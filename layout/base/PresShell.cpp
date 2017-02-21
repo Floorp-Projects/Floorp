@@ -1477,13 +1477,8 @@ PresShell::RemovePreferenceStyles()
 }
 
 void
-PresShell::AddUserSheet(nsISupports* aSheet)
+PresShell::AddUserSheet(StyleSheet* aSheet)
 {
-  if (mStyleSet->IsServo()) {
-    NS_ERROR("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
-    return;
-  }
-
   // Make sure this does what nsDocumentViewer::CreateStyleSet does wrt
   // ordering. We want this new sheet to come after all the existing stylesheet
   // service sheets, but before other user sheets; see nsIStyleSheetService.idl
@@ -1495,7 +1490,8 @@ PresShell::AddUserSheet(nsISupports* aSheet)
   mStyleSet->BeginUpdate();
 
   nsStyleSheetService* sheetService = nsStyleSheetService::gInstance;
-  nsTArray<RefPtr<StyleSheet>>& userSheets = *sheetService->UserStyleSheets();
+  nsTArray<RefPtr<StyleSheet>>& userSheets =
+    *sheetService->UserStyleSheets(mStyleSet->BackendType());
   // Iterate forwards when removing so the searches for RemoveStyleSheet are as
   // short as possible.
   for (StyleSheet* sheet : userSheets) {
@@ -1514,54 +1510,34 @@ PresShell::AddUserSheet(nsISupports* aSheet)
 }
 
 void
-PresShell::AddAgentSheet(nsISupports* aSheet)
+PresShell::AddAgentSheet(StyleSheet* aSheet)
 {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
-  // XXXheycam This needs to work with ServoStyleSheets too.
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
-  if (!sheet) {
-    NS_ERROR("stylo: AddAgentSheet needs to support ServoStyleSheets");
-    return;
-  }
-
-  mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+  mStyleSet->AppendStyleSheet(SheetType::Agent, aSheet);
   RestyleForCSSRuleChanges();
 }
 
 void
-PresShell::AddAuthorSheet(nsISupports* aSheet)
+PresShell::AddAuthorSheet(StyleSheet* aSheet)
 {
-  // XXXheycam This needs to work with ServoStyleSheets too.
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
-  if (!sheet) {
-    NS_ERROR("stylo: AddAuthorSheet needs to support ServoStyleSheets");
-    return;
-  }
-
   // Document specific "additional" Author sheets should be stronger than the
   // ones added with the StyleSheetService.
   StyleSheet* firstAuthorSheet =
     mDocument->GetFirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, sheet, firstAuthorSheet);
+    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, aSheet, firstAuthorSheet);
   } else {
-    mStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+    mStyleSet->AppendStyleSheet(SheetType::Doc, aSheet);
   }
 
   RestyleForCSSRuleChanges();
 }
 
 void
-PresShell::RemoveSheet(SheetType aType, nsISupports* aSheet)
+PresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet)
 {
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
-  if (!sheet) {
-    NS_ERROR("stylo: RemoveSheet needs to support ServoStyleSheets");
-    return;
-  }
-
-  mStyleSet->RemoveStyleSheet(aType, sheet);
+  mStyleSet->RemoveStyleSheet(aType, aSheet);
   RestyleForCSSRuleChanges();
 }
 
