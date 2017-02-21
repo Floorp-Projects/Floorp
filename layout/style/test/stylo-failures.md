@@ -28,7 +28,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 
 * Media query support:
   * test_acid3_test46.html: @media support [13]
-  * test_bug1089417.html [1] **disabled**
+  * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
   * test_media_queries.html [1]
@@ -137,7 +137,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_descriptor_storage.html [1]
   * test_descriptor_syntax_errors.html [1]
   * test_font_face_parser.html `@font-face` [447]
-  * test_redundant_font_download.html [3] **disabled**
+  * test_redundant_font_download.html [3]
 * @namespace support:
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
