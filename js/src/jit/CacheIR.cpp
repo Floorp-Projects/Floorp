@@ -1447,7 +1447,6 @@ SetPropIRGenerator::maybeEmitIdGuard(jsid id)
     emitIdGuard(setElemKeyValueId(), id);
 }
 
-
 GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                                        HandleObject env, HandlePropertyName name)
   : IRGenerator(cx, script, pc, CacheKind::GetName),
@@ -1904,8 +1903,13 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachSetArrayLength(obj, objId, id, rhsValId))
                 return true;
+            if (tryAttachProxy(obj, objId, id, rhsValId))
+                return true;
             return false;
         }
+
+        if (tryAttachProxyElement(obj, objId, rhsValId))
+            return true;
 
         uint32_t index;
         Int32OperandId indexId;
@@ -2503,6 +2507,69 @@ SetPropIRGenerator::tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOpe
     setUpdateStubInfo(aobj->group(), JSID_VOID);
 
     trackAttached("StoreUnboxedArrayElementHole");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
+                                          ValOperandId rhsId)
+{
+    MOZ_ASSERT(obj->is<ProxyObject>());
+
+    writer.guardIsProxy(objId);
+
+    // Ensure that the incoming object is not a DOM proxy, so that we can get to
+    // the specialized stubs
+    writer.guardNotDOMProxy(objId);
+
+    if (cacheKind_ == CacheKind::SetProp) {
+        writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+    } else {
+        // We could call maybeEmitIdGuard here and then emit CallProxySet, but
+        // for SetElem we prefer to attach a stub that can handle any Value
+        // so we don't attach a new stub for every id.
+        MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+        writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
+    }
+
+    writer.returnFromIC();
+
+    trackAttached("GenericProxy");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
+                                   ValOperandId rhsId)
+{
+    switch (GetProxyStubType(cx_, obj, id)) {
+      case ProxyStubType::None:
+        return false;
+      case ProxyStubType::DOMExpando:
+      case ProxyStubType::DOMShadowed:
+      case ProxyStubType::DOMUnshadowed:
+      case ProxyStubType::Generic:
+        return tryAttachGenericProxy(obj, objId, id, rhsId);
+    }
+
+    MOZ_CRASH("Unexpected ProxyStubType");
+}
+
+bool
+SetPropIRGenerator::tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId)
+{
+    if (!obj->is<ProxyObject>())
+        return false;
+
+    writer.guardIsProxy(objId);
+
+    // Like GetPropIRGenerator::tryAttachProxyElement, don't check for DOM
+    // proxies here as we don't have specialized DOM stubs for this.
+    MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+    writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
+    writer.returnFromIC();
+
+    trackAttached("ProxyElement");
     return true;
 }
 
