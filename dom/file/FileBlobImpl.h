@@ -50,16 +50,6 @@ public:
   virtual bool IsSizeUnknown() const override { return false; }
   virtual bool IsDateUnknown() const override { return false; }
 
-  void SetName(const nsAString& aName)
-  {
-    mName = aName;
-  }
-
-  void SetType(const nsAString& aType)
-  {
-    mContentType = aType;
-  }
-
 protected:
   virtual ~FileBlobImpl() = default;
 
