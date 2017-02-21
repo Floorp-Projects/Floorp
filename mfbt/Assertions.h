@@ -214,22 +214,22 @@ static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void MOZ_NoReturn(int aLine)
   TerminateProcess(GetCurrentProcess(), 3);
 }
 
-#  define MOZ_REALLY_CRASH() \
+#  define MOZ_REALLY_CRASH(line) \
      do { \
        __debugbreak(); \
-       MOZ_NoReturn(__LINE__); \
+       MOZ_NoReturn(line); \
      } while (0)
 #else
 #  ifdef __cplusplus
-#    define MOZ_REALLY_CRASH() \
+#    define MOZ_REALLY_CRASH(line) \
        do { \
-         *((volatile int*) NULL) = __LINE__; \
+         *((volatile int*) NULL) = line; \
          ::abort(); \
        } while (0)
 #  else
-#    define MOZ_REALLY_CRASH() \
+#    define MOZ_REALLY_CRASH(line) \
        do { \
-         *((volatile int*) NULL) = __LINE__; \
+         *((volatile int*) NULL) = line; \
          abort(); \
        } while (0)
 #  endif
@@ -260,14 +260,14 @@ static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void MOZ_NoReturn(int aLine)
 #  define MOZ_CRASH(...) \
      do { \
        MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
-       MOZ_REALLY_CRASH(); \
+       MOZ_REALLY_CRASH(__LINE__); \
      } while (0)
 #else
 #  define MOZ_CRASH(...) \
      do { \
        MOZ_ReportCrash("" __VA_ARGS__, __FILE__, __LINE__); \
        MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
-       MOZ_REALLY_CRASH(); \
+       MOZ_REALLY_CRASH(__LINE__); \
      } while (0)
 #endif
 
@@ -366,7 +366,7 @@ struct AssertionConditionType
     if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
       MOZ_REPORT_ASSERTION_FAILURE(#expr, __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")"); \
-      MOZ_REALLY_CRASH(); \
+      MOZ_REALLY_CRASH(__LINE__); \
     } \
   } while (0)
 /* Now the two-argument form. */
@@ -376,7 +376,7 @@ struct AssertionConditionType
     if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
       MOZ_REPORT_ASSERTION_FAILURE(#expr " (" explain ")", __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
-      MOZ_REALLY_CRASH(); \
+      MOZ_REALLY_CRASH(__LINE__); \
     } \
   } while (0)
 
