@@ -374,10 +374,12 @@
               }
             } catch (e) {}
           }
-          if (filePicker.show() != Ci.nsIFilePicker.returnCancel) {
-            this.value = filePicker.file.path;
-            this.inputChanged();
-          }
+          filePicker.open(rv => {
+            if (rv != Ci.nsIFilePicker.returnCancel && filePicker.file) {
+              this.value = filePicker.file.path;
+              this.inputChanged();
+            }
+          });
         ]]>
         </body>
       </method>
