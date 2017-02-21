@@ -11,8 +11,6 @@
 #include "nsDirectoryService.h"
 #include "nsDataHashtable.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/dom/CrashReporterChild.h"
-#include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/Unused.h"
@@ -20,6 +18,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/ipc/CrashReporterClient.h"
 
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -111,8 +110,6 @@ using google_breakpad::FileID;
 using google_breakpad::PageAllocator;
 #endif
 using namespace mozilla;
-using mozilla::dom::CrashReporterChild;
-using mozilla::dom::PCrashReporterChild;
 using mozilla::ipc::CrashReporterClient;
 
 namespace CrashReporter {
@@ -2259,28 +2256,6 @@ EnqueueDelayedNote(DelayedNote* aNote)
   gDelayedAnnotations->AppendElement(aNote);
 }
 
-class CrashReporterHelperRunnable : public Runnable {
-public:
-  explicit CrashReporterHelperRunnable(const nsACString& aKey,
-                                       const nsACString& aData)
-    : mKey(aKey)
-    , mData(aData)
-    , mAppendAppNotes(false)
-    {}
-  explicit CrashReporterHelperRunnable(const nsACString& aData)
-    : mKey()
-    , mData(aData)
-    , mAppendAppNotes(true)
-    {}
-
-  NS_IMETHOD Run() override;
-
-private:
-  nsCString mKey;
-  nsCString mData;
-  bool mAppendAppNotes;
-};
-
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 {
   if (!GetEnabled())
@@ -2298,23 +2273,10 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
       return NS_OK;
     }
 
-    // Otherwise, we have to handle this on the main thread since we will go
-    // through IPDL.
-    if (!NS_IsMainThread()) {
-      // Child process needs to handle this in the main thread:
-      nsCOMPtr<nsIRunnable> r = new CrashReporterHelperRunnable(key, data);
-      NS_DispatchToMainThread(r);
-      return NS_OK;
-    }
+    // EnqueueDelayedNote() can only be called on the main thread.
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-    MOZ_ASSERT(NS_IsMainThread());
-    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
-    if (!reporter) {
-      EnqueueDelayedNote(new DelayedNote(key, data));
-      return NS_OK;
-    }
-    if (!reporter->SendAnnotateCrashReport(nsCString(key), escapedData))
-      return NS_ERROR_FAILURE;
+    EnqueueDelayedNote(new DelayedNote(key, data));
     return NS_OK;
   }
 
@@ -2383,22 +2345,10 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
       return NS_OK;
     }
 
-    if (!NS_IsMainThread()) {
-      // Child process needs to handle this in the main thread:
-      nsCOMPtr<nsIRunnable> r = new CrashReporterHelperRunnable(data);
-      NS_DispatchToMainThread(r);
-      return NS_OK;
-    }
+    // EnqueueDelayedNote can only be called on the main thread.
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-    MOZ_ASSERT(NS_IsMainThread());
-    PCrashReporterChild* reporter = CrashReporterChild::GetCrashReporter();
-    if (!reporter) {
-      EnqueueDelayedNote(new DelayedNote(data));
-      return NS_OK;
-    }
-
-    if (!reporter->SendAppendAppNotes(escapedData))
-      return NS_ERROR_FAILURE;
+    EnqueueDelayedNote(new DelayedNote(data));
     return NS_OK;
   }
 
@@ -2406,24 +2356,6 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data)
 
   notesField->Append(data);
   return AnnotateCrashReport(NS_LITERAL_CSTRING("Notes"), *notesField);
-}
-
-nsresult CrashReporterHelperRunnable::Run()
-{
-  // We expect this to be in the child process' main thread.  If it isn't,
-  // something is happening we didn't design for.
-  MOZ_ASSERT(!XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Don't just leave the assert, paranoid about infinite recursion
-  if (NS_IsMainThread()) {
-    if (mAppendAppNotes) {
-      return AppendAppNotesToCrashReport(mData);
-    } else {
-      return AnnotateCrashReport(mKey, mData);
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 // Returns true if found, false if not found.
