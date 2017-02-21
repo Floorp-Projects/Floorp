@@ -50,6 +50,7 @@ private:
 
   void WaitIfPendingReply();
 
+  Display*                     mDisplay;
   xcb_connection_t*            mConnection;
   Window                       mWindow;
   Visual*                      mVisual;
@@ -57,6 +58,7 @@ private:
 
   mozilla::gfx::SurfaceFormat  mFormat;
   mozilla::gfx::IntSize        mSize;
+  int                          mStride;
 
   xcb_pixmap_t                 mPixmap;
   xcb_gcontext_t               mGC;
