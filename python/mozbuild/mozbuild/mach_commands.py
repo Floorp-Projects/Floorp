@@ -1499,8 +1499,7 @@ class PackageFrontend(MachCommandBase):
         self._activate_virtualenv()
         os.environ['PATH'] = original_path
 
-        for package in ('taskcluster==0.0.32',
-                        'mozregression==1.0.2'):
+        for package in ('taskcluster==0.0.32',):
             self._install_pip_package(package)
 
         state_dir = self._mach_context.state_dir
