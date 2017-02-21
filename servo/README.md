@@ -238,4 +238,3 @@ There are lots of mach commands you can use. You can list them with `./mach
 
 
 The generated documentation can be found on http://doc.servo.org/servo/index.html
-
