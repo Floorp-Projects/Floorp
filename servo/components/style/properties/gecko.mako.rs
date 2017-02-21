@@ -628,6 +628,7 @@ impl Debug for ${style_struct.gecko_struct_name} {
     # Types used with predefined_type()-defined properties that we can auto-generate.
     predefined_types = {
         "length::LengthOrAuto": impl_style_coord,
+        "length::LengthOrNormal": impl_style_coord,
         "Length": impl_absolute_length,
         "Position": impl_position,
         "LengthOrPercentage": impl_style_coord,
@@ -961,7 +962,7 @@ fn static_assert() {
 <%self:impl_trait style_struct_name="Position"
                   skip_longhands="${skip_position_longhands} z-index box-sizing order align-content
                                   justify-content align-self justify-self align-items
-                                  justify-items">
+                                  justify-items grid-auto-rows grid-auto-columns">
     % for side in SIDES:
     <% impl_split_style_coord("%s" % side.ident,
                               "mOffset",
@@ -1080,6 +1081,36 @@ fn static_assert() {
         self.gecko.${value.gecko}.mHasSpan = other.gecko.${value.gecko}.mHasSpan;
         self.gecko.${value.gecko}.mInteger = other.gecko.${value.gecko}.mInteger;
         self.gecko.${value.gecko}.mLineName.assign(&*other.gecko.${value.gecko}.mLineName);
+    }
+    % endfor
+
+    % for kind in ["rows", "columns"]:
+    pub fn set_grid_auto_${kind}(&mut self, v: longhands::grid_auto_rows::computed_value::T) {
+        use values::specified::grid::TrackSize;
+
+        match v {
+            TrackSize::FitContent(lop) => {
+                // Gecko sets min value to None and max value to the actual value in fit-content
+                // https://dxr.mozilla.org/mozilla-central/rev/0eef1d5/layout/style/nsRuleNode.cpp#8221
+                self.gecko.mGridAuto${kind.title()}Min.set_value(CoordDataValue::None);
+                lop.to_gecko_style_coord(&mut self.gecko.mGridAuto${kind.title()}Max);
+            },
+            TrackSize::Breadth(breadth) => {
+                // Set the value to both fields if there's one breadth value
+                // https://dxr.mozilla.org/mozilla-central/rev/0eef1d5/layout/style/nsRuleNode.cpp#8230
+                breadth.to_gecko_style_coord(&mut self.gecko.mGridAuto${kind.title()}Min);
+                breadth.to_gecko_style_coord(&mut self.gecko.mGridAuto${kind.title()}Max);
+            },
+            TrackSize::MinMax(min, max) => {
+                min.to_gecko_style_coord(&mut self.gecko.mGridAuto${kind.title()}Min);
+                max.to_gecko_style_coord(&mut self.gecko.mGridAuto${kind.title()}Max);
+            },
+        }
+    }
+
+    pub fn copy_grid_auto_${kind}_from(&mut self, other: &Self) {
+        self.gecko.mGridAuto${kind.title()}Min.copy_from(&other.gecko.mGridAuto${kind.title()}Min);
+        self.gecko.mGridAuto${kind.title()}Max.copy_from(&other.gecko.mGridAuto${kind.title()}Max);
     }
     % endfor
 
@@ -3011,7 +3042,7 @@ clip-path
 </%self:impl_trait>
 
 <%self:impl_trait style_struct_name="Column"
-                  skip_longhands="column-count column-gap column-rule-width">
+                  skip_longhands="column-count column-rule-width">
 
     #[allow(unused_unsafe)]
     pub fn set_column_count(&mut self, v: longhands::column_count::computed_value::T) {
@@ -3026,17 +3057,6 @@ clip-path
     }
 
     ${impl_simple_copy('column_count', 'mColumnCount')}
-
-    pub fn set_column_gap(&mut self, v: longhands::column_gap::computed_value::T) {
-        use values::Either;
-
-        match v {
-            Either::First(len) => self.gecko.mColumnGap.set(len),
-            Either::Second(_normal) => self.gecko.mColumnGap.set_value(CoordDataValue::Normal),
-        }
-    }
-
-    <%call expr="impl_coord_copy('column_gap', 'mColumnGap')"></%call>
 
     <% impl_app_units("column_rule_width", "mColumnRuleWidth", need_clone=True,
                       round_to_pixels=True) %>

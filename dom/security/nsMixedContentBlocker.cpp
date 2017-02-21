@@ -864,6 +864,13 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
   nsresult stateRV = securityUI->GetState(&state);
 
+  OriginAttributes originAttributes;
+  if (principal) {
+    originAttributes.Inherit(principal->OriginAttributesRef());
+  } else if (aRequestPrincipal) {
+    originAttributes.Inherit(aRequestPrincipal->OriginAttributesRef());
+  }
+
   bool doHSTSPriming = false;
   if (IsEligibleForHSTSPriming(aContentLocation)) {
     bool hsts = false;
@@ -872,7 +879,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
       do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aContentLocation,
-        0, &cached, &hsts);
+        0, originAttributes, &cached, &hsts);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (hsts && sUseHSTS) {
@@ -907,14 +914,16 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   bool active = (classification == eMixedScript);
   if (!aHadInsecureImageRedirect) {
     if (XRE_IsParentProcess()) {
-      AccumulateMixedContentHSTS(innerContentLocation, active, doHSTSPriming);
+      AccumulateMixedContentHSTS(innerContentLocation, active, doHSTSPriming,
+                                 originAttributes);
     } else {
       // Ask the parent process to do the same call
       mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
       if (cc) {
         mozilla::ipc::URIParams uri;
         SerializeURI(innerContentLocation, uri);
-        cc->SendAccumulateMixedContentHSTS(uri, active, doHSTSPriming);
+        cc->SendAccumulateMixedContentHSTS(uri, active, doHSTSPriming,
+                                           originAttributes);
       }
     }
   }
@@ -1097,7 +1106,9 @@ enum MixedContentHSTSPrimingState {
 // Record information on when HSTS would have made mixed content not mixed
 // content (regardless of whether it was actually blocked)
 void
-nsMixedContentBlocker::AccumulateMixedContentHSTS(nsIURI* aURI, bool aActive, bool aHasHSTSPriming)
+nsMixedContentBlocker::AccumulateMixedContentHSTS(
+  nsIURI* aURI, bool aActive, bool aHasHSTSPriming,
+  const OriginAttributes& aOriginAttributes)
 {
   // This method must only be called in the parent, because
   // nsSiteSecurityService is only available in the parent
@@ -1112,7 +1123,8 @@ nsMixedContentBlocker::AccumulateMixedContentHSTS(nsIURI* aURI, bool aActive, bo
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, 0, nullptr, &hsts);
+  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, 0,
+                        aOriginAttributes, nullptr, &hsts);
   if (NS_FAILED(rv)) {
     return;
   }

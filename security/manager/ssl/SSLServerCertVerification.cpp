@@ -524,6 +524,7 @@ CertErrorRunnable::CheckCertOverrides()
   nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
                           uri,
                           mProviderFlags,
+                          mInfoObject->GetOriginAttributes(),
                           nullptr,
                           &strictTransportSecurityEnabled);
   if (NS_FAILED(nsrv)) {
@@ -535,6 +536,7 @@ CertErrorRunnable::CheckCertOverrides()
   nsrv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP,
                           uri,
                           mProviderFlags,
+                          mInfoObject->GetOriginAttributes(),
                           nullptr,
                           &hasPinningInformation);
   if (NS_FAILED(nsrv)) {

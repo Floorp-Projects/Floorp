@@ -13,6 +13,12 @@
 #include "pkix/Time.h"
 
 namespace mozilla {
+class OriginAttributes;
+}
+
+using mozilla::OriginAttributes;
+
+namespace mozilla {
 namespace psm {
 
 class PublicKeyPinningService
@@ -31,6 +37,7 @@ public:
                                     const char* hostname,
                                     mozilla::pkix::Time time,
                                     bool enforceTestMode,
+                                    const OriginAttributes& originAttributes,
                             /*out*/ bool& chainHasValidPins,
                    /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo);
   /**
@@ -50,6 +57,7 @@ public:
   static nsresult HostHasPins(const char* hostname,
                               mozilla::pkix::Time time,
                               bool enforceTestMode,
+                              const OriginAttributes& originAttributes,
                       /*out*/ bool& hostHasPins);
 
   /**

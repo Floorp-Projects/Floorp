@@ -415,10 +415,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * calc() doesn't support number value servo/servo#15205
     * test_value_storage.html `calc(1 +` [1]
     * ... `calc(-2.5)` [1]
-  * incorrect parsing function for column-{gap,width} servo/servo#15088
-    * test_compute_data_with_start_struct.html ` column-` [4]
-    * test_value_storage.html `column-gap` [3]
-    * ... `column-width` [3]
   * size part of shorthand background/mask always desires two values servo/servo#15199
     * test_value_storage.html `'background'` [18]
     * ... `/ auto none` [34]

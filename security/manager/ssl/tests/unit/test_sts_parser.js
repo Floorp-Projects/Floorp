@@ -17,7 +17,7 @@ function testSuccess(header, expectedMaxAge, expectedIncludeSubdomains) {
   let includeSubdomains = {};
 
   sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, dummyUri, header,
-                    sslStatus, 0, maxAge, includeSubdomains);
+                    sslStatus, 0, {}, maxAge, includeSubdomains);
 
   equal(maxAge.value, expectedMaxAge, "Did not correctly parse maxAge");
   equal(includeSubdomains.value, expectedIncludeSubdomains,
@@ -31,7 +31,7 @@ function testFailure(header) {
 
   throws(() => {
     sss.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, dummyUri, header,
-                      sslStatus, 0, maxAge, includeSubdomains);
+                      sslStatus, 0, {}, maxAge, includeSubdomains);
   }, "Parsed invalid header: " + header);
 }
 
