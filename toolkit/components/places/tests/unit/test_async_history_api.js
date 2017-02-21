@@ -25,9 +25,9 @@ function VisitInfo(aTransitionType,
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
-function promiseUpdatePlaces(aPlaces, aBatchFrecencyNotifications) {
+function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
   return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(aPlaces, {
+    PlacesUtils.asyncHistory.updatePlaces(aPlaces, Object.assign({
       _errors: [],
       _results: [],
       handleError(aResultCode, aPlace) {
@@ -36,10 +36,10 @@ function promiseUpdatePlaces(aPlaces, aBatchFrecencyNotifications) {
       handleResult(aPlace) {
         this._results.push(aPlace);
       },
-      handleCompletion() {
-        resolve({ errors: this._errors, results: this._results });
+      handleCompletion(resultCount) {
+        resolve({ errors: this._errors, results: this._results, resultCount});
       }
-    }, aBatchFrecencyNotifications);
+    }, aOptions), aBatchFrecencyNotifications);
   });
 }
 
@@ -1125,6 +1125,113 @@ add_task(function* test_omit_frecency_notifications() {
     };
     PlacesUtils.history.addObserver(frecencyObserverCheck, false);
   });
-  yield promiseUpdatePlaces(places, true);
+  yield promiseUpdatePlaces(places, {}, true);
   yield promiseFrecenciesChanged;
+});
+
+add_task(function* test_ignore_errors() {
+  yield PlacesTestUtils.clearHistory();
+  // This test ensures that trying to add a visit, with a guid already found in
+  // another visit, fails - but doesn't report if we told it not to.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+
+  do_check_false(yield promiseIsURIVisited(place.uri));
+  let placesResult = yield promiseUpdatePlaces(place);
+  if (placesResult.errors.length > 0) {
+    do_throw("Unexpected error.");
+  }
+  let placeInfo = placesResult.results[0];
+  do_check_true(yield promiseIsURIVisited(placeInfo.uri));
+
+  let badPlace = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: placeInfo.guid,
+  };
+
+  do_check_false(yield promiseIsURIVisited(badPlace.uri));
+  placesResult = yield promiseUpdatePlaces(badPlace, {ignoreErrors: true});
+  if (placesResult.results.length > 0) {
+    do_throw("Unexpected success.");
+  }
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because we disabled reporting.");
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because there were none.");
+  Assert.equal(placesResult.resultCount, 0,
+               "Should know that we updated 0 items from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_ignore_results() {
+  yield PlacesTestUtils.clearHistory();
+  let place = {
+    uri: NetUtil.newURI("http://mozilla.org/"),
+    title: "test",
+    visits: [
+      new VisitInfo()
+    ]
+  };
+  let placesResult = yield promiseUpdatePlaces(place, {ignoreResults: true});
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because we disabled reporting.");
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because there were none.");
+  Assert.equal(placesResult.resultCount, 1,
+               "Should know that we updated 1 item from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_ignore_results_and_errors() {
+  yield PlacesTestUtils.clearHistory();
+  // This test ensures that trying to add a visit, with a guid already found in
+  // another visit, fails - but doesn't report if we told it not to.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+
+  do_check_false(yield promiseIsURIVisited(place.uri));
+  let placesResult = yield promiseUpdatePlaces(place);
+  if (placesResult.errors.length > 0) {
+    do_throw("Unexpected error.");
+  }
+  let placeInfo = placesResult.results[0];
+  do_check_true(yield promiseIsURIVisited(placeInfo.uri));
+
+  let badPlace = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: placeInfo.guid,
+  };
+  let allPlaces = [
+    {
+      uri: NetUtil.newURI(TEST_DOMAIN + "test_other_successful_item"),
+      visits: [
+        new VisitInfo(),
+      ],
+    },
+    badPlace,
+  ];
+
+  do_check_false(yield promiseIsURIVisited(badPlace.uri));
+  placesResult = yield promiseUpdatePlaces(allPlaces, {ignoreErrors: true, ignoreResults: true});
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because we disabled reporting.");
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because we disabled reporting.");
+  Assert.equal(placesResult.resultCount, 1,
+               "Should know that we updated 1 item from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
