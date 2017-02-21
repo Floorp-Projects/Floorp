@@ -1,25 +1,76 @@
+System Add-ons Overview
+=======================
+
+System add-ons are a method for shipping extensions to Firefox that:
+
+* are hidden from the about:addons UI
+* cannot be user disabled
+* can be updated restartlessly based on criteria Mozilla sets
+
+Generally these are considered to be built-in features to Firefox, and the
+fact that they are extensions and can be updated restartlessly are implementation
+details as far as users are concerned.
+
+If you'd like to ship an add-on with Firefox or as an update (either to an existing
+feature or as a "hotfix" to patch critical problems in the wild) please contact the
+GoFaster team: https://mail.mozilla.org/listinfo/gofaster
+
+The add-ons themselves are either legacy Firefox add-ons or WebExtensions.
+They must be:
+
+* restartless
+* multi-process compatible
+
+Other than these restrictions there is nothing special or different about
+the extensions themselves.
+
+It is possible to override an installed system add-on by installing a different add-on
+with the same ID into a higher priority location.
+
+Available locations, starting from the highest priority include:
+
+1) temporary install (about:debugging)
+2) normal user install into profile (about:addons or AMO/TestPilot/etc.)
+3) system add-on updates
+4) built-in system add-ons
+
+This makes it possible for a developer or user to override a system add-on
+by installing an add-on with the same ID from AMO or TestPilot or as a temporary
+add-on.
+
+Default, built-in system add-ons
+--------------------------------
+
+The set of **default** system add-ons are checked into `mozilla-central` under
+`./browser/extensions`. These get placed into the `features` directory of the
+application directory at build time.
+
+System add-on updates
+---------------------
+
+System add-on **updates** are served via Mozilla's Automatic Update Service
+(AUS, aka `Balrog`_). These are installed into the users profile under the `features`
+directory.
+
+Updates must be specifically signed by Mozilla - the signature that addons.mozilla.org
+uses will not work for system add-ons.
+
+As noted above, these updates may override a built-in system add-on, or they may
+be a new install. Updates are always served as a set - if any add-on in the set
+fails to install or upgrade, then the whole set fails. This is to leave Firefox
+in a consistent state.
+
+System add-on updates are removed when the Firefox application version changes,
+to avoid compatibility problems - for instance a user downgrading to an earlier
+version of Firefox than the update supports will end up with a disabled update
+rather than falling back to the built-in version.
+
 Firefox System Add-on Update Protocol
 =====================================
-This document describes the protocol that Firefox uses when retrieving updates
-for System Add-ons from the automatic update service (AUS, currently `Balrog`_),
-and the expected behavior of Firefox based on the updater service's response.
+This section describes the protocol that Firefox uses when retrieving updates
+from AUS, and the expected behavior of Firefox based on the updater service's response.
 
 .. _Balrog: https://wiki.mozilla.org/Balrog
-
-System Add-ons
---------------
-System add-ons:
-
-* Are add-ons that ship with Firefox, are hidden from the UI, and cannot be
-  disabled
-* Can be updated by Firefox depending on the AUS response to Firefox's update
-  request
-* Are stored in two locations:
-
-  * The **default** set ships with Firefox and is stored in the application
-    directory.
-  * The **update** set is stored in the user’s profile directory. If an add-on
-    is both in the update and default set, the update version gets precedence.
 
 Update Request
 --------------
