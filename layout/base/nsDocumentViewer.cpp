@@ -2403,19 +2403,15 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     }
   }
 
-  if (styleSet->IsGecko()) {
-    nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
-    if (sheetService) {
-      for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-        styleSet->AppendStyleSheet(SheetType::Agent, sheet);
-      }
-      for (StyleSheet* sheet : Reversed(*sheetService->UserStyleSheets())) {
-        styleSet->PrependStyleSheet(SheetType::User, sheet);
-      }
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+  if (sheetService) {
+    for (StyleSheet* sheet : *sheetService->AgentStyleSheets(backendType)) {
+      styleSet->AppendStyleSheet(SheetType::Agent, sheet);
     }
-  } else {
-    NS_WARNING("stylo: Not yet checking nsStyleSheetService for Servo-backed "
-               "documents. See bug 1290224");
+    for (StyleSheet* sheet :
+           Reversed(*sheetService->UserStyleSheets(backendType))) {
+      styleSet->PrependStyleSheet(SheetType::User, sheet);
+    }
   }
 
   // Caller will handle calling EndUpdate, per contract.

@@ -2287,13 +2287,9 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], SheetType::User);
     RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], SheetType::Doc);
 
-    if (GetStyleBackendType() == StyleBackendType::Gecko) {
-      nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
-      if (sheetService) {
-        RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(), SheetType::Doc);
-      }
-    } else {
-      NS_WARNING("stylo: nsStyleSheetService doesn't handle ServoStyleSheets yet");
+    if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
+      RemoveStyleSheetsFromStyleSets(
+        *sheetService->AuthorStyleSheets(GetStyleBackendType()), SheetType::Doc);
     }
 
     mStyleSetFilled = false;
@@ -2360,23 +2356,19 @@ nsDocument::FillStyleSet(StyleSetHandle aStyleSet)
     }
   }
 
-  if (aStyleSet->IsGecko()) {
-    nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
-    if (sheetService) {
-      for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
-        aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
-      }
+  if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
+    nsTArray<RefPtr<StyleSheet>>& sheets =
+      *sheetService->AuthorStyleSheets(aStyleSet->BackendType());
+    for (StyleSheet* sheet : sheets) {
+      aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
     }
+  }
 
-    // Iterate backwards to maintain order
-    for (StyleSheet* sheet : Reversed(mOnDemandBuiltInUASheets)) {
-      if (sheet->IsApplicable()) {
-        aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
-      }
+  // Iterate backwards to maintain order
+  for (StyleSheet* sheet : Reversed(mOnDemandBuiltInUASheets)) {
+    if (sheet->IsApplicable()) {
+      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
-  } else {
-    NS_WARNING("stylo: Not yet checking nsStyleSheetService for Servo-backed "
-               "documents. See bug 1290224");
   }
 
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAgentSheet],

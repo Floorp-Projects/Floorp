@@ -2119,20 +2119,27 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   if (sheetService) {
     // This looks like a lot of work, but in a normal browser session we just
     // send two loads.
+    //
+    // The URIs of the Gecko and Servo sheets should be the same, so it
+    // shouldn't matter which we look at.  (The Servo sheets don't exist
+    // in non-MOZ-STYLO builds, though, so look at the Gecko ones.)
 
-    for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->AgentStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->UserStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->AuthorStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
