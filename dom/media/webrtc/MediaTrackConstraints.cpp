@@ -294,6 +294,10 @@ NormalizedConstraints::NormalizedConstraints(
   : NormalizedConstraintSet(*aOthers[0])
   , mBadConstraint(nullptr)
 {
+  for (auto& entry : aOthers[0]->mAdvanced) {
+    mAdvanced.push_back(entry);
+  }
+
   // Create a list of member pointers.
   nsTArray<MemberPtrType> list;
   NormalizedConstraints dummy(dom::MediaTrackConstraints(), &list);
