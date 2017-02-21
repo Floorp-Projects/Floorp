@@ -6463,49 +6463,52 @@ var MailIntegration = {
 
 function BrowserOpenAddonsMgr(aView) {
   return new Promise(resolve => {
-    if (aView) {
-      let emWindow;
-      let browserWindow;
+    let emWindow;
+    let browserWindow;
 
-      var receivePong = function(aSubject, aTopic, aData) {
-        let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShellTreeItem)
-                                 .rootTreeItem
-                                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIDOMWindow);
-        if (!emWindow || browserWin == window /* favor the current window */) {
-          emWindow = aSubject;
-          browserWindow = browserWin;
-        }
+    var receivePong = function(aSubject, aTopic, aData) {
+      let browserWin = aSubject.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShellTreeItem)
+                               .rootTreeItem
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindow);
+      if (!emWindow || browserWin == window /* favor the current window */) {
+        emWindow = aSubject;
+        browserWindow = browserWin;
       }
-      Services.obs.addObserver(receivePong, "EM-pong", false);
-      Services.obs.notifyObservers(null, "EM-ping", "");
-      Services.obs.removeObserver(receivePong, "EM-pong");
+    }
+    Services.obs.addObserver(receivePong, "EM-pong", false);
+    Services.obs.notifyObservers(null, "EM-ping", "");
+    Services.obs.removeObserver(receivePong, "EM-pong");
 
-      if (emWindow) {
+    if (emWindow) {
+      if (aView) {
         emWindow.loadView(aView);
-        browserWindow.gBrowser.selectedTab =
-          browserWindow.gBrowser._getTabForContentWindow(emWindow);
-        emWindow.focus();
-        resolve(emWindow);
-        return;
       }
+      browserWindow.gBrowser.selectedTab =
+        browserWindow.gBrowser._getTabForContentWindow(emWindow);
+      emWindow.focus();
+      resolve(emWindow);
+      return;
     }
 
-    switchToTabHavingURI("about:addons", true);
+    // This must be a new load, else the ping/pong would have
+    // found the window above.
+    let whereToOpen = (window.gBrowser && isTabEmpty(gBrowser.selectedTab)) ?
+                      "current" :
+                      "tab";
+    openUILinkIn("about:addons", whereToOpen);
 
-    if (aView) {
-      // This must be a new load, else the ping/pong would have
-      // found the window above.
-      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(observer, aTopic);
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(observer, aTopic);
+      if (aView) {
         aSubject.loadView(aView);
-        resolve(aSubject);
-      }, "EM-loaded", false);
-    } else {
-      resolve();
-    }
+      }
+      aSubject.QueryInterface(Ci.nsIDOMWindow);
+      aSubject.focus();
+      resolve(aSubject);
+    }, "EM-loaded", false);
   });
 }
 

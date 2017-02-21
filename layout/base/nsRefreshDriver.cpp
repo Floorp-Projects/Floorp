@@ -1240,7 +1240,11 @@ nsRefreshDriver::RestoreNormalRefresh()
 TimeStamp
 nsRefreshDriver::MostRecentRefresh() const
 {
-  const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
+  // In case of stylo traversal, we have already activated the refresh driver in
+  // ServoRestyleManager::ProcessPendingRestyles().
+  if (!ServoStyleSet::IsInServoTraversal()) {
+    const_cast<nsRefreshDriver*>(this)->EnsureTimerStarted();
+  }
 
   return mMostRecentRefresh;
 }
@@ -1323,6 +1327,10 @@ nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest)
 void
 nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags)
 {
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(),
+             "EnsureTimerStarted should be called only when we are not "
+             "in servo traversal");
+
   if (mTestControllingRefreshes)
     return;
 

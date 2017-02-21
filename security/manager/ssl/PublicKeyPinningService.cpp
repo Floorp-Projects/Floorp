@@ -164,6 +164,7 @@ PublicKeyPinningService::ChainMatchesPinset(const UniqueCERTCertList& certList,
 // Dynamic pins are prioritized over static pins.
 static nsresult
 FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
+                       const OriginAttributes& originAttributes,
                /*out*/ nsTArray<nsCString>& dynamicFingerprints,
                /*out*/ const TransportSecurityPreload*& staticFingerprints)
 {
@@ -190,7 +191,8 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
     bool includeSubdomains;
     nsTArray<nsCString> pinArray;
     rv = sssService->GetKeyPinsForHostname(nsDependentCString(evalHost), time,
-                                           pinArray, &includeSubdomains, &found);
+                                           originAttributes, pinArray,
+                                           &includeSubdomains, &found);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -241,6 +243,7 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
 static nsresult
 CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
                      bool enforceTestMode, mozilla::pkix::Time time,
+                     const OriginAttributes& originAttributes,
              /*out*/ bool& chainHasValidPins,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
@@ -254,8 +257,8 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
 
   nsTArray<nsCString> dynamicFingerprints;
   const TransportSecurityPreload* staticFingerprints = nullptr;
-  nsresult rv = FindPinningInformation(hostname, time, dynamicFingerprints,
-                                       staticFingerprints);
+  nsresult rv = FindPinningInformation(hostname, time, originAttributes,
+                                       dynamicFingerprints, staticFingerprints);
   // If we have no pinning information, the certificate chain trivially
   // validates with respect to pinning.
   if (dynamicFingerprints.Length() == 0 && !staticFingerprints) {
@@ -326,12 +329,14 @@ CheckPinsForHostname(const UniqueCERTCertList& certList, const char* hostname,
 }
 
 nsresult
-PublicKeyPinningService::ChainHasValidPins(const UniqueCERTCertList& certList,
-                                           const char* hostname,
-                                           mozilla::pkix::Time time,
-                                           bool enforceTestMode,
-                                   /*out*/ bool& chainHasValidPins,
-                          /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
+PublicKeyPinningService::ChainHasValidPins(
+  const UniqueCERTCertList& certList,
+  const char* hostname,
+  mozilla::pkix::Time time,
+  bool enforceTestMode,
+  const OriginAttributes& originAttributes,
+  /*out*/ bool& chainHasValidPins,
+  /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo)
 {
   chainHasValidPins = false;
   if (!certList) {
@@ -342,14 +347,15 @@ PublicKeyPinningService::ChainHasValidPins(const UniqueCERTCertList& certList,
   }
   nsAutoCString canonicalizedHostname(CanonicalizeHostname(hostname));
   return CheckPinsForHostname(certList, canonicalizedHostname.get(),
-                              enforceTestMode, time, chainHasValidPins,
-                              pinningTelemetryInfo);
+                              enforceTestMode, time, originAttributes,
+                              chainHasValidPins, pinningTelemetryInfo);
 }
 
 nsresult
 PublicKeyPinningService::HostHasPins(const char* hostname,
                                      mozilla::pkix::Time time,
                                      bool enforceTestMode,
+                                     const OriginAttributes& originAttributes,
                                      /*out*/ bool& hostHasPins)
 {
   hostHasPins = false;
@@ -357,7 +363,8 @@ PublicKeyPinningService::HostHasPins(const char* hostname,
   nsTArray<nsCString> dynamicFingerprints;
   const TransportSecurityPreload* staticFingerprints = nullptr;
   nsresult rv = FindPinningInformation(canonicalizedHostname.get(), time,
-                                       dynamicFingerprints, staticFingerprints);
+                                       originAttributes, dynamicFingerprints,
+                                       staticFingerprints);
   if (NS_FAILED(rv)) {
     return rv;
   }
