@@ -5266,6 +5266,9 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   const char16_t* params[] = { src.get() };
   ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
 
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);
+
   AudioTracks()->EmptyTracks();
   VideoTracks()->EmptyTracks();
   if (mIsLoadingFromSourceChildren) {
