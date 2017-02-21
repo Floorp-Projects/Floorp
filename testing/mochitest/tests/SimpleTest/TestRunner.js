@@ -108,6 +108,12 @@ TestRunner._numTimeouts = 0;
 TestRunner._currentTestStartTime = new Date().valueOf();
 TestRunner._timeoutFactor = 1;
 
+/**
+* Used to collect code coverage with the js debugger.
+*/
+TestRunner.jscovDirPrefix = "";
+var coverageCollector = {};
+
 TestRunner._checkForHangs = function() {
   function reportError(win, msg) {
     if ("SimpleTest" in win) {
@@ -352,6 +358,12 @@ TestRunner.runTests = function (/*url...*/) {
 
     SpecialPowers.registerProcessCrashObservers();
 
+    // Initialize code coverage
+    if (TestRunner.jscovDirPrefix != "") {
+        var CoverageCollector = SpecialPowers.Cu.import("resource://testing-common/CoverageUtils.jsm", {}).CoverageCollector;
+        coverageCollector = new CoverageCollector(TestRunner.jscovDirPrefix);
+    }
+
     TestRunner._urls = flattenArguments(arguments);
 
     var singleTestRun = this._urls.length <= 1 && TestRunner.repeat <= 1;
@@ -481,8 +493,12 @@ TestRunner.runNextTest = function() {
 
           if (TestRunner.onComplete)
             TestRunner.onComplete();
-       }
-       TestRunner.generateFailureList();
+        }
+        TestRunner.generateFailureList();
+
+        if (TestRunner.jscovDirPrefix != "") {
+          coverageCollector.finalize();
+        }
     }
 };
 
@@ -505,6 +521,11 @@ TestRunner.testFinished = function(tests) {
         TestRunner.updateUI([{ result: false }]);
         return;
     }
+
+    if (TestRunner.jscovDirPrefix != "") {
+        coverageCollector.recordTestCoverage(TestRunner.currentTestURL);
+    }
+
     TestRunner._lastTestFinished = TestRunner._currentTest;
     TestRunner._loopIsRestarting = false;
 
