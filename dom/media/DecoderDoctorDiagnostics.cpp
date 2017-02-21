@@ -454,11 +454,14 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       case DecoderDoctorDiagnostics::eEvent:
         MOZ_ASSERT_UNREACHABLE("Events shouldn't be stored for processing.");
         break;
+      case DecoderDoctorDiagnostics::eDecodeError:
+        // TODO
+        break;
+      case DecoderDoctorDiagnostics::eDecodeWarning:
+        // TODO
+        break;
       default:
-        MOZ_ASSERT(diag.mDecoderDoctorDiagnostics.Type()
-                     == DecoderDoctorDiagnostics::eFormatSupportCheck
-                   || diag.mDecoderDoctorDiagnostics.Type()
-                        == DecoderDoctorDiagnostics::eMediaKeySystemAccessRequest);
+        MOZ_ASSERT_UNREACHABLE("Unhandled DecoderDoctorDiagnostics type");
         break;
     }
   }
@@ -779,6 +782,88 @@ DecoderDoctorDiagnostics::StoreEvent(nsIDocument* aDocument,
 #endif // MOZ_PULSEAUDIO
 }
 
+void
+DecoderDoctorDiagnostics::StoreDecodeError(nsIDocument* aDocument,
+                                           const MediaResult& aError,
+                                           const nsString& aMediaSrc,
+                                           const char* aCallSite)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Make sure we only store once.
+  MOZ_ASSERT(mDiagnosticsType == eUnsaved);
+  mDiagnosticsType = eDecodeError;
+
+  if (NS_WARN_IF(!aDocument)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDecodeError("
+            "nsIDocument* aDocument=nullptr, aError=%s,"
+            " aMediaSrc=<provided>, call site '%s')",
+            this, aError.Description().get(), aCallSite);
+    return;
+  }
+
+  RefPtr<DecoderDoctorDocumentWatcher> watcher =
+    DecoderDoctorDocumentWatcher::RetrieveOrCreate(aDocument);
+
+  if (NS_WARN_IF(!watcher)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDecodeError("
+            "nsIDocument* aDocument=%p, aError='%s', aMediaSrc=<provided>,"
+            " call site '%s') - Could not create document watcher",
+            this, aDocument, aError.Description().get(), aCallSite);
+    return;
+  }
+
+  mDecodeIssue = aError;
+  mDecodeIssueMediaSrc = aMediaSrc;
+
+  // StoreDecodeError should only be called once, after all data is
+  // available, so it is safe to Move() from this object.
+  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // Even though it's moved-from, the type should stay set
+  // (Only used to ensure that we do store only once.)
+  MOZ_ASSERT(mDiagnosticsType == eDecodeError);
+}
+
+void
+DecoderDoctorDiagnostics::StoreDecodeWarning(nsIDocument* aDocument,
+                                             const MediaResult& aWarning,
+                                             const nsString& aMediaSrc,
+                                             const char* aCallSite)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Make sure we only store once.
+  MOZ_ASSERT(mDiagnosticsType == eUnsaved);
+  mDiagnosticsType = eDecodeWarning;
+
+  if (NS_WARN_IF(!aDocument)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDecodeWarning("
+            "nsIDocument* aDocument=nullptr, aWarning=%s,"
+            " aMediaSrc=<provided>, call site '%s')",
+            this, aWarning.Description().get(), aCallSite);
+    return;
+  }
+
+  RefPtr<DecoderDoctorDocumentWatcher> watcher =
+    DecoderDoctorDocumentWatcher::RetrieveOrCreate(aDocument);
+
+  if (NS_WARN_IF(!watcher)) {
+    DD_WARN("DecoderDoctorDiagnostics[%p]::StoreDecodeWarning("
+            "nsIDocument* aDocument=%p, aWarning='%s', aMediaSrc=<provided>,"
+            " call site '%s') - Could not create document watcher",
+            this, aDocument, aWarning.Description().get(), aCallSite);
+    return;
+  }
+
+  mDecodeIssue = aWarning;
+  mDecodeIssueMediaSrc = aMediaSrc;
+
+  // StoreDecodeWarning should only be called once, after all data is
+  // available, so it is safe to Move() from this object.
+  watcher->AddDiagnostics(Move(*this), aCallSite);
+  // Even though it's moved-from, the type should stay set
+  // (Only used to ensure that we do store only once.)
+  MOZ_ASSERT(mDiagnosticsType == eDecodeWarning);
+}
+
 static const char*
 EventDomainString(DecoderDoctorEvent::Domain aDomain)
 {
@@ -836,6 +921,20 @@ DecoderDoctorDiagnostics::GetDescription() const
     case eEvent:
       s = nsPrintfCString("event domain %s result=%" PRIu32,
                           EventDomainString(mEvent.mDomain), static_cast<uint32_t>(mEvent.mResult));
+      break;
+    case eDecodeError:
+      s = "decode error: ";
+      s += mDecodeIssue.Description();
+      s += ", src='";
+      s += mDecodeIssueMediaSrc.IsEmpty() ? "<none>" : "<provided>";
+      s += "'";
+      break;
+    case eDecodeWarning:
+      s = "decode warning: ";
+      s += mDecodeIssue.Description();
+      s += ", src='";
+      s += mDecodeIssueMediaSrc.IsEmpty() ? "<none>" : "<provided>";
+      s += "'";
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected DiagnosticsType");
