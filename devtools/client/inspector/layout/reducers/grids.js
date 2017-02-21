@@ -14,17 +14,11 @@ const INITIAL_GRIDS = [];
 let reducers = {
 
   [UPDATE_GRID_HIGHLIGHTED](grids, { nodeFront, highlighted }) {
-    let newGrids = grids.map(g => {
-      if (g.nodeFront == nodeFront) {
-        g.highlighted = highlighted;
-      } else {
-        g.highlighted = false;
-      }
-
-      return g;
+    return grids.map(g => {
+      return Object.assign({}, g, {
+        highlighted: g.nodeFront === nodeFront ? highlighted : false
+      });
     });
-
-    return newGrids;
   },
 
   [UPDATE_GRIDS](_, { grids }) {
