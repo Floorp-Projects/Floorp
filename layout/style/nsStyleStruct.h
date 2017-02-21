@@ -2640,7 +2640,6 @@ private:
   nsStyleCorners mRadius;
 };
 
-template<typename ReferenceBox>
 struct StyleShapeSource
 {
   StyleShapeSource()
@@ -2678,7 +2677,7 @@ struct StyleShapeSource
       SetReferenceBox(aOther.mReferenceBox);
     } else {
       ReleaseRef();
-      mReferenceBox = ReferenceBox::NoBox;
+      mReferenceBox = StyleGeometryBox::NoBox;
       mType = StyleShapeSourceType::None;
     }
     return *this;
@@ -2735,7 +2734,7 @@ struct StyleShapeSource
   }
 
   void SetBasicShape(StyleBasicShape* aBasicShape,
-                     ReferenceBox aReferenceBox)
+                     StyleGeometryBox aReferenceBox)
   {
     NS_ASSERTION(aBasicShape, "expected pointer");
     ReleaseRef();
@@ -2745,7 +2744,7 @@ struct StyleShapeSource
     mType = StyleShapeSourceType::Shape;
   }
 
-  ReferenceBox GetReferenceBox() const
+  StyleGeometryBox GetReferenceBox() const
   {
     MOZ_ASSERT(mType == StyleShapeSourceType::Box ||
                mType == StyleShapeSourceType::Shape,
@@ -2753,7 +2752,7 @@ struct StyleShapeSource
     return mReferenceBox;
   }
 
-  void SetReferenceBox(ReferenceBox aReferenceBox)
+  void SetReferenceBox(StyleGeometryBox aReferenceBox)
   {
     ReleaseRef();
     mReferenceBox = aReferenceBox;
@@ -2782,11 +2781,8 @@ private:
     css::URLValue* mURL;
   };
   StyleShapeSourceType mType = StyleShapeSourceType::None;
-  ReferenceBox mReferenceBox = ReferenceBox::NoBox;
+  StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
 };
-
-using StyleClipPath = StyleShapeSource<StyleGeometryBox>;
-using StyleShapeOutside = StyleShapeSource<StyleShapeOutsideShapeBox>;
 
 } // namespace mozilla
 
@@ -2910,7 +2906,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
-  mozilla::StyleShapeOutside mShapeOutside; // [reset]
+  mozilla::StyleShapeSource mShapeOutside; // [reset]
 
   bool IsBlockInsideStyle() const {
     return mozilla::StyleDisplay::Block == mDisplay ||
@@ -3890,7 +3886,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   nsStyleImageLayers    mMask;
-  mozilla::StyleClipPath mClipPath;   // [reset]
+  mozilla::StyleShapeSource mClipPath;// [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]
   nscolor          mLightingColor;    // [reset]
