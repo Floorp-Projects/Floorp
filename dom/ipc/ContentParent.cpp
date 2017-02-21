@@ -650,6 +650,32 @@ ContentParent::IsMaxProcessCountReached(const nsAString& aContentProcessType)
   return GetPoolSize(aContentProcessType) >= GetMaxProcessCount(aContentProcessType);
 }
 
+/*static*/ void
+ContentParent::ReleaseCachedProcesses()
+{
+  // We might want to extend this for other process types as well in the future...
+  nsTArray<ContentParent*>& contentParents = GetOrCreatePool(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  nsTArray<ContentParent*> toRelease;
+
+  // Shuting down these processes will change the array so let's use another array for the removal.
+  for (auto* cp : contentParents) {
+    nsTArray<TabId> tabIds = cpm->GetTabParentsByProcessId(cp->mChildID);
+    if (!tabIds.Length()) {
+      toRelease.AppendElement(cp);
+    }
+  }
+
+  for (auto* cp : toRelease) {
+    // Start a soft shutdown.
+    cp->ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+    // Make sure we don't select this process for new tabs.
+    cp->MarkAsDead();
+    // Make sure that this process is no longer accessible from JS by its message manager.
+    cp->ShutDownMessageManager();
+  }
+}
+
 /*static*/ already_AddRefed<ContentParent>
 ContentParent::RandomSelect(const nsTArray<ContentParent*>& aContentParents,
                             ContentParent* aOpener, int32_t aMaxContentParents)
