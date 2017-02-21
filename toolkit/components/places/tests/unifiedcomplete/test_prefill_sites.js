@@ -9,6 +9,8 @@ const PREF_FEATURE_EXPIRE_DAYS = "browser.urlbar.usepreloadedtopurls.expire_days
 const autocompleteObject = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
                              .getService(Ci.mozIPlacesAutoComplete);
 
+Cu.importGlobalProperties(["fetch"]);
+
 // With or without trailing slash - no matter. URI.spec does have it always.
 // Then, check_autocomplete() doesn't cut it off (uses stripPrefix()).
 let yahoooURI = NetUtil.newURI("https://yahooo.com/");
@@ -114,3 +116,27 @@ add_task(function* test_sorting_against_history() {
   yield cleanup();
 });
 
+add_task(function* test_data_file() {
+  let response = yield fetch("chrome://global/content/unifiedcomplete-top-urls.json");
+
+  do_print("Source file is supplied and fetched OK");
+  Assert.ok(response.ok);
+
+  do_print("The JSON is parsed");
+  let sites = yield response.json();
+
+  do_print("Storage is populated");
+  autocompleteObject.populatePrefillSiteStorage(sites);
+
+  let lastSite = sites.pop();
+  let uri = NetUtil.newURI(lastSite[0]);
+  let title = lastSite[1];
+
+  do_print("Storage is populated from JSON correctly");
+  yield check_autocomplete({
+    search: uri.host.slice(1), // omit 1st letter to avoid style:"autofill" result
+    matches: [ { uri, title,  style: ["prefill-site"] } ],
+  });
+
+  yield cleanup();
+});

@@ -202,8 +202,6 @@ this.ForgetAboutSite = {
                 getService(Ci.nsISiteSecurityService);
       for (let type of [Ci.nsISiteSecurityService.HEADER_HSTS,
                         Ci.nsISiteSecurityService.HEADER_HPKP]) {
-        sss.removeState(type, httpsURI, 0);
-
         // Also remove HSTS/HPKP information for subdomains by enumerating the
         // information in the site security service.
         let enumerator = sss.enumerate(type);
@@ -211,10 +209,10 @@ this.ForgetAboutSite = {
           let entry = enumerator.getNext();
           let hostname = entry.QueryInterface(Ci.nsISiteSecurityState).hostname;
           // If the hostname is aDomain's subdomain, we remove its state.
-          if (hostname.endsWith("." + aDomain)) {
+          if (hostname == aDomain || hostname.endsWith("." + aDomain)) {
             // This uri is used as a key to remove the state.
             let uri = caUtils.makeURI("https://" + hostname);
-            sss.removeState(type, uri, 0);
+            sss.removeState(type, uri, 0, entry.originAttributes);
           }
         }
       }

@@ -28,6 +28,8 @@ enum MixedContentTypes {
 #include "nsIChannelEventSink.h"
 #include "imgRequest.h"
 
+using mozilla::OriginAttributes;
+
 class nsILoadInfo; // forward declaration
 
 class nsMixedContentBlocker : public nsIContentPolicy,
@@ -63,7 +65,8 @@ public:
                              int16_t* aDecision);
   static void AccumulateMixedContentHSTS(nsIURI* aURI,
                                          bool aActive,
-                                         bool aHasHSTSPriming);
+                                         bool aHasHSTSPriming,
+                                         const OriginAttributes& aOriginAttributes);
   /* If the document associated with aRequestingContext requires priming for
    * aURI, propagate that to the LoadInfo so the HttpChannel will find out about
    * it.
