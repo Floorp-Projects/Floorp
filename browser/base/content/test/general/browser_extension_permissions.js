@@ -107,14 +107,14 @@ const INSTALL_FUNCTIONS = [
 
     let MockFilePicker = SpecialPowers.MockFilePicker;
     MockFilePicker.init(window);
-    MockFilePicker.returnFiles = [file];
+    MockFilePicker.setFiles([file]);
+    MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
 
     await BrowserOpenAddonsMgr("addons://list/extension");
     let contentWin = gBrowser.selectedTab.linkedBrowser.contentWindow;
 
     // Do the install...
     contentWin.gViewController.doCommand("cmd_installFromFile");
-    MockFilePicker.cleanup();
   },
 
   async function installSearch(filename) {
