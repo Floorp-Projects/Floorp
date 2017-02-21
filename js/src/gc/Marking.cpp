@@ -897,18 +897,18 @@ template <> void GCMarker::traverse(js::Scope* thing) { markAndScan(thing); }
 // be used as a weakmap key and thereby recurse into weakmapped values.
 template <typename T>
 void
-js::GCMarker::markAndPush(StackTag tag, T* thing)
+js::GCMarker::markAndPush(T* thing)
 {
     if (!mark(thing))
         return;
-    pushTaggedPtr(tag, thing);
+    pushTaggedPtr(thing);
     markImplicitEdges(thing);
 }
 namespace js {
-template <> void GCMarker::traverse(JSObject* thing) { markAndPush(ObjectTag, thing); }
-template <> void GCMarker::traverse(ObjectGroup* thing) { markAndPush(GroupTag, thing); }
-template <> void GCMarker::traverse(jit::JitCode* thing) { markAndPush(JitCodeTag, thing); }
-template <> void GCMarker::traverse(JSScript* thing) { markAndPush(ScriptTag, thing); }
+template <> void GCMarker::traverse(JSObject* thing) { markAndPush(thing); }
+template <> void GCMarker::traverse(ObjectGroup* thing) { markAndPush(thing); }
+template <> void GCMarker::traverse(jit::JitCode* thing) { markAndPush(thing); }
+template <> void GCMarker::traverse(JSScript* thing) { markAndPush(thing); }
 } // namespace js
 
 namespace js {
@@ -1192,7 +1192,7 @@ js::GCMarker::eagerlyMarkChildren(JSRope* rope)
             } else {
                 // When both children are ropes, set aside the right one to
                 // scan it later.
-                if (next && !stack.push(reinterpret_cast<uintptr_t>(next)))
+                if (next && !stack.pushTempRope(next))
                     delayMarkingChildren(next);
                 next = &left->asRope();
             }
@@ -1201,7 +1201,9 @@ js::GCMarker::eagerlyMarkChildren(JSRope* rope)
             rope = next;
         } else if (savedPos != stack.position()) {
             MOZ_ASSERT(savedPos < stack.position());
-            rope = reinterpret_cast<JSRope*>(stack.pop());
+            uintptr_t ptr = stack.pop();
+            MOZ_ASSERT((ptr & MarkStack::TagMask) == MarkStack::TempRopeTag);
+            rope = reinterpret_cast<JSRope*>(ptr &~ MarkStack::TempRopeTag);
         } else {
             break;
         }
@@ -1646,13 +1648,13 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
 
     // Decode
     uintptr_t addr = stack.pop();
-    uintptr_t tag = addr & StackTagMask;
-    addr &= ~StackTagMask;
+    uintptr_t tag = addr & MarkStack::TagMask;
+    addr &= ~MarkStack::TagMask;
 
     // Dispatch
     switch (tag) {
-      case ValueArrayTag: {
-        JS_STATIC_ASSERT(ValueArrayTag == 0);
+      case MarkStack::ValueArrayTag: {
+        JS_STATIC_ASSERT(MarkStack::ValueArrayTag == 0);
         MOZ_ASSERT(!(addr & CellMask));
         obj = reinterpret_cast<JSObject*>(addr);
         uintptr_t addr2 = stack.pop();
@@ -1664,25 +1666,25 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         goto scan_value_array;
       }
 
-      case ObjectTag: {
+      case MarkStack::ObjectTag: {
         obj = reinterpret_cast<JSObject*>(addr);
         AssertZoneIsMarking(obj);
         goto scan_obj;
       }
 
-      case GroupTag: {
+      case MarkStack::GroupTag: {
         return lazilyMarkChildren(reinterpret_cast<ObjectGroup*>(addr));
       }
 
-      case JitCodeTag: {
+      case MarkStack::JitCodeTag: {
         return reinterpret_cast<jit::JitCode*>(addr)->traceChildren(this);
       }
 
-      case ScriptTag: {
+      case MarkStack::ScriptTag: {
         return reinterpret_cast<JSScript*>(addr)->traceChildren(this);
       }
 
-      case SavedValueArrayTag: {
+      case MarkStack::SavedValueArrayTag: {
         MOZ_ASSERT(!(addr & CellMask));
         JSObject* obj = reinterpret_cast<JSObject*>(addr);
         HeapSlot* vp;
@@ -1819,10 +1821,10 @@ struct SlotArrayLayout
 void
 GCMarker::saveValueRanges()
 {
-    for (uintptr_t* p = stack.tos_; p > stack.stack_; ) {
-        uintptr_t tag = *--p & StackTagMask;
-        if (tag == ValueArrayTag) {
-            *p &= ~StackTagMask;
+    for (uintptr_t* p = stack.top(); p > stack.base(); ) {
+        uintptr_t tag = *--p & MarkStack::TagMask;
+        if (tag == MarkStack::ValueArrayTag) {
+            *p &= ~MarkStack::TagMask;
             p -= 2;
             SlotArrayLayout* arr = reinterpret_cast<SlotArrayLayout*>(p);
             NativeObject* obj = arr->obj;
@@ -1848,8 +1850,8 @@ GCMarker::saveValueRanges()
                 }
                 arr->kind = HeapSlot::Slot;
             }
-            p[2] |= SavedValueArrayTag;
-        } else if (tag == SavedValueArrayTag) {
+            p[2] |= MarkStack::SavedValueArrayTag;
+        } else if (tag == MarkStack::SavedValueArrayTag) {
             p -= 2;
         }
     }
@@ -1904,6 +1906,26 @@ GCMarker::restoreValueArray(JSObject* objArg, void** vpp, void** endp)
 
 /*** Mark Stack ***********************************************************************************/
 
+template <typename T>
+struct MapTypeToMarkStackTag {};
+
+template <>
+struct MapTypeToMarkStackTag<JSObject*> { static const auto value = MarkStack::ObjectTag; };
+template <>
+struct MapTypeToMarkStackTag<ObjectGroup*> { static const auto value = MarkStack::GroupTag; };
+template <>
+struct MapTypeToMarkStackTag<jit::JitCode*> { static const auto value = MarkStack::JitCodeTag; };
+template <>
+struct MapTypeToMarkStackTag<JSScript*> { static const auto value = MarkStack::ScriptTag; };
+
+MarkStack::MarkStack(size_t maxCapacity)
+  : stack_(nullptr),
+    tos_(nullptr),
+    end_(nullptr),
+    baseCapacity_(0),
+    maxCapacity_(maxCapacity)
+{}
+
 bool
 MarkStack::init(JSGCMode gcMode)
 {
@@ -1947,6 +1969,51 @@ MarkStack::setMaxCapacity(size_t maxCapacity)
         baseCapacity_ = maxCapacity_;
 
     reset();
+}
+
+template <typename T>
+inline bool
+MarkStack::push(T* ptr)
+{
+    uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+    MOZ_ASSERT(!(addr & TagMask));
+    auto tag = MapTypeToMarkStackTag<T*>::value;
+    return pushTaggedPtr(addr | uintptr_t(tag));
+}
+
+inline bool
+MarkStack::pushTempRope(JSRope* rope)
+{
+    return pushTaggedPtr(uintptr_t(rope) | TempRopeTag);
+}
+
+inline bool
+MarkStack::pushTaggedPtr(uintptr_t item)
+{
+    if (tos_ == end_) {
+        if (!enlarge(1))
+            return false;
+    }
+    MOZ_ASSERT(tos_ < end_);
+    *tos_++ = item;
+    return true;
+}
+
+inline bool
+MarkStack::push(uintptr_t item1, uintptr_t item2, uintptr_t item3)
+{
+    uintptr_t* nextTos = tos_ + 3;
+    if (nextTos > end_) {
+        if (!enlarge(3))
+            return false;
+        nextTos = tos_ + 3;
+    }
+    MOZ_ASSERT(nextTos <= end_);
+    tos_[0] = item1;
+    tos_[1] = item2;
+    tos_[2] = item3;
+    tos_ = nextTos;
+    return true;
 }
 
 void
@@ -2087,6 +2154,41 @@ GCMarker::reset()
     }
     MOZ_ASSERT(isDrained());
     MOZ_ASSERT(!markLaterArenas);
+}
+
+
+template <typename T>
+void
+GCMarker::pushTaggedPtr(T* ptr)
+{
+    checkZone(ptr);
+    if (!stack.push(ptr))
+        delayMarkingChildren(ptr);
+}
+
+void
+GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end)
+{
+    checkZone(obj);
+
+    MOZ_ASSERT(start <= end);
+    uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | MarkStack::ValueArrayTag;
+    uintptr_t startAddr = reinterpret_cast<uintptr_t>(start);
+    uintptr_t endAddr = reinterpret_cast<uintptr_t>(end);
+
+    /*
+     * Push in the reverse order so obj will be on top. If we cannot push
+     * the array, we trigger delay marking for the whole object.
+     */
+    if (!stack.push(endAddr, startAddr, tagged))
+        delayMarkingChildren(obj);
+}
+
+void
+GCMarker::repush(JSObject* obj)
+{
+    MOZ_ASSERT(gc::TenuredCell::fromPointer(obj)->isMarked(markColor()));
+    pushTaggedPtr(obj);
 }
 
 void

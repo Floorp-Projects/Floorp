@@ -41,6 +41,8 @@ class JitCode;
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
 static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
 
+namespace gc {
+
 /*
  * When the native stack is low, the GC does not call js::TraceChildren to mark
  * the reachable "children" of the thing. Rather the thing is put aside and
@@ -55,8 +57,6 @@ static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
  */
 class MarkStack
 {
-    friend class GCMarker;
-
     ActiveThreadData<uintptr_t*> stack_;
     ActiveThreadData<uintptr_t*> tos_;
     ActiveThreadData<uintptr_t*> end_;
@@ -66,13 +66,28 @@ class MarkStack
     ActiveThreadData<size_t> maxCapacity_;
 
   public:
-    explicit MarkStack(size_t maxCapacity)
-      : stack_(nullptr),
-        tos_(nullptr),
-        end_(nullptr),
-        baseCapacity_(0),
-        maxCapacity_(maxCapacity)
-    {}
+    /*
+     * We use a common mark stack to mark GC things of different types and use
+     * the explicit tags to distinguish them when it cannot be deduced from
+     * the context of push or pop operation.
+     */
+    enum Tag {
+        ValueArrayTag,
+        ObjectTag,
+        GroupTag,
+        SavedValueArrayTag,
+        JitCodeTag,
+        ScriptTag,
+        TempRopeTag,
+
+        LastTag = TempRopeTag
+    };
+
+    static const uintptr_t TagMask = 7;
+    static_assert(TagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
+    static_assert(TagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
+
+    explicit MarkStack(size_t maxCapacity);
 
     ~MarkStack() {
         js_free(stack_);
@@ -94,30 +109,16 @@ class MarkStack
     size_t maxCapacity() const { return maxCapacity_; }
     void setMaxCapacity(size_t maxCapacity);
 
-    MOZ_MUST_USE bool push(uintptr_t item) {
-        if (tos_ == end_) {
-            if (!enlarge(1))
-                return false;
-        }
-        MOZ_ASSERT(tos_ < end_);
-        *tos_++ = item;
-        return true;
-    }
+    uintptr_t* base() { return stack_; }
+    uintptr_t* top() { return tos_; }
 
-    MOZ_MUST_USE bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3) {
-        uintptr_t* nextTos = tos_ + 3;
-        if (nextTos > end_) {
-            if (!enlarge(3))
-                return false;
-            nextTos = tos_ + 3;
-        }
-        MOZ_ASSERT(nextTos <= end_);
-        tos_[0] = item1;
-        tos_[1] = item2;
-        tos_[2] = item3;
-        tos_ = nextTos;
-        return true;
-    }
+    template <typename T>
+    MOZ_MUST_USE bool push(T* ptr);
+    MOZ_MUST_USE bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3);
+
+    // GCMarker::eagerlyMarkChildren uses unused marking stack as temporary
+    // storage to hold rope pointers.
+    MOZ_MUST_USE bool pushTempRope(JSRope* ptr);
 
     bool isEmpty() const {
         return tos_ == stack_;
@@ -136,9 +137,10 @@ class MarkStack
     void setGCMode(JSGCMode gcMode);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-};
 
-namespace gc {
+  private:
+    MOZ_MUST_USE bool pushTaggedPtr(uintptr_t item);
+};
 
 struct WeakKeyTableHashPolicy {
     typedef JS::GCCellPtr Lookup;
@@ -252,34 +254,12 @@ class GCMarker : public JSTracer
     void checkZone(void* p) {}
 #endif
 
-    /*
-     * We use a common mark stack to mark GC things of different types and use
-     * the explicit tags to distinguish them when it cannot be deduced from
-     * the context of push or pop operation.
-     */
-    enum StackTag {
-        ValueArrayTag,
-        ObjectTag,
-        GroupTag,
-        SavedValueArrayTag,
-        JitCodeTag,
-        ScriptTag,
-        LastTag = JitCodeTag
-    };
-
-    static const uintptr_t StackTagMask = 7;
-    static_assert(StackTagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
-    static_assert(StackTagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
-
     // Push an object onto the stack for later tracing and assert that it has
     // already been marked.
-    void repush(JSObject* obj) {
-        MOZ_ASSERT(gc::TenuredCell::fromPointer(obj)->isMarked(markColor()));
-        pushTaggedPtr(ObjectTag, obj);
-    }
+    inline void repush(JSObject* obj);
 
     template <typename T> void markAndTraceChildren(T* thing);
-    template <typename T> void markAndPush(StackTag tag, T* thing);
+    template <typename T> void markAndPush(T* thing);
     template <typename T> void markAndScan(T* thing);
     template <typename T> void markImplicitEdgesHelper(T oldThing);
     template <typename T> void markImplicitEdges(T* oldThing);
@@ -300,29 +280,10 @@ class GCMarker : public JSTracer
     template <typename T>
     MOZ_MUST_USE bool mark(T* thing);
 
-    void pushTaggedPtr(StackTag tag, void* ptr) {
-        checkZone(ptr);
-        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
-        MOZ_ASSERT(!(addr & StackTagMask));
-        if (!stack.push(addr | uintptr_t(tag)))
-            delayMarkingChildren(ptr);
-    }
+    template <typename T>
+    inline void pushTaggedPtr(T* ptr);
 
-    void pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end) {
-        checkZone(obj);
-
-        MOZ_ASSERT(start <= end);
-        uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | GCMarker::ValueArrayTag;
-        uintptr_t startAddr = reinterpret_cast<uintptr_t>(start);
-        uintptr_t endAddr = reinterpret_cast<uintptr_t>(end);
-
-        /*
-         * Push in the reverse order so obj will be on top. If we cannot push
-         * the array, we trigger delay marking for the whole object.
-         */
-        if (!stack.push(endAddr, startAddr, tagged))
-            delayMarkingChildren(obj);
-    }
+    inline void pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end);
 
     bool isMarkStackEmpty() {
         return stack.isEmpty();
@@ -333,7 +294,7 @@ class GCMarker : public JSTracer
     inline void processMarkStackTop(SliceBudget& budget);
 
     /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
-    MarkStack stack;
+    gc::MarkStack stack;
 
     /* The color is only applied to objects and functions. */
     ActiveThreadData<uint32_t> color;
