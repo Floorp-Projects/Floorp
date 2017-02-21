@@ -89,13 +89,9 @@ task buildBlocklists(type:Exec) {
     commandLine 'python', 'build-disconnect.py'
 }
 
-project.afterEvaluate {
-    // Meh. This should be easier..
-
-    prepareFocusWebkitDebugDependencies.dependsOn("buildBlocklists")
-    prepareFocusWebkitBetaDependencies.dependsOn("buildBlocklists")
-    prepareFocusWebkitReleaseDependencies.dependsOn("buildBlocklists")
-    prepareKlarWebkitDebugDependencies.dependsOn("buildBlocklists")
-    prepareKlarWebkitBetaDependencies.dependsOn("buildBlocklists")
-    prepareKlarWebkitReleaseDependencies.dependsOn("buildBlocklists")
+tasks.whenTaskAdded { task ->
+    def name = task.name
+    if (name.contains("generate") && name.contains("Config") && name.contains("Webkit")) {
+        task.dependsOn buildBlocklists
+    }
 }
