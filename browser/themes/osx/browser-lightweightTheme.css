@@ -5,8 +5,8 @@
 %include shared.inc
 
 /*
- * LightweightThemeListener will append the current lightweight theme's header
- * image to the background-image for each of the following rulesets.
+ * LightweightThemeListener will set the current lightweight theme's header
+ * image to the lwt-header-image variable, used in each of the following rulesets.
  */
 
 /* Lightweight theme on tabs */
@@ -14,7 +14,7 @@
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-attachment: scroll, fixed;
   background-color: transparent;
-  background-image: @fgTabTextureLWT@;/*, lwtHeader;*/
+  background-image: @fgTabTextureLWT@, var(--lwt-header-image);
   background-position: 0 0, right top;
   background-repeat: repeat-x, no-repeat;
 }
@@ -23,8 +23,8 @@
   background-attachment: scroll, scroll, fixed;
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTextureLWT@;/*,
-                    lwtHeader;*/
+                    @fgTabTextureLWT@,
+                    var(--lwt-header-image);
   background-position: 0 0, 0 0, right top;
   background-repeat: repeat-x, repeat-x, no-repeat;
 }
@@ -32,7 +32,7 @@
 @media (min-resolution: 2dppx) {
   #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
     background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
-                      @fgTabTextureLWT@;/*,
-                      lwtHeader;*/
+                      @fgTabTextureLWT@,
+                      var(--lwt-header-image);
   }
 }
