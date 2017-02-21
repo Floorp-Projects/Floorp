@@ -22,8 +22,6 @@
 namespace js {
 namespace jit {
 
-class AutoShapeVector;
-
 //
 // Baseline Inline Caches are polymorphic caches that aggressively
 // share their stub code.
@@ -2299,34 +2297,9 @@ IsPreliminaryObject(JSObject* obj);
 void
 StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
 
-JSObject*
-GetDOMProxyProto(JSObject* obj);
-
-bool
-IsCacheableProtoChain(JSObject* obj, JSObject* holder, bool isDOMProxy=false);
-
-bool
-IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder, Shape* shape, bool isDOMProxy=false);
-
-void
-GetFixedOrDynamicSlotOffset(Shape* shape, bool* isFixed, uint32_t* offset);
-
-MOZ_MUST_USE bool
-IsCacheableGetPropCall(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape,
-                       bool* isScripted, bool* isTemporarilyUnoptimizable, bool isDOMProxy=false);
-
-MOZ_MUST_USE bool
-UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
-                               ICStub::Kind kind,
-                               HandleNativeObject holder,
-                               HandleObject receiver,
-                               HandleFunction getter);
 MOZ_MUST_USE bool
 CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto = nullptr, size_t* protoChainDepthOut = nullptr);
-
-MOZ_MUST_USE bool
-GetProtoShapes(JSObject* obj, size_t protoChainDepth, MutableHandle<ShapeVector> shapes);
 
 void
 CheckForTypedObjectWithDetachedStorage(JSContext* cx, MacroAssembler& masm, Label* failure);
