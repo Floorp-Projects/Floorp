@@ -80,10 +80,10 @@ nsDeleteDir::Shutdown(bool finishDeleting)
     for (int32_t i = gInstance->mTimers.Count(); i > 0; i--) {
       nsCOMPtr<nsITimer> timer = gInstance->mTimers[i-1];
       gInstance->mTimers.RemoveObjectAt(i-1);
-      timer->Cancel();
 
       nsCOMArray<nsIFile> *arg;
       timer->GetClosure((reinterpret_cast<void**>(&arg)));
+      timer->Cancel();
 
       if (finishDeleting)
         dirsToRemove.AppendObjects(*arg);
