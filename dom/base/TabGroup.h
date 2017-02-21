@@ -115,6 +115,7 @@ public:
                    nsIDocShellTreeItem** aFoundItem);
 
   nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows();
+  const nsTArray<nsPIDOMWindowOuter*>& GetWindows() { return mWindows; }
 
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
