@@ -282,7 +282,7 @@ add_test(function() {
     var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
     var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 
-    MockFilePicker.returnFiles = [profD];
+    MockFilePicker.setFiles([profD]);
     MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
     let promise = new Promise(resolve => {
@@ -296,7 +296,7 @@ add_test(function() {
       is(input.tooltipText, profD.path, "Label tooltip should match file chosen");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.file"), profD.path, "File pref should match file chosen");
 
-      MockFilePicker.returnFiles = [curProcD];
+      MockFilePicker.setFiles([curProcD]);
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
 
       return promise = new Promise(resolve => {
@@ -315,7 +315,7 @@ add_test(function() {
       is(input.value, "", "Label value should be empty");
       is(input.tooltipText, "", "Label tooltip should be empty");
 
-      MockFilePicker.returnFiles = [profD];
+      MockFilePicker.setFiles([profD]);
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
 
       return new Promise(resolve => {
@@ -328,7 +328,7 @@ add_test(function() {
       is(input.tooltipText, profD.path, "Label tooltip should match file chosen");
       is(Services.prefs.getCharPref("extensions.inlinesettings1.directory"), profD.path, "Directory pref should match file chosen");
 
-      MockFilePicker.returnFiles = [curProcD];
+      MockFilePicker.setFiles([curProcD]);
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
 
       return new Promise(resolve => {
