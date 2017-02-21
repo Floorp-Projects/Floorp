@@ -263,6 +263,7 @@ TextTrack::SetReadyState(TextTrackReadyState aState)
   if (mediaElement && (mReadyState == TextTrackReadyState::Loaded||
       mReadyState == TextTrackReadyState::FailedToLoad)) {
     mediaElement->RemoveTextTrack(this, true);
+    mediaElement->UpdateReadyState();
   }
 }
 
