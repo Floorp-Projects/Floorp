@@ -410,14 +410,6 @@ var SessionHistoryInternal = {
       }
     }
 
-    // The field entry.owner_b64 got renamed to entry.triggeringPricipal_b64 in
-    // Bug 1286472. To remain backward compatible we still have to support that
-    // field for a few cycles before we can remove it within Bug 1289785.
-    if (entry.owner_b64) {
-      entry.triggeringPricipal_b64 = entry.owner_b64;
-      delete entry.owner_b64;
-    }
-
     // Before introducing the concept of principalToInherit we only had
     // a triggeringPrincipal within every entry which basically is the
     // equivalent of the new principalToInherit. To avoid compatibility

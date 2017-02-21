@@ -69,6 +69,11 @@ td {
   border-color: var(--in-content-table-border-dark-color);
 }
 
+td.integer {
+  text-align: end;
+  font-family: monospace;
+}
+
 .prefs-table {
   width: 100%;
   table-layout: fixed;

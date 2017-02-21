@@ -575,6 +575,21 @@ if (AppConstants.MOZ_SANDBOX) {
           data[key] = sysInfo.getPropertyAsBool(key);
         }
       }
+
+      let reporter = Cc["@mozilla.org/sandbox/syscall-reporter;1"].
+                     getService(Ci.mozISandboxReporter);
+      const snapshot = reporter.snapshot();
+      let syscalls = [];
+      for (let index = snapshot.begin; index < snapshot.end; ++index) {
+        let report = snapshot.getElement(index);
+        let { msecAgo, pid, tid, procType, syscall } = report;
+        let args = []
+        for (let i = 0; i < report.numArgs; ++i) {
+          args.push(report.getArg(i));
+        }
+        syscalls.push({ index, msecAgo, pid, tid, procType, syscall, args });
+      }
+      data.syscallLog = syscalls;
     }
 
     if (AppConstants.MOZ_CONTENT_SANDBOX) {
