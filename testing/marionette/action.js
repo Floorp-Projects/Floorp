@@ -713,11 +713,8 @@ action.Sequence = class extends Array {
     // used here only to validate 'type' and InputState type
     let inputSourceState = InputState.fromJson(actionSequence);
     let id = actionSequence.id;
-    if (typeof id == "undefined") {
-      actionSequence.id = id = element.generateUUID();
-    } else if (typeof id != "string") {
-      throw new InvalidArgumentError(`Expected 'id' to be a string, got: ${id}`);
-    }
+    assert.defined(id, "Expected 'id' to be defined");
+    assert.string(id, error.pprint`Expected 'id' to be a string, got: ${id}`);
     let actionItems = actionSequence.actions;
     if (!Array.isArray(actionItems)) {
       throw new InvalidArgumentError(
