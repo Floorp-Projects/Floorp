@@ -36,7 +36,8 @@ public:
   {
     DeleteCaption();
     if (aCaption) {
-      nsINode::AppendChild(*aCaption, aError);
+      nsCOMPtr<nsINode> firstChild = nsINode::GetFirstChild();
+      nsINode::InsertBefore(*aCaption, firstChild, aError);
     }
   }
 
@@ -59,7 +60,18 @@ public:
 
     DeleteTHead();
     if (aTHead) {
-      nsCOMPtr<nsINode> refNode = nsINode::GetFirstChild();
+
+      nsCOMPtr<nsIContent> refNode = nullptr;
+      for (refNode = nsINode::GetFirstChild();
+           refNode;
+           refNode = refNode->GetNextSibling()) {
+        if (refNode->IsHTMLElement() &&
+            !refNode->IsHTMLElement(nsGkAtoms::caption) &&
+            !refNode->IsHTMLElement(nsGkAtoms::colgroup)) {
+          break;
+        }
+      }
+
       nsINode::InsertBefore(*aTHead, refNode, aError);
     }
   }
