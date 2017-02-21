@@ -51,6 +51,10 @@
 #endif
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+#include "mozilla/SandboxReporter.h"
+#endif
+
 #include "nsTArray.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -910,6 +914,15 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 #  elif defined(MOZ_WIDGET_COCOA)
   childArgv.push_back(CrashReporter::GetChildNotificationPipe());
 #  endif  // OS_LINUX
+#endif
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  {
+    int srcFd, dstFd;
+    SandboxReporter::Singleton()
+      ->GetClientFileDescriptorMapping(&srcFd, &dstFd);
+    mFileMap.push_back(std::make_pair(srcFd, dstFd));
+  }
 #endif
 
 #ifdef MOZ_WIDGET_COCOA

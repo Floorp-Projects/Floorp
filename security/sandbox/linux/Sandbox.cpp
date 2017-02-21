@@ -13,6 +13,7 @@
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
+#include "SandboxReporterClient.h"
 #include "SandboxUtil.h"
 
 #include <dirent.h>
@@ -73,6 +74,8 @@ int gSeccompTsyncBroadcastSignum = 0;
 
 namespace mozilla {
 
+static bool gSandboxCrashOnError = false;
+
 // This is initialized by SandboxSetCrashFunc().
 SandboxCrashFunc gSandboxCrashFunc;
 
@@ -83,6 +86,7 @@ SandboxCrashFunc gSandboxCrashFunc;
 static SandboxOpenedFile gMediaPluginFile;
 #endif
 
+static Maybe<SandboxReporterClient> gSandboxReporterClient;
 static UniquePtr<SandboxChroot> gChrootHelper;
 static void (*gChromiumSigSysHandler)(int, siginfo_t*, void*);
 
@@ -135,28 +139,24 @@ SigSysHandler(int nr, siginfo_t *info, void *void_context)
     return;
   }
 
-  pid_t pid = getpid();
-  unsigned long syscall_nr = SECCOMP_SYSCALL(&savedCtx);
-  unsigned long args[6];
-  args[0] = SECCOMP_PARM1(&savedCtx);
-  args[1] = SECCOMP_PARM2(&savedCtx);
-  args[2] = SECCOMP_PARM3(&savedCtx);
-  args[3] = SECCOMP_PARM4(&savedCtx);
-  args[4] = SECCOMP_PARM5(&savedCtx);
-  args[5] = SECCOMP_PARM6(&savedCtx);
+  SandboxReport report = gSandboxReporterClient->MakeReportAndSend(&savedCtx);
 
   // TODO, someday when this is enabled on MIPS: include the two extra
   // args in the error message.
-  SANDBOX_LOG_ERROR("seccomp sandbox violation: pid %d, syscall %d,"
-                    " args %d %d %d %d %d %d.  Killing process.",
-                    pid, syscall_nr,
-                    args[0], args[1], args[2], args[3], args[4], args[5]);
+  SANDBOX_LOG_ERROR("seccomp sandbox violation: pid %d, tid %d, syscall %d,"
+                    " args %d %d %d %d %d %d.%s",
+                    report.mPid, report.mTid, report.mSyscall,
+                    report.mArgs[0], report.mArgs[1], report.mArgs[2],
+                    report.mArgs[3], report.mArgs[4], report.mArgs[5],
+                    gSandboxCrashOnError ? "  Killing process." : "");
 
-  // Bug 1017393: record syscall number somewhere useful.
-  info->si_addr = reinterpret_cast<void*>(syscall_nr);
+  if (gSandboxCrashOnError) {
+    // Bug 1017393: record syscall number somewhere useful.
+    info->si_addr = reinterpret_cast<void*>(report.mSyscall);
 
-  gSandboxCrashFunc(nr, info, &savedCtx);
-  _exit(127);
+    gSandboxCrashFunc(nr, info, &savedCtx);
+    _exit(127);
+  }
 }
 
 /**
@@ -459,6 +459,7 @@ static void
 SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
 {
   MOZ_ASSERT(gSandboxCrashFunc);
+  MOZ_RELEASE_ASSERT(gSandboxReporterClient.isSome());
 
   // Note: PolicyCompiler borrows the policy and registry for its
   // lifetime, but does not take ownership of them.
@@ -514,6 +515,21 @@ SandboxEarlyInit(GeckoProcessType aType)
     return;
   }
   MOZ_RELEASE_ASSERT(IsSingleThreaded());
+
+  // Set gSandboxCrashOnError if appropriate.  This doesn't need to
+  // happen this early, but for now it's here so that I don't need to
+  // add NSPR dependencies for PR_GetEnv.
+  //
+  // This also means that users with "unexpected threads" setups won't
+  // crash even on nightly.
+#ifdef NIGHTLY_BUILD
+  gSandboxCrashOnError = true;
+#endif
+  if (const char* envVar = getenv("MOZ_SANDBOX_CRASH_ON_ERROR")) {
+    if (envVar[0]) {
+      gSandboxCrashOnError = envVar[0] != '0';
+    }
+  }
 
   // Which kinds of resource isolation (of those that need to be set
   // up at this point) can be used by this process?
@@ -643,6 +659,8 @@ SetContentProcessSandbox(int aBrokerFd, std::vector<int>& aSyscallWhitelist)
     return false;
   }
 
+  gSandboxReporterClient.emplace(SandboxReport::ProcType::CONTENT);
+
   // This needs to live until the process exits.
   static Maybe<SandboxBrokerClient> sBroker;
   if (aBrokerFd >= 0) {
@@ -673,6 +691,8 @@ SetMediaPluginSandbox(const char *aFilePath)
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForMedia)) {
     return;
   }
+
+  gSandboxReporterClient.emplace(SandboxReport::ProcType::MEDIA_PLUGIN);
 
   MOZ_ASSERT(!gMediaPluginFile.mPath);
   if (aFilePath) {

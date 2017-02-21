@@ -10553,6 +10553,16 @@
     "cpp_guard": "XP_LINUX",
     "description": "Whether the sandbox is enabled for the content process"
   },
+  "SANDBOX_REJECTED_SYSCALLS": {
+    "alert_emails": ["jld@mozilla.com", "gcp@mozilla.com"],
+    "bug_numbers": [1286865],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "count",
+    "keyed": true,
+    "cpp_guard": "XP_LINUX",
+    "description": "System calls blocked by a seccomp-bpf sandbox policy; limited to syscalls where we would crash on Nightly.  The key is generally the architecture and syscall ID but in some cases we include non-personally-identifying information from the syscall arguments; see the function SubmitToTelemetry in security/sandbox/linux/reporter/SandboxReporter.cpp for details."
+  },
   "SYNC_WORKER_OPERATION": {
     "alert_emails": ["amarchesini@mozilla.com", "khuey@mozilla.com" ],
     "bug_numbers": [1267904],

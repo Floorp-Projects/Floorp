@@ -548,6 +548,39 @@
 	<tbody id="sandbox-tbody">
 	</tbody>
       </table>
+
+#if defined(XP_LINUX)
+      <h4>&aboutSupport.sandboxSyscallLogTitle;</h4>
+      <table>
+	<thead>
+	  <tr>
+	    <th>
+	      &aboutSupport.sandboxSyscallIndex;
+	    </th>
+	    <th>
+	      &aboutSupport.sandboxSyscallAge;
+	    </th>
+	    <th>
+	      &aboutSupport.sandboxSyscallPID;
+	    </th>
+	    <th>
+	      &aboutSupport.sandboxSyscallTID;
+	    </th>
+	    <th>
+	      &aboutSupport.sandboxSyscallProcType;
+	    </th>
+	    <th>
+	      &aboutSupport.sandboxSyscallNumber;
+	    </th>
+	    <th id="sandbox-syscalls-argshead">
+	      &aboutSupport.sandboxSyscallArgs;
+	    </th>
+	    </tr>
+	</thead>
+	<tbody id="sandbox-syscalls-tbody">
+	</tbody>
+      </table>
+#endif
 #endif
 
     </div>
