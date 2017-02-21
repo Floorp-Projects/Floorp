@@ -692,6 +692,9 @@ private:
         newData = mSource.AsGeckoRuleNode()->                           \
           GetStyle##name_<aComputeData>(this);                          \
       } else {                                                          \
+        if (!aComputeData) {                                            \
+          return nullptr;                                               \
+        }                                                               \
         newData =                                                       \
           Servo_GetStyle##name_(mSource.AsServoComputedValues());       \
         /* perform any remaining main thread work on the struct */      \
