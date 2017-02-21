@@ -17,15 +17,6 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
   });
 }
 
-function* is_audio_playing(tab) {
-  let browser = tab.linkedBrowser;
-  let isPlaying = yield ContentTask.spawn(browser, {}, function* () {
-    let audio = content.document.querySelector("audio");
-    return !audio.paused;
-  });
-  return isPlaying;
-}
-
 function* play(tab) {
   let browser = tab.linkedBrowser;
   yield ContentTask.spawn(browser, {}, function* () {
@@ -33,16 +24,12 @@ function* play(tab) {
     audio.play();
   });
 
-  // If the tab has already be muted, it means the tab won't get soundplaying,
-  // so we don't need to check this attribute.
-  if (browser.audioMuted) {
-      return;
-  }
-
   yield wait_for_tab_playing_event(tab, true);
 }
 
 function* pause(tab, options) {
+  ok(tab.hasAttribute("soundplaying"), "The tab should have the soundplaying attribute when pause() is called");
+
   let extendedDelay = options && options.extendedDelay;
   if (extendedDelay) {
     // Use 10s to remove possibility of race condition with attr removal.
@@ -59,12 +46,6 @@ function* pause(tab, options) {
       let audio = content.document.querySelector("audio");
       audio.pause();
     });
-
-    // If the tab has already be muted, it means the tab won't have soundplaying,
-    // so we don't need to check this attribute.
-    if (browser.audioMuted) {
-      return;
-    }
 
     if (extendedDelay) {
       ok(tab.hasAttribute("soundplaying"), "The tab should still have the soundplaying attribute immediately after pausing");
@@ -160,13 +141,6 @@ function* test_mute_tab(tab, icon, expectMuted) {
 
   is(gBrowser.selectedTab, activeTab, "Clicking on mute should not change the currently selected tab");
 
-  // If the audio is playing, we should check whether clicking on icon affects
-  // the media element's playing state.
-  let isAudioPlaying = yield is_audio_playing(tab);
-  if (isAudioPlaying) {
-    yield wait_for_tab_playing_event(tab, !expectMuted);
-  }
-
   return mutedPromise;
 }
 
@@ -195,7 +169,7 @@ function* test_muting_using_menu(tab, expectMuted) {
   yield play(tab);
 
   is(toggleMute.hasAttribute("muted"), expectMuted, "Should have the correct state for the muted attribute");
-  is(!toggleMute.hasAttribute("soundplaying"), expectMuted, "The value of soundplaying attribute is incorrect");
+  ok(toggleMute.hasAttribute("soundplaying"), "Should have the soundplaying attribute");
 
   yield pause(tab);
 
@@ -260,14 +234,14 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
 }
 
 function* test_swapped_browser_while_playing(oldTab, newBrowser) {
-  // The tab was muted so it won't have soundplaying attribute even it's playing.
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
   is(oldTab.muteReason, null, "Expected the correct muteReason attribute on the old tab");
-  ok(!oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
+  ok(oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
 
   let newTab = gBrowser.getTabForBrowser(newBrowser);
   let AttrChangePromise = BrowserTestUtils.waitForEvent(newTab, "TabAttrModified", false, event => {
-    return event.detail.changed.includes("muted");
+    return event.detail.changed.includes("soundplaying") &&
+           event.detail.changed.includes("muted");
   });
 
   gBrowser.swapBrowsersAndCloseOther(newTab, oldTab);
@@ -275,7 +249,7 @@ function* test_swapped_browser_while_playing(oldTab, newBrowser) {
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
   is(newTab.muteReason, null, "Expected the correct muteReason property on the new tab");
-  ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
+  ok(newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
                                                      "soundplaying-icon");
