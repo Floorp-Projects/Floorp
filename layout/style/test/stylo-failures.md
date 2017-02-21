@@ -566,6 +566,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * border-width/padding failure
   * test_compute_data_with_start_struct.html `-width` [4]
   * ... `padding-` [4]
+* test_additional_sheets.html: one sub-test cascade order is wrong [1]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_variables.html `url`: url in custom property [1]

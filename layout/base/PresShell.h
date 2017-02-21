@@ -568,10 +568,10 @@ protected:
    * Methods to handle changes to user and UA sheet lists that we get
    * notified about.
    */
-  void AddUserSheet(nsISupports* aSheet);
-  void AddAgentSheet(nsISupports* aSheet);
-  void AddAuthorSheet(nsISupports* aSheet);
-  void RemoveSheet(mozilla::SheetType aType, nsISupports* aSheet);
+  void AddUserSheet(StyleSheet* aSheet);
+  void AddAgentSheet(StyleSheet* aSheet);
+  void AddAuthorSheet(StyleSheet* aSheet);
+  void RemoveSheet(mozilla::SheetType aType, StyleSheet* aSheet);
 
   // Hide a view if it is a popup
   void HideViewIfPopup(nsView* aView);
