@@ -47,22 +47,23 @@ module.exports = createClass({
     fp.init(window,
       Strings.GetStringFromName("selectAddonFromFile2"),
       Ci.nsIFilePicker.modeOpen);
-    let res = fp.show();
-    if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
-      return;
-    }
-    let file = fp.file;
-    // AddonManager.installTemporaryAddon accepts either
-    // addon directory or final xpi file.
-    if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
-      file = file.parent;
-    }
+    fp.open(res => {
+      if (res == Ci.nsIFilePicker.returnCancel || !fp.file) {
+        return;
+      }
+      let file = fp.file;
+      // AddonManager.installTemporaryAddon accepts either
+      // addon directory or final xpi file.
+      if (!file.isDirectory() && !file.leafName.endsWith(".xpi")) {
+        file = file.parent;
+      }
 
-    AddonManager.installTemporaryAddon(file)
-      .catch(e => {
-        console.error(e);
-        this.setState({ installError: e.message });
-      });
+      AddonManager.installTemporaryAddon(file)
+        .catch(e => {
+          console.error(e);
+          this.setState({ installError: e.message });
+        });
+    });
   },
 
   render() {
