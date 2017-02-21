@@ -354,11 +354,15 @@ marionette:
 
 mochitest:
     description: "Mochitest plain run"
-    suite: mochitest/plain-chunked
+    suite:
+        by-test-platform:
+            linux64-jsdcov/opt: mochitest/plain-chunked-coverage
+            default: mochitest/plain-chunked
     treeherder-symbol: tc-M()
     loopback-video: true
     instance-size:
         by-test-platform:
+            linux64-jsdcov/opt: xlarge
             android.*: xlarge
             default: legacy # Bug 1281241: migrating to m3.large instances
     chunks:
@@ -371,11 +375,13 @@ mochitest:
     e10s:
         by-test-platform:
             linux64-ccov/opt: false
+            linux64-jsdcov/opt: false
             android.*: false
             default: both
     max-run-time:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10800
+            linux64-jsdcov/opt: 10800
             default: 5400
     allow-software-gl-layers: false
     mozharness:
@@ -402,7 +408,11 @@ mochitest:
                             - unittests/linux_unittest.py
                             - remove_executables.py
                 extra-options:
-                    - --mochitest-suite=plain-chunked
+                    by-test-platform:
+                        linux64-jsdcov/opt:
+                            - --mochitest-suite=plain-chunked-coverage
+                        default:
+                            - --mochitest-suite=plain-chunked
 
 mochitest-a11y:
     description: "Mochitest a11y run"
