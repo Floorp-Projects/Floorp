@@ -35,13 +35,12 @@ function* openAboutDebugging(page, win) {
   let tab = yield addTab(url, { window: win });
   let browser = tab.linkedBrowser;
   let document = browser.contentDocument;
-  let window = browser.contentWindow;
 
   if (!document.querySelector(".app")) {
     yield waitForMutation(document.body, { childList: true });
   }
 
-  return { tab, document, window };
+  return { tab, document };
 }
 
 /**
@@ -116,7 +115,7 @@ function* installAddon({document, path, name, isWebExtension}) {
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
   let file = getSupportsFile(path);
-  MockFilePicker.setFiles([file.file]);
+  MockFilePicker.returnFiles = [file.file];
 
   let addonList = getAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });

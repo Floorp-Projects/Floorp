@@ -36,6 +36,7 @@ add_task(function* test_downloads_saveAs() {
 
   MockFilePicker.init(window);
   MockFilePicker.useAnyFile();
+  const [file] = MockFilePicker.returnFiles;
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
@@ -44,8 +45,6 @@ add_task(function* test_downloads_saveAs() {
   let result = yield extension.awaitMessage("done");
 
   ok(result.ok, "downloads.download() works with saveAs");
-
-  const file = MockFilePicker.getNsIFile();
   is(file.fileSize, 12, "downloaded file is the correct size");
   file.remove(false);
 
