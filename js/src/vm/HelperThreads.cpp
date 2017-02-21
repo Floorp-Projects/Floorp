@@ -28,6 +28,8 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/NativeObject-inl.h"
+
 using namespace js;
 
 using mozilla::ArrayLength;
@@ -352,6 +354,11 @@ ParseTask::trace(JSTracer* trc)
 {
     if (parseGlobal->runtimeFromAnyThread() != trc->runtime())
         return;
+    Zone* zone = MaybeForwarded(parseGlobal)->zoneFromAnyThread();
+    if (zone->usedByHelperThread()) {
+        MOZ_ASSERT(!zone->isCollecting());
+        return;
+    }
 
     TraceManuallyBarrieredEdge(trc, &parseGlobal, "ParseTask::parseGlobal");
     if (script)
@@ -1229,7 +1236,7 @@ HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& locked)
 static void
 LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
 {
-    // Mark the zone as no longer in use by an JSContext, and available
+    // Mark the zone as no longer in use by a helper thread, and available
     // to be collected by the GC.
     rt->clearUsedByHelperThread(task->parseGlobal->zone());
 }
