@@ -12,10 +12,7 @@
 #include "mozilla/dom/MediaKeySession.h"
 
 #include "mozIGeckoMediaPluginService.h"
-#include "nsContentCID.h"
-#include "nsIConsoleService.h"
 #include "nsPrintfCString.h"
-#include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "prenv.h"
 #include "GMPCDMCallbackProxy.h"
@@ -23,6 +20,7 @@
 #include "MainThreadUtils.h"
 #include "MediaData.h"
 #include "DecryptJob.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 
@@ -635,19 +633,6 @@ GMPCDMProxy::OnDecrypted(uint32_t aId,
 {
   MOZ_ASSERT(IsOnOwnerThread());
   gmp_Decrypted(aId, aResult, aDecryptedData);
-}
-
-static void
-LogToConsole(const nsAString& aMsg)
-{
-  nsCOMPtr<nsIConsoleService> console(
-    do_GetService("@mozilla.org/consoleservice;1"));
-  if (!console) {
-    NS_WARNING("Failed to log message to console.");
-    return;
-  }
-  nsAutoString msg(aMsg);
-  console->LogStringMessage(msg.get());
 }
 
 void

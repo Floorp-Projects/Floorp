@@ -2054,10 +2054,29 @@ CachedBorderImageData::GetCachedSVGViewportSize()
   return mCachedSVGViewportSize;
 }
 
+struct PurgeCachedImagesTask : mozilla::Runnable
+{
+  NS_IMETHOD Run() final
+  {
+    mSubImages.Clear();
+    return NS_OK;
+  }
+
+  nsCOMArray<imgIContainer> mSubImages;
+};
+
 void
 CachedBorderImageData::PurgeCachedImages()
 {
-  mSubImages.Clear();
+  if (ServoStyleSet::IsInServoTraversal()) {
+    RefPtr<PurgeCachedImagesTask> task = new PurgeCachedImagesTask();
+    task->mSubImages.SwapElements(mSubImages);
+    // This will run the task immediately if we're already on the main thread,
+    // but that is fine.
+    NS_DispatchToMainThread(task.forget());
+  } else {
+    mSubImages.Clear();
+  }
 }
 
 void
