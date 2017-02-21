@@ -3854,6 +3854,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         forceAsync(false),
         installedFile(false),
         sourceIsLazy(false),
+        allowHTMLComments(true),
         introductionType(nullptr),
         introductionLineno(0),
         introductionOffset(0),
@@ -3890,6 +3891,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool forceAsync;
     bool installedFile;  // 'true' iff pre-compiling js file in packaged app
     bool sourceIsLazy;
+    bool allowHTMLComments;
 
     // |introductionType| is a statically allocated C string:
     // one of "eval", "Function", or "GeneratorFunction".
