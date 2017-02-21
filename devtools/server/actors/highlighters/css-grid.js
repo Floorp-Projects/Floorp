@@ -652,11 +652,16 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
   renderGridLineNumber(lineNumber, linePos, startPos, dimensionType) {
     this.ctx.save();
 
+    let textWidth = this.ctx.measureText(lineNumber).width;
+    // Guess the font height based on the measured width
+    let textHeight = textWidth * 2;
+
     if (dimensionType === COLUMNS) {
-      this.ctx.fillText(lineNumber, linePos, startPos);
+      let yPos = Math.max(startPos, textHeight);
+      this.ctx.fillText(lineNumber, linePos, yPos);
     } else {
-      let textWidth = this.ctx.measureText(lineNumber).width;
-      this.ctx.fillText(lineNumber, startPos - textWidth, linePos);
+      let xPos = Math.max(startPos, textWidth);
+      this.ctx.fillText(lineNumber, xPos - textWidth, linePos);
     }
 
     this.ctx.restore();
