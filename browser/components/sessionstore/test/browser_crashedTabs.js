@@ -13,7 +13,6 @@ const PAGE_2 = "data:text/html,<html><body>Another%20regular,%20everyday,%20norm
 add_task(function* test_initialize() {
   yield SpecialPowers.pushPrefEnv({
     set: [
-      [ "dom.ipc.processCount", 1 ],
       [ "browser.tabs.animate", false]
   ] });
 });
@@ -241,7 +240,7 @@ add_task(function* test_revive_tab_from_session_store() {
   browser.loadURI(PAGE_1);
   yield promiseBrowserLoaded(browser);
 
-  let newTab2 = gBrowser.addTab();
+  let newTab2 = gBrowser.addTab("about:blank", { sameProcessAsFrameLoader: browser.frameLoader });
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
   yield promiseBrowserLoaded(browser2);
@@ -298,7 +297,7 @@ add_task(function* test_revive_all_tabs_from_session_store() {
   // a second window, since only selected tabs will show
   // about:tabcrashed.
   let win2 = yield BrowserTestUtils.openNewBrowserWindow();
-  let newTab2 = win2.gBrowser.addTab(PAGE_1);
+  let newTab2 = win2.gBrowser.addTab(PAGE_1, { sameProcessAsFrameLoader: browser.frameLoader });
   win2.gBrowser.selectedTab = newTab2;
   let browser2 = newTab2.linkedBrowser;
   ok(browser2.isRemoteBrowser, "Should be a remote browser");
@@ -405,7 +404,7 @@ add_task(function* test_hide_restore_all_button() {
   // Load up a second window so we can get another tab to show
   // about:tabcrashed
   let win2 = yield BrowserTestUtils.openNewBrowserWindow();
-  let newTab3 = win2.gBrowser.addTab(PAGE_2);
+  let newTab3 = win2.gBrowser.addTab(PAGE_2, { sameProcessAsFrameLoader: browser.frameLoader });
   win2.gBrowser.selectedTab = newTab3;
   let otherWinBrowser = newTab3.linkedBrowser;
   yield promiseBrowserLoaded(otherWinBrowser);
