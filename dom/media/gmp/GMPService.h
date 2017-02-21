@@ -23,6 +23,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/MozPromise.h"
 #include "GMPContentParent.h"
+#include "GMPCrashHelper.h"
 
 template <class> struct already_AddRefed;
 
