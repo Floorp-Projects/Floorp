@@ -35,6 +35,12 @@
   background-clip: content-box;
 }
 
+.colorwidget-colorswatch {
+  background-color: transparent;
+  color: transparent;
+  border: 1px solid transparent;
+}
+
 /* Elements */
 
 #colorwidget-tooltip {
@@ -69,6 +75,43 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   left:0;
   bottom:0;
   right:0;
+}
+
+.colorwidget-contrast {
+  color: var(--theme-content-color1);
+  padding-top: 4px;
+}
+
+.colorwidget-colorswatch, .colorwidget-contrast-ratio, .colorwidget-contrast-grade, .colorwidget-contrast-help {
+  display: inline-block;
+}
+
+.colorwidget-colorswatch {
+  width: 28%;
+}
+
+.colorwidget-contrast-ratio {
+  font-family: Courier New, Courier, monospace;
+  padding-left: 8px;
+  width: 26%;
+}
+
+.colorwidget-contrast-grade {
+  font-family: Courier New, Courier, monospace;
+  width: 18%;
+}
+
+.colorwidget-contrast-help {
+  margin-inline-start: 5px;
+}
+
+.colorwidget-contrast-help::before {
+  background-image: url(chrome://devtools/skin/images/help.svg);
+}
+
+.colorwidget-colorswatch {
+  text-align: center;
+  color: transparent;
 }
 
 .colorwidget-color {
