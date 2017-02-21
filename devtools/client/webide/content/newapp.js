@@ -110,62 +110,65 @@ function doOK() {
     return false;
   }
 
-  let folder;
-
   /* Chrome mochitest support */
-  let testOptions = window.arguments[0].testOptions;
-  if (testOptions) {
-    folder = testOptions.folder;
-  } else {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
-    let res = fp.show();
-    if (res == Ci.nsIFilePicker.returnCancel) {
-      console.error("No directory selected");
-      return false;
+  let promise = new Promise((resolve, reject) => {
+    let testOptions = window.arguments[0].testOptions;
+    if (testOptions) {
+      resolve(testOptions.folder);
+    } else {
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(window, "Select directory where to create app directory", Ci.nsIFilePicker.modeGetFolder);
+      fp.open(res => {
+        if (res == Ci.nsIFilePicker.returnCancel) {
+          console.error("No directory selected");
+          reject(null);
+        } else {
+          resolve(fp.file);
+        }
+      });
     }
-    folder = fp.file;
-  }
-
-  // Create subfolder with fs-friendly name of project
-  let subfolder = projectName.replace(/[\\/:*?"<>|]/g, "").toLowerCase();
-  let win = Services.wm.getMostRecentWindow("devtools:webide");
-  folder.append(subfolder);
-
-  try {
-    folder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  } catch (e) {
-    win.UI.reportError("error_folderCreationFailed");
-    window.close();
-    return false;
-  }
-
-  // Download boilerplate zip
-  let template = gTemplateList[templatelistNode.selectedIndex];
-  let source = template.file;
-  let target = folder.clone();
-  target.append(subfolder + ".zip");
+  });
 
   let bail = (e) => {
     console.error(e);
     window.close();
   };
 
-  Downloads.fetch(source, target).then(() => {
-    ZipUtils.extractFiles(target, folder);
-    target.remove(false);
-    AppProjects.addPackaged(folder).then((project) => {
-      window.arguments[0].location = project.location;
-      AppManager.validateAndUpdateProject(project).then(() => {
-        if (project.manifest) {
-          project.manifest.name = projectName;
-          AppManager.writeManifest(project).then(() => {
-            AppManager.validateAndUpdateProject(project).then(
-              () => {window.close();}, bail);
-          }, bail);
-        } else {
-          bail("Manifest not found");
-        }
+  promise.then(folder => {
+    // Create subfolder with fs-friendly name of project
+    let subfolder = projectName.replace(/[\\/:*?"<>|]/g, "").toLowerCase();
+    let win = Services.wm.getMostRecentWindow("devtools:webide");
+    folder.append(subfolder);
+
+    try {
+      folder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+    } catch (e) {
+      win.UI.reportError("error_folderCreationFailed");
+      window.close();
+      return;
+    }
+
+    // Download boilerplate zip
+    let template = gTemplateList[templatelistNode.selectedIndex];
+    let source = template.file;
+    let target = folder.clone();
+    target.append(subfolder + ".zip");
+    Downloads.fetch(source, target).then(() => {
+      ZipUtils.extractFiles(target, folder);
+      target.remove(false);
+      AppProjects.addPackaged(folder).then((project) => {
+        window.arguments[0].location = project.location;
+        AppManager.validateAndUpdateProject(project).then(() => {
+          if (project.manifest) {
+            project.manifest.name = projectName;
+            AppManager.writeManifest(project).then(() => {
+              AppManager.validateAndUpdateProject(project).then(
+                () => {window.close();}, bail);
+            }, bail);
+          } else {
+            bail("Manifest not found");
+          }
+        }, bail);
       }, bail);
     }, bail);
   }, bail);
