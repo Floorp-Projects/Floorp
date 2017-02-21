@@ -72,8 +72,8 @@
  *   and does not use a lock to protect accesses. This makes it cheaper but
  *   less general. It is best used for arena pools that (a) are hot, (b) have
  *   lifetimes bounded within a single function, and (c) don't need locking.
- *   Use PORT_InitArena() and PORT_DestroyArena() to initialize and finalize
- *   PORTCheapArenaPools.
+ *   Use PORT_InitCheapArena() and PORT_DestroyCheapArena() to initialize and
+ *   finalize PORTCheapArenaPools.
  *
  * All the other PORT_Arena* functions will operate safely with either
  * subclass.

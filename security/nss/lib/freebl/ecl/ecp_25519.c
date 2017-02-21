@@ -79,8 +79,7 @@ ec_Curve25519_pt_validate(const SECItem *px)
           0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
     };
 
-    /* The point must not be longer than 32 (it can be smaller). */
-    if (px->len <= 32) {
+    if (px->len == 32) {
         p = px->data;
     } else {
         return SECFailure;
