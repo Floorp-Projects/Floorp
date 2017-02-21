@@ -144,6 +144,10 @@ if (params.interactiveDebugger) {
   TestRunner.interactiveDebugger = true;
 }
 
+if (params.jscovDirPrefix) {
+  TestRunner.jscovDirPrefix = params.jscovDirPrefix;
+}
+
 if (params.maxTimeouts) {
   TestRunner.maxTimeouts = params.maxTimeouts;
 }

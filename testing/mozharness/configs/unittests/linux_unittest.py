@@ -183,6 +183,7 @@ config = {
         "plain-gpu": ["--subsuite=gpu"],
         "plain-clipboard": ["--subsuite=clipboard"],
         "plain-chunked": ["--chunk-by-dir=4"],
+        "plain-chunked-coverage": ["--chunk-by-dir=4", "--timeout=1200"],
         "mochitest-media": ["--subsuite=media"],
         "chrome": ["--flavor=chrome"],
         "chrome-gpu": ["--flavor=chrome", "--subsuite=gpu"],
