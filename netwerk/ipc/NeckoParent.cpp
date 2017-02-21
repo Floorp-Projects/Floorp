@@ -149,8 +149,7 @@ static MOZ_COLD
 void CrashWithReason(const char * reason)
 {
 #ifndef RELEASE_OR_BETA
-  MOZ_CRASH_ANNOTATE(reason);
-  MOZ_REALLY_CRASH();
+  MOZ_CRASH_UNSAFE_OOL(reason);
 #endif
 }
 
