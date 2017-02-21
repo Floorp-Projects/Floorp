@@ -31,12 +31,6 @@
               "browser_style": {
                 "type": "boolean",
                 "optional": true
-              },
-              "default_area": {
-                "type": "string",
-                "default": "navbar",
-                "enum": ["navbar", "menupanel", "tabstrip", "personaltoolbar"],
-                "optional": true
               }
             },
             "optional": true
