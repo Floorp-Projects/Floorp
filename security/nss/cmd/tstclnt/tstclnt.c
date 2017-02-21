@@ -1509,7 +1509,7 @@ main(int argc, char **argv)
     /* XXX: 'B' was used in the past but removed in 3.28,
      *      please leave some time before resuing it. */
     optstate = PL_CreateOptState(argc, argv,
-                                 "46A:CDFGHI:KL:M:OR:STUV:WYZa:bc:d:fgh:m:n:op:qr:st:uvw:z");
+                                 "46A:CDFGHI:KL:M:OR:STUV:W:YZa:bc:d:fgh:m:n:op:qr:st:uvw:z");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':

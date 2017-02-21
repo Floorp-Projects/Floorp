@@ -14,7 +14,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 3) {
     return 0;
   }
-  INIT_NUMBERS
+  INIT_FOUR_NUMBERS
 
   // We can't divide by 0.
   if (mp_cmp_z(&b) == 0) {
