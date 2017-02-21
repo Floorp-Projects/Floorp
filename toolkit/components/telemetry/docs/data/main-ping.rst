@@ -301,6 +301,8 @@ Limits for captured stacks are the same as for chromeHangs (see below). Furtherm
 * the key length is limited to 50 characters,
 * keys are restricted to alpha-numeric characters and `-`.
 
+The module names can contain unicode characters.
+
 Structure:
 
 .. code-block:: js
@@ -335,6 +337,8 @@ Some limits are applied:
 
 * Reported chrome hang stacks are limited in depth to 50 entries.
 * The maximum number of reported stacks is 50.
+
+The module names can contain unicode characters.
 
 Structure:
 
@@ -561,7 +565,9 @@ Structure:
 
 lateWrites
 ----------
-This sections reports writes to the file system that happen during shutdown. The reported data contains the stack and the loaded libraries at the time the writes happened.
+This sections reports writes to the file system that happen during shutdown. The reported data contains the stack and the file names of the loaded libraries at the time the writes happened.
+
+The file names of the loaded libraries can contain unicode characters.
 
 Structure:
 
