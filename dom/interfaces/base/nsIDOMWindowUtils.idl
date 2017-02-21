@@ -1564,6 +1564,12 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in AString value2);
 
   /**
+   * Wrap an nsIFile in an DOM File
+   * Returns a File object.
+   */
+  nsISupports wrapDOMFile(in nsIFile aFile);
+
+  /**
    * Get the type of the currently focused html input, if any.
    */
   readonly attribute string focusedInputType;
