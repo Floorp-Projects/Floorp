@@ -786,7 +786,7 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  GMPCapability video(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER));
+  GMPCapability video;
 
   nsCString codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs);
   nsTArray<nsCString> codecs;
@@ -808,14 +808,19 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
   }
 
   video.mAPITags.AppendElement(kEMEKeySystem);
+
+  if (MediaPrefs::EMEChromiumAPIEnabled()) {
+    video.mAPIName = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
+    mAdapter = NS_LITERAL_STRING("chromium");
+  } else {
+    video.mAPIName = NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+    mAdapter = NS_LITERAL_STRING("widevine");
+
+    GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
+    decrypt.mAPITags.AppendElement(kEMEKeySystem);
+    mCapabilities.AppendElement(Move(decrypt));
+  }
   mCapabilities.AppendElement(Move(video));
-
-  GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
-
-  decrypt.mAPITags.AppendElement(kEMEKeySystem);
-  mCapabilities.AppendElement(Move(decrypt));
-
-  mAdapter = NS_LITERAL_STRING("widevine");
 
   return GenericPromise::CreateAndResolve(true, __func__);
 }
