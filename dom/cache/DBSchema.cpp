@@ -2564,7 +2564,9 @@ Migrate(mozIStorageConnection* aConn)
     MOZ_DIAGNOSTIC_ASSERT(currentVersion > lastVersion);
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(currentVersion == kLatestSchemaVersion);
+  // Don't release assert this since people do sometimes share profiles
+  // across schema versions.  Our check in Validate() will catch it.
+  MOZ_ASSERT(currentVersion == kLatestSchemaVersion);
 
   if (rewriteSchema) {
     // Now overwrite the master SQL for the entries table to remove the column
