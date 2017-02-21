@@ -4,10 +4,11 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=810981
 https://bugzilla.mozilla.org/show_bug.cgi?id=1282902
 https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
+https://bugzilla.mozilla.org/show_bug.cgi?id=1265818
 -->
 <head>
   <meta charset="utf-8">
-  <title>Tests for Bug 810981, 1282902, 1301016</title>
+  <title>Tests for Bug 810981, 1282902, 1301016, 1265818</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
@@ -15,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
   <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript">
 
-  /** Tests for Bug 810981, 1282902, 1301016 **/
+  /** Tests for Bug 810981, 1282902, 1301016, 1265818 **/
 
   "use strict";
 
@@ -32,6 +33,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
 
   // Use something with ample space for scrolling and zooming.
   const URL = "http://example.org/chrome/mobile/android/tests/browser/chrome/browser_scrollPositions_sample.html";
+  // Same content but under a different URL, so we have something to navigate to and from.
+  const URL2 = "http://example.org/chrome/mobile/android/tests/browser/chrome/browser_scrollPositions_sample2.html";
   // Reader mode URL
   const URL_reader = "about:reader?url=http%3A%2F%2Fexample.org%2Fchrome%2Fmobile%2Fandroid%2Ftests%2Fbrowser%2Fchrome%2Fbasic_article_mobile.html";
 
@@ -41,6 +44,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
   const SCROLL_STR = SCROLL_X + "," + SCROLL_Y;
   const SCROLL_STR_Y_ONLY = 0 + "," + SCROLL_Y;
   const ZOOM = 1 + 0.5 * Math.random();
+
+  const SCROLL2_X = Math.round(300 * (1 + Math.random()));
+  const SCROLL2_Y = Math.round(400 * (1 + Math.random()));
+  const SCROLL2_STR = SCROLL2_X + "," + SCROLL2_Y;
+  const ZOOM2 = 1.5 + 0.5 * Math.random();
 
   function dispatchUIEvent(browser, type) {
     let event = browser.contentDocument.createEvent("UIEvents");
@@ -148,6 +156,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
         is(scrollX.value, SCROLL_X, "scrollX set correctly");
         is(scrollY.value, SCROLL_Y, "scrollY set correctly");
 
+        // Navigate to a different page and scroll/zoom there as well.
+        browser.loadURI(URL2);
+        yield promiseBrowserEvent(browser, "pageshow");
+
+        setZoomLevel(browser, ZOOM2);
+        setScrollPosition(browser, SCROLL2_X, SCROLL2_Y);
+        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+
+        utils.getResolution(zoom);
+        utils.getScrollXY(false, scrollX, scrollY);
+        ok(fuzzyEquals(zoom.value, ZOOM2), "zoom set correctly");
+        is(scrollX.value, SCROLL2_X, "scrollX set correctly");
+        is(scrollY.value, SCROLL2_Y, "scrollY set correctly");
+
         // Remove the tab.
         BrowserApp.closeTab(tabScroll);
         yield promiseTabEvent(browser, "SSTabCloseProcessed");
@@ -157,13 +179,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
     yield createAndRemoveTab();
     let state = ss.getClosedTabs(chromeWin);
     let [{scrolldata}] = state;
-    is(scrolldata.scroll, SCROLL_STR, "stored scroll position is correct");
-    ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM), "stored zoom level is correct");
+    is(scrolldata.scroll, SCROLL2_STR, "stored scroll position is correct");
+    ok(fuzzyEquals(scrolldata.zoom.resolution, ZOOM2), "stored zoom level is correct");
 
     // Restore the closed tab.
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
-    yield promiseBrowserEvent(browser, "pageshow");
+    let pageshow = promiseBrowserEvent(browser, "pageshow");
+    let scroll = promiseBrowserEvent(browser, "scroll");
+    yield pageshow;
+    yield scroll;
 
     // Check the scroll position and zoom level.
     let ifreq = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -171,7 +196,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
     let scrollX = {}, scrollY = {}, zoom = {};
     utils.getResolution(zoom);
     utils.getScrollXY(false, scrollX, scrollY);
-    ok(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly");
+    ok(fuzzyEquals(zoom.value, ZOOM2), "zoom restored correctly");
+    is(scrollX.value, SCROLL2_X, "scrollX restored correctly");
+    is(scrollY.value, SCROLL2_Y, "scrollY restored correctly");
+
+    // Now go back in history and check that the scroll position
+    // is restored there as well.
+    is(browser.canGoBack, true, "can go back");
+    pageshow = promiseBrowserEvent(browser, "pageshow");
+    scroll = promiseBrowserEvent(browser, "scroll");
+    browser.goBack();
+    yield pageshow;
+    yield scroll;
+
+    utils.getResolution(zoom);
+    utils.getScrollXY(false, scrollX, scrollY);
+    todo(fuzzyEquals(zoom.value, ZOOM), "zoom restored correctly"); // Bug 1312605
     is(scrollX.value, SCROLL_X, "scrollX restored correctly");
     is(scrollY.value, SCROLL_Y, "scrollY restored correctly");
 
@@ -246,6 +286,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1301016
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=810981">Mozilla Bug 810981</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1282902">Mozilla Bug 1282902</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1301016">Mozilla Bug 1301016</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265818">Mozilla Bug 1265818</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
