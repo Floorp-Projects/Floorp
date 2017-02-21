@@ -733,6 +733,7 @@
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX)
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
+@RESPATH@/components/sandbox.xpt
 #endif
 #endif
 
