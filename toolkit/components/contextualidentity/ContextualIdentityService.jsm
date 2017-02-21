@@ -298,13 +298,6 @@ _ContextualIdentityService.prototype = {
     }, userContextId);
   },
 
-  disableContainers() {
-    for (let identity of this._identities) {
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                   JSON.stringify({ userContextId: identity.userContextId }));
-    }
-  },
-
   _forEachContainerTab(callback, userContextId = 0) {
     let windowList = Services.wm.getEnumerator("navigator:browser");
     while (windowList.hasMoreElements()) {
