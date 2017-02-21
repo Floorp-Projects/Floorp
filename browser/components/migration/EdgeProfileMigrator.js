@@ -139,14 +139,10 @@ EdgeTypedURLMigrator.prototype = {
     }
 
     MigrationUtils.insertVisitsWrapper(places, {
-      _success: false,
-      handleResult() {
-        // Importing any entry is considered a successful import.
-        this._success = true;
-      },
-      handleError() {},
-      handleCompletion() {
-        aCallback(this._success);
+      ignoreErrors: true,
+      ignoreResults: true,
+      handleCompletion(updatedCount) {
+        aCallback(updatedCount > 0);
       }
     });
   },
