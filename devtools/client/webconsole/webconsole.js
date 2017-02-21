@@ -226,7 +226,8 @@ function WebConsoleFrame(webConsoleOwner) {
 
   let require = BrowserLoaderModule.BrowserLoader({
     window: this.window,
-    useOnlyShared: true
+    useOnlyShared: true,
+    commonLibRequire: gDevTools.getToolbox(this.owner.target).browserRequire,
   }).require;
 
   this.React = require("devtools/client/shared/vendor/react");

@@ -6,18 +6,19 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
+const Cu = Components.utils;
 
 const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 
-// Initialize module loader and load all modules of the new inline
-// preview feature. The entire code-base doesn't need any extra
-// privileges and runs entirely in content scope.
-const NewConsoleOutputWrapper = BrowserLoader({
-  baseURI: "resource://devtools/client/webconsole/new-console-output/",
+this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
+  // Initialize module loader and load all modules of the new inline
+  // preview feature. The entire code-base doesn't need any extra
+  // privileges and runs entirely in content scope.
+  let NewConsoleOutputWrapper = BrowserLoader({
+    baseURI: "resource://devtools/client/webconsole/new-console-output/",
+    commonLibRequire: toolbox.browserRequire,
   window}).require("./new-console-output-wrapper");
 
-this.NewConsoleOutput = function (parentNode, jsterm, toolbox, owner, serviceContainer) {
   return new NewConsoleOutputWrapper(
     parentNode, jsterm, toolbox, owner, serviceContainer);
 };
