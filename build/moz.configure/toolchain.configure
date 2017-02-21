@@ -970,9 +970,9 @@ set_config('VISIBILITY_FLAGS', visibility_flags)
 
 @depends(c_compiler, using_sccache)
 def depend_cflags(c_compiler, using_sccache):
-    if c_compiler.type != 'msvc':
+    if c_compiler.type in ('gcc', 'clang'):
         return '-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-    elif using_sccache:
+    elif c_compiler.type == 'msvc' and using_sccache:
         # sccache supports a special flag to create depfiles
         # by parsing MSVC's -showIncludes output.
         return '-deps$(MDDEPDIR)/$(@F).pp'
