@@ -700,7 +700,6 @@ protected:
       if (numPrefixBytes < 0 || (prefixGroups & (ePrefixGroup3 | ePrefixGroup4))) {
         // Either the prefix sequence was bad, or there are prefixes that
         // we don't currently support (groups 3 and 4)
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
       }
       nOrigBytes += numPrefixBytes;
@@ -710,7 +709,6 @@ protected:
         ++nOrigBytes;
         int len = CountModRmSib(origBytes + nOrigBytes);
         if (len < 0) {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
           return;
         }
         nOrigBytes += len;
@@ -735,7 +733,6 @@ protected:
           nOrigBytes += 3;
         } else {
           // bail
-          MOZ_ASSERT_UNREACHABLE("Unrecognized bit opcode sequence");
           return;
         }
       } else if (origBytes[nOrigBytes] == 0x68) {
@@ -762,8 +759,7 @@ protected:
 #endif
         return;
       } else {
-        //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nOrigBytes]);
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
+        //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
         return;
       }
     }
@@ -790,7 +786,6 @@ protected:
           nOrigBytes++;
           continue;
         }
-        MOZ_ASSERT_UNREACHABLE("Opcode sequence includes commands after JMP");
         return;
       }
       if (origBytes[nOrigBytes] == 0x0f) {
@@ -802,7 +797,6 @@ protected:
               (origBytes[nOrigBytes] & 0x7) == 0x04) {
             COPY_CODES(3);
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
         } else if (origBytes[nOrigBytes] == 0x05) {
@@ -817,7 +811,6 @@ protected:
           nTrampBytes = jump.GenerateJump(tramp);
           nOrigBytes += 5;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else if (origBytes[nOrigBytes] == 0x40 ||
@@ -831,7 +824,6 @@ protected:
           // mov r32, imm32
           COPY_CODES(5);
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else if (origBytes[nOrigBytes] == 0x45) {
@@ -842,7 +834,6 @@ protected:
           // xor r32, r32
           COPY_CODES(2);
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else if ((origBytes[nOrigBytes] & 0xfb) == 0x48) {
@@ -874,7 +865,6 @@ protected:
           if ((origBytes[nOrigBytes + 1] & 0xc0) == 0xc0) {
             COPY_CODES(2);
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
         } else if ((origBytes[nOrigBytes] & 0xfd) == 0x89) {
@@ -882,7 +872,6 @@ protected:
           // MOV r/m64, r64 | MOV r64, r/m64
           int len = CountModRmSib(origBytes + nOrigBytes);
           if (len < 0) {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
           COPY_CODES(len);
@@ -893,7 +882,6 @@ protected:
             // ModR/W + SIB + disp8 + imm32
             COPY_CODES(8);
           } else {
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
         } else if (origBytes[nOrigBytes] == 0xff) {
@@ -911,12 +899,10 @@ protected:
             foundJmp = true;
           } else {
             // not support yet!
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
         } else {
           // not support yet!
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else if (origBytes[nOrigBytes] == 0x66) {
@@ -941,7 +927,6 @@ protected:
             }
           } else {
             // complex MOV, bail
-            MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
             return;
           }
         }
@@ -960,12 +945,10 @@ protected:
           int len = CountModRmSib(origBytes + nOrigBytes);
           if (len < 0) {
             // no way to support this yet.
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
           COPY_CODES(len);
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else if (origBytes[nOrigBytes] == 0x90) {
@@ -985,7 +968,6 @@ protected:
         int nModRmSibBytes = CountModRmSib(&origBytes[nOrigBytes + 1], &subOpcode);
         if (nModRmSibBytes < 0 || subOpcode != 0) {
           // Unsupported
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
         COPY_CODES(2 + nModRmSibBytes);
@@ -1025,11 +1007,9 @@ protected:
           nTrampBytes = jump.GenerateJump(tramp);
           nOrigBytes += 5;
         } else {
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
       } else {
-        MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
       }
     }
@@ -1165,16 +1145,6 @@ public:
     }
   }
 
-  /**
-   * Hook/detour the method aName from the DLL we set in Init so that it calls
-   * aHookDest instead.  Returns the original method pointer in aOrigFunc
-   * and returns true if successful.
-   *
-   * IMPORTANT: If you use this method, please add your case to the
-   * TestDllInterceptor in order to detect future failures.  Even if this
-   * succeeds now, updates to the hooked DLL could cause it to fail in
-   * the future.
-   */
   bool AddHook(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     // Use a nop space patch if possible, otherwise fall back to a detour.
@@ -1191,16 +1161,6 @@ public:
     return AddDetour(aName, aHookDest, aOrigFunc);
   }
 
-  /**
-   * Detour the method aName from the DLL we set in Init so that it calls
-   * aHookDest instead.  Returns the original method pointer in aOrigFunc
-   * and returns true if successful.
-   *
-   * IMPORTANT: If you use this method, please add your case to the
-   * TestDllInterceptor in order to detect future failures.  Even if this
-   * succeeds now, updates to the detoured DLL could cause it to fail in
-   * the future.
-   */
   bool AddDetour(const char* aName, intptr_t aHookDest, void** aOrigFunc)
   {
     // Generally, code should not call this method directly. Use AddHook unless
