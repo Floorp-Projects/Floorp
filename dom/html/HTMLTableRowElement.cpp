@@ -175,8 +175,8 @@ HTMLTableRowElement::InsertCell(int32_t aIndex,
 
   // create the cell
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-  nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::td,
-                              getter_AddRefs(nodeInfo));
+  nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::td,
+                               getter_AddRefs(nodeInfo));
 
   RefPtr<nsGenericHTMLElement> cell =
     NS_NewHTMLTableCellElement(nodeInfo.forget());
