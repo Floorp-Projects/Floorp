@@ -13,6 +13,7 @@
       'sources': [
         'pk11_aeskeywrap_unittest.cc',
         'pk11_chacha20poly1305_unittest.cc',
+        'pk11_curve25519_unittest.cc',
         'pk11_ecdsa_unittest.cc',
         'pk11_pbkdf2_unittest.cc',
         'pk11_prf_unittest.cc',
