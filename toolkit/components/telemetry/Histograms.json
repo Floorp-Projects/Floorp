@@ -4162,6 +4162,24 @@
     "bug_numbers": [1298257],
     "description": "Classifier prefix matching result (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
   },
+  "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 86400000,
+    "n_buckets": 50,
+    "bug_numbers": [1338082],
+    "description": "Positive cache duration (ms) received in fullhash response from any v4 provider"
+  },
+  "URLCLASSIFIER_NEGATIVE_CACHE_DURATION": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 86400000,
+    "n_buckets": 50,
+    "bug_numbers": [1338082],
+    "description": "Negative cache duration (ms) received in fullhash response from any v4 provider"
+  },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],

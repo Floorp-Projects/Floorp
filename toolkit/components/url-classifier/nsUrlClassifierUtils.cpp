@@ -455,9 +455,12 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
       continue; // Ignore un-convertable threat type.
     }
     auto& hash = m.threat().hash();
+    auto cacheDuration = DurationToMs(m.cache_duration());
     aCallback->OnCompleteHashFound(nsCString(hash.c_str(), hash.length()),
-                                   tableNames,
-                                   DurationToMs(m.cache_duration()));
+                                   tableNames, cacheDuration);
+
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_POSITIVE_CACHE_DURATION,
+                          cacheDuration);
   }
 
   auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
@@ -467,6 +470,9 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(const nsACString& aResponse,
 
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_COMPLETION_ERROR,
                         hasUnknownThreatType ? UNKNOWN_THREAT_TYPE : SUCCESS);
+
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_NEGATIVE_CACHE_DURATION,
+                        negCacheDuration);
 
   return NS_OK;
 }
