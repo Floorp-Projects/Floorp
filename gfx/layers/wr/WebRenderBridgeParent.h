@@ -70,8 +70,7 @@ public:
                                           const gfx::SurfaceFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
-  mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize,
-                                      bool* aOutSuccess) override;
+  mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
