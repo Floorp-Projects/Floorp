@@ -218,7 +218,8 @@ ParentForUndisplayedMap(const nsIContent* aContent)
 }
 
 /* static */ nsStyleContext*
-nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap, nsIContent* aContent)
+nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap,
+                                     const nsIContent* aContent)
 {
   UndisplayedNode* node = GetUndisplayedNodeInMapFor(aMap, aContent);
   return node ? node->mStyle.get() : nullptr;
