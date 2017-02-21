@@ -12,6 +12,14 @@
 namespace js {
 namespace jit {
 
+// Limit on the number of bytes of executable memory to prevent JIT spraying
+// attacks.
+#if JS_BITS_PER_WORD == 32
+static const size_t MaxCodeBytesPerProcess = 128 * 1024 * 1024;
+#else
+static const size_t MaxCodeBytesPerProcess = 640 * 1024 * 1024;
+#endif
+
 // Executable code is allocated in 64K chunks. ExecutableAllocator uses pools
 // that are at least this big. Code we allocate does not necessarily have 64K
 // alignment though.
