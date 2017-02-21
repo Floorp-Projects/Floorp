@@ -587,10 +587,35 @@ var snapshotFormatters = {
           data[key] === data["hasUserNamespaces"]) {
         continue;
       }
+      if (key === "syscallLog") {
+	// Not in this table.
+	continue;
+      }
       tbody.appendChild($.new("tr", [
         $.new("th", strings.GetStringFromName(key), "column"),
-        $.new("td", data[key])
+        $.new("td", data[key]),
       ]));
+    }
+
+    let syscallBody = $("sandbox-syscalls-tbody");
+    let argsHead = $("sandbox-syscalls-argshead");
+    for (let syscall of data.syscallLog) {
+      if (argsHead.colSpan < syscall.args.length) {
+	argsHead.colSpan = syscall.args.length;
+      }
+      let cells = [
+	$.new("td", syscall.index, "integer"),
+	$.new("td", syscall.msecAgo / 1000),
+	$.new("td", syscall.pid, "integer"),
+	$.new("td", syscall.tid, "integer"),
+	$.new("td", strings.GetStringFromName("sandboxProcType." +
+					      syscall.procType)),
+	$.new("td", syscall.syscall, "integer"),
+      ];
+      for (let arg of syscall.args) {
+	cells.push($.new("td", arg, "integer"));
+      }
+      syscallBody.appendChild($.new("tr", cells));
     }
   },
 };
