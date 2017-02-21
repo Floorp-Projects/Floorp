@@ -2277,9 +2277,22 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     uint32_t flags = 0;
     if (loadContext && loadContext->UsePrivateBrowsing())
         flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
+
+    OriginAttributes originAttributes;
+    // If the principal is given, we use the originAttributes from this
+    // principal. Otherwise, we use the originAttributes from the
+    // loadContext.
+    if (aPrincipal) {
+        originAttributes.Inherit(aPrincipal->OriginAttributesRef());
+    } else if (loadContext) {
+        loadContext->GetOriginAttributes(originAttributes);
+        originAttributes.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
+    }
+
     nsCOMPtr<nsIURI> clone;
     if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
-                                      aURI, flags, nullptr, &isStsHost)) &&
+                                      aURI, flags, originAttributes,
+                                      nullptr, &isStsHost)) &&
                                       isStsHost) {
         if (NS_SUCCEEDED(NS_GetSecureUpgradedURI(aURI,
                                                  getter_AddRefs(clone)))) {
@@ -2324,17 +2337,6 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
 
     nsAutoCString username;
     aURI->GetUsername(username);
-
-    OriginAttributes originAttributes;
-    // If the principal is given, we use the originAttributes from this
-    // principal. Otherwise, we use the originAttributes from the
-    // loadContext.
-    if (aPrincipal) {
-        originAttributes.Inherit(aPrincipal->OriginAttributesRef());
-    } else if (loadContext) {
-        loadContext->GetOriginAttributes(originAttributes);
-        originAttributes.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
-    }
 
     auto *ci =
         new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,

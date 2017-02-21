@@ -1962,6 +1962,9 @@ GK_ATOM(onmozinterruptend, "onmozinterruptend")
 // MediaDevices device change event
 GK_ATOM(ondevicechange, "ondevicechange")
 
+// HTML element attributes that only exposed to XBL and chrome content
+GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
+
 //---------------------------------------------------------------------------
 // Special atoms
 //---------------------------------------------------------------------------

@@ -782,6 +782,12 @@ public:
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
   void MozSetDirectory(const nsAString& aDirectoryPath, ErrorResult& aRv);
 
+  bool MozInputRangeIgnorePreventDefault() const
+  {
+    return (IsInChromeDocument() || IsInNativeAnonymousSubtree()) &&
+      GetBoolAttr(nsGkAtoms::mozinputrangeignorepreventdefault);
+  }
+
   /*
    * The following functions are called from datetime picker to let input box
    * know the current state of the picker or to update the input box on changes.
@@ -1468,7 +1474,7 @@ protected:
   void ClearGetFilesHelpers();
 
   /**
-   * nsINode::SetMayBeApzAware() will be invoked in this function if necessary 
+   * nsINode::SetMayBeApzAware() will be invoked in this function if necessary
    * to prevent default action of APZC so that we can increase/decrease the
    * value of this InputElement when mouse wheel event comes without scrolling
    * the page.
