@@ -76,6 +76,7 @@ this.MockFilePicker = {
     this.returnFiles = [];
     this.returnValue = null;
     this.showCallback = null;
+    this.afterOpenCallback = null;
     this.shown = false;
     this.showing = false;
   },
@@ -210,6 +211,9 @@ MockFilePickerInstance.prototype = {
     };
   },
   show: function() {
+    throw "This is not implemented";
+  },
+  _openInternal: function() {
     MockFilePicker.displayDirectory = this.displayDirectory;
     MockFilePicker.shown = true;
     if (typeof MockFilePicker.showCallback == "function") {
@@ -224,11 +228,16 @@ MockFilePickerInstance.prototype = {
     this.window.setTimeout(function() {
       let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
-        result = this.show();
+        result = this._openInternal();
       } catch(ex) {
       }
       if (aFilePickerShownCallback) {
         aFilePickerShownCallback.done(result);
+      }
+      if (typeof MockFilePicker.afterOpenCallback == "function") {
+        this.window.setTimeout(() => {
+          MockFilePicker.afterOpenCallback(this);
+        }, 0);
       }
     }.bind(this), 0);
   }
