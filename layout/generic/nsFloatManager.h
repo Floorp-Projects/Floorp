@@ -362,7 +362,7 @@ private:
     virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
 
     static mozilla::LogicalRect ComputeShapeBoxRect(
-      const mozilla::StyleShapeOutside& aShapeOutside,
+      const mozilla::StyleShapeSource& aShapeOutside,
       nsIFrame* const aFrame,
       const mozilla::LogicalRect& aMarginRect,
       mozilla::WritingMode aWM);
