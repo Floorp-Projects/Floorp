@@ -478,8 +478,6 @@ static void ReadProfilerVars(const char* fileName, const char** features,
         set_profiler_interval(value);
       } else if (strncmp(feature, PROFILER_ENTRIES, bufferSize) == 0) {
         set_profiler_entries(value);
-      } else if (strncmp(feature, PROFILER_STACK, bufferSize) == 0) {
-        set_profiler_scan(value);
       } else if (strncmp(feature, PROFILER_FEATURES, bufferSize) == 0) {
         *featureCount = readCSVArray(value, features);
       } else if (strncmp(feature, "threads", bufferSize) == 0) {
