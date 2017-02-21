@@ -1,7 +1,6 @@
 import hashlib
 import re
 import os
-import re
 from six import binary_type
 from six.moves.urllib.parse import urljoin
 from fnmatch import fnmatch
@@ -17,7 +16,7 @@ from .item import Stub, ManualTest, WebdriverSpecTest, RefTestNode, RefTest, Tes
 from .utils import rel_path_to_url, ContextManagerBytesIO, cached_property
 
 wd_pattern = "*.py"
-meta_re = re.compile("//\s*<meta>\s*(\w*)=(.*)$")
+meta_re = re.compile(b"//\s*META:\s*(\w*)=(.*)$")
 
 reference_file_re = re.compile(r'(^|[\-_])(not)?ref[0-9]*([\-_]|$)')
 
@@ -28,6 +27,20 @@ def replace_end(s, old, new):
     """
     assert s.endswith(old)
     return s[:-len(old)] + new
+
+
+def read_script_metadata(f):
+    """
+    Yields any metadata (pairs of bytestrings) from the file-like object `f`,
+    as specified according to the `meta_re` regex.
+    """
+    for line in f:
+        assert isinstance(line, binary_type), line
+        m = meta_re.match(line)
+        if not m:
+            break
+
+        yield (m.groups()[0], m.groups()[1])
 
 
 class SourceFile(object):
@@ -260,25 +273,30 @@ class SourceFile(object):
         return self.root.findall(".//{http://www.w3.org/1999/xhtml}meta[@name='timeout']")
 
     @cached_property
+    def script_metadata(self):
+        if not self.name_is_worker and not self.name_is_multi_global:
+            return None
+
+        with self.open() as f:
+            return list(read_script_metadata(f))
+
+    @cached_property
     def timeout(self):
         """The timeout of a test or reference file. "long" if the file has an extended timeout
         or None otherwise"""
-        if self.name_is_worker:
-            with self.open() as f:
-                for line in f:
-                    m = meta_re.match(line)
-                    if m and m.groups()[0] == "timeout":
-                        if m.groups()[1].lower() == "long":
-                            return "long"
-                        return
+        if self.script_metadata:
+            if any(m == (b"timeout", b"long") for m in self.script_metadata):
+                return "long"
 
         if self.root is None:
-            return
+            return None
 
         if self.timeout_nodes:
             timeout_str = self.timeout_nodes[0].attrib.get("content", None)
             if timeout_str and timeout_str.lower() == "long":
-                return timeout_str
+                return "long"
+
+        return None
 
     @cached_property
     def viewport_nodes(self):
@@ -464,8 +482,8 @@ class SourceFile(object):
 
         elif self.name_is_multi_global:
             rv = TestharnessTest.item_type, [
-                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.html")),
-                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker.html")),
+                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.html"), timeout=self.timeout),
+                TestharnessTest(self, replace_end(self.url, ".any.js", ".any.worker.html"), timeout=self.timeout),
             ]
 
         elif self.name_is_worker:
