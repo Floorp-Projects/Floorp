@@ -633,7 +633,7 @@ public:
                       const nsAString& aFullPath, const nsAString& aType,
                       const nsAString& aName,
                       const Optional<int64_t>& aLastModified,
-                      bool aExistenceCheck, bool aIsFromNsIFile);
+                      bool aIsFromNsIFile);
 
 private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
