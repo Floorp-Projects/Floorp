@@ -625,11 +625,9 @@ private:
   CreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc) const;
 
   RefPtr<ID3D11Device> mDevice;
-  RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
   RefPtr<MFTDecoder> mTransform;
   RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
-  RefPtr<ID3D11Texture2D> mSyncSurface;
   RefPtr<ID3D11VideoDecoder> mDecoder;
   GUID mDecoderGUID;
   uint32_t mWidth = 0;
@@ -676,13 +674,6 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   mDevice = gfx::DeviceManagerDx::Get()->CreateDecoderDevice();
   if (!mDevice) {
     aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");
-    return E_FAIL;
-  }
-
-  mDevice->GetImmediateContext(getter_AddRefs(mContext));
-  if (!mContext) {
-    aFailureReason.AssignLiteral(
-      "Failed to get immediate context for d3d11 device");
     return E_FAIL;
   }
 
@@ -791,22 +782,6 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     }
   }
 
-  D3D11_TEXTURE2D_DESC desc;
-  desc.Width = kSyncSurfaceSize;
-  desc.Height = kSyncSurfaceSize;
-  desc.MipLevels = 1;
-  desc.ArraySize = 1;
-  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  desc.SampleDesc.Count = 1;
-  desc.SampleDesc.Quality = 0;
-  desc.Usage = D3D11_USAGE_STAGING;
-  desc.BindFlags = 0;
-  desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-  desc.MiscFlags = 0;
-
-  hr = mDevice->CreateTexture2D(&desc, NULL, getter_AddRefs(mSyncSurface));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
   if (layers::ImageBridgeChild::GetSingleton()) {
     // There's no proper KnowsCompositor for ImageBridge currently (and it
     // implements the interface), so just use that if it's available.
@@ -865,26 +840,23 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   HRESULT hr = mTransform->Input(aVideoSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
+  RefPtr<IDXGIKeyedMutex> mutex;
   RefPtr<IMFSample> sample;
   RefPtr<ID3D11Texture2D> texture = image->GetTexture();
+
+  texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+
+  hr = mutex->AcquireSync(0, 2000);
+
+  if (hr != S_OK) {
+    NS_WARNING("Acquire sync didn't manage to return within 2 seconds.");
+  }
+
   hr = CreateOutputSample(sample, texture);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = mTransform->Output(&sample);
-
-  RefPtr<ID3D11DeviceContext> ctx;
-  mDevice->GetImmediateContext(getter_AddRefs(ctx));
-
-  // Copy a small rect into our sync surface, and then map it
-  // to block until decoding/color conversion completes.
-  D3D11_BOX rect = { 0, 0, 0, kSyncSurfaceSize, kSyncSurfaceSize, 1 };
-  ctx->CopySubresourceRegion(mSyncSurface, 0, 0, 0, 0, texture, 0, &rect);
-
-  D3D11_MAPPED_SUBRESOURCE mapped;
-  hr = ctx->Map(mSyncSurface, 0, D3D11_MAP_READ, 0, &mapped);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  ctx->Unmap(mSyncSurface, 0);
+  mutex->ReleaseSync(0);
 
   image.forget(aOutImage);
 

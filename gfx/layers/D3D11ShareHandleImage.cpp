@@ -63,7 +63,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 {
   RefPtr<ID3D11Texture2D> texture = GetTexture();
   if (!texture) {
-    NS_WARNING("Cannot readback from shared texture because no texture is available.");
+    gfxWarning() << "Cannot readback from shared texture because no texture is available.";
     return nullptr;
   }
 
@@ -96,7 +96,19 @@ D3D11ShareHandleImage::GetAsSourceSurface()
     return nullptr;
   }
 
+  RefPtr<IDXGIKeyedMutex> mutex;
+  hr = texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+
+  if (SUCCEEDED(hr) && mutex) {
+    hr = mutex->AcquireSync(0, 2000);
+    if (hr != S_OK) {
+      NS_WARNING("Acquire sync didn't manage to return within 2 seconds.");
+    }
+  }
   context->CopyResource(softTexture, texture);
+  if (SUCCEEDED(hr) && mutex) {
+    mutex->ReleaseSync(0);
+  }
 
   RefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8A8);
@@ -154,7 +166,7 @@ D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                     aSize,
                     BackendSelector::Content,
                     layers::TextureFlags::DEFAULT,
-                    TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION);
+                    TextureAllocationFlags::ALLOC_DEFAULT);
   return textureClient.forget();
 }
 
