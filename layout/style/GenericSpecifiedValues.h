@@ -19,7 +19,11 @@
 #include "nsPresContext.h"
 
 struct nsRuleData;
+
 namespace mozilla {
+
+class ServoSpecifiedValues;
+
 // This provides a common interface for attribute mappers (MapAttributesIntoRule)
 // to use regardless of the style backend. If the style backend is Gecko,
 // this will contain an nsRuleData. If it is Servo, it will be a PropertyDeclarationBlock.
@@ -30,7 +34,7 @@ protected:
         : mType(aType), mPresContext(aPresContext), mSIDs(aSIDs) {}
 
 public:
-    MOZ_DECL_STYLO_METHODS(nsRuleData, nsRuleData)
+    MOZ_DECL_STYLO_METHODS(nsRuleData, ServoSpecifiedValues)
 
     // Check if we already contain a certain longhand
     inline bool PropertyIsSet(nsCSSPropertyID aId);

@@ -16,10 +16,11 @@
 
 #include "nsRuleData.h"
 #include "mozilla/GenericSpecifiedValues.h"
+#include "mozilla/ServoSpecifiedValues.h"
 
 namespace mozilla {
 
-MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues, nsRuleData, nsRuleData)
+MOZ_DEFINE_STYLO_METHODS(GenericSpecifiedValues, nsRuleData, ServoSpecifiedValues)
 
 bool
 GenericSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)

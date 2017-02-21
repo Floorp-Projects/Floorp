@@ -94,8 +94,8 @@ fails == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xht
 fails == flexbox-inlinecontent-horiz-5.xhtml flexbox-inlinecontent-horiz-5.xhtml
 
 # Tests for intrinsic sizing of flexboxes
-fails asserts-if(stylo,36) == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1a.xhtml # bug 1324661
-fails asserts-if(stylo,36) == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1b.xhtml # bug 1324661
+fails == flexbox-intrinsic-sizing-horiz-1a.xhtml flexbox-intrinsic-sizing-horiz-1a.xhtml
+fails == flexbox-intrinsic-sizing-horiz-1b.xhtml flexbox-intrinsic-sizing-horiz-1b.xhtml
 fails == flexbox-intrinsic-sizing-horiz-2a.xhtml flexbox-intrinsic-sizing-horiz-2a.xhtml
 fails == flexbox-intrinsic-sizing-horiz-2b.xhtml flexbox-intrinsic-sizing-horiz-2b.xhtml
 

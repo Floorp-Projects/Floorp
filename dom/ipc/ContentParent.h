@@ -575,6 +575,14 @@ public:
   RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aURI) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
+                                  const nsString& aKey,
+                                  const nsString& aOldValue,
+                                  const nsString& aNewValue,
+                                  const IPC::Principal& aPrincipal,
+                                  const bool& aIsPrivate) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvGetA11yContentId(uint32_t* aContentId) override;
 
   virtual int32_t Pid() const override;
@@ -804,11 +812,14 @@ private:
                                                       nsTArray<uint8_t>* aSignature) override;
 
   virtual mozilla::ipc::IPCResult RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
-                                                  const uint32_t& aFlags, bool* aIsSecureURI) override;
+                                                  const uint32_t& aFlags,
+                                                  const OriginAttributes& aOriginAttributes,
+                                                  bool* aIsSecureURI) override;
 
   virtual mozilla::ipc::IPCResult RecvAccumulateMixedContentHSTS(const URIParams& aURI,
                                                                  const bool& aActive,
-                                                                 const bool& aHSTSPriming) override;
+                                                                 const bool& aHSTSPriming,
+                                                                 const OriginAttributes& aOriginAttributes) override;
 
   virtual bool DeallocPHalParent(PHalParent*) override;
 

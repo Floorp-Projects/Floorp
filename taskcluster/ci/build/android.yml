@@ -134,7 +134,7 @@ android-api-15-gradle/opt:
         product: mobile
         job-name: android-api-15-gradle-opt
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-api-15-gradle/opt
         symbol: tc(Bg)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android

@@ -1520,40 +1520,65 @@ SetFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObje
     return ElementSpecific<T, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
 }
 
-/* set(array[, offset]) */
+// ES2017 draft rev c57ef95c45a371f9c9485bb1c3881dbdc04524a2
+// 22.2.3.23 %TypedArray%.prototype.set ( overloaded [ , offset ] )
+// 22.2.3.23.1 %TypedArray%.prototype.set ( array [ , offset ] )
+// 22.2.3.23.2 %TypedArray%.prototype.set( typedArray [ , offset ] )
 /* static */ bool
 TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
 
+    // Steps 1-5 (Validation performed as part of CallNonGenericMethod).
     Rooted<TypedArrayObject*> target(cx, &args.thisv().toObject().as<TypedArrayObject>());
 
-    // The first argument must be either a typed array or arraylike.
-    if (args.length() == 0 || !args[0].isObject()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-        return false;
-    }
-
-    int32_t offset = 0;
+    // Steps 6-7.
+    double targetOffset = 0;
     if (args.length() > 1) {
-        if (!ToInt32(cx, args[1], &offset))
+        // Step 6.
+        if (!ToInteger(cx, args[1], &targetOffset))
             return false;
 
-        if (offset < 0 || uint32_t(offset) > target->length()) {
-            // the given offset is bogus
+        // Step 7.
+        if (targetOffset < 0) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
             return false;
         }
     }
 
-    RootedObject arg0(cx, &args[0].toObject());
-    if (arg0->is<TypedArrayObject>()) {
-        Handle<TypedArrayObject*> source = arg0.as<TypedArrayObject>();
-        if (source->length() > target->length() - offset) {
+    // Steps 8-9.
+    if (target->hasDetachedBuffer()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
+    }
+
+    if (args.get(0).isObject() && args[0].toObject().is<TypedArrayObject>()) {
+        // Remaining steps of 22.2.3.23.2.
+        Rooted<TypedArrayObject*> source(cx, &args[0].toObject().as<TypedArrayObject>());
+
+        // Steps 11-12.
+        if (source->hasDetachedBuffer()) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+            return false;
+        }
+
+        // Step 10 (Reordered).
+        uint32_t targetLength = target->length();
+
+        // Step 22 (Split into two checks to provide better error messages).
+        if (targetOffset > targetLength) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+            return false;
+        }
+
+        // Step 22 (Cont'd).
+        uint32_t offset = uint32_t(targetOffset);
+        if (source->length() > targetLength - offset) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
 
+        // Steps 13-21, 23-28.
         switch (target->type()) {
 #define SET_FROM_TYPED_ARRAY(T, N) \
           case Scalar::N: \
@@ -1566,28 +1591,83 @@ JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
             MOZ_CRASH("Unsupported TypedArray type");
         }
     } else {
-        uint32_t len;
-        if (!GetLengthProperty(cx, arg0, &len))
+        // Remaining steps of 22.2.3.23.1.
+
+        // Step 10.
+        // We can't reorder this step because side-effects in step 16 can
+        // detach the underlying array buffer from the typed array.
+        uint32_t targetLength = target->length();
+
+        // Step 15.
+        RootedObject src(cx, ToObject(cx, args.get(0)));
+        if (!src)
             return false;
 
-        if (uint32_t(offset) > target->length() || len > target->length() - offset) {
+        // Step 16.
+        uint32_t srcLength;
+        if (!GetLengthProperty(cx, src, &srcLength))
+            return false;
+
+        // Step 17 (Split into two checks to provide better error messages).
+        if (targetOffset > targetLength) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
+            return false;
+        }
+
+        // Step 17 (Cont'd).
+        uint32_t offset = uint32_t(targetOffset);
+        if (srcLength > targetLength - offset) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
 
-        switch (target->type()) {
+        // Steps 11-14, 18-21.
+        if (srcLength > 0) {
+            // GetLengthProperty in step 16 can lead to the execution of user
+            // code which may detach the buffer. Handle this case here to
+            // ensure SetFromNonTypedArray is never called with a detached
+            // buffer. We still need to execute steps 21.a-b for their
+            // possible side-effects.
+            if (target->hasDetachedBuffer()) {
+                // Steps 21.a-b.
+                RootedValue v(cx);
+                if (!GetElement(cx, src, src, 0, &v))
+                   return false;
+
+                double unused;
+                if (!ToNumber(cx, v, &unused))
+                    return false;
+
+                // Step 21.c.
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_DETACHED);
+                return false;
+            }
+
+            switch (target->type()) {
 #define SET_FROM_NON_TYPED_ARRAY(T, N) \
-          case Scalar::N: \
-            if (!SetFromNonTypedArray<T>(cx, target, arg0, len, offset)) \
-                return false; \
-            break;
+              case Scalar::N: \
+                if (!SetFromNonTypedArray<T>(cx, target, src, srcLength, offset)) \
+                    return false; \
+                break;
 JS_FOR_EACH_TYPED_ARRAY(SET_FROM_NON_TYPED_ARRAY)
 #undef SET_FROM_NON_TYPED_ARRAY
-          default:
-            MOZ_CRASH("Unsupported TypedArray type");
+              default:
+                MOZ_CRASH("Unsupported TypedArray type");
+            }
+
+            // Step 21.c.
+            // SetFromNonTypedArray doesn't throw when the array buffer gets
+            // detached.
+            if (target->hasDetachedBuffer()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                          JSMSG_TYPED_ARRAY_DETACHED);
+                return false;
+            }
         }
     }
 
+    // Step 29/22.
     args.rval().setUndefined();
     return true;
 }

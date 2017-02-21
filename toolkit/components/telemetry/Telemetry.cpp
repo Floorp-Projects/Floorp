@@ -12,6 +12,7 @@
 #include <prproces.h>
 
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
@@ -24,6 +25,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsThreadManager.h"
+#include "nsXPCOMCIDInternal.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMPrivate.h"
@@ -76,6 +78,8 @@
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/HangMonitor.h"
+#include "nsNativeCharsetUtils.h"
+#include "nsProxyRelease.h"
 
 #if defined(MOZ_GECKO_PROFILER)
 #include "shared-libraries.h"
@@ -96,6 +100,8 @@ namespace {
 using namespace mozilla;
 using namespace mozilla::HangMonitor;
 using Telemetry::Common::AutoHashtable;
+using mozilla::dom::Promise;
+using mozilla::dom::AutoJSAPI;
 
 // The maximum number of chrome hangs stacks that we're keeping.
 const size_t kMaxChromeStacksKept = 50;
@@ -1654,8 +1660,197 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   return ret;
 }
 
+#if defined(MOZ_GECKO_PROFILER)
+class GetLoadedModulesResultRunnable final : public Runnable
+{
+  nsMainThreadPtrHandle<Promise> mPromise;
+  SharedLibraryInfo mRawModules;
+  nsCOMPtr<nsIThread> mWorkerThread;
+
+public:
+  GetLoadedModulesResultRunnable(const nsMainThreadPtrHandle<Promise>& aPromise, const SharedLibraryInfo& rawModules)
+    : mPromise(aPromise)
+    , mRawModules(rawModules)
+    , mWorkerThread(do_GetCurrentThread())
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mWorkerThread->Shutdown();
+
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(mPromise->GlobalJSObject()))) {
+      mPromise->MaybeReject(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    JSContext* cx = jsapi.cx();
+
+    JS::RootedObject moduleArray(cx, JS_NewArrayObject(cx, 0));
+    if (!moduleArray) {
+      mPromise->MaybeReject(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    for (unsigned int i = 0, n = mRawModules.GetSize(); i != n; i++) {
+      const SharedLibrary &info = mRawModules.GetEntry(i);
+
+      nsString basename = info.GetName();
+#if defined(XP_MACOSX) || defined(XP_LINUX)
+      int32_t pos = basename.RFindChar('/');
+      if (pos != kNotFound) {
+        basename.Cut(0, pos + 1);
+      }
+#endif
+
+      nsString debug_basename = info.GetDebugName();
+#if defined(XP_MACOSX) || defined(XP_LINUX)
+      pos = debug_basename.RFindChar('/');
+      if (pos != kNotFound) {
+        debug_basename.Cut(0, pos + 1);
+      }
+#endif
+
+      JS::RootedObject moduleObj(cx, JS_NewPlainObject(cx));
+      if (!moduleObj) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+
+      // Module name.
+      JS::RootedString moduleName(cx, JS_NewUCStringCopyZ(cx, basename.get()));
+      if (!moduleName || !JS_DefineProperty(cx, moduleObj, "name", moduleName, JSPROP_ENUMERATE)) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+
+      // Module debug name.
+      JS::RootedValue moduleDebugName(cx);
+
+      if (!debug_basename.IsEmpty()) {
+        JS::RootedString str_moduleDebugName(cx, JS_NewUCStringCopyZ(cx, debug_basename.get()));
+        if (!str_moduleDebugName) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+          return NS_OK;
+        }
+        moduleDebugName.setString(str_moduleDebugName);
+      }
+      else {
+        moduleDebugName.setNull();
+      }
+
+      if (!JS_DefineProperty(cx, moduleObj, "debugName", moduleDebugName, JSPROP_ENUMERATE)) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+
+      // Module Breakpad identifier.
+      JS::RootedValue id(cx);
+
+      if (!info.GetBreakpadId().empty()) {
+        JS::RootedString str_id(cx, JS_NewStringCopyZ(cx, info.GetBreakpadId().c_str()));
+        if (!str_id) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+          return NS_OK;
+        }
+        id.setString(str_id);
+      } else {
+        id.setNull();
+      }
+
+      if (!JS_DefineProperty(cx, moduleObj, "debugID", id, JSPROP_ENUMERATE)) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+
+      // Module version.
+      JS::RootedValue version(cx);
+
+      if (!info.GetVersion().empty()) {
+        JS::RootedString v(cx, JS_NewStringCopyZ(cx, info.GetVersion().c_str()));
+        if (!v) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+          return NS_OK;
+        }
+        version.setString(v);
+      } else {
+        version.setNull();
+      }
+
+      if (!JS_DefineProperty(cx, moduleObj, "version", version, JSPROP_ENUMERATE)) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+
+      if (!JS_DefineElement(cx, moduleArray, i, moduleObj, JSPROP_ENUMERATE)) {
+        mPromise->MaybeReject(NS_ERROR_FAILURE);
+        return NS_OK;
+      }
+    }
+
+    mPromise->MaybeResolve(moduleArray);
+    return NS_OK;
+  }
+};
+
+class GetLoadedModulesRunnable final : public Runnable
+{
+  nsMainThreadPtrHandle<Promise> mPromise;
+
+public:
+  explicit GetLoadedModulesRunnable(const nsMainThreadPtrHandle<Promise>& aPromise)
+    : mPromise(aPromise)
+  { }
+
+  NS_IMETHOD
+  Run() override
+  {
+    nsCOMPtr<nsIRunnable> resultRunnable = new GetLoadedModulesResultRunnable(mPromise, SharedLibraryInfo::GetInfoForSelf());
+    return NS_DispatchToMainThread(resultRunnable);
+  }
+};
+#endif // MOZ_GECKO_PROFILER
+
+NS_IMETHODIMP
+TelemetryImpl::GetLoadedModules(JSContext *cx, nsISupports** aPromise)
+{
+  nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(global, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+#if defined(MOZ_GECKO_PROFILER)
+  nsCOMPtr<nsIThreadManager> tm = do_GetService(NS_THREADMANAGER_CONTRACTID);
+  nsCOMPtr<nsIThread> getModulesThread;
+  nsresult rv = tm->NewThread(0, 0, getter_AddRefs(getModulesThread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsMainThreadPtrHandle<Promise> mainThreadPromise(new nsMainThreadPtrHolder<Promise>(promise));
+  nsCOMPtr<nsIRunnable> runnable = new GetLoadedModulesRunnable(mainThreadPromise);
+  promise.forget(aPromise);
+
+  return getModulesThread->Dispatch(runnable, nsIEventTarget::DISPATCH_NORMAL);
+#else // MOZ_GECKO_PROFILER
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif // MOZ_GECKO_PROFILER
+}
+
 static bool
-IsValidBreakpadId(const std::string &breakpadId) {
+IsValidBreakpadId(const std::string &breakpadId)
+{
   if (breakpadId.size() < 33) {
     return false;
   }
@@ -3029,15 +3224,14 @@ GetStackAndModules(const std::vector<uintptr_t>& aPCs)
 #ifdef MOZ_GECKO_PROFILER
   for (unsigned i = 0, n = rawModules.GetSize(); i != n; ++i) {
     const SharedLibrary &info = rawModules.GetEntry(i);
-    const std::string &name = info.GetName();
-    std::string basename = name;
+    std::string basename = info.GetNativeDebugName();
 #if defined(XP_MACOSX) || defined(XP_LINUX)
     // We want to use just the basename as the libname, but the
     // current profiler addon needs the full path name, so we compute the
     // basename in here.
-    size_t pos = name.rfind('/');
+    size_t pos = basename.rfind('/');
     if (pos != std::string::npos) {
-      basename = name.substr(pos + 1);
+      basename = basename.substr(pos + 1);
     }
 #endif
     mozilla::Telemetry::ProcessedStack::Module module = {

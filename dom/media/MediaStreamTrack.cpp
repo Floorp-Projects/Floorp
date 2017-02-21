@@ -130,11 +130,12 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
     mReadyState(MediaStreamTrackState::Live),
     mEnabled(true), mConstraints(aConstraints)
 {
-
   GetSource().RegisterSink(this);
 
-  mPrincipalHandleListener = new PrincipalHandleListener(this);
-  AddListener(mPrincipalHandleListener);
+  if (GetOwnedStream()) {
+    mPrincipalHandleListener = new PrincipalHandleListener(this);
+    AddListener(mPrincipalHandleListener);
+  }
 
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =

@@ -35,6 +35,9 @@ function mismatchError(actual, expect) {
     return RegExp(str);
 }
 
+const emptyStackError = /from empty stack/;
+const unusedValuesError = /unused values not explicitly dropped by end of block/;
+
 function jsify(wasmVal) {
     if (wasmVal === 'nan')
         return NaN;

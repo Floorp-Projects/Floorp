@@ -16,57 +16,57 @@
 == bc_dyn_cg1.html bc_dyn_cg1.html
 == bc_dyn_cg2.html bc_dyn_cg2.html
 == bc_dyn_cg3.html bc_dyn_cg3.html
-fails asserts-if(stylo,4) == bc_dyn_table1.html bc_dyn_table1.html # bug 1324661
-fails asserts-if(stylo,6) == bc_dyn_table2.html bc_dyn_table2.html # bug 1324661
-fails asserts-if(stylo,2) == bc_dyn_table3.html bc_dyn_table3.html # bug 1324661
+== bc_dyn_table1.html bc_dyn_table1.html
+== bc_dyn_table2.html bc_dyn_table2.html
+== bc_dyn_table3.html bc_dyn_table3.html
 == bc_borderoffset1.html bc_borderoffset1.html
 == bc_borderoffset2.html bc_borderoffset2.html
-asserts-if(stylo,4) == frame_above_rules_all.html frame_above_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_above_rules_cols.html frame_above_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_above_rules_groups.html frame_above_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_above_rules_none.html frame_above_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_above_rules_rows.html frame_above_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_below_rules_all.html frame_below_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_below_rules_cols.html frame_below_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_below_rules_groups.html frame_below_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_below_rules_none.html frame_below_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_below_rules_rows.html frame_below_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_border_rules_all.html frame_border_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_border_rules_cols.html frame_border_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_border_rules_groups.html frame_border_rules_groups.html # bug 1324661
-asserts-if(stylo,7) == frame_border_rules_none.html frame_border_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_border_rules_rows.html frame_border_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_box_rules_all.html frame_box_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_box_rules_cols.html frame_box_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_box_rules_groups.html frame_box_rules_groups.html # bug 1324661
-asserts-if(stylo,7) == frame_box_rules_none.html frame_box_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_box_rules_none-collapse.html frame_box_rules_none-collapse.html # bug 1324661
-asserts-if(stylo,4) == frame_box_rules_rows.html frame_box_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_hsides_rules_all.html frame_hsides_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_hsides_rules_cols.html frame_hsides_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_hsides_rules_groups.html frame_hsides_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_hsides_rules_none.html frame_hsides_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_hsides_rules_rows.html frame_hsides_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_lhs_rules_all.html frame_lhs_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_lhs_rules_cols.html frame_lhs_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_lhs_rules_groups.html frame_lhs_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_lhs_rules_none.html frame_lhs_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_lhs_rules_rows.html frame_lhs_rules_rows.html # bug 1324661
-asserts-if(stylo,4) == frame_rhs_rules_all.html frame_rhs_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_rhs_rules_cols.html frame_rhs_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_rhs_rules_groups.html frame_rhs_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_rhs_rules_none.html frame_rhs_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_rhs_rules_rows.html frame_rhs_rules_rows.html # bug 1324661
+== frame_above_rules_all.html frame_above_rules_all.html
+== frame_above_rules_cols.html frame_above_rules_cols.html
+== frame_above_rules_groups.html frame_above_rules_groups.html
+== frame_above_rules_none.html frame_above_rules_none.html
+== frame_above_rules_rows.html frame_above_rules_rows.html
+== frame_below_rules_all.html frame_below_rules_all.html
+== frame_below_rules_cols.html frame_below_rules_cols.html
+== frame_below_rules_groups.html frame_below_rules_groups.html
+== frame_below_rules_none.html frame_below_rules_none.html
+== frame_below_rules_rows.html frame_below_rules_rows.html
+== frame_border_rules_all.html frame_border_rules_all.html
+== frame_border_rules_cols.html frame_border_rules_cols.html
+== frame_border_rules_groups.html frame_border_rules_groups.html
+== frame_border_rules_none.html frame_border_rules_none.html
+== frame_border_rules_rows.html frame_border_rules_rows.html
+== frame_box_rules_all.html frame_box_rules_all.html
+== frame_box_rules_cols.html frame_box_rules_cols.html
+== frame_box_rules_groups.html frame_box_rules_groups.html
+== frame_box_rules_none.html frame_box_rules_none.html
+== frame_box_rules_none-collapse.html frame_box_rules_none-collapse.html
+== frame_box_rules_rows.html frame_box_rules_rows.html
+== frame_hsides_rules_all.html frame_hsides_rules_all.html
+== frame_hsides_rules_cols.html frame_hsides_rules_cols.html
+== frame_hsides_rules_groups.html frame_hsides_rules_groups.html
+== frame_hsides_rules_none.html frame_hsides_rules_none.html
+== frame_hsides_rules_rows.html frame_hsides_rules_rows.html
+== frame_lhs_rules_all.html frame_lhs_rules_all.html
+== frame_lhs_rules_cols.html frame_lhs_rules_cols.html
+== frame_lhs_rules_groups.html frame_lhs_rules_groups.html
+== frame_lhs_rules_none.html frame_lhs_rules_none.html
+== frame_lhs_rules_rows.html frame_lhs_rules_rows.html
+== frame_rhs_rules_all.html frame_rhs_rules_all.html
+== frame_rhs_rules_cols.html frame_rhs_rules_cols.html
+== frame_rhs_rules_groups.html frame_rhs_rules_groups.html
+== frame_rhs_rules_none.html frame_rhs_rules_none.html
+== frame_rhs_rules_rows.html frame_rhs_rules_rows.html
 == frame_void_rules_all.html frame_void_rules_all.html
 == frame_void_rules_cols.html frame_void_rules_cols.html
 == frame_void_rules_groups.html frame_void_rules_groups.html
 == frame_void_rules_none.html frame_void_rules_none.html
 == frame_void_rules_rows.html frame_void_rules_rows.html
-asserts-if(stylo,4) == frame_vsides_rules_all.html frame_vsides_rules_all.html # bug 1324661
-asserts-if(stylo,4) == frame_vsides_rules_cols.html frame_vsides_rules_cols.html # bug 1324661
-asserts-if(stylo,4) == frame_vsides_rules_groups.html frame_vsides_rules_groups.html # bug 1324661
-asserts-if(stylo,4) == frame_vsides_rules_none.html frame_vsides_rules_none.html # bug 1324661
-asserts-if(stylo,4) == frame_vsides_rules_rows.html frame_vsides_rules_rows.html # bug 1324661
+== frame_vsides_rules_all.html frame_vsides_rules_all.html
+== frame_vsides_rules_cols.html frame_vsides_rules_cols.html
+== frame_vsides_rules_groups.html frame_vsides_rules_groups.html
+== frame_vsides_rules_none.html frame_vsides_rules_none.html
+== frame_vsides_rules_rows.html frame_vsides_rules_rows.html
 fails == borderhandling-1.html borderhandling-1.html
 fails == borderhandling-2.html borderhandling-2.html
 fails == borderhandling-3.html borderhandling-3.html
@@ -74,7 +74,7 @@ fails == borderhandling-4.html borderhandling-4.html
 fails == borderhandling-5.xhtml borderhandling-5.xhtml
 fails == borderhandling-6.xhtml borderhandling-6.xhtml
 fails == borderhandling-7.xhtml borderhandling-7.xhtml
-asserts-if(stylo,4) == borderhandling-8.html borderhandling-8.html # bug 1324661
+== borderhandling-8.html borderhandling-8.html
 fails == borderhandling-frame-border.html borderhandling-frame-border.html
 fails == borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks.html
 fails == borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks.html
@@ -92,10 +92,10 @@ fails == borderhandling-rules-border-cols-strict.html borderhandling-rules-borde
 fails == borderhandling-rules-border-all-strict.html borderhandling-rules-border-all-strict.html
 fails == bordercolor-1.html bordercolor-1.html
 fails == bordercolor-2.html bordercolor-2.html
-fails asserts-if(stylo,4) == bordercolor-3.html bordercolor-3.html # bug 1324661
+fails == bordercolor-3.html bordercolor-3.html
 fails == bordercolor-4.html bordercolor-4.html
-asserts-if(stylo,4) == empty-toprow.html empty-toprow.html # bug 1324661
-asserts-if(stylo,4) == double_borders.html double_borders.html # bug 1324661
+== empty-toprow.html empty-toprow.html
+== double_borders.html double_borders.html
 # == border-collapse-rtl.html border-collapse-rtl.html
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width

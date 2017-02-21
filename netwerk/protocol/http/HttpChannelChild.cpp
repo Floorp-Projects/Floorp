@@ -2944,11 +2944,14 @@ HttpChannelChild::ShouldInterceptURI(nsIURI* aURI,
       nsContentUtils::GetSecurityManager()->
         GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
   }
+  OriginAttributes originAttributes;
+  NS_ENSURE_TRUE(NS_GetOriginAttributes(this, originAttributes), false);
   rv = NS_ShouldSecureUpgrade(aURI,
                               mLoadInfo,
                               resultPrincipal,
                               mPrivateBrowsing,
                               mAllowSTS,
+                              originAttributes,
                               aShouldUpgrade);
   NS_ENSURE_SUCCESS(rv, false);
 

@@ -99,21 +99,18 @@ ${helpers.single_keyword("flex-wrap", "nowrap wrap wrap-reverse",
                               animatable=False)}
 % endif
 
-// https://drafts.csswg.org/css-flexbox/#propdef-align-items
-// FIXME: This is a workaround for 'normal' value. We don't support the Gecko initial value 'normal' yet.
-${helpers.single_keyword("align-items", "stretch flex-start flex-end center baseline" if product == "servo"
-                         else "normal stretch flex-start flex-end center baseline",
-                         need_clone=True,
-                         extra_prefixes="webkit",
-                         gecko_constant_prefix="NS_STYLE_ALIGN",
-                         spec="https://drafts.csswg.org/css-flexbox/#align-items-property",
-                         animatable=False)}
-
 % if product == "servo":
     // FIXME: Update Servo to support the same Syntax as Gecko.
     ${helpers.single_keyword("align-content", "stretch flex-start flex-end center space-between space-around",
                              extra_prefixes="webkit",
                              spec="https://drafts.csswg.org/css-align/#propdef-align-content",
+                             animatable=False)}
+
+    ${helpers.single_keyword("align-items",
+                             "stretch flex-start flex-end center baseline",
+                             need_clone=True,
+                             extra_prefixes="webkit",
+                             spec="https://drafts.csswg.org/css-flexbox/#align-items-property",
                              animatable=False)}
 % else:
     ${helpers.predefined_type(name="align-content",
@@ -121,6 +118,19 @@ ${helpers.single_keyword("align-items", "stretch flex-start flex-end center base
                               initial_value="specified::AlignJustifyContent::normal()",
                               spec="https://drafts.csswg.org/css-align/#propdef-align-content",
                               extra_prefixes="webkit",
+                              animatable=False)}
+
+    ${helpers.predefined_type(name="align-items",
+                              type="AlignItems",
+                              initial_value="specified::AlignItems::normal()",
+                              spec="https://drafts.csswg.org/css-align/#propdef-align-items",
+                              extra_prefixes="webkit",
+                              animatable=False)}
+
+    ${helpers.predefined_type(name="justify-items",
+                              type="JustifyItems",
+                              initial_value="specified::JustifyItems::auto()",
+                              spec="https://drafts.csswg.org/css-align/#propdef-justify-items",
                               animatable=False)}
 % endif
 
@@ -245,28 +255,31 @@ ${helpers.predefined_type("object-position",
                           spec="https://drafts.csswg.org/css-images-3/#the-object-position",
                           animatable=True)}
 
-<% grid_longhands = ["grid-row-start", "grid-row-end", "grid-column-start", "grid-column-end"] %>
+% for kind in ["row", "column"]:
+    ${helpers.predefined_type("grid-%s-gap" % kind,
+                              "LengthOrPercentage",
+                              "computed::LengthOrPercentage::Length(Au(0))",
+                              spec="https://drafts.csswg.org/css-grid/#propdef-grid-%s-gap" % kind,
+                              animatable=True,
+                              products="gecko")}
 
-% for longhand in grid_longhands:
-    ${helpers.predefined_type("%s" % longhand,
-                              "GridLine",
+    % for range in ["start", "end"]:
+        ${helpers.predefined_type("grid-%s-%s" % (kind, range),
+                                  "GridLine",
+                                  "Default::default()",
+                                  animatable=False,
+                                  spec="https://drafts.csswg.org/css-grid/#propdef-grid-%s-%s" % (kind, range),
+                                  products="gecko",
+                                  boxed=True)}
+    % endfor
+
+    // NOTE: According to the spec, this should handle multiple values of `<track-size>`,
+    // but gecko supports only a single value
+    ${helpers.predefined_type("grid-auto-%ss" % kind,
+                              "TrackSize",
                               "Default::default()",
                               animatable=False,
-                              spec="https://drafts.csswg.org/css-grid/#propdef-%s" % longhand,
+                              spec="https://drafts.csswg.org/css-grid/#propdef-grid-auto-%ss" % kind,
                               products="gecko",
                               boxed=True)}
 % endfor
-
-${helpers.predefined_type("grid-row-gap",
-                          "LengthOrPercentage",
-                          "computed::LengthOrPercentage::Length(Au(0))",
-                          spec="https://drafts.csswg.org/css-grid/#propdef-grid-row-gap",
-                          animatable=True,
-                          products="gecko")}
-
-${helpers.predefined_type("grid-column-gap",
-                          "LengthOrPercentage",
-                          "computed::LengthOrPercentage::Length(Au(0))",
-                          spec="https://drafts.csswg.org/css-grid/#propdef-grid-column-gap",
-                          animatable=True,
-                          products="gecko")}

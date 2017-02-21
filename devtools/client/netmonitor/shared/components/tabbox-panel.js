@@ -10,8 +10,8 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../../actions/index");
-const { Filters } = require("../../filter-predicates");
-const { L10N } = require("../../l10n");
+const { Filters } = require("../../utils/filter-predicates");
+const { L10N } = require("../../utils/l10n");
 const { getSelectedRequest } = require("../../selectors/index");
 
 // Components

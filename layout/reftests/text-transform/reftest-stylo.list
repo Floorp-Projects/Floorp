@@ -4,7 +4,7 @@
 == capitalize-3.html capitalize-3.html
 == capitalize-4.html capitalize-4.html
 == capitalize-5.html capitalize-5.html
-fails == capitalize-6.html capitalize-6.html
+== capitalize-6.html capitalize-6.html
 == capitalize-7.html capitalize-7.html
 == capitalize-7a.html capitalize-7a.html
 == capitalize-8.html capitalize-8.html
@@ -25,13 +25,13 @@ fails == all-title.html all-title.html
 == smtp-upper.html smtp-upper.html
 == smtp-lower.html smtp-lower.html
 == smtp-title.html smtp-title.html
-fails == turkish-casing-1.html turkish-casing-1.html
+== turkish-casing-1.html turkish-casing-1.html
 fails HTTP(..) == small-caps-turkish-1.html small-caps-turkish-1.html
-fails == greek-uppercase-1a.html greek-uppercase-1a.html
-fails == greek-uppercase-1b.html greek-uppercase-1b.html
-fails == greek-uppercase-2.html greek-uppercase-2.html
+== greek-uppercase-1a.html greek-uppercase-1a.html
+== greek-uppercase-1b.html greek-uppercase-1b.html
+== greek-uppercase-2.html greek-uppercase-2.html
 fails HTTP(..) == greek-small-caps-1.html greek-small-caps-1.html
-fails == irish-uppercase-1.html irish-uppercase-1.html
+== irish-uppercase-1.html irish-uppercase-1.html
 fails == irish-lowercase-1a.html irish-lowercase-1a.html
 fails == irish-lowercase-1b.html irish-lowercase-1b.html
 == fullwidth-1.html fullwidth-1.html

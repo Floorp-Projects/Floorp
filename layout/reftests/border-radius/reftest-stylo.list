@@ -77,7 +77,7 @@ fails == scrollbar-clamping-2.html scrollbar-clamping-2.html
 
 # Test for bad corner joins.
 fails == corner-joins-1.xhtml corner-joins-1.xhtml
-fails == corner-joins-2.xhtml corner-joins-2.xhtml
+== corner-joins-2.xhtml corner-joins-2.xhtml
 
 == scroll-1.html scroll-1.html
 

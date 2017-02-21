@@ -41,7 +41,9 @@ function runTests() {
                                      isWidgetEventSynthesized: true });
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+});
 
 </script>
 </body>

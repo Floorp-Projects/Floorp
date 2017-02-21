@@ -537,12 +537,6 @@ pub mod root {
     pub const NS_STYLE_GRID_AUTO_FLOW_COLUMN: ::std::os::raw::c_uint = 2;
     pub const NS_STYLE_GRID_AUTO_FLOW_DENSE: ::std::os::raw::c_uint = 4;
     pub const NS_STYLE_GRID_TEMPLATE_SUBGRID: ::std::os::raw::c_uint = 0;
-    pub const NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT: ::std::os::raw::c_uint
-              =
-        1;
-    pub const NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT: ::std::os::raw::c_uint
-              =
-        2;
     pub const NS_STYLE_GRID_REPEAT_AUTO_FILL: ::std::os::raw::c_uint = 0;
     pub const NS_STYLE_GRID_REPEAT_AUTO_FIT: ::std::os::raw::c_uint = 1;
     pub const NS_STYLE_WIDTH_MAX_CONTENT: ::std::os::raw::c_uint = 0;
@@ -5653,6 +5647,9 @@ pub mod root {
             MozGroupbox = 37,
             MozPopup = 38,
         }
+        #[repr(u8)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub enum StyleGridTrackBreadth { MaxContent = 1, MinContent = 2, }
         #[repr(C)]
         #[derive(Debug, Copy, Clone)]
         pub struct WritingMode([u8; 0]);
@@ -24719,6 +24716,23 @@ pub mod root {
     pub type ThreadSafePrincipalHolder =
         root::nsMainThreadPtrHolder<root::nsIPrincipal>;
     pub type ThreadSafeURIHolder = root::nsMainThreadPtrHolder<root::nsIURI>;
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct ServoBundledURI {
+        pub mURLString: *const u8,
+        pub mURLStringLength: u32,
+        pub mBaseURI: *mut root::ThreadSafeURIHolder,
+        pub mReferrer: *mut root::ThreadSafeURIHolder,
+        pub mPrincipal: *mut root::ThreadSafePrincipalHolder,
+    }
+    #[test]
+    fn bindgen_test_layout_ServoBundledURI() {
+        assert_eq!(::std::mem::size_of::<ServoBundledURI>() , 40usize);
+        assert_eq!(::std::mem::align_of::<ServoBundledURI>() , 8usize);
+    }
+    impl Clone for ServoBundledURI {
+        fn clone(&self) -> Self { *self }
+    }
     pub type nsMediaFeatureValueGetter =
         ::std::option::Option<unsafe extern "C" fn(aPresContext:
                                                        *mut root::nsPresContext,

@@ -519,3 +519,18 @@ callback IdleRequestCallback = void (IdleDeadline deadline);
 partial interface Window {
   [ChromeOnly] readonly attribute boolean isSecureContextIfOpenerIgnored;
 };
+
+partial interface Window {
+/**
+  * Returns a list of locales that the application should be localized to.
+  *
+  * The result is a sorted list of valid locale IDs and it should be
+  * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
+  *
+  * This API always returns at least one locale.
+  *
+  * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+  */
+  [Func="IsChromeOrXBL"]
+  sequence<DOMString> getAppLocales();
+};

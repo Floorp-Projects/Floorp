@@ -981,11 +981,37 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
  * See: http://developer.mozilla.org/en/docs/Category:JSAPI_Reference
  */
 
+// Create a new runtime, with a single cooperative context for this thread.
+// On success, the new context will be the active context for the runtime.
 extern JS_PUBLIC_API(JSContext*)
 JS_NewContext(uint32_t maxbytes,
               uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,
               JSRuntime* parentRuntime = nullptr);
 
+// The methods below for controlling the active context in a cooperatively
+// multithreaded runtime are not threadsafe, and the caller must ensure they
+// are called serially if there is a chance for contention between threads.
+
+// Called from the active context for a runtime, yield execution so that
+// this context is no longer active and can no longer use the API.
+extern JS_PUBLIC_API(void)
+JS_YieldCooperativeContext(JSContext* cx);
+
+// Called from a context whose runtime has no active context, this thread
+// becomes the active context for that runtime and may use the API.
+extern JS_PUBLIC_API(void)
+JS_ResumeCooperativeContext(JSContext* cx);
+
+// Create a new context on this thread for cooperative multithreading in the
+// same runtime as siblingContext. Called on a runtime (as indicated by
+// siblingContet) which has no active context, on success the new context will
+// become the runtime's active context.
+extern JS_PUBLIC_API(JSContext*)
+JS_NewCooperativeContext(JSContext* siblingContext);
+
+// Destroy a context allocated with JS_NewContext or JS_NewCooperativeContext.
+// The context must be the current active context in the runtime, and after
+// this call the runtime will have no active context.
 extern JS_PUBLIC_API(void)
 JS_DestroyContext(JSContext* cx);
 

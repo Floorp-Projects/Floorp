@@ -14,6 +14,9 @@
 #include "nsIPrincipal.h"
 #include "nsICookiePermission.h"
 
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StorageBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
@@ -25,6 +28,9 @@
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
+
+using namespace ipc;
+
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Storage, mManager, mPrincipal, mWindow)
@@ -58,7 +64,6 @@ Storage::Storage(nsPIDOMWindowInner* aWindow,
 
 Storage::~Storage()
 {
-  mCache->KeepAlive();
 }
 
 /* virtual */ JSObject*
@@ -216,27 +221,97 @@ Storage::BroadcastChangeNotification(const nsSubstring& aKey,
                                      const nsSubstring& aOldValue,
                                      const nsSubstring& aNewValue)
 {
+  if (!XRE_IsParentProcess() && GetType() == LocalStorage && mPrincipal) {
+    // If we are in a child process, we want to send a message to the parent in
+    // order to broadcast the StorageEvent correctly to any child process.
+    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+    Unused << NS_WARN_IF(!cc->SendBroadcastLocalStorageChange(
+      mDocumentURI, nsString(aKey), nsString(aOldValue), nsString(aNewValue),
+      IPC::Principal(mPrincipal), mIsPrivate));
+  }
+
+  DispatchStorageEvent(GetType(), mDocumentURI, aKey, aOldValue, aNewValue,
+                       mPrincipal, mIsPrivate, this, false);
+}
+
+/* static */ void
+Storage::DispatchStorageEvent(StorageType aStorageType,
+                              const nsAString& aDocumentURI,
+                              const nsAString& aKey,
+                              const nsAString& aOldValue,
+                              const nsAString& aNewValue,
+                              nsIPrincipal* aPrincipal,
+                              bool aIsPrivate,
+                              Storage* aStorage,
+                              bool aImmediateDispatch)
+{
   StorageEventInit dict;
   dict.mBubbles = false;
   dict.mCancelable = false;
   dict.mKey = aKey;
   dict.mNewValue = aNewValue;
   dict.mOldValue = aOldValue;
-  dict.mStorageArea = this;
-  dict.mUrl = mDocumentURI;
+  dict.mStorageArea = aStorage;
+  dict.mUrl = aDocumentURI;
 
   // Note, this DOM event should never reach JS. It is cloned later in
   // nsGlobalWindow.
   RefPtr<StorageEvent> event =
     StorageEvent::Constructor(nullptr, NS_LITERAL_STRING("storage"), dict);
 
+  event->SetPrincipal(aPrincipal);
+
   RefPtr<StorageNotifierRunnable> r =
     new StorageNotifierRunnable(event,
-                                GetType() == LocalStorage
+                                aStorageType == LocalStorage
                                   ? u"localStorage"
                                   : u"sessionStorage",
-                                IsPrivate());
-  NS_DispatchToMainThread(r);
+                                aIsPrivate);
+
+  if (aImmediateDispatch) {
+    Unused << r->Run();
+  } else {
+    NS_DispatchToMainThread(r);
+  }
+
+  // If we are in the parent process and we have the principal, we want to
+  // broadcast this event to every other process.
+  if (aStorageType == LocalStorage && XRE_IsParentProcess() && aPrincipal) {
+    for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+      Unused << cp->SendDispatchLocalStorageChange(
+        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
+        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
+    }
+  }
+}
+
+void
+Storage::ApplyEvent(StorageEvent* aStorageEvent)
+{
+  MOZ_ASSERT(aStorageEvent);
+
+  nsAutoString key;
+  nsAutoString old;
+  nsAutoString value;
+
+  aStorageEvent->GetKey(key);
+  aStorageEvent->GetNewValue(value);
+
+  // No key means clearing the full storage.
+  if (key.IsVoid()) {
+    MOZ_ASSERT(value.IsVoid());
+    mCache->Clear(this, StorageCache::E10sPropagated);
+    return;
+  }
+
+  // No new value means removing the key.
+  if (value.IsVoid()) {
+    mCache->RemoveItem(this, key, old, StorageCache::E10sPropagated);
+    return;
+  }
+
+  // Otherwise, we set the new value.
+  mCache->SetItem(this, key, value, old, StorageCache::E10sPropagated);
 }
 
 static const char kPermissionType[] = "cookie";

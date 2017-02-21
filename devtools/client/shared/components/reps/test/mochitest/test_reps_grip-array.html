@@ -17,7 +17,11 @@ Test GripArray rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const {
+    REPS,
+    MODE,
+    getSelectableInInspectorGrips,
+  } = browserRequire("devtools/client/shared/components/reps/load-reps");
   let { Rep, GripArray } = REPS;
 
   let componentUnderTest = GripArray;
@@ -39,8 +43,9 @@ window.onload = Task.async(function* () {
     yield testNodeList();
     yield testDocumentFragment();
 
-    yield testOnMouseOver();
-    yield testOnMouseOut();
+    yield testOnDomNodeMouseOver();
+    yield testOnDomNodeMouseOut();
+    yield testOnDomNodeInspectIconClick();
   } catch (e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
@@ -103,6 +108,13 @@ window.onload = Task.async(function* () {
       {
         mode: MODE.LONG,
         expectedOutput: defaultOutput,
+      },
+      {
+        // Check the custom title with nested objects to make sure nested objects are not
+        // displayed with their parent's title.
+        mode: MODE.LONG,
+        title: "CustomTitle",
+        expectedOutput: `CustomTitle [ 1, "foo", Object ]`,
       }
     ];
 
@@ -308,41 +320,98 @@ window.onload = Task.async(function* () {
     testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
   }
 
-
-
-  function testOnMouseOver() {
+  function testOnDomNodeMouseOver() {
     const stub = getGripStub("testNodeList");
+    const grips = getSelectableInInspectorGrips(stub);
+
+    is(grips.length, 3, "the stub has three node grips");
+
+    const attachedActorIds = getStubAttachedActorIds(grips);
 
     let mouseOverValue;
     let onDOMNodeMouseOver = (object) => {
       mouseOverValue = object;
     };
-    const renderedComponent = renderComponent(
-      GripArray.rep, {object: stub, onDOMNodeMouseOver});
+    const renderedComponent = renderComponent(GripArray.rep, {
+      object: stub,
+      onDOMNodeMouseOver,
+      attachedActorIds,
+    });
 
     const nodes = renderedComponent.querySelectorAll(".objectBox-node");
+    is(nodes.length, 3, "There are three node elements");
     nodes.forEach((node, index) => {
       TestUtils.Simulate.mouseOver(node);
 
-      is(mouseOverValue, stub.preview.items[index], "onDOMNodeMouseOver is called with " +
-        "the expected argument when mouseover is fired on the Rep");
+      is(mouseOverValue, grips[index],
+        "onDOMNodeMouseOver is called with the expected argument " +
+        "when mouseover is fired on the Rep");
     });
   }
 
-  function testOnMouseOut() {
+  function testOnDomNodeMouseOut() {
     const stub = getGripStub("testNodeList");
+    const grips = getSelectableInInspectorGrips(stub);
 
-    let called = false;
+    is(grips.length, 3, "the stub has three node grips");
+
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let called = 0;
     let onDOMNodeMouseOut = (object) => {
-      called = true;
+      called++;
     };
-    const renderedComponent = renderComponent(
-      GripArray.rep, {object: stub, onDOMNodeMouseOut});
+    const renderedComponent = renderComponent(GripArray.rep, {
+      object: stub,
+      onDOMNodeMouseOut,
+      attachedActorIds,
+    });
 
-    const node = renderedComponent.querySelector(".objectBox-node");
-    TestUtils.Simulate.mouseOut(node);
+    const nodes = renderedComponent.querySelectorAll(".objectBox-node");
+    info("Simulating mouseout on each node");
+    Array.from(nodes).forEach(node => TestUtils.Simulate.mouseOut(node));
 
-    is(called, true, "onDOMNodeMouseOut is called when mouseout is fired on the Rep");
+    is(called, 3, "onDOMNodeMouseOut is called when mouseout is fired on each NodeRep");
+  }
+
+  function testOnDomNodeInspectIconClick() {
+    const stub = getGripStub("testNodeList");
+    const grips = getSelectableInInspectorGrips(stub);
+
+    is(grips.length, 3, "the stub has three node grips");
+
+    const attachedActorIds = getStubAttachedActorIds(grips);
+
+    let inspectIconClickedValue = null;
+    let onInspectIconClick = (object) => {
+      inspectIconClickedValue = object;
+    };
+
+    let renderedComponentWithoutInspectIcon = renderComponent(GripArray.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds: ["someOtherId"],
+    });
+    is(renderedComponentWithoutInspectIcon.querySelector(".open-inspector"), null,
+      "There isn't an inspect icon when the actor is not in attachedActorIds");
+
+    const renderedComponent = renderComponent(GripArray.rep, {
+      object: stub,
+      onInspectIconClick,
+      attachedActorIds,
+    });
+
+    const icons = renderedComponent.querySelectorAll(".open-inspector");
+    is(icons.length, grips.length,
+      "There is an icon for each grip array item with a matching attachedNodeFront");
+
+    icons.forEach((icon, index) => {
+      TestUtils.Simulate.click(icon);
+
+      is(inspectIconClickedValue, grips[index],
+        "onInspectIconClick is called with the expected argument " +
+        "when the inspect icon is clicked");
+    });
   }
 
   function getGripStub(functionName) {

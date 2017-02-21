@@ -2616,6 +2616,9 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       const void* parentStruct = parentContext->StyleData(aSID);
       aContext->AddStyleBit(bit); // makes const_cast OK.
       aContext->SetStyle(aSID, const_cast<void*>(parentStruct));
+      if (isReset) {
+        parentContext->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
+      }
       return parentStruct;
     }
     else

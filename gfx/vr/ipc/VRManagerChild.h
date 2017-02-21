@@ -81,9 +81,9 @@ public:
   void UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates);
   void FireDOMVRDisplayMountedEvent(uint32_t aDisplayID);
   void FireDOMVRDisplayUnmountedEvent(uint32_t aDisplayID);
-  void FireDOMVRDisplayConnectEvent();
-  void FireDOMVRDisplayDisconnectEvent();
-  void FireDOMVRDisplayPresentChangeEvent();
+  void FireDOMVRDisplayConnectEvent(uint32_t aDisplayID);
+  void FireDOMVRDisplayDisconnectEvent(uint32_t aDisplayID);
+  void FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID);
 
   virtual void HandleFatalError(const char* aName, const char* aMsg) const override;
 
@@ -141,9 +141,9 @@ private:
 
   void FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID);
   void FireDOMVRDisplayUnmountedEventInternal(uint32_t aDisplayID);
-  void FireDOMVRDisplayConnectEventInternal();
-  void FireDOMVRDisplayDisconnectEventInternal();
-  void FireDOMVRDisplayPresentChangeEventInternal();
+  void FireDOMVRDisplayConnectEventInternal(uint32_t aDisplayID);
+  void FireDOMVRDisplayDisconnectEventInternal(uint32_t aDisplayID);
+  void FireDOMVRDisplayPresentChangeEventInternal(uint32_t aDisplayID);
   /**
   * Notify id of Texture When host side end its use. Transaction id is used to
   * make sure if there is no newer usage.
@@ -167,8 +167,7 @@ private:
   int32_t mFrameRequestCallbackCounter;
   mozilla::TimeStamp mStartTimeStamp;
 
-  // Array of Weak pointers, instance is owned by nsGlobalWindow::mVREventObserver.
-  nsTArray<dom::VREventObserver*> mListeners;
+  nsTArray<RefPtr<dom::VREventObserver>> mListeners;
 
   /**
   * Hold TextureClients refs until end of their usages on host side.

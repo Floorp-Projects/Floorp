@@ -144,6 +144,41 @@
     "description": "The operating system audio back-end used when successfully opening an audio stream, or whether the failure occurred on the first try or not <https://dxr.mozilla.org/mozilla-central/search?q=AUDIOSTREAM_BACKEND_ID_STR>",
     "releaseChannelCollection": "opt-out"
   },
+  "AUSHELPER_CPU_ERROR_CODE": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1296630],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 16,
+    "releaseChannelCollection": "opt-out",
+    "description": "The error code from the aushelper system add-on when querying the registry for CPU information for bug 1296630 (see browser/extensions/aushelper/bootstrap.js)."
+  },
+  "AUSHELPER_CPU_RESULT_CODE": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1296630],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 5,
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the system is affected by bug 1296630 (1=No, 2=Yes, 3=Error, and 4=Unknown)."
+  },
+  "AUSHELPER_WEBSENSE_ERROR_CODE": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1305847],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 8,
+    "releaseChannelCollection": "opt-out",
+    "description": "The error code from the aushelper system add-on when gathering information on Websense (see browser/extensions/aushelper/bootstrap.js)."
+  },
+  "AUSHELPER_WEBSENSE_REG_EXISTS": {
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1305847],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the system has a Websense InstallVersion registry value (see browser/extensions/aushelper/bootstrap.js)."
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -4127,6 +4162,24 @@
     "bug_numbers": [1298257],
     "description": "Classifier prefix matching result (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
   },
+  "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 86400000,
+    "n_buckets": 50,
+    "bug_numbers": [1338082],
+    "description": "Positive cache duration (ms) received in fullhash response from any v4 provider"
+  },
+  "URLCLASSIFIER_NEGATIVE_CACHE_DURATION": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 86400000,
+    "n_buckets": 50,
+    "bug_numbers": [1338082],
+    "description": "Negative cache duration (ms) received in fullhash response from any v4 provider"
+  },
   "CSP_DOCUMENTS_COUNT": {
     "alert_emails": ["seceng@mozilla.com"],
     "bug_numbers": [1252829],
@@ -5113,6 +5166,39 @@
     "releaseChannelCollection": "opt-out",
     "keyed": true,
     "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser."
+  },
+  "FX_MIGRATION_BOOKMARKS_JANK_MS": {
+    "bug_numbers": [1338522],
+    "alert_emails": ["dao@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing bookmarks from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
+  },
+  "FX_MIGRATION_HISTORY_JANK_MS": {
+    "bug_numbers": [1338522],
+    "alert_emails": ["dao@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing history from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
+  },
+  "FX_MIGRATION_LOGINS_JANK_MS": {
+    "bug_numbers": [1338522],
+    "alert_emails": ["dao@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
   },
   "FX_MIGRATION_BOOKMARKS_QUANTITY": {
     "bug_numbers": [1279501],
@@ -10466,6 +10552,16 @@
     "kind": "boolean",
     "cpp_guard": "XP_LINUX",
     "description": "Whether the sandbox is enabled for the content process"
+  },
+  "SANDBOX_REJECTED_SYSCALLS": {
+    "alert_emails": ["jld@mozilla.com", "gcp@mozilla.com"],
+    "bug_numbers": [1286865],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "count",
+    "keyed": true,
+    "cpp_guard": "XP_LINUX",
+    "description": "System calls blocked by a seccomp-bpf sandbox policy; limited to syscalls where we would crash on Nightly.  The key is generally the architecture and syscall ID but in some cases we include non-personally-identifying information from the syscall arguments; see the function SubmitToTelemetry in security/sandbox/linux/reporter/SandboxReporter.cpp for details."
   },
   "SYNC_WORKER_OPERATION": {
     "alert_emails": ["amarchesini@mozilla.com", "khuey@mozilla.com" ],

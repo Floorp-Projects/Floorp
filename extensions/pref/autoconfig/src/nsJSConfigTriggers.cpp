@@ -130,7 +130,7 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
         return NS_ERROR_UNEXPECTED;
     }
     rv = xpc->EvalInSandboxObject(convertedScript, filename, cx,
-                                  autoconfigSb, JSVERSION_LATEST, &v);
+                                  autoconfigSb, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

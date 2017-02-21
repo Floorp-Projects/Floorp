@@ -115,7 +115,7 @@ fails == css-multicol-1/multicol-nested-margin-002.xht css-multicol-1/multicol-n
 fails == css-multicol-1/multicol-nested-margin-003.xht css-multicol-1/multicol-nested-margin-003.xht
 fails == css-multicol-1/multicol-nested-margin-004.xht css-multicol-1/multicol-nested-margin-004.xht
 fails == css-multicol-1/multicol-nested-margin-005.xht css-multicol-1/multicol-nested-margin-005.xht
-fails asserts-if(stylo,4) == css-multicol-1/multicol-overflow-000.xht css-multicol-1/multicol-overflow-000.xht # bug 1324661
+fails == css-multicol-1/multicol-overflow-000.xht css-multicol-1/multicol-overflow-000.xht
 fails == css-multicol-1/multicol-overflowing-001.xht css-multicol-1/multicol-overflowing-001.xht
 fails == css-multicol-1/multicol-reduce-000.xht css-multicol-1/multicol-reduce-000.xht
 fails == css-multicol-1/multicol-rule-000.xht css-multicol-1/multicol-rule-000.xht
@@ -145,10 +145,10 @@ fails == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/multicol-rule
 == css-multicol-1/multicol-rule-shorthand-001.xht css-multicol-1/multicol-rule-shorthand-001.xht
 fails == css-multicol-1/multicol-rule-solid-000.xht css-multicol-1/multicol-rule-solid-000.xht
 fails == css-multicol-1/multicol-rule-stacking-001.xht css-multicol-1/multicol-rule-stacking-001.xht
-asserts-if(stylo,4) == css-multicol-1/multicol-rule-style-groove-001.xht css-multicol-1/multicol-rule-style-groove-001.xht # bug 1324661
-asserts-if(stylo,4) == css-multicol-1/multicol-rule-style-inset-001.xht css-multicol-1/multicol-rule-style-inset-001.xht # bug 1324661
-asserts-if(stylo,4) == css-multicol-1/multicol-rule-style-outset-001.xht css-multicol-1/multicol-rule-style-outset-001.xht # bug 1324661
-asserts-if(stylo,4) == css-multicol-1/multicol-rule-style-ridge-001.xht css-multicol-1/multicol-rule-style-ridge-001.xht # bug 1324661
+== css-multicol-1/multicol-rule-style-groove-001.xht css-multicol-1/multicol-rule-style-groove-001.xht
+== css-multicol-1/multicol-rule-style-inset-001.xht css-multicol-1/multicol-rule-style-inset-001.xht
+== css-multicol-1/multicol-rule-style-outset-001.xht css-multicol-1/multicol-rule-style-outset-001.xht
+== css-multicol-1/multicol-rule-style-ridge-001.xht css-multicol-1/multicol-rule-style-ridge-001.xht
 fails == css-multicol-1/multicol-shorthand-001.xht css-multicol-1/multicol-shorthand-001.xht
 fails == css-multicol-1/multicol-span-000.xht css-multicol-1/multicol-span-000.xht
 fails == css-multicol-1/multicol-span-all-001.xht css-multicol-1/multicol-span-all-001.xht
