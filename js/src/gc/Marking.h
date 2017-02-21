@@ -43,6 +43,8 @@ static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
 
 namespace gc {
 
+class MarkStackIter;
+
 /*
  * When the native stack is low, the GC does not call js::TraceChildren to mark
  * the reachable "children" of the thing. Rather the thing is put aside and
@@ -57,14 +59,6 @@ namespace gc {
  */
 class MarkStack
 {
-    ActiveThreadData<uintptr_t*> stack_;
-    ActiveThreadData<uintptr_t*> tos_;
-    ActiveThreadData<uintptr_t*> end_;
-
-    // The capacity we start with and reset() to.
-    ActiveThreadData<size_t> baseCapacity_;
-    ActiveThreadData<size_t> maxCapacity_;
-
   public:
     /*
      * We use a common mark stack to mark GC things of different types and use
@@ -87,21 +81,51 @@ class MarkStack
     static_assert(TagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
     static_assert(TagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
 
-    explicit MarkStack(size_t maxCapacity);
+    class TaggedPtr
+    {
+        uintptr_t bits;
 
-    ~MarkStack() {
-        js_free(stack_);
-    }
+        Cell* ptr() const;
+
+      public:
+        TaggedPtr(Tag tag, Cell* ptr);
+        Tag tag() const;
+        template <typename T> T* as() const;
+        JSObject* asValueArrayObject() const;
+        JSObject* asSavedValueArrayObject() const;
+        JSRope* asTempRope() const;
+    };
+
+    struct ValueArray
+    {
+        ValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end);
+
+        HeapSlot* end;
+        HeapSlot* start;
+        TaggedPtr ptr;
+    };
+
+    struct SavedValueArray
+    {
+        SavedValueArray(JSObject* obj, size_t index, HeapSlot::Kind kind);
+
+        uintptr_t kind;
+        uintptr_t index;
+        TaggedPtr ptr;
+    };
+
+    explicit MarkStack(size_t maxCapacity);
+    ~MarkStack();
 
     size_t capacity() { return end_ - stack_; }
 
-    ptrdiff_t position() const { return tos_ - stack_; }
-
-    void setStack(uintptr_t* stack, size_t tosIndex, size_t capacity) {
-        stack_ = stack;
-        tos_ = stack + tosIndex;
-        end_ = stack + capacity;
+    size_t position() const {
+        auto result = tos_ - stack_;
+        MOZ_ASSERT(result >= 0);
+        return size_t(result);
     }
+
+    void setStack(TaggedPtr* stack, size_t tosIndex, size_t capacity);
 
     MOZ_MUST_USE bool init(JSGCMode gcMode);
 
@@ -109,12 +133,11 @@ class MarkStack
     size_t maxCapacity() const { return maxCapacity_; }
     void setMaxCapacity(size_t maxCapacity);
 
-    uintptr_t* base() { return stack_; }
-    uintptr_t* top() { return tos_; }
-
     template <typename T>
     MOZ_MUST_USE bool push(T* ptr);
-    MOZ_MUST_USE bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3);
+    MOZ_MUST_USE bool push(JSObject* obj, HeapSlot* start, HeapSlot* end);
+    MOZ_MUST_USE bool push(const ValueArray& array);
+    MOZ_MUST_USE bool push(const SavedValueArray& array);
 
     // GCMarker::eagerlyMarkChildren uses unused marking stack as temporary
     // storage to hold rope pointers.
@@ -124,22 +147,62 @@ class MarkStack
         return tos_ == stack_;
     }
 
-    uintptr_t pop() {
-        MOZ_ASSERT(!isEmpty());
-        return *--tos_;
-    }
+    Tag peekTag() const;
+    TaggedPtr popPtr();
+    ValueArray popValueArray();
+    SavedValueArray popSavedValueArray();
 
     void reset();
-
-    /* Grow the stack, ensuring there is space for at least count elements. */
-    MOZ_MUST_USE bool enlarge(unsigned count);
 
     void setGCMode(JSGCMode gcMode);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   private:
-    MOZ_MUST_USE bool pushTaggedPtr(uintptr_t item);
+    MOZ_MUST_USE bool ensureSpace(size_t count);
+
+    /* Grow the stack, ensuring there is space for at least count elements. */
+    MOZ_MUST_USE bool enlarge(size_t count);
+
+    const TaggedPtr& peekPtr() const;
+    MOZ_MUST_USE bool pushTaggedPtr(Tag tag, Cell* ptr);
+
+    ActiveThreadData<TaggedPtr*> stack_;
+    ActiveThreadData<TaggedPtr*> tos_;
+    ActiveThreadData<TaggedPtr*> end_;
+
+    // The capacity we start with and reset() to.
+    ActiveThreadData<size_t> baseCapacity_;
+    ActiveThreadData<size_t> maxCapacity_;
+
+#ifdef DEBUG
+    mutable size_t iteratorCount_;
+#endif
+
+    friend class MarkStackIter;
+};
+
+class MarkStackIter
+{
+    const MarkStack& stack_;
+    MarkStack::TaggedPtr* pos_;
+
+  public:
+    explicit MarkStackIter(const MarkStack& stack);
+    ~MarkStackIter();
+
+    bool done() const;
+    MarkStack::Tag peekTag() const;
+    MarkStack::ValueArray peekValueArray() const;
+    void nextPtr();
+    void nextArray();
+
+    // Mutate the current ValueArray to a SavedValueArray.
+    void saveValueArray(NativeObject* obj, uintptr_t index, HeapSlot::Kind kind);
+
+  private:
+    size_t position() const;
+    const MarkStack::TaggedPtr& peekPtr() const;
 };
 
 struct WeakKeyTableHashPolicy {
@@ -289,7 +352,8 @@ class GCMarker : public JSTracer
         return stack.isEmpty();
     }
 
-    MOZ_MUST_USE bool restoreValueArray(JSObject* obj, void** vpp, void** endp);
+    MOZ_MUST_USE bool restoreValueArray(const gc::MarkStack::SavedValueArray& array,
+                                        HeapSlot** vpp, HeapSlot** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
 
