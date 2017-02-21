@@ -18,9 +18,6 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
-#ifdef MOZ_GECKO_PROFILER
-#include "mozilla/ProfileGatherer.h"
-#endif
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -61,9 +58,6 @@
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
-#ifdef MOZ_GECKO_PROFILER
-using mozilla::ProfileGatherer;
-#endif
 using mozilla::ipc::MessageChannel;
 using mozilla::ipc::GeckoChildProcessHost;
 
@@ -649,10 +643,7 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
         rv = profiler->GetStartParams(getter_AddRefs(currentProfilerParams));
         MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-        nsCOMPtr<nsISupports> gatherer;
-        rv = profiler->GetProfileGatherer(getter_AddRefs(gatherer));
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-        mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
+        mIsProfilerActive = true;
 
         StartProfiler(currentProfilerParams);
     }
@@ -781,6 +772,9 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mAsyncInitRv(NS_ERROR_NOT_INITIALIZED)
     , mAsyncInitError(NPERR_NO_ERROR)
     , mContentParent(nullptr)
+#ifdef MOZ_GECKO_PROFILER
+    , mIsProfilerActive(false)
+#endif
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
     sInstantiated = true;
@@ -3374,25 +3368,23 @@ PluginModuleChromeParent::StartProfiler(nsIProfilerStartParams* aParams)
     if (NS_WARN_IF(!profiler)) {
         return;
     }
-    nsCOMPtr<nsISupports> gatherer;
-    profiler->GetProfileGatherer(getter_AddRefs(gatherer));
-    mGatherer = static_cast<ProfileGatherer*>(gatherer.get());
+    mIsProfilerActive = true;
 }
 
 void
 PluginModuleChromeParent::StopProfiler()
 {
-    mGatherer = nullptr;
+    mIsProfilerActive = false;
     Unused << SendStopProfiler();
 }
 
 void
 PluginModuleChromeParent::GatherAsyncProfile()
 {
-    if (NS_WARN_IF(!mGatherer)) {
+    if (NS_WARN_IF(!mIsProfilerActive)) {
         return;
     }
-    mGatherer->WillGatherOOPProfile();
+    profiler_will_gather_OOP_profile();
     Unused << SendGatherProfile();
 }
 
@@ -3410,12 +3402,12 @@ mozilla::ipc::IPCResult
 PluginModuleChromeParent::RecvProfile(const nsCString& aProfile)
 {
 #ifdef MOZ_GECKO_PROFILER
-    if (NS_WARN_IF(!mGatherer)) {
+    if (NS_WARN_IF(!mIsProfilerActive)) {
         return IPC_OK();
     }
 
     mProfile = aProfile;
-    mGatherer->GatheredOOPProfile();
+    profiler_gathered_OOP_profile();
 #endif
     return IPC_OK();
 }
