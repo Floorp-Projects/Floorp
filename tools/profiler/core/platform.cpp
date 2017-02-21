@@ -174,7 +174,6 @@ static Atomic<bool> gUseStackWalk(false);
 
 // Values harvested from env vars, that control the profiler.
 static int gUnwindInterval;   /* in milliseconds */
-static int gUnwindStackScan;  /* max # of dubious frames allowed */
 static int gProfileEntries;   /* how many entries do we store? */
 
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
@@ -1309,22 +1308,6 @@ set_profiler_entries(const char* aEntries)
 }
 
 static bool
-set_profiler_scan(const char* aScanCount)
-{
-  if (aScanCount) {
-    errno = 0;
-    long int n = strtol(aScanCount, nullptr, 10);
-    if (errno == 0 && 0 <= n && n <= 100) {
-      gUnwindStackScan = n;
-      return true;
-    }
-    return false;
-  }
-
-  return true;
-}
-
-static bool
 is_native_unwinding_avail()
 {
 # if defined(HAVE_NATIVE_UNWIND)
@@ -1338,7 +1321,6 @@ is_native_unwinding_avail()
 static const char* PROFILER_HELP     = "MOZ_PROFILER_HELP";
 static const char* PROFILER_INTERVAL = "MOZ_PROFILER_INTERVAL";
 static const char* PROFILER_ENTRIES  = "MOZ_PROFILER_ENTRIES";
-static const char* PROFILER_STACK    = "MOZ_PROFILER_STACK_SCAN";
 #if defined(GP_OS_android)
 static const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
 #endif
@@ -1361,9 +1343,6 @@ profiler_usage()
   LOG( "Profiler:   MOZ_PROFILER_VERBOSE");
   LOG( "Profiler:   If set to any value, increases verbosity (recommended).");
   LOG( "Profiler: ");
-  LOG( "Profiler:   MOZ_PROFILER_STACK_SCAN=<number>   (default is zero)");
-  LOG( "Profiler:   The number of dubious (stack-scanned) frames allowed");
-  LOG( "Profiler: ");
   LOG( "Profiler:   MOZ_PROFILER_LUL_TEST");
   LOG( "Profiler:   If set to any value, runs LUL unit tests at startup of");
   LOG( "Profiler:   the unwinder thread, and prints a short summary of results.");
@@ -1375,20 +1354,17 @@ profiler_usage()
   /* Re-set defaults */
   gUnwindInterval   = 0;  /* We'll have to look elsewhere */
   gProfileEntries   = 0;
-  gUnwindStackScan  = 0;
 
   LOG( "Profiler:");
   LOGF("Profiler: Sampling interval = %d ms (zero means \"platform default\")",
        (int)gUnwindInterval);
   LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
        (int)gProfileEntries);
-  LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
-       (int)gUnwindStackScan);
   LOG( "Profiler:");
 }
 
 // Read env vars at startup, so as to set:
-//   gUnwindInterval, gProfileEntries, gUnwindStackScan.
+//   gUnwindInterval, gProfileEntries
 static void
 read_profiler_env_vars()
 {
@@ -1398,7 +1374,6 @@ read_profiler_env_vars()
 
   const char* interval = getenv(PROFILER_INTERVAL);
   const char* entries = getenv(PROFILER_ENTRIES);
-  const char* scanCount = getenv(PROFILER_STACK);
 
   if (getenv(PROFILER_HELP)) {
     // Enable verbose output
@@ -1410,8 +1385,7 @@ read_profiler_env_vars()
   }
 
   if (!set_profiler_interval(interval) ||
-      !set_profiler_entries(entries) ||
-      !set_profiler_scan(scanCount)) {
+      !set_profiler_entries(entries)) {
       profiler_usage();
   } else {
     LOG( "Profiler:");
@@ -1419,8 +1393,6 @@ read_profiler_env_vars()
         (int)gUnwindInterval);
     LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
         (int)gProfileEntries);
-    LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
-        (int)gUnwindStackScan);
     LOG( "Profiler:");
   }
 }
@@ -1640,8 +1612,7 @@ profiler_init(void* stackTop)
   bool isMainThread = true;
   RegisterCurrentThread(gGeckoThreadName, stack, isMainThread, stackTop);
 
-  // Read interval settings from MOZ_PROFILER_INTERVAL and stack-scan
-  // threshhold from MOZ_PROFILER_STACK_SCAN.
+  // Read settings from environment variables.
   read_profiler_env_vars();
 
   // Platform-specific initialization.
