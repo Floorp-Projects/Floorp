@@ -179,8 +179,8 @@ def test_reftest_computation_chain():
     test2 = s2.manifest_items()[1][0]
     test2_node = test2.to_RefTestNode()
 
-    assert list(m) == [("reftest", {test1}),
-                       ("reftest_node", {test2_node})]
+    assert list(m) == [("reftest", test1.path, {test1}),
+                       ("reftest_node", test2.path, {test2_node})]
 
 
 def test_reftest_computation_chain_update_add():
@@ -191,7 +191,7 @@ def test_reftest_computation_chain_update_add():
 
     assert m.update([s2]) is True
 
-    assert list(m) == [("reftest", {test2})]
+    assert list(m) == [("reftest", test2.path, {test2})]
 
     s1 = SourceFileWithTest("test1", "0"*40, item.RefTest, [("/test2", "==")])
     test1 = s1.manifest_items()[1][0]
@@ -201,8 +201,8 @@ def test_reftest_computation_chain_update_add():
 
     test2_node = test2.to_RefTestNode()
 
-    assert list(m) == [("reftest", {test1}),
-                       ("reftest_node", {test2_node})]
+    assert list(m) == [("reftest", test1.path, {test1}),
+                       ("reftest_node", test2.path, {test2_node})]
 
 
 def test_reftest_computation_chain_update_remove():
@@ -217,10 +217,10 @@ def test_reftest_computation_chain_update_remove():
     test2 = s2.manifest_items()[1][0]
     test2_node = test2.to_RefTestNode()
 
-    assert list(m) == [("reftest", {test1}),
-                       ("reftest_node", {test2_node})]
+    assert list(m) == [("reftest", test1.path, {test1}),
+                       ("reftest_node", test2.path, {test2_node})]
 
     # s2's hash is unchanged, but it has gone from a node to a test
     assert m.update([s2]) is True
 
-    assert list(m) == [("reftest", {test2})]
+    assert list(m) == [("reftest", test2.path, {test2})]

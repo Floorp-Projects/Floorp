@@ -10878,9 +10878,13 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                 &haveFirstLineStyle);
   }
 
+  const bool isFlexOrGridContainer = ::IsFlexOrGridContainer(aFrame);
   // The logic here needs to match the logic in GetFloatContainingBlock()
+  // (Since we already have isFlexOrGridContainer, we check that eagerly instead
+  // of letting ShouldSuppressFloatingOfDescendants look it up redundantly.)
   nsFrameConstructorSaveState floatSaveState;
-  if (ShouldSuppressFloatingOfDescendants(aFrame)) {
+  if (isFlexOrGridContainer ||
+      ShouldSuppressFloatingOfDescendants(aFrame)) {
     aState.PushFloatContainingBlock(nullptr, floatSaveState);
   } else if (aFrame->IsFloatContainingBlock()) {
     aState.PushFloatContainingBlock(aFrame, floatSaveState);
@@ -10933,6 +10937,14 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     const bool addChildItems = MOZ_LIKELY(mCurrentDepth < kMaxDepth);
     if (!addChildItems) {
       NS_WARNING("ProcessChildren max depth exceeded");
+    }
+
+    // Don't blockify 'display' in ApplyStyleFixups unless aFrame really is
+    // a flex/grid container frame, not just has display:flex/grid.
+    Maybe<TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper>
+      parentDisplayBasedStyleFixupSkipper;
+    if (!isFlexOrGridContainer) {
+      parentDisplayBasedStyleFixupSkipper.emplace(aState.mTreeMatchContext);
     }
 
     InsertionPoint insertion(aFrame, nullptr);
