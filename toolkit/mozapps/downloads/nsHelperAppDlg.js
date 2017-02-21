@@ -316,53 +316,55 @@ nsUnknownContentTypeDialog.prototype = {
         if (lastDir && isUsableDirectory(lastDir))
           picker.displayDirectory = lastDir;
 
-        if (picker.show() == nsIFilePicker.returnCancel) {
-          // null result means user cancelled.
-          aLauncher.saveDestinationAvailable(null);
-          return;
-        }
-
-        // Be sure to save the directory the user chose through the Save As...
-        // dialog  as the new browser.download.dir since the old one
-        // didn't exist.
-        result = picker.file;
-
-        if (result) {
-          try {
-            // Remove the file so that it's not there when we ensure non-existence later;
-            // this is safe because for the file to exist, the user would have had to
-            // confirm that he wanted the file overwritten.
-            // Only remove file if final name exists
-            if (result.exists() && this.getFinalLeafName(result.leafName) == result.leafName)
-              result.remove(false);
-          }
-          catch (ex) {
-            // As it turns out, the failure to remove the file, for example due to
-            // permission error, will be handled below eventually somehow.
+        picker.open(returnValue => {
+          if (returnValue == nsIFilePicker.returnCancel) {
+            // null result means user cancelled.
+            aLauncher.saveDestinationAvailable(null);
+            return;
           }
 
-          var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
+          // Be sure to save the directory the user chose through the Save As...
+          // dialog  as the new browser.download.dir since the old one
+          // didn't exist.
+          result = picker.file;
 
-          // Do not store the last save directory as a pref inside the private browsing mode
-          gDownloadLastDir.setFile(aLauncher.source, newDir);
-
-          try {
-            result = this.validateLeafName(newDir, result.leafName, null);
-          }
-          catch (ex) {
-            // When the chosen download directory is write-protected,
-            // display an informative error message.
-            // In all cases, download will be stopped.
-
-            if (ex.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED) {
-              this.displayBadPermissionAlert();
-              aLauncher.saveDestinationAvailable(null);
-              return;
+          if (result) {
+            try {
+              // Remove the file so that it's not there when we ensure non-existence later;
+              // this is safe because for the file to exist, the user would have had to
+              // confirm that he wanted the file overwritten.
+              // Only remove file if final name exists
+              if (result.exists() && this.getFinalLeafName(result.leafName) == result.leafName)
+                result.remove(false);
+            }
+            catch (ex) {
+              // As it turns out, the failure to remove the file, for example due to
+              // permission error, will be handled below eventually somehow.
             }
 
+            var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
+
+            // Do not store the last save directory as a pref inside the private browsing mode
+            gDownloadLastDir.setFile(aLauncher.source, newDir);
+
+            try {
+              result = this.validateLeafName(newDir, result.leafName, null);
+            }
+            catch (ex) {
+              // When the chosen download directory is write-protected,
+              // display an informative error message.
+              // In all cases, download will be stopped.
+
+              if (ex.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED) {
+                this.displayBadPermissionAlert();
+                aLauncher.saveDestinationAvailable(null);
+                return;
+              }
+
+            }
           }
-        }
-        aLauncher.saveDestinationAvailable(result);
+          aLauncher.saveDestinationAvailable(result);
+        });
       }.bind(this));
     }.bind(this)).then(null, Components.utils.reportError);
   },
