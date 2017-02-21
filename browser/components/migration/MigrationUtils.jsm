@@ -996,7 +996,7 @@ this.MigrationUtils = Object.freeze({
     if (gKeepUndoData) {
       this._updateHistoryUndo(places);
     }
-    return PlacesUtils.asyncHistory.updatePlaces(places, options);
+    return PlacesUtils.asyncHistory.updatePlaces(places, options, true);
   },
 
   insertLoginWrapper(login) {
