@@ -77,6 +77,18 @@ DocAccessibleChild::RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandl
   return IPC_OK();
 }
 
+HWND
+DocAccessibleChild::GetNativeWindowHandle() const
+{
+  if (mEmulatedWindowHandle) {
+    return mEmulatedWindowHandle;
+  }
+
+  auto tab = static_cast<dom::TabChild*>(Manager());
+  MOZ_ASSERT(tab);
+  return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());
+}
+
 void
 DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent)
 {
