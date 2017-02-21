@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include "nsString.h"
 
 namespace mozilla {
 namespace Telemetry {
