@@ -79,10 +79,8 @@ from mozpack.mozjar import (
 )
 from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
-from mozregression.download_manager import (
+from dlmanager import (
     DownloadManager,
-)
-from mozregression.persist_limit import (
     PersistLimit,
 )
 
