@@ -1017,7 +1017,7 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(serviceWorker->GetPrincipal(), aScope);
+    GetRegistration(serviceWorker->Principal(), aScope);
   MOZ_DIAGNOSTIC_ASSERT(registration);
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
@@ -1377,7 +1377,7 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
   MOZ_DIAGNOSTIC_ASSERT(aWorker);
 
   RefPtr<ServiceWorkerRegistrationInfo> reg =
-    GetRegistration(aWorker->GetPrincipal(), aWorker->Scope());
+    GetRegistration(aWorker->Principal(), aWorker->Scope());
   if (!reg) {
     return;
   }
@@ -3206,12 +3206,10 @@ ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
                                             nsIPrincipal* aPrincipal,
                                             nsLoadFlags aLoadFlags)
 {
-  nsresult rv;
-
 #ifdef DEBUG
   AssertIsOnMainThread();
   nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   RefPtr<ServiceWorkerRegistrationInfo> tmp =
@@ -3219,35 +3217,8 @@ ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
   MOZ_ASSERT(!tmp);
 #endif
 
-  // The environment that registers the document may have some CSP applied
-  // to its principal.  This should not be inherited by the registration
-  // itself or the worker it creates.  To avoid confusion in callsites
-  // downstream we strip the CSP from the principal now.
-  //
-  // Unfortunately there is no API to clone a principal without its CSP.  To
-  // achieve the same thing we serialize to the IPC PrincipalInfo type and
-  // back to an nsIPrincipal.
-  PrincipalInfo principalInfo;
-  rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIPrincipal> cleanPrincipal =
-    PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  // Verify that we do not have any CSP set on our principal "clone".
-#if defined(DEBUG) || !defined(RELEASE_OR_BETA)
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  MOZ_ALWAYS_SUCCEEDS(cleanPrincipal->GetCsp(getter_AddRefs(csp)));
-  MOZ_DIAGNOSTIC_ASSERT(!csp);
-#endif
-
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    new ServiceWorkerRegistrationInfo(aScope, cleanPrincipal, aLoadFlags);
+    new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aLoadFlags);
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.
   AddScopeAndRegistration(aScope, registration);

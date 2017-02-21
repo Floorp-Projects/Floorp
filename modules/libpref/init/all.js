@@ -748,6 +748,9 @@ pref("gfx.downloadable_fonts.otl_validation", false);
 pref("gfx.downloadable_fonts.otl_validation", true);
 #endif
 
+// Whether to preserve OpenType variation tables in fonts (bypassing OTS)
+pref("gfx.downloadable_fonts.keep_variation_tables", false);
+
 #ifdef ANDROID
 pref("gfx.bundled_fonts.enabled", true);
 pref("gfx.bundled_fonts.force-enabled", false);

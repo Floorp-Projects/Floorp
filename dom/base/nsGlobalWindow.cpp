@@ -54,6 +54,7 @@
 #include "nsNetUtil.h"
 #include "nsVariant.h"
 #include "nsPrintfCString.h"
+#include "mozilla/intl/LocaleService.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -14915,6 +14916,17 @@ nsGlobalWindow::GetPaintWorklet(ErrorResult& aRv)
   }
 
   return mPaintWorklet;
+}
+
+void
+nsGlobalWindow::GetAppLocales(nsTArray<nsString>& aLocales)
+{
+  nsTArray<nsCString> appLocales;
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocales(appLocales);
+
+  for (uint32_t i = 0; i < appLocales.Length(); i++) {
+    aLocales.AppendElement(NS_ConvertUTF8toUTF16(appLocales[i]));
+  }
 }
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;

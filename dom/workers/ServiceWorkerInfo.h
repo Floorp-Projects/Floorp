@@ -72,7 +72,7 @@ public:
   }
 
   nsIPrincipal*
-  GetPrincipal() const
+  Principal() const
   {
     return mPrincipal;
   }
