@@ -31,6 +31,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -1164,10 +1165,8 @@ DumpHeapTracer::onChild(const JS::GCCellPtr& thing)
 void
 js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
-    if (nurseryBehaviour == js::CollectNurseryBeforeDump) {
-        for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next())
-            group->evictNursery(JS::gcreason::API);
-    }
+    if (nurseryBehaviour == js::CollectNurseryBeforeDump)
+        EvictAllNurseries(cx->runtime(), JS::gcreason::API);
 
     DumpHeapTracer dtrc(fp, cx);
 
