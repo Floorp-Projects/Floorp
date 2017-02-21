@@ -2229,13 +2229,17 @@ MarkStackIter::MarkStackIter(const MarkStack& stack)
   : stack_(stack),
     pos_(stack.tos_)
 {
+#ifdef DEBUG
     stack.iteratorCount_++;
+#endif
 }
 
 MarkStackIter::~MarkStackIter()
 {
+#ifdef DEBUG
     MOZ_ASSERT(stack_.iteratorCount_);
     stack_.iteratorCount_--;
+#endif
 }
 
 inline size_t
