@@ -1693,8 +1693,6 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
   return NS_OK;
 }
 
-static char sCrashReasonBuffer[1024];
-
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -1773,14 +1771,9 @@ nsNSSComponent::InitializeNSS()
     init_rv = NSS_NoDB_Init(nullptr);
     if (init_rv != SECSuccess) {
       PRErrorCode savedPRErrorCode3 = PR_GetError();
-      nsPrintfCString message("NSS initialization failed PRErrorCodes %d %d %d",
+      MOZ_CRASH_UNSAFE_PRINTF("NSS initialization failed PRErrorCodes %d %d %d",
                               savedPRErrorCode1, savedPRErrorCode2,
                               savedPRErrorCode3);
-      mozilla::PodArrayZero(sCrashReasonBuffer);
-      strncpy(sCrashReasonBuffer, message.get(),
-              sizeof(sCrashReasonBuffer) - 1);
-      MOZ_CRASH_ANNOTATE(sCrashReasonBuffer);
-      MOZ_REALLY_CRASH();
     }
   }
   if (init_rv != SECSuccess) {
