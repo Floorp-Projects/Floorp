@@ -794,18 +794,7 @@ var LightWeightThemeWebInstaller = {
  * Listen for Lightweight Theme styling changes and update the browser's theme accordingly.
  */
 var LightweightThemeListener = {
-  _modifiedStyles: [],
-
   init() {
-    XPCOMUtils.defineLazyGetter(this, "styleSheet", function() {
-      for (let i = document.styleSheets.length - 1; i >= 0; i--) {
-        let sheet = document.styleSheets[i];
-        if (sheet.href == "chrome://browser/skin/browser-lightweightTheme.css")
-          return sheet;
-      }
-      return undefined;
-    });
-
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
     Services.obs.addObserver(this, "lightweight-theme-optimized", false);
     if (document.documentElement.hasAttribute("lwtheme"))
@@ -818,44 +807,18 @@ var LightweightThemeListener = {
   },
 
   /**
-   * Append the headerImage to the background-image property of all rulesets in
-   * browser-lightweightTheme.css.
+   * Set the headerImage to a CSS variable which is used to apply the background-image
+   * property of all rulesets in browser-lightweightTheme.css.
    *
    * @param headerImage - a string containing a CSS image for the lightweight theme header.
    */
   updateStyleSheet(headerImage) {
-    if (!this.styleSheet)
-      return;
-    this.substituteRules(this.styleSheet.cssRules, headerImage);
-  },
-
-  substituteRules(ruleList, headerImage, existingStyleRulesModified = 0) {
-    let styleRulesModified = 0;
-    for (let i = 0; i < ruleList.length; i++) {
-      let rule = ruleList[i];
-      if (rule instanceof Ci.nsIDOMCSSGroupingRule) {
-        // Add the number of modified sub-rules to the modified count
-        styleRulesModified += this.substituteRules(rule.cssRules, headerImage, existingStyleRulesModified + styleRulesModified);
-      } else if (rule instanceof Ci.nsIDOMCSSStyleRule) {
-        if (!rule.style.backgroundImage)
-          continue;
-        let modifiedIndex = existingStyleRulesModified + styleRulesModified;
-        if (!this._modifiedStyles[modifiedIndex])
-          this._modifiedStyles[modifiedIndex] = { backgroundImage: rule.style.backgroundImage };
-
-        rule.style.backgroundImage = this._modifiedStyles[modifiedIndex].backgroundImage + ", " + headerImage;
-        styleRulesModified++;
-      } else {
-        Cu.reportError("Unsupported rule encountered");
-      }
-    }
-    return styleRulesModified;
-  },
-
+    document.documentElement.style.setProperty("--lwt-header-image", headerImage);
+},
   // nsIObserver
   observe(aSubject, aTopic, aData) {
-    if ((aTopic != "lightweight-theme-styling-update" && aTopic != "lightweight-theme-optimized") ||
-          !this.styleSheet)
+    if (aTopic != "lightweight-theme-styling-update" &&
+        aTopic != "lightweight-theme-optimized")
       return;
 
     if (aTopic == "lightweight-theme-optimized" && aSubject != window)
