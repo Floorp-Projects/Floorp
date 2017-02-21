@@ -238,7 +238,7 @@ ExecutableAllocator::createPool(size_t n)
 }
 
 void*
-ExecutableAllocator::alloc(size_t n, ExecutablePool** poolp, CodeKind type)
+ExecutableAllocator::alloc(JSContext* cx, size_t n, ExecutablePool** poolp, CodeKind type)
 {
     // Don't race with reprotectAll called from the signal handler.
     JitRuntime::AutoPreventBackedgePatching apbp(rt_);
@@ -261,6 +261,9 @@ ExecutableAllocator::alloc(size_t n, ExecutablePool** poolp, CodeKind type)
     // (found, or created if necessary) a pool that had enough space.
     void* result = (*poolp)->alloc(n, type);
     MOZ_ASSERT(result);
+
+    cx->zone()->updateJitCodeMallocBytes(n);
+
     return result;
 }
 
