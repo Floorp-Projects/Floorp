@@ -6,15 +6,19 @@
 
 #include "URLClassifierChild.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIURI.h"
 
 using namespace mozilla::dom;
 
 mozilla::ipc::IPCResult
-URLClassifierChild::Recv__delete__(const MaybeResult& aResult)
+URLClassifierChild::Recv__delete__(const MaybeInfo& aInfo,
+                                   const nsresult& aResult)
 {
   MOZ_ASSERT(mCallback);
-  if (aResult.type() == MaybeResult::Tnsresult) {
-    mCallback->OnClassifyComplete(aResult.get_nsresult());
+  if (aInfo.type() == MaybeInfo::TClassifierInfo) {
+    mCallback->OnClassifyComplete(aResult, aInfo.get_ClassifierInfo().list(),
+                                  aInfo.get_ClassifierInfo().provider(),
+                                  aInfo.get_ClassifierInfo().prefix());
   }
   return IPC_OK();
 }

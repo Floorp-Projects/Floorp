@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsStringStream.h"
 #include "nsQueryObject.h"
+#include "nsIURIClassifier.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;
@@ -1360,6 +1361,22 @@ HttpChannelParent::NotifyTrackingProtectionDisabled()
 {
   if (!mIPCClosed)
     Unused << SendNotifyTrackingProtectionDisabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
+                                            const nsACString& aProvider,
+                                            const nsACString& aPrefix)
+{
+  if (!mIPCClosed) {
+    ClassifierInfo info;
+    info.list() = aList;
+    info.prefix() = aPrefix;
+    info.provider() = aProvider;
+
+    Unused << SendSetClassifierMatchedInfo(info);
+  }
   return NS_OK;
 }
 

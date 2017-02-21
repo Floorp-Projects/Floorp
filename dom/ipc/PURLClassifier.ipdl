@@ -8,12 +8,13 @@
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 include protocol PContent;
+include PURLClassifierInfo;
 
 namespace mozilla {
 namespace dom {
 
-union MaybeResult {
-  nsresult;
+union MaybeInfo {
+  ClassifierInfo;
   void_t;
 };
 
@@ -22,7 +23,7 @@ protocol PURLClassifier
   manager PContent;
 
 child:
-  async __delete__(MaybeResult status);
+  async __delete__(MaybeInfo info, nsresult errorCode);
 };
 
 } // namespace dom
