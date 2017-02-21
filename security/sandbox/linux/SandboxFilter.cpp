@@ -169,6 +169,7 @@ public:
       Arg<clockid_t> clk_id(0);
       return If(clk_id == CLOCK_MONOTONIC, Allow())
 #ifdef CLOCK_MONOTONIC_COARSE
+        // Used by SandboxReporter, among other things.
         .ElseIf(clk_id == CLOCK_MONOTONIC_COARSE, Allow())
 #endif
         .ElseIf(clk_id == CLOCK_PROCESS_CPUTIME_ID, Allow())

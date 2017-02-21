@@ -67,6 +67,7 @@ SOURCES += [
     'SandboxHooks.cpp',
     'SandboxInfo.cpp',
     'SandboxLogging.cpp',
+    'SandboxReporterClient.cpp',
     'SandboxUtil.cpp',
 ]
 
@@ -109,6 +110,8 @@ if CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     'broker',
     'glue',
+    'interfaces',
+    'reporter',
 ]
 
 TEST_DIRS += [
