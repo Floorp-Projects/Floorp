@@ -53,7 +53,7 @@ function test() {
     var destDir = createTemporarySaveDirectory();
     var file = destDir.clone();
     file.append("no_default_file_name");
-    MockFilePicker.setFiles([file]);
+    MockFilePicker.returnFiles = [file];
     MockFilePicker.showCallback = function(fp) {
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
@@ -80,7 +80,7 @@ function test() {
     ok(downloadSuccess, "The inner frame should have been downloaded successfully");
 
     // Read the entire saved file.
-    var file = MockFilePicker.getNsIFile();
+    var file = MockFilePicker.returnFiles[0];
     var fileContents = readShortFile(file);
 
     // Check if outer POST data is found (bug 471962).
