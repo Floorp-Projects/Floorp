@@ -675,9 +675,6 @@ private:
   ContentParent(ContentParent* aOpener,
                 const nsAString& aRemoteType);
 
-  // The common initialization for the constructors.
-  void InitializeMembers();
-
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
   bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
