@@ -78,6 +78,9 @@ bool
 HaveGMPFor(const nsCString& aAPI,
            nsTArray<nsCString>&& aTags);
 
+void
+LogToConsole(const nsAString& aMsg);
+
 } // namespace mozilla
 
 #endif
