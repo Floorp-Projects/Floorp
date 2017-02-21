@@ -54,6 +54,13 @@ public class SuggestedSiteLoader implements IconLoader {
     private IconResponse buildIcon(final Context context, final String siteURL, final int targetSize) {
         final SuggestedSites suggestedSites = BrowserDB.from(context).getSuggestedSites();
 
+        if (suggestedSites == null) {
+            // See longer explanation in SuggestedSitePreparer: suggested sites aren't always loaded.
+            // If they aren't, SuggestedSitePreparer won't suggest any bundled icons so we should
+            // never try to load them anyway, but we should double check here to be completely safe.
+            return null;
+        }
+
         final String iconLocation = suggestedSites.getImageUrlForUrl(siteURL);
         final String backgroundColorString = suggestedSites.getBackgroundColorForUrl(siteURL);
 
