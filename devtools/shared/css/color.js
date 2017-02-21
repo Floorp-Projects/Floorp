@@ -75,6 +75,7 @@ module.exports.colorUtils = {
   rgbToColorName: rgbToColorName,
   colorToRGBA: colorToRGBA,
   isValidCSSColor: isValidCSSColor,
+  calculateContrastRatio: calculateContrastRatio,
 };
 
 /**
@@ -444,6 +445,15 @@ CssColor.prototype = {
    */
   valueOf: function () {
     return this.rgba;
+  },
+
+  /**
+   * Check whether the color is fully transparent (alpha === 0).
+   *
+   * @return {Boolean} True if the color is transparent and valid.
+   */
+  isTransparent: function () {
+    return this._getRGBATuple().a === 0;
   },
 };
 
@@ -1141,4 +1151,38 @@ function colorToRGBA(name, useCssColor4ColorFunction = false) {
  */
 function isValidCSSColor(name, useCssColor4ColorFunction = false) {
   return colorToRGBA(name, useCssColor4ColorFunction) !== null;
+}
+
+/**
+ * Calculates the luminance of a rgba tuple based on the formula given in
+ * https://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
+ *
+ * @param {Array} rgba An array with [r,g,b,a] values.
+ * @return {Number} The calculated luminance.
+ */
+function calculateLuminance(rgba) {
+  for (let i = 0; i < 3; i++) {
+    rgba[i] /= 255;
+    rgba[i] = (rgba[i] < 0.03928) ? (rgba[i] / 12.92) :
+                                    Math.pow(((rgba[i] + 0.055) / 1.055), 2.4);
+  }
+  return 0.2126 * rgba[0] + 0.7152 * rgba[1] + 0.0722 * rgba[2];
+}
+
+/**
+ * Calculates the contrast ratio of 2 rgba tuples based on the formula in
+ * https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast7
+ *
+ * @param {Array} backgroundColor An array with [r,g,b,a] values containing
+ * the background color.
+ * @param {Array} textColor An array with [r,g,b,a] values containing
+ * the text color.
+ * @return {Number} The calculated luminance.
+ */
+function calculateContrastRatio(backgroundColor, textColor) {
+  let backgroundLuminance = calculateLuminance(backgroundColor);
+  let textLuminance = calculateLuminance(textColor);
+  let ratio = (textLuminance + 0.05) / (backgroundLuminance + 0.05);
+
+  return (ratio > 1.0) ? ratio : (1 / ratio);
 }

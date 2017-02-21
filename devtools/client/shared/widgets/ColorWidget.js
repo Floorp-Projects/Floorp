@@ -9,10 +9,14 @@
 
 "use strict";
 
+const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/shared/css/color");
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const SAMPLE_TEXT = "Abc";
 
 /**
  * ColorWidget creates a color picker widget in any container you give it.
@@ -50,6 +54,7 @@ function ColorWidget(parentEl, rgb) {
   this.onRgbaInputChange = this.onRgbaInputChange.bind(this);
   this.onSelectValueChange = this.onSelectValueChange.bind(this);
   this.onSliderMove = this.onSliderMove.bind(this);
+  this.updateContrast = this.updateContrast.bind(this);
 
   this.initializeColorWidget();
 
@@ -60,6 +65,53 @@ function ColorWidget(parentEl, rgb) {
 }
 
 module.exports.ColorWidget = ColorWidget;
+
+/**
+ * Calculates the contrast grade and title for the given contrast
+ * ratio and background color.
+ * @param {Number} contrastRatio Contrast ratio to calculate grade.
+ * @param {String} backgroundColor A string of the form `rgba(r, g, b, a)`
+ * where r, g, b and a are floats.
+ * @return {Object} An object of the form {grade, title}.
+ * |grade| is a string containing the contrast grade.
+ * |title| is a string containing the title of the colorwidget.
+ */
+ColorWidget.calculateGradeAndTitle = function (contrastRatio, backgroundColor) {
+  let grade = "";
+  let title = "";
+
+  if (contrastRatio < 3.0) {
+    grade = L10N.getStr("inspector.colorwidget.contrastRatio.failGrade");
+    title = L10N.getStr("inspector.colorwidget.contrastRatio.failInfo");
+  } else if (contrastRatio < 4.5) {
+    grade = "AA*";
+    title = L10N.getStr("inspector.colorwidget.contrastRatio.AABigInfo");
+  } else if (contrastRatio < 7.0) {
+    grade = "AAA*";
+    title = L10N.getStr("inspector.colorwidget.contrastRatio.AAABigInfo");
+  } else if (contrastRatio < 22.0) {
+    grade = "AAA";
+    title = L10N.getStr("inspector.colorwidget.contrastRatio.AAAInfo");
+  }
+  title += "\n";
+  title += L10N.getStr("inspector.colorwidget.contrastRatio.info") + " ";
+  title += backgroundColor;
+
+  return { grade, title };
+};
+
+/**
+ * Converts the contrastRatio to a string of length 4 by rounding
+ * contrastRatio and padding the required number of 0s before or
+ * after.
+ * @param {Number} contrastRatio The contrast ratio to be formatted.
+ * @return {String} The formatted ratio.
+ */
+ColorWidget.ratioToString = function (contrastRatio) {
+  let formattedRatio = (contrastRatio < 10) ? "0" : "";
+  formattedRatio += contrastRatio.toFixed(2);
+  return formattedRatio;
+};
 
 ColorWidget.hsvToRgb = function (h, s, v, a) {
   let r, g, b;
@@ -255,11 +307,37 @@ ColorWidget.prototype = {
           <input class="colorwidget-hsla-a" data-id="a" />
         </div>
       </div>
+    <div class="colorwidget-contrast">
+      <div class="colorwidget-contrast-info"></div>
+      <div class="colorwidget-contrast-inner">
+        <span class="colorwidget-colorswatch"></span>
+        <span class="colorwidget-contrast-ratio"></span>
+        <span class="colorwidget-contrast-grade"></span>
+        <button class="colorwidget-contrast-help devtools-button"></button>
+      </div>
+    </div>
     `;
 
     this.element.addEventListener("click", this.onElementClick);
 
     this.parentEl.appendChild(this.element);
+
+    this.closestBackgroundColor = "rgba(255, 255, 255, 1)";
+
+    this.contrast = this.element.querySelector(".colorwidget-contrast");
+    this.contrastInfo = this.element.querySelector(".colorwidget-contrast-info");
+    this.contrastInfo.textContent = L10N.getStr(
+      "inspector.colorwidget.contrastRatio.header"
+    );
+
+    this.contrastInner = this.element.querySelector(".colorwidget-contrast-inner");
+    this.contrastSwatch = this.contrastInner.querySelector(".colorwidget-colorswatch");
+
+    this.contrastSwatch.textContent = SAMPLE_TEXT;
+
+    this.contrastRatio = this.contrastInner.querySelector(".colorwidget-contrast-ratio");
+    this.contrastGrade = this.contrastInner.querySelector(".colorwidget-contrast-grade");
+    this.contrastHelp = this.contrastInner.querySelector(".colorwidget-contrast-help");
 
     this.slider = this.element.querySelector(".colorwidget-hue");
     this.slideHelper = this.element.querySelector(".colorwidget-slider");
@@ -300,7 +378,7 @@ ColorWidget.prototype = {
     this.hslaValue.addEventListener("input", this.onHslaInputChange);
   },
 
-  show: function () {
+  show: Task.async(function* () {
     this.initializeColorWidget();
     this.element.classList.add("colorwidget-show");
 
@@ -312,8 +390,14 @@ ColorWidget.prototype = {
     this.alphaSliderWidth = this.alphaSliderInner.offsetWidth;
     this.alphaSliderHelperWidth = this.alphaSliderHelper.offsetWidth;
 
+    if (this.inspector && this.inspector.selection.nodeFront && this.contrastEnabled) {
+      let node = this.inspector.selection.nodeFront;
+      this.closestBackgroundColor = yield node.getClosestBackgroundColor();
+    }
+    this.updateContrast();
+
     this.updateUI();
-  },
+  }),
 
   onElementClick: function (e) {
     e.stopPropagation();
@@ -458,7 +542,48 @@ ColorWidget.prototype = {
   },
 
   onChange: function () {
+    this.updateContrast();
     this.emit("changed", this.rgb, this.rgbCssString);
+  },
+
+  updateContrast: function () {
+    if (!this.contrastEnabled) {
+      this.contrast.style.display = "none";
+      return;
+    }
+
+    this.contrast.style.display = "initial";
+
+    if (!colorUtils.isValidCSSColor(this.closestBackgroundColor)) {
+      this.contrastRatio.textContent = L10N.getStr(
+        "inspector.colorwidget.contrastRatio.invalidColor"
+      );
+
+      this.contrastGrade.textContent = "";
+      this.contrastHelp.removeAttribute("title");
+      return;
+    }
+    if (!this.rgbaColor) {
+      this.rgbaColor = new colorUtils.CssColor(this.closestBackgroundColor);
+    }
+    this.rgbaColor.newColor(this.closestBackgroundColor);
+    let rgba = this.rgbaColor._getRGBATuple();
+    let backgroundColor = [rgba.r, rgba.g, rgba.b, rgba.a];
+
+    let textColor = this.rgb;
+
+    let ratio = colorUtils.calculateContrastRatio(backgroundColor, textColor);
+
+    let contrastDetails = ColorWidget.calculateGradeAndTitle(ratio,
+                        this.rgbaColor.toString());
+
+    this.contrastRatio.textContent = ColorWidget.ratioToString(ratio);
+    this.contrastGrade.textContent = contrastDetails.grade;
+
+    this.contrastHelp.setAttribute("title", contrastDetails.title);
+
+    this.contrastSwatch.style.backgroundColor = this.rgbaColor.toString();
+    this.contrastSwatch.style.color = this.rgbCssString;
   },
 
   updateHelperLocations: function () {
