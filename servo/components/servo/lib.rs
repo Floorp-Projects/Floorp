@@ -45,8 +45,11 @@ pub extern crate script;
 pub extern crate script_traits;
 pub extern crate script_layout_interface;
 pub extern crate servo_config;
+pub extern crate servo_geometry;
 pub extern crate servo_url;
 pub extern crate style;
+pub extern crate style_traits;
+pub extern crate webrender_traits;
 pub extern crate webvr;
 pub extern crate webvr_traits;
 
@@ -54,7 +57,6 @@ pub extern crate webvr_traits;
 extern crate webdriver_server;
 
 extern crate webrender;
-extern crate webrender_traits;
 
 #[cfg(feature = "webdriver")]
 fn webdriver(port: u16, constellation: Sender<ConstellationMsg>) {
@@ -181,10 +183,7 @@ impl<Window> Browser<Window> where Window: WindowMethods + 'static {
                 enable_scrollbars: opts.output_file.is_none(),
                 renderer_kind: renderer_kind,
                 enable_subpixel_aa: opts.enable_subpixel_text_antialiasing,
-                clear_framebuffer: true,
-                clear_color: webrender_traits::ColorF::new(1.0, 1.0, 1.0, 1.0),
-                render_target_debug: false,
-                workers: None,
+                ..Default::default()
             }).expect("Unable to initialize webrender!")
         };
 

@@ -13,7 +13,7 @@ add_task(function* () {
   info("Starting test... ");
 
   let { windowRequire } = monitor.panelWin;
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
 
   yield testNavigate();
   yield testNavigateBack();

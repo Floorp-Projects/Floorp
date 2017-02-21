@@ -23,29 +23,41 @@ stubPreparedMessages.set("ReferenceError: asdf is not defined", new ConsoleMessa
   "messageText": "ReferenceError: asdf is not defined",
   "parameters": null,
   "repeat": 1,
-  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1476573167137,\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error\",\"line\":3,\"column\":5},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
+  "repeatId": "{\"id\":null,\"allowRepeating\":true,\"source\":\"javascript\",\"timeStamp\":1476573167137,\"type\":\"log\",\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"repeatId\":null,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null},{\"filename\":\"chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval\",\"lineNumber\":6,\"columnNumber\":9,\"functionName\":null},{\"filename\":\"chrome://mochikit/content/tests/BrowserTestUtils/content-task.js\",\"lineNumber\":53,\"columnNumber\":20,\"functionName\":null}],\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":3,\"column\":5},\"groupId\":null,\"exceptionDocURL\":\"https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default\",\"userProvidedStyles\":null,\"notes\":null}",
   "stacktrace": [
     {
-      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "lineNumber": 3,
       "columnNumber": 5,
       "functionName": "bar"
     },
     {
-      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "lineNumber": 6,
       "columnNumber": 5,
       "functionName": "foo"
     },
     {
-      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+      "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
       "lineNumber": 9,
       "columnNumber": 3,
+      "functionName": null
+    },
+    {
+      "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+      "lineNumber": 6,
+      "columnNumber": 9,
+      "functionName": null
+    },
+    {
+      "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+      "lineNumber": 53,
+      "columnNumber": 20,
       "functionName": null
     }
   ],
   "frame": {
-    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
     "line": 3,
     "column": 5
   },
@@ -62,7 +74,7 @@ stubPackets.set("ReferenceError: asdf is not defined", {
     "errorMessage": "ReferenceError: asdf is not defined",
     "errorMessageName": "JSMSG_NOT_DEFINED",
     "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
-    "sourceName": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
     "lineText": "",
     "lineNumber": 3,
     "columnNumber": 5,
@@ -76,21 +88,33 @@ stubPackets.set("ReferenceError: asdf is not defined", {
     "private": false,
     "stacktrace": [
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "lineNumber": 3,
         "columnNumber": 5,
         "functionName": "bar"
       },
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "lineNumber": 6,
         "columnNumber": 5,
         "functionName": "foo"
       },
       {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js?key=Reference%20Error",
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
         "lineNumber": 9,
         "columnNumber": 3,
+        "functionName": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "lineNumber": 6,
+        "columnNumber": 9,
+        "functionName": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "lineNumber": 53,
+        "columnNumber": 20,
         "functionName": null
       }
     ],

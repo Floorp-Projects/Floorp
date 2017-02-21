@@ -175,10 +175,46 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemovePropertyById, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property)
-SERVO_BINDING_FUNC(Servo_DeclarationBlock_AddPresValue, void,
+
+// presentation attributes
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_PropertyIsSet, bool,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetIdentStringValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
-                   nsCSSValueBorrowedMut css_value)
+                   nsIAtom* value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetKeywordValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   int32_t value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetIntValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   int32_t value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPixelValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   float value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPercentValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   float value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetAutoValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetCurrentColor, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetColorValue, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   nsCSSPropertyID property,
+                   nscolor value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetFontFamily, void,
+                   RawServoDeclarationBlockBorrowed declarations,
+                   const nsAString& value)
+SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetTextDecorationColorOverride, void,
+                   RawServoDeclarationBlockBorrowed declarations)
 
 // CSS supports()
 SERVO_BINDING_FUNC(Servo_CSSSupports2, bool,

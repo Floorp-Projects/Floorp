@@ -8,14 +8,14 @@
  */
 
 add_task(function* () {
-  let { L10N } = require("devtools/client/netmonitor/l10n");
+  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
 
   let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let {
     getDisplayedRequests,
     getSortedRequests,

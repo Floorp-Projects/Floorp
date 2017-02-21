@@ -783,12 +783,22 @@ Collection.prototype = {
 
     this._onRecord = onRecord;
 
-    this._onProgress = function() {
-      let newline;
+    this._onProgress = function(httpChannel) {
+      let newline, length = 0, contentLength = "unknown";
+
+      try {
+          // Content-Length of the value of this response header
+          contentLength = httpChannel.getResponseHeader("Content-Length");
+      } catch (ex) { }
+
       while ((newline = this._data.indexOf("\n")) > 0) {
         // Split the json record from the rest of the data
         let json = this._data.slice(0, newline);
         this._data = this._data.slice(newline + 1);
+
+        length += json.length;
+        coll._log.trace("Record: Content-Length = " + contentLength +
+                        ", ByteCount = " + length);
 
         // Deserialize a record from json and give it to the callback
         let record = new coll._recordObj();

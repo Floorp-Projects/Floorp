@@ -7,7 +7,7 @@ const React = require("devtools/client/shared/vendor/react");
 
 const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
 
-const { REPS, MODE, parseURLEncodedText } = require("devtools/client/shared/components/reps/load-reps");
+const { REPS, MODE, parseURLEncodedText } = require("devtools/client/shared/components/reps/reps");
 const Rep = React.createFactory(REPS.Rep);
 
 // Network

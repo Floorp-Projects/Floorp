@@ -722,6 +722,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if type.nullable():
             declType = CGWrapper(declType, pre="Option<", post=" >")
 
+        if isMember != "Dictionary" and type_needs_tracing(type):
+            declType = CGTemplatedType("RootedTraceableBox", declType)
+
         templateBody = ("match FromJSValConvertible::from_jsval(cx, ${val}, ()) {\n"
                         "    Ok(ConversionResult::Success(value)) => value,\n"
                         "    Ok(ConversionResult::Failure(error)) => {\n"
@@ -4032,17 +4035,14 @@ def convertConstIDLValueToRust(value):
 
 
 class CGConstant(CGThing):
-    def __init__(self, constants):
+    def __init__(self, constant):
         CGThing.__init__(self)
-        self.constants = constants
+        self.constant = constant
 
     def define(self):
-        def stringDecl(const):
-            name = const.identifier.name
-            value = convertConstIDLValueToRust(const.value)
-            return CGGeneric("pub const %s: %s = %s;\n" % (name, builtinNames[const.value.type.tag()], value))
-
-        return CGIndenter(CGList(stringDecl(m) for m in self.constants)).define()
+        name = self.constant.identifier.name
+        value = convertConstIDLValueToRust(self.constant.value)
+        return "pub const %s: %s = %s;\n" % (name, builtinNames[self.constant.value.type.tag()], value)
 
 
 def getUnionTypeTemplateVars(type, descriptorProvider):
@@ -5720,10 +5720,10 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassTraceHook(descriptor))
 
         # If there are no constant members, don't make a module for constants
-        constMembers = [m for m in descriptor.interface.members if m.isConst()]
+        constMembers = [CGConstant(m) for m in descriptor.interface.members if m.isConst()]
         if constMembers:
             cgThings.append(CGNamespace.build([descriptor.name + "Constants"],
-                                              CGConstant(constMembers),
+                                              CGIndenter(CGList(constMembers)),
                                               public=True))
             reexports.append(descriptor.name + 'Constants')
 
@@ -6195,6 +6195,9 @@ def type_needs_tracing(t):
 
         if t.isSequence():
             return type_needs_tracing(t.inner)
+
+        if t.isUnion():
+            return any(type_needs_tracing(member) for member in t.flatMemberTypes)
 
         return False
 

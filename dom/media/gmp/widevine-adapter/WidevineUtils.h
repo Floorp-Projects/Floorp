@@ -20,18 +20,18 @@ namespace detail {
 LogModule* GetCDMLog();
 } // namespace detail
 
-#define Log(...) MOZ_LOG(detail::GetCDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define CDM_LOG(...) MOZ_LOG(detail::GetCDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #define ENSURE_TRUE(condition, rv) { \
   if (!(condition)) {\
-    Log("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
+    CDM_LOG("ENSURE_TRUE FAILED %s:%d", __FILE__, __LINE__); \
     return rv; \
   } \
 } \
 
 #define ENSURE_GMP_SUCCESS(err, rv) { \
   if (GMP_FAILED(err)) {\
-    Log("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
+    CDM_LOG("ENSURE_GMP_SUCCESS FAILED %s:%d", __FILE__, __LINE__); \
     return rv; \
     } \
 } \

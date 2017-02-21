@@ -131,7 +131,7 @@ var TalosParentProfiler;
      */
     finishTest() {
       if (initted) {
-        let profileFile = profileDir + "/" + currentTest + ".sps";
+        let profileFile = profileDir + "/" + currentTest + ".profile";
         return TalosPowers.profilerFinish(profileFile);
       } else {
         let msg = "You should not call finishTest without having first " +
@@ -152,7 +152,7 @@ var TalosParentProfiler;
      */
     finishStartupProfiling() {
       if (initted) {
-        let profileFile = profileDir + "/startup.sps";
+        let profileFile = profileDir + "/startup.profile";
         return TalosPowers.profilerFinish(profileFile);
       }
       return Promise.resolve();

@@ -133,6 +133,7 @@ public:
         mSymbols.fDestroySurface = nullptr;
         mSymbols.fCreateWindowSurface = nullptr;
         mSymbols.fCreatePbufferSurface = nullptr;
+        mSymbols.fCreatePbufferFromClientBuffer = nullptr;
         mSymbols.fCreatePixmapSurface = nullptr;
         mSymbols.fBindAPI = nullptr;
         mSymbols.fInitialize = nullptr;
@@ -185,6 +186,7 @@ public:
         EGL_ANDROID_image_crop,
         ANGLE_platform_angle,
         ANGLE_platform_angle_d3d,
+        ANGLE_d3d_share_handle_client_buffer,
         Extensions_Max
     };
 
@@ -287,6 +289,14 @@ public:
         EGLSurface surf = mSymbols.fCreatePbufferSurface(dpy, config, attrib_list);
         AFTER_GL_CALL;
         return surf;
+    }
+
+    EGLSurface fCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list)
+    {
+        BEFORE_GL_CALL;
+        EGLSurface ret = mSymbols.fCreatePbufferFromClientBuffer(dpy, buftype, buffer, config, attrib_list);
+        AFTER_GL_CALL;
+        return ret;
     }
 
     EGLSurface fCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list)
@@ -585,6 +595,8 @@ public:
         pfnCreateWindowSurface fCreateWindowSurface;
         typedef EGLSurface (GLAPIENTRY * pfnCreatePbufferSurface)(EGLDisplay dpy, EGLConfig config, const EGLint* attrib_list);
         pfnCreatePbufferSurface fCreatePbufferSurface;
+        typedef EGLSurface (GLAPIENTRY * pfnCreatePbufferFromClientBuffer)(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list);
+        pfnCreatePbufferFromClientBuffer fCreatePbufferFromClientBuffer;
         typedef EGLSurface (GLAPIENTRY * pfnCreatePixmapSurface)(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list);
         pfnCreatePixmapSurface fCreatePixmapSurface;
         typedef EGLBoolean (GLAPIENTRY * pfnBindAPI)(EGLenum api);

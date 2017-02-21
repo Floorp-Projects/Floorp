@@ -10,7 +10,7 @@ define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
   const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
 
-  const { REPS, createFactories, MODE } = require("devtools/client/shared/components/reps/load-reps");
+  const { REPS, createFactories, MODE } = require("devtools/client/shared/components/reps/reps");
   const Rep = createFactory(REPS.Rep);
 
   const { SearchBox } = createFactories(require("./search-box"));

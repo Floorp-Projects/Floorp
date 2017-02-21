@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674770
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true], ["dom.ipc.processCount", 1]]}, startTests);
+  SpecialPowers.pushPrefEnv({"set":[["middlemouse.paste", true]]}, startTests);
 });
 
 function startTests() {

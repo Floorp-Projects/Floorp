@@ -33,6 +33,7 @@ use std::fmt;
 /// another. See the `ScaleFactor` docs for an example.
 // Uncomment the derive, and remove the macro call, once heapsize gets
 // PhantomData<T> support.
+#[repr(C)]
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Length<T, Unit>(pub T, PhantomData<Unit>);
 
@@ -51,14 +52,14 @@ impl<Unit, T: HeapSizeOf> HeapSizeOf for Length<T, Unit> {
 }
 
 impl<Unit, T> Deserialize for Length<T, Unit> where T: Deserialize {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Length<T, Unit>,D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Length<T, Unit>,D::Error>
                       where D: Deserializer {
         Ok(Length(try!(Deserialize::deserialize(deserializer)), PhantomData))
     }
 }
 
 impl<T, Unit> Serialize for Length<T, Unit> where T: Serialize {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(),S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
         self.0.serialize(serializer)
     }
 }

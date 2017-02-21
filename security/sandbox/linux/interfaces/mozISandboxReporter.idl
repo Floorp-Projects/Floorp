@@ -1,0 +1,65 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+// A wrapper for the C++ class SandboxReport, representing one system
+// call that was rejected by policy.
+[scriptable, builtinclass, uuid(ed1e84d3-3346-42e1-b28c-e76a77f549f0)]
+interface mozISandboxReport : nsISupports
+{
+  // The timestamp relative to the time when this property is read.
+  // This is mainly meant for distinguishing recent events that might
+  // be related to an observable failure from older ones that may be
+  // unrelated, not for exact timing.
+  readonly attribute uint64_t msecAgo;
+  readonly attribute int32_t pid;
+  readonly attribute int32_t tid;
+  readonly attribute ACString procType;
+  readonly attribute uint32_t syscall;
+  // Currently numArgs is effectively a constant and indicates the
+  // maximum number of arguments possible on the platform; the actual
+  // system call may use fewer.
+  readonly attribute uint32_t numArgs;
+  // The argument values are presented as strings because JS doesn't
+  // have 64-bit integers and data would be lost on 64-bit platforms
+  // if the XPIDL type uint64_t were used.  The string may be decimal
+  // or hex (with leading "0x").
+  ACString getArg(in uint32_t aIndex);
+};
+
+// A wrapper for SandboxReporter::Snapshot, representing the most
+// recent SandboxReport events.  Index 0 is the first report in the
+// session, and so on; exposing the indices like this lets us see how
+// many reports have been received even though only a limited number
+// of them are stored.
+[scriptable, builtinclass, uuid(6e8ff6e5-05c9-42d3-853d-40523fd86a50)]
+interface mozISandboxReportArray : nsISupports
+{
+  readonly attribute uint64_t begin;
+  readonly attribute uint64_t end;
+  // (aIndex >= begin && aIndex < end) must be true.
+  mozISandboxReport getElement(in uint64_t aIndex);
+};
+
+// A wrapper for the SandboxReporter; use the component/contract IDs
+// below to access the SandboxReporter singleton.  The component
+// constructor will fail if called in a child process.
+[scriptable, builtinclass, uuid(8535bdf7-6d9e-4853-acf9-a146449c4a3b)]
+interface mozISandboxReporter : nsISupports
+{
+  mozISandboxReportArray snapshot();
+};
+
+%{ C++
+
+#define MOZ_SANDBOX_REPORTER_CID \
+{0x5118a6f9, 0x2493, 0x4f97, {0x95, 0x52, 0x62, 0x06, 0x63, 0xe0, 0x3c, 0xb3}}
+
+#define MOZ_SANDBOX_REPORTER_CONTRACTID \
+    "@mozilla.org/sandbox/syscall-reporter;1"
+
+%}

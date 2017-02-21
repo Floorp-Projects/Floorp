@@ -13,6 +13,8 @@ enum
     kDateFormatLong,                // provides the long date format for the given locale
     kDateFormatShort,               // provides the short date format for the given locale
     kDateFormatYearMonth,           // formats using only the year and month 
+    kDateFormatYearMonthLong,       // long version of kDateFormatYearMonth
+    kDateFormatMonthLong,           // long format of month name only
     kDateFormatWeekday              // week day (e.g. Mon, Tue)
 };
 %}

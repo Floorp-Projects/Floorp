@@ -17,8 +17,6 @@
 #include "ssl.h"
 
 #include "nsThreadUtils.h"
-#include "PeerConnectionImpl.h"
-#include "PeerConnectionCtx.h"
 
 #include "signaling/src/sdp/SipccSdpParser.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
@@ -58,7 +56,6 @@ class SdpTest : public ::testing::Test {
     }
 
     static void TearDownTestCase() {
-      PeerConnectionCtx::Destroy();
     }
 
     void ResetSdp() {

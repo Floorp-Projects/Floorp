@@ -106,10 +106,10 @@ load 710149-1.html
 asserts-if(stylo,1) load 766452-1.html # bug 1324700
 load 766452-2.html
 load 768079-1.html
-asserts-if(stylo,2) load 783041-1.html # bug 1324661
-asserts-if(stylo,2-4) load 783041-2.html # bug 1324661
-asserts-if(stylo,2) load 783041-3.html # bug 1324661
-asserts-if(stylo,2) load 783041-4.html # bug 1324661
+load 783041-1.html
+load 783041-2.html
+load 783041-3.html
+load 783041-4.html
 load 798853.html # bug 868792
 load 805760-1.html
 skip-if(Android) load 815489.html # bug 1216304

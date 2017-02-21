@@ -61,7 +61,8 @@ config = {
         "browser/locales/shipped-locales",
         "browser/locales/all-locales",
         "mobile/android/locales/maemo-locales",
-        "mobile/android/locales/all-locales"
+        "mobile/android/locales/all-locales",
+        "mobile/locales/l10n-changesets.json",
     ],
 
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),

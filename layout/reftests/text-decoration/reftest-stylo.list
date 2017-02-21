@@ -97,7 +97,7 @@ fails == text-decoration-propagation-1-quirks.html text-decoration-propagation-1
 == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards.html
 fails == 641444-1.html 641444-1.html
 fails == decoration-css21.html decoration-css21.html
-fails == decoration-color-override-quirks.html decoration-color-override-quirks.html
+== decoration-color-override-quirks.html decoration-color-override-quirks.html
 == decoration-color-override-standards.html decoration-color-override-standards.html
 == decoration-color-override-standards-ref.html decoration-color-override-standards-ref.html
 == decoration-css21-block.html decoration-css21-block.html

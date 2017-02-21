@@ -12,7 +12,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Actions = require("../actions/index");
 const { ACTIVITY_TYPE } = require("../constants");
-const { L10N } = require("../l10n");
+const { L10N } = require("../utils/l10n");
 
 const { button, div, span } = DOM;
 

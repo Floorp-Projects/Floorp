@@ -339,6 +339,7 @@ ConvertBSTRAttributesToArray(const nsAString& aStr,
         break;
     }
     tokens[state] += *itr;
+    ++itr;
   }
   return true;
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1338961
+-->
+<head>
+  <title>Test mouse and touch events for range</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* synthesizeMouse and synthesizeFunc uses getBoundingClientRect. We set
+     * the following properties to avoid fractional values in the rect returned
+     * by getBoundingClientRect in order to avoid rounding that would occur
+     * when event coordinates are internally converted to be relative to the
+     * top-left of the element. (Such rounding would make it difficult to
+     * predict exactly what value the input should take on for events at
+     * certain coordinates.)
+     */
+    input { margin: 0 ! important; width: 200px ! important; }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1338961">Mozilla Bug 1338961</a>
+<p id="display"></p>
+<div id="content">
+  <input id="range" type="range" mozinputrangeignorepreventdefault="true">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1338961
+ * This test ensures mozinputrangeignorepreventdefault has no effect in
+ * content html.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test(synthesizeMouse, "click", "mousedown", "mousemove", "mouseup");
+  test(synthesizeTouch, "tap", "touchstart", "touchmove", "touchend");
+  SimpleTest.finish();
+});
+
+function flush() {
+  // Flush style, specifically to flush the 'direction' property so that the
+  // browser uses the new value for thumb positioning.
+  var flush = document.body.clientWidth;
+}
+
+const QUARTER_OF_RANGE = "25";
+
+function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
+  var elem = document.getElementById("range");
+  elem.focus();
+  flush();
+
+  var width = parseFloat(window.getComputedStyle(elem).width);
+  var height = parseFloat(window.getComputedStyle(elem).height);
+  var borderLeft = parseFloat(window.getComputedStyle(elem).borderLeftWidth);
+  var borderTop = parseFloat(window.getComputedStyle(elem).borderTopWidth);
+  var paddingLeft = parseFloat(window.getComputedStyle(elem).paddingLeft);
+  var paddingTop = parseFloat(window.getComputedStyle(elem).paddingTop);
+
+  // Extrema for mouse/touch events:
+  var midY = height / 2 + borderTop + paddingTop;
+  var minX = borderLeft + paddingLeft;
+  var midX = minX + width / 2;
+  var maxX = minX + width;
+
+  function preventDefault(e) {
+    e.preventDefault();
+  }
+
+  // Test that preventDefault() works:
+  elem.value = QUARTER_OF_RANGE;
+  elem.addEventListener(startName, preventDefault);
+  synthesizeFunc(elem, midX, midY, {});
+  is(elem.value, QUARTER_OF_RANGE, "Test that preventDefault() works");
+  elem.removeEventListener(startName, preventDefault);
+
+  // Test that preventDefault() on the parent node works:
+  elem.value = QUARTER_OF_RANGE;
+  elem.parentNode.addEventListener(startName, preventDefault);
+  synthesizeFunc(elem, midX, midY, {});
+  is(elem.value, QUARTER_OF_RANGE, "Test that preventDefault() on the parent node works");
+  elem.parentNode.removeEventListener(startName, preventDefault);
+}
+
+</script>
+</pre>
+</body>
+</html>

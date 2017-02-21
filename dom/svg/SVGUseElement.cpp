@@ -326,11 +326,11 @@ SVGUseElement::CreateAnonymousContent()
       newElement->SetLength(nsGkAtoms::height, mLengthAttributes[ATTR_HEIGHT]);
   }
 
-  // Set up its base URI correctly
-  nsCOMPtr<nsIURI> baseURI = targetContent->GetBaseURI();
-  if (!baseURI)
+  // Store the base URI
+  mContentBaseURI = targetContent->GetBaseURI();
+  if (!mContentBaseURI) {
     return nullptr;
-  newcontent->SetExplicitBaseURI(baseURI);
+  }
 
   targetContent->AddMutationObserver(this);
   mClone = newcontent;

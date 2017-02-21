@@ -3,8 +3,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../../framework/test/shared-head.js */
-/* exported TEMP_FILE_PATH, TEMP_CSS_FILE_PATH, formatPacket, formatStub,
-            formatNetworkEventStub, formatFile */
+/* exported generateConsoleApiStubs, generateCssMessageStubs,
+            generateEvaluationResultStubs, generateNetworkEventStubs,
+            generatePageErrorStubs, BASE_PATH */
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
@@ -20,12 +21,16 @@ registerCleanupFunction(() => {
 
 const { prepareMessage } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index.js");
+const {
+  consoleApi,
+  cssMessage,
+  evaluationResult,
+  networkEvent,
+  pageError,
+} = require("devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/stub-snippets.js");
 
 const BASE_PATH =
   "../../../../devtools/client/webconsole/new-console-output/test/fixtures";
-const TEMP_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`, "test-tempfile.js");
-const TEMP_CSS_FILE_PATH = OS.Path.join(`${BASE_PATH}/stub-generators`,
-                                        "test-tempfile.css");
 
 let cachedPackets = {};
 
@@ -56,6 +61,18 @@ function getCleanedPacket(key, packet) {
       res.timestamp = existingPacket.timestamp;
     }
 
+    if (res.timeStamp) {
+      res.timeStamp = existingPacket.timeStamp;
+    }
+
+    if (res.startedDateTime) {
+      res.startedDateTime = existingPacket.startedDateTime;
+    }
+
+    if (res.actor) {
+      res.actor = existingPacket.actor;
+    }
+
     if (res.message) {
       // Clean timeStamp on the message prop.
       res.message.timeStamp = existingPacket.message.timeStamp;
@@ -69,10 +86,18 @@ function getCleanedPacket(key, packet) {
       }
 
       if (Array.isArray(res.message.arguments)) {
-        // Clean actor ids on each message.arguments item.
         res.message.arguments.forEach((argument, i) => {
+          let existingArgument = existingPacket.message.arguments[i];
+
+          // Clean actor ids on each message.arguments item.
           if (argument && argument.actor) {
-            argument.actor = existingPacket.message.arguments[i].actor;
+            argument.actor = existingArgument.actor;
+          }
+
+          // `window`'s properties count can vary from OS to OS, so we
+          // clean the `ownPropertyLength` property from the grip.
+          if (argument && argument.class === "Window") {
+            argument.ownPropertyLength = existingArgument.ownPropertyLength;
           }
         });
       }
@@ -111,6 +136,43 @@ function getCleanedPacket(key, packet) {
       // Clean timeStamp on pageError messages.
       res.pageError.timeStamp = existingPacket.pageError.timeStamp;
     }
+
+    if (res.packet) {
+      if (res.packet.totalTime) {
+        // res.packet.totalTime is read-only so we use assign to override it.
+        res.packet = Object.assign({}, existingPacket.packet, {
+          totalTime: existingPacket.packet.totalTime
+        });
+      }
+    }
+
+    if (res.networkInfo) {
+      if (res.networkInfo.timeStamp) {
+        res.networkInfo.timeStamp = existingPacket.networkInfo.timeStamp;
+      }
+
+      if (res.networkInfo.startedDateTime) {
+        res.networkInfo.startedDateTime = existingPacket.networkInfo.startedDateTime;
+      }
+
+      if (res.networkInfo.totalTime) {
+        res.networkInfo.totalTime = existingPacket.networkInfo.totalTime;
+      }
+
+      if (res.networkInfo.actor) {
+        res.networkInfo.actor = existingPacket.networkInfo.actor;
+      }
+
+      if (res.networkInfo.request && res.networkInfo.request.headersSize) {
+        res.networkInfo.request.headersSize =
+          existingPacket.networkInfo.request.headersSize;
+      }
+
+      if (res.networkInfo.response && res.networkInfo.response.headersSize) {
+        res.networkInfo.response.headersSize =
+          existingPacket.networkInfo.response.headersSize;
+      }
+    }
   } else {
     res = packet;
   }
@@ -134,8 +196,13 @@ function formatStub(key, packet) {
 }
 
 function formatNetworkEventStub(key, packet) {
-  let networkInfo = packet.actor ? packet : packet.networkInfo;
-  let prepared = prepareMessage(networkInfo, {getNextId: () => networkInfo.actor});
+  let cleanedPacket = getCleanedPacket(key, packet);
+  let networkInfo = cleanedPacket.networkInfo ? cleanedPacket.networkInfo : cleanedPacket;
+
+  let prepared = prepareMessage(
+    networkInfo,
+    {getNextId: () => "1"}
+  );
   let stringifiedMessage = JSON.stringify(prepared, null, 2);
   return `stubPreparedMessages.set("${key}", ` +
     `new NetworkEventMessage(${stringifiedMessage}));`;
@@ -166,4 +233,209 @@ module.exports = {
   stubPackets,
 };
 `;
+}
+
+function* generateConsoleApiStubs() {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
+
+  let stubs = {
+    preparedMessages: [],
+    packets: [],
+  };
+
+  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let {ui} = toolbox.getCurrentPanel().hud;
+  ok(ui.jsterm, "jsterm exists");
+  ok(ui.newConsoleOutput, "newConsoleOutput exists");
+
+  for (let [key, {keys, code}] of consoleApi) {
+    let received = new Promise(resolve => {
+      let i = 0;
+      let listener = (type, res) => {
+        stubs.packets.push(formatPacket(keys[i], res));
+        stubs.preparedMessages.push(formatStub(keys[i], res));
+        if (++i === keys.length) {
+          toolbox.target.client.removeListener("consoleAPICall", listener);
+          resolve();
+        }
+      };
+      toolbox.target.client.addListener("consoleAPICall", listener);
+    });
+
+    yield ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      [key, code],
+      function ([subKey, subCode]) {
+        let script = content.document.createElement("script");
+        script.innerHTML = `function triggerPacket() {${subCode}}`;
+        content.document.body.appendChild(script);
+        content.wrappedJSObject.triggerPacket();
+        script.remove();
+      }
+    );
+
+    yield received;
+  }
+
+  yield closeTabAndToolbox();
+  return formatFile(stubs, "ConsoleMessage");
+}
+
+function* generateCssMessageStubs() {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-css-message.html";
+
+  let stubs = {
+    preparedMessages: [],
+    packets: [],
+  };
+
+  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+
+  for (let [key, code] of cssMessage) {
+    let received = new Promise(resolve => {
+      /* CSS errors are considered as pageError on the server */
+      toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
+        toolbox.target.client.removeListener("pageError", onPacket);
+        info("Received css message:" + e + " " + JSON.stringify(packet, null, "\t"));
+
+        let message = prepareMessage(packet, {getNextId: () => 1});
+        stubs.packets.push(formatPacket(message.messageText, packet));
+        stubs.preparedMessages.push(formatStub(message.messageText, packet));
+        resolve();
+      });
+    });
+
+    yield ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      [key, code],
+      function ([subKey, subCode]) {
+        let style = content.document.createElement("style");
+        style.innerHTML = subCode;
+        content.document.body.appendChild(style);
+      }
+    );
+
+    yield received;
+  }
+
+  yield closeTabAndToolbox();
+  return formatFile(stubs, "ConsoleMessage");
+}
+
+function* generateEvaluationResultStubs() {
+  const TEST_URI = "data:text/html;charset=utf-8,stub generation";
+
+  let stubs = {
+    preparedMessages: [],
+    packets: [],
+  };
+
+  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+
+  for (let [code, key] of evaluationResult) {
+    const packet = yield new Promise(resolve => {
+      toolbox.target.activeConsole.evaluateJS(code, resolve);
+    });
+    stubs.packets.push(formatPacket(key, packet));
+    stubs.preparedMessages.push(formatStub(key, packet));
+  }
+
+  yield closeTabAndToolbox();
+  return formatFile(stubs, "ConsoleMessage");
+}
+
+function* generateNetworkEventStubs() {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html";
+
+  let stubs = {
+    preparedMessages: [],
+    packets: [],
+  };
+
+  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let {ui} = toolbox.getCurrentPanel().hud;
+
+  for (let [key, {keys, code}] of networkEvent) {
+    let onNetwork = new Promise(resolve => {
+      let i = 0;
+      toolbox.target.activeConsole.on("networkEvent", function onNetworkEvent(type, res) {
+        stubs.packets.push(formatPacket(keys[i], res));
+        stubs.preparedMessages.push(formatNetworkEventStub(keys[i], res));
+        if (++i === keys.length) {
+          toolbox.target.activeConsole.off("networkEvent", onNetworkEvent);
+          resolve();
+        }
+      });
+    });
+
+    let onNetworkUpdate = new Promise(resolve => {
+      let i = 0;
+      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(event, res) {
+        let updateKey = `${keys[i++]} ${res.packet.updateType}`;
+        stubs.packets.push(formatPacket(updateKey, res));
+        stubs.preparedMessages.push(formatNetworkEventStub(updateKey, res));
+        if (i === keys.length) {
+          ui.jsterm.hud.off("network-message-updated", onNetworkUpdated);
+          resolve();
+        }
+      });
+    });
+
+    yield ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      [key, code],
+      function ([subKey, subCode]) {
+        let script = content.document.createElement("script");
+        script.innerHTML = `function triggerPacket() {${subCode}}`;
+        content.document.body.appendChild(script);
+        content.wrappedJSObject.triggerPacket();
+        script.remove();
+      }
+    );
+
+    yield Promise.all([onNetwork, onNetworkUpdate]);
+  }
+
+  yield closeTabAndToolbox();
+  return formatFile(stubs, "NetworkEventMessage");
+}
+
+function* generatePageErrorStubs() {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html";
+
+  let stubs = {
+    preparedMessages: [],
+    packets: [],
+  };
+
+  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+
+  for (let [key, code] of pageError) {
+    let received = new Promise(resolve => {
+      toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
+        let message = prepareMessage(packet, {getNextId: () => 1});
+        stubs.packets.push(formatPacket(message.messageText, packet));
+        stubs.preparedMessages.push(formatStub(message.messageText, packet));
+        resolve();
+      }, {
+        once: true
+      });
+    });
+
+    yield ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      [key, code],
+      function ([subKey, subCode]) {
+        let script = content.document.createElement("script");
+        script.innerHTML = subCode;
+        content.document.body.appendChild(script);
+        script.remove();
+      }
+    );
+
+    yield received;
+  }
+
+  yield closeTabAndToolbox();
+  return formatFile(stubs, "ConsoleMessage");
 }

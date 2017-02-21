@@ -51,6 +51,7 @@
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -2118,20 +2119,27 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   if (sheetService) {
     // This looks like a lot of work, but in a normal browser session we just
     // send two loads.
+    //
+    // The URIs of the Gecko and Servo sheets should be the same, so it
+    // shouldn't matter which we look at.  (The Servo sheets don't exist
+    // in non-MOZ-STYLO builds, though, so look at the Gecko ones.)
 
-    for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->AgentStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->UserStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
+    for (StyleSheet* sheet :
+           *sheetService->AuthorStyleSheets(StyleBackendType::Gecko)) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
@@ -3369,20 +3377,22 @@ ContentParent::RecvNSSU2FTokenSign(nsTArray<uint8_t>&& aApplication,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvIsSecureURI(const uint32_t& type,
-                               const URIParams& uri,
-                               const uint32_t& flags,
-                               bool* isSecureURI)
+ContentParent::RecvIsSecureURI(const uint32_t& aType,
+                               const URIParams& aURI,
+                               const uint32_t& aFlags,
+                               const OriginAttributes& aOriginAttributes,
+                               bool* aIsSecureURI)
 {
   nsCOMPtr<nsISiteSecurityService> sss(do_GetService(NS_SSSERVICE_CONTRACTID));
   if (!sss) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsCOMPtr<nsIURI> ourURI = DeserializeURI(uri);
+  nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
   if (!ourURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsresult rv = sss->IsSecureURI(type, ourURI, flags, nullptr, isSecureURI);
+  nsresult rv = sss->IsSecureURI(aType, ourURI, aFlags, aOriginAttributes, nullptr,
+                                 aIsSecureURI);
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }
@@ -3390,13 +3400,14 @@ ContentParent::RecvIsSecureURI(const uint32_t& type,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvAccumulateMixedContentHSTS(const URIParams& aURI, const bool& aActive, const bool& aHSTSPriming)
+ContentParent::RecvAccumulateMixedContentHSTS(const URIParams& aURI, const bool& aActive, const bool& aHSTSPriming,
+                                              const OriginAttributes& aOriginAttributes)
 {
   nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
   if (!ourURI) {
     return IPC_FAIL_NO_REASON(this);
   }
-  nsMixedContentBlocker::AccumulateMixedContentHSTS(ourURI, aActive, aHSTSPriming);
+  nsMixedContentBlocker::AccumulateMixedContentHSTS(ourURI, aActive, aHSTSPriming, aOriginAttributes);
   return IPC_OK();
 }
 
@@ -4764,6 +4775,25 @@ ContentParent::RecvUnstoreAndBroadcastBlobURLUnregistration(const nsCString& aUR
                                                false /* Don't broadcast */);
   BroadcastBlobURLUnregistration(aURI, this);
   mBlobURLs.RemoveElement(aURI);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvBroadcastLocalStorageChange(const nsString& aDocumentURI,
+                                               const nsString& aKey,
+                                               const nsString& aOldValue,
+                                               const nsString& aNewValue,
+                                               const Principal& aPrincipal,
+                                               const bool& aIsPrivate)
+{
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    if (cp != this) {
+      Unused << cp->SendDispatchLocalStorageChange(
+        nsString(aDocumentURI), nsString(aKey), nsString(aOldValue),
+        nsString(aNewValue), IPC::Principal(aPrincipal), aIsPrivate);
+    }
+  }
 
   return IPC_OK();
 }

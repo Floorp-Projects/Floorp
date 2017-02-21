@@ -724,35 +724,30 @@ class HiddenExtensionPage {
    * @returns {Promise<XULElement>}
    *   a Promise which resolves to the newly created browser XUL element.
    */
-  createBrowserElement() {
+  async createBrowserElement() {
     if (this.browser) {
       throw new Error("createBrowserElement called twice");
     }
 
-    let waitForParentDocument;
+    let chromeDoc = await this.createWindowlessBrowser();
+
+    const browser = this.browser = chromeDoc.createElement("browser");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("webextension-view-type", this.viewType);
+
+    let awaitFrameLoader = Promise.resolve();
+
     if (this.extension.remote) {
-      waitForParentDocument = this.createWindowedBrowser();
-    } else {
-      waitForParentDocument = this.createWindowlessBrowser();
+      browser.setAttribute("remote", "true");
+      browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
+      awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
     }
 
-    return waitForParentDocument.then(chromeDoc => {
-      const browser = this.browser = chromeDoc.createElement("browser");
-      browser.setAttribute("type", "content");
-      browser.setAttribute("disableglobalhistory", "true");
-      browser.setAttribute("webextension-view-type", this.viewType);
+    chromeDoc.documentElement.appendChild(browser);
+    await awaitFrameLoader;
 
-      let awaitFrameLoader = Promise.resolve();
-
-      if (this.extension.remote) {
-        browser.setAttribute("remote", "true");
-        browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
-        awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
-      }
-
-      chromeDoc.documentElement.appendChild(browser);
-      return awaitFrameLoader.then(() => browser);
-    });
+    return browser;
   }
 
   /**
@@ -769,58 +764,26 @@ class HiddenExtensionPage {
    *   a promise which resolves to the newly created XULDocument.
    */
   createWindowlessBrowser() {
-    return Task.spawn(function* () {
-      // The invisible page is currently wrapped in a XUL window to fix an issue
-      // with using the canvas API from a background page (See Bug 1274775).
-      let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
-      this.windowlessBrowser = windowlessBrowser;
+    // The invisible page is currently wrapped in a XUL window to fix an issue
+    // with using the canvas API from a background page (See Bug 1274775).
+    let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+    this.windowlessBrowser = windowlessBrowser;
 
-      // The windowless browser is a thin wrapper around a docShell that keeps
-      // its related resources alive. It implements nsIWebNavigation and
-      // forwards its methods to the underlying docShell, but cannot act as a
-      // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
-      // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
-      // access to the webNav methods that are already available on the
-      // windowless browser, but contrary to appearances, they are not the same
-      // object.
-      let chromeShell = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
-                                         .getInterface(Ci.nsIDocShell)
-                                         .QueryInterface(Ci.nsIWebNavigation);
+    // The windowless browser is a thin wrapper around a docShell that keeps
+    // its related resources alive. It implements nsIWebNavigation and
+    // forwards its methods to the underlying docShell, but cannot act as a
+    // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
+    // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
+    // access to the webNav methods that are already available on the
+    // windowless browser, but contrary to appearances, they are not the same
+    // object.
+    let chromeShell = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
+                                       .getInterface(Ci.nsIDocShell)
+                                       .QueryInterface(Ci.nsIWebNavigation);
 
-      yield this.initParentWindow(chromeShell);
-
+    return this.initParentWindow(chromeShell).then(() => {
       return promiseDocumentLoaded(windowlessBrowser.document);
-    }.bind(this));
-  }
-
-  /**
-   * Private helper that create a XULDocument in a visible dialog window.
-   *
-   * Using this helper, the extension page is loaded into a visible dialog window.
-   * Only to be used for debugging, and in temporary, test-only use for
-   * out-of-process extensions.
-   *
-   * @returns {Promise<XULDocument>}
-   *   a promise which resolves to the newly created XULDocument.
-   */
-  createWindowedBrowser() {
-    return Task.spawn(function* () {
-      let window = Services.ww.openWindow(null, "about:blank", "_blank",
-                                          "chrome,alwaysLowered,dialog", null);
-
-      this.parentWindow = window;
-
-      let chromeShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDocShell)
-                              .QueryInterface(Ci.nsIWebNavigation);
-
-
-      yield this.initParentWindow(chromeShell);
-
-      window.minimize();
-
-      return promiseDocumentLoaded(window.document);
-    }.bind(this));
+    });
   }
 
   /**

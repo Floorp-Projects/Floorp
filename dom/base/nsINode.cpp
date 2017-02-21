@@ -1513,26 +1513,6 @@ nsINode::Unlink(nsINode* tmp)
   }
 }
 
-static void
-ReleaseURI(void*, /* aObject*/
-           nsIAtom*, /* aPropertyName */
-           void* aPropertyValue,
-           void* /* aData */)
-{
-  nsIURI* uri = static_cast<nsIURI*>(aPropertyValue);
-  NS_RELEASE(uri);
-}
-
-nsresult
-nsINode::SetExplicitBaseURI(nsIURI* aURI)
-{
-  nsresult rv = SetProperty(nsGkAtoms::baseURIProperty, aURI, ReleaseURI);
-  if (NS_SUCCEEDED(rv)) {
-    NS_ADDREF(aURI);
-  }
-  return rv;
-}
-
 static nsresult
 AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
 {
