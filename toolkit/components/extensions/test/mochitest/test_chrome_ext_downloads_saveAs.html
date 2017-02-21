@@ -35,8 +35,7 @@ add_task(function* test_downloads_saveAs() {
   const extension = ExtensionTestUtils.loadExtension(manifest);
 
   MockFilePicker.init(window);
-  MockFilePicker.useAnyFile();
-  const [file] = MockFilePicker.returnFiles;
+  const file = yield MockFilePicker.useAnyFile();
 
   yield extension.startup();
   yield extension.awaitMessage("ready");
