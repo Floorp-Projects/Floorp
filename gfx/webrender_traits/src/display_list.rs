@@ -8,13 +8,14 @@ use std::slice;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
 use {BorderSide, BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
-use {DisplayItem, DisplayListMode, FilterOp, YuvColorSpace};
+use {DisplayItem, DisplayListMode, ExtendMode, FilterOp, YuvColorSpace};
 use {FontKey, GlyphInstance, GradientDisplayItem, RadialGradientDisplayItem, GradientStop, IframeDisplayItem};
 use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange, MixBlendMode, PipelineId};
 use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
 use {ScrollPolicy, ServoScrollRootId, SpecificDisplayItem, StackingContext, TextDisplayItem};
 use {WebGLContextId, WebGLDisplayItem, YuvImageDisplayItem};
 use {LayoutTransform, LayoutPoint, LayoutRect, LayoutSize};
+use {GlyphOptions, PropertyBinding};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -154,7 +155,8 @@ impl DisplayListBuilder {
                      font_key: FontKey,
                      color: ColorF,
                      size: Au,
-                     blur_radius: Au) {
+                     blur_radius: Au,
+                     glyph_options: Option<GlyphOptions>) {
         // Sanity check - anything with glyphs bigger than this
         // is probably going to consume too much memory to render
         // efficiently anyway. This is specifically to work around
@@ -168,6 +170,7 @@ impl DisplayListBuilder {
                 font_key: font_key,
                 size: size,
                 blur_radius: blur_radius,
+                glyph_options: glyph_options,
             };
 
             let display_item = DisplayItem {
@@ -239,11 +242,13 @@ impl DisplayListBuilder {
                          clip: ClipRegion,
                          start_point: LayoutPoint,
                          end_point: LayoutPoint,
-                         stops: Vec<GradientStop>) {
+                         stops: Vec<GradientStop>,
+                         extend_mode: ExtendMode) {
         let item = GradientDisplayItem {
             start_point: start_point,
             end_point: end_point,
             stops: self.auxiliary_lists_builder.add_gradient_stops(&stops),
+            extend_mode: extend_mode,
         };
 
         let display_item = DisplayItem {
@@ -262,13 +267,15 @@ impl DisplayListBuilder {
                                 start_radius: f32,
                                 end_center: LayoutPoint,
                                 end_radius: f32,
-                                stops: Vec<GradientStop>) {
+                                stops: Vec<GradientStop>,
+                                extend_mode: ExtendMode) {
         let item = RadialGradientDisplayItem {
             start_center: start_center,
             start_radius: start_radius,
             end_center: end_center,
             end_radius: end_radius,
             stops: self.auxiliary_lists_builder.add_gradient_stops(&stops),
+            extend_mode: extend_mode,
         };
 
         let display_item = DisplayItem {
@@ -285,16 +292,16 @@ impl DisplayListBuilder {
                                  bounds: LayoutRect,
                                  clip: ClipRegion,
                                  z_index: i32,
-                                 transform: &LayoutTransform,
-                                 perspective: &LayoutTransform,
+                                 transform: PropertyBinding<LayoutTransform>,
+                                 perspective: LayoutTransform,
                                  mix_blend_mode: MixBlendMode,
                                  filters: Vec<FilterOp>) {
         let stacking_context = StackingContext {
             scroll_policy: scroll_policy,
             bounds: bounds,
             z_index: z_index,
-            transform: transform.clone(),
-            perspective: perspective.clone(),
+            transform: transform,
+            perspective: perspective,
             mix_blend_mode: mix_blend_mode,
             filters: self.auxiliary_lists_builder.add_filters(&filters),
         };
@@ -319,7 +326,7 @@ impl DisplayListBuilder {
     }
 
     pub fn push_scroll_layer(&mut self,
-                             clip: LayoutRect,
+                             clip: ClipRegion,
                              content_size: LayoutSize,
                              scroll_root_id: ServoScrollRootId) {
         let scroll_layer_id = self.next_scroll_layer_id;
@@ -332,8 +339,8 @@ impl DisplayListBuilder {
 
         let item = DisplayItem {
             item: SpecificDisplayItem::PushScrollLayer(item),
-            rect: clip,
-            clip: ClipRegion::simple(&LayoutRect::zero()),
+            rect: clip.main,
+            clip: clip,
         };
         self.list.push(item);
     }
