@@ -1437,12 +1437,18 @@ internal_AccumulateChildKeyed(GeckoProcessType aProcessType, mozilla::Telemetry:
 
 namespace {
 
+static const JSClass sJSHistogramClass = {
+  "JSHistogram",  /* name */
+  JSCLASS_HAS_PRIVATE  /* flags */
+};
+
 bool
 internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   MOZ_ASSERT(obj);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSHistogramClass) {
     return false;
   }
 
@@ -1512,7 +1518,8 @@ internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSHistogramClass) {
     return false;
   }
 
@@ -1539,14 +1546,19 @@ bool
 internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSHistogramClass) {
     return false;
   }
 
   bool onlySubsession = false;
-#if !defined(MOZ_WIDGET_ANDROID)
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  // This function should always return |undefined| and never fail but
+  // rather report failures using the console.
+  args.rval().setUndefined();
 
+
+#if !defined(MOZ_WIDGET_ANDROID)
   if (args.length() >= 1) {
     if (!args[0].isBoolean()) {
       JS_ReportErrorASCII(cx, "Not a boolean");
@@ -1572,12 +1584,7 @@ nsresult
 internal_WrapAndReturnHistogram(Histogram *h, JSContext *cx,
                                 JS::MutableHandle<JS::Value> ret)
 {
-  static const JSClass JSHistogram_class = {
-    "JSHistogram",  /* name */
-    JSCLASS_HAS_PRIVATE  /* flags */
-  };
-
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &sJSHistogramClass));
   if (!obj)
     return NS_ERROR_FAILURE;
   // The 3 functions that are wrapped up here are eventually called
@@ -1617,13 +1624,19 @@ internal_WrapAndReturnHistogram(Histogram *h, JSContext *cx,
 
 namespace {
 
+static const JSClass sJSKeyedHistogramClass = {
+  "JSKeyedHistogram",  /* name */
+  JSCLASS_HAS_PRIVATE  /* flags */
+};
+
 bool
 internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
                                      JS::Value *vp,
                                      bool subsession, bool clearSubsession)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
     return false;
   }
 
@@ -1686,7 +1699,8 @@ bool
 internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
     return false;
   }
 
@@ -1744,7 +1758,8 @@ bool
 internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
     return false;
   }
 
@@ -1791,7 +1806,8 @@ bool
 internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
+  if (!obj ||
+      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
     return false;
   }
 
@@ -1800,9 +1816,13 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  // This function should always return |undefined| and never fail but
+  // rather report failures using the console.
+  args.rval().setUndefined();
+
 #if !defined(MOZ_WIDGET_ANDROID)
   bool onlySubsession = false;
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (args.length() >= 1) {
     if (!(args[0].isNumber() || args[0].isBoolean())) {
@@ -1826,12 +1846,7 @@ nsresult
 internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
                                      JS::MutableHandle<JS::Value> ret)
 {
-  static const JSClass JSHistogram_class = {
-    "JSKeyedHistogram",  /* name */
-    JSCLASS_HAS_PRIVATE  /* flags */
-  };
-
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &sJSKeyedHistogramClass));
   if (!obj)
     return NS_ERROR_FAILURE;
   // The 6 functions that are wrapped up here are eventually called
