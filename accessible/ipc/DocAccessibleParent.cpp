@@ -411,8 +411,13 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // We do not use GetAccessible here because we want to be sure to not get the
   // document it self.
   ProxyEntry* e = mAccessibles.GetEntry(aParentID);
-  if (!e)
+  if (!e) {
+#ifdef DEBUG
     return IPC_FAIL(this, "binding to nonexistant proxy!");
+#else
+    return IPC_OK();
+#endif
+  }
 
   ProxyAccessible* outerDoc = e->mProxy;
   MOZ_ASSERT(outerDoc);
