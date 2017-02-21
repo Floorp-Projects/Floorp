@@ -785,7 +785,7 @@ class MachCommandConditions(object):
         """Must have a git source checkout."""
         if hasattr(cls, 'substs'):
             top_srcdir = cls.substs.get('top_srcdir')
-            return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.git'))
+            return top_srcdir and os.path.exists(os.path.join(top_srcdir, '.git'))
         return False
 
 
