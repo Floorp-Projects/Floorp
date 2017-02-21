@@ -54,9 +54,6 @@ class nsIWidget;
 
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
-#ifdef MOZ_GECKO_PROFILER
-class ProfileGatherer;
-#endif
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
 class SandboxBroker;
@@ -1188,7 +1185,7 @@ private:
   PProcessHangMonitorParent* mHangMonitorActor;
 
 #ifdef MOZ_GECKO_PROFILER
-  RefPtr<mozilla::ProfileGatherer> mGatherer;
+  bool mIsProfilerActive;
 #endif
   nsCString mProfile;
 
