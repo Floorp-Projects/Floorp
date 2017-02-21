@@ -25,7 +25,7 @@ function VisitInfo(aTransitionType,
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
-function promiseUpdatePlaces(aPlaces) {
+function promiseUpdatePlaces(aPlaces, aBatchFrecencyNotifications) {
   return new Promise((resolve, reject) => {
     PlacesUtils.asyncHistory.updatePlaces(aPlaces, {
       _errors: [],
@@ -39,7 +39,7 @@ function promiseUpdatePlaces(aPlaces) {
       handleCompletion() {
         resolve({ errors: this._errors, results: this._results });
       }
-    });
+    }, aBatchFrecencyNotifications);
   });
 }
 
@@ -1093,8 +1093,38 @@ add_task(function* test_typed_hidden_not_overwritten() {
                "The page should be marked as typed");
   Assert.equal(rows[0].getResultByName("hidden"), 0,
                "The page should be marked as not hidden");
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
-function run_test() {
-  run_next_test();
-}
+add_task(function* test_omit_frecency_notifications() {
+  yield PlacesTestUtils.clearHistory();
+  let places = [
+    { uri: NetUtil.newURI("http://mozilla.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_TYPED),
+      ]
+    },
+    { uri: NetUtil.newURI("http://example.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_TYPED),
+      ]
+    },
+  ];
+  let promiseFrecenciesChanged = new Promise(resolve => {
+    let frecencyObserverCheck = {
+      onFrecencyChanged() {
+        ok(false, "Should not fire frecencyChanged because we explicitly asked not to do so.");
+      },
+      onManyFrecenciesChanged() {
+        ok(true, "Should fire many frecencies changed notification instead.");
+        PlacesUtils.history.removeObserver(frecencyObserverCheck);
+        resolve();
+      },
+    };
+    PlacesUtils.history.addObserver(frecencyObserverCheck, false);
+  });
+  yield promiseUpdatePlaces(places, true);
+  yield promiseFrecenciesChanged;
+});
