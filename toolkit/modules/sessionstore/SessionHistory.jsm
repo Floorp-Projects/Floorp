@@ -80,23 +80,32 @@ var SessionHistoryInternal = {
     let ihistory = history.QueryInterface(Ci.nsISHistory);
 
     let data = {entries: [], userContextId: loadContext.originAttributes.userContextId };
+    // We want to keep track how many entries we *could* have collected and
+    // how many we skipped, so we can sanitiy-check the current history index
+    // and also determine whether we need to get any fallback data or not.
+    let skippedCount = 0, entryCount = 0;
 
     if (history && history.count > 0) {
       // Loop over the transaction linked list directly so we can get the
       // persist property for each transaction.
-      for (let txn = history.rootTransaction; txn; txn = txn.next) {
+      for (let txn = history.rootTransaction; txn; entryCount++, txn = txn.next) {
+        if (entryCount <= aFromIdx) {
+          skippedCount++;
+          continue;
+        }
         let entry = this.serializeEntry(txn.sHEntry);
         entry.persist = txn.persist;
         data.entries.push(entry);
       }
 
       // Ensure the index isn't out of bounds if an exception was thrown above.
-      data.index = Math.min(history.index + 1, data.entries.length);
+      data.index = Math.min(history.index + 1, entryCount);
     }
 
     // If either the session history isn't available yet or doesn't have any
-    // valid entries, make sure we at least include the current page.
-    if (data.entries.length == 0) {
+    // valid entries, make sure we at least include the current page,
+    // unless of course we just skipped all entries because aFromIdx was big enough.
+    if (data.entries.length == 0 && (skippedCount != entryCount || aFromIdx < 0)) {
       let uri = webNavigation.currentURI.spec;
       let body = webNavigation.document.body;
       // We landed here because the history is inaccessible or there are no
@@ -112,11 +121,6 @@ var SessionHistoryInternal = {
         });
         data.index = 1;
       }
-    }
-
-    // Check if we should discard some of the entries which didn't change
-    if (aFromIdx > -1) {
-      data.entries.splice(0, aFromIdx + 1);
     }
 
     // Transform the entries from local to global index space.
