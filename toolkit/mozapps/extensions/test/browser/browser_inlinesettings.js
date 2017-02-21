@@ -277,25 +277,20 @@ add_test(function() {
     is(input.color, "#FF9900", "Color picker should have updated value");
     is(Services.prefs.getCharPref("extensions.inlinesettings1.color"), "#FF9900", "Color pref should have been updated");
 
-    ok(!settings[6].hasAttribute("first-row"), "Not the first row");
-    var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
-    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
-    is(input.value, "", "Label value should be empty");
-    is(input.tooltipText, "", "Label tooltip should be empty");
+    try {
+      ok(!settings[6].hasAttribute("first-row"), "Not the first row");
+      var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+      input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+      is(input.value, "", "Label value should be empty");
+      is(input.tooltipText, "", "Label tooltip should be empty");
 
-    var testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    testFile.append("\u2622");
-    var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+      var testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      testFile.append("\u2622");
+      var curProcD = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 
-    MockFilePicker.returnFiles = [testFile];
-    MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
-
-    let promise = new Promise(resolve => {
-      MockFilePicker.afterOpenCallback = resolve;
+      MockFilePicker.returnFiles = [testFile];
+      MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
       EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-    });
-
-    promise.then(() => {
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, testFile.path, "Label value should match file chosen");
       is(input.tooltipText, testFile.path, "Label tooltip should match file chosen");
@@ -303,12 +298,7 @@ add_test(function() {
 
       MockFilePicker.returnFiles = [curProcD];
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
-
-      return new Promise(resolve => {
-        MockFilePicker.afterOpenCallback = resolve;
-        EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      });
-    }).then(() => {
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeOpen, "File picker mode should be open file");
       is(input.value, testFile.path, "Label value should not have changed");
       is(input.tooltipText, testFile.path, "Label tooltip should not have changed");
@@ -322,12 +312,7 @@ add_test(function() {
 
       MockFilePicker.returnFiles = [testFile];
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnOK;
-
-      return new Promise(resolve => {
-        MockFilePicker.afterOpenCallback = resolve;
-        EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      });
-    }).then(() => {
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, testFile.path, "Label value should match file chosen");
       is(input.tooltipText, testFile.path, "Label tooltip should match file chosen");
@@ -335,12 +320,7 @@ add_test(function() {
 
       MockFilePicker.returnFiles = [curProcD];
       MockFilePicker.returnValue = Ci.nsIFilePicker.returnCancel;
-
-      return new Promise(resolve => {
-        MockFilePicker.afterOpenCallback = resolve;
-        EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
-      });
-    }).then(() => {
+      EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
       is(MockFilePicker.mode, Ci.nsIFilePicker.modeGetFolder, "File picker mode should be directory");
       is(input.value, testFile.path, "Label value should not have changed");
       is(input.tooltipText, testFile.path, "Label tooltip should not have changed");
@@ -349,12 +329,12 @@ add_test(function() {
       var unsizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[2], "anonid", "input");
       var sizedInput = gManagerWindow.document.getAnonymousElementByAttribute(settings[8], "anonid", "input");
       is(unsizedInput.clientWidth > sizedInput.clientWidth, true, "Input with size attribute should be smaller than input without");
-    }).then(() => {
+    } finally {
       button = gManagerWindow.document.getElementById("detail-prefs-btn");
       is_element_hidden(button, "Preferences button should not be visible");
 
       gCategoryUtilities.openType("extension", run_next_test);
-    });
+    }
   });
 });
 

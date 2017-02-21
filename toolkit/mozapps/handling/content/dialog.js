@@ -166,37 +166,35 @@ var dialog = {
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
-    fp.open(rv => {
-      if (rv == Ci.nsIFilePicker.returnOK && fp.file) {
-        let uri = Cc["@mozilla.org/network/util;1"].
-                  getService(Ci.nsIIOService).
-                  newFileURI(fp.file);
+    if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file) {
+      let uri = Cc["@mozilla.org/network/util;1"].
+                getService(Ci.nsIIOService).
+                newFileURI(fp.file);
 
-        let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                         createInstance(Ci.nsILocalHandlerApp);
-        handlerApp.executable = fp.file;
+      let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                       createInstance(Ci.nsILocalHandlerApp);
+      handlerApp.executable = fp.file;
 
-        // if this application is already in the list, select it and don't add it again
-        let parent = document.getElementById("items");
-        for (let i = 0; i < parent.childNodes.length; ++i) {
-          let elm = parent.childNodes[i];
-          if (elm.obj instanceof Ci.nsILocalHandlerApp && elm.obj.equals(handlerApp)) {
-            parent.selectedItem = elm;
-            parent.ensureSelectedElementIsVisible();
-            return;
-          }
+      // if this application is already in the list, select it and don't add it again
+      let parent = document.getElementById("items");
+      for (let i = 0; i < parent.childNodes.length; ++i) {
+        let elm = parent.childNodes[i];
+        if (elm.obj instanceof Ci.nsILocalHandlerApp && elm.obj.equals(handlerApp)) {
+          parent.selectedItem = elm;
+          parent.ensureSelectedElementIsVisible();
+          return;
         }
-
-        let elm = document.createElement("richlistitem");
-        elm.setAttribute("type", "handler");
-        elm.setAttribute("name", fp.file.leafName);
-        elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
-        elm.obj = handlerApp;
-
-        parent.selectedItem = parent.insertBefore(elm, parent.firstChild);
-        parent.ensureSelectedElementIsVisible();
       }
-    });
+
+      let elm = document.createElement("richlistitem");
+      elm.setAttribute("type", "handler");
+      elm.setAttribute("name", fp.file.leafName);
+      elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
+      elm.obj = handlerApp;
+
+      parent.selectedItem = parent.insertBefore(elm, parent.firstChild);
+      parent.ensureSelectedElementIsVisible();
+    }
   },
 
  /**
