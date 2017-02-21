@@ -140,6 +140,19 @@ public:
    * display:contents children of aParentContent, if any.
    */
   mozilla::UndisplayedNode* GetAllDisplayContentsIn(nsIContent* aParentContent);
+
+  /**
+   * Return the relevant undisplayed node for a given content with display:
+   * contents style.
+   */
+  mozilla::UndisplayedNode* GetDisplayContentsNodeFor(
+      const nsIContent* aContent) {
+    if (!mDisplayContentsMap) {
+      return nullptr;
+    }
+    return GetUndisplayedNodeInMapFor(mDisplayContentsMap, aContent);
+  }
+
   /**
    * Register aContent having a display:contents style context.
    */
@@ -208,6 +221,9 @@ public:
 protected:
   static nsStyleContext* GetStyleContextInMap(UndisplayedMap* aMap,
                                               nsIContent* aContent);
+  static mozilla::UndisplayedNode*
+    GetUndisplayedNodeInMapFor(UndisplayedMap* aMap,
+                               const nsIContent* aContent);
   static mozilla::UndisplayedNode*
     GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
                                    nsIContent* aParentContent);
