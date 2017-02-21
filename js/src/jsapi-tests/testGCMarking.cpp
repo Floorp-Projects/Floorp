@@ -165,7 +165,7 @@ BEGIN_TEST(testDeadNurseryCCW)
 
     // Now a GC should clear the CCW.
     CHECK(countWrappers(global1->compartment()) == 1);
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
     CHECK(countWrappers(global1->compartment()) == 0);
 
     // Check for corruption of the CCW table by doing a full GC to force sweeping.
@@ -193,7 +193,7 @@ BEGIN_TEST(testLiveNurseryCCW)
 
     // Now a GC should not kill the CCW.
     CHECK(countWrappers(global1->compartment()) == 1);
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
     CHECK(countWrappers(global1->compartment()) == 1);
 
     CHECK(!js::gc::IsInsideNursery(wrappee));
@@ -230,7 +230,7 @@ BEGIN_TEST(testLiveNurseryWrapperCCW)
 
     // Now a GC should not kill the CCW.
     CHECK(countWrappers(global1->compartment()) == 1);
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
     CHECK(countWrappers(global1->compartment()) == 1);
 
     CHECK(!js::gc::IsInsideNursery(wrapper));
@@ -264,7 +264,7 @@ BEGIN_TEST(testLiveNurseryWrappeeCCW)
 
     // Now a GC should not kill the CCW.
     CHECK(countWrappers(global1->compartment()) == 1);
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
     CHECK(countWrappers(global1->compartment()) == 0);
 
     CHECK(!js::gc::IsInsideNursery(wrappee));
@@ -330,7 +330,7 @@ BEGIN_TEST(testIncrementalRoots)
 
     // Tenure everything so intentionally unrooted objects don't move before we
     // can use them.
-    cx->zone()->group()->minorGC(JS::gcreason::API);
+    cx->runtime()->gc.minorGC(JS::gcreason::API);
 
     // Release all roots except for the AutoObjectVector.
     obj = root = nullptr;

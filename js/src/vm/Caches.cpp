@@ -13,7 +13,7 @@ using namespace js;
 using mozilla::PodZero;
 
 MathCache*
-ZoneGroupCaches::createMathCache(JSContext* cx)
+RuntimeCaches::createMathCache(JSContext* cx)
 {
     MOZ_ASSERT(!mathCache_);
 
@@ -28,7 +28,7 @@ ZoneGroupCaches::createMathCache(JSContext* cx)
 }
 
 bool
-ZoneGroupCaches::init()
+RuntimeCaches::init()
 {
     if (!evalCache.init())
         return false;
@@ -37,14 +37,14 @@ ZoneGroupCaches::init()
 }
 
 void
-NewObjectCache::clearNurseryObjects(ZoneGroup* group)
+NewObjectCache::clearNurseryObjects(JSRuntime* rt)
 {
     for (unsigned i = 0; i < mozilla::ArrayLength(entries); ++i) {
         Entry& e = entries[i];
         NativeObject* obj = reinterpret_cast<NativeObject*>(&e.templateObject);
         if (IsInsideNursery(e.key) ||
-            group->nursery().isInside(obj->slots_) ||
-            group->nursery().isInside(obj->elements_))
+            rt->gc.nursery().isInside(obj->slots_) ||
+            rt->gc.nursery().isInside(obj->elements_))
         {
             PodZero(&e);
         }
