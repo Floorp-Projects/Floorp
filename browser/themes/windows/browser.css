@@ -51,6 +51,8 @@
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDLightShadow;
+
+  --lwt-header-image: none;
 }
 
 @media (-moz-windows-default-theme) {

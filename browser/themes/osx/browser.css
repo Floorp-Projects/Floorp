@@ -49,6 +49,8 @@
   --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
+
+  --lwt-header-image: none;
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
