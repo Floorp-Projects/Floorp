@@ -330,7 +330,7 @@ ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
 const char ModuleNamespaceObject::ProxyHandler::family = 0;
 
 ModuleNamespaceObject::ProxyHandler::ProxyHandler()
-  : BaseProxyHandler(&family, true)
+  : BaseProxyHandler(&family, false)
 {}
 
 bool
@@ -438,7 +438,8 @@ ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        return symbol == cx->wellKnownSymbols().toStringTag;
+        *bp = symbol == cx->wellKnownSymbols().toStringTag;
+        return true;
     }
 
     *bp = ns->bindings().has(id);
@@ -457,7 +458,8 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
             return true;
         }
 
-        return false;
+        vp.setUndefined();
+        return true;
     }
 
     ModuleEnvironmentObject* env;
