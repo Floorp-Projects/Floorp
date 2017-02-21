@@ -217,6 +217,8 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
       aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,
                             CSSPseudoElementType::NotPseudo, aElement);
 
+    newContext->EnsureStructsForServo(oldStyleContext);
+
     // XXX This could not always work as expected: there are kinds of content
     // with the first split and the last sharing style, but others not. We
     // should handle those properly.
