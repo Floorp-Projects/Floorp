@@ -808,7 +808,7 @@ var LightweightThemeListener = {
 
   /**
    * Set the headerImage to a CSS variable which is used to apply the background-image
-   * property of all rulesets in browser-lightweightTheme.css.
+   * property of the respective rulesets in tabs.inc.css.
    *
    * @param headerImage - a string containing a CSS image for the lightweight theme header.
    */
