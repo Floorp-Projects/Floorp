@@ -11,6 +11,8 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 
+#define CHROMIUM_CDM_API "chromium-cdm8-host4"
+
 class nsIFile;
 class nsCString;
 class nsISimpleEnumerator;

@@ -24,6 +24,7 @@
 #include "mozilla/MozPromise.h"
 #include "GMPContentParent.h"
 #include "GMPCrashHelper.h"
+#include "ChromiumCDMParent.h"
 
 template <class> struct already_AddRefed;
 
@@ -37,12 +38,27 @@ namespace gmp {
 
 struct NodeId
 {
+  NodeId(const nsAString& aOrigin,
+         const nsAString& aTopLevelOrigin,
+         const nsAString& aGMPName)
+    : mOrigin(aOrigin)
+    , mTopLevelOrigin(aTopLevelOrigin)
+    , mGMPName(aGMPName)
+  {
+  }
   nsString mOrigin;
   nsString mTopLevelOrigin;
   nsString mGMPName;
 };
 
-typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>, nsresult, /* IsExclusive = */ true> GetGMPContentParentPromise;
+typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>,
+                   nsresult,
+                   /* IsExclusive = */ true>
+  GetGMPContentParentPromise;
+typedef MozPromise<RefPtr<ChromiumCDMParent>,
+                   nsresult,
+                   /* IsExclusive = */ true>
+  GetCDMParentPromise;
 
 class GeckoMediaPluginService : public mozIGeckoMediaPluginService
                               , public nsIObserver
@@ -53,6 +69,10 @@ public:
   virtual nsresult Init();
 
   NS_DECL_THREADSAFE_ISUPPORTS
+
+  RefPtr<GetCDMParentPromise> GetCDM(const NodeId& aNodeId,
+                                     nsTArray<nsCString> aTags,
+                                     GMPCrashHelper* aHelper);
 
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
