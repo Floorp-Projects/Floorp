@@ -812,11 +812,14 @@ private:
                                                       nsTArray<uint8_t>* aSignature) override;
 
   virtual mozilla::ipc::IPCResult RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
-                                                  const uint32_t& aFlags, bool* aIsSecureURI) override;
+                                                  const uint32_t& aFlags,
+                                                  const OriginAttributes& aOriginAttributes,
+                                                  bool* aIsSecureURI) override;
 
   virtual mozilla::ipc::IPCResult RecvAccumulateMixedContentHSTS(const URIParams& aURI,
                                                                  const bool& aActive,
-                                                                 const bool& aHSTSPriming) override;
+                                                                 const bool& aHSTSPriming,
+                                                                 const OriginAttributes& aOriginAttributes) override;
 
   virtual bool DeallocPHalParent(PHalParent*) override;
 

@@ -8,13 +8,14 @@
 
 use app_units::Au;
 use cssparser::RGBA;
-use gecko_bindings::structs::{nsStyleCoord, StyleShapeRadius};
+use gecko_bindings::structs::{nsStyleCoord, StyleGridTrackBreadth, StyleShapeRadius};
 use gecko_bindings::sugar::ns_style_coord::{CoordData, CoordDataMut, CoordDataValue};
 use std::cmp::max;
-use values::{Auto, Either, None_};
+use values::{Auto, Either, None_, Normal};
 use values::computed::{Angle, LengthOrPercentageOrNone, Number};
 use values::computed::{LengthOrPercentage, LengthOrPercentageOrAuto};
 use values::computed::basic_shape::ShapeRadius;
+use values::specified::grid::{TrackBreadth, TrackKeyword};
 
 /// A trait that defines an interface to convert from and to `nsStyleCoord`s.
 pub trait GeckoStyleCoordConvertible : Sized {
@@ -137,6 +138,39 @@ impl GeckoStyleCoordConvertible for LengthOrPercentageOrNone {
     }
 }
 
+impl<L: GeckoStyleCoordConvertible> GeckoStyleCoordConvertible for TrackBreadth<L> {
+    fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
+        match *self {
+            TrackBreadth::Breadth(ref lop) => lop.to_gecko_style_coord(coord),
+            TrackBreadth::Flex(fr) => coord.set_value(CoordDataValue::FlexFraction(fr)),
+            TrackBreadth::Keyword(TrackKeyword::Auto) => coord.set_value(CoordDataValue::Auto),
+            TrackBreadth::Keyword(TrackKeyword::MinContent) =>
+                coord.set_value(CoordDataValue::Enumerated(StyleGridTrackBreadth::MinContent as u32)),
+            TrackBreadth::Keyword(TrackKeyword::MaxContent) =>
+                coord.set_value(CoordDataValue::Enumerated(StyleGridTrackBreadth::MaxContent as u32)),
+        }
+    }
+
+    fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
+        L::from_gecko_style_coord(coord).map(TrackBreadth::Breadth).or_else(|| {
+            match coord.as_value() {
+                CoordDataValue::Enumerated(v) => {
+                    if v == StyleGridTrackBreadth::MinContent as u32 {
+                        Some(TrackBreadth::Keyword(TrackKeyword::MinContent))
+                    } else if v == StyleGridTrackBreadth::MaxContent as u32 {
+                        Some(TrackBreadth::Keyword(TrackKeyword::MaxContent))
+                    } else {
+                        None
+                    }
+                },
+                CoordDataValue::FlexFraction(fr) => Some(TrackBreadth::Flex(fr)),
+                CoordDataValue::Auto => Some(TrackBreadth::Keyword(TrackKeyword::Auto)),
+                _ => L::from_gecko_style_coord(coord).map(TrackBreadth::Breadth),
+            }
+        })
+    }
+}
+
 impl GeckoStyleCoordConvertible for ShapeRadius {
     fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
         match *self {
@@ -217,6 +251,20 @@ impl GeckoStyleCoordConvertible for None_ {
     fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
         if let CoordDataValue::None = coord.as_value() {
             Some(None_)
+        } else {
+            None
+        }
+    }
+}
+
+impl GeckoStyleCoordConvertible for Normal {
+    fn to_gecko_style_coord<T: CoordDataMut>(&self, coord: &mut T) {
+        coord.set_value(CoordDataValue::Normal)
+    }
+
+    fn from_gecko_style_coord<T: CoordData>(coord: &T) -> Option<Self> {
+        if let CoordDataValue::Normal = coord.as_value() {
+            Some(Normal)
         } else {
             None
         }
