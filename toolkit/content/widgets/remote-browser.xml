@@ -190,9 +190,7 @@
           let changed = val.toFixed(2) != this._fullZoom.toFixed(2);
 
           this._fullZoom = val;
-          try {
-            this.messageManager.sendAsyncMessage("FullZoom", {value: val});
-          } catch(ex) {}
+          this.messageManager.sendAsyncMessage("FullZoom", {value: val});
 
           if (changed) {
             let event = new Event("FullZoomChange", {bubbles: true});
@@ -210,9 +208,7 @@
           let changed = val.toFixed(2) != this._textZoom.toFixed(2);
 
           this._textZoom = val;
-          try {
-            this.messageManager.sendAsyncMessage("TextZoom", {value: val});
-          } catch(ex) {}
+          this.messageManager.sendAsyncMessage("TextZoom", {value: val});
 
           if (changed) {
             let event = new Event("TextZoomChange", {bubbles: true});
