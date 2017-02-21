@@ -142,7 +142,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [946]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [930]
 * flex-basis glue not implemented bug 1331529
   * test_flexbox_flex_shorthand.html `flex-basis` [28]
   * test_flexbox_layout.html [355]
@@ -436,8 +436,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * {transform,perspective}-origin servo/servo#15487
       * test_property_syntax_errors.html `transform-origin'` [50]
       * ... `perspective-origin'` [30]
-    * test_property_syntax_errors.html `'border-spacing'`: servo/servo#15489 [7]
-    * ... `'text-overflow'`: servo/servo#15491 [8]
+    * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -521,7 +520,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `: 10 ` [6]
     * ... ` 2 ` [26]
     * ... `: 5 ` [84]
-    * ... `border-spacing: ` [5]
+    * ... `border-spacing: ` [6]
     * ... `rect(1, ` [1]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
