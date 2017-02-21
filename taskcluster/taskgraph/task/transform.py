@@ -87,6 +87,8 @@ class TransformTask(base.Task):
         return [(label, name) for name, label in self.dependencies.items()]
 
     def optimize(self, params):
+        bbb_task = False
+
         if self.index_paths:
             optimized, taskId = super(TransformTask, self).optimize(params)
             if optimized:
@@ -100,12 +102,18 @@ class TransformTask(base.Task):
                              self.label)
                 return True, None
 
+        # for bbb tasks we need to send in the buildbot buildername
+        if self.task.get('provisionerId') == 'buildbot-bridge':
+            self.label = self.task.get('payload').get('buildername')
+            bbb_task = True
+
         # we would like to return 'False, None' while it's high_value_task
         # and we wouldn't optimize it. Otherwise, it will return 'True, None'
         if is_low_value_task(self.label,
                              params.get('project'),
                              params.get('pushlog_id'),
-                             params.get('pushdate')):
+                             params.get('pushdate'),
+                             bbb_task):
             # Always optimize away low-value tasks
             return True, None
         else:
