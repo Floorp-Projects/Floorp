@@ -86,10 +86,6 @@ protected:
   virtual bool GradientVectorLengthIsZero() = 0;
   virtual already_AddRefed<gfxPattern> CreateGradient() = 0;
 
-  // Internal methods for handling referenced gradients
-  class AutoGradientReferencer;
-  nsSVGGradientFrame* GetReferencedGradientIfNotInUse();
-
   // Accessors to lookup gradient attributes
   uint16_t GetEnumValue(uint32_t aIndex, nsIContent *aDefault);
   uint16_t GetEnumValue(uint32_t aIndex)
