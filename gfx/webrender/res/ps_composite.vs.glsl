@@ -3,48 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-struct Composite {
-    ivec4 src0_src1_target_id_op;
-    int z;
-};
-
-Composite fetch_composite() {
-    PrimitiveInstance pi = fetch_prim_instance();
-
-    Composite composite;
-    composite.src0_src1_target_id_op = ivec4(pi.user_data.xy,
-                                             pi.render_task_index,
-                                             pi.sub_index);
-    composite.z = pi.z;
-
-    return composite;
-}
-
 void main(void) {
-    Composite composite = fetch_composite();
-    Tile src0 = fetch_tile(composite.src0_src1_target_id_op.x);
-    Tile src1 = fetch_tile(composite.src0_src1_target_id_op.y);
-    Tile dest = fetch_tile(composite.src0_src1_target_id_op.z);
+    PrimitiveInstance pi = fetch_prim_instance();
+    AlphaBatchTask dest_task = fetch_alpha_batch_task(pi.render_task_index);
+    AlphaBatchTask backdrop_task = fetch_alpha_batch_task(pi.user_data.x);
+    AlphaBatchTask src_task = fetch_alpha_batch_task(pi.user_data.y);
 
-    vec2 local_pos = mix(dest.screen_origin_task_origin.zw,
-                         dest.screen_origin_task_origin.zw + dest.size_target_index.xy,
+    vec2 dest_origin = dest_task.render_target_origin -
+                       dest_task.screen_space_origin +
+                       src_task.screen_space_origin;
+
+    vec2 local_pos = mix(dest_origin,
+                         dest_origin + src_task.size,
                          aPosition.xy);
 
     vec2 texture_size = vec2(textureSize(sCache, 0));
-    vec2 st0 = src0.screen_origin_task_origin.zw / texture_size;
-    vec2 st1 = (src0.screen_origin_task_origin.zw + src0.size_target_index.xy) / texture_size;
-    vUv0 = vec3(mix(st0, st1, aPosition.xy), src0.size_target_index.z);
 
-    st0 = vec2(src1.screen_origin_task_origin.zw) / texture_size;
-    st1 = vec2(src1.screen_origin_task_origin.zw + src1.size_target_index.xy) / texture_size;
-    vec2 local_virtual_pos = mix(dest.screen_origin_task_origin.xy,
-                                 dest.screen_origin_task_origin.xy + dest.size_target_index.xy,
-                                 aPosition.xy);
-    vec2 f = (local_virtual_pos - src1.screen_origin_task_origin.xy) / src1.size_target_index.xy;
-    vUv1 = vec3(mix(st0, st1, f), src1.size_target_index.z);
-    vUv1Rect = vec4(st0, st1);
+    vec2 st0 = (backdrop_task.render_target_origin + vec2(0.0, backdrop_task.size.y)) / texture_size;
+    vec2 st1 = (backdrop_task.render_target_origin + vec2(backdrop_task.size.x, 0.0)) / texture_size;
+    vUv0 = vec3(mix(st0, st1, aPosition.xy), backdrop_task.render_target_layer_index);
 
-    vOp = composite.src0_src1_target_id_op.w;
+    st0 = src_task.render_target_origin / texture_size;
+    st1 = (src_task.render_target_origin + src_task.size) / texture_size;
+    vUv1 = vec3(mix(st0, st1, aPosition.xy), src_task.render_target_layer_index);
 
-    gl_Position = uTransform * vec4(local_pos, composite.z, 1.0);
+    vOp = pi.sub_index;
+
+    gl_Position = uTransform * vec4(local_pos, pi.z, 1.0);
+
 }

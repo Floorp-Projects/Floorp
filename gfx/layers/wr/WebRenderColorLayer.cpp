@@ -5,8 +5,8 @@
 
 #include "WebRenderColorLayer.h"
 
-#include "WebRenderLayersLogging.h"
 #include "gfxPrefs.h"
+#include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -14,23 +14,34 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
+
 void
 WebRenderColorLayer::RenderLayer()
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
+  gfx::Matrix4x4 transform = GetTransform();
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
-  Rect rect = RelativeToVisible(IntRectToRect(bounds.ToUnknownRect()));
+  Rect rect(0, 0, bounds.width, bounds.height);
   Rect clip;
   if (GetClipRect().isSome()) {
-      clip = RelativeToTransformedVisible(IntRectToRect(GetClipRect().ref().ToUnknownRect()));
+      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
   } else {
       clip = rect;
   }
 
-  gfx::Matrix4x4 transform;// = GetTransform();
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
