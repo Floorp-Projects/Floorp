@@ -27,7 +27,7 @@ WidevineVideoDecoder::WidevineVideoDecoder(GMPVideoHost* aVideoHost,
 {
   // Expect to start with a CDM wrapper, will release it in DecodingComplete().
   MOZ_ASSERT(mCDMWrapper);
-  Log("WidevineVideoDecoder created this=%p", this);
+  CDM_LOG("WidevineVideoDecoder created this=%p", this);
 
   // Corresponding Release is in DecodingComplete().
   AddRef();
@@ -35,7 +35,7 @@ WidevineVideoDecoder::WidevineVideoDecoder(GMPVideoHost* aVideoHost,
 
 WidevineVideoDecoder::~WidevineVideoDecoder()
 {
-  Log("WidevineVideoDecoder destroyed this=%p", this);
+  CDM_LOG("WidevineVideoDecoder destroyed this=%p", this);
 }
 
 static
@@ -88,7 +88,7 @@ WidevineVideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
     mCallback->Error(ToGMPErr(rv));
     return;
   }
-  Log("WidevineVideoDecoder::InitDecode() rv=%d", rv);
+  CDM_LOG("WidevineVideoDecoder::InitDecode() rv=%d", rv);
   mAnnexB = mp4_demuxer::AnnexB::ConvertExtraDataToAnnexB(mExtraData);
 }
 
@@ -141,8 +141,8 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   WidevineVideoFrame frame;
   Status rv = CDM()->DecryptAndDecodeFrame(sample, &frame);
-  Log("WidevineVideoDecoder::Decode(timestamp=%" PRId64 ") rv=%d", sample.timestamp,
-      rv);
+  CDM_LOG("WidevineVideoDecoder::Decode(timestamp=%" PRId64 ") rv=%d",
+          sample.timestamp, rv);
 
   // Destroy frame, so that the shmem is now free to be used to return
   // output to the Gecko process.
@@ -151,7 +151,7 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
 
   if (rv == kSuccess) {
     if (!ReturnOutput(frame)) {
-      Log("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
+      CDM_LOG("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
       mCallback->Error(GMPDecodeErr);
       return;
     }
@@ -250,7 +250,7 @@ WidevineVideoDecoder::ReturnOutput(WidevineVideoFrame& aCDMFrame)
     GMPVideoFrame* f = nullptr;
     auto err = mVideoHost->CreateFrame(kGMPI420VideoFrame, &f);
     if (GMP_FAILED(err) || !f) {
-      Log("Failed to create i420 frame!\n");
+      CDM_LOG("Failed to create i420 frame!\n");
       return false;
     }
     auto gmpFrame = static_cast<GMPVideoi420Frame*>(f);
@@ -331,7 +331,7 @@ WidevineVideoDecoder::ReturnOutput(WidevineVideoFrame& aCDMFrame)
 void
 WidevineVideoDecoder::Reset()
 {
-  Log("WidevineVideoDecoder::Reset() mSentInput=%d", mSentInput);
+  CDM_LOG("WidevineVideoDecoder::Reset() mSentInput=%d", mSentInput);
   // We shouldn't reset if a drain is pending.
   MOZ_ASSERT(!mDrainPending);
   mResetInProgress = true;
@@ -360,9 +360,9 @@ WidevineVideoDecoder::CompleteReset()
 void
 WidevineVideoDecoder::Drain()
 {
-  Log("WidevineVideoDecoder::Drain()");
+  CDM_LOG("WidevineVideoDecoder::Drain()");
   if (mReturnOutputCallDepth > 0) {
-    Log("Drain call is reentrant, postponing drain");
+    CDM_LOG("Drain call is reentrant, postponing drain");
     mDrainPending = true;
     return;
   }
@@ -372,13 +372,13 @@ WidevineVideoDecoder::Drain()
     WidevineVideoFrame frame;
     InputBuffer sample;
     Status rv = CDM()->DecryptAndDecodeFrame(sample, &frame);
-    Log("WidevineVideoDecoder::Drain();  DecryptAndDecodeFrame() rv=%d", rv);
+    CDM_LOG("WidevineVideoDecoder::Drain();  DecryptAndDecodeFrame() rv=%d", rv);
     if (frame.Format() == kUnknownVideoFormat) {
       break;
     }
     if (rv == kSuccess) {
       if (!ReturnOutput(frame)) {
-        Log("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
+        CDM_LOG("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
       }
     }
   }
@@ -393,14 +393,14 @@ WidevineVideoDecoder::Drain()
 void
 WidevineVideoDecoder::DecodingComplete()
 {
-  Log("WidevineVideoDecoder::DecodingComplete()");
+  CDM_LOG("WidevineVideoDecoder::DecodingComplete()");
 
   if (mCDMWrapper) {
     // mCallback will be null if the decoder has not been fully initialized.
     if (mCallback) {
       CDM()->DeinitializeDecoder(kStreamTypeVideo);
     } else {
-      Log("WideVineDecoder::DecodingComplete() Decoder was not fully initialized!");
+      CDM_LOG("WideVineDecoder::DecodingComplete() Decoder was not fully initialized!");
     }
 
     mCDMWrapper = nullptr;
