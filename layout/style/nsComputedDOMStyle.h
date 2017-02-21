@@ -661,9 +661,8 @@ private:
   already_AddRefed<CSSValue> CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
 
-  template<typename ReferenceBox>
   already_AddRefed<CSSValue>
-  GetShapeSource(const mozilla::StyleShapeSource<ReferenceBox>& aShapeSource,
+  GetShapeSource(const mozilla::StyleShapeSource& aShapeSource,
                  const KTableEntry aBoxKeywordTable[]);
 
   template<typename ReferenceBox>
