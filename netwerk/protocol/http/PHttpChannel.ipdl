@@ -10,6 +10,7 @@ include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
 include NeckoChannelParams;
+include PURLClassifierInfo;
 
 include protocol PBlob; //FIXME: bug #792908
 
@@ -167,6 +168,9 @@ child:
 
   // Tell the child to issue a deprecation warning.
   async IssueDeprecationWarning(uint32_t warning, bool asError);
+
+  // Tell the child information of matched URL againts SafeBrowsing list
+  async SetClassifierMatchedInfo(ClassifierInfo info);
 
 both:
   // After receiving this message, the parent also calls

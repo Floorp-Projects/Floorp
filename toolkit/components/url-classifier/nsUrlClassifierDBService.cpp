@@ -1114,6 +1114,9 @@ nsUrlClassifierLookupCallback::HandleResults()
   LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, %" PRIuSIZE " results]",
        this, mResults->Length()));
 
+  nsCOMPtr<nsIUrlClassifierClassifyCallback> classifyCallback =
+    do_QueryInterface(mCallback);
+
   nsTArray<nsCString> tables;
   // Build a stringified list of result tables.
   for (uint32_t i = 0; i < mResults->Length(); i++) {
@@ -1137,6 +1140,12 @@ nsUrlClassifierLookupCallback::HandleResults()
 
     if (tables.IndexOf(result.mTableName) == nsTArray<nsCString>::NoIndex) {
       tables.AppendElement(result.mTableName);
+    }
+
+    if (classifyCallback) {
+      nsCString prefixString;
+      result.hash.fixedLengthPrefix.ToString(prefixString);
+      classifyCallback->HandleResult(result.mTableName, prefixString);
     }
   }
 
@@ -1173,38 +1182,113 @@ nsUrlClassifierLookupCallback::HandleResults()
   return mCallback->HandleEvent(tableStr);
 }
 
+struct Provider {
+  nsCString name;
+  uint8_t priority;
+};
+
+// Order matters
+// Provider which is not included in this table has the lowest priority 0
+static const Provider kBuiltInProviders[] = {
+  { NS_LITERAL_CSTRING("mozilla"), 1 },
+  { NS_LITERAL_CSTRING("google4"), 2 },
+  { NS_LITERAL_CSTRING("google"), 3 },
+};
 
 // -------------------------------------------------------------------------
-// Helper class for nsIURIClassifier implementation, translates table names
-// to nsIURIClassifier enums.
+// Helper class for nsIURIClassifier implementation, handle classify result and
+// send back to nsIURIClassifier
 
-class nsUrlClassifierClassifyCallback final : public nsIUrlClassifierCallback
+class nsUrlClassifierClassifyCallback final : public nsIUrlClassifierCallback,
+                                              public nsIUrlClassifierClassifyCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERCALLBACK
+  NS_DECL_NSIURLCLASSIFIERCLASSIFYCALLBACK
 
   explicit nsUrlClassifierClassifyCallback(nsIURIClassifierCallback *c)
     : mCallback(c)
     {}
 
 private:
-  ~nsUrlClassifierClassifyCallback() {}
+
+  struct ClassifyMatchedInfo {
+    nsCString table;
+    nsCString prefix;
+    Provider provider;
+    nsresult errorCode;
+  };
+
+  ~nsUrlClassifierClassifyCallback() {};
 
   nsCOMPtr<nsIURIClassifierCallback> mCallback;
+  nsTArray<ClassifyMatchedInfo> mMatchedArray;
 };
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierClassifyCallback,
-                  nsIUrlClassifierCallback)
+                  nsIUrlClassifierCallback,
+                  nsIUrlClassifierClassifyCallback)
 
 NS_IMETHODIMP
 nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 {
   nsresult response = TablesToResponse(tables);
-  mCallback->OnClassifyComplete(response);
+  ClassifyMatchedInfo* matchedInfo = nullptr;
+
+  if (NS_FAILED(response)) {
+    // Filter all matched info which has correct response
+    // In the case multiple tables found, use the higher priority provider
+    nsTArray<ClassifyMatchedInfo> matches;
+    for (uint32_t i = 0; i < mMatchedArray.Length(); i++) {
+      if (mMatchedArray[i].errorCode == response &&
+          (!matchedInfo ||
+           matchedInfo->provider.priority < mMatchedArray[i].provider.priority)) {
+        matchedInfo = &mMatchedArray[i];
+      }
+    }
+  }
+
+  nsCString provider = matchedInfo ? matchedInfo->provider.name : EmptyCString();
+  nsCString prefix = matchedInfo ? matchedInfo->prefix : EmptyCString();
+  nsCString table = matchedInfo ? matchedInfo->table : EmptyCString();
+
+  mCallback->OnClassifyComplete(response, table, provider, prefix);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsUrlClassifierClassifyCallback::HandleResult(const nsACString& aTable,
+                                              const nsACString& aPrefix)
+{
+  LOG(("nsUrlClassifierClassifyCallback::HandleResult [%p, table %s prefix %s]",
+        this, PromiseFlatCString(aTable).get(), PromiseFlatCString(aPrefix).get()));
+
+  if (NS_WARN_IF(aTable.IsEmpty()) || NS_WARN_IF(aPrefix.IsEmpty())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  ClassifyMatchedInfo* matchedInfo = mMatchedArray.AppendElement();
+  matchedInfo->table = aTable;
+  matchedInfo->prefix = aPrefix;
+
+  nsCOMPtr<nsIUrlClassifierUtils> urlUtil =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+
+  nsCString provider;
+  nsresult rv = urlUtil->GetProvider(aTable, provider);
+
+  matchedInfo->provider.name = NS_SUCCEEDED(rv) ? provider : EmptyCString();
+  matchedInfo->provider.priority = 0;
+  for (uint8_t i = 0; i < ArrayLength(kBuiltInProviders); i++) {
+    if (kBuiltInProviders[i].name.Equals(matchedInfo->provider.name)) {
+      matchedInfo->provider.priority = kBuiltInProviders[i].priority;
+    }
+  }
+  matchedInfo->errorCode = TablesToResponse(aTable);
+
+  return NS_OK;
+}
 
 // -------------------------------------------------------------------------
 // Proxy class implementation
@@ -1503,6 +1587,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   RefPtr<nsUrlClassifierClassifyCallback> callback =
     new nsUrlClassifierClassifyCallback(c);
+
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
   nsAutoCString tables;

@@ -108,6 +108,7 @@ public:
   mozilla::ipc::IPCResult RecvNotifyTrackingProtectionDisabled() override;
   mozilla::ipc::IPCResult RecvNotifyTrackingResource() override;
   void FlushedForDiversion();
+  mozilla::ipc::IPCResult RecvSetClassifierMatchedInfo(const ClassifierInfo& aInfo) override;
 
 protected:
   mozilla::ipc::IPCResult RecvOnStartRequest(const nsresult& channelStatus,

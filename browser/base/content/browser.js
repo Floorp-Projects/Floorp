@@ -2972,7 +2972,8 @@ var BrowserOnClick = {
       break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(msg.data.elementId, msg.data.reason,
-                            msg.data.isTopFrame, msg.data.location);
+                            msg.data.isTopFrame, msg.data.location,
+                            msg.data.blockedInfo);
       break;
       case "Browser:EnableOnlineMode":
         if (Services.io.offline) {
@@ -3097,7 +3098,7 @@ var BrowserOnClick = {
     }
   },
 
-  onAboutBlocked(elementId, reason, isTopFrame, location) {
+  onAboutBlocked(elementId, reason, isTopFrame, location, blockedInfo) {
     // Depending on what page we are displaying here (malware/phishing/unwanted)
     // use the right strings and links for each.
     let bucketName = "";
@@ -3140,13 +3141,13 @@ var BrowserOnClick = {
           if (sendTelemetry) {
             secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
           }
-          this.ignoreWarningButton(reason);
+          this.ignoreWarningButton(reason, blockedInfo);
         }
         break;
     }
   },
 
-  ignoreWarningButton(reason) {
+  ignoreWarningButton(reason, blockedInfo) {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
@@ -3166,23 +3167,33 @@ var BrowserOnClick = {
 
     let title;
     if (reason === "malware") {
-      title = gNavigatorBundle.getString("safebrowsing.reportedAttackSite");
-      buttons[1] = {
-        label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
-        accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
-        callback() {
-          openUILinkIn(gSafeBrowsing.getReportURL("MalwareMistake"), "tab");
-        }
-      };
+      let reportUrl = gSafeBrowsing.getReportURL("MalwareMistake", blockedInfo);
+
+      // There's no button if we can not get report url, for example if the provider
+      // of blockedInfo is not Google
+      if (reportUrl) {
+        buttons[1] = {
+          label: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.label"),
+          accessKey: gNavigatorBundle.getString("safebrowsing.notAnAttackButton.accessKey"),
+          callback() {
+            openUILinkIn(reportUrl, "tab");
+          }
+        };
+      }
     } else if (reason === "phishing") {
-      title = gNavigatorBundle.getString("safebrowsing.deceptiveSite");
-      buttons[1] = {
-        label: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.label"),
-        accessKey: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.accessKey"),
-        callback() {
-          openUILinkIn(gSafeBrowsing.getReportURL("PhishMistake"), "tab");
-        }
-      };
+      let reportUrl = gSafeBrowsing.getReportURL("PhishMistake", blockedInfo);
+
+      // There's no button if we can not get report url, for example if the provider
+      // of blockedInfo is not Google
+      if (reportUrl) {
+        buttons[1] = {
+          label: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.label"),
+          accessKey: gNavigatorBundle.getString("safebrowsing.notADeceptiveSiteButton.accessKey"),
+          callback() {
+            openUILinkIn(reportUrl, "tab");
+          }
+        };
+      }
     } else if (reason === "unwanted") {
       title = gNavigatorBundle.getString("safebrowsing.reportedUnwantedSite");
       // There is no button for reporting errors since Google doesn't currently

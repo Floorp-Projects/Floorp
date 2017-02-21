@@ -345,6 +345,7 @@ NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIConsoleReportCollector)
   NS_INTERFACE_MAP_ENTRY(nsIThrottledInputChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIClassifiedChannel)
   if (aIID.Equals(NS_GET_IID(HttpBaseChannel))) {
     foundInterface = static_cast<nsIWritablePropertyBag*>(this);
   } else
@@ -3382,6 +3383,41 @@ HttpBaseChannel::SameOriginWithOriginalUri(nsIURI *aURI)
 }
 
 
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsIClassifiedChannel
+
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedList(nsACString& aList)
+{
+  aList = mMatchedList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedProvider(nsACString& aProvider)
+{
+  aProvider = mMatchedProvider;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetMatchedPrefix(nsACString& aPrefix)
+{
+  aPrefix = mMatchedPrefix;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetMatchedInfo(const nsACString& aList,
+                                const nsACString& aProvider,
+                                const nsACString& aPrefix) {
+  NS_ENSURE_ARG(!aList.IsEmpty());
+
+  mMatchedList = aList;
+  mMatchedProvider = aProvider;
+  mMatchedPrefix = aPrefix;
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsITimedChannel
