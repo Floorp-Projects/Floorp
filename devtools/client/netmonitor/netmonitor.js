@@ -4,7 +4,19 @@
 
 "use strict";
 
+const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
+
 function Netmonitor(toolbox) {
+  const require = window.windowRequire = BrowserLoader({
+    baseURI: "resource://devtools/client/netmonitor/",
+    window,
+    commonLibRequire: toolbox.browserRequire,
+  }).require;
+
+  // Inject EventEmitter into netmonitor window.
+  const EventEmitter = require("devtools/shared/event-emitter");
+  EventEmitter.decorate(window);
+
   window.NetMonitorController = require("./netmonitor-controller").NetMonitorController;
   window.NetMonitorController._toolbox = toolbox;
   window.NetMonitorController._target = toolbox.target;
