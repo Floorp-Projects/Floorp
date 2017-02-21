@@ -129,10 +129,10 @@ private:
       bool mightHaveNoneSVGMask =
         nsSVGEffects::GetEffectProperties(firstFrame).MightHaveNoneSVGMask();
 
-      MOZ_ASSERT(mightHaveNoneSVGMask ||
-                 aFrame->GetParent()->StyleContext()->GetPseudo() ==
-                 nsCSSAnonBoxes::mozAnonymousBlock,
-                 "How did we getting here, then?");
+      NS_ASSERTION(mightHaveNoneSVGMask ||
+                   aFrame->GetParent()->StyleContext()->GetPseudo() ==
+                   nsCSSAnonBoxes::mozAnonymousBlock,
+                   "How did we getting here, then?");
     }
 
     bool hasEffect = nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame);
