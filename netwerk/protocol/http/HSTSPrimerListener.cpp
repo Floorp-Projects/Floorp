@@ -149,8 +149,12 @@ HSTSPrimingListener::CheckHSTSPrimingRequestStatus(nsIRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(uri, NS_ERROR_CONTENT_BLOCKED);
 
+  OriginAttributes originAttributes;
+  NS_GetOriginAttributes(httpChannel, originAttributes);
+
   bool hsts;
-  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, 0, nullptr, &hsts);
+  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, 0,
+                        originAttributes, nullptr, &hsts);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hsts) {
@@ -222,7 +226,12 @@ HSTSPrimingListener::StartHSTSPriming(nsIChannel* aRequestChannel,
   bool cached;
   nsCOMPtr<nsISiteSecurityService> sss = do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, 0, &cached, &hsts);
+
+  OriginAttributes originAttributes;
+  NS_GetOriginAttributes(aRequestChannel, originAttributes);
+
+  rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, 0,
+                        originAttributes, &cached, &hsts);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hsts) {

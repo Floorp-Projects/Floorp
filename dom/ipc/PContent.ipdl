@@ -796,10 +796,12 @@ parent:
                          uint8_t[] keyHandle)
         returns (uint8_t[] signature);
 
-    sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
+    sync IsSecureURI(uint32_t aType, URIParams aURI, uint32_t aFlags,
+                     OriginAttributes aOriginAttributes)
         returns (bool isSecureURI);
 
-    async AccumulateMixedContentHSTS(URIParams uri, bool active, bool hasHSTSPriming);
+    async AccumulateMixedContentHSTS(URIParams aURI, bool aActive, bool aHasHSTSPriming,
+                                     OriginAttributes aOriginAttributes);
 
     nested(inside_cpow) async PHal();
 

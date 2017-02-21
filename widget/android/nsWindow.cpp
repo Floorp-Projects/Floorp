@@ -102,6 +102,20 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 
+static TimeStamp
+GetEventTimeStamp(int64_t aEventTime)
+{
+    // Android's event time is SystemClock.uptimeMillis that is counted in ms
+    // since OS was booted.
+    // (https://developer.android.com/reference/android/os/SystemClock.html)
+    // and this SystemClock.uptimeMillis uses SYSTEM_TIME_MONOTONIC.
+    // Our posix implemententaion of TimeStamp::Now uses SYSTEM_TIME_MONOTONIC
+    //  too. Due to same implementation, we can use this via FromSystemTime.
+    int64_t tick =
+        BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime);
+    return TimeStamp::FromSystemTime(tick);
+}
+
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
 // one.
@@ -638,7 +652,7 @@ public:
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
-        ScrollWheelInput input(aTime, TimeStamp::Now(), GetModifiers(aMetaState),
+        ScrollWheelInput input(aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState),
                                ScrollWheelInput::SCROLLMODE_SMOOTH,
                                ScrollWheelInput::SCROLLDELTA_PIXEL,
                                origin,
@@ -757,7 +771,7 @@ public:
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
-        MouseInput input(mouseType, buttonType, nsIDOMMouseEvent::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, TimeStamp(), GetModifiers(aMetaState));
+        MouseInput input(mouseType, buttonType, nsIDOMMouseEvent::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
@@ -828,7 +842,7 @@ public:
                 return false;
         }
 
-        MultiTouchInput input(type, aTime, TimeStamp(), 0);
+        MultiTouchInput input(type, aTime, GetEventTimeStamp(aTime), 0);
         input.modifiers = GetModifiers(aMetaState);
         input.mTouches.SetCapacity(endIndex - startIndex);
 
@@ -2530,6 +2544,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
     event.mLocation =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
     event.mTime = time;
+    event.mTimeStamp = GetEventTimeStamp(time);
 }
 
 void
