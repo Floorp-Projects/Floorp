@@ -6,7 +6,7 @@ using namespace cdm;
 namespace mozilla {
 WidevineDummyDecoder::WidevineDummyDecoder()
 {
-  Log("WidevineDummyDecoder created");
+  CDM_LOG("WidevineDummyDecoder created");
 }
 
 void WidevineDummyDecoder::InitDecode(const GMPVideoCodec & aCodecSettings,
@@ -15,7 +15,7 @@ void WidevineDummyDecoder::InitDecode(const GMPVideoCodec & aCodecSettings,
                                       GMPVideoDecoderCallback * aCallback,
                                       int32_t aCoreCount)
 {
-  Log("WidevineDummyDecoder::InitDecode");
+  CDM_LOG("WidevineDummyDecoder::InitDecode");
 
   mCallback = aCallback;
   mCallback->Error(GMPErr::GMPNotImplementedErr);
@@ -27,31 +27,31 @@ void WidevineDummyDecoder::Decode(GMPVideoEncodedFrame * aInputFrame,
                                   uint32_t aCodecSpecificInfoLength,
                                   int64_t aRenderTimeMs)
 {
-  Log("WidevineDummyDecoder::Decode");
+  CDM_LOG("WidevineDummyDecoder::Decode");
   mCallback->Error(GMPErr::GMPNotImplementedErr);
 }
 
 void WidevineDummyDecoder::Reset()
 {
-  Log("WidevineDummyDecoder::Reset");
+  CDM_LOG("WidevineDummyDecoder::Reset");
   mCallback->Error(GMPErr::GMPNotImplementedErr);
 }
 
 void WidevineDummyDecoder::Drain()
 {
-  Log("WidevineDummyDecoder::Drain");
+  CDM_LOG("WidevineDummyDecoder::Drain");
   mCallback->Error(GMPErr::GMPNotImplementedErr);
 }
 
 void WidevineDummyDecoder::DecodingComplete()
 {
-  Log("WidevineDummyDecoder::DecodingComplete");
+  CDM_LOG("WidevineDummyDecoder::DecodingComplete");
 
   mCallback = nullptr;
   delete this;
 }
 
 WidevineDummyDecoder::~WidevineDummyDecoder() {
-  Log("WidevineDummyDecoder destroyed");
+  CDM_LOG("WidevineDummyDecoder destroyed");
 }
 }

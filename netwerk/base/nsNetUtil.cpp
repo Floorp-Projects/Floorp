@@ -385,14 +385,9 @@ NS_NewInputStreamChannelInternal(nsIChannel        **outChannel,
   stream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZILLA_INTERNAL_API
     uint32_t len;
     char* utf8Bytes = ToNewUTF8String(aData, &len);
     rv = stream->AdoptData(utf8Bytes, len);
-#else
-    char* utf8Bytes = ToNewUTF8String(aData);
-    rv = stream->AdoptData(utf8Bytes, strlen(utf8Bytes));
-#endif
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
@@ -1188,8 +1183,6 @@ NS_ReadInputStreamToBuffer(nsIInputStream *aInputStream,
     return rv;
 }
 
-#ifdef MOZILLA_INTERNAL_API
-
 nsresult
 NS_ReadInputStreamToString(nsIInputStream *aInputStream,
                            nsACString &aDest,
@@ -1200,8 +1193,6 @@ NS_ReadInputStreamToString(nsIInputStream *aInputStream,
     void* dest = aDest.BeginWriting();
     return NS_ReadInputStreamToBuffer(aInputStream, &dest, aCount);
 }
-
-#endif
 
 nsresult
 NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
@@ -1711,11 +1702,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
         return false;
     }
 
-#ifdef MOZILLA_INTERNAL_API
     if (!targetHost.Equals(sourceHost, nsCaseInsensitiveCStringComparator() ))
-#else
-    if (!targetHost.Equals(sourceHost, CaseInsensitiveCompare))
-#endif
     {
         return false;
     }
@@ -2177,6 +2164,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
                        nsIPrincipal* aChannelResultPrincipal,
                        bool aPrivateBrowsing,
                        bool aAllowSTS,
+                       const OriginAttributes& aOriginAttributes,
                        bool& aShouldUpgrade)
 {
   // Even if we're in private browsing mode, we still enforce existing STS
@@ -2235,7 +2223,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     bool isStsHost = false;
     uint32_t flags = aPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
     rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
-                          nullptr, &isStsHost);
+                          aOriginAttributes, nullptr, &isStsHost);
 
     // if the SSS check fails, it's likely because this load is on a
     // malformed URI or something else in the setup is wrong, so any error

@@ -52,7 +52,7 @@ this.SelectParentHelper = {
     // but they don't intend to change the popup to transparent.
     if (customStylingEnabled &&
         selectBackgroundColor != uaSelectBackgroundColor &&
-        selectBackgroundColor != "transparent" &&
+        selectBackgroundColor != "rgba(0, 0, 0, 0)" &&
         selectBackgroundColor != selectColor) {
       ruleBody = `background-color: ${selectBackgroundColor};`;
     }
@@ -60,7 +60,7 @@ this.SelectParentHelper = {
     if (customStylingEnabled &&
         selectColor != uaSelectColor &&
         selectColor != selectBackgroundColor &&
-        (selectBackgroundColor != "transparent" ||
+        (selectBackgroundColor != "rgba(0, 0, 0, 0)" ||
          selectColor != uaSelectBackgroundColor)) {
       ruleBody += `color: ${selectColor};`;
     }
@@ -253,7 +253,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     let ruleBody = "";
     if (customStylingEnabled &&
         option.backgroundColor &&
-        option.backgroundColor != "transparent" &&
+        option.backgroundColor != "rgba(0, 0, 0, 0)" &&
         option.backgroundColor != uaBackgroundColor) {
       ruleBody = `background-color: ${option.backgroundColor};`;
     }

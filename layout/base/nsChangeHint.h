@@ -319,6 +319,8 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
           nsChangeHint_UpdateUsesOpacity | \
           nsChangeHint_UpdateBackgroundPosition)
 
+// NB: Once we drop support for the old style system, this logic should be
+// inlined in the Servo style system to eliminate the FFI call.
 inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint) {
   nsChangeHint result = nsChangeHint(aChangeHint & (
     nsChangeHint_UpdateTransformLayer |

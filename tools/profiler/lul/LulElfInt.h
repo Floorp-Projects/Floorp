@@ -55,7 +55,7 @@
 // elfutils.h: Utilities for dealing with ELF files.
 //
 
-#if defined(SPS_OS_android)
+#if defined(GP_OS_android)
 
 // From toolkit/crashreporter/google-breakpad/src/common/android/include/elf.h
 // The Android headers don't always define this constant.

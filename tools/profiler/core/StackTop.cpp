@@ -4,22 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef XP_MACOSX
+#include "PlatformMacros.h"
+
+#if defined(GP_OS_darwin)
 #include <mach/task.h>
 #include <mach/thread_act.h>
 #include <pthread.h>
-#elif XP_WIN
+#elif defined(GP_OS_windows)
 #include <windows.h>
 #endif
 
 #include "StackTop.h"
 
 void *GetStackTop(void *guess) {
-#if defined(XP_MACOSX)
+#if defined(GP_OS_darwin)
   pthread_t thread = pthread_self();
   return pthread_get_stackaddr_np(thread);
-#elif defined(XP_WIN)
-#if defined(_MSC_VER) && defined(_M_IX86)
+#elif defined(GP_OS_windows)
+#if defined(_MSC_VER) && defined(GP_ARCH_x86)
   // offset 0x18 from the FS segment register gives a pointer to
   // the thread information block for the current thread
   NT_TIB* pTib;
@@ -28,7 +30,7 @@ void *GetStackTop(void *guess) {
       MOV pTib, EAX
   }
   return static_cast<void*>(pTib->StackBase);
-#elif defined(__GNUC__) && defined(i386)
+#elif defined(__GNUC__) && defined(GP_ARCH_x86)
   // offset 0x18 from the FS segment register gives a pointer to
   // the thread information block for the current thread
   NT_TIB* pTib;
@@ -36,7 +38,7 @@ void *GetStackTop(void *guess) {
        : "=r" (pTib)
       );
   return static_cast<void*>(pTib->StackBase);
-#elif defined(_M_X64) || defined(__x86_64)
+#elif defined(GP_ARCH_amd64)
   PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
   return reinterpret_cast<void*>(pTib->StackBase);
 #else

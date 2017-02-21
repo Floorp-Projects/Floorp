@@ -124,14 +124,14 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
           "default": None,
           "help": "extra options to talos"
           }],
-        [["--spsProfile"], {
-            "dest": "sps_profile",
+        [["--geckoProfile"], {
+            "dest": "gecko_profile",
             "action": "store_true",
             "default": False,
             "help": "Whether or not to profile the test run and save the profile results"
         }],
-        [["--spsProfileInterval"], {
-            "dest": "sps_profile_interval",
+        [["--geckoProfileInterval"], {
+            "dest": "gecko_profile_interval",
             "type": "int",
             "default": 0,
             "help": "The interval between samples taken by the profiler (milliseconds)"
@@ -166,18 +166,18 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
         self.talos_json = self.config.get("talos_json")
         self.talos_json_config = self.config.get("talos_json_config")
         self.tests = None
-        self.sps_profile = self.config.get('sps_profile')
-        self.sps_profile_interval = self.config.get('sps_profile_interval')
+        self.gecko_profile = self.config.get('gecko_profile')
+        self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
 
     # We accept some configuration options from the try commit message in the format mozharness: <options>
     # Example try commit message:
-    #   mozharness: --spsProfile try: <stuff>
-    def query_sps_profile_options(self):
-        sps_results = []
+    #   mozharness: --geckoProfile try: <stuff>
+    def query_gecko_profile_options(self):
+        gecko_results = []
         if self.buildbot_config:
             # this is inside automation
-            # now let's see if we added spsProfile specs in the commit message
+            # now let's see if we added GeckoProfile specs in the commit message
             try:
                 junk, junk, opts = self.buildbot_config['sourcestamp']['changes'][-1]['comments'].partition('mozharness:')
             except IndexError:
@@ -189,23 +189,23 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
               # the first line for mozharness options
               opts = opts.split('\n')[0]
               opts = re.sub(r'\w+:.*', '', opts).strip().split(' ')
-              if "--spsProfile" in opts:
+              if "--geckoProfile" in opts:
                   # overwrite whatever was set here.
-                  self.sps_profile = True
+                  self.gecko_profile = True
               try:
-                  idx = opts.index('--spsProfileInterval')
+                  idx = opts.index('--geckoProfileInterval')
                   if len(opts) > idx + 1:
-                      self.sps_profile_interval = opts[idx + 1]
+                      self.gecko_profile_interval = opts[idx + 1]
               except ValueError:
                   pass
-        # finally, if sps_profile is set, we add that to the talos options
-        if self.sps_profile:
-            sps_results.append('--spsProfile')
-            if self.sps_profile_interval:
-                sps_results.extend(
-                    ['--spsProfileInterval', str(self.sps_profile_interval)]
+        # finally, if gecko_profile is set, we add that to the talos options
+        if self.gecko_profile:
+            gecko_results.append('--geckoProfile')
+            if self.gecko_profile_interval:
+                gecko_results.extend(
+                    ['--geckoProfileInterval', str(self.gecko_profile_interval)]
                 )
-        return sps_results
+        return gecko_results
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -293,7 +293,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
         # configure profiling options
-        options.extend(self.query_sps_profile_options())
+        options.extend(self.query_gecko_profile_options())
         # extra arguments
         if args is not None:
             options += args
@@ -485,7 +485,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin):
 
             parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
         else:
-            if not self.sps_profile:
+            if not self.gecko_profile:
                 self._validate_treeherder_data(parser)
                 if not self.run_local:
                     # copy results to upload dir so they are included as an artifact

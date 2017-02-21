@@ -34,10 +34,9 @@ private:
     bool TestPref(nsIURI *, const char *pref);
 
     bool MatchesBaseURI(const nsCSubstring &scheme,
-                          const nsCSubstring &host,
-                          int32_t             port,
-                          const char         *baseStart,
-                          const char         *baseEnd);
+                        const nsCSubstring &host,
+                        int32_t             port,
+                        nsDependentCSubstring const& url);
     // Thread for GenerateCredentialsAsync
     RefPtr<mozilla::LazyIdleThread> mNegotiateThread;
 };

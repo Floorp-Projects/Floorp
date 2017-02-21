@@ -378,7 +378,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
 
     ModuleEntry* mod;
     if (mModules.Get(spec, &mod))
-    return mod;
+        return mod;
 
     dom::AutoJSAPI jsapi;
     jsapi.Init();

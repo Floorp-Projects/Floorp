@@ -768,6 +768,9 @@ public:
                                  mozilla::dom::VRDisplayEventReason aReason);
   void DispatchVRDisplayDeactivate(uint32_t aDisplayID,
                                    mozilla::dom::VRDisplayEventReason aReason);
+  void DispatchVRDisplayConnect(uint32_t aDisplayID);
+  void DispatchVRDisplayDisconnect(uint32_t aDisplayID);
+  void DispatchVRDisplayPresentChange(uint32_t aDisplayID);
 
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
@@ -943,6 +946,9 @@ public:
 
   mozilla::dom::Worklet*
   GetPaintWorklet(mozilla::ErrorResult& aRv);
+
+  void
+  GetAppLocales(nsTArray<nsString>& aLocales);
 
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
@@ -1943,9 +1949,6 @@ protected:
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
-  typedef nsTArray<RefPtr<mozilla::dom::StorageEvent>> nsStorageEventArray;
-  nsStorageEventArray mPendingStorageEvents;
-
   uint32_t mSuspendDepth;
   uint32_t mFreezeDepth;
 
@@ -2027,7 +2030,7 @@ protected:
   // The VR Displays for this window
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
-  nsAutoPtr<mozilla::dom::VREventObserver> mVREventObserver;
+  RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

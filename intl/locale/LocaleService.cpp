@@ -5,7 +5,6 @@
 
 #include "LocaleService.h"
 
-#include "jsapi.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
@@ -79,25 +78,19 @@ LocaleService::Refresh()
  * mozILocaleService methods
  */
 NS_IMETHODIMP
-LocaleService::GetAppLocales(JSContext* aCtx, JS::MutableHandleValue aRetVal)
+LocaleService::GetAppLocales(uint32_t* aCount, char*** aOutArray)
 {
   if (mAppLocales.IsEmpty()) {
     ReadAppLocales(mAppLocales);
   }
 
-  uint32_t appLocalesNum = mAppLocales.Length();
+  *aCount = mAppLocales.Length();
+  *aOutArray = static_cast<char**>(moz_xmalloc(*aCount * sizeof(char*)));
 
-  JS::RootedObject locales(aCtx, JS_NewArrayObject(aCtx, appLocalesNum));
-  JS::Rooted<JS::Value> value(aCtx);
-
-  for (size_t i = 0; i < appLocalesNum; i++) {
-    const nsCString& loc = mAppLocales[i];
-    JSString* str = JS_NewStringCopyN(aCtx, loc.get(), loc.Length());
-    value.setString(str);
-    JS_DefineElement(aCtx, locales, i, value, JSPROP_ENUMERATE);
+  for (uint32_t i = 0; i < *aCount; i++) {
+    (*aOutArray)[i] = moz_xstrdup(mAppLocales[i].get());
   }
 
-  aRetVal.setObject(*locales);
   return NS_OK;
 }
 

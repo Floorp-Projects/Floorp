@@ -29,7 +29,7 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import HgErrorList
 from mozharness.base.vcs.vcsbase import VCSScript
-from mozharness.base.log import ERROR
+from mozharness.base.log import ERROR, FATAL
 
 
 class L10nBumper(VCSScript):
@@ -71,16 +71,17 @@ class L10nBumper(VCSScript):
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    def hg_commit(self, repo_path, message):
+    def hg_commit(self, path, repo_path, message):
         """
         Commits changes in repo_path, with specified user and commit message
         """
         user = self.config['hg_user']
         hg = self.query_exe('hg', return_type='list')
-        cmd = hg + ['commit', '-u', user, '-m', message]
         env = self.query_env(partial_env={'LANG': 'en_US.UTF-8'})
+        cmd = hg + ['add', path]
+        self.run_command(cmd, cwd=repo_path, env=env)
+        cmd = hg + ['commit', '-u', user, '-m', message]
         status = self.run_command(cmd, cwd=repo_path, env=env)
-        return status == 0
 
     def hg_push(self, repo_path):
         hg = self.query_exe('hg', return_type='list')
@@ -123,9 +124,51 @@ class L10nBumper(VCSScript):
             if key not in new_contents:
                 locale_map[key] = "removed"
         for k,v in new_contents.items():
-            if old_contents.get(k) != v:
+            if old_contents.get(k, {}).get('revision') != v['revision']:
                 locale_map[k] = v['revision']
+            elif old_contents.get(k, {}).get('platforms') != v['platforms']:
+                locale_map[k] = v['platforms']
         return locale_map
+
+    def _build_platform_dict(self, bump_config):
+        dirs = self.query_abs_dirs()
+        repo_path = dirs['gecko_local_dir']
+        platform_dict = {}
+        for platform_config in bump_config['platform_configs']:
+            path = os.path.join(repo_path, platform_config['path'])
+            self.info("Reading %s for %s locales..." % (path, platform_config['platforms']))
+            contents = self.read_from_file(path)
+            for locale in contents.splitlines():
+                platforms = platform_dict.get(locale, {}).get('platforms', [])
+                platforms = sorted(list(platform_config['platforms']) + platforms)
+                platform_dict[locale] = {'platforms': platforms}
+        self.info("Built platform_dict:\n%s" % pprint.pformat(platform_dict))
+        return platform_dict
+
+    def _build_revision_dict(self, bump_config, version_list):
+        self.info("Building revision dict...")
+        platform_dict = self._build_platform_dict(bump_config)
+        revision_dict = {}
+        if bump_config.get('revision_url'):
+            repl_dict = {
+                'MAJOR_VERSION': version_list[0],
+            }
+
+            url = bump_config['revision_url'] % repl_dict
+            path = self.download_file(url, error_level=FATAL)
+            revision_info = self.read_from_file(path)
+            self.info("Got %s" % revision_info)
+            for line in revision_info.splitlines():
+                locale, revision = line.split(' ')
+                if locale in platform_dict:
+                    revision_dict[locale] = platform_dict[locale]
+                    revision_dict[locale]['revision'] = revision
+        else:
+            for k, v in platform_dict.items():
+                v['revision'] = 'default'
+                revision_dict[k] = v
+        self.info("revision_dict:\n%s" % pprint.pformat(revision_dict))
+        return revision_dict
 
     def build_commit_message(self, name, locale_map):
         revisions = []
@@ -193,13 +236,8 @@ class L10nBumper(VCSScript):
             else:
                 old_contents = {}
 
-            repl_dict = {
-                'MAJOR_VERSION': version_list[0],
-            }
+            new_contents = self._build_revision_dict(bump_config, version_list)
 
-            url = bump_config['url'] % repl_dict
-            new_contents = self.load_json_url(url)
-            self.info("Got %s" % pprint.pformat(new_contents))
             if new_contents == old_contents:
                 continue
             # super basic sanity check
@@ -218,7 +256,7 @@ class L10nBumper(VCSScript):
             # Commit
             message = self.build_commit_message(bump_config['name'],
                                                 locale_map)
-            self.hg_commit(repo_path, message)
+            self.hg_commit(path, repo_path, message)
             changes = True
         return changes
 

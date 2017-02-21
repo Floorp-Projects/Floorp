@@ -197,6 +197,12 @@ TextPropertyEditor.prototype = {
       class: "ruleview-computedlist",
     });
 
+    // Holds the viewers for the overridden shorthand properties.
+    // will be populated in |_updateShorthandOverridden|.
+    this.shorthandOverridden = createChild(this.element, "ul", {
+      class: "ruleview-overridden-items",
+    });
+
     // Only bind event handlers if the rule is editable.
     if (this.ruleEditor.isEditable) {
       this.enable.addEventListener("click", this._onEnableClicked, true);
@@ -454,8 +460,9 @@ TextPropertyEditor.prototype = {
       elToClick.click();
     }
 
-    // Populate the computed styles.
+    // Populate the computed styles and shorthand overridden styles.
     this._updateComputed();
+    this._updateShorthandOverridden();
 
     // Update the rule property highlight.
     this.ruleView._updatePropertyHighlight(this);
@@ -469,7 +476,7 @@ TextPropertyEditor.prototype = {
 
   /**
    * Update the visibility of the enable checkbox, the warning indicator and
-   * the filter property, as well as the overriden state of the property.
+   * the filter property, as well as the overridden state of the property.
    */
   updatePropertyState: function () {
     if (this.prop.enabled) {
@@ -527,43 +534,84 @@ TextPropertyEditor.prototype = {
         continue;
       }
 
-      let li = createChild(this.computed, "li", {
-        class: "ruleview-computed"
-      });
-
-      if (computed.overridden) {
-        li.classList.add("ruleview-overridden");
-      }
-
-      createChild(li, "span", {
-        class: "ruleview-propertyname theme-fg-color5",
-        textContent: computed.name
-      });
-      appendText(li, ": ");
-
-      let outputParser = this.ruleView._outputParser;
-      let frag = outputParser.parseCssProperty(
-        computed.name, computed.value, {
-          colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
-          urlClass: "theme-link",
-          baseURI: this.sheetHref
-        }
-      );
-
-      // Store the computed property value that was parsed for output
-      computed.parsedValue = frag.textContent;
-
-      createChild(li, "span", {
-        class: "ruleview-propertyvalue theme-fg-color1",
-        child: frag
-      });
-
-      appendText(li, ";");
-
       // Store the computed style element for easy access when highlighting
       // styles
-      computed.element = li;
+      computed.element = this._createComputedListItem(this.computed, computed,
+        "ruleview-computed");
     }
+  },
+
+  /**
+   * Update the indicator for overridden shorthand styles. The shorthand
+   * overridden styles themselves are populated on demand, when they
+   * become visible.
+   */
+  _updateShorthandOverridden: function () {
+    this.shorthandOverridden.innerHTML = "";
+
+    this._populatedShorthandOverridden = false;
+    this._populateShorthandOverridden();
+  },
+
+  /**
+   * Populate the list of overridden shorthand styles.
+   */
+  _populateShorthandOverridden: function () {
+    if (this._populatedShorthandOverridden || this.prop.overridden) {
+      return;
+    }
+    this._populatedShorthandOverridden = true;
+
+    for (let computed of this.prop.computed) {
+      // Don't display duplicate information or show properties
+      // that are completely overridden.
+      if (computed.name === this.prop.name || !computed.overridden) {
+        continue;
+      }
+
+      this._createComputedListItem(this.shorthandOverridden, computed,
+        "ruleview-overridden-item");
+    }
+  },
+
+  /**
+   * Creates and populates a list item with the computed CSS property.
+   */
+  _createComputedListItem: function (parentEl, computed, className) {
+    let li = createChild(parentEl, "li", {
+      class: className
+    });
+
+    if (computed.overridden) {
+      li.classList.add("ruleview-overridden");
+    }
+
+    createChild(li, "span", {
+      class: "ruleview-propertyname theme-fg-color5",
+      textContent: computed.name
+    });
+    appendText(li, ": ");
+
+    let outputParser = this.ruleView._outputParser;
+    let frag = outputParser.parseCssProperty(
+      computed.name, computed.value, {
+        colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
+        urlClass: "theme-link",
+        baseURI: this.sheetHref
+      }
+    );
+
+    // Store the computed property value that was parsed for output
+    computed.parsedValue = frag.textContent;
+
+    createChild(li, "span", {
+      class: "ruleview-propertyvalue theme-fg-color1",
+      child: frag
+    });
+
+    appendText(li, ";");
+
+    return li;
   },
 
   /**
@@ -593,9 +641,12 @@ TextPropertyEditor.prototype = {
       this.expander.removeAttribute("open");
       this.computed.removeAttribute("filter-open");
       this.computed.removeAttribute("user-open");
+      this.shorthandOverridden.removeAttribute("hidden");
+      this._populateShorthandOverridden();
     } else {
       this.expander.setAttribute("open", "true");
       this.computed.setAttribute("user-open", "");
+      this.shorthandOverridden.setAttribute("hidden", "true");
       this._populateComputed();
     }
 

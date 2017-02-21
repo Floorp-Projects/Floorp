@@ -437,6 +437,7 @@ skip script test262/intl402/DateTimeFormat/12.1.1_1.js
 skip script test262/intl402/DateTimeFormat/prototype/12.3_a.js
 skip script test262/intl402/Collator/prototype/10.3_a.js
 skip script test262/intl402/NumberFormat/prototype/11.3_a.js
+skip script test262/intl402/PluralRules/prototype/prototype.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
 skip script test262/language/statements/do-while/cptn-abrupt-empty.js
@@ -547,27 +548,6 @@ skip script test262/language/expressions/async-generators/expression-yield-star-
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1050755
 skip script test262/built-ins/Date/UTC/return-value.js
-
-# PluralRules.
-skip script test262/intl402/PluralRules/builtin.js
-skip script test262/intl402/PluralRules/this-not-ignored.js
-skip script test262/intl402/PluralRules/name.js
-skip script test262/intl402/PluralRules/length.js
-skip script test262/intl402/PluralRules/supportedLocalesOf/main.js
-skip script test262/intl402/PluralRules/can-be-subclassed.js
-skip script test262/intl402/PluralRules/internals.js
-skip script test262/intl402/PluralRules/prototype/properties.js
-skip script test262/intl402/PluralRules/supportedLocalesOf/supportedLocalesOf.js
-skip script test262/intl402/PluralRules/supportedLocalesOf/name.js
-skip script test262/intl402/PluralRules/supportedLocalesOf/arguments.js
-skip script test262/intl402/PluralRules/prototype/builtins.js
-skip script test262/intl402/PluralRules/prototype/prototype.js
-skip script test262/intl402/PluralRules/prototype/bind.js
-skip script test262/intl402/PluralRules/prototype/resolvedOptions/name.js
-skip script test262/intl402/PluralRules/prototype/resolvedOptions/properties.js
-skip script test262/intl402/PluralRules/prototype/resolvedOptions/builtins.js
-skip script test262/intl402/PluralRules/prototype/constructor/main.js
-skip script test262/intl402/PluralRules/prototype/select/name.js
 
 # SIMD.
 skip script test262/built-ins/Simd/check.js

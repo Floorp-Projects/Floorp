@@ -7,6 +7,7 @@ from cStringIO import StringIO
 from mozbuild.pythonutil import iter_modules_in_path
 import mozpack.path as mozpath
 import itertools
+from ConfigParser import RawConfigParser
 
 import ipdl
 
@@ -20,6 +21,8 @@ op = optparse.OptionParser(usage='ipdl.py [options] IPDLfiles...')
 op.add_option('-I', '--include', dest='includedirs', default=[ ],
               action='append',
               help='Additional directory to search for included protocol specifications')
+op.add_option('-s', '--sync-msg-list', dest='syncMsgList', default='sync-messages.ini',
+              help="Config file listing allowed sync messages")
 op.add_option('-v', '--verbose', dest='verbosity', default=1, action='count',
               help='Verbose logging (specify -vv or -vvv for very verbose logging)')
 op.add_option('-q', '--quiet', dest='verbosity', action='store_const', const=0,
@@ -35,9 +38,9 @@ A protocol Foo in the namespace bar will cause the sources
   cppdir/FooParent.cpp, cppdir/FooChild.cpp
 to be generated""")
 
-
 options, files = op.parse_args()
 _verbosity = options.verbosity
+syncMsgList = options.syncMsgList
 headersdir = options.headersdir
 cppdir = options.cppdir
 includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
@@ -113,6 +116,11 @@ def normalizedFilename(f):
         return '<stdin>'
     return f
 
+log(2, 'Reading sync message list')
+parser = RawConfigParser()
+parser.readfp(open(options.syncMsgList))
+syncMsgList = parser.sections()
+
 # First pass: parse and type-check all protocols
 for f in files:
     log(2, os.path.basename(f))
@@ -133,6 +141,10 @@ for f in files:
     log(2, 'checking types')
     if not ipdl.typecheck(ast):
         print >>sys.stderr, 'Specification is not well typed.'
+        sys.exit(1)
+
+    if not ipdl.checkSyncMessage(ast, syncMsgList):
+        print >>sys.stderr, 'Error: New sync IPC messages must be reviewed by an IPC peer and recorded in %s' % options.syncMsgList
         sys.exit(1)
 
     if _verbosity > 2:

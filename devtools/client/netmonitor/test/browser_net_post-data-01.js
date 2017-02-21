@@ -8,7 +8,7 @@
  */
 
 add_task(function* () {
-  let { L10N } = require("devtools/client/netmonitor/l10n");
+  let { L10N } = require("devtools/client/netmonitor/utils/l10n");
 
   // Set a higher panel height in order to get full CodeMirror content
   Services.prefs.setIntPref("devtools.toolbox.footer.height", 400);

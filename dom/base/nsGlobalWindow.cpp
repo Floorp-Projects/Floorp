@@ -54,6 +54,7 @@
 #include "nsNetUtil.h"
 #include "nsVariant.h"
 #include "nsPrintfCString.h"
+#include "mozilla/intl/LocaleService.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -2179,7 +2180,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWakeLock)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingStorageEvents)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIdleRequestExecutor)
   for (IdleRequest* request : tmp->mIdleRequestCallbacks) {
@@ -2260,7 +2260,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleService)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWakeLock)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingStorageEvents)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIdleObservers)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGamepads)
@@ -3240,7 +3239,11 @@ nsGlobalWindow::PreloadLocalStorage()
   // private browsing windows do not persist local storage to disk so we should
   // only try to precache storage when we're not a private browsing window.
   if (principal->GetPrivateBrowsingId() == 0) {
-    storageManager->PrecacheStorage(principal);
+    nsCOMPtr<nsIDOMStorage> storage;
+    rv = storageManager->PrecacheStorage(principal, getter_AddRefs(storage));
+    if (NS_SUCCEEDED(rv)) {
+      mLocalStorage = static_cast<Storage*>(storage.get());
+    }
   }
 }
 
@@ -10444,8 +10447,10 @@ void
 nsGlobalWindow::DisableVRUpdates()
 {
   MOZ_ASSERT(IsInnerWindow());
-
-  mVREventObserver = nullptr;
+  if (mVREventObserver) {
+    mVREventObserver->DisconnectFromOwner();
+    mVREventObserver = nullptr;
+  }
 }
 
 void
@@ -11904,49 +11909,66 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  bool isPrivateBrowsing = IsPrivateBrowsing();
-  if ((!nsCRT::strcmp(aTopic, "dom-storage2-changed") && !isPrivateBrowsing) ||
-      (!nsCRT::strcmp(aTopic, "dom-private-storage2-changed") && isPrivateBrowsing)) {
-    if (!IsInnerWindow() || !AsInner()->IsCurrentInnerWindow()) {
+  // We need these for our private-browsing check below; so save them off.
+  // (And we can't do the private-browsing enforcement check as part of our
+  // outer conditional because otherwise we'll trigger an NS_WARNING if control
+  // flow reaches the bottom of this method.)
+  bool isNonPrivateLocalStorageChange =
+    !nsCRT::strcmp(aTopic, "dom-storage2-changed");
+  bool isPrivateLocalStorageChange =
+    !nsCRT::strcmp(aTopic, "dom-private-storage2-changed");
+  if (isNonPrivateLocalStorageChange || isPrivateLocalStorageChange) {
+    // Enforce that the source storage area's private browsing state matches
+    // this window's state.  These flag checks and their maintenance independent
+    // from the principal's OriginAttributes matter because chrome docshells
+    // that are part of private browsing windows can be private browsing without
+    // having their OriginAttributes set (because they have the system
+    // principal).
+    bool isPrivateBrowsing = IsPrivateBrowsing();
+    if ((isNonPrivateLocalStorageChange && isPrivateBrowsing) ||
+        (isPrivateLocalStorageChange && !isPrivateBrowsing)) {
       return NS_OK;
     }
 
-    nsIPrincipal *principal;
-    nsresult rv;
+    // We require that aData be either u"SessionStorage" or u"localStorage".
+    // Assert under debug, but ignore the bogus event under non-debug.
+    MOZ_ASSERT(aData);
+    if (!aData) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // LocalStorage can only exist on an inner window, and we don't want to
+    // generate events on frozen or otherwise-navigated-away from windows.
+    // (Actually, this code used to try and buffer events for frozen windows,
+    // but it never worked, so we've removed it.  See bug 1285898.)
+    if (!IsInnerWindow() || !AsInner()->IsCurrentInnerWindow() || IsFrozen()) {
+      return NS_OK;
+    }
+
+    nsIPrincipal *principal = GetPrincipal();
+    if (!principal) {
+      return NS_OK;
+    }
 
     RefPtr<StorageEvent> event = static_cast<StorageEvent*>(aSubject);
     if (!event) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<Storage> changingStorage = event->GetStorageArea();
-    if (!changingStorage) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDOMStorage> istorage = changingStorage.get();
-
     bool fireMozStorageChanged = false;
     nsAutoString eventType;
     eventType.AssignLiteral("storage");
-    principal = GetPrincipal();
-    if (!principal) {
-      return NS_OK;
-    }
 
-    if (changingStorage->IsPrivate() != IsPrivateBrowsing()) {
-      return NS_OK;
-    }
+    if (!NS_strcmp(aData, u"sessionStorage")) {
+      nsCOMPtr<nsIDOMStorage> changingStorage = event->GetStorageArea();
+      MOZ_ASSERT(changingStorage);
 
-    switch (changingStorage->GetType())
-    {
-    case Storage::SessionStorage:
-    {
       bool check = false;
 
       nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(GetDocShell());
       if (storageManager) {
-        rv = storageManager->CheckStorage(principal, istorage, &check);
+        nsresult rv = storageManager->CheckStorage(principal, changingStorage,
+                                                   &check);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -11967,58 +11989,48 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       if (fireMozStorageChanged) {
         eventType.AssignLiteral("MozSessionStorageChanged");
       }
-      break;
     }
 
-    case Storage::LocalStorage:
-    {
-      // Allow event fire only for the same principal storages
-      // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
-      nsIPrincipal* storagePrincipal = changingStorage->GetPrincipal();
+    else {
+      MOZ_ASSERT(!NS_strcmp(aData, u"localStorage"));
+      nsIPrincipal* storagePrincipal = event->GetPrincipal();
+      if (!storagePrincipal) {
+        return NS_OK;
+      }
 
       bool equals = false;
-      rv = storagePrincipal->Equals(principal, &equals);
+      nsresult rv = storagePrincipal->Equals(principal, &equals);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!equals)
+      if (!equals) {
         return NS_OK;
+      }
 
-      fireMozStorageChanged = mLocalStorage == changingStorage;
+      fireMozStorageChanged = mLocalStorage == event->GetStorageArea();
+
       if (fireMozStorageChanged) {
         eventType.AssignLiteral("MozLocalStorageChanged");
       }
-      break;
-    }
-    default:
-      return NS_OK;
     }
 
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
     ErrorResult error;
-    RefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType, event, error);
+    RefPtr<StorageEvent> clonedEvent =
+      CloneStorageEvent(eventType, event, error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
 
-    newEvent->SetTrusted(true);
+    clonedEvent->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      WidgetEvent* internalEvent = newEvent->WidgetEventPtr();
+      WidgetEvent* internalEvent = clonedEvent->WidgetEventPtr();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
-    if (IsFrozen()) {
-      // This window is frozen, rather than firing the events here,
-      // store the domain in which the change happened and fire the
-      // events if we're ever thawed.
-
-      mPendingStorageEvents.AppendElement(newEvent);
-      return NS_OK;
-    }
-
     bool defaultActionEnabled;
-    DispatchEvent(newEvent, &defaultActionEnabled);
+    DispatchEvent(clonedEvent, &defaultActionEnabled);
 
     return NS_OK;
   }
@@ -12109,10 +12121,19 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetUrl(dict.mUrl);
 
   RefPtr<Storage> storageArea = aEvent->GetStorageArea();
-  MOZ_ASSERT(storageArea);
 
   RefPtr<Storage> storage;
-  if (storageArea->GetType() == Storage::LocalStorage) {
+
+  // If null, this is a localStorage event received by IPC.
+  if (!storageArea) {
+    storage = GetLocalStorage(aRv);
+    if (aRv.Failed() || !storage) {
+      return nullptr;
+    }
+
+    // We must apply the current change to the 'local' localStorage.
+    storage->ApplyEvent(aEvent);
+  } else if (storageArea->GetType() == Storage::LocalStorage) {
     storage = GetLocalStorage(aRv);
   } else {
     MOZ_ASSERT(storageArea->GetType() == Storage::SessionStorage);
@@ -12124,7 +12145,7 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   }
 
   MOZ_ASSERT(storage);
-  MOZ_ASSERT(storage->IsForkOf(storageArea));
+  MOZ_ASSERT_IF(storageArea, storage->IsForkOf(storageArea));
 
   dict.mStorageArea = storage;
 
@@ -12416,11 +12437,6 @@ nsresult
 nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
-
-  for (uint32_t i = 0, len = mPendingStorageEvents.Length(); i < len; ++i) {
-    Observe(mPendingStorageEvents[i], "dom-storage2-changed", nullptr);
-    Observe(mPendingStorageEvents[i], "dom-private-storage2-changed", nullptr);
-  }
 
   if (mApplicationCache) {
     static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->FirePendingEvents();
@@ -13291,6 +13307,13 @@ nsGlobalWindow::EventListenerAdded(nsIAtom* aType)
       aType == nsGkAtoms::onvrdisplaypresentchange) {
     NotifyVREventListenerAdded();
   }
+
+  // We need to initialize localStorage in order to receive notifications.
+  if (aType == nsGkAtoms::onstorage) {
+    ErrorResult rv;
+    GetLocalStorage(rv);
+    rv.SuppressException();
+  }
 }
 
 void
@@ -13472,6 +13495,8 @@ void
 nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
                                           mozilla::dom::VRDisplayEventReason aReason)
 {
+  // Search for the display identified with aDisplayID and fire the
+  // event if found.
   for (auto display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID
         && !display->IsAnyPresenting()) {
@@ -13479,7 +13504,7 @@ nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
       // display already.
 
       VRDisplayEventInit init;
-      init.mBubbles = true;
+      init.mBubbles = false;
       init.mCancelable = false;
       init.mDisplay = display;
       init.mReason.Construct(aReason);
@@ -13494,7 +13519,9 @@ nsGlobalWindow::DispatchVRDisplayActivate(uint32_t aDisplayID,
       event->SetTrusted(true);
       bool defaultActionEnabled;
       Unused << DispatchEvent(event, &defaultActionEnabled);
-      break;
+      // Once we dispatch the event, we must not access any members as an event
+      // listener can do anything, including closing windows.
+      return;
     }
   }
 }
@@ -13503,13 +13530,15 @@ void
 nsGlobalWindow::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
                                             mozilla::dom::VRDisplayEventReason aReason)
 {
+  // Search for the display identified with aDisplayID and fire the
+  // event if found.
   for (auto display : mVRDisplays) {
     if (display->DisplayId() == aDisplayID && display->IsPresenting()) {
       // We only want to trigger this event to content that is presenting to
       // the display already.
 
       VRDisplayEventInit init;
-      init.mBubbles = true;
+      init.mBubbles = false;
       init.mCancelable = false;
       init.mDisplay = display;
       init.mReason.Construct(aReason);
@@ -13518,9 +13547,96 @@ nsGlobalWindow::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
         VRDisplayEvent::Constructor(this,
                                     NS_LITERAL_STRING("vrdisplaydeactivate"),
                                     init);
+      event->SetTrusted(true);
       bool defaultActionEnabled;
       Unused << DispatchEvent(event, &defaultActionEnabled);
-      break;
+      // Once we dispatch the event, we must not access any members as an event
+      // listener can do anything, including closing windows.
+      return;
+    }
+  }
+}
+
+void
+nsGlobalWindow::DispatchVRDisplayConnect(uint32_t aDisplayID)
+{
+  // Search for the display identified with aDisplayID and fire the
+  // event if found.
+  for (auto display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID) {
+      // Fire event even if not presenting to the display.
+      VRDisplayEventInit init;
+      init.mBubbles = false;
+      init.mCancelable = false;
+      init.mDisplay = display;
+      // VRDisplayEvent.reason is not set for vrdisplayconnect
+
+      RefPtr<VRDisplayEvent> event =
+        VRDisplayEvent::Constructor(this,
+                                    NS_LITERAL_STRING("vrdisplayconnect"),
+                                    init);
+      event->SetTrusted(true);
+      bool defaultActionEnabled;
+      Unused << DispatchEvent(event, &defaultActionEnabled);
+      // Once we dispatch the event, we must not access any members as an event
+      // listener can do anything, including closing windows.
+      return;
+    }
+  }
+}
+
+void
+nsGlobalWindow::DispatchVRDisplayDisconnect(uint32_t aDisplayID)
+{
+  // Search for the display identified with aDisplayID and fire the
+  // event if found.
+  for (auto display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID) {
+      // Fire event even if not presenting to the display.
+      VRDisplayEventInit init;
+      init.mBubbles = false;
+      init.mCancelable = false;
+      init.mDisplay = display;
+      // VRDisplayEvent.reason is not set for vrdisplaydisconnect
+
+      RefPtr<VRDisplayEvent> event =
+        VRDisplayEvent::Constructor(this,
+                                    NS_LITERAL_STRING("vrdisplaydisconnect"),
+                                    init);
+      event->SetTrusted(true);
+      bool defaultActionEnabled;
+      Unused << DispatchEvent(event, &defaultActionEnabled);
+      // Once we dispatch the event, we must not access any members as an event
+      // listener can do anything, including closing windows.
+      return;
+    }
+  }
+}
+
+void
+nsGlobalWindow::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
+{
+  // Search for the display identified with aDisplayID and fire the
+  // event if found.
+  for (auto display : mVRDisplays) {
+    if (display->DisplayId() == aDisplayID) {
+      // Fire event even if not presenting to the display.
+      VRDisplayEventInit init;
+      init.mBubbles = false;
+      init.mCancelable = false;
+      init.mDisplay = display;
+      // VRDisplayEvent.reason is not set for vrdisplaypresentchange
+
+      RefPtr<VRDisplayEvent> event =
+        VRDisplayEvent::Constructor(this,
+                                    NS_LITERAL_STRING("vrdisplaypresentchange"),
+                                    init);
+      event->SetTrusted(true);
+      bool defaultActionEnabled;
+      Unused << DispatchEvent(event, &defaultActionEnabled);
+      // Once we dispatch the event, we must not access any members as an event
+      // listener can do anything, including closing windows.
+      return;
     }
   }
 }
@@ -14800,6 +14916,17 @@ nsGlobalWindow::GetPaintWorklet(ErrorResult& aRv)
   }
 
   return mPaintWorklet;
+}
+
+void
+nsGlobalWindow::GetAppLocales(nsTArray<nsString>& aLocales)
+{
+  nsTArray<nsCString> appLocales;
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocales(appLocales);
+
+  for (uint32_t i = 0; i < appLocales.Length(); i++) {
+    aLocales.AppendElement(NS_ConvertUTF8toUTF16(appLocales[i]));
+  }
 }
 
 template class nsPIDOMWindow<mozIDOMWindowProxy>;

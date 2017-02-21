@@ -50,7 +50,7 @@ function checkPassValidPin(pinValue, settingPin, expectedMaxAge) {
   }
   try {
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HPKP, uri,
-                             pinValue, sslStatus, 0, maxAge);
+                             pinValue, sslStatus, 0, {}, maxAge);
     ok(true, "Valid pin should be accepted");
   } catch (e) {
     ok(false, "Valid pin should have been accepted");

@@ -47,7 +47,9 @@ function runTests() {
                                    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE });
 }
 
-SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true]]}, runTests);
+});
 
 </script>
 </body>

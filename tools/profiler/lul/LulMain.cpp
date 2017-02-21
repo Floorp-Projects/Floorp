@@ -60,11 +60,11 @@ NameOf_DW_REG(int16_t aReg)
 {
   switch (aReg) {
     case DW_REG_CFA:       return "cfa";
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XBP: return "xbp";
     case DW_REG_INTEL_XSP: return "xsp";
     case DW_REG_INTEL_XIP: return "xip";
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R7:    return "r7";
     case DW_REG_ARM_R11:   return "r11";
     case DW_REG_ARM_R12:   return "r12";
@@ -119,11 +119,11 @@ RuleSet::Print(void(*aLog)(const char*)) const
   res += mCfaExpr.ShowRule("cfa");
   res += " in";
   // For each reg we care about, print the recovery expression.
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   res += mXipExpr.ShowRule(" RA");
   res += mXspExpr.ShowRule(" SP");
   res += mXbpExpr.ShowRule(" BP");
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   res += mR15expr.ShowRule(" R15");
   res += mR7expr .ShowRule(" R7" );
   res += mR11expr.ShowRule(" R11");
@@ -140,11 +140,11 @@ LExpr*
 RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
   switch (aRegno) {
     case DW_REG_CFA: return &mCfaExpr;
-#   if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#   if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XIP: return &mXipExpr;
     case DW_REG_INTEL_XSP: return &mXspExpr;
     case DW_REG_INTEL_XBP: return &mXbpExpr;
-#   elif defined(SPS_ARCH_arm)
+#   elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R15:   return &mR15expr;
     case DW_REG_ARM_R14:   return &mR14expr;
     case DW_REG_ARM_R13:   return &mR13expr;
@@ -633,7 +633,7 @@ class PriMap {
     // |ia| falls within an r-x range.  So we can
     // safely poke around in [insns_min, insns_max].
 
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     // Is the previous instruction recognisably a CALL?  This is
     // common for the 32- and 64-bit versions, except for the
     // simm32(%rip) case, which is 64-bit only.
@@ -645,7 +645,7 @@ class PriMap {
     // logic works for both 32- and 64-bit cases.
 
     uint8_t* p = (uint8_t*)ia;
-#   if defined(SPS_ARCH_amd64)
+#   if defined(GP_ARCH_amd64)
     // CALL simm32(%rip)  == FF15 simm32
     if (ia - 6 >= insns_min && p[-6] == 0xFF && p[-5] == 0x15) {
       return true;
@@ -745,7 +745,7 @@ class PriMap {
       return true;
     }
 
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     if (ia & 1) {
       uint16_t w0 = 0, w1 = 0;
       // The return address has its lowest bit set, indicating a return
@@ -1093,11 +1093,11 @@ TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
 {
   switch (aReg) {
     case DW_REG_CFA:       return aCFA;
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XBP: return aOldRegs->xbp;
     case DW_REG_INTEL_XSP: return aOldRegs->xsp;
     case DW_REG_INTEL_XIP: return aOldRegs->xip;
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R7:    return aOldRegs->r7;
     case DW_REG_ARM_R11:   return aOldRegs->r11;
     case DW_REG_ARM_R12:   return aOldRegs->r12;
@@ -1285,11 +1285,11 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   // anew.  If we don't even manage to compute a new PC value, then
   // the caller will have to abandon the unwind.
   // FIXME: Create and use instead: aRegs->SetAllInvalid();
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   aRegs->xbp = TaggedUWord();
   aRegs->xsp = TaggedUWord();
   aRegs->xip = TaggedUWord();
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   aRegs->r7  = TaggedUWord();
   aRegs->r11 = TaggedUWord();
   aRegs->r12 = TaggedUWord();
@@ -1313,14 +1313,14 @@ void UseRuleSet(/*MOD*/UnwindRegs* aRegs,
   // value rules mention the CFA.  In any case, compute the new values
   // for each register that we're tracking.
 
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   aRegs->xbp
     = aRS->mXbpExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->xsp
     = aRS->mXspExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->xip
     = aRS->mXipExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   aRegs->r7
     = aRS->mR7expr .EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->r11
@@ -1370,7 +1370,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
     if (DEBUG_MAIN) {
       char buf[300];
       mLog("\n");
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
       SprintfLiteral(buf,
                      "LoopTop: rip %d/%llx  rsp %d/%llx  rbp %d/%llx\n",
                      (int)regs.xip.Valid(), (unsigned long long int)regs.xip.Value(),
@@ -1378,7 +1378,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
                      (int)regs.xbp.Valid(), (unsigned long long int)regs.xbp.Value());
       buf[sizeof(buf)-1] = 0;
       mLog(buf);
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
       SprintfLiteral(buf,
                      "LoopTop: r15 %d/%llx  r7 %d/%llx  r11 %d/%llx"
                      "  r12 %d/%llx  r13 %d/%llx  r14 %d/%llx\n",
@@ -1395,10 +1395,10 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
 #endif
     }
 
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     TaggedUWord ia = regs.xip;
     TaggedUWord sp = regs.xsp;
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     TaggedUWord ia = (*aFramesUsed == 0 ? regs.r15 : regs.r14);
     TaggedUWord sp = regs.r13;
 #else
@@ -1503,7 +1503,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
     // hasn't been rescheduled.  The code below doesn't handle that;
     // it could easily be made to.
     //
-#if defined(SPS_PLAT_x86_android) || defined(SPS_PLAT_x86_linux)
+#if defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
     if (!ruleset && *aFramesUsed == 1 && ia.Valid() && sp.Valid()) {
       uintptr_t insns_min, insns_max;
       uintptr_t eip = ia.Value();
@@ -1575,11 +1575,11 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           scan_succeeded = true;
           (*aScannedFramesAcquired)++;
 
-#if defined(SPS_ARCH_amd64) || defined(SPS_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
           // The same logic applies for the 32- and 64-bit cases.
           // Register names of the form xsp etc refer to (eg) esp in
           // the 32-bit case and rsp in the 64-bit case.
-#         if defined(SPS_ARCH_amd64)
+#         if defined(GP_ARCH_amd64)
           const int wordSize = 8;
 #         else
           const int wordSize = 4;
@@ -1619,7 +1619,7 @@ LUL::Unwind(/*OUT*/uintptr_t* aFramePCs,
           // Move on to the next word up the stack
           sp = sp + TaggedUWord(wordSize);
 
-#elif defined(SPS_ARCH_arm)
+#elif defined(GP_ARCH_arm)
           // Set all registers to be undefined, except for SP(R13) and
           // PC(R15).
 
@@ -1686,7 +1686,7 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   // Get hold of the current unwind-start registers.
   UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
-#if defined(SPS_PLAT_amd64_linux)
+#if defined(GP_PLAT_amd64_linux)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(
@@ -1701,7 +1701,7 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   startRegs.xbp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 128;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#elif defined(SPS_PLAT_x86_linux) || defined(SPS_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 12);
   __asm__ __volatile__(
@@ -1717,7 +1717,7 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   startRegs.xbp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#elif defined(SPS_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_android)
   volatile uintptr_t block[6];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(

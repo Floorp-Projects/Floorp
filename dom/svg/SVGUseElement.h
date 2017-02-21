@@ -77,6 +77,7 @@ public:
   already_AddRefed<SVGAnimatedLength> Height();
 
   nsIURI* GetSourceDocURI();
+  nsIURI* GetContentBaseURI() const { return mContentBaseURI; }
 
 protected:
   class SourceReference : public nsReferencedElement {
@@ -119,6 +120,7 @@ protected:
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;    // cloned tree
   SourceReference      mSource;   // observed element
+  nsCOMPtr<nsIURI> mContentBaseURI; // Base URI for its anonymous content
 };
 
 } // namespace dom

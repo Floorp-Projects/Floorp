@@ -285,6 +285,7 @@ mod bindings {
             "mozilla::PropertyStyleAnimationValuePair",
             "mozilla::TraversalRootBehavior",
             "mozilla::StyleShapeRadius",
+            "mozilla::StyleGrid.*",
             ".*ThreadSafe.*Holder",
             "AnonymousContent",
             "AudioContext",
@@ -365,6 +366,7 @@ mod bindings {
             "nsStylePadding",
             "nsStylePosition",
             "nsStyleSVG",
+            "nsStyleSVGPaint",
             "nsStyleSVGReset",
             "nsStyleTable",
             "nsStyleTableBorder",
@@ -383,6 +385,7 @@ mod bindings {
             "PropertyValuePair",
             "Runnable",
             "ServoAttrSnapshot",
+            "ServoBundledURI",
             "ServoElementSnapshot",
             "SheetParsingMode",
             "StaticRefPtr",
@@ -500,12 +503,13 @@ mod bindings {
             .header(add_include("mozilla/ServoBindings.h"))
             .hide_type("nsACString_internal")
             .hide_type("nsAString_internal")
-            .raw_line("pub use nsstring::{nsACString, nsAString};")
+            .raw_line("pub use nsstring::{nsACString, nsAString, nsString};")
             .raw_line("type nsACString_internal = nsACString;")
             .raw_line("type nsAString_internal = nsAString;")
             .whitelisted_function("Servo_.*")
             .whitelisted_function("Gecko_.*");
         let structs_types = [
+            "mozilla::css::URLValue",
             "RawGeckoDocument",
             "RawGeckoElement",
             "RawGeckoKeyframeList",
@@ -523,6 +527,7 @@ mod bindings {
             "FontFamilyList",
             "FontFamilyType",
             "Keyframe",
+            "ServoBundledURI",
             "ServoElementSnapshot",
             "SheetParsingMode",
             "StyleBasicShape",
@@ -550,6 +555,7 @@ mod bindings {
             "nsStyleCoord_CalcValue",
             "nsStyleDisplay",
             "nsStyleEffects",
+            "nsStyleFilter",
             "nsStyleFont",
             "nsStyleGradient",
             "nsStyleGradientStop",
@@ -565,6 +571,7 @@ mod bindings {
             "nsStylePosition",
             "nsStyleQuoteValues",
             "nsStyleSVG",
+            "nsStyleSVGPaint",
             "nsStyleSVGReset",
             "nsStyleTable",
             "nsStyleTableBorder",
@@ -578,6 +585,7 @@ mod bindings {
             "nsStyleVisibility",
             "nsStyleXUL",
             "nsTimingFunction",
+            "nscolor",
             "nscoord",
             "nsresult",
             "Loader",

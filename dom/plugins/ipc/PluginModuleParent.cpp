@@ -2720,6 +2720,26 @@ ForceWindowless(InfallibleTArray<nsCString>& names,
     }
 }
 #endif // windows or linux
+#if defined(XP_WIN)
+static void
+ForceDirect(InfallibleTArray<nsCString>& names,
+            InfallibleTArray<nsCString>& values)
+{
+    nsCaseInsensitiveUTF8StringArrayComparator comparator;
+    NS_NAMED_LITERAL_CSTRING(wmodeAttributeName, "wmode");
+    NS_NAMED_LITERAL_CSTRING(directAttributeValue, "direct");
+    auto wmodeAttributeIndex =
+        names.IndexOf(wmodeAttributeName, 0, comparator);
+    if (wmodeAttributeIndex != names.NoIndex) {
+        if (values[wmodeAttributeIndex].EqualsLiteral("window")) {
+            values[wmodeAttributeIndex].Assign(directAttributeValue);
+        }
+    } else {
+        names.AppendElement(wmodeAttributeName);
+        values.AppendElement(directAttributeValue);
+    }
+}
+#endif // windows
 
 nsresult
 PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
@@ -2758,6 +2778,8 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
 #ifdef XP_WIN
         bool supportsAsyncRender =
           Preferences::GetBool("dom.ipc.plugins.asyncdrawing.enabled", false);
+        bool supportsForceDirect =
+          Preferences::GetBool("dom.ipc.plugins.forcedirect.enabled", false);
         if (supportsAsyncRender) {
           // Prefs indicates we want async plugin rendering, make sure
           // the flash module has support.
@@ -2777,6 +2799,14 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
 #elif defined(MOZ_WIDGET_GTK)
         // We no longer support windowed mode on Linux.
         ForceWindowless(names, values);
+#endif
+#ifdef XP_WIN
+        // For all builds that use async rendering force use of the accelerated
+        // direct path for flash objects that have wmode=window or no wmode
+        // specified.
+        if (supportsAsyncRender && supportsForceDirect) {
+            ForceDirect(names, values);
+        }
 #endif
     }
 

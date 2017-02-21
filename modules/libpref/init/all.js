@@ -748,6 +748,9 @@ pref("gfx.downloadable_fonts.otl_validation", false);
 pref("gfx.downloadable_fonts.otl_validation", true);
 #endif
 
+// Whether to preserve OpenType variation tables in fonts (bypassing OTS)
+pref("gfx.downloadable_fonts.keep_variation_tables", false);
+
 #ifdef ANDROID
 pref("gfx.bundled_fonts.enabled", true);
 pref("gfx.bundled_fonts.force-enabled", false);
@@ -1254,7 +1257,7 @@ pref("privacy.trackingprotection.lower_network_priority",  false);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
-#if defined(XP_WIN) && !defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_GTK) && !defined(RELEASE_OR_BETA) || defined(XP_MACOSX) && !defined(RELEASE_OR_BETA)
+#if defined(XP_WIN) && !defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_GTK) && !defined(RELEASE_OR_BETA) || defined(XP_MACOSX) && !defined(RELEASE_OR_BETA) || defined(MOZ_WIDGET_ANDROID) && !defined(RELEASE_OR_BETA)
 pref("dom.event.highrestimestamp.enabled",  true);
 #else
 pref("dom.event.highrestimestamp.enabled",  false);
@@ -1484,8 +1487,9 @@ pref("network.http.accept.default", "text/html,application/xhtml+xml,application
 // Prefs allowing granular control of referers
 // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.http.sendRefererHeader",      2);
-// 0=no referrer, 1=same origin, 2=strict-origin-when-cross-origin,
-// 3=no-referre-when-downgrade(default)
+// Set the default Referrer Policy to be used unless overriden by the site
+// 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
+// 3=no-referrer-when-downgrade
 pref("network.http.referer.userControlPolicy", 3);
 // false=real referer, true=spoof referer (use target URI as referer)
 pref("network.http.referer.spoofSource", false);
@@ -2915,6 +2919,8 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", false);
 #else
 // Allow the AsyncDrawing mode to be used for plugins in dev channels.
 pref("dom.ipc.plugins.asyncdrawing.enabled", true);
+// Force the accelerated path for a subset of Flash wmode values
+pref("dom.ipc.plugins.forcedirect.enabled", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
@@ -2922,6 +2928,9 @@ pref("dom.ipc.processCount", 2);
 #else
 pref("dom.ipc.processCount", 1);
 #endif
+
+// WebExtensions only support a single extension process.
+pref("dom.ipc.processCount.extension", 1);
 
 // Disable support for SVG
 pref("svg.disabled", false);

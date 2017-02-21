@@ -373,9 +373,27 @@ function runTest(event) {
       is(video.volume, 0.5, "Volume should be decreased by 0.1");
       SimpleTest.executeSoon(function() {
         isVolumeSliderShowingCorrectVolume(video.volume);
+        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+      });
+      break;
+
+    case 27:
+      is(event.type, "play", "checking event type");
+
+      SimpleTest.executeSoon(() => {
+        synthesizeKey(" ", {});
+      });
+      break;
+
+    case 28:
+      is(event.type, "pause", "checking event type");
+
+      SimpleTest.executeSoon(() => {
         SimpleTest.finish();
       });
       break;
+
+
 
     default:
       throw "unexpected test #" + testnum + " w/ event " + event.type;

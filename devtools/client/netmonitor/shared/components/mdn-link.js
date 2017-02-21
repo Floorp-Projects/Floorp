@@ -10,7 +10,7 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { L10N } = require("../../l10n");
+const { L10N } = require("../../utils/l10n");
 
 const { a } = DOM;
 
