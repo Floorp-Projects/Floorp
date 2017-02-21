@@ -18,7 +18,7 @@ FRAGMENT(ExecutableAllocator, onepool) {
     using namespace js::jit;
     ExecutablePool* pool = nullptr;
     ExecutableAllocator execAlloc(cx->runtime());
-    execAlloc.alloc(16 * 1024, &pool, BASELINE_CODE);
+    execAlloc.alloc(cx, 16 * 1024, &pool, BASELINE_CODE);
 
     breakpoint();
 
@@ -32,10 +32,10 @@ FRAGMENT(ExecutableAllocator, twopools) {
     ExecutablePool* pool = nullptr;
     ExecutableAllocator execAlloc(cx->runtime());
 
-    execAlloc.alloc(16 * 1024, &init, BASELINE_CODE);
+    execAlloc.alloc(cx, 16 * 1024, &init, BASELINE_CODE);
 
     do { // Keep allocating until we get a second pool.
-        execAlloc.alloc(32 * 1024, &pool, ION_CODE);
+        execAlloc.alloc(cx, 32 * 1024, &pool, ION_CODE);
     } while (pool == init);
 
     breakpoint();

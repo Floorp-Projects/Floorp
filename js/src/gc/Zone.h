@@ -392,6 +392,10 @@ struct Zone : public JS::shadow::Zone,
     // a free.
     js::gc::MemoryCounter<Zone> gcMallocCounter;
 
+    // Counter of JIT code executable memory for GC scheduling. Also imprecise,
+    // since wasm can generate code that outlives a zone.
+    js::gc::MemoryCounter<Zone> jitCodeCounter;
+
   public:
     JS::WeakCache<TypeDescrObjectSet>& typeDescrObjects() { return typeDescrObjects_.ref(); }
 
@@ -406,7 +410,18 @@ struct Zone : public JS::shadow::Zone,
     void updateMallocCounter(size_t nbytes) { gcMallocCounter.update(this, nbytes); }
     size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
     size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
-    bool isTooMuchMalloc() const { return gcMallocCounter.isTooMuchMalloc(); }
+
+    void updateJitCodeMallocBytes(size_t size) { jitCodeCounter.update(this, size); }
+
+    // Resets all the memory counters.
+    void resetAllMallocBytes() {
+        resetGCMallocBytes();
+        jitCodeCounter.reset();
+    }
+    bool isTooMuchMalloc() const {
+        return gcMallocCounter.isTooMuchMalloc() ||
+               jitCodeCounter.isTooMuchMalloc();
+    }
 
   private:
     // Bitmap of atoms marked by this zone.

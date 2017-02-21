@@ -177,7 +177,7 @@ class ExecutableAllocator
     // alloc() returns a pointer to some memory, and also (by reference) a
     // pointer to reference-counted pool. The caller owns a reference to the
     // pool; i.e. alloc() increments the count before returning the object.
-    void* alloc(size_t n, ExecutablePool** poolp, CodeKind type);
+    void* alloc(JSContext* cx, size_t n, ExecutablePool** poolp, CodeKind type);
 
     void releasePoolPages(ExecutablePool* pool);
 
