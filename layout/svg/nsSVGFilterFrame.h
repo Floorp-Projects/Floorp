@@ -69,10 +69,8 @@ private:
   // Parse our xlink:href and set up our nsSVGPaintingProperty if we
   // reference another filter and we don't have a property. Return
   // the referenced filter's frame if available, null otherwise.
-  class AutoFilterReferencer;
   friend class nsSVGFilterInstance;
   nsSVGFilterFrame* GetReferencedFilter();
-  nsSVGFilterFrame* GetReferencedFilterIfNotInUse();
 
   // Accessors to lookup filter attributes
   uint16_t GetEnumValue(uint32_t aIndex, nsIContent *aDefault);
