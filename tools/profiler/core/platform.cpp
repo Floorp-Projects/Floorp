@@ -36,7 +36,7 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-#include "mozilla/ProfileGatherer.h"
+#include "ProfileGatherer.h"
 #include "ProfilerMarkers.h"
 #include "shared-libraries.h"
 
@@ -1789,25 +1789,39 @@ profiler_get_start_params(int* aEntrySize,
 }
 
 void
-profiler_get_gatherer(nsISupports** aRetVal)
+profiler_will_gather_OOP_profile()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!aRetVal) {
+  if (!gGatherer) {
     return;
   }
 
-  if (NS_WARN_IF(!profiler_is_active())) {
-    *aRetVal = nullptr;
+  gGatherer->WillGatherOOPProfile();
+}
+
+void
+profiler_gathered_OOP_profile()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gGatherer) {
     return;
   }
 
-  if (NS_WARN_IF(!gGatherer)) {
-    *aRetVal = nullptr;
+  gGatherer->GatheredOOPProfile();
+}
+
+void
+profiler_OOP_exit_profile(const nsCString& aProfile)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gGatherer) {
     return;
   }
 
-  NS_ADDREF(*aRetVal = gGatherer);
+  gGatherer->OOPExitProfile(aProfile);
 }
 
 void

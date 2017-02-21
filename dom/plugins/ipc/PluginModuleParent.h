@@ -35,9 +35,6 @@ class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
-#ifdef MOZ_GECKO_PROFILER
-class ProfileGatherer;
-#endif
 
 namespace ipc {
 class CrashReporterHost;
@@ -672,7 +669,7 @@ private:
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
 #ifdef MOZ_GECKO_PROFILER
-    RefPtr<mozilla::ProfileGatherer> mGatherer;
+    bool mIsProfilerActive;
 #endif
     nsCString mProfile;
     bool mIsBlocklisted;
