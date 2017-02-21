@@ -1912,114 +1912,6 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
     }
 }
 
-JSObject*
-GetDOMProxyProto(JSObject* obj)
-{
-    MOZ_ASSERT(IsCacheableDOMProxy(obj));
-    return obj->staticPrototype();
-}
-
-bool
-IsCacheableProtoChain(JSObject* obj, JSObject* holder, bool isDOMProxy)
-{
-    MOZ_ASSERT_IF(isDOMProxy, IsCacheableDOMProxy(obj));
-
-    if (!isDOMProxy && !obj->isNative()) {
-        if (obj == holder)
-            return false;
-        if (!obj->is<UnboxedPlainObject>() &&
-            !obj->is<UnboxedArrayObject>() &&
-            !obj->is<TypedObject>())
-        {
-            return false;
-        }
-    }
-
-    JSObject* cur = obj;
-    while (cur != holder) {
-        // We cannot assume that we find the holder object on the prototype
-        // chain and must check for null proto. The prototype chain can be
-        // altered during the lookupProperty call.
-        MOZ_ASSERT(!cur->hasDynamicPrototype());
-
-        // Don't handle objects which require a prototype guard. This should
-        // be uncommon so handling it is likely not worth the complexity.
-        if (cur->hasUncacheableProto())
-            return false;
-
-        JSObject* proto = cur->staticPrototype();
-        if (!proto || !proto->isNative())
-            return false;
-
-        cur = proto;
-    }
-
-    return true;
-}
-
-bool
-IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder, Shape* shape, bool isDOMProxy)
-{
-    if (!shape || !IsCacheableProtoChain(obj, holder, isDOMProxy))
-        return false;
-
-    if (!shape->hasSlot() || !shape->hasDefaultGetter())
-        return false;
-
-    return true;
-}
-
-void
-GetFixedOrDynamicSlotOffset(Shape* shape, bool* isFixed, uint32_t* offset)
-{
-    MOZ_ASSERT(isFixed);
-    MOZ_ASSERT(offset);
-    *isFixed = shape->slot() < shape->numFixedSlots();
-    *offset = *isFixed ? NativeObject::getFixedSlotOffset(shape->slot())
-                       : (shape->slot() - shape->numFixedSlots()) * sizeof(Value);
-}
-
-bool
-IsCacheableGetPropCall(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape,
-                       bool* isScripted, bool* isTemporarilyUnoptimizable, bool isDOMProxy)
-{
-    MOZ_ASSERT(isScripted);
-
-    if (!shape || !IsCacheableProtoChain(obj, holder, isDOMProxy))
-        return false;
-
-    if (shape->hasSlot() || shape->hasDefaultGetter())
-        return false;
-
-    if (!shape->hasGetterValue())
-        return false;
-
-    if (!shape->getterValue().isObject() || !shape->getterObject()->is<JSFunction>())
-        return false;
-
-    JSFunction* func = &shape->getterObject()->as<JSFunction>();
-    if (IsWindow(obj)) {
-        if (!func->isNative())
-            return false;
-
-        if (!func->jitInfo() || func->jitInfo()->needsOuterizedThisObject())
-            return false;
-    }
-
-    if (func->isNative()) {
-        *isScripted = false;
-        return true;
-    }
-
-    if (!func->hasJITCode()) {
-        *isTemporarilyUnoptimizable = true;
-        return false;
-    }
-
-    *isScripted = true;
-    return true;
-}
-
 bool
 CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id,
                        JSObject** lastProto, size_t* protoChainDepthOut)
@@ -2239,21 +2131,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         void* address = code->raw() + returnOffset_;
         cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
     }
-}
-
-bool
-GetProtoShapes(JSObject* obj, size_t protoChainDepth, MutableHandle<ShapeVector> shapes)
-{
-    JSObject* curProto = obj->staticPrototype();
-    for (size_t i = 0; i < protoChainDepth; i++) {
-        if (!shapes.append(curProto->as<NativeObject>().lastProperty()))
-            return false;
-        curProto = curProto->staticPrototype();
-    }
-
-    MOZ_ASSERT(!curProto,
-               "longer prototype chain encountered than this stub permits!");
-    return true;
 }
 
 /* static */ ICGetProp_Generic*
