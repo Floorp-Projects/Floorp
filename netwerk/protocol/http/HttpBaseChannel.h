@@ -29,6 +29,7 @@
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPriority.h"
 #include "nsIClassOfService.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
 #include "nsITraceableChannel.h"
@@ -90,6 +91,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIForcePendingChannel
                       , public nsIConsoleReportCollector
                       , public nsIThrottledInputChannel
+                      , public nsIClassifiedChannel
 {
 protected:
   virtual ~HttpBaseChannel();
@@ -102,6 +104,7 @@ public:
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSITIMEDCHANNEL
   NS_DECL_NSITHROTTLEDINPUTCHANNEL
+  NS_DECL_NSICLASSIFIEDCHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_BASE_CHANNEL_IID)
 
@@ -600,6 +603,11 @@ protected:
   nsID mChannelId;
 
   nsString mIntegrityMetadata;
+
+  // Classified channel's matched information
+  nsCString mMatchedList;
+  nsCString mMatchedProvider;
+  nsCString mMatchedPrefix;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)

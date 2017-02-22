@@ -179,6 +179,10 @@ class nsCaret final : public nsISelectionListener
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+    nsIFrame*     GetFrame(int32_t* aContentOffset);
+    void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
+                                    nsRect* aCaretRect, nsRect* aHookRect);
+
 protected:
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
@@ -195,9 +199,6 @@ protected:
     };
     static Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
                                   nscoord aCaretHeight);
-
-    void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
-                                    nsRect* aCaretRect, nsRect* aHookRect);
 
     // Returns true if we should not draw the caret because of XUL menu popups.
     // The caret should be hidden if:

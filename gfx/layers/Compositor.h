@@ -135,7 +135,6 @@ class CompositorD3D11;
 class BasicCompositor;
 class TextureHost;
 class TextureReadLock;
-class WebRenderCompositorOGL;
 
 enum SurfaceInitMode
 {
@@ -474,7 +473,6 @@ public:
   virtual CompositorD3D9* AsCompositorD3D9() { return nullptr; }
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
   virtual BasicCompositor* AsBasicCompositor() { return nullptr; }
-  virtual WebRenderCompositorOGL* AsWebRenderCompositorOGL() { return nullptr; }
 
   /**
    * Each Compositor has a unique ID.

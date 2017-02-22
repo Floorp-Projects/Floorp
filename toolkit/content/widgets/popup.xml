@@ -722,7 +722,7 @@
         // the dropdown was opened via the keyboard.
         if (!(event.buttons & 1)) {
           this._draggingState = this.NOT_DRAGGING;
-          menupopup.releaseCapture();
+          this.releaseCapture();
           return;
         }
 

@@ -24,6 +24,7 @@ class nsIWidget;
 namespace mozilla {
 namespace layers {
 
+class DisplayItemLayer;
 class ImageFactory;
 class ImageLayer;
 class PaintLayerContext;
@@ -117,6 +118,7 @@ public:
   virtual already_AddRefed<TextLayer> CreateTextLayer() override;
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
+  virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
   virtual ImageFactory *GetImageFactory();
 
   virtual LayersBackend GetBackendType() override { return LayersBackend::LAYERS_BASIC; }
@@ -211,6 +213,14 @@ protected:
   bool mUsingDefaultTarget;
   bool mTransactionIncomplete;
   bool mCompositorMightResample;
+
+private:
+  // Display items are only valid during this transaction.
+  // At the end of the transaction, we have to go and clear out
+  // DisplayItemLayer's and null their display item. See comment
+  // above DisplayItemLayer declaration.
+  void ClearDisplayItemLayers();
+  nsTArray<RefPtr<DisplayItemLayer>> mDisplayItemLayers;
 };
 
 } // namespace layers

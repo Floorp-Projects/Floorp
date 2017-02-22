@@ -144,7 +144,7 @@ pub mod color {
 /// Most attributes can only be turned on and must be turned off with term.reset().
 /// The ones that can be turned off explicitly take a boolean value.
 /// Color is also represented as an attribute for convenience.
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Hash, Eq, Copy, Clone)]
 pub enum Attr {
     /// Bold (or possibly bright) mode
     Bold,
@@ -200,53 +200,53 @@ pub enum Error {
 impl std::cmp::PartialEq for Error {
     fn eq(&self, other: &Error) -> bool {
         use Error::*;
-        match self {
-            &Io(_) => false,
-            &TerminfoParsing(ref inner1) => {
-                match other {
-                    &TerminfoParsing(ref inner2) => inner1 == inner2,
+        match *self {
+            Io(_) => false,
+            TerminfoParsing(ref inner1) => {
+                match *other {
+                    TerminfoParsing(ref inner2) => inner1 == inner2,
                     _ => false,
                 }
             }
-            &ParameterizedExpansion(ref inner1) => {
-                match other {
-                    &ParameterizedExpansion(ref inner2) => inner1 == inner2,
+            ParameterizedExpansion(ref inner1) => {
+                match *other {
+                    ParameterizedExpansion(ref inner2) => inner1 == inner2,
                     _ => false,
                 }
             }
-            &NotSupported => {
-                match other {
-                    &NotSupported => true,
+            NotSupported => {
+                match *other {
+                    NotSupported => true,
                     _ => false,
                 }
             }
-            &TermUnset => {
-                match other {
-                    &TermUnset => true,
+            TermUnset => {
+                match *other {
+                    TermUnset => true,
                     _ => false,
                 }
             }
-            &TerminfoEntryNotFound => {
-                match other {
-                    &TerminfoEntryNotFound => true,
+            TerminfoEntryNotFound => {
+                match *other {
+                    TerminfoEntryNotFound => true,
                     _ => false,
                 }
             }
-            &CursorDestinationInvalid => {
-                match other {
-                    &CursorDestinationInvalid => true,
+            CursorDestinationInvalid => {
+                match *other {
+                    CursorDestinationInvalid => true,
                     _ => false,
                 }
             }
-            &ColorOutOfRange => {
-                match other {
-                    &ColorOutOfRange => true,
+            ColorOutOfRange => {
+                match *other {
+                    ColorOutOfRange => true,
                     _ => false,
                 }
             }
-            &__Nonexhaustive => {
-                match other {
-                    &__Nonexhaustive => true,
+            __Nonexhaustive => {
+                match *other {
+                    __Nonexhaustive => true,
                     _ => false,
                 }
             }
@@ -260,7 +260,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use std::error::Error;
-        if let &::Error::Io(ref e) = self {
+        if let ::Error::Io(ref e) = *self {
             write!(f, "{}", e)
         } else {
             f.write_str(self.description())
@@ -271,25 +271,24 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         use Error::*;
-        use std::error::Error;
-        match self {
-            &Io(ref io) => io.description(),
-            &TerminfoParsing(ref e) => e.description(),
-            &ParameterizedExpansion(ref e) => e.description(),
-            &NotSupported => "operation not supported by the terminal",
-            &TermUnset => "TERM environment variable unset, unable to detect a terminal",
-            &TerminfoEntryNotFound => "could not find a terminfo entry for this terminal",
-            &CursorDestinationInvalid => "could not move cursor to requested position",
-            &ColorOutOfRange => "color not supported by the terminal",
-            &__Nonexhaustive => "placeholder variant that shouldn't be used",
+        match *self {
+            Io(ref io) => io.description(),
+            TerminfoParsing(ref e) => e.description(),
+            ParameterizedExpansion(ref e) => e.description(),
+            NotSupported => "operation not supported by the terminal",
+            TermUnset => "TERM environment variable unset, unable to detect a terminal",
+            TerminfoEntryNotFound => "could not find a terminfo entry for this terminal",
+            CursorDestinationInvalid => "could not move cursor to requested position",
+            ColorOutOfRange => "color not supported by the terminal",
+            __Nonexhaustive => "placeholder variant that shouldn't be used",
         }
     }
 
     fn cause(&self) -> Option<&std::error::Error> {
-        match self {
-            &Error::Io(ref io) => Some(io),
-            &Error::TerminfoParsing(ref e) => Some(e),
-            &Error::ParameterizedExpansion(ref e) => Some(e),
+        match *self {
+            Error::Io(ref io) => Some(io),
+            Error::TerminfoParsing(ref e) => Some(e),
+            Error::ParameterizedExpansion(ref e) => Some(e),
             _ => None,
         }
     }
@@ -297,8 +296,8 @@ impl std::error::Error for Error {
 
 impl From<Error> for io::Error {
     fn from(err: Error) -> io::Error {
-        let kind = match &err {
-            &Error::Io(ref e) => e.kind(),
+        let kind = match err {
+            Error::Io(ref e) => e.kind(),
             _ => io::ErrorKind::Other,
         };
         io::Error::new(kind, err)
@@ -392,10 +391,10 @@ pub trait Terminal: Write {
     fn carriage_return(&mut self) -> Result<()>;
 
     /// Gets an immutable reference to the stream inside
-    fn get_ref<'a>(&'a self) -> &'a Self::Output;
+    fn get_ref(&self) -> &Self::Output;
 
     /// Gets a mutable reference to the stream inside
-    fn get_mut<'a>(&'a mut self) -> &'a mut Self::Output;
+    fn get_mut(&mut self) -> &mut Self::Output;
 
     /// Returns the contained stream, destroying the `Terminal`
     fn into_inner(self) -> Self::Output where Self: Sized;

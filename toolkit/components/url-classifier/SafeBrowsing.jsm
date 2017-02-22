@@ -146,17 +146,16 @@ this.SafeBrowsing = {
 
   reportURL:             null,
 
-  getReportURL: function(kind, URI) {
+  getReportURL: function(kind, info) {
     let pref;
     switch (kind) {
       case "Phish":
         pref = "browser.safebrowsing.reportPhishURL";
         break;
+
       case "PhishMistake":
-        pref = "browser.safebrowsing.reportPhishMistakeURL";
-        break;
       case "MalwareMistake":
-        pref = "browser.safebrowsing.reportMalwareMistakeURL";
+        pref = "browser.safebrowsing.provider." + info.provider + ".report" + kind + "URL";
         break;
 
       default:
@@ -164,16 +163,20 @@ this.SafeBrowsing = {
         Components.utils.reportError(err);
         throw err;
     }
+
+    if (!info.list || !info.uri) {
+      return null;
+    }
+
     let reportUrl = Services.urlFormatter.formatURLPref(pref);
+    // formatURLPref might return "about:blank" if getting the pref fails
+    if (reportUrl == "about:blank") {
+      reportUrl = null;
+    }
 
-    let pageUri = URI.clone();
-
-    // Remove the query to avoid including potentially sensitive data
-    if (pageUri instanceof Ci.nsIURL)
-      pageUri.query = '';
-
-    reportUrl += encodeURIComponent(pageUri.asciiSpec);
-
+    if (reportUrl) {
+      reportUrl += encodeURIComponent(info.uri);
+    }
     return reportUrl;
   },
 

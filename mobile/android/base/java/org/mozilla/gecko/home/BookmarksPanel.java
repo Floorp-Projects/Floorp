@@ -72,6 +72,9 @@ public class BookmarksPanel extends HomeFragment {
     // Callback for cursor loaders.
     private CursorLoaderCallbacks mLoaderCallbacks;
 
+    // Keep track whether a fresh loader has been used or not.
+    private int mLastLoaderHash;
+
     @Override
     public void restoreData(@NonNull Bundle data) {
         final ArrayList<FolderInfo> stack = data.getParcelableArrayList("parentStack");
@@ -318,8 +321,13 @@ public class BookmarksPanel extends HomeFragment {
                 mPanelStateChangeListener.onStateChanged(bundle);
             }
 
-            if (mList != null) {
+            // BrowserDB updates (e.g. through sync, or when opening a new tab) will trigger
+            // a refresh which reuses the same loader - in that case we don't want to reset
+            // the scroll position again.
+            int currentLoaderHash = bl.hashCode();
+            if (mList != null && currentLoaderHash != mLastLoaderHash) {
                 mList.setSelection(bl.getTargetPosition());
+                mLastLoaderHash = currentLoaderHash;
             }
             updateUiFromCursor(c);
         }

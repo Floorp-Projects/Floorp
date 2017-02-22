@@ -153,15 +153,6 @@ vec3 Luminosity(vec3 Cb, vec3 Cs) {
 
 void main(void) {
     vec4 Cb = texture(sCache, vUv0);
-
-    if (vUv1.x < vUv1Rect.x ||
-        vUv1.x > vUv1Rect.z ||
-        vUv1.y < vUv1Rect.y ||
-        vUv1.y > vUv1Rect.w) {
-        oFragColor = Cb;
-        return;
-    }
-
     vec4 Cs = texture(sCache, vUv1);
 
     // Return yellow if none of the branches match (shouldn't happen).
@@ -176,6 +167,14 @@ void main(void) {
             break;
         case 3:
             result.rgb = HardLight(Cs.rgb, Cb.rgb);        // Overlay is inverse of Hardlight
+            break;
+        case 4:
+            // mix-blend-mode: darken
+            result.rgb = min(Cs.rgb, Cb.rgb);
+            break;
+        case 5:
+            // mix-blend-mode: lighten
+            result.rgb = max(Cs.rgb, Cb.rgb);
             break;
         case 6:
             result.r = ColorDodge(Cb.r, Cs.r);

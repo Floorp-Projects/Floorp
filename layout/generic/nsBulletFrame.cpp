@@ -13,6 +13,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -223,85 +225,15 @@ public:
     MOZ_ASSERT(IsTextType());
   }
 
-  already_AddRefed<layers::Layer>
-  BuildLayer(nsDisplayListBuilder* aBuilder,
-             layers::LayerManager* aManager,
-             const ContainerLayerParameters& aContainerParameters,
-             nsDisplayItem* aItem)
-  {
-    RefPtr<layers::Layer> oldLayer =
-      (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
-    RefPtr<layers::Layer> layer;
-    nsPoint offset(aContainerParameters.mOffset.x, aContainerParameters.mOffset.y);
-
-    if (IsImageType()) {
-      layer = BuildLayerForImage(oldLayer, aBuilder, aManager, aItem);
-      offset = offset + mDest.TopLeft();
-    } else if (IsPathType()) {
-      layer = BuildLayerForPath(oldLayer, aBuilder, aManager, aItem);
-    } else {
-      MOZ_ASSERT(IsTextType());
-      layer = BuildLayerForText(oldLayer, aBuilder, aManager, aItem);
-    }
-
-    if (layer) {
-      layer->SetBaseTransform(gfx::Matrix4x4::Translation(offset.x, offset.y, 0));
-    }
-
-    return layer.forget();
-  }
+  void
+  CreateWebRenderCommands(nsDisplayItem* aItem,
+                          nsTArray<layers::WebRenderCommand>& aCommands,
+                          layers::WebRenderDisplayItemLayer* aLayer);
 
   DrawResult
   Paint(nsRenderingContext& aRenderingContext, nsPoint aPt,
         const nsRect& aDirtyRect, uint32_t aFlags,
-        bool aDisableSubpixelAA, nsIFrame* aFrame)
-  {
-    if (IsImageType()) {
-      SamplingFilter filter = nsLayoutUtils::GetSamplingFilterForFrame(aFrame);
-      return nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
-                                            aFrame->PresContext(), mImage, filter,
-                                            mDest, aDirtyRect,
-                                            /* no SVGImageContext */ Nothing(),
-                                            aFlags);
-    }
-
-    if (IsPathType()) {
-      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
-      switch (mListStyleType) {
-      case NS_STYLE_LIST_STYLE_CIRCLE:
-        MOZ_ASSERT(mPath);
-        drawTarget->Stroke(mPath, ColorPattern(ToDeviceColor(mColor)));
-        break;
-      case NS_STYLE_LIST_STYLE_DISC:
-      case NS_STYLE_LIST_STYLE_SQUARE:
-      case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
-      case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
-        MOZ_ASSERT(mPath);
-        drawTarget->Fill(mPath, ColorPattern(ToDeviceColor(mColor)));
-        break;
-      default:
-        MOZ_CRASH("unreachable");
-      }
-    }
-
-    if (IsTextType()) {
-      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
-      DrawTargetAutoDisableSubpixelAntialiasing
-        disable(drawTarget, aDisableSubpixelAA);
-
-      aRenderingContext.ThebesContext()->SetColor(
-        Color::FromABGR(mColor));
-
-      nsPresContext* presContext = aFrame->PresContext();
-      if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
-        presContext->SetBidiEnabled();
-      }
-      nsLayoutUtils::DrawString(aFrame, *mFontMetrics, &aRenderingContext,
-                                mText.get(), mText.Length(), mPoint);
-    }
-
-    return DrawResult::SUCCESS;
-  }
+        bool aDisableSubpixelAA, nsIFrame* aFrame);
 
   bool
   IsImageType() const
@@ -333,132 +265,26 @@ public:
   }
 
   bool
-  BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
-  {
-    MOZ_ASSERT(IsTextType());
+  BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA);
 
-    RefPtr<DrawTargetCapture> capture =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
-    RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
-    nsRenderingContext ctx(captureCtx);
-
-    {
-      DrawTargetAutoDisableSubpixelAntialiasing
-        disable(capture, disableSubpixelAA);
-
-      ctx.ThebesContext()->SetColor(
-        Color::FromABGR(mColor));
-
-      nsPresContext* presContext = aItem->Frame()->PresContext();
-      if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
-        presContext->SetBidiEnabled();
-      }
-      nsLayoutUtils::DrawString(aItem->Frame(), *mFontMetrics, &ctx,
-                                mText.get(), mText.Length(), mPoint);
-    }
-
-    layers::GlyphArray* g = mGlyphs.AppendElement();
-    std::vector<Glyph> glyphs;
-    Color color;
-    if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)) {
-      mFont = nullptr;
-      mGlyphs.Clear();
-      return false;
-    }
-
-    g->glyphs().SetLength(glyphs.size());
-    PodCopy(g->glyphs().Elements(), glyphs.data(), glyphs.size());
-    g->color() = color;
-
-    return true;
-  }
+  bool
+  IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags);
 
 private:
-  already_AddRefed<layers::Layer>
-  BuildLayerForImage(layers::Layer* aOldLayer,
-                     nsDisplayListBuilder* aBuilder,
-                     layers::LayerManager* aManager,
-                     nsDisplayItem* aItem)
-  {
-    MOZ_ASSERT(IsImageType());
+  void
+  CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
+                                  nsTArray<layers::WebRenderCommand>& aCommands,
+                                  layers::WebRenderDisplayItemLayer* aLayer);
 
-    uint32_t flags = imgIContainer::FLAG_NONE;
-    if (aBuilder->ShouldSyncDecodeImages()) {
-      flags |= imgIContainer::FLAG_SYNC_DECODE;
-    }
+  void
+  CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
+                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 layers::WebRenderDisplayItemLayer* aLayer);
 
-    RefPtr<layers::ImageContainer> container =
-      mImage->GetImageContainer(aManager, flags);
-    if (!container) {
-      return nullptr;
-    }
-
-    RefPtr<layers::ImageLayer> layer;
-    if (aOldLayer && aOldLayer->GetType() == layers::Layer::TYPE_IMAGE) {
-      layer = static_cast<layers::ImageLayer*>(aOldLayer);
-    } else {
-      layer = aManager->CreateImageLayer();
-      if (!layer) {
-        return nullptr;
-      }
-    }
-
-    layer->SetContainer(container);
-    int32_t imageWidth;
-    int32_t imageHeight;
-    mImage->GetWidth(&imageWidth);
-    mImage->GetHeight(&imageHeight);
-    if (imageWidth > 0 && imageHeight > 0) {
-      // We're actually using the ImageContainer. Let our frame know that it
-      // should consider itself to have painted successfully.
-      nsDisplayBulletGeometry::UpdateDrawResult(aItem,
-                                                image::DrawResult::SUCCESS);
-    }
-
-    return layer.forget();
-  }
-
-  already_AddRefed<layers::Layer>
-  BuildLayerForPath(layers::Layer* aOldLayer,
-                    nsDisplayListBuilder* aBuilder,
-                    layers::LayerManager* aManager,
-                    nsDisplayItem* aItem)
-  {
-    MOZ_ASSERT(IsPathType());
-
-    // Not supported yet.
-    return nullptr;
-  }
-
-  already_AddRefed<layers::Layer>
-  BuildLayerForText(layers::Layer* aOldLayer,
-                    nsDisplayListBuilder* aBuilder,
-                    layers::LayerManager* aManager,
-                    nsDisplayItem* aItem)
-  {
-    MOZ_ASSERT(IsTextType());
-    MOZ_ASSERT(mFont);
-    MOZ_ASSERT(!mGlyphs.IsEmpty());
-
-    RefPtr<layers::TextLayer> layer;
-    if (aOldLayer && aOldLayer->GetType() == layers::Layer::TYPE_TEXT) {
-      layer = static_cast<layers::TextLayer*>(aOldLayer);
-    } else {
-      layer = aManager->CreateTextLayer();
-      if (!layer) {
-        return nullptr;
-      }
-    }
-
-    layer->SetGlyphs(Move(mGlyphs));
-    layer->SetScaledFont(mFont);
-    auto A2D = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
-    bool dummy;
-    const LayoutDeviceIntRect destBounds =
-      LayoutDeviceIntRect::FromAppUnitsToOutside(aItem->GetBounds(aBuilder, &dummy), A2D);
-    layer->SetBounds(IntRect(destBounds.x, destBounds.y, destBounds.width, destBounds.height));
-    return layer.forget();
-  }
+  void
+  CreateWebRenderCommandsForText(nsDisplayItem* aItem,
+                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                 layers::WebRenderDisplayItemLayer* aLayer);
 
 private:
   // mImage and mDest are the properties for list-style-image.
@@ -480,10 +306,199 @@ private:
   nsPoint mPoint;
   RefPtr<ScaledFont> mFont;
   nsTArray<layers::GlyphArray> mGlyphs;
+  WebRenderGlyphHelper mGlyphHelper;
 
   // Store the type of list-style-type.
   int32_t mListStyleType;
 };
+
+void
+BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
+                                        nsTArray<layers::WebRenderCommand>& aCommands,
+                                        layers::WebRenderDisplayItemLayer* aLayer)
+{
+  if (IsImageType()) {
+    CreateWebRenderCommandsForImage(aItem, aCommands, aLayer);
+  } else if (IsPathType()) {
+    CreateWebRenderCommandsForPath(aItem, aCommands, aLayer);
+  } else {
+    MOZ_ASSERT(IsTextType());
+    CreateWebRenderCommandsForText(aItem, aCommands, aLayer);
+  }
+}
+
+DrawResult
+BulletRenderer::Paint(nsRenderingContext& aRenderingContext, nsPoint aPt,
+                      const nsRect& aDirtyRect, uint32_t aFlags,
+                      bool aDisableSubpixelAA, nsIFrame* aFrame)
+{
+  if (IsImageType()) {
+    SamplingFilter filter = nsLayoutUtils::GetSamplingFilterForFrame(aFrame);
+    return nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
+                                          aFrame->PresContext(), mImage, filter,
+                                          mDest, aDirtyRect,
+                                          /* no SVGImageContext */ Nothing(),
+                                          aFlags);
+  }
+
+  if (IsPathType()) {
+    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+    switch (mListStyleType) {
+    case NS_STYLE_LIST_STYLE_CIRCLE:
+      MOZ_ASSERT(mPath);
+      drawTarget->Stroke(mPath, ColorPattern(ToDeviceColor(mColor)));
+      break;
+    case NS_STYLE_LIST_STYLE_DISC:
+    case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+      MOZ_ASSERT(mPath);
+      drawTarget->Fill(mPath, ColorPattern(ToDeviceColor(mColor)));
+      break;
+    default:
+      MOZ_CRASH("unreachable");
+    }
+  }
+
+  if (IsTextType()) {
+    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+    DrawTargetAutoDisableSubpixelAntialiasing
+      disable(drawTarget, aDisableSubpixelAA);
+
+    aRenderingContext.ThebesContext()->SetColor(
+      Color::FromABGR(mColor));
+
+    nsPresContext* presContext = aFrame->PresContext();
+    if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
+      presContext->SetBidiEnabled();
+    }
+    nsLayoutUtils::DrawString(aFrame, *mFontMetrics, &aRenderingContext,
+                              mText.get(), mText.Length(), mPoint);
+  }
+
+  return DrawResult::SUCCESS;
+}
+
+bool
+BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
+{
+  MOZ_ASSERT(IsTextType());
+
+  RefPtr<DrawTargetCapture> capture =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
+  RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
+  nsRenderingContext ctx(captureCtx);
+
+  {
+    DrawTargetAutoDisableSubpixelAntialiasing
+      disable(capture, disableSubpixelAA);
+
+    ctx.ThebesContext()->SetColor(
+      Color::FromABGR(mColor));
+
+    nsPresContext* presContext = aItem->Frame()->PresContext();
+    if (!presContext->BidiEnabled() && HasRTLChars(mText)) {
+      presContext->SetBidiEnabled();
+    }
+
+    nsLayoutUtils::DrawString(aItem->Frame(), *mFontMetrics, &ctx,
+                              mText.get(), mText.Length(), mPoint);
+  }
+
+  layers::GlyphArray* g = mGlyphs.AppendElement();
+  std::vector<Glyph> glyphs;
+  Color color;
+  if (!capture->ContainsOnlyColoredGlyphs(mFont, color, glyphs)) {
+    mFont = nullptr;
+    mGlyphs.Clear();
+    return false;
+  }
+
+  g->glyphs().SetLength(glyphs.size());
+  PodCopy(g->glyphs().Elements(), glyphs.data(), glyphs.size());
+  g->color() = color;
+
+  return true;
+}
+
+bool
+BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32_t aFlags)
+{
+  MOZ_ASSERT(IsImageType());
+
+  return mImage->IsImageContainerAvailable(aManager, aFlags);
+}
+
+void
+BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
+                                                nsTArray<layers::WebRenderCommand>& aCommands,
+                                                layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsImageType());
+
+  if (!mImage) {
+     return;
+  }
+
+  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
+  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
+  uint32_t flags = builder->ShouldSyncDecodeImages() ?
+                   imgIContainer::FLAG_SYNC_DECODE :
+                   imgIContainer::FLAG_NONE;
+
+  RefPtr<layers::ImageContainer> container =
+    mImage->GetImageContainer(aLayer->WrManager(), flags);
+  if (!container) {
+    return;
+  }
+
+  uint64_t externalImageId = layer->SendImageContainer(container);
+
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  Rect destRect =
+    NSRectToRect(mDest, appUnitsPerDevPixel);
+  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+  IntRect dest = RoundedToInt(destRectTransformed);
+
+  aCommands.AppendElement(layers::OpDPPushExternalImageId(
+                            LayerIntRegion(),
+                            wr::ToWrRect(dest),
+                            wr::ToWrRect(dest),
+                            Nothing(),
+                            WrImageRendering::Auto,
+                            externalImageId));
+}
+
+void
+BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
+                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsPathType());
+  // Not supported yet.
+  MOZ_CRASH("unreachable");
+}
+
+void
+BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
+                                               nsTArray<layers::WebRenderCommand>& aCommands,
+                                               layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(IsTextType());
+  MOZ_ASSERT(mFont);
+  MOZ_ASSERT(!mGlyphs.IsEmpty());
+
+  layers::WebRenderDisplayItemLayer* layer = static_cast<layers::WebRenderDisplayItemLayer*>(aLayer);
+  nsDisplayListBuilder* builder = layer->GetDisplayListBuilder();
+  const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  bool dummy;
+  Rect destRect =
+    NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
+  Rect destRectTransformed = aLayer->RelativeToParent(destRect);
+
+  mGlyphHelper.BuildWebRenderCommands(aCommands, mGlyphs, mFont, aLayer->GetOffsetToParent(),
+                                      destRectTransformed, destRectTransformed);
+}
 
 class nsDisplayBullet final : public nsDisplayItem {
 public:
@@ -513,6 +528,9 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aParameters) override;
+
+  virtual void CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                       layers::WebRenderDisplayItemLayer* aLayer) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
@@ -591,6 +609,16 @@ nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
+  if (br->IsImageType()) {
+    uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                   ? imgIContainer::FLAG_SYNC_DECODE
+                   : imgIContainer::FLAG_NONE;
+
+    if (!br->IsImageContainerAvailable(aManager, flags)) {
+      return LAYER_NONE;
+    }
+  }
+
   if (br->IsTextType()) {
     if (!br->BuildGlyphForText(this, mDisableSubpixelAA)) {
       return LAYER_NONE;
@@ -610,7 +638,17 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  return mBulletRenderer->BuildLayer(aBuilder, aManager, aContainerParameters, this);
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayBullet::CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                         layers::WebRenderDisplayItemLayer* aLayer)
+{
+  if (!mBulletRenderer)
+    return;
+
+  mBulletRenderer->CreateWebRenderCommands(this, aCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
