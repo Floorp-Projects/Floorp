@@ -181,24 +181,6 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
         ExposeObjectToActiveJS(obj);
     }
 
-    // If we've somehow gotten to this point after either the source or target
-    // compartment has been nuked, return a DeadObjectProxy to prevent further
-    // access.
-    JSCompartment* origin = js::GetObjectCompartment(obj);
-    JSCompartment* target = js::GetObjectCompartment(scope);
-    if (CompartmentPrivate::Get(origin)->wasNuked ||
-        CompartmentPrivate::Get(target)->wasNuked) {
-        NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
-
-        RootedObject ccw(cx, Wrapper::New(cx, obj, &CrossCompartmentWrapper::singleton));
-
-        NukeCrossCompartmentWrapper(cx, ccw);
-
-        retObj.set(ccw);
-        return;
-    }
-
-
     // If we've got a WindowProxy, there's nothing special that needs to be
     // done here, and we can move on to the next phase of wrapping. We handle
     // this case first to allow us to assert against wrappers below.
@@ -350,10 +332,8 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
                         JSCompartment* origin, JSCompartment* target)
 {
     if (CompartmentPrivate::Get(origin)->wasNuked || CompartmentPrivate::Get(target)->wasNuked) {
-        // If either compartment has already been nuked, we should have returned
-        // a dead wrapper from our prewrap callback, and this function should
-        // not be called.
-        MOZ_ASSERT_UNREACHABLE("CheckUnwrapSafety called for a dead wrapper");
+        // If either compartment has already been nuked, we should have an opaque wrapper.
+        MOZ_ASSERT(handler->hasSecurityPolicy());
     } else if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
         MOZ_ASSERT(!handler->hasSecurityPolicy());
@@ -477,9 +457,21 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
     // First, handle the special cases.
     //
 
+    // If we've somehow gotten to this point after either the source or target
+    // compartment has been nuked, return an opaque wrapper to prevent further
+    // access.
+    // Ideally, we should return a DeadProxyObject instead of a wrapper in this
+    // case (bug 1322273).
+    if (CompartmentPrivate::Get(origin)->wasNuked ||
+        CompartmentPrivate::Get(target)->wasNuked) {
+        NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
+
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
+    }
+
     // If UniversalXPConnect is enabled, this is just some dumb mochitest. Use
     // a vanilla CCW.
-    if (xpc::IsUniversalXPConnectEnabled(target)) {
+    else if (xpc::IsUniversalXPConnectEnabled(target)) {
         CrashIfNotInAutomation();
         wrapper = &CrossCompartmentWrapper::singleton;
     }
