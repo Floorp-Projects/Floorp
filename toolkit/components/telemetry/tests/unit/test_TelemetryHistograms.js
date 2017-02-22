@@ -757,6 +757,14 @@ add_task(function* test_keyed_histogram_recording_enabled() {
     "Keyed histogram add should not record when recording is disabled");
 });
 
+add_task(function* test_histogramSnapshots() {
+  let keyed = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_COUNT");
+  keyed.add("a", 1);
+
+  // Check that keyed histograms are not returned
+  Assert.ok(!("TELEMETRY_TEST_KEYED_COUNT#a" in Telemetry.histogramSnapshots));
+});
+
 add_task(function* test_datasets() {
   // Check that datasets work as expected.
 
