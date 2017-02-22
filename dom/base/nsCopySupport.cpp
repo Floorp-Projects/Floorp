@@ -755,8 +755,13 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     *aActionTaken = false;
   }
 
-  NS_ASSERTION(aEventMessage == eCut || aEventMessage == eCopy ||
-               aEventMessage == ePaste,
+  EventMessage originalEventMessage = aEventMessage;
+  if (originalEventMessage == ePasteNoFormatting) {
+    originalEventMessage = ePaste;
+  }
+
+  NS_ASSERTION(originalEventMessage == eCut || originalEventMessage == eCopy ||
+               originalEventMessage == ePaste,
                "Invalid clipboard event type");
 
   nsCOMPtr<nsIPresShell> presShell = aPresShell;
@@ -813,10 +818,10 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
     clipboardData =
       new DataTransfer(doc->GetScopeObject(), aEventMessage,
-                       aEventMessage == ePaste, aClipboardType);
+                       originalEventMessage == ePaste, aClipboardType);
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    InternalClipboardEvent evt(true, aEventMessage);
+    InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
     EventDispatcher::Dispatch(content, presShell->GetPresContext(), &evt,
                               nullptr, &status);
@@ -827,7 +832,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // No need to do anything special during a paste. Either an event listener
   // took care of it and cancelled the event, or the caller will handle it.
   // Return true to indicate that the event wasn't cancelled.
-  if (aEventMessage == ePaste) {
+  if (originalEventMessage == ePaste) {
     // Clear and mark the clipboardData as readonly. This prevents someone
     // from reading the clipboard contents after the paste event has fired.
     if (clipboardData) {
@@ -867,7 +872,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
     // when cutting non-editable content, do nothing
     // XXX this is probably the wrong editable flag to check
-    if (aEventMessage != eCut || content->IsEditable()) {
+    if (originalEventMessage != eCut || content->IsEditable()) {
       // get the data from the selection if any
       bool isCollapsed;
       sel->GetIsCollapsed(&isCollapsed);

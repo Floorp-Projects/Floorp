@@ -2787,7 +2787,7 @@ HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow)
   // Suspend event handling on the document
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
   if (doc) {
-    doc->SuppressEventHandling(nsIDocument::eEvents);
+    doc->SuppressEventHandling();
   }
 }
 
