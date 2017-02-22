@@ -247,7 +247,7 @@ task_description_schema = Schema({
             Extra: basestring,  # additional properties are allowed
         },
     }, {
-        'implementation': 'native-engine',
+        Required('implementation'): 'native-engine',
 
         # A link for an executable to download
         Optional('context'): basestring,
@@ -257,7 +257,7 @@ task_description_schema = Schema({
         Optional('reboot'): bool,
 
         # the command to run
-        Required('command'): [taskref_or_string],
+        Optional('command'): [taskref_or_string],
 
         # environment variables
         Optional('env'): {basestring: taskref_or_string},
