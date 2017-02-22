@@ -831,7 +831,6 @@ host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_c_compiler=c_compiler)
 
 # Generic compiler-based conditions.
-building_with_msvc = depends(c_compiler)(lambda info: info.type == 'msvc')
 non_msvc_compiler = depends(c_compiler)(lambda info: info.type != 'msvc')
 building_with_gcc = depends(c_compiler)(lambda info: info.type == 'gcc')
 
@@ -967,36 +966,6 @@ set_define('HAVE_VISIBILITY_ATTRIBUTE',
            depends(visibility_flags)(lambda v: bool(v) or None))
 set_config('WRAP_SYSTEM_INCLUDES', wrap_system_includes)
 set_config('VISIBILITY_FLAGS', visibility_flags)
-
-@depends(c_compiler, using_sccache)
-def depend_cflags(c_compiler, using_sccache):
-    if c_compiler.type in ('gcc', 'clang'):
-        return '-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-    elif c_compiler.type == 'msvc' and using_sccache:
-        # sccache supports a special flag to create depfiles
-        # by parsing MSVC's -showIncludes output.
-        return '-deps$(MDDEPDIR)/$(@F).pp'
-
-set_config('_DEPEND_CFLAGS', depend_cflags)
-
-@depends(c_compiler, when=building_with_msvc)
-@imports(_from='re', _import='compile', _as='re_compile')
-def msvc_showincludes_prefix(c_compiler):
-    pattern = re_compile(r'^([^:]*:.*[ :] )(.*\\stdio.h)$')
-    output = try_invoke_compiler([c_compiler.compiler], 'C', '#include <stdio.h>\n',
-                                 ['-nologo', '-c', '-Fonul', '-showIncludes'])
-    for line in output.splitlines():
-        if line.endswith('\\stdio.h'):
-            m = pattern.match(line)
-            if m:
-                if not m.group(2):
-                    die("Unable to parse cl -showIncludes prefix. " +
-                        "This compiler's locale has an unsupported formatting.")
-                return m.group(1)
-    # We should have found the prefix and returned earlier
-    die('Cannot find cl -showIncludes prefix.')
-
-set_config('CL_INCLUDES_PREFIX', msvc_showincludes_prefix)
 
 @depends(target)
 def is_windows(target):
