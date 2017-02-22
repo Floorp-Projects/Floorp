@@ -299,12 +299,26 @@ private:
 struct JsepTrackPair {
   size_t mLevel;
   // Is this track pair sharing a transport with another?
-  Maybe<size_t> mBundleLevel;
+  size_t mBundleLevel = SIZE_MAX; // SIZE_MAX if no bundle level
   uint32_t mRecvonlySsrc;
   RefPtr<JsepTrack> mSending;
   RefPtr<JsepTrack> mReceiving;
   RefPtr<JsepTransport> mRtpTransport;
   RefPtr<JsepTransport> mRtcpTransport;
+
+  bool HasBundleLevel() const {
+    return mBundleLevel != SIZE_MAX;
+  }
+
+  size_t BundleLevel() const {
+    MOZ_ASSERT(HasBundleLevel());
+    return mBundleLevel;
+  }
+
+  void SetBundleLevel(size_t aBundleLevel) {
+    MOZ_ASSERT(aBundleLevel != SIZE_MAX);
+    mBundleLevel = aBundleLevel;
+  }
 };
 
 } // namespace mozilla
