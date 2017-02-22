@@ -60,11 +60,14 @@ public:
 
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
-  mozilla::ipc::IPCResult RecvAddImage(const gfx::IntSize& aSize,
+  mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
+                                       const gfx::IntSize& aSize,
                                        const uint32_t& aStride,
                                        const gfx::SurfaceFormat& aFormat,
-                                       const ByteBuffer& aBuffer,
-                                       wr::ImageKey* aOutImageKey) override;
+                                       const ByteBuffer& aBuffer) override;
+  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
+                                         const ByteBuffer& aBuffer,
+                                         const uint32_t& aFontIndex) override;
   mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
                                           const gfx::IntSize& aSize,
                                           const gfx::SurfaceFormat& aFormat,

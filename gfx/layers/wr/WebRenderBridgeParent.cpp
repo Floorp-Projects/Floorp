@@ -139,22 +139,39 @@ WebRenderBridgeParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
+WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
+				    const gfx::IntSize& aSize,
                                     const uint32_t& aStride,
                                     const gfx::SurfaceFormat& aFormat,
-                                    const ByteBuffer& aBuffer,
-                                    wr::ImageKey* aOutImageKey)
+                                    const ByteBuffer& aBuffer)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
-  *aOutImageKey = mApi->AddImageBuffer(descriptor,
-                                       aBuffer.AsSlice());
+  mApi->AddImage(aImageKey, descriptor,
+                 aBuffer.AsSlice());
 
   return IPC_OK();
 }
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
+                                      const ByteBuffer& aBuffer,
+                                      const uint32_t& aFontIndex)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  MOZ_ASSERT(mApi);
+  auto slice = aBuffer.AsSlice();
+  mApi->AddRawFont(aFontKey, slice);
+
+  return IPC_OK();
+}
+
+
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
@@ -308,8 +325,8 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
                           op.mask().ptrOr(nullptr), op.filter(), wr::ImageKey(op.key()));
         break;
       }
-      case WebRenderCommand::TOpDPPushExternalImageId: {
-        const OpDPPushExternalImageId& op = cmd.get_OpDPPushExternalImageId();
+      case WebRenderCommand::TOpAddExternalImage: {
+        const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
 
         RefPtr<CompositableHost> host = mExternalImageIds.Get(op.externalImageId());
@@ -348,11 +365,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
         }
 
         wr::ImageDescriptor descriptor(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8);
-        wr::ImageKey key;
+        wr::ImageKey key = op.key();
         auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
-        key = mApi->AddImageBuffer(descriptor, slice);
+        mApi->AddImage(key, descriptor, slice);
 
-        builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
         // XXX workaround for releasing Readlock. See Bug 1339625
@@ -376,17 +392,12 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
         const OpDPPushText& op = cmd.get_OpDPPushText();
         const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
 
-        // TODO: We are leaking the key
-        wr::FontKey fontKey;
-        auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
-        fontKey = mApi->AddRawFont(slice);
-
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
           builder.PushText(op.bounds(),
                            op.clip(),
                            glyph_array[i].color,
-                           fontKey,
+                           op.key(),
                            Range<const WrGlyphInstance>(glyphs.Elements(), glyphs.Length()),
                            op.glyph_size());
         }
