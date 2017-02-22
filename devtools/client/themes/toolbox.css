@@ -134,7 +134,7 @@
 }
 
 .devtools-tab:hover {
-  background-color: var(--toolbar-tab-hover);
+  background-color: var(--theme-toolbar-hover);
 }
 
 .theme-dark .devtools-tab:hover:active {
@@ -142,7 +142,7 @@
 }
 
 .devtools-tab:hover:active {
-  background-color: var(--toolbar-tab-hover-active);
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .theme-dark .devtools-tab:not(.selected).highlighted {
