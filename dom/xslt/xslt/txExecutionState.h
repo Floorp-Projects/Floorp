@@ -95,6 +95,8 @@ public:
     nsresult pushEvalContext(txIEvalContext* aContext);
     txIEvalContext* popEvalContext();
 
+    void popAndDeleteEvalContext();
+
     /**
      * Helper that deletes all entries before |aContext| and then
      * pops it off the stack. The caller must delete |aContext| if
