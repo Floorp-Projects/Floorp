@@ -7,6 +7,7 @@
 from __future__ import print_function
 
 import json
+import os.path
 import urlparse
 import shutil
 
@@ -121,5 +122,10 @@ if __name__ == "__main__":
     # generate_blacklists()
 
     # Dumb copy the lists for now, until we switch to the compacted version as per focus-ios
-    shutil.copy("shavar-prod-lists/disconnect-entitylist.json", "app/src/webkit/res/raw/entitylist.json")
-    shutil.copy("shavar-prod-lists/disconnect-blacklist.json", "app/src/webkit/res/raw/blocklist.json")
+    rawpath = "app/src/webkit/res/raw"
+    if not os.path.exists(rawpath):
+        os.makedirs(rawpath)
+
+    shutil.copy("shavar-prod-lists/disconnect-entitylist.json", rawpath + "/entitylist.json")
+    shutil.copy("shavar-prod-lists/disconnect-blacklist.json", rawpath + "/blocklist.json")
+    shutil.copy("shavar-prod-lists/google_mapping.json", rawpath + "/google_mapping.json")
