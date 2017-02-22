@@ -1192,10 +1192,27 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     // continues a LexicalDeclaration.
     bool nextTokenContinuesLetDeclaration(TokenKind next, YieldHandling yieldHandling);
 
-    Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
+    Node lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
 
     Node importDeclaration();
+
+    bool processExport(Node node);
+    bool processExportFrom(Node node);
+
+    Node exportFrom(uint32_t begin, Node specList);
+    Node exportBatch(uint32_t begin);
+    Node exportClause(uint32_t begin);
+    Node exportFunctionDeclaration(uint32_t begin);
+    Node exportVariableStatement(uint32_t begin);
+    Node exportClassDeclaration(uint32_t begin);
+    Node exportLexicalDeclaration(uint32_t begin, DeclarationKind kind);
+    Node exportDefaultFunctionDeclaration(uint32_t begin,
+                                          FunctionAsyncKind asyncKind = SyncFunction);
+    Node exportDefaultClassDeclaration(uint32_t begin);
+    Node exportDefaultAssignExpr(uint32_t begin);
+    Node exportDefault(uint32_t begin);
     Node exportDeclaration();
+
     Node expressionStatement(YieldHandling yieldHandling,
                              InvokedPrediction invoked = PredictUninvoked);
 
@@ -1324,6 +1341,9 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet);
     bool checkExportedName(JSAtom* exportName);
     bool checkExportedNamesForDeclaration(Node node);
+    bool checkExportedNameForClause(Node node);
+    bool checkExportedNameForFunction(Node node);
+    bool checkExportedNameForClass(Node node);
 
     enum ClassContext { ClassStatement, ClassExpression };
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext,
