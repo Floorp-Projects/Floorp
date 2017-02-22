@@ -21,7 +21,6 @@ from .util import (
     calculate_head_rev
 )
 from ..create import create_task
-from .. import GECKO
 from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.schema import resolve_keyed_by
 
@@ -33,6 +32,7 @@ JOB_TYPES = {
     'decision-task': decision.run_decision_task,
 }
 
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 logger = logging.getLogger(__name__)
 _session = None
 
