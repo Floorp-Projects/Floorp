@@ -20,7 +20,6 @@ button {
 
 .button-box {
   -moz-appearance: button-focus;
-  border: 1px solid transparent;
   padding-top: 1px;
   padding-bottom: 2px;
   padding-inline-start: 3px;
@@ -34,12 +33,6 @@ button {
 .button-text {
   margin: 0 !important;
   text-align: center;
-}
-
-/* .......... focused state .......... */
-
-button:focus > .button-box {
-  border: 1px dotted ThreeDDarkShadow;
 }
 
 /* .......... hover state .......... */
