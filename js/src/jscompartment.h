@@ -652,6 +652,10 @@ struct JSCompartment
         return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(wrapped));
     }
 
+    js::WrapperMap::Ptr lookupWrapper(JSObject* obj) const {
+        return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(obj));
+    }
+
     void removeWrapper(js::WrapperMap::Ptr p) {
         crossCompartmentWrappers.remove(p);
     }
