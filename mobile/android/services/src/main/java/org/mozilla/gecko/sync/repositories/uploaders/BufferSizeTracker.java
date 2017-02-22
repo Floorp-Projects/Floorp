@@ -19,7 +19,7 @@ public abstract class BufferSizeTracker {
 
     /* @GuardedBy("accessLock") */ private long byteCount = BatchingUploader.PER_PAYLOAD_OVERHEAD_BYTE_COUNT;
     /* @GuardedBy("accessLock") */ private long recordCount = 0;
-    /* @GuardedBy("accessLock") */ protected Long smallestRecordByteCount;
+    /* @GuardedBy("accessLock") */ private Long smallestRecordByteCount;
 
     protected final long maxBytes;
     protected final long maxRecords;
@@ -84,14 +84,6 @@ public abstract class BufferSizeTracker {
     protected long getRecordCount() {
         synchronized (accessLock) {
             return recordCount;
-        }
-    }
-
-    @CallSuper
-    protected void reset() {
-        synchronized (accessLock) {
-            byteCount = BatchingUploader.PER_PAYLOAD_OVERHEAD_BYTE_COUNT;
-            recordCount = 0;
         }
     }
 
