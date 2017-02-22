@@ -2158,31 +2158,20 @@ public:
   virtual mozilla::PendingAnimationTracker*
   GetOrCreatePendingAnimationTracker() = 0;
 
-  enum SuppressionType {
-    eAnimationsOnly = 0x1,
-
-    // Note that suppressing events also suppresses animation frames, so
-    // there's no need to split out events in its own bitmask.
-    eEvents = 0x3,
-  };
-
   /**
    * Prevents user initiated events from being dispatched to the document and
    * subdocuments.
    */
-  virtual void SuppressEventHandling(SuppressionType aWhat,
-                                     uint32_t aIncrease = 1) = 0;
+  virtual void SuppressEventHandling(uint32_t aIncrease = 1) = 0;
 
   /**
    * Unsuppress event handling.
    * @param aFireEvents If true, delayed events (focus/blur) will be fired
    *                    asynchronously.
    */
-  virtual void UnsuppressEventHandlingAndFireEvents(SuppressionType aWhat,
-                                                    bool aFireEvents) = 0;
+  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) = 0;
 
   uint32_t EventHandlingSuppressed() const { return mEventsSuppressed; }
-  uint32_t AnimationsPaused() const { return mAnimationsPaused; }
 
   bool IsEventHandlingEnabled() {
     return !EventHandlingSuppressed() && mScriptGlobalObject;
@@ -3281,8 +3270,6 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   uint32_t mEventsSuppressed;
-
-  uint32_t mAnimationsPaused;
 
   /**
    * The number number of external scripts (ones with the src attribute) that
