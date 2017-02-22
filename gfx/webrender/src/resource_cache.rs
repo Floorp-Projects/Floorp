@@ -15,15 +15,17 @@ use std::fmt::Debug;
 use std::hash::BuildHasherDefault;
 use std::hash::Hash;
 use std::mem;
-use std::sync::{Arc, Barrier};
+use std::sync::{Arc, Barrier, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use texture_cache::{TextureCache, TextureCacheItemId};
+use thread_profiler::register_thread_with_profiler;
 use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRendering};
 use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
 use webrender_traits::{DevicePoint, DeviceIntSize, ImageDescriptor, ColorF};
-use webrender_traits::ExternalImageId;
+use webrender_traits::{ExternalImageId, GlyphOptions, GlyphInstance};
 use threadpool::ThreadPool;
+use euclid::Point2D;
 
 thread_local!(pub static FONT_CONTEXT: RefCell<FontContext> = RefCell::new(FontContext::new()));
 
@@ -36,7 +38,7 @@ enum GlyphCacheMsg {
     /// Add a new font.
     AddFont(FontKey, FontTemplate),
     /// Request glyphs for a text run.
-    RequestGlyphs(FontKey, Au, ColorF, Vec<u32>, FontRenderMode),
+    RequestGlyphs(FontKey, Au, ColorF, Vec<GlyphInstance>, FontRenderMode, Option<GlyphOptions>),
     /// Finished requesting glyphs. Reply with new glyphs.
     EndFrame,
 }
@@ -66,6 +68,7 @@ pub struct CacheItem {
 pub struct RenderedGlyphKey {
     pub key: GlyphKey,
     pub render_mode: FontRenderMode,
+    pub glyph_options: Option<GlyphOptions>,
 }
 
 impl RenderedGlyphKey {
@@ -73,10 +76,14 @@ impl RenderedGlyphKey {
                size: Au,
                color: ColorF,
                index: u32,
-               render_mode: FontRenderMode) -> RenderedGlyphKey {
+               point: Point2D<f32>,
+               render_mode: FontRenderMode,
+               glyph_options: Option<GlyphOptions>) -> RenderedGlyphKey {
         RenderedGlyphKey {
-            key: GlyphKey::new(font_key, size, color, index),
+            key: GlyphKey::new(font_key, size, color, index,
+                               point, render_mode),
             render_mode: render_mode,
+            glyph_options: glyph_options,
         }
     }
 }
@@ -206,8 +213,9 @@ pub struct ResourceCache {
 
 impl ResourceCache {
     pub fn new(texture_cache: TextureCache,
+               workers: Arc<Mutex<ThreadPool>>,
                enable_aa: bool) -> ResourceCache {
-        let (glyph_cache_tx, glyph_cache_result_queue) = spawn_glyph_cache_thread();
+        let (glyph_cache_tx, glyph_cache_result_queue) = spawn_glyph_cache_thread(workers);
 
         ResourceCache {
             cached_glyphs: Some(ResourceClassCache::new()),
@@ -257,7 +265,7 @@ impl ResourceCache {
             Some(image) => {
                 // This image should not be an external image.
                 match image.data {
-                    ImageData::External(id) => {
+                    ImageData::ExternalHandle(id) => {
                         panic!("Update an external image with buffer, id={} image_key={:?}", id.0, image_key);
                     },
                     _ => {},
@@ -286,7 +294,7 @@ impl ResourceCache {
         // If the key is associated to an external image, pass the external id to renderer for cleanup.
         if let Some(image) = value {
             match image.data {
-                ImageData::External(id) => {
+                ImageData::ExternalHandle(id) => {
                     self.pending_external_image_update_list.push(id);
                 },
                 _ => {},
@@ -327,8 +335,9 @@ impl ResourceCache {
                           key: FontKey,
                           size: Au,
                           color: ColorF,
-                          glyph_indices: &[u32],
-                          render_mode: FontRenderMode) {
+                          glyph_instances: &[GlyphInstance],
+                          render_mode: FontRenderMode,
+                          glyph_options: Option<GlyphOptions>) {
         debug_assert!(self.state == State::AddResources);
         let render_mode = self.get_glyph_render_mode(render_mode);
         // Immediately request that the glyph cache thread start
@@ -337,8 +346,9 @@ impl ResourceCache {
         let msg = GlyphCacheMsg::RequestGlyphs(key,
                                                size,
                                                color,
-                                               glyph_indices.to_vec(),
-                                               render_mode);
+                                               glyph_instances.to_vec(),
+                                               render_mode,
+                                               glyph_options);
         self.glyph_cache_tx.send(msg).unwrap();
     }
 
@@ -354,8 +364,9 @@ impl ResourceCache {
                          font_key: FontKey,
                          size: Au,
                          color: ColorF,
-                         glyph_indices: &[u32],
+                         glyph_instances: &[GlyphInstance],
                          render_mode: FontRenderMode,
+                         glyph_options: Option<GlyphOptions>,
                          mut f: F) -> SourceTexture where F: FnMut(usize, DevicePoint, DevicePoint) {
         debug_assert!(self.state == State::QueryResources);
         let cache = self.cached_glyphs.as_ref().unwrap();
@@ -364,10 +375,14 @@ impl ResourceCache {
                                                   size,
                                                   color,
                                                   0,
-                                                  render_mode);
+                                                  Point2D::new(0.0, 0.0),
+                                                  render_mode,
+                                                  glyph_options);
         let mut texture_id = None;
-        for (loop_index, glyph_index) in glyph_indices.iter().enumerate() {
-            glyph_key.key.index = *glyph_index;
+        for (loop_index, glyph_instance) in glyph_instances.iter().enumerate() {
+            glyph_key.key.index = glyph_instance.index;
+            glyph_key.key.subpixel_point.set_offset(glyph_instance.point, render_mode);
+
             let image_id = cache.get(&glyph_key, self.current_frame_id);
             let cache_item = image_id.map(|image_id| self.texture_cache.get(image_id));
             if let Some(cache_item) = cache_item {
@@ -404,9 +419,7 @@ impl ResourceCache {
                         }
                     }
 
-                    dimensions = font_context.get_glyph_dimensions(glyph_key.font_key,
-                                                                   glyph_key.size,
-                                                                   glyph_key.index);
+                    dimensions = font_context.get_glyph_dimensions(glyph_key);
                 });
 
                 *entry.insert(dimensions)
@@ -438,8 +451,9 @@ impl ResourceCache {
         let image_template = &self.image_templates[&image_key];
 
         let external_id = match image_template.data {
-            ImageData::External(id) => Some(id),
-            ImageData::Raw(..) => None,
+            ImageData::ExternalHandle(id) => Some(id),
+            // raw and externalBuffer are all use resource_cache.
+            ImageData::Raw(..) | ImageData::ExternalBuffer(..) => None,
         };
 
         ImageProperties {
@@ -474,6 +488,8 @@ impl ResourceCache {
     }
 
     pub fn block_until_all_resources_added(&mut self) {
+        profile_scope!("block_until_all_resources_added");
+
         debug_assert!(self.state == State::AddResources);
         self.state = State::QueryResources;
 
@@ -507,7 +523,7 @@ impl ResourceCache {
                                                               is_opaque: false,
                                                           },
                                                           TextureFilter::Linear,
-                                                          Arc::new(glyph.bytes));
+                                                          ImageData::Raw(Arc::new(glyph.bytes)));
                                 Some(image_id)
                             } else {
                                 None
@@ -526,19 +542,21 @@ impl ResourceCache {
         for request in self.pending_image_requests.drain(..) {
             let cached_images = &mut self.cached_images;
             let image_template = &self.image_templates[&request.key];
+            let image_data = image_template.data.clone();
 
             match image_template.data {
-                ImageData::External(..) => {}
-                ImageData::Raw(ref bytes) => {
+                ImageData::ExternalHandle(..) => {
+                    // external handle doesn't need to update the texture_cache.
+                }
+                ImageData::Raw(..) | ImageData::ExternalBuffer(..) => {
                     match cached_images.entry(request.clone(), self.current_frame_id) {
                         Occupied(entry) => {
                             let image_id = entry.get().texture_cache_id;
 
                             if entry.get().epoch != image_template.epoch {
-                                // TODO: Can we avoid the clone of the bytes here?
                                 self.texture_cache.update(image_id,
                                                           image_template.descriptor,
-                                                          bytes.clone());
+                                                          image_data);
 
                                 // Update the cached epoch
                                 *entry.into_mut() = CachedImageInfo {
@@ -555,11 +573,10 @@ impl ResourceCache {
                                 ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
                             };
 
-                            // TODO: Can we avoid the clone of the bytes here?
                             self.texture_cache.insert(image_id,
                                                       image_template.descriptor,
                                                       filter,
-                                                      bytes.clone());
+                                                      image_data);
 
                             entry.insert(CachedImageInfo {
                                 texture_cache_id: image_id,
@@ -608,7 +625,10 @@ impl Resource for CachedImageInfo {
     }
 }
 
-fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResultMsg>) {
+fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResultMsg>) {
+    let worker_count = {
+        workers.lock().unwrap().max_count()
+    };
     // Used for messages from resource cache -> glyph cache thread.
     let (msg_tx, msg_rx) = channel();
     // Used for returning results from glyph cache thread -> resource cache.
@@ -617,12 +637,19 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
     let (glyph_tx, glyph_rx) = channel();
 
     thread::Builder::new().name("GlyphCache".to_string()).spawn(move|| {
-        // TODO(gw): Use a heuristic to select best # of worker threads.
-        let worker_count = 4;
-        let thread_pool = ThreadPool::new(worker_count);
-
         let mut glyph_cache = None;
         let mut current_frame_id = FrameId(0);
+
+        register_thread_with_profiler("GlyphCache".to_string());
+
+        let barrier = Arc::new(Barrier::new(worker_count));
+        for i in 0..worker_count {
+            let barrier = barrier.clone();
+            workers.lock().unwrap().execute(move || {
+                register_thread_with_profiler(format!("Glyph Worker {}", i));
+                barrier.wait();
+            });
+        }
 
         // Maintain a set of glyphs that have been requested this
         // frame. This ensures the glyph thread won't rasterize
@@ -633,8 +660,11 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
         let mut pending_glyphs = HashSet::new();
 
         while let Ok(msg) = msg_rx.recv() {
+            profile_scope!("handle_msg");
             match msg {
                 GlyphCacheMsg::BeginFrame(frame_id, cache) => {
+                    profile_scope!("BeginFrame");
+
                     // We are beginning a new frame. Take ownership of the glyph
                     // cache hash map, so we can easily see which glyph requests
                     // actually need to be rasterized.
@@ -642,6 +672,8 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                     glyph_cache = Some(cache);
                 }
                 GlyphCacheMsg::AddFont(font_key, font_template) => {
+                    profile_scope!("AddFont");
+
                     // Add a new font to the font context in each worker thread.
                     // Use a barrier to ensure that each worker in the pool handles
                     // one of these messages, to ensure that the new font gets
@@ -650,7 +682,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                     for _ in 0..worker_count {
                         let barrier = barrier.clone();
                         let font_template = font_template.clone();
-                        thread_pool.execute(move || {
+                        workers.lock().unwrap().execute(move || {
                             FONT_CONTEXT.with(|font_context| {
                                 let mut font_context = font_context.borrow_mut();
                                 match font_template {
@@ -668,33 +700,36 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                         });
                     }
                 }
-                GlyphCacheMsg::RequestGlyphs(key, size, color, indices, render_mode) => {
+                GlyphCacheMsg::RequestGlyphs(key, size, color, glyph_instances, render_mode, glyph_options) => {
+                    profile_scope!("RequestGlyphs");
+
                     // Request some glyphs for a text run.
                     // For any glyph that isn't currently in the cache,
                     // immeediately push a job to the worker thread pool
                     // to start rasterizing this glyph now!
                     let glyph_cache = glyph_cache.as_mut().unwrap();
 
-                    for glyph_index in indices {
+                    for glyph_instance in glyph_instances {
                         let glyph_key = RenderedGlyphKey::new(key,
                                                               size,
                                                               color,
-                                                              glyph_index,
-                                                              render_mode);
+                                                              glyph_instance.index,
+                                                              glyph_instance.point,
+                                                              render_mode,
+                                                              glyph_options);
 
                         glyph_cache.mark_as_needed(&glyph_key, current_frame_id);
                         if !glyph_cache.contains_key(&glyph_key) &&
                            !pending_glyphs.contains(&glyph_key) {
                             let glyph_tx = glyph_tx.clone();
                             pending_glyphs.insert(glyph_key.clone());
-                            thread_pool.execute(move || {
+                            workers.lock().unwrap().execute(move || {
+                                profile_scope!("glyph");
                                 FONT_CONTEXT.with(move |font_context| {
                                     let mut font_context = font_context.borrow_mut();
-                                    let result = font_context.rasterize_glyph(glyph_key.key.font_key,
-                                                                              glyph_key.key.size,
-                                                                              glyph_key.key.color,
-                                                                              glyph_key.key.index,
-                                                                              render_mode);
+                                    let result = font_context.rasterize_glyph(&glyph_key.key,
+                                                                              render_mode,
+                                                                              glyph_options);
                                     glyph_tx.send((glyph_key, result)).unwrap();
                                 });
                             });
@@ -702,6 +737,8 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                     }
                 }
                 GlyphCacheMsg::EndFrame => {
+                    profile_scope!("EndFrame");
+
                     // The resource cache has finished requesting glyphs. Block
                     // on completion of any pending glyph rasterizing jobs, and then
                     // return the list of new glyphs to the resource cache.

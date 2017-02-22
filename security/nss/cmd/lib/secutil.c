@@ -3230,6 +3230,8 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     SECItem data;
     CERTCertTrust certTrust;
     PK11SlotList *slotList;
+    PRBool falseAttributeFound = PR_FALSE;
+    PRBool trueAttributeFound = PR_FALSE;
     const char *moz_policy_ca_info = NULL;
 
     data.data = cert->derCert.data;
@@ -3250,23 +3252,24 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
                 PORT_SetError(0);
                 if (PK11_HasAttributeSet(se->slot, handle,
                                          CKA_NSS_MOZILLA_CA_POLICY, PR_FALSE)) {
-                    moz_policy_ca_info = "true (attribute present)";
-                } else {
-                    if (PORT_GetError() != 0) {
-                        moz_policy_ca_info = "false (attribute missing)";
-                    } else {
-                        moz_policy_ca_info = "false (attribute present)";
-                    }
+                    trueAttributeFound = PR_TRUE;
+                } else if (!PORT_GetError()) {
+                    falseAttributeFound = PR_TRUE;
                 }
             }
         }
         PK11_FreeSlotList(slotList);
     }
 
-    if (moz_policy_ca_info) {
-        SECU_Indent(stdout, 1);
-        printf("Mozilla-CA-Policy: %s\n", moz_policy_ca_info);
+    if (trueAttributeFound) {
+        moz_policy_ca_info = "true (attribute present)";
+    } else if (falseAttributeFound) {
+        moz_policy_ca_info = "false (attribute present)";
+    } else {
+        moz_policy_ca_info = "false (attribute missing)";
     }
+    SECU_Indent(stdout, 1);
+    printf("Mozilla-CA-Policy: %s\n", moz_policy_ca_info);
 
     if (trust) {
         SECU_PrintTrustFlags(stdout, trust,

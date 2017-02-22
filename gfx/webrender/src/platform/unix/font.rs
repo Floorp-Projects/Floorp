@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use webrender_traits::{FontKey, ColorU, FontRenderMode, GlyphDimensions, NativeFontHandle};
+use webrender_traits::{FontKey, FontRenderMode, GlyphDimensions};
+use webrender_traits::{NativeFontHandle, GlyphOptions};
+use webrender_traits::{GlyphKey};
 
 use freetype::freetype::{FT_Render_Mode, FT_Pixel_Mode};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter};
@@ -40,7 +42,6 @@ fn float_to_fixed_ft(f: f64) -> i32 {
 
 impl FontContext {
     pub fn new() -> FontContext {
-//        let _pf = util::ProfileScope::new("  FontContext::new");
         let mut lib: FT_Library = ptr::null_mut();
         unsafe {
             let result = FT_Init_FreeType(&mut lib);
@@ -111,11 +112,9 @@ impl FontContext {
         None
     }
 
-    pub fn get_glyph_dimensions(&self,
-                                font_key: FontKey,
-                                size: Au,
-                                character: u32) -> Option<GlyphDimensions> {
-        self.load_glyph(font_key, size, character).and_then(|slot| {
+     pub fn get_glyph_dimensions(&mut self,
+                                 key: &GlyphKey) -> Option<GlyphDimensions> {
+        self.load_glyph(key.font_key, key.size, key.index).and_then(|slot| {
             let metrics = unsafe { &(*slot).metrics };
             if metrics.width == 0 || metrics.height == 0 {
                 None
@@ -131,16 +130,15 @@ impl FontContext {
     }
 
     pub fn rasterize_glyph(&mut self,
-                           font_key: FontKey,
-                           size: Au,
-                           color: ColorU,
-                           character: u32,
-                           render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
+                           key: &GlyphKey,
+                           render_mode: FontRenderMode,
+                           _glyph_options: Option<GlyphOptions>)
+                           -> Option<RasterizedGlyph> {
         let mut glyph = None;
 
-        if let Some(slot) = self.load_glyph(font_key,
-                                            size,
-                                            character) {
+        if let Some(slot) = self.load_glyph(key.font_key,
+                                            key.size,
+                                            key.index) {
             let render_mode = match render_mode {
                 FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
                 FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,

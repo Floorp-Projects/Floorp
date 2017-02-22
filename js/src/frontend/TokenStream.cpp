@@ -1719,14 +1719,16 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         goto out;
 
       case '<':
-        // NB: treat HTML begin-comment as comment-till-end-of-line.
-        if (matchChar('!')) {
-            if (matchChar('-')) {
-                if (matchChar('-'))
-                    goto skipline;
-                ungetChar('-');
+        if (options().allowHTMLComments) {
+            // Treat HTML begin-comment as comment-till-end-of-line.
+            if (matchChar('!')) {
+                if (matchChar('-')) {
+                    if (matchChar('-'))
+                        goto skipline;
+                    ungetChar('-');
+                }
+                ungetChar('!');
             }
-            ungetChar('!');
         }
         if (matchChar('<')) {
             tp->type = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
@@ -1866,12 +1868,14 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
 
       case '-':
         if (matchChar('-')) {
-            int32_t c2;
-            if (!peekChar(&c2))
-                goto error;
+            if (options().allowHTMLComments && !flags.isDirtyLine) {
+                int32_t c2;
+                if (!peekChar(&c2))
+                    goto error;
 
-            if (c2 == '>' && !flags.isDirtyLine)
-                goto skipline;
+                if (c2 == '>')
+                    goto skipline;
+            }
 
             tp->type = TOK_DEC;
         } else {

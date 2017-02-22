@@ -4,6 +4,15 @@ set -v -e -x
 
 export DEBIAN_FRONTEND=noninteractive
 
+apt-get -y update
+apt-get -y install software-properties-common
+
+# Add more repos
+add-apt-repository "deb http://ports.ubuntu.com/ xenial main restricted universe multiverse"
+add-apt-repository "deb http://ports.ubuntu.com/ xenial-security main restricted universe multiverse"
+add-apt-repository "deb http://ports.ubuntu.com/ xenial-updates main restricted universe multiverse"
+add-apt-repository "deb http://ports.ubuntu.com/ xenial-backports main restricted universe multiverse"
+
 # Update.
 apt-get -y update
 apt-get -y dist-upgrade
@@ -13,8 +22,8 @@ apt_packages+=('build-essential')
 apt_packages+=('ca-certificates')
 apt_packages+=('curl')
 apt_packages+=('zlib1g-dev')
-apt_packages+=('gyp')
 apt_packages+=('ninja-build')
+apt_packages+=('gyp')
 apt_packages+=('mercurial')
 
 # Install packages.

@@ -223,4 +223,35 @@ TEST_P(TlsConnectGeneric, OcspSuccess) {
   EXPECT_EQ(0U, capture_ocsp->extension().len());
 }
 
+TEST_P(TlsConnectGeneric, OcspHugeSuccess) {
+  EnsureTlsSetup();
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
+                                      SSL_ENABLE_OCSP_STAPLING, PR_TRUE));
+
+  uint8_t hugeOcspValue[16385];
+  memset(hugeOcspValue, 0xa1, sizeof(hugeOcspValue));
+  const SECItem hugeOcspItems[] = {
+      {siBuffer, const_cast<uint8_t*>(hugeOcspValue), sizeof(hugeOcspValue)}};
+  const SECItemArray hugeOcspResponses = {const_cast<SECItem*>(hugeOcspItems),
+                                          PR_ARRAY_SIZE(hugeOcspItems)};
+  const SSLExtraServerCertData hugeOcspExtraData = {
+      ssl_auth_null, nullptr, &hugeOcspResponses, nullptr};
+
+  // The value should be available during the AuthCertificateCallback
+  client_->SetAuthCertificateCallback([&](TlsAgent* agent, bool checksig,
+                                          bool isServer) -> SECStatus {
+    const SECItemArray* ocsp = SSL_PeerStapledOCSPResponses(agent->ssl_fd());
+    if (!ocsp) {
+      return SECFailure;
+    }
+    EXPECT_EQ(1U, ocsp->len) << "We only provide the first item";
+    EXPECT_EQ(0, SECITEM_CompareItem(&hugeOcspItems[0], &ocsp->items[0]));
+    return SECSuccess;
+  });
+  EXPECT_TRUE(server_->ConfigServerCert(TlsAgent::kServerRsa, true,
+                                        &hugeOcspExtraData));
+
+  Connect();
+}
+
 }  // namespace nspr_test

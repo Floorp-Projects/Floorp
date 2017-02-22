@@ -241,8 +241,16 @@ add_task(function*() {
   // notifications of their shutdown to ensure we're avoiding shutdown races.
   // (If there are races then the processes won't actually be shut down.)  So
   // it's easiest to just boost the limit.
-  let keepAliveCount =
-    SpecialPowers.getIntPref("dom.ipc.keepProcessesAlive.web", 1);
+  let keepAliveCount = 0;
+  try {
+    // This will throw if the preference is not defined, leaving our value at 0.
+    // Alternately, we could use Preferences.jsm's Preferences.get() API which
+    // supports default values, but we're sticking with SpecialPowers here for
+    // consistency.
+    keepAliveCount = SpecialPowers.getIntPref("dom.ipc.keepProcessesAlive.web");
+  } catch (ex) {
+    // Then zero is correct.
+  }
   let safeProcessCount = keepAliveCount + 6;
   info("dom.ipc.keepProcessesAlive.web is " + keepAliveCount + ", boosting " +
        "process count temporarily to " + safeProcessCount);

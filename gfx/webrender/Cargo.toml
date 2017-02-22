@@ -1,23 +1,23 @@
 [package]
 name = "webrender"
-version = "0.11.1"
+version = "0.15.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
 build = "build.rs"
-workspace = ".."
 
 [features]
 default = ["codegen", "freetype-lib"]
 codegen = ["webrender_traits/codegen"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 serde_derive = ["webrender_traits/serde_derive"]
+profiler = ["thread_profiler/thread_profiler"]
 
 [dependencies]
 app_units = "0.3"
 bincode = "0.6"
 bit-set = "0.4"
-byteorder = "0.5"
+byteorder = "1.0"
 euclid = "0.10.3"
 fnv="1.0"
 gleam = "0.2.30"
@@ -29,6 +29,8 @@ time = "0.1"
 threadpool = "1.3.2"
 webrender_traits = {path = "../webrender_traits", default-features = false}
 bitflags = "0.7"
+gamma-lut = "0.1"
+thread_profiler = "0.1.1"
 
 [dev-dependencies]
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
@@ -37,8 +39,8 @@ angle = {git = "https://github.com/servo/angle", branch = "servo"}
 freetype = { version = "0.2", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.1.5"
+dwrote = "0.1.7"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.5.0"
-core-text = "2.0"
+core-graphics = "0.6.0"
+core-text = "3.0"

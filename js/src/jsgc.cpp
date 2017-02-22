@@ -873,7 +873,10 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     lock(mutexid::GCLock),
     allocTask(rt, emptyChunks_.ref()),
     decommitTask(rt),
-    helperState(rt)
+    helperState(rt),
+    nursery_(rt),
+    storeBuffer_(rt, nursery()),
+    blocksToFreeAfterMinorGC((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE)
 {
     setGCMode(JSGC_MODE_GLOBAL);
 }
@@ -921,10 +924,8 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
         VerifyBarriers(rt, PreBarrierVerifier);
 
     if (zeal == 0 && hasZealMode(ZealMode::GenerationalGC)) {
-        for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-            group->evictNursery(JS::gcreason::DEBUG_GC);
-            group->nursery().leaveZealMode();
-        }
+        evictNursery(JS::gcreason::DEBUG_GC);
+        nursery().leaveZealMode();
     }
 
     ZealMode zealMode = ZealMode(zeal);
@@ -1053,6 +1054,9 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
             setMarkStackLimit(atoi(size), lock);
 
         jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
+
+        if (!nursery().init(maxNurseryBytes, lock))
+            return false;
     }
 
 #ifdef JS_GC_ZEAL
@@ -2965,7 +2969,7 @@ GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
 void
 Nursery::requestMinorGC(JS::gcreason::Reason reason) const
 {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(zoneGroup()->runtime));
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
     MOZ_ASSERT(!CurrentThreadIsPerformingGC());
 
     if (minorGCRequested())
@@ -3346,7 +3350,7 @@ GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc* lifo)
 }
 
 void
-ZoneGroup::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
+GCRuntime::freeAllLifoBlocksAfterMinorGC(LifoAlloc* lifo)
 {
     blocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
@@ -3619,15 +3623,13 @@ GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
         target.context()->frontendCollectionPool().purge();
     }
 
-    for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        group->caches().gsnCache.purge();
-        group->caches().envCoordinateNameCache.purge();
-        group->caches().newObjectCache.purge();
-        group->caches().nativeIterCache.purge();
-        group->caches().uncompressedSourceCache.purge();
-        if (group->caches().evalCache.initialized())
-            group->caches().evalCache.clear();
-    }
+    rt->caches().gsnCache.purge();
+    rt->caches().envCoordinateNameCache.purge();
+    rt->caches().newObjectCache.purge();
+    rt->caches().nativeIterCache.purge();
+    rt->caches().uncompressedSourceCache.purge();
+    if (rt->caches().evalCache.initialized())
+        rt->caches().evalCache.clear();
 
     if (auto cache = rt->maybeThisRuntimeSharedImmutableStrings())
         cache->purge();
@@ -5595,12 +5597,10 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
         releaseRelocatedArenas(relocatedArenas);
 
     // Clear caches that can contain cell pointers.
-    for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        group->caches().newObjectCache.purge();
-        group->caches().nativeIterCache.purge();
-        if (group->caches().evalCache.initialized())
-            group->caches().evalCache.clear();
-    }
+    rt->caches().newObjectCache.purge();
+    rt->caches().nativeIterCache.purge();
+    if (rt->caches().evalCache.initialized())
+        rt->caches().evalCache.clear();
 
 #ifdef DEBUG
     CheckHashTablesAfterMovingGC(rt);
@@ -6664,14 +6664,14 @@ GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock)
 }
 
 void
-ZoneGroup::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
+GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
 
     if (TlsContext.get()->suppressGC)
         return;
 
-    gcstats::AutoPhase ap(runtime->gc.stats(), phase);
+    gcstats::AutoPhase ap(rt->gc.stats(), phase);
 
     nursery().clearMinorGCRequest();
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
@@ -6682,14 +6682,14 @@ ZoneGroup::minorGC(JS::gcreason::Reason reason, gcstats::Phase phase)
     blocksToFreeAfterMinorGC.ref().freeAll();
 
 #ifdef JS_GC_ZEAL
-    if (runtime->hasZealMode(ZealMode::CheckHeapAfterGC))
-        CheckHeapAfterGC(runtime);
+    if (rt->hasZealMode(ZealMode::CheckHeapAfterGC))
+        CheckHeapAfterGC(rt);
 #endif
 
     {
-        AutoLockGC lock(runtime);
-        for (ZonesInGroupIter zone(this); !zone.done(); zone.next())
-            runtime->gc.maybeAllocTriggerZoneGC(zone, lock);
+        AutoLockGC lock(rt);
+        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+            maybeAllocTriggerZoneGC(zone, lock);
     }
 }
 
@@ -6697,10 +6697,8 @@ JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
   : cx(cx)
 {
     if (!cx->generationalDisabled) {
-        for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
-            group->evictNursery(JS::gcreason::API);
-            group->nursery().disable();
-        }
+        cx->runtime()->gc.evictNursery(JS::gcreason::API);
+        cx->nursery().disable();
     }
     ++cx->generationalDisabled;
 }
@@ -6724,10 +6722,8 @@ GCRuntime::gcIfRequested()
 {
     // This method returns whether a major GC was performed.
 
-    for (ZoneGroupsIter group(rt); !group.done(); group.next()) {
-        if (group->nursery().minorGCRequested())
-            group->minorGC(group->nursery().minorGCTriggerReason());
-    }
+    if (nursery().minorGCRequested())
+        minorGC(nursery().minorGCTriggerReason());
 
     if (majorGCRequested()) {
         if (!isIncrementalGCInProgress())
@@ -6806,11 +6802,7 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
 
         groupHolder.reset(group);
 
-        size_t nurseryBytes =
-            options.creationOptions().disableNursery()
-            ? 0
-            : rt->gc.tunables.gcMaxNurseryBytes();
-        if (!group->init(nurseryBytes)) {
+        if (!group->init()) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -6966,7 +6958,7 @@ GCRuntime::runDebugGC()
         return;
 
     if (hasZealMode(ZealMode::GenerationalGC))
-        return TlsContext.get()->zone()->group()->minorGC(JS::gcreason::DEBUG_GC);
+        return minorGC(JS::gcreason::DEBUG_GC);
 
     PrepareForDebugGC(rt);
 

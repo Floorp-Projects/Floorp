@@ -10,7 +10,7 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.tile);
+                                                    prim.task);
     vLocalRect = vi.clipped_local_rect;
     vLocalPos = vi.local_pos;
 #else
@@ -18,8 +18,8 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.tile);
-    vLocalPos = vi.local_clamped_pos - vi.local_rect.p0;
+                                 prim.task);
+    vLocalPos = vi.local_pos - vi.local_rect.p0;
 #endif
 
     YuvImage image = fetch_yuv_image(prim.prim_index);
@@ -44,6 +44,9 @@ void main(void) {
     vTextureOffsetV = v_st0;
 
     vStretchSize = image.size;
+
+    vHalfTexelY = vec2(0.5) / y_texture_size;
+    vHalfTexelUv = vec2(0.5) / uv_texture_size;
 
     // The constants added to the Y, U and V components are applied in the fragment shader.
     if (image.color_space == YUV_REC601) {
@@ -72,6 +75,6 @@ void main(void) {
         );
     }
 
-    write_clip(vi.global_clamped_pos, prim.clip_area);
+    write_clip(vi.screen_pos, prim.clip_area);
 
 }

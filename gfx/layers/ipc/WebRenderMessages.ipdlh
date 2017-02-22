@@ -12,16 +12,20 @@ include protocol PTexture;
 using WrBorderRadius from "mozilla/webrender/webrender_ffi.h";
 using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
 using WrColor from "mozilla/webrender/webrender_ffi.h";
-using WrImageKey from "mozilla/webrender/webrender_ffi.h";
-using WrTextureFilter from "mozilla/webrender/webrender_ffi.h";
 using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
+using WrPoint from "mozilla/webrender/webrender_ffi.h";
+using WrGradientStop from "mozilla/webrender/webrender_ffi.h";
+using WrGradientExtendMode from "mozilla/webrender/webrender_ffi.h";
 using WrGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
+using WrBoxShadowClipMode from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ImageRendering from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::LayerIntRegion from "Units.h";
 
 namespace mozilla {
@@ -40,6 +44,15 @@ struct OpDPPushStackingContext {
 
 struct OpDPPopStackingContext { };
 
+struct OpDPPushScrollLayer {
+  WrRect bounds;
+  WrRect overflow;
+  MaybeImageMask mask;
+  uint64_t scrollid;
+};
+
+struct OpDPPopScrollLayer { };
+
 struct OpDPPushRect {
   WrRect bounds;
   WrRect clip;
@@ -56,12 +69,32 @@ struct OpDPPushBorder {
   WrBorderRadius radius;
 };
 
+struct OpDPPushLinearGradient {
+  WrRect bounds;
+  WrRect clip;
+  WrPoint startPoint;
+  WrPoint endPoint;
+  WrGradientExtendMode extendMode;
+  WrGradientStop[] stops;
+};
+
+struct OpDPPushRadialGradient {
+  WrRect bounds;
+  WrRect clip;
+  WrPoint startCenter;
+  WrPoint endCenter;
+  float startRadius;
+  float endRadius;
+  WrGradientExtendMode extendMode;
+  WrGradientStop[] stops;
+};
+
 struct OpDPPushImage {
   WrRect bounds;
   WrRect clip;
   MaybeImageMask mask;
-  WrTextureFilter filter;
-  WrImageKey key;
+  ImageRendering filter;
+  ImageKey key;
 };
 
 struct OpDPPushExternalImageId {
@@ -69,7 +102,7 @@ struct OpDPPushExternalImageId {
   WrRect bounds;
   WrRect clip;
   MaybeImageMask mask;
-  WrTextureFilter filter;
+  ImageRendering filter;
   uint64_t externalImageId;
 };
 
@@ -89,15 +122,32 @@ struct OpDPPushText {
   uint32_t font_buffer_length;
 };
 
+struct OpDPPushBoxShadow {
+  WrRect rect;
+  WrRect clip;
+  WrRect box_bounds;
+  WrPoint offset;
+  WrColor color;
+  float blur_radius;
+  float spread_radius;
+  float border_radius;
+  WrBoxShadowClipMode clip_mode;
+};
+
 union WebRenderCommand {
   OpDPPushStackingContext;
   OpDPPopStackingContext;
+  OpDPPushScrollLayer;
+  OpDPPopScrollLayer;
   OpDPPushRect;
   OpDPPushBorder;
+  OpDPPushLinearGradient;
+  OpDPPushRadialGradient;
   OpDPPushImage;
   OpDPPushExternalImageId;
   OpDPPushIframe;
   OpDPPushText;
+  OpDPPushBoxShadow;
   CompositableOperation;
 };
 

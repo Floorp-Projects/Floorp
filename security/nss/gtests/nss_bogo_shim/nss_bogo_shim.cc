@@ -122,6 +122,11 @@ class TestAgent {
       cert_ = ReadCertificate(cfg_.get<std::string>("cert-file"));
       if (!cert_) return false;
     }
+
+    // Needed because certs are not entirely valid.
+    rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook, this);
+    if (rv != SECSuccess) return false;
+
     if (cfg_.get<bool>("server")) {
       // Server
       rv = SSL_ConfigServerCert(ssl_fd_, cert_, key_, nullptr, 0);
@@ -129,17 +134,11 @@ class TestAgent {
         std::cerr << "Couldn't configure server cert\n";
         return false;
       }
-    } else {
+
+    } else if (key_ && cert_) {
       // Client.
-
-      // Needed because server certs are not entirely valid.
-      rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook, this);
+      rv = SSL_GetClientAuthDataHook(ssl_fd_, GetClientAuthDataHook, this);
       if (rv != SECSuccess) return false;
-
-      if (key_ && cert_) {
-        rv = SSL_GetClientAuthDataHook(ssl_fd_, GetClientAuthDataHook, this);
-        if (rv != SECSuccess) return false;
-      }
     }
 
     return true;
@@ -268,6 +267,47 @@ class TestAgent {
 
     rv = SSL_OptionSet(ssl_fd_, SSL_NO_CACHE, false);
     if (rv != SECSuccess) return false;
+
+    auto alpn = cfg_.get<std::string>("advertise-alpn");
+    if (!alpn.empty()) {
+      assert(!cfg_.get<bool>("server"));
+
+      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_ALPN, PR_TRUE);
+      if (rv != SECSuccess) return false;
+
+      rv = SSL_SetNextProtoNego(
+          ssl_fd_, reinterpret_cast<const unsigned char*>(alpn.c_str()),
+          alpn.size());
+      if (rv != SECSuccess) return false;
+    }
+
+    if (cfg_.get<bool>("fallback-scsv")) {
+      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_FALLBACK_SCSV, PR_TRUE);
+      if (rv != SECSuccess) return false;
+    }
+
+    if (cfg_.get<bool>("false-start")) {
+      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_FALSE_START, PR_TRUE);
+      if (rv != SECSuccess) return false;
+    }
+
+    if (cfg_.get<bool>("enable-ocsp-stapling")) {
+      rv = SSL_OptionSet(ssl_fd_, SSL_ENABLE_OCSP_STAPLING, PR_TRUE);
+      if (rv != SECSuccess) return false;
+    }
+
+    bool requireClientCert = cfg_.get<bool>("require-any-client-certificate");
+    if (requireClientCert || cfg_.get<bool>("verify-peer")) {
+      assert(cfg_.get<bool>("server"));
+
+      rv = SSL_OptionSet(ssl_fd_, SSL_REQUEST_CERTIFICATE, PR_TRUE);
+      if (rv != SECSuccess) return false;
+
+      rv = SSL_OptionSet(
+          ssl_fd_, SSL_REQUIRE_CERTIFICATE,
+          requireClientCert ? SSL_REQUIRE_ALWAYS : SSL_REQUIRE_NO_ERROR);
+      if (rv != SECSuccess) return false;
+    }
 
     if (!cfg_.get<bool>("server")) {
       // Needed to make resumption work.
@@ -413,6 +453,28 @@ class TestAgent {
       }
     }
 
+    auto alpn = cfg_.get<std::string>("expect-alpn");
+    if (!alpn.empty()) {
+      SSLNextProtoState state;
+      char chosen[256];
+      unsigned int chosen_len;
+      rv = SSL_GetNextProto(ssl_fd_, &state,
+                            reinterpret_cast<unsigned char*>(chosen),
+                            &chosen_len, sizeof(chosen));
+      if (rv != SECSuccess) {
+        PRErrorCode err = PR_GetError();
+        std::cerr << "SSL_GetNextProto failed with error=" << FormatError(err)
+                  << std::endl;
+        return SECFailure;
+      }
+
+      assert(chosen_len <= sizeof(chosen));
+      if (std::string(chosen, chosen_len) != alpn) {
+        std::cerr << "Unexpected ALPN selection" << std::endl;
+        return SECFailure;
+      }
+    }
+
     return SECSuccess;
   }
 
@@ -437,7 +499,14 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   for (auto flag : kVersionDisableFlags) {
     cfg->AddEntry<bool>(flag, false);
   }
+  cfg->AddEntry<bool>("fallback-scsv", false);
+  cfg->AddEntry<bool>("false-start", false);
+  cfg->AddEntry<bool>("enable-ocsp-stapling", false);
   cfg->AddEntry<bool>("write-then-read", false);
+  cfg->AddEntry<bool>("require-any-client-certificate", false);
+  cfg->AddEntry<bool>("verify-peer", false);
+  cfg->AddEntry<std::string>("advertise-alpn", "");
+  cfg->AddEntry<std::string>("expect-alpn", "");
 
   auto rv = cfg->ParseArgs(argc, argv);
   switch (rv) {

@@ -187,7 +187,7 @@ BEGIN_TEST(testUnbarrieredEquality)
     // in ObjectPtr without awkward conversations about nursery allocatability.
     JS::RootedObject robj(cx, JS_NewArrayBuffer(cx, 20));
     JS::RootedObject robj2(cx, JS_NewArrayBuffer(cx, 30));
-    cx->zone()->group()->evictNursery(); // Need tenured objects
+    cx->runtime()->gc.evictNursery(); // Need tenured objects
 
     // Need some bare pointers to compare against.
     JSObject* obj = robj;

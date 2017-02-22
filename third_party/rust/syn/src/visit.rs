@@ -171,7 +171,6 @@ pub fn walk_ty<V: Visitor>(visitor: &mut V, ty: &Ty) {
         Ty::ImplTrait(ref bounds) => {
             walk_list!(visitor, visit_ty_param_bound, bounds);
         }
-        Ty::Mac(_) => {}
     }
 }
 

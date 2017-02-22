@@ -503,9 +503,6 @@ MP_MODARITH     - Define true to include the modular arithmetic
                   in your application, you can set this to zero to
                   leave out all the modular routines.
 
-MP_NUMTH        - Define true to include number theoretic functions
-                  such as mp_gcd(), mp_lcm(), and mp_invmod().
-
 MP_LOGTAB       - If true, the file "logtab.h" is included, which
                   is basically a static table of base 2 logarithms.
                   These are used to compute how big the buffers for

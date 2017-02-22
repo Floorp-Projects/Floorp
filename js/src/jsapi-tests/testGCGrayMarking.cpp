@@ -674,7 +674,7 @@ IsMarkedGray(JSObject* obj)
 void
 EvictNursery()
 {
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
 }
 
 bool

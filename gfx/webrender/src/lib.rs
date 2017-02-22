@@ -48,6 +48,8 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate thread_profiler;
 
 mod batch_builder;
 mod debug_colors;
@@ -55,6 +57,7 @@ mod debug_font_data;
 mod debug_render;
 mod device;
 mod frame;
+mod frame_builder;
 mod freelist;
 mod geometry;
 mod gpu_store;
@@ -65,6 +68,7 @@ mod prim_store;
 mod profiler;
 mod record;
 mod render_backend;
+mod render_task;
 mod resource_cache;
 mod scene;
 mod scroll_tree;
@@ -77,7 +81,7 @@ mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
 
-pub use record::{ApiRecordingReceiver, set_recording_detour, WEBRENDER_RECORDING_HEADER};
+pub use record::{ApiRecordingReceiver, BinaryRecorder, WEBRENDER_RECORDING_HEADER};
 
 mod platform {
     #[cfg(target_os="macos")]
@@ -126,6 +130,9 @@ extern crate webrender_traits;
 extern crate offscreen_gl_context;
 extern crate byteorder;
 extern crate threadpool;
+
+#[cfg(any(target_os="macos", target_os="windows"))]
+extern crate gamma_lut;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{Renderer, RendererOptions};

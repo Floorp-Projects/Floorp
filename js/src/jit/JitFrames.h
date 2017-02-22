@@ -289,7 +289,7 @@ void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTrac
 JSCompartment*
 TopmostIonActivationCompartment(JSContext* cx);
 
-void UpdateJitActivationsForMinorGC(ZoneGroup* group, JSTracer* trc);
+void UpdateJitActivationsForMinorGC(JSRuntime* rt, JSTracer* trc);
 
 static inline uint32_t
 EncodeFrameHeaderSize(size_t headerSize)

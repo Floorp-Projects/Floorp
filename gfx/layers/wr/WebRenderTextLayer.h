@@ -7,6 +7,7 @@
 #ifndef GFX_WEBRENDERTEXTLAYER_H
 #define GFX_WEBRENDERTEXTLAYER_H
 
+#include "gfxUtils.h"
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
 
@@ -18,10 +19,6 @@ class WebRenderTextLayer : public WebRenderLayer,
 public:
     explicit WebRenderTextLayer(WebRenderLayerManager* aLayerManager)
         : TextLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
-        , mFontData(nullptr)
-        , mFontDataLength(0)
-        , mIndex(0)
-        , mGlyphSize(0.0)
     {
         MOZ_COUNT_CTOR(WebRenderTextLayer);
     }
@@ -30,19 +27,14 @@ protected:
     virtual ~WebRenderTextLayer()
     {
         MOZ_COUNT_DTOR(WebRenderTextLayer);
-        if (mFontData) {
-            free(mFontData);
-        }
     }
 
 public:
   Layer* GetLayer() override { return this; }
   void RenderLayer() override;
 
-  uint8_t* mFontData;
-  uint32_t mFontDataLength;
-  uint32_t mIndex;
-  float mGlyphSize;
+protected:
+  gfx::WebRenderGlyphHelper mGlyphHelper;
 };
 
 } // namespace layers

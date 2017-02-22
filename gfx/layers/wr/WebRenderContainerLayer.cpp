@@ -7,9 +7,9 @@
 
 #include <inttypes.h>
 #include "gfxPrefs.h"
+#include "LayersLogging.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "WebRenderLayersLogging.h"
 
 namespace mozilla {
 namespace layers {
@@ -20,10 +20,18 @@ WebRenderContainerLayer::RenderLayer()
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
+  gfx::Matrix4x4 transform = GetTransform();
+  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
 
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-  gfx::Matrix4x4 transform;// = GetTransform();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
   Maybe<WrImageMask> mask = buildMaskLayer();
 
@@ -71,7 +79,7 @@ WebRenderRefLayer::RenderLayer()
                   Stringify(transform).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::PipelineId(mId)));
+  WrBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::AsPipelineId(mId)));
 }
 
 } // namespace layers

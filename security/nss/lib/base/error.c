@@ -55,6 +55,7 @@ static PRUintn error_stack_index = INVALID_TPD_INDEX;
  */
 
 static PRCallOnceType error_call_once;
+static const PRCallOnceType error_call_again;
 
 /*
  * error_once_function
@@ -264,6 +265,8 @@ nss_DestroyErrorStack(void)
 {
     if (INVALID_TPD_INDEX != error_stack_index) {
         PR_SetThreadPrivate(error_stack_index, NULL);
+        error_stack_index = INVALID_TPD_INDEX;
+        error_call_once = error_call_again; /* allow to init again */
     }
     return;
 }
