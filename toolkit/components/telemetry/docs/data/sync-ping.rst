@@ -143,7 +143,7 @@ syncs.failureReason
 
 Stores error information, if any is present. Always contains the "name" property, which identifies the type of error it is. The types can be.
 
-- ``httperror``: Indicates that we recieved an HTTP error response code, but are unable to be more specific about the error. Contains the following properties:
+- ``httperror``: Indicates that we received an HTTP error response code, but are unable to be more specific about the error. Contains the following properties:
 
     - ``code``: Integer HTTP status code.
 
@@ -165,7 +165,7 @@ Stores error information, if any is present. Always contains the "name" property
 
    - ``error``: The message provided by the error.
 
-- ``sqlerror``: Indicates that we recieved a ``mozIStorageError`` from a database query.
+- ``sqlerror``: Indicates that we received a ``mozIStorageError`` from a database query.
 
     - ``code``: Value of the ``error.result`` property, one of the constants listed `here <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/MozIStorageError#Constants>`_.
 
