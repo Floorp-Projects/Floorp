@@ -80,11 +80,10 @@ FormAutofillParent.prototype = {
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this, false);
     Services.obs.addObserver(this, "formautofill-storage-changed", false);
-    this._enabled = this._getStatus();
+
     // Force to trigger the onStatusChanged function for setting listeners properly
     // while initizlization
-    this._onStatusChanged();
-    Services.ppmm.addMessageListener("FormAutofill:getEnabledStatus", this);
+    this._setStatus(this._getStatus());
   },
 
   observe(subject, topic, data) {
@@ -104,8 +103,7 @@ FormAutofillParent.prototype = {
         // Observe pref changes and update _enabled cache if status is changed.
         let currentStatus = this._getStatus();
         if (currentStatus !== this._enabled) {
-          this._enabled = currentStatus;
-          this._onStatusChanged();
+          this._setStatus(currentStatus);
         }
         break;
       }
@@ -118,8 +116,7 @@ FormAutofillParent.prototype = {
 
         let currentStatus = this._getStatus();
         if (currentStatus !== this._enabled) {
-          this._enabled = currentStatus;
-          this._onStatusChanged();
+          this._setStatus(currentStatus);
         }
         break;
       }
@@ -143,6 +140,9 @@ FormAutofillParent.prototype = {
     }
 
     Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus", this._enabled);
+    // Sync process data autofillEnabled to make sure the value up to date
+    // no matter when the new content process is initialized.
+    Services.ppmm.initialProcessData.autofillEnabled = this._enabled;
   },
 
   /**
@@ -160,6 +160,16 @@ FormAutofillParent.prototype = {
   },
 
   /**
+   * Set status and trigger _onStatusChanged.
+   *
+   * @param {boolean} newStatus The latest status we want to set for _enabled
+   */
+  _setStatus(newStatus) {
+    this._enabled = newStatus;
+    this._onStatusChanged();
+  },
+
+  /**
    * Handles the message coming from FormAutofillContent.
    *
    * @param   {string} message.name The name of the message.
@@ -170,10 +180,6 @@ FormAutofillParent.prototype = {
     switch (name) {
       case "FormAutofill:GetProfiles":
         this._getProfiles(data, target);
-        break;
-      case "FormAutofill:getEnabledStatus":
-        Services.ppmm.broadcastAsyncMessage("FormAutofill:enabledStatus",
-                                            this._enabled);
         break;
     }
   },

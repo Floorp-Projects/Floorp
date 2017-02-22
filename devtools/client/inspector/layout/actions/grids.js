@@ -5,11 +5,28 @@
 "use strict";
 
 const {
+  UPDATE_GRID_COLOR,
   UPDATE_GRID_HIGHLIGHTED,
   UPDATE_GRIDS,
 } = require("./index");
 
 module.exports = {
+
+  /**
+   * Update the color used for the grid's highlighter.
+   *
+   * @param  {NodeFront} nodeFront
+   *         The NodeFront of the DOM node to toggle the grid highlighter.
+   * @param  {String} color
+   *         The color to use for thie nodeFront's grid highlighter.
+   */
+  updateGridColor(nodeFront, color) {
+    return {
+      type: UPDATE_GRID_COLOR,
+      color,
+      nodeFront,
+    };
+  },
 
   /**
    * Update the grid highlighted state.
@@ -22,8 +39,8 @@ module.exports = {
   updateGridHighlighted(nodeFront, highlighted) {
     return {
       type: UPDATE_GRID_HIGHLIGHTED,
-      nodeFront,
       highlighted,
+      nodeFront,
     };
   },
 
