@@ -2,7 +2,8 @@
     "work_dir": ".",
     "log_name": "multilocale",
     "objdir": "obj-firefox",
-    "locales_file": "build/mobile/android/locales/maemo-locales",
+    "locales_file": "build/mobile/locales/l10n-changesets.json",
+    "locales_platform": "android-multilocale",
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US", "multi"],
     "repos": [{
