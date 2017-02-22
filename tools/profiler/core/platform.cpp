@@ -1181,19 +1181,6 @@ ToJSON(double aSinceTime)
   return b.WriteFunc()->CopyData();
 }
 
-static JSObject*
-ToJSObject(JSContext* aCx, double aSinceTime)
-{
-  JS::RootedValue val(aCx);
-  {
-    UniquePtr<char[]> buf = ToJSON(aSinceTime);
-    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
-    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
-                                 js_string.Length(), &val));
-  }
-  return &val.toObject();
-}
-
 // END saving/streaming code
 ////////////////////////////////////////////////////////////////////////
 
@@ -1726,7 +1713,14 @@ profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
     return nullptr;
   }
 
-  return ToJSObject(aCx, aSinceTime);
+  JS::RootedValue val(aCx);
+  {
+    UniquePtr<char[]> buf = ToJSON(aSinceTime);
+    NS_ConvertUTF8toUTF16 js_string(nsDependentCString(buf.get()));
+    auto buf16 = static_cast<const char16_t*>(js_string.get());
+    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, buf16, js_string.Length(), &val));
+  }
+  return &val.toObject();
 }
 
 void
