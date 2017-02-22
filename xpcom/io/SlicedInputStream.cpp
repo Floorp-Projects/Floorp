@@ -121,25 +121,9 @@ SlicedInputStream::Available(uint64_t* aLength)
 NS_IMETHODIMP
 SlicedInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
 {
-  return ReadSegments(NS_CopySegmentToBuffer, aBuffer, aCount, aReadCount);
-}
-
-NS_IMETHODIMP
-SlicedInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
-                                uint32_t aCount, uint32_t *aResult)
-{
-  NS_ENSURE_STATE(mInputStream);
-
-  uint32_t result;
-
-  if (!aResult) {
-    aResult = &result;
-  }
-
-  *aResult = 0;
-
   if (mClosed) {
-    return NS_BASE_STREAM_CLOSED;
+    *aReadCount = 0;
+    return NS_OK;
   }
 
   if (mCurPos < mStart) {
@@ -173,33 +157,20 @@ SlicedInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     aCount = mStart + mLength - mCurPos;
   }
 
-  char buf[4096];
-  while (mCurPos < mStart + mLength && *aResult < aCount) {
-    uint32_t bytesRead;
-    uint64_t bufCount = XPCOM_MIN(aCount - *aResult, (uint32_t)sizeof(buf));
-    nsresult rv = mInputStream->Read(buf, bufCount, &bytesRead);
-    if (NS_WARN_IF(NS_FAILED(rv)) || bytesRead == 0) {
-      return rv;
-    }
-
-    mCurPos += bytesRead;
-
-    uint32_t bytesWritten = 0;
-    while (bytesWritten < bytesRead) {
-      uint32_t writerCount = 0;
-      rv = aWriter(this, aClosure, buf + bytesWritten, *aResult,
-                   bytesRead - bytesWritten, &writerCount);
-      if (NS_FAILED(rv) || writerCount == 0) {
-	return NS_OK;
-      }
-
-      MOZ_ASSERT(writerCount <= bytesRead - bytesWritten);
-      bytesWritten += writerCount;
-      *aResult += writerCount;
-    }
+  nsresult rv = mInputStream->Read(aBuffer, aCount, aReadCount);
+  if (NS_WARN_IF(NS_FAILED(rv)) || *aReadCount == 0) {
+    return rv;
   }
 
+  mCurPos += *aReadCount;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SlicedInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+                                uint32_t aCount, uint32_t *aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
