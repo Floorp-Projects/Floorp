@@ -1053,6 +1053,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'InstallTrigger.webidl',
     ]
 
+if CONFIG['FUZZING']:
+    WEBIDL_FILES += [
+        'FuzzingFunctions.webidl',
+    ]
+
 GENERATED_EVENTS_WEBIDL_FILES = [
     'AddonEvent.webidl',
     'AnimationPlaybackEvent.webidl',
