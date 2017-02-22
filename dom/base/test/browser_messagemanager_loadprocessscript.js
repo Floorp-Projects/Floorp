@@ -49,6 +49,29 @@ function promiseMessage(messageManager, message) {
   })
 }
 
+add_task(function*(){
+  // This test is only relevant in e10s.
+  if (!gMultiProcessBrowser)
+    return;
+
+  ppmm.releaseCachedProcesses();
+
+  yield SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 5]]})
+  yield SpecialPowers.pushPrefEnv({"set": [["dom.ipc.keepProcessesAlive.web", 5]]})
+
+  let tabs = [];
+  for (let i = 0; i < 3; i++) {
+    tabs[i] = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
+  }
+
+  for (let i = 0; i < 3; i++) {
+    yield BrowserTestUtils.removeTab(tabs[i]);
+  }
+
+  ppmm.releaseCachedProcesses();
+  is(ppmm.childCount, 3, "Should get back to 3 processes at this point.");
+})
+
 // Test that loading a process script loads in all existing processes
 add_task(function*() {
   let checks = [];
@@ -65,7 +88,7 @@ add_task(function*() {
   if (!gMultiProcessBrowser)
     return;
 
-  is(ppmm.childCount, 2, "Should be two processes at this point");
+  is(ppmm.childCount, 3, "Should be three processes at this point");
 
   // Load something in the main process
   gBrowser.selectedBrowser.loadURI("about:robots");
@@ -80,7 +103,7 @@ add_task(function*() {
   // However, stuff like remote thumbnails can cause a content
   // process to exist nonetheless. This should be rare, though,
   // so the test is useful most of the time.
-  if (ppmm.childCount == 1) {
+  if (ppmm.childCount == 2) {
     let mainMM = ppmm.getChildAt(0);
 
     let check = checkProcess(ppmm);
@@ -95,7 +118,7 @@ add_task(function*() {
     gBrowser.selectedBrowser.loadURI("about:blank");
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-    is(ppmm.childCount, 2, "Should be back to two processes at this point");
+    is(ppmm.childCount, 3, "Should be back to three processes at this point");
 
     // The new process should have responded
     yield check;
@@ -103,7 +126,7 @@ add_task(function*() {
     ppmm.removeDelayedProcessScript(processScriptURL);
 
     let childMM;
-    childMM = ppmm.getChildAt(0) == mainMM ? ppmm.getChildAt(1) : ppmm.getChildAt(0);
+    childMM = ppmm.getChildAt(2);
 
     childMM.loadProcessScript(initTestScriptURL, false);
     let msg = yield promiseMessage(childMM, "ProcessTest:InitGood");

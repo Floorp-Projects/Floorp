@@ -26,7 +26,9 @@ class nsIPresShell;
 
 namespace mozilla {
 namespace layers {
+class GlyphArray;
 struct PlanarYCbCrData;
+class WebRenderCommand;
 } // namespace layers
 namespace image {
 class ImageRegion;
@@ -305,6 +307,37 @@ SafeBytesForBitmap(uint32_t aWidth, uint32_t aHeight, unsigned aBytesPerPixel)
   CheckedInt<uint32_t> height = uint32_t(aHeight);
   return width * height * aBytesPerPixel;
 }
+
+class WebRenderGlyphHelper final {
+public:
+  WebRenderGlyphHelper()
+    : mFontData(nullptr)
+    , mFontDataLength(0)
+    , mIndex(0)
+    , mGlyphSize(0.0)
+  {
+  }
+
+  ~WebRenderGlyphHelper()
+  {
+    if (mFontData) {
+      free(mFontData);
+    }
+  }
+
+  void BuildWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                              const nsTArray<layers::GlyphArray>& aGlyphs,
+                              ScaledFont* aFont,
+                              const Point& aOffset,
+                              const Rect& aBounds,
+                              const Rect& aClip);
+
+public:
+  uint8_t* mFontData;
+  uint32_t mFontDataLength;
+  uint32_t mIndex;
+  float mGlyphSize;
+};
 
 } // namespace gfx
 } // namespace mozilla

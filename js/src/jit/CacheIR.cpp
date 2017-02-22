@@ -1447,7 +1447,6 @@ SetPropIRGenerator::maybeEmitIdGuard(jsid id)
     emitIdGuard(setElemKeyValueId(), id);
 }
 
-
 GetNameIRGenerator::GetNameIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                                        HandleObject env, HandlePropertyName name)
   : IRGenerator(cx, script, pc, CacheKind::GetName),
@@ -1904,8 +1903,13 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachSetArrayLength(obj, objId, id, rhsValId))
                 return true;
+            if (tryAttachProxy(obj, objId, id, rhsValId))
+                return true;
             return false;
         }
+
+        if (tryAttachProxyElement(obj, objId, rhsValId))
+            return true;
 
         uint32_t index;
         Int32OperandId indexId;
@@ -2161,9 +2165,36 @@ SetPropIRGenerator::trackNotAttached()
 #endif
 }
 
+static bool
+CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleId id,
+                MutableHandleObject holder, MutableHandleShape propShape,
+                bool* isTemporarilyUnoptimizable)
+{
+    // Don't attach a setter stub for ops like JSOP_INITELEM.
+    if (IsPropertyInitOp(JSOp(*pc)))
+        return false;
+    MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
+
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), &prop))
+        return false;
+
+    if (prop.isNonNativeProperty())
+        return false;
+
+    propShape.set(prop.maybeShape());
+    if (!IsCacheableSetPropCallScripted(obj, holder, propShape, isTemporarilyUnoptimizable) &&
+        !IsCacheableSetPropCallNative(obj, holder, propShape))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static void
-EmitCallSetterResultNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
-                             Shape* shape, ObjOperandId objId, ValOperandId rhsId)
+EmitCallSetterNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
+                       Shape* shape, ObjOperandId objId, ValOperandId rhsId)
 {
     if (IsCacheableSetPropCallNative(obj, holder, shape)) {
         JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
@@ -2185,30 +2216,15 @@ bool
 SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
                                     ValOperandId rhsId)
 {
-    // Don't attach a setter stub for ops like JSOP_INITELEM.
-    if (IsPropertyInitOp(JSOp(*pc_)))
+    RootedObject holder(cx_);
+    RootedShape propShape(cx_);
+    if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape, isTemporarilyUnoptimizable_))
         return false;
-    MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
-
-    PropertyResult prop;
-    JSObject* holder;
-    if (!LookupPropertyPure(cx_, obj, id, &holder, &prop))
-        return false;
-
-    if (prop.isNonNativeProperty())
-        return false;
-
-    Shape* shape = prop.maybeShape();
-    if (!IsCacheableSetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable_) &&
-        !IsCacheableSetPropCallNative(obj, holder, shape))
-    {
-        return false;
-    }
 
     maybeEmitIdGuard(id);
 
     Maybe<ObjOperandId> expandoId;
-    TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
+    TestMatchingReceiver(writer, obj, propShape, objId, &expandoId);
 
     if (obj != holder) {
         GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -2218,7 +2234,7 @@ SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId, Handle
         writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
     }
 
-    EmitCallSetterResultNoGuards(writer, obj, holder, shape, objId, rhsId);
+    EmitCallSetterNoGuards(writer, obj, holder, propShape, objId, rhsId);
 
     trackAttached("Setter");
     return true;
@@ -2503,6 +2519,132 @@ SetPropIRGenerator::tryAttachSetUnboxedArrayElementHole(HandleObject obj, ObjOpe
     setUpdateStubInfo(aobj->group(), JSID_VOID);
 
     trackAttached("StoreUnboxedArrayElementHole");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id,
+                                          ValOperandId rhsId, bool handleDOMProxies)
+{
+    MOZ_ASSERT(obj->is<ProxyObject>());
+
+    writer.guardIsProxy(objId);
+
+    if (!handleDOMProxies) {
+        // Ensure that the incoming object is not a DOM proxy, so that we can
+        // get to the specialized stubs. If handleDOMProxies is true, we were
+        // unable to attach a specialized DOM stub, so we just handle all
+        // proxies here.
+        writer.guardNotDOMProxy(objId);
+    }
+
+    if (cacheKind_ == CacheKind::SetProp) {
+        writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+    } else {
+        // We could call maybeEmitIdGuard here and then emit CallProxySet, but
+        // for SetElem we prefer to attach a stub that can handle any Value
+        // so we don't attach a new stub for every id.
+        MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+        writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
+    }
+
+    writer.returnFromIC();
+
+    trackAttached("GenericProxy");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id,
+                                              ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    maybeEmitIdGuard(id);
+    writer.guardShape(objId, obj->maybeShape());
+
+    // No need for more guards: we know this is a DOM proxy, since the shape
+    // guard enforces a given JSClass, so just go ahead and emit the call to
+    // ProxySet.
+    writer.callProxySet(objId, id, rhsId, IsStrictSetPC(pc_));
+    writer.returnFromIC();
+
+    trackAttached("DOMProxyShadowed");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId, HandleId id,
+                                                ValOperandId rhsId)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    RootedObject proto(cx_, obj->staticPrototype());
+    if (!proto)
+        return false;
+
+    RootedObject holder(cx_);
+    RootedShape propShape(cx_);
+    if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape, isTemporarilyUnoptimizable_))
+        return false;
+
+    maybeEmitIdGuard(id);
+    writer.guardShape(objId, obj->maybeShape());
+
+    // Guard that our expando object hasn't started shadowing this property.
+    CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
+
+    GeneratePrototypeGuards(writer, obj, holder, objId);
+
+    // Guard on the holder of the property.
+    ObjOperandId holderId = writer.loadObject(holder);
+    writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+
+    // EmitCallSetterNoGuards expects |obj| to be the object the property is
+    // on to do some checks. Since we actually looked at proto, and no extra
+    // guards will be generated, we can just pass that instead.
+    EmitCallSetterNoGuards(writer, proto, holder, propShape, objId, rhsId);
+
+    trackAttached("DOMProxyUnshadowed");
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id,
+                                   ValOperandId rhsId)
+{
+    switch (GetProxyStubType(cx_, obj, id)) {
+      case ProxyStubType::None:
+        return false;
+      case ProxyStubType::DOMExpando:
+      case ProxyStubType::DOMShadowed:
+        return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
+      case ProxyStubType::DOMUnshadowed:
+        if (tryAttachDOMProxyUnshadowed(obj, objId, id, rhsId))
+            return true;
+        return tryAttachGenericProxy(obj, objId, id, rhsId, /* handleDOMProxies = */ true);
+      case ProxyStubType::Generic:
+        return tryAttachGenericProxy(obj, objId, id, rhsId, /* handleDOMProxies = */ false);
+    }
+
+    MOZ_CRASH("Unexpected ProxyStubType");
+}
+
+bool
+SetPropIRGenerator::tryAttachProxyElement(HandleObject obj, ObjOperandId objId, ValOperandId rhsId)
+{
+    if (!obj->is<ProxyObject>())
+        return false;
+
+    writer.guardIsProxy(objId);
+
+    // Like GetPropIRGenerator::tryAttachProxyElement, don't check for DOM
+    // proxies here as we don't have specialized DOM stubs for this.
+    MOZ_ASSERT(cacheKind_ == CacheKind::SetElem);
+    writer.callProxySetByValue(objId, setElemKeyValueId(), rhsId, IsStrictSetPC(pc_));
+    writer.returnFromIC();
+
+    trackAttached("ProxyElement");
     return true;
 }
 

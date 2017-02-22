@@ -19,13 +19,20 @@ void main(void) {
 
     alpha = min(alpha, do_clip());
 
-    vec2 st_y = vTextureOffsetY + relative_pos_in_rect / vStretchSize * vTextureSizeY;
-    vec2 st_u = vTextureOffsetU + relative_pos_in_rect / vStretchSize * vTextureSizeUv;
-    vec2 st_v = vTextureOffsetV + relative_pos_in_rect / vStretchSize * vTextureSizeUv;
+    // We clamp the texture coordinates to the half-pixel offset from the borders
+    // in order to avoid sampling outside of the texture area.
+    vec2 st_y = vTextureOffsetY + clamp(
+        relative_pos_in_rect / vStretchSize * vTextureSizeY,
+        vHalfTexelY, vTextureSizeY - vHalfTexelY);
+    vec2 uv_offset = clamp(
+        relative_pos_in_rect / vStretchSize * vTextureSizeUv,
+        vHalfTexelUv, vTextureSizeUv - vHalfTexelUv);
+    vec2 st_u = vTextureOffsetU + uv_offset;
+    vec2 st_v = vTextureOffsetV + uv_offset;
 
-    float y = texture(sColor0, st_y).r;
-    float u = texture(sColor1, st_u).r;
-    float v = texture(sColor2, st_v).r;
+    float y = textureLod(sColor0, st_y, 0.0).r;
+    float u = textureLod(sColor1, st_u, 0.0).r;
+    float v = textureLod(sColor2, st_v, 0.0).r;
 
     // See the vertex shader for an explanation of where the constants come from.
     vec3 rgb = vYuvColorMatrix * vec3(y - 0.06275, u - 0.50196, v - 0.50196);

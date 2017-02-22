@@ -55,6 +55,8 @@ public:
   void PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates);
   void RenderLayerWithReadback(ReadbackProcessor *aReadback);
   RefPtr<ContentClient> mContentClient;
+  RefPtr<ImageContainer> mImageContainer;
+  RefPtr<ImageClient> mImageClient;
 };
 
 } // namespace layers

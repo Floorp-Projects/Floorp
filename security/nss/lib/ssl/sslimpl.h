@@ -870,7 +870,6 @@ typedef struct SSL3HandshakeStateStr {
     TLS13CertificateRequest *certificateRequest;
     PRCList cipherSpecs;            /* The cipher specs in the sequence they
                                      * will be applied. */
-    ssl3CipherSpec *nullSpec;       /* In case 0-RTT is rejected. */
     sslZeroRttState zeroRttState;   /* Are we doing a 0-RTT handshake? */
     sslZeroRttIgnore zeroRttIgnore; /* Are we ignoring 0-RTT? */
     ssl3CipherSuite zeroRttSuite;   /* The cipher suite we used for 0-RTT. */
@@ -1222,16 +1221,12 @@ struct sslSocketStr {
     SSLProtocolVariant protocolVariant;
 };
 
-/* All the global data items declared here should be protected using the
-** ssl_global_data_lock, which is a reader/writer lock.
-*/
-extern NSSRWLock *ssl_global_data_lock;
 extern char ssl_debug;
 extern char ssl_trace;
 extern FILE *ssl_trace_iob;
 extern FILE *ssl_keylog_iob;
-extern PRUint32 ssl_sid_timeout;
 extern PRUint32 ssl3_sid_timeout;
+extern PRUint32 ssl_ticket_lifetime;
 
 extern const char *const ssl3_cipherName[];
 
@@ -1698,10 +1693,6 @@ SECStatus ssl_MaybeSetSessionTicketKeyPair(const sslKeyPair *keyPair);
 SECStatus ssl_GetSessionTicketKeys(sslSocket *ss, unsigned char *keyName,
                                    PK11SymKey **encKey, PK11SymKey **macKey);
 void ssl_ResetSessionTicketKeys();
-
-/* Tell clients to consider tickets valid for this long. */
-#define TLS_EX_SESS_TICKET_LIFETIME_HINT (2 * 24 * 60 * 60) /* 2 days */
-#define TLS_EX_SESS_TICKET_VERSION (0x0103)
 
 extern SECStatus ssl3_ValidateNextProtoNego(const unsigned char *data,
                                             unsigned int length);

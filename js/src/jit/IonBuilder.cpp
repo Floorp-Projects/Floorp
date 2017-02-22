@@ -5534,9 +5534,8 @@ IonBuilder::jsop_compare(JSOp op, MDefinition* left, MDefinition* right)
 static bool
 ObjectOrSimplePrimitive(MDefinition* op)
 {
-    // Return true if op is either undefined/null/boolean/int32 or an object.
+    // Return true if op is either undefined/null/boolean/int32/symbol or an object.
     return !op->mightBeType(MIRType::String)
-        && !op->mightBeType(MIRType::Symbol)
         && !op->mightBeType(MIRType::Double)
         && !op->mightBeType(MIRType::Float32)
         && !op->mightBeType(MIRType::MagicOptimizedArguments)
@@ -5595,14 +5594,14 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
     // Try to emit a bitwise compare. Check if a bitwise compare equals the wanted
     // result for all observed operand types.
 
-    // Onlye allow loose and strict equality.
+    // Only allow loose and strict equality.
     if (op != JSOP_EQ && op != JSOP_NE && op != JSOP_STRICTEQ && op != JSOP_STRICTNE) {
         trackOptimizationOutcome(TrackedOutcome::RelationalCompare);
         return Ok();
     }
 
     // Only primitive (not double/string) or objects are supported.
-    // I.e. Undefined/Null/Boolean/Int32 and Object
+    // I.e. Undefined/Null/Boolean/Int32/Symbol and Object
     if (!ObjectOrSimplePrimitive(left) || !ObjectOrSimplePrimitive(right)) {
         trackOptimizationOutcome(TrackedOutcome::OperandTypeNotBitwiseComparable);
         return Ok();
@@ -5638,10 +5637,14 @@ IonBuilder::compareTryBitwise(bool* emitted, JSOp op, MDefinition* left, MDefini
             return Ok();
         }
 
-        // For loosy comparison of an object with a Boolean/Number/String
+        // For loosy comparison of an object with a Boolean/Number/String/Symbol
         // the valueOf the object is taken. Therefore not supported.
-        bool simpleLHS = left->mightBeType(MIRType::Boolean) || left->mightBeType(MIRType::Int32);
-        bool simpleRHS = right->mightBeType(MIRType::Boolean) || right->mightBeType(MIRType::Int32);
+        bool simpleLHS = left->mightBeType(MIRType::Boolean) ||
+                         left->mightBeType(MIRType::Int32) ||
+                         left->mightBeType(MIRType::Symbol);
+        bool simpleRHS = right->mightBeType(MIRType::Boolean) ||
+                         right->mightBeType(MIRType::Int32) ||
+                         right->mightBeType(MIRType::Symbol);
         if ((left->mightBeType(MIRType::Object) && simpleRHS) ||
             (right->mightBeType(MIRType::Object) && simpleLHS))
         {

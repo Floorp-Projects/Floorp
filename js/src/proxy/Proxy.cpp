@@ -355,6 +355,31 @@ Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, Handle
 }
 
 bool
+js::ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id, HandleValue val, bool strict)
+{
+    ObjectOpResult result;
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    if (!Proxy::set(cx, proxy, id, val, receiver, result))
+        return false;
+    return result.checkStrictErrorOrWarning(cx, proxy, id, strict);
+}
+
+bool
+js::ProxySetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal, HandleValue val,
+                            bool strict)
+{
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idVal, &id))
+        return false;
+
+    ObjectOpResult result;
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    if (!Proxy::set(cx, proxy, id, val, receiver, result))
+        return false;
+    return result.checkStrictErrorOrWarning(cx, proxy, id, strict);
+}
+
+bool
 Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy, AutoIdVector& props)
 {
     JS_CHECK_RECURSION(cx, return false);

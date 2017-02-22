@@ -18,10 +18,6 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
     enterCount(1),
     zones_(this),
     usedByHelperThread(false),
-    nursery_(this, this),
-    storeBuffer_(this, runtime, nursery()),
-    blocksToFreeAfterMinorGC((size_t) JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    caches_(this),
 #ifdef DEBUG
     ionBailAfter_(this, 0),
 #endif
@@ -30,14 +26,9 @@ ZoneGroup::ZoneGroup(JSRuntime* runtime)
 {}
 
 bool
-ZoneGroup::init(size_t maxNurseryBytes)
+ZoneGroup::init()
 {
-    if (!caches().init())
-        return false;
-
     AutoLockGC lock(runtime);
-    if (!nursery().init(maxNurseryBytes, lock))
-        return false;
 
     jitZoneGroup = js_new<jit::JitZoneGroup>(this);
     if (!jitZoneGroup)

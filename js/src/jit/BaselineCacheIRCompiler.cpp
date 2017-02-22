@@ -1505,6 +1505,79 @@ BaselineCacheIRCompiler::emitCallSetArrayLength()
     return true;
 }
 
+typedef bool (*ProxySetPropertyFn)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+static const VMFunction ProxySetPropertyInfo =
+    FunctionInfo<ProxySetPropertyFn>(ProxySetProperty, "ProxySetProperty");
+
+bool
+BaselineCacheIRCompiler::emitCallProxySet()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Address idAddr(stubAddress(reader.stubOffset()));
+    bool strict = reader.readBool();
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, scratch);
+
+    // Load the jsid in the scratch register.
+    masm.loadPtr(idAddr, scratch);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(scratch);
+    masm.Push(obj);
+
+    if (!callVM(masm, ProxySetPropertyInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
+typedef bool (*ProxySetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+static const VMFunction ProxySetPropertyByValueInfo =
+    FunctionInfo<ProxySetPropertyByValueFn>(ProxySetPropertyByValue, "ProxySetPropertyByValue");
+
+bool
+BaselineCacheIRCompiler::emitCallProxySetByValue()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand idVal = allocator.useValueRegister(masm, reader.valOperandId());
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    bool strict = reader.readBool();
+
+    allocator.discardStack(masm);
+
+    // We need a scratch register but we don't have any registers available on
+    // x86, so temporarily store |obj| in the frame's scratch slot.
+    int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
+    masm.storePtr(obj, Address(BaselineFrameReg, scratchOffset));
+
+    AutoStubFrame stubFrame(*this);
+    stubFrame.enter(masm, obj);
+
+    // Restore |obj|. Because we entered a stub frame we first have to load
+    // the original frame pointer.
+    masm.loadPtr(Address(BaselineFrameReg, 0), obj);
+    masm.loadPtr(Address(obj, scratchOffset), obj);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(idVal);
+    masm.Push(obj);
+
+    if (!callVM(masm, ProxySetPropertyByValueInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
 bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {

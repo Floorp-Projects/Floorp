@@ -245,9 +245,24 @@
       ],
     },
     {
+      'target_name': 'nssfuzz-mpi-invmod',
+      'type': 'executable',
+      'sources': [
+        'mpi_invmod_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'nssfuzz-mpi-base',
+      ],
+      'include_dirs': [
+        '<(DEPTH)/lib/freebl',
+      ],
+    },
+    {
       'target_name': 'nssfuzz-tls-client',
       'type': 'executable',
       'sources': [
+        'tls_client_config.cc',
         'tls_client_socket.cc',
         'tls_client_target.cc',
       ],
@@ -258,6 +273,13 @@
       ],
       'include_dirs': [
         '<(DEPTH)/lib/freebl',
+      ],
+      'conditions': [
+        [ 'fuzz_tls==1', {
+          'defines': [
+            'UNSAFE_FUZZER_MODE',
+          ],
+        }],
       ],
     },
     {
@@ -277,6 +299,7 @@
             'nssfuzz-mpi-addmod',
             'nssfuzz-mpi-div',
             'nssfuzz-mpi-expmod',
+            'nssfuzz-mpi-invmod',
             'nssfuzz-mpi-mod',
             'nssfuzz-mpi-mulmod',
             'nssfuzz-mpi-sqr',

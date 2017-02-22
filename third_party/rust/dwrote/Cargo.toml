@@ -3,7 +3,7 @@ name = "dwrote"
 description = "Lightweight binding to DirectWrite."
 repository = "https://github.com/vvuk/dwrote-rs"
 license = "MPL-2.0"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["Vladimir Vukicevic <vladimir@pobox.com>"]
 build = "build.rs"
 

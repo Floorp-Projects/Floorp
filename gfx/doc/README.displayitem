@@ -7,21 +7,22 @@ How to add a new WebRender display item from a Gecko Display item, the general f
 More detailed steps are:
 
 1) Force layout to create an active layer for the gecko display item.
-See http://searchfox.org/mozilla-central/rev/0f254a30d684796bcc8b6e2a102a0095d25842bb/layout/generic/nsTextFrame.cpp#4983
-as an example for text layers. Ping Matt Woodrow or Markus Stange for help.
+See http://searchfox.org/mozilla-central/source/layout/painting/nsDisplayList.h#1850
 
-The Active layer part comes from nsDisplayText::GetLayerState
+For most items, we should just be creating a DisplayItemLayer. The DisplayItemLayer has a pointer to the nsDisplayItem. To layerize, just return an active layer for the current item.
 
-2) Create the new display item layer:
+See https://hg.mozilla.org/projects/graphics/file/c8873c351679e4a394170cd899e8b5a5fb2a00e7/layout/painting/nsDisplayList.cpp#l4403
 
-See text layer:
-http://searchfox.org/mozilla-central/rev/0f254a30d684796bcc8b6e2a102a0095d25842bb/gfx/layers/Layers.h#2403
+Thus for most display items, it's just implementing:
+GetLayerState,
+BuildLayer (which should just call BuildDisplayItemLayer)
+CreateWebRenderCommands.
 
-The layer should have all the information to display the item.
+2) When implementing CreateWebRenderCommands, take a look at the nsDisplayItem::Paint method and reproduce the logic in webrender display items.
 
-3) Create the WebRender equivalent layer. In YourLayerType::RenderLayer, serialize the data needed for the layer type.
-4) If you need to add a custom IPC serialization mechanism, do it in WebRenderMessageUtils.h
-5) Create a WebRender command to process the new layer type in WebRenderMessages.ipdlh. These are the struct OpDPPushYourLayerTypeHere
-6) Add a new function in WebRender.h that will call out into webrender to render your display item.
-7) In WebRenderBridgeParent::ProcessWebRenderCommands, call out to the new function in (6).
-8) Fill out the function in (6) in bindings.rs to make webrender do the right thing. Generally, it's just push a display item.
+If you need to implement a new WebRender display item (generally shouldn't be needed):
+1) If you need to pipe in a new WR display item type, do it in WebRenderMessages.ipdl.
+2) If you need to add a custom IPC serialization mechanism, do it in WebRenderMessageUtils.h
+3) Add a new function in WebRender.h that will call out into webrender for a new WR display item.
+4) In WebRenderBridgeParent::ProcessWebRenderCommands, call out to the new function in (3).
+5) Fill out the function in (3) in bindings.rs to make webrender do the right thing.

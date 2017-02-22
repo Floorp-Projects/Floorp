@@ -12,7 +12,7 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.tile);
+                                                    prim.task);
     vLocalRect = vi.clipped_local_rect;
     vLocalPos = vi.local_pos;
 #else
@@ -20,10 +20,10 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.tile);
+                                 prim.task);
 #endif
 
 #ifdef WR_FEATURE_CLIP
-    write_clip(vi.global_clamped_pos, prim.clip_area);
+    write_clip(vi.screen_pos, prim.clip_area);
 #endif
 }

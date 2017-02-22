@@ -48,18 +48,21 @@ WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
   mCommands.AppendElement(aCmd);
 }
 
+void
+WebRenderBridgeChild::AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands)
+{
+  MOZ_ASSERT(mIsInTransaction);
+  mCommands.AppendElements(aCommands);
+}
+
 bool
 WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mIsInTransaction);
-  bool success = false;
-  UpdateFwdTransactionId();
-  this->SendDPBegin(aSize, &success);
-  if (!success) {
-    return false;
-  }
 
+  UpdateFwdTransactionId();
+  this->SendDPBegin(aSize);
   mIsInTransaction = true;
   return true;
 }

@@ -1441,15 +1441,6 @@ EmitObjectOpResultCheck(MacroAssembler& masm, Label* failure, bool strict,
 }
 
 static bool
-ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, bool strict)
-{
-    RootedValue receiver(cx, ObjectValue(*proxy));
-    ObjectOpResult result;
-    return Proxy::set(cx, proxy, id, v, receiver, result)
-           && result.checkStrictErrorOrWarning(cx, proxy, id, strict);
-}
-
-static bool
 EmitCallProxySet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                  HandleId propId, LiveRegisterSet liveRegs, Register object,
                  const ConstantOrRegister& value, void* returnAddr, bool strict)

@@ -18,7 +18,6 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositableHolder.h"
-#include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
@@ -150,7 +149,8 @@ WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  *aOutImageKey = mApi->AddImageBuffer(aSize, aStride, aFormat,
+  wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
+  *aOutImageKey = mApi->AddImageBuffer(descriptor,
                                        aBuffer.AsSlice());
 
   return IPC_OK();
@@ -166,7 +166,8 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  mApi->UpdateImageBuffer(aImageKey, aSize, aFormat, aBuffer.AsSlice());
+  wr::ImageDescriptor descriptor(aSize, aFormat);
+  mApi->UpdateImageBuffer(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
 }
@@ -183,16 +184,13 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize,
-                                   bool* aOutSuccess)
+WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mBuilder.isSome());
   mBuilder.ref().Begin(LayerIntSize(aSize.width, aSize.height));
-  *aOutSuccess = true;
-
   return IPC_OK();
 }
 
@@ -214,7 +212,7 @@ WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommand
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ProcessWebrenderCommands(aCommands, wr::Epoch(aTransactionId));
+  ProcessWebrenderCommands(aCommands, wr::NewEpoch(aTransactionId));
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -264,6 +262,15 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         builder.PopStackingContext();
         break;
       }
+      case WebRenderCommand::TOpDPPushScrollLayer: {
+        const OpDPPushScrollLayer& op = cmd.get_OpDPPushScrollLayer();
+        builder.PushScrollLayer(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr));
+        break;
+      }
+      case WebRenderCommand::TOpDPPopScrollLayer: {
+        builder.PopScrollLayer();
+        break;
+      }
       case WebRenderCommand::TOpDPPushRect: {
         const OpDPPushRect& op = cmd.get_OpDPPushRect();
         builder.PushRect(op.bounds(), op.clip(), op.color());
@@ -274,6 +281,21 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         builder.PushBorder(op.bounds(), op.clip(),
                            op.top(), op.right(), op.bottom(), op.left(),
                            op.radius());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushLinearGradient: {
+        const OpDPPushLinearGradient& op = cmd.get_OpDPPushLinearGradient();
+        builder.PushLinearGradient(op.bounds(), op.clip(),
+                                   op.startPoint(), op.endPoint(),
+                                   op.stops(), op.extendMode());
+        break;
+      }
+      case WebRenderCommand::TOpDPPushRadialGradient: {
+        const OpDPPushRadialGradient& op = cmd.get_OpDPPushRadialGradient();
+        builder.PushRadialGradient(op.bounds(), op.clip(),
+                                   op.startCenter(), op.endCenter(),
+                                   op.startRadius(), op.endRadius(),
+                                   op.stops(), op.extendMode());
         break;
       }
       case WebRenderCommand::TOpDPPushImage: {
@@ -321,9 +343,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
           break;
         }
 
+        wr::ImageDescriptor descriptor(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8);
         wr::ImageKey key;
         auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
-        key = mApi->AddImageBuffer(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8, slice);
+        key = mApi->AddImageBuffer(descriptor, slice);
 
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
@@ -349,13 +372,13 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         const OpDPPushText& op = cmd.get_OpDPPushText();
         const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
 
+        // TODO: We are leaking the key
+        wr::FontKey fontKey;
+        auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
+        fontKey = mApi->AddRawFont(slice);
+
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
-
-          // TODO: We are leaking the key
-          wr::FontKey fontKey;
-          auto slice = Range<uint8_t>(op.font_buffer().mData, op.font_buffer_length());
-          fontKey = mApi->AddRawFont(slice);
           builder.PushText(op.bounds(),
                            op.clip(),
                            glyph_array[i].color,
@@ -364,6 +387,19 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
                            op.glyph_size());
         }
 
+        break;
+      }
+      case WebRenderCommand::TOpDPPushBoxShadow: {
+        const OpDPPushBoxShadow& op = cmd.get_OpDPPushBoxShadow();
+        builder.PushBoxShadow(op.rect(),
+                              op.clip(),
+                              op.box_bounds(),
+                              op.offset(),
+                              op.color(),
+                              op.blur_radius(),
+                              op.spread_radius(),
+                              op.border_radius(),
+                              op.clip_mode());
         break;
       }
       default:
@@ -381,7 +417,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   }
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), true);
   }
 }
 
@@ -507,7 +543,7 @@ WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverE
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
-  mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), false);
+  mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), false);
   return IPC_OK();
 }
 

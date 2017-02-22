@@ -176,13 +176,13 @@ CompileZone::addressOfFreeList(gc::AllocKind allocKind)
 const void*
 CompileZone::addressOfNurseryPosition()
 {
-    return zone()->group()->addressOfNurseryPosition();
+    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
 }
 
 const void*
 CompileZone::addressOfNurseryCurrentEnd()
 {
-    return zone()->group()->addressOfNurseryCurrentEnd();
+    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryCurrentEnd();
 }
 
 bool

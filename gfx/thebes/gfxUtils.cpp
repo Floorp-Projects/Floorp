@@ -21,10 +21,12 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIClipboardHelper.h"
 #include "nsIFile.h"
@@ -1437,6 +1439,66 @@ Color ToDeviceColor(Color aColor)
 Color ToDeviceColor(nscolor aColor)
 {
   return ToDeviceColor(Color::FromABGR(aColor));
+}
+
+static void
+WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
+                  float aGlyphSize, uint32_t aVariationCount,
+                  const ScaledFont::VariationSetting* aVariations, void* aBaton)
+{
+  WebRenderGlyphHelper* helper = static_cast<WebRenderGlyphHelper*>(aBaton);
+
+  uint8_t* fontData = (uint8_t*)malloc(aLength * sizeof(uint8_t));
+  memcpy(fontData, aData, aLength * sizeof(uint8_t));
+
+  helper->mFontData = fontData;
+  helper->mFontDataLength = aLength;
+  helper->mIndex = aIndex;
+  helper->mGlyphSize = aGlyphSize;
+}
+
+void
+WebRenderGlyphHelper::BuildWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                             const nsTArray<GlyphArray>& aGlyphs,
+                                             ScaledFont* aFont,
+                                             const Point& aOffset,
+                                             const Rect& aBounds,
+                                             const Rect& aClip)
+{
+  MOZ_ASSERT(aFont);
+  MOZ_ASSERT(!aGlyphs.IsEmpty());
+  MOZ_ASSERT((aFont->GetType() == gfx::FontType::DWRITE) ||
+              (aFont->GetType() == gfx::FontType::MAC));
+
+  aFont->GetFontFileData(&WriteFontFileData, this);
+  wr::ByteBuffer fontBuffer(mFontDataLength, mFontData);
+
+  nsTArray<WrGlyphArray> wr_glyphs;
+  wr_glyphs.SetLength(aGlyphs.Length());
+
+  for (size_t i = 0; i < aGlyphs.Length(); i++) {
+    GlyphArray glyph_array = aGlyphs[i];
+    nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
+
+    nsTArray<WrGlyphInstance>& wr_glyph_instances = wr_glyphs[i].glyphs;
+    wr_glyph_instances.SetLength(glyphs.Length());
+    wr_glyphs[i].color = glyph_array.color().value();
+
+    for (size_t j = 0; j < glyphs.Length(); j++) {
+      wr_glyph_instances[j].index = glyphs[j].mIndex;
+      wr_glyph_instances[j].x = glyphs[j].mPosition.x - aOffset.x;
+      wr_glyph_instances[j].y = glyphs[j].mPosition.y - aOffset.y;
+    }
+  }
+
+  aCommands.AppendElement(OpDPPushText(
+                            wr::ToWrRect(aBounds),
+                            wr::ToWrRect(aClip),
+                            wr_glyphs,
+                            mIndex,
+                            mGlyphSize,
+                            fontBuffer,
+                            mFontDataLength));
 }
 
 } // namespace gfx

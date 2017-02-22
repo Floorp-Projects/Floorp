@@ -7,7 +7,7 @@
 
 #include "apz/src/AsyncPanZoomController.h"
 #include "gfxPrefs.h"
-#include "WebRenderLayersLogging.h"
+#include "LayersLogging.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
@@ -24,6 +24,7 @@
 #include "WebRenderImageLayer.h"
 #include "WebRenderPaintedLayer.h"
 #include "WebRenderTextLayer.h"
+#include "WebRenderDisplayItemLayer.h"
 
 namespace mozilla {
 
@@ -86,6 +87,19 @@ WebRenderLayer::RelativeToParent(Rect aRect)
   return aRect;
 }
 
+Point
+WebRenderLayer::GetOffsetToParent()
+{
+  Rect parentBounds = ParentStackingContextBounds(-1);
+  return parentBounds.TopLeft();
+}
+
+Rect
+WebRenderLayer::VisibleBoundsRelativeToParent()
+{
+  return RelativeToParent(IntRectToRect(GetLayer()->GetVisibleRegion().GetBounds().ToUnknownRect()));
+}
+
 Rect
 WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 {
@@ -118,7 +132,7 @@ WebRenderLayer::buildMaskLayer() {
           wr::ImageKey maskKey;
           WrBridge()->SendAddImage(size, map.GetStride(), SurfaceFormat::A8, buf, &maskKey);
 
-          imageMask.image = maskKey.mHandle;
+          imageMask.image = maskKey;
           imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
           WrManager()->AddImageKeyForDiscard(maskKey);
@@ -158,15 +172,11 @@ WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
         fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
     }
 
-    mLayer->WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(bounds),
-                              wr::ToWrRect(overflow),
-                              Nothing(),
-                              1.0f,
-                              layer->GetAnimations(),
-                              identity,
-                              WrMixBlendMode::Normal,
-                              fm.GetScrollId()));
+/*    mLayer->WrBridge()->AddWebRenderCommand(
+      OpDPPushScrollLayer(wr::ToWrRect(bounds),
+                          wr::ToWrRect(overflow),
+                          Nothing(),
+                          fm.GetScrollId()));*/
   }
 }
 
@@ -179,7 +189,7 @@ WrScrollFrameStackingContextGenerator::~WrScrollFrameStackingContextGenerator()
       continue;
     }
     if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
-    mLayer->WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+//    mLayer->WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
   }
 }
 
@@ -200,14 +210,14 @@ WebRenderLayerManager::AsKnowsCompositor()
 
 void
 WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
-                                  uint64_t aLayersId,
+                                  wr::PipelineId aLayersId,
                                   TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   MOZ_ASSERT(mWrChild == nullptr);
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(wr::PipelineId(aLayersId),
+  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
                                                                             &textureFactoryIdentifier);
   MOZ_ASSERT(bridge);
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
@@ -537,6 +547,12 @@ already_AddRefed<BorderLayer>
 WebRenderLayerManager::CreateBorderLayer()
 {
   return MakeAndAddRef<WebRenderBorderLayer>(this);
+}
+
+already_AddRefed<DisplayItemLayer>
+WebRenderLayerManager::CreateDisplayItemLayer()
+{
+  return MakeAndAddRef<WebRenderDisplayItemLayer>(this);
 }
 
 } // namespace layers

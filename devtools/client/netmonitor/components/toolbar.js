@@ -21,8 +21,8 @@ const {
   isNetworkDetailsToggleButtonDisabled,
 } = require("../selectors/index");
 const {
-  getSizeWithDecimals,
-  getTimeWithDecimals,
+  getFormattedSize,
+  getFormattedTime
 } = require("../utils/format-utils");
 const { FILTER_SEARCH_DELAY } = require("../constants");
 
@@ -89,11 +89,11 @@ const Toolbar = createClass({
 
     let { count, contentSize, transferredSize, millis } = summary;
     let text = (count === 0) ? L10N.getStr("networkMenu.empty") :
-      PluralForm.get(count, L10N.getStr("networkMenu.summary2"))
+      PluralForm.get(count, L10N.getStr("networkMenu.summary3"))
       .replace("#1", count)
-      .replace("#2", getSizeWithDecimals(contentSize / 1024))
-      .replace("#3", getSizeWithDecimals(transferredSize / 1024))
-      .replace("#4", getTimeWithDecimals(millis / 1000));
+      .replace("#2", getFormattedSize(contentSize))
+      .replace("#3", getFormattedSize(transferredSize))
+      .replace("#4", getFormattedTime(millis));
 
     let buttons = requestFilterTypes.map(([type, checked]) => {
       let classList = ["devtools-button"];

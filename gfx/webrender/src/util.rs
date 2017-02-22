@@ -4,34 +4,9 @@
 
 use euclid::{Point2D, Rect, Size2D};
 use euclid::{TypedRect, TypedPoint2D, TypedSize2D, TypedPoint4D, TypedMatrix4D};
-use webrender_traits::{DeviceIntRect, DeviceIntPoint, DeviceIntSize, DeviceIntLength};
+use webrender_traits::{DeviceIntRect, DeviceIntPoint, DeviceIntSize};
 use webrender_traits::{LayerRect, WorldPoint4D, LayerPoint4D, LayerToWorldTransform};
 use num_traits::Zero;
-use time::precise_time_ns;
-
-#[allow(dead_code)]
-pub struct ProfileScope {
-    name: &'static str,
-    t0: u64,
-}
-
-impl ProfileScope {
-    #[allow(dead_code)]
-    pub fn new(name: &'static str) -> ProfileScope {
-        ProfileScope {
-            name: name,
-            t0: precise_time_ns(),
-        }
-    }
-}
-
-impl Drop for ProfileScope {
-    fn drop(&mut self) {
-            let t1 = precise_time_ns();
-            let ms = (t1 - self.t0) as f64 / 1000000f64;
-            println!("{} {}", self.name, ms);
-    }
-}
 
 // TODO: Implement these in euclid!
 pub trait MatrixHelpers<Src, Dst> {
@@ -42,7 +17,7 @@ pub trait MatrixHelpers<Src, Dst> {
     /// 2D rectangle.
     fn can_losslessly_transform_a_2d_rect(&self) -> bool;
 
-    /// Returns true if this matrix will transforms an axis-aligned 2D rectangle to another axis-
+    /// Returns true if this matrix transforms an axis-aligned 2D rectangle to another axis-
     /// aligned 2D rectangle after perspective divide.
     fn can_losslessly_transform_and_perspective_project_a_2d_rect(&self) -> bool;
 
@@ -118,15 +93,6 @@ impl<U> RectHelpers<U> for TypedRect<f32, U> {
 // below instead of an "or".
 pub fn rect_is_empty<N:PartialEq + Zero, U>(rect: &TypedRect<N, U>) -> bool {
     rect.size.width == Zero::zero() || rect.size.height == Zero::zero()
-}
-
-#[inline]
-pub fn rect_from_points(x0: DeviceIntLength,
-                        y0: DeviceIntLength,
-                        x1: DeviceIntLength,
-                        y1: DeviceIntLength) -> DeviceIntRect {
-    DeviceIntRect::new(DeviceIntPoint::from_lengths(x0, y0),
-                       DeviceIntSize::from_lengths(x1 - x0, y1 - y0))
 }
 
 #[inline]

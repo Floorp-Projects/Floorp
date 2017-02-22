@@ -2245,7 +2245,6 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         traceGlobal_(nullptr),
         zoneSpec_(NewZoneInSystemZoneGroup),
         zonePointer_(nullptr),
-        disableNursery_(false),
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
@@ -2280,14 +2279,6 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     CompartmentCreationOptions& setNewZoneInNewZoneGroup();
     CompartmentCreationOptions& setNewZoneInSystemZoneGroup();
     CompartmentCreationOptions& setNewZoneInExistingZoneGroup(JSObject* obj);
-
-    // If these options are creating a new zone group, prevent the use of a
-    // generational GC nursery by that group.
-    bool disableNursery() const { return disableNursery_; }
-    CompartmentCreationOptions& setDisableNursery(bool flag) {
-        disableNursery_ = flag;
-        return *this;
-    }
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
@@ -2358,7 +2349,6 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JSTraceOp traceGlobal_;
     ZoneSpecifier zoneSpec_;
     void* zonePointer_; // Per zoneSpec_, either a Zone, ZoneGroup, or null.
-    bool disableNursery_;
     bool invisibleToDebugger_;
     bool mergeable_;
     bool preserveJitCode_;
@@ -3864,6 +3854,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         forceAsync(false),
         installedFile(false),
         sourceIsLazy(false),
+        allowHTMLComments(true),
         introductionType(nullptr),
         introductionLineno(0),
         introductionOffset(0),
@@ -3900,6 +3891,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool forceAsync;
     bool installedFile;  // 'true' iff pre-compiling js file in packaged app
     bool sourceIsLazy;
+    bool allowHTMLComments;
 
     // |introductionType| is a statically allocated C string:
     // one of "eval", "Function", or "GeneratorFunction".

@@ -589,6 +589,7 @@ frontend::CompileModule(JSContext* cx, const ReadOnlyCompileOptions& optionsInpu
     CompileOptions options(cx, optionsInput);
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
     options.setIsRunOnce(true);
+    options.allowHTMLComments = false;
 
     RootedScope emptyGlobalScope(cx, &cx->global()->emptyGlobalScope());
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, emptyGlobalScope,

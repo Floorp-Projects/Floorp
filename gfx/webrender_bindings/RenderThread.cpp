@@ -137,20 +137,6 @@ RenderThread::NewScrollFrameReady(wr::WindowId aWindowId, bool aCompositeNeeded)
 }
 
 void
-RenderThread::PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight)
-{
-  if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<wr::WindowId, uint64_t, float, float>(
-      this, &RenderThread::PipelineSizeChanged,
-      aWindowId, aPipelineId, aWidth, aHeight
-    ));
-    return;
-  }
-
-  UpdateAndRender(aWindowId);
-}
-
-void
 RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 {
   if (!IsInRenderThread()) {
@@ -177,7 +163,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
     // TODO - Currently each bridge seems to  only have one pipeline but at some
     // point we should pass make sure we only notify bridges that have the
     // corresponding pipeline id.
-    aBridge->NotifyDidComposite(epoch, aStart, aEnd);
+    aBridge->NotifyDidComposite(epoch.mHandle, aStart, aEnd);
   }
   wr_rendered_epochs_delete(aEpochs);
 }
@@ -225,15 +211,6 @@ void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId, bool aCompositeNee
 {
   mozilla::wr::RenderThread::Get()->NewScrollFrameReady(mozilla::wr::WindowId(aWindowId),
                                                         aCompositeNeeded);
-}
-
-void wr_notifier_pipeline_size_changed(WrWindowId aWindowId,
-                                       uint64_t aPipelineId,
-                                       float aWidth,
-                                       float aHeight)
-{
-  mozilla::wr::RenderThread::Get()->PipelineSizeChanged(mozilla::wr::WindowId(aWindowId),
-                                                        aPipelineId, aWidth, aHeight);
 }
 
 void wr_notifier_external_event(WrWindowId aWindowId, size_t aRawEvent)

@@ -153,14 +153,15 @@ def target_tasks_graphics(full_task_graph, parameters):
 def target_tasks_valgrind(full_task_graph, parameters):
     """Target tasks that only run on the cedar branch."""
     def filter(task):
-        platform = task.attributes.get('build_platform')
-        # only select platforms
+        platform = task.attributes.get('test_platform')
         if platform not in ['linux64']:
             return False
-        if task.attributes.get('unittest_suite'):
-            if not (task.attributes['unittest_suite'].startswith('mochitest-valgrind')):
-                return False
-        return True
+
+        if task.attributes.get('unittest_suite', '').startswith('mochitest') and \
+           task.attributes.get('unittest_flavor', '').startswith('valgrind-plain'):
+            return True
+        return False
+
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
@@ -168,8 +169,8 @@ def target_tasks_valgrind(full_task_graph, parameters):
 def target_tasks_code_coverage(full_task_graph, parameters):
     """Target tasks that generate coverage data."""
     def filter(task):
-        platform = task.attributes.get('build_platform')
-        if platform not in ('linux64-ccov/opt', 'linux64-jsdcov/opt'):
+        platform = task.attributes.get('test_platform')
+        if platform not in ('linux64-ccov', 'linux64-jsdcov'):
             return False
         return True
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

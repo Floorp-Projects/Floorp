@@ -153,6 +153,8 @@ public:
 
   static bool IsMaxProcessCountReached(const nsAString& aContentProcessType);
 
+  static void ReleaseCachedProcesses();
+
   /**
    * Picks a random content parent from |aContentParents| with a given |aOpener|
    * respecting the index limit set by |aMaxContentParents|.

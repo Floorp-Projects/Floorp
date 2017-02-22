@@ -737,6 +737,7 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<BorderLayerProperties>(static_cast<BorderLayer*>(aRoot));
     case Layer::TYPE_TEXT:
       return MakeUnique<TextLayerProperties>(static_cast<TextLayer*>(aRoot));
+    case Layer::TYPE_DISPLAYITEM:
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:
     case Layer::TYPE_PAINTED:

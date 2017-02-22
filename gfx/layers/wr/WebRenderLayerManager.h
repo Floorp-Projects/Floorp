@@ -44,6 +44,8 @@ public:
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
   gfx::Rect ParentStackingContextBounds(size_t aScrollMetadataIndex);
   gfx::Rect RelativeToParent(gfx::Rect aRect);
+  gfx::Rect VisibleBoundsRelativeToParent();
+  gfx::Point GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
   Maybe<WrImageMask> buildMaskLayer();
@@ -65,7 +67,7 @@ class WebRenderLayerManager final : public LayerManager
 
 public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);
-  void Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLayersId, TextureFactoryIdentifier* aTextureFactoryIdentifier);
+  void Initialize(PCompositorBridgeChild* aCBChild, wr::PipelineId aLayersId, TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
   virtual void Destroy() override;
 
@@ -101,6 +103,7 @@ public:
   virtual already_AddRefed<RefLayer> CreateRefLayer() override;
   virtual already_AddRefed<TextLayer> CreateTextLayer() override;
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
+  virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
 
   virtual bool NeedsWidgetInvalidation() override { return true; }
 

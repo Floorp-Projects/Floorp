@@ -1695,7 +1695,6 @@ mp_iseven(const mp_int *a)
 /*------------------------------------------------------------------------*/
 /* {{{ Number theoretic functions */
 
-#if MP_NUMTH
 /* {{{ mp_gcd(a, b, c) */
 
 /*
@@ -2376,7 +2375,6 @@ mp_invmod(const mp_int *a, const mp_int *m, mp_int *c)
 } /* end mp_invmod() */
 
 /* }}} */
-#endif /* if MP_NUMTH */
 
 /* }}} */
 

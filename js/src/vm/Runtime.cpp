@@ -250,6 +250,9 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
             return false;
     }
 
+    if (!caches().init())
+        return false;
+
     return true;
 }
 
@@ -402,19 +405,15 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
     }
 
-    for (ZoneGroupsIter group(this); !group.done(); group.next()) {
-        ZoneGroupCaches& caches = group->caches();
+    if (MathCache* cache = caches().maybeGetMathCache())
+        rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
 
-        if (MathCache* cache = caches.maybeGetMathCache())
-            rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->uncompressedSourceCache +=
+        caches().uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
 
-        rtSizes->uncompressedSourceCache +=
-            caches.uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
-
-        rtSizes->gc.nurseryCommitted += group->nursery().sizeOfHeapCommitted();
-        rtSizes->gc.nurseryMallocedBuffers += group->nursery().sizeOfMallocedBuffers(mallocSizeOf);
-        group->storeBuffer().addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
-    }
+    rtSizes->gc.nurseryCommitted += gc.nursery().sizeOfHeapCommitted();
+    rtSizes->gc.nurseryMallocedBuffers += gc.nursery().sizeOfMallocedBuffers(mallocSizeOf);
+    gc.storeBuffer().addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
 
     if (sharedImmutableStrings_) {
         rtSizes->sharedImmutableStringsCache +=

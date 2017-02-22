@@ -138,7 +138,7 @@ void main(void) {
                                                     prim.local_clip_rect,
                                                     prim.z,
                                                     prim.layer,
-                                                    prim.tile);
+                                                    prim.task);
     vLocalPos = vi.local_pos;
 
     // Local space
@@ -148,8 +148,8 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.tile);
-    vLocalPos = vi.local_clamped_pos.xy;
+                                 prim.task);
+    vLocalPos = vi.local_pos.xy;
 
     // Local space
     vLocalRect = prim.local_rect;
@@ -217,10 +217,10 @@ void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     vPieceRectHypotenuseLength = sqrt(pow(width, 2.0) + pow(height, 2.0));
 #else
-    vDistanceFromMixLine = (vi.local_clamped_pos.x - x0) * height -
-                           (vi.local_clamped_pos.y - y0) * width;
-    vDistanceFromMiddle = (vi.local_clamped_pos.x - vLocalRect.x) +
-                          (vi.local_clamped_pos.y - vLocalRect.y) -
+    vDistanceFromMixLine = (vi.local_pos.x - x0) * height -
+                           (vi.local_pos.y - y0) * width;
+    vDistanceFromMiddle = (vi.local_pos.x - vLocalRect.x) +
+                          (vi.local_pos.y - vLocalRect.y) -
                           0.5 * (vLocalRect.z + vLocalRect.w);
 #endif
 }

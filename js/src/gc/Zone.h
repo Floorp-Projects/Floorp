@@ -510,7 +510,7 @@ struct Zone : public JS::shadow::Zone,
         // If the cell was in the nursery, hopefully unlikely, then we need to
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
-        if (!group()->nursery().addedUniqueIdToCell(cell)) {
+        if (IsInsideNursery(cell) && !group()->nursery().addedUniqueIdToCell(cell)) {
             uniqueIds().remove(cell);
             return false;
         }
@@ -883,7 +883,7 @@ struct GCManagedDeletePolicy
     void operator()(const T* ptr) {
         if (ptr) {
             Zone* zone = ptr->zone();
-            if (zone && zone->group()->nursery().isEnabled()) {
+            if (zone && !zone->usedByHelperThread() && zone->group()->nursery().isEnabled()) {
                 // The object may contain nursery pointers and must only be
                 // destroyed after a minor GC.
                 zone->group()->callAfterMinorGC(deletePtr, const_cast<T*>(ptr));
