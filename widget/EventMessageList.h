@@ -226,6 +226,7 @@ NS_EVENT_MESSAGE(eXULCommand)
 NS_EVENT_MESSAGE(eCopy)
 NS_EVENT_MESSAGE(eCut)
 NS_EVENT_MESSAGE(ePaste)
+NS_EVENT_MESSAGE(ePasteNoFormatting)
 
 // Query for the selected text information, it return the selection offset,
 // selection length and selected text.
