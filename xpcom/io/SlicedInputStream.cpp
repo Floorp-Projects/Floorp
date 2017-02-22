@@ -7,22 +7,45 @@
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
 
-NS_IMPL_ISUPPORTS(SlicedInputStream, nsIInputStream,
-                  nsICloneableInputStream, nsIAsyncInputStream)
+NS_IMPL_ADDREF(SlicedInputStream);
+NS_IMPL_RELEASE(SlicedInputStream);
+
+NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
+                                     mWeakCloneableInputStream)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
+NS_INTERFACE_MAP_END
 
 SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
                                      uint64_t aStart, uint64_t aLength)
-  : mInputStream(aInputStream)
+  : mWeakCloneableInputStream(nullptr)
   , mStart(aStart)
   , mLength(aLength)
   , mCurPos(0)
   , mClosed(false)
 {
   MOZ_ASSERT(aInputStream);
+  SetSourceStream(aInputStream);
 }
 
 SlicedInputStream::~SlicedInputStream()
 {}
+
+void
+SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
+{
+  MOZ_ASSERT(aInputStream);
+
+  mInputStream = aInputStream;
+
+  nsCOMPtr<nsICloneableInputStream> cloneableStream =
+    do_QueryInterface(aInputStream);
+  if (cloneableStream && SameCOMIdentity(aInputStream, cloneableStream)) {
+    mWeakCloneableInputStream = cloneableStream;
+  }
+}
 
 NS_IMETHODIMP
 SlicedInputStream::Close()
@@ -151,6 +174,7 @@ SlicedInputStream::IsNonBlocking(bool* aNonBlocking)
 NS_IMETHODIMP
 SlicedInputStream::GetCloneable(bool* aCloneable)
 {
+  MOZ_ASSERT(mWeakCloneableInputStream);
   *aCloneable = true;
   return NS_OK;
 }
@@ -158,17 +182,12 @@ SlicedInputStream::GetCloneable(bool* aCloneable)
 NS_IMETHODIMP
 SlicedInputStream::Clone(nsIInputStream** aResult)
 {
-  nsCOMPtr<nsIInputStream> clonedStream;
-  nsCOMPtr<nsIInputStream> replacementStream;
+  MOZ_ASSERT(mWeakCloneableInputStream);
 
-  nsresult rv = NS_CloneInputStream(mInputStream, getter_AddRefs(clonedStream),
-                                    getter_AddRefs(replacementStream));
+  nsCOMPtr<nsIInputStream> clonedStream;
+  nsresult rv = mWeakCloneableInputStream->Clone(getter_AddRefs(clonedStream));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  if (replacementStream) {
-    mInputStream = replacementStream.forget();
   }
 
   nsCOMPtr<nsIInputStream> sis =
