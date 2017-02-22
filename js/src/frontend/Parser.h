@@ -1203,7 +1203,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     Node exportBatch(uint32_t begin);
     bool checkLocalExportNames(Node node);
     Node exportClause(uint32_t begin);
-    Node exportFunctionDeclaration(uint32_t begin);
+    Node exportFunctionDeclaration(uint32_t begin,
+                                   FunctionAsyncKind asyncKind = SyncFunction);
     Node exportVariableStatement(uint32_t begin);
     Node exportClassDeclaration(uint32_t begin);
     Node exportLexicalDeclaration(uint32_t begin, DeclarationKind kind);
