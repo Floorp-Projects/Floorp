@@ -210,10 +210,22 @@ class Dict(ContainerType):
 class List(ContainerType):
 
     def convert(self, data):
-        # while dicts and strings _can_ be cast to lists, doing so is probably not intentional
+        # while dicts and strings _can_ be cast to lists,
+        # doing so is likely not intentional behaviour
         if isinstance(data, (basestring, dict)):
             raise ValueError("Expected list but got %s" % type(data))
         return [self.item_type.convert(item) for item in data]
+
+
+class TestList(DataType):
+    """A TestList is a list of tests that can be either keyed by a group name,
+    or specified as a flat list.
+    """
+
+    def convert(self, data):
+        if isinstance(data, (list, tuple)):
+            data = {'default': data}
+        return Dict({Unicode: List(Unicode)}).convert(data)
 
 
 class Int(DataType):
