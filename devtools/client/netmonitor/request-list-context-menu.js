@@ -50,7 +50,7 @@ RequestListContextMenu.prototype = {
 
     let menu = new Menu();
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-url",
+      id: "request-list-context-copy-url",
       label: L10N.getStr("netmonitor.context.copyUrl"),
       accesskey: L10N.getStr("netmonitor.context.copyUrl.accesskey"),
       visible: !!selectedRequest,
@@ -58,7 +58,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-url-params",
+      id: "request-list-context-copy-url-params",
       label: L10N.getStr("netmonitor.context.copyUrlParams"),
       accesskey: L10N.getStr("netmonitor.context.copyUrlParams.accesskey"),
       visible: !!(selectedRequest && getUrlQuery(selectedRequest.url)),
@@ -66,7 +66,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-post-data",
+      id: "request-list-context-copy-post-data",
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
       visible: !!(selectedRequest && selectedRequest.requestPostData),
@@ -74,7 +74,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-as-curl",
+      id: "request-list-context-copy-as-curl",
       label: L10N.getStr("netmonitor.context.copyAsCurl"),
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
       visible: !!selectedRequest,
@@ -87,7 +87,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-request-headers",
+      id: "request-list-context-copy-request-headers",
       label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
       visible: !!(selectedRequest && selectedRequest.requestHeaders),
@@ -95,7 +95,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "response-menu-context-copy-response-headers",
+      id: "response-list-context-copy-response-headers",
       label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
       visible: !!(selectedRequest && selectedRequest.responseHeaders),
@@ -103,7 +103,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-response",
+      id: "request-list-context-copy-response",
       label: L10N.getStr("netmonitor.context.copyResponse"),
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
       visible: !!(selectedRequest &&
@@ -114,7 +114,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-image-as-data-uri",
+      id: "request-list-context-copy-image-as-data-uri",
       label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
       accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
       visible: !!(selectedRequest &&
@@ -129,7 +129,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-copy-all-as-har",
+      id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
       visible: this.sortedRequests.size > 0,
@@ -137,7 +137,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-save-all-as-har",
+      id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
       visible: this.sortedRequests.size > 0,
@@ -150,7 +150,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-resend",
+      id: "request-list-context-resend",
       label: L10N.getStr("netmonitor.context.editAndResend"),
       accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
       visible: !!(window.NetMonitorController.supportsCustomRequest &&
@@ -164,7 +164,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-newtab",
+      id: "request-list-context-newtab",
       label: L10N.getStr("netmonitor.context.newTab"),
       accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
       visible: !!selectedRequest,
@@ -172,7 +172,7 @@ RequestListContextMenu.prototype = {
     }));
 
     menu.append(new MenuItem({
-      id: "request-menu-context-perf",
+      id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
       visible: !!window.NetMonitorController.supportsPerfStats,

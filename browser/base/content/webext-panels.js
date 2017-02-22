@@ -5,28 +5,60 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+var {
+  promiseEvent,
+} = ExtensionUtils;
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+function getBrowser(sidebar) {
+  let browser = document.getElementById("webext-panels-browser");
+  if (browser) {
+    return Promise.resolve(browser);
+  }
+
+  browser = document.createElementNS(XUL_NS, "browser");
+  browser.setAttribute("id", "webext-panels-browser");
+  browser.setAttribute("type", "content");
+  browser.setAttribute("flex", "1");
+  browser.setAttribute("disableglobalhistory", "true");
+  browser.setAttribute("webextension-view-type", "sidebar");
+  browser.setAttribute("context", "contentAreaContextMenu");
+  browser.setAttribute("tooltip", "aHTMLTooltip");
+  browser.setAttribute("onclick", "window.parent.contentAreaClick(event, true);");
+
+  let readyPromise;
+  if (sidebar.remote) {
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("remoteType",
+                         E10SUtils.getRemoteTypeForURI(sidebar.uri, true,
+                                                       E10SUtils.EXTENSION_REMOTE_TYPE));
+    readyPromise = promiseEvent(browser, "XULFrameLoaderCreated");
+  } else {
+    readyPromise = Promise.resolve();
+  }
+  document.documentElement.appendChild(browser);
+
+  return readyPromise.then(() => {
+    browser.messageManager.loadFrameScript("chrome://browser/content/content.js", false);
+    ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+    return browser;
+  });
+}
 
 function loadWebPanel() {
   let sidebarURI = new URL(location);
-  let uri = sidebarURI.searchParams.get("panel");
-  let remote = sidebarURI.searchParams.get("remote");
-  let browser = document.getElementById("webext-panels-browser");
-  if (remote) {
-    let remoteType = E10SUtils.getRemoteTypeForURI(uri, true,
-                                                   E10SUtils.EXTENSION_REMOTE_TYPE);
-    browser.setAttribute("remote", "true");
-    browser.setAttribute("remoteType", remoteType);
-  } else {
-    browser.removeAttribute("remote");
-    browser.removeAttribute("remoteType");
-  }
-  browser.loadURI(uri);
+  let sidebar = {
+    uri: sidebarURI.searchParams.get("panel"),
+    remote: sidebarURI.searchParams.get("remote"),
+  };
+  getBrowser(sidebar).then(browser => {
+    browser.loadURI(sidebar.uri);
+  });
 }
 
 function load() {
-  let browser = document.getElementById("webext-panels-browser");
-  browser.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
-  ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
-
   this.loadWebPanel();
 }

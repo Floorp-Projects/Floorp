@@ -44,7 +44,7 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // toolbox.doc
     monitor.toolbox.doc
-      .querySelector("#request-menu-context-copy-request-headers").click();
+      .querySelector("#request-list-context-copy-request-headers").click();
   }, function validate(result) {
     // Sometimes, a "Cookie" header is left over from other tests. Remove it:
     result = String(result).replace(/Cookie: [^\n]+\n/, "");
@@ -69,7 +69,7 @@ add_task(function* () {
     // Context menu is appending in XUL document, we must select it from
     // _oolbox.doc
     monitor.toolbox.doc
-      .querySelector("#response-menu-context-copy-response-headers").click();
+      .querySelector("#response-list-context-copy-response-headers").click();
   }, function validate(result) {
     // Fake the "Last-Modified" and "Date" headers because they will vary:
     result = String(result)

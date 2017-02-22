@@ -823,26 +823,24 @@ WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                         unsigned int* packetsSent,
                                         uint64_t* bytesSent)
 {
-  {
-    CSFLogVerbose(logTag, "%s for VideoConduit:%p", __FUNCTION__, this);
-    MutexAutoLock lock(mCodecMutex);
-    if (!mSendStream) {
-      return false;
-    }
-
-    const webrtc::VideoSendStream::Stats& stats = mSendStream->GetStats();
-    *packetsSent = 0;
-    for (auto entry: stats.substreams){
-      *packetsSent += entry.second.rtp_stats.transmitted.packets;
-      // NG -- per https://www.w3.org/TR/webrtc-stats/ this is only payload bytes
-      *bytesSent += entry.second.rtp_stats.MediaPayloadBytes();
-    }
-    // Note: timestamp is not correct per the spec... should be time the rtcp
-    // was received (remote) or sent (local)
-    *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-    return true;
+  CSFLogVerbose(logTag, "%s for VideoConduit:%p", __FUNCTION__, this);
+  MutexAutoLock lock(mCodecMutex);
+  if (!mSendStream) {
+    return false;
   }
-  return false;
+
+  const webrtc::VideoSendStream::Stats& stats = mSendStream->GetStats();
+  *packetsSent = 0;
+  for (auto entry: stats.substreams){
+    *packetsSent += entry.second.rtp_stats.transmitted.packets;
+    // NG -- per https://www.w3.org/TR/webrtc-stats/ this is only payload bytes
+    *bytesSent += entry.second.rtp_stats.MediaPayloadBytes();
+  }
+
+  // Note: timestamp is not correct per the spec... should be time the rtcp
+  // was received (remote) or sent (local)
+  *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+  return true;
 }
 
 MediaConduitErrorCode

@@ -3248,6 +3248,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   // share the request context - see bug 1236650
   httpChannel->SetRequestContextID(mRequestContextID);
 
+  // Preserve the loading order
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(newChannel);
+  if (p) {
+    p->SetPriority(mPriority);
+  }
+
   if (httpInternal) {
     // Convey third party cookie, conservative, and spdy flags.
     httpInternal->SetThirdPartyFlags(mThirdPartyFlags);
