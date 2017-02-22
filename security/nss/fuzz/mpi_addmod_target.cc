@@ -14,7 +14,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (size < 3) {
     return 0;
   }
-  INIT_NUMBERS
+  INIT_FOUR_NUMBERS
 
   auto modulus = get_modulus(data, size, ctx);
   // Compare with OpenSSL add mod

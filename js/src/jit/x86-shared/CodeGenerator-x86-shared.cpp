@@ -148,7 +148,7 @@ void
 CodeGeneratorX86Shared::emitCompare(MCompare::CompareType type, const LAllocation* left, const LAllocation* right)
 {
 #ifdef JS_CODEGEN_X64
-    if (type == MCompare::Compare_Object) {
+    if (type == MCompare::Compare_Object || type == MCompare::Compare_Symbol) {
         masm.cmpPtr(ToRegister(left), ToOperand(right));
         return;
     }
