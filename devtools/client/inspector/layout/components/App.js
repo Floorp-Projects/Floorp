@@ -26,11 +26,13 @@ const App = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
     showBoxModelProperties: PropTypes.bool.isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
+    onSetGridOverlayColor: PropTypes.func.isRequired,
+    onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
     onToggleShowGridLineNumbers: PropTypes.func.isRequired,
