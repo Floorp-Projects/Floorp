@@ -3600,6 +3600,11 @@ EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
         return false;
     }
 
+    if (cooperative && !cx->runtime()->gc.canChangeActiveContext(cx)) {
+        JS_ReportErrorASCII(cx, "Cooperating multithreading context switches are not currently allowed");
+        return false;
+    }
+
     if (!args[0].toString()->ensureLinear(cx))
         return false;
 
