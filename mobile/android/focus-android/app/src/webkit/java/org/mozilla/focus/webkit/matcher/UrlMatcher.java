@@ -114,10 +114,11 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
 
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String prefName) {
-        final boolean prefValue = sharedPreferences.getBoolean(prefName, false);
-
         final String categoryName = categoryPrefMap.get(prefName);
+
         if (categoryName != null) {
+            final boolean prefValue = sharedPreferences.getBoolean(prefName, false);
+
             setCategoryEnabled(categoryName, prefValue);
         }
     }
