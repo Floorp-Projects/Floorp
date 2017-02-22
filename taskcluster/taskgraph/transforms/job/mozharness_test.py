@@ -264,8 +264,8 @@ def mozharness_test_on_windows(config, job, taskdesc):
     ]
 
 
-@run_job_using('macosx-engine', 'mozharness-test', schema=mozharness_test_run_schema)
-def mozharness_test_on_mac_osx(config, job, taskdesc):
+@run_job_using('native-engine', 'mozharness-test', schema=mozharness_test_run_schema)
+def mozharness_test_on_native_engine(config, job, taskdesc):
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
@@ -282,6 +282,7 @@ def mozharness_test_on_mac_osx(config, job, taskdesc):
         'type': 'directory',
     } for (prefix, path) in ARTIFACTS]
 
+    worker['reboot'] = test['reboot']
     worker['env'] = {
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
@@ -289,9 +290,15 @@ def mozharness_test_on_mac_osx(config, job, taskdesc):
         'MOZHARNESS_SCRIPT': mozharness['script'],
         'MOZHARNESS_URL': {'task-reference': mozharness_url},
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
+        "MOZ_NO_REMOTE": '1',
+        "NO_EM_RESTART": '1',
+        "XPCOM_DEBUG_BREAK": 'warn',
+        "NO_FAIL_ON_TEST_ERRORS": '1',
+        "MOZ_HIDE_RESULTS_TABLE": '1',
+        "MOZ_NODE_PATH": "/usr/local/bin/node",
     }
 
-    worker['link'] = '{}/raw-file/{}/taskcluster/scripts/tester/test-macosx.sh'.format(
+    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/test-macosx.sh'.format(
         config.params['head_repository'], config.params['head_rev']
     )
 
