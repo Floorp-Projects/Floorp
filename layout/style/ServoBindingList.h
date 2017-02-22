@@ -130,9 +130,6 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_GetOpacity, float,
 SERVO_BINDING_FUNC(Servo_AnimationValue_GetTransform, void,
                    RawServoAnimationValueBorrowed value,
                    RefPtr<nsCSSValueSharedList>* list)
-SERVO_BINDING_FUNC(Servo_AnimationValue_DeepEqual, bool,
-                   RawServoAnimationValueBorrowed,
-                   RawServoAnimationValueBorrowed)
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
