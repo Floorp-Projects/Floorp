@@ -97,13 +97,11 @@ private:
   bool mRegisteredDecode;
 
   webrtc::VideoReceiveState mReceiveState;
-#ifdef MOZILLA_INTERNAL_API
   TimeStamp mFirstDecodeTime;
   TimeStamp mReceiveFailureTime;
   TimeDuration mTotalLossTime;
   uint32_t mRecoveredBeforeLoss;
   uint32_t mRecoveredLosses;
-#endif
 };
 
 }

@@ -28,7 +28,7 @@
 
 #include "mozilla/Unused.h"
 
-#if defined(MOZ_WIDGET_ANDROID) && defined(MOZILLA_INTERNAL_API)
+#if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidJNIWrapper.h"
 #include "VideoEngine.h"
 #endif
@@ -846,7 +846,6 @@ WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
 MediaConduitErrorCode
 WebrtcVideoConduit::InitMain()
 {
-#if defined(MOZILLA_INTERNAL_API)
   // already know we must be on MainThread barring unit test weirdness
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -916,8 +915,7 @@ WebrtcVideoConduit::InitMain()
     CSFLogError(logTag,  "%s: could not set Android objects", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-#endif
-#endif
+#endif  //MOZ_WIDGET_ANDROID
   return kMediaConduitNoError;
 }
 
@@ -1191,10 +1189,8 @@ WebrtcVideoConduit::CreateDecoder(webrtc::VideoDecoder::DecoderType aType)
   } else if (aType == webrtc::VideoDecoder::kVp8) {
     bool enabled = false;
     // attempt to get a decoder
-#ifdef MOZILLA_INTERNAL_API
     enabled = mozilla::Preferences::GetBool(
                   "media.navigator.hardware.vp8_decode.acceleration_enabled", false);
-#endif
     if (enabled) {
       nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
       if (gfxInfo) {
@@ -1246,10 +1242,8 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoEncoder::EncoderType aType,
   } else if (aType == webrtc::VideoEncoder::kVp8) {
     bool enabled = false;
     // attempt to get a encoder
-#ifdef MOZILLA_INTERNAL_API
     enabled = mozilla::Preferences::GetBool(
                   "media.navigator.hardware.vp8_encode.acceleration_enabled", false);
-#endif
     if (enabled) {
       nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
       if (gfxInfo) {
