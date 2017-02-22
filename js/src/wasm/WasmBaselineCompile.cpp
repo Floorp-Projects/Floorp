@@ -2389,7 +2389,10 @@ class BaseCompiler
 
     void startCallArgs(FunctionCall& call, size_t stackArgAreaSize)
     {
-        call.stackArgAreaSize = stackArgAreaSize;
+        // It's possible the TLS pointer may have implicitly used stack before.
+        MOZ_ASSERT(call.stackArgAreaSize == 0 || call.stackArgAreaSize == sizeof(void*));
+
+        call.stackArgAreaSize += stackArgAreaSize;
 
         size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
         if (adjustment)
@@ -2397,7 +2400,10 @@ class BaseCompiler
     }
 
     const ABIArg reservePointerArgument(FunctionCall& call) {
-        return call.abi.next(MIRType::Pointer);
+        ABIArg ret = call.abi.next(MIRType::Pointer);
+        if (ret.kind() == ABIArg::Stack)
+            call.stackArgAreaSize += sizeof(void*);
+        return ret;
     }
 
     // TODO / OPTIMIZE (Bug 1316821): Note passArg is used only in one place.
