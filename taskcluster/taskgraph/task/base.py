@@ -5,17 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import abc
-import json
-import os
-import urllib2
-
-
-# if running in a task, prefer to use the taskcluster proxy (http://taskcluster/),
-# otherwise hit the services directly
-if os.environ.get('TASK_ID'):
-    INDEX_URL = 'http://taskcluster/index/v1/task/{}'
-else:
-    INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
+import requests
+from taskgraph.util.taskcluster import find_task_id
 
 
 class Task(object):
@@ -109,11 +100,10 @@ class Task(object):
         """
         for index_path in self.index_paths:
             try:
-                url = INDEX_URL.format(index_path)
-                existing_task = json.load(urllib2.urlopen(url))
+                task_id = find_task_id(index_path)
 
-                return True, existing_task['taskId']
-            except urllib2.HTTPError:
+                return True, task_id
+            except requests.exceptions.HTTPError:
                 pass
 
         return False, None

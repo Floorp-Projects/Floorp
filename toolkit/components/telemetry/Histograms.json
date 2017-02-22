@@ -10700,6 +10700,37 @@
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
   },
+  "STORAGE_SYNC_GET_OPS_SIZE": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "keyed": true,
+    "description": "Track the size of results of get() operations performed this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "STORAGE_SYNC_SET_OPS_SIZE": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "keyed": true,
+    "description": "Track the size of set() operations performed by addons this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "STORAGE_SYNC_REMOVE_OPS": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "count",
+    "keyed": true,
+    "description": "Track the number of remove() operations addons perform this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
+  },
   "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
     "expires_in_version": "56",

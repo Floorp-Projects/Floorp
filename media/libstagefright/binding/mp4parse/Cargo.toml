@@ -10,6 +10,7 @@ authors = [
 description = "Parser for ISO base media file format (mp4)"
 documentation = "https://mp4parse-docs.surge.sh/mp4parse/"
 license = "MPL-2.0"
+categories = ["multimedia::video"]
 
 repository = "https://github.com/mozilla/mp4parse-rust"
 
@@ -17,6 +18,9 @@ repository = "https://github.com/mozilla/mp4parse-rust"
 exclude = [
   "*.mp4",
 ]
+
+[badges]
+travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 
 [dependencies]
 byteorder = "1.0.0"

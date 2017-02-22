@@ -5,9 +5,13 @@
 
 /* representation of length values in computed style data */
 
-#include "nsStyleCoord.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
+
+// nsStyleCoord.h must not be the first header in a unified source file,
+// otherwise it may not build with MSVC due to a bug in our STL wrapper.
+// See bug 1331102.
+#include "nsStyleCoord.h"
 
 using namespace mozilla;
 

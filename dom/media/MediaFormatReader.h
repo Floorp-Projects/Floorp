@@ -575,6 +575,9 @@ private:
   class DecoderFactory;
   UniquePtr<DecoderFactory> mDecoderFactory;
 
+  class ShutdownPromisePool;
+  UniquePtr<ShutdownPromisePool> mShutdownPromisePool;
+
   MediaEventListener mCompositorUpdatedListener;
   MediaEventListener mOnTrackWaitingForKeyListener;
 
@@ -592,8 +595,7 @@ private:
 
   void ShutdownDecoder(TrackType aTrack);
   RefPtr<ShutdownPromise> ShutdownDecoderWithPromise(TrackType aTrack);
-  void TearDownDecoders();
-  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+  RefPtr<ShutdownPromise> TearDownDecoders();
 };
 
 } // namespace mozilla

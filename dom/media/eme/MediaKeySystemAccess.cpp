@@ -272,21 +272,16 @@ GetSupportedKeySystems()
         clearkey.mSessionTypes.AppendElement(MediaKeySessionType::Persistent_license);
       }
 #if defined(XP_WIN)
-      // Clearkey CDM uses WMF decoders on Windows.
-      if (WMFDecoderModule::HasAAC()) {
-        clearkey.mMP4.SetCanDecryptAndDecode(EME_CODEC_AAC);
-      } else {
-        clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
-      }
+      // Clearkey CDM uses WMF's H.264 decoder on Windows.
       if (WMFDecoderModule::HasH264()) {
         clearkey.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       } else {
         clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
       }
 #else
-      clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
         clearkey.mMP4.SetCanDecrypt(EME_CODEC_VP9);
       }
