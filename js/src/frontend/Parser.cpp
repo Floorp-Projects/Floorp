@@ -4870,13 +4870,7 @@ Parser<FullParseHandler>::importDeclaration()
             return null();
         }
 
-        if (!tokenStream.getToken(&tt))
-            return null();
-
-        if (tt != TOK_FROM) {
-            error(JSMSG_FROM_AFTER_IMPORT_CLAUSE);
-            return null();
-        }
+        MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_IMPORT_CLAUSE);
 
         MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
     }
@@ -5080,13 +5074,7 @@ Parser<ParseHandler>::exportBatch(uint32_t begin)
 
     handler.addList(kid, exportSpec);
 
-    TokenKind tt;
-    if (!tokenStream.getToken(&tt))
-        return null();
-    if (tt != TOK_FROM) {
-        error(JSMSG_FROM_AFTER_EXPORT_STAR);
-        return null();
-    }
+    MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_EXPORT_STAR);
 
     return exportFrom(begin, kid);
 }
