@@ -2506,11 +2506,11 @@ void
 moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
                           gint* scale_height)
 {
-  WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
-                           MOZ_GTK_SCALE_HORIZONTAL :
-                           MOZ_GTK_SCALE_VERTICAL;
-
   if (gtk_check_version(3, 20, 0) != nullptr) {
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_HORIZONTAL :
+                               MOZ_GTK_SCALE_VERTICAL;
+
       gint thumb_length, thumb_height, trough_border;
       moz_gtk_get_scalethumb_metrics(orient, &thumb_length, &thumb_height);
 
@@ -2526,12 +2526,10 @@ moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
       }
       ReleaseStyleContext(style);
   } else {
-      GtkStyleContext* style = ClaimStyleContext(widget);
-      gtk_style_context_get(style, gtk_style_context_get_state(style),
-                            "min-width", scale_width,
-                            "min-height", scale_height,
-                            nullptr);
-      ReleaseStyleContext(style);
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_TROUGH_HORIZONTAL :
+                               MOZ_GTK_SCALE_TROUGH_VERTICAL;
+      moz_gtk_get_widget_min_size(widget, scale_width, scale_height);
   }
 }
 
