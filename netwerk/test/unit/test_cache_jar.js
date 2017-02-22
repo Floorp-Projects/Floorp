@@ -47,12 +47,10 @@ var fourthTests = [
   [0, false, 1, 1], [0, true, 1, 0], [1, false, 1, 0], [1, true, 1, 0]
 ];
 
-function run_all_tests() {
+async function run_all_tests() {
   for (let test of firstTests) {
     handlers_called = 0;
-    var chan = makeChan(URL, test[0], test[1], test[2]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[3]));
-    yield undefined;
+    await test_channel(...test);
   }
 
   // We can't easily cause webapp data to be cleared from the child process, so skip
@@ -68,9 +66,7 @@ function run_all_tests() {
 
   for (let test of secondTests) {
     handlers_called = 0;
-    var chan = makeChan(URL, test[0], test[1], test[2]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[3]));
-    yield undefined;
+    await test_channel(...test);
   }
 
   Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs_notInBrowser);
@@ -78,9 +74,7 @@ function run_all_tests() {
 
   for (let test of thirdTests) {
     handlers_called = 0;
-    var chan = makeChan(URL, test[0], test[1], test[2]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[3]));
-    yield undefined;
+    await test_channel(...test);
   }
 
   let attrs_userContextId = JSON.stringify({ userContextId: 1 });
@@ -88,13 +82,10 @@ function run_all_tests() {
 
   for (let test of fourthTests) {
     handlers_called = 0;
-    var chan = makeChan(URL, test[0], test[1], test[2]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[3]));
-    yield undefined;
+    await test_channel(...test);
   }
 }
 
-var gTests;
 function run_test() {
   do_get_profile();
   if (!newCacheBackEndUsed()) {
@@ -105,22 +96,26 @@ function run_test() {
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/cached", cached_handler);
   httpserv.start(-1);
-  gTests = run_all_tests();
-  gTests.next();
+  run_all_tests().then(() => {
+    do_test_finished();
+  });
 }
 
-function doneFirstLoad(req, buffer, expected) {
+function test_channel(appId, inIsolatedMozBrowser, userContextId, expected) {
+  return new Promise(resolve => {
+    var chan = makeChan(URL, appId, inIsolatedMozBrowser, userContextId);
+    chan.asyncOpen2(new ChannelListener(doneFirstLoad.bind(null, resolve), expected));
+  });
+}
+
+function doneFirstLoad(resolve, req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var oa = req.loadInfo.originAttributes;
   var chan = makeChan(URL, oa.appId, oa.isInIsolatedMozBrowserElement, oa.userContextId);
-  chan.asyncOpen2(new ChannelListener(doneSecondLoad, expected));
+  chan.asyncOpen2(new ChannelListener(doneSecondLoad.bind(null, resolve), expected));
 }
 
-function doneSecondLoad(req, buffer, expected) {
+function doneSecondLoad(resolve, req, buffer, expected) {
   do_check_eq(handlers_called, expected);
-  try {
-    gTests.next();
-  } catch (x) {
-    do_test_finished();
-  }
+  resolve();
 }

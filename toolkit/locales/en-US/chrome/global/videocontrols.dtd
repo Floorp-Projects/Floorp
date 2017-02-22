@@ -42,8 +42,8 @@ the 5 minute mark in a 6 hour long video, #1 would be "5:00" and #2 would be
 media position, and the #2 string is the total duration. For example, when at
 the 5 minute mark in a 6 hour long video, #1 would be "5:00" and #2 would be
 "6:00:00", result string would be "5:00 / 6:00:00".
-Note that #2 is not always avaiable. For example, when at the 5 minute mark in an
-unknown duration video, #1 would be "5:00" and string which is surrounded by <span>
-would be deleted, result string would be "5:00".
+Note that #2 is not always available. For example, when at the 5 minute mark in an
+unknown duration video, #1 would be "5:00" and the string which is surrounded by
+<span> would be deleted, result string would be "5:00".
 -->
 <!ENTITY positionAndDuration.nameFormat "#1<span> / #2</span>">

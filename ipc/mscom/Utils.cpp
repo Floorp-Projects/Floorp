@@ -4,10 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef ACCESSIBILITY
 #include "mozilla/mscom/Registration.h"
+#include "nsTArray.h"
+#endif
+
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/RefPtr.h"
-#include "nsTArray.h"
 
 #include <objbase.h>
 #include <objidl.h>
@@ -46,6 +49,7 @@ IsProxy(IUnknown* aUnknown)
   return false;
 }
 
+#ifdef ACCESSIBILITY
 static bool
 IsVtableIndexFromParentInterface(TYPEATTR* aTypeAttr,
                                  unsigned long aVtableIndex)
@@ -173,6 +177,7 @@ IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,
 
   return false;
 }
+#endif // ifdef ACCESSIBILITY
 
 } // namespace mscom
 } // namespace mozilla
