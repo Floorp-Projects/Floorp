@@ -20,7 +20,7 @@
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
 #include "nsNullPrincipal.h"
-#include "nsPrincipal.h"
+#include "nsExpandedPrincipal.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
