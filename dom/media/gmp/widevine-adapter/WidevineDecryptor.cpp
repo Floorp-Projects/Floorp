@@ -9,6 +9,7 @@
 #include "WidevineUtils.h"
 #include "WidevineFileIO.h"
 #include "GMPPlatform.h"
+#include <mozilla/SizePrintfMacros.h>
 #include <stdarg.h>
 #include "TimeUnits.h"
 
@@ -160,6 +161,43 @@ WidevineDecryptor::SetServerCertificate(uint32_t aPromiseId,
   CDM()->SetServerCertificate(aPromiseId, aServerCert, aServerCertSize);
 }
 
+class WidevineDecryptedBlock : public cdm::DecryptedBlock {
+public:
+
+  WidevineDecryptedBlock()
+    : mBuffer(nullptr)
+    , mTimestamp(0)
+  {
+  }
+
+  ~WidevineDecryptedBlock() override {
+    if (mBuffer) {
+      mBuffer->Destroy();
+      mBuffer = nullptr;
+    }
+  }
+
+  void SetDecryptedBuffer(cdm::Buffer* aBuffer) override {
+    mBuffer = aBuffer;
+  }
+
+  cdm::Buffer* DecryptedBuffer() override {
+    return mBuffer;
+  }
+
+  void SetTimestamp(int64_t aTimestamp) override {
+    mTimestamp = aTimestamp;
+  }
+
+  int64_t Timestamp() const override {
+    return mTimestamp;
+  }
+
+private:
+  cdm::Buffer* mBuffer;
+  int64_t mTimestamp;
+};
+
 cdm::Time
 WidevineDecryptor::ThrottleDecrypt(cdm::Time aWallTime, cdm::Time aSampleDuration)
 {
@@ -288,6 +326,28 @@ WidevineDecryptor::DecryptingComplete()
   mCallback = nullptr;
   Release();
 }
+
+class WidevineBuffer : public cdm::Buffer {
+public:
+  explicit WidevineBuffer(size_t aSize) {
+    CDM_LOG("WidevineBuffer(size=%" PRIuSIZE ") created", aSize);
+    mBuffer.SetLength(aSize);
+  }
+  ~WidevineBuffer() override {
+    CDM_LOG("WidevineBuffer(size=%" PRIu32 ") destroyed", Size());
+  }
+  void Destroy() override { delete this; }
+  uint32_t Capacity() const override { return mBuffer.Length(); };
+  uint8_t* Data() override { return mBuffer.Elements(); }
+  void SetSize(uint32_t aSize) override { mBuffer.SetLength(aSize); }
+  uint32_t Size() const override { return mBuffer.Length(); }
+
+private:
+  WidevineBuffer(const WidevineBuffer&);
+  void operator=(const WidevineBuffer&);
+
+  nsTArray<uint8_t> mBuffer;
+};
 
 Buffer*
 WidevineDecryptor::Allocate(uint32_t aCapacity)
