@@ -4583,19 +4583,19 @@ Tab.prototype = {
 
     let audioElements = this.browser.contentDocument.getElementsByTagName("audio");
     for (let audio of audioElements) {
-      if (audio.paused == inactive && audio.duration > mediaDurationThreshold) {
-        return true;
+      if (audio.paused == inactive && audio.duration < mediaDurationThreshold) {
+        return false;
       }
     }
 
     let videoElements = this.browser.contentDocument.getElementsByTagName("video");
     for (let video of videoElements) {
-      if (video.paused == inactive && video.duration > mediaDurationThreshold) {
-        return true;
+      if (video.paused == inactive && video.duration < mediaDurationThreshold) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   },
 
   observe: function(aSubject, aTopic, aData) {
