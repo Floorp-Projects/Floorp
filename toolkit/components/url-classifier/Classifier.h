@@ -109,6 +109,10 @@ public:
                                            const nsACString& aProvider,
                                            nsIFile** aPrivateStoreDirectory);
 
+  // Swap in in-memory and on-disk database and remove all
+  // update intermediaries.
+  nsresult SwapInNewTablesAndCleanup();
+
 private:
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
@@ -118,9 +122,15 @@ private:
   nsresult SetupPathNames();
   nsresult RecoverBackups();
   nsresult CleanToDelete();
-  nsresult BackupTables();
-  nsresult RemoveBackupTables();
+  nsresult CopyInUseDirForUpdate();
+  void     CopyInUseLookupCacheForUpdate();
   nsresult RegenActiveTables();
+
+
+
+  // Remove any intermediary for update, including in-memory
+  // and on-disk data.
+  void RemoveUpdateIntermediaries();
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   already_AddRefed<nsIFile> GetFailedUpdateDirectroy();
@@ -137,7 +147,17 @@ private:
 
   nsresult UpdateCache(TableUpdate* aUpdates);
 
-  LookupCache *GetLookupCache(const nsACString& aTable);
+  LookupCache *GetLookupCache(const nsACString& aTable,
+                              bool aForUpdate = false);
+
+  LookupCache *GetLookupCacheForUpdate(const nsACString& aTable) {
+    return GetLookupCache(aTable, true);
+  }
+
+  LookupCache *GetLookupCacheFrom(const nsACString& aTable,
+                                  nsTArray<LookupCache*>& aLookupCaches,
+                                  nsIFile* aRootStoreDirectory);
+
 
   bool CheckValidUpdate(nsTArray<TableUpdate*>* aUpdates,
                         const nsACString& aTable);
@@ -152,9 +172,10 @@ private:
   nsCOMPtr<nsIFile> mRootStoreDirectory;
   // Used for atomically updating the other dirs.
   nsCOMPtr<nsIFile> mBackupDirectory;
+  nsCOMPtr<nsIFile> mUpdatingDirectory; // For update only.
   nsCOMPtr<nsIFile> mToDeleteDirectory;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
-  nsTArray<LookupCache*> mLookupCaches;
+  nsTArray<LookupCache*> mLookupCaches; // For query only.
   nsTArray<nsCString> mActiveTablesCache;
   uint32_t mHashKey;
   // Stores the last time a given table was updated (seconds).
@@ -167,6 +188,9 @@ private:
   // Whether mTableRequestResult is outdated and needs to
   // be reloaded from disk.
   bool mIsTableRequestResultOutdated;
+
+  // The copy of mLookupCaches for update only.
+  nsTArray<LookupCache*> mNewLookupCaches;
 };
 
 } // namespace safebrowsing

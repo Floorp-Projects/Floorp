@@ -628,8 +628,10 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
+#ifdef NIGHTLY_BUILD
 // Enable EME (Encrypted Media Extensions)
 pref("media.eme.enabled", true);
+#endif
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
@@ -775,6 +777,7 @@ pref("dom.phonenumber.substringmatching.VE", 7);
 // Enable hardware-accelerated Skia canvas
 pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
+pref("gfx.canvas.azure.accelerated.limit", 64);
 
 // See ua-update.json.in for the packaged UA override list
 pref("general.useragent.updates.enabled", true);

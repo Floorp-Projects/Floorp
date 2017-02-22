@@ -168,7 +168,7 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   for (size_t i = 0; i < numModules; ++i) {
     Telemetry::ProcessedStack::Module module = stack.GetModule(i);
     sha1Stream.Printf("%s %s\n", module.mBreakpadId.c_str(),
-                      module.mName.c_str());
+                      NS_ConvertUTF16toUTF8(module.mName).get());
   }
 
   size_t numFrames = stack.GetStackSize();

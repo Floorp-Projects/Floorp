@@ -26,7 +26,7 @@ std::tuple<BIGNUM *, mp_int> get_modulus(const uint8_t *data, size_t size,
 
 // Initialise MPI and BN variables
 // XXX: Also silence unused variable warnings for R.
-#define INIT_NUMBERS                     \
+#define INIT_FOUR_NUMBERS                \
   mp_int a, b, c, r;                     \
   mp_int *m1 = nullptr;                  \
   BN_CTX *ctx = BN_CTX_new();            \
@@ -45,6 +45,24 @@ std::tuple<BIGNUM *, mp_int> get_modulus(const uint8_t *data, size_t size,
     (void)(R);                           \
   } while (0);
 
+// Initialise MPI and BN variables
+// XXX: Also silence unused variable warnings for B.
+#define INIT_THREE_NUMBERS        \
+  mp_int a, b, c;                 \
+  BN_CTX *ctx = BN_CTX_new();     \
+  BN_CTX_start(ctx);              \
+  BIGNUM *A = BN_CTX_get(ctx);    \
+  BIGNUM *B = BN_CTX_get(ctx);    \
+  BIGNUM *C = BN_CTX_get(ctx);    \
+  assert(mp_init(&a) == MP_OKAY); \
+  assert(mp_init(&b) == MP_OKAY); \
+  assert(mp_init(&c) == MP_OKAY); \
+  size_t max_size = 4 * size + 1; \
+  parse_input(data, size, A, &a); \
+  do {                            \
+    (void)(B);                    \
+  } while (0);
+
 #define CLEANUP_AND_RETURN \
   mp_clear(&a);            \
   mp_clear(&b);            \
@@ -55,6 +73,14 @@ std::tuple<BIGNUM *, mp_int> get_modulus(const uint8_t *data, size_t size,
   }                        \
   BN_CTX_end(ctx);         \
   BN_CTX_free(ctx);        \
+  return 0;
+
+#define CLEANUP_AND_RETURN_THREE \
+  mp_clear(&a);                  \
+  mp_clear(&b);                  \
+  mp_clear(&c);                  \
+  BN_CTX_end(ctx);               \
+  BN_CTX_free(ctx);              \
   return 0;
 
 #endif  // mpi_helper_h__

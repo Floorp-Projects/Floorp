@@ -36,7 +36,7 @@ add_task(function* () {
   });
   yield wait;
 
-  document.querySelector(".requests-menu-contents").focus();
+  document.querySelector(".requests-list-contents").focus();
 
   check(-1, false);
 

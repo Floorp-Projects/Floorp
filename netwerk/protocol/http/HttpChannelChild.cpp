@@ -969,8 +969,23 @@ HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
   // NB: We use aChannelStatus here instead of mStatus because if there was an
   // nsCORSListenerProxy on this request, it will override the tracking
   // protection's return value.
-  if (aChannelStatus == NS_ERROR_TRACKING_URI) {
-    nsChannelClassifier::SetBlockedTrackingContent(this);
+  if (aChannelStatus == NS_ERROR_TRACKING_URI ||
+      aChannelStatus == NS_ERROR_MALWARE_URI ||
+      aChannelStatus == NS_ERROR_UNWANTED_URI ||
+      aChannelStatus == NS_ERROR_BLOCKED_URI ||
+      aChannelStatus == NS_ERROR_PHISHING_URI) {
+    nsCString list, provider, prefix;
+
+    nsresult rv = GetMatchedList(list);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    rv = GetMatchedProvider(provider);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    rv = GetMatchedPrefix(prefix);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    nsChannelClassifier::SetBlockedContent(this, aChannelStatus, list, provider, prefix);
   }
 
   MOZ_ASSERT(!mOnStopRequestCalled,
@@ -1516,6 +1531,14 @@ HttpChannelChild::FlushedForDiversion()
 
   SendDivertComplete();
 }
+
+mozilla::ipc::IPCResult
+HttpChannelChild::RecvSetClassifierMatchedInfo(const ClassifierInfo& aInfo)
+{
+  SetMatchedInfo(aInfo.list(), aInfo.provider(), aInfo.prefix());
+  return IPC_OK();
+}
+
 
 mozilla::ipc::IPCResult
 HttpChannelChild::RecvDivertMessages()

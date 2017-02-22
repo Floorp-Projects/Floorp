@@ -241,6 +241,14 @@ AtomMarkingRuntime::markAtom(JSContext* cx, TenuredCell* thing)
         // not being collected by the incremental GC.
         TenuredCell::readBarrier(thing);
     }
+
+    // Children of the thing also need to be marked in the context's zone.
+    // We don't have a JSTracer for this so manually handle the cases in which
+    // an atom can reference other atoms.
+    if (thing->getTraceKind() == JS::TraceKind::Symbol) {
+        JSAtom* description = static_cast<JS::Symbol*>(thing)->description();
+        markAtom(cx, description);
+    }
 }
 
 void

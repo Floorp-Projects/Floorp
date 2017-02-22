@@ -1218,7 +1218,7 @@ var BrowserApp = {
 
     if (fullscreenState) {
        this.fullscreenTransitionTab = newTab;
-       doc.exitFullscreen();
+       this.selectedBrowser.contentDocument.exitFullscreen();
     }
 
     if (typeof aParams.tabIndex == "number") {

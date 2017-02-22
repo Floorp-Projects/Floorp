@@ -200,19 +200,23 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_LOADED_MIXED_DISPLAY_CONTENT  = 0x00000200;
 
    /**
-   * Tracking content flags
+   *  Safe Browsing blocking content flags
    *
    * May be set in addition to the State security Flags, to indicate that
-   * tracking content has been encountered.
+   * tracking or unsafe content has been encountered.
    *
    * STATE_BLOCKED_TRACKING_CONTENT
    *   Tracking content has been blocked from loading.
    *
    * STATE_LOADED_TRACKING_CONTENT
    *   Tracking content has been loaded.
+   *
+   * STATE_BLOCKED_UNSAFE_CONTENT
+   *   Content which againts SafeBrowsing list has been blocked from loading.
    */
-  const unsigned long STATE_BLOCKED_TRACKING_CONTENT = 0x00001000;
-  const unsigned long STATE_LOADED_TRACKING_CONTENT  = 0x00002000;
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT         = 0x00001000;
+  const unsigned long STATE_LOADED_TRACKING_CONTENT          = 0x00002000;
+  const unsigned long STATE_BLOCKED_UNSAFE_CONTENT           = 0x00004000;
 
   /**
    * Security Strength Flags

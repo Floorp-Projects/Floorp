@@ -135,7 +135,7 @@ class Nursery
     static const size_t Alignment = gc::ChunkSize;
     static const size_t ChunkShift = gc::ChunkShift;
 
-    explicit Nursery(ZoneGroup* group);
+    explicit Nursery(JSRuntime* rt);
     ~Nursery();
 
     MOZ_MUST_USE bool init(uint32_t maxNurseryBytes, AutoLockGC& lock);
@@ -221,8 +221,8 @@ class Nursery
     void waitBackgroundFreeEnd();
 
     MOZ_MUST_USE bool addedUniqueIdToCell(gc::Cell* cell) {
-        if (!IsInsideNursery(cell) || !isEnabled())
-            return true;
+        MOZ_ASSERT(IsInsideNursery(cell));
+        MOZ_ASSERT(isEnabled());
         MOZ_ASSERT(cellsWithUid_.initialized());
         MOZ_ASSERT(!cellsWithUid_.has(cell));
         return cellsWithUid_.put(cell);
@@ -286,8 +286,8 @@ class Nursery
         char data[NurseryChunkUsableSize];
         gc::ChunkTrailer trailer;
         static NurseryChunk* fromChunk(gc::Chunk* chunk);
-        void init(ZoneGroup* group);
-        void poisonAndInit(ZoneGroup* group, uint8_t poison);
+        void init(JSRuntime* rt);
+        void poisonAndInit(JSRuntime* rt, uint8_t poison);
         uintptr_t start() const { return uintptr_t(&data); }
         uintptr_t end() const { return uintptr_t(&trailer); }
         gc::Chunk* toChunk(JSRuntime* rt);
@@ -295,8 +295,7 @@ class Nursery
     static_assert(sizeof(NurseryChunk) == gc::ChunkSize,
                   "Nursery chunk size must match gc::Chunk size.");
 
-    // The set of zones which this is the nursery for.
-    ZoneGroup* zoneGroup_;
+    JSRuntime* runtime_;
 
     /* Vector of allocated chunks to allocate from. */
     Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
@@ -429,7 +428,7 @@ class Nursery
 
     uintptr_t position() const { return position_; }
 
-    ZoneGroup* zoneGroup() const { return zoneGroup_; }
+    JSRuntime* runtime() const { return runtime_; }
 
     /* Allocates a new GC thing from the tenured generation during minor GC. */
     gc::TenuredCell* allocateFromTenured(JS::Zone* zone, gc::AllocKind thingKind);

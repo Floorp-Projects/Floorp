@@ -377,7 +377,6 @@ struct ECParamsStr {
     SECItem DEREncoding;
     ECCurveName name;
     SECItem curveOID;
-    int pointSize;
 };
 typedef struct ECParamsStr ECParams;
 

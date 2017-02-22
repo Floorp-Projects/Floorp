@@ -37,9 +37,14 @@ function stringifyGridFragments(fragments) {
 
 function getStringifiableFragment(fragment) {
   return {
+    areas: getStringifiableAreas(fragment.areas),
     cols: getStringifiableDimension(fragment.cols),
     rows: getStringifiableDimension(fragment.rows)
   };
+}
+
+function getStringifiableAreas(areas) {
+  return [...areas].map(getStringifiableArea);
 }
 
 function getStringifiableDimension(dimension) {
@@ -49,8 +54,12 @@ function getStringifiableDimension(dimension) {
   };
 }
 
-function getStringifiableLine({ breadth, number, start, names }) {
-  return { breadth, number, start, names };
+function getStringifiableArea({ columnEnd, columnStart, name, rowEnd, rowStart, type }) {
+  return { columnEnd, columnStart, name, rowEnd, rowStart, type };
+}
+
+function getStringifiableLine({ breadth, names, number, start }) {
+  return { breadth, names, number, start };
 }
 
 function getStringifiableTrack({ breadth, start, state, type }) {

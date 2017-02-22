@@ -48,20 +48,30 @@ typedef struct mp4parse_track_info {
 	int64_t media_time;
 } mp4parse_track_info;
 
+typedef struct mp4parse_indice {
+	uint64_t start_offset;
+	uint64_t end_offset;
+	uint64_t start_composition;
+	uint64_t end_composition;
+	uint64_t start_decode;
+	bool sync;
+} mp4parse_indice;
+
 typedef struct mp4parse_byte_data {
 	uint32_t length;
 	uint8_t const* data;
+	mp4parse_indice const* indices;
 } mp4parse_byte_data;
 
 typedef struct mp4parse_pssh_info {
 	mp4parse_byte_data data;
 } mp4parse_pssh_info;
 
-typedef struct mp4parser_sinf_info {
+typedef struct mp4parse_sinf_info {
 	uint32_t is_encrypted;
 	uint8_t iv_size;
 	mp4parse_byte_data kid;
-} mp4parser_sinf_info;
+} mp4parse_sinf_info;
 
 typedef struct mp4parse_track_audio_info {
 	uint16_t channels;
@@ -69,7 +79,7 @@ typedef struct mp4parse_track_audio_info {
 	uint32_t sample_rate;
 	uint16_t profile;
 	mp4parse_byte_data codec_specific_config;
-	mp4parser_sinf_info protected_data;
+	mp4parse_sinf_info protected_data;
 } mp4parse_track_audio_info;
 
 typedef struct mp4parse_track_video_info {
@@ -78,7 +88,7 @@ typedef struct mp4parse_track_video_info {
 	uint16_t image_width;
 	uint16_t image_height;
 	mp4parse_byte_data extra_data;
-	mp4parser_sinf_info protected_data;
+	mp4parse_sinf_info protected_data;
 } mp4parse_track_video_info;
 
 typedef struct mp4parse_fragment_info {
@@ -115,6 +125,8 @@ mp4parse_error mp4parse_get_track_audio_info(mp4parse_parser* parser, uint32_t t
 
 /// Fill the supplied `mp4parse_track_video_info` with metadata for `track`.
 mp4parse_error mp4parse_get_track_video_info(mp4parse_parser* parser, uint32_t track_index, mp4parse_track_video_info* info);
+
+mp4parse_error mp4parse_get_indice_table(mp4parse_parser* parser, uint32_t track_id, mp4parse_byte_data* indices);
 
 /// Fill the supplied `mp4parse_fragment_info` with metadata from fragmented file.
 mp4parse_error mp4parse_get_fragment_info(mp4parse_parser* parser, mp4parse_fragment_info* info);

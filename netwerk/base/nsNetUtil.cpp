@@ -989,26 +989,6 @@ NS_ExtractCharsetFromContentType(const nsACString &rawContentType,
 }
 
 nsresult
-NS_NewPartialLocalFileInputStream(nsIInputStream **result,
-                                  nsIFile         *file,
-                                  uint64_t         offset,
-                                  uint64_t         length,
-                                  int32_t          ioFlags       /* = -1 */,
-                                  int32_t          perm          /* = -1 */,
-                                  int32_t          behaviorFlags /* = 0 */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIPartialFileInputStream> in =
-        do_CreateInstance(NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(file, offset, length, ioFlags, perm, behaviorFlags);
-        if (NS_SUCCEEDED(rv))
-            rv = CallQueryInterface(in, result);
-    }
-    return rv;
-}
-
-nsresult
 NS_NewAtomicFileOutputStream(nsIOutputStream **result,
                                 nsIFile       *file,
                                 int32_t        ioFlags       /* = -1 */,
@@ -1572,6 +1552,7 @@ NS_SecurityHashURI(nsIURI *aURI)
     if (scheme.EqualsLiteral("file"))
         return schemeHash; // sad face
 
+#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
     bool hasFlag;
     if (NS_FAILED(NS_URIChainHasFlags(baseURI,
         nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
@@ -1586,6 +1567,7 @@ NS_SecurityHashURI(nsIURI *aURI)
             specHash = static_cast<uint32_t>(res);
         return specHash;
     }
+#endif
 
     nsAutoCString host;
     uint32_t hostHash = 0;
@@ -1672,6 +1654,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
         return NS_SUCCEEDED(rv) && filesAreEqual;
     }
 
+#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
     bool hasFlag;
     if (NS_FAILED(NS_URIChainHasFlags(targetBaseURI,
         nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
@@ -1685,6 +1668,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
                  NS_SUCCEEDED( sourceBaseURI->GetSpec(sourceSpec) ) &&
                  targetSpec.Equals(sourceSpec) );
     }
+#endif
 
     // Compare hosts
     nsAutoCString targetHost;
