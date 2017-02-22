@@ -183,6 +183,55 @@ add_test(function test_processPointerMoveAction() {
   run_next_test();
 });
 
+add_test(function test_computePointerDestinationViewport() {
+  let act = { type: "pointerMove", x: 100, y: 200, origin: "viewport"};
+  let inputState = new action.InputState.Pointer(action.PointerType.Mouse);
+  // these values should not affect the outcome
+  inputState.x = "99";
+  inputState.y = "10";
+  let target = action.computePointerDestination(act, inputState);
+  equal(act.x, target.x);
+  equal(act.y, target.y);
+
+  run_next_test();
+});
+
+add_test(function test_computePointerDestinationPointer() {
+  let act = { type: "pointerMove", x: 100, y: 200, origin: "pointer"};
+  let inputState = new action.InputState.Pointer(action.PointerType.Mouse);
+  inputState.x = 10;
+  inputState.y = 99;
+  let target = action.computePointerDestination(act, inputState);
+  equal(act.x + inputState.x, target.x);
+  equal(act.y + inputState.y, target.y);
+
+
+  run_next_test();
+});
+
+add_test(function test_computePointerDestinationElement() {
+  // origin represents a web element
+  // using an object literal instead to test default case in computePointerDestination
+  let act = {type: "pointerMove", x: 100, y: 200, origin: {}};
+  let inputState = new action.InputState.Pointer(action.PointerType.Mouse);
+  let elementCenter = {x: 10, y: 99};
+  let target = action.computePointerDestination(act, inputState, elementCenter);
+  equal(act.x + elementCenter.x, target.x);
+  equal(act.y + elementCenter.y, target.y);
+
+  Assert.throws(
+      () => action.computePointerDestination(act, inputState, {a: 1}),
+      InvalidArgumentError,
+      "Invalid element center coordinates.");
+
+  Assert.throws(
+      () => action.computePointerDestination(act, inputState, undefined),
+      InvalidArgumentError,
+      "Undefined element center coordinates.");
+
+  run_next_test();
+});
+
 add_test(function test_processPointerAction() {
   let actionSequence = {
     type: "pointer",
