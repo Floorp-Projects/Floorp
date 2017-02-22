@@ -200,6 +200,32 @@ def target_tasks_nightly_linux(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
+@_target_task('mozilla_beta_tasks')
+def target_tasks_mozilla_beta(full_task_graph, parameters):
+    """Select the set of tasks required for a promotable beta or release build
+    of linux, plus android CI. The candidates build process involves a pipeline
+    of builds and signing, but does not include beetmover or balrog jobs."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        if platform in ('android-api-15', 'android-x86'):
+            return True
+        if platform in ('linux64-nightly', 'linux-nightly'):
+            if task.kind not in [
+                'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
+                'checksums-signing',
+            ]:
+                return task.attributes.get('nightly', False)
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('mozilla_release_tasks')
+def target_tasks_mozilla_release(full_task_graph, parameters):
+    """Select the set of tasks required for a promotable beta or release build
+    of linux, plus android CI. The candidates build process involves a pipeline
+    of builds and signing, but does not include beetmover or balrog jobs."""
+    return target_tasks_mozilla_beta(full_task_graph, parameters)
+
+
 @_target_task('stylo_tasks')
 def target_tasks_stylo(full_task_graph, parameters):
     """Target stylotasks that only run on the m-c branch."""
