@@ -225,19 +225,19 @@ function closeBrowserAction(extension, win = window) {
   return Promise.resolve();
 }
 
-function* openContextMenu(selector = "#img1") {
+async function openContextMenu(selector = "#img1") {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
-  yield BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, gBrowser.selectedBrowser);
-  yield popupShownPromise;
+  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {type: "contextmenu"}, gBrowser.selectedBrowser);
+  await popupShownPromise;
   return contentAreaContextMenu;
 }
 
-function* closeContextMenu() {
+async function closeContextMenu() {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
   contentAreaContextMenu.hidePopup();
-  yield popupHiddenPromise;
+  await popupHiddenPromise;
 }
 
 function* openExtensionContextMenu(selector = "#img1") {
