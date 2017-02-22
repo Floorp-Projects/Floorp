@@ -11,6 +11,7 @@
 #include "VPXDecoder.h"
 #include "mozilla/EndianUtils.h"
 #include "prsystem.h"
+#include "mp4_demuxer/AnnexB.h"
 
 namespace mozilla {
 
@@ -231,6 +232,8 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
     return;
   }
 
+  bool isOpenH264 = aGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
 
@@ -241,6 +244,9 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
     codecSpecific.AppendElement(0); // mPacketizationMode.
     codecSpecific.AppendElements(mConfig.mExtraData->Elements(),
                                  mConfig.mExtraData->Length());
+    // OpenH264 expects pseudo-AVCC, but others must be passed
+    // AnnexB for H264.
+    mConvertToAnnexB = !isOpenH264;
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
     codec.mCodecType = kGMPVideoCodecVP8;
   } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
@@ -275,7 +281,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
   // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
   // and do not include the length of the buffer length field.
-  mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+  mConvertNALUnitLengths = isOpenH264;
 
   mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
 }
