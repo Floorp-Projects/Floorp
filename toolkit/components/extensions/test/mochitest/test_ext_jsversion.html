@@ -29,7 +29,7 @@ add_task(function* test_versioned_js() {
       "background.html": `
         <meta charset="utf-8">
         ${script('src="background.js" type="application/javascript"')}
-        ${script('src="background-1.js" type="application/javascript;version=1.8"')}
+        ${script('src="background-1.js" type="application/javascript"')}
         ${script('src="background-2.js" type="application/javascript;version=latest"')}
         ${script('src="background-3.js" type="application/javascript"')}
       `,

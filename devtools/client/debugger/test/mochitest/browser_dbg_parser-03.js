@@ -19,7 +19,7 @@ function test() {
     "<script type='text/javascript'>",
     "let b = 42;",
     "</script>",
-    "<script type='text/javascript;version=1.8'>",
+    "<script type='text/javascript'>",
     "let c = 42;",
     "</script>",
     "</head>"

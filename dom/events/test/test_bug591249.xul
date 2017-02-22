@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=591249
   <iframe id="iframe" src="chrome://mochitests/content/chrome/dom/events/test/bug591249_iframe.xul" style="height: 300px; width: 100%;"></iframe>
 </body>
 
-<script class="testbody" type="application/javascript;version=1.8"><![CDATA[
+<script class="testbody" type="application/javascript"><![CDATA[
 /** Test for Bug 591249 **/
 
 SimpleTest.waitForExplicitFinish();
