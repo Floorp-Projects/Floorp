@@ -1,3 +1,6 @@
+// This file expects contextMenu to be defined in the scope it is loaded into.
+/* global contextMenu:true */
+
 var lastElement;
 
 function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
