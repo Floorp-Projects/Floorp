@@ -58,7 +58,7 @@ static Atomic<uint32_t> wasmCodeAllocations(0);
 static const uint32_t MaxWasmCodeAllocations = 16384;
 
 static uint8_t*
-AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
+AllocateCodeSegment(JSContext* cx, uint32_t totalLength)
 {
     if (wasmCodeAllocations >= MaxWasmCodeAllocations)
         return nullptr;
@@ -68,6 +68,18 @@ AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
     totalLength = JS_ROUNDUP(totalLength, ExecutableCodePageSize);
 
     void* p = AllocateExecutableMemory(totalLength, ProtectionSetting::Writable);
+
+    // If the allocation failed and the embedding gives us a last-ditch attempt
+    // to purge all memory (which, in gecko, does a purging GC/CC/GC), do that
+    // then retry the allocation.
+    if (!p) {
+        JSRuntime* rt = cx->runtime();
+        if (rt->largeAllocationFailureCallback) {
+            rt->largeAllocationFailureCallback(rt->largeAllocationFailureCallbackData);
+            p = AllocateExecutableMemory(totalLength, ProtectionSetting::Writable);
+        }
+    }
+
     if (!p) {
         ReportOutOfMemory(cx);
         return nullptr;
