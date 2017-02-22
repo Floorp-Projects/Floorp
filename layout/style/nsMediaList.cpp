@@ -577,6 +577,34 @@ nsMediaList::Clone()
   return result.forget();
 }
 
+template<typename Func>
+nsresult
+nsMediaList::DoMediaChange(Func aCallback)
+{
+  nsCOMPtr<nsIDocument> doc;
+  if (mStyleSheet) {
+    doc = mStyleSheet->GetAssociatedDocument();
+  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
+  if (mStyleSheet) {
+    mStyleSheet->WillDirty();
+  }
+
+  nsresult rv = aCallback();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mStyleSheet) {
+    mStyleSheet->DidDirty();
+  }
+  /* XXXldb Pass something meaningful? */
+  if (doc) {
+    doc->StyleRuleChanged(mStyleSheet, nullptr);
+  }
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMediaList::GetMediaText(nsAString& aMediaText)
 {
@@ -584,39 +612,13 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
   return NS_OK;
 }
 
-// "sheet" should be a StyleSheet and "doc" should be an
-// nsCOMPtr<nsIDocument>
-#define BEGIN_MEDIA_CHANGE(sheet, doc)                         \
-  if (sheet) {                                                 \
-    doc = sheet->GetAssociatedDocument();                      \
-  }                                                            \
-  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);       \
-  if (sheet) {                                                 \
-    sheet->WillDirty();                                        \
-  }
-
-#define END_MEDIA_CHANGE(sheet, doc)                           \
-  if (sheet) {                                                 \
-    sheet->DidDirty();                                         \
-  }                                                            \
-  /* XXXldb Pass something meaningful? */                      \
-  if (doc) {                                                   \
-    doc->StyleRuleChanged(sheet, nullptr);                     \
-  }
-
-
 NS_IMETHODIMP
 nsMediaList::SetMediaText(const nsAString& aMediaText)
 {
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  SetText(aMediaText);
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return NS_OK;
+  return DoMediaChange([&]() {
+    SetText(aMediaText);
+    return NS_OK;
+  });
 }
 
 NS_IMETHODIMP
@@ -652,35 +654,13 @@ nsMediaList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn)
 NS_IMETHODIMP
 nsMediaList::DeleteMedium(const nsAString& aOldMedium)
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  rv = Delete(aOldMedium);
-  if (NS_FAILED(rv))
-    return rv;
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return rv;
+  return DoMediaChange([&]() { return Delete(aOldMedium); });
 }
 
 NS_IMETHODIMP
 nsMediaList::AppendMedium(const nsAString& aNewMedium)
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDocument> doc;
-
-  BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-
-  rv = Append(aNewMedium);
-  if (NS_FAILED(rv))
-    return rv;
-
-  END_MEDIA_CHANGE(mStyleSheet, doc)
-
-  return rv;
+  return DoMediaChange([&]() { return Append(aNewMedium); });
 }
 
 nsresult
