@@ -103,15 +103,22 @@ ProfileGatherer::Start(double aSinceTime,
 
 void
 ProfileGatherer::Start(double aSinceTime,
-                       nsIFile* aFile)
+                       const nsACString& aFileName)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  nsresult rv = file->InitWithNativePath(aFileName);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH();
+  }
+
   if (mGathering) {
     return;
   }
 
   mSinceTime = aSinceTime;
-  mFile = aFile;
+  mFile = file;
   mGathering = true;
   mPendingProfiles = 0;
 
@@ -127,18 +134,6 @@ ProfileGatherer::Start(double aSinceTime,
   if (!mPendingProfiles) {
     Finish();
   }
-}
-
-void
-ProfileGatherer::Start(double aSinceTime,
-                       const nsACString& aFileName)
-{
-  nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  nsresult rv = file->InitWithNativePath(aFileName);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH();
-  }
-  Start(aSinceTime, file);
 }
 
 void
