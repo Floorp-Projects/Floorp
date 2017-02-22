@@ -17,14 +17,16 @@ add_task(function* () {
   yield testFirstPage(inspector, view, testActor);
 
   info("Navigate to the second page");
+  let onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.eval(`content.location.href="${IFRAME2}"`);
-  yield inspector.once("markuploaded");
+  yield onMarkupLoaded;
 
   yield testSecondPage(inspector, view, testActor);
 
   info("Go back to the first page");
+  onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.eval("content.history.back();");
-  yield inspector.once("markuploaded");
+  yield onMarkupLoaded;
 
   yield testBackToFirstPage(inspector, view, testActor);
 });
