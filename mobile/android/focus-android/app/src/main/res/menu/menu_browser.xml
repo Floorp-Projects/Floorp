@@ -2,20 +2,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/back"
-        android:title="Back" />
+        android:title="@string/menu_back" />
     <item
         android:id="@+id/forward"
-        android:title="Forward" />
+        android:title="@string/menu_forward" />
     <item
         android:id="@+id/refresh"
-        android:title="Refresh" />
+        android:title="@string/menu_refresh" />
     <item
         android:id="@+id/share"
-        android:title="Share" />
+        android:title="@string/menu_share" />
     <item
         android:id="@+id/open"
-        android:title="Open with" />
+        android:title="@string/menu_open_with" />
     <item
         android:id="@+id/settings"
-        android:title="Settings" />
+        android:title="@string/menu_settings" />
 </menu>

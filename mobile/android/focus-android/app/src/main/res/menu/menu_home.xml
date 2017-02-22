@@ -5,14 +5,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/settings"
-        android:title="Settings" />
+        android:title="@string/menu_settings" />
     <item
         android:id="@+id/about"
-        android:title="About" />
+        android:title="@string/menu_about" />
     <item
         android:id="@+id/help"
-        android:title="Help" />
+        android:title="@string/menu_help" />
     <item
         android:id="@+id/rights"
-        android:title="Your Rights" />
+        android:title="@string/menu_rights" />
 </menu>
