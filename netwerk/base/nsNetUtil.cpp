@@ -989,26 +989,6 @@ NS_ExtractCharsetFromContentType(const nsACString &rawContentType,
 }
 
 nsresult
-NS_NewPartialLocalFileInputStream(nsIInputStream **result,
-                                  nsIFile         *file,
-                                  uint64_t         offset,
-                                  uint64_t         length,
-                                  int32_t          ioFlags       /* = -1 */,
-                                  int32_t          perm          /* = -1 */,
-                                  int32_t          behaviorFlags /* = 0 */)
-{
-    nsresult rv;
-    nsCOMPtr<nsIPartialFileInputStream> in =
-        do_CreateInstance(NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(file, offset, length, ioFlags, perm, behaviorFlags);
-        if (NS_SUCCEEDED(rv))
-            rv = CallQueryInterface(in, result);
-    }
-    return rv;
-}
-
-nsresult
 NS_NewAtomicFileOutputStream(nsIOutputStream **result,
                                 nsIFile       *file,
                                 int32_t        ioFlags       /* = -1 */,
