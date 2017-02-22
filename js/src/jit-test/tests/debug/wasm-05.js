@@ -3,8 +3,8 @@
 
 load(libdir + "asserts.js");
 
-if (!wasmIsSupported())
-     quit();
+// Disabled in aurora (see also bug 1326452).
+quit();
 
 // Checking if experimental format generates internal source map to binary file
 // by querying debugger scripts getLineOffsets.
