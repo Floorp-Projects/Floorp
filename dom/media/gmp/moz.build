@@ -68,6 +68,8 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'ChromiumCDMChild.cpp',
+    'ChromiumCDMParent.cpp',
     'DecryptJob.cpp',
     'GMPCDMCallbackProxy.cpp',
     'GMPCDMProxy.cpp',
@@ -111,6 +113,7 @@ DIRS += [
 
 IPDL_SOURCES += [
   'GMPTypes.ipdlh',
+  'PChromiumCDM.ipdl',
   'PGMP.ipdl',
   'PGMPContent.ipdl',
   'PGMPDecryptor.ipdl',
