@@ -89,26 +89,30 @@ class ActionSequence(object):
             .key_up("a") \
             .perform()
     """
-    def __init__(self, session, action_type, input_id):
+    def __init__(self, session, action_type, input_id, pointer_params=None):
         """Represents a sequence of actions of one type for one input source.
 
         :param session: WebDriver session.
         :param action_type: Action type; may be "none", "key", or "pointer".
         :param input_id: ID of input source.
+        :param pointer_params: Optional dictionary of pointer parameters.
         """
         self.session = session
-        # TODO take advantage of remote end generating uuid
         self._id = input_id
         self._type = action_type
         self._actions = []
+        self._pointer_params = pointer_params
 
     @property
     def dict(self):
-        return {
-          "type": self._type,
-          "id": self._id,
-          "actions": self._actions,
+        d = {
+            "type": self._type,
+            "id": self._id,
+            "actions": self._actions,
         }
+        if self._pointer_params is not None:
+            d["parameters"] = self._pointer_params
+        return d
 
     @command
     def perform(self):
@@ -117,6 +121,48 @@ class ActionSequence(object):
 
     def _key_action(self, subtype, value):
         self._actions.append({"type": subtype, "value": value})
+
+    def _pointer_action(self, subtype, button):
+        self._actions.append({"type": subtype, "button": button})
+
+    def pointer_move(self, x, y, duration=None, origin=None):
+        """Queue a pointerMove action.
+
+        :param x: Destination x-axis coordinate of pointer in CSS pixels.
+        :param y: Destination y-axis coordinate of pointer in CSS pixels.
+        :param duration: Number of milliseconds over which to distribute the
+                         move. If None, remote end defaults to 0.
+        :param origin: Origin of coordinates, either "viewport", "pointer" or
+                       an Element. If None, remote end defaults to "viewport".
+        """
+        # TODO change to pointerMove once geckodriver > 0.14 is available on mozilla-central
+        action = {
+            "type": "move",
+            "x": x,
+            "y": y
+        }
+        if duration is not None:
+            action["duration"] = duration
+        if origin is not None:
+            action["origin"] = origin if isinstance(origin, basestring) else origin.json()
+        self._actions.append(action)
+        return self
+
+    def pointer_up(self, button):
+        """Queue a pointerUp action for `button`.
+
+        :param button: Pointer button to perform action with.
+        """
+        self._pointer_action("pointerUp", button)
+        return self
+
+    def pointer_down(self, button):
+        """Queue a pointerDown action for `button`.
+
+        :param button: Pointer button to perform action with.
+        """
+        self._pointer_action("pointerDown", button)
+        return self
 
     def key_up(self, value):
         """Queue a keyUp action for `value`.
