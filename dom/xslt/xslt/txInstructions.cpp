@@ -470,7 +470,7 @@ txLoopNodeSet::execute(txExecutionState& aEs)
     txNodeSetContext* context =
         static_cast<txNodeSetContext*>(aEs.getEvalContext());
     if (!context->hasNext()) {
-        delete aEs.popEvalContext();
+        aEs.popAndDeleteEvalContext();
 
         return NS_OK;
     }
