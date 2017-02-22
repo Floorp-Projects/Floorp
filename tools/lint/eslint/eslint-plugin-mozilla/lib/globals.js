@@ -60,6 +60,13 @@ function parseBooleanConfig(string, comment) {
 const globalCache = new Map();
 
 /**
+ * Global discovery can occasionally meet circular dependencies due to the way
+ * js files are included via xul files etc. This set is used to avoid getting
+ * into loops whilst the discovery is in progress.
+ */
+var globalDiscoveryInProgressForFiles = new Set();
+
+/**
  * An object that returns found globals for given AST node types. Each prototype
  * property should be named for a node type and accepts a node parameter and a
  * parents parameter which is a list of the parent nodes of the current node.
@@ -130,6 +137,14 @@ module.exports = {
       return globalCache.get(path);
     }
 
+    if (globalDiscoveryInProgressForFiles.has(path)) {
+      // We're already processing this file, so return an empty set for now -
+      // the initial processing will pick up on the globals for this file.
+      return [];
+    } else {
+      globalDiscoveryInProgressForFiles.add(path);
+    }
+
     let content = fs.readFileSync(path, "utf8");
 
     // Parse the content into an AST
@@ -173,6 +188,7 @@ module.exports = {
 
     globalCache.set(path, globals);
 
+    globalDiscoveryInProgressForFiles.delete(path);
     return globals;
   },
 
