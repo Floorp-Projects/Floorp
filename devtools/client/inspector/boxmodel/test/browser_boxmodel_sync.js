@@ -17,14 +17,14 @@ add_task(function* () {
   yield selectNode("p", inspector);
 
   info("Modify padding-bottom in box model view");
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-bottom > span");
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
-  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
 
-  EventUtils.synthesizeKey("7", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("7", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
   is(editor.value, "7", "Should have the right value in the editor.");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   let onRuleViewRefreshed = once(inspector, "rule-view-refreshed");
   let onRuleViewSelected = once(inspector.sidebar, "ruleview-selected");
