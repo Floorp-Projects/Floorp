@@ -5,6 +5,7 @@
 
 #include "WidevineUtils.h"
 #include "WidevineDecryptor.h"
+#include <mozilla/SizePrintfMacros.h>
 
 #include "gmp-api/gmp-errors.h"
 #include <stdarg.h>
@@ -74,6 +75,92 @@ CDMWrapper::~CDMWrapper()
   CDM_LOG("CDMWrapper destroying CDM=%p", mCDM);
   mCDM->Destroy();
   mCDM = nullptr;
+}
+
+WidevineBuffer::WidevineBuffer(size_t aSize)
+{
+  CDM_LOG("WidevineBuffer(size=%" PRIuSIZE ") created", aSize);
+  mBuffer.SetLength(aSize);
+}
+
+WidevineBuffer::~WidevineBuffer()
+{
+  CDM_LOG("WidevineBuffer(size=%" PRIu32 ") destroyed", Size());
+}
+
+void
+WidevineBuffer::Destroy()
+{
+  delete this;
+}
+
+uint32_t
+WidevineBuffer::Capacity() const
+{
+  return mBuffer.Length();
+}
+
+uint8_t*
+WidevineBuffer::Data()
+{
+  return mBuffer.Elements();
+}
+
+void
+WidevineBuffer::SetSize(uint32_t aSize)
+{
+  mBuffer.SetLength(aSize);
+}
+
+uint32_t
+WidevineBuffer::Size() const
+{
+  return mBuffer.Length();
+}
+
+nsTArray<uint8_t>
+WidevineBuffer::ExtractBuffer() {
+  nsTArray<uint8_t> out;
+  out.SwapElements(mBuffer);
+  return out;
+}
+
+WidevineDecryptedBlock::WidevineDecryptedBlock()
+  : mBuffer(nullptr)
+  , mTimestamp(0)
+{
+}
+
+WidevineDecryptedBlock::~WidevineDecryptedBlock()
+{
+  if (mBuffer) {
+    mBuffer->Destroy();
+    mBuffer = nullptr;
+  }
+}
+
+void
+WidevineDecryptedBlock::SetDecryptedBuffer(cdm::Buffer* aBuffer)
+{
+  mBuffer = aBuffer;
+}
+
+cdm::Buffer*
+WidevineDecryptedBlock::DecryptedBuffer()
+{
+  return mBuffer;
+}
+
+void
+WidevineDecryptedBlock::SetTimestamp(int64_t aTimestamp)
+{
+  mTimestamp = aTimestamp;
+}
+
+int64_t
+WidevineDecryptedBlock::Timestamp() const
+{
+  return mTimestamp;
 }
 
 } // namespace mozilla
