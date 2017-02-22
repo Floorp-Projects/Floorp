@@ -26,7 +26,13 @@ public class UrlAutoCompleteFilter implements InlineAutocompleteEditText.OnFilte
             return;
         }
 
-        for (String domain : domains) {
+        for (final String domain : domains) {
+            final String wwwDomain = "www." + domain;
+            if (wwwDomain.startsWith(searchText)) {
+                view.onAutocomplete(wwwDomain);
+                return;
+            }
+
             if (domain.startsWith(searchText)) {
                 view.onAutocomplete(domain);
                 return;
