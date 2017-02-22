@@ -403,10 +403,52 @@ assertThrowsInstanceOf(function() {
     parseAsModule("export {,} from 'a'");
 }, SyntaxError);
 
-parseAsModule("export { true as a } from 'b'");
+program([
+    exportDeclaration(
+        null,
+        [
+            exportSpecifier(
+                ident("true"),
+                ident("true")
+            ),
+        ],
+        lit("b"),
+        false
+    )
+]).assert(parseAsModule("export { true } from 'b'"));
+
+program([
+    exportDeclaration(
+        null,
+        [
+            exportSpecifier(
+                ident("true"),
+                ident("name")
+            ),
+        ],
+        lit("b"),
+        false
+    )
+]).assert(parseAsModule("export { true as name } from 'b'"));
+
+assertThrowsInstanceOf(function() {
+    parseAsModule("export { true }");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    parseAsModule("export { true as name }");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    parseAsModule("export { static }");
+}, SyntaxError);
+
+assertThrowsInstanceOf(function() {
+    parseAsModule("export { static as name }");
+}, SyntaxError);
 
 assertThrowsInstanceOf(function () {
-    parseAsModule("export { a } from 'b' f();");
+    parseAsModule("export { name } from 'b' f();");
 }, SyntaxError);
 
 assertThrowsInstanceOf(function () {
