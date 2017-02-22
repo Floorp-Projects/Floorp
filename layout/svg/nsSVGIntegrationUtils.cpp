@@ -85,66 +85,20 @@ private:
     if (r) {
       return *r;
     }
-    // Despite the fact that we're invoked for frames with SVG effects applied,
-    // we can actually get here. All continuations and IB split siblings of a
-    // frame with SVG effects applied will have the PreEffectsBBoxProperty
-    // property set on them. Therefore, the frames that are passed to us will
-    // always have that property set...well, with one exception. If the frames
-    // for an element with SVG effects applied have been subject to an "IB
-    // split", then the block frame(s) that caused the split will have been
-    // wrapped in anonymous, inline-block, nsBlockFrames of pseudo-type
-    // nsCSSAnonBoxes::mozAnonymousBlock. These "IB split sibling" anonymous
-    // blocks will have the PreEffectsBBoxProperty property set on them, but
-    // they will never be passed to us. Instead, we'll be passed the block
-    // children that they wrap, which don't have the PreEffectsBBoxProperty
-    // property set on them. This is actually okay. What we care about is
-    // collecting the _pre_ effects visual overflow rects of the frames to
-    // which the SVG effects have been applied. Since the IB split results in
-    // any overflow rect adjustments for transforms, effects, etc. taking
-    // place on the anonymous block wrappers, the wrapped children are left
-    // with their overflow rects unaffected. In other words, calling
-    // GetVisualOverflowRect() on the children will return their pre-effects
-    // visual overflow rects, just as we need.
-    //
-    // A couple of tests that demonstrate the IB split and cause us to get here
-    // are:
-    //
-    //  * reftests/svg/svg-integration/clipPath-html-06.xhtml
-    //  * reftests/svg/svg-integration/clipPath-html-06-extref.xhtml
-    //
-    // If we ever got passed a frame with the PreTransformOverflowAreasProperty
-    // property set, that would be bad, since then our GetVisualOverflowRect()
-    // call would give us the post-effects, and post-transform, overflow rect.
-    //
-    // There is one more exceptions, in
-    // nsStyleImageLayers::Layer::CalcDifference, we do not add
-    // nsChangeHint_UpdateOverflow hint when image mask(not SVG mask) property
-    // value changed, since replace image mask does not cause layout change.
-    // So even if we apply a new mask image to this frame,
-    // PreEffectsBBoxProperty might still left empty.
+
 #ifdef DEBUG
-    if (aCheckPropCache) {
-      nsIFrame* firstFrame =
-        nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-      bool mightHaveNoneSVGMask =
-        nsSVGEffects::GetEffectProperties(firstFrame).MightHaveNoneSVGMask();
+    // Having PreTransformOverflowAreasProperty cached means
+    // GetVisualOverflowRect() will return post-effect rect, which is not what
+    // we want. This function intentional reports pre-effect rect. But it does
+    // not matter if there is no SVG effect on this frame, since no effect
+    // means post-effect rect matches pre-effect rect.
+    if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
+      nsOverflowAreas* preTransformOverflows =
+        aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
 
-      NS_ASSERTION(mightHaveNoneSVGMask ||
-                   aFrame->GetParent()->StyleContext()->GetPseudo() ==
-                   nsCSSAnonBoxes::mozAnonymousBlock,
-                   "How did we getting here, then?");
+      MOZ_ASSERT(!preTransformOverflows,
+                 "GetVisualOverflowRect() won't return the pre-effects rect!");
     }
-
-    bool hasEffect = nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame);
-    nsOverflowAreas* preTransformOverflows =
-      aFrame->Properties().Get(aFrame->PreTransformOverflowAreasProperty());
-    // Having PreTransformOverflowAreasProperty means GetVisualOverflowRect()
-    // will return post-effect rect, which is not what we want, this function
-    // intentional reports pre-effect rect. But it does not matter if there is
-    // no SVG effect on this frame, since no effect means post-effect rect
-    // matches pre-effect rect.
-    MOZ_ASSERT(!hasEffect || !preTransformOverflows,
-               "GetVisualOverflowRect() won't return the pre-effects rect!");
 #endif
     return aFrame->GetVisualOverflowRect();
   }
