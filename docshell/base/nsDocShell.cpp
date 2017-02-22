@@ -795,6 +795,7 @@ nsDocShell::nsDocShell()
   , mIsAppTab(false)
   , mUseGlobalHistory(false)
   , mUseRemoteTabs(false)
+  , mUseTrackingProtection(false)
   , mDeviceSizeIsPageSize(false)
   , mWindowDraggingAllowed(false)
   , mInFrameSwap(false)
@@ -8852,14 +8853,7 @@ nsDocShell::RestoreFromHistory()
       nsCOMPtr<nsIDocument> d = parent->GetDocument();
       if (d) {
         if (d->EventHandlingSuppressed()) {
-          document->SuppressEventHandling(nsIDocument::eEvents,
-                                          d->EventHandlingSuppressed());
-        }
-
-        // Ick, it'd be nicer to not rewalk all of the subdocs here.
-        if (d->AnimationsPaused()) {
-          document->SuppressEventHandling(nsIDocument::eAnimationsOnly,
-                                          d->AnimationsPaused());
+          document->SuppressEventHandling(d->EventHandlingSuppressed());
         }
       }
     }
@@ -13686,17 +13680,40 @@ nsDocShell::GetNestedFrameId(uint64_t* aId)
 }
 
 NS_IMETHODIMP
-nsDocShell::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+nsDocShell::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
-  if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
-    *aIsTrackingProtectionOn = true;
-  } else if (UsePrivateBrowsing() &&
-             Preferences::GetBool("privacy.trackingprotection.pbmode.enabled", false)) {
-    *aIsTrackingProtectionOn = true;
-  } else {
-    *aIsTrackingProtectionOn = false;
+  *aUseTrackingProtection  = false;
+
+  static bool sTPEnabled = false;
+  static bool sTPInPBEnabled = false;
+  static bool sPrefsInit = false;
+
+  if (!sPrefsInit) {
+    sPrefsInit = true;
+    Preferences::AddBoolVarCache(&sTPEnabled,
+      "privacy.trackingprotection.enabled", false);
+    Preferences::AddBoolVarCache(&sTPInPBEnabled,
+      "privacy.trackingprotection.pbmode.enabled", false);
   }
 
+  if (mUseTrackingProtection || sTPEnabled ||
+      (UsePrivateBrowsing() && sTPInPBEnabled)) {
+    *aUseTrackingProtection = true;
+    return NS_OK;
+  }
+
+  RefPtr<nsDocShell> parent = GetParentDocshell();
+  if (parent) {
+    return parent->GetUseTrackingProtection(aUseTrackingProtection);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetUseTrackingProtection(bool aUseTrackingProtection)
+{
+  mUseTrackingProtection = aUseTrackingProtection;
   return NS_OK;
 }
 

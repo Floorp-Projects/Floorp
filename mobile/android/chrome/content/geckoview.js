@@ -47,6 +47,8 @@ var ModuleManager = {
 
 function startup() {
   ModuleManager.init();
+  ModuleManager.add("resource://gre/modules/GeckoViewSettings.jsm",
+                    "GeckoViewSettings");
   ModuleManager.add("resource://gre/modules/GeckoViewContent.jsm",
                     "GeckoViewContent");
   ModuleManager.add("resource://gre/modules/GeckoViewNavigation.jsm",

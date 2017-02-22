@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for bug 1327798</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?=id=1327798">Mozilla Bug 1327798</a>
+<p id="display"></p>
+<div id="content" style="display: none;"></div>
+
+<div contenteditable="true" id="editable1"><b>Formatted Text</b><br></div>
+<pre>
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  var editable = document.getElementById("editable1");
+  editable.focus();
+
+  window.getSelection().selectAllChildren(editable1);
+
+  SpecialPowers.doCommand(window, "cmd_copy");
+
+  //--------- now check the content of the clipboard
+  var clipboard = SpecialPowers.Cc["@mozilla.org/widget/clipboard;1"]
+                               .getService(SpecialPowers.Ci.nsIClipboard);
+  // does the clipboard contain text/unicode data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/unicode"], 1, clipboard.kGlobalClipboard),
+     "clipboard contains unicode text");
+  // does the clipboard contain text/html data ?
+  ok(clipboard.hasDataMatchingFlavors(["text/html"], 1, clipboard.kGlobalClipboard),
+     "clipboard contains html text");
+
+  window.addEventListener("paste", (e) => {
+    ok(e.clipboardData.types.indexOf('text/html'), -1, "clipboardData shouldn't have text/html");
+    ok(e.clipboardData.getData('text/plain'), "Formatted Text",  "getData(text/plain) should return plain text");
+    SimpleTest.finish();
+  });
+
+  SpecialPowers.doCommand(window, "cmd_pasteNoFormatting");
+});
+</script>
+</pre>
+</body>
+</html>

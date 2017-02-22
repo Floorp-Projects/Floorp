@@ -27,7 +27,7 @@ job-template:
    locales-file:
       by-build-platform:
          default: browser/locales/all-locales
-         android-api-15-l10n: mobile/android/locales/all-locales
+         android-api-15-l10n: mobile/locales/l10n-changesets.json
    run-time:
       by-build-platform:
          default: 36000
