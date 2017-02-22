@@ -13,12 +13,7 @@ add_task(function* checkBackFromInvalidURI() {
   gURLBar.value = "::2600";
   gURLBar.focus();
 
-  let promiseErrorPageLoaded = new Promise(resolve => {
-    tab.linkedBrowser.addEventListener("DOMContentLoaded", function onLoad() {
-      tab.linkedBrowser.removeEventListener("DOMContentLoaded", onLoad, false, true);
-      resolve();
-    }, false, true);
-  });
+  let promiseErrorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
   EventUtils.synthesizeKey("VK_RETURN", {});
   yield promiseErrorPageLoaded;
 

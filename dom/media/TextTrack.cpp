@@ -263,6 +263,7 @@ TextTrack::SetReadyState(TextTrackReadyState aState)
   if (mediaElement && (mReadyState == TextTrackReadyState::Loaded||
       mReadyState == TextTrackReadyState::FailedToLoad)) {
     mediaElement->RemoveTextTrack(this, true);
+    mediaElement->UpdateReadyState();
   }
 }
 
@@ -335,6 +336,23 @@ TextTrack::DispatchAsyncTrustedEvent(const nsString& aEventName)
       self->DispatchTrustedEvent(aEventName);
     })
   );
+}
+
+bool
+TextTrack::IsLoaded()
+{
+  if (mMode == TextTrackMode::Disabled) {
+    return true;
+  }
+  // If the TrackElement's src is null, we can not block the
+  // MediaElement.
+  if (mTrackElement) {
+    nsAutoString src;
+    if (!(mTrackElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src))) {
+      return true;
+    }
+  }
+  return (mReadyState >= Loaded);
 }
 
 } // namespace dom
