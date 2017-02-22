@@ -163,6 +163,17 @@ txExecutionState::end(nsresult aResult)
 }
 
 void
+txExecutionState::popAndDeleteEvalContext()
+{
+  if (!mEvalContextStack.isEmpty()) {
+    auto ctx = popEvalContext();
+    if (ctx != mInitialEvalContext) {
+      delete ctx;
+    }
+  }
+}
+
+void
 txExecutionState::popAndDeleteEvalContextUntil(txIEvalContext* aContext)
 {
   auto ctx = popEvalContext();
