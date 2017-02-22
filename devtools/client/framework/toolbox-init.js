@@ -58,30 +58,30 @@ if (url.search.length > 1) {
       // `iframe` is the targeted document to debug
       let iframe = host.wrappedJSObject ? host.wrappedJSObject.target
                                         : host.target;
+      if (!iframe) {
+        throw new Error("Unable to find the targeted iframe to debug");
+      }
+
       // Need to use a xray and query some interfaces to have
       // attributes and behavior expected by devtools codebase
       iframe = XPCNativeWrapper(iframe);
       iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
 
-      if (iframe) {
-        // Fake a xul:tab object as we don't have one.
-        // linkedBrowser is the only one attribute being queried by client.getTab
-        let tab = { linkedBrowser: iframe };
+      // Fake a xul:tab object as we don't have one.
+      // linkedBrowser is the only one attribute being queried by client.getTab
+      let tab = { linkedBrowser: iframe };
 
-        if (!DebuggerServer.initialized) {
-          DebuggerServer.init();
-          DebuggerServer.addBrowserActors();
-        }
-        let client = new DebuggerClient(DebuggerServer.connectPipe());
-
-        yield client.connect();
-        // Creates a target for a given browser iframe.
-        let response = yield client.getTab({ tab });
-        let form = response.tab;
-        target = yield TargetFactory.forRemoteTab({client, form, chrome: false});
-      } else {
-        alert("Unable to find the targetted iframe to debug");
+      if (!DebuggerServer.initialized) {
+        DebuggerServer.init();
+        DebuggerServer.addBrowserActors();
       }
+      let client = new DebuggerClient(DebuggerServer.connectPipe());
+
+      yield client.connect();
+      // Creates a target for a given browser iframe.
+      let response = yield client.getTab({ tab });
+      let form = response.tab;
+      target = yield TargetFactory.forRemoteTab({client, form, chrome: false});
     } else {
       target = yield targetFromURL(url);
     }
