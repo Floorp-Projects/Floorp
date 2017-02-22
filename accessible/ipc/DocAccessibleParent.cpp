@@ -398,9 +398,12 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   ipc::IPCResult result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
   MOZ_ASSERT(CheckDocTree());
+#ifdef DEBUG
   if (!result) {
     return result;
   }
+#endif
+
   return IPC_OK();
 }
 
@@ -412,11 +415,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // document it self.
   ProxyEntry* e = mAccessibles.GetEntry(aParentID);
   if (!e) {
-#ifdef DEBUG
     return IPC_FAIL(this, "binding to nonexistant proxy!");
-#else
-    return IPC_OK();
-#endif
   }
 
   ProxyAccessible* outerDoc = e->mProxy;
