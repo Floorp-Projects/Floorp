@@ -105,8 +105,11 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
       aEventMessage == eDragStart) {
     mReadOnly = false;
   } else if (mIsExternal) {
-    if (aEventMessage == ePaste) {
-      CacheExternalClipboardFormats();
+    if (aEventMessage == ePasteNoFormatting) {
+      mEventMessage = ePaste;
+      CacheExternalClipboardFormats(true);
+    } else if (aEventMessage == ePaste) {
+      CacheExternalClipboardFormats(false);
     } else if (aEventMessage >= eDragDropEventFirst &&
                aEventMessage <= eDragDropEventLast) {
       CacheExternalDragFormats();
@@ -1356,7 +1359,7 @@ DataTransfer::CacheExternalDragFormats()
 }
 
 void
-DataTransfer::CacheExternalClipboardFormats()
+DataTransfer::CacheExternalClipboardFormats(bool aPlainTextOnly)
 {
   NS_ASSERTION(mEventMessage == ePaste,
                "caching clipboard data for invalid event");
@@ -1374,6 +1377,17 @@ DataTransfer::CacheExternalClipboardFormats()
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> sysPrincipal;
   ssm->GetSystemPrincipal(getter_AddRefs(sysPrincipal));
+
+  if (aPlainTextOnly) {
+    bool supported;
+    const char* unicodeMime[] = { kUnicodeMime };
+    clipboard->HasDataMatchingFlavors(unicodeMime, 1, mClipboardType,
+                                      &supported);
+    if (supported) {
+      CacheExternalData(kUnicodeMime, 0, sysPrincipal, false);
+    }
+    return;
+  }
 
   // Check if the clipboard has any files
   bool hasFileData = false;
