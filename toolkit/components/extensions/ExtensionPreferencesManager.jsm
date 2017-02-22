@@ -57,22 +57,32 @@ function initialValueCallback() {
 }
 
 /**
- * Takes an object of preferenceName:value pairs and either sets or resets the
- * preference to the value.
+ * Takes an item returned by the ExtensionSettingsStore and conditionally sets
+ * preferences based on the item's contents.
  *
- * @param {Object} prefsObject
- *        An object with one property per preference, which holds the value to
- *        store in that preference. If the value is undefined then the
- *        preference is reset.
- */
-function setPrefs(prefsObject) {
-  for (let pref in prefsObject) {
-    if (prefsObject[pref] === undefined) {
-      Preferences.reset(pref);
-    } else {
-      Preferences.set(pref, prefsObject[pref]);
+ * @param {string} name
+ *        The name of the setting being processed.
+ * @param {Object|null} item
+ *        Either null, or an object with a value property which indicates the
+ *        value stored for the setting in the settings store.
+
+ * @returns {Promise}
+ *          Resolves to true if the preferences were changed and to false if
+ *          the preferences were not changed.
+*/
+async function processItem(name, item) {
+  if (item) {
+    let prefs = item.initialValue || await settingsMap.get(name).setCallback(item.value);
+    for (let pref in prefs) {
+      if (prefs[pref] === undefined) {
+        Preferences.reset(pref);
+      } else {
+        Preferences.set(pref, prefs[pref]);
+      }
     }
+    return true;
   }
+  return false;
 }
 
 this.ExtensionPreferencesManager = {
@@ -122,42 +132,109 @@ this.ExtensionPreferencesManager = {
     let setting = settingsMap.get(name);
     let item = await ExtensionSettingsStore.addSetting(
       extension, STORE_TYPE, name, value, initialValueCallback.bind(setting));
-    if (item) {
-      let prefs = await setting.setCallback(item.value);
-      setPrefs(prefs);
-      return true;
-    }
-    return false;
+    return await processItem(name, item);
   },
 
   /**
-   * Indicates that this extension no longer wants to set the given preference.
+   * Indicates that this extension wants to temporarily cede control over the
+   * given setting.
    *
    * @param {Extension} extension
    *        The extension for which a preference setting is being removed.
    * @param {string} name
    *        The unique id of the setting.
+   *
+   * @returns {Promise}
+   *          Resolves to true if the preferences were changed and to false if
+   *          the preferences were not changed.
    */
-  async unsetSetting(extension, name) {
-    let item = await ExtensionSettingsStore.removeSetting(
+  async disableSetting(extension, name) {
+    let item = await ExtensionSettingsStore.disable(
       extension, STORE_TYPE, name);
-    if (item) {
-      let prefs = item.initialValue || await settingsMap.get(name).setCallback(item.value);
-      setPrefs(prefs);
-    }
+    return await processItem(name, item);
   },
 
   /**
-   * Unsets all previously set settings for an extension. This can be called when
-   * an extension is being uninstalled or disabled, for example.
+   * Enable a setting that has been disabled.
    *
-   * @param {Extension} extension The extension for which all settings are being unset.
+   * @param {Extension} extension
+   *        The extension for which a setting is being enabled.
+   * @param {string} name
+   *        The unique id of the setting.
+   *
+   * @returns {Promise}
+   *          Resolves to true if the preferences were changed and to false if
+   *          the preferences were not changed.
    */
-  async unsetAll(extension) {
+  async enableSetting(extension, name) {
+    let item = await ExtensionSettingsStore.enable(extension, STORE_TYPE, name);
+    return await processItem(name, item);
+  },
+
+  /**
+   * Indicates that this extension no longer wants to set the given setting.
+   *
+   * @param {Extension} extension
+   *        The extension for which a preference setting is being removed.
+   * @param {string} name
+   *        The unique id of the setting.
+   *
+   * @returns {Promise}
+   *          Resolves to true if the preferences were changed and to false if
+   *          the preferences were not changed.
+   */
+  async removeSetting(extension, name) {
+    let item = await ExtensionSettingsStore.removeSetting(
+      extension, STORE_TYPE, name);
+    return await processItem(name, item);
+  },
+
+  /**
+   * Disables all previously set settings for an extension. This can be called when
+   * an extension is being disabled, for example.
+   *
+   * @param {Extension} extension
+   *        The extension for which all settings are being unset.
+   */
+  async disableAll(extension) {
     let settings = await ExtensionSettingsStore.getAllForExtension(extension, STORE_TYPE);
+    let disablePromises = [];
     for (let name of settings) {
-      await this.unsetSetting(extension, name);
+      disablePromises.push(this.disableSetting(extension, name));
     }
+    await Promise.all(disablePromises);
+  },
+
+  /**
+   * Enables all disabled settings for an extension. This can be called when
+   * an extension has finsihed updating or is being re-enabled, for example.
+   *
+   * @param {Extension} extension
+   *        The extension for which all settings are being enabled.
+   */
+  async enableAll(extension) {
+    let settings = await ExtensionSettingsStore.getAllForExtension(extension, STORE_TYPE);
+    let enablePromises = [];
+    for (let name of settings) {
+      enablePromises.push(this.enableSetting(extension, name));
+    }
+    await Promise.all(enablePromises);
+  },
+
+  /**
+   * Removes all previously set settings for an extension. This can be called when
+   * an extension is being uninstalled, for example.
+   *
+   * @param {Extension} extension
+   *        The extension for which all settings are being unset.
+   */
+  async removeAll(extension) {
+    let settings = await ExtensionSettingsStore.getAllForExtension(extension, STORE_TYPE);
+    let removePromises = [];
+    for (let name of settings) {
+      removePromises.push(this.removeSetting(extension, name));
+    }
+    await Promise.all(removePromises);
   },
 
   /**
