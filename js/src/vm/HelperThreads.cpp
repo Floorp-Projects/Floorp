@@ -1663,7 +1663,7 @@ JSContext::addPendingOutOfMemory()
 }
 
 void
-HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
+HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked, uintptr_t stackLimit)
 {
     MOZ_ASSERT(HelperThreadState().canStartParseTask(locked));
     MOZ_ASSERT(idle());
@@ -1903,7 +1903,14 @@ HelperThread::threadLoop()
             oomUnsafe.crash("HelperThread cx.init()");
     }
     cx.setHelperThread(this);
-    JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
+
+    // Compute the thread's stack limit, for over-recursed checks.
+    uintptr_t stackLimit = GetNativeStackBase();
+#if JS_STACK_GROWTH_DIRECTION > 0
+    stackLimit += HELPER_STACK_QUOTA;
+#else
+    stackLimit -= HELPER_STACK_QUOTA;
+#endif
 
     while (true) {
         MOZ_ASSERT(idle());
@@ -1939,7 +1946,7 @@ HelperThread::threadLoop()
             handlePromiseTaskWorkload(lock);
         } else if (HelperThreadState().canStartParseTask(lock)) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_PARSE);
-            handleParseWorkload(lock);
+            handleParseWorkload(lock, stackLimit);
         } else if (HelperThreadState().canStartCompressionTask(lock)) {
             js::oom::SetThreadType(js::oom::THREAD_TYPE_COMPRESS);
             handleCompressionWorkload(lock);
