@@ -25,7 +25,7 @@ LoadContext.prototype = {
   getInterface: XPCOMUtils.generateQI([Ci.nsILoadContext])
 };
 
-function getChannels() {
+function* getChannels() {
   for (let u of URIs) {
     yield NetUtil.newChannel({
       uri: u,
