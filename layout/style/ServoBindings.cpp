@@ -1019,7 +1019,7 @@ Gecko_SetStyleCoordCalcValue(nsStyleUnit* aUnit, nsStyleUnion* aValue, nsStyleCo
 }
 
 void
-Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* aDst, const mozilla::StyleClipPath* aSrc)
+Gecko_CopyClipPathValueFrom(mozilla::StyleShapeSource* aDst, const mozilla::StyleShapeSource* aSrc)
 {
   MOZ_ASSERT(aDst);
   MOZ_ASSERT(aSrc);
@@ -1028,13 +1028,13 @@ Gecko_CopyClipPathValueFrom(mozilla::StyleClipPath* aDst, const mozilla::StyleCl
 }
 
 void
-Gecko_DestroyClipPath(mozilla::StyleClipPath* aClip)
+Gecko_DestroyClipPath(mozilla::StyleShapeSource* aClip)
 {
-  aClip->~StyleClipPath();
+  aClip->~StyleShapeSource();
 }
 
 void
-Gecko_StyleClipPath_SetURLValue(mozilla::StyleClipPath* aClip, ServoBundledURI aURI)
+Gecko_StyleClipPath_SetURLValue(mozilla::StyleShapeSource* aClip, ServoBundledURI aURI)
 {
   RefPtr<css::URLValue> url = aURI.IntoCssUrl();
   aClip->SetURL(url.get());

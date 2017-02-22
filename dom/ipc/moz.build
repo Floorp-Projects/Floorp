@@ -95,6 +95,7 @@ IPDL_SOURCES += [
     'PScreenManager.ipdl',
     'PTabContext.ipdlh',
     'PURLClassifier.ipdl',
+    'PURLClassifierInfo.ipdlh',
     'ServiceWorkerConfiguration.ipdlh',
 ]
 

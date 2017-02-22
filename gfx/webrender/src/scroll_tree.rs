@@ -6,28 +6,85 @@ use fnv::FnvHasher;
 use layer::{Layer, ScrollingState};
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasherDefault;
-use webrender_traits::{LayerPoint, PipelineId, ScrollEventPhase, ScrollLayerId, ScrollLayerInfo};
-use webrender_traits::{ScrollLayerPixel, ScrollLayerRect, ScrollLayerState, ScrollLocation};
-use webrender_traits::{ScrollToWorldTransform, ServoScrollRootId, WorldPoint};
-use webrender_traits::as_scroll_parent_rect;
+use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, PipelineId};
+use webrender_traits::{ScrollEventPhase, ScrollLayerId, ScrollLayerInfo, ScrollLayerPixel};
+use webrender_traits::{ScrollLayerRect, ScrollLayerState, ScrollLocation, ScrollToWorldTransform};
+use webrender_traits::{ServoScrollRootId, WorldPoint, as_scroll_parent_rect};
 
 pub type ScrollStates = HashMap<ScrollLayerId, ScrollingState, BuildHasherDefault<FnvHasher>>;
 
 pub struct ScrollTree {
     pub layers: HashMap<ScrollLayerId, Layer, BuildHasherDefault<FnvHasher>>,
     pub pending_scroll_offsets: HashMap<(PipelineId, ServoScrollRootId), LayerPoint>,
+
+    /// The ScrollLayerId of the currently scrolling layer. Used to allow the same
+    /// layer to scroll even if a touch operation leaves the boundaries of that layer.
     pub current_scroll_layer_id: Option<ScrollLayerId>,
-    pub root_scroll_layer_id: Option<ScrollLayerId>,
+
+    /// The current reference frame id, used for giving a unique id to all new
+    /// reference frames. The ScrollTree increments this by one every time a
+    /// reference frame is created.
+    current_reference_frame_id: usize,
+
+    /// The root reference frame, which is the true root of the ScrollTree. Initially
+    /// this ID is not valid, which is indicated by ```layers``` being empty.
+    pub root_reference_frame_id: ScrollLayerId,
+
+    /// The root scroll layer, which is the first child of the root reference frame.
+    /// Initially this ID is not valid, which is indicated by ```layers``` being empty.
+    pub topmost_scroll_layer_id: ScrollLayerId,
+
+    /// A set of pipelines which should be discarded the next time this
+    /// tree is drained.
+    pub pipelines_to_discard: HashSet<PipelineId>,
 }
 
 impl ScrollTree {
     pub fn new() -> ScrollTree {
+        let dummy_pipeline = PipelineId(0, 0);
         ScrollTree {
             layers: HashMap::with_hasher(Default::default()),
             pending_scroll_offsets: HashMap::new(),
             current_scroll_layer_id: None,
-            root_scroll_layer_id: None,
+            root_reference_frame_id: ScrollLayerId::root_reference_frame(dummy_pipeline),
+            topmost_scroll_layer_id: ScrollLayerId::root_scroll_layer(dummy_pipeline),
+            current_reference_frame_id: 1,
+            pipelines_to_discard: HashSet::new(),
         }
+    }
+
+    pub fn root_reference_frame_id(&self) -> ScrollLayerId {
+        // TODO(mrobinson): We should eventually make this impossible to misuse.
+        debug_assert!(!self.layers.is_empty());
+        debug_assert!(self.layers.contains_key(&self.root_reference_frame_id));
+        self.root_reference_frame_id
+    }
+
+    pub fn topmost_scroll_layer_id(&self) -> ScrollLayerId {
+        // TODO(mrobinson): We should eventually make this impossible to misuse.
+        debug_assert!(!self.layers.is_empty());
+        debug_assert!(self.layers.contains_key(&self.topmost_scroll_layer_id));
+        self.topmost_scroll_layer_id
+    }
+
+    pub fn establish_root(&mut self,
+                          pipeline_id: PipelineId,
+                          viewport_size: &LayerSize,
+                          content_size: &LayerSize) {
+        debug_assert!(self.layers.is_empty());
+
+        let identity = LayerToScrollTransform::identity();
+        let viewport = LayerRect::new(LayerPoint::zero(), *viewport_size);
+
+        let root_reference_frame_id = ScrollLayerId::root_reference_frame(pipeline_id);
+        self.root_reference_frame_id = root_reference_frame_id;
+        let reference_frame = Layer::new(&viewport, viewport.size, &identity, pipeline_id);
+        self.layers.insert(self.root_reference_frame_id, reference_frame);
+
+        let scroll_layer = Layer::new(&viewport, *content_size, &identity, pipeline_id);
+        let topmost_scroll_layer_id = ScrollLayerId::root_scroll_layer(pipeline_id);
+        self.topmost_scroll_layer_id = topmost_scroll_layer_id;
+        self.add_layer(scroll_layer, topmost_scroll_layer_id, root_reference_frame_id);
     }
 
     pub fn collect_layers_bouncing_back(&self)
@@ -41,18 +98,19 @@ impl ScrollTree {
         layers_bouncing_back
     }
 
-    pub fn get_scroll_layer(&self,
-                            cursor: &WorldPoint,
-                            scroll_layer_id: ScrollLayerId)
-                            -> Option<ScrollLayerId> {
+    fn find_scrolling_layer_at_point_in_layer(&self,
+                                              cursor: &WorldPoint,
+                                              scroll_layer_id: ScrollLayerId)
+                                              -> Option<ScrollLayerId> {
         self.layers.get(&scroll_layer_id).and_then(|layer| {
             for child_layer_id in layer.children.iter().rev() {
-                if let Some(layer_id) = self.get_scroll_layer(cursor, *child_layer_id) {
+            if let Some(layer_id) =
+                self.find_scrolling_layer_at_point_in_layer(cursor, *child_layer_id) {
                     return Some(layer_id);
                 }
             }
 
-            if scroll_layer_id.info == ScrollLayerInfo::Fixed {
+            if let ScrollLayerInfo::ReferenceFrame(_) = scroll_layer_id.info {
                 return None;
             }
 
@@ -62,6 +120,11 @@ impl ScrollTree {
                 None
             }
         })
+    }
+
+    pub fn find_scrolling_layer_at_point(&self, cursor: &WorldPoint) -> ScrollLayerId {
+        self.find_scrolling_layer_at_point_in_layer(cursor, self.root_reference_frame_id())
+            .unwrap_or(self.topmost_scroll_layer_id())
     }
 
     pub fn get_scroll_layer_state(&self) -> Vec<ScrollLayerState> {
@@ -75,17 +138,23 @@ impl ScrollTree {
                         scroll_offset: scroll_layer.scrolling.offset,
                     })
                 }
-                ScrollLayerInfo::Fixed => {}
+                ScrollLayerInfo::ReferenceFrame(..) => {}
             }
         }
         result
     }
 
     pub fn drain(&mut self) -> ScrollStates {
+        self.current_reference_frame_id = 1;
+
         let mut scroll_states = HashMap::with_hasher(Default::default());
         for (layer_id, old_layer) in &mut self.layers.drain() {
-            scroll_states.insert(layer_id, old_layer.scrolling);
+            if !self.pipelines_to_discard.contains(&layer_id.pipeline_id) {
+                scroll_states.insert(layer_id, old_layer.scrolling);
+            }
         }
+
+        self.pipelines_to_discard.clear();
         scroll_states
     }
 
@@ -94,6 +163,11 @@ impl ScrollTree {
                          pipeline_id: PipelineId,
                          scroll_root_id: ServoScrollRootId)
                          -> bool {
+        if self.layers.is_empty() {
+            self.pending_scroll_offsets.insert((pipeline_id, scroll_root_id), origin);
+            return false;
+        }
+
         let origin = LayerPoint::new(origin.x.max(0.0), origin.y.max(0.0));
 
         let mut scrolled_a_layer = false;
@@ -105,8 +179,8 @@ impl ScrollTree {
 
             match layer_id.info {
                 ScrollLayerInfo::Scrollable(_, id) if id != scroll_root_id => continue,
-                ScrollLayerInfo::Fixed => continue,
-                _ => {}
+                ScrollLayerInfo::ReferenceFrame(..) => continue,
+                ScrollLayerInfo::Scrollable(..) => {}
             }
 
             found_layer = true;
@@ -125,25 +199,33 @@ impl ScrollTree {
                   cursor: WorldPoint,
                   phase: ScrollEventPhase)
                   -> bool {
-        let root_scroll_layer_id = match self.root_scroll_layer_id {
-            Some(root_scroll_layer_id) => root_scroll_layer_id,
-            None => return false,
-        };
+        if self.layers.is_empty() {
+            return false;
+        }
 
         let scroll_layer_id = match (
             phase,
-            self.get_scroll_layer(&cursor, root_scroll_layer_id),
+            self.find_scrolling_layer_at_point(&cursor),
             self.current_scroll_layer_id) {
-            (ScrollEventPhase::Start, Some(scroll_layer_id), _) => {
-                self.current_scroll_layer_id = Some(scroll_layer_id);
+            (ScrollEventPhase::Start, scroll_layer_at_point_id, _) => {
+                self.current_scroll_layer_id = Some(scroll_layer_at_point_id);
+                scroll_layer_at_point_id
+            },
+            (_, scroll_layer_at_point_id, Some(cached_scroll_layer_id)) => {
+                let scroll_layer_id = match self.layers.get(&cached_scroll_layer_id) {
+                    Some(_) => cached_scroll_layer_id,
+                    None => {
+                        self.current_scroll_layer_id = Some(scroll_layer_at_point_id);
+                        scroll_layer_at_point_id
+                    },
+                };
                 scroll_layer_id
             },
-            (ScrollEventPhase::Start, None, _) => return false,
-            (_, _, Some(scroll_layer_id)) => scroll_layer_id,
             (_, _, None) => return false,
         };
 
-        let non_root_overscroll = if scroll_layer_id != root_scroll_layer_id {
+        let topmost_scroll_layer_id = self.topmost_scroll_layer_id();
+        let non_root_overscroll = if scroll_layer_id != topmost_scroll_layer_id {
             // true if the current layer is overscrolling,
             // and it is not the root scroll layer.
             let child_layer = self.layers.get(&scroll_layer_id).unwrap();
@@ -177,14 +259,14 @@ impl ScrollTree {
         };
 
         let scroll_layer_info = if switch_layer {
-            root_scroll_layer_id.info
+            topmost_scroll_layer_id.info
         } else {
             scroll_layer_id.info
         };
 
         let scroll_root_id = match scroll_layer_info {
              ScrollLayerInfo::Scrollable(_, scroll_root_id) => scroll_root_id,
-             _ => unreachable!("Tried to scroll a non-scrolling layer."),
+             _ => unreachable!("Tried to scroll a reference frame."),
 
         };
 
@@ -196,7 +278,7 @@ impl ScrollTree {
 
             match layer_id.info {
                 ScrollLayerInfo::Scrollable(_, id) if id != scroll_root_id => continue,
-                ScrollLayerInfo::Fixed => continue,
+                ScrollLayerInfo::ReferenceFrame(..) => continue,
                 _ => {}
             }
 
@@ -207,8 +289,15 @@ impl ScrollTree {
     }
 
     pub fn update_all_layer_transforms(&mut self) {
-        let root_scroll_layer_id = self.root_scroll_layer_id;
-        self.update_layer_transforms(root_scroll_layer_id);
+        if self.layers.is_empty() {
+            return;
+        }
+
+        let root_reference_frame_id = self.root_reference_frame_id();
+        let root_viewport = self.layers[&root_reference_frame_id].local_viewport_rect;
+        self.update_layer_transform(root_reference_frame_id,
+                                    &ScrollToWorldTransform::identity(),
+                                    &as_scroll_parent_rect(&root_viewport));
     }
 
     fn update_layer_transform(&mut self,
@@ -237,33 +326,6 @@ impl ScrollTree {
         }
     }
 
-    pub fn update_layer_transforms(&mut self, root_scroll_layer_id: Option<ScrollLayerId>) {
-        if let Some(root_scroll_layer_id) = root_scroll_layer_id {
-            let root_viewport = self.layers[&root_scroll_layer_id].local_viewport_rect;
-
-            self.update_layer_transform(root_scroll_layer_id,
-                                        &ScrollToWorldTransform::identity(),
-                                        &as_scroll_parent_rect(&root_viewport));
-
-            // Update any fixed layers
-            let mut fixed_layers = Vec::new();
-            for (layer_id, _) in &self.layers {
-                match layer_id.info {
-                    ScrollLayerInfo::Scrollable(..) => {}
-                    ScrollLayerInfo::Fixed => {
-                        fixed_layers.push(*layer_id);
-                    }
-                }
-            }
-
-            for layer_id in fixed_layers {
-                self.update_layer_transform(layer_id,
-                                            &ScrollToWorldTransform::identity(),
-                                            &as_scroll_parent_rect(&root_viewport));
-            }
-        }
-    }
-
     pub fn tick_scrolling_bounce_animations(&mut self) {
         for (_, layer) in &mut self.layers {
             layer.tick_scrolling_bounce_animation()
@@ -289,20 +351,43 @@ impl ScrollTree {
 
             let pipeline_id = scroll_layer_id.pipeline_id;
             if let Some(pending_offset) =
-                self.pending_scroll_offsets.get_mut(&(pipeline_id, scroll_root_id)) {
-                layer.set_scroll_origin(pending_offset);
+                self.pending_scroll_offsets.remove(&(pipeline_id, scroll_root_id)) {
+                layer.set_scroll_origin(&pending_offset);
             }
         }
 
     }
 
-    pub fn add_layer(&mut self, layer: Layer, id: ScrollLayerId, parent_id: Option<ScrollLayerId>) {
+    pub fn add_reference_frame(&mut self,
+                               rect: LayerRect,
+                               transform: LayerToScrollTransform,
+                               pipeline_id: PipelineId,
+                               parent_id: ScrollLayerId) -> ScrollLayerId {
+        let reference_frame_id = ScrollLayerId {
+            pipeline_id: pipeline_id,
+            info: ScrollLayerInfo::ReferenceFrame(self.current_reference_frame_id),
+        };
+        self.current_reference_frame_id += 1;
+
+        let layer = Layer::new(&rect, rect.size, &transform, pipeline_id);
+        self.add_layer(layer, reference_frame_id, parent_id);
+        reference_frame_id
+    }
+
+    pub fn add_layer(&mut self, layer: Layer, id: ScrollLayerId, parent_id: ScrollLayerId) {
         debug_assert!(!self.layers.contains_key(&id));
         self.layers.insert(id, layer);
 
-        if let Some(parent_id) = parent_id {
-            debug_assert!(parent_id != id);
-            self.layers.get_mut(&parent_id).unwrap().add_child(id);
+        debug_assert!(parent_id != id);
+        self.layers.get_mut(&parent_id).unwrap().add_child(id);
+    }
+
+    pub fn discard_frame_state_for_pipeline(&mut self, pipeline_id: PipelineId) {
+        self.pipelines_to_discard.insert(pipeline_id);
+
+        match self.current_scroll_layer_id {
+            Some(id) if id.pipeline_id == pipeline_id => self.current_scroll_layer_id = None,
+            _ => {}
         }
     }
 }

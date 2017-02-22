@@ -1,6 +1,7 @@
 import json
 import os
 import inspect
+import re
 from types import FunctionType
 from collections import namedtuple
 from taskgraph.util.docker import docker_image
@@ -159,6 +160,13 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
         def build_callback_action_task(parameters):
             if not available(parameters):
                 return None
+
+            match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters['head_repository'])
+            if not match:
+                raise Exception('Unrecognized head_repository')
+            repo_scope = 'assume:repo:{}/{}:*'.format(
+                match.group(1), match.group(2))
+
             return {
                 'created': {'$fromNow': ''},
                 'deadline': {'$fromNow': '12 hours'},
@@ -174,7 +182,7 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                 'workerType': 'gecko-decision',
                 'provisionerId': 'aws-provisioner-v1',
                 'scopes': [
-                    'assume:repo:hg.mozilla.org/projects/{}:*'.format(parameters['project']),
+                    repo_scope,
                 ],
                 'tags': {
                     'createdForUser': parameters['owner'],
