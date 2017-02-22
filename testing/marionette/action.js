@@ -366,8 +366,9 @@ action.PointerOrigin.get = function(obj) {
 /** Represents possible subtypes for a pointer input source. */
 action.PointerType = {
   Mouse: "mouse",
-  Pen: "pen",
-  Touch: "touch",
+  // TODO For now, only mouse is supported
+  //Pen: "pen",
+  //Touch: "touch",
 };
 
 /**
@@ -533,7 +534,7 @@ action.InputState.Key = class Key extends InputState {
    *     Normalized key value.
    *
    * @return {boolean}
-   *     True if |key| is removed successfully, false otherwise.
+   *     True if |key| was present before removal, false otherwise.
    */
   release(key) {
     return this.pressed.delete(key);
@@ -567,6 +568,48 @@ action.InputState.Pointer = class Pointer extends InputState {
     this.subtype = action.PointerType.get(subtype);
     this.x = 0;
     this.y = 0;
+  }
+
+  /**
+   * Check whether |button| is pressed.
+   *
+   * @param {number} button
+   *     Positive integer that refers to a mouse button.
+   *
+   * @return {boolean}
+   *     True if |button| is in set of pressed buttons.
+   */
+  isPressed(button) {
+    assert.positiveInteger(button);
+    return this.pressed.has(button);
+  }
+
+  /**
+   * Add |button| to the set of pressed keys.
+   *
+   * @param {number} button
+   *     Positive integer that refers to a mouse button.
+   *
+   * @return {Set}
+   *     Set of pressed buttons.
+   */
+  press(button) {
+    assert.positiveInteger(button);
+    return this.pressed.add(button);
+  }
+
+   /**
+   * Remove |button| from the set of pressed buttons.
+   *
+   * @param {number} button
+   *     A positive integer that refers to a mouse button.
+   *
+   * @return {boolean}
+   *     True if |button| was present before removals, false otherwise.
+   */
+  release(button) {
+    assert.positiveInteger(button);
+    return this.pressed.delete(button);
   }
 };
 
@@ -858,6 +901,21 @@ action.Key = class {
   }
 };
 
+/** Collect properties associated with MouseEvent */
+action.Mouse = class {
+  constructor(type, button = 0) {
+    this.type = type;
+    assert.positiveInteger(button);
+    this.button = button;
+    this.buttons = 0;
+  }
+
+  update(inputState) {
+    let allButtons = Array.from(inputState.pressed);
+    this.buttons = allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
+  }
+};
+
 /**
  * Dispatch a chain of actions over |chain.length| ticks.
  *
@@ -962,7 +1020,11 @@ function toEvents(tickDuration, seenEls, container) {
         return dispatchKeyDown(a, inputState, container.frame);
 
       case action.PointerDown:
+        return dispatchPointerDown(a, inputState, container.frame);
+
       case action.PointerUp:
+        return dispatchPointerUp(a, inputState, container.frame);
+
       case action.PointerMove:
       case action.PointerCancel:
         throw new UnsupportedOperationError();
@@ -1030,6 +1092,84 @@ function dispatchKeyUp(a, inputState, win) {
     keyEvent.update(inputState);
     event.sendKeyUp(keyEvent.key, keyEvent, win);
 
+    resolve();
+  });
+}
+
+/**
+ * Dispatch a pointerDown action equivalent to pressing a pointer-device
+ * button.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {nsIDOMWindow} win
+ *     Current window.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least a pointerdown event.
+ */
+function dispatchPointerDown(a, inputState, win) {
+  return new Promise(resolve => {
+    if (inputState.isPressed(a.button)) {
+      resolve();
+      return;
+    }
+    inputState.press(a.button);
+    // Append a copy of |a| with pointerUp subtype
+    action.inputsToCancel.push(Object.assign({}, a, {subtype: action.PointerUp}));
+    switch (inputState.subtype) {
+      case action.PointerType.Mouse:
+        let mouseEvent = new action.Mouse("mousedown", a.button);
+        mouseEvent.update(inputState);
+        event.synthesizeMouseAtPoint(inputState.x, inputState.y, mouseEvent, win);
+        break;
+      case action.PointerType.Pen:
+      case action.PointerType.Touch:
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported.");
+        break;
+      default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+    }
+    resolve();
+  });
+}
+
+/**
+ * Dispatch a pointerUp action equivalent to releasing a pointer-device
+ * button.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {nsIDOMWindow} win
+ *     Current window.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least a pointerup event.
+ */
+function dispatchPointerUp(a, inputState, win) {
+  return new Promise(resolve => {
+    if (!inputState.isPressed(a.button)) {
+      resolve();
+      return;
+    }
+    inputState.release(a.button);
+    switch (inputState.subtype) {
+      case action.PointerType.Mouse:
+        let mouseEvent = new action.Mouse("mouseup", a.button);
+        mouseEvent.update(inputState);
+        event.synthesizeMouseAtPoint(inputState.x, inputState.y,
+            mouseEvent, win);
+        break;
+      case action.PointerType.Pen:
+      case action.PointerType.Touch:
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported.");
+      default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+    }
     resolve();
   });
 }
