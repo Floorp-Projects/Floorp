@@ -9,6 +9,7 @@
 #include "nsXPCOM.h"
 #include "nsDebug.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 nsTArrayHeader nsTArrayHeader::sEmptyHdr = { 0, 0, 0 };
 
@@ -22,15 +23,7 @@ IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity, size_t aElemSize)
 MOZ_NORETURN MOZ_COLD void
 InvalidArrayIndex_CRASH(size_t aIndex, size_t aLength)
 {
-  const size_t CAPACITY = 512;
-  // Leak the buffer on the heap to make sure that it lives long enough, as
-  // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
-  // the program.
-  auto* buffer = new char[CAPACITY];
-  snprintf(buffer, CAPACITY,
-           "ElementAt(aIndex = %llu, aLength = %llu)",
-           (long long unsigned) aIndex,
-           (long long unsigned) aLength);
-  MOZ_CRASH_ANNOTATE(buffer);
-  MOZ_REALLY_CRASH();
+  MOZ_CRASH_UNSAFE_PRINTF(
+    "ElementAt(aIndex = %" PRIu64 ", aLength = %" PRIu64 ")",
+    static_cast<uint64_t>(aIndex), static_cast<uint64_t>(aLength));
 }

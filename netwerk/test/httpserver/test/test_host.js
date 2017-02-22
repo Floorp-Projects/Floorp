@@ -267,7 +267,7 @@ function check400(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  var firstLine = iter.next();
+  var { value: firstLine } = iter.next();
   do_check_eq(firstLine.substring(0, HTTP_400_LEADER_LENGTH), HTTP_400_LEADER);
 }
 
@@ -296,7 +296,7 @@ function check10(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next(), "HTTP/1.0 200 TEST PASSED");
+  do_check_eq(iter.next().value, "HTTP/1.0 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -395,7 +395,7 @@ function check11goodHost(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next(), "HTTP/1.1 200 TEST PASSED");
+  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -432,7 +432,7 @@ function check11ipHost(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next(), "HTTP/1.1 200 TEST PASSED");
+  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -517,7 +517,7 @@ function check10ip(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next(), "HTTP/1.0 200 TEST PASSED");
+  do_check_eq(iter.next().value, "HTTP/1.0 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -554,7 +554,7 @@ function check11goodHostWackyPort(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next(), "HTTP/1.1 200 TEST PASSED");
+  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 

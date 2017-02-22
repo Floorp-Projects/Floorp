@@ -22,6 +22,7 @@
 #include "nsStringStream.h"
 #include "nsTemporaryFileInputStream.h"
 #include "nsXULAppAPI.h"
+#include "SlicedInputStream.h"
 
 using namespace mozilla::dom;
 
@@ -29,7 +30,6 @@ namespace {
 
 NS_DEFINE_CID(kStringInputStreamCID, NS_STRINGINPUTSTREAM_CID);
 NS_DEFINE_CID(kFileInputStreamCID, NS_LOCALFILEINPUTSTREAM_CID);
-NS_DEFINE_CID(kPartialFileInputStreamCID, NS_PARTIALLOCALFILEINPUTSTREAM_CID);
 NS_DEFINE_CID(kBufferedInputStreamCID, NS_BUFFEREDINPUTSTREAM_CID);
 NS_DEFINE_CID(kMIMEInputStreamCID, NS_MIMEINPUTSTREAM_CID);
 NS_DEFINE_CID(kMultiplexInputStreamCID, NS_MULTIPLEXINPUTSTREAM_CID);
@@ -90,10 +90,6 @@ DeserializeInputStream(const InputStreamParams& aParams,
       serializable = do_CreateInstance(kFileInputStreamCID);
       break;
 
-    case InputStreamParams::TPartialFileInputStreamParams:
-      serializable = do_CreateInstance(kPartialFileInputStreamCID);
-      break;
-
     case InputStreamParams::TTemporaryFileInputStreamParams:
       serializable = new nsTemporaryFileInputStream();
       break;
@@ -147,6 +143,10 @@ DeserializeInputStream(const InputStreamParams& aParams,
 
       return stream.forget();
     }
+
+    case InputStreamParams::TSlicedInputStreamParams:
+      serializable = new SlicedInputStream();
+      break;
 
     default:
       MOZ_ASSERT(false, "Unknown params!");

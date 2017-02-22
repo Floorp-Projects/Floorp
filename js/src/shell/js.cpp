@@ -3177,9 +3177,10 @@ Crash(JSContext* cx, unsigned argc, Value* vp)
     char* utf8chars = JS_EncodeStringToUTF8(cx, message);
     if (!utf8chars)
         return false;
+#ifndef DEBUG
     MOZ_ReportCrash(utf8chars, __FILE__, __LINE__);
-    MOZ_CRASH_ANNOTATE("MOZ_CRASH(dynamic)");
-    MOZ_REALLY_CRASH();
+#endif
+    MOZ_CRASH_UNSAFE_OOL(utf8chars);
 }
 
 static bool

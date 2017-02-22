@@ -262,7 +262,7 @@ add_task(function test_setup()
   })
 });
 
-add_task(function test_normal()
+add_task(function* test_normal()
 {
   // This test demonstrates the most basic use case.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -296,7 +296,7 @@ add_task(function test_normal()
   destFile.remove(false);
 });
 
-add_task(function test_combinations()
+add_task(function* test_combinations()
 {
   let initialFile = getTempFile(TEST_FILE_NAME_1);
   let renamedFile = getTempFile(TEST_FILE_NAME_2);
@@ -403,7 +403,7 @@ add_task(function test_combinations()
   }
 });
 
-add_task(function test_setTarget_after_close_stream()
+add_task(function* test_setTarget_after_close_stream()
 {
   // This test checks the case where we close the output stream before we call
   // the setTarget method.  All the data should be buffered and written anyway.
@@ -437,7 +437,7 @@ add_task(function test_setTarget_after_close_stream()
   destFile.remove(false);
 });
 
-add_task(function test_setTarget_fast()
+add_task(function* test_setTarget_fast()
 {
   // This test checks a fast rename of the target file.
   let destFile1 = getTempFile(TEST_FILE_NAME_1);
@@ -460,7 +460,7 @@ add_task(function test_setTarget_fast()
   destFile2.remove(false);
 });
 
-add_task(function test_setTarget_multiple()
+add_task(function* test_setTarget_multiple()
 {
   // This test checks multiple renames of the target file.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -485,7 +485,7 @@ add_task(function test_setTarget_multiple()
   destFile.remove(false);
 });
 
-add_task(function test_enableAppend()
+add_task(function* test_enableAppend()
 {
   // This test checks append mode with hashing disabled.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -513,7 +513,7 @@ add_task(function test_enableAppend()
   destFile.remove(false);
 });
 
-add_task(function test_enableAppend_setTarget_fast()
+add_task(function* test_enableAppend_setTarget_fast()
 {
   // This test checks a fast rename of the target file in append mode.
   let destFile1 = getTempFile(TEST_FILE_NAME_1);
@@ -550,7 +550,7 @@ add_task(function test_enableAppend_setTarget_fast()
   destFile1.remove(false);
 });
 
-add_task(function test_enableAppend_hash()
+add_task(function* test_enableAppend_hash()
 {
   // This test checks append mode, also verifying that the computed hash
   // includes the contents of the existing data.
@@ -582,7 +582,7 @@ add_task(function test_enableAppend_hash()
   destFile.remove(false);
 });
 
-add_task(function test_finish_only()
+add_task(function* test_finish_only()
 {
   // This test checks creating the object and doing nothing.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -595,7 +595,7 @@ add_task(function test_finish_only()
   yield completionPromise;
 });
 
-add_task(function test_empty()
+add_task(function* test_empty()
 {
   // This test checks we still create an empty file when no data is fed.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -617,7 +617,7 @@ add_task(function test_empty()
   destFile.remove(false);
 });
 
-add_task(function test_empty_hash()
+add_task(function* test_empty_hash()
 {
   // This test checks the hash of an empty file, both in normal and append mode.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -646,7 +646,7 @@ add_task(function test_empty_hash()
   destFile.remove(false);
 });
 
-add_task(function test_invalid_hash()
+add_task(function* test_invalid_hash()
 {
   let saver = new BackgroundFileSaverStreamListener();
   let completionPromise = promiseSaverComplete(saver);
@@ -676,7 +676,7 @@ add_task(function test_invalid_hash()
   } catch (ex if ex.result == Cr.NS_ERROR_FAILURE) { }
 });
 
-add_task(function test_signature()
+add_task(function* test_signature()
 {
   // Check that we get a signature if the saver is finished.
   let destFile = getTempFile(TEST_FILE_NAME_1);
@@ -704,7 +704,7 @@ add_task(function test_signature()
   destFile.remove(false);
 });
 
-add_task(function test_signature_not_enabled()
+add_task(function* test_signature_not_enabled()
 {
   // Check that we get a signature if the saver is finished on Windows.
   let destFile = getTempFile(TEST_FILE_NAME_1);

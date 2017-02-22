@@ -28,11 +28,6 @@ DEFINES['abort'] = 'moz_abort'
 
 DEFINES['MOZ_JEMALLOC_IMPL'] = True
 
-#XXX: PGO on Linux causes problems here
-# See bug 419470
-if CONFIG['OS_TARGET'] == 'Linux':
-    NO_PGO = True
-
 LOCAL_INCLUDES += [
     '/memory/build',
 ]

@@ -20,7 +20,8 @@ const LATE_WRITE_PREFIX = "Telemetry.LateWriteFinal-";
 const LOADED_MODULES = {
   "4759A7E6993548C89CAF716A67EC242D00": "libtest.so",
   "F77AF15BB8D6419FA875954B4A3506CA00": "libxul.so",
-  "1E2F7FB590424E8F93D60BB88D66B8C500": "libc.so"
+  "1E2F7FB590424E8F93D60BB88D66B8C500": "libc.so",
+  "E4D6D70CC09A63EF8B88D532F867858800": "libmodμles.so",
 };
 const N_MODULES = Object.keys(LOADED_MODULES).length;
 
@@ -28,12 +29,14 @@ const N_MODULES = Object.keys(LOADED_MODULES).length;
 const STACK1 = [
   [ 0, 0 ],
   [ 1, 1 ],
-  [ 2, 2 ]
+  [ 2, 2 ],
+  [ 3, 3 ],
 ];
 const STACK2 = [
   [ 0, 0 ],
   [ 1, 5 ],
   [ 2, 10 ],
+  [ 3, 15 ],
 ];
 // XXX The only error checking is for a zero-sized stack.
 const STACK_BOGUS = [];
@@ -42,8 +45,14 @@ function write_string_to_file(file, contents) {
   let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                 .createInstance(Ci.nsIFileOutputStream);
   ostream.init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-	       RW_OWNER, ostream.DEFER_OPEN);
-  ostream.write(contents, contents.length);
+               RW_OWNER, ostream.DEFER_OPEN);
+
+  var bos = Cc["@mozilla.org/binaryoutputstream;1"]
+            .createInstance(Ci.nsIBinaryOutputStream);
+  bos.setOutputStream(ostream);
+
+  let utf8 = new TextEncoder("utf-8").encode(contents);
+  bos.writeByteArray(utf8, utf8.length);
   ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
   ostream.close();
 }
