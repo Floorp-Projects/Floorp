@@ -3,7 +3,6 @@ use rustc_serialize::json;
 use common::{Nullable, Date};
 use cookie;
 use time;
-use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum WebDriverResponse {
@@ -146,24 +145,26 @@ impl Cookie {
     }
 }
 
-impl Into<cookie::Cookie> for Cookie {
-    fn into(self) -> cookie::Cookie {
-        cookie::Cookie {
-            name: self.name,
-            value: self.value,
-            expires: match self.expiry {
-                Nullable::Value(Date(expiry)) => {
-                    Some(time::at(time::Timespec::new(expiry as i64, 0)))
-                },
-                Nullable::Null => None
+impl Into<cookie::Cookie<'static>> for Cookie {
+    fn into(self) -> cookie::Cookie<'static> {
+        let cookie = cookie::Cookie::build(self.name, self.value)
+            .secure(self.secure)
+            .http_only(self.httpOnly);
+        let cookie = match self.domain {
+            Nullable::Value(domain) => cookie.domain(domain), 
+            Nullable::Null => cookie,
+        };
+        let cookie = match self.path {
+            Nullable::Value(path) => cookie.path(path), 
+            Nullable::Null => cookie,
+        };
+        let cookie = match self.expiry {
+            Nullable::Value(Date(expiry)) => {
+                cookie.expires(time::at(time::Timespec::new(expiry as i64, 0)))
             },
-            max_age: None,
-            domain: self.domain.into(),
-            path: self.path.into(),
-            secure: self.secure,
-            httponly: self.httpOnly,
-            custom: BTreeMap::new()
-        }
+            Nullable::Null => cookie,
+        };
+        cookie.finish()
     }
 }
 
