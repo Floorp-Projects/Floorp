@@ -11,12 +11,14 @@
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
 #include "nsIIPCSerializableInputStream.h"
+#include "nsISeekableStream.h"
 
 // A wrapper for a slice of an underlying input stream.
 
 class SlicedInputStream final : public nsIAsyncInputStream
                               , public nsICloneableInputStream
                               , public nsIIPCSerializableInputStream
+                              , public nsISeekableStream
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -24,6 +26,7 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
+  NS_DECL_NSISEEKABLESTREAM
 
   // Create an input stream whose data comes from a slice of aInputStream.  The
   // slice begins at aStart bytes beyond aInputStream's current position, and
@@ -53,6 +56,7 @@ private:
   // Raw pointers because these are just QI of mInputStream.
   nsICloneableInputStream* mWeakCloneableInputStream;
   nsIIPCSerializableInputStream* mWeakIPCSerializableInputStream;
+  nsISeekableStream* mWeakSeekableInputStream;
 
   uint64_t mStart;
   uint64_t mLength;
