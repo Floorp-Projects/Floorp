@@ -48,8 +48,9 @@ public:
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
-  wr::ImageKey AddImageBuffer(const ImageDescriptor& aDescriptor,
-                              Range<uint8_t> aBytes);
+  void AddImage(wr::ImageKey aKey,
+                const ImageDescriptor& aDescriptor,
+                Range<uint8_t> aBytes);
 
   wr::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
                                       gfx::SurfaceFormat aFormat,
@@ -61,7 +62,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  wr::FontKey AddRawFont(Range<uint8_t> aBytes);
+  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes);
 
   void DeleteFont(wr::FontKey aKey);
 
@@ -70,6 +71,7 @@ public:
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
+  WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
 

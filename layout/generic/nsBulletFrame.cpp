@@ -36,6 +36,7 @@
 #include "imgRequestProxy.h"
 #include "nsIURI.h"
 #include "SVGImageContext.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include <algorithm>
 
@@ -460,13 +461,21 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
   IntRect dest = RoundedToInt(destRectTransformed);
 
-  aCommands.AppendElement(layers::OpDPPushExternalImageId(
+  WrImageKey key;
+  key.mNamespace = layer->WrBridge()->GetNamespace();
+  key.mHandle = layer->WrBridge()->GetNextResourceId();
+  aCommands.AppendElement(layers::OpAddExternalImage(
                             LayerIntRegion(),
+                            externalImageId,
+                            key));
+  aCommands.AppendElement(layers::OpDPPushImage(
                             wr::ToWrRect(dest),
                             wr::ToWrRect(dest),
                             Nothing(),
                             WrImageRendering::Auto,
-                            externalImageId));
+                            key));
+
+
 }
 
 void
@@ -496,7 +505,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
     NSRectToRect(aItem->GetBounds(builder, &dummy), appUnitsPerDevPixel);
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
 
-  mGlyphHelper.BuildWebRenderCommands(aCommands, mGlyphs, mFont, aLayer->GetOffsetToParent(),
+  mGlyphHelper.BuildWebRenderCommands(layer->WrBridge(), aCommands, mGlyphs, mFont, aLayer->GetOffsetToParent(),
                                       destRectTransformed, destRectTransformed);
 }
 

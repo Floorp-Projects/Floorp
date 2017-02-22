@@ -7,9 +7,9 @@
 #ifndef WR_h
 #define WR_h
 
-#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/gfx/Types.h"
-
+#include "nsTArray.h"
+#include "mozilla/gfx/Point.h"
 // ---
 #define WR_DECL_FFI_1(WrType, t1)                 \
 struct WrType {                                   \
@@ -49,6 +49,7 @@ extern "C" {
 // serialization code in WebRenderMessageUtils.h and the rust bindings.
 
 WR_DECL_FFI_1(WrEpoch, uint32_t)
+WR_DECL_FFI_1(WrIdNamespace, uint32_t)
 WR_DECL_FFI_1(WrWindowId, uint64_t)
 
 WR_DECL_FFI_2(WrPipelineId, uint32_t, uint32_t)
@@ -412,8 +413,8 @@ WR_INLINE void
 wr_api_delete(WrAPI* api)
 WR_DESTRUCTOR_SAFE_FUNC;
 
-WR_INLINE WrImageKey
-wr_api_add_image(WrAPI* api, const WrImageDescriptor* descriptor, uint8_t *buffer, size_t buffer_size)
+WR_INLINE void
+wr_api_add_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, uint8_t *buffer, size_t buffer_size)
 WR_FUNC;
 
 WR_INLINE WrImageKey
@@ -449,8 +450,8 @@ WR_INLINE void
 wr_api_send_external_event(WrAPI* api, uintptr_t evt)
 WR_DESTRUCTOR_SAFE_FUNC;
 
-WR_INLINE WrFontKey
-wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size)
+WR_INLINE void
+wr_api_add_raw_font(WrAPI* api, WrFontKey key, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
 WR_INLINE WrState*
@@ -544,6 +545,10 @@ wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrRect clip,
                       WrRect box_bounds, WrPoint offset, WrColor color,
                       float blur_radius, float spread_radius, float border_radius,
                       WrBoxShadowClipMode clip_mode)
+WR_FUNC;
+
+WR_INLINE WrIdNamespace
+wr_api_get_namespace(WrAPI* api)
 WR_FUNC;
 
 #undef WR_FUNC

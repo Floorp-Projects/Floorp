@@ -1571,7 +1571,8 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 
 PWebRenderBridgeParent*
 CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
-                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                    uint32_t* aIdNamespace)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -1590,6 +1591,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<WebRenderCompositableHolder> holder = new WebRenderCompositableHolder();
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
+  *aIdNamespace = api->GetNamespace().mHandle;
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(api), Move(holder));
 
   mCompositorScheduler = mWrBridge->CompositorScheduler();

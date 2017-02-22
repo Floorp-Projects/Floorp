@@ -451,7 +451,8 @@ public:
   }
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
-                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier) override;
+                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                      uint32_t* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
   static void SetWebRenderProfilerEnabled(bool aEnabled);
 

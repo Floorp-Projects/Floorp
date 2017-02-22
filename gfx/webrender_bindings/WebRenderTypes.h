@@ -10,6 +10,9 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/Range.h"
+#include "Units.h"
+#include "nsStyleConsts.h"
 
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
