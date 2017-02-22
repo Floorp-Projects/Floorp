@@ -71,7 +71,8 @@ moz_container_get_type(void)
 
         moz_container_type = g_type_register_static (GTK_TYPE_CONTAINER,
                                                      "MozContainer",
-                                                     &moz_container_info, 0);
+                                                     &moz_container_info,
+                                                     static_cast<GTypeFlags>(0));
 #ifdef ACCESSIBILITY
         /* Set a factory to return accessible object with ROLE_REDUNDANT for
          * MozContainer, so that gail won't send focus notification for it */
@@ -89,7 +90,7 @@ moz_container_new (void)
 {
     MozContainer *container;
 
-    container = g_object_new (MOZ_CONTAINER_TYPE, NULL);
+    container = static_cast<MozContainer*>(g_object_new (MOZ_CONTAINER_TYPE, nullptr));
 
     return GTK_WIDGET(container);
 }
@@ -290,7 +291,7 @@ moz_container_size_allocate (GtkWidget     *widget,
     tmp_list = container->children;
 
     while (tmp_list) {
-        MozContainerChild *child = tmp_list->data;
+        MozContainerChild *child = static_cast<MozContainerChild*>(tmp_list->data);
 
         moz_container_allocate_child (container, child);
 
@@ -372,7 +373,7 @@ moz_container_forall (GtkContainer *container, gboolean include_internals,
     tmp_list = moz_container->children;
     while (tmp_list) {
         MozContainerChild *child;
-        child = tmp_list->data;
+        child = static_cast<MozContainerChild*>(tmp_list->data);
         tmp_list = tmp_list->next;
         (* callback) (child->widget, callback_data);
     }
@@ -400,7 +401,7 @@ moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
     while (tmp_list) {
         MozContainerChild *child;
     
-        child = tmp_list->data;
+        child = static_cast<MozContainerChild*>(tmp_list->data);
         tmp_list = tmp_list->next;
 
         if (child->widget == child_widget)
@@ -415,4 +416,3 @@ moz_container_add(GtkContainer *container, GtkWidget *widget)
 {
     moz_container_put(MOZ_CONTAINER(container), widget, 0, 0);
 }
-

@@ -42,7 +42,7 @@ function Spinner(props, context) {
      *         }
      */
     _init(props) {
-      const { setValue, getDisplayString, hideButtons, rootFontSize = 10 } = props;
+      const { id, setValue, getDisplayString, hideButtons, rootFontSize = 10 } = props;
 
       const spinnerTemplate = document.getElementById("spinner-template");
       const spinnerElement = document.importNode(spinnerTemplate.content, true);
@@ -72,6 +72,9 @@ function Spinner(props, context) {
 
       this.elements.spinner.style.height = (ITEM_HEIGHT * viewportSize) + "rem";
 
+      if (id) {
+        this.elements.container.id = id;
+      }
       if (hideButtons) {
         this.elements.container.classList.add("hide-buttons");
       }

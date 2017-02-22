@@ -7,7 +7,8 @@ once a parent is removed from the pool, its children are removed as well.
 
 The overall hierarchy of actors looks like this:
 
-  RootActor: First one, automatically instantiated when we start connecting.
+```
+RootActor: First one, automatically instantiated when we start connecting.
    |         Mostly meant to instantiate new actors.
    |
    |--> Global-scoped actors:
@@ -27,6 +28,7 @@ The overall hierarchy of actors looks like this:
                worker).  Examples include the console and inspector actors.
                These actors may extend this hierarchy by having their
                own children, like LongStringActor, WalkerActor, etc.
+```
 
 ## RootActor
 
@@ -36,7 +38,8 @@ All other actors have an `actorID` which is computed dynamically,
 so that you need to ask an existing actor to create an Actor
 and returns its `actorID`. That's the main role of RootActor.
 
-  RootActor (root.js)
+```
+RootActor (root.js)
    |
    |-- BrowserTabActor (webbrowser.js)
    |   Targets tabs living in the parent or child process. Note that this is
@@ -60,6 +63,11 @@ and returns its `actorID`. That's the main role of RootActor.
    |   Returned by "listWorkers" request to a ChildProcessActor to get workers
    |   for the chrome of the child process.
    |
+   |-- WindowActor (window.js)
+   |   Targets a single window, such as a browser window in Firefox, but it can
+   |   be used to reach any window in the parent process.
+   |   Returned by "getWindow" request to the root actor.
+   |
    |-- ChromeActor (chrome.js)
    |   Targets all resources in the parent process of firefox
    |   (chrome documents, JSM, JS XPCOM, etc.).
@@ -73,6 +81,7 @@ and returns its `actorID`. That's the main role of RootActor.
    \-- BrowserAddonActor (addon.js)
        Targets the javascript of add-ons.
        Returned by "listAddons" request.
+```
 
 ## "TabActor"
 
