@@ -14,8 +14,9 @@ add_task(function* () {
   yield assertBoxModelView(inspector, view, testActor);
 
   info("Reload the page");
+  let onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.reload();
-  yield inspector.once("markuploaded");
+  yield onMarkupLoaded;
 
   info("Test that the box model view works on the reloaded page");
   yield assertBoxModelView(inspector, view, testActor);
