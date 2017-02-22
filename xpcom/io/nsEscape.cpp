@@ -575,24 +575,9 @@ bool
 NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
                nsACString& aResult)
 {
-  bool didAppend = false;
-  nsresult rv = NS_UnescapeURL(aStr, aLen, aFlags, aResult, didAppend,
-                               mozilla::fallible);
-  if (rv == NS_ERROR_OUT_OF_MEMORY) {
-    ::NS_ABORT_OOM(aLen * sizeof(nsACString::char_type));
-  }
-
-  return didAppend;
-}
-
-nsresult
-NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
-               nsACString& aResult, bool& aDidAppend,
-               const mozilla::fallible_t&)
-{
   if (!aStr) {
     NS_NOTREACHED("null pointer");
-    return NS_ERROR_INVALID_ARG;
+    return false;
   }
 
   MOZ_ASSERT(aResult.IsEmpty(),
@@ -609,9 +594,7 @@ NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
   bool skipInvalidHostChar = !!(aFlags & esc_Host);
 
   if (writing) {
-    if (!aResult.SetCapacity(aLen, mozilla::fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    aResult.SetCapacity(aLen);
   }
 
   const char* last = aStr;
@@ -629,19 +612,13 @@ NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
             (c1 < '2' || (c1 == '7' && (c2 == 'f' || c2 == 'F'))))) {
         if (!writing) {
           writing = true;
-          if (!aResult.SetCapacity(aLen, mozilla::fallible)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
+          aResult.SetCapacity(aLen);
         }
         if (p > last) {
-          if (!aResult.Append(last, p - last, mozilla::fallible)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
+          aResult.Append(last, p - last);
           last = p;
         }
-        if (!aResult.Append(u, mozilla::fallible)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+        aResult.Append(u);
         i += 2;
         p += 2;
         last += 3;
@@ -649,11 +626,8 @@ NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
     }
   }
   if (writing && last < aStr + aLen) {
-    if (!aResult.Append(last, aStr + aLen - last, mozilla::fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    aResult.Append(last, aStr + aLen - last);
   }
 
-  aDidAppend = writing;
-  return NS_OK;
+  return writing;
 }
