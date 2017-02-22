@@ -31,30 +31,30 @@ function* testUnits(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-top > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
-  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "3px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("1", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("1", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
-  EventUtils.synthesizeKey("e", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("e", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "padding-top")), "",
      "An invalid value is handled cleanly");
 
-  EventUtils.synthesizeKey("m", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("m", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "1em", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "padding-top")),
      "1em", "Should have updated the padding.");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   is((yield getStyle(testActor, "#div1", "padding-top")), "1em",
      "Should be the right padding.");
@@ -68,22 +68,22 @@ function* testValueComesFromStyleRule(inspector, view, testActor) {
      "Should have the right border-bottom-width");
   yield selectNode("#div2", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-border.old-boxmodel-bottom > span");
+  let span = view.document.querySelector(".boxmodel-border.boxmodel-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
-  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "1em", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("0", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("0", {}, view.document.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "0", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should have updated the border.");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should be the right border-bottom-width.");
@@ -97,15 +97,15 @@ function* testShorthandsAreParsed(inspector, view, testActor) {
      "Should have the right padding");
   yield selectNode("#div3", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-right > span");
+  let span = view.document.querySelector(".boxmodel-padding.boxmodel-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
-  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
+  let editor = view.document.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "2em", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
 
   is((yield getStyle(testActor, "#div3", "padding-right")), "",
      "Should be the right padding.");
