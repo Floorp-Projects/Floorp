@@ -299,6 +299,7 @@ module.exports = {
     "CSSPrimitiveValue": false,
     "CSSValueList": false,
     "dump": true,
+    "ImageDocument": false,
     // Specific to Firefox
     // eslint-disable-next-line max-len
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError

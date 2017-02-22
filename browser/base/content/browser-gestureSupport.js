@@ -1057,7 +1057,7 @@ var gHistorySwipeAnimation = {
     try {
       let browser = gBrowser.selectedBrowser;
       let snapshots = browser.snapshots;
-      let currIndex = _getCurrentHistoryIndex();
+      let currIndex = this._getCurrentHistoryIndex();
 
       // Kick off snapshot compression.
       let canvas = snapshots[currIndex].image;

@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* import-globals-from aboutDialog-appUpdater.js */
+
 // Services = object with smart getters for common XPCOM services
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");

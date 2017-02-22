@@ -243,7 +243,6 @@ const gXPInstallObserver = {
 
       if (gPrefService.prefIsLocked("xpinstall.enabled")) {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
-        buttons = [];
       } else {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessage");
 

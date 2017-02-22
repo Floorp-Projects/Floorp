@@ -5,6 +5,13 @@
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+/* import-globals-from ../../../../toolkit/content/globalOverlay.js */
+/* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
+/* import-globals-from ../../../../toolkit/content/treeUtils.js */
+/* import-globals-from feeds.js */
+/* import-globals-from permissions.js */
+/* import-globals-from security.js */
+
 // define a js object to implement nsITreeView
 function pageInfoTreeView(treeid, copycol) {
   // copycol is the index number for the column that we want to add to
