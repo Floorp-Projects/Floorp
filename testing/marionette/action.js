@@ -993,6 +993,40 @@ action.computeTickDuration = function(tickActions) {
 };
 
 /**
+ * Compute viewport coordinates of pointer target based on given origin.
+ *
+ * @param {action.Action} a
+ *     Action that specifies pointer origin and x and y coordinates of target.
+ * @param {action.InputState} inputState
+ *     Input state that specifies current x and y coordinates of pointer.
+ * @param {Map.<string, number>=} center
+ *     Object representing x and y coordinates of an element center-point.
+ *     This is only used if |a.origin| is a web element reference.
+ *
+ * @return {Map.<string, number>}
+ *     x and y coordinates of pointer destination.
+ */
+action.computePointerDestination = function(a, inputState, center = undefined) {
+  let {x, y} = a;
+  switch (a.origin) {
+    case action.PointerOrigin.Viewport:
+      break;
+    case action.PointerOrigin.Pointer:
+      x += inputState.x;
+      y += inputState.y;
+      break;
+    default:
+      // origin represents web element
+      assert.defined(center);
+      assert.in("x", center);
+      assert.in("y", center);
+      x += center.x;
+      y += center.y;
+  }
+  return {"x": x, "y": y};
+};
+
+/**
  * Create a closure to use as a map from action definitions to Promise events.
  *
  * @param {number} tickDuration
@@ -1026,6 +1060,8 @@ function toEvents(tickDuration, seenEls, container) {
         return dispatchPointerUp(a, inputState, container.frame);
 
       case action.PointerMove:
+        return dispatchPointerMove(a, inputState, tickDuration, seenEls, container);
+
       case action.PointerCancel:
         throw new UnsupportedOperationError();
 
@@ -1127,7 +1163,7 @@ function dispatchPointerDown(a, inputState, win) {
         break;
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported.");
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
         break;
       default:
         throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
@@ -1166,12 +1202,108 @@ function dispatchPointerUp(a, inputState, win) {
         break;
       case action.PointerType.Pen:
       case action.PointerType.Touch:
-        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported.");
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
       default:
         throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
     }
     resolve();
   });
+}
+
+/**
+ * Dispatch a pointerMove action equivalent to moving pointer device in a line.
+ *
+ * If the action duration is 0, the pointer jumps immediately to the target coordinates.
+ * Otherwise, events are synthesized to mimic a pointer travelling in a discontinuous,
+ * approximately straight line, with the pointer coordinates being updated around 60
+ * times per second.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {element.Store} seenEls
+ *     Element store.
+ * @param {?} container
+ *     Object with |frame| attribute of type |nsIDOMWindow|.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least one pointermove event, as well as mousemove events
+ *     as appropriate.
+ */
+function dispatchPointerMove(a, inputState, tickDuration, seenEls, container) {
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  // interval between pointermove increments in ms, based on common vsync
+  const fps60 = 17;
+  return new Promise(resolve => {
+    const start = Date.now();
+    const [startX, startY] = [inputState.x, inputState.y];
+    let target = action.computePointerDestination(a, inputState,
+        getElementCenter(a.origin, seenEls, container));
+    const [targetX, targetY] = [target.x, target.y];
+    if (!inViewPort(targetX, targetY, container.frame)) {
+      throw new MoveTargetOutOfBoundsError(
+          `(${targetX}, ${targetY}) is out of bounds of viewport ` +
+          `width (${container.frame.innerWidth}) and height (${container.frame.innerHeight})`);
+    }
+
+    const duration = typeof a.duration == "undefined" ? tickDuration : a.duration;
+    if (duration === 0) {
+      // move pointer to destination in one step
+      performOnePointerMove(inputState, targetX, targetY, container.frame);
+      resolve();
+      return;
+    }
+
+    const distanceX = targetX - startX;
+    const distanceY = targetY - startY;
+    const ONE_SHOT = Ci.nsITimer.TYPE_ONE_SHOT;
+    let intermediatePointerEvents = Task.spawn(function* () {
+      // wait |fps60| ms before performing first incremental pointer move
+      yield new Promise(resolveTimer =>
+          timer.initWithCallback(resolveTimer, fps60, ONE_SHOT)
+      );
+      let durationRatio = Math.floor(Date.now() - start) / duration;
+      const epsilon = fps60 / duration / 10;
+      while ((1 - durationRatio) > epsilon) {
+        let x = Math.floor(durationRatio * distanceX + startX);
+        let y = Math.floor(durationRatio * distanceY + startY);
+        performOnePointerMove(inputState, x, y, container.frame);
+        // wait |fps60| ms before performing next pointer move
+        yield new Promise(resolveTimer =>
+            timer.initWithCallback(resolveTimer, fps60, ONE_SHOT));
+        durationRatio = Math.floor(Date.now() - start) / duration;
+      }
+    });
+    // perform last pointer move after all incremental moves are resolved and
+    // durationRatio is close enough to 1
+    intermediatePointerEvents.then(() => {
+      performOnePointerMove(inputState, targetX, targetY, container.frame);
+      resolve();
+    });
+
+  });
+}
+
+function performOnePointerMove(inputState, targetX, targetY, win) {
+  if (targetX == inputState.x && targetY == inputState.y) {
+    return;
+  }
+  switch (inputState.subtype) {
+    case action.PointerType.Mouse:
+      let mouseEvent = new action.Mouse("mousemove");
+      mouseEvent.update(inputState);
+      //TODO both pointermove (if available) and mousemove
+      event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
+      break;
+    case action.PointerType.Pen:
+    case action.PointerType.Touch:
+      throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
+    default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+  }
+  inputState.x = targetX;
+  inputState.y = targetY;
 }
 
 /**
@@ -1213,4 +1345,19 @@ function capitalize(str) {
     throw new InvalidArgumentError(`Expected string, got: ${str}`);
   }
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function inViewPort(x, y, win) {
+  assert.number(x);
+  assert.number(y);
+  // Viewport includes scrollbars if rendered.
+  return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
+}
+
+function getElementCenter(elementReference, seenEls, container) {
+  if (element.isWebElementReference(elementReference)) {
+    let uuid = elementReference[element.Key] || elementReference[element.LegacyKey];
+    let el = seenEls.get(uuid, container);
+    return element.coordinates(el);
+  }
 }
