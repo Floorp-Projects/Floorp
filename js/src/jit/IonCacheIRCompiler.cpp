@@ -934,6 +934,18 @@ IonCacheIRCompiler::emitCallSetArrayLength()
 }
 
 bool
+IonCacheIRCompiler::emitCallProxySet()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
+IonCacheIRCompiler::emitCallProxySetByValue()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
 IonCacheIRCompiler::emitLoadTypedObjectResult()
 {
     AutoOutputRegister output(*this);

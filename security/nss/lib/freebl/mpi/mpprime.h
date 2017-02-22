@@ -13,6 +13,8 @@
 
 #include "mpi.h"
 
+SEC_BEGIN_PROTOS
+
 extern const int prime_tab_size; /* number of primes available */
 extern const mp_digit prime_tab[];
 
@@ -34,5 +36,7 @@ mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, mp_size nPrimes,
                  unsigned char *sieve, mp_size nSieve);
 mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
                       unsigned long *nTries);
+
+SEC_END_PROTOS
 
 #endif /* end _H_MP_PRIME_ */

@@ -35,7 +35,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessagePort.h"
-#include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
@@ -778,6 +778,12 @@ nsFrameMessageManager::GetChildAt(uint32_t aIndex,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameMessageManager::ReleaseCachedProcesses()
+{
+  ContentParent::ReleaseCachedProcesses();
+  return NS_OK;
+}
 
 // nsIContentFrameMessageManager
 
