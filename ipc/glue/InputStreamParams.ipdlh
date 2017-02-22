@@ -29,13 +29,6 @@ struct FileInputStreamParams
   int32_t ioFlags;
 };
 
-struct PartialFileInputStreamParams
-{
-  FileInputStreamParams fileStreamParams;
-  uint64_t begin;
-  uint64_t length;
-};
-
 struct TemporaryFileInputStreamParams
 {
   uint32_t fileDescriptorIndex;
@@ -77,7 +70,6 @@ union InputStreamParams
 {
   StringInputStreamParams;
   FileInputStreamParams;
-  PartialFileInputStreamParams;
   TemporaryFileInputStreamParams;
   BufferedInputStreamParams;
   MIMEInputStreamParams;
