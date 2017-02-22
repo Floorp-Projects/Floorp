@@ -1,5 +1,10 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
 const Services = require("Services");
-const {Ci} = require("chrome");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -67,10 +72,13 @@ ToolboxHostManager.prototype = {
     // We have to listen on capture as no event fires on bubble
     this.host.frame.addEventListener("unload", this, true);
 
-    let toolbox = new Toolbox(this.target, toolId, this.host.type, this.host.frame.contentWindow, this.frameId);
+    let toolbox = new Toolbox(this.target, toolId, this.host.type,
+                              this.host.frame.contentWindow, this.frameId);
 
-    // Prevent reloading the toolbox when loading the tools in a tab (e.g. from about:debugging)
-    if (!this.host.frame.contentWindow.location.href.startsWith("about:devtools-toolbox")) {
+    // Prevent reloading the toolbox when loading the tools in a tab
+    // (e.g. from about:debugging)
+    let location = this.host.frame.contentWindow.location;
+    if (!location.href.startsWith("about:devtools-toolbox")) {
       this.host.frame.setAttribute("src", "about:devtools-toolbox");
     }
 
@@ -78,7 +86,7 @@ ToolboxHostManager.prototype = {
   }),
 
   handleEvent(event) {
-    switch(event.type) {
+    switch (event.type) {
       case "message":
         this.onMessage(event);
         break;
