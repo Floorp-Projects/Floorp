@@ -62,16 +62,16 @@ exports.targetFromURL = Task.async(function* (url) {
   let form, isTabActor;
   if (type === "tab") {
     // Fetch target for a remote tab
-    id = parseInt(id);
+    id = parseInt(id, 10);
     if (isNaN(id)) {
-      throw new Error("targetFromURL, wrong tab id:'" + id + "', should be a number");
+      throw new Error(`targetFromURL, wrong tab id '${id}', should be a number`);
     }
     try {
       let response = yield client.getTab({ outerWindowID: id });
       form = response.tab;
     } catch (ex) {
       if (ex.error == "noTab") {
-        throw new Error("targetFromURL, tab with outerWindowID:'" + id + "' doesn't exist");
+        throw new Error(`targetFromURL, tab with outerWindowID '${id}' doesn't exist`);
       }
       throw ex;
     }
@@ -79,7 +79,7 @@ exports.targetFromURL = Task.async(function* (url) {
     // Fetch target for a remote chrome actor
     DebuggerServer.allowChromeProcess = true;
     try {
-      id = parseInt(id);
+      id = parseInt(id, 10);
       if (isNaN(id)) {
         id = 0;
       }
@@ -92,7 +92,7 @@ exports.targetFromURL = Task.async(function* (url) {
       }
     } catch (ex) {
       if (ex.error == "noProcess") {
-        throw new Error("targetFromURL, process with id:'" + id + "' doesn't exist");
+        throw new Error(`targetFromURL, process with id '${id}' doesn't exist`);
       }
       throw ex;
     }
@@ -111,13 +111,12 @@ exports.targetFromURL = Task.async(function* (url) {
       chrome = true;
     } catch (ex) {
       if (ex.error == "notFound") {
-        throw new Error(`targetFromURL, window with id:'${id}' ` +
-                        "doesn't exist");
+        throw new Error(`targetFromURL, window with id '${id}' doesn't exist`);
       }
       throw ex;
     }
   } else {
-    throw new Error("targetFromURL, unsupported type='" + type + "' parameter");
+    throw new Error(`targetFromURL, unsupported type '${type}' parameter`);
   }
 
   return TargetFactory.forRemoteTab({ client, form, chrome, isTabActor });
@@ -137,7 +136,7 @@ function* createClient(params) {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
     }
-    transport = DebuggerServer.connectPipe()
+    transport = DebuggerServer.connectPipe();
   }
   return new DebuggerClient(transport);
 }
