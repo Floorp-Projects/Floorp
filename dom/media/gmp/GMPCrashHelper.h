@@ -7,8 +7,9 @@
 #if !defined(GMPCrashHelper_h_)
 #define GMPCrashHelper_h_
 
-#include "nsPIDOMWindow.h"
+#include "MainThreadUtils.h"
 #include "nsISupportsImpl.h"
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 
