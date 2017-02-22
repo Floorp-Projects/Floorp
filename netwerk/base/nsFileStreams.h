@@ -175,47 +175,6 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPartialFileInputStream : public nsFileInputStream,
-                                 public nsIPartialFileInputStream
-{
-public:
-    using nsFileInputStream::Init;
-    using nsFileInputStream::Read;
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIPARTIALFILEINPUTSTREAM
-    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
-
-    nsPartialFileInputStream()
-      : mStart(0), mLength(0), mPosition(0), mDeferredSeek(false)
-    { }
-
-    NS_IMETHOD Tell(int64_t *aResult) override;
-    NS_IMETHOD Available(uint64_t *aResult) override;
-    NS_IMETHOD Read(char* aBuf, uint32_t aCount, uint32_t* aResult) override;
-    NS_IMETHOD Seek(int32_t aWhence, int64_t aOffset) override;
-
-    static nsresult
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-protected:
-    ~nsPartialFileInputStream()
-    { }
-
-    inline nsresult DoPendingSeek();
-
-private:
-    uint64_t TruncateSize(uint64_t aSize) {
-          return std::min<uint64_t>(mLength - mPosition, aSize);
-    }
-
-    uint64_t mStart;
-    uint64_t mLength;
-    uint64_t mPosition;
-    bool mDeferredSeek;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 class nsFileOutputStream : public nsFileStreamBase,
                            public nsIFileOutputStream
 {

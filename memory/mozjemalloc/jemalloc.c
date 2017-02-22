@@ -1548,25 +1548,17 @@ MOZ_JEMALLOC_API
 void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 	    const char *p4) = wrtmessage;
 
-#ifdef MALLOC_DEBUG
-#  define assert(e) do {						\
-	if (!(e)) {							\
-		char line_buf[UMAX2S_BUFSIZE];				\
-		_malloc_message(__FILE__, ":", umax2s(__LINE__, 10,	\
-		    line_buf), ": Failed assertion: ");			\
-		_malloc_message("\"", #e, "\"\n", "");			\
-		abort();						\
-	}								\
-} while (0)
-#else
-#define assert(e)
-#endif
-
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
+
+#ifdef MALLOC_DEBUG
+#  define assert(e) MOZ_ASSERT(e)
+#else
+#  define assert(e)
+#endif
 
 #ifdef MOZ_MEMORY_ANDROID
 // Android's pthread.h does not declare pthread_atfork() until SDK 21.
@@ -1574,19 +1566,10 @@ extern MOZ_EXPORT
 int pthread_atfork(void (*)(void), void (*)(void), void(*)(void));
 #endif
 
-/* RELEASE_ASSERT calls jemalloc_crash() instead of calling MOZ_CRASH()
- * directly because we want crashing to add a frame to the stack.  This makes
- * it easier to find the failing assertion in crash stacks. */
-MOZ_NEVER_INLINE static void
-jemalloc_crash()
-{
-	MOZ_CRASH();
-}
-
 #if defined(MOZ_JEMALLOC_HARD_ASSERTS)
 #  define RELEASE_ASSERT(assertion) do {	\
 	if (!(assertion)) {			\
-		jemalloc_crash();		\
+		MOZ_CRASH_UNSAFE_OOL(#assertion);	\
 	}					\
 } while (0)
 #else

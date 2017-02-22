@@ -29,13 +29,6 @@ struct FileInputStreamParams
   int32_t ioFlags;
 };
 
-struct PartialFileInputStreamParams
-{
-  FileInputStreamParams fileStreamParams;
-  uint64_t begin;
-  uint64_t length;
-};
-
 struct TemporaryFileInputStreamParams
 {
   uint32_t fileDescriptorIndex;
@@ -64,17 +57,26 @@ struct SameProcessInputStreamParams
   intptr_t addRefedInputStream;
 };
 
+struct SlicedInputStreamParams
+{
+  InputStreamParams stream;
+  uint64_t start;
+  uint64_t length;
+  uint64_t curPos;
+  bool closed;
+};
+
 union InputStreamParams
 {
   StringInputStreamParams;
   FileInputStreamParams;
-  PartialFileInputStreamParams;
   TemporaryFileInputStreamParams;
   BufferedInputStreamParams;
   MIMEInputStreamParams;
   MultiplexInputStreamParams;
   RemoteInputStreamParams;
   SameProcessInputStreamParams;
+  SlicedInputStreamParams;
 };
 
 union OptionalInputStreamParams

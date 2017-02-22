@@ -136,9 +136,7 @@ BackgroundChildImpl::ProcessingError(Result aCode, const char* aReason)
       MOZ_CRASH("Unknown error code!");
   }
 
-  // This is just MOZ_CRASH() un-inlined so that we can pass the result code as
-  // a string. MOZ_CRASH() only supports string literals at the moment.
-  MOZ_ReportCrash(abortMessage.get(), __FILE__, __LINE__); MOZ_REALLY_CRASH();
+  MOZ_CRASH_UNSAFE_PRINTF("%s: %s", abortMessage.get(), aReason);
 }
 
 void

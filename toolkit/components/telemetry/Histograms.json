@@ -1017,7 +1017,7 @@
     "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
   },
   "GPU_PROCESS_LAUNCH_TIME_MS_2" : {
-    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
     "bug_numbers": [1297790, 1317796],
     "kind": "exponential",
@@ -1027,7 +1027,7 @@
     "description": "GPU process launch time in milliseconds"
   },
   "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
-    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
     "bug_numbers": [1324095],
     "kind": "exponential",

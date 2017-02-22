@@ -16,6 +16,12 @@ if (typeof parseModule === "function") {
     assertThrows(() => parseModule("async function f() { function g() { await 3; } }"), SyntaxError);
 
     if (typeof Reflect !== "undefined" && Reflect.parse) {
+        Reflect.parse("export async function f() {}", { target: "module" });
+        assertThrows(() => Reflect.parse("export async function() {}", { target: "module" }), SyntaxError);
+
+        Reflect.parse("export default async function() {}", { target: "module" });
+        Reflect.parse("export default async function f() {}", { target: "module" });
+
         assertThrows(() => Reflect.parse("export default async function() { yield; }", { target: "module" }), SyntaxError);
         assertThrows(() => Reflect.parse("export default async function() { yield = 1; }", { target: "module" }), SyntaxError);
     }

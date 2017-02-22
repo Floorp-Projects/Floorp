@@ -2608,16 +2608,11 @@ TypeZone::addPendingRecompile(JSContext* cx, JSScript* script)
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS
-static char sCrashReason[256];
-
-MOZ_NORETURN MOZ_COLD MOZ_NEVER_INLINE void
+void
 js::ReportMagicWordFailure(uintptr_t actual, uintptr_t expected)
 {
-    SprintfLiteral(sCrashReason,
-                   "MOZ_CRASH(Got 0x%" PRIxPTR " expected magic word 0x%" PRIxPTR ")",
-                   actual, expected);
-    MOZ_CRASH_ANNOTATE(sCrashReason);
-    MOZ_REALLY_CRASH();
+    MOZ_CRASH_UNSAFE_PRINTF("Got 0x%" PRIxPTR " expected magic word 0x%" PRIxPTR,
+                            actual, expected);
 }
 #endif
 

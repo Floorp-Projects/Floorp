@@ -445,6 +445,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
 mozilla::ipc::IPCResult
 DocAccessibleParent::RecvShutdown()
 {
+  MOZ_DIAGNOSTIC_ASSERT(LiveDocs().Contains(IProtocol::Id()));
   Destroy();
 
   auto mgr = static_cast<dom::TabParent*>(Manager());

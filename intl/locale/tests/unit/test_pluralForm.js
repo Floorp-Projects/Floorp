@@ -591,7 +591,7 @@ function run_test()
     5,5,5,5,5,5,5,5,5,5,
   ]];
 
-  for (let [rule, expect] in Iterator(allExpect)) {
+  for (let [rule, expect] of allExpect.entries()) {
     print("\nTesting rule #" + rule);
 
     let [get, numForms] = PluralForm.makeGetter(rule);
@@ -607,7 +607,7 @@ function run_test()
     words = words.join(";");
 
     // Make sure we get the expected number
-    for (let [index, number] in Iterator(expect)) {
+    for (let [index, number] of expect.entries()) {
       print(["Plural form of ", index, " should be ", number, " (", words, ")"].join(""));
       do_check_eq(get(index, words), number);
     }
