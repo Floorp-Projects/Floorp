@@ -3469,6 +3469,7 @@ WorkerMain(void* arg)
     MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
 
     JSContext* cx = nullptr;
+    ShellContext* sc = nullptr;
 
     auto guard = mozilla::MakeScopeExit([&] {
             if (cx)
@@ -3478,6 +3479,7 @@ WorkerMain(void* arg)
                 CooperativeYield();
             }
             js_delete(input);
+            js_delete(sc);
         });
 
     cx = input->parentRuntime
@@ -3486,13 +3488,13 @@ WorkerMain(void* arg)
     if (!cx)
         return;
 
-    UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
+    sc = js_new<ShellContext>(cx);
     if (!sc)
         return;
 
     if (input->parentRuntime)
         sc->isWorker = true;
-    JS_SetContextPrivate(cx, sc.get());
+    JS_SetContextPrivate(cx, sc);
     SetWorkerContextOptions(cx);
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
 
