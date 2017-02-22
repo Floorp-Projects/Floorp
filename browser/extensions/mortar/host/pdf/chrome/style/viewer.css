@@ -889,11 +889,6 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
   padding-top: 5px;
 }
 
-.bookmark[href='#'] {
-  opacity: .5;
-  pointer-events: none;
-}
-
 .toolbarButton.bookmark::before,
 .secondaryToolbarButton.bookmark::before {
   content: url(images/toolbarButton-bookmark.png);
