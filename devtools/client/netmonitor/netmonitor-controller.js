@@ -14,6 +14,10 @@ const {
   formDataURI,
 } = require("./utils/request-utils");
 const {
+  onFirefoxConnect,
+  onFirefoxDisconnect,
+} = require("./utils/client");
+const {
   getRequestById,
   getDisplayedRequestById,
 } = require("./selectors/index");
@@ -53,7 +57,8 @@ var NetMonitorController = {
     }
     this._shutdown = new Promise(async (resolve) => {
       gStore.dispatch(Actions.batchReset());
-      this.TargetEventsHandler.disconnect();
+      onFirefoxDisconnect(this._target);
+      this._target.off("close", this._onTabDetached);
       this.NetworkEventsHandler.disconnect();
       await this.disconnect();
       resolve();
@@ -75,6 +80,8 @@ var NetMonitorController = {
     if (this._connection) {
       return this._connection;
     }
+    this._onTabDetached = this.shutdownNetMonitor.bind(this);
+
     this._connection = new Promise(async (resolve) => {
       // Some actors like AddonActor or RootActor for chrome debugging
       // aren't actual tabs.
@@ -95,7 +102,8 @@ var NetMonitorController = {
       };
       await connectTimeline();
 
-      this.TargetEventsHandler.connect();
+      onFirefoxConnect(this._target);
+      this._target.on("close", this._onTabDetached);
       this.NetworkEventsHandler.connect();
 
       window.emit(EVENTS.CONNECTED);
@@ -354,78 +362,6 @@ var NetMonitorController = {
       window.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
     });
   },
-};
-
-/**
- * Functions handling target-related lifetime events.
- */
-function TargetEventsHandler() {
-  this._onTabNavigated = this._onTabNavigated.bind(this);
-  this._onTabDetached = this._onTabDetached.bind(this);
-}
-
-TargetEventsHandler.prototype = {
-  get target() {
-    return NetMonitorController._target;
-  },
-
-  /**
-   * Listen for events emitted by the current tab target.
-   */
-  connect: function () {
-    this.target.on("close", this._onTabDetached);
-    this.target.on("navigate", this._onTabNavigated);
-    this.target.on("will-navigate", this._onTabNavigated);
-  },
-
-  /**
-   * Remove events emitted by the current tab target.
-   */
-  disconnect: function () {
-    if (!this.target) {
-      return;
-    }
-    this.target.off("close", this._onTabDetached);
-    this.target.off("navigate", this._onTabNavigated);
-    this.target.off("will-navigate", this._onTabNavigated);
-  },
-
-  /**
-   * Called for each location change in the monitored tab.
-   *
-   * @param string type
-   *        Packet type.
-   * @param object packet
-   *        Packet received from the server.
-   */
-  _onTabNavigated: function (type, packet) {
-    switch (type) {
-      case "will-navigate": {
-        // Reset UI.
-        if (!Services.prefs.getBoolPref("devtools.webconsole.persistlog")) {
-          gStore.dispatch(Actions.batchReset());
-          gStore.dispatch(Actions.clearRequests());
-        } else {
-          // If the log is persistent, just clear all accumulated timing markers.
-          gStore.dispatch(Actions.clearTimingMarkers());
-        }
-
-        window.emit(EVENTS.TARGET_WILL_NAVIGATE);
-        break;
-      }
-      case "navigate": {
-        window.emit(EVENTS.TARGET_DID_NAVIGATE);
-        break;
-      }
-    }
-  },
-
-  /**
-   * Called when the monitored tab is closed.
-   */
-  _onTabDetached: function () {
-    NetMonitorController.shutdownNetMonitor();
-  }
 };
 
 /**
@@ -889,7 +825,9 @@ NetworkEventsHandler.prototype = {
   }
 };
 
-NetMonitorController.TargetEventsHandler = new TargetEventsHandler();
+/**
+ * Preliminary setup for the NetMonitorController object.
+ */
 NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
 window.gNetwork = NetMonitorController.NetworkEventsHandler;
 
