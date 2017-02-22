@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418986-1
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=418986-1"
      target="_blank">Mozilla Bug 418986 (Part 1)</a>
 
-  <script type="application/javascript;version=1.7" src="bug418986-1.js"></script>
+  <script type="application/javascript" src="bug418986-1.js"></script>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     window.onload = function() {
