@@ -20,7 +20,6 @@ public:
   void WillGatherOOPProfile();
   void GatheredOOPProfile();
   void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
-  void Start(double aSinceTime, nsIFile* aFile);
   void Start(double aSinceTime, const nsACString& aFileName);
   void Cancel();
   void OOPExitProfile(const nsCString& aProfile);
