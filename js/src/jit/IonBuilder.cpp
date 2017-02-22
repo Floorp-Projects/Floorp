@@ -870,9 +870,12 @@ IonBuilder::processIterators()
     Vector<MDefinition*, 8, SystemAllocPolicy> worklist;
 
     for (size_t i = 0; i < iterators_.length(); i++) {
-        if (!worklist.append(iterators_[i]))
-            return abort(AbortReason::Alloc);
-        iterators_[i]->setInWorklist();
+        MDefinition* iter = iterators_[i];
+        if (!iter->isInWorklist()) {
+            if (!worklist.append(iter))
+                return abort(AbortReason::Alloc);
+            iter->setInWorklist();
+        }
     }
 
     while (!worklist.empty()) {
