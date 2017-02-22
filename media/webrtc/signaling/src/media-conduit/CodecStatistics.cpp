@@ -22,11 +22,9 @@ VideoCodecStatistics::VideoCodecStatistics(int channel,
   mDecoderDiscardedPackets(0),
   mRegisteredEncode(false),
   mRegisteredDecode(false),
-  mReceiveState(kReceiveStateInitial)
-#ifdef MOZILLA_INTERNAL_API
-  , mRecoveredBeforeLoss(0)
-  , mRecoveredLosses(0)
-#endif
+  mReceiveState(kReceiveStateInitial),
+  mRecoveredBeforeLoss(0),
+  mRecoveredLosses(0)
 {
   MOZ_ASSERT(mPtrViECodec);
 }
@@ -92,7 +90,6 @@ void VideoCodecStatistics::ReceiveStateChange(const int aChannel,
                                               VideoReceiveState aState)
 {
   CSFLogDebug(logTag,"New state for %d: %d (was %d)", aChannel, aState, mReceiveState);
-#ifdef MOZILLA_INTERNAL_API
   if (mFirstDecodeTime.IsNull()) {
     mFirstDecodeTime = TimeStamp::Now();
   }
@@ -134,14 +131,11 @@ void VideoCodecStatistics::ReceiveStateChange(const int aChannel,
       break;
   }
 
-#endif
-
   mReceiveState = aState;
 }
 
 void VideoCodecStatistics::EndOfCallStats()
 {
-#ifdef MOZILLA_INTERNAL_API
   if (!mFirstDecodeTime.IsNull()) {
     TimeDuration callDelta = TimeStamp::Now() - mFirstDecodeTime;
     if (callDelta.ToSeconds() != 0) {
@@ -159,7 +153,6 @@ void VideoCodecStatistics::EndOfCallStats()
                             static_cast<uint32_t>(percent*10));
     }
   }
-#endif
 }
 
 void VideoCodecStatistics::SentFrame()
