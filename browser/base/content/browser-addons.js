@@ -798,7 +798,7 @@ var LightweightThemeListener = {
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
     Services.obs.addObserver(this, "lightweight-theme-optimized", false);
     if (document.documentElement.hasAttribute("lwtheme"))
-      this.updateStyleSheet(document.documentElement.style.backgroundImage);
+      this.updateStyleSheet(document.documentElement.style.getPropertyValue("--lwt-header-image"));
   },
 
   uninit() {
