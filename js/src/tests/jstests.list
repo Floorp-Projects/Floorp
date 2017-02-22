@@ -31,6 +31,14 @@ skip script test262/language/expressions/yield/iter-value-specified.js
 skip script test262/language/expressions/yield/iter-value-unspecified.js
 
 
+#########################################################################
+# Test262 tests disabled when features are only conditionally available #
+#########################################################################
+
+skip-if(!Array.prototype.values) script test262/built-ins/Array/prototype/Symbol.iterator.js
+skip-if(!Array.prototype.values) include test262/built-ins/Array/prototype/values/jstests.list
+
+
 #####################################
 # Test262 tests disabled on browser #
 #####################################
