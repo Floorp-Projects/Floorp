@@ -62,7 +62,9 @@ def load_parameters_file(options):
     Load parameters from the --parameters option
     """
     import urllib
-    from taskgraph.util.taskcluster import get_artifact_url
+
+    url_prefix = "https://queue.taskcluster.net/v1/task/"
+    url_postfix = "/artifacts/public/parameters.yml"
 
     filename = options['parameters']
 
@@ -76,7 +78,7 @@ def load_parameters_file(options):
         # fetching parameters.yml using task task-id or supplied url
         if filename.startswith("task-id="):
             task_id = filename.split("=")[1]
-            filename = get_artifact_url(task_id, 'public/parameters.yml')
+            filename = url_prefix + task_id + url_postfix
         f = urllib.urlopen(filename)
 
     if filename.endswith('.yml'):

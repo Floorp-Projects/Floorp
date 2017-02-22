@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from voluptuous import Schema, Required
-from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.tests import (
     test_description_schema,
@@ -15,6 +14,8 @@ from taskgraph.transforms.job.common import (
 )
 import os
 import re
+
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 ARTIFACTS = [
     # (artifact name prefix, in-image path)
@@ -58,11 +59,11 @@ def mozharness_test_on_docker(config, job, taskdesc):
         ("public/test_info/", "/home/worker/workspace/build/blobber_upload_dir/"),
     ]
 
-    installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-    test_packages_url = get_artifact_url('<build>',
-                                         'public/build/target.test_packages.json')
-    mozharness_url = get_artifact_url('<build>',
-                                      'public/build/mozharness.zip')
+    installer_url = ARTIFACT_URL.format('<build>', mozharness['build-artifact-name'])
+    test_packages_url = ARTIFACT_URL.format('<build>',
+                                            'public/build/target.test_packages.json')
+    mozharness_url = ARTIFACT_URL.format('<build>',
+                                         'public/build/mozharness.zip')
 
     worker['artifacts'] = [{
         'name': prefix,
@@ -205,11 +206,11 @@ def mozharness_test_on_windows(config, job, taskdesc):
 
     target = 'firefox-{}.en-US.{}'.format(get_firefox_version(), build_platform)
 
-    installer_url = get_artifact_url(
+    installer_url = ARTIFACT_URL.format(
         '<build>', 'public/build/{}.zip'.format(target))
-    test_packages_url = get_artifact_url(
+    test_packages_url = ARTIFACT_URL.format(
         '<build>', 'public/build/{}.test_packages.json'.format(target))
-    mozharness_url = get_artifact_url(
+    mozharness_url = ARTIFACT_URL.format(
         '<build>', 'public/build/mozharness.zip')
 
     taskdesc['scopes'].extend(
@@ -269,11 +270,11 @@ def mozharness_test_on_mac_osx(config, job, taskdesc):
     mozharness = test['mozharness']
     worker = taskdesc['worker']
 
-    installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
-    test_packages_url = get_artifact_url('<build>',
-                                         'public/build/target.test_packages.json')
-    mozharness_url = get_artifact_url('<build>',
-                                      'public/build/mozharness.zip')
+    installer_url = ARTIFACT_URL.format('<build>', mozharness['build-artifact-name'])
+    test_packages_url = ARTIFACT_URL.format('<build>',
+                                            'public/build/target.test_packages.json')
+    mozharness_url = ARTIFACT_URL.format('<build>',
+                                         'public/build/mozharness.zip')
 
     worker['artifacts'] = [{
         'name': prefix.rstrip('/'),

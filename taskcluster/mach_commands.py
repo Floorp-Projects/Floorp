@@ -22,6 +22,8 @@ from mach.decorators import (
 
 from mozbuild.base import MachCommandBase
 
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
+
 
 class ShowTaskGraphSubCommand(SubCommand):
     """A SubCommand with TaskGraph-specific arguments"""

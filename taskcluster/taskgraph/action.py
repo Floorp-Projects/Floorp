@@ -6,17 +6,18 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import logging
 import requests
+import yaml
 
 from .create import create_tasks
 from .decision import write_artifact
 from .optimize import optimize_task_graph
 from .taskgraph import TaskGraph
-from .util.taskcluster import get_artifact
-
 
 logger = logging.getLogger(__name__)
+TASKCLUSTER_QUEUE_URL = "https://queue.taskcluster.net/v1/task"
 TREEHERDER_URL = "https://treeherder.mozilla.org/api"
 
 # We set this to 5 for now because this is what SETA sets the
@@ -60,6 +61,15 @@ def add_tasks(decision_task_id, task_labels, prefix=''):
     write_artifact('{}label-to-taskid.json'.format(prefix), label_to_taskid)
     # actually create the graph
     create_tasks(optimized_graph, label_to_taskid, decision_params)
+
+
+def get_artifact(task_id, path):
+    resp = requests.get(url="{}/{}/artifacts/{}".format(TASKCLUSTER_QUEUE_URL, task_id, path))
+    if path.endswith('.json'):
+        artifact = json.loads(resp.text)
+    elif path.endswith('.yml'):
+        artifact = yaml.load(resp.text)
+    return artifact
 
 
 def backfill(project, job_id):
