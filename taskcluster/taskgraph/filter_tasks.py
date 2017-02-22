@@ -5,12 +5,15 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
+import os
 
 from . import (
     target_tasks,
 )
 
 logger = logging.getLogger(__name__)
+
+GECKO = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 filter_task_functions = {}
 

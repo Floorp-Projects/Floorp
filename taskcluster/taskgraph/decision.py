@@ -18,7 +18,6 @@ from .create import create_tasks
 from .parameters import Parameters
 from .taskgraph import TaskGraph
 from actions import render_actions_json
-from . import GECKO
 
 from taskgraph.util.templates import Templates
 from taskgraph.util.time import (
@@ -29,6 +28,7 @@ from taskgraph.util.time import (
 logger = logging.getLogger(__name__)
 
 ARTIFACTS_DIR = 'artifacts'
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 
 # For each project, this gives a set of parameters specific to the project.
 # See `taskcluster/docs/parameters.rst` for information on parameters.

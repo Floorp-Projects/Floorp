@@ -89,11 +89,10 @@ this.TelemetryModules = Object.freeze({
             }
           );
         },
-        err => this._log.error("notify - promise failed", ex)
+        err => this._log.error("notify - promise failed", err)
       );
     } catch (ex) {
       this._log.error("notify - caught exception", ex);
     }
   },
 });
-

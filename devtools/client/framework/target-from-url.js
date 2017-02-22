@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu, Ci } = require("chrome");
-
 const { TargetFactory } = require("devtools/client/framework/target");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
@@ -21,20 +19,25 @@ const { Task } = require("devtools/shared/task");
  * ws:
  *    {Boolean} If true, connect via websocket instread of regular TCP connection.
  *
- * type: tab, process
- *    {String} The type of target to connect to.  Currently tabs and processes are supported types.
+ * type: tab, process, window
+ *    {String} The type of target to connect to.
  *
- * If type="tab":
+ * If type == "tab":
  * id:
  *    {Number} the tab outerWindowID
  * chrome: Optional
- *    {Boolean} Force the creation of a chrome target. Gives more privileges to the tab
- *    actor. Allows chrome execution in the webconsole and see chrome files in
- *    the debugger. (handy when contributing to firefox)
+ *    {Boolean} Force the creation of a chrome target. Gives more privileges to
+ *    the tab actor. Allows chrome execution in the webconsole and see chrome
+ *    files in the debugger. (handy when contributing to firefox)
  *
- * If type="process":
+ * If type == "process":
  * id:
- *    {Number} the process id to debug. Default to 0, which is the parent process.
+ *    {Number} the process id to debug. Default to 0, which is the parent
+ *    process.
+ *
+ * If type == "window":
+ * id:
+ *    {Number} the window outerWindowID
  *
  * @param {URL} url
  *        The url to fetch query params from.
@@ -90,6 +93,26 @@ exports.targetFromURL = Task.async(function* (url) {
     } catch (ex) {
       if (ex.error == "noProcess") {
         throw new Error("targetFromURL, process with id:'" + id + "' doesn't exist");
+      }
+      throw ex;
+    }
+  } else if (type == "window") {
+    // Fetch target for a remote window actor
+    DebuggerServer.allowChromeProcess = true;
+    try {
+      id = parseInt(id, 10);
+      if (isNaN(id)) {
+        throw new Error("targetFromURL, window requires id parameter");
+      }
+      let response = yield client.mainRoot.getWindow({
+        outerWindowID: id,
+      });
+      form = response.window;
+      chrome = true;
+    } catch (ex) {
+      if (ex.error == "notFound") {
+        throw new Error(`targetFromURL, window with id:'${id}' ` +
+                        "doesn't exist");
       }
       throw ex;
     }
