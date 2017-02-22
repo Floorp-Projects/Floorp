@@ -4170,7 +4170,7 @@
     "keyed": true,
     "n_values": 16,
     "bug_numbers": [1311910],
-    "description": "Whether or not an error was encountered while processing a Safe Browsing update (0 = success, 1 = unspecified error, 2 = addition of an already existing prefix, 3 = parser got into an infinite loop, 4 = removal index out of bounds, 5 = checksum mismatch, 6 = missing checksum). Keyed by provider"
+    "description": "Whether or not an error was encountered while processing a Safe Browsing update (0 = success, 1 = unspecified error, 2 = addition of an already existing prefix, 3 = parser got into an infinite loop, 4 = removal index out of bounds, 5 = checksum mismatch, 6 = missing checksum, 7 = update while shutdown, 8 = cannot find table, 9 = build prefix failure, 10 = write disk failure, 11 = protocol parser error). Keyed by provider"
   },
   "URLCLASSIFIER_PREFIX_MATCH": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],

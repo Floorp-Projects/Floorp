@@ -595,6 +595,8 @@ nsUrlClassifierDBServiceWorker::FinishStream()
     if (mProtocolParser->ResetRequested()) {
       mClassifier->ResetTables(Classifier::Clear_All, mUpdateTables);
     }
+  } else {
+    mUpdateStatus = NS_ERROR_UC_UPDATE_PROTOCOL_PARSER_ERROR;
   }
 
   mProtocolParser = nullptr;
