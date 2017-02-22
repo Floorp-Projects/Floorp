@@ -68,6 +68,25 @@ class TestTestManifestBackend(BackendTester):
         self.assertIn('here', o[manifest_path])
         self.assertIn('support-files', o[manifest_path])
 
+    def test_test_manifest_sources(self):
+        """Ensure that backend sources are generated correctly."""
+        env = self._consume('test-manifests-backend-sources', TestManifestBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.TestManifestBackend.in')
+        self.assertTrue(os.path.exists(backend_path))
+
+        status_path = mozpath.join(env.topobjdir, 'config.status')
+
+        with open(backend_path, 'r') as fh:
+            sources = set(mozpath.relpath(source.strip(), env.topsrcdir)
+                          for source in fh)
+
+        self.assertEquals(sources,
+                          set(['mochitest.ini',
+                               'mochitest-common.ini',
+                               'moz.build',
+                               mozpath.relpath(status_path, env.topsrcdir)]))
+
 
 if __name__ == '__main__':
     main()
