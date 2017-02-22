@@ -4540,41 +4540,39 @@ Tab.prototype = {
     this._restoreZoom = aHistoryEventName !== "New";
   },
 
-  OnHistoryNewEntry: function(newURI, oldIndex) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryNewEntry: function(aUri) {
     this._updateZoomFromHistoryEvent("New");
   },
 
-  OnHistoryGoBack: function(backURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryGoBack: function(aUri) {
     this._updateZoomFromHistoryEvent("Back");
     return true;
   },
 
-  OnHistoryGoForward: function(forwardURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryGoForward: function(aUri) {
     this._updateZoomFromHistoryEvent("Forward");
     return true;
   },
 
-  OnHistoryReload: function(reloadURI, reloadFlags) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryReload: function(aUri, aFlags) {
+    // we don't do anything with this, so don't propagate it
+    // for now anyway
     return true;
   },
 
-  OnHistoryGotoIndex: function(index, gotoURI) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryGotoIndex: function(aIndex, aUri) {
     this._updateZoomFromHistoryEvent("Goto");
     return true;
   },
 
-  OnHistoryPurge: function(numEntries) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryPurge: function(aNumEntries) {
+    this._updateZoomFromHistoryEvent("Purge");
     return true;
   },
 
-  OnHistoryReplaceEntry: function(index) {
-    Services.obs.notifyObservers(this.browser, "Content:HistoryChange", null);
+  OnHistoryReplaceEntry: function(aIndex) {
+    // we don't do anything with this, so don't propogate it
+    // for now anyway.
   },
 
   ShouldNotifyMediaPlaybackChange: function(inactive) {
