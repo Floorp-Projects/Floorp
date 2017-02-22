@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
-# %include taskcluster/docker/recipes/tooltool.py
-ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /setup/tooltool.py
+# %include python/mozbuild/mozbuild/action/tooltool.py
+ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
 
 # %include taskcluster/docker/recipes/common.sh
 ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
