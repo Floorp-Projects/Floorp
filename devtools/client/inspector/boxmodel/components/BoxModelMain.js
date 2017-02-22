@@ -37,7 +37,23 @@ module.exports = createClass({
     return layout[property] ? parseFloat(layout[property]) : "-";
   },
 
-  getHeightOrWidthValue(property) {
+  getHeightValue(property) {
+    let { layout } = this.props.boxModel;
+
+    if (property == undefined) {
+      return "-";
+    }
+
+    property -= parseFloat(layout["border-top-width"]) +
+                parseFloat(layout["border-bottom-width"]) +
+                parseFloat(layout["padding-top"]) +
+                parseFloat(layout["padding-bottom"]);
+    property = parseFloat(property.toPrecision(6));
+
+    return property;
+  },
+
+  getWidthValue(property) {
     let { layout } = this.props.boxModel;
 
     if (property == undefined) {
@@ -83,7 +99,7 @@ module.exports = createClass({
   render() {
     let { boxModel, onShowBoxModelEditor } = this.props;
     let { layout } = boxModel;
-    let { width, height } = layout;
+    let { height, width } = layout;
 
     let borderTop = this.getBorderOrPaddingValue("border-top-width");
     let borderRight = this.getBorderOrPaddingValue("border-right-width");
@@ -100,8 +116,8 @@ module.exports = createClass({
     let marginBottom = this.getMarginValue("margin-bottom", "bottom");
     let marginLeft = this.getMarginValue("margin-left", "left");
 
-    width = this.getHeightOrWidthValue(width);
-    height = this.getHeightOrWidthValue(height);
+    height = this.getHeightValue(height);
+    width = this.getWidthValue(width);
 
     return dom.div(
       {
