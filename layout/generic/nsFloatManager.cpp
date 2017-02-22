@@ -609,7 +609,7 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 
-  const StyleShapeOutside& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
+  const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
   if (shapeOutside.GetType() == StyleShapeSourceType::None) {
     return;
@@ -764,7 +764,7 @@ nsFloatManager::FloatInfo::IsEmpty(ShapeType aShapeType) const
 
 /* static */ LogicalRect
 nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
-  const StyleShapeOutside& aShapeOutside,
+  const StyleShapeSource& aShapeOutside,
   nsIFrame* const aFrame,
   const mozilla::LogicalRect& aMarginRect,
   mozilla::WritingMode aWM)
@@ -772,19 +772,20 @@ nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
   LogicalRect rect = aMarginRect;
 
   switch (aShapeOutside.GetReferenceBox()) {
-    case StyleShapeOutsideShapeBox::Content:
+    case StyleGeometryBox::Content:
       rect.Deflate(aWM, aFrame->GetLogicalUsedPadding(aWM));
       MOZ_FALLTHROUGH;
-    case StyleShapeOutsideShapeBox::Padding:
+    case StyleGeometryBox::Padding:
       rect.Deflate(aWM, aFrame->GetLogicalUsedBorder(aWM));
       MOZ_FALLTHROUGH;
-    case StyleShapeOutsideShapeBox::Border:
+    case StyleGeometryBox::Border:
       rect.Deflate(aWM, aFrame->GetLogicalUsedMargin(aWM));
       break;
-    case StyleShapeOutsideShapeBox::Margin:
+    case StyleGeometryBox::Margin:
       // Do nothing. rect is already a margin rect.
       break;
-    case StyleShapeOutsideShapeBox::NoBox:
+    case StyleGeometryBox::NoBox:
+    default:
       MOZ_ASSERT(aShapeOutside.GetType() != StyleShapeSourceType::Box,
                  "Box source type must have <shape-box> specified!");
       break;

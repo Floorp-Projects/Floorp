@@ -12,8 +12,6 @@
 
 use self::Param::*;
 use self::States::*;
-use self::FormatState::*;
-use self::FormatOp::*;
 
 use std::iter::repeat;
 
@@ -36,17 +34,23 @@ enum States {
 
 #[derive(Copy, PartialEq, Clone)]
 enum FormatState {
-    FormatStateFlags,
-    FormatStateWidth,
-    FormatStatePrecision,
+    Flags,
+    Width,
+    Precision,
 }
 
 /// Types of parameters a capability can use
 #[allow(missing_docs)]
 #[derive(Clone)]
 pub enum Param {
-    Words(String),
     Number(i32),
+    Words(String),
+}
+
+impl Default for Param {
+    fn default() -> Self {
+        Param::Number(0)
+    }
 }
 
 /// An error from interpreting a parameterized string.
@@ -85,17 +89,17 @@ impl ::std::fmt::Display for Error {
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
-        match self {
-            &StackUnderflow => "not enough elements on the stack",
-            &TypeMismatch => "type mismatch",
-            &UnrecognizedFormatOption(_) => "unrecognized format option",
-            &InvalidVariableName(_) => "invalid variable name",
-            &InvalidParameterIndex(_) => "invalid parameter index",
-            &MalformedCharacterConstant => "malformed character constant",
-            &IntegerConstantOverflow => "integer constant computation overflowed",
-            &MalformedIntegerConstant => "malformed integer constant",
-            &FormatWidthOverflow => "format width constant computation overflowed",
-            &FormatPrecisionOverflow => "format precision constant computation overflowed",
+        match *self {
+            StackUnderflow => "not enough elements on the stack",
+            TypeMismatch => "type mismatch",
+            UnrecognizedFormatOption(_) => "unrecognized format option",
+            InvalidVariableName(_) => "invalid variable name",
+            InvalidParameterIndex(_) => "invalid parameter index",
+            MalformedCharacterConstant => "malformed character constant",
+            IntegerConstantOverflow => "integer constant computation overflowed",
+            MalformedIntegerConstant => "malformed integer constant",
+            FormatWidthOverflow => "format width constant computation overflowed",
+            FormatPrecisionOverflow => "format precision constant computation overflowed",
         }
     }
 
@@ -105,6 +109,7 @@ impl ::std::error::Error for Error {
 }
 
 /// Container for static and dynamic variable arrays
+#[derive(Default)]
 pub struct Variables {
     /// Static variables A-Z
     sta: [Param; 26],
@@ -115,16 +120,7 @@ pub struct Variables {
 impl Variables {
     /// Return a new zero-initialized Variables
     pub fn new() -> Variables {
-        Variables {
-            sta: [Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0)],
-            dyn: [Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0), Number(0), Number(0),
-                  Number(0), Number(0), Number(0), Number(0), Number(0)],
-        }
+        Default::default()
     }
 }
 
@@ -257,24 +253,24 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
                     // printf-style support for %doxXs
                     'd' | 'o' | 'x' | 'X' | 's' => {
                         if let Some(arg) = stack.pop() {
-                            let flags = Flags::new();
+                            let flags = Flags::default();
                             let res = try!(format(arg, FormatOp::from_char(cur), flags));
-                            output.extend(res.iter().map(|x| *x));
+                            output.extend(res);
                         } else {
                             return Err(Error::StackUnderflow);
                         }
                     }
                     ':' | '#' | ' ' | '.' | '0'...'9' => {
-                        let mut flags = Flags::new();
-                        let mut fstate = FormatStateFlags;
+                        let mut flags = Flags::default();
+                        let mut fstate = FormatState::Flags;
                         match cur {
                             ':' => (),
                             '#' => flags.alternate = true,
                             ' ' => flags.space = true,
-                            '.' => fstate = FormatStatePrecision,
+                            '.' => fstate = FormatState::Precision,
                             '0'...'9' => {
                                 flags.width = cur as usize - '0' as usize;
-                                fstate = FormatStateWidth;
+                                fstate = FormatState::Width;
                             }
                             _ => unreachable!("logic error"),
                         }
@@ -282,7 +278,7 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
                     }
 
                     // conditionals
-                    '?' => (),
+                    '?'|';' => (),
                     't' => {
                         match stack.pop() {
                             Some(Number(0)) => state = SeekIfElse(0),
@@ -292,7 +288,6 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
                         }
                     }
                     'e' => state = SeekIfEnd(0),
-                    ';' => (),
                     c => return Err(Error::UnrecognizedFormatOption(c)),
                 }
             }
@@ -365,33 +360,30 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
                     (_, 'd') | (_, 'o') | (_, 'x') | (_, 'X') | (_, 's') => {
                         if let Some(arg) = stack.pop() {
                             let res = try!(format(arg, FormatOp::from_char(cur), *flags));
-                            output.extend(res.iter().map(|x| *x));
+                            output.extend(res);
                             // will cause state to go to Nothing
                             old_state = FormatPattern(*flags, *fstate);
                         } else {
                             return Err(Error::StackUnderflow);
                         }
                     }
-                    (FormatStateFlags, '#') => {
+                    (FormatState::Flags, '#') => {
                         flags.alternate = true;
                     }
-                    (FormatStateFlags, '-') => {
+                    (FormatState::Flags, '-') => {
                         flags.left = true;
                     }
-                    (FormatStateFlags, '+') => {
+                    (FormatState::Flags, '+') => {
                         flags.sign = true;
                     }
-                    (FormatStateFlags, ' ') => {
+                    (FormatState::Flags, ' ') => {
                         flags.space = true;
                     }
-                    (FormatStateFlags, '0'...'9') => {
+                    (FormatState::Flags, '0'...'9') => {
                         flags.width = cur as usize - '0' as usize;
-                        *fstate = FormatStateWidth;
+                        *fstate = FormatState::Width;
                     }
-                    (FormatStateFlags, '.') => {
-                        *fstate = FormatStatePrecision;
-                    }
-                    (FormatStateWidth, '0'...'9') => {
+                    (FormatState::Width, '0'...'9') => {
                         flags.width = match flags.width.checked_mul(10).and_then(|w| {
                             w.checked_add(cur as usize - '0' as usize)
                         }) {
@@ -399,10 +391,10 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
                             None => return Err(Error::FormatWidthOverflow),
                         }
                     }
-                    (FormatStateWidth, '.') => {
-                        *fstate = FormatStatePrecision;
+                    (FormatState::Width, '.')|(FormatState::Flags, '.') => {
+                        *fstate = FormatState::Precision;
                     }
-                    (FormatStatePrecision, '0'...'9') => {
+                    (FormatState::Precision, '0'...'9') => {
                         flags.precision = match flags.precision.checked_mul(10).and_then(|w| {
                             w.checked_add(cur as usize - '0' as usize)
                         }) {
@@ -461,7 +453,7 @@ pub fn expand(cap: &[u8], params: &[Param], vars: &mut Variables) -> Result<Vec<
     Ok(output)
 }
 
-#[derive(Copy, PartialEq, Clone)]
+#[derive(Copy, PartialEq, Clone, Default)]
 struct Flags {
     width: usize,
     precision: usize,
@@ -471,46 +463,35 @@ struct Flags {
     space: bool,
 }
 
-impl Flags {
-    fn new() -> Flags {
-        Flags {
-            width: 0,
-            precision: 0,
-            alternate: false,
-            left: false,
-            sign: false,
-            space: false,
-        }
-    }
-}
-
 #[derive(Copy, Clone)]
 enum FormatOp {
-    FormatDigit,
-    FormatOctal,
-    FormatHex,
-    FormatHEX,
-    FormatString,
+    Digit,
+    Octal,
+    Hex,
+    HEX,
+    String,
 }
 
 impl FormatOp {
     fn from_char(c: char) -> FormatOp {
+        use self::FormatOp::*;
         match c {
-            'd' => FormatDigit,
-            'o' => FormatOctal,
-            'x' => FormatHex,
-            'X' => FormatHEX,
-            's' => FormatString,
+            'd' => Digit,
+            'o' => Octal,
+            'x' => Hex,
+            'X' => HEX,
+            's' => String,
             _ => panic!("bad FormatOp char"),
         }
     }
 }
 
 fn format(val: Param, op: FormatOp, flags: Flags) -> Result<Vec<u8>, Error> {
+    use self::FormatOp::*;
     let mut s = match val {
         Number(d) => {
             match op {
-                FormatDigit => {
+                Digit => {
                     if flags.sign {
                         format!("{:+01$}", d, flags.precision)
                     } else if d < 0 {
@@ -522,7 +503,7 @@ fn format(val: Param, op: FormatOp, flags: Flags) -> Result<Vec<u8>, Error> {
                         format!("{:01$}", d, flags.precision)
                     }
                 }
-                FormatOctal => {
+                Octal => {
                     if flags.alternate {
                         // Leading octal zero counts against precision.
                         format!("0{:01$o}", d, flags.precision.saturating_sub(1))
@@ -530,27 +511,27 @@ fn format(val: Param, op: FormatOp, flags: Flags) -> Result<Vec<u8>, Error> {
                         format!("{:01$o}", d, flags.precision)
                     }
                 }
-                FormatHex => {
+                Hex => {
                     if flags.alternate && d != 0 {
                         format!("0x{:01$x}", d, flags.precision)
                     } else {
                         format!("{:01$x}", d, flags.precision)
                     }
                 }
-                FormatHEX => {
+                HEX => {
                     if flags.alternate && d != 0 {
                         format!("0X{:01$X}", d, flags.precision)
                     } else {
                         format!("{:01$X}", d, flags.precision)
                     }
                 }
-                FormatString => return Err(Error::TypeMismatch),
+                String => return Err(Error::TypeMismatch),
             }
             .into_bytes()
         }
         Words(s) => {
             match op {
-                FormatString => {
+                String => {
                     let mut s = s.into_bytes();
                     if flags.precision > 0 && flags.precision < s.len() {
                         s.truncate(flags.precision);
@@ -615,18 +596,18 @@ mod test {
                    vars: &mut Variables)
                    -> Result<Vec<u8>, super::Error> {
             let mut u8v: Vec<_> = fmt.bytes().collect();
-            u8v.extend(cap.as_bytes().iter().map(|&b| b));
+            u8v.extend(cap.as_bytes().iter().cloned());
             expand(&u8v, params, vars)
         }
 
         let caps = ["%d", "%c", "%s", "%Pa", "%l", "%!", "%~"];
-        for &cap in caps.iter() {
+        for &cap in &caps {
             let res = get_res("", cap, &[], vars);
             assert!(res.is_err(),
                     "Op {} succeeded incorrectly with 0 stack entries",
                     cap);
             let p = if cap == "%s" || cap == "%l" {
-                Words("foo".to_string())
+                Words("foo".to_owned())
             } else {
                 Number(97)
             };
@@ -637,7 +618,7 @@ mod test {
                     res.err().unwrap());
         }
         let caps = ["%+", "%-", "%*", "%/", "%m", "%&", "%|", "%A", "%O"];
-        for &cap in caps.iter() {
+        for &cap in &caps {
             let res = expand(cap.as_bytes(), &[], vars);
             assert!(res.is_err(),
                     "Binop {} succeeded incorrectly with 0 stack entries",
@@ -662,7 +643,7 @@ mod test {
     #[test]
     fn test_comparison_ops() {
         let v = [('<', [1u8, 0u8, 0u8]), ('=', [0u8, 1u8, 0u8]), ('>', [0u8, 0u8, 1u8])];
-        for &(op, bs) in v.iter() {
+        for &(op, bs) in &v {
             let s = format!("%{{1}}%{{2}}%{}%d", op);
             let res = expand(s.as_bytes(), &[], &mut Variables::new());
             assert!(res.is_ok(), res.err().unwrap());
@@ -698,13 +679,13 @@ mod test {
         let mut varstruct = Variables::new();
         let vars = &mut varstruct;
         assert_eq!(expand(b"%p1%s%p2%2s%p3%2s%p4%.2s",
-                          &[Words("foo".to_string()),
-                            Words("foo".to_string()),
-                            Words("f".to_string()),
-                            Words("foo".to_string())],
+                          &[Words("foo".to_owned()),
+                            Words("foo".to_owned()),
+                            Words("f".to_owned()),
+                            Words("foo".to_owned())],
                           vars),
                    Ok("foofoo ffo".bytes().collect::<Vec<_>>()));
-        assert_eq!(expand(b"%p1%:-4.2s", &[Words("foo".to_string())], vars),
+        assert_eq!(expand(b"%p1%:-4.2s", &[Words("foo".to_owned())], vars),
                    Ok("fo  ".bytes().collect::<Vec<_>>()));
 
         assert_eq!(expand(b"%p1%d%p1%.3d%p1%5d%p1%:+d", &[Number(1)], vars),

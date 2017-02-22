@@ -36,4 +36,7 @@ void main(void) {
     vClipMaskUv = vec3((vPos.xy / vPos.z - local_rect.xy) / local_rect.zw, 0.0);
     vec2 texture_size = vec2(textureSize(sMask, 0));
     vClipMaskUvRect = mask.uv_rect / texture_size.xyxy;
+    // applying a half-texel offset to the UV boundaries to prevent linear samples from the outside
+    vec4 inner_rect = vec4(mask.uv_rect.xy, mask.uv_rect.xy + mask.uv_rect.zw);
+    vClipMaskUvInnerRect = (inner_rect + vec4(0.5, 0.5, -0.5, -0.5)) / texture_size.xyxy;
 }

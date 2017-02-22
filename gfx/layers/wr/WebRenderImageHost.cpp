@@ -5,8 +5,7 @@
 
 #include "WebRenderImageHost.h"
 
-#include "LayersLogging.h"              // for AppendToString
-
+#include "LayersLogging.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
 #include "mozilla/layers/LayerManagerComposite.h"     // for TexturedEffect, Effect, etc

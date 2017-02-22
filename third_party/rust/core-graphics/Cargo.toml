@@ -3,7 +3,7 @@ name = "core-graphics"
 description = "Bindings to Core Graphics for OS X"
 homepage = "https://github.com/servo/core-graphics-rs"
 repository = "https://github.com/servo/core-graphics-rs"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["The Servo Project Developers"]
 license = "MIT / Apache-2.0"
 
@@ -13,5 +13,5 @@ elcapitan = []
 
 [dependencies]
 libc = "0.2"
-core-foundation = "0.2"
+core-foundation = "0.3"
 serde = "0.8"

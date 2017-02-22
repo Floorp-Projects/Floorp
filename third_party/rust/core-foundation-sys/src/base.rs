@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use libc::{c_uint, c_long, c_ulong, c_void};
+use libc::{c_uint, c_long, c_ulong, c_void, c_int};
 
 pub type Boolean = u8;
 pub type CFIndex = c_long;
@@ -19,6 +19,7 @@ pub type CFTypeID = c_ulong;
 pub type CFTypeRef = *const c_void;
 pub type CFOptionFlags = u32;
 pub type OSStatus = i32;
+pub type SInt32 = c_int;
 
 #[repr(C)]
 #[derive(Clone, Copy)]

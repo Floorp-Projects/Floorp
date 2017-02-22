@@ -12,7 +12,7 @@ void main(void) {
                                  prim.local_clip_rect,
                                  prim.z,
                                  prim.layer,
-                                 prim.tile);
+                                 prim.task);
 
     RenderTaskData child_task = fetch_render_task(prim.user_data.x);
     vUv.z = child_task.data1.x;
@@ -22,7 +22,7 @@ void main(void) {
     vec2 patch_size_device_pixels = child_task.data0.zw - vec2(2.0);
     vec2 patch_size = patch_size_device_pixels / uDevicePixelRatio;
 
-    vUv.xy = (vi.local_clamped_pos - prim.local_rect.xy) / patch_size;
+    vUv.xy = (vi.local_pos - prim.local_rect.xy) / patch_size;
     vMirrorPoint = 0.5 * prim.local_rect.zw / patch_size;
 
     vec2 texture_size = vec2(textureSize(sCache, 0));
