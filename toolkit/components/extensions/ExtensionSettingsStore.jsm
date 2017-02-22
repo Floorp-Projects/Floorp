@@ -24,7 +24,8 @@
  *         {
  *           id, // The id of the extension requesting the setting.
  *           installDate, // The install date of the extension.
- *           value // The value of the setting requested by the extension.
+ *           value, // The value of the setting requested by the extension.
+ *           enabled // Whether the setting is currently enabled.
  *         }
  *       ],
  *     },
@@ -57,14 +58,14 @@ const STORE_PATH = OS.Path.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, J
 let _store;
 
 // Get the internal settings store, which is persisted in a JSON file.
-async function getStore(type) {
+function getStore(type) {
   if (!_store) {
-    _store = new JSONFile({
+    let initStore = new JSONFile({
       path: STORE_PATH,
     });
-    await _store.load();
+    initStore.ensureDataReady();
+    _store = initStore;
   }
-  _store.ensureDataReady();
 
   // Ensure a property exists for the given type.
   if (!_store.data[type]) {
@@ -77,18 +78,103 @@ async function getStore(type) {
 // Return an object with properties for key and value|initialValue, or null
 // if no setting has been stored for that key.
 async function getTopItem(type, key) {
-  let store = await getStore(type);
+  let store = getStore(type);
 
   let keyInfo = store.data[type][key];
   if (!keyInfo) {
     return null;
   }
 
-  if (!keyInfo.precedenceList.length) {
-    return {key, initialValue: keyInfo.initialValue};
+  // Find the highest precedence, enabled setting.
+  for (let item of keyInfo.precedenceList) {
+    if (item.enabled) {
+      return {key, value: item.value};
+    }
   }
 
-  return {key, value: keyInfo.precedenceList[0].value};
+  // Nothing found in the precedenceList, return the initialValue.
+  return {key, initialValue: keyInfo.initialValue};
+}
+
+// Comparator used when sorting the precedence list.
+function precedenceComparator(a, b) {
+  if (a.enabled && !b.enabled) {
+    return -1;
+  }
+  if (b.enabled && !a.enabled) {
+    return 1;
+  }
+  return b.installDate - a.installDate;
+}
+
+/**
+ * Helper method that alters a setting, either by changing its enabled status
+ * or by removing it.
+ *
+ * @param {Extension} extension
+ *        The extension for which a setting is being removed/disabled.
+ * @param {string} type
+ *        The type of setting to be altered.
+ * @param {string} key
+ *        A string that uniquely identifies the setting.
+ * @param {string} action
+ *        The action to perform on the setting.
+ *        Will be one of remove|enable|disable.
+ *
+ * @returns {object | null}
+ *          Either an object with properties for key and value, which
+ *          corresponds to the current top precedent setting, or null if
+ *          the current top precedent setting has not changed.
+ */
+async function alterSetting(extension, type, key, action) {
+  let returnItem;
+  let store = getStore(type);
+
+  let keyInfo = store.data[type][key];
+  if (!keyInfo) {
+    throw new Error(
+      `Cannot alter the setting for ${type}:${key} as it does not exist.`);
+  }
+
+  let id = extension.id;
+  let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
+
+  if (foundIndex === -1) {
+    throw new Error(
+      `Cannot alter the setting for ${type}:${key} as it does not exist.`);
+  }
+
+  switch (action) {
+    case "remove":
+      keyInfo.precedenceList.splice(foundIndex, 1);
+      break;
+
+    case "enable":
+      keyInfo.precedenceList[foundIndex].enabled = true;
+      keyInfo.precedenceList.sort(precedenceComparator);
+      foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
+      break;
+
+    case "disable":
+      keyInfo.precedenceList[foundIndex].enabled = false;
+      keyInfo.precedenceList.sort(precedenceComparator);
+      break;
+
+    default:
+      throw new Error(`${action} is not a valid action for alterSetting.`);
+  }
+
+  if (foundIndex === 0) {
+    returnItem = await getTopItem(type, key);
+  }
+
+  if (action === "remove" && keyInfo.precedenceList.length === 0) {
+    delete store.data[type][key];
+  }
+
+  store.saveSoon();
+
+  return returnItem;
 }
 
 this.ExtensionSettingsStore = {
@@ -124,7 +210,7 @@ this.ExtensionSettingsStore = {
     }
 
     let id = extension.id;
-    let store = await getStore(type);
+    let store = getStore(type);
 
     if (!store.data[type][key]) {
       // The setting for this key does not exist. Set the initial value.
@@ -137,19 +223,17 @@ this.ExtensionSettingsStore = {
     let keyInfo = store.data[type][key];
     // Check for this item in the precedenceList.
     let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
-    if (foundIndex == -1) {
+    if (foundIndex === -1) {
       // No item for this extension, so add a new one.
       let addon = await AddonManager.getAddonByID(id);
-      keyInfo.precedenceList.push({id, installDate: addon.installDate, value});
+      keyInfo.precedenceList.push({id, installDate: addon.installDate, value, enabled: true});
     } else {
       // Item already exists or this extension, so update it.
       keyInfo.precedenceList[foundIndex].value = value;
     }
 
     // Sort the list.
-    keyInfo.precedenceList.sort((a, b) => {
-      return b.installDate - a.installDate;
-    });
+    keyInfo.precedenceList.sort(precedenceComparator);
 
     store.saveSoon();
 
@@ -161,48 +245,63 @@ this.ExtensionSettingsStore = {
   },
 
   /**
-   * Removes a setting from the store, returning the current top precedent
-   * setting.
+   * Removes a setting from the store, possibly returning the current top
+   * precedent setting.
    *
-   * @param {Extension} extension The extension for which a setting is being removed.
-   * @param {string} type The type of setting to be removed.
-   * @param {string} key A string that uniquely identifies the setting.
+   * @param {Extension} extension
+   *        The extension for which a setting is being removed.
+   * @param {string} type
+   *        The type of setting to be removed.
+   * @param {string} key
+   *        A string that uniquely identifies the setting.
    *
-   * @returns {object | null} Either an object with properties for key and
-   *                          value, which corresponds to the current top
-   *                          precedent setting, or null if the current top
-   *                          precedent setting has not changed.
+   * @returns {object | null}
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
    */
   async removeSetting(extension, type, key) {
-    let returnItem;
-    let store = await getStore(type);
+    return await alterSetting(extension, type, key, "remove");
+  },
 
-    let keyInfo = store.data[type][key];
-    if (!keyInfo) {
-      throw new Error(
-        `Cannot remove setting for ${type}:${key} as it does not exist.`);
-    }
+  /**
+   * Enables a setting in the store, possibly returning the current top
+   * precedent setting.
+   *
+   * @param {Extension} extension
+   *        The extension for which a setting is being enabled.
+   * @param {string} type
+   *        The type of setting to be enabled.
+   * @param {string} key
+   *        A string that uniquely identifies the setting.
+   *
+   * @returns {object | null}
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
+   */
+  async enable(extension, type, key) {
+    return await alterSetting(extension, type, key, "enable");
+  },
 
-    let id = extension.id;
-    let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
-
-    if (foundIndex == -1) {
-      throw new Error(
-        `Cannot remove setting for ${type}:${key} as it does not exist.`);
-    }
-
-    keyInfo.precedenceList.splice(foundIndex, 1);
-
-    if (foundIndex == 0) {
-      returnItem = await getTopItem(type, key);
-    }
-
-    if (keyInfo.precedenceList.length == 0) {
-      delete store.data[type][key];
-    }
-    store.saveSoon();
-
-    return returnItem;
+  /**
+   * Disables a setting in the store, possibly returning the current top
+   * precedent setting.
+   *
+   * @param {Extension} extension
+   *        The extension for which a setting is being disabled.
+   * @param {string} type
+   *        The type of setting to be disabled.
+   * @param {string} key
+   *        A string that uniquely identifies the setting.
+   *
+   * @returns {object | null}
+   *          Either an object with properties for key and value, which
+   *          corresponds to the current top precedent setting, or null if
+   *          the current top precedent setting has not changed.
+   */
+  async disable(extension, type, key) {
+    return await alterSetting(extension, type, key, "disable");
   },
 
   /**
@@ -214,7 +313,7 @@ this.ExtensionSettingsStore = {
    * @returns {array} A list of settings which have been stored for the extension.
    */
   async getAllForExtension(extension, type) {
-    let store = await getStore(type);
+    let store = getStore(type);
 
     let keysObj = store.data[type];
     let items = [];
@@ -251,16 +350,19 @@ this.ExtensionSettingsStore = {
    * controllable_by_this_extension: can be controlled by this extension
    * controlled_by_this_extension: controlled by this extension
    *
-   * @param {Extension} extension The extension for which levelOfControl is being
-   *                              requested.
-   * @param {string} type The type of setting to be returned. For example `pref`.
-   * @param {string} key A string that uniquely identifies the setting, for
-   *                     example, a preference name.
+   * @param {Extension} extension
+   *        The extension for which levelOfControl is being requested.
+   * @param {string} type
+   *        The type of setting to be returned. For example `pref`.
+   * @param {string} key
+   *        A string that uniquely identifies the setting, for example, a
+   *        preference name.
    *
-   * @returns {string} The level of control of the extension over the key.
+   * @returns {string}
+   *          The level of control of the extension over the key.
    */
   async getLevelOfControl(extension, type, key) {
-    let store = await getStore(type);
+    let store = getStore(type);
 
     let keyInfo = store.data[type][key];
     if (!keyInfo || !keyInfo.precedenceList.length) {
@@ -268,7 +370,12 @@ this.ExtensionSettingsStore = {
     }
 
     let id = extension.id;
-    let topItem = keyInfo.precedenceList[0];
+    let enabledItems = keyInfo.precedenceList.filter(item => item.enabled);
+    if (!enabledItems.length) {
+      return "controllable_by_this_extension";
+    }
+
+    let topItem = enabledItems[0];
     if (topItem.id == id) {
       return "controlled_by_this_extension";
     }
