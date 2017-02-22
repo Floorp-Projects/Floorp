@@ -348,7 +348,8 @@ public:
   already_AddRefed<SourceSurface> GetSourceSurface();
 
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf, size_t& aHeapSizeOut,
-                              size_t& aNonHeapSizeOut) const;
+                              size_t& aNonHeapSizeOut,
+                              size_t& aSharedHandlesOut) const;
 
 private: // methods
 
