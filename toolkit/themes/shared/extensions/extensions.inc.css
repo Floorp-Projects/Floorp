@@ -260,6 +260,8 @@ button.warning {
 
 #header-utils-btn:not([disabled="true"]):active:hover,
 #header-utils-btn[open="true"] {
+  padding-bottom: 0px;
+  padding-top: 0px;
   background-color: #dadada;
 }
 

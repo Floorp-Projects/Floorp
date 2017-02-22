@@ -836,10 +836,20 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand)
   : VRControllerHost(VRDeviceType::Oculus)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOculus, VRControllerHost);
-  mControllerInfo.mControllerName.AssignLiteral("Oculus Touch (");
-  mControllerInfo.mControllerName.AppendPrintf("%s%s",
-                                               GamepadHandValues::strings[uint32_t(aHand)].value,
-                                               ")");
+
+  char* touchID = "";
+  switch (aHand) {
+    case dom::GamepadHand::Left:
+      touchID = "Oculus Touch (Left)";
+      break;
+    case dom::GamepadHand::Right:
+      touchID = "Oculus Touch (Right)";
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+  mControllerInfo.mControllerName = touchID;
   mControllerInfo.mMappingType = GamepadMappingType::_empty;
   mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = kNumOculusButton;
@@ -988,10 +998,13 @@ VRSystemManagerOculus::HandleInput()
 
     // Start to process pose
     ovrTrackingState state = ovr_GetTrackingState(mSession, 0.0, false);
-    ovrPoseStatef& pose(state.HandPoses[i]);
+    // HandPoses is ordered by ovrControllerType_LTouch and ovrControllerType_RTouch,
+    // therefore, we can't get its state by the index of mOculusController.
+    const uint32_t handIdx = static_cast<uint32_t>(controller->GetHand()) - 1;
+    ovrPoseStatef& pose(state.HandPoses[handIdx]);
     GamepadPoseState poseState;
 
-    if (state.HandStatusFlags[i] & ovrStatus_OrientationTracked) {
+    if (state.HandStatusFlags[handIdx] & ovrStatus_OrientationTracked) {
       poseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
       poseState.orientation[0] = pose.ThePose.Orientation.x;
       poseState.orientation[1] = pose.ThePose.Orientation.y;
@@ -1006,7 +1019,7 @@ VRSystemManagerOculus::HandleInput()
       poseState.angularAcceleration[1] = pose.AngularAcceleration.y;
       poseState.angularAcceleration[2] = pose.AngularAcceleration.z;
     }
-    if (state.HandStatusFlags[i] & ovrStatus_PositionTracked) {
+    if (state.HandStatusFlags[handIdx] & ovrStatus_PositionTracked) {
       poseState.flags |= GamepadCapabilityFlags::Cap_Position;
       poseState.position[0] = pose.ThePose.Position.x;
       poseState.position[1] = pose.ThePose.Position.y;
@@ -1039,10 +1052,10 @@ VRSystemManagerOculus::HandleButtonPress(uint32_t aControllerIdx,
 
   for (uint32_t i = 0; i < kNumOculusButton; ++i) {
     switch (hand) {
-      case mozilla::dom::GamepadHand::Left:
+      case dom::GamepadHand::Left:
         buttonMask = kOculusTouchLButton[i];
         break;
-      case mozilla::dom::GamepadHand::Right:
+      case dom::GamepadHand::Right:
         buttonMask = kOculusTouchRButton[i];
         break;
       default:
@@ -1080,6 +1093,7 @@ VRSystemManagerOculus::HandlePoseTracking(uint32_t aControllerIdx,
                                           const GamepadPoseState& aPose,
                                           VRControllerHost* aController)
 {
+  MOZ_ASSERT(aController);
   if (aPose != aController->GetPose()) {
     aController->SetPose(aPose);
     NewPoseState(aControllerIdx, aPose);

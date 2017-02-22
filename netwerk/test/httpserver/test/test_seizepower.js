@@ -157,7 +157,7 @@ var data1 = "GET /called-too-late HTTP/1.0\r\n" +
        "\r\n";
 function checkTooLate(data)
 {
-  do_check_eq(LineIterator(data).next(), "too-late passed");
+  do_check_eq(LineIterator(data).next().value, "too-late passed");
 }
 
 var data2 = "GET /exceptions HTTP/1.0\r\n" +
@@ -178,5 +178,5 @@ var data4 = "GET /seize-after-async HTTP/1.0\r\n" +
        "\r\n";
 function checkSeizeAfterAsync(data)
 {
-  do_check_eq(LineIterator(data).next(), "HTTP/1.0 200 async seizure pass");
+  do_check_eq(LineIterator(data).next().value, "HTTP/1.0 200 async seizure pass");
 }

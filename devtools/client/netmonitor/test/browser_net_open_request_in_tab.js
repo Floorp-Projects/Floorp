@@ -35,7 +35,7 @@ add_task(function* () {
   // Context menu is appending in XUL document, we must select it from
   // toolbox.doc
   monitor.toolbox.doc
-    .querySelector("#request-menu-context-newtab").click();
+    .querySelector("#request-list-context-newtab").click();
   yield onTabOpen;
 
   ok(true, "A new tab has been opened");

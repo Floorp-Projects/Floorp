@@ -29,8 +29,17 @@ interface nsIURIClassifierCallback : nsISupports
    * @param aErrorCode
    *        The error code with which the channel should be cancelled, or
    *        NS_OK if the load should continue normally.
+   * @param aList
+   *        Name of the list that matched
+   * @param aProvider
+   *        Name of provider that matched
+   * @param aPrefix
+   *        Hash prefix of URL that matched
    */
-  void onClassifyComplete(in nsresult aErrorCode);
+  void onClassifyComplete(in nsresult aErrorCode,
+                          in ACString aList,
+                          in ACString aProvider,
+                          in ACString aPrefix);
 };
 
 /**

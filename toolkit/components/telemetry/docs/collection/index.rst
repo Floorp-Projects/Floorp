@@ -20,6 +20,7 @@ The current data collection possibilities include:
 * :doc:`measuring elapsed time <measuring-time>`
 * :doc:`custom pings <custom-pings>`
 * :doc:`stack capture <stack-capture>` allow recording application call stacks
+* :doc:`Use counters <use-counters>` measure the usage of web platform features
 
 .. toctree::
    :maxdepth: 2

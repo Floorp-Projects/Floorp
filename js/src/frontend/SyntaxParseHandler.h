@@ -241,6 +241,10 @@ class SyntaxParseHandler
         return NodeUnparenthesizedUnary;
     }
 
+    Node newNullary(ParseNodeKind kind, JSOp op, const TokenPos& pos) {
+        return NodeGeneric;
+    }
+
     Node newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, Node kid) {
         return NodeUnparenthesizedUnary;
     }
@@ -307,6 +311,16 @@ class SyntaxParseHandler
     void addCaseStatementToList(Node list, Node stmt) {}
     MOZ_MUST_USE bool prependInitialYield(Node stmtList, Node gen) { return true; }
     Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
+
+    Node newExportDeclaration(Node kid, const TokenPos& pos) {
+        return NodeGeneric;
+    }
+    Node newExportFromDeclaration(uint32_t begin, Node exportSpecSet, Node moduleSpec) {
+        return NodeGeneric;
+    }
+    Node newExportDefaultDeclaration(Node kid, Node maybeBinding, const TokenPos& pos) {
+        return NodeGeneric;
+    }
 
     Node newSetThis(Node thisName, Node value) { return value; }
 

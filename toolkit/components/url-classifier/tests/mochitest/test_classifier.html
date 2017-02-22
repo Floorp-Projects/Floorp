@@ -157,6 +157,7 @@ SpecialPowers.pushPrefEnv(
             ["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.annotate_channels", true]]},
   function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     classifierHelper.waitForInit()
       .then(() => classifierHelper.addUrlToDB(testData))
       .then(updateSuccess)

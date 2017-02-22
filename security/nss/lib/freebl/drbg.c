@@ -398,7 +398,7 @@ static PRStatus
 rng_init(void)
 {
     PRUint8 bytes[PRNG_SEEDLEN * 2]; /* entropy + nonce */
-#ifndef UNSAFE_FUZZER_MODE
+#ifndef UNSAFE_RNG_NO_URANDOM_SEED
     unsigned int numBytes;
     SECStatus rv = SECSuccess;
 #endif
@@ -418,7 +418,7 @@ rng_init(void)
             return PR_FAILURE;
         }
 
-#ifndef UNSAFE_FUZZER_MODE
+#ifndef UNSAFE_RNG_NO_URANDOM_SEED
         /* Try to get some seed data for the RNG */
         numBytes = (unsigned int)RNG_SystemRNG(bytes, sizeof bytes);
         PORT_Assert(numBytes == 0 || numBytes == sizeof bytes);

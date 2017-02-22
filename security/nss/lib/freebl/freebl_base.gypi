@@ -159,6 +159,11 @@
         }],
       ],
     }],
+    [ 'fuzz_oss==1', {
+      'defines': [
+        'UNSAFE_RNG_NO_URANDOM_SEED',
+      ],
+    }],
     [ 'fuzz_tls==1', {
       'sources': [
         'det_rng.c',

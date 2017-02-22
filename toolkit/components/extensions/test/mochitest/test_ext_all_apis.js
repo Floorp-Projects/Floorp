@@ -82,6 +82,8 @@ let expectedBackgroundApis = [
   "runtime.openOptionsPage",
   "runtime.reload",
   "runtime.setUninstallURL",
+  "types.LevelOfControl",
+  "types.SettingScope",
 ];
 
 function sendAllApis() {
