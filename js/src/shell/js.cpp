@@ -3470,6 +3470,7 @@ WorkerMain(void* arg)
     MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
 
     JSContext* cx = nullptr;
+    ShellContext* sc = nullptr;
 
     auto guard = mozilla::MakeScopeExit([&] {
             if (cx)
@@ -3479,6 +3480,7 @@ WorkerMain(void* arg)
                 CooperativeYield();
             }
             js_delete(input);
+            js_delete(sc);
         });
 
     cx = input->parentRuntime
@@ -3487,13 +3489,13 @@ WorkerMain(void* arg)
     if (!cx)
         return;
 
-    UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
+    sc = js_new<ShellContext>(cx);
     if (!sc)
         return;
 
     if (input->parentRuntime)
         sc->isWorker = true;
-    JS_SetContextPrivate(cx, sc.get());
+    JS_SetContextPrivate(cx, sc);
     SetWorkerContextOptions(cx);
     sc->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
 
@@ -3544,10 +3546,13 @@ WorkerMain(void* arg)
         JS_ExecuteScript(cx, script, &result);
     } while (0);
 
-    JS::SetLargeAllocationFailureCallback(cx, nullptr, nullptr);
+    if (input->parentRuntime) {
+        JS::SetLargeAllocationFailureCallback(cx, nullptr, nullptr);
 
-    JS::SetGetIncumbentGlobalCallback(cx, nullptr);
-    JS::SetEnqueuePromiseJobCallback(cx, nullptr);
+        JS::SetGetIncumbentGlobalCallback(cx, nullptr);
+        JS::SetEnqueuePromiseJobCallback(cx, nullptr);
+    }
+
     sc->jobQueue.reset();
 
     KillWatchdog(cx);
@@ -3595,6 +3600,11 @@ EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
         // When we have a better idea of how cooperative multithreading will be
         // used in the browser this restriction might be relaxed.
         JS_ReportErrorASCII(cx, "Cooperative multithreading in worker runtimes is not supported");
+        return false;
+    }
+
+    if (cooperative && !cx->runtime()->gc.canChangeActiveContext(cx)) {
+        JS_ReportErrorASCII(cx, "Cooperating multithreading context switches are not currently allowed");
         return false;
     }
 

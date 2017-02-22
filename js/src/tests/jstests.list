@@ -163,11 +163,6 @@ skip script test262/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuff
 skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-on-get-src-value-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-on-tointeger-offset-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/array-arg-targetbuffer-detached-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-srcbuffer-detached-during-tointeger-offset-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-targetbuffer-detached-during-tointeger-offset-throws.js
 skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-same-targettype.js
 skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-other-targettype.js
 skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-get-ctor.js
@@ -202,11 +197,6 @@ skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
 skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317384
-skip script test262/built-ins/TypedArray/prototype/set/array-arg-negative-integer-offset-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-negative-integer-offset-throws.js
-skip script test262/built-ins/TypedArray/prototype/set/typedarray-arg-src-range-greather-than-target-throws-rangeerror.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317383
 skip script test262/built-ins/TypedArrays/buffer-arg-byteoffset-is-negative-throws.js
