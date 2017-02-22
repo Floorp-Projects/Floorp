@@ -718,8 +718,9 @@ ExtensionTabManager.prototype = {
 
     if (this.hasTabPermission(tab)) {
       let entries = tab.state ? tab.state.entries : tab.entries;
-      result.url = entries[0].url;
-      result.title = entries[0].title;
+      let entry = entries[entries.length - 1];
+      result.url = entry.url;
+      result.title = entry.title;
       if (tab.image) {
         result.favIconUrl = tab.image;
       }
