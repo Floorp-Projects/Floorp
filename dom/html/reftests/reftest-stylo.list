@@ -6,17 +6,16 @@ include toblob-todataurl/reftest-stylo.list
 fails == 41464-1a.html 41464-1a.html
 fails == 41464-1b.html 41464-1b.html
 fails == 52019-1.html 52019-1.html
-fails == 82711-1.html 82711-1.html
+fails == 82711-1.html 82711-1.html # Bug 1341637
 fails == 82711-2.html 82711-2.html
-# == 82711-1-ref.html 82711-1-ref.html
+fails == 82711-1-ref.html 82711-1-ref.html
 == 468263-1a.html 468263-1a.html
 == 468263-1b.html 468263-1b.html
 == 468263-1c.html 468263-1c.html
-# == 468263-1d.html 468263-1d.html
-# == 468263-2.html 468263-2.html
-# == 468263-2.html 468263-2.html
+== 468263-1d.html 468263-1d.html
+fails == 468263-2.html 468263-2.html # Bug 1341642
 fails == 484200-1.html 484200-1.html
-# == 485377.html 485377.html
+== 485377.html 485377.html
 == 557840.html 557840.html
 == 560059-video-dimensions.html 560059-video-dimensions.html
 fails == 573322-quirks.html 573322-quirks.html
@@ -27,16 +26,16 @@ fails == 596455-2a.html 596455-2a.html
 fails == 596455-2b.html 596455-2b.html
 fails == 610935.html 610935.html
 == 649134-1.html 649134-1.html
-# == 649134-2.html 649134-2.html
+== 649134-2.html 649134-2.html
 fails == 741776-1.vtt 741776-1.vtt
 
-# == bug448564-1_malformed.html bug448564-1_malformed.html
-# == bug448564-1_malformed.html bug448564-1_malformed.html
+== bug448564-1_malformed.html bug448564-1_malformed.html
+== bug448564-1_malformed.html bug448564-1_malformed.html
 
-# == bug448564-4a.html bug448564-4a.html
-# == bug502168-1_malformed.html bug502168-1_malformed.html
+== bug448564-4a.html bug448564-4a.html
+== bug502168-1_malformed.html bug502168-1_malformed.html
 
-# == responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
+fails == responsive-image-load-shortcircuit.html responsive-image-load-shortcircuit.html
 == image-load-shortcircuit-1.html image-load-shortcircuit-1.html
 == image-load-shortcircuit-2.html image-load-shortcircuit-2.html
 
@@ -44,7 +43,7 @@ fails == 741776-1.vtt 741776-1.vtt
 # image-orientation when determining the size of the image.
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
-# == bug917595-iframe-1.html bug917595-iframe-1.html
+fails == bug917595-iframe-1.html bug917595-iframe-1.html # Bug 1341647
 fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 
 # Test support for SVG-as-image in <picture> elements.
@@ -52,11 +51,11 @@ fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 == bug1106522-2.html bug1106522-2.html
 
 fails == href-attr-change-restyles.html href-attr-change-restyles.html
-# == figure.html figure.html
+== figure.html figure.html
 fails == pre-1.html pre-1.html
-# == table-border-1.html table-border-1.html
-# == table-border-2.html table-border-2.html
-# == table-border-2.html table-border-2.html
+fails == table-border-1.html table-border-1.html # Bug 1341651
+== table-border-2.html table-border-2.html
+== table-border-2.html table-border-2.html
 
 # Test imageset is using permissions.default.image
 # pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-with-srcset.html
