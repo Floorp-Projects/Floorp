@@ -355,20 +355,6 @@ Classifier::DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables
 }
 
 void
-Classifier::AbortUpdateAndReset(const nsCString& aTable)
-{
-  // We don't need to reset while shutting down. It will only slow us down.
-  if (nsUrlClassifierDBService::ShutdownHasStarted()) {
-    return;
-  }
-
-  LOG(("Abort updating table %s.", aTable.get()));
-
-  // ResetTables will clear both in-memory & on-disk data.
-  ResetTables(Clear_All, nsTArray<nsCString> { aTable });
-}
-
-void
 Classifier::TableRequest(nsACString& aResult)
 {
   MOZ_ASSERT(!NS_IsMainThread(),
@@ -694,6 +680,16 @@ Classifier::SwapInNewTablesAndCleanup()
 nsresult
 Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 {
+  nsCString failedTableName;
+
+  nsresult bgRv = ApplyUpdatesBackground(aUpdates, failedTableName);
+  return ApplyUpdatesForeground(bgRv, failedTableName);
+}
+
+nsresult
+Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+                                   nsACString& aFailedTableName)
+{
   // Will run on the update thread after Bug 1339760.
   // No lock is required except for CopyInUseDirForUpdate() since
   // the table lookup may lead to database removal.
@@ -755,12 +751,11 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
         }
 
         if (NS_FAILED(rv)) {
+          aFailedTableName = updateTable;
           if (rv != NS_ERROR_OUT_OF_MEMORY) {
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
             DumpFailedUpdate();
 #endif
-            // TODO: Bug 1339050 - Should be run on worker thread.
-            AbortUpdateAndReset(updateTable);
           }
           RemoveUpdateIntermediaries();
           return rv;
@@ -770,11 +765,6 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
 
   } // End of scopedUpdatesClearer scope.
 
-  rv = SwapInNewTablesAndCleanup();
-  if (NS_FAILED(rv)) {
-    LOG(("Failed to swap in new tables."));
-  }
-
   if (LOG_ENABLED()) {
     PRIntervalTime clockEnd = PR_IntervalNow();
     LOG(("update took %dms\n",
@@ -782,6 +772,19 @@ Classifier::ApplyUpdates(nsTArray<TableUpdate*>* aUpdates)
   }
 
   return rv;
+}
+
+nsresult
+Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
+                                   const nsACString& aFailedTableName)
+{
+  if (NS_SUCCEEDED(aBackgroundRv)) {
+    return SwapInNewTablesAndCleanup();
+  }
+  if (NS_ERROR_OUT_OF_MEMORY != aBackgroundRv) {
+    ResetTables(Clear_All, nsTArray<nsCString> { nsCString(aFailedTableName) });
+  }
+  return aBackgroundRv;
 }
 
 nsresult
