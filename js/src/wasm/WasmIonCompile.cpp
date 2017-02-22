@@ -3096,7 +3096,7 @@ EmitCurrentMemory(FunctionCompiler& f)
     if (!f.passInstance(&args))
         return false;
 
-    f.finishCall(&args, TlsUsage::Unused);
+    f.finishCall(&args, TlsUsage::Need);
 
     MDefinition* ret;
     if (!f.builtinInstanceMethodCall(SymbolicAddress::CurrentMemory, args, ValType::I32, &ret))
