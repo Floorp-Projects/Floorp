@@ -1,4 +1,4 @@
-FROM aarch64/ubuntu:xenial-20161213
+FROM franziskus/xenial:aarch64
 MAINTAINER Franziskus Kiefer <franziskuskiefer@gmail.com>
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
@@ -11,6 +11,9 @@ RUN chmod +x /home/worker/bin/*
 # Install dependencies.
 ADD setup.sh /tmp/setup.sh
 RUN bash /tmp/setup.sh
+
+# Change user.
+USER worker
 
 # Env variables.
 ENV HOME /home/worker

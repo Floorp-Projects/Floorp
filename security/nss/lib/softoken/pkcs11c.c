@@ -7240,14 +7240,9 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             ecPoint.data = mechParams->pPublicData;
             ecPoint.len = mechParams->ulPublicDataLen;
 
-            pubKeyLen = privKey->u.ec.ecParams.pointSize;
+            pubKeyLen = EC_GetPointSize(&privKey->u.ec.ecParams);
 
-            /* if the len is too small, can't be a valid point */
-            if (ecPoint.len < pubKeyLen) {
-                goto ec_loser;
-            }
-            /* if the len is too large, must be an encoded point (length is
-             * equal case just falls through */
+            /* if the len is too large, might be an encoded point */
             if (ecPoint.len > pubKeyLen) {
                 SECItem newPoint;
 

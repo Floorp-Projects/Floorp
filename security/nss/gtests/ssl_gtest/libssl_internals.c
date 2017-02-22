@@ -367,3 +367,7 @@ SECStatus SSLInt_UsingShortHeaders(PRFileDesc *fd, PRBool *result) {
 
   return SECSuccess;
 }
+
+void SSLInt_SetTicketLifetime(uint32_t lifetime) {
+  ssl_ticket_lifetime = lifetime;
+}

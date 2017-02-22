@@ -225,13 +225,11 @@ int mp_isodd(const mp_int *a);
 int mp_iseven(const mp_int *a);
 
 /* Number theoretic        */
-#if MP_NUMTH
 mp_err mp_gcd(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_lcm(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_xgcd(const mp_int *a, const mp_int *b, mp_int *g, mp_int *x, mp_int *y);
 mp_err mp_invmod(const mp_int *a, const mp_int *m, mp_int *c);
 mp_err mp_invmod_xgcd(const mp_int *a, const mp_int *m, mp_int *c);
-#endif /* end MP_NUMTH */
 
 /* Input and output        */
 #if MP_IOFUNC

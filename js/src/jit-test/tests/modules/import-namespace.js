@@ -45,6 +45,9 @@ b.evaluation();
 testHasNames(getModuleEnvironmentNames(b), ["ns", "x"]);
 let ns = getModuleEnvironmentValue(b, "ns");
 testHasNames(Object.keys(ns), ["a", "b"]);
+assertEq(ns.a, 1);
+assertEq(ns.b, 2);
+assertEq(ns.c, undefined);
 assertEq(getModuleEnvironmentValue(b, "x"), 3);
 
 // Test module namespace internal methods as defined in 9.4.6

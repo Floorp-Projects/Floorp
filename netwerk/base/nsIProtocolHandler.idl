@@ -7,6 +7,18 @@
 
 %{C++
 #include "nsCOMPtr.h"
+
+/**
+ * Protocol handlers are registered with XPCOM under the following CONTRACTID prefix:
+ */
+#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "@mozilla.org/network/protocol;1?name="
+/**
+ * For example, "@mozilla.org/network/protocol;1?name=http"
+ */
+
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+#define IS_ORIGIN_IS_FULL_SPEC_DEFINED 1
+#endif
 %}
 
 interface nsIURI;
@@ -57,7 +69,14 @@ interface nsIProtocolHandler : nsISupports
   nsresult DoGetProtocolFlags(nsIURI* aURI, uint32_t* aFlags)
   {
       nsCOMPtr<nsIProtocolHandlerWithDynamicFlags> dh = do_QueryInterface(this);
-      return dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
+      nsresult rv = dh ? dh->GetFlagsForURI(aURI, aFlags) : GetProtocolFlags(aFlags);
+      if (NS_SUCCEEDED(rv)) {
+#if !IS_ORIGIN_IS_FULL_SPEC_DEFINED
+        MOZ_RELEASE_ASSERT(!(*aFlags & nsIProtocolHandler::ORIGIN_IS_FULL_SPEC),
+                           "ORIGIN_IS_FULL_SPEC is unsupported but used");
+#endif
+      }
+      return rv;
   }
 %}
 
@@ -298,6 +317,9 @@ interface nsIProtocolHandler : nsISupports
     /**
      * If this flag is set, then the origin for this protocol is the full URI
      * spec, not just the scheme + host + port.
+     *
+     * Note: this is not supported in Firefox.  It is currently only available
+     * in Thunderbird and SeaMonkey.
      */
     const unsigned long ORIGIN_IS_FULL_SPEC = (1 << 20);
 
@@ -307,15 +329,3 @@ interface nsIProtocolHandler : nsISupports
      */
     const unsigned long URI_SCHEME_NOT_SELF_LINKABLE = (1 << 21);
 };
-
-%{C++
-/**
- * Protocol handlers are registered with XPCOM under the following CONTRACTID prefix:
- */
-#define NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "@mozilla.org/network/protocol;1?name="
-/**
- * For example, "@mozilla.org/network/protocol;1?name=http"
- */
-
-#define IS_ORIGIN_IS_FULL_SPEC_DEFINED 1
-%}

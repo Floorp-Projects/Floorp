@@ -258,12 +258,15 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   // authentication tag.
   static const uint8_t payload[18] = {6};
   DataBuffer record;
-  uint64_t epoch = 0;
+  uint64_t epoch;
   if (mode_ == DGRAM) {
-    epoch++;
     if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
-      epoch++;
+      epoch = 3;  // Application traffic keys.
+    } else {
+      epoch = 1;
     }
+  } else {
+    epoch = 0;
   }
   TlsAgentTestBase::MakeRecord(mode_, kTlsApplicationDataType, version_,
                                payload, sizeof(payload), &record,
