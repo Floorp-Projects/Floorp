@@ -149,16 +149,6 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        // if about:newtab points to an external resource we have to make sure
-        // the content is signed and trusted
-        bool remoteEnabled = false;
-        rv = aboutNewTabService->GetRemoteEnabled(&remoteEnabled);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (remoteEnabled) {
-          NS_ENSURE_ARG_POINTER(aLoadInfo);
-          aLoadInfo->SetVerifySignedContent(true);
-        }
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {
