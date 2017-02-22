@@ -40,9 +40,9 @@ add_test(function test_processPointerParameters() {
     let message = `parametersData: [pointerType: ${parametersData.pointerType}]`;
     check(/Unknown pointerType/, message, parametersData);
   }
-  parametersData.pointerType = "pen";
+  parametersData.pointerType = "mouse"; //TODO "pen";
   deepEqual(action.PointerParameters.fromJson(parametersData),
-      {pointerType: action.PointerType.Pen});
+      {pointerType: "mouse"}); //TODO action.PointerType.Pen});
 
   run_next_test();
 });
@@ -188,7 +188,7 @@ add_test(function test_processPointerAction() {
     type: "pointer",
     id: "some_id",
     parameters: {
-      pointerType: "touch"
+      pointerType: "mouse" //TODO "touch"
     },
   };
   let actionItems = [
@@ -325,7 +325,7 @@ add_test(function test_processInputSourceActionSequencePointer() {
     id: "9",
     actions: [actionItem],
     parameters: {
-      pointerType: "pen"
+      pointerType: "mouse" // TODO "pen"
     },
   };
   let expectedAction = new action.Action(
@@ -389,13 +389,14 @@ add_test(function test_processPointerActionInputStateMap() {
       `type "pointer" with ${wrongInputState.type} in inputState`);
   action.inputStateMap.clear();
 
-  wrongInputState = new action.InputState.Pointer("pen");
-  action.inputStateMap.set(id, wrongInputState);
-  checkErrors(
-      /to be mapped to InputState whose subtype is/, action.processPointerAction,
-      [id, parameters, a],
-      `subtype ${parameters.pointerType} with ${wrongInputState.subtype} in inputState`);
-  action.inputStateMap.clear();
+  // TODO - uncomment once pen is supported
+  //wrongInputState = new action.InputState.Pointer("pen");
+  //action.inputStateMap.set(id, wrongInputState);
+  //checkErrors(
+  //    /to be mapped to InputState whose subtype is/, action.processPointerAction,
+  //    [id, parameters, a],
+  //    `subtype ${parameters.pointerType} with ${wrongInputState.subtype} in inputState`);
+  //action.inputStateMap.clear();
 
   let rightInputState = new action.InputState.Pointer("mouse");
   action.inputStateMap.set(id, rightInputState);
@@ -474,7 +475,7 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
     id: "7",
     actions: mouseActionItems,
     parameters: {
-      pointerType: "touch"
+      pointerType: "mouse" //TODO "touch"
     },
   };
   let keyActionItems = [
