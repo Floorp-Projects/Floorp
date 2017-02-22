@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GroupedSHistory.h"
+
+#include "mozilla/dom/Promise.h"
 #include "TabParent.h"
 #include "PartialSHistory.h"
 
