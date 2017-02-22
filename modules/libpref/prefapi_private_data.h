@@ -29,6 +29,9 @@ pref_SetPref(const mozilla::dom::PrefSetting& aPref);
 #ifdef DEBUG
 void
 pref_SetInitPhase(pref_initPhase phase);
+
+void
+pref_SetWatchingPref(bool watching);
 #endif
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);

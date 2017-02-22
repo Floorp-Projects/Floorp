@@ -60,11 +60,22 @@
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }                                                                            \
 } while (0);
+class WatchinPrefRAII {
+public:
+  WatchinPrefRAII() {
+    pref_SetWatchingPref(true);
+  }
+  ~WatchinPrefRAII() {
+    pref_SetWatchingPref(false);
+  }
+};
+#define WATCHING_PREF_RAII() WatchinPrefRAII watchingPrefRAII
 #else
 #define ENSURE_MAIN_PROCESS(message, pref)                                     \
   if (MOZ_UNLIKELY(!XRE_IsParentProcess())) {        \
     return NS_ERROR_NOT_AVAILABLE;                                             \
   }
+#define WATCHING_PREF_RAII()
 #endif
 
 class PrefCallback;
@@ -1732,6 +1743,7 @@ Preferences::RegisterCallbackAndCall(PrefChangedFunc aCallback,
                                      void* aClosure,
                                      MatchKind aMatchKind)
 {
+  WATCHING_PREF_RAII();
   nsresult rv = RegisterCallback(aCallback, aPref, aClosure, aMatchKind);
   if (NS_SUCCEEDED(rv)) {
     (*aCallback)(aPref, aClosure);
@@ -1779,6 +1791,7 @@ Preferences::AddBoolVarCache(bool* aCache,
                              const char* aPref,
                              bool aDefault)
 {
+  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
@@ -1804,6 +1817,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
+  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
@@ -1829,6 +1843,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
+  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
@@ -1856,6 +1871,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
+  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
@@ -1888,6 +1904,7 @@ Preferences::AddFloatVarCache(float* aCache,
                              const char* aPref,
                              float aDefault)
 {
+  WATCHING_PREF_RAII();
   NS_ASSERTION(aCache, "aCache must not be NULL");
 #ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
