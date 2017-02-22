@@ -4,14 +4,14 @@
   <meta charset="utf8">
   <title>Test for cached messages</title>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <script type="text/javascript" src="common.js"></script>
   <!-- Any copyright is dedicated to the Public Domain.
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
 </head>
 <body>
 <p>Test for cached messages</p>
 
-<script class="testbody" type="application/javascript;version=1.8">
+<script class="testbody" type="application/javascript">
 var ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
                           .getService(Ci.nsIConsoleAPIStorage);
 let expectedConsoleCalls = [];
@@ -94,7 +94,7 @@ function doConsoleCalls() {
 }
 </script>
 
-<script class="testbody" type="text/javascript;version=1.8">
+<script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 var {ConsoleServiceListener, ConsoleAPIListener} =
   require("devtools/server/actors/utils/webconsole-listeners");

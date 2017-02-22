@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=586961
   <button id="controlbutton" label="Button" />
 </box>
 
-<script class="testbody" type="application/javascript;version=1.7"><![CDATA[
+<script class="testbody" type="application/javascript"><![CDATA[
 
 /** Test for Bug 586961 **/
 

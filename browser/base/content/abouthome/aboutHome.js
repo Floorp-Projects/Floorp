@@ -339,7 +339,7 @@ function showSnippets() {
       // through DOM manipulation to activate their contents.
       Array.forEach(snippetsElt.getElementsByTagName("script"), function(elt) {
         let relocatedScript = document.createElement("script");
-        relocatedScript.type = "text/javascript;version=1.8";
+        relocatedScript.type = "text/javascript";
         relocatedScript.text = elt.text;
         elt.parentNode.replaceChild(relocatedScript, elt);
       });
