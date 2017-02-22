@@ -56,6 +56,17 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         // shouldInterceptRequest() might be called _before_ onPageStarted or shouldOverrideUrlLoading
         // are called (this happens when the webview is first shown). However we are notified of the URL
         // via notifyCurrentURL in that case.
+        final String scheme = request.getUrl().getScheme();
+
+        if (!request.isForMainFrame() &&
+                !scheme.equals("http") && !scheme.equals("https")) {
+            // Block any malformed non-http(s) URIs. Webkit will already ignore things like market: URLs,
+            // but not in all cases (malformed market: URIs, such as market:://... will still end up here).
+            // (Note: data: URIs are automatically handled by webkit, and won't end up here either.)
+            // file:// URIs are disabled separately by setting WebSettings.setAllowFileAccess()
+            return new WebResourceResponse(null, null, null);
+        }
+
         final UrlMatcher matcher = getMatcher(view.getContext());
 
         // Don't block the main frame from being loaded. This also protects against cases where we
