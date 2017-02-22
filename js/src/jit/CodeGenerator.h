@@ -287,6 +287,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitSinCos(LSinCos *lir);
     void visitStringSplit(LStringSplit* lir);
     void visitFunctionEnvironment(LFunctionEnvironment* lir);
+    void visitNewLexicalEnvironmentObject(LNewLexicalEnvironmentObject* lir);
+    void visitCopyLexicalEnvironmentObject(LCopyLexicalEnvironmentObject* lir);
     void visitCallGetProperty(LCallGetProperty* lir);
     void visitCallGetElement(LCallGetElement* lir);
     void visitCallSetElement(LCallSetElement* lir);

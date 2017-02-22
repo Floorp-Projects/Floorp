@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env browser */
+
 "use strict";
 
 // URL constructor doesn't support about: scheme
@@ -25,6 +27,23 @@ if (url.search.length > 1) {
   let host = window.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .containerElement;
+
+  // If there's no containerElement (which happens when loading about:devtools-toolbox as
+  // a top level document), use the current window.
+  if (!host) {
+    host = {
+      contentWindow: window,
+      contentDocument: document,
+      // toolbox-host-manager.js wants to set attributes on the frame that contains it,
+      // but that is fine to skip and doesn't make sense when using the current window.
+      setAttribute() {},
+      ownerDocument: document,
+      // toolbox-host-manager.js wants to listen for unload events from outside the frame,
+      // but this is fine to skip since the toolbox code listens inside the frame as well,
+      // and there is no outer document in this case.
+      addEventListener() {},
+    };
+  }
 
   // Specify the default tool to open
   let tool = url.searchParams.get("tool");

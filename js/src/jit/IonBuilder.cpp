@@ -1172,6 +1172,9 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
         env = constant(ObjectValue(script()->global().lexicalEnvironment()));
     }
 
+    // Update the environment slot from UndefinedValue only after initial
+    // environment is created so that bailout doesn't see a partial env.
+    // See: |InitFromBailout|
     current->setEnvironmentChain(env);
     return Ok();
 }
@@ -2204,6 +2207,19 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETFUNNAME:
         return jsop_setfunname(GET_UINT8(pc));
 
+      case JSOP_PUSHLEXICALENV:
+        return jsop_pushlexicalenv(GET_UINT32_INDEX(pc));
+
+      case JSOP_POPLEXICALENV:
+        current->setEnvironmentChain(walkEnvironmentChain(1));
+        return Ok();
+
+      case JSOP_FRESHENLEXICALENV:
+        return jsop_copylexicalenv(true);
+
+      case JSOP_RECREATELEXICALENV:
+        return jsop_copylexicalenv(false);
+
       case JSOP_ITER:
         return jsop_iter(GET_INT8(pc));
 
@@ -2266,18 +2282,6 @@ IonBuilder::inspectOpcode(JSOp op)
         pushConstant(MagicValue(JS_IS_CONSTRUCTING));
         return Ok();
 
-#ifdef DEBUG
-      case JSOP_PUSHLEXICALENV:
-      case JSOP_FRESHENLEXICALENV:
-      case JSOP_RECREATELEXICALENV:
-      case JSOP_POPLEXICALENV:
-        // These opcodes are currently unhandled by Ion, but in principle
-        // there's no reason they couldn't be.  Whenever this happens, OSR
-        // will have to consider that JSOP_{FRESHEN,RECREATE}LEXICALENV
-        // mutates the env chain -- right now MBasicBlock::environmentChain()
-        // caches the env chain.  JSOP_{FRESHEN,RECREATE}LEXICALENV must
-        // update that stale value.
-#endif
       default:
         break;
     }
@@ -11842,6 +11846,35 @@ IonBuilder::jsop_setfunname(uint8_t prefixKind)
 
     current->add(ins);
     current->push(fun);
+
+    return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_pushlexicalenv(uint32_t index)
+{
+    MOZ_ASSERT(analysis().usesEnvironmentChain());
+
+    LexicalScope* scope = &script()->getScope(index)->as<LexicalScope>();
+    MNewLexicalEnvironmentObject* ins =
+        MNewLexicalEnvironmentObject::New(alloc(), current->environmentChain(), scope);
+
+    current->add(ins);
+    current->setEnvironmentChain(ins);
+
+    return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_copylexicalenv(bool copySlots)
+{
+    MOZ_ASSERT(analysis().usesEnvironmentChain());
+
+    MCopyLexicalEnvironmentObject* ins =
+        MCopyLexicalEnvironmentObject::New(alloc(), current->environmentChain(), copySlots);
+
+    current->add(ins);
+    current->setEnvironmentChain(ins);
 
     return resumeAfter(ins);
 }
