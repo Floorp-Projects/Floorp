@@ -9,6 +9,7 @@ interface mozIDOMWindowProxy;
 [scriptable, uuid(e8420a7b-659b-4325-968b-a114a6a067aa)]
 interface nsIBrowserTab : nsISupports {
   readonly attribute mozIDOMWindowProxy window;
+  readonly attribute float scale;
 };
 
 [scriptable, uuid(08426a73-e70b-4680-9282-630932e2b2bb)]
