@@ -1159,8 +1159,8 @@ PeerConnectionImpl::GetDatachannelParameters(
           static_cast<const JsepApplicationCodecDescription*>(codec)->mLocalPort;
         *remoteport =
           static_cast<const JsepApplicationCodecDescription*>(codec)->mRemotePort;
-        if (trackPair.mBundleLevel.isSome()) {
-          *level = static_cast<uint16_t>(*trackPair.mBundleLevel);
+        if (trackPair.HasBundleLevel()) {
+          *level = static_cast<uint16_t>(trackPair.BundleLevel());
         } else {
           *level = static_cast<uint16_t>(trackPair.mLevel);
         }
@@ -2467,8 +2467,8 @@ PeerConnectionImpl::InsertDTMF(mozilla::dom::RTCRtpSender& sender,
   state->mLevel = -1;
   for (auto& trackPair : trackPairs) {
     if (state->mTrackId.EqualsASCII(trackPair.mSending->GetTrackId().c_str())) {
-      if (trackPair.mBundleLevel.isSome()) {
-        state->mLevel = *trackPair.mBundleLevel;
+      if (trackPair.HasBundleLevel()) {
+        state->mLevel = trackPair.BundleLevel();
       } else {
         state->mLevel = trackPair.mLevel;
       }
