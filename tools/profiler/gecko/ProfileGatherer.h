@@ -28,6 +28,7 @@ private:
   ~ProfileGatherer() {};
   void Finish();
   void Reset();
+  void Start2(double aSinceTime);
 
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;
