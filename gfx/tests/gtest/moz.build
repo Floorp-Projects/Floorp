@@ -28,6 +28,8 @@ UNIFIED_SOURCES += [
     'TestTextureCompatibility.cpp',
     'TestTextures.cpp',
     'TestTreeTraversal.cpp',
+    # Bug 1179287 - PGO bustage on Linux
+    #'TestTiledLayerBuffer.cpp',
     'TestVsync.cpp',
 ]
 
