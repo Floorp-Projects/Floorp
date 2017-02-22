@@ -2046,31 +2046,31 @@ class BaseCompiler
         AllocatableGeneralRegisterSet knownGPR_ = availGPR_;
         AllocatableFloatRegisterSet knownFPU_ = availFPU_;
         for (size_t i = 0 ; i < stk_.length() ; i++) {
-	    Stk& item = stk_[i];
-	    switch (item.kind_) {
-	      case Stk::RegisterI32:
-		knownGPR_.add(item.i32reg());
-		break;
-	      case Stk::RegisterI64:
+            Stk& item = stk_[i];
+            switch (item.kind_) {
+              case Stk::RegisterI32:
+                knownGPR_.add(item.i32reg());
+                break;
+              case Stk::RegisterI64:
 #ifdef JS_PUNBOX64
-		knownGPR_.add(item.i64reg().reg);
+                knownGPR_.add(item.i64reg().reg);
 #else
-		knownGPR_.add(item.i64reg().high);
-		knownGPR_.add(item.i64reg().low);
+                knownGPR_.add(item.i64reg().high);
+                knownGPR_.add(item.i64reg().low);
 #endif
-		break;
-	      case Stk::RegisterF32:
-		knownFPU_.add(item.f32reg());
-		break;
-	      case Stk::RegisterF64:
-		knownFPU_.add(item.f64reg());
-		break;
-	      default:
-		break;
-	    }
-	}
-	MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
-	MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
+                break;
+              case Stk::RegisterF32:
+                knownFPU_.add(item.f32reg());
+                break;
+              case Stk::RegisterF64:
+                knownFPU_.add(item.f64reg());
+                break;
+              default:
+                break;
+            }
+        }
+        MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
+        MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
     }
 #endif
 
@@ -2908,7 +2908,8 @@ class BaseCompiler
         // movl clears the high bits if the two registers are the same.
         masm.movl(src.reg, dest);
 #elif defined(JS_NUNBOX32)
-        masm.move32(src.low, dest);
+        if (src.low != dest)
+            masm.move32(src.low, dest);
 #else
         MOZ_CRASH("BaseCompiler platform hook: wrapI64ToI32");
 #endif
@@ -2947,7 +2948,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         masm.movl(src, dest.reg);
 #elif defined(JS_NUNBOX32)
-        masm.move32(src, dest.low);
+        if (src != dest.low)
+            masm.move32(src, dest.low);
         masm.move32(Imm32(0), dest.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendU32ToI64");
