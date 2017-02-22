@@ -40,7 +40,7 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
 
     @WorkerThread private static synchronized UrlMatcher getMatcher(final Context context) {
         if (MATCHER == null) {
-            MATCHER = UrlMatcher.loadMatcher(context, R.raw.blocklist, R.raw.entitylist);
+            MATCHER = UrlMatcher.loadMatcher(context, R.raw.blocklist, new int[] { R.raw.google_mapping }, R.raw.entitylist);
         }
         return MATCHER;
     }

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.webkit.matcher;
 
-import android.util.ArrayMap;
 import android.util.JsonReader;
 import android.util.JsonToken;
 
@@ -12,7 +11,6 @@ import org.mozilla.focus.webkit.matcher.util.FocusString;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,9 +47,12 @@ public class BlocklistProcessor {
         DISCONNECT_MOVED = Collections.unmodifiableSet(moved);
     }
 
-    public static Map<String, Trie> loadCategoryMap(final JsonReader reader) throws IOException {
-        final Map<String, Trie> categoryMap = new HashMap<>(5);
+    public enum ListType {
+        BASE_LIST,
+        OVERRIDE_LIST
+    }
 
+    public static Map<String, Trie> loadCategoryMap(final JsonReader reader, final Map<String, Trie> categoryMap, final ListType listType) throws IOException {
         reader.beginObject();
 
         while (reader.hasNext()) {
@@ -60,11 +61,10 @@ public class BlocklistProcessor {
             final String name = reader.nextName();
 
             if (name.equals("categories")) {
-                extractCategories(reader, categoryMap);
+                extractCategories(reader, categoryMap, listType);
             } else {
                 reader.skipValue();
             }
-
         }
 
         reader.endObject();
@@ -110,7 +110,7 @@ public class BlocklistProcessor {
         }
     }
 
-    private static void extractCategories(final JsonReader reader, final Map<String, Trie> categoryMap) throws IOException {
+    private static void extractCategories(final JsonReader reader, final Map<String, Trie> categoryMap, final ListType listType) throws IOException {
         reader.beginObject();
 
         final List<String> socialOverrides = new LinkedList<String>();
@@ -125,17 +125,31 @@ public class BlocklistProcessor {
                 ListCallback callback = new ListCallback(socialOverrides, DISCONNECT_MOVED);
                 extractCategory(reader, callback);
             } else {
-                final Trie categoryTrie = Trie.createRootNode();
+                final Trie categoryTrie;
+
+                if (listType == ListType.BASE_LIST) {
+                    if (categoryMap.containsKey(categoryName)) {
+                        throw new IllegalStateException("Cannot insert already loaded category");
+                    }
+
+                    categoryTrie = Trie.createRootNode();
+                    categoryMap.put(categoryName, categoryTrie);
+                } else {
+                    categoryTrie = categoryMap.get(categoryName);
+
+                    if (categoryTrie == null) {
+                        throw new IllegalStateException("Cannot add override items to nonexistent category");
+                    }
+                }
+
                 final TrieCallback callback = new TrieCallback(categoryTrie);
 
                 extractCategory(reader, callback);
-
-                categoryMap.put(categoryName, categoryTrie);
             }
         }
 
         final Trie socialTrie = categoryMap.get(SOCIAL);
-        if (socialTrie == null) {
+        if (socialTrie == null && listType == ListType.BASE_LIST) {
             throw new IllegalStateException("Expected social list to exist. Can't copy FB/Twitter into non-existing list");
         }
 

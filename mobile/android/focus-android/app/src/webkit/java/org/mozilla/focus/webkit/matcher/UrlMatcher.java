@@ -55,20 +55,35 @@ public class UrlMatcher implements  SharedPreferences.OnSharedPreferenceChangeLi
     // A cahced list of previously approved URLs. This MUST be cleared whenever items are added to enabledCategories.
     private final HashSet<String> previouslyUnmatched = new HashSet<>();
 
-    public static UrlMatcher loadMatcher(final Context context, final int blockListFile, final int entityListFile) {
+    public static UrlMatcher loadMatcher(final Context context, final int blockListFile, final int[] blockListOverrides, final int entityListFile) {
         final Map<String, String> categoryPrefMap = loadDefaultPrefMap(context);
 
-        final Map<String, Trie> categoryMap;
+        final Map<String, Trie> categoryMap = new HashMap<>(5);
         {
             InputStream inputStream = context.getResources().openRawResource(blockListFile);
             JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
 
             try {
-                categoryMap = BlocklistProcessor.loadCategoryMap(jsonReader);
+                BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.BASE_LIST);
 
                 jsonReader.close();
             } catch (IOException e) {
                 throw new IllegalStateException("Unable to parse blacklist");
+            }
+        }
+
+        if (blockListOverrides != null) {
+            for (int i = 0; i < blockListOverrides.length; i++) {
+                InputStream inputStream = context.getResources().openRawResource(blockListOverrides[i]);
+                JsonReader jsonReader = new JsonReader(new InputStreamReader(inputStream));
+
+                try {
+                    BlocklistProcessor.loadCategoryMap(jsonReader, categoryMap, BlocklistProcessor.ListType.OVERRIDE_LIST);
+
+                    jsonReader.close();
+                } catch (IOException e) {
+                    throw new IllegalStateException("Unable to parse override blacklist");
+                }
             }
         }
 
