@@ -959,7 +959,7 @@ static inline bool apply_lookup (hb_apply_context_t *c,
   TRACE_APPLY (NULL);
 
   hb_buffer_t *buffer = c->buffer;
-  unsigned int end;
+  int end;
 
   /* All positions are distance from beginning of *output* buffer.
    * Adjust. */
@@ -998,8 +998,8 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 
     /* Recursed lookup changed buffer len.  Adjust. */
 
-    end = int (end) + delta;
-    if (end <= match_positions[idx])
+    end += delta;
+    if (end <= int (match_positions[idx]))
     {
       /* End might end up being smaller than match_positions[idx] if the recursed
        * lookup ended up removing many items, more than we have had matched.
