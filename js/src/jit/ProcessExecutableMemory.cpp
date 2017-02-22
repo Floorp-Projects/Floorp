@@ -390,7 +390,7 @@ class PageBitSet
 #if JS_BITS_PER_WORD == 32
 static const size_t MaxCodeBytesPerProcess = 140 * 1024 * 1024;
 #else
-static const size_t MaxCodeBytesPerProcess = 640 * 1024 * 1024;
+static const size_t MaxCodeBytesPerProcess = 1 * 1024 * 1024 * 1024;
 #endif
 
 // Per-process executable memory allocator. It reserves a block of memory of
