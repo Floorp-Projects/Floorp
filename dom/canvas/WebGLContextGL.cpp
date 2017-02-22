@@ -2035,9 +2035,21 @@ WebGLContext::UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* 
     (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
+static inline void
+MatrixAxBToRowMajor(const uint8_t width, const uint8_t height,
+                    const float* __restrict srcColMajor,
+                    float* __restrict dstRowMajor)
+{
+    for (uint8_t x = 0; x < width; ++x) {
+        for (uint8_t y = 0; y < height; ++y) {
+            dstRowMajor[y * width + x] = srcColMajor[x * height + y];
+        }
+    }
+}
+
 void
 WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
-                                 WebGLUniformLocation* loc, bool transpose,
+                                 WebGLUniformLocation* loc, const bool transpose,
                                  const Float32Arr& arr, GLuint elemOffset,
                                  GLuint elemCountOverride)
 {
@@ -2049,13 +2061,48 @@ WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
     }
     const auto elemBytes = arr.elemBytes + elemOffset;
 
-    uint32_t numElementsToUpload;
+    uint32_t numMatsToUpload;
     if (!ValidateUniformMatrixArraySetter(loc, A, B, LOCAL_GL_FLOAT, elemCount,
-                                          transpose, funcName, &numElementsToUpload))
+                                          transpose, funcName, &numMatsToUpload))
     {
         return;
     }
     MOZ_ASSERT(!loc->mInfo->mSamplerTexList, "Should not be a sampler.");
+
+    ////
+
+    bool uploadTranspose = transpose;
+    const float* uploadBytes = elemBytes;
+
+    UniqueBuffer temp;
+    if (!transpose && gl->WorkAroundDriverBugs() && gl->IsANGLE() &&
+        gl->IsAtLeast(gl::ContextProfile::OpenGLES, 300))
+    {
+        // ANGLE is really slow at non-GL-transposed matrices.
+        const size_t kElemsPerMat = A * B;
+
+        temp = malloc(numMatsToUpload * kElemsPerMat * sizeof(float));
+        if (!temp) {
+            ErrorOutOfMemory("%s: Failed to alloc temporary buffer for transposition.",
+                             funcName);
+            return;
+        }
+
+        auto srcItr = (const float*)elemBytes;
+        auto dstItr = (float*)temp.get();
+        const auto srcEnd = srcItr + numMatsToUpload * kElemsPerMat;
+
+        while (srcItr != srcEnd) {
+            MatrixAxBToRowMajor(A, B, srcItr, dstItr);
+            srcItr += kElemsPerMat;
+            dstItr += kElemsPerMat;
+        }
+
+        uploadBytes = (const float*)temp.get();
+        uploadTranspose = true;
+    }
+
+    ////
 
     static const decltype(&gl::GLContext::fUniformMatrix2fv) kFuncList[] = {
         &gl::GLContext::fUniformMatrix2fv,
@@ -2073,7 +2120,7 @@ WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
     const auto func = kFuncList[3*(A-2) + (B-2)];
 
     MakeContextCurrent();
-    (gl->*func)(loc->mLoc, numElementsToUpload, transpose, elemBytes);
+    (gl->*func)(loc->mLoc, numMatsToUpload, uploadTranspose, uploadBytes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

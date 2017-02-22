@@ -231,13 +231,21 @@ const uint32_t sFileStreamFlags =
 void
 FileBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
-  if (mWholeFile) {
-    aRv = NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags);
+  nsCOMPtr<nsIInputStream> stream;
+  aRv = NS_NewLocalFileInputStream(getter_AddRefs(stream), mFile, -1, -1,
+                                   sFileStreamFlags);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  aRv = NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
-                                          -1, -1, sFileStreamFlags);
+  if (mWholeFile) {
+    stream.forget(aStream);
+    return;
+  }
+
+  RefPtr<SlicedInputStream> slicedInputStream =
+    new SlicedInputStream(stream, mStart, mLength);
+  slicedInputStream.forget(aStream);
 }
 
 bool
