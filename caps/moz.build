@@ -41,7 +41,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'DomainPolicy.cpp',
-    'nsExpandedPrincipal.cpp',
     'nsJSPrincipals.cpp',
     'nsNullPrincipal.cpp',
     'nsNullPrincipalURI.cpp',
