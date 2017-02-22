@@ -10,17 +10,20 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
+#include "nsIIPCSerializableInputStream.h"
 
 // A wrapper for a slice of an underlying input stream.
 
 class SlicedInputStream final : public nsIAsyncInputStream
                               , public nsICloneableInputStream
+                              , public nsIIPCSerializableInputStream
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
-  NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIASYNCINPUTSTREAM
+  NS_DECL_NSICLONEABLEINPUTSTREAM
+  NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
   // Create an input stream whose data comes from a slice of aInputStream.  The
   // slice begins at aStart bytes beyond aInputStream's current position, and
@@ -36,6 +39,9 @@ public:
   SlicedInputStream(nsIInputStream* aInputStream,
                     uint64_t aStart, uint64_t aLength);
 
+  // This CTOR is meant to be used just for IPC.
+  SlicedInputStream();
+
 private:
   ~SlicedInputStream();
 
@@ -44,8 +50,9 @@ private:
 
   nsCOMPtr<nsIInputStream> mInputStream;
 
-  // Raw pointer because this is just QI of mInputStream.
+  // Raw pointers because these are just QI of mInputStream.
   nsICloneableInputStream* mWeakCloneableInputStream;
+  nsIIPCSerializableInputStream* mWeakIPCSerializableInputStream;
 
   uint64_t mStart;
   uint64_t mLength;
