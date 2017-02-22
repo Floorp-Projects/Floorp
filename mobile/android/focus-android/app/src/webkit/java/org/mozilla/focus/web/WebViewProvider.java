@@ -56,6 +56,10 @@ public class WebViewProvider {
 
         // So we hide the controls after enabling zooming
         settings.setDisplayZoomControls(false);
+
+        // Disable access to arbitrary local files by webpages - assets can still be loaded
+        // via file:///android_asset/res, so at least error page images won't be blocked.
+        settings.setAllowFileAccess(false);
     }
 
     private static class WebkitView extends NestedWebView implements IWebView {
