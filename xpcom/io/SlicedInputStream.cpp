@@ -20,6 +20,8 @@ NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
                                      mWeakCloneableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      mWeakIPCSerializableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream,
+                                     mWeakSeekableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -27,6 +29,7 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
                                      uint64_t aStart, uint64_t aLength)
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
+  , mWeakSeekableInputStream(nullptr)
   , mStart(aStart)
   , mLength(aLength)
   , mCurPos(0)
@@ -39,6 +42,7 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
 SlicedInputStream::SlicedInputStream()
   : mWeakCloneableInputStream(nullptr)
   , mWeakIPCSerializableInputStream(nullptr)
+  , mWeakSeekableInputStream(nullptr)
   , mStart(0)
   , mLength(0)
   , mCurPos(0)
@@ -67,6 +71,12 @@ SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
   if (serializableStream &&
       SameCOMIdentity(aInputStream, serializableStream)) {
     mWeakIPCSerializableInputStream = serializableStream;
+  }
+
+  nsCOMPtr<nsISeekableStream> seekableStream =
+    do_QueryInterface(aInputStream);
+  if (seekableStream && SameCOMIdentity(aInputStream, seekableStream)) {
+    mWeakSeekableInputStream = seekableStream;
   }
 }
 
@@ -324,4 +334,76 @@ SlicedInputStream::ExpectedSerializedLength()
   }
 
   return mWeakIPCSerializableInputStream->ExpectedSerializedLength();
+}
+
+// nsISeekableStream
+
+NS_IMETHODIMP
+SlicedInputStream::Seek(int32_t aWhence, int64_t aOffset)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakSeekableInputStream);
+
+  int64_t offset;
+  switch (aWhence) {
+    case NS_SEEK_SET:
+      offset = mStart + aOffset;
+      break;
+    case NS_SEEK_CUR:
+      offset = mStart + mCurPos + aOffset;
+      break;
+    case NS_SEEK_END:
+      offset = mStart + mLength + aOffset;
+      break;
+   default:
+     return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  if (offset < (int64_t)mStart || offset > (int64_t)(mStart + mLength)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv = mWeakSeekableInputStream->Seek(NS_SEEK_SET, offset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mCurPos = offset - mStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SlicedInputStream::Tell(int64_t *aResult)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakSeekableInputStream);
+
+  int64_t tell = 0;
+
+  nsresult rv = mWeakSeekableInputStream->Tell(&tell);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (tell < (int64_t)mStart) {
+    *aResult = 0;
+    return NS_OK;
+  }
+
+  *aResult = tell - mStart;
+  if (*aResult > (int64_t)mLength) {
+    *aResult = mLength;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SlicedInputStream::SetEOF()
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakSeekableInputStream);
+
+  mClosed = true;
+  return mWeakSeekableInputStream->SetEOF();
 }
