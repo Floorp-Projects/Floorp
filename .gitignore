@@ -122,3 +122,7 @@ lextab.py
 
 # tup database
 /.tup
+
+# Ignore Visual Studio Code workspace files.
+.vscode/
+!.vscode/extensions.json
