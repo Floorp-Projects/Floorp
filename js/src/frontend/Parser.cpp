@@ -5079,6 +5079,31 @@ Parser<ParseHandler>::exportBatch(uint32_t begin)
     return exportFrom(begin, kid);
 }
 
+template<>
+bool
+Parser<FullParseHandler>::checkLocalExportNames(ParseNode* node)
+{
+    // ES 2017 draft 15.2.3.1.
+    for (ParseNode* next = node->pn_head; next; next = next->pn_next) {
+        ParseNode* name = next->pn_left;
+        MOZ_ASSERT(name->isKind(PNK_NAME));
+
+        RootedPropertyName ident(context, name->pn_atom->asPropertyName());
+        if (!checkLocalExportName(ident, name->pn_pos.begin))
+            return false;
+    }
+
+    return true;
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::checkLocalExportNames(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::exportClause(uint32_t begin)
@@ -5164,6 +5189,9 @@ Parser<ParseHandler>::exportClause(uint32_t begin)
         return exportFrom(begin, kid);
 
     if (!matchOrInsertSemicolonAfterNonExpression())
+        return null();
+
+    if (!checkLocalExportNames(kid))
         return null();
 
     Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));

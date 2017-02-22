@@ -1201,6 +1201,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     Node exportFrom(uint32_t begin, Node specList);
     Node exportBatch(uint32_t begin);
+    bool checkLocalExportNames(Node node);
     Node exportClause(uint32_t begin);
     Node exportFunctionDeclaration(uint32_t begin);
     Node exportVariableStatement(uint32_t begin);
@@ -1352,6 +1353,10 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool checkLabelOrIdentifierReference(HandlePropertyName ident,
                                          uint32_t offset,
                                          YieldHandling yieldHandling);
+
+    bool checkLocalExportName(HandlePropertyName ident, uint32_t offset) {
+        return checkLabelOrIdentifierReference(ident, offset, YieldIsName);
+    }
 
     bool checkBindingIdentifier(HandlePropertyName ident,
                                 uint32_t offset,
