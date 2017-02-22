@@ -225,11 +225,7 @@ add_task(function* test_formdata_navigation() {
       // Go back.
       is(browser.canGoBack, true, "can go back");
       browser.goBack();
-
-      let titleChange = promiseTabEvent(browser, "DOMTitleChanged");
-      let tabDataUpdate = promiseTabEvent(browser, "SSTabDataUpdated");
-      yield titleChange;
-      yield tabDataUpdate;
+      yield promiseTabEvent(browser, "SSTabDataUpdated");
       is(browser.currentURI.spec, URL, "navigated back to form data page");
 
       // Make sure form data is still present.
