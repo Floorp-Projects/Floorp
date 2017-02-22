@@ -1617,7 +1617,7 @@ class SubModuleProperty extends Entry {
                         `is not a sub-module`);
       }
     }
-    let subpath = [path, this.name];
+    let subpath = [...path, this.name];
     let namespace = subpath.join(".");
 
     let functions = type.functions;

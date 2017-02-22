@@ -510,6 +510,20 @@ extern MOZ_MUST_USE bool
 intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp);
 
 /**
+ * Returns a plain object with locale information for a single valid locale
+ * (callers must perform this validation).  The object will have these
+ * properties:
+ *
+ *   direction
+ *     a string with a value "ltr" for left-to-right locale, and "rtl" for
+ *     right-to-left locale.
+ *   locale
+ *     a BCP47 compilant locale string for the resolved locale.
+ */
+extern MOZ_MUST_USE bool
+intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp);
+
+/**
  * Returns an Array with CLDR-based fields display names.
  * The function takes three arguments:
  *

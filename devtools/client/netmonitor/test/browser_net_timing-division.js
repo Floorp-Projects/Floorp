@@ -25,11 +25,11 @@ add_task(function* () {
   yield wait;
 
   let milDivs = document.querySelectorAll(
-    ".requests-menu-timings-division[data-division-scale=millisecond]");
+    ".requests-list-timings-division[data-division-scale=millisecond]");
   let secDivs = document.querySelectorAll(
-    ".requests-menu-timings-division[data-division-scale=second]");
+    ".requests-list-timings-division[data-division-scale=second]");
   let minDivs = document.querySelectorAll(
-    ".requests-menu-timings-division[data-division-scale=minute]");
+    ".requests-list-timings-division[data-division-scale=minute]");
 
   info("Number of millisecond divisions: " + milDivs.length);
   info("Number of second divisions: " + secDivs.length);
