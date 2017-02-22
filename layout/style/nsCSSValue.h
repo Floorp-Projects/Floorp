@@ -8,8 +8,6 @@
 #ifndef nsCSSValue_h___
 #define nsCSSValue_h___
 
-#include <type_traits>
-
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SheetType.h"
@@ -32,6 +30,8 @@
 #include "nsStyleConsts.h"
 #include "nsStyleCoord.h"
 #include "gfxFontFamilyList.h"
+
+#include <type_traits>
 
 class imgRequestProxy;
 class nsIContent;
