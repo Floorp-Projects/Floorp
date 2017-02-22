@@ -30,6 +30,8 @@ HttpChannelParentListener::HttpChannelParentListener(HttpChannelParent* aInitial
   , mShouldIntercept(false)
   , mShouldSuspendIntercept(false)
 {
+  LOG(("HttpChannelParentListener::HttpChannelParentListener [this=%p, next=%p]",
+       this, aInitialChannel));
 }
 
 HttpChannelParentListener::~HttpChannelParentListener()
@@ -160,6 +162,9 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
                                     uint32_t redirectFlags,
                                     nsIAsyncVerifyRedirectCallback* callback)
 {
+  LOG(("HttpChannelParentListener::AsyncOnChannelRedirect [this=%p, old=%p, new=%p, flags=%u]",
+       this, oldChannel, newChannel, redirectFlags));
+
   nsresult rv;
 
   nsCOMPtr<nsIParentRedirectingChannel> activeRedirectingChannel =
@@ -193,6 +198,9 @@ HttpChannelParentListener::AsyncOnChannelRedirect(
 NS_IMETHODIMP
 HttpChannelParentListener::OnRedirectResult(bool succeeded)
 {
+  LOG(("HttpChannelParentListener::OnRedirectResult [this=%p, suc=%d]",
+       this, succeeded));
+
   nsresult rv;
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
