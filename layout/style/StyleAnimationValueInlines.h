@@ -11,16 +11,6 @@
 
 namespace mozilla {
 
-bool
-AnimationValue::operator==(const AnimationValue& aOther) const
-{
-    // mGecko and mServo are mutual exclusive, one of them must be null
-    if (mServo) {
-      return Servo_AnimationValue_DeepEqual(mServo, aOther.mServo);
-    }
-    return mGecko == aOther.mGecko;
-}
-
 float
 AnimationValue::GetOpacity() const
 {
