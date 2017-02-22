@@ -148,6 +148,7 @@ EXPORTS.mozilla.css += [
 UNIFIED_SOURCES += [
     'AnimationCollection.cpp',
     'AnimationCommon.cpp',
+    'BindingStyleRule.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
     'CSSLexer.cpp',
@@ -208,6 +209,7 @@ UNIFIED_SOURCES += [
     'ServoCSSRuleList.cpp',
     'ServoDeclarationBlock.cpp',
     'ServoElementSnapshot.cpp',
+    'ServoSpecifiedValues.cpp',
     'ServoStyleRule.cpp',
     'ServoStyleSet.cpp',
     'ServoStyleSheet.cpp',
@@ -217,21 +219,13 @@ UNIFIED_SOURCES += [
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
-# - BindingStyleRule.cpp doesn't _really_ needs to be built separately,
-# except insofar as it shifts unified build boundaries, causing
-# Unified_cpp_layout_style4.cpp to include nsStyleCoord.cpp, which
-# includes, via nsStyleCoord.h, <type_traits>, which ends up including
-# <xutility>, which fails in much the way described in
-# <https://bugzilla.mozilla.org/show_bug.cgi?id=1331102>.
 # - nsCSSRuleProcessor.cpp needs to be built separately because it uses
 # plarena.h.
 # - nsLayoutStylesheetCache.cpp needs to be built separately because it uses
 # nsExceptionHandler.h, which includes windows.h.
 SOURCES += [
-    'BindingStyleRule.cpp',
     'nsCSSRuleProcessor.cpp',
     'nsLayoutStylesheetCache.cpp',
-    'ServoSpecifiedValues.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

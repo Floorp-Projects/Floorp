@@ -61,9 +61,13 @@ private:
 
     bool AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri);
 public:
-    // If we are blocking tracking content, update the corresponding flag in
-    // the respective docshell and call nsISecurityEventSink::onSecurityChange.
-    static nsresult SetBlockedTrackingContent(nsIChannel *channel);
+    // If we are blocking content, update the corresponding flag in the respective
+    // docshell and call nsISecurityEventSink::onSecurityChange.
+    static nsresult SetBlockedContent(nsIChannel *channel,
+                                      nsresult aErrorCode,
+                                      const nsACString& aList,
+                                      const nsACString& aProvider,
+                                      const nsACString& aPrefix);
     static nsresult NotifyTrackingProtectionDisabled(nsIChannel *aChannel);
 };
 

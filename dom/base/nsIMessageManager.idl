@@ -327,6 +327,12 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
    * Return a single subordinate message manager.
    */
   nsIMessageListenerManager getChildAt(in unsigned long aIndex);
+
+  /**
+   * Some processes are kept alive after their last tab/window are closed for testing
+   * (see dom.ipc.keepProcessesAlive). This function releases those.
+   */
+   void releaseCachedProcesses();
 };
 
 [scriptable, builtinclass, uuid(0e602c9e-1977-422a-a8e4-fe0d4a4f78d0)]

@@ -192,7 +192,7 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
 #ifdef MOZ_RUST_MP4PARSE
 static void
 UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
-                         const mp4parser_sinf_info& aSinf)
+                         const mp4parse_sinf_info& aSinf)
 {
   if (aSinf.is_encrypted != 0) {
     aConfig.mCrypto.mValid = true;

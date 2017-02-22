@@ -31,6 +31,9 @@ init128x(uint64_t x)
     return ret;
 }
 
+#define CONSTANT_TIME_CARRY(a, b) \
+    ((a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1))
+
 /* arithmetic */
 
 uint128_t
@@ -38,7 +41,7 @@ add128(uint128_t a, uint128_t b)
 {
     uint128_t ret;
     ret.lo = a.lo + b.lo;
-    ret.hi = a.hi + b.hi + (ret.lo < b.lo);
+    ret.hi = a.hi + b.hi + CONSTANT_TIME_CARRY(ret.lo, b.lo);
     return ret;
 }
 

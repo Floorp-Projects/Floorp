@@ -22,7 +22,8 @@ class URLClassifierChild : public PURLClassifierChild
   {
     mCallback = aCallback;
   }
-  mozilla::ipc::IPCResult Recv__delete__(const MaybeResult& aResult) override;
+  mozilla::ipc::IPCResult Recv__delete__(const MaybeInfo& aInfo,
+                                         const nsresult& aResult) override;
 
  private:
   ~URLClassifierChild() = default;

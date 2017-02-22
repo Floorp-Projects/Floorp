@@ -18,15 +18,18 @@ const MAX_MB_SIZE = 1000 * BYTES_IN_MB;
 const MAX_MILLISECOND = 1000;
 const MAX_SECOND = 60 * MAX_MILLISECOND;
 
-const CONTENT_SIZE_DECIMALS = 2;
-const REQUEST_TIME_DECIMALS = 2;
+const REQUEST_DECIMALS = 2;
 
-function getSizeWithDecimals(size, decimals = REQUEST_TIME_DECIMALS) {
-  return L10N.numberWithDecimals(size, CONTENT_SIZE_DECIMALS);
+function getSizeWithDecimals(size, decimals = REQUEST_DECIMALS) {
+  return L10N.numberWithDecimals(size, decimals);
 }
 
 function getTimeWithDecimals(time) {
-  return L10N.numberWithDecimals(time, REQUEST_TIME_DECIMALS);
+  return L10N.numberWithDecimals(time, REQUEST_DECIMALS);
+}
+
+function formatDecimals(size, decimals) {
+  return (size % 1 > 0) ? decimals : 0;
 }
 
 /**
@@ -35,18 +38,27 @@ function getTimeWithDecimals(time) {
  * than 1024 in order to keep the displayed digits smaller as "1016 KB" is
  * more awkward than 0.99 MB"
  */
-function getFormattedSize(bytes, decimals = REQUEST_TIME_DECIMALS) {
+function getFormattedSize(bytes, decimals = REQUEST_DECIMALS) {
   if (bytes < MAX_BYTES_SIZE) {
     return L10N.getFormatStr("networkMenu.sizeB", bytes);
-  } else if (bytes < MAX_KB_SIZE) {
-    let kb = bytes / BYTES_IN_KB;
-    return L10N.getFormatStr("networkMenu.sizeKB", getSizeWithDecimals(kb, decimals));
-  } else if (bytes < MAX_MB_SIZE) {
-    let mb = bytes / BYTES_IN_MB;
-    return L10N.getFormatStr("networkMenu.sizeMB", getSizeWithDecimals(mb, decimals));
   }
-  let gb = bytes / BYTES_IN_GB;
-  return L10N.getFormatStr("networkMenu.sizeGB", getSizeWithDecimals(gb, decimals));
+  if (bytes < MAX_KB_SIZE) {
+    const kb = bytes / BYTES_IN_KB;
+    const formattedDecimals = formatDecimals(kb, decimals);
+
+    return L10N.getFormatStr("networkMenu.sizeKB",
+      getSizeWithDecimals(kb, formattedDecimals));
+  }
+  if (bytes < MAX_MB_SIZE) {
+    const mb = bytes / BYTES_IN_MB;
+    const formattedDecimals = formatDecimals(mb, decimals);
+    return L10N.getFormatStr("networkMenu.sizeMB",
+      getSizeWithDecimals(mb, formattedDecimals));
+  }
+  const gb = bytes / BYTES_IN_GB;
+  const formattedDecimals = formatDecimals(gb, decimals);
+  return L10N.getFormatStr("networkMenu.sizeGB",
+    getSizeWithDecimals(gb, formattedDecimals));
 }
 
 /**
@@ -56,11 +68,12 @@ function getFormattedSize(bytes, decimals = REQUEST_TIME_DECIMALS) {
 function getFormattedTime(ms) {
   if (ms < MAX_MILLISECOND) {
     return L10N.getFormatStr("networkMenu.millisecond", ms | 0);
-  } else if (ms < MAX_SECOND) {
-    let sec = ms / MAX_MILLISECOND;
+  }
+  if (ms < MAX_SECOND) {
+    const sec = ms / MAX_MILLISECOND;
     return L10N.getFormatStr("networkMenu.second", getTimeWithDecimals(sec));
   }
-  let min = ms / MAX_SECOND;
+  const min = ms / MAX_SECOND;
   return L10N.getFormatStr("networkMenu.minute", getTimeWithDecimals(min));
 }
 

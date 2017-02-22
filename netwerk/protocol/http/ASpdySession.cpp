@@ -32,7 +32,8 @@ ASpdySession::~ASpdySession() = default;
 
 ASpdySession *
 ASpdySession::NewSpdySession(uint32_t version,
-                             nsISocketTransport *aTransport)
+                             nsISocketTransport *aTransport,
+                             bool attemptingEarlyData)
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
@@ -46,7 +47,7 @@ ASpdySession::NewSpdySession(uint32_t version,
 
   Telemetry::Accumulate(Telemetry::SPDY_VERSION2, version);
 
-  return new Http2Session(aTransport, version);
+  return new Http2Session(aTransport, version, attemptingEarlyData);
 }
 
 SpdyInformation::SpdyInformation()

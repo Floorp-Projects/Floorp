@@ -65,9 +65,4 @@
   </popupset>
 
   <commandset id="editMenuCommands"/>
-  <browser id="webext-panels-browser"
-           type="content" flex="1"
-           webextension-view-type="sidebar"
-           context="contentAreaContextMenu" tooltip="aHTMLTooltip"
-           onclick="window.parent.contentAreaClick(event, true);"/>
 </page>

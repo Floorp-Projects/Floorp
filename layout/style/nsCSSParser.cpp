@@ -6936,7 +6936,12 @@ CSSParserImpl::ParseHue(float& aAngle)
   // The '0' value is handled by <number> parsing, so use VARIANT_ANGLE flag
   // instead of VARIANT_ANGLE_OR_ZERO.
   if (ParseSingleTokenVariant(angleValue, VARIANT_ANGLE, nullptr)) {
+    // Convert double value of GetAngleValueInDegrees() to float.
     aAngle = angleValue.GetAngleValueInDegrees();
+    // And then clamp it as finite values in float.
+    aAngle = mozilla::clamped(aAngle,
+                              -std::numeric_limits<float>::max(),
+                               std::numeric_limits<float>::max());
     return true;
   }
 

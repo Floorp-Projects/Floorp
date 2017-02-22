@@ -55,6 +55,7 @@ use mp4parse::TrackTimeScale;
 use mp4parse::TrackScaledTime;
 use mp4parse::serialize_opus_header;
 use mp4parse::CodecType;
+use mp4parse::Track;
 
 // rusty-cheddar's C enum generation doesn't namespace enum members by
 // prefixing them, so we're forced to do it in our member names until
@@ -114,16 +115,30 @@ pub struct mp4parse_track_info {
 }
 
 #[repr(C)]
+#[derive(Default, Debug, PartialEq)]
+pub struct mp4parse_indice {
+    pub start_offset: u64,
+    pub end_offset: u64,
+    pub start_composition: u64,
+    pub end_composition: u64,
+    pub start_decode: u64,
+    pub sync: bool,
+}
+
+#[repr(C)]
 pub struct mp4parse_byte_data {
     pub length: u32,
+    // cheddar can't handle generic type, so it needs to be multiple data types here.
     pub data: *const u8,
+    pub indices: *const mp4parse_indice,
 }
 
 impl Default for mp4parse_byte_data {
     fn default() -> Self {
         mp4parse_byte_data {
             length: 0,
-            data: std::ptr::null_mut(),
+            data: std::ptr::null(),
+            indices: std::ptr::null(),
         }
     }
 }
@@ -132,6 +147,10 @@ impl mp4parse_byte_data {
     fn set_data(&mut self, data: &Vec<u8>) {
         self.length = data.len() as u32;
         self.data = data.as_ptr();
+    }
+    fn set_indices(&mut self, data: &Vec<mp4parse_indice>) {
+        self.length = data.len() as u32;
+        self.indices = data.as_ptr();
     }
 }
 
@@ -143,7 +162,7 @@ pub struct mp4parse_pssh_info {
 
 #[repr(C)]
 #[derive(Default)]
-pub struct mp4parser_sinf_info {
+pub struct mp4parse_sinf_info {
     pub is_encrypted: u32,
     pub iv_size: u8,
     pub kid: mp4parse_byte_data,
@@ -157,7 +176,7 @@ pub struct mp4parse_track_audio_info {
     pub sample_rate: u32,
     pub profile: u16,
     pub codec_specific_config: mp4parse_byte_data,
-    pub protected_data: mp4parser_sinf_info,
+    pub protected_data: mp4parse_sinf_info,
 }
 
 #[repr(C)]
@@ -168,7 +187,7 @@ pub struct mp4parse_track_video_info {
     pub image_width: u16,
     pub image_height: u16,
     pub extra_data: mp4parse_byte_data,
-    pub protected_data: mp4parser_sinf_info,
+    pub protected_data: mp4parse_sinf_info,
 }
 
 #[repr(C)]
@@ -187,6 +206,7 @@ struct Wrap {
     poisoned: bool,
     opus_header: HashMap<u32, Vec<u8>>,
     pssh_data: Vec<u8>,
+    sample_table: HashMap<u32, Vec<mp4parse_indice>>,
 }
 
 #[repr(C)]
@@ -220,6 +240,10 @@ impl mp4parse_parser {
 
     fn pssh_data_mut(&mut self) -> &mut Vec<u8> {
         &mut self.0.pssh_data
+    }
+
+    fn sample_table_mut(&mut self) -> &mut HashMap<u32, Vec<mp4parse_indice>> {
+        &mut self.0.sample_table
     }
 }
 
@@ -266,6 +290,7 @@ pub unsafe extern fn mp4parse_new(io: *const mp4parse_io) -> *mut mp4parse_parse
         poisoned: false,
         opus_header: HashMap::new(),
         pssh_data: Vec::new(),
+        sample_table: HashMap::new(),
     }));
 
     Box::into_raw(parser)
@@ -401,6 +426,8 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
                 mp4parse_codec::MP4PARSE_CODEC_MP3,
             AudioCodecSpecific::ES_Descriptor(_) =>
                 mp4parse_codec::MP4PARSE_CODEC_UNKNOWN,
+            AudioCodecSpecific::MP3 =>
+                mp4parse_codec::MP4PARSE_CODEC_MP3,
         },
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
@@ -536,6 +563,7 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
                 }
             }
         }
+        AudioCodecSpecific::MP3 => (),
     }
 
     match audio.protection_info.iter().find(|sinf| sinf.tenc.is_some()) {
@@ -613,6 +641,367 @@ pub unsafe extern fn mp4parse_get_track_video_info(parser: *mut mp4parse_parser,
     }
 
     MP4PARSE_OK
+}
+
+#[no_mangle]
+pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, track_id: u32, indices: *mut mp4parse_byte_data) -> mp4parse_error {
+    if parser.is_null() || (*parser).poisoned() {
+        return MP4PARSE_ERROR_BADARG;
+    }
+
+    // Initialize fields to default values to ensure all fields are always valid.
+    *indices = Default::default();
+
+    let context = (*parser).context();
+    let tracks = &context.tracks;
+    let track = match tracks.iter().find(|track| track.track_id == Some(track_id)) {
+        Some(t) => t,
+        _ => return MP4PARSE_ERROR_INVALID,
+    };
+
+    let index_table = (*parser).sample_table_mut();
+    match index_table.get(&track_id) {
+        Some(v) => {
+            (*indices).set_indices(v);
+            return MP4PARSE_OK;
+        },
+        _ => {},
+    }
+
+    // Find the track start offset time from 'elst'.
+    // 'media_time' maps start time onward, 'empty_duration' adds time offset
+    // before first frame is displayed.
+    let offset_time =
+        match (&track.empty_duration, &track.media_time, &context.timescale) {
+            (&Some(empty_duration), &Some(media_time), &Some(scale)) => {
+                (empty_duration.0 - media_time.0) as i64 * scale.0 as i64
+            },
+            (&Some(empty_duration), _, &Some(scale)) => {
+                empty_duration.0 as i64 * scale.0 as i64
+            },
+            (_, &Some(media_time), &Some(scale)) => {
+                (0 - media_time.0) as i64 * scale.0 as i64
+            },
+            _ => 0,
+        };
+
+    match create_sample_table(track, offset_time) {
+        Some(v) => {
+            (*indices).set_indices(&v);
+            index_table.insert(track_id, v);
+            return MP4PARSE_OK;
+        },
+        _ => {},
+    }
+
+    MP4PARSE_ERROR_INVALID
+}
+
+// Convert a 'ctts' compact table to full table by iterator,
+// (sample_with_the_same_offset_count, offset) => (offset), (offset), (offset) ...
+//
+// For example:
+// (2, 10), (4, 9) into (10, 10, 9, 9, 9, 9) by calling next_offset_time().
+struct TimeOffsetIterator<'a> {
+    cur_sample_range: std::ops::Range<u32>,
+    cur_offset: i64,
+    ctts_iter: Option<std::slice::Iter<'a, mp4parse::TimeOffset>>,
+}
+
+impl<'a> Iterator for TimeOffsetIterator<'a> {
+    type Item = i64;
+
+    fn next(&mut self) -> Option<i64> {
+        let has_sample = self.cur_sample_range.next()
+            .or_else(|| {
+                // At end of current TimeOffset, find the next TimeOffset.
+                let iter = match self.ctts_iter {
+                    Some(ref mut v) => v,
+                    _ => return None,
+                };
+                let offset_version;
+                self.cur_sample_range = match iter.next() {
+                    Some(v) => {
+                        offset_version = v.time_offset;
+                        (0 .. v.sample_count)
+                    },
+                    _ => {
+                        offset_version = mp4parse::TimeOffsetVersion::Version0(0);
+                        (0 .. 0)
+                    },
+                };
+
+                self.cur_offset = match offset_version {
+                    mp4parse::TimeOffsetVersion::Version0(i) => i as i64,
+                    mp4parse::TimeOffsetVersion::Version1(i) => i as i64,
+                };
+
+                self.cur_sample_range.next()
+            });
+
+        has_sample.and(Some(self.cur_offset))
+    }
+}
+
+impl<'a> TimeOffsetIterator<'a> {
+    fn next_offset_time(&mut self) -> i64 {
+        match self.next() {
+            Some(v) => v as i64,
+            _ => 0,
+        }
+    }
+}
+
+// Convert 'stts' compact table to full table by iterator,
+// (sample_count_with_the_same_time, time) => (time, time, time) ... repeats
+// sample_count_with_the_same_time.
+//
+// For example:
+// (2, 3000), (1, 2999) to (3000, 3000, 2999).
+struct TimeToSampleIteraor<'a> {
+    cur_sample_count: std::ops::Range<u32>,
+    cur_sample_delta: u32,
+    stts_iter: std::slice::Iter<'a, mp4parse::Sample>,
+}
+
+impl<'a> Iterator for TimeToSampleIteraor<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<u32> {
+        let has_sample = self.cur_sample_count.next()
+            .or_else(|| {
+                self.cur_sample_count = match self.stts_iter.next() {
+                    Some(v) => {
+                        self.cur_sample_delta = v.sample_delta;
+                        (0 .. v.sample_count)
+                    },
+                    _ => (0 .. 0),
+                };
+
+                self.cur_sample_count.next()
+            });
+
+        has_sample.and(Some(self.cur_sample_delta))
+    }
+}
+
+impl<'a> TimeToSampleIteraor<'a> {
+    fn next_delta(&mut self) -> u32 {
+        match self.next() {
+            Some(v) => v,
+            _ => 0,
+        }
+    }
+}
+
+// Convert 'stco' compact table to full table by iterator.
+// (start_chunk_num, sample_number) => (start_chunk_num, sample_number),
+//                                     (start_chunk_num + 1, sample_number),
+//                                     (start_chunk_num + 2, sample_number),
+//                                     ...
+//                                     (next start_chunk_num, next sample_number),
+//                                     ...
+//
+// For example:
+// (1, 5), (5, 10), (9, 2) => (1, 5), (2, 5), (3, 5), (4, 5), (5, 10), (6, 10),
+// (7, 10), (8, 10), (9, 2)
+struct SampleToChunkIterator<'a> {
+    chunks: std::ops::Range<u32>,
+    sample_count: u32,
+    stsc_peek_iter: std::iter::Peekable<std::slice::Iter<'a, mp4parse::SampleToChunk>>,
+    remain_chunk_count: u32, // total chunk number from 'stco'.
+}
+
+impl<'a> Iterator for SampleToChunkIterator<'a> {
+    type Item = (u32, u32);
+
+    fn next(&mut self) -> Option<(u32, u32)> {
+        let has_chunk = self.chunks.next()
+            .or_else(|| {
+                self.chunks = match (self.stsc_peek_iter.next(), self.stsc_peek_iter.peek()) {
+                    (Some(next), Some(peek)) => {
+                        self.sample_count = next.samples_per_chunk;
+                        ((next.first_chunk - 1) .. (peek.first_chunk - 1))
+                    },
+                    (Some(next), None) => {
+                        self.sample_count = next.samples_per_chunk;
+                        // Total chunk number in 'stsc' could be different to 'stco',
+                        // there could be more chunks at the last 'stsc' record.
+                        ((next.first_chunk - 1) .. next.first_chunk + self.remain_chunk_count -1)
+                    },
+                    _ => (0 .. 0),
+                };
+                self.remain_chunk_count -= self.chunks.len() as u32;
+                self.chunks.next()
+            });
+
+        has_chunk.map_or(None, |id| { Some((id, self.sample_count)) })
+    }
+}
+
+// A helper struct to convert track time to us.
+struct PresentationTime {
+    time: i64,
+    scale: TrackTimeScale
+}
+
+impl PresentationTime {
+    fn new(time: i64, scale: TrackTimeScale) -> PresentationTime {
+        PresentationTime {
+            time: time,
+            scale: scale,
+        }
+    }
+
+    fn to_us(&self) -> i64 {
+        let track_time = TrackScaledTime(self.time as u64, self.scale.1);
+        match track_time_to_us(track_time, self.scale) {
+            Some(v) => v as i64,
+            _ => 0,
+        }
+    }
+}
+
+fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4parse_indice>> {
+    let timescale = match track.timescale {
+        Some(t) => t,
+        _ => return None,
+    };
+
+    let (stsc, stco, stsz, stts) =
+        match (&track.stsc, &track.stco, &track.stsz, &track.stts) {
+            (&Some(ref a), &Some(ref b), &Some(ref c), &Some(ref d)) => (a, b, c, d),
+            _ => return None,
+        };
+
+    // According to spec, no sync table means every sample is sync sample.
+    let has_sync_table = match track.stss {
+        Some(_) => true,
+        _ => false,
+    };
+
+    let mut sample_table = Vec::new();
+    let mut sample_size_iter = stsz.sample_sizes.iter();
+
+    // Get 'stsc' iterator for (chunk_id, chunk_sample_count) and calculate the sample
+    // offset address.
+    let stsc_iter = SampleToChunkIterator {
+        chunks: (0 .. 0),
+        sample_count: 0,
+        stsc_peek_iter: stsc.samples.as_slice().iter().peekable(),
+        remain_chunk_count: stco.offsets.len() as u32,
+    };
+
+    for i in stsc_iter {
+        let chunk_id = i.0 as usize;
+        let sample_counts = i.1;
+        let mut cur_position: u64 = stco.offsets[chunk_id];
+        for _ in 0 .. sample_counts {
+            let start_offset = cur_position;
+            let end_offset = match (stsz.sample_size, sample_size_iter.next()) {
+                (_, Some(t)) => start_offset + *t as u64,
+                (t, _) if t > 0 => start_offset + t as u64,
+                _ => 0,
+            };
+            if end_offset == 0 {
+                return None;
+            }
+            cur_position = end_offset;
+
+            sample_table.push(
+                mp4parse_indice {
+                    start_offset: start_offset,
+                    end_offset: end_offset,
+                    start_composition: 0,
+                    end_composition: 0,
+                    start_decode: 0,
+                    sync: !has_sync_table,
+                }
+            );
+        }
+    }
+
+    // Mark the sync sample in sample_table according to 'stss'.
+    match &track.stss {
+        &Some(ref v) => {
+            for iter in &v.samples {
+                sample_table[(iter - 1) as usize].sync = true;
+            }
+        },
+        _ => {}
+    }
+
+    let ctts_iter = match &track.ctts {
+        &Some(ref v) => Some(v.samples.as_slice().iter()),
+        _ => None,
+    };
+
+    let mut ctts_offset_iter = TimeOffsetIterator {
+        cur_sample_range: (0 .. 0),
+        cur_offset: 0,
+        ctts_iter: ctts_iter,
+    };
+
+    let mut stts_iter = TimeToSampleIteraor {
+        cur_sample_count: (0 .. 0),
+        cur_sample_delta: 0,
+        stts_iter: stts.samples.as_slice().iter(),
+    };
+
+    // sum_delta is the sum of stts_iter delta.
+    // According to sepc:
+    //      decode time => DT(n) = DT(n-1) + STTS(n)
+    //      composition time => CT(n) = DT(n) + CTTS(n)
+    // Note:
+    //      composition time needs to add the track offset time from 'elst' table.
+    let mut sum_delta = PresentationTime::new(0, timescale);
+    for sample in sample_table.as_mut_slice() {
+        let decode_time = sum_delta.to_us();
+        sum_delta.time += stts_iter.next_delta() as i64;
+
+        // ctts_offset is the current sample offset time.
+        let ctts_offset = PresentationTime::new(ctts_offset_iter.next_offset_time(), timescale);
+
+        let start_composition = (decode_time + ctts_offset.to_us() + track_offset_time) as u64;
+        let end_composition = (sum_delta.to_us() + ctts_offset.to_us() + track_offset_time) as u64;
+
+        sample.start_decode = decode_time as u64;
+        sample.start_composition = start_composition;
+        sample.end_composition = end_composition;
+    }
+
+    // Correct composition end time due to 'ctts' causes composition time re-ordering.
+    //
+    // Composition end time is not in specification. However, gecko needs it, so we need to
+    // calculate to correct the composition end time.
+    if track.ctts.is_some() {
+        // Create an index table refers to sample_table and sorted by start_composisiton time.
+        let mut sort_table = Vec::new();
+        sort_table.reserve(sample_table.len());
+        for i in 0 .. sample_table.len() {
+            sort_table.push(i);
+        }
+
+        sort_table.sort_by_key(|i| {
+            match sample_table.get(*i) {
+                Some(v) => {
+                    v.start_composition
+                },
+                _ => 0,
+            }
+        });
+
+        let iter = sort_table.iter();
+        for i in 0 .. (iter.len() - 1) {
+            let current_index = sort_table[i] as usize;
+            let peek_index = sort_table[i + 1] as usize;
+            let next_start_composition_time = sample_table[peek_index].start_composition;
+            let ref mut sample = sample_table[current_index];
+            sample.end_composition = next_start_composition_time;
+        }
+    }
+
+    Some(sample_table)
 }
 
 /// Fill the supplied `mp4parse_fragment_info` with metadata from fragmented file.

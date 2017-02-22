@@ -544,7 +544,7 @@ static const uintptr_t TypeConstraintMagic = BaseTypeInferenceMagic + 1;
 static const uintptr_t ConstraintTypeSetMagic = BaseTypeInferenceMagic + 2;
 
 #ifdef JS_CRASH_DIAGNOSTICS
-extern MOZ_NORETURN MOZ_COLD MOZ_NEVER_INLINE void
+extern void
 ReportMagicWordFailure(uintptr_t actual, uintptr_t expected);
 #endif
 

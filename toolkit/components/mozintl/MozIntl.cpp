@@ -82,6 +82,17 @@ MozIntl::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* cx)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MozIntl::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx)
+{
+  static const JSFunctionSpec funcs[] = {
+    JS_SELF_HOSTED_FN("getLocaleInfo", "Intl_getLocaleInfo", 1, 0),
+    JS_FS_END
+  };
+
+  return AddFunctions(cx, val, funcs);
+}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(MozIntl)
 NS_DEFINE_NAMED_CID(MOZ_MOZINTL_CID);
 

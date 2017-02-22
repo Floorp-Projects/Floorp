@@ -1,51 +1,39 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const TEST_URI = NetUtil.newURI("http://mochi.test:8888/notFoundPage.html");
-
-function test() {
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  registerCleanupFunction(function() {
-    gBrowser.removeCurrentTab();
+add_task(function* test() {
+  const TEST_URL = "http://mochi.test:8888/notFoundPage.html";
+  // Ensure that decay frecency doesn't kick in during tests (as a result
+  // of idle-daily).
+  Services.prefs.setCharPref("places.frecency.decayRate", "1.0");
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  registerCleanupFunction(function*() {
+    Services.prefs.clearUserPref("places.frecency.decayRate");
+    yield BrowserTestUtils.removeTab(tab);
+    yield PlacesTestUtils.clearHistory();
   });
 
   // First add a visit to the page, this will ensure that later we skip
   // updating the frecency for a newly not-found page.
-  addVisits({ uri: TEST_URI }, window, () => {
-    info("Added visit");
-    fieldForUrl(TEST_URI, "frecency", aFrecency => {
-      ok(aFrecency > 0, "Frecency should be > 0");
-      continueTest(aFrecency);
-    });
-  });
-}
+  yield PlacesTestUtils.addVisits({ uri: TEST_URL });
+  let frecency = yield PlacesTestUtils.fieldInDB(TEST_URL, "frecency");
+  is(frecency, 100, "Check initial frecency");
 
-function continueTest(aOldFrecency) {
   // Used to verify errors are not marked as typed.
-  PlacesUtils.history.markPageAsTyped(TEST_URI);
-  gBrowser.selectedBrowser.loadURI(TEST_URI.spec);
+  PlacesUtils.history.markPageAsTyped(NetUtil.newURI(TEST_URL));
 
-  // Create and add history observer.
-  let historyObserver = {
-    __proto__: NavHistoryObserver.prototype,
-    onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                      aTransitionType) {
-      PlacesUtils.history.removeObserver(historyObserver);
-      info("Received onVisit: " + aURI.spec);
-      fieldForUrl(aURI, "frecency", function(aFrecency) {
-        is(aFrecency, aOldFrecency, "Frecency should be unchanged");
-        fieldForUrl(aURI, "hidden", function(aHidden) {
-          is(aHidden, 0, "Page should not be hidden");
-          fieldForUrl(aURI, "typed", function(aTyped) {
-            is(aTyped, 0, "page should not be marked as typed");
-            PlacesTestUtils.clearHistory().then(finish);
-          });
-        });
-      });
-    }
-  };
-  PlacesUtils.history.addObserver(historyObserver, false);
-}
+  let promiseVisit = new Promise(resolve => {
+    let historyObserver = {
+      __proto__: NavHistoryObserver.prototype,
+      onVisit(uri) {
+        PlacesUtils.history.removeObserver(historyObserver);
+        is(uri.spec, TEST_URL, "Check visited url");
+        resolve();
+      }
+    };
+    PlacesUtils.history.addObserver(historyObserver, false);
+  });
+  gBrowser.selectedBrowser.loadURI(TEST_URL);
+  yield promiseVisit;
+
+  is(yield PlacesTestUtils.fieldInDB(TEST_URL, "frecency"), frecency, "Frecency should be unchanged");
+  is(yield PlacesTestUtils.fieldInDB(TEST_URL, "hidden"), 0, "Page should not be hidden");
+  is(yield PlacesTestUtils.fieldInDB(TEST_URL, "typed"), 0, "page should not be marked as typed");
+});

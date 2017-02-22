@@ -1017,7 +1017,7 @@
     "description": "This metric is recorded every time a navigator.geolocation.watchPosition() request gets allowed/fulfilled. A false value is recorded if the owner is not visible according to document.isVisible."
   },
   "GPU_PROCESS_LAUNCH_TIME_MS_2" : {
-    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
     "bug_numbers": [1297790, 1317796],
     "kind": "exponential",
@@ -1027,7 +1027,7 @@
     "description": "GPU process launch time in milliseconds"
   },
   "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
-    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
     "bug_numbers": [1324095],
     "kind": "exponential",
@@ -10699,6 +10699,37 @@
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
+  },
+  "STORAGE_SYNC_GET_OPS_SIZE": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "keyed": true,
+    "description": "Track the size of results of get() operations performed this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "STORAGE_SYNC_SET_OPS_SIZE": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "keyed": true,
+    "description": "Track the size of set() operations performed by addons this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "STORAGE_SYNC_REMOVE_OPS": {
+    "alert_emails": ["eglassercamp@mozilla.com"],
+    "expires_in_version": "58",
+    "bug_numbers": [1328974],
+    "kind": "count",
+    "keyed": true,
+    "description": "Track the number of remove() operations addons perform this subsession. The key is the addon ID.",
+    "releaseChannelCollection": "opt-out"
   },
   "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
     "alert_emails": ["jh+bugzilla@buttercookie.de"],

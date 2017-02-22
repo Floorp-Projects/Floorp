@@ -201,6 +201,63 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {
   SendReceive();
 }
 
+TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtClient) {
+  SSLInt_SetTicketLifetime(1);  // one second
+  // This causes a ticket resumption.
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  SendReceive();
+
+  WAIT_(false, 1000);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+
+  // TLS 1.3 uses the pre-shared key extension instead.
+  SSLExtensionType xtn = (version_ >= SSL_LIBRARY_VERSION_TLS_1_3)
+                             ? ssl_tls13_pre_shared_key_xtn
+                             : ssl_session_ticket_xtn;
+  auto capture = std::make_shared<TlsExtensionCapture>(xtn);
+  client_->SetPacketFilter(capture);
+  Connect();
+
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    EXPECT_FALSE(capture->captured());
+  } else {
+    EXPECT_TRUE(capture->captured());
+    EXPECT_EQ(0U, capture->extension().len());
+  }
+}
+
+TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtServer) {
+  SSLInt_SetTicketLifetime(1);  // one second
+  // This causes a ticket resumption.
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  Connect();
+  SendReceive();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ExpectResumption(RESUME_NONE);
+
+  SSLExtensionType xtn = (version_ >= SSL_LIBRARY_VERSION_TLS_1_3)
+                             ? ssl_tls13_pre_shared_key_xtn
+                             : ssl_session_ticket_xtn;
+  auto capture = std::make_shared<TlsExtensionCapture>(xtn);
+  client_->SetPacketFilter(capture);
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  EXPECT_TRUE(capture->captured());
+  EXPECT_LT(0U, capture->extension().len());
+
+  WAIT_(false, 1000);  // Let the ticket expire on the server.
+
+  Handshake();
+  CheckConnected();
+}
+
 // This callback switches out the "server" cert used on the server with
 // the "client" certificate, which should be the same type.
 static int32_t SwitchCertificates(TlsAgent* agent, const SECItem* srvNameArr,

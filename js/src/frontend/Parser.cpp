@@ -4647,8 +4647,10 @@ Parser<ParseHandler>::declarationList(YieldHandling yieldHandling,
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool isConst)
+Parser<ParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind)
 {
+    MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
+
     /*
      * Parse body-level lets without a new block object. ES6 specs
      * that an execution environment's initial lexical environment
@@ -4660,7 +4662,8 @@ Parser<ParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool isCon
      *
      * See 8.1.1.1.6 and the note in 13.2.1.
      */
-    Node decl = declarationList(yieldHandling, isConst ? PNK_CONST : PNK_LET);
+    Node decl = declarationList(yieldHandling,
+                                kind == DeclarationKind::Const ? PNK_CONST : PNK_LET);
     if (!decl || !matchOrInsertSemicolonAfterExpression())
         return null();
 
@@ -4867,13 +4870,7 @@ Parser<FullParseHandler>::importDeclaration()
             return null();
         }
 
-        if (!tokenStream.getToken(&tt))
-            return null();
-
-        if (tt != TOK_FROM) {
-            error(JSMSG_FROM_AFTER_IMPORT_CLAUSE);
-            return null();
-        }
+        MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_IMPORT_CLAUSE);
 
         MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
     }
@@ -4949,9 +4946,499 @@ Parser<SyntaxParseHandler>::checkExportedNamesForDeclaration(Node node)
 }
 
 template<>
-ParseNode*
-Parser<FullParseHandler>::exportDeclaration()
+bool
+Parser<FullParseHandler>::checkExportedNameForClause(ParseNode* node)
 {
+    return checkExportedName(node->pn_atom);
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::checkExportedNameForClause(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<>
+bool
+Parser<FullParseHandler>::checkExportedNameForFunction(ParseNode* node)
+{
+    return checkExportedName(node->pn_funbox->function()->explicitName());
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::checkExportedNameForFunction(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<>
+bool
+Parser<FullParseHandler>::checkExportedNameForClass(ParseNode* node)
+{
+    const ClassNode& cls = node->as<ClassNode>();
+    MOZ_ASSERT(cls.names());
+    return checkExportedName(cls.names()->innerBinding()->pn_atom);
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::checkExportedNameForClass(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<>
+bool
+Parser<FullParseHandler>::processExport(ParseNode* node)
+{
+    return pc->sc()->asModuleContext()->builder.processExport(node);
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::processExport(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<>
+bool
+Parser<FullParseHandler>::processExportFrom(ParseNode* node)
+{
+    return pc->sc()->asModuleContext()->builder.processExportFrom(node);
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::processExportFrom(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportFrom(uint32_t begin, Node specList)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FROM));
+
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+
+    Node moduleSpec = stringLiteral();
+    if (!moduleSpec)
+        return null();
+
+    if (!matchOrInsertSemicolonAfterNonExpression())
+        return null();
+
+    Node node = handler.newExportFromDeclaration(begin, specList, moduleSpec);
+    if (!node)
+        return null();
+
+    if (!processExportFrom(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportBatch(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_MUL));
+
+    Node kid = handler.newList(PNK_EXPORT_SPEC_LIST);
+    if (!kid)
+        return null();
+
+    // Handle the form |export *| by adding a special export batch
+    // specifier to the list.
+    Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
+    if (!exportSpec)
+        return null();
+
+    handler.addList(kid, exportSpec);
+
+    MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_EXPORT_STAR);
+
+    return exportFrom(begin, kid);
+}
+
+template<>
+bool
+Parser<FullParseHandler>::checkLocalExportNames(ParseNode* node)
+{
+    // ES 2017 draft 15.2.3.1.
+    for (ParseNode* next = node->pn_head; next; next = next->pn_next) {
+        ParseNode* name = next->pn_left;
+        MOZ_ASSERT(name->isKind(PNK_NAME));
+
+        RootedPropertyName ident(context, name->pn_atom->asPropertyName());
+        if (!checkLocalExportName(ident, name->pn_pos.begin))
+            return false;
+    }
+
+    return true;
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::checkLocalExportNames(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportClause(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
+
+    Node kid = handler.newList(PNK_EXPORT_SPEC_LIST);
+    if (!kid)
+        return null();
+
+    TokenKind tt;
+    while (true) {
+        // Handle the forms |export {}| and |export { ..., }| (where ... is non
+        // empty), by escaping the loop early if the next token is }.
+        if (!tokenStream.getToken(&tt))
+            return null();
+
+        if (tt == TOK_RC)
+            break;
+
+        if (!TokenKindIsPossibleIdentifierName(tt)) {
+            error(JSMSG_NO_BINDING_NAME);
+            return null();
+        }
+
+        Node bindingName = newName(tokenStream.currentName());
+        if (!bindingName)
+            return null();
+
+        bool foundAs;
+        if (!tokenStream.matchToken(&foundAs, TOK_AS))
+            return null();
+        if (foundAs)
+            MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifierName, JSMSG_NO_EXPORT_NAME);
+
+        Node exportName = newName(tokenStream.currentName());
+        if (!exportName)
+            return null();
+
+        if (!checkExportedNameForClause(exportName))
+            return null();
+
+        Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
+        if (!exportSpec)
+            return null();
+
+        handler.addList(kid, exportSpec);
+
+        TokenKind next;
+        if (!tokenStream.getToken(&next))
+            return null();
+
+        if (next == TOK_RC)
+            break;
+
+        if (next != TOK_COMMA) {
+            error(JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
+            return null();
+        }
+    }
+
+    // Careful!  If |from| follows, even on a new line, it must start a
+    // FromClause:
+    //
+    //   export { x }
+    //   from "foo"; // a single ExportDeclaration
+    //
+    // But if it doesn't, we might have an ASI opportunity in Operand context:
+    //
+    //   export { x }   // ExportDeclaration, terminated by ASI
+    //   fro\u006D      // ExpressionStatement, the name "from"
+    //
+    // In that case let matchOrInsertSemicolonAfterNonExpression sort out ASI
+    // or any necessary error.
+    bool matched;
+    if (!tokenStream.matchToken(&matched, TOK_FROM, TokenStream::Operand))
+        return null();
+
+    if (matched)
+        return exportFrom(begin, kid);
+
+    if (!matchOrInsertSemicolonAfterNonExpression())
+        return null();
+
+    if (!checkLocalExportNames(kid))
+        return null();
+
+    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportVariableStatement(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_VAR));
+
+    Node kid = declarationList(YieldIsName, PNK_VAR);
+    if (!kid)
+        return null();
+    if (!matchOrInsertSemicolonAfterExpression())
+        return null();
+    if (!checkExportedNamesForDeclaration(kid))
+        return null();
+
+    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportFunctionDeclaration(uint32_t begin,
+                                                FunctionAsyncKind asyncKind /* = SyncFunction */)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
+
+    Node kid = functionStmt(YieldIsKeyword, NameRequired, asyncKind);
+    if (!kid)
+        return null();
+
+    if (!checkExportedNameForFunction(kid))
+        return null();
+
+    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportClassDeclaration(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_CLASS));
+
+    Node kid = classDefinition(YieldIsKeyword, ClassStatement, NameRequired);
+    if (!kid)
+        return null();
+
+    if (!checkExportedNameForClass(kid))
+        return null();
+
+    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportLexicalDeclaration(uint32_t begin, DeclarationKind kind)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
+    MOZ_ASSERT_IF(kind == DeclarationKind::Const, tokenStream.isCurrentTokenType(TOK_CONST));
+    MOZ_ASSERT_IF(kind == DeclarationKind::Let, tokenStream.isCurrentTokenType(TOK_LET));
+
+    Node kid = lexicalDeclaration(YieldIsName, kind);
+    if (!kid)
+        return null();
+    if (!checkExportedNamesForDeclaration(kid))
+        return null();
+
+    Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportDefaultFunctionDeclaration(uint32_t begin,
+                                                           FunctionAsyncKind asyncKind
+                                                           /* = SyncFunction */)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
+
+    Node kid = functionStmt(YieldIsKeyword, AllowDefaultName, asyncKind);
+    if (!kid)
+        return null();
+
+    Node node = handler.newExportDefaultDeclaration(kid, null(), TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportDefaultClassDeclaration(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_CLASS));
+
+    Node kid = classDefinition(YieldIsKeyword, ClassStatement, AllowDefaultName);
+    if (!kid)
+        return null();
+
+    Node node = handler.newExportDefaultDeclaration(kid, null(), TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportDefaultAssignExpr(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    RootedPropertyName name(context, context->names().starDefaultStar);
+    Node nameNode = newName(name);
+    if (!nameNode)
+        return null();
+    if (!noteDeclaredName(name, DeclarationKind::Const, pos()))
+        return null();
+
+    Node kid = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
+    if (!kid)
+        return null();
+    if (!matchOrInsertSemicolonAfterExpression())
+        return null();
+
+    Node node = handler.newExportDefaultDeclaration(kid, nameNode, TokenPos(begin, pos().end));
+    if (!node)
+        return null();
+
+    if (!processExport(node))
+        return null();
+
+    return node;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportDefault(uint32_t begin)
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
+    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_DEFAULT));
+
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt, TokenStream::Operand))
+        return null();
+
+    if (!checkExportedName(context->names().default_))
+        return null();
+
+    switch (tt) {
+      case TOK_FUNCTION:
+        return exportDefaultFunctionDeclaration(begin);
+
+      case TOK_ASYNC: {
+        TokenKind nextSameLine = TOK_EOF;
+        if (!tokenStream.peekTokenSameLine(&nextSameLine))
+            return null();
+
+        if (nextSameLine == TOK_FUNCTION) {
+            tokenStream.consumeKnownToken(TOK_FUNCTION);
+            return exportDefaultFunctionDeclaration(begin, AsyncFunction);
+        }
+
+        tokenStream.ungetToken();
+        return exportDefaultAssignExpr(begin);
+      }
+
+      case TOK_CLASS:
+        return exportDefaultClassDeclaration(begin);
+
+      default:
+        tokenStream.ungetToken();
+        return exportDefaultAssignExpr(begin);
+    }
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exportDeclaration()
+{
+    if (!abortIfSyntaxParser())
+        return null();
+
     MOZ_ASSERT(tokenStream.currentToken().type == TOK_EXPORT);
 
     if (!pc->atModuleLevel()) {
@@ -4961,267 +5448,52 @@ Parser<FullParseHandler>::exportDeclaration()
 
     uint32_t begin = pos().begin;
 
-    Node kid;
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
     switch (tt) {
-      case TOK_LC: {
-        kid = handler.newList(PNK_EXPORT_SPEC_LIST);
-        if (!kid)
-            return null();
+      case TOK_MUL:
+        return exportBatch(begin);
 
-        while (true) {
-            // Handle the forms |export {}| and |export { ..., }| (where ...
-            // is non empty), by escaping the loop early if the next token
-            // is }.
-            if (!tokenStream.getToken(&tt))
-                return null();
-
-            if (tt == TOK_RC)
-                break;
-
-            if (!TokenKindIsPossibleIdentifierName(tt)) {
-                error(JSMSG_NO_BINDING_NAME);
-                return null();
-            }
-
-            Node bindingName = newName(tokenStream.currentName());
-            if (!bindingName)
-                return null();
-
-            bool foundAs;
-            if (!tokenStream.matchToken(&foundAs, TOK_AS))
-                return null();
-            if (foundAs)
-                MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifierName, JSMSG_NO_EXPORT_NAME);
-
-            Node exportName = newName(tokenStream.currentName());
-            if (!exportName)
-                return null();
-
-            if (!checkExportedName(exportName->pn_atom))
-                return null();
-
-            Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
-            if (!exportSpec)
-                return null();
-
-            handler.addList(kid, exportSpec);
-
-            TokenKind next;
-            if (!tokenStream.getToken(&next))
-                return null();
-
-            if (next == TOK_RC)
-                break;
-
-            if (next != TOK_COMMA) {
-                error(JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
-                return null();
-            }
-        }
-
-        // Careful!  If |from| follows, even on a new line, it must start a
-        // FromClause:
-        //
-        //   export { x }
-        //   from "foo"; // a single ExportDeclaration
-        //
-        // But if it doesn't, we might have an ASI opportunity in Operand
-        // context:
-        //
-        //   export { x }   // ExportDeclaration, terminated by ASI
-        //   fro\u006D      // ExpressionStatement, the name "from"
-        //
-        // In that case let matchOrInsertSemicolonAfterNonExpression sort out
-        // ASI or any necessary error.
-        bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_FROM, TokenStream::Operand))
-            return null();
-
-        if (matched) {
-            MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
-
-            Node moduleSpec = stringLiteral();
-            if (!moduleSpec)
-                return null();
-
-            if (!matchOrInsertSemicolonAfterNonExpression())
-                return null();
-
-            ParseNode* node = handler.newExportFromDeclaration(begin, kid, moduleSpec);
-            if (!node || !pc->sc()->asModuleContext()->builder.processExportFrom(node))
-                return null();
-
-            return node;
-        }
-
-        if (!matchOrInsertSemicolonAfterNonExpression())
-            return null();
-        break;
-      }
-
-      case TOK_MUL: {
-        kid = handler.newList(PNK_EXPORT_SPEC_LIST);
-        if (!kid)
-            return null();
-
-        // Handle the form |export *| by adding a special export batch
-        // specifier to the list.
-        Node exportSpec = handler.newNullary(PNK_EXPORT_BATCH_SPEC, JSOP_NOP, pos());
-        if (!exportSpec)
-            return null();
-
-        handler.addList(kid, exportSpec);
-
-        if (!tokenStream.getToken(&tt))
-            return null();
-        if (tt != TOK_FROM) {
-            error(JSMSG_FROM_AFTER_EXPORT_STAR);
-            return null();
-        }
-
-        MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
-
-        Node moduleSpec = stringLiteral();
-        if (!moduleSpec)
-            return null();
-
-        if (!matchOrInsertSemicolonAfterNonExpression())
-            return null();
-
-        ParseNode* node = handler.newExportFromDeclaration(begin, kid, moduleSpec);
-        if (!node || !pc->sc()->asModuleContext()->builder.processExportFrom(node))
-            return null();
-
-        return node;
-
-      }
-
-      case TOK_FUNCTION:
-        kid = functionStmt(YieldIsKeyword, NameRequired);
-        if (!kid)
-            return null();
-
-        if (!checkExportedName(kid->pn_funbox->function()->explicitName()))
-            return null();
-        break;
-
-      case TOK_CLASS: {
-        kid = classDefinition(YieldIsKeyword, ClassStatement, NameRequired);
-        if (!kid)
-            return null();
-
-        const ClassNode& cls = kid->as<ClassNode>();
-        MOZ_ASSERT(cls.names());
-        if (!checkExportedName(cls.names()->innerBinding()->pn_atom))
-            return null();
-        break;
-      }
+      case TOK_LC:
+        return exportClause(begin);
 
       case TOK_VAR:
-        kid = declarationList(YieldIsName, PNK_VAR);
-        if (!kid)
-            return null();
-        if (!matchOrInsertSemicolonAfterExpression())
-            return null();
-        if (!checkExportedNamesForDeclaration(kid))
-            return null();
-        break;
+        return exportVariableStatement(begin);
 
-      case TOK_DEFAULT: {
-        if (!tokenStream.getToken(&tt, TokenStream::Operand))
+      case TOK_FUNCTION:
+        return exportFunctionDeclaration(begin);
+
+      case TOK_ASYNC: {
+        TokenKind nextSameLine = TOK_EOF;
+        if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
 
-        if (!checkExportedName(context->names().default_))
-            return null();
-
-        ParseNode* nameNode = nullptr;
-        switch (tt) {
-          case TOK_FUNCTION:
-            kid = functionStmt(YieldIsKeyword, AllowDefaultName);
-            if (!kid)
-                return null();
-            break;
-          case TOK_CLASS:
-            kid = classDefinition(YieldIsKeyword, ClassStatement, AllowDefaultName);
-            if (!kid)
-                return null();
-            break;
-          default: {
-            if (tt == TOK_ASYNC) {
-                TokenKind nextSameLine = TOK_EOF;
-                if (!tokenStream.peekTokenSameLine(&nextSameLine))
-                    return null();
-
-                if (nextSameLine == TOK_FUNCTION) {
-                    tokenStream.consumeKnownToken(nextSameLine);
-                    kid = functionStmt(YieldIsName, AllowDefaultName, AsyncFunction);
-                    if (!kid)
-                        return null();
-                    break;
-                }
-            }
-
-            tokenStream.ungetToken();
-            RootedPropertyName name(context, context->names().starDefaultStar);
-            nameNode = newName(name);
-            if (!nameNode)
-                return null();
-            if (!noteDeclaredName(name, DeclarationKind::Const, pos()))
-                return null();
-            kid = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
-            if (!kid)
-                return null();
-            if (!matchOrInsertSemicolonAfterExpression())
-                return null();
-            break;
-          }
+        if (nextSameLine == TOK_FUNCTION) {
+            tokenStream.consumeKnownToken(TOK_FUNCTION);
+            return exportFunctionDeclaration(begin, AsyncFunction);
         }
 
-        ParseNode* node = handler.newExportDefaultDeclaration(kid, nameNode,
-                                                              TokenPos(begin, pos().end));
-        if (!node || !pc->sc()->asModuleContext()->builder.processExport(node))
-            return null();
-
-        return node;
+        error(JSMSG_DECLARATION_AFTER_EXPORT);
+        return null();
       }
 
+      case TOK_CLASS:
+        return exportClassDeclaration(begin);
+
       case TOK_CONST:
-        kid = lexicalDeclaration(YieldIsName, /* isConst = */ true);
-        if (!kid)
-            return null();
-        if (!checkExportedNamesForDeclaration(kid))
-            return null();
-        break;
+        return exportLexicalDeclaration(begin, DeclarationKind::Const);
 
       case TOK_LET:
-        kid = lexicalDeclaration(YieldIsName, /* isConst = */ false);
-        if (!kid)
-            return null();
-        if (!checkExportedNamesForDeclaration(kid))
-            return null();
-        break;
+        return exportLexicalDeclaration(begin, DeclarationKind::Let);
+
+      case TOK_DEFAULT:
+        return exportDefault(begin);
 
       default:
         error(JSMSG_DECLARATION_AFTER_EXPORT);
         return null();
     }
-
-    ParseNode* node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
-    if (!node || !pc->sc()->asModuleContext()->builder.processExport(node))
-        return null();
-
-    return node;
-}
-
-template<>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::exportDeclaration()
-{
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return SyntaxParseHandler::NodeFailure;
 }
 
 template <typename ParseHandler>
@@ -7088,7 +7360,7 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
             return null();
 
         if (tt == TOK_LET && nextTokenContinuesLetDeclaration(next, yieldHandling))
-            return lexicalDeclaration(yieldHandling, /* isConst = */ false);
+            return lexicalDeclaration(yieldHandling, DeclarationKind::Let);
 
         if (tt == TOK_ASYNC) {
             TokenKind nextSameLine = TOK_EOF;
@@ -7183,7 +7455,7 @@ Parser<ParseHandler>::statementListItem(YieldHandling yieldHandling,
       case TOK_CONST:
         // [In] is the default behavior, because for-loops specially parse
         // their heads to handle |in| in this situation.
-        return lexicalDeclaration(yieldHandling, /* isConst = */ true);
+        return lexicalDeclaration(yieldHandling, DeclarationKind::Const);
 
       // ImportDeclaration (only inside modules)
       case TOK_IMPORT:

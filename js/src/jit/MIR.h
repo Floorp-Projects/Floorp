@@ -4545,6 +4545,9 @@ class MCompare
         // String compared to String
         Compare_String,
 
+        // Symbol compared to Symbol
+        Compare_Symbol,
+
         // Undefined compared to String
         // Null      compared to String
         // Boolean   compared to String

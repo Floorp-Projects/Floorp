@@ -23,7 +23,7 @@ addLoadEvent(function() {
   var doc = SpecialPowers.wrap($("testFrame")).contentDocument;
 
   checkNode(doc.getElementById("feedTitleText"), [
-    "ELEMENT", "h1", { "xml:base": "http://www.example.com/foo/bar/" }, [
+    "ELEMENT", "h1", [
       ["TEXT", "Example of a "],
       ["ELEMENT", "em", [
         ["TEXT", "special"],
@@ -35,7 +35,7 @@ addLoadEvent(function() {
   ]);
 
   checkNode(doc.getElementById("feedSubtitleText"), [
-    "ELEMENT", "h2", { "xml:base": "http://www.example.com/foo/bar/" }, [
+    "ELEMENT", "h2", [
       ["TEXT", "With a "],
       ["ELEMENT", "em", [
         ["TEXT", "special"],
@@ -47,7 +47,7 @@ addLoadEvent(function() {
   ]);
 
   checkNode(doc.querySelector(".entry").firstChild.firstChild.firstChild, [
-    "ELEMENT", "span", { "xml:base": "http://www.example.com/foo/bar/" }, [
+    "ELEMENT", "span", [
       ["TEXT", "Some "],
       ["ELEMENT", "abbr", { title: "Extensible Hyper-text Mark-up Language" }, [
         ["TEXT", "XHTML"],
@@ -59,7 +59,7 @@ addLoadEvent(function() {
   ]);
 
   checkNode(doc.querySelectorAll(".entry")[1].firstChild.firstChild.firstChild, [
-    "ELEMENT", "span", { "xml:base": "http://www.example.com/foo/bar/" }, [
+    "ELEMENT", "span", [
       ["TEXT", "Some "],
       ["ELEMENT", "abbr", { title: "Hyper-text Mark-up Language" }, [
         ["TEXT", "HTML"],

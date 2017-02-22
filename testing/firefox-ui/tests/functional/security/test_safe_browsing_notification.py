@@ -25,14 +25,18 @@ class TestSafeBrowsingNotificationBar(PuppeteerMixin, MarionetteTestCase):
             },
             # Phishing URL info
             {
-                'button_property': 'safebrowsing.notADeceptiveSiteButton.label',
-                'report_page': 'google.com/safebrowsing/report_error',
+                # First two properties are not needed, because only url which
+                # matches google's list could be reported
+                'button_property': None,
+                'report_page': None,
                 'unsafe_page': 'https://www.itisatrap.org/firefox/its-a-trap.html'
             },
             # Malware URL object
             {
-                'button_property': 'safebrowsing.notAnAttackButton.label',
-                'report_page': 'stopbadware.org',
+                # First two properties are not needed, because only url which
+                # matches google's list could be reported
+                'button_property': None,
+                'report_page': None,
                 'unsafe_page': 'https://www.itisatrap.org/firefox/its-an-attack.html'
             }
         ]
