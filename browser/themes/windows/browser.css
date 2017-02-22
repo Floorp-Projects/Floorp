@@ -83,6 +83,12 @@ toolbar:-moz-lwtheme {
   --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
 }
 
+:root {
+  color: var(--lwt-textcolor);
+  background-color: var(--lwt-accentcolor);
+  background-image: var(--lwt-header-image);
+}
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -336,6 +342,11 @@ toolbar:-moz-lwtheme {
 
 #print-preview-toolbar:not(:-moz-lwtheme) {
   -moz-appearance: toolbox;
+}
+
+#browser-bottombox:-moz-lwtheme {
+  background-color: var(--lwt-accentcolor);
+  background-image: var(--lwt-footer-image);
 }
 
 #browser-bottombox:not(:-moz-lwtheme) {

@@ -42,6 +42,12 @@
   --lwt-header-image: none;
 }
 
+:root {
+  color: var(--lwt-textcolor);
+  background-color: var(--lwt-accentcolor);
+  background-image: var(--lwt-header-image);
+}
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
@@ -125,6 +131,11 @@
 #browser-bottombox {
   /* opaque for layers optimization */
   background-color: -moz-Dialog;
+}
+
+#browser-bottombox:-moz-lwtheme {
+  background-color: var(--lwt-accentcolor);
+  background-image: var(--lwt-header-image);
 }
 
 /* Places toolbar */
