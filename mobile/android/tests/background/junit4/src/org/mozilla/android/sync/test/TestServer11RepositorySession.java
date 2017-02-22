@@ -72,7 +72,12 @@ public class TestServer11RepositorySession {
   static final String SYNC_KEY          = "eh7ppnb82iwr5kt3z3uyi5vr44";
 
   public final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(TEST_USERNAME, TEST_PASSWORD);
-  protected final InfoCollections infoCollections = new InfoCollections();
+  protected final InfoCollections infoCollections = new InfoCollections() {
+    @Override
+    public Long getTimestamp(String collection) {
+      return 0L;
+    }
+  };
   protected final InfoConfiguration infoConfiguration = new InfoConfiguration();
 
   // Few-second timeout so that our longer operations don't time out and cause spurious error-handling results.

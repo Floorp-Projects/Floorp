@@ -37,15 +37,6 @@ public class Payload extends BufferSizeTracker {
         }
     }
 
-    @Override
-    protected void reset() {
-        synchronized (accessLock) {
-            super.reset();
-            recordsBuffer.clear();
-            recordGuidsBuffer.clear();
-        }
-    }
-
     protected ArrayList<byte[]> getRecordsBuffer() {
         synchronized (accessLock) {
             return new ArrayList<>(recordsBuffer);
@@ -62,5 +53,9 @@ public class Payload extends BufferSizeTracker {
         synchronized (accessLock) {
             return recordsBuffer.isEmpty();
         }
+    }
+
+    Payload nextPayload() {
+        return new Payload(accessLock, maxBytes, maxRecords);
     }
 }
