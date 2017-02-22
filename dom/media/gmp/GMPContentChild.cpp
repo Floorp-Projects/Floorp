@@ -8,6 +8,7 @@
 #include "GMPDecryptorChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
+#include "ChromiumCDMChild.h"
 #include "base/task.h"
 
 namespace mozilla {
@@ -93,6 +94,21 @@ GMPContentChild::DeallocPGMPVideoEncoderChild(PGMPVideoEncoderChild* aActor)
   return true;
 }
 
+PChromiumCDMChild*
+GMPContentChild::AllocPChromiumCDMChild()
+{
+  ChromiumCDMChild* actor = new ChromiumCDMChild(this);
+  actor->AddRef();
+  return actor;
+}
+
+bool
+GMPContentChild::DeallocPChromiumCDMChild(PChromiumCDMChild* aActor)
+{
+  static_cast<ChromiumCDMChild*>(aActor)->Release();
+  return true;
+}
+
 mozilla::ipc::IPCResult
 GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 {
@@ -144,6 +160,13 @@ GMPContentChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+GMPContentChild::RecvPChromiumCDMConstructor(PChromiumCDMChild* aActor)
+{
+  // TODO: Implement.
+  return IPC_OK();
+}
+
 void
 GMPContentChild::CloseActive()
 {
@@ -165,6 +188,11 @@ GMPContentChild::CloseActive()
   for (auto iter = videoEncoders.ConstIter(); !iter.Done(); iter.Next()) {
     iter.Get()->GetKey()->SendShutdown();
   }
+
+  const ManagedContainer<PChromiumCDMChild>& cdms = ManagedPChromiumCDMChild();
+  for (auto iter = cdms.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->SendShutdown();
+  }
 }
 
 bool
@@ -172,7 +200,8 @@ GMPContentChild::IsUsed()
 {
   return !ManagedPGMPDecryptorChild().IsEmpty() ||
          !ManagedPGMPVideoDecoderChild().IsEmpty() ||
-         !ManagedPGMPVideoEncoderChild().IsEmpty();
+         !ManagedPGMPVideoEncoderChild().IsEmpty() ||
+         !ManagedPChromiumCDMChild().IsEmpty();
 }
 
 } // namespace gmp

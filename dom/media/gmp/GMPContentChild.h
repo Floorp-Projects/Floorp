@@ -26,6 +26,8 @@ public:
   mozilla::ipc::IPCResult RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor) override;
   mozilla::ipc::IPCResult RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor, const uint32_t& aDecryptorId) override;
   mozilla::ipc::IPCResult RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor) override;
+  mozilla::ipc::IPCResult RecvPChromiumCDMConstructor(
+    PChromiumCDMChild* aActor) override;
 
   PGMPDecryptorChild* AllocPGMPDecryptorChild() override;
   bool DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor) override;
@@ -35,6 +37,9 @@ public:
 
   PGMPVideoEncoderChild* AllocPGMPVideoEncoderChild() override;
   bool DeallocPGMPVideoEncoderChild(PGMPVideoEncoderChild* aActor) override;
+
+  PChromiumCDMChild* AllocPChromiumCDMChild() override;
+  bool DeallocPChromiumCDMChild(PChromiumCDMChild* aActor) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;
