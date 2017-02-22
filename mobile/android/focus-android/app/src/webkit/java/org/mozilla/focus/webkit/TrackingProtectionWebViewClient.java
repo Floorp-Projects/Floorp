@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.support.annotation.WorkerThread;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -50,20 +51,21 @@ public class TrackingProtectionWebViewClient extends WebViewClient {
         triggerPreload(context);
     }
 
-    /*
-     * The new undeprecated version of this methods is API 21+.
-     */
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-        // There's not guarantee that data has finished loading by now. shouldInterceptRequest() is
-        // called off the UI thread, so it's safe for us to block on loading if necessary.
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        // shouldInterceptRequest() might be called _before_ onPageStarted or shouldOverrideUrlLoading
+        // are called (this happens when the webview is first shown). However we are notified of the URL
+        // via notifyCurrentURL in that case.
         final UrlMatcher matcher = getMatcher(view.getContext());
 
-        if (matcher.matches(url, currentPageURL)) {
+        // Don't block the main frame from being loaded. This also protects against cases where we
+        // open a link that redirects to another app (e.g. to the play store).
+        if ((!request.isForMainFrame()) &&
+                matcher.matches(request.getUrl().toString(), currentPageURL)) {
             return new WebResourceResponse(null, null, null);
         }
 
-        return super.shouldInterceptRequest(view, url);
+        return super.shouldInterceptRequest(view, request);
     }
 
     /**
