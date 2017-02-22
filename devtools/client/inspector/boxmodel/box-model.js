@@ -126,8 +126,16 @@ BoxModel.prototype = {
 
   /**
    * Updates the box model panel by dispatching the new layout data.
+   *
+   * @param  {String} reason
+   *         Optional string describing the reason why the boxmodel is updated.
    */
-  updateBoxModel() {
+  updateBoxModel(reason) {
+    this._updateReasons = this._updateReasons || [];
+    if (reason) {
+      this._updateReasons.push(reason);
+    }
+
     let lastRequest = Task.spawn((function* () {
       if (!(this.isPanelVisible() &&
           this.inspector.selection.isConnected() &&
@@ -151,9 +159,11 @@ BoxModel.prototype = {
         return this._lastRequest;
       }
 
-      this._lastRequest = null;
+      this.inspector.emit("boxmodel-view-updated", this._updateReasons);
 
-      this.inspector.emit("boxmodel-view-updated");
+      this._lastRequest = null;
+      this._updateReasons = [];
+
       return null;
     }).bind(this)).catch(console.error);
 
@@ -173,7 +183,7 @@ BoxModel.prototype = {
       this.trackReflows();
     }
 
-    this.updateBoxModel();
+    this.updateBoxModel("new-selection");
   },
 
   /**

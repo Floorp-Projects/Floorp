@@ -40,8 +40,9 @@ function* testReflowsAfterIframeDeletion(inspector, view, testActor) {
        "iframe");
 
   info("Deleting the iframe2");
+  let onInspectorUpdated = inspector.once("inspector-updated");
   yield removeIframe2(testActor);
-  yield inspector.once("inspector-updated");
+  yield onInspectorUpdated;
 
   info("Selecting the test node in iframe1");
   yield selectNodeInIframe1("p", inspector);
