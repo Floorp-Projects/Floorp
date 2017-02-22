@@ -9,6 +9,7 @@
 #include "gmp-video-codec.h"
 #include "gmp-video-frame-encoded.h"
 #include "gmp-decryption.h"
+#include "IPCMessageUtils.h"
 
 namespace IPC {
 
