@@ -5,6 +5,7 @@
 "use strict";
 
 const {
+  UPDATE_GRID_COLOR,
   UPDATE_GRID_HIGHLIGHTED,
   UPDATE_GRIDS,
 } = require("../actions/index");
@@ -13,18 +14,24 @@ const INITIAL_GRIDS = [];
 
 let reducers = {
 
-  [UPDATE_GRID_HIGHLIGHTED](grids, { nodeFront, highlighted }) {
+  [UPDATE_GRID_COLOR](grids, { nodeFront, color }) {
     let newGrids = grids.map(g => {
       if (g.nodeFront == nodeFront) {
-        g.highlighted = highlighted;
-      } else {
-        g.highlighted = false;
+        g.color = color;
       }
 
       return g;
     });
 
     return newGrids;
+  },
+
+  [UPDATE_GRID_HIGHLIGHTED](grids, { nodeFront, highlighted }) {
+    return grids.map(g => {
+      return Object.assign({}, g, {
+        highlighted: g.nodeFront === nodeFront ? highlighted : false
+      });
+    });
   },
 
   [UPDATE_GRIDS](_, { grids }) {

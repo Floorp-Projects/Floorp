@@ -50,8 +50,8 @@ add_task(function* test_background_clipboard_permissions() {
   yield extension.unload();
 });
 
-/** Selecting text in a bg page is not possible, skip test until it's fixed.
-add_task(function* with_permission_allow_copy() {
+/** Selecting text in a bg page is not possible, bug 1272869.
+add_task(function* test_background_clipboard_copy() {
   function backgroundScript() {
     browser.test.onMessage.addListener(txt => {
       browser.test.assertEq(true, doCopy(txt),
@@ -60,7 +60,7 @@ add_task(function* with_permission_allow_copy() {
     browser.test.sendMessage("ready");
   }
   let extensionData = {
-    background: `${doCopy};(${backgroundScript})();`,
+    background: `(${shared})();(${backgroundScript})();`,
     manifest: {
       permissions: [
         "clipboardWrite",
@@ -79,7 +79,8 @@ add_task(function* with_permission_allow_copy() {
   });
 
   yield extension.unload();
-}); */
+});
+*/
 
 add_task(function* test_contentscript_clipboard_permissions() {
   function contentScript() {
@@ -181,6 +182,29 @@ add_task(function* test_contentscript_clipboard_paste() {
   is(paste, STRANGE, "the correct string was pasted");
 
   win.close();
+  yield extension.unload();
+});
+
+add_task(function* test_background_clipboard_paste() {
+  function background() {
+    browser.test.sendMessage("paste", doPaste());
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["clipboardRead"],
+    },
+    background: `(${shared})();(${background})();`,
+  });
+
+  const STRANGE = "Stranger Things";
+  SpecialPowers.clipboardCopyString(STRANGE);
+
+  yield extension.startup();
+
+  const paste = yield extension.awaitMessage("paste");
+  is(paste, STRANGE, "the correct string was pasted");
+
   yield extension.unload();
 });
 
