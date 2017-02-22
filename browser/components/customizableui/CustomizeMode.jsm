@@ -626,9 +626,9 @@ CustomizeMode.prototype = {
       let drawingInTitlebar = !docElement.hasAttribute("drawtitle");
       let titlebar = this.document.getElementById("titlebar");
       if (drawingInTitlebar) {
-        titlebar.style.backgroundImage = headerImageRef;
+        titlebar.setProperty("--lwt-header-image", headerImageRef);
       } else {
-        titlebar.style.removeProperty("background-image");
+        titlebar.style.removeProperty("--lwt-header-image");
       }
     }
 
@@ -647,11 +647,14 @@ CustomizeMode.prototype = {
                                  ", rgba(255,255,255,0.5) " + ridgeCenter +
                                  ", rgba(255,255,255,0.5) " + ridgeEnd + ", " +
                                  "transparent " + ridgeEnd + ")";
-    deck.style.backgroundImage = ridge + ", " + limitedBG;
+    deck.style.setProperty("--lwt-header-image", ridge + ", " + limitedBG);
+
+    let tabs = this.document.getElementById("tabbrowser-tabs");
+    tabs.style.setProperty("--lwt-header-image", headerImageRef);
 
     /* Remove the background styles from the <window> so we can style it instead. */
-    docElement.style.removeProperty("background-image");
-    docElement.style.removeProperty("background-color");
+    docElement.style.removeProperty("--lwt-header-image");
+    docElement.style.removeProperty("--lwt-accentcolor");
   },
 
   removeLWTStyling() {
@@ -660,14 +663,14 @@ CustomizeMode.prototype = {
                           ["tab-view-deck"];
     for (let id of affectedNodes) {
       let node = this.document.getElementById(id);
-      node.style.removeProperty("background-image");
+      node.style.removeProperty("--lwt-header-image");
     }
     let docElement = this.document.documentElement;
     docElement.removeAttribute("customization-lwtheme");
     let data = docElement._lightweightTheme.getData();
     if (data && data.headerURL) {
-      docElement.style.backgroundImage = this._getHeaderImageRef(data);
-      docElement.style.backgroundColor = data.accentcolor || "white";
+      docElement.style.setProperty("--lwt-header-image", this._getHeaderImageRef(data));
+      docElement.style.setProperty("--lwt-accentcolor", data.accentcolor || "white");
     }
   },
 
