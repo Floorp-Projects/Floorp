@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include "nsString.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -33,7 +34,8 @@ public:
   struct Module
   {
     // The file name, /foo/bar/libxul.so for example.
-    std::string mName;
+    // It can contain unicode characters.
+    nsString mName;
     std::string mBreakpadId;
 
     bool operator==(const Module& other) const;

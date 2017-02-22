@@ -74,14 +74,7 @@ MediaShutdownManager::InitStatics()
     sInstance, NS_LITERAL_STRING(__FILE__), __LINE__,
     NS_LITERAL_STRING("MediaShutdownManager shutdown"));
   if (NS_FAILED(rv)) {
-    // Leak the buffer on the heap to make sure that it lives long enough,
-    // as MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to
-    // the end of the program.
-    const size_t CAPACITY = 256;
-    auto buf = new char[CAPACITY];
-    snprintf(buf, CAPACITY, "Failed to add shutdown blocker! rv=%x", uint32_t(rv));
-    MOZ_CRASH_ANNOTATE(buf);
-    MOZ_REALLY_CRASH();
+    MOZ_CRASH_UNSAFE_PRINTF("Failed to add shutdown blocker! rv=%x", uint32_t(rv));
   }
 }
 
