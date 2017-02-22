@@ -20,7 +20,8 @@ config = {
     "work_dir": ".",
     "log_name": "multilocale",
     "objdir": OBJDIR,
-    "locales_file": "%s/%s/locales/maemo-locales" % (BUILD_DIR, ANDROID_DIR),
+    "locales_file": "%s/mobile/locales/l10n-changesets.json" % BUILD_DIR,
+    "locales_platform": "android-multilocale",
     "locales_dir": "%s/locales" % ANDROID_DIR,
     "ignore_locales": ["en-US", "multi"],
     "repos": [{
