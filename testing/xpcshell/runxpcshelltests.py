@@ -21,7 +21,7 @@ import tempfile
 import time
 import traceback
 
-from collections import deque, namedtuple
+from collections import defaultdict, deque, namedtuple
 from distutils import dir_util
 from multiprocessing import cpu_count
 from argparse import ArgumentParser
@@ -1355,7 +1355,11 @@ class XPCShellTests(object):
         keep_going = True
         exceptions = []
         tracebacks = []
-        self.log.suite_start([t['id'] for t in self.alltests])
+
+        tests_by_manifest = defaultdict(list)
+        for test in self.alltests:
+            tests_by_manifest[test['manifest']].append(test['id'])
+        self.log.suite_start(tests_by_manifest)
 
         while tests_queue or running_tests:
             # if we're not supposed to continue and all of the running tests
