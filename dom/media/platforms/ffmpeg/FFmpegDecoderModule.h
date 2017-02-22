@@ -11,6 +11,7 @@
 #include "FFmpegLibWrapper.h"
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegVideoDecoder.h"
+#include "MediaPrefs.h"
 
 namespace mozilla {
 
@@ -39,11 +40,17 @@ public:
     if (aParams.VideoConfig().HasAlpha()) {
       return nullptr;
     }
-    RefPtr<MediaDataDecoder> decoder =
-      new FFmpegVideoDecoder<V>(mLib,
-                                aParams.mTaskQueue,
-                                aParams.VideoConfig(),
-                                aParams.mImageContainer);
+    if (aParams.mOptions.contains(
+          CreateDecoderParams::Option::LowLatency) &&
+        !MediaPrefs::PDMFFVPXLowLatencyEnabled()) {
+      return nullptr;
+    }
+    RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
+      mLib,
+      aParams.mTaskQueue,
+      aParams.VideoConfig(),
+      aParams.mImageContainer,
+      aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency));
     return decoder.forget();
   }
 

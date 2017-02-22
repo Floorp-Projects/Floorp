@@ -9,16 +9,22 @@ import os
 import urllib2
 
 from . import base
-from .. import GECKO
 from taskgraph.util.docker import (
     docker_image,
     generate_context_hash,
     INDEX_PREFIX,
 )
-from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.util.templates import Templates
 
 logger = logging.getLogger(__name__)
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
+
+# if running in a task, prefer to use the taskcluster proxy (http://taskcluster/),
+# otherwise hit the services directly
+if os.environ.get('TASK_ID'):
+    ARTIFACT_URL = 'http://taskcluster/queue/v1/task/{}/artifacts/{}'
+else:
+    ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
 class DockerImageTask(base.Task):
@@ -88,7 +94,7 @@ class DockerImageTask(base.Task):
                 # Only return the task ID if the artifact exists for the indexed
                 # task.
                 request = urllib2.Request(
-                    get_artifact_url(taskId, 'public/image.tar.zst'))
+                    ARTIFACT_URL.format(taskId, 'public/image.tar.zst'))
                 request.get_method = lambda: 'HEAD'
                 urllib2.urlopen(request)
 

@@ -26,7 +26,7 @@ job-template:
    locales-file:
       by-build-platform:
          default: browser/locales/all-locales
-         android-api-15-nightly: mobile/android/locales/all-locales
+         android-api-15-nightly: mobile/locales/l10n-changesets.json
    chunks: 6
    run-time:
       by-build-platform:

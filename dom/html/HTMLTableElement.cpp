@@ -403,16 +403,27 @@ HTMLTableElement::CreateTHead()
   if (!head) {
     // Create a new head rowgroup.
     RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-    nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::thead,
-                                getter_AddRefs(nodeInfo));
+    nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::thead,
+                                 getter_AddRefs(nodeInfo));
 
     head = NS_NewHTMLTableSectionElement(nodeInfo.forget());
     if (!head) {
       return nullptr;
     }
 
-    ErrorResult rv;
-    nsCOMPtr<nsINode> refNode = nsINode::GetFirstChild();
+    nsCOMPtr<nsIContent> refNode = nullptr;
+    for (refNode = nsINode::GetFirstChild();
+         refNode;
+         refNode = refNode->GetNextSibling()) {
+
+      if (refNode->IsHTMLElement() &&
+          !refNode->IsHTMLElement(nsGkAtoms::caption) &&
+          !refNode->IsHTMLElement(nsGkAtoms::colgroup)) {
+        break;
+      }
+    }
+
+    IgnoredErrorResult rv;
     nsINode::InsertBefore(*head, refNode, rv);
   }
   return head.forget();
@@ -436,8 +447,8 @@ HTMLTableElement::CreateTFoot()
   if (!foot) {
     // create a new foot rowgroup
     RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-    nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tfoot,
-                                getter_AddRefs(nodeInfo));
+    nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::tfoot,
+                                 getter_AddRefs(nodeInfo));
 
     foot = NS_NewHTMLTableSectionElement(nodeInfo.forget());
     if (!foot) {
@@ -467,15 +478,17 @@ HTMLTableElement::CreateCaption()
   if (!caption) {
     // Create a new caption.
     RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-    nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::caption,
-                                getter_AddRefs(nodeInfo));
+    nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::caption,
+                                 getter_AddRefs(nodeInfo));
 
     caption = NS_NewHTMLTableCaptionElement(nodeInfo.forget());
     if (!caption) {
       return nullptr;
     }
 
-    AppendChildTo(caption, true);
+    IgnoredErrorResult rv;
+    nsCOMPtr<nsINode> firsChild = nsINode::GetFirstChild();
+    nsINode::InsertBefore(*caption, firsChild, rv);
   }
   return caption.forget();
 }
@@ -514,7 +527,7 @@ HTMLTableElement::CreateTBody()
     }
   }
 
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   nsINode::InsertBefore(*newBody, referenceNode, rv);
 
   return newBody.forget();
@@ -560,8 +573,8 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
 
     // create the row
     RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-    nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
-                                getter_AddRefs(nodeInfo));
+    nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::tr,
+                                 getter_AddRefs(nodeInfo));
 
     newRow = NS_NewHTMLTableRowElement(nodeInfo.forget());
 
@@ -594,8 +607,8 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
 
     if (!rowGroup) { // need to create a TBODY
       RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-      nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tbody,
-                                  getter_AddRefs(nodeInfo));
+      nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::tbody,
+                                   getter_AddRefs(nodeInfo));
 
       rowGroup = NS_NewHTMLTableSectionElement(nodeInfo.forget());
       if (rowGroup) {
@@ -608,8 +621,8 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
 
     if (rowGroup) {
       RefPtr<mozilla::dom::NodeInfo> nodeInfo;
-      nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
-                                  getter_AddRefs(nodeInfo));
+      nsContentUtils::QNameChanged(mNodeInfo, nsGkAtoms::tr,
+                                   getter_AddRefs(nodeInfo));
 
       newRow = NS_NewHTMLTableRowElement(nodeInfo.forget());
       if (newRow) {

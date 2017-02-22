@@ -1131,4 +1131,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * header, and has not seen the initiating load yet.
    */
   [infallible] readonly attribute boolean awaitingLargeAlloc;
+
+  /**
+   * Attribute that determines whether tracking protection is enabled.
+   */
+  attribute boolean useTrackingProtection;
 };

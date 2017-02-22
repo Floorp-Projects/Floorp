@@ -907,21 +907,13 @@ public:
   virtual mozilla::PendingAnimationTracker*
   GetOrCreatePendingAnimationTracker() override;
 
-  virtual void SuppressEventHandling(SuppressionType aWhat,
-                                     uint32_t aIncrease) override;
+  virtual void SuppressEventHandling(uint32_t aIncrease) override;
 
-  virtual void UnsuppressEventHandlingAndFireEvents(SuppressionType aWhat,
-                                                    bool aFireEvents) override;
+  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) override;
 
   void DecreaseEventSuppression() {
     MOZ_ASSERT(mEventsSuppressed);
     --mEventsSuppressed;
-    MaybeRescheduleAnimationFrameNotifications();
-  }
-
-  void ResumeAnimations() {
-    MOZ_ASSERT(mAnimationsPaused);
-    --mAnimationsPaused;
     MaybeRescheduleAnimationFrameNotifications();
   }
 

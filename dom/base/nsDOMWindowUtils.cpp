@@ -1650,9 +1650,9 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (aSuppress) {
-    doc->SuppressEventHandling(nsIDocument::eEvents);
+    doc->SuppressEventHandling();
   } else {
-    doc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents, true);
+    doc->UnsuppressEventHandlingAndFireEvents(true);
   }
 
   return NS_OK;
