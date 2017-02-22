@@ -7,6 +7,8 @@ Support for running toolchain-building jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
 from voluptuous import Schema, Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
@@ -16,9 +18,9 @@ from taskgraph.transforms.job.common import (
     docker_worker_support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
-from taskgraph import GECKO
 
 
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..', '..'))
 TOOLCHAIN_INDEX = 'gecko.cache.level-{level}.toolchains.v1.{name}.{digest}'
 
 toolchain_run_schema = Schema({

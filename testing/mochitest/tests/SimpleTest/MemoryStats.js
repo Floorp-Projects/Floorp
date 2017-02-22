@@ -104,7 +104,7 @@ MemoryStats.dump = function (testNumber,
     }
 
     // This is the old, deprecated function.
-    if (dumpDMD && typeof(DMDReportAndDump) != undefined) {
+    if (dumpDMD && typeof(DMDReportAndDump) != "undefined") {
         var basename = "dmd-" + testNumber + "-deprecated.txt";
         var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
                                                      basename);
@@ -112,7 +112,7 @@ MemoryStats.dump = function (testNumber,
         DMDReportAndDump(dumpfile);
     }
 
-    if (dumpDMD && typeof(DMDAnalyzeReports) != undefined) {
+    if (dumpDMD && typeof(DMDAnalyzeReports) != "undefined") {
         var basename = "dmd-" + testNumber + ".txt";
         var dumpfile = MemoryStats.constructPathname(dumpOutputDirectory,
                                                      basename);
