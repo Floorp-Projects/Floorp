@@ -78,6 +78,7 @@ js::Thread::Thread(Thread&& aOther)
 {
   id_ = aOther.id_;
   aOther.id_ = Id();
+  options_ = aOther.options_;
 }
 
 js::Thread&
@@ -86,6 +87,7 @@ js::Thread::operator=(Thread&& aOther)
   MOZ_RELEASE_ASSERT(!joinable());
   id_ = aOther.id_;
   aOther.id_ = Id();
+  options_ = aOther.options_;
   return *this;
 }
 
