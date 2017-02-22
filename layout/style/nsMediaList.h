@@ -306,6 +306,9 @@ public:
 protected:
   ~nsMediaList();
 
+  template<typename Func>
+  nsresult DoMediaChange(Func aCallback);
+
   nsresult Delete(const nsAString & aOldMedium);
   nsresult Append(const nsAString & aOldMedium);
 
