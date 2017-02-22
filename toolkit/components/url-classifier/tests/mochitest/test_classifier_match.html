@@ -1,0 +1,195 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the URI Classifier Matched Info (bug 1288633) </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+var Cr = SpecialPowers.Cr;
+
+var inputDatas = [
+  { url: "malware.example.com/",
+    db: "mochi-block-simple",
+  },
+  { url: "malware1.example.com/",
+    db: "mochi1-block-simple",
+  },
+  { url: "malware1.example.com/",
+    db: "mochi1-malware-simple",
+    provider: "mozilla"
+  },
+  { url: "malware2.example.com/",
+    db: "mochi2-unwanted-simple",
+    provider: "mozilla"
+  },
+  { url: "malware2.example.com/",
+    db: "mochi2-malware-simple",
+    provider: "mozilla"
+  },
+  { url: "malware3.example.com/",
+    db: "mochig3-malware-simple",
+    provider: "google"
+  },
+  { url: "malware3.example.com/",
+    db: "mochim3-malware-simple",
+    provider: "mozilla"
+  },
+];
+
+function hashPrefix(str) {
+  function bytesFromString(str) {
+    let converter =
+      Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                       .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    return converter.convertToByteArray(str);
+  }
+
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                               .createInstance(Ci.nsICryptoHash);
+
+  let data = bytesFromString(str);
+  hasher.init(hasher.SHA256);
+  hasher.update(data, data.length);
+
+  return hasher.finish(false).slice(0, 4);
+}
+
+var testDatas = [
+  // Match empty provider
+  { url: "http://malware.example.com",
+    expect: { error: Cr.NS_ERROR_BLOCKED_URI,
+              table: "mochi-block-simple",
+              provider: "",
+              prefix: (function(){
+                return hashPrefix("malware.example.com/");
+              })(),
+            }
+  },
+  // Match multiple tables, only one has valid provider
+  { url: "http://malware1.example.com",
+    expect: { error: Cr.NS_ERROR_MALWARE_URI,
+              table: "mochi1-malware-simple",
+              provider: "mozilla",
+              prefix: (function(){
+                return hashPrefix("malware1.example.com/");
+              })(),
+            }
+  },
+  // Match multiple tables, handle order
+  { url: "http://malware2.example.com",
+    expect: { error: Cr.NS_ERROR_MALWARE_URI,
+              table: "mochi2-malware-simple",
+              provider: "mozilla",
+              prefix: (function(){
+                return hashPrefix("malware2.example.com/");
+              })(),
+            }
+  },
+  // Match multiple tables, handle order
+  { url: "http://malware3.example.com",
+    expect: { error: Cr.NS_ERROR_MALWARE_URI,
+              table: "mochig3-malware-simple",
+              provider: "google",
+              prefix: (function(){
+                return hashPrefix("malware3.example.com/");
+              })(),
+            }
+  },
+
+];
+
+SimpleTest.waitForExplicitFinish();
+
+function setupTestData(datas) {
+  let prefValues = {};
+  for (let data of datas) {
+    if (!data.provider) {
+      continue;
+    }
+    let providerPref = "browser.safebrowsing.provider." + data.provider + ".lists";
+    let prefValue;
+    if (!prefValues[providerPref]) {
+      prefValue = data.db;
+    } else {
+      prefValue = prefValues[providerPref] + "," + data.db;
+    }
+    prefValues[providerPref] = prefValue;
+  }
+
+  // Convert map to array
+  let prefArray = [];
+  for (var pref in prefValues) {
+    prefArray.push([pref, prefValues[pref]]);
+  }
+
+  let activeTablePref = "urlclassifier.malwareTable";
+  let activeTable = SpecialPowers.getCharPref(activeTablePref);
+  for (let data of datas) {
+      activeTable += "," + data.db;
+  }
+  prefArray.push([activeTablePref, activeTable]);
+
+  return SpecialPowers.pushPrefEnv({set: prefArray});
+}
+
+function runTest() {
+  return new Promise(resolve => {
+    let service = Cc["@mozilla.org/url-classifier/dbservice;1"].
+                getService(Ci.nsIURIClassifier);
+    let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                getService(Ci.nsIScriptSecurityManager);
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService);
+    function runNextTest() {
+      if (!testDatas.length) {
+        resolve();
+        return;
+      }
+      let test = testDatas.shift();
+      let uri = ios.newURI(test.url, null, null);
+      let prin = ssm.createCodebasePrincipal(uri, {});
+      service.classify(prin, false, function(errorCode, table, provider, prefix) {
+        is(errorCode, test.expect.error, `Test url ${test.url} correct error`);
+        is(table, test.expect.table, `Test url ${test.url} correct table`);
+        is(provider, test.expect.provider, `Test url ${test.url} correct provider`);
+        is(prefix, btoa(test.expect.prefix), `Test url ${test.url} correct prefix`);
+        runNextTest();
+      });
+    }
+    runNextTest();
+  });
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["browser.safebrowsing.malware.enabled", true]]},
+  function() {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    classifierHelper.waitForInit()
+      .then(() => setupTestData(inputDatas))
+      .then(() => classifierHelper.addUrlToDB(inputDatas))
+      .then(runTest)
+      .then(function() {
+        SimpleTest.finish();
+      }).catch(function(e) {
+        ok(false, "Some tests failed with error " + e);
+        SimpleTest.finish();
+      });
+  });
+</script>
+
+</script>
+</pre>
+</body>
+</html>
