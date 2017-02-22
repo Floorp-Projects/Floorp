@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 
-from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Int, Any, Tuple
+from logtypes import Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple
 from logtypes import log_action, convertor_registry
 
 """Structured Logging for recording test results.
@@ -256,7 +256,7 @@ class StructuredLogger(object):
             self._state.suite_started = False
         return True
 
-    @log_action(List(Unicode, "tests"),
+    @log_action(TestList("tests"),
                 Dict(Any, "run_info", default=None, optional=True),
                 Dict(Any, "version_info", default=None, optional=True),
                 Dict(Any, "device_info", default=None, optional=True),
@@ -264,7 +264,7 @@ class StructuredLogger(object):
     def suite_start(self, data):
         """Log a suite_start message
 
-        :param list tests: Test identifiers that will be run in the suite.
+        :param dict tests: Test identifiers that will be run in the suite, keyed by group name.
         :param dict run_info: Optional information typically provided by mozinfo.
         :param dict version_info: Optional target application version information provided
           by mozversion.
