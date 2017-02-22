@@ -32,7 +32,9 @@ const EXTRA_SCRIPTS = [
   // placesOverlay.xul.
   "toolkit/content/globalOverlay.js",
   // Via editMenuOverlay.xul
-  "toolkit/content/editMenuOverlay.js"
+  "toolkit/content/editMenuOverlay.js",
+  // Via baseMenuOverlay.xul
+  "browser/base/content/utilityOverlay.js",
 ];
 
 // Some files in global-scripts.inc need mapping to specific locations.

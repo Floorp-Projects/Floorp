@@ -7,6 +7,7 @@
 /* import-globals-from advanced.js */
 /* import-globals-from main.js */
 /* import-globals-from search.js */
+/* import-globals-from containers.js */
 /* import-globals-from content.js */
 /* import-globals-from privacy.js */
 /* import-globals-from applications.js */
