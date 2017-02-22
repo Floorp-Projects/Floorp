@@ -19,7 +19,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'IMContextWrapper.cpp',
-    'mozcontainer.c',
+    'mozcontainer.cpp',
     'NativeKeyBindings.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
