@@ -3232,7 +3232,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   background-position: right top;
   background-attachment: fixed;
   /* The image will get set from CustomizeMode.jsm */
-  background-image: none;
+  background-image: var(--lwt-header-image);
   background-color: transparent;
 }
 
