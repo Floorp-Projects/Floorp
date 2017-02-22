@@ -6,9 +6,7 @@
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
-  this.panelDoc = iframeWindow.document;
   this.toolbox = toolbox;
-  this.netmonitor = new iframeWindow.Netmonitor(toolbox);
 }
 
 NetMonitorPanel.prototype = {
@@ -16,14 +14,17 @@ NetMonitorPanel.prototype = {
     if (!this.toolbox.target.isRemote) {
       await this.toolbox.target.makeRemote();
     }
-    await this.netmonitor.init();
+    await this.panelWin.Netmonitor.bootstrap({
+      tabTarget: this.toolbox.target,
+      toolbox: this.toolbox,
+    });
     this.emit("ready");
     this.isReady = true;
     return this;
   },
 
   async destroy() {
-    await this.netmonitor.destroy();
+    await this.panelWin.Netmonitor.destroy();
     this.emit("destroyed");
     return this;
   },

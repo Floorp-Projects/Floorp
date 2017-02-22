@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
@@ -82,6 +81,7 @@ var NetMonitorController = {
       if (this._target.isTabActor) {
         this.tabClient = this._target.activeTab;
       }
+      this.webConsoleClient = this._target.activeConsole;
 
       let connectTimeline = () => {
         // Don't start up waiting for timeline markers if the server isn't
@@ -93,8 +93,6 @@ var NetMonitorController = {
         }
         return undefined;
       };
-
-      this.webConsoleClient = this._target.activeConsole;
       await connectTimeline();
 
       this.TargetEventsHandler.connect();
