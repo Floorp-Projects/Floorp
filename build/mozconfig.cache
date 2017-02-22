@@ -113,11 +113,31 @@ else
         exit 1
     fi
     mk_add_options "export SCCACHE_BUCKET=$bucket"
+    case "$master" in
+    *us[ew][12].mozilla.com*|*euc1.mozilla.com*)
+        mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
+        ;;
+    esac
     ac_add_options "--with-ccache=$topsrcdir/sccache2/sccache${suffix}"
     export SCCACHE_VERBOSE_STATS=1
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
     mk_add_options "UPLOAD_EXTRA_FILES+=sccache.log.gz"
+    case "$platform" in
+    win*)
+        # sccache supports a special flag to create depfiles.
+        #TODO: bug 1318370 - move this all into toolchain.configure
+        export _DEPEND_CFLAGS='-deps$(MDDEPDIR)/$(@F).pp'
+        # Windows builds have a default wrapper that needs to be overridden
+        mk_add_options "export CC_WRAPPER="
+        mk_add_options "export CXX_WRAPPER="
+        # For now, sccache doesn't support separate PDBs so force debug info to be
+        # in object files.
+        mk_add_options "export COMPILE_PDB_FLAG="
+        mk_add_options "export HOST_PDB_FLAG="
+        mk_add_options "export MOZ_DEBUG_FLAGS=-Z7"
+        ;;
+    esac
 fi
 
 fi
