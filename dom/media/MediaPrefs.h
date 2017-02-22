@@ -121,6 +121,7 @@ private:
 #endif
 #ifdef MOZ_FFVPX
   DECL_MEDIA_PREF("media.ffvpx.enabled",                      PDMFFVPXEnabled, bool, true);
+  DECL_MEDIA_PREF("media.ffvpx.low-latency.enabled",          PDMFFVPXLowLatencyEnabled, bool, false);
 #endif
 #ifdef XP_WIN
   DECL_MEDIA_PREF("media.wmf.enabled",                        PDMWMFEnabled, bool, true);

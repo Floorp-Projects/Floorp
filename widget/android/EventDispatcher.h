@@ -48,6 +48,10 @@ public:
                          jni::Object::Param aData,
                          jni::Object::Param aCallback);
 
+    static nsresult UnboxBundle(JSContext* aCx,
+                                const jni::Object::Param aData,
+                                JS::MutableHandleValue aOut);
+
 private:
     java::EventDispatcher::GlobalRef mDispatcher;
     nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;

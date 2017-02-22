@@ -46,6 +46,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   , mNestedFrameId(0)
   , mIsContent(true)
   , mUseRemoteTabs(false)
+  , mUseTrackingProtection(false)
 #ifdef DEBUG
   , mIsNotNull(true)
 #endif
@@ -57,6 +58,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
 
   MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetIsContent(&mIsContent));
   MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetUseRemoteTabs(&mUseRemoteTabs));
+  MOZ_ALWAYS_SUCCEEDS(aOptionalBase->GetUseTrackingProtection(&mUseTrackingProtection));
 }
 
 //-----------------------------------------------------------------------------
@@ -180,20 +182,22 @@ LoadContext::GetOriginAttributes(JS::MutableHandleValue aAttrs)
 }
 
 NS_IMETHODIMP
-LoadContext::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+LoadContext::GetUseTrackingProtection(bool* aUseTrackingProtection)
 {
   MOZ_ASSERT(mIsNotNull);
 
-  if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
-    *aIsTrackingProtectionOn = true;
-  } else if ((mOriginAttributes.mPrivateBrowsingId > 0) &&
-             Preferences::GetBool("privacy.trackingprotection.pbmode.enabled", false)) {
-    *aIsTrackingProtectionOn = true;
-  } else {
-    *aIsTrackingProtectionOn = false;
-  }
+  NS_ENSURE_ARG_POINTER(aUseTrackingProtection);
 
+  *aUseTrackingProtection = mUseTrackingProtection;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadContext::SetUseTrackingProtection(bool aUseTrackingProtection)
+{
+  MOZ_ASSERT_UNREACHABLE("Should only be set through nsDocShell");
+
+  return NS_ERROR_UNEXPECTED;
 }
 
 //-----------------------------------------------------------------------------

@@ -26,6 +26,7 @@ struct VideoDataIPDL
 {
   MediaDataIPDL base;
   IntSize display;
+  IntSize frameSize;
   SurfaceDescriptorGPUVideo sd;
   int32_t frameID;
 };

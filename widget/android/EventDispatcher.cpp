@@ -966,5 +966,13 @@ EventDispatcher::DispatchToGecko(jni::String::Param aEvent,
     DispatchOnGecko(list, event, data, callback);
 }
 
+/* static */
+nsresult
+EventDispatcher::UnboxBundle(JSContext* aCx, jni::Object::Param aData,
+                             JS::MutableHandleValue aOut)
+{
+    return detail::UnboxBundle(aCx, aData, aOut);
+}
+
 } // namespace widget
 } // namespace mozilla

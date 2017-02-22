@@ -47,16 +47,9 @@ const DOCS_GA_PARAMS = "?utm_source=mozilla" +
 flags.testing = true;
 
 function loadTab(url, preferredRemoteType) {
-  let deferred = promise.defer();
-
-  let tab = gBrowser.selectedTab = gBrowser.addTab(url, { preferredRemoteType });
-  let browser = gBrowser.getBrowserForTab(tab);
-
-  browser.addEventListener("load", function () {
-    deferred.resolve({tab: tab, browser: browser});
-  }, {capture: true, once: true});
-
-  return deferred.promise;
+  return addTab(url, { preferredRemoteType }).then( tab => {
+    return { tab, browser: tab.linkedBrowser };
+  });
 }
 
 function loadBrowser(browser) {
@@ -64,17 +57,7 @@ function loadBrowser(browser) {
 }
 
 function closeTab(tab) {
-  let deferred = promise.defer();
-
-  let container = gBrowser.tabContainer;
-
-  container.addEventListener("TabClose", function () {
-    deferred.resolve(null);
-  }, {capture: true, once: true});
-
-  gBrowser.removeTab(tab);
-
-  return deferred.promise;
+  return removeTab(tab);
 }
 
 /**

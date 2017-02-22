@@ -12,32 +12,31 @@ import sys
 import subprocess
 import tarfile
 import tempfile
+import urllib2
 import which
 from subprocess import Popen, PIPE
 from io import BytesIO
 
 from taskgraph.util import docker
-from taskgraph.util.taskcluster import (
-    find_task_id,
-    get_artifact_url,
-)
-from . import GECKO
 
-DOCKER_INDEX = docker.INDEX_PREFIX + '.{}.{}.hash.{}'
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+INDEX_URL = 'https://index.taskcluster.net/v1/task/' + docker.INDEX_PREFIX + '.{}.{}.hash.{}'
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
 
 def load_image_by_name(image_name, tag=None):
     context_path = os.path.join(GECKO, 'taskcluster', 'docker', image_name)
     context_hash = docker.generate_context_hash(GECKO, context_path, image_name)
 
-    index_path = DOCKER_INDEX.format('level-3', image_name, context_hash)
-    task_id = find_task_id(index_path)
+    image_index_url = INDEX_URL.format('level-3', image_name, context_hash)
+    print("Fetching", image_index_url)
+    task = json.load(urllib2.urlopen(image_index_url))
 
-    return load_image_by_task_id(task_id, tag)
+    return load_image_by_task_id(task['taskId'], tag)
 
 
 def load_image_by_task_id(task_id, tag=None):
-    artifact_url = get_artifact_url(task_id, 'public/image.tar.zst')
+    artifact_url = ARTIFACT_URL.format(task_id, 'public/image.tar.zst')
     result = load_image(artifact_url, tag)
     print("Found docker image: {}:{}".format(result['image'], result['tag']))
     if tag:
