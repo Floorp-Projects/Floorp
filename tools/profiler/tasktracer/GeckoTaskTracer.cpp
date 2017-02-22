@@ -57,7 +57,7 @@ static mozilla::StaticMutex sMutex;
 
 // The generation of TraceInfo. It will be > 0 if the Task Tracer is started and
 // <= 0 if stopped.
-static mozilla::Atomic<bool> sStarted;
+static mozilla::Atomic<bool> sStarted(false);
 static nsTArray<UniquePtr<TraceInfo>>* sTraceInfos = nullptr;
 static PRTime sStartTime;
 
@@ -74,8 +74,8 @@ GetTimestamp()
 static TraceInfo*
 AllocTraceInfo(int aTid)
 {
-  StaticMutexAutoLock lock(sMutex);
-
+  sMutex.AssertCurrentThreadOwns();
+  MOZ_ASSERT(sTraceInfos);
   auto* info = sTraceInfos->AppendElement(MakeUnique<TraceInfo>(aTid));
 
   return info->get();
@@ -86,12 +86,14 @@ CreateSourceEvent(SourceEventType aType)
 {
   // Create a new unique task id.
   uint64_t newId = GenNewUniqueTaskId();
-  TraceInfo* info = GetOrCreateTraceInfo();
-  ENSURE_TRUE_VOID(info);
+  {
+    TraceInfoHolder info = GetOrCreateTraceInfo();
+    ENSURE_TRUE_VOID(info);
 
-  info->mCurTraceSourceId = newId;
-  info->mCurTraceSourceType = aType;
-  info->mCurTaskId = newId;
+    info->mCurTraceSourceId = newId;
+    info->mCurTraceSourceType = aType;
+    info->mCurTaskId = newId;
+  }
 
   uintptr_t* namePtr;
 #define SOURCE_EVENT_NAME(type)         \
@@ -118,10 +120,23 @@ static void
 DestroySourceEvent()
 {
   // Log a fake end for this source event.
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  LogEnd(info->mCurTraceSourceId, info->mCurTraceSourceId);
+  uint64_t curTraceSourceId;
+  curTraceSourceId = info->mCurTraceSourceId;
+  info.Reset();
+
+  LogEnd(curTraceSourceId, curTraceSourceId);
+}
+
+inline static void
+ObsoleteCurrentTraceInfos()
+{
+  MOZ_ASSERT(sTraceInfos);
+  for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
+    (*sTraceInfos)[i]->mObsolete = true;
+  }
 }
 
 inline static bool
@@ -134,24 +149,16 @@ static void
 SetLogStarted(bool aIsStartLogging)
 {
   MOZ_ASSERT(aIsStartLogging != sStarted);
-  MOZ_ASSERT(sTraceInfos != nullptr);
+  StaticMutexAutoLock lock(sMutex);
+
   sStarted = aIsStartLogging;
 
-  StaticMutexAutoLock lock(sMutex);
-  if (!aIsStartLogging && sTraceInfos) {
-    for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
-      (*sTraceInfos)[i]->mObsolete = true;
-    }
+  if (aIsStartLogging && sTraceInfos == nullptr) {
+    sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
   }
-}
 
-inline static void
-ObsoleteCurrentTraceInfos()
-{
-  // Note that we can't and don't need to acquire sMutex here because this
-  // function is called before the other threads are recreated.
-  for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
-    (*sTraceInfos)[i]->mObsolete = true;
+  if (!aIsStartLogging && sTraceInfos) {
+    ObsoleteCurrentTraceInfos();
   }
 }
 
@@ -191,9 +198,6 @@ InitTaskTracer(uint32_t aFlags)
   if (!success) {
     MOZ_CRASH();
   }
-
-  // A memory barrier is necessary here.
-  sTraceInfos = new nsTArray<UniquePtr<TraceInfo>>();
 }
 
 void
@@ -201,13 +205,22 @@ ShutdownTaskTracer()
 {
   if (IsStartLogging()) {
     SetLogStarted(false);
+
+    StaticMutexAutoLock lock(sMutex);
+    // Make sure all threads are out of holding mutics.
+    // See |GetOrCreateTraceInfo()|
+    for (auto& traceinfo: *sTraceInfos) {
+      MutexAutoLock lock(traceinfo->mLogsMutex);
+    }
+    delete sTraceInfos;
+    sTraceInfos = nullptr;
   }
 }
 
 static void
 FreeTraceInfo(TraceInfo* aTraceInfo)
 {
-  StaticMutexAutoLock lock(sMutex);
+  sMutex.AssertCurrentThreadOwns();
   if (aTraceInfo) {
     UniquePtr<TraceInfo> traceinfo(aTraceInfo);
     mozilla::DebugOnly<bool> removed =
@@ -219,15 +232,19 @@ FreeTraceInfo(TraceInfo* aTraceInfo)
 
 void FreeTraceInfo()
 {
-  FreeTraceInfo(sTraceInfoTLS.get());
+  StaticMutexAutoLock lock(sMutex);
+  if (sTraceInfos) {
+    FreeTraceInfo(sTraceInfoTLS.get());
+  }
 }
 
-TraceInfo*
+TraceInfoHolder
 GetOrCreateTraceInfo()
 {
-  ENSURE_TRUE(IsStartLogging(), nullptr);
-
   TraceInfo* info = sTraceInfoTLS.get();
+  StaticMutexAutoLock lock(sMutex);
+  ENSURE_TRUE(IsStartLogging(), TraceInfoHolder{});
+
   if (info && info->mObsolete) {
     // TraceInfo is obsolete: remove it.
     FreeTraceInfo(info);
@@ -239,13 +256,15 @@ GetOrCreateTraceInfo()
     sTraceInfoTLS.set(info);
   }
 
-  return info;
+  return TraceInfoHolder{info}; // |mLogsMutex| will be held, then
+                                // ||sMutex| will be released for
+                                // efficiency reason.
 }
 
 uint64_t
 GenNewUniqueTaskId()
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE(info, 0);
 
   Thread::tid_t tid = Thread::GetCurrentId();
@@ -267,7 +286,7 @@ void
 SetCurTraceInfo(uint64_t aSourceEventId, uint64_t aParentTaskId,
                 SourceEventType aSourceEventType)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
   info->mCurTraceSourceId = aSourceEventId;
@@ -279,7 +298,7 @@ void
 GetCurTraceInfo(uint64_t* aOutSourceEventId, uint64_t* aOutParentTaskId,
                 SourceEventType* aOutSourceEventType)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
   *aOutSourceEventId = info->mCurTraceSourceId;
@@ -298,7 +317,7 @@ void
 LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
             SourceEventType aSourceEventType, int aDelayTimeMs)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
   // aDelayTimeMs is the expected delay time in milliseconds, thus the dispatch
@@ -306,7 +325,6 @@ LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
   uint64_t time = (aDelayTimeMs <= 0) ? GetTimestamp() :
                   GetTimestamp() + aDelayTimeMs;
 
-  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [0 taskId dispatchTime sourceEventId sourceEventType parentTaskId]
   TraceInfoLogType* log = info->AppendLog();
@@ -323,10 +341,9 @@ LogDispatch(uint64_t aTaskId, uint64_t aParentTaskId, uint64_t aSourceEventId,
 void
 LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [1 taskId beginTime processId threadId]
   TraceInfoLogType* log = info->AppendLog();
@@ -342,10 +359,9 @@ LogBegin(uint64_t aTaskId, uint64_t aSourceEventId)
 void
 LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [2 taskId endTime]
   TraceInfoLogType* log = info->AppendLog();
@@ -359,10 +375,9 @@ LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
 void
 LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [4 taskId address]
   TraceInfoLogType* log = info->AppendLog();
@@ -412,10 +427,9 @@ AutoScopedLabel::~AutoScopedLabel()
 
 void AddLabel(const char* aFormat, ...)
 {
-  TraceInfo* info = GetOrCreateTraceInfo();
+  TraceInfoHolder info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);
 
-  MutexAutoLock lock(info->mLogsMutex);
   // Log format:
   // [3 taskId "label"]
   TraceInfoLogType* log = info->AppendLog();
@@ -455,6 +469,10 @@ GetLoggedData(TimeStamp aTimeStamp)
 
   // TODO: This is called from a signal handler. Use semaphore instead.
   StaticMutexAutoLock lock(sMutex);
+
+  if (sTraceInfos == nullptr) {
+    return result;
+  }
 
   for (uint32_t i = 0; i < sTraceInfos->Length(); ++i) {
     TraceInfo* info = (*sTraceInfos)[i].get();
