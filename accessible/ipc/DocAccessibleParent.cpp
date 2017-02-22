@@ -427,11 +427,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // here.
   if (outerDoc->ChildrenCount() > 1 ||
       (outerDoc->ChildrenCount() == 1 && !outerDoc->ChildAt(0)->IsDoc())) {
-#ifdef DEBUG
     return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
-#else
-    return IPC_OK();
-#endif
   }
 
   aChildDoc->SetParent(outerDoc);
