@@ -166,23 +166,40 @@ nsNullPrincipal::Read(nsIObjectInputStream* aStream)
   // that the Init() method has already been invoked by the time we deserialize.
   // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
   // in which case ::Read needs to invoke Init().
+
+  nsCOMPtr<nsISupports> supports;
+  nsresult rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIURI> uri = do_QueryInterface(supports);
+
   nsAutoCString suffix;
-  nsresult rv = aStream->ReadCString(suffix);
+  rv = aStream->ReadCString(suffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool ok = mOriginAttributes.PopulateFromSuffix(suffix);
+  OriginAttributes attrs;
+  bool ok = attrs.PopulateFromSuffix(suffix);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  return NS_OK;
+  return Init(attrs, uri);
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
+  NS_ENSURE_STATE(mURI);
+  nsresult rv = NS_WriteOptionalCompoundObject(aStream, mURI, NS_GET_IID(nsIURI),
+                                               true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
 
-  nsresult rv = aStream->WriteStringZ(suffix.get());
+  rv = aStream->WriteStringZ(suffix.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
