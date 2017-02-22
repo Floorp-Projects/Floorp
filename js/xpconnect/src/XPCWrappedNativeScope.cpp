@@ -10,7 +10,7 @@
 #include "XPCWrapper.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsExpandedPrincipal.h"
+#include "nsPrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "nsIAddonInterposition.h"
