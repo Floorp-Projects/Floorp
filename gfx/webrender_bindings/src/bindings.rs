@@ -189,20 +189,10 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     println!("WebRender - OpenGL version new {}", version);
 
     let opts = RendererOptions {
-        device_pixel_ratio: 1.0,
-        resource_override_path: None,
         enable_aa: false,
-        enable_subpixel_aa: false,
         enable_profiler: enable_profiler,
-        enable_scrollbars: false,
-        precache_shaders: false,
-        renderer_kind: RendererKind::Native,
-        debug: false,
-        clear_framebuffer: true,
-        render_target_debug: false,
-        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
         recorder: recorder,
-        workers: None,
+        .. Default::default()
     };
 
     let (mut renderer, sender) = match Renderer::new(opts) {
