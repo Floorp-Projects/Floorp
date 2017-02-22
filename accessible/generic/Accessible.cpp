@@ -2163,12 +2163,13 @@ Accessible::RemoveChild(Accessible* aChild)
 void
 Accessible::MoveChild(uint32_t aNewIndex, Accessible* aChild)
 {
-  MOZ_ASSERT(aChild, "No child was given");
-  MOZ_ASSERT(aChild->mParent == this, "A child from different subtree was given");
-  MOZ_ASSERT(aChild->mIndexInParent != -1, "Unbound child was given");
-  MOZ_ASSERT(static_cast<uint32_t>(aChild->mIndexInParent) != aNewIndex,
+  MOZ_DIAGNOSTIC_ASSERT(aChild, "No child was given");
+  MOZ_DIAGNOSTIC_ASSERT(aChild->mParent == this, "A child from different subtree was given");
+  MOZ_DIAGNOSTIC_ASSERT(aChild->mIndexInParent != -1, "Unbound child was given");
+  MOZ_DIAGNOSTIC_ASSERT(aChild->mParent->GetChildAt(aChild->mIndexInParent) == aChild, "Wrong index in parent");
+  MOZ_DIAGNOSTIC_ASSERT(static_cast<uint32_t>(aChild->mIndexInParent) != aNewIndex,
              "No move, same index");
-  MOZ_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
+  MOZ_DIAGNOSTIC_ASSERT(aNewIndex <= mChildren.Length(), "Wrong new index was given");
 
   RefPtr<AccHideEvent> hideEvent = new AccHideEvent(aChild, false);
   if (mDoc->Controller()->QueueMutationEvent(hideEvent)) {
