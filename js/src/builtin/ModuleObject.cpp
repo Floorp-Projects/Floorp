@@ -464,8 +464,10 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
 
     ModuleEnvironmentObject* env;
     Shape* shape;
-    if (!ns->bindings().lookup(id, &env, &shape))
-        return false;
+    if (!ns->bindings().lookup(id, &env, &shape)) {
+        vp.setUndefined();
+        return true;
+    }
 
     RootedValue value(cx, env->getSlot(shape->slot()));
     if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {

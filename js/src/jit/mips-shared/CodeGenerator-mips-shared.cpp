@@ -138,7 +138,9 @@ CodeGeneratorMIPSShared::visitCompare(LCompare* comp)
     const LDefinition* def = comp->getDef(0);
 
 #ifdef JS_CODEGEN_MIPS64
-    if (mir->compareType() == MCompare::Compare_Object) {
+    if (mir->compareType() == MCompare::Compare_Object ||
+        mir->compareType() == MCompare::Compare_Symbol)
+    {
         if (right->isGeneralReg())
             masm.cmpPtrSet(cond, ToRegister(left), ToRegister(right), ToRegister(def));
         else
@@ -162,7 +164,8 @@ CodeGeneratorMIPSShared::visitCompareAndBranch(LCompareAndBranch* comp)
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), comp->jsop());
 
 #ifdef JS_CODEGEN_MIPS64
-    if (mir->compareType() == MCompare::Compare_Object) {
+    if (mir->compareType() == MCompare::Compare_Object ||
+        mir->compareType() == MCompare::Compare_Symbol)
         if (comp->right()->isGeneralReg()) {
             emitBranch(ToRegister(comp->left()), ToRegister(comp->right()), cond,
                        comp->ifTrue(), comp->ifFalse());

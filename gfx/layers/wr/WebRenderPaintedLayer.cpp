@@ -5,9 +5,11 @@
 
 #include "WebRenderPaintedLayer.h"
 
-#include "WebRenderLayersLogging.h"
+#include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
@@ -74,6 +76,9 @@ WebRenderPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbac
   if (didUpdate) {
     Mutated();
 
+    // XXX It will cause reftests failures. See Bug 1340798.
+    //mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
 
     // Hold(this) ensures this layer is kept alive through the current transaction
@@ -111,10 +116,27 @@ WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 void
 WebRenderPaintedLayer::RenderLayer()
 {
-  RenderLayerWithReadback(nullptr);
+  // XXX We won't keep using ContentClient for WebRenderPaintedLayer in the future and
+  // there is a crash problem for ContentClient on MacOS. So replace ContentClient with
+  // ImageClient. See bug 1341001.
+  //RenderLayerWithReadback(nullptr);
+
+  if (!mImageContainer) {
+    mImageContainer = LayerManager::CreateImageContainer();
+  }
+
+  if (!mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WrBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return;
+    }
+    mImageClient->Connect();
+  }
 
   if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mContentClient);
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
     MOZ_ASSERT(mExternalImageId);
   }
 
@@ -128,23 +150,67 @@ WebRenderPaintedLayer::RenderLayer()
       return;
   }
 
+  IntSize imageSize(size.width, size.height);
+  RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(SurfaceFormat::B8G8R8A8,
+                                                                                            imageSize,
+                                                                                            BackendSelector::Content,
+                                                                                            TextureFlags::DEFAULT);
+  if (!texture) {
+    return;
+  }
+
+  {
+    TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
+    if (!autoLock.Succeeded()) {
+      return;
+    }
+    RefPtr<DrawTarget> target = texture->BorrowDrawTarget();
+    if (!target) {
+      return;
+    }
+    target->ClearRect(Rect(0, 0, imageSize.width, imageSize.height));
+    target->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
+    RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
+    MOZ_ASSERT(ctx); // already checked the target above
+
+    Manager()->GetPaintedLayerCallback()(this,
+                                         ctx,
+                                         visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
+                                         DrawRegionClip::DRAW, nsIntRegion(), Manager()->GetPaintedLayerCallbackData());
+  }
+  RefPtr<TextureWrapperImage> image = new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), imageSize));
+  mImageContainer->SetCurrentImageInTransaction(image);
+  if (!mImageClient->UpdateImage(mImageContainer, /* unused */0)) {
+    return;
+   }
+ 
   WrScrollFrameStackingContextGenerator scrollFrames(this);
+
+  Matrix4x4 transform = GetTransform();
 
   // Since we are creating a stacking context below using the visible region of
   // this layer, we need to make sure the image display item has coordinates
   // relative to the visible region.
-  Rect rect = RelativeToVisible(IntRectToRect(bounds.ToUnknownRect()));
+  Rect rect(0, 0, size.width, size.height);
   Rect clip;
   if (GetClipRect().isSome()) {
-      clip = RelativeToTransformedVisible(IntRectToRect(GetClipRect().ref().ToUnknownRect()));
+      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
   } else {
       clip = rect;
   }
 
   Maybe<WrImageMask> mask = buildMaskLayer();
-  Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  Rect relBounds = VisibleBoundsRelativeToParent();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
   Rect overflow(0, 0, relBounds.width, relBounds.height);
-  Matrix4x4 transform;// = GetTransform();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {
@@ -158,9 +224,6 @@ WebRenderPaintedLayer::RenderLayer()
                   Stringify(mixBlendMode).c_str());
   }
 
-  ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
-  visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
-
   WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds),
                               wr::ToWrRect(overflow),
@@ -170,7 +233,8 @@ WebRenderPaintedLayer::RenderLayer()
                               transform,
                               mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
+  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), wr::ImageRendering::Auto, mExternalImageId));
+
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 

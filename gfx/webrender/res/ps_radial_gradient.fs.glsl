@@ -2,18 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-float offset(int index) {
-    return vOffsets[index / 4][index % 4];
-}
-
-float linearStep(float lo, float hi, float x) {
-    float d = hi - lo;
-    float v = x - lo;
-    if (d != 0.0) {
-        v /= d;
-    }
-    return clamp(v, 0.0, 1.0);
-}
+uniform sampler2D sGradients;
 
 void main(void) {
     vec2 cd = vEndCenter - vStartCenter;
@@ -55,13 +44,17 @@ void main(void) {
         }
     }
 
-    oFragColor = mix(vColors[0],
-                     vColors[1],
-                     linearStep(offset(0), offset(1), x));
+    vec2 texture_size = vec2(textureSize(sGradients, 0));
 
-    for (int i=1 ; i < vStopCount-1 ; ++i) {
-        oFragColor = mix(oFragColor,
-                         vColors[i+1],
-                         linearStep(offset(i), offset(i+1), x));
-    }
+    // Either saturate or modulo the offset depending on repeat mode, then scale to number of
+    // gradient color entries (texture width / 2).
+    x = mix(clamp(x, 0.0, 1.0), fract(x), vGradientRepeat) * 0.5 * texture_size.x;
+
+    // Start at the center of first color in the nearest 2-color entry, then offset with the
+    // fractional remainder to interpolate between the colors. Rely on texture clamping when
+    // outside of valid range.
+    x = 2.0 * floor(x) + 0.5 + fract(x);
+
+    // Normalize the texture coordates so we can use texture() for bilinear filtering.
+    oFragColor = texture(sGradients, vec2(x, vGradientIndex) / texture_size);
 }

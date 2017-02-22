@@ -19,6 +19,23 @@ use ffi;
 pub use ffi::types::*;
 pub use ffi::*;
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum GlType {
+    Gl,
+    Gles,
+}
+
+impl Default for GlType {
+  #[cfg(target_os="android")]
+  fn default() -> GlType {
+    GlType::Gles
+  }
+  #[cfg(not(target_os="android"))]
+  fn default() -> GlType {
+    GlType::Gl
+  }
+}
+
 #[inline]
 pub fn buffer_data<T>(target: GLenum, data: &[T], usage: GLenum) {
     unsafe {

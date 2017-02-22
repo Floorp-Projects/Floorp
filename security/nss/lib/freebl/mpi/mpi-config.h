@@ -24,10 +24,6 @@
 #define MP_MODARITH 1 /* include modular arithmetic ?        */
 #endif
 
-#ifndef MP_NUMTH
-#define MP_NUMTH 1 /* include number theoretic functions? */
-#endif
-
 #ifndef MP_LOGTAB
 #define MP_LOGTAB 1 /* use table of logs instead of log()? */
 #endif

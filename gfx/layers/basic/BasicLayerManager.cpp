@@ -546,6 +546,18 @@ BasicLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   mInTransaction = false;
 
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
+
+  ClearDisplayItemLayers();
+}
+
+void
+BasicLayerManager::ClearDisplayItemLayers()
+{
+  for (uint32_t i = 0; i < mDisplayItemLayers.Length(); i++) {
+    mDisplayItemLayers[i]->EndTransaction();
+  }
+
+  mDisplayItemLayers.Clear();
 }
 
 void
@@ -734,7 +746,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
       }
 
       PaintLayer(aGroupTarget, layer, aPaintContext.mCallback,
-          aPaintContext.mCallbackData);
+                aPaintContext.mCallbackData);
       if (mTransactionIncomplete)
         break;
     }
@@ -816,7 +828,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   PROFILER_LABEL("BasicLayerManager", "PaintLayer",
     js::ProfileEntry::Category::GRAPHICS);
 
-  PaintLayerContext paintLayerContext(aTarget, aLayer, aCallback, aCallbackData);
+  PaintLayerContext paintLayerContext(aTarget, aLayer,
+                                      aCallback, aCallbackData);
 
   // Don't attempt to paint layers with a singular transform, cairo will
   // just throw an error.

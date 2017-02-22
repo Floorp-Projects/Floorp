@@ -18,9 +18,12 @@ use std::{i32, usize};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
+use renderer::BlendMode;
 use webrender_traits::{Epoch, ColorF, PipelineId, DeviceIntSize};
-use webrender_traits::{ImageFormat, MixBlendMode, NativeFontHandle};
+use webrender_traits::{ImageFormat, NativeFontHandle, MixBlendMode};
 use webrender_traits::{ExternalImageId, ScrollLayerId, WebGLCommand};
+use webrender_traits::{ImageData};
+use webrender_traits::{DeviceUintRect};
 
 // An ID for a texture that is owned by the
 // texture cache module. This can include atlases
@@ -190,6 +193,7 @@ pub enum TextureSampler {
     RenderTasks,
     Geometry,
     ResourceRects,
+    Gradients,
 }
 
 impl TextureSampler {
@@ -269,6 +273,9 @@ pub enum ClipAttribute {
     SegmentIndex,
 }
 
+// A packed RGBA8 color ordered for vertex data or similar.
+// Use PackedTexel instead if intending to upload to a texture.
+
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct PackedColor {
@@ -284,6 +291,29 @@ impl PackedColor {
             r: (0.5 + color.r * COLOR_FLOAT_TO_FIXED).floor() as u8,
             g: (0.5 + color.g * COLOR_FLOAT_TO_FIXED).floor() as u8,
             b: (0.5 + color.b * COLOR_FLOAT_TO_FIXED).floor() as u8,
+            a: (0.5 + color.a * COLOR_FLOAT_TO_FIXED).floor() as u8,
+        }
+    }
+}
+
+// RGBA8 textures currently pack texels in BGRA format for upload.
+// PackedTexel abstracts away this difference from PackedColor.
+
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+pub struct PackedTexel {
+    pub b: u8,
+    pub g: u8,
+    pub r: u8,
+    pub a: u8,
+}
+
+impl PackedTexel {
+    pub fn from_color(color: &ColorF) -> PackedTexel {
+        PackedTexel {
+            b: (0.5 + color.b * COLOR_FLOAT_TO_FIXED).floor() as u8,
+            g: (0.5 + color.g * COLOR_FLOAT_TO_FIXED).floor() as u8,
+            r: (0.5 + color.r * COLOR_FLOAT_TO_FIXED).floor() as u8,
             a: (0.5 + color.a * COLOR_FLOAT_TO_FIXED).floor() as u8,
         }
     }
@@ -342,10 +372,35 @@ pub enum RenderTargetMode {
 }
 
 pub enum TextureUpdateOp {
-    Create(u32, u32, ImageFormat, TextureFilter, RenderTargetMode, Option<Arc<Vec<u8>>>),
-    Update(u32, u32, u32, u32, Arc<Vec<u8>>, Option<u32>),
-    Grow(u32, u32, ImageFormat, TextureFilter, RenderTargetMode),
-    Free
+    Create {
+      width: u32,
+      height: u32,
+      format: ImageFormat,
+      filter: TextureFilter,
+      mode: RenderTargetMode,
+      data: Option<ImageData>,
+    },
+    Update {
+        page_pos_x: u32,    // the texture page position which we want to upload
+        page_pos_y: u32,
+        width: u32,
+        height: u32,
+        data: Arc<Vec<u8>>,
+        stride: Option<u32>,
+    },
+    UpdateForExternalBuffer {
+        rect: DeviceUintRect,
+        id: ExternalImageId,
+        stride: Option<u32>,
+    },
+    Grow {
+        width: u32,
+        height: u32,
+        format: ImageFormat,
+        filter: TextureFilter,
+        mode: RenderTargetMode,
+    },
+    Free,
 }
 
 pub type ExternalImageUpdateList = Vec<ExternalImageId>;
@@ -435,7 +490,27 @@ pub enum LowLevelFilterOp {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum CompositionOp {
-    MixBlend(MixBlendMode),
-    Filter(LowLevelFilterOp),
+pub enum HardwareCompositeOp {
+    Multiply,
+    Max,
+    Min,
+}
+
+impl HardwareCompositeOp {
+    pub fn from_mix_blend_mode(mix_blend_mode: MixBlendMode) -> Option<HardwareCompositeOp> {
+        match mix_blend_mode {
+            MixBlendMode::Multiply => Some(HardwareCompositeOp::Multiply),
+            MixBlendMode::Lighten => Some(HardwareCompositeOp::Max),
+            MixBlendMode::Darken => Some(HardwareCompositeOp::Min),
+            _ => None,
+        }
+    }
+
+    pub fn to_blend_mode(&self) -> BlendMode {
+        match self {
+            &HardwareCompositeOp::Multiply => BlendMode::Multiply,
+            &HardwareCompositeOp::Max => BlendMode::Max,
+            &HardwareCompositeOp::Min => BlendMode::Min,
+        }
+    }
 }

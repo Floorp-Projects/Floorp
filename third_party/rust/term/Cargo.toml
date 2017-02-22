@@ -1,7 +1,7 @@
 [package]
 
 name = "term"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["The Rust Project Developers", "Steven Allen"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -11,7 +11,11 @@ documentation = "https://stebalien.github.io/doc/term/term/"
 description = """
 A terminal formatting library
 """
+categories = ["command-line-interface"]
 
-[dependencies]
+[target.'cfg(windows)'.dependencies]
 winapi = "0.2"
 kernel32-sys = "0.2"
+
+[features]
+default=[]

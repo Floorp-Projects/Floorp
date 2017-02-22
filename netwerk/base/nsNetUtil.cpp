@@ -1572,6 +1572,7 @@ NS_SecurityHashURI(nsIURI *aURI)
     if (scheme.EqualsLiteral("file"))
         return schemeHash; // sad face
 
+#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
     bool hasFlag;
     if (NS_FAILED(NS_URIChainHasFlags(baseURI,
         nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
@@ -1586,6 +1587,7 @@ NS_SecurityHashURI(nsIURI *aURI)
             specHash = static_cast<uint32_t>(res);
         return specHash;
     }
+#endif
 
     nsAutoCString host;
     uint32_t hostHash = 0;
@@ -1672,6 +1674,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
         return NS_SUCCEEDED(rv) && filesAreEqual;
     }
 
+#if IS_ORIGIN_IS_FULL_SPEC_DEFINED
     bool hasFlag;
     if (NS_FAILED(NS_URIChainHasFlags(targetBaseURI,
         nsIProtocolHandler::ORIGIN_IS_FULL_SPEC, &hasFlag)) ||
@@ -1685,6 +1688,7 @@ NS_SecurityCompareURIs(nsIURI *aSourceURI,
                  NS_SUCCEEDED( sourceBaseURI->GetSpec(sourceSpec) ) &&
                  targetSpec.Equals(sourceSpec) );
     }
+#endif
 
     // Compare hosts
     nsAutoCString targetHost;

@@ -194,7 +194,7 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
 
     // In order to test the SCC algorithm, we need the wrapper/wrappee to be
     // tenured.
-    cx->zone()->group()->evictNursery();
+    cx->runtime()->gc.evictNursery();
 
     return object;
 }

@@ -21,7 +21,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) f
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) fails-if(webrender) == plugin-background-5-step.html plugin-background-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) fails-if(webrender) == plugin-background-10-step.html plugin-background-ref.html
 random-if(!haveTestPlugin) == plugin-transform-1.html plugin-transform-1-ref.html
-fails-if(!haveTestPlugin) fails-if(webrender) == plugin-transform-2.html plugin-transform-2-ref.html
+fails-if(!haveTestPlugin) == plugin-transform-2.html plugin-transform-2-ref.html
 skip-if(!haveTestPlugin) == shrink-1.html shrink-1-ref.html
 skip-if(!haveTestPlugin) == update-1.html update-1-ref.html
 skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers-ref.html

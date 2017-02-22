@@ -79,7 +79,7 @@ proxy_Call(JSContext* cx, unsigned argc, Value* vp);
 bool
 proxy_Construct(JSContext* cx, unsigned argc, Value* vp);
 
-// These two functions are used by JIT code
+// These functions are used by JIT code
 
 bool
 ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp);
@@ -87,6 +87,13 @@ ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleVa
 bool
 ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
                         MutableHandleValue vp);
+
+bool
+ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id, HandleValue val, bool strict);
+
+bool
+ProxySetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal, HandleValue val,
+                        bool strict);
 
 } /* namespace js */
 
