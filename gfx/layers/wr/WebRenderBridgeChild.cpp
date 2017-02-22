@@ -15,8 +15,10 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
+WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId, uint32_t aIdNamespace)
   : mIsInTransaction(false)
+  , mIdNamespace(aIdNamespace)
+  , mResourceId(0)
   , mIPCOpen(false)
   , mDestroyed(false)
 {

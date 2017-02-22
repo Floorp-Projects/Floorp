@@ -135,6 +135,11 @@ WebRenderAPI::Create(bool aEnableProfiler,
   return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id, maxTextureSize, useANGLE)).forget();
 }
 
+WrIdNamespace
+WebRenderAPI::GetNamespace() {
+  return wr_api_get_namespace(mWrApi);
+}
+
 WebRenderAPI::~WebRenderAPI()
 {
   layers::SynchronousTask task("Destroy WebRenderAPI");
@@ -209,13 +214,14 @@ WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
   wr_api_set_root_pipeline(mWrApi, aPipeline);
 }
 
-ImageKey
-WebRenderAPI::AddImageBuffer(const ImageDescriptor& aDescritptor,
-                             Range<uint8_t> aBytes)
+void
+WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescritptor,
+                       Range<uint8_t> aBytes)
 {
-  return ImageKey(wr_api_add_image(mWrApi,
-                                   &aDescritptor,
-                                   &aBytes[0], aBytes.length()));
+  wr_api_add_image(mWrApi,
+                   key,
+                   &aDescritptor,
+                   &aBytes[0], aBytes.length());
 }
 
 ImageKey
@@ -246,10 +252,10 @@ WebRenderAPI::DeleteImage(ImageKey aKey)
   wr_api_delete_image(mWrApi, aKey);
 }
 
-wr::FontKey
-WebRenderAPI::AddRawFont(Range<uint8_t> aBytes)
+void
+WebRenderAPI::AddRawFont(wr::FontKey key, Range<uint8_t> aBytes)
 {
-  return wr::FontKey(wr_api_add_raw_font(mWrApi, &aBytes[0], aBytes.length()));
+  wr_api_add_raw_font(mWrApi, key, &aBytes[0], aBytes.length());
 }
 
 void

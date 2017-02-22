@@ -28,7 +28,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
 public:
-  explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
+  explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId, uint32_t aIdNamespace);
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
   void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
@@ -53,6 +53,9 @@ public:
   void Destroy();
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
+
+  uint32_t GetNextResourceId() { return ++mResourceId; }
+  uint32_t GetNamespace() { return mIdNamespace; }
 
 private:
   friend class CompositorBridgeChild;
@@ -102,6 +105,8 @@ private:
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
   bool mIsInTransaction;
+  uint32_t mIdNamespace;
+  uint32_t mResourceId;
 
   bool mIPCOpen;
   bool mDestroyed;

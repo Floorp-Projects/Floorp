@@ -10,7 +10,7 @@ use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, Im
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
-use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId};
+use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -48,6 +48,7 @@ check_ffi_type!(_epoch_repr struct Epoch as (u32));
 check_ffi_type!(_image_format_repr enum ImageFormat as u32);
 check_ffi_type!(_border_style_repr enum BorderStyle as u32);
 check_ffi_type!(_image_rendering_repr enum ImageRendering as u32);
+check_ffi_type!(_namespace_id_repr struct IdNamespace as (u32));
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -134,6 +135,12 @@ pub extern fn wr_renderer_current_epoch(renderer: &mut Renderer,
 #[no_mangle]
 pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
     Box::from_raw(renderer);
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_api_get_namespace(api: &mut RenderApi) -> IdNamespace
+{
+    api.id_namespace
 }
 
 #[no_mangle]
@@ -575,10 +582,15 @@ pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: Pipelin
 }
 
 #[no_mangle]
-pub extern fn wr_api_add_image(api: &mut RenderApi, descriptor: &WrImageDescriptor, bytes: * const u8, size: usize) -> ImageKey {
+pub extern fn wr_api_generate_image_key(api: &mut RenderApi) -> ImageKey
+{
+    api.generate_image_key()
+}
+
+#[no_mangle]
+pub extern fn wr_api_add_image(api: &mut RenderApi, image_key: ImageKey, descriptor: &WrImageDescriptor, bytes: * const u8, size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    let image_key = api.generate_image_key();
     api.add_image(
         image_key,
         ImageDescriptor {
@@ -590,7 +602,6 @@ pub extern fn wr_api_add_image(api: &mut RenderApi, descriptor: &WrImageDescript
         },
         ImageData::new(bytes)
     );
-    image_key
 }
 
 #[no_mangle]
@@ -901,11 +912,17 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
         key
     );
 }
+#[no_mangle]
+pub extern fn wr_api_generate_font_key(api: &mut RenderApi) -> FontKey
+{
+    api.generate_font_key()
+}
 
 #[no_mangle]
 pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
+                                  key: FontKey,
                                   font_buffer: *mut u8,
-                                  buffer_size: usize) -> FontKey
+                                  buffer_size: usize)
 {
     assert!( unsafe { is_in_compositor_thread() });
 
@@ -915,10 +932,9 @@ pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    let font_key = api.generate_font_key();
-    api.add_raw_font(font_key, font_vector);
-    font_key
+    api.add_raw_font(key, font_vector);
 }
+
 
 #[no_mangle]
 pub extern fn wr_dp_push_text(state: &mut WrState,
