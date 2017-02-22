@@ -13,6 +13,7 @@ XPIDL_SOURCES += [
 
 EXPORTS += [
     'ChromiumCDMParent.h',
+    'ChromiumCDMProxy.h',
     'DecryptJob.h',
     'gmp-api/gmp-decryption.h',
     'gmp-api/gmp-entrypoints.h',
@@ -72,6 +73,7 @@ UNIFIED_SOURCES += [
     'ChromiumCDMAdapter.cpp',
     'ChromiumCDMChild.cpp',
     'ChromiumCDMParent.cpp',
+    'ChromiumCDMProxy.cpp',
     'DecryptJob.cpp',
     'GMPCDMCallbackProxy.cpp',
     'GMPCDMProxy.cpp',
