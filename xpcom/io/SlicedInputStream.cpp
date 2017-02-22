@@ -4,8 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SlicedInputStream.h"
+#include "mozilla/ipc/InputStreamUtils.h"
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
+
+using namespace mozilla::ipc;
 
 NS_IMPL_ADDREF(SlicedInputStream);
 NS_IMPL_RELEASE(SlicedInputStream);
@@ -14,13 +17,16 @@ NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
-                                     mWeakCloneableInputStream)
+                                     mWeakCloneableInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
+                                     mWeakIPCSerializableInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
 SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
                                      uint64_t aStart, uint64_t aLength)
   : mWeakCloneableInputStream(nullptr)
+  , mWeakIPCSerializableInputStream(nullptr)
   , mStart(aStart)
   , mLength(aLength)
   , mCurPos(0)
@@ -30,12 +36,22 @@ SlicedInputStream::SlicedInputStream(nsIInputStream* aInputStream,
   SetSourceStream(aInputStream);
 }
 
+SlicedInputStream::SlicedInputStream()
+  : mWeakCloneableInputStream(nullptr)
+  , mWeakIPCSerializableInputStream(nullptr)
+  , mStart(0)
+  , mLength(0)
+  , mCurPos(0)
+  , mClosed(false)
+{}
+
 SlicedInputStream::~SlicedInputStream()
 {}
 
 void
 SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
 {
+  MOZ_ASSERT(!mInputStream);
   MOZ_ASSERT(aInputStream);
 
   mInputStream = aInputStream;
@@ -45,11 +61,20 @@ SlicedInputStream::SetSourceStream(nsIInputStream* aInputStream)
   if (cloneableStream && SameCOMIdentity(aInputStream, cloneableStream)) {
     mWeakCloneableInputStream = cloneableStream;
   }
+
+  nsCOMPtr<nsIIPCSerializableInputStream> serializableStream =
+    do_QueryInterface(aInputStream);
+  if (serializableStream &&
+      SameCOMIdentity(aInputStream, serializableStream)) {
+    mWeakIPCSerializableInputStream = serializableStream;
+  }
 }
 
 NS_IMETHODIMP
 SlicedInputStream::Close()
 {
+  NS_ENSURE_STATE(mInputStream);
+
   mClosed = true;
   return NS_OK;
 }
@@ -59,6 +84,8 @@ SlicedInputStream::Close()
 NS_IMETHODIMP
 SlicedInputStream::Available(uint64_t* aLength)
 {
+  NS_ENSURE_STATE(mInputStream);
+
   if (mClosed) {
     return NS_BASE_STREAM_CLOSED;
   }
@@ -91,6 +118,8 @@ NS_IMETHODIMP
 SlicedInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                                 uint32_t aCount, uint32_t *aResult)
 {
+  NS_ENSURE_STATE(mInputStream);
+
   uint32_t result;
 
   if (!aResult) {
@@ -166,6 +195,7 @@ SlicedInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 NS_IMETHODIMP
 SlicedInputStream::IsNonBlocking(bool* aNonBlocking)
 {
+  NS_ENSURE_STATE(mInputStream);
   return mInputStream->IsNonBlocking(aNonBlocking);
 }
 
@@ -174,7 +204,9 @@ SlicedInputStream::IsNonBlocking(bool* aNonBlocking)
 NS_IMETHODIMP
 SlicedInputStream::GetCloneable(bool* aCloneable)
 {
-  MOZ_ASSERT(mWeakCloneableInputStream);
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakCloneableInputStream);
+
   *aCloneable = true;
   return NS_OK;
 }
@@ -182,7 +214,8 @@ SlicedInputStream::GetCloneable(bool* aCloneable)
 NS_IMETHODIMP
 SlicedInputStream::Clone(nsIInputStream** aResult)
 {
-  MOZ_ASSERT(mWeakCloneableInputStream);
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakCloneableInputStream);
 
   nsCOMPtr<nsIInputStream> clonedStream;
   nsresult rv = mWeakCloneableInputStream->Clone(getter_AddRefs(clonedStream));
@@ -202,6 +235,8 @@ SlicedInputStream::Clone(nsIInputStream** aResult)
 NS_IMETHODIMP
 SlicedInputStream::CloseWithStatus(nsresult aStatus)
 {
+  NS_ENSURE_STATE(mInputStream);
+
   nsCOMPtr<nsIAsyncInputStream> asyncStream =
     do_QueryInterface(mInputStream);
   if (!asyncStream) {
@@ -217,6 +252,8 @@ SlicedInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
                              uint32_t aRequestedCount,
                              nsIEventTarget* aEventTarget)
 {
+  NS_ENSURE_STATE(mInputStream);
+
   nsCOMPtr<nsIAsyncInputStream> asyncStream =
     do_QueryInterface(mInputStream);
   if (!asyncStream) {
@@ -225,4 +262,66 @@ SlicedInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
   return asyncStream->AsyncWait(aCallback, aFlags, aRequestedCount,
                                 aEventTarget);
+}
+
+// nsIIPCSerializableInputStream
+
+void
+SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
+                             FileDescriptorArray& aFileDescriptors)
+{
+  MOZ_ASSERT(mInputStream);
+  MOZ_ASSERT(mWeakIPCSerializableInputStream);
+
+  SlicedInputStreamParams params;
+  SerializeInputStream(mInputStream, params.stream(), aFileDescriptors);
+  params.start() = mStart;
+  params.length() = mLength;
+  params.curPos() = mCurPos;
+  params.closed() = mClosed;
+
+  aParams = params;
+}
+
+bool
+SlicedInputStream::Deserialize(const mozilla::ipc::InputStreamParams& aParams,
+                               const FileDescriptorArray& aFileDescriptors)
+{
+  MOZ_ASSERT(!mInputStream);
+  MOZ_ASSERT(!mWeakIPCSerializableInputStream);
+
+  if (aParams.type() !=
+      InputStreamParams::TSlicedInputStreamParams) {
+    NS_ERROR("Received unknown parameters from the other process!");
+    return false;
+  }
+
+  const SlicedInputStreamParams& params =
+    aParams.get_SlicedInputStreamParams();
+
+  nsCOMPtr<nsIInputStream> stream =
+    DeserializeInputStream(params.stream(), aFileDescriptors);
+  if (!stream) {
+    NS_WARNING("Deserialize failed!");
+    return false;
+  }
+
+  SetSourceStream(stream);
+
+  mStart = params.start();
+  mLength = params.length();
+  mCurPos = params.curPos();
+  mClosed = params.closed();
+
+  return true;
+}
+
+mozilla::Maybe<uint64_t>
+SlicedInputStream::ExpectedSerializedLength()
+{
+  if (!mInputStream || !mWeakIPCSerializableInputStream) {
+    return mozilla::Nothing();
+  }
+
+  return mWeakIPCSerializableInputStream->ExpectedSerializedLength();
 }

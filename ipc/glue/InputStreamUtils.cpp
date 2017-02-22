@@ -22,6 +22,7 @@
 #include "nsStringStream.h"
 #include "nsTemporaryFileInputStream.h"
 #include "nsXULAppAPI.h"
+#include "SlicedInputStream.h"
 
 using namespace mozilla::dom;
 
@@ -147,6 +148,10 @@ DeserializeInputStream(const InputStreamParams& aParams,
 
       return stream.forget();
     }
+
+    case InputStreamParams::TSlicedInputStreamParams:
+      serializable = new SlicedInputStream();
+      break;
 
     default:
       MOZ_ASSERT(false, "Unknown params!");
