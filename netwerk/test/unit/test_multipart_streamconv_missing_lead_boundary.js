@@ -11,7 +11,7 @@ function make_channel(url) {
   return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
-var multipartBody = "\r\nSome text\r\n--boundary\r\n\r\n<?xml version='1.0'?><root/>\r\n--boundary--";
+var multipartBody = "Preamble\r\n--boundary\r\n\r\nSome text\r\n--boundary\r\n\r\n<?xml version='1.0'?><root/>\r\n--boundary--";
 
 function contentHandler(metadata, response)
 {
