@@ -85,7 +85,6 @@ EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
     dstParams->type = srcParams->type;
     dstParams->fieldID.size = srcParams->fieldID.size;
     dstParams->fieldID.type = srcParams->fieldID.type;
-    dstParams->pointSize = srcParams->pointSize;
     if (srcParams->fieldID.type == ec_field_GFp ||
         srcParams->fieldID.type == ec_field_plain) {
         CHECK_SEC_OK(SECITEM_CopyItem(arena, &dstParams->fieldID.u.prime,
@@ -135,7 +134,6 @@ gf_populate_params(ECCurveName name, ECFieldType field_type, ECParams *params)
     CHECK_OK(curveParams);
     params->fieldID.size = curveParams->size;
     params->fieldID.type = field_type;
-    params->pointSize = curveParams->pointSize;
     if (field_type == ec_field_GFp ||
         field_type == ec_field_plain) {
         CHECK_OK(hexString2SECItem(params->arena, &params->fieldID.u.prime,
@@ -292,6 +290,22 @@ EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams)
         ;
         return SECSuccess;
     }
+}
+
+int
+EC_GetPointSize(const ECParams *params)
+{
+    ECCurveName name = params->name;
+    const ECCurveParams *curveParams;
+
+    if ((name < ECCurve_noName) || (name > ECCurve_pastLastCurve) ||
+        ((curveParams = ecCurve_map[name]) == NULL)) {
+        /* unknown curve, calculate point size from params. assume standard curves with 2 points 
+         * and a point compression indicator byte */
+        int sizeInBytes = (params->fieldID.size + 7) / 8;
+        return sizeInBytes * 2 + 1;
+    }
+    return curveParams->pointSize;
 }
 
 #endif /* NSS_DISABLE_ECC */

@@ -294,9 +294,13 @@ static const struct FREEBLVectorStr vector =
       ChaCha20Poly1305_CreateContext,
       ChaCha20Poly1305_DestroyContext,
       ChaCha20Poly1305_Seal,
-      ChaCha20Poly1305_Open
+      ChaCha20Poly1305_Open,
 
       /* End of Version 3.018 */
+
+      EC_GetPointSize
+
+      /* End of Version 3.019 */
     };
 
 const FREEBLVector*

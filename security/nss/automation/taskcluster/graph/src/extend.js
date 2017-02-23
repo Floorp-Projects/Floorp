@@ -274,6 +274,7 @@ async function scheduleFuzzing() {
       CC: "clang",
       CCC: "clang++"
     },
+    features: ["allowPtrace"],
     platform: "linux64",
     collection: "fuzz",
     image: FUZZ_IMAGE
@@ -328,8 +329,6 @@ async function scheduleFuzzing() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
         "quickder nss/fuzz/corpus/quickder -max_total_time=300"
     ],
-    // Need a privileged docker container to remove this.
-    env: {ASAN_OPTIONS: "detect_leaks=0"},
     symbol: "QuickDER",
     kind: "test"
   }));
