@@ -4081,6 +4081,15 @@
     "n_buckets": 30,
     "description": "Time spent inside ClassifyLocalWithTables (ms)"
   },
+  "URLCLASSIFIER_ASYNC_CLASSIFYLOCAL_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1341506],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 30,
+    "description": "Time spent per AsyncClassifyLocalWithTables (ms)"
+  },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
