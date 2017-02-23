@@ -71,8 +71,8 @@ asserts(1-2) == vertical-table-specified-width-2.html vertical-table-specified-w
 fails == wm-row-progression-002.xht wm-row-progression-002.xht
 fails == wm-row-progression-003.xht wm-row-progression-003.xht
 fails == wm-row-progression-004.xht wm-row-progression-004.xht
-== wm-row-progression-004.xht wm-row-progression-005.xht
-== wm-row-progression-004.xht wm-row-progression-006.xht
+fails == wm-row-progression-005.xht wm-row-progression-005.xht
+fails == wm-row-progression-006.xht wm-row-progression-006.xht
 fails == wm-row-progression-007.xht wm-row-progression-007.xht
 
 # == table-caption-top-1.html table-caption-top-1.html
