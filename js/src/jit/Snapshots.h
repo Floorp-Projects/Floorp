@@ -506,19 +506,48 @@ class SnapshotReader
 
 class RInstructionStorage
 {
-    static const size_t Size = 4 * sizeof(uint32_t);
-    mozilla::AlignedStorage<Size> mem;
+    /*
+     * DO NOT REUSE THIS IMPLEMENTATION TACTIC.
+     *
+     * It is undefined behavior to bytewise-copy the bytes of one T, into a
+     * location that isn't a T -- and because the target |mBytes| often wasn't
+     * previously constructed as a T, it doesn't always count as such -- and
+     * then interpret that second location as T.  (This is *possibly* okay if T
+     * is POD or standard layout or is trivial.  None of those are true here.)
+     * The C++ spec considers this a strict aliasing violation.  We've hit
+     * crashes before when we've done this: for example, bug 1269319.
+     *
+     * This tactic is used here *only* because it was mistakenly added long
+     * ago, before it was recognized to be buggy, and we haven't yet struggled
+     * through the effort to remove it.
+     */
+    static constexpr size_t Size = 4 * sizeof(uint32_t);
+    union U
+    {
+        char mBytes[Size];
+
+        // This presumes all RInstructionStorage are safely uint64_t-alignable.
+        // RInstruction::readRecoverData asserts that no RInstruction subclass
+        // has stricter alignment requirements than RInstructionStorage.
+        uint64_t mDummy;
+    } u;
 
   public:
-    const void* addr() const { return mem.addr(); }
-    void* addr() { return mem.addr(); }
+    const void* addr() const { return u.mBytes; }
+    void* addr() { return u.mBytes; }
 
     RInstructionStorage() = default;
 
     RInstructionStorage(const RInstructionStorage& other) {
+        // FIXME: This is a strict aliasing violation: see the comment above,
+        //        and see bug 1269319 for an instance of this idea having
+        //        caused crashes.
         memcpy(addr(), other.addr(), Size);
     }
     void operator=(const RInstructionStorage& other) {
+        // FIXME: This is a strict aliasing violation: see the comment above,
+        //        and see bug 1269319 for an instance of this idea having
+        //        caused crashes.
         memcpy(addr(), other.addr(), Size);
     }
 };

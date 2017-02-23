@@ -99,36 +99,6 @@ struct AlignedElem<16>
   MOZ_ALIGNED_DECL(uint8_t elem, 16);
 };
 
-/*
- * This utility pales in comparison to Boost's aligned_storage. The utility
- * simply assumes that uint64_t is enough alignment for anyone. This may need
- * to be extended one day...
- *
- * As an important side effect, pulling the storage into this template is
- * enough obfuscation to confuse gcc's strict-aliasing analysis into not giving
- * false negatives when we cast from the char buffer to whatever type we've
- * constructed using the bytes.
- */
-template<size_t Nbytes>
-struct AlignedStorage
-{
-  union U
-  {
-    char mBytes[Nbytes];
-    uint64_t mDummy;
-  } u;
-
-  const void* addr() const { return u.mBytes; }
-  void* addr() { return u.mBytes; }
-
-  AlignedStorage() = default;
-
-  // AlignedStorage is non-copyable: the default copy constructor violates
-  // strict aliasing rules, per bug 1269319.
-  AlignedStorage(const AlignedStorage&) = delete;
-  void operator=(const AlignedStorage&) = delete;
-};
-
 template<typename T>
 struct MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS AlignedStorage2
 {
