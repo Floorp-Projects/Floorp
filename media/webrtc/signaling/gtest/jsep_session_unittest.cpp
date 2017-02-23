@@ -102,7 +102,7 @@ protected:
   }
 
   std::string
-  CreateOffer(const Maybe<JsepOfferOptions> options = Nothing())
+  CreateOffer(const Maybe<JsepOfferOptions>& options = Nothing())
   {
     JsepOfferOptions defaultOptions;
     const JsepOfferOptions& optionsRef = options ? *options : defaultOptions;
@@ -532,7 +532,7 @@ protected:
   static const uint32_t ALL_CHECKS = CHECK_SUCCESS | CHECK_TRACKS;
 
   void OfferAnswer(uint32_t checkFlags = ALL_CHECKS,
-                   const Maybe<JsepOfferOptions> options = Nothing()) {
+                   const Maybe<JsepOfferOptions>& options = Nothing()) {
     std::string offer = CreateOffer(options);
     SetLocalOffer(offer, checkFlags);
     SetRemoteOffer(offer, checkFlags);
