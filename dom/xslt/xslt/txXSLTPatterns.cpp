@@ -32,15 +32,25 @@ double txUnionPattern::getDefaultPriority()
  * This should be called on the simple patterns for xsl:template,
  * but is fine for xsl:key and xsl:number
  */
-bool txUnionPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txUnionPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                        bool& aMatched)
 {
     uint32_t i, len = mLocPathPatterns.Length();
     for (i = 0; i < len; ++i) {
-        if (mLocPathPatterns[i]->matches(aNode, aContext)) {
-            return true;
+        nsresult rv = mLocPathPatterns[i]->matches(aNode, aContext, aMatched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (aMatched) {
+            aMatched = true;
+
+            return NS_OK;
         }
     }
-    return false;
+
+    aMatched = false;
+
+    return NS_OK;
 }
 
 txPattern::Type
@@ -103,7 +113,9 @@ nsresult txLocPathPattern::addStep(txPattern* aPattern, bool isChild)
     return NS_OK;
 }
 
-bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                          bool& aMatched)
 {
     NS_ASSERTION(mSteps.Length() > 1, "Internal error");
 
@@ -121,18 +133,39 @@ bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aConte
 
     uint32_t pos = mSteps.Length();
     Step* step = &mSteps[--pos];
-    if (!step->pattern->matches(aNode, aContext))
-        return false;
+    nsresult rv = step->pattern->matches(aNode, aContext, aMatched);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aMatched) {
+        return NS_OK;
+    }
 
     txXPathTreeWalker walker(aNode);
     bool hasParent = walker.moveToParent();
 
     while (step->isChild) {
-        if (!pos)
-            return true; // all steps matched
+        if (!pos) {
+            aMatched = true;
+
+            return NS_OK; // all steps matched
+        }
+
+        if (!hasParent) {
+            // no more ancestors
+            aMatched = false;
+
+            return NS_OK;
+        }
+
         step = &mSteps[--pos];
-        if (!hasParent || !step->pattern->matches(walker.getCurrentPosition(), aContext))
-            return false; // no more ancestors or no match
+        rv = step->pattern->matches(walker.getCurrentPosition(), aContext,
+                                    aMatched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!aMatched) {
+            // no match
+            return NS_OK;
+        }
 
         hasParent = walker.moveToParent();
     }
@@ -142,12 +175,19 @@ bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aConte
     uint32_t blockPos = pos;
 
     while (pos) {
-        if (!hasParent)
-            return false; // There are more steps in the current block 
-                             // than ancestors of the tested node
+        if (!hasParent) {
+            aMatched = false; // There are more steps in the current block
+                              // than ancestors of the tested node
+            return NS_OK;
+        }
 
         step = &mSteps[--pos];
-        if (!step->pattern->matches(walker.getCurrentPosition(), aContext)) {
+        bool matched;
+        rv = step->pattern->matches(walker.getCurrentPosition(), aContext,
+                                    matched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!matched) {
             // Didn't match. We restart at beginning of block using a new
             // start node
             pos = blockPos;
@@ -164,7 +204,9 @@ bool txLocPathPattern::matches(const txXPathNode& aNode, txIMatchContext* aConte
         }
     }
 
-    return true;
+    aMatched = true;
+
+    return NS_OK;
 } // txLocPathPattern::matches
 
 double txLocPathPattern::getDefaultPriority()
@@ -218,9 +260,13 @@ txLocPathPattern::toString(nsAString& aDest)
  * a txPattern matching the document node, or '/'
  */
 
-bool txRootPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txRootPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                       bool& aMatched)
 {
-    return txXPathNodeUtils::isRoot(aNode);
+    aMatched = txXPathNodeUtils::isRoot(aNode);
+
+    return NS_OK;
 }
 
 double txRootPattern::getDefaultPriority()
@@ -264,10 +310,14 @@ txIdPattern::txIdPattern(const nsSubstring& aString)
     }
 }
 
-bool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                     bool& aMatched)
 {
     if (!txXPathNodeUtils::isElement(aNode)) {
-        return false;
+        aMatched = false;
+
+        return NS_OK;
     }
 
     // Get a ID attribute, if there is
@@ -275,7 +325,9 @@ bool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     NS_ASSERTION(content, "a Element without nsIContent");
 
     nsIAtom* id = content->GetID();
-    return id && mIds.IndexOf(id) > -1;
+    aMatched = id && mIds.IndexOf(id) > -1;
+
+    return NS_OK;
 }
 
 double txIdPattern::getDefaultPriority()
@@ -320,18 +372,22 @@ txIdPattern::toString(nsAString& aDest)
  * argument.
  */
 
-bool txKeyPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txKeyPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                      bool& aMatched)
 {
     txExecutionState* es = (txExecutionState*)aContext->getPrivateContext();
     nsAutoPtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
-    NS_ENSURE_TRUE(contextDoc, false);
+    NS_ENSURE_TRUE(contextDoc, NS_ERROR_FAILURE);
 
     RefPtr<txNodeSet> nodes;
     nsresult rv = es->getKeyNodes(mName, *contextDoc, mValue, true,
                                   getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return nodes->contains(aNode);
+    aMatched = nodes->contains(aNode);
+
+    return NS_OK;
 }
 
 double txKeyPattern::getDefaultPriority()
@@ -373,21 +429,32 @@ txKeyPattern::toString(nsAString& aDest)
  * a txPattern to hold the NodeTest and the Predicates of a StepPattern
  */
 
-bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
+nsresult
+txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext,
+                       bool& aMatched)
 {
     NS_ASSERTION(mNodeTest, "Internal error");
 
-    if (!mNodeTest->matches(aNode, aContext))
-        return false;
+    nsresult rv = mNodeTest->matches(aNode, aContext, aMatched);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aMatched) {
+        return NS_OK;
+    }
 
     txXPathTreeWalker walker(aNode);
     if ((!mIsAttr &&
          txXPathNodeUtils::isAttribute(walker.getCurrentPosition())) ||
         !walker.moveToParent()) {
-        return false;
+        aMatched = false;
+
+        return NS_OK;
     }
+
     if (isEmpty()) {
-        return true;
+        aMatched = true;
+
+        return NS_OK;
     }
 
     /*
@@ -410,13 +477,17 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 
     // Create the context node set for evaluating the predicates
     RefPtr<txNodeSet> nodes;
-    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
-    NS_ENSURE_SUCCESS(rv, false);
+    rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     bool hasNext = mIsAttr ? walker.moveToFirstAttribute() :
                                walker.moveToFirstChild();
     while (hasNext) {
-        if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+        bool matched;
+        rv = mNodeTest->matches(walker.getCurrentPosition(), aContext, matched);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (matched) {
             nodes->append(walker.getCurrentPosition());
         }
         hasNext = mIsAttr ? walker.moveToNextAttribute() :
@@ -426,7 +497,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     Expr* predicate = mPredicates[0];
     RefPtr<txNodeSet> newNodes;
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
-    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t i, predLen = mPredicates.Length();
     for (i = 1; i < predLen; ++i) {
@@ -437,7 +508,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
             predContext.next();
             RefPtr<txAExprResult> exprResult;
             rv = predicate->evaluate(&predContext, getter_AddRefs(exprResult));
-            NS_ENSURE_SUCCESS(rv, false);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             switch(exprResult->getResultType()) {
                 case txAExprResult::NUMBER:
@@ -464,20 +535,25 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
         nodes->clear();
         nodes->append(*newNodes);
         if (!contextIsInPredicate) {
-            return false;
+            aMatched = false;
+
+            return NS_OK;
         }
         predicate = mPredicates[i];
     }
     txForwardContext evalContext(aContext, aNode, nodes);
     RefPtr<txAExprResult> exprResult;
     rv = predicate->evaluate(&evalContext, getter_AddRefs(exprResult));
-    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (exprResult->getResultType() == txAExprResult::NUMBER)
+    if (exprResult->getResultType() == txAExprResult::NUMBER) {
         // handle default, [position() == numberValue()]
-        return ((double)evalContext.position() == exprResult->numberValue());
+        aMatched = ((double)evalContext.position() == exprResult->numberValue());
+    } else {
+        aMatched = exprResult->booleanValue();
+    }
 
-    return exprResult->booleanValue();
+    return NS_OK;
 } // matches
 
 double txStepPattern::getDefaultPriority()
