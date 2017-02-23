@@ -15,7 +15,7 @@ pub struct GLContextAttributes {
 
 #[cfg(feature = "serde")]
 impl Deserialize for GLContextAttributes {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer
     {
         let values = try!(<[_; 6]>::deserialize(deserializer));
@@ -32,7 +32,7 @@ impl Deserialize for GLContextAttributes {
 
 #[cfg(feature = "serde")]
 impl Serialize for GLContextAttributes {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         let values = [

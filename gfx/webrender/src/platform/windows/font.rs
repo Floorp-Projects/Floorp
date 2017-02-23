@@ -82,18 +82,24 @@ fn dwrite_render_mode(font_face: &dwrote::FontFace,
 
 fn get_glyph_dimensions_with_analysis(analysis: dwrote::GlyphRunAnalysis,
                                       texture_type: dwrote::DWRITE_TEXTURE_TYPE)
-                                      -> GlyphDimensions {
+                                      -> Option<GlyphDimensions> {
     let bounds = analysis.get_alpha_texture_bounds(texture_type);
 
     let width = (bounds.right - bounds.left) as u32;
     let height = (bounds.bottom - bounds.top) as u32;
-    assert!(width > 0 && height > 0);
-    GlyphDimensions {
+
+    // Alpha texture bounds can sometimes return an empty rect
+    // Such as for spaces
+    if width == 0 || height == 0 {
+        return None
+    }
+
+    Some(GlyphDimensions {
         left: bounds.left,
         top: -bounds.top,
         width: width,
         height: height,
-    }
+    })
 }
 
 impl FontContext {
@@ -203,7 +209,7 @@ impl FontContext {
         let analysis = self.create_glyph_analysis(key, render_mode, None);
 
         let texture_type = dwrite_texture_type(render_mode);
-        Some(get_glyph_dimensions_with_analysis(analysis, texture_type))
+        get_glyph_dimensions_with_analysis(analysis, texture_type)
     }
 
     // DWRITE gives us values in RGB. WR doesn't really touch it after. Note, CG returns in BGR
@@ -265,6 +271,10 @@ impl FontContext {
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
         let width = (bounds.right - bounds.left) as usize;
         let height = (bounds.bottom - bounds.top) as usize;
+
+        // We should not get here since glyph_dimensions would return
+        // None for empty glyphs.
+        assert!(width > 0 && height > 0);
 
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 
