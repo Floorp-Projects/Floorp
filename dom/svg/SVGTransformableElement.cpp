@@ -101,12 +101,15 @@ SVGTransformableElement::IsEventAttributeName(nsIAtom* aName)
 // nsSVGElement overrides
 
 gfxMatrix
-SVGTransformableElement::PrependLocalTransformsTo(
-  const gfxMatrix &aMatrix,
-  SVGTransformTypes aWhich) const
+SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix& aMatrix,
+                                                  SVGTransformTypes aWhich) const
 {
-  return SVGContentUtils::PrependLocalTransformsTo(
-    aMatrix, aWhich, mAnimateMotionTransform, mTransforms);
+  if (aWhich == eChildToUserSpace) {
+    // We don't have any eUserSpaceToParent transforms. (Sub-classes that do
+    // must override this function and handle that themselves.)
+    return aMatrix;
+  }
+  return GetUserToParentTransform(mAnimateMotionTransform, mTransforms) * aMatrix;
 }
 
 const gfx::Matrix*
@@ -253,6 +256,24 @@ SVGTransformableElement::GetTransformToElement(SVGGraphicsElement& aElement,
 
   RefPtr<SVGMatrix> mat = tmp->Multiply(*ourScreenCTM);
   return mat.forget();
+}
+
+/* static */ gfxMatrix
+SVGTransformableElement::GetUserToParentTransform(
+                           const gfx::Matrix* aAnimateMotionTransform,
+                           const nsSVGAnimatedTransformList* aTransforms)
+{
+  gfxMatrix result;
+
+  if (aAnimateMotionTransform) {
+    result.PreMultiply(ThebesMatrix(*aAnimateMotionTransform));
+  }
+
+  if (aTransforms) {
+    result.PreMultiply(aTransforms->GetAnimValue().GetConsolidationMatrix());
+  }
+
+  return result;
 }
 
 } // namespace dom
