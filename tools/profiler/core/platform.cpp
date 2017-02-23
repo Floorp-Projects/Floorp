@@ -251,12 +251,12 @@ AddDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
 }
 
 static void
-AddPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
+AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
                PseudoStack* stack, void* lastpc)
 {
   // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations and
   // should not be recorded in the profile.
-  if (entry.hasFlag(StackEntry::BEGIN_PSEUDO_JS)) {
+  if (entry.hasFlag(js::ProfileEntry::BEGIN_PSEUDO_JS)) {
     return;
   }
 
@@ -307,8 +307,8 @@ AddPseudoEntry(volatile StackEntry& entry, ThreadInfo& aInfo,
   }
 
   uint32_t category = entry.category();
-  MOZ_ASSERT(!(category & StackEntry::IS_CPP_ENTRY));
-  MOZ_ASSERT(!(category & StackEntry::FRAME_LABEL_COPY));
+  MOZ_ASSERT(!(category & js::ProfileEntry::IS_CPP_ENTRY));
+  MOZ_ASSERT(!(category & js::ProfileEntry::FRAME_LABEL_COPY));
 
   if (category) {
     aInfo.addTag(ProfileEntry::Category((int)category));
@@ -345,7 +345,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
                        NativeStack& aNativeStack)
 {
   PseudoStack* pseudoStack = aInfo.Stack();
-  volatile StackEntry* pseudoFrames = pseudoStack->mStack;
+  volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   // Make a copy of the JS stack into a JSFrame array. This is necessary since,
@@ -420,7 +420,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     uint8_t* nativeStackAddr = nullptr;
 
     if (pseudoIndex != pseudoCount) {
-      volatile StackEntry& pseudoFrame = pseudoFrames[pseudoIndex];
+      volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
 
       if (pseudoFrame.isCpp()) {
         lastPseudoCppStackAddr = (uint8_t*) pseudoFrame.stackAddress();
@@ -471,7 +471,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     // Check to see if pseudoStack frame is top-most.
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
-      volatile StackEntry& pseudoFrame = pseudoFrames[pseudoIndex];
+      volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
       AddPseudoEntry(pseudoFrame, aInfo, pseudoStack, nullptr);
       pseudoIndex++;
       continue;
@@ -616,7 +616,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
   for (uint32_t i = pseudoStack->stackSize(); i > 0; --i) {
     // The pseudostack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
-    volatile StackEntry& entry = pseudoStack->mStack[i - 1];
+    volatile js::ProfileEntry& entry = pseudoStack->mStack[i - 1];
     if (!entry.isJs() && strcmp(entry.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
@@ -2486,7 +2486,7 @@ profiler_get_backtrace_noalloc(char *output, size_t outputSize)
     return;
   }
 
-  volatile StackEntry *pseudoFrames = pseudoStack->mStack;
+  volatile js::ProfileEntry *pseudoFrames = pseudoStack->mStack;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
   for (uint32_t i = 0; i < pseudoCount; i++) {
