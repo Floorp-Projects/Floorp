@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
 const DEFAULT_EXTENSION_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
-const BRAND_PROPERTIES = "chrome://browser/locale/brand.properties";
+const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
