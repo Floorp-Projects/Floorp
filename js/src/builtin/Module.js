@@ -65,12 +65,12 @@ function ModuleGetExportedNames(exportStarSet = [])
     return exportedNames;
 }
 
-// 15.2.1.16.3 ResolveExport(exportName, resolveSet, exportStarSet)
-function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
+// 15.2.1.16.3 ResolveExport(exportName, resolveSet)
+function ModuleResolveExport(exportName, resolveSet = [])
 {
     if (!IsObject(this) || !IsModule(this)) {
         return callFunction(CallModuleMethodIfWrapped, this, exportName, resolveSet,
-                            exportStarSet, "ModuleResolveExport");
+                            "ModuleResolveExport");
     }
 
     // Step 1
@@ -101,37 +101,28 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
         if (exportName === e.exportName) {
             let importedModule = CallModuleResolveHook(module, e.moduleRequest,
                                                        MODULE_STATE_INSTANTIATED);
-            let indirectResolution = callFunction(importedModule.resolveExport, importedModule,
-                                                  e.importName, resolveSet, exportStarSet);
-            if (indirectResolution !== null)
-                return indirectResolution;
+            return callFunction(importedModule.resolveExport, importedModule, e.importName,
+                                resolveSet);
         }
     }
 
     // Step 6
     if (exportName === "default") {
         // A default export cannot be provided by an export *.
-        ThrowSyntaxError(JSMSG_BAD_DEFAULT_EXPORT);
+        return null;
     }
 
     // Step 7
-    if (callFunction(ArrayIncludes, exportStarSet, module))
-        return null;
-
-    // Step 8
-    _DefineDataProperty(exportStarSet, exportStarSet.length, module);
-
-    // Step 9
     let starResolution = null;
 
-    // Step 10
+    // Step 8
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
         let importedModule = CallModuleResolveHook(module, e.moduleRequest,
                                                    MODULE_STATE_INSTANTIATED);
         let resolution = callFunction(importedModule.resolveExport, importedModule,
-                                      exportName, resolveSet, exportStarSet);
+                                      exportName, resolveSet);
         if (resolution === "ambiguous")
             return resolution;
 
@@ -148,6 +139,7 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
         }
     }
 
+    // Step 9
     return starResolution;
 }
 
@@ -279,7 +271,7 @@ function ModuleDeclarationInstantiation()
             }
         }
 
-        // Step 16.iv
+        // Step 17.a.iii
         InstantiateModuleFunctionDeclarations(module);
     } catch (e) {
         RecordInstantationFailure(module);
