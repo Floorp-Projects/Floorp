@@ -1316,9 +1316,6 @@ internal_RemoteAccumulate(mozilla::Telemetry::HistogramID aId,
   KeyedHistogram* keyed
      = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
   MOZ_ASSERT(keyed);
-  // Assert on empty keys as well, we should be filtering them out in
-  // the outer API.
-  MOZ_ASSERT(!aKey.IsEmpty());
   if (!keyed->IsRecordingEnabled()) {
     return false;
   }
@@ -1746,12 +1743,6 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     return true;
   }
 
-  if (key.IsEmpty()) {
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-      NS_LITERAL_STRING("Empty histogram keys are not allowed."));
-    return true;
-  }
-
   const uint32_t type = keyed->GetHistogramType();
 
   // If we don't have an argument for the count histogram, assume an increment of 1.
@@ -2145,12 +2136,6 @@ TelemetryHistogram::Accumulate(mozilla::Telemetry::HistogramID aID,
     return;
   }
 
-  if (aKey.IsEmpty()) {
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-      NS_LITERAL_STRING("Empty histogram keys are not allowed."));
-    return;
-  }
-
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_Accumulate(aID, aKey, aSample);
 }
@@ -2174,12 +2159,6 @@ void
 TelemetryHistogram::Accumulate(const char* name,
                                const nsCString& key, uint32_t sample)
 {
-  if (key.IsEmpty()) {
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-      NS_LITERAL_STRING("Empty histogram keys are not allowed."));
-    return;
-  }
-
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (!internal_CanRecordBase()) {
     return;
