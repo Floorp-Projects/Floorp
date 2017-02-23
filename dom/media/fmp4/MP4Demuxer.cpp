@@ -116,7 +116,6 @@ AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata)
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
   : mResource(aResource)
   , mStream(new mp4_demuxer::ResourceStream(aResource))
-  , mInitData(new MediaByteBuffer)
 {
 }
 
@@ -127,27 +126,71 @@ MP4Demuxer::Init()
 
   // Check that we have enough data to read the metadata.
   if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                                        __func__);
+    return InitPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                  RESULT_DETAIL("Incomplete MP4 metadata")),
+      __func__);
   }
 
-  mInitData = mp4_demuxer::MP4Metadata::Metadata(stream);
-  if (!mInitData) {
-    // OOM
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                                        __func__);
+  RefPtr<MediaByteBuffer> initData = mp4_demuxer::MP4Metadata::Metadata(stream);
+  if (!initData) {
+    return InitPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                  RESULT_DETAIL("Invalid MP4 metadata or OOM")),
+      __func__);
   }
 
   RefPtr<mp4_demuxer::BufferStream> bufferstream =
-    new mp4_demuxer::BufferStream(mInitData);
+    new mp4_demuxer::BufferStream(initData);
 
-  mMetadata = MakeUnique<mp4_demuxer::MP4Metadata>(bufferstream);
+  mp4_demuxer::MP4Metadata metadata{bufferstream};
 
-  if (!mMetadata->GetNumberTracks(mozilla::TrackInfo::kAudioTrack)
-      && !mMetadata->GetNumberTracks(mozilla::TrackInfo::kVideoTrack)) {
-    return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                                        __func__);
+  auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
+  auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);
+  if (audioTrackCount == 0 && videoTrackCount == 0) {
+    return InitPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                  RESULT_DETAIL("No MP4 audio or video tracks")),
+      __func__);
   }
+
+  if (audioTrackCount != 0) {
+    mAudioDemuxers.SetLength(audioTrackCount);
+    for (size_t i = 0; i < audioTrackCount; i++) {
+      UniquePtr<TrackInfo> info =
+        metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
+      if (info) {
+        FallibleTArray<mp4_demuxer::Index::Indice> indices;
+        if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
+          mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+        }
+      }
+    }
+  }
+
+  if (videoTrackCount != 0) {
+    mVideoDemuxers.SetLength(videoTrackCount);
+    for (size_t i = 0; i < videoTrackCount; i++) {
+      UniquePtr<TrackInfo> info =
+        metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
+      if (info) {
+        FallibleTArray<mp4_demuxer::Index::Indice> indices;
+        if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
+          mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+        }
+      }
+    }
+  }
+
+  const mp4_demuxer::CryptoFile& cryptoFile = metadata.Crypto();
+  if (cryptoFile.valid) {
+    const nsTArray<mp4_demuxer::PsshInfo>& psshs = cryptoFile.pssh;
+    for (uint32_t i = 0; i < psshs.Length(); i++) {
+      mCryptoInitData.AppendElements(psshs[i].data);
+    }
+  }
+
+  mIsSeekable = metadata.CanSeek();
 
   return InitPromise::CreateAndResolve(NS_OK, __func__);
 }
@@ -155,78 +198,74 @@ MP4Demuxer::Init()
 bool
 MP4Demuxer::HasTrackType(TrackInfo::TrackType aType) const
 {
-  return !!GetNumberTracks(aType);
+  return GetNumberTracks(aType) != 0;
 }
 
 uint32_t
 MP4Demuxer::GetNumberTracks(TrackInfo::TrackType aType) const
 {
-  return mMetadata->GetNumberTracks(aType);
+  switch (aType) {
+    case TrackInfo::kAudioTrack: return uint32_t(mAudioDemuxers.Length());
+    case TrackInfo::kVideoTrack: return uint32_t(mVideoDemuxers.Length());
+    default: return 0;
+  }
 }
 
 already_AddRefed<MediaTrackDemuxer>
 MP4Demuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
 {
-  if (mMetadata->GetNumberTracks(aType) <= aTrackNumber) {
-    return nullptr;
+  switch (aType) {
+    case TrackInfo::kAudioTrack:
+      if (aTrackNumber >= uint32_t(mAudioDemuxers.Length())) {
+        return nullptr;
+      }
+      return RefPtr<MediaTrackDemuxer>(mAudioDemuxers[aTrackNumber]).forget();
+    case TrackInfo::kVideoTrack:
+      if (aTrackNumber >= uint32_t(mVideoDemuxers.Length())) {
+        return nullptr;
+      }
+      return RefPtr<MediaTrackDemuxer>(mVideoDemuxers[aTrackNumber]).forget();
+    default:
+      return nullptr;
   }
-  UniquePtr<TrackInfo> info = mMetadata->GetTrackInfo(aType, aTrackNumber);
-  if (!info) {
-    return nullptr;
-  }
-  FallibleTArray<mp4_demuxer::Index::Indice> indices;
-  if (!mMetadata->ReadTrackIndex(indices, info->mTrackId)) {
-    return nullptr;
-  }
-  RefPtr<MP4TrackDemuxer> e = new MP4TrackDemuxer(this, Move(info), indices);
-  mDemuxers.AppendElement(e);
-
-  return e.forget();
 }
 
 bool
 MP4Demuxer::IsSeekable() const
 {
-  return mMetadata->CanSeek();
+  return mIsSeekable;
 }
 
 void
 MP4Demuxer::NotifyDataArrived()
 {
-  for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
-    mDemuxers[i]->NotifyDataArrived();
+  for (auto& dmx : mAudioDemuxers) {
+    dmx->NotifyDataArrived();
+  }
+  for (auto& dmx : mVideoDemuxers) {
+    dmx->NotifyDataArrived();
   }
 }
 
 void
 MP4Demuxer::NotifyDataRemoved()
 {
-  for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
-    mDemuxers[i]->NotifyDataArrived();
+  for (auto& dmx : mAudioDemuxers) {
+    dmx->NotifyDataArrived();
+  }
+  for (auto& dmx : mVideoDemuxers) {
+    dmx->NotifyDataArrived();
   }
 }
 
 UniquePtr<EncryptionInfo>
 MP4Demuxer::GetCrypto()
 {
-  const mp4_demuxer::CryptoFile& cryptoFile = mMetadata->Crypto();
-  if (!cryptoFile.valid) {
-    return nullptr;
+  UniquePtr<EncryptionInfo> crypto;
+  if (!mCryptoInitData.IsEmpty()) {
+    crypto.reset(new EncryptionInfo{});
+    crypto->AddInitData(NS_LITERAL_STRING("cenc"), mCryptoInitData);
   }
-
-  const nsTArray<mp4_demuxer::PsshInfo>& psshs = cryptoFile.pssh;
-  nsTArray<uint8_t> initData;
-  for (uint32_t i = 0; i < psshs.Length(); i++) {
-    initData.AppendElements(psshs[i].data);
-  }
-
-  if (initData.IsEmpty()) {
-    return nullptr;
-  }
-
-  auto crypto = MakeUnique<EncryptionInfo>();
-  crypto->AddInitData(NS_LITERAL_STRING("cenc"), Move(initData));
-
   return crypto;
 }
 
