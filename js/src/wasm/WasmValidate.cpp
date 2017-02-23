@@ -829,20 +829,24 @@ DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env)
     if (!DecodeLimits(d, &memory))
         return false;
 
-    CheckedInt<uint32_t> initialBytes = memory.initial;
-    initialBytes *= PageSize;
-    if (!initialBytes.isValid() || initialBytes.value() > MaxMemoryInitialBytes)
+    if (memory.initial > MaxMemoryInitialPages)
         return d.fail("initial memory size too big");
 
+    CheckedInt<uint32_t> initialBytes = memory.initial;
+    initialBytes *= PageSize;
+    MOZ_ASSERT(initialBytes.isValid());
     memory.initial = initialBytes.value();
 
     if (memory.maximum) {
-        CheckedInt<uint32_t> maximumBytes = *memory.maximum;
-        maximumBytes *= PageSize;
-        if (!maximumBytes.isValid())
+        if (*memory.maximum > MaxMemoryMaximumPages)
             return d.fail("maximum memory size too big");
 
-        memory.maximum = Some(maximumBytes.value());
+        CheckedInt<uint32_t> maximumBytes = *memory.maximum;
+        maximumBytes *= PageSize;
+
+        // Clamp the maximum memory value to UINT32_MAX; it's not semantically
+        // visible since growing will fail for values greater than INT32_MAX.
+        memory.maximum = Some(maximumBytes.isValid() ? maximumBytes.value() : UINT32_MAX);
     }
 
     env->memoryUsage = MemoryUsage::Unshared;
@@ -1462,7 +1466,7 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
         if (!d.readVarU32(&seg.length))
             return d.fail("expected segment size");
 
-        if (seg.length > MaxMemoryInitialBytes)
+        if (seg.length > MaxMemoryInitialPages * PageSize)
             return d.fail("segment size too big");
 
         seg.bytecodeOffset = d.currentOffset();
