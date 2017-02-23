@@ -4897,7 +4897,7 @@ MAKE_GC_SWEEP_TASK(SweepMiscTask);
 /* virtual */ void
 SweepAtomsTask::run()
 {
-    AtomMarkingRuntime::Bitmap marked;
+    DenseBitmap marked;
     if (runtime()->gc.atomMarking.computeBitmapFromChunkMarkBits(runtime(), marked)) {
         for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
             runtime()->gc.atomMarking.updateZoneBitmap(zone, marked);
