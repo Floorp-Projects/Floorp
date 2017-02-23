@@ -77,10 +77,10 @@ fails == flexbox-position-absolute-1.xhtml flexbox-position-absolute-1.xhtml
 fails == flexbox-position-absolute-2.xhtml flexbox-position-absolute-2.xhtml
 fails == flexbox-position-absolute-3.xhtml flexbox-position-absolute-3.xhtml
 == flexbox-position-absolute-4.xhtml flexbox-position-absolute-4.xhtml
-# == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
+fails == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
 fails == flexbox-position-fixed-1.xhtml flexbox-position-fixed-1.xhtml
 fails == flexbox-position-fixed-2.xhtml flexbox-position-fixed-2.xhtml
-# == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
+fails == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
 == flexbox-position-fixed-4.xhtml flexbox-position-fixed-4.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block

@@ -166,48 +166,48 @@ HTTP == svg-stylesheet-external-1.html svg-stylesheet-external-1.html
 fails == svg-border-image-repaint-1.html svg-border-image-repaint-1.html
 
 # Tests for image-orientation with a viewbox and an intrinsic size:
-# == image-orientation-viewbox-and-size.html?0 image-orientation-viewbox-and-size.html?0
-# == image-orientation-viewbox-and-size.html?90 image-orientation-viewbox-and-size.html?90
-# == image-orientation-viewbox-and-size.html?180 image-orientation-viewbox-and-size.html?180
-# == image-orientation-viewbox-and-size.html?270 image-orientation-viewbox-and-size.html?270
-# == image-orientation-viewbox-and-size.html?0&flip image-orientation-viewbox-and-size.html?0&flip
-# == image-orientation-viewbox-and-size.html?90&flip image-orientation-viewbox-and-size.html?90&flip
-# == image-orientation-viewbox-and-size.html?180&flip image-orientation-viewbox-and-size.html?180&flip
-# == image-orientation-viewbox-and-size.html?270&flip image-orientation-viewbox-and-size.html?270&flip
+== image-orientation-viewbox-and-size.html?0 image-orientation-viewbox-and-size.html?0
+fails == image-orientation-viewbox-and-size.html?90 image-orientation-viewbox-and-size.html?90 # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?180 image-orientation-viewbox-and-size.html?180 # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?270 image-orientation-viewbox-and-size.html?270 # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?0&flip image-orientation-viewbox-and-size.html?0&flip # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?90&flip image-orientation-viewbox-and-size.html?90&flip # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?180&flip image-orientation-viewbox-and-size.html?180&flip # Bug 1341758
+fails == image-orientation-viewbox-and-size.html?270&flip image-orientation-viewbox-and-size.html?270&flip # Bug 1341758
 
 # Tests for image-orientation with a viewbox and no intrinsic size:
-# == image-orientation-viewbox-no-size.html?0 image-orientation-viewbox-no-size.html?0
-# == image-orientation-viewbox-no-size.html?90 image-orientation-viewbox-no-size.html?90
-# == image-orientation-viewbox-no-size.html?180 image-orientation-viewbox-no-size.html?180
-# == image-orientation-viewbox-no-size.html?270 image-orientation-viewbox-no-size.html?270
-# == image-orientation-viewbox-no-size.html?0&flip image-orientation-viewbox-no-size.html?0&flip
-# == image-orientation-viewbox-no-size.html?90&flip image-orientation-viewbox-no-size.html?90&flip
-# == image-orientation-viewbox-no-size.html?180&flip image-orientation-viewbox-no-size.html?180&flip
-# == image-orientation-viewbox-no-size.html?270&flip image-orientation-viewbox-no-size.html?270&flip
+== image-orientation-viewbox-no-size.html?0 image-orientation-viewbox-no-size.html?0
+fails == image-orientation-viewbox-no-size.html?90 image-orientation-viewbox-no-size.html?90 # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?180 image-orientation-viewbox-no-size.html?180 # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?270 image-orientation-viewbox-no-size.html?270 # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?0&flip image-orientation-viewbox-no-size.html?0&flip # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?90&flip image-orientation-viewbox-no-size.html?90&flip # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?180&flip image-orientation-viewbox-no-size.html?180&flip # Bug 1341758
+fails == image-orientation-viewbox-no-size.html?270&flip image-orientation-viewbox-no-size.html?270&flip # Bug 1341758
 
 # Tests for image-orientation with no viewbox and an intrinsic size:
-# == image-orientation-no-viewbox-and-size.html?0 image-orientation-no-viewbox-and-size.html?0
-# == image-orientation-no-viewbox-and-size.html?90 image-orientation-no-viewbox-and-size.html?90
-# == image-orientation-no-viewbox-and-size.html?180 image-orientation-no-viewbox-and-size.html?180
-# == image-orientation-no-viewbox-and-size.html?270 image-orientation-no-viewbox-and-size.html?270
-# == image-orientation-no-viewbox-and-size.html?0&flip image-orientation-no-viewbox-and-size.html?0&flip
-# == image-orientation-no-viewbox-and-size.html?90&flip image-orientation-no-viewbox-and-size.html?90&flip
-# == image-orientation-no-viewbox-and-size.html?180&flip image-orientation-no-viewbox-and-size.html?180&flip
-# == image-orientation-no-viewbox-and-size.html?270&flip image-orientation-no-viewbox-and-size.html?270&flip
+== image-orientation-no-viewbox-and-size.html?0 image-orientation-no-viewbox-and-size.html?0
+fails == image-orientation-no-viewbox-and-size.html?90 image-orientation-no-viewbox-and-size.html?90 # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?180 image-orientation-no-viewbox-and-size.html?180 # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?270 image-orientation-no-viewbox-and-size.html?270 # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?0&flip image-orientation-no-viewbox-and-size.html?0&flip # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?90&flip image-orientation-no-viewbox-and-size.html?90&flip # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?180&flip image-orientation-no-viewbox-and-size.html?180&flip # Bug 1341758
+fails == image-orientation-no-viewbox-and-size.html?270&flip image-orientation-no-viewbox-and-size.html?270&flip # Bug 1341758
 
 # Tests for image-orientation with no viewbox and no intrinsic size:
-# == image-orientation-no-viewbox-no-size.html?0 image-orientation-no-viewbox-no-size.html?0
-# == image-orientation-no-viewbox-no-size.html?90 image-orientation-no-viewbox-no-size.html?90
-# == image-orientation-no-viewbox-no-size.html?180 image-orientation-no-viewbox-no-size.html?180
-# == image-orientation-no-viewbox-no-size.html?270 image-orientation-no-viewbox-no-size.html?270
-# == image-orientation-no-viewbox-no-size.html?0&flip image-orientation-no-viewbox-no-size.html?0&flip
-# == image-orientation-no-viewbox-no-size.html?90&flip image-orientation-no-viewbox-no-size.html?90&flip
-# == image-orientation-no-viewbox-no-size.html?180&flip image-orientation-no-viewbox-no-size.html?180&flip
-# == image-orientation-no-viewbox-no-size.html?270&flip image-orientation-no-viewbox-no-size.html?270&flip
+== image-orientation-no-viewbox-no-size.html?0 image-orientation-no-viewbox-no-size.html?0
+fails == image-orientation-no-viewbox-no-size.html?90 image-orientation-no-viewbox-no-size.html?90 # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?180 image-orientation-no-viewbox-no-size.html?180 # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?270 image-orientation-no-viewbox-no-size.html?270 # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?0&flip image-orientation-no-viewbox-no-size.html?0&flip # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?90&flip image-orientation-no-viewbox-no-size.html?90&flip # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?180&flip image-orientation-no-viewbox-no-size.html?180&flip # Bug 1341758
+fails == image-orientation-no-viewbox-no-size.html?270&flip image-orientation-no-viewbox-no-size.html?270&flip # Bug 1341758
 
 # Test that 'image-orientation: from-image' has no effect, since SVGs don't have EXIF data.
-# == image-orientation-viewbox-and-size.html?from-image image-orientation-viewbox-and-size.html?from-image
-# == image-orientation-viewbox-no-size.html?from-image image-orientation-viewbox-no-size.html?from-image
+== image-orientation-viewbox-and-size.html?from-image image-orientation-viewbox-and-size.html?from-image
+== image-orientation-viewbox-no-size.html?from-image image-orientation-viewbox-no-size.html?from-image
 
 # Sanity checks for the image-orientation tests. Ensures that the various
 # combinations of rotations and flips actually look different from each other.
@@ -229,14 +229,14 @@ fails == svg-border-image-repaint-1.html svg-border-image-repaint-1.html
 == nonuniform-scale-3d.html?1.0&0.5&0.5 nonuniform-scale-3d.html?1.0&0.5&0.5
 
 # Sanity checks that nonuniform scales don't devolve to uniform scales.
-# == nonuniform-scale-2d.html?0.3&1.0 nonuniform-scale-2d.html?0.3&1.0
-# == nonuniform-scale-2d.html?0.3&1.0 nonuniform-scale-2d.html?0.3&1.0
-# == nonuniform-scale-2d.html?1.0&0.3 nonuniform-scale-2d.html?1.0&0.3
-# == nonuniform-scale-2d.html?1.0&0.3 nonuniform-scale-2d.html?1.0&0.3
-# == nonuniform-scale-3d.html?0.3&1.0&0.3 nonuniform-scale-3d.html?0.3&1.0&0.3
-# == nonuniform-scale-3d.html?0.3&1.0&0.3 nonuniform-scale-3d.html?0.3&1.0&0.3
-# == nonuniform-scale-3d.html?1.0&0.3&0.3 nonuniform-scale-3d.html?1.0&0.3&0.3
-# == nonuniform-scale-3d.html?1.0&0.3&0.3 nonuniform-scale-3d.html?1.0&0.3&0.3
+== nonuniform-scale-2d.html?0.3&1.0 nonuniform-scale-2d.html?0.3&1.0
+== nonuniform-scale-2d.html?0.3&1.0 nonuniform-scale-2d.html?0.3&1.0
+== nonuniform-scale-2d.html?1.0&0.3 nonuniform-scale-2d.html?1.0&0.3
+== nonuniform-scale-2d.html?1.0&0.3 nonuniform-scale-2d.html?1.0&0.3
+== nonuniform-scale-3d.html?0.3&1.0&0.3 nonuniform-scale-3d.html?0.3&1.0&0.3
+== nonuniform-scale-3d.html?0.3&1.0&0.3 nonuniform-scale-3d.html?0.3&1.0&0.3
+== nonuniform-scale-3d.html?1.0&0.3&0.3 nonuniform-scale-3d.html?1.0&0.3&0.3
+== nonuniform-scale-3d.html?1.0&0.3&0.3 nonuniform-scale-3d.html?1.0&0.3&0.3
 
 # Test for preserveAspectRatio with no-longer-supported "defer" keyword
 == defer-unsupported-1.svg defer-unsupported-1.svg

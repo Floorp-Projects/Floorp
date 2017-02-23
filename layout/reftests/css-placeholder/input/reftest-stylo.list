@@ -9,7 +9,7 @@
 # ::value (bug 648643), depending of the ::value behaviour (it could change the
 # caret colour and the text colour or just the text colour).
 
-# == placeholder-simple.html placeholder-simple.html
+fails == placeholder-simple.html placeholder-simple.html
 # needs-focus == placeholder-focus.html placeholder-focus.html
 fails needs-focus == placeholder-blur.html placeholder-blur.html
 fails == placeholder-value.html placeholder-value.html

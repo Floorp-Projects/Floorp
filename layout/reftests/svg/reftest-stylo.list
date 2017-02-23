@@ -285,7 +285,7 @@ fuzzy-if(skiaContent,3,5) == pattern-scale-01c.svg pattern-scale-01c.svg
 # This test depends on :visited styles (which are asynchronous), so we run
 # it in layout/style/test/test_visited_reftests.html instead of using the
 # reftest harness.
-# == pseudo-classes-02.svg pseudo-classes-02.svg
+== pseudo-classes-02.svg pseudo-classes-02.svg
 == radialGradient-basic-01.svg radialGradient-basic-01.svg
 == radialGradient-basic-02.svg radialGradient-basic-02.svg
 fuzzy-if(cocoaWidget,4,15982) fuzzy-if(winWidget,4,92) fuzzy-if(skiaContent,4,60) == radialGradient-basic-03.svg radialGradient-basic-03.svg
@@ -296,7 +296,7 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg rect-01.svg
 == rect-04.svg rect-04.svg
 == rect-with-rx-and-ry-01.svg rect-with-rx-and-ry-01.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01.svg
-# == rootElement-null-01.svg rootElement-null-01.svg
+== rootElement-null-01.svg rootElement-null-01.svg
 == script-empty-01.svg script-empty-01.svg
 == selector-01.svg selector-01.svg
 == stroke-linecap-circle-ellipse-01.svg stroke-linecap-circle-ellipse-01.svg
@@ -433,7 +433,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.sv
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light.svg
-# == blend-difference-stacking.html blend-difference-stacking.html
+== blend-difference-stacking.html blend-difference-stacking.html
 
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls

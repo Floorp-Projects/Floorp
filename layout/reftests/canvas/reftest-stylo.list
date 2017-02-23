@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# == default-size.html default-size.html
+== default-size.html default-size.html
 fails == size-1.html size-1.html
 
 == empty-transaction-1.html empty-transaction-1.html
@@ -31,8 +31,8 @@ fails asserts-if(stylo,1) == text-rtl-alignment-test.html text-rtl-alignment-tes
 asserts-if(stylo,1) == text-horzline-with-bottom.html text-horzline-with-bottom.html # bug 1324700
 fails-if(azureSkia&&OSX>=1008) asserts-if(stylo,1) == text-horzline-with-top.html text-horzline-with-top.html # bug 1324700
 
-# == text-big-stroke.html text-big-stroke.html
-# == text-big-stroke.html text-big-stroke.html
+fails asserts-if(stylo,1) == text-big-stroke.html text-big-stroke.html # Bug 1324700
+fails asserts-if(stylo,1) == text-big-stroke.html text-big-stroke.html # Bug 1324700
 
 fails asserts-if(stylo,1) == text-context-state-test.html text-context-state-test.html # bug 1324700
 fails asserts-if(stylo,1) == text-font-inherit.html text-font-inherit.html # bug 1324700
@@ -42,8 +42,8 @@ fails asserts-if(stylo,1) == text-no-frame-test.html text-no-frame-test.html # b
 fails asserts-if(stylo,1) == text-no-frame-2-test.html text-no-frame-2-test.html # bug 1324700
 fails asserts-if(stylo,1) == text-not-in-doc-test.html text-not-in-doc-test.html # bug 1324700
 
-# == text-bidi-ltr-test.html text-bidi-ltr-test.html
-# == text-bidi-ltr-test.html text-bidi-ltr-test.html
+fails asserts-if(stylo,1) == text-bidi-ltr-test.html text-bidi-ltr-test.html # Bug 1324700
+fails asserts-if(stylo,1) == text-bidi-ltr-test.html text-bidi-ltr-test.html # Bug 1324700
 fails asserts-if(stylo,1) == text-bidi-rtl-test.html text-bidi-rtl-test.html # bug 1324700
 
 fails asserts-if(stylo,4) == text-font-lang.html text-font-lang.html # bug 1324700

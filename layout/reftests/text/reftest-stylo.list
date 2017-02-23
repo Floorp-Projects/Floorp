@@ -11,7 +11,7 @@ fails HTTP(..) == font-selection-generic-1.html font-selection-generic-1.html
 # This currently fails because line spacing does not respect font-size-adjust
 # in the "obvious" way, but it is unclear what the behavior should really be;
 # see bug
-# == font-size-adjust-03.html font-size-adjust-03.html
+== font-size-adjust-03.html font-size-adjust-03.html
 fails == justification-1.html justification-1.html
 == justification-2a.html justification-2a.html
 == justification-2b.html justification-2b.html
@@ -68,7 +68,7 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01.html
 == text-align-last-end.html text-align-last-end.html
 == text-align-last-center.html text-align-last-center.html
 == text-align-last-justify.html text-align-last-justify.html
-# == text-align-last-justify-rtl.html text-align-last-justify-rtl.html
+== text-align-last-justify-rtl.html text-align-last-justify-rtl.html
 #
 # Default values:
 # text-align defaults to start. text-align-last defaults to auto, which is
@@ -83,35 +83,35 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01.html
 # All combinations of text-align and text-align-last should give different results
 # This only tests the combinations with the same value for text-align and
 # different values for text-align-last
-# == text-align-start-last-start.html text-align-start-last-start.html
-# == text-align-start-last-start.html text-align-start-last-start.html
-# == text-align-start-last-start.html text-align-start-last-start.html
-# == text-align-start-last-end.html text-align-start-last-end.html
-# == text-align-start-last-end.html text-align-start-last-end.html
+== text-align-start-last-start.html text-align-start-last-start.html
+== text-align-start-last-start.html text-align-start-last-start.html
+== text-align-start-last-start.html text-align-start-last-start.html
+== text-align-start-last-end.html text-align-start-last-end.html
+== text-align-start-last-end.html text-align-start-last-end.html
 == text-align-start-last-center.html text-align-start-last-center.html
-# == text-align-end-last-start.html text-align-end-last-start.html
-# == text-align-end-last-start.html text-align-end-last-start.html
-# == text-align-end-last-start.html text-align-end-last-start.html
-# == text-align-end-last-end.html text-align-end-last-end.html
-# == text-align-end-last-end.html text-align-end-last-end.html
+== text-align-end-last-start.html text-align-end-last-start.html
+== text-align-end-last-start.html text-align-end-last-start.html
+== text-align-end-last-start.html text-align-end-last-start.html
+== text-align-end-last-end.html text-align-end-last-end.html
+== text-align-end-last-end.html text-align-end-last-end.html
 == text-align-end-last-center.html text-align-end-last-center.html
-# == text-align-center-last-start.html text-align-center-last-start.html
-# == text-align-center-last-start.html text-align-center-last-start.html
-# == text-align-center-last-start.html text-align-center-last-start.html
-# == text-align-center-last-end.html text-align-center-last-end.html
-# == text-align-center-last-end.html text-align-center-last-end.html
+== text-align-center-last-start.html text-align-center-last-start.html
+== text-align-center-last-start.html text-align-center-last-start.html
+== text-align-center-last-start.html text-align-center-last-start.html
+== text-align-center-last-end.html text-align-center-last-end.html
+== text-align-center-last-end.html text-align-center-last-end.html
 == text-align-center-last-center.html text-align-center-last-center.html
-# == text-align-justify-last-start.html text-align-justify-last-start.html
-# == text-align-justify-last-start.html text-align-justify-last-start.html
-# == text-align-justify-last-start.html text-align-justify-last-start.html
-# == text-align-justify-last-end.html text-align-justify-last-end.html
-# == text-align-justify-last-end.html text-align-justify-last-end.html
+== text-align-justify-last-start.html text-align-justify-last-start.html
+== text-align-justify-last-start.html text-align-justify-last-start.html
+== text-align-justify-last-start.html text-align-justify-last-start.html
+== text-align-justify-last-end.html text-align-justify-last-end.html
+== text-align-justify-last-end.html text-align-justify-last-end.html
 == text-align-justify-last-center.html text-align-justify-last-center.html
 == text-align-left-in-rtl-block.html text-align-left-in-rtl-block.html
 fails HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1.html
 == white-space-1a.html white-space-1a.html
 == white-space-1b.html white-space-1b.html
-# == white-space-2.html white-space-2.html
+== white-space-2.html white-space-2.html
 == wordbreak-1.html wordbreak-1.html
 == wordbreak-2.html wordbreak-2.html
 == wordbreak-3.html wordbreak-3.html
@@ -135,12 +135,12 @@ fails == wordwrap-06.html wordwrap-06.html
 fails == overflowwrap-06.html overflowwrap-06.html
 == wordwrap-07.html wordwrap-07.html
 == overflowwrap-07.html overflowwrap-07.html
-# == wordwrap-08.html wordwrap-08.html
-# == wordwrap-08.html wordwrap-08.html
-# == wordwrap-09.html wordwrap-09.html
-# == overflowwrap-09.html overflowwrap-09.html
-# == wordwrap-09.html wordwrap-09.html
-# == overflowwrap-09.html overflowwrap-09.html
+fails == wordwrap-08.html wordwrap-08.html # Bug 1341637, bug 1321769?
+fails == wordwrap-08.html wordwrap-08.html # Bug 1341637, bug 1321769?
+fails == wordwrap-09.html wordwrap-09.html # Bug 1341637, bug 1321769?
+fails == overflowwrap-09.html overflowwrap-09.html # Bug 1341637, bug 1321769?
+fails == wordwrap-09.html wordwrap-09.html # Bug 1341637, bug 1321769?
+fails == overflowwrap-09.html overflowwrap-09.html # Bug 1341637, bug 1321769?
 == wordwrap-10.html wordwrap-10.html
 == overflowwrap-10.html overflowwrap-10.html
 fails == word-spacing-01.html word-spacing-01.html
@@ -193,11 +193,11 @@ fails HTTP(..) == 1170688.html 1170688.html
 == emoji-02.html emoji-02.html
 
 # Bug 727276: tests with variation selectors 15 and 16 to control emoji rendering style
-# == emoji-03.html emoji-03.html
+== emoji-03.html emoji-03.html
 # the next two will fail on OS X 10.6 because no color emoji font is present,
 # and also on Android platforms until we have color emoji fonts there.
 # Tests rely on bundled EmojiOne Mozilla to pass on Windows <8.1 and Linux.
-# == emoji-03.html emoji-03.html
+== emoji-03.html emoji-03.html
 fails-if(OSX==1006||Android) == emoji-04.html emoji-04.html
 == emoji-05.html emoji-05.html
 
@@ -242,8 +242,8 @@ fails HTTP(..) == graphite-bidi-1.html graphite-bidi-1.html
 fails HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection.html
 
 # Tests for hyphenation with hyphens property
-# == auto-hyphenation-1.html auto-hyphenation-1.html
-# == auto-hyphenation-1.html auto-hyphenation-1.html
+== auto-hyphenation-1.html auto-hyphenation-1.html
+== auto-hyphenation-1.html auto-hyphenation-1.html
 == auto-hyphenation-1a.html auto-hyphenation-1a.html
 == auto-hyphenation-2.html auto-hyphenation-2.html
 == auto-hyphenation-3.html auto-hyphenation-3.html
@@ -254,8 +254,8 @@ fails == auto-hyphenation-5.html auto-hyphenation-5.html
 == auto-hyphenation-8.html auto-hyphenation-8.html
 == auto-hyphenation-9.html auto-hyphenation-9.html
 == auto-hyphenation-10.html auto-hyphenation-10.html
-# == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml
-# == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml
+fails == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
+fails == auto-hyphenation-xmllang-1.xhtml auto-hyphenation-xmllang-1.xhtml # Bug 1341714
 fails == auto-hyphenation-xmllang-1a.xhtml auto-hyphenation-xmllang-1a.xhtml
 fails == auto-hyphenation-xmllang-2.xhtml auto-hyphenation-xmllang-2.xhtml
 == auto-hyphenation-xmllang-3.xhtml auto-hyphenation-xmllang-3.xhtml
@@ -279,9 +279,9 @@ fails == auto-hyphenation-xmllang-14a.xhtml auto-hyphenation-xmllang-14a.xhtml
 == auto-hyphenation-ca-1.html auto-hyphenation-ca-1.html
 == auto-hyphenation-cy-1.html auto-hyphenation-cy-1.html
 == auto-hyphenation-da-1.html auto-hyphenation-da-1.html
-# == auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
+== auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
 == auto-hyphenation-de-1996-1.html auto-hyphenation-de-1996-1.html
-# == auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
+== auto-hyphenation-de-1901-1.html auto-hyphenation-de-1901-1.html
 == auto-hyphenation-de-ch-1.html auto-hyphenation-de-ch-1.html
 == auto-hyphenation-eo-1.html auto-hyphenation-eo-1.html
 == auto-hyphenation-es-1.html auto-hyphenation-es-1.html
@@ -308,8 +308,8 @@ fails == auto-hyphenation-pl-1.html auto-hyphenation-pl-1.html
 == auto-hyphenation-sh-1.html auto-hyphenation-sh-1.html
 == auto-hyphenation-sl-1.html auto-hyphenation-sl-1.html
 == auto-hyphenation-sr-1.html auto-hyphenation-sr-1.html
-# == auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
-# == auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
+== auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
+== auto-hyphenation-sv-1.html auto-hyphenation-sv-1.html
 == auto-hyphenation-tr-1.html auto-hyphenation-tr-1.html
 == auto-hyphenation-uk-1.html auto-hyphenation-uk-1.html
 
