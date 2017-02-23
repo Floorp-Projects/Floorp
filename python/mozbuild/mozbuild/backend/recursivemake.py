@@ -1251,7 +1251,13 @@ class RecursiveMakeBackend(CommonBackend):
             feature_var = 'HOST_RUST_LIBRARY_FEATURES'
         backend_file.write_once('%s := %s\n' % (libdef.LIB_FILE_VAR, libdef.import_name))
         backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml\n')
-        backend_file.write('CARGO_TARGET_DIR := .\n')
+        # Need to normalize the path so Cargo sees the same paths from all
+        # possible invocations of Cargo with this CARGO_TARGET_DIR.  Otherwise,
+        # Cargo's dependency calculations don't work as we expect and we wind
+        # up recompiling lots of things.
+        target_dir = mozpath.join(backend_file.objdir, libdef.target_dir)
+        target_dir = mozpath.normpath(target_dir)
+        backend_file.write('CARGO_TARGET_DIR := %s\n' % target_dir)
         if libdef.features:
             backend_file.write('%s := %s\n' % (libdef.FEATURES_VAR, ' '.join(libdef.features)))
 
