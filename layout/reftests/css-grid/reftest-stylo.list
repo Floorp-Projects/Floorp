@@ -100,8 +100,8 @@ fails == grid-item-intrinsic-ratio-stretch-004.html grid-item-intrinsic-ratio-st
 fails == grid-item-intrinsic-ratio-stretch-005.html grid-item-intrinsic-ratio-stretch-005.html
 fails == grid-item-intrinsic-ratio-stretch-006.html grid-item-intrinsic-ratio-stretch-006.html
 fails == grid-item-intrinsic-ratio-stretch-007.html grid-item-intrinsic-ratio-stretch-007.html
-# == grid-item-intrinsic-ratio-normal-001.html grid-item-intrinsic-ratio-normal-001.html
-# == grid-item-intrinsic-ratio-normal-002.html grid-item-intrinsic-ratio-normal-002.html
+fails == grid-item-intrinsic-ratio-normal-001.html grid-item-intrinsic-ratio-normal-001.html
+fails == grid-item-intrinsic-ratio-normal-002.html grid-item-intrinsic-ratio-normal-002.html
 fails == grid-item-intrinsic-ratio-normal-003.html grid-item-intrinsic-ratio-normal-003.html
 fails == grid-item-intrinsic-ratio-normal-004.html grid-item-intrinsic-ratio-normal-004.html
 fails == grid-item-intrinsic-ratio-normal-005.html grid-item-intrinsic-ratio-normal-005.html
@@ -271,4 +271,4 @@ skip == grid-fragmentation-dyn2-030.html grid-fragmentation-dyn2-030.html
 skip == grid-fragmentation-dyn2-031.html grid-fragmentation-dyn2-031.html
 fails == bug1306106.html bug1306106.html
 fails == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001.html
-# == grid-percent-intrinsic-sizing-002.html grid-percent-intrinsic-sizing-002.html
+skip-if(stylo) == grid-percent-intrinsic-sizing-002.html grid-percent-intrinsic-sizing-002.html # Why does this fail to load?

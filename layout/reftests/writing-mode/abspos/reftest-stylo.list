@@ -6,9 +6,9 @@
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
 # Even though the whole reftest-stylo.list here is skipped, it doesn't actually work because reftests match the last
 # **-if, which means even though we tried to skip this list,the fuzzy-if still matched forcing us to run the test.
-# == s71-abs-pos-non-replaced-vlr-003.xht s71-abs-pos-non-replaced-vlr-003.xht
-# == s71-abs-pos-non-replaced-vlr-005.xht s71-abs-pos-non-replaced-vlr-005.xht
-# == s71-abs-pos-non-replaced-vlr-007.xht s71-abs-pos-non-replaced-vlr-007.xht
+== s71-abs-pos-non-replaced-vlr-003.xht s71-abs-pos-non-replaced-vlr-003.xht
+== s71-abs-pos-non-replaced-vlr-005.xht s71-abs-pos-non-replaced-vlr-005.xht
+== s71-abs-pos-non-replaced-vlr-007.xht s71-abs-pos-non-replaced-vlr-007.xht
 fails == s71-abs-pos-non-replaced-vlr-009.xht s71-abs-pos-non-replaced-vlr-009.xht
 fails == s71-abs-pos-non-replaced-vlr-011.xht s71-abs-pos-non-replaced-vlr-011.xht
 fails == s71-abs-pos-non-replaced-vlr-013.xht s71-abs-pos-non-replaced-vlr-013.xht

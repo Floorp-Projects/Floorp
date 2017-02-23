@@ -507,11 +507,11 @@ public:
                                           const char* aType);
   static void* DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
                                          const char* aType);
-  static void DisplayReflowExit(nsPresContext*      aPresContext,
-                                 nsIFrame*            aFrame,
-                                 ReflowOutput& aMetrics,
-                                 uint32_t             aStatus,
-                                 void*                aFrameTreeNode);
+  static void DisplayReflowExit(nsPresContext* aPresContext,
+                                nsIFrame* aFrame,
+                                ReflowOutput& aMetrics,
+                                const nsReflowStatus& aStatus,
+                                void* aFrameTreeNode);
   static void DisplayLayoutExit(nsIFrame* aFrame,
                                  void* aFrameTreeNode);
   static void DisplayIntrinsicISizeExit(nsIFrame* aFrame,

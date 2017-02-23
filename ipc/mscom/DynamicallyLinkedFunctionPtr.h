@@ -30,6 +30,13 @@ public:
     if (mModule) {
       mFunction = reinterpret_cast<FunctionPtrT>(
                     ::GetProcAddress(mModule, aFuncName));
+
+      if (!mFunction) {
+        // Since the function doesn't exist, there is no point in holding a
+        // reference to mModule anymore.
+        ::FreeLibrary(mModule);
+        mModule = NULL;
+      }
     }
   }
 
@@ -46,7 +53,7 @@ public:
     }
   }
 
-  R operator()(Args... args)
+  R operator()(Args... args) const
   {
     return mFunction(mozilla::Forward<Args>(args)...);
   }

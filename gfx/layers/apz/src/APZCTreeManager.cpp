@@ -1793,10 +1793,19 @@ APZCTreeManager::GetAPZCAtPoint(HitTestingTreeNode* aNode,
 
   if (*aOutHitResult != HitNothing) {
       MOZ_ASSERT(resultNode);
-      if (aOutHitScrollbar) {
-        for (HitTestingTreeNode* n = resultNode; n; n = n->GetParent()) {
-          if (n->IsScrollbarNode()) {
+      for (HitTestingTreeNode* n = resultNode; n; n = n->GetParent()) {
+        if (n->IsScrollbarNode()) {
+          if (aOutHitScrollbar) {
             *aOutHitScrollbar = true;
+          }
+          // If we hit a scrollbar, target the APZC for the content scrolled
+          // by the scrollbar. (The scrollbar itself doesn't scroll with the
+          // scrolled content, so it doesn't carry the scrolled content's
+          // scroll metadata).
+          ScrollableLayerGuid guid(n->GetLayersId(), 0, n->GetScrollTargetId());
+          if (RefPtr<HitTestingTreeNode> scrollTarget = GetTargetNode(guid, &GuidComparatorIgnoringPresShell)) {
+            MOZ_ASSERT(scrollTarget->GetApzc());
+            return scrollTarget->GetApzc();
           }
         }
       }

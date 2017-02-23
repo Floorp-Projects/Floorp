@@ -4575,27 +4575,32 @@ Tab.prototype = {
     // for now anyway.
   },
 
-  ShouldNotifyMediaPlaybackChange: function(inactive) {
-    // We don't want to show the media control interface for the short sound
-    // which duration is smaller than the threshold. The basic unit is second.
+  ShouldNotifyMediaPlaybackChange: function(activeState) {
+    // If the media is active, we would check it's duration, because we don't
+    // want to show the media control interface for the short sound which
+    // duration is smaller than the threshold. The basic unit is second.
     // Note : the streaming format's duration is infinite.
+    if (activeState === "inactive") {
+      return true;
+    }
+
     const mediaDurationThreshold = 1.0;
 
     let audioElements = this.browser.contentDocument.getElementsByTagName("audio");
     for (let audio of audioElements) {
-      if (audio.paused == inactive && audio.duration > mediaDurationThreshold) {
-        return true;
+      if (!audio.paused && audio.duration < mediaDurationThreshold) {
+        return false;
       }
     }
 
     let videoElements = this.browser.contentDocument.getElementsByTagName("video");
     for (let video of videoElements) {
-      if (video.paused == inactive && video.duration > mediaDurationThreshold) {
-        return true;
+      if (!video.paused && video.duration < mediaDurationThreshold) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -4626,14 +4631,13 @@ Tab.prototype = {
           return;
         }
 
-        let isInactive = (aData === "inactive");
-        if (!this.ShouldNotifyMediaPlaybackChange(isInactive)) {
+        if (!this.ShouldNotifyMediaPlaybackChange(aData)) {
           return;
         }
 
         let status;
         if (aTopic == "media-playback") {
-          status = isInactive ? "end" : "start";
+          status = (aData === "inactive") ? "end" : "start";
         } else if (aTopic == "media-playback-resumed") {
           status = "resume";
         }

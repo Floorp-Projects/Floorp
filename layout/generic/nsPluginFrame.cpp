@@ -506,13 +506,13 @@ nsPluginFrame::Reflow(nsPresContext*           aPresContext,
   // arrived. Otherwise there may be PARAMs or other stuff that the
   // plugin needs to see that haven't arrived yet.
   if (!GetContent()->IsDoneAddingChildren()) {
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 
   // if we are printing or print previewing, bail for now
   if (aPresContext->Medium() == nsGkAtoms::print) {
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     return;
   }
 
@@ -531,7 +531,7 @@ nsPluginFrame::Reflow(nsPresContext*           aPresContext,
     aPresContext->PresShell()->PostReflowCallback(this);
   }
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }

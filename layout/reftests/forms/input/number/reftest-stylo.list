@@ -9,23 +9,23 @@ default-preferences pref(dom.forms.number,true)
 skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthemed.html
 
 # should look the same as type=text, except for the spin box
-# == number-similar-to-text-unthemed.html number-similar-to-text-unthemed.html
-# == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl.html
-# == number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr.html
-# == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl.html
+== number-similar-to-text-unthemed.html number-similar-to-text-unthemed.html
+== number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl.html
+== number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr.html
+== number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl.html
 
 # dynamic type changes:
 fails == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1.html
-# == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1.html
+== from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1.html
 
 # dynamic value changes:
 # fuzzy-if(skiaContent,2,13) == show-value.html show-value.html
 
 # disabled
-# == number-disabled.html number-disabled.html
+== number-disabled.html number-disabled.html
 
 # auto width:
-# == number-auto-width-1.html number-auto-width-1.html
+== number-auto-width-1.html number-auto-width-1.html
 
 # min-height/max-height tests:
 fails == number-min-height-1.html number-min-height-1.html

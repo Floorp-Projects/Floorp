@@ -156,7 +156,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
-  aStatus = NS_FRAME_COMPLETE;  // we're always complete
+  aStatus.Reset();  // we're always complete
 
   // Don't do incremental reflow until we've taught tables how to do
   // it right in paginated mode.
@@ -283,7 +283,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
     // Is the page complete?
     nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
 
-    if (NS_FRAME_IS_FULLY_COMPLETE(status)) {
+    if (status.IsFullyComplete()) {
       NS_ASSERTION(!kidNextInFlow, "bad child flow list");
     } else if (!kidNextInFlow) {
       // The page isn't complete and it doesn't have a next-in-flow, so

@@ -2,8 +2,8 @@
 == zero-inline-block-margin-left.html zero-inline-block-margin-left.html
 == zero-inline-block-margin-right.html zero-inline-block-margin-right.html
 == zero-inline-block-margin-ref.html zero-inline-block-margin-ref.html
-# == inline-block-width.html inline-block-width.html
-# == inline-block-padding.html inline-block-padding.html
+== inline-block-width.html inline-block-width.html
+== inline-block-padding.html inline-block-padding.html
 == inline-block-margin.html inline-block-margin.html
-# == inline-block-width.html inline-block-width.html
+== inline-block-width.html inline-block-width.html
 == inline-block-baseline.html inline-block-baseline.html

@@ -12,7 +12,7 @@ fails HTTP(..) == blur-opacity.html blur-opacity.html
 == basic-negcoord.html basic-negcoord.html
 == basic-opacity.html basic-opacity.html
 == blur.html blur.html
-# == color-inherit.html color-inherit.html
+== color-inherit.html color-inherit.html
 == color-parserorder.html color-parserorder.html
 == decorations-multiple-zorder.html decorations-multiple-zorder.html
 == multiple-noblur.html multiple-noblur.html
@@ -22,8 +22,8 @@ fails HTTP(..) == blur-opacity.html blur-opacity.html
 == textindent.html textindent.html
 == lineoverflow.html lineoverflow.html
 
-# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
 
 needs-focus == text-shadow-selected-1.html text-shadow-selected-1.html

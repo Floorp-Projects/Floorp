@@ -5,13 +5,13 @@
 == appendsingle.html appendsingle.html
 
 # append several elements
-# == appendmultiple.html appendmultiple.html
+== appendmultiple.html appendmultiple.html
 
 # insert a single element
 == insertsingle.html insertsingle.html
 
 # insert several elements
-# == insertmultiple.html insertmultiple.html
+== insertmultiple.html insertmultiple.html
 
 # insert multiple nodes to a parent and one of its children
 == inserttoparentandchild-1.html inserttoparentandchild-1.html
@@ -27,9 +27,9 @@
 # multiple range inserts
 == insertmultiplemultiple-1.html insertmultiplemultiple-1.html
 # a range insert and an append
-# == insertmultiplemultiple-2.html insertmultiplemultiple-2.html
+== insertmultiplemultiple-2.html insertmultiplemultiple-2.html
 # multiple range inserts and an append
-# == insertmultiplemultiple-2.html insertmultiplemultiple-2.html
+== insertmultiplemultiple-2.html insertmultiplemultiple-2.html
 
 # testing bindings that have multiple insertion points
 fails == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml

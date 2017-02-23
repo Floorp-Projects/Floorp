@@ -57,13 +57,13 @@ fails == 83958-2b.html 83958-2b.html
 fails == 115921-2.html 115921-2.html
 == 151407-1.html 151407-1.html
 == 151407-1a.html 151407-1a.html
-# == 151407-2-ltr.html 151407-2-ltr.html
-# == 151407-2-rtl.html 151407-2-rtl.html
+== 151407-2-ltr.html 151407-2-ltr.html
+== 151407-2-rtl.html 151407-2-rtl.html
 == 151407-2-auto.html 151407-2-auto.html
 == 151407-2-empty.html 151407-2-empty.html
 == 151407-2-foopy.html 151407-2-foopy.html
-# == 151407-3-ltr.html 151407-3-ltr.html
-# == 151407-3-rtl.html 151407-3-rtl.html
+== 151407-3-ltr.html 151407-3-ltr.html
+== 151407-3-rtl.html 151407-3-rtl.html
 == 151407-3-auto.html 151407-3-auto.html
 == 151407-3-foopy.html 151407-3-foopy.html
 == 229367-1.html 229367-1.html
@@ -79,7 +79,7 @@ fails == 263359-4.html 263359-4.html
 fails == 267459-1.html 267459-1.html
 fails == 267459-2.html 267459-2.html
 == 299065-1.html 299065-1.html
-# == 305643-1.html 305643-1.html
+== 305643-1.html 305643-1.html
 fails asserts-if(stylo,7) == 332655-1.html 332655-1.html # bug 1335314
 fails asserts-if(stylo,7) == 332655-2.html 332655-2.html # bug 1335314
 fails == 381279-1.html 381279-1.html
@@ -93,7 +93,7 @@ fails == 413928-2.html 413928-2.html
 == 425338-1b.html 425338-1b.html
 == 489517-1.html 489517-1.html
 == 489887-1.html 489887-1.html
-# == 492231-1.html 492231-1.html
+== 492231-1.html 492231-1.html
 == 496006-1.html 496006-1.html
 == 503269-1.html 503269-1.html
 == 503957-1.html 503957-1.html
@@ -148,28 +148,28 @@ fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == 869833-1.xul 869833-1.xul
 == 922530-1.html 922530-1.html
 == 922550-1.html 922550-1.html
 == 1067268-1.html 1067268-1.html
-# == 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1.html
+== 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1.html
 == 1069941-inline-bidi-margin-1.html 1069941-inline-bidi-margin-1.html
 == 1155359-1.xul 1155359-1.xul
 == 1157726-1.html 1157726-1.html
 == 1161752.html 1161752.html
 == 1161752-5-embed.html 1161752-5-embed.html
-# == brackets-1a-ltr.html brackets-1a-ltr.html
-# == brackets-1a-rtl.html brackets-1a-rtl.html
-# == brackets-1b-ltr.html brackets-1b-ltr.html
-# == brackets-1b-rtl.html brackets-1b-rtl.html
-# == brackets-1c-ltr.html brackets-1c-ltr.html
-# == brackets-1c-rtl.html brackets-1c-rtl.html
-# == brackets-2a-ltr.html brackets-2a-ltr.html
-# == brackets-2a-rtl.html brackets-2a-rtl.html
-# == brackets-2b-ltr.html brackets-2b-ltr.html
-# == brackets-2b-rtl.html brackets-2b-rtl.html
-# == brackets-2c-ltr.html brackets-2c-ltr.html
-# == brackets-2c-rtl.html brackets-2c-rtl.html
-# == brackets-3a-ltr.html brackets-3a-ltr.html
-# == brackets-3a-rtl.html brackets-3a-rtl.html
-# == brackets-3b-ltr.html brackets-3b-ltr.html
-# == brackets-3b-rtl.html brackets-3b-rtl.html
+== brackets-1a-ltr.html brackets-1a-ltr.html
+== brackets-1a-rtl.html brackets-1a-rtl.html
+== brackets-1b-ltr.html brackets-1b-ltr.html
+== brackets-1b-rtl.html brackets-1b-rtl.html
+== brackets-1c-ltr.html brackets-1c-ltr.html
+== brackets-1c-rtl.html brackets-1c-rtl.html
+== brackets-2a-ltr.html brackets-2a-ltr.html
+== brackets-2a-rtl.html brackets-2a-rtl.html
+== brackets-2b-ltr.html brackets-2b-ltr.html
+== brackets-2b-rtl.html brackets-2b-rtl.html
+== brackets-2c-ltr.html brackets-2c-ltr.html
+== brackets-2c-rtl.html brackets-2c-rtl.html
+== brackets-3a-ltr.html brackets-3a-ltr.html
+== brackets-3a-rtl.html brackets-3a-rtl.html
+== brackets-3b-ltr.html brackets-3b-ltr.html
+== brackets-3b-rtl.html brackets-3b-rtl.html
 fails == 1217833-1.html 1217833-1.html
 fails == 1217833-2.html 1217833-2.html
 == 1231175-1.html 1231175-1.html

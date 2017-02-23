@@ -12,7 +12,7 @@ fails == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1.html
 == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2.html
 fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,1,3528) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image.html
 == element-1.html element-1.html
-# == iframe-1.html iframe-1.html
+== iframe-1.html iframe-1.html
 == nested-1.html nested-1.html
 == nested-2.html nested-2.html
 == position-fixed-1.html position-fixed-1.html
@@ -30,7 +30,7 @@ fails == position-fixed-transformed-1.html position-fixed-transformed-1.html
 skip-if(!asyncPan) == sticky-pos-scrollable-3.html sticky-pos-scrollable-3.html
 fails == fixed-pos-scrollable-1.html fixed-pos-scrollable-1.html
 == culling-1.html culling-1.html
-# == position-fixed-iframe-1.html position-fixed-iframe-1.html
+== position-fixed-iframe-1.html position-fixed-iframe-1.html
 == position-fixed-iframe-2.html position-fixed-iframe-2.html
 fuzzy-if(skiaContent,1,11300) skip-if(!asyncPan) == position-fixed-in-scroll-container.html position-fixed-in-scroll-container.html
 == position-fixed-inside-sticky-1.html position-fixed-inside-sticky-1.html

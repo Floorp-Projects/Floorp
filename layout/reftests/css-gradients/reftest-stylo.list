@@ -57,7 +57,7 @@ fails == linear-zero-length-1a.html linear-zero-length-1a.html
 fails == linear-zero-length-1b.html linear-zero-length-1b.html
 fails == linear-zero-length-1c.html linear-zero-length-1c.html
 == nostops.html nostops.html
-# == onestop.html onestop.html
+== onestop.html onestop.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1a.html radial-1a.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,6,88024) random-if(d2d) fuzzy-if(skiaContent,4,6000) == radial-1b.html radial-1b.html
 fails == radial-1c.html radial-1c.html
@@ -137,12 +137,12 @@ fails == height-dependence-1.html height-dependence-1.html
 fails == height-dependence-2.html height-dependence-2.html
 fails == height-dependence-3.html height-dependence-3.html
 
-# == linear-onestopposition-1.html linear-onestopposition-1.html
-# == linear-onestopposition-1.html linear-onestopposition-1.html
+fails == linear-onestopposition-1.html linear-onestopposition-1.html
+fails == linear-onestopposition-1.html linear-onestopposition-1.html
 == radial-onestopposition-1a.html radial-onestopposition-1a.html
 == radial-onestopposition-1b.html radial-onestopposition-1b.html
 fails == radial-onestopposition-1c.html radial-onestopposition-1c.html
-# == repeating-linear-onestopposition-1.html repeating-linear-onestopposition-1.html
+== repeating-linear-onestopposition-1.html repeating-linear-onestopposition-1.html
 == repeating-radial-onestopposition-1a.html repeating-radial-onestopposition-1a.html
 == repeating-radial-onestopposition-1b.html repeating-radial-onestopposition-1b.html
 fails == repeating-radial-onestopposition-1c.html repeating-radial-onestopposition-1c.html

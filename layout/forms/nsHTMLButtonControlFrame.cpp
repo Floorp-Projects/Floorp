@@ -214,13 +214,13 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   // else, we ignore child overflow -- anything that overflows beyond our
   // own border-box will get clipped when painting.
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
                                  aReflowInput, aStatus);
 
   // We're always complete and we don't support overflow containers
   // so we shouldn't have a next-in-flow ever.
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   MOZ_ASSERT(!GetNextInFlow());
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
@@ -257,7 +257,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   ReflowChild(aFirstKid, aPresContext,
               contentsDesiredSize, contentsReflowInput,
               wm, childPos, dummyContainerSize, 0, contentsReflowStatus);
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(contentsReflowStatus),
+  MOZ_ASSERT(contentsReflowStatus.IsComplete(),
              "We gave button-contents frame unconstrained available height, "
              "so it should be complete");
 

@@ -32,5 +32,5 @@ random-if(winWidget) == placeholder-19.xul placeholder-19.xul
 # needs-focus == placeholder-20.html placeholder-20.html
 # needs-focus == placeholder-21.html placeholder-21.html
 fails needs-focus == placeholder-22.html placeholder-22.html
-# == placeholder-rtl.html placeholder-rtl.html
+fails == placeholder-rtl.html placeholder-rtl.html # Bug 1340696
 fails pref(dom.placeholder.show_on_focus,false) needs-focus == placeholder-focus-pref.html placeholder-focus-pref.html

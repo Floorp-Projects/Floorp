@@ -125,6 +125,10 @@
             <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
             <vbox id="PanelUI-remotetabs-tabspane">
               <vbox id="PanelUI-remotetabs-tabslist"
+                    showAllLabel="&appMenuRemoteTabs.showAll.label;"
+                    showAllTooltipText="&appMenuRemoteTabs.showAll.tooltip;"
+                    showMoreLabel="&appMenuRemoteTabs.showMore.label;"
+                    showMoreTooltipText="&appMenuRemoteTabs.showMore.tooltip;"
                     notabsforclientlabel="&appMenuRemoteTabs.notabs.label;"
                     />
             </vbox>

@@ -186,14 +186,14 @@ fails == mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-m
 fails == maction-selection.html maction-selection.html
 fails == maction-dynamic-embellished-op.html maction-dynamic-embellished-op.html
 fails == maction-dynamic-1.html maction-dynamic-1.html
-# == maction-dynamic-2.html maction-dynamic-2.html
+fails == maction-dynamic-2.html maction-dynamic-2.html
 fails == mo-lspace-rspace.html mo-lspace-rspace.html
 fails == mo-lspace-rspace-2.html mo-lspace-rspace-2.html
 fails == mo-lspace-rspace-3.html mo-lspace-rspace-3.html
 fails == mo-lspace-rspace-4.html mo-lspace-rspace-4.html
 fails == mo-invisibleoperators.html mo-invisibleoperators.html
 fails == mo-invisibleoperators-2.html mo-invisibleoperators-2.html
-# == mo-glyph-size.html mo-glyph-size.html
+== mo-glyph-size.html mo-glyph-size.html
 fails == maction-dynamic-3.html maction-dynamic-3.html
 == whitespace-trim-1.html whitespace-trim-1.html
 fails == whitespace-trim-2.html whitespace-trim-2.html
@@ -246,7 +246,7 @@ fails == menclose-3-madruwb.html menclose-3-madruwb.html
 fails == menclose-3-radical.html menclose-3-radical.html
 fails == menclose-3-default.html menclose-3-default.html
 fails == menclose-3-invalid.html menclose-3-invalid.html
-# == menclose-3-multiple.html menclose-3-multiple.html
+== menclose-3-multiple.html menclose-3-multiple.html
 fails == menclose-3-unknown.html menclose-3-unknown.html
 == menclose-4.html menclose-4.html
 fails == menclose-5-actuarial.html menclose-5-actuarial.html

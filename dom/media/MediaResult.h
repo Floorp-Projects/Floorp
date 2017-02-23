@@ -7,6 +7,8 @@
 #ifndef MediaResult_h_
 #define MediaResult_h_
 
+#include "nsString.h" // Required before 'mozilla/ErrorNames.h'!?
+#include "mozilla/ErrorNames.h"
 #include "nsError.h"
 #include "nsPrintfCString.h"
 
@@ -51,7 +53,13 @@ public:
     if (NS_SUCCEEDED(mCode)) {
       return nsCString();
     }
-    return nsPrintfCString("0x%08" PRIx32 ": %s", static_cast<uint32_t>(mCode), mMessage.get());
+    nsCString name;
+    GetErrorName(mCode, static_cast<nsACString&>(name));
+    return nsPrintfCString("%s (0x%08" PRIx32 ")%s%s",
+                           name.get(),
+                           static_cast<uint32_t>(mCode),
+                           mMessage.IsEmpty() ? "" : " - ",
+                           mMessage.get());
   }
 
 private:
@@ -59,7 +67,11 @@ private:
   nsCString mMessage;
 };
 
-#define RESULT_DETAIL(arg, ...) nsPrintfCString("%s: " arg, __func__, ##__VA_ARGS__)
+#ifdef _MSC_VER
+#define RESULT_DETAIL(arg, ...) nsPrintfCString("%s: " arg, __FUNCSIG__, ##__VA_ARGS__)
+#else
+#define RESULT_DETAIL(arg, ...) nsPrintfCString("%s: " arg, __PRETTY_FUNCTION__, ##__VA_ARGS__)
+#endif
 
 } // namespace mozilla
 #endif // MediaResult_h_

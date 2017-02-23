@@ -22,12 +22,12 @@ fails == input-type-invalid.html input-type-invalid.html
 fails == input-disabled-fieldset-1.html input-disabled-fieldset-1.html
 fails == input-disabled-fieldset-2.html input-disabled-fieldset-2.html
 fails == input-fieldset-legend.html input-fieldset-legend.html
-# == input-radio-required.html input-radio-required.html
-# == input-radio-customerror.html input-radio-customerror.html
-# == input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
-# == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
-# == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
-# == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
+fails == input-radio-required.html input-radio-required.html
+fails == input-radio-customerror.html input-radio-customerror.html
+== input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
+== input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
+fails == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
+== input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
 fails == input-radio-focus-click.html input-radio-focus-click.html
 fails == input-submit.html input-submit.html
 fails == input-image.html input-image.html

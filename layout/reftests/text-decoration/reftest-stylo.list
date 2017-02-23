@@ -69,24 +69,24 @@ fails == underline-style-inline-wavy-quirks.html underline-style-inline-wavy-qui
 == underline-style-inline-dashed-standards.html underline-style-inline-dashed-standards.html
 == underline-style-inline-double-standards.html underline-style-inline-double-standards.html
 == underline-style-inline-wavy-standards.html underline-style-inline-wavy-standards.html
-# == underline-block-quirks.html underline-block-quirks.html
-# == underline-block-quirks.html underline-block-quirks.html
-# == underline-inline-block-quirks.html underline-inline-block-quirks.html
-# == underline-inline-block-quirks.html underline-inline-block-quirks.html
-# == underline-table-caption-quirks.html underline-table-caption-quirks.html
-# == underline-table-caption-quirks.html underline-table-caption-quirks.html
-# == underline-table-cell-quirks.html underline-table-cell-quirks.html
-# == underline-table-cell-quirks.html underline-table-cell-quirks.html
+== underline-block-quirks.html underline-block-quirks.html
+== underline-block-quirks.html underline-block-quirks.html
+fails == underline-inline-block-quirks.html underline-inline-block-quirks.html # Bug 1341781
+fails == underline-inline-block-quirks.html underline-inline-block-quirks.html # Bug 1341781
+fails == underline-table-caption-quirks.html underline-table-caption-quirks.html # Bug 1341781
+fails == underline-table-caption-quirks.html underline-table-caption-quirks.html # Bug 1341781
+fails == underline-table-cell-quirks.html underline-table-cell-quirks.html # Bug 1341781
+fails == underline-table-cell-quirks.html underline-table-cell-quirks.html # Bug 1341781
 == underline-block-propagation-quirks.html underline-block-propagation-quirks.html
 fails == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks.html
-# == underline-block-standards.html underline-block-standards.html
-# == underline-block-standards.html underline-block-standards.html
-# == underline-inline-block-standards.html underline-inline-block-standards.html
-# == underline-inline-block-standards.html underline-inline-block-standards.html
-# == underline-table-caption-standards.html underline-table-caption-standards.html
-# == underline-table-caption-standards.html underline-table-caption-standards.html
-# == underline-table-cell-standards.html underline-table-cell-standards.html
-# == underline-table-cell-standards.html underline-table-cell-standards.html
+== underline-block-standards.html underline-block-standards.html
+== underline-block-standards.html underline-block-standards.html
+== underline-inline-block-standards.html underline-inline-block-standards.html
+== underline-inline-block-standards.html underline-inline-block-standards.html
+fails == underline-table-caption-standards.html underline-table-caption-standards.html # Bug 1341651
+fails == underline-table-caption-standards.html underline-table-caption-standards.html # Bug 1341651
+fails == underline-table-cell-standards.html underline-table-cell-standards.html # Bug 1341651
+fails == underline-table-cell-standards.html underline-table-cell-standards.html # Bug 1341651
 == underline-block-propagation-standards.html underline-block-propagation-standards.html
 fails == underline-block-propagation-2-standards.html underline-block-propagation-2-standards.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-standards.html

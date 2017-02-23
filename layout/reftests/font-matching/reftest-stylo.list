@@ -9,32 +9,32 @@ fails == synthetic-bold-2.html synthetic-bold-2.html
 == defaultfont-bold.html defaultfont-bold.html
 == defaultfont-italic.html defaultfont-italic.html
 == defaultfont-oblique.html defaultfont-oblique.html
-# == defaultfont-bolditalic.html defaultfont-bolditalic.html
-# == defaultfont-bolditalic.html defaultfont-bolditalic.html
+== defaultfont-bolditalic.html defaultfont-bolditalic.html
+== defaultfont-bolditalic.html defaultfont-bolditalic.html
 
 == defaultjapanese-bold.html defaultjapanese-bold.html
 == defaultjapanese-italic.html defaultjapanese-italic.html
 == defaultjapanese-oblique.html defaultjapanese-oblique.html
-# == defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
-# == defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
+== defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
+== defaultjapanese-bolditalic.html defaultjapanese-bolditalic.html
 
 == impact-bold.html impact-bold.html
 == impact-italic.html impact-italic.html
 == impact-oblique.html impact-oblique.html
-# == impact-bolditalic.html impact-bolditalic.html
-# == impact-bolditalic.html impact-bolditalic.html
+== impact-bolditalic.html impact-bolditalic.html
+== impact-bolditalic.html impact-bolditalic.html
 
 == arialunicode-bold.html arialunicode-bold.html
 == arialunicode-italic.html arialunicode-italic.html
 == arialunicode-oblique.html arialunicode-oblique.html
-# == arialunicode-bolditalic.html arialunicode-bolditalic.html
-# == arialunicode-bolditalic.html arialunicode-bolditalic.html
+== arialunicode-bolditalic.html arialunicode-bolditalic.html
+== arialunicode-bolditalic.html arialunicode-bolditalic.html
 
 == lucidaconsole-bold.html lucidaconsole-bold.html
 == lucidaconsole-italic.html lucidaconsole-italic.html
 == lucidaconsole-oblique.html lucidaconsole-oblique.html
-# == lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
-# == lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
+== lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
+== lucidaconsole-bolditalic.html lucidaconsole-bolditalic.html
 
 # checking that we don't match fullnames, psnames (see bug 538103)
 == arial-variations-1.html arial-variations-1.html
