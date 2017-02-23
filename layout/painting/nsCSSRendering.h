@@ -438,6 +438,13 @@ struct nsCSSRendering {
                                       nsStyleContext* aStyleContext,
                                       Sides aSkipSides = Sides());
 
+  static mozilla::Maybe<nsCSSBorderRenderer>
+  CreateBorderRendererForOutline(nsPresContext* aPresContext,
+                                 nsRenderingContext* aRenderingContext,
+                                 nsIFrame* aForFrame,
+                                 const nsRect& aDirtyRect,
+                                 const nsRect& aBorderArea,
+                                 nsStyleContext* aStyleContext);
 
   /**
    * Render the outline for an element using css rendering rules
