@@ -63,7 +63,7 @@ class Timeouts(object):
         minutes (or 300 seconds).
 
         """
-        return self._get("page load")
+        return self._get("pageLoad")
 
     @page_load.setter
     def page_load(self, sec):
@@ -71,7 +71,7 @@ class Timeouts(object):
         to wait for the page loading to complete.
 
         """
-        self._set("page load", sec)
+        self._set("pageLoad", sec)
 
     @property
     def implicit(self):
