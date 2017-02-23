@@ -250,19 +250,38 @@ var FormAutofillContent = {
    */
   _formsDetails: new WeakMap(),
 
+  /**
+   * @type {Set} Set of the fields with usable values in any saved profile.
+   */
+  savedFieldNames: null,
+
   init() {
     FormAutofillUtils.defineLazyLogGetter(this, "FormAutofillContent");
 
-    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", (result) => {
-      if (result.data) {
-        ProfileAutocomplete.ensureRegistered();
-      } else {
-        ProfileAutocomplete.ensureUnregistered();
-      }
-    });
+    Services.cpmm.addMessageListener("FormAutofill:enabledStatus", this);
+    Services.cpmm.addMessageListener("FormAutofill:savedFieldNames", this);
 
     if (Services.cpmm.initialProcessData.autofillEnabled) {
       ProfileAutocomplete.ensureRegistered();
+    }
+
+    this.savedFieldNames =
+      Services.cpmm.initialProcessData.autofillSavedFieldNames || new Set();
+  },
+
+  receiveMessage({name, data}) {
+    switch (name) {
+      case "FormAutofill:enabledStatus": {
+        if (data) {
+          ProfileAutocomplete.ensureRegistered();
+        } else {
+          ProfileAutocomplete.ensureUnregistered();
+        }
+        break;
+      }
+      case "FormAutofill:savedFieldNames": {
+        this.savedFieldNames = data;
+      }
     }
   },
 

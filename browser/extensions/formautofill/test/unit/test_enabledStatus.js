@@ -25,6 +25,7 @@ add_task(function* test_enabledStatus_observe() {
   let formAutofillParent = new FormAutofillParent();
   sinon.stub(formAutofillParent, "_getStatus");
   sinon.spy(formAutofillParent, "_setStatus");
+  sinon.stub(formAutofillParent, "_updateSavedFieldNames");
 
   // _enabled = _getStatus() => No need to trigger onStatusChanged
   formAutofillParent._enabled = true;
