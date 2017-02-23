@@ -764,6 +764,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := .',
         ]
 
         self.assertEqual(lines, expected)
@@ -778,6 +779,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := .',
         ]
 
         self.assertEqual(lines, expected)
@@ -792,6 +794,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := .',
             'HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout',
         ]
 
@@ -807,6 +810,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := .',
             'RUST_LIBRARY_FEATURES := musthave cantlivewithout',
         ]
 
@@ -821,6 +825,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'CARGO_FILE := %s/code/Cargo.toml' % env.topsrcdir,
+            'CARGO_TARGET_DIR := .',
             'RUST_PROGRAMS += i686-pc-windows-msvc/release/target.exe',
             'RUST_CARGO_PROGRAMS += target',
             'HOST_RUST_PROGRAMS += i686-pc-windows-msvc/release/host.exe',
