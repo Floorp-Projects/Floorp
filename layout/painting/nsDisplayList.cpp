@@ -4803,10 +4803,10 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
 
       Rect deviceClipRect = aLayer->RelativeToParent(clipRect + shadowOffset);
 
-      float blurRadius = shadow->mRadius / appUnitsPerDevPixel;
+      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
       // TODO: Calculate the border radius here.
       float borderRadius = 0.0;
-      float spreadRadius = shadow->mSpread / appUnitsPerDevPixel;
+      float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
       aCommands.AppendElement(OpDPPushBoxShadow(
                               wr::ToWrRect(deviceBoxRect),
