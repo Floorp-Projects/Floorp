@@ -5038,6 +5038,24 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+NukeCCW(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isObject() ||
+        !IsCrossCompartmentWrapper(&args[0].toObject()))
+    {
+        JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                  "nukeCCW");
+        return false;
+    }
+
+    NukeCrossCompartmentWrapper(cx, &args[0].toObject());
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 GetMaxArgs(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -6365,6 +6383,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         principals of ~0 subsumes all other principals. The absence of a\n"
 "         principal is treated as if its bits were 0xffff, for subsumption\n"
 "         purposes. If this property is omitted, supply no principal."),
+
+    JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
+"nukeCCW(wrapper)",
+"  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
 
     JS_FN_HELP("createMappedArrayBuffer", CreateMappedArrayBuffer, 1, 0,
 "createMappedArrayBuffer(filename, [offset, [size]])",
