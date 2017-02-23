@@ -465,6 +465,34 @@ class TreeMetadataEmitter(LoggingMixin):
                      ' in [profile.%s] section') % (libname, profile_name),
                     context)
 
+            # gkrust and gkrust-gtest must have the exact same profile settings
+            # for our almost-workspaces configuration to work properly.
+            if libname in ('gkrust', 'gkrust-gtest'):
+                if profile_name == 'dev':
+                    expected_profile = {
+                        'opt-level': 1,
+                        'debug': True,
+                        'rpath': False,
+                        'lto': False,
+                        'debug-assertions': True,
+                        'codegen-units': 1,
+                        'panic': 'abort',
+                    }
+                else:
+                    expected_profile = {
+                        'opt-level': 2,
+                        'debug': True,
+                        'rpath': False,
+                        'lto': True,
+                        'debug-assertions': False,
+                        'panic': 'abort',
+                    }
+
+                if profile != expected_profile:
+                    raise SandboxValidationError(
+                        'Cargo profile.%s for %s is incorrect' % (profile_name, libname),
+                        context)
+
         cargo_target_dir = context.get('RUST_LIBRARY_TARGET_DIR', '.')
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
