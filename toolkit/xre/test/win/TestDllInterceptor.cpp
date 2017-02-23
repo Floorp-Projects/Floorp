@@ -4,6 +4,7 @@
 
 #include <shlobj.h>
 #include <stdio.h>
+#include <commdlg.h>
 
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsDllInterceptor.h"
@@ -42,7 +43,21 @@ patched_rotatePayload(payload p)
   return orig_rotatePayload(p);
 }
 
-bool TestHook(const char *dll, const char *func)
+typedef bool(*HookTestFunc)(void*);
+bool CheckHook(HookTestFunc aHookTestFunc, void* aOrigFunc,
+               const char* aDllName, const char* aFuncName)
+{
+  if (aHookTestFunc(aOrigFunc)) {
+    printf("TEST-PASS | WindowsDllInterceptor | "
+           "Executed hooked function %s from %s\n", aFuncName, aDllName);
+    return true;
+  }
+  printf("TEST-FAILED | WindowsDllInterceptor | "
+         "Failed to execute hooked function %s from %s\n", aFuncName, aDllName);
+  return false;
+}
+
+bool TestHook(HookTestFunc funcTester, const char *dll, const char *func)
 {
   void *orig_func;
   bool successful = false;
@@ -54,7 +69,7 @@ bool TestHook(const char *dll, const char *func)
 
   if (successful) {
     printf("TEST-PASS | WindowsDllInterceptor | Could hook %s from %s\n", func, dll);
-    return true;
+    return CheckHook(funcTester, orig_func, dll, func);
   } else {
     printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to hook %s from %s\n", func, dll);
     return false;
@@ -80,20 +95,18 @@ bool TestDetour(const char *dll, const char *func)
   }
 }
 
-bool MaybeTestHook(const bool cond, const char* dll, const char* func)
+bool MaybeTestHook(const bool cond, HookTestFunc funcTester, const char* dll, const char* func)
 {
   if (!cond) {
+    printf("TEST-SKIPPED | WindowsDllInterceptor | Skipped hook test for %s from %s\n", func, dll);
     return true;
   }
 
-  return TestHook(dll, func);
+  return TestHook(funcTester, dll, func);
 }
 
 bool ShouldTestTipTsf()
 {
-#if defined(_M_X64)
-  return false;
-#else
   if (!IsWin8OrLater()) {
     return false;
   }
@@ -125,7 +138,234 @@ bool ShouldTestTipTsf()
 
   // Leak the module so that it's loaded for the interceptor test
   return true;
-#endif
+}
+
+// These test the patched function returned by the DLL
+// interceptor.  They check that the patched assembler preamble does
+// something sane.  The parameter is a pointer to the patched function.
+bool TestGetWindowInfo(void* aFunc)
+{
+  auto patchedGetWindowInfo =
+    reinterpret_cast<decltype(&GetWindowInfo)>(aFunc);
+  return patchedGetWindowInfo(0, 0) == FALSE;
+}
+
+bool TestSetWindowLongPtr(void* aFunc)
+{
+  auto patchedSetWindowLongPtr =
+    reinterpret_cast<decltype(&SetWindowLongPtr)>(aFunc);
+  return patchedSetWindowLongPtr(0, 0, 0) == 0;
+}
+
+bool TestSetWindowLong(void* aFunc)
+{
+  auto patchedSetWindowLong =
+    reinterpret_cast<decltype(&SetWindowLong)>(aFunc);
+  return patchedSetWindowLong(0, 0, 0) == 0;
+}
+
+bool TestTrackPopupMenu(void* aFunc)
+{
+  auto patchedTrackPopupMenu =
+    reinterpret_cast<decltype(&TrackPopupMenu)>(aFunc);
+  return patchedTrackPopupMenu(0, 0, 0, 0, 0, 0, 0) == 0;
+}
+
+bool TestNtFlushBuffersFile(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtFlushBuffersFileType)(HANDLE, PIO_STATUS_BLOCK);
+  auto patchedNtFlushBuffersFile =
+    reinterpret_cast<NtFlushBuffersFileType>(aFunc);
+  patchedNtFlushBuffersFile(0, 0);
+  return true;
+}
+
+bool TestNtCreateFile(void* aFunc)
+{
+  auto patchedNtCreateFile =
+    reinterpret_cast<decltype(&NtCreateFile)>(aFunc);
+  return patchedNtCreateFile(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) != 0;
+}
+
+bool TestNtReadFile(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtReadFileType)(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
+                                           PIO_STATUS_BLOCK, PVOID, ULONG,
+                                           PLARGE_INTEGER, PULONG);
+  auto patchedNtReadFile =
+    reinterpret_cast<NtReadFileType>(aFunc);
+  return patchedNtReadFile(0, 0, 0, 0, 0, 0, 0, 0, 0) != 0;
+}
+
+bool TestNtReadFileScatter(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtReadFileScatterType)(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
+                                                  PIO_STATUS_BLOCK, PFILE_SEGMENT_ELEMENT, ULONG,
+                                                  PLARGE_INTEGER, PULONG);
+  auto patchedNtReadFileScatter =
+    reinterpret_cast<NtReadFileScatterType>(aFunc);
+  return patchedNtReadFileScatter(0, 0, 0, 0, 0, 0, 0, 0, 0) != 0;
+}
+
+bool TestNtWriteFile(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtWriteFileType)(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
+                                            PIO_STATUS_BLOCK, PVOID, ULONG,
+                                            PLARGE_INTEGER, PULONG);
+  auto patchedNtWriteFile =
+    reinterpret_cast<NtWriteFileType>(aFunc);
+  return patchedNtWriteFile(0, 0, 0, 0, 0, 0, 0, 0, 0) != 0;
+}
+
+bool TestNtWriteFileGather(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtWriteFileGatherType)(HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID,
+                                                  PIO_STATUS_BLOCK, PFILE_SEGMENT_ELEMENT, ULONG,
+                                                  PLARGE_INTEGER, PULONG);
+  auto patchedNtWriteFileGather =
+    reinterpret_cast<NtWriteFileGatherType>(aFunc);
+  return patchedNtWriteFileGather(0, 0, 0, 0, 0, 0, 0, 0, 0) != 0;
+}
+
+bool TestNtQueryFullAttributesFile(void* aFunc)
+{
+  typedef NTSTATUS(WINAPI *NtQueryFullAttributesFileType)(POBJECT_ATTRIBUTES,
+                                                          PVOID);
+  auto patchedNtQueryFullAttributesFile =
+    reinterpret_cast<NtQueryFullAttributesFileType>(aFunc);
+  return patchedNtQueryFullAttributesFile(0, 0) != 0;
+}
+
+bool TestSetUnhandledExceptionFilter(void* aFunc)
+{
+  auto patchedSetUnhandledExceptionFilter =
+    reinterpret_cast<decltype(&SetUnhandledExceptionFilter)>(aFunc);
+  // Retrieve the current filter as we set the new filter to null, then restore the current filter.
+  LPTOP_LEVEL_EXCEPTION_FILTER current = patchedSetUnhandledExceptionFilter(0);
+  patchedSetUnhandledExceptionFilter(current);
+  return true;
+}
+
+bool TestVirtualAlloc(void* aFunc)
+{
+  auto patchedVirtualAlloc =
+    reinterpret_cast<decltype(&VirtualAlloc)>(aFunc);
+  return patchedVirtualAlloc(0, 0, 0, 0) == 0;
+}
+
+bool TestMapViewOfFile(void* aFunc)
+{
+  auto patchedMapViewOfFile =
+    reinterpret_cast<decltype(&MapViewOfFile)>(aFunc);
+  return patchedMapViewOfFile(0, 0, 0, 0, 0) == 0;
+}
+
+bool TestCreateDIBSection(void* aFunc)
+{
+  auto patchedCreateDIBSection =
+    reinterpret_cast<decltype(&CreateDIBSection)>(aFunc);
+  // MSDN is wrong here.  This does not return ERROR_INVALID_PARAMETER.  It
+  // sets the value of GetLastError to ERROR_INVALID_PARAMETER.
+  // CreateDIBSection returns 0 on error.
+  return patchedCreateDIBSection(0, 0, 0, 0, 0, 0) == 0;
+}
+
+bool TestCreateFileW(void* aFunc)
+{
+  auto patchedCreateFileW =
+    reinterpret_cast<decltype(&CreateFileW)>(aFunc);
+  return patchedCreateFileW(0, 0, 0, 0, 0, 0, 0) == INVALID_HANDLE_VALUE;
+}
+
+bool TestCreateFileA(void* aFunc)
+{
+  auto patchedCreateFileA =
+    reinterpret_cast<decltype(&CreateFileA)>(aFunc);
+//  return patchedCreateFileA(0, 0, 0, 0, 0, 0, 0) == INVALID_HANDLE_VALUE;
+  printf("TEST-SKIPPED | WindowsDllInterceptor | "
+          "Will not attempt to execute patched CreateFileA -- patched method is known to fail.\n");
+  return true;
+}
+
+bool TestInSendMessageEx(void* aFunc)
+{
+  auto patchedInSendMessageEx =
+    reinterpret_cast<decltype(&InSendMessageEx)>(aFunc);
+  patchedInSendMessageEx(0);
+  return true;
+}
+
+bool TestImmGetContext(void* aFunc)
+{
+  auto patchedImmGetContext =
+    reinterpret_cast<decltype(&ImmGetContext)>(aFunc);
+  patchedImmGetContext(0);
+  return true;
+}
+
+bool TestImmGetCompositionStringW(void* aFunc)
+{
+  auto patchedImmGetCompositionStringW =
+    reinterpret_cast<decltype(&ImmGetCompositionStringW)>(aFunc);
+  patchedImmGetCompositionStringW(0, 0, 0, 0);
+  return true;
+}
+
+bool TestImmSetCandidateWindow(void* aFunc)
+{
+  auto patchedImmSetCandidateWindow =
+    reinterpret_cast<decltype(&ImmSetCandidateWindow)>(aFunc);
+//  return patchedImmSetCandidateWindow(0, 0) == 0;
+  // ImmSetCandidateWindow crashes if given bad parameters.
+  printf("TEST-SKIPPED | WindowsDllInterceptor | "
+          "Will not attempt to execute patched ImmSetCandidateWindow.\n");
+  return true;
+}
+
+bool TestImmNotifyIME(void* aFunc)
+{
+  auto patchedImmNotifyIME =
+    reinterpret_cast<decltype(&ImmNotifyIME)>(aFunc);
+  return patchedImmNotifyIME(0, 0, 0, 0) == 0;
+}
+
+bool TestGetSaveFileNameW(void* aFunc)
+{
+  auto patchedGetSaveFileNameWType =
+    reinterpret_cast<decltype(&GetSaveFileNameW)>(aFunc);
+  patchedGetSaveFileNameWType(0);
+  return true;
+}
+
+bool TestGetOpenFileNameW(void* aFunc)
+{
+  auto patchedGetOpenFileNameWType =
+    reinterpret_cast<decltype(&GetOpenFileNameW)>(aFunc);
+  patchedGetOpenFileNameWType(0);
+  return true;
+}
+
+bool TestGetKeyState(void* aFunc)
+{
+  auto patchedGetKeyState =
+    reinterpret_cast<decltype(&GetKeyState)>(aFunc);
+  patchedGetKeyState(0);
+  return true;
+}
+
+bool TestSendMessageTimeoutW(void* aFunc)
+{
+  auto patchedSendMessageTimeoutW =
+    reinterpret_cast<decltype(&SendMessageTimeoutW)>(aFunc);
+  return patchedSendMessageTimeoutW(0, 0, 0, 0, 0, 0, 0) == 0;
+}
+
+bool TestProcessCaretEvents(void* aFunc)
+{
+  auto patchedProcessCaretEvents =
+    reinterpret_cast<WINEVENTPROC>(aFunc);
+  patchedProcessCaretEvents(0, 0, 0, 0, 0, 0, 0);
+  return true;
 }
 
 int main()
@@ -183,45 +423,50 @@ int main()
     return 1;
   }
 
-  if (TestHook("user32.dll", "GetWindowInfo") &&
+  if (TestHook(TestGetWindowInfo, "user32.dll", "GetWindowInfo") &&
 #ifdef _WIN64
-      TestHook("user32.dll", "SetWindowLongPtrA") &&
-      TestHook("user32.dll", "SetWindowLongPtrW") &&
+      TestHook(TestSetWindowLongPtr, "user32.dll", "SetWindowLongPtrA") &&
+      TestHook(TestSetWindowLongPtr, "user32.dll", "SetWindowLongPtrW") &&
 #else
-      TestHook("user32.dll", "SetWindowLongA") &&
-      TestHook("user32.dll", "SetWindowLongW") &&
+      TestHook(TestSetWindowLong, "user32.dll", "SetWindowLongA") &&
+      TestHook(TestSetWindowLong, "user32.dll", "SetWindowLongW") &&
 #endif
-      TestHook("user32.dll", "TrackPopupMenu") &&
+      TestHook(TestTrackPopupMenu, "user32.dll", "TrackPopupMenu") &&
 #ifdef _M_IX86
       // We keep this test to hook complex code on x86. (Bug 850957)
-      TestHook("ntdll.dll", "NtFlushBuffersFile") &&
+      TestHook(TestNtFlushBuffersFile, "ntdll.dll", "NtFlushBuffersFile") &&
 #endif
-      TestHook("ntdll.dll", "NtCreateFile") &&
-      TestHook("ntdll.dll", "NtReadFile") &&
-      TestHook("ntdll.dll", "NtReadFileScatter") &&
-      TestHook("ntdll.dll", "NtWriteFile") &&
-      TestHook("ntdll.dll", "NtWriteFileGather") &&
-      TestHook("ntdll.dll", "NtQueryFullAttributesFile") &&
+      TestHook(TestNtCreateFile, "ntdll.dll", "NtCreateFile") &&
+      TestHook(TestNtReadFile, "ntdll.dll", "NtReadFile") &&
+      TestHook(TestNtReadFileScatter, "ntdll.dll", "NtReadFileScatter") &&
+      TestHook(TestNtWriteFile, "ntdll.dll", "NtWriteFile") &&
+      TestHook(TestNtWriteFileGather, "ntdll.dll", "NtWriteFileGather") &&
+      TestHook(TestNtQueryFullAttributesFile, "ntdll.dll", "NtQueryFullAttributesFile") &&
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
-      TestHook("kernel32.dll", "SetUnhandledExceptionFilter") &&
+      TestHook(TestSetUnhandledExceptionFilter, "kernel32.dll", "SetUnhandledExceptionFilter") &&
 #ifdef _M_IX86
       // Bug 670967: xpcom/base/AvailableMemoryTracker.cpp
-      TestHook("kernel32.dll", "VirtualAlloc") &&
-      TestHook("kernel32.dll", "MapViewOfFile") &&
-      TestHook("gdi32.dll", "CreateDIBSection") &&
-      TestHook("kernel32.dll", "CreateFileW") &&
+      TestHook(TestVirtualAlloc, "kernel32.dll", "VirtualAlloc") &&
+      TestHook(TestMapViewOfFile, "kernel32.dll", "MapViewOfFile") &&
+      TestHook(TestCreateDIBSection, "gdi32.dll", "CreateDIBSection") &&
+      TestHook(TestCreateFileW, "kernel32.dll", "CreateFileW") &&    // see Bug 1316415
 #endif
+      TestHook(TestCreateFileA, "kernel32.dll", "CreateFileA") &&
       TestDetour("user32.dll", "CreateWindowExW") &&
-      TestHook("user32.dll", "InSendMessageEx") &&
-      TestHook("imm32.dll", "ImmGetContext") &&
-      TestHook("imm32.dll", "ImmGetCompositionStringW") &&
-      TestHook("imm32.dll", "ImmSetCandidateWindow") &&
+      TestHook(TestInSendMessageEx, "user32.dll", "InSendMessageEx") &&
+      TestHook(TestImmGetContext, "imm32.dll", "ImmGetContext") &&
+      // TestHook("imm32.dll", "ImmReleaseContext") &&    // see Bug 1316415
+      TestHook(TestImmGetCompositionStringW, "imm32.dll", "ImmGetCompositionStringW") &&
+      TestHook(TestImmSetCandidateWindow, "imm32.dll", "ImmSetCandidateWindow") &&
+      TestHook(TestImmNotifyIME, "imm32.dll", "ImmNotifyIME") &&
+      TestHook(TestGetSaveFileNameW, "comdlg32.dll", "GetSaveFileNameW") &&
+      TestHook(TestGetOpenFileNameW, "comdlg32.dll", "GetOpenFileNameW") &&
 #ifdef _M_X64
-      TestHook("user32.dll", "GetKeyState") &&
+      TestHook(TestGetKeyState, "user32.dll", "GetKeyState") &&    // see Bug 1316415
 #endif
-      MaybeTestHook(ShouldTestTipTsf(), "tiptsf.dll", "ProcessCaretEvents") &&
+      MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
-      TestHook("user32.dll", "SendMessageTimeoutW") &&
+      TestHook(TestSendMessageTimeoutW, "user32.dll", "SendMessageTimeoutW") &&
 #endif
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");

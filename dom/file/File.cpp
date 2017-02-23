@@ -13,6 +13,7 @@
 #include "mozilla/dom/FileCreatorHelper.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace dom {
@@ -60,6 +61,7 @@ File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
 /* static */ already_AddRefed<File>
 File::CreateFromFile(nsISupports* aParent, nsIFile* aFile)
 {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<File> file = new File(aParent, new FileBlobImpl(aFile));
   return file.forget();
 }
@@ -68,6 +70,7 @@ File::CreateFromFile(nsISupports* aParent, nsIFile* aFile)
 File::CreateFromFile(nsISupports* aParent, nsIFile* aFile,
                      const nsAString& aName, const nsAString& aContentType)
 {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<File> file = new File(aParent,
     new FileBlobImpl(aFile, aName, aContentType));
   return file.forget();
@@ -166,8 +169,6 @@ File::CreateFromNsIFile(const GlobalObject& aGlobal,
                         SystemCallerGuarantee aGuarantee,
                         ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   RefPtr<Promise> promise =

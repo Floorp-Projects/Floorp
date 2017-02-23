@@ -71,6 +71,18 @@ AllocateCodeSegment(JSContext* cx, uint32_t codeLength)
     codeLength = JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 
     void* p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
+
+    // If the allocation failed and the embedding gives us a last-ditch attempt
+    // to purge all memory (which, in gecko, does a purging GC/CC/GC), do that
+    // then retry the allocation.
+    if (!p) {
+        JSRuntime* rt = cx->runtime();
+        if (rt->largeAllocationFailureCallback) {
+            rt->largeAllocationFailureCallback(rt->largeAllocationFailureCallbackData);
+            p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
+        }
+    }
+
     if (!p) {
         ReportOutOfMemory(cx);
         return nullptr;

@@ -158,7 +158,7 @@ SpeechSynthesisUtterance::GetChosenVoiceURI(nsString& aResult) const
 void
 SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventType,
                                                        uint32_t aCharIndex,
-                                                       Nullable<uint32_t> aCharLength,
+                                                       const Nullable<uint32_t>& aCharLength,
                                                        float aElapsedTime,
                                                        const nsAString& aName)
 {

@@ -7,6 +7,7 @@
 #include "SandboxInitialization.h"
 
 #include "sandbox/win/src/sandbox_factory.h"
+#include "mozilla/sandboxing/permissionsService.h"
 
 namespace mozilla {
 namespace sandboxing {
@@ -75,6 +76,11 @@ GetInitializedBrokerServices()
     InitializeBrokerServices();
 
   return sInitializedBrokerServices;
+}
+
+PermissionsService* GetPermissionsService()
+{
+  return PermissionsService::GetInstance();
 }
 
 } // sandboxing

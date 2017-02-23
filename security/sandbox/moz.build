@@ -19,6 +19,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
 
     DIRS += [
         'win/src/sandboxbroker',
+        'win/src/sandboxpermissions',
         'win/src/sandboxtarget',
     ]
 
@@ -29,6 +30,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.sandboxing += [
         'chromium-shim/sandbox/win/loggingCallbacks.h',
         'chromium-shim/sandbox/win/loggingTypes.h',
+        'chromium-shim/sandbox/win/permissionsService.h',
         'chromium-shim/sandbox/win/sandboxLogging.h',
         'win/SandboxInitialization.h',
     ]
@@ -36,6 +38,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'chromium-shim/base/files/file_path.cpp',
         'chromium-shim/base/logging.cpp',
+        'chromium-shim/sandbox/win/permissionsService.cpp',
         'chromium-shim/sandbox/win/sandboxLogging.cpp',
         'chromium/base/at_exit.cc',
         'chromium/base/base_switches.cc',

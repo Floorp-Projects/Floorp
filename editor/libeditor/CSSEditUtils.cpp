@@ -1243,6 +1243,44 @@ CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
   return isSet;
 }
 
+bool
+CSSEditUtils::HaveCSSEquivalentStyles(
+                nsINode& aNode,
+                nsIAtom* aHTMLProperty,
+                nsIAtom* aHTMLAttribute,
+                StyleType aStyleType)
+{
+  nsAutoString valueString;
+  nsCOMPtr<nsINode> node = &aNode;
+  do {
+    // get the value of the CSS equivalent styles
+    nsresult rv =
+      GetCSSEquivalentToHTMLInlineStyleSet(node, aHTMLProperty, aHTMLAttribute,
+                                           valueString, aStyleType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    if (!valueString.IsEmpty()) {
+      return true;
+    }
+
+    if (nsGkAtoms::u != aHTMLProperty && nsGkAtoms::strike != aHTMLProperty) {
+      return false;
+    }
+
+    // unfortunately, the value of the text-decoration property is not
+    // inherited.
+    // that means that we have to look at ancestors of node to see if they
+    // are underlined
+
+    // set to null if it's not a dom element
+    node = node->GetParentElement();
+  } while (node);
+
+  return false;
+}
+
 void
 CSSEditUtils::SetCSSEnabled(bool aIsCSSPrefChecked)
 {

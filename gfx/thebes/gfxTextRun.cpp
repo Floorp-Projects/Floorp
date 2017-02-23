@@ -616,11 +616,17 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams) const
         HasNonOpaqueNonTransparentColor(aParams.context, currentColor) &&
         HasSyntheticBoldOrColor(this, aRange)) {
         needToRestore = true;
-        // measure text, use the bounding box
+        // Measure text; use the bounding box to determine the area we need
+        // to buffer.
         gfxTextRun::Metrics metrics = MeasureText(
             aRange, gfxFont::LOOSE_INK_EXTENTS,
             aParams.context->GetDrawTarget(), aParams.provider);
-        metrics.mBoundingBox.MoveBy(aPt);
+        if (IsRightToLeft()) {
+            metrics.mBoundingBox.MoveBy(gfxPoint(aPt.x - metrics.mAdvanceWidth,
+                                                 aPt.y));
+        } else {
+            metrics.mBoundingBox.MoveBy(aPt);
+        }
         syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor,
                                            GetAppUnitsPerDevUnit());
     }

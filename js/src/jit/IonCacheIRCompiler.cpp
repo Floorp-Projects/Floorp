@@ -95,6 +95,9 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
     ObjectGroup* groupStubField(uint32_t offset) {
         return (ObjectGroup*)readStubWord(offset, StubField::Type::ObjectGroup);
     }
+    JSCompartment* compartmentStubField(uint32_t offset) {
+        return (JSCompartment*)readStubWord(offset, StubField::Type::RawWord);
+    }
     jsid idStubField(uint32_t offset) {
         return mozilla::BitwiseCast<jsid>(readStubWord(offset, StubField::Type::Id));
     }
@@ -487,6 +490,25 @@ IonCacheIRCompiler::emitGuardProto()
 
     masm.loadObjProto(obj, scratch);
     masm.branchPtr(Assembler::NotEqual, scratch, ImmGCPtr(proto), failure->label());
+    return true;
+}
+
+bool
+IonCacheIRCompiler::emitGuardCompartment()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    objectStubField(reader.stubOffset()); // Read global.
+    JSCompartment* compartment = compartmentStubField(reader.stubOffset());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    masm.loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    masm.branchPtr(Assembler::NotEqual, scratch, ImmPtr(compartment), failure->label());
     return true;
 }
 

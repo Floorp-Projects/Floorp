@@ -17,6 +17,11 @@
 namespace sandbox {
 class BrokerServices;
 }
+namespace mozilla {
+namespace sandboxing {
+class PermissionsService;
+}
+}
 #endif
 
 namespace mozilla {
@@ -194,6 +199,7 @@ public:
    * Chromium sandbox BrokerServices.
    */
   sandbox::BrokerServices* sandboxBrokerServices = nullptr;
+  mozilla::sandboxing::PermissionsService* sandboxPermissionsService;
 #endif
 };
 

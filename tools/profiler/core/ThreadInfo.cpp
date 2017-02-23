@@ -23,10 +23,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mStackTop(aStackTop)
   , mPendingDelete(false)
   , mMutex(MakeUnique<mozilla::Mutex>("ThreadInfo::mMutex"))
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  , mRssMemory(0)
-  , mUssMemory(0)
-#endif
 {
   MOZ_COUNT_CTOR(ThreadInfo);
   mThread = NS_GetCurrentThread();
@@ -260,9 +256,9 @@ ThreadInfo::GetMutex()
 }
 
 void
-ThreadInfo::DuplicateLastSample()
+ThreadInfo::DuplicateLastSample(const TimeStamp& aStartTime)
 {
-  mBuffer->DuplicateLastSample(mThreadId);
+  mBuffer->DuplicateLastSample(mThreadId, aStartTime);
 }
 
 size_t

@@ -31,7 +31,7 @@ FileCreatorHelper::CreateFile(nsIGlobalObject* aGlobalObject,
                               bool aIsFromNsIFile,
                               ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   RefPtr<Promise> promise = Promise::Create(aGlobalObject, aRv);
   if (NS_WARN_IF(aRv.Failed())) {

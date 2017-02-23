@@ -24,6 +24,7 @@
 #include "nsIObserver.h"
 #ifdef XP_WIN
 #include "nsWindowsHelpers.h"
+#include "sandboxPermissions.h"
 #endif
 
 #ifdef MOZ_CRASHREPORTER
@@ -34,9 +35,6 @@ class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
-#ifdef MOZ_GECKO_PROFILER
-class ProfileGatherer;
-#endif
 
 namespace ipc {
 class CrashReporterHost;
@@ -193,6 +191,14 @@ protected:
     AnswerNPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(
                                         const bool& shouldRegister,
                                         NPError* result) override;
+
+    virtual mozilla::ipc::IPCResult
+    AnswerGetFileName(const GetFileNameFunc& aFunc,
+                      const OpenFileNameIPC& aOfnIn,
+                      OpenFileNameRetIPC* aOfnOut, bool* aResult) override
+    {
+      return IPC_FAIL_NO_REASON(this);
+    }
 
 protected:
     void SetChildTimeout(const int32_t aChildTimeout);
@@ -509,6 +515,12 @@ class PluginModuleChromeParent
     virtual mozilla::ipc::IPCResult
     AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet) override;
 
+    // Proxy GetOpenFileName/GetSaveFileName on Windows.
+    virtual mozilla::ipc::IPCResult
+    AnswerGetFileName(const GetFileNameFunc& aFunc,
+                      const OpenFileNameIPC& aOfnIn,
+                      OpenFileNameRetIPC* aOfnOut, bool* aResult) override;
+
 private:
     virtual void
     EnteredCxxStack() override;
@@ -657,11 +669,14 @@ private:
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
 #ifdef MOZ_GECKO_PROFILER
-    RefPtr<mozilla::ProfileGatherer> mGatherer;
+    bool mIsProfilerActive;
 #endif
     nsCString mProfile;
     bool mIsBlocklisted;
     static bool sInstantiated;
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    mozilla::SandboxPermissions mSandboxPermissions;
+#endif
 };
 
 } // namespace plugins

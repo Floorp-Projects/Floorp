@@ -29,7 +29,7 @@ MOZ_CrashOOL(const char* aFilename, int aLine, const char* aReason)
 #ifdef DEBUG
   MOZ_ReportCrash(aReason, aFilename, aLine);
 #endif
-  MOZ_CRASH_ANNOTATE(aReason);
+  gMozCrashReason = aReason;
   MOZ_REALLY_CRASH(aLine);
 }
 
@@ -59,7 +59,7 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...)
 #ifdef DEBUG
   MOZ_ReportCrash(sPrintfCrashReason, aFilename, aLine);
 #endif
-  MOZ_CRASH_ANNOTATE(sPrintfCrashReason);
+  gMozCrashReason = sPrintfCrashReason;
   MOZ_REALLY_CRASH(aLine);
 }
 

@@ -383,6 +383,10 @@ struct ProxyValueArray
         for (size_t i = 0; i < PROXY_EXTRA_SLOTS; i++)
             extraSlots[i] = JS::UndefinedValue();
     }
+
+    static size_t offsetOfPrivateSlot() {
+        return offsetof(ProxyValueArray, privateSlot);
+    }
 };
 
 // All proxies share the same data layout. Following the object's shape and
