@@ -142,7 +142,14 @@ TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry)
   }
 
   // Transform the geometry to the parent 3D context leaf coordinate space.
-  aGeometry->TransformToScreenSpace(transform.ProjectTo2D().Inverse());
+  transform = transform.ProjectTo2D();
+
+  if (!transform.IsSingular()) {
+    aGeometry->TransformToScreenSpace(transform.Inverse());
+  } else {
+    // Discard the geometry since the result might not be correct.
+    aGeometry.reset();
+  }
 }
 
 
