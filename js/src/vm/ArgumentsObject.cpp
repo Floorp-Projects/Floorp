@@ -16,6 +16,7 @@
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
