@@ -7,6 +7,8 @@
 #define GMPUtils_h_
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/AbstractThread.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
@@ -82,6 +84,9 @@ HaveGMPFor(const nsCString& aAPI,
 
 void
 LogToConsole(const nsAString& aMsg);
+
+RefPtr<AbstractThread>
+GetGMPAbstractThread();
 
 } // namespace mozilla
 
