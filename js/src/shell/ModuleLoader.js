@@ -21,9 +21,7 @@ Reflect.Loader = new class {
         return os.file.readFile(path);
     }
 
-    loadAndParse(name) {
-        let path = this.resolve(name);
-
+    loadAndParse(path) {
         if (this.registry.has(path))
             return this.registry.get(path);
 
@@ -33,11 +31,23 @@ Reflect.Loader = new class {
         return module;
     }
 
-    ["import"](name, referrer) {
-        let module = this.loadAndParse(name);
+    loadAndExecute(path) {
+        let module = this.loadAndParse(path);
         module.declarationInstantiation();
         return module.evaluation();
     }
+
+    importRoot(path) {
+        return this.loadAndExecute(path);
+    }
+
+    ["import"](name, referrer) {
+        let path = this.resolve(name);
+        return this.loadAndExecute(path);
+    }
 };
 
-setModuleResolveHook((module, requestName) => Reflect.Loader.loadAndParse(requestName));
+setModuleResolveHook((module, requestName) => {
+    let path = Reflect.Loader.resolve(requestName);
+    return Reflect.Loader.loadAndParse(path)
+});

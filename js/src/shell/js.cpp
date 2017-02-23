@@ -733,12 +733,12 @@ GetLoaderObject(JSContext* cx, MutableHandleObject resultOut)
 }
 
 static bool
-GetImportMethod(JSContext* cx, HandleObject loader, MutableHandleFunction resultOut)
+GetImportRootMethod(JSContext* cx, HandleObject loader, MutableHandleFunction resultOut)
 {
-    // Look up the module loader's |import| method.
+    // Look up the module loader's |importRoot| method.
 
     RootedValue value(cx);
-    if (!JS_GetProperty(cx, loader, "import", &value) || !value.isObject())
+    if (!JS_GetProperty(cx, loader, "importRoot", &value) || !value.isObject())
         return false;
 
     RootedObject object(cx, &value.toObject());
@@ -752,17 +752,31 @@ GetImportMethod(JSContext* cx, HandleObject loader, MutableHandleFunction result
 static MOZ_MUST_USE bool
 RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
-    // Execute a module by calling |Reflect.Loader.import(filename)|.
+    // Execute a module by calling Reflect.Loader.importRoot on the resolved
+    // filename.
 
     RootedObject loaderObj(cx);
-    MOZ_ALWAYS_TRUE(GetLoaderObject(cx, &loaderObj));
+    if (!GetLoaderObject(cx, &loaderObj)) {
+        JS_ReportErrorASCII(cx, "Failed to get Reflect.Loader");
+        return false;
+    }
 
     RootedFunction importFun(cx);
-    MOZ_ALWAYS_TRUE(GetImportMethod(cx, loaderObj, &importFun));
+    if (!GetImportRootMethod(cx, loaderObj, &importFun)) {
+        JS_ReportErrorASCII(cx, "Failed to get Reflect.Loader.importRoot method");
+        return false;
+    }
 
-    JS::AutoValueArray<2> args(cx);
-    args[0].setString(JS_NewStringCopyZ(cx, filename));
-    args[1].setUndefined();
+    RootedString path(cx, JS_NewStringCopyZ(cx, filename));
+    if (!path)
+        return false;
+
+    path = ResolvePath(cx, path, RootRelative);
+    if (!path)
+        return false;
+
+    JS::AutoValueArray<1> args(cx);
+    args[0].setString(path);
 
     RootedValue value(cx);
     return JS_CallFunction(cx, loaderObj, importFun, args, &value);
