@@ -2691,6 +2691,26 @@ WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeade
   return NS_OK;
 }
 
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::SetReferrerPolicyFromHeaderValue(
+                                  const nsACString& aReferrerPolicyHeaderValue)
+{
+  NS_ConvertUTF8toUTF16 headerValue(aReferrerPolicyHeaderValue);
+
+  if (headerValue.IsEmpty()) {
+    return;
+  }
+
+  net::ReferrerPolicy policy =
+    nsContentUtils::GetReferrerPolicyFromHeader(headerValue);
+  if (policy == net::RP_Unset) {
+    return;
+  }
+
+  SetReferrerPolicy(policy);
+}
+
 
 // Can't use NS_IMPL_CYCLE_COLLECTION_CLASS(WorkerPrivateParent) because of the
 // templates.
