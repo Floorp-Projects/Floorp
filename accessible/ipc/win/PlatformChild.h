@@ -27,6 +27,7 @@ private:
   UniquePtr<mozilla::mscom::RegisteredProxy> mIA2Proxy;
   UniquePtr<mozilla::mscom::RegisteredProxy> mAccTypelib;
   UniquePtr<mozilla::mscom::RegisteredProxy> mMiscTypelib;
+  UniquePtr<mozilla::mscom::RegisteredProxy> mSdnTypelib;
 };
 
 } // namespace mozilla

@@ -46,6 +46,7 @@ PlatformChild::PlatformChild()
   : mAccTypelib(mozilla::mscom::RegisterTypelib(L"oleacc.dll",
         mozilla::mscom::RegistrationFlags::eUseSystemDirectory))
   , mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb"))
+  , mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll"))
 {
   mozilla::mscom::InterceptorLog::Init();
   mozilla::mscom::RegisterArrayData(sPlatformChildArrayData);
