@@ -694,6 +694,38 @@ GetIndexFromString(JSString* str)
     return int32_t(index);
 }
 
+JSObject*
+WrapObjectPure(JSContext* cx, JSObject* obj)
+{
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(cx->compartment() != obj->compartment());
+
+    // From: JSCompartment::getNonWrapperObjectForCurrentCompartment
+    // Note that if the object is same-compartment, but has been wrapped into a
+    // different compartment, we need to unwrap it and return the bare same-
+    // compartment object. Note again that windows are always wrapped by a
+    // WindowProxy even when same-compartment so take care not to strip this
+    // particular wrapper.
+    obj = UncheckedUnwrap(obj, /* stopAtWindowProxy = */ true);
+    if (cx->compartment() == obj->compartment()) {
+        MOZ_ASSERT(!IsWindow(obj));
+        JS::ExposeObjectToActiveJS(obj);
+        return obj;
+    }
+
+    // Try to Lookup an existing wrapper for this object. We assume that
+    // if we can find such a wrapper, not calling preWrap is correct.
+    if (WrapperMap::Ptr p = cx->compartment()->lookupWrapper(obj)) {
+        JSObject* wrapped = &p->value().get().toObject();
+
+        // Ensure the wrapper is still exposed.
+        JS::ExposeObjectToActiveJS(wrapped);
+        return wrapped;
+    }
+
+    return nullptr;
+}
+
 bool
 DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn)
 {

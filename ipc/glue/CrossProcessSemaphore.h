@@ -61,7 +61,7 @@ public:
    * specified).
    * Returns true if the semaphore was succesfully decremented, false otherwise.
    **/
-  bool Wait(Maybe<TimeDuration> aWaitTime = Nothing());
+  bool Wait(const Maybe<TimeDuration>& aWaitTime = Nothing());
 
   /**
    * Increments the current value of the semaphore.

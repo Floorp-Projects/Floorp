@@ -93,8 +93,8 @@ public:
     if (mThread != nullptr) {
       MonitorAutoUnlock unlock(mMonitor);
       NS_DispatchToMainThread(
-        WrapRunnableNM<decltype(&ShutdownThread),
-                       nsCOMPtr<nsIThread> >(&ShutdownThread, mThread));
+        WrapRunnableNM(&ShutdownThread, nsCOMPtr<nsIThread>(mThread))
+      );
       mThread = nullptr;
     }
   }

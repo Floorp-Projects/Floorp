@@ -257,10 +257,9 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
   // Must be shut down before VideoEncoderDestroyed(), since this can recurse
   // the GMPThread event loop.  See bug 1049501
   if (mEncodedThread) {
-    // Can't get it to allow me to use WrapRunnable with a nsCOMPtr<nsIThread>()
     NS_DispatchToMainThread(
-      WrapRunnableNM<decltype(&ShutdownEncodedThread),
-                     nsCOMPtr<nsIThread> >(&ShutdownEncodedThread, mEncodedThread));
+      WrapRunnableNM(&ShutdownEncodedThread, nsCOMPtr<nsIThread>(mEncodedThread))
+    );
     mEncodedThread = nullptr;
   }
   if (mPlugin) {

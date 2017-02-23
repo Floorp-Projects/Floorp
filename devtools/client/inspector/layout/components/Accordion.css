@@ -24,7 +24,7 @@
 }
 
 .accordion ._header:hover {
-  background-color: var(--theme-selection-color);
+  background-color: var(--theme-toolbar-hover);
 }
 
 .accordion ._header:hover svg {

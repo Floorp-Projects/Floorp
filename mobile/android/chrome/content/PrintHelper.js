@@ -12,7 +12,8 @@ var PrintHelper = {
 
     switch (event) {
       case "Print:PDF":
-        callback.onSuccess(this.generatePDF(browser));
+        this.generatePDF(browser).then((data) => callback.onSuccess(data),
+                                       (error) => callback.onError(error));
         break;
     }
   },

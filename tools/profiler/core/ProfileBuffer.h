@@ -12,7 +12,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
-class ProfileBuffer : public mozilla::RefCounted<ProfileBuffer> {
+class ProfileBuffer : public mozilla::RefCounted<ProfileBuffer>
+{
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ProfileBuffer)
 
@@ -25,7 +26,7 @@ public:
                            JSContext* cx, UniqueStacks& aUniqueStacks);
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
                            UniqueStacks& aUniqueStacks);
-  void DuplicateLastSample(int aThreadId);
+  void DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
 
