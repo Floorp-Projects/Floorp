@@ -149,25 +149,6 @@ nsSynthVoiceRegistry::nsSynthVoiceRegistry()
 
     mSpeechSynthChild = new SpeechSynthesisChild();
     ContentChild::GetSingleton()->SendPSpeechSynthesisConstructor(mSpeechSynthChild);
-
-    InfallibleTArray<RemoteVoice> voices;
-    InfallibleTArray<nsString> defaults;
-    bool isSpeaking;
-
-    mSpeechSynthChild->SendReadVoicesAndState(&voices, &defaults, &isSpeaking);
-
-    for (uint32_t i = 0; i < voices.Length(); ++i) {
-      RemoteVoice voice = voices[i];
-      AddVoiceImpl(nullptr, voice.voiceURI(),
-                   voice.name(), voice.lang(),
-                   voice.localService(), voice.queued());
-    }
-
-    for (uint32_t i = 0; i < defaults.Length(); ++i) {
-      SetDefaultVoice(defaults[i], true);
-    }
-
-    mIsSpeaking = isSpeaking;
   }
 }
 
@@ -214,23 +195,53 @@ nsSynthVoiceRegistry::Shutdown()
   gSynthVoiceRegistry = nullptr;
 }
 
-void
-nsSynthVoiceRegistry::SendVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                                         InfallibleTArray<nsString>* aDefaults,
-                                         bool* aIsSpeaking)
+bool
+nsSynthVoiceRegistry::SendInitialVoicesAndState(SpeechSynthesisParent* aParent)
 {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  InfallibleTArray<RemoteVoice> voices;
+  InfallibleTArray<nsString> defaults;
+
   for (uint32_t i=0; i < mVoices.Length(); ++i) {
     RefPtr<VoiceData> voice = mVoices[i];
 
-    aVoices->AppendElement(RemoteVoice(voice->mUri, voice->mName, voice->mLang,
-                                       voice->mIsLocal, voice->mIsQueued));
+    voices.AppendElement(RemoteVoice(voice->mUri, voice->mName, voice->mLang,
+                                     voice->mIsLocal, voice->mIsQueued));
   }
 
   for (uint32_t i=0; i < mDefaultVoices.Length(); ++i) {
-    aDefaults->AppendElement(mDefaultVoices[i]->mUri);
+    defaults.AppendElement(mDefaultVoices[i]->mUri);
   }
 
-  *aIsSpeaking = IsSpeaking();
+  return aParent->SendInitialVoicesAndState(voices, defaults, IsSpeaking());
+}
+
+void
+nsSynthVoiceRegistry::RecvInitialVoicesAndState(const nsTArray<RemoteVoice>& aVoices,
+                                                const nsTArray<nsString>& aDefaults,
+                                                const bool& aIsSpeaking)
+{
+  // We really should have a local instance since this is a directed response to
+  // an Init() call.
+  MOZ_ASSERT(gSynthVoiceRegistry);
+
+  for (uint32_t i = 0; i < aVoices.Length(); ++i) {
+    RemoteVoice voice = aVoices[i];
+    gSynthVoiceRegistry->AddVoiceImpl(nullptr, voice.voiceURI(),
+                                      voice.name(), voice.lang(),
+                                      voice.localService(), voice.queued());
+  }
+
+  for (uint32_t i = 0; i < aDefaults.Length(); ++i) {
+    gSynthVoiceRegistry->SetDefaultVoice(aDefaults[i], true);
+  }
+
+  gSynthVoiceRegistry->mIsSpeaking = aIsSpeaking;
+
+  if (aVoices.Length()) {
+    gSynthVoiceRegistry->NotifyVoicesChanged();
+  }
 }
 
 void
