@@ -23,6 +23,7 @@ enum class CSSPseudoElementType : uint8_t;
 class ErrorResult;
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;
+struct ServoComputedStyleValues;
 
 namespace dom {
 class Element;
@@ -87,8 +88,7 @@ public:
   static nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                             dom::Element* aElement,
-                            const ServoComputedValues* aCurrentStyle,
-                            const ServoComputedValues* aParentStyle);
+                            const ServoComputedStyleValues& aServoValues);
 
   /**
    * Fills in the mComputedOffset member of each keyframe in the given array
