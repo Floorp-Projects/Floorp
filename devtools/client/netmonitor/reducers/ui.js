@@ -64,7 +64,4 @@ function ui(state = new UI(), action) {
   }
 }
 
-module.exports = {
-  UI,
-  ui
-}
+module.exports = ui;
