@@ -161,15 +161,17 @@ PROFILER_FUNC_VOID(profiler_shutdown())
 
 // Start the profiler with the selected options. The samples will be
 // recorded in a circular buffer.
-//   "aProfileEntries" is an abstract size indication of how big
+//   "aEntries" is an abstract size indication of how big
 //       the profile's circular buffer should be. Multiply by 4
 //       words to get the cost.
 //   "aInterval" the sampling interval. The profiler will do its
 //       best to sample at this interval. The profiler visualization
 //       should represent the actual sampling accuracy.
-PROFILER_FUNC_VOID(profiler_start(int aProfileEntries, double aInterval,
-                              const char** aFeatures, uint32_t aFeatureCount,
-                              const char** aThreadNameFilters, uint32_t aFilterCount))
+PROFILER_FUNC_VOID(profiler_start(int aEntries, double aInterval,
+                                  const char** aFeatures,
+                                  uint32_t aFeatureCount,
+                                  const char** aThreadNameFilters,
+                                  uint32_t aFilterCount))
 
 // Stop the profiler and discard the profile. Call 'profiler_save' before this
 // to retrieve the profile.
@@ -234,7 +236,7 @@ PROFILER_FUNC_VOID(profiler_save_profile_to_file(const char* aFilename))
 PROFILER_FUNC(const char** profiler_get_features(), nullptr)
 
 PROFILER_FUNC_VOID(profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
-                                                   uint32_t* aTotalSize,
+                                                   uint32_t* aEntries,
                                                    uint32_t* aGeneration))
 
 // Get information about the current buffer status.
@@ -245,14 +247,14 @@ PROFILER_FUNC_VOID(profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
 // for how fast the buffer is being written to, and how much
 // data is visible.
 static inline void profiler_get_buffer_info(uint32_t* aCurrentPosition,
-                                            uint32_t* aTotalSize,
+                                            uint32_t* aEntries,
                                             uint32_t* aGeneration)
 {
   *aCurrentPosition = 0;
-  *aTotalSize = 0;
+  *aEntries = 0;
   *aGeneration = 0;
 
-  profiler_get_buffer_info_helper(aCurrentPosition, aTotalSize, aGeneration);
+  profiler_get_buffer_info_helper(aCurrentPosition, aEntries, aGeneration);
 }
 
 // Lock the profiler. When locked the profiler is (1) stopped,
@@ -433,14 +435,14 @@ void profiler_OOP_exit_profile(const nsCString& aProfile);
 #endif
 
 #if !defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED) && !defined(ARCH_ARMV6)
-# define PROFILE_DEFAULT_ENTRY 1000000
+# define PROFILE_DEFAULT_ENTRIES 1000000
 #else
-# define PROFILE_DEFAULT_ENTRY 100000
+# define PROFILE_DEFAULT_ENTRIES 100000
 #endif
 
 // In the case of profiler_get_backtrace we know that we only need enough space
 // for a single backtrace.
-#define GET_BACKTRACE_DEFAULT_ENTRY 1000
+#define GET_BACKTRACE_DEFAULT_ENTRIES 1000
 
 #if defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED)
 /* A 1ms sampling interval has been shown to be a large perf hit
