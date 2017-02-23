@@ -45,6 +45,7 @@ public:
     , mNestedFrameId(0)
     , mIsContent(aToCopy.mIsContent)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
+    , mUseTrackingProtection(aToCopy.mUseTrackingProtection)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
@@ -61,6 +62,7 @@ public:
     , mNestedFrameId(aNestedFrameId)
     , mIsContent(aToCopy.mIsContent)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
+    , mUseTrackingProtection(aToCopy.mUseTrackingProtection)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
@@ -72,11 +74,13 @@ public:
               bool aIsContent,
               bool aUsePrivateBrowsing,
               bool aUseRemoteTabs,
+              bool aUseTrackingProtection,
               const OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aIsContent)
     , mUseRemoteTabs(aUseRemoteTabs)
+    , mUseTrackingProtection(aUseTrackingProtection)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
@@ -91,6 +95,7 @@ public:
     , mNestedFrameId(0)
     , mIsContent(false)
     , mUseRemoteTabs(false)
+    , mUseTrackingProtection(false)
     , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
@@ -110,6 +115,7 @@ private:
   uint64_t mNestedFrameId;
   bool mIsContent;
   bool mUseRemoteTabs;
+  bool mUseTrackingProtection;
   OriginAttributes mOriginAttributes;
 #ifdef DEBUG
   bool mIsNotNull;

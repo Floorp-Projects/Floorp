@@ -95,12 +95,12 @@
 
 .theme-dark .tabs .tabs-menu-item:hover:not(.is-active),
 .theme-light .tabs .tabs-menu-item:hover:not(.is-active) {
-  background-color: var(--toolbar-tab-hover);
+  background-color: var(--theme-toolbar-hover);
 }
 
 .theme-dark .tabs .tabs-menu-item:hover:active:not(.is-active),
 .theme-light .tabs .tabs-menu-item:hover:active:not(.is-active) {
-  background-color: var(--toolbar-tab-hover-active);
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .theme-dark .tabs .tabs-menu-item.is-active,
@@ -165,7 +165,7 @@
 }
 
 .theme-firebug .tabs .tabs-menu-item:hover:active a {
-  background-color: var(--toolbar-tab-hover-active);
+  background-color: var(--theme-toolbar-hover-active);
 }
 
 .theme-firebug .tabs .tabs-menu-item.is-active:hover:active a {

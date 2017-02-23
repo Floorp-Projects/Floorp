@@ -79,6 +79,12 @@ WMFDecoderModule::Startup()
 already_AddRefed<MediaDataDecoder>
 WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
+  if (aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency)) {
+    // Latency on Windows is bad. Let's not attempt to decode with WMF decoders
+    // when low latency is required.
+    return nullptr;
+  }
+
   nsAutoPtr<WMFVideoMFTManager> manager(
     new WMFVideoMFTManager(aParams.VideoConfig(),
                            aParams.mKnowsCompositor,

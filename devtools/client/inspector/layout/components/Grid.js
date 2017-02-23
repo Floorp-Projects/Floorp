@@ -18,8 +18,10 @@ module.exports = createClass({
   displayName: "Grid",
 
   propTypes: {
+    getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+    onSetGridOverlayColor: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
     onToggleShowGridLineNumbers: PropTypes.func.isRequired,
     onToggleShowInfiniteLines: PropTypes.func.isRequired,
@@ -29,8 +31,10 @@ module.exports = createClass({
 
   render() {
     let {
+      getSwatchColorPickerTooltip,
       grids,
       highlighterSettings,
+      onSetGridOverlayColor,
       onToggleGridHighlighter,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
@@ -42,7 +46,9 @@ module.exports = createClass({
           id: "layout-grid-container",
         },
         GridList({
+          getSwatchColorPickerTooltip,
           grids,
+          onSetGridOverlayColor,
           onToggleGridHighlighter,
         }),
         GridDisplaySettings({

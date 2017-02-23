@@ -326,6 +326,9 @@
               '-Wimplicit-fallthrough',
               '-Wthread-safety',
             ],
+            'cflags_mozilla': [
+              '-Wthread-safety',
+            ],
           }],
         ],
       }],

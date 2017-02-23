@@ -5,10 +5,12 @@
 package org.mozilla.gecko.sync.repositories.uploaders;
 
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Server11PreviousPostFailedException;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 
@@ -45,11 +47,11 @@ public class RecordUploadRunnable implements Runnable {
     @VisibleForTesting
     public final boolean isCommit;
     private final Uri collectionUri;
-    private final BatchMeta batchMeta;
+    private final String batchToken;
 
     public RecordUploadRunnable(MayUploadProvider mayUploadProvider,
                                 Uri collectionUri,
-                                BatchMeta batchMeta,
+                                String batchToken,
                                 SyncStorageRequestDelegate uploadDelegate,
                                 ArrayList<byte[]> outgoing,
                                 long byteCount,
@@ -58,7 +60,7 @@ public class RecordUploadRunnable implements Runnable {
         this.uploadDelegate = uploadDelegate;
         this.outgoing = outgoing;
         this.byteCount = byteCount;
-        this.batchMeta = batchMeta;
+        this.batchToken = batchToken;
         this.collectionUri = collectionUri;
         this.isCommit = isCommit;
     }
@@ -144,7 +146,7 @@ public class RecordUploadRunnable implements Runnable {
         // Fortunately, BaseResource is currently synchronous.
         // If that ever changes, you'll need to block here.
 
-        final URI postURI = buildPostURI(isCommit, batchMeta, collectionUri);
+        final URI postURI = buildPostURI(isCommit, batchToken, collectionUri);
         final SyncStorageRequest request = new SyncStorageRequest(postURI);
         request.delegate = uploadDelegate;
 
@@ -153,9 +155,8 @@ public class RecordUploadRunnable implements Runnable {
     }
 
     @VisibleForTesting
-    public static URI buildPostURI(boolean isCommit, BatchMeta batchMeta, Uri collectionUri) {
+    public static URI buildPostURI(boolean isCommit, @Nullable String batchToken, Uri collectionUri) {
         final Uri.Builder uriBuilder = collectionUri.buildUpon();
-        final String batchToken = batchMeta.getToken();
 
         if (batchToken != null) {
             uriBuilder.appendQueryParameter(QUERY_PARAM_BATCH, batchToken);

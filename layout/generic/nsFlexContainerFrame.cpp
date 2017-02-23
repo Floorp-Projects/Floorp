@@ -1846,7 +1846,7 @@ nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
   // XXXdholbert Once we do pagination / splitting, we'll need to actually
   // handle incomplete childReflowStatuses. But for now, we give our kids
   // unconstrained available height, which means they should always complete.
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+  MOZ_ASSERT(childReflowStatus.IsComplete(),
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 
@@ -3903,7 +3903,7 @@ ResolveFlexContainerMainSize(const ReflowInput& aReflowInput,
     // XXXdholbert For now, we don't support pushing children to our next
     // continuation or splitting children, so "amount of BSize required by
     // our children" is just the main-size (BSize) of our longest flex line.
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
     nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
 
     if (largestLineOuterSize <= aAvailableBSizeForContent) {
@@ -3963,7 +3963,7 @@ nsFlexContainerFrame::ComputeCrossSize(const ReflowInput& aReflowInput,
     // XXXdholbert For now, we don't support pushing children to our next
     // continuation or splitting children, so "amount of BSize required by
     // our children" is just the sum of our FlexLines' BSizes (cross sizes).
-    NS_FRAME_SET_INCOMPLETE(aStatus);
+    aStatus.SetIncomplete();
     if (aSumLineCrossSizes <= aAvailableBSizeForContent) {
       return aAvailableBSizeForContent;
     }
@@ -4329,7 +4329,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    nsTArray<StrutInfo>& aStruts,
                                    const FlexboxAxisTracker& aAxisTracker)
 {
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   LinkedList<FlexLine> lines;
   nsTArray<nsIFrame*> placeholderKids;
@@ -4626,7 +4626,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // NOTE: If we're auto-height, we allow our bottom border/padding to push us
   // over the available height without requesting a continuation, for
   // consistency with the behavior of "display:block" elements.
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+  if (aStatus.IsComplete()) {
     nscoord desiredBSizeWithBEndBP =
       desiredSizeInFlexWM.BSize(flexWM) + blockEndContainerBP;
 
@@ -4638,7 +4638,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       desiredSizeInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
     } else {
       // We couldn't fit bottom border/padding, so we'll need a continuation.
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
     }
   }
 
@@ -4780,7 +4780,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   // handle incomplete childReflowStatuses. But for now, we give our kids
   // unconstrained available height, which means they should always
   // complete.
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+  MOZ_ASSERT(childReflowStatus.IsComplete(),
              "We gave flex item unconstrained available height, so it "
              "should be complete");
 

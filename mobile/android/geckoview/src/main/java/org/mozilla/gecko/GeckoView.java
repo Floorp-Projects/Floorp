@@ -51,6 +51,8 @@ public class GeckoView extends LayerView
     /* package */ ProgressListener mProgressListener;
     private InputConnectionListener mInputConnectionListener;
 
+    private GeckoViewSettings mSettings;
+
     protected boolean onAttachedToWindowCalled;
     protected String chromeURI;
     protected int screenId = 0; // default to the primary screen
@@ -60,8 +62,10 @@ public class GeckoView extends LayerView
         @WrapForJNI(skip = true)
         /* package */ Window() {}
 
-        static native void open(Window instance, GeckoView view, Object compositor,
-                                EventDispatcher dispatcher, String chromeURI, int screenId);
+        static native void open(Window instance, GeckoView view,
+                                Object compositor, EventDispatcher dispatcher,
+                                String chromeURI, GeckoBundle settings,
+                                int screenId);
 
         @Override protected native void disposeNative();
         native void close();
@@ -191,6 +195,8 @@ public class GeckoView extends LayerView
 
         initializeView();
         listener.registerListeners();
+
+        mSettings = new GeckoViewSettings(getEventDispatcher());
     }
 
     @Override
@@ -227,12 +233,17 @@ public class GeckoView extends LayerView
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             Window.open(window, this, getCompositor(), eventDispatcher,
-                        chromeURI, screenId);
+                        chromeURI, mSettings.asBundle(), screenId);
         } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                    "open", window, GeckoView.class, this, Object.class, getCompositor(),
-                    EventDispatcher.class, eventDispatcher,
-                    String.class, chromeURI, screenId);
+            GeckoThread.queueNativeCallUntil(
+                GeckoThread.State.PROFILE_READY,
+                Window.class, "open", window,
+                GeckoView.class, this,
+                Object.class, getCompositor(),
+                EventDispatcher.class, eventDispatcher,
+                String.class, chromeURI,
+                GeckoBundle.class, mSettings.asBundle(),
+                screenId);
         }
     }
 
@@ -325,6 +336,10 @@ public class GeckoView extends LayerView
     */
     public void goForward() {
         eventDispatcher.dispatch("GeckoView:GoForward", null);
+    }
+
+    public GeckoViewSettings getSettings() {
+        return mSettings;
     }
 
     @Override

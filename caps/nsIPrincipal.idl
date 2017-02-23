@@ -11,9 +11,29 @@
 struct JSPrincipals;
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "mozilla/DebugOnly.h"
 namespace mozilla {
 class OriginAttributes;
 }
+
+/**
+ * Some methods have a fast path for the case when we're comparing a principal
+ * to itself. The situation may happen for example with about:blank documents.
+ */
+
+#define DECL_FAST_INLINE_HELPER(method_)                       \
+  inline bool method_(nsIPrincipal* aOther)                    \
+  {                                                            \
+    mozilla::DebugOnly<bool> val = false;                      \
+    MOZ_ASSERT_IF(this == aOther,                              \
+                  NS_SUCCEEDED(method_(aOther, &val)) && val); \
+                                                               \
+    bool retVal = false;                                       \
+    return                                                     \
+      this == aOther ||                                        \
+      (NS_SUCCEEDED(method_(aOther, &retVal)) && retVal);      \
+  }
+
 %}
 
 interface nsIURI;
@@ -41,15 +61,8 @@ interface nsIPrincipal : nsISerializable
     boolean equalsConsideringDomain(in nsIPrincipal other);
 
     %{C++
-    inline bool Equals(nsIPrincipal* aOther) {
-      bool equal = false;
-      return NS_SUCCEEDED(Equals(aOther, &equal)) && equal;
-    }
-
-    inline bool EqualsConsideringDomain(nsIPrincipal* aOther) {
-      bool equal = false;
-      return NS_SUCCEEDED(EqualsConsideringDomain(aOther, &equal)) && equal;
-    }
+      DECL_FAST_INLINE_HELPER(Equals)
+      DECL_FAST_INLINE_HELPER(EqualsConsideringDomain)
     %}
 
     /**
@@ -101,20 +114,10 @@ interface nsIPrincipal : nsISerializable
     boolean subsumesConsideringDomainIgnoringFPD(in nsIPrincipal other);
 
     %{C++
-    inline bool Subsumes(nsIPrincipal* aOther) {
-      bool subsumes = false;
-      return NS_SUCCEEDED(Subsumes(aOther, &subsumes)) && subsumes;
-    }
-
-    inline bool SubsumesConsideringDomain(nsIPrincipal* aOther) {
-      bool subsumes = false;
-      return NS_SUCCEEDED(SubsumesConsideringDomain(aOther, &subsumes)) && subsumes;
-    }
-
-    inline bool SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther) {
-      bool subsumes = false;
-      return NS_SUCCEEDED(SubsumesConsideringDomainIgnoringFPD(aOther, &subsumes)) && subsumes;
-    }
+      DECL_FAST_INLINE_HELPER(Subsumes)
+      DECL_FAST_INLINE_HELPER(SubsumesConsideringDomain)
+      DECL_FAST_INLINE_HELPER(SubsumesConsideringDomainIgnoringFPD)
+#undef DECL_FAST_INLINE_HELPER
     %}
 
     /**

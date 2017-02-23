@@ -2,13 +2,13 @@
 default-preferences pref(dom.forms.datetime,true)
 
 # not valid on Android where type=time looks like type=text
-# == time-simple-unthemed.html time-simple-unthemed.html
-# == time-large-font.html time-large-font.html
-# == time-width-height.html time-width-height.html
-# == time-border.html time-border.html
+fails == time-simple-unthemed.html time-simple-unthemed.html # Bug 1340696
+fails == time-large-font.html time-large-font.html # Bug 1340696
+fails == time-width-height.html time-width-height.html # Bug 1340696
+fails == time-border.html time-border.html # Bug 1340696
 # only valid on Android where type=number looks the same as type=text
-# == time-simple-unthemed.html time-simple-unthemed.html
+fails == time-simple-unthemed.html time-simple-unthemed.html # Bug 1340696
 
 # type change
-# == to-time-from-other-type-unthemed.html to-time-from-other-type-unthemed.html
-# == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed.html
+fails == to-time-from-other-type-unthemed.html to-time-from-other-type-unthemed.html # Bug 1340696
+== from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed.html

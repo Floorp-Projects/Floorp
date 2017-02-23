@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
@@ -179,12 +180,12 @@ struct VariantImplementation<Tag, N, T>
 
   template<typename Variant>
   static void copyConstruct(void* aLhs, const Variant& aRhs) {
-    new (aLhs) T(aRhs.template as<T>());
+    ::new (KnownNotNull, aLhs) T(aRhs.template as<T>());
   }
 
   template<typename Variant>
   static void moveConstruct(void* aLhs, Variant&& aRhs) {
-    new (aLhs) T(aRhs.template extract<T>());
+    ::new (KnownNotNull, aLhs) T(aRhs.template extract<T>());
   }
 
   template<typename Variant>
@@ -222,7 +223,7 @@ struct VariantImplementation<Tag, N, T, Ts...>
   template<typename Variant>
   static void copyConstruct(void* aLhs, const Variant& aRhs) {
     if (aRhs.template is<T>()) {
-      new (aLhs) T(aRhs.template as<T>());
+      ::new (KnownNotNull, aLhs) T(aRhs.template as<T>());
     } else {
       Next::copyConstruct(aLhs, aRhs);
     }
@@ -231,7 +232,7 @@ struct VariantImplementation<Tag, N, T, Ts...>
   template<typename Variant>
   static void moveConstruct(void* aLhs, Variant&& aRhs) {
     if (aRhs.template is<T>()) {
-      new (aLhs) T(aRhs.template extract<T>());
+      ::new (KnownNotNull, aLhs) T(aRhs.template extract<T>());
     } else {
       Next::moveConstruct(aLhs, aRhs);
     }
@@ -485,7 +486,7 @@ public:
   explicit Variant(RefT&& aT)
     : tag(Impl::template tag<T>())
   {
-    new (ptr()) T(Forward<RefT>(aT));
+    ::new (KnownNotNull, ptr()) T(Forward<RefT>(aT));
   }
 
   /**
@@ -498,7 +499,7 @@ public:
   MOZ_IMPLICIT Variant(detail::AsVariantTemporary<RefT>&& aValue)
     : tag(Impl::template tag<T>())
   {
-    new (ptr()) T(Move(aValue.mValue));
+    ::new (KnownNotNull, ptr()) T(Move(aValue.mValue));
   }
 
   /** Copy construction. */
@@ -519,7 +520,7 @@ public:
   Variant& operator=(const Variant& aRhs) {
     MOZ_ASSERT(&aRhs != this, "self-assign disallowed");
     this->~Variant();
-    new (this) Variant(aRhs);
+    ::new (KnownNotNull, this) Variant(aRhs);
     return *this;
   }
 
@@ -527,7 +528,7 @@ public:
   Variant& operator=(Variant&& aRhs) {
     MOZ_ASSERT(&aRhs != this, "self-assign disallowed");
     this->~Variant();
-    new (this) Variant(Move(aRhs));
+    ::new (KnownNotNull, this) Variant(Move(aRhs));
     return *this;
   }
 
@@ -536,7 +537,7 @@ public:
   Variant& operator=(detail::AsVariantTemporary<T>&& aValue)
   {
     this->~Variant();
-    new (this) Variant(Move(aValue));
+    ::new (KnownNotNull, this) Variant(Move(aValue));
     return *this;
   }
 

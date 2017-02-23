@@ -1766,11 +1766,11 @@ SessionStore.prototype = {
     let tabs = closedTabs
       .filter(tab => tab.isPrivate == isPrivate)
       .map(function (tab) {
-        // Get the url and title for the last entry in the session history.
-        let lastEntry = tab.entries[tab.entries.length - 1];
+        // Get the url and title for the current entry in the session history.
+        let entry = tab.entries[tab.index - 1];
         return {
-          url: lastEntry.url,
-          title: lastEntry.title || "",
+          url: entry.url,
+          title: entry.title || "",
           data: JSON.stringify(tab),
         };
       });

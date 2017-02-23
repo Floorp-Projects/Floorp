@@ -386,7 +386,10 @@ void profiler_add_marker(const char *aMarker,
 MOZ_EXPORT  // XXX: should this be 'extern "C"' as well?
 void profiler_save_profile_to_file_async(double aSinceTime,
                                          const char* aFileName);
-void profiler_get_gatherer(nsISupports** aRetVal);
+
+void profiler_will_gather_OOP_profile();
+void profiler_gathered_OOP_profile();
+void profiler_OOP_exit_profile(const nsCString& aProfile);
 
 #define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)

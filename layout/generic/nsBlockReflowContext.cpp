@@ -307,7 +307,7 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
   mOuterReflowInput.mFloatManager->Translate(-tI, -tB);
 
 #ifdef DEBUG
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+  if (!aFrameReflowStatus.IsInlineBreakBefore()) {
     if ((CRAZY_SIZE(mMetrics.ISize(mWritingMode)) ||
          CRAZY_SIZE(mMetrics.BSize(mWritingMode))) &&
         !mFrame->GetParent()->IsCrazySizeAssertSuppressed()) {
@@ -330,13 +330,13 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
     mMetrics.SetOverflowAreasToDesiredBounds();
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||
+  if (!aFrameReflowStatus.IsInlineBreakBefore() ||
       (mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up), unless it is an out of flow frame.
-    if (NS_FRAME_IS_FULLY_COMPLETE(aFrameReflowStatus)) {
+    if (aFrameReflowStatus.IsFullyComplete()) {
       nsIFrame* kidNextInFlow = mFrame->GetNextInFlow();
       if (nullptr != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
@@ -367,7 +367,7 @@ nsBlockReflowContext::PlaceBlock(const ReflowInput&  aReflowInput,
   // Compute collapsed block-end margin value.
   WritingMode wm = aReflowInput.GetWritingMode();
   WritingMode parentWM = mMetrics.GetWritingMode();
-  if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+  if (aReflowStatus.IsComplete()) {
     aBEndMarginResult = mMetrics.mCarriedOutBEndMargin;
     aBEndMarginResult.Include(aReflowInput.ComputedLogicalMargin().
       ConvertTo(parentWM, wm).BEnd(parentWM));

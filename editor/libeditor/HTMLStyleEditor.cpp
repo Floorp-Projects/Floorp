@@ -778,22 +778,25 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     // the HTML style defined by aProperty/aAttribute has a CSS equivalence in
     // this implementation for the node aNode; let's check if it carries those
     // css styles
-    nsCOMPtr<nsIAtom> attribute =
-      aAttribute ? NS_Atomize(*aAttribute) : nullptr;
-    nsAutoString propertyValue;
-    bool isSet = mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(&aNode,
-      aProperty, attribute, propertyValue, CSSEditUtils::eSpecified);
-    if (isSet && aNode.IsElement()) {
-      // yes, tmp has the corresponding css declarations in its style attribute
-      // let's remove them
-      mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(aNode.AsElement(),
-                                                    aProperty,
-                                                    attribute,
-                                                    &propertyValue,
-                                                    false);
-      // remove the node if it is a span or font, if its style attribute is
-      // empty or absent, and if it does not have a class nor an id
-      RemoveElementIfNoStyleOrIdOrClass(*aNode.AsElement());
+    if (aNode.IsElement()) {
+      nsCOMPtr<nsIAtom> attribute =
+        aAttribute ? NS_Atomize(*aAttribute) : nullptr;
+      bool hasAttribute =
+        mCSSEditUtils->HaveCSSEquivalentStyles(
+                         aNode, aProperty, attribute, CSSEditUtils::eSpecified);
+      if (hasAttribute) {
+        // yes, tmp has the corresponding css declarations in its style
+        // attribute
+        // let's remove them
+        mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(aNode.AsElement(),
+                                                      aProperty,
+                                                      attribute,
+                                                      nullptr,
+                                                      false);
+        // remove the node if it is a span or font, if its style attribute is
+        // empty or absent, and if it does not have a class nor an id
+        RemoveElementIfNoStyleOrIdOrClass(*aNode.AsElement());
+      }
     }
   }
 

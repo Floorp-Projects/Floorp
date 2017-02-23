@@ -28,7 +28,8 @@ class FFmpegVideoDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 public:
   FFmpegVideoDecoder(FFmpegLibWrapper* aLib, TaskQueue* aTaskQueue,
                      const VideoInfo& aConfig,
-                     ImageContainer* aImageContainer);
+                     ImageContainer* aImageContainer,
+                     bool aLowLatency);
   virtual ~FFmpegVideoDecoder();
 
   RefPtr<InitPromise> Init() override;
@@ -92,6 +93,7 @@ private:
   int64_t mLastInputDts;
 
   DurationMap mDurationMap;
+  const bool mLowLatency;
 };
 
 } // namespace mozilla

@@ -11,6 +11,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "nsExpandedPrincipal.h"
 #include "nsPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"

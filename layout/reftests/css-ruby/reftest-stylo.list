@@ -13,9 +13,9 @@ fails == box-properties-4.html box-properties-4.html
 == dynamic-insertion-1.html dynamic-insertion-1.html
 == dynamic-insertion-2.html dynamic-insertion-2.html
 fails == dynamic-insertion-3.html dynamic-insertion-3.html
-# == dynamic-removal-1.html dynamic-removal-1.html
-# == dynamic-removal-2.html dynamic-removal-2.html
-# == dynamic-removal-3.html dynamic-removal-3.html
+== dynamic-removal-1.html dynamic-removal-1.html
+== dynamic-removal-2.html dynamic-removal-2.html
+== dynamic-removal-3.html dynamic-removal-3.html
 == float-handling.html float-handling.html
 fails test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == inflated-ruby-1.html inflated-ruby-1.html
 == intra-level-whitespace-1.html intra-level-whitespace-1.html
@@ -28,12 +28,12 @@ fails == justification-2.html justification-2.html
 fails == lang-specific-style-1.html lang-specific-style-1.html
 == line-breaking-1.html line-breaking-1.html
 fails == line-breaking-2.html line-breaking-2.html
-# == line-break-suppression-1.html line-break-suppression-1.html
-# == line-break-suppression-2.html line-break-suppression-2.html
-# == line-break-suppression-3.html line-break-suppression-3.html
+skip-if(stylo) == line-break-suppression-1.html line-break-suppression-1.html
+skip-if(stylo) == line-break-suppression-2.html line-break-suppression-2.html
+skip-if(stylo) == line-break-suppression-3.html line-break-suppression-3.html
 == line-break-suppression-4.html line-break-suppression-4.html
 == line-break-suppression-5.html line-break-suppression-5.html
-# == line-height-1.html line-height-1.html
+skip-if(stylo) == line-height-1.html line-height-1.html
 == line-height-2.html line-height-2.html
 == line-height-3.html line-height-3.html
 == line-height-4.html line-height-4.html
@@ -54,5 +54,5 @@ fails == ruby-position-vertical-rl.html ruby-position-vertical-rl.html
 == ruby-span-1.html ruby-span-1.html
 fails == ruby-whitespace-1.html ruby-whitespace-1.html
 == ruby-whitespace-2.html ruby-whitespace-2.html
-# == bug1181890.html bug1181890.html
-# == bug1181890.html bug1181890.html
+skip-if(stylo) == bug1181890.html bug1181890.html
+skip-if(stylo) == bug1181890.html bug1181890.html

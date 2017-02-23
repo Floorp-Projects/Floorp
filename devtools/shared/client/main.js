@@ -1742,6 +1742,27 @@ RootClient.prototype = {
   },
 
   /**
+   * Fetch the WindowActor for a specific window, like a browser window in
+   * Firefox, but it can be used to reach any window in the process.
+   *
+   * @param number outerWindowID
+   *        The outerWindowID of the top level window you are looking for.
+   */
+  getWindow: function ({ outerWindowID }) {
+    if (!outerWindowID) {
+      throw new Error("Must specify outerWindowID");
+    }
+
+    let packet = {
+      to: this.actor,
+      type: "getWindow",
+      outerWindowID,
+    };
+
+    return this.request(packet);
+  },
+
+  /**
    * Description of protocol's actors and methods.
    *
    * @param function onResponse

@@ -78,20 +78,35 @@ interface nsILoadContext : nsISupports
    */
   readonly attribute boolean useRemoteTabs;
 
+  /*
+   * Attribute that determines if tracking protection should be used. May not be
+   * changed after a document has been loaded in this context.
+   */
+  attribute boolean useTrackingProtection;
+
 %{C++
   /**
    * De-XPCOMed getter to make call-sites cleaner.
    */
-  bool UsePrivateBrowsing() {
-    bool usingPB;
+  bool UsePrivateBrowsing()
+  {
+    bool usingPB = false;
     GetUsePrivateBrowsing(&usingPB);
     return usingPB;
   }
 
-  bool UseRemoteTabs() {
-    bool usingRT;
+  bool UseRemoteTabs()
+  {
+    bool usingRT = false;
     GetUseRemoteTabs(&usingRT);
     return usingRT;
+  }
+
+  bool UseTrackingProtection()
+  {
+    bool usingTP = false;
+    GetUseTrackingProtection(&usingTP);
+    return usingTP;
   }
 %}
 
@@ -129,21 +144,5 @@ interface nsILoadContext : nsISupports
    */
   bool GetOriginAttributes(mozilla::OriginAttributes& aAttrs);
 #endif
-%}
-
-  /**
-   * Returns true if tracking protection is enabled for the load context.
-   */
-  boolean IsTrackingProtectionOn();
-
-%{C++
-  /**
-   * De-XPCOMed getter to make call-sites cleaner.
-   */
-  bool UseTrackingProtection() {
-    bool usingTP;
-    IsTrackingProtectionOn(&usingTP);
-    return usingTP;
-  }
 %}
 };

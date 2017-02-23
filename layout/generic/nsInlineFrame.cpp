@@ -574,7 +574,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             ReflowOutput& aMetrics,
                             nsReflowStatus& aStatus)
 {
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   nsLineLayout* lineLayout = aReflowInput.mLineLayout;
   bool inFirstLine = aReflowInput.mLineLayout->GetInFirstLine();
@@ -687,8 +687,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     if (!done) {
       bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
-      done = NS_INLINE_IS_BREAK(aStatus) || 
-             (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus));
+      done = aStatus.IsInlineBreak() ||
+             (!reflowingFirstLetter && aStatus.IsIncomplete());
       if (done) {
         if (!irs.mSetParentPointer) {
           break;
@@ -720,13 +720,14 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #endif
       if (nullptr == frame) {
         if (!isComplete) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
+          aStatus.Reset();
+          aStatus.SetIncomplete();
         }
         break;
       }
       ReflowInlineFrame(aPresContext, aReflowInput, irs, frame, aStatus);
-      if (NS_INLINE_IS_BREAK(aStatus) || 
-          (!reflowingFirstLetter && NS_FRAME_IS_NOT_COMPLETE(aStatus))) {
+      if (aStatus.IsInlineBreak() ||
+          (!reflowingFirstLetter && aStatus.IsIncomplete())) {
         break;
       }
       irs.mPrevFrame = frame;
@@ -734,7 +735,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     }
   }
 
-  NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) || !GetOverflowFrames(),
+  NS_ASSERTION(!aStatus.IsComplete() || !GetOverflowFrames(),
                "We can't be complete AND have overflow frames!");
 
   // If after reflowing our children they take up no area then make
@@ -771,7 +772,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
    * chain.  For box-decoration-break:clone we always apply the end border and
    * padding since all continuations have them.
    */
-  if ((NS_FRAME_IS_COMPLETE(aStatus) &&
+  if ((aStatus.IsComplete() &&
        !LastInFlow()->GetNextContinuation() &&
        !FrameIsNonLastInIBSplit()) ||
       boxDecorationBreakClone) {
@@ -803,15 +804,16 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   bool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
   bool pushedFrame;
   lineLayout->ReflowFrame(aFrame, aStatus, nullptr, pushedFrame);
-  
-  if (NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
+
+  if (aStatus.IsInlineBreakBefore()) {
     if (aFrame != mFrames.FirstChild()) {
       // Change break-before status into break-after since we have
       // already placed at least one child frame. This preserves the
       // break-type so that it can be propagated upward.
-      aStatus = NS_FRAME_NOT_COMPLETE |
-        NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
-        (aStatus & NS_INLINE_BREAK_TYPE_MASK);
+      StyleClear oldBreakType = aStatus.BreakType();
+      aStatus.Reset();
+      aStatus.SetIncomplete();
+      aStatus.SetInlineLineBreakAfter(oldBreakType);
       PushFrames(aPresContext, aFrame, irs.mPrevFrame, irs);
     }
     else {
@@ -822,14 +824,14 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   }
 
   // Create a next-in-flow if needed.
-  if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
+  if (!aStatus.IsFullyComplete()) {
     CreateNextInFlow(aFrame);
   }
 
-  if (NS_INLINE_IS_BREAK_AFTER(aStatus)) {
+  if (aStatus.IsInlineBreakAfter()) {
     nsIFrame* nextFrame = aFrame->GetNextSibling();
     if (nextFrame) {
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
       PushFrames(aPresContext, nextFrame, aFrame, irs);
     }
     else {
@@ -838,7 +840,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       nsInlineFrame* nextInFlow = static_cast<nsInlineFrame*>(GetNextInFlow());
       while (nextInFlow) {
         if (nextInFlow->mFrames.NotEmpty()) {
-          NS_FRAME_SET_INCOMPLETE(aStatus);
+          aStatus.SetIncomplete();
           break;
         }
         nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
@@ -847,7 +849,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     return;
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus) && !reflowingFirstLetter) {
+  if (!aStatus.IsFullyComplete() && !reflowingFirstLetter) {
     nsIFrame* nextFrame = aFrame->GetNextSibling();
     if (nextFrame) {
       PushFrames(aPresContext, nextFrame, aFrame, irs);

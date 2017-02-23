@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.mscom += [
     'Aggregation.h',
+    'AgileReference.h',
     'AsyncInvoker.h',
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
@@ -17,6 +18,7 @@ EXPORTS.mozilla.mscom += [
 ]
 
 UNIFIED_SOURCES += [
+    'AgileReference.cpp',
     'EnsureMTA.cpp',
     'MainThreadRuntime.cpp',
     'ProxyStream.cpp',
@@ -32,6 +34,7 @@ if CONFIG['ACCESSIBILITY']:
         'MainThreadHandoff.h',
         'MainThreadInvoker.h',
         'Registration.h',
+        'StructStream.h',
         'WeakRef.h',
     ]
 
@@ -47,6 +50,7 @@ if CONFIG['ACCESSIBILITY']:
         'InterceptorLog.cpp',
         'MainThreadHandoff.cpp',
         'MainThreadInvoker.cpp',
+        'StructStream.cpp',
     ]
 
 LOCAL_INCLUDES += [

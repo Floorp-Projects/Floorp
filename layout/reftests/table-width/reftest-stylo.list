@@ -3,7 +3,7 @@ fails == spacing-invariance-quirks-min.html spacing-invariance-quirks-min.html
 fails == spacing-invariance-quirks-pref.html spacing-invariance-quirks-pref.html
 fails == spacing-invariance-standards-min.html spacing-invariance-standards-min.html
 fails == spacing-invariance-standards-pref.html spacing-invariance-standards-pref.html
-# == min-width.html min-width.html
+== min-width.html min-width.html
 == pref-width.html pref-width.html
 == min-width-ref.html min-width-ref.html
 == percent-large.html percent-large.html
@@ -38,7 +38,7 @@ fails == percent-small-nested.html percent-small-nested.html
 == percent-truncation-3.html percent-truncation-3.html
 fails == balancing-1.html balancing-1.html
 == balancing-2.html balancing-2.html
-# == cellpadding.html cellpadding.html
+fails == cellpadding.html cellpadding.html # Bug 1341648, bug 1341651
 fails == cellspacing.html cellspacing.html
 fails == percent-basis.html percent-basis.html
 == default-box-sizing-separate-standards.html default-box-sizing-separate-standards.html

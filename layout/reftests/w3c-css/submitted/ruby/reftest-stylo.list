@@ -1,10 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # Tests for inlinizing block-level boxes
-# == ruby-inlinize-blocks-001.html ruby-inlinize-blocks-001.html
+skip-if(stylo) == ruby-inlinize-blocks-001.html ruby-inlinize-blocks-001.html # Bug 1323716
 fails == ruby-inlinize-blocks-002.html ruby-inlinize-blocks-002.html
 == ruby-inlinize-blocks-003.html ruby-inlinize-blocks-003.html
-# == ruby-inlinize-blocks-004.html ruby-inlinize-blocks-004.html
-# == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005.html
+skip-if(stylo) == ruby-inlinize-blocks-004.html ruby-inlinize-blocks-004.html # Bug 1323716
+skip-if(stylo) == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005.html # Bug 1323716
 
 # Tests for autohiding base-identical annotations
 == ruby-autohide-001.html ruby-autohide-001.html
