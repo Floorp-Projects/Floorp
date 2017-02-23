@@ -109,7 +109,7 @@ CrossProcessSemaphore::~CrossProcessSemaphore()
 }
 
 bool
-CrossProcessSemaphore::Wait(Maybe<TimeDuration> aWaitTime)
+CrossProcessSemaphore::Wait(const Maybe<TimeDuration>& aWaitTime)
 {
   MOZ_ASSERT(*mRefCount > 0, "Attempting to wait on a semaphore with zero ref count");
   int ret;
