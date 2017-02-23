@@ -1,5 +1,4 @@
 // |jit-test| test-also-wasm-check-bce
-load(libdir + "wasm.js");
 
 const RuntimeError = WebAssembly.RuntimeError;
 

@@ -1,5 +1,3 @@
-load(libdir + 'wasm.js');
-
 const WasmPage = 64 * 1024;
 
 const emptyModuleBinary = wasmTextToBinary('(module)');

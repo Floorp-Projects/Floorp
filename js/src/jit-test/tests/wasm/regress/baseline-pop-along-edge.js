@@ -1,7 +1,5 @@
 // Bug 1316181
 
-load(libdir + "wasm.js");
-
 // There are locals with different values here to ensure that the
 // get_local at the end picks up the right one even if the stack might
 // have become unbalanced by a failure to adjust SP along the branch
