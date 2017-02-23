@@ -177,29 +177,24 @@ public final class CodecProxy {
             }
             mRemote.queueInput(sample);
             sample.dispose();
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        } catch (RemoteException | IOException e) {
             Log.e(LOGTAG, "fail to input sample: size=" + info.size +
                     ", pts=" + info.presentationTimeUs +
-                    ", flags=" + Integer.toHexString(info.flags));
+                    ", flags=" + Integer.toHexString(info.flags), e);
             return false;
         }
 
         return true;
     }
 
-    private Sample processInput(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) throws RemoteException {
+    private Sample processInput(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo)
+            throws RemoteException, IOException {
         if (info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
             mCallbacks.setEndOfInput(true);
             return Sample.EOS;
         } else {
             mCallbacks.setEndOfInput(false);
-            try {
-                return mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
+            return mRemote.dequeueInput(info.size).set(bytes, info, cryptoInfo);
         }
     }
 
