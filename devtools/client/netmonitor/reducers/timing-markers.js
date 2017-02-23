@@ -51,7 +51,4 @@ function timingMarkers(state = new TimingMarkers(), action) {
   }
 }
 
-module.exports = {
-  TimingMarkers,
-  timingMarkers
-}
+module.exports = timingMarkers;
