@@ -617,7 +617,7 @@ DecodePreamble(Decoder& d)
     if (!d.readFixedU32(&u32) || u32 != MagicNumber)
         return d.fail("failed to match magic number");
 
-    if (!d.readFixedU32(&u32) || (u32 != EncodingVersion && u32 != PrevEncodingVersion)) {
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion) {
         return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
                       u32, EncodingVersion);
     }
