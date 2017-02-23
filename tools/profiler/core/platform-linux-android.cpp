@@ -63,7 +63,6 @@
 #include "prenv.h"
 #include "mozilla/LinuxSignal.h"
 #include "mozilla/DebugOnly.h"
-#include "ProfileEntry.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
