@@ -887,10 +887,10 @@ KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
   }
 
   result =
-    KeyframeUtils::GetAnimationPropertiesFromKeyframes(keyframesCopy,
-                                                       computedValues,
-                                                       mEffectOptions.mComposite,
-                                                       aStyleContext);
+    KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+      keyframesCopy,
+      computedValues,
+      mEffectOptions.mComposite);
 
 #ifdef DEBUG
   MOZ_ASSERT(SpecifiedKeyframeArraysAreEqual(mKeyframes, keyframesCopy),

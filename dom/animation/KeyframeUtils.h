@@ -130,15 +130,13 @@ public:
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite
    *   operation, this value will be used.
-   * @param aStyleContext The style context to calculate the style difference.
    * @return The set of animation properties. If an error occurs, the returned
    *   array will be empty.
    */
   static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
     const nsTArray<Keyframe>& aKeyframes,
     const nsTArray<ComputedKeyframeValues>& aComputedValues,
-    dom::CompositeOperation aEffectComposite,
-    nsStyleContext* aStyleContext);
+    dom::CompositeOperation aEffectComposite);
 
   /**
    * Check if the property or, for shorthands, one or more of
