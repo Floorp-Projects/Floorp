@@ -374,9 +374,9 @@ MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::Track
     for (uint32_t i = 0; i < data.length; i++) {
       MOZ_DIAGNOSTIC_ASSERT(data.indices[i].start_offset == aDest[i].start_offset);
       MOZ_DIAGNOSTIC_ASSERT(data.indices[i].end_offset == aDest[i].end_offset);
-      MOZ_DIAGNOSTIC_ASSERT(abs(data.indices[i].start_composition - aDest[i].start_composition) <= 1);
-      MOZ_DIAGNOSTIC_ASSERT(abs(data.indices[i].end_composition - aDest[i].end_composition) <= 1);
-      MOZ_DIAGNOSTIC_ASSERT(abs(data.indices[i].start_decode - aDest[i].start_decode) <= 1);
+      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].start_composition == aDest[i].start_composition);
+      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].end_composition == aDest[i].end_composition);
+      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].start_decode == aDest[i].start_decode);
       MOZ_DIAGNOSTIC_ASSERT(data.indices[i].sync == aDest[i].sync);
     }
   }
