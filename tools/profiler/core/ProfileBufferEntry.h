@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZ_PROFILE_ENTRY_H
-#define MOZ_PROFILE_ENTRY_H
+#ifndef ProfileBufferEntry_h
+#define ProfileBufferEntry_h
 
 #include <ostream>
 #include "GeckoProfiler.h"
@@ -25,7 +25,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 
-#define PROFILE_ENTRY_KIND_LIST(_) \
+#define PROFILE_BUFFER_ENTRY_KIND_LIST(_) \
     _(Category,        int)               \
     _(CodeLocation,    const char *)      \
     _(EmbeddedString,  void *)            \
@@ -46,34 +46,36 @@
 #pragma pack(push, 1)
 #endif
 
-class ProfileEntry
+class ProfileBufferEntry
 {
 public:
   enum class Kind : uint8_t {
     INVALID = 0,
 #   define DEF_ENUM_(k, t) k,
-    PROFILE_ENTRY_KIND_LIST(DEF_ENUM_)
+    PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_ENUM_)
 #   undef DEF_ENUM_
     LIMIT
   };
 
-  ProfileEntry();
+  ProfileBufferEntry();
 
 private:
   // aTagData must not need release (i.e. be a string from the text segment)
-  ProfileEntry(Kind aKind, const char *aTagData);
-  ProfileEntry(Kind aKind, void *aTagPtr);
-  ProfileEntry(Kind aKind, ProfilerMarker *aTagMarker);
-  ProfileEntry(Kind aKind, double aTagDouble);
-  ProfileEntry(Kind aKind, uintptr_t aTagOffset);
-  ProfileEntry(Kind aKind, Address aTagAddress);
-  ProfileEntry(Kind aKind, int aTagLine);
-  ProfileEntry(Kind aKind, char aTagChar);
+  ProfileBufferEntry(Kind aKind, const char *aTagData);
+  ProfileBufferEntry(Kind aKind, void *aTagPtr);
+  ProfileBufferEntry(Kind aKind, ProfilerMarker *aTagMarker);
+  ProfileBufferEntry(Kind aKind, double aTagDouble);
+  ProfileBufferEntry(Kind aKind, uintptr_t aTagOffset);
+  ProfileBufferEntry(Kind aKind, Address aTagAddress);
+  ProfileBufferEntry(Kind aKind, int aTagLine);
+  ProfileBufferEntry(Kind aKind, char aTagChar);
 
 public:
 # define DEF_MAKE_(k, t) \
-    static ProfileEntry k(t val) { return ProfileEntry(Kind::k, val); }
-  PROFILE_ENTRY_KIND_LIST(DEF_MAKE_)
+    static ProfileBufferEntry k(t val) { \
+      return ProfileBufferEntry(Kind::k, val); \
+    }
+  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_MAKE_)
 # undef DEF_MAKE_
 
   Kind kind() const { return mKind; }
@@ -81,7 +83,7 @@ public:
 
 # define DEF_METHODS_(k, t) \
     bool is##k() const { return hasKind(Kind::k); }
-  PROFILE_ENTRY_KIND_LIST(DEF_METHODS_)
+  PROFILE_BUFFER_ENTRY_KIND_LIST(DEF_METHODS_)
 # undef DEF_METHODS_
 
   const ProfilerMarker* getMarker() {
@@ -408,4 +410,4 @@ private:
 // }
 //
 
-#endif /* ndef MOZ_PROFILE_ENTRY_H */
+#endif /* ndef ProfileBufferEntry_h */

@@ -232,7 +232,7 @@ public:
 static void
 AddDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
 {
-  aInfo.addTag(ProfileEntry::CodeLocation(""));
+  aInfo.addTag(ProfileBufferEntry::CodeLocation(""));
 
   size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
   for (size_t j = 0; j < strLen; ) {
@@ -246,7 +246,7 @@ AddDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
     j += sizeof(void*) / sizeof(char);
 
     // Cast to *((void**) to pass the text data to a void*.
-    aInfo.addTag(ProfileEntry::EmbeddedString(*((void**)(&text[0]))));
+    aInfo.addTag(ProfileBufferEntry::EmbeddedString(*((void**)(&text[0]))));
   }
 }
 
@@ -293,7 +293,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
       lineno = entry.line();
     }
   } else {
-    aInfo.addTag(ProfileEntry::CodeLocation(sampleLabel));
+    aInfo.addTag(ProfileBufferEntry::CodeLocation(sampleLabel));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
     // js entries as well.
@@ -303,7 +303,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
   }
 
   if (lineno != -1) {
-    aInfo.addTag(ProfileEntry::LineNumber(lineno));
+    aInfo.addTag(ProfileBufferEntry::LineNumber(lineno));
   }
 
   uint32_t category = entry.category();
@@ -311,7 +311,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
   MOZ_ASSERT(!(category & js::ProfileEntry::FRAME_LABEL_COPY));
 
   if (category) {
-    aInfo.addTag(ProfileEntry::Category((int)category));
+    aInfo.addTag(ProfileBufferEntry::Category((int)category));
   }
 }
 
@@ -399,7 +399,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 
   // Start the sample with a root entry.
-  aInfo.addTag(ProfileEntry::Sample("(root)"));
+  aInfo.addTag(ProfileBufferEntry::Sample("(root)"));
 
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
@@ -502,7 +502,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
         aInfo.addTag(
-          ProfileEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
+          ProfileBufferEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
       }
 
       jsIndex--;
@@ -514,7 +514,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
       void* addr = (void*)aNativeStack.pc_array[nativeIndex];
-      aInfo.addTag(ProfileEntry::NativeLeafAddr(addr));
+      aInfo.addTag(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
       nativeIndex--;
@@ -772,7 +772,7 @@ DoSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
   MergeStacksIntoProfile(aInfo, aSample, nativeStack);
 
   if (aSample && aAddLeafAddresses) {
-    aInfo.addTag(ProfileEntry::NativeLeafAddr((void*)aSample->pc));
+    aInfo.addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample->pc));
   }
 }
 
@@ -783,10 +783,11 @@ Tick(TickSample* aSample)
 {
   ThreadInfo& currThreadInfo = *aSample->threadInfo;
 
-  currThreadInfo.addTag(ProfileEntry::ThreadId(currThreadInfo.ThreadId()));
+  currThreadInfo.addTag(
+    ProfileBufferEntry::ThreadId(currThreadInfo.ThreadId()));
 
   mozilla::TimeDuration delta = aSample->timestamp - gStartTime;
-  currThreadInfo.addTag(ProfileEntry::Time(delta.ToMilliseconds()));
+  currThreadInfo.addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   PseudoStack* stack = currThreadInfo.Stack();
 
@@ -808,7 +809,7 @@ Tick(TickSample* aSample)
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
       currThreadInfo.addStoredMarker(marker);
-      currThreadInfo.addTag(ProfileEntry::Marker(marker));
+      currThreadInfo.addTag(ProfileBufferEntry::Marker(marker));
     }
   }
 
@@ -816,23 +817,24 @@ Tick(TickSample* aSample)
     mozilla::TimeDuration delta =
       currThreadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(
         aSample->timestamp);
-    currThreadInfo.addTag(ProfileEntry::Responsiveness(delta.ToMilliseconds()));
+    currThreadInfo.addTag(
+      ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
   if (aSample->rssMemory != 0) {
-    currThreadInfo.addTag(ProfileEntry::ResidentMemory(
+    currThreadInfo.addTag(ProfileBufferEntry::ResidentMemory(
       static_cast<double>(aSample->rssMemory)));
   }
 
   // ussMemory is equal to 0 when we are not recording.
   if (aSample->ussMemory != 0) {
-    currThreadInfo.addTag(ProfileEntry::UnsharedMemory(
+    currThreadInfo.addTag(ProfileBufferEntry::UnsharedMemory(
       static_cast<double>(aSample->ussMemory)));
   }
 
   if (gLastFrameNumber != gFrameNumber) {
-    currThreadInfo.addTag(ProfileEntry::FrameNumber(gFrameNumber));
+    currThreadInfo.addTag(ProfileBufferEntry::FrameNumber(gFrameNumber));
     gLastFrameNumber = gFrameNumber;
   }
 }
