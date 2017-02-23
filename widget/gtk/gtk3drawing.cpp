@@ -2554,10 +2554,28 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
                                MOZ_GTK_SCALE_THUMB_HORIZONTAL:
                                MOZ_GTK_SCALE_THUMB_VERTICAL;
       GtkStyleContext* style = ClaimStyleContext(widget);
-      gtk_style_context_get(style, gtk_style_context_get_state(style),
-                            "min-width", thumb_length,
-                            "min-height", thumb_height,
+
+      gint min_width, min_height;
+      GtkStateFlags state = gtk_style_context_get_state(style);
+      gtk_style_context_get(style, state,
+                            "min-width", &min_width,
+                            "min-height", &min_height,
                              nullptr);
+      GtkBorder margin;
+      gtk_style_context_get_margin(style, state, &margin);
+      gint margin_width = margin.left + margin.right;
+      gint margin_height = margin.top + margin.bottom;
+
+      // Negative margin of slider element also determines its minimal size
+      // so use bigger of those two values.
+      if (min_width < -margin_width)
+          min_width = -margin_width;
+      if (min_height < -margin_height)
+          min_height = -margin_height;
+
+      *thumb_length = min_width;
+      *thumb_height = min_height;
+
       ReleaseStyleContext(style);
   }
 
