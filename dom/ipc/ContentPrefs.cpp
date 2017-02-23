@@ -23,6 +23,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "dom.max_chrome_script_run_time",
   "dom.max_script_run_time",
   "dom.use_watchdog",
+  "dom.webcomponents.enabled",
   "focusmanager.testmode",
   "hangmonitor.timeout",
   "javascript.enabled",

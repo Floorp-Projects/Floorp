@@ -5944,7 +5944,7 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
 
-  if (Preferences::GetBool("dom.webcomponents.enabled")) {
+  if (nsContentUtils::IsWebComponentsEnabled()) {
     return true;
   }
 
@@ -5960,7 +5960,7 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 bool
 nsDocument::IsWebComponentsEnabled(dom::NodeInfo* aNodeInfo)
 {
-  if (Preferences::GetBool("dom.webcomponents.enabled")) {
+  if (nsContentUtils::IsWebComponentsEnabled()) {
     return true;
   }
 
