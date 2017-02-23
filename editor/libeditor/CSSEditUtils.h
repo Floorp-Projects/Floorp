@@ -213,7 +213,7 @@ public:
    *                                values (out).
    * @param aStyleType     [IN] eSpecified or eComputed.
    * @return               A boolean being true if the css properties are
-   *                       set.
+   *                       not same as initial value.
    */
   bool IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aContent,
                                            nsIAtom* aProperty,
@@ -238,6 +238,29 @@ public:
                                            const nsAString* aAttribute,
                                            nsAString& aValue,
                                            StyleType aStyleType);
+
+  /**
+   * This is a kind of IsCSSEquivalentToHTMLInlineStyleSet.
+   * IsCSSEquivalentToHTMLInlineStyleSet returns whether the properties
+   * aren't same as initial value.  But this method returns whether the
+   * properties aren't set.
+   * If node is <span style="font-weight: normal"/>,
+   *  - IsCSSEquivalentToHTMLInlineStyleSet returns false.
+   *  - HaveCSSEquivalentStyles returns true.
+   *
+   * @param aNode          [IN] A DOM node.
+   * @param aHTMLProperty  [IN] An atom containing an HTML property.
+   * @param aAttribute     [IN] An atom to an attribute name or nullptr
+   *                            if irrelevant.
+   * @param aStyleType     [IN] eSpecified or eComputed.
+   * @return               A boolean being true if the css properties are
+   *                       not set.
+   */
+
+  bool HaveCSSEquivalentStyles(nsINode& aNode,
+                               nsIAtom* aProperty,
+                               nsIAtom* aAttribute,
+                               StyleType aStyleType);
 
   /**
    * Adds to the node the CSS inline styles equivalent to the HTML style
