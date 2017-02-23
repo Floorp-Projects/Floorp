@@ -19,6 +19,7 @@
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // For PropertyValuesPair etc.
 #include "jsapi.h" // For ForOfIterator etc.
 #include "nsClassHashtable.h"
+#include "nsContentUtils.h" // For GetContextForContent
 #include "nsCSSParser.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
@@ -588,6 +589,32 @@ KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
   nsTArray<ComputedKeyframeValues> emptyArray;
   ApplySpacing(aKeyframes, SpacingMode::distribute, eCSSProperty_UNKNOWN,
                emptyArray, nullptr);
+}
+
+/* static */ nsTArray<ComputedKeyframeValues>
+KeyframeUtils::GetComputedKeyframeValues(
+  const nsTArray<Keyframe>& aKeyframes,
+  dom::Element* aElement,
+  const ServoComputedValues* aCurrentStyle,
+  const ServoComputedValues* aParentStyle)
+{
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->OwnerDoc()->IsStyledByServo());
+
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
+  MOZ_ASSERT(presContext);
+
+  nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
+
+  // Construct each nsTArray<PropertyStyleAnimationValuePair> here.
+  result.AppendElements(aKeyframes.Length());
+
+  Servo_GetComputedKeyframeValues(&aKeyframes,
+                                  aCurrentStyle,
+                                  aParentStyle,
+                                  presContext,
+                                  &result);
+  return result;
 }
 
 /* static */ nsTArray<ComputedKeyframeValues>

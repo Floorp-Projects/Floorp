@@ -15,6 +15,7 @@ struct JSContext;
 class JSObject;
 class nsIDocument;
 class nsStyleContext;
+struct ServoComputedValues;
 
 namespace mozilla {
 struct AnimationProperty;
@@ -82,6 +83,12 @@ public:
   GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                             dom::Element* aElement,
                             nsStyleContext* aStyleContext);
+
+  static nsTArray<ComputedKeyframeValues>
+  GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
+                            dom::Element* aElement,
+                            const ServoComputedValues* aCurrentStyle,
+                            const ServoComputedValues* aParentStyle);
 
   /**
    * Fills in the mComputedOffset member of each keyframe in the given array
