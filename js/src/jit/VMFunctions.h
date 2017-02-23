@@ -680,6 +680,8 @@ void PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj);
 // is not an index in this range, return -1.
 int32_t GetIndexFromString(JSString* str);
 
+JSObject* WrapObjectPure(JSContext* cx, JSObject* obj);
+
 MOZ_MUST_USE bool
 DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustReturn);
 MOZ_MUST_USE bool

@@ -443,6 +443,10 @@ class ObjectGroup : public gc::TenuredCell
         return offsetof(ObjectGroup, proto_);
     }
 
+    static inline uint32_t offsetOfCompartment() {
+        return offsetof(ObjectGroup, compartment_);
+    }
+
     static inline uint32_t offsetOfAddendum() {
         return offsetof(ObjectGroup, addendum_);
     }

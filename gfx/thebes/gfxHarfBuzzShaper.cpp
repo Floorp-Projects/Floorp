@@ -336,9 +336,9 @@ gfxHarfBuzzShaper::GetGlyphHAdvance(hb_codepoint_t glyph) const
     // glyph must be valid now, because we checked during initialization
     // that mNumLongHMetrics is > 0, and that the metrics table is large enough
     // to contain mNumLongHMetrics records
-    const GlyphMetrics* metrics =
-        reinterpret_cast<const GlyphMetrics*>(hb_blob_get_data(mHmtxTable,
-                                                               nullptr));
+    const ::GlyphMetrics* metrics =
+        reinterpret_cast<const ::GlyphMetrics*>(hb_blob_get_data(mHmtxTable,
+                                                                 nullptr));
     return FloatToFixed(mFont->FUnitsToDevUnitsFactor() *
                         uint16_t(metrics->metrics[glyph].advanceWidth));
 }
@@ -362,9 +362,9 @@ gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) const
     // glyph must be valid now, because we checked during initialization
     // that mNumLongVMetrics is > 0, and that the metrics table is large enough
     // to contain mNumLongVMetrics records
-    const GlyphMetrics* metrics =
-        reinterpret_cast<const GlyphMetrics*>(hb_blob_get_data(mVmtxTable,
-                                                               nullptr));
+    const ::GlyphMetrics* metrics =
+        reinterpret_cast<const ::GlyphMetrics*>(hb_blob_get_data(mVmtxTable,
+                                                                 nullptr));
     return FloatToFixed(mFont->FUnitsToDevUnitsFactor() *
                         uint16_t(metrics->metrics[glyph].advanceWidth));
 }
@@ -465,8 +465,8 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                 return;
             }
 
-            const GlyphMetrics* metrics =
-                reinterpret_cast<const GlyphMetrics*>
+            const ::GlyphMetrics* metrics =
+                reinterpret_cast<const ::GlyphMetrics*>
                     (hb_blob_get_data(mVmtxTable, nullptr));
             int16_t lsb;
             if (aGlyph < hb_codepoint_t(mNumLongVMetrics)) {

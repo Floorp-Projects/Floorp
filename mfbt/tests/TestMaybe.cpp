@@ -10,6 +10,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/TemplateLib.h"
 #include "mozilla/Types.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
@@ -778,7 +779,7 @@ ReturnSomeNullptr()
 
 struct D
 {
-  explicit D(Maybe<int*>) {}
+  explicit D(const Maybe<int*>&) {}
 };
 
 static bool
@@ -816,7 +817,7 @@ ReturnDerivedPointer()
 
 struct ExplicitConstructorBasePointer
 {
-  explicit ExplicitConstructorBasePointer(Maybe<Base*>) {}
+  explicit ExplicitConstructorBasePointer(const Maybe<Base*>&) {}
 };
 
 static bool
@@ -1064,6 +1065,21 @@ TestTypeConversion()
 
   return true;
 }
+
+// These are quasi-implementation details, but we assert them here to prevent
+// backsliding to earlier times when Maybe<T> for smaller T took up more space
+// than T's alignment required.
+
+static_assert(sizeof(Maybe<char>) == 2 * sizeof(char),
+              "Maybe<char> shouldn't bloat at all ");
+static_assert(sizeof(Maybe<bool>) <= 2 * sizeof(bool),
+              "Maybe<bool> shouldn't bloat");
+static_assert(sizeof(Maybe<int>) <= 2 * sizeof(int),
+              "Maybe<int> shouldn't bloat");
+static_assert(sizeof(Maybe<long>) <= 2 * sizeof(long),
+              "Maybe<long> shouldn't bloat");
+static_assert(sizeof(Maybe<double>) <= 2 * sizeof(double),
+              "Maybe<double> shouldn't bloat");
 
 int
 main()

@@ -389,11 +389,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       dirtyRect.MoveBy(-rootRect.TopLeft());
     }
 
-    // XXXbholley - I don't think huge images in SVGs are common enough to
-    // warrant worrying about the responsiveness impact of doing synchronous
-    // decodes. The extra code complexity of determinining when we want to
-    // force sync probably just isn't worth it, so always pass FLAG_SYNC_DECODE
-    uint32_t drawFlags = imgIContainer::FLAG_SYNC_DECODE;
+    uint32_t drawFlags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
 
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the

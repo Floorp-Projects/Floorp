@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema
+from taskgraph.util.scriptworker import get_signing_cert_scope
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Schema, Any, Required, Optional
 
@@ -108,6 +109,7 @@ def make_task_description(config, jobs):
             # Used for l10n attribute passthrough
             attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
+        signing_cert_scope = get_signing_cert_scope(config)
         task = {
             'label': label,
             'description': "{} Signing".format(
@@ -116,7 +118,7 @@ def make_task_description(config, jobs):
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': job['upstream-artifacts'],
                        'max-run-time': 3600},
-            'scopes': ["project:releng:signing:cert:nightly-signing"] + signing_format_scopes,
+            'scopes': [signing_cert_scope] + signing_format_scopes,
             'dependencies': {job['depname']: dep_job.label},
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
