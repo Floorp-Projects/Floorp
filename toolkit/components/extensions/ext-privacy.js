@@ -13,6 +13,28 @@ const {
   ExtensionError,
 } = ExtensionUtils;
 
+/* eslint-disable mozilla/balanced-listeners */
+extensions.on("startup", async (type, extension) => {
+  if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(extension.startupReason)) {
+    await ExtensionPreferencesManager.enableAll(extension);
+  }
+});
+
+extensions.on("shutdown", async (type, extension) => {
+  switch (extension.shutdownReason) {
+    case "ADDON_DISABLE":
+    case "ADDON_DOWNGRADE":
+    case "ADDON_UPGRADE":
+      await ExtensionPreferencesManager.disableAll(extension);
+      break;
+
+    case "ADDON_UNINSTALL":
+      await ExtensionPreferencesManager.removeAll(extension);
+      break;
+  }
+});
+/* eslint-enable mozilla/balanced-listeners */
+
 function checkScope(scope) {
   if (scope && scope !== "regular") {
     throw new ExtensionError(
@@ -20,8 +42,7 @@ function checkScope(scope) {
   }
 }
 
-function getAPI(extension, context, name, callback) {
-  let anythingSet = false;
+function getAPI(extension, name, callback) {
   return {
     async get(details) {
       return {
@@ -34,23 +55,12 @@ function getAPI(extension, context, name, callback) {
     },
     async set(details) {
       checkScope(details.scope);
-      if (!anythingSet) {
-        anythingSet = true;
-        context.callOnClose({
-          close: async () => {
-            if (["ADDON_DISABLE", "ADDON_UNINSTALL"].includes(extension.shutdownReason)) {
-              await ExtensionPreferencesManager.unsetAll(extension);
-              anythingSet = false;
-            }
-          },
-        });
-      }
       return await ExtensionPreferencesManager.setSetting(
         extension, name, details.value);
     },
     async clear(details) {
       checkScope(details.scope);
-      return await ExtensionPreferencesManager.unsetSetting(
+      return await ExtensionPreferencesManager.removeSetting(
         extension, name);
     },
   };
@@ -125,7 +135,7 @@ extensions.registerSchemaAPI("privacy.network", "addon_parent", context => {
   return {
     privacy: {
       network: {
-        networkPredictionEnabled: getAPI(extension, context,
+        networkPredictionEnabled: getAPI(extension,
           "network.networkPredictionEnabled",
           () => {
             return Preferences.get("network.predictor.enabled") &&
@@ -133,7 +143,7 @@ extensions.registerSchemaAPI("privacy.network", "addon_parent", context => {
               Preferences.get("network.http.speculative-parallel-limit") > 0 &&
               !Preferences.get("network.dns.disablePrefetch");
           }),
-        webRTCIPHandlingPolicy: getAPI(extension, context,
+        webRTCIPHandlingPolicy: getAPI(extension,
           "network.webRTCIPHandlingPolicy",
           () => {
             if (Preferences.get("media.peerconnection.ice.proxy_only")) {
@@ -153,7 +163,7 @@ extensions.registerSchemaAPI("privacy.network", "addon_parent", context => {
           }),
       },
       websites: {
-        hyperlinkAuditingEnabled: getAPI(extension, context,
+        hyperlinkAuditingEnabled: getAPI(extension,
           "websites.hyperlinkAuditingEnabled",
           () => {
             return Preferences.get("browser.send_pings");
