@@ -19,7 +19,7 @@ function test() {
     "a.push('<script type=\"text/javascript\">');",
     "a.push('var b = 42;');",
     "a.push('</script>');",
-    "a.push('<script type=\"text/javascript\">');",
+    "a.push('<script type=\"text/javascript;version=1.8\">');",
     "a.push('var c = 42;');",
     "a.push('</script>');"
   ].join("\n");

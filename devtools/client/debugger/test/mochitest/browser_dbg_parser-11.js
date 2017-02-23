@@ -12,7 +12,7 @@ function test() {
 
   let source = [
     '<script type="text/javascript" src="chrome://foo.js"/>',
-    '<script type="application/javascript" src="chrome://baz.js"/>',
+    '<script type="application/javascript;version=1.8" src="chrome://baz.js"/>',
     '<script async defer src="chrome://foobar.js"/>',
     '<script type="application/javascript"/>"hello third"',
     '<script type="application/javascript">"hello fourth"</script>',
