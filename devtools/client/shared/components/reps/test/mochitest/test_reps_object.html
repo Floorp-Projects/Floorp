@@ -17,7 +17,7 @@ Test Obj rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, Obj } = REPS;
 
   const componentUnderTest = Obj;
@@ -248,9 +248,9 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(
-      modeTests, 
-      "testCustomTitle", 
-      componentUnderTest, 
+      modeTests,
+      "testCustomTitle",
+      componentUnderTest,
       stub, {
         title: customTitle
       }
