@@ -68,7 +68,7 @@ fails == mask-size-auto-auto.html mask-size-auto-auto.html
 fails == mask-size-auto-length.html mask-size-auto-length.html
 fails == mask-size-auto-percent.html mask-size-auto-percent.html
 fails == mask-size-contain-clip-border.html mask-size-contain-clip-border.html
-# == mask-size-contain-clip-padding.html mask-size-contain-clip-padding.html
+fails == mask-size-contain-clip-padding.html mask-size-contain-clip-padding.html
 fails == mask-size-contain-position-fifty-fifty.html mask-size-contain-position-fifty-fifty.html
 fails == mask-size-contain.html mask-size-contain.html
 fails == mask-size-cover.html mask-size-cover.html

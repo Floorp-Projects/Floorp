@@ -73,11 +73,10 @@ use microtask::{MicrotaskQueue, Microtask};
 use msg::constellation_msg::{FrameId, FrameType, PipelineId, PipelineNamespace};
 use net_traits::{CoreResourceMsg, FetchMetadata, FetchResponseListener};
 use net_traits::{IpcSend, Metadata, ReferrerPolicy, ResourceThreads};
-use net_traits::image_cache_thread::{ImageCacheChan, ImageCacheResult, ImageCacheThread};
+use net_traits::image_cache_thread::{PendingImageResponse, ImageCacheThread};
 use net_traits::request::{CredentialsMode, Destination, RequestInit};
 use net_traits::storage_thread::StorageType;
 use network_listener::NetworkListener;
-use origin::Origin;
 use profile_traits::mem::{self, OpaqueSender, Report, ReportKind, ReportsChan};
 use profile_traits::time::{self, ProfilerCategory, profile};
 use script_layout_interface::message::{self, NewLayoutThreadInfo, ReflowQueryType};
@@ -95,7 +94,7 @@ use script_traits::WebVREventMsg;
 use script_traits::webdriver_msg::WebDriverScriptCommand;
 use serviceworkerjob::{Job, JobQueue, AsyncJobHandler};
 use servo_config::opts;
-use servo_url::ServoUrl;
+use servo_url::{MutableOrigin, ServoUrl};
 use std::cell::Cell;
 use std::collections::{hash_map, HashMap, HashSet};
 use std::default::Default;
@@ -120,6 +119,8 @@ use time::Tm;
 use url::Position;
 use webdriver_handlers;
 use webvr_traits::WebVRMsg;
+
+pub type ImageCacheMsg = (PipelineId, PendingImageResponse);
 
 thread_local!(pub static STACK_ROOTS: Cell<Option<RootCollectionPtr>> = Cell::new(None));
 thread_local!(static SCRIPT_THREAD_ROOT: Cell<Option<*const ScriptThread>> = Cell::new(None));
@@ -155,7 +156,8 @@ struct InProgressLoad {
     is_visible: bool,
     /// The requested URL of the load.
     url: ServoUrl,
-    origin: Origin,
+    /// The origin for the document
+    origin: MutableOrigin,
 }
 
 impl InProgressLoad {
@@ -166,7 +168,7 @@ impl InProgressLoad {
            layout_chan: Sender<message::Msg>,
            window_size: Option<WindowSizeData>,
            url: ServoUrl,
-           origin: Origin) -> InProgressLoad {
+           origin: MutableOrigin) -> InProgressLoad {
         InProgressLoad {
             pipeline_id: id,
             frame_id: frame_id,
@@ -230,7 +232,7 @@ enum MixedMessage {
     FromConstellation(ConstellationControlMsg),
     FromScript(MainThreadScriptMsg),
     FromDevtools(DevtoolScriptControlMsg),
-    FromImageCache(ImageCacheResult),
+    FromImageCache((PipelineId, PendingImageResponse)),
     FromScheduler(TimerEvent)
 }
 
@@ -444,10 +446,10 @@ pub struct ScriptThread {
     layout_to_constellation_chan: IpcSender<LayoutMsg>,
 
     /// The port on which we receive messages from the image cache
-    image_cache_port: Receiver<ImageCacheResult>,
+    image_cache_port: Receiver<ImageCacheMsg>,
 
     /// The channel on which the image cache can send messages to ourself.
-    image_cache_channel: ImageCacheChan,
+    image_cache_channel: Sender<ImageCacheMsg>,
 
     /// For providing contact with the time profiler.
     time_profiler_chan: time::ProfilerChan,
@@ -545,7 +547,7 @@ impl ScriptThreadFactory for ScriptThread {
 
             let mut failsafe = ScriptMemoryFailsafe::new(&script_thread);
 
-            let origin = Origin::new(&load_data.url);
+            let origin = MutableOrigin::new(load_data.url.origin());
             let new_load = InProgressLoad::new(id, frame_id, parent_info, layout_chan, window_size,
                                                load_data.url.clone(), origin);
             script_thread.start_page_load(new_load, load_data);
@@ -611,7 +613,7 @@ impl ScriptThread {
         });
     }
 
-    pub fn process_attach_layout(new_layout_info: NewLayoutInfo, origin: Origin) {
+    pub fn process_attach_layout(new_layout_info: NewLayoutInfo, origin: MutableOrigin) {
         SCRIPT_THREAD_ROOT.with(|root| {
             if let Some(script_thread) = root.get() {
                 let script_thread = unsafe { &*script_thread };
@@ -646,17 +648,14 @@ impl ScriptThread {
         let (ipc_devtools_sender, ipc_devtools_receiver) = ipc::channel().unwrap();
         let devtools_port = ROUTER.route_ipc_receiver_to_new_mpsc_receiver(ipc_devtools_receiver);
 
-        // Ask the router to proxy IPC messages from the image cache thread to us.
-        let (ipc_image_cache_channel, ipc_image_cache_port) = ipc::channel().unwrap();
-        let image_cache_port =
-            ROUTER.route_ipc_receiver_to_new_mpsc_receiver(ipc_image_cache_port);
-
         let (timer_event_chan, timer_event_port) = channel();
 
         // Ask the router to proxy IPC messages from the control port to us.
         let control_port = ROUTER.route_ipc_receiver_to_new_mpsc_receiver(state.control_port);
 
         let boxed_script_sender = MainThreadScriptChan(chan.clone()).clone();
+
+        let (image_cache_channel, image_cache_port) = channel();
 
         ScriptThread {
             documents: DOMRefCell::new(Documents::new()),
@@ -666,7 +665,7 @@ impl ScriptThread {
             job_queue_map: Rc::new(JobQueue::new()),
 
             image_cache_thread: state.image_cache_thread,
-            image_cache_channel: ImageCacheChan(ipc_image_cache_channel),
+            image_cache_channel: image_cache_channel,
             image_cache_port: image_cache_port,
 
             resource_threads: state.resource_threads,
@@ -791,7 +790,7 @@ impl ScriptThread {
                 FromConstellation(ConstellationControlMsg::AttachLayout(
                         new_layout_info)) => {
                     self.profile_event(ScriptThreadEventCategory::AttachLayout, || {
-                        let origin = Origin::new(&new_layout_info.load_data.url);
+                        let origin = MutableOrigin::new(new_layout_info.load_data.url.origin());
                         self.handle_new_layout(new_layout_info, origin);
                     })
                 }
@@ -1111,8 +1110,11 @@ impl ScriptThread {
         }
     }
 
-    fn handle_msg_from_image_cache(&self, msg: ImageCacheResult) {
-        msg.responder.unwrap().respond(msg.image_response);
+    fn handle_msg_from_image_cache(&self, (id, response): (PipelineId, PendingImageResponse)) {
+        let window = self.documents.borrow().find_window(id);
+        if let Some(ref window) = window {
+            window.pending_image_notification(response);
+        }
     }
 
     fn handle_webdriver_msg(&self, pipeline_id: PipelineId, msg: WebDriverScriptCommand) {
@@ -1208,7 +1210,7 @@ impl ScriptThread {
         window.set_scroll_offsets(scroll_offsets)
     }
 
-    fn handle_new_layout(&self, new_layout_info: NewLayoutInfo, origin: Origin) {
+    fn handle_new_layout(&self, new_layout_info: NewLayoutInfo, origin: MutableOrigin) {
         let NewLayoutInfo {
             parent_info,
             new_pipeline_id,

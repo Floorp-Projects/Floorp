@@ -978,6 +978,8 @@ class MochitestDesktop(object):
                 self.urlOpts.append("dumpDMDAfterTest=true")
             if options.debugger:
                 self.urlOpts.append("interactiveDebugger=true")
+            if options.jscov_dir_prefix:
+                self.urlOpts.append("jscovDirPrefix=%s" % options.jscov_dir_prefix)
 
     def normflavor(self, flavor):
         """

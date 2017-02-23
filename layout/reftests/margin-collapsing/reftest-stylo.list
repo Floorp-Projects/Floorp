@@ -10,14 +10,14 @@
 # "Horizontal margins never collapse."
 # Horizontal margins of inline boxes do not collapse.
 # The norefs for these tests depict margins that incorrectly collapsed.
-# == inline-horizontal-1.html inline-horizontal-1.html
-# == inline-horizontal-1.html inline-horizontal-1.html
-# == inline-horizontal-2.html inline-horizontal-2.html
-# == inline-horizontal-2.html inline-horizontal-2.html
-# == inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
-# == inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
-# == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
-# == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+== inline-horizontal-1.html inline-horizontal-1.html
+== inline-horizontal-1.html inline-horizontal-1.html
+== inline-horizontal-2.html inline-horizontal-2.html
+== inline-horizontal-2.html inline-horizontal-2.html
+== inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+== inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+== inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+== inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
 # Horizontal margins of block boxes do not collapse.
 # These block boxes are actually floats - in CSS 2.1 there is no other
 # method to create horizontally adjacent block boxes.
@@ -38,19 +38,19 @@
 == block-horizontal-4-dyn.html block-horizontal-4-dyn.html
 == block-horizontal-4-dyn.html block-horizontal-4-dyn.html
 # Horizontal margins of inline-block boxes do not collapse.
-# == inline-block-horizontal-1.html inline-block-horizontal-1.html
-# == inline-block-horizontal-1.html inline-block-horizontal-1.html
-# == inline-block-horizontal-2.html inline-block-horizontal-2.html
-# == inline-block-horizontal-2.html inline-block-horizontal-2.html
-# == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
-# == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
-# == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
-# == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+== inline-block-horizontal-1.html inline-block-horizontal-1.html
+== inline-block-horizontal-1.html inline-block-horizontal-1.html
+== inline-block-horizontal-2.html inline-block-horizontal-2.html
+== inline-block-horizontal-2.html inline-block-horizontal-2.html
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
 # Horizontal margins of inline-tables do not collapse.
-# == inline-table-horizontal-1.html inline-table-horizontal-1.html
-# == inline-table-horizontal-1.html inline-table-horizontal-1.html
-# == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
-# == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+== inline-table-horizontal-1.html inline-table-horizontal-1.html
+== inline-table-horizontal-1.html inline-table-horizontal-1.html
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
 # "In CSS, the adjoining margins of two or more boxes
 #  (which might or might not be siblings) can combine to form a single margin.
 #  Margins that combine this way are said to collapse,
@@ -576,16 +576,16 @@
 == block-overflow-1.html block-overflow-1.html
 == block-overflow-2.html block-overflow-2.html
 == block-overflow-2.html block-overflow-2.html
-# == block-overflow-3.html block-overflow-3.html
-# == block-overflow-3.html block-overflow-3.html
-# == block-overflow-4.html block-overflow-4.html
-# == block-overflow-4.html block-overflow-4.html
+fails == block-overflow-3.html block-overflow-3.html # Bug 1321769?
+fails == block-overflow-3.html block-overflow-3.html # Bug 1321769?
+fails == block-overflow-4.html block-overflow-4.html # Bug 1321769?
+fails == block-overflow-4.html block-overflow-4.html # Bug 1321769?
 == block-overflow-5a.html block-overflow-5a.html
 == block-overflow-5a.html block-overflow-5a.html
 == block-overflow-5b.html block-overflow-5b.html
 == block-overflow-5b.html block-overflow-5b.html
-# == block-overflow-5c.html block-overflow-5c.html
-# == block-overflow-5c.html block-overflow-5c.html
+fails == block-overflow-5c.html block-overflow-5c.html # Bug 1321769?
+fails == block-overflow-5c.html block-overflow-5c.html # Bug 1321769?
 == block-overflow-5d.html block-overflow-5d.html
 == block-overflow-5d.html block-overflow-5d.html
 == block-overflow-1-dyn.html block-overflow-1-dyn.html
@@ -668,11 +668,11 @@ fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 # CSS 2 definition of 'top' and 'bottom' (which is different from CSS 2.1's).
 # Since Bug
 # alias for the CSS 2.1 values 'top' and 'bottom' respectively.
-# == table-caption-top-1.html table-caption-top-1.html
+== table-caption-top-1.html table-caption-top-1.html
 == table-caption-top-2.html table-caption-top-2.html
 == table-caption-top-outside-1.html table-caption-top-outside-1.html
 == table-caption-top-outside-2.html table-caption-top-outside-2.html
-# == table-caption-bottom-1.html table-caption-bottom-1.html
+== table-caption-bottom-1.html table-caption-bottom-1.html
 == table-caption-bottom-2.html table-caption-bottom-2.html
 == table-caption-bottom-outside-1.html table-caption-bottom-outside-1.html
 == table-caption-bottom-outside-2.html table-caption-bottom-outside-2.html
@@ -730,8 +730,8 @@ fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 == inline-block-sibling-1c-dyn.html inline-block-sibling-1c-dyn.html
 == inline-block-sibling-2-dyn.html inline-block-sibling-2-dyn.html
 == inline-block-child-1.html inline-block-child-1.html
-# == inline-block-child-2.html inline-block-child-2.html
-# == inline-block-child-2.html inline-block-child-2.html
+== inline-block-child-2.html inline-block-child-2.html
+== inline-block-child-2.html inline-block-child-2.html
 == inline-block-child-3.html inline-block-child-3.html
 == inline-block-child-1-dyn.html inline-block-child-1-dyn.html
 == inline-block-child-2-dyn.html inline-block-child-2-dyn.html

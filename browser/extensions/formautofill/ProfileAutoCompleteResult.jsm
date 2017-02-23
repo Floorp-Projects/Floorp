@@ -69,11 +69,11 @@ ProfileAutoCompleteResult.prototype = {
    * @returns {number} The number of results
    */
   get matchCount() {
-    return this._matchingProfiles.length;
+    return this._popupLabels.length;
   },
 
   _checkIndexBounds(index) {
-    if (index < 0 || index >= this._matchingProfiles.length) {
+    if (index < 0 || index >= this._popupLabels.length) {
       throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
   },
@@ -123,7 +123,10 @@ ProfileAutoCompleteResult.prototype = {
   },
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
-    return profiles.map(profile => {
+    // Skip results without a primary label.
+    return profiles.filter(profile => {
+      return !!profile[focusedFieldName];
+    }).map(profile => {
       return {
         primary: profile[focusedFieldName],
         secondary: this._getSecondaryLabel(focusedFieldName,

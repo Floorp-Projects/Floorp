@@ -3212,13 +3212,6 @@ x86_64)
   ;;
 esac
 
-# This is potentially set in external mozconfig files; if it's set,
-# then the build exposes the "webgl" context name, which is reserved
-# for conformant implementations.
-if test -n "$MOZ_WEBGL_CONFORMANT"; then
-  AC_DEFINE(MOZ_WEBGL_CONFORMANT)
-fi
-
 dnl ========================================================
 dnl D3D compiler DLL
 dnl ========================================================

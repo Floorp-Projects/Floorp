@@ -4,9 +4,9 @@ fails == multiple-summary.html multiple-summary.html
 fails == open-multiple-summary.html open-multiple-summary.html
 fails == summary-not-first-child.html summary-not-first-child.html
 fails == open-summary-not-first-child.html open-summary-not-first-child.html
-# == open-summary-block-style.html open-summary-block-style.html
-# == open-summary-inline-style.html open-summary-inline-style.html
-# == open-summary-table-cell-style.html open-summary-table-cell-style.html
+== open-summary-block-style.html open-summary-block-style.html
+== open-summary-inline-style.html open-summary-inline-style.html
+== open-summary-table-cell-style.html open-summary-table-cell-style.html
 fails == no-summary.html no-summary.html
 fails == open-no-summary.html open-no-summary.html
 == summary-not-in-details.html summary-not-in-details.html

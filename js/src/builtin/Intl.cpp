@@ -943,6 +943,31 @@ class ScopedICUObject
 // The inline capacity we use for the char16_t Vectors.
 static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
+template <typename ICUStringFunction>
+static JSString*
+Call(JSContext* cx, const ICUStringFunction& strFn)
+{
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    MOZ_ALWAYS_TRUE(chars.resize(INITIAL_CHAR_BUFFER_SIZE));
+
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t size = strFn(Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE, &status);
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        MOZ_ASSERT(size >= 0);
+        if (!chars.resize(size_t(size)))
+            return nullptr;
+        status = U_ZERO_ERROR;
+        strFn(Char16ToUChar(chars.begin()), size, &status);
+    }
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return nullptr;
+    }
+
+    MOZ_ASSERT(size >= 0);
+    return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
+}
+
 
 /******************** Collator ********************/
 
@@ -1807,21 +1832,13 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     return toClose.forget();
 }
 
-using FormattedNumberChars = Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE>;
-
-static bool
+static JSString*
 PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
-                       UFieldPositionIterator* fpositer, FormattedNumberChars& formattedChars)
+                       UFieldPositionIterator* fpositer)
 {
     // PartitionNumberPattern doesn't consider -0.0 to be negative.
     if (IsNegativeZero(*x))
         *x = 0.0;
-
-    MOZ_ASSERT(formattedChars.length() == 0,
-               "formattedChars must initially be empty");
-    MOZ_ALWAYS_TRUE(formattedChars.resize(INITIAL_CHAR_BUFFER_SIZE));
-
-    UErrorCode status = U_ZERO_ERROR;
 
 #if !defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     MOZ_ASSERT(fpositer == nullptr,
@@ -1829,41 +1846,13 @@ PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
                "can't provide it");
 #endif
 
-    int32_t resultSize;
+    return Call(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
 #if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-    resultSize =
-        unum_formatDoubleForFields(nf, *x,
-                                   Char16ToUChar(formattedChars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                   fpositer, &status);
+        return unum_formatDoubleForFields(nf, *x, chars, size, fpositer, status);
 #else
-    resultSize =
-        unum_formatDouble(nf, *x, Char16ToUChar(formattedChars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                          nullptr, &status);
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(resultSize >= 0);
-        if (!formattedChars.resize(size_t(resultSize)))
-            return false;
-        status = U_ZERO_ERROR;
-#ifdef DEBUG
-        int32_t size =
+        return unum_formatDouble(nf, *x, chars, size, nullptr, status);
 #endif
-#if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-            unum_formatDoubleForFields(nf, *x, Char16ToUChar(formattedChars.begin()), resultSize,
-                                       fpositer, &status);
-#else
-            unum_formatDouble(nf, *x, Char16ToUChar(formattedChars.begin()), resultSize,
-                              nullptr, &status);
-#endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-        MOZ_ASSERT(size == resultSize);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(resultSize >= 0);
-    return formattedChars.resize(size_t(resultSize));
+    });
 }
 
 static bool
@@ -1871,11 +1860,7 @@ intl_FormatNumber(JSContext* cx, UNumberFormat* nf, double x, MutableHandleValue
 {
     // Passing null for |fpositer| will just not compute partition information,
     // letting us common up all ICU number-formatting code.
-    FormattedNumberChars chars(cx);
-    if (!PartitionNumberPattern(cx, nf, &x, nullptr, chars))
-        return false;
-
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), chars.length());
+    JSString* str = PartitionNumberPattern(cx, nf, &x, nullptr);
     if (!str)
         return false;
 
@@ -1967,16 +1952,12 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     MOZ_ASSERT(fpositer);
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
-    FormattedNumberChars chars(cx);
-    if (!PartitionNumberPattern(cx, nf, &x, fpositer, chars))
+    RootedString overallResult(cx, PartitionNumberPattern(cx, nf, &x, fpositer));
+    if (!overallResult)
         return false;
 
     RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
     if (!partsArray)
-        return false;
-
-    RootedString overallResult(cx, NewStringCopyN<CanGC>(cx, chars.begin(), chars.length()));
-    if (!overallResult)
         return false;
 
     // First, vacuum up fields in the overall formatted string.
@@ -2234,7 +2215,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
     RootedObject singlePart(cx);
     RootedValue propVal(cx);
 
-    PartGenerator gen(cx, fields, chars.length());
+    PartGenerator gen(cx, fields, overallResult->length());
     do {
         bool hasPart;
         Part part;
@@ -2274,7 +2255,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
         partIndex++;
     } while (true);
 
-    MOZ_ASSERT(lastEndIndex == chars.length(),
+    MOZ_ASSERT(lastEndIndex == overallResult->length(),
                "result array must partition the entire string");
 
     result.setObject(*partsArray);
@@ -2900,32 +2881,13 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
 
     mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    UBool* isSystemID = nullptr;
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.begin().get()),
-                                               tzchars.length(), Char16ToUChar(chars.begin()),
-                                               INITIAL_CHAR_BUFFER_SIZE, isSystemID, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size)))
-            return false;
-        status = U_ZERO_ERROR;
-        ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.begin().get()), tzchars.length(),
-                                    Char16ToUChar(chars.begin()), size, isSystemID, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
+    JSString* str = Call(cx, [&tzchars](UChar* chars, uint32_t size, UErrorCode* status) {
+        return ucal_getCanonicalTimeZoneID(Char16ToUChar(tzchars.begin().get()), tzchars.length(),
+                                           chars, size, nullptr, status);
+    });
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }
@@ -2941,29 +2903,10 @@ js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp)
     // needed.
     js::ResyncICUDefaultTimeZone();
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = ucal_getDefaultTimeZone(Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                           &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size)))
-            return false;
-        status = U_ZERO_ERROR;
-        ucal_getDefaultTimeZone(Char16ToUChar(chars.begin()), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
+    JSString* str = Call(cx, ucal_getDefaultTimeZone);
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }
@@ -3010,7 +2953,7 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     if (!skeleton.initTwoByte(cx, args[1].toString()))
         return false;
 
-    mozilla::Range<const char16_t> skeletonChars = skeleton.twoByteRange();
+    mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
 
     UErrorCode status = U_ZERO_ERROR;
     UDateTimePatternGenerator* gen = udatpg_open(icuLocale(locale.ptr()), &status);
@@ -3020,30 +2963,13 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    int32_t size = udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.begin().get()),
-                                         skeletonChars.length(), Char16ToUChar(chars.begin()),
-                                         INITIAL_CHAR_BUFFER_SIZE, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
-            return false;
-        status = U_ZERO_ERROR;
-        udatpg_getBestPattern(gen, Char16ToUChar(skeletonChars.begin().get()),
-                              skeletonChars.length(), Char16ToUChar(chars.begin()), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString* str = Call(cx, [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
+        return udatpg_getBestPattern(gen, Char16ToUChar(skelChars.begin().get()),
+                                     skelChars.length(), chars, size, status);
+    });
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }
@@ -3117,31 +3043,13 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue
         return false;
     }
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = udat_format(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                               nullptr, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
-            return false;
-        status = U_ZERO_ERROR;
-        udat_format(df, x, Char16ToUChar(chars.begin()), size, nullptr, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString* str = Call(cx, [df, x](UChar* chars, int32_t size, UErrorCode* status) {
+        return udat_format(df, x, chars, size, nullptr, status);
+    });
     if (!str)
         return false;
 
     result.setString(str);
-
     return true;
 }
 
@@ -3239,10 +3147,6 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
         return false;
     }
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
     UErrorCode status = U_ZERO_ERROR;
     UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
     if (U_FAILURE(status)) {
@@ -3251,35 +3155,22 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
     }
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
-    int32_t resultSize =
-        udat_formatForFields(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                             fpositer, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(resultSize >= 0);
-        if (!chars.resize(resultSize))
-            return false;
-        status = U_ZERO_ERROR;
-        udat_formatForFields(df, x, Char16ToUChar(chars.begin()), resultSize, fpositer, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+    RootedString overallResult(cx);
+    overallResult = Call(cx, [df, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
+        return udat_formatForFields(df, x, chars, size, fpositer, status);
+    });
+    if (!overallResult)
         return false;
-    }
 
     RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
     if (!partsArray)
         return false;
 
-    MOZ_ASSERT(resultSize >= 0);
-    if (resultSize == 0) {
+    if (overallResult->length() == 0) {
         // An empty string contains no parts, so avoid extra work below.
         result.setObject(*partsArray);
         return true;
     }
-
-    RootedString overallResult(cx, NewStringCopyN<CanGC>(cx, chars.begin(), resultSize));
-    if (!overallResult)
-        return false;
 
     size_t lastEndIndex = 0;
 
@@ -3637,26 +3528,9 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 
     ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
-        return false;
-
-    int32_t size = uplrules_select(pr, y, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
-                                   &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
-            return false;
-        status = U_ZERO_ERROR;
-        uplrules_select(pr, y, Char16ToUChar(chars.begin()), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return false;
-    }
-
-    MOZ_ASSERT(size >= 0);
-    JSString* str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString* str = Call(cx, [pr, y](UChar* chars, int32_t size, UErrorCode* status) {
+        return uplrules_select(pr, y, chars, size, status);
+    });
     if (!str)
         return false;
 
@@ -4057,25 +3931,9 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
             return nullptr;
         }
 
-        UErrorCode status = U_ZERO_ERROR;
-        int32_t resultSize =
-            udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
-                            INITIAL_CHAR_BUFFER_SIZE, &status);
-        if (status == U_BUFFER_OVERFLOW_ERROR) {
-            MOZ_ASSERT(resultSize >= 0);
-            if (!chars.resize(resultSize))
-                return nullptr;
-            status = U_ZERO_ERROR;
-            udat_getSymbols(fmt, symbolType, index, Char16ToUChar(chars.begin()),
-                            resultSize, &status);
-        }
-        if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-            return nullptr;
-        }
-
-        MOZ_ASSERT(resultSize >= 0);
-        return NewStringCopyN<CanGC>(cx, chars.begin(), resultSize);
+        return Call(cx, [fmt, symbolType, index](UChar* chars, int32_t size, UErrorCode* status) {
+            return udat_getSymbols(fmt, symbolType, index, chars, size, status);
+        });
     }
 
     ReportBadKey(cx, pattern);

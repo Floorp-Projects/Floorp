@@ -98,6 +98,7 @@ public:
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
   LayerIntCoord GetScrollThumbLength() const;
   bool IsScrollbarNode() const;
+  FrameMetrics::ViewID GetScrollTargetId() const;
 
   /* Fixed pos info */
 
@@ -128,9 +129,15 @@ private:
 
   uint64_t mLayersId;
 
+  // This is set for both scroll track and scroll thumb Container layers, and
+  // represents the scroll id of the scroll frame scrolled by the scrollbar.
   FrameMetrics::ViewID mScrollViewId;
+
+  // This is set for scroll thumb Container layers only.
   ScrollDirection mScrollDir;
   int32_t mScrollThumbLength;
+
+  // This is set for scroll track Container layers only.
   bool mIsScrollbarContainer;
 
   FrameMetrics::ViewID mFixedPosTarget;

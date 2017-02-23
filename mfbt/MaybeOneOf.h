@@ -14,6 +14,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 
 #include <new> // for placement new
@@ -105,7 +106,7 @@ public:
   {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
-    ::new (data()) T(Forward<Args>(aArgs)...);
+    ::new (KnownNotNull, data()) T(Forward<Args>(aArgs)...);
   }
 
   template <class T>

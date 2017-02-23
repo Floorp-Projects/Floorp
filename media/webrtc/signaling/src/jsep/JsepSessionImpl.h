@@ -244,7 +244,7 @@ private:
   nsresult SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp);
   // Non-const so it can assign m-line index to tracks
   nsresult SetupOfferMSectionsByType(SdpMediaSection::MediaType type,
-                                     Maybe<size_t> offerToReceive,
+                                     const Maybe<size_t>& offerToReceive,
                                      Sdp* sdp);
   nsresult BindLocalTracks(SdpMediaSection::MediaType mediatype,
                            Sdp* sdp);

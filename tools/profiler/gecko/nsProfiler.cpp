@@ -289,20 +289,3 @@ nsProfiler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsProfiler::GetProfileGatherer(nsISupports** aRetVal)
-{
-  if (!aRetVal) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-
-  // If we're not profiling, there will be no gatherer.
-  if (!profiler_is_active()) {
-    *aRetVal = nullptr;
-  } else {
-    nsCOMPtr<nsISupports> gatherer;
-    profiler_get_gatherer(getter_AddRefs(gatherer));
-    gatherer.forget(aRetVal);
-  }
-  return NS_OK;
-}

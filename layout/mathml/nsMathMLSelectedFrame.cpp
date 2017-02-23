@@ -140,7 +140,7 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
 {
   MarkInReflow();
   mPresentationData.flags &= ~NS_MATHML_ERROR;
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   aDesiredSize.ClearSize();
   aDesiredSize.SetBlockStartAscent(0);
   mBoundingMetrics = nsBoundingMetrics();

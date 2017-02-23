@@ -23,6 +23,7 @@ namespace jit {
     _(GuardType)                          \
     _(GuardClass)                         \
     _(GuardIsProxy)                       \
+    _(GuardIsCrossCompartmentWrapper)     \
     _(GuardNotDOMProxy)                   \
     _(GuardMagicValue)                    \
     _(GuardNoUnboxedExpando)              \
@@ -32,6 +33,7 @@ namespace jit {
     _(GuardAndGetIndexFromString)         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
+    _(LoadWrapperTarget)                  \
     _(LoadDOMExpandoValue)                \
     _(LoadDOMExpandoValueIgnoreGeneration)\
     _(LoadUndefinedResult)                \
@@ -47,7 +49,8 @@ namespace jit {
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
     _(LoadUnboxedArrayElementResult)      \
-    _(LoadTypedElementResult)
+    _(LoadTypedElementResult)             \
+    _(WrapResult)
 
 // Represents a Value on the Baseline frame's expression stack. Slot 0 is the
 // value on top of the stack (the most recently pushed value), slot 1 is the

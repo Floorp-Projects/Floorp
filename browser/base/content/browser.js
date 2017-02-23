@@ -460,6 +460,7 @@ const gStoragePressureObserver = {
     let buttons = [];
     let usage = parseInt(data);
     let prefStrBundle = document.getElementById("bundle_preferences");
+    let brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
     let notificationBox = document.getElementById("high-priority-global-notificationbox");
     buttons.push({
       label: prefStrBundle.getString("spaceAlert.learnMoreButton.label"),
@@ -474,7 +475,7 @@ const gStoragePressureObserver = {
       // This is because this usage is small and not the main cause for space issue.
       // In order to avoid the bad and wrong impression among users that
       // firefox eats disk space a lot, indicate users to clean up other disk space.
-      msg = prefStrBundle.getString("spaceAlert.under5GB.description");
+      msg = prefStrBundle.getFormattedString("spaceAlert.under5GB.message", [brandShortName]);
       buttons.push({
         label: prefStrBundle.getString("spaceAlert.under5GB.okButton.label"),
         accessKey: prefStrBundle.getString("spaceAlert.under5GB.okButton.accesskey"),
@@ -483,15 +484,15 @@ const gStoragePressureObserver = {
     } else {
       // The firefox-used space >= 5GB, then guide users to about:preferences
       // to clear some data stored on firefox by websites.
-      let descriptionStringID = "spaceAlert.over5GB.description";
+      let descriptionStringID = "spaceAlert.over5GB.message";
       let prefButtonLabelStringID = "spaceAlert.over5GB.prefButton.label";
       let prefButtonAccesskeyStringID = "spaceAlert.over5GB.prefButton.accesskey";
       if (AppConstants.platform == "win") {
-        descriptionStringID = "spaceAlert.over5GB.descriptionWin";
+        descriptionStringID = "spaceAlert.over5GB.messageWin";
         prefButtonLabelStringID = "spaceAlert.over5GB.prefButtonWin.label";
         prefButtonAccesskeyStringID = "spaceAlert.over5GB.prefButtonWin.accesskey";
       }
-      msg = prefStrBundle.getString(descriptionStringID);
+      msg = prefStrBundle.getFormattedString(descriptionStringID, [brandShortName]);
       buttons.push({
         label: prefStrBundle.getString(prefButtonLabelStringID),
         accessKey: prefStrBundle.getString(prefButtonAccesskeyStringID),
@@ -3435,7 +3436,7 @@ var PrintPreviewListener = {
       let browser = gBrowser.selectedBrowser;
       let preferredRemoteType = browser.remoteType;
       this._tabBeforePrintPreview = gBrowser.selectedTab;
-      this._printPreviewTab = gBrowser.loadOneTab("about:blank", {
+      this._printPreviewTab = gBrowser.loadOneTab("about:printpreview", {
         inBackground: false,
         preferredRemoteType,
         sameProcessAsFrameLoader: browser.frameLoader
@@ -3446,7 +3447,7 @@ var PrintPreviewListener = {
   },
   createSimplifiedBrowser() {
     let browser = this._tabBeforePrintPreview.linkedBrowser;
-    this._simplifyPageTab = gBrowser.loadOneTab("about:blank", {
+    this._simplifyPageTab = gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
       sameProcessAsFrameLoader: browser.frameLoader
      });

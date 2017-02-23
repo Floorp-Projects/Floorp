@@ -42,7 +42,7 @@ skip-if(d2d) fuzzy-if(skiaContent,1,6400) == feFlood-2.svg feFlood-2.svg
 
 fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlur-1.svg
 == feGaussianBlur-2.svg feGaussianBlur-2.svg
-# == feGaussianBlur-3.svg feGaussianBlur-3.svg
+== feGaussianBlur-3.svg feGaussianBlur-3.svg
 == feGaussianBlur-4.svg feGaussianBlur-4.svg
 == feGaussianBlur-5.svg feGaussianBlur-5.svg
 == feGaussianBlur-6.svg feGaussianBlur-6.svg

@@ -494,8 +494,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   mozilla::LogModule::Init();
 
-  char aLocal;
-  profiler_init(&aLocal);
   nsresult rv = NS_OK;
 
   // We are not shutting down
@@ -781,9 +779,6 @@ NS_InitMinimalXPCOM()
   NS_LogInit();
   NS_InitAtomTable();
   mozilla::LogModule::Init();
-
-  char aLocal;
-  profiler_init(&aLocal);
 
   nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1101,8 +1096,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   sMainHangMonitor = nullptr;
 
   BackgroundHangMonitor::Shutdown();
-
-  profiler_shutdown();
 
   NS_LogTerm();
 

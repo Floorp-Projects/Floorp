@@ -11,11 +11,14 @@ import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
 import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
+
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -28,14 +31,16 @@ import ch.boye.httpclientandroidlib.entity.BasicHttpEntity;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 
+import static org.mockito.Mockito.mock;
+
 import static org.junit.Assert.*;
 
 @RunWith(TestRunner.class)
 public class PayloadUploadDelegateTest {
-    private BatchingUploader batchingUploader;
+    private PayloadDispatcher payloadDispatcher;
+    private AuthHeaderProvider authHeaderProvider;
 
-    class MockUploader extends BatchingUploader {
-        public final ArrayList<String> successRecords = new ArrayList<>();
+    class MockPayloadDispatcher extends PayloadDispatcher {
         public final HashMap<String, Exception> failedRecords = new HashMap<>();
         public boolean didLastPayloadFail = false;
 
@@ -43,24 +48,22 @@ public class PayloadUploadDelegateTest {
         public int commitPayloadsSucceeded = 0;
         public int lastPayloadsSucceeded = 0;
 
-        public MockUploader(final Server11RepositorySession repositorySession, final Executor workQueue, final RepositorySessionStoreDelegate sessionStoreDelegate) {
-            super(repositorySession, workQueue, sessionStoreDelegate);
+        public int committedGuids = 0;
+
+        public MockPayloadDispatcher(final Executor workQueue, final BatchingUploader uploader) {
+            super(workQueue, uploader, null);
         }
 
         @Override
-        public void payloadSucceeded(final SyncStorageResponse response, final boolean isCommit, final boolean isLastPayload) {
+        public void payloadSucceeded(final SyncStorageResponse response, String[] guids, final boolean isCommit, final boolean isLastPayload) {
             successResponses.add(response);
             if (isCommit) {
                 ++commitPayloadsSucceeded;
+                committedGuids += guids.length;
             }
             if (isLastPayload) {
                 ++lastPayloadsSucceeded;
             }
-        }
-
-        @Override
-        public void recordSucceeded(final String recordGuid) {
-            successRecords.add(recordGuid);
         }
 
         @Override
@@ -85,14 +88,20 @@ public class PayloadUploadDelegateTest {
                 "dummyCollection",
                 "http://dummy.url/",
                 null,
-                new InfoCollections(),
+                new InfoCollections() {
+                    @Override
+                    public Long getTimestamp(String collection) {
+                        return 0L;
+                    }
+                },
                 new InfoConfiguration()
         );
-        batchingUploader = new MockUploader(
-                new Server11RepositorySession(server11Repository),
+        payloadDispatcher = new MockPayloadDispatcher(
                 null,
-                null
+                mock(BatchingUploader.class)
         );
+
+        authHeaderProvider = mock(AuthHeaderProvider.class);
     }
 
     @Test
@@ -101,16 +110,16 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
         postedGuids.add("testGuid2");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         // Test that non-2* responses aren't processed
         payloadUploadDelegate.handleRequestSuccess(makeSyncStorageResponse(404, null, null));
-        assertEquals(2, ((MockUploader) batchingUploader).failedRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(2, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid2").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid2").getClass());
     }
 
     @Test
@@ -119,16 +128,16 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
         postedGuids.add("testGuid2");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         // Test that responses without X-Last-Modified header aren't processed
         payloadUploadDelegate.handleRequestSuccess(makeSyncStorageResponse(200, null, null));
-        assertEquals(2, ((MockUploader) batchingUploader).failedRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(2, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid2").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid2").getClass());
     }
 
     @Test
@@ -137,16 +146,16 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
         postedGuids.add("testGuid2");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, true);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
 
         // Test that we catch json processing errors
         payloadUploadDelegate.handleRequestSuccess(makeSyncStorageResponse(200, "non json body", "123"));
-        assertEquals(2, ((MockUploader) batchingUploader).failedRecords.size());
-        assertTrue(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(2, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertTrue(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
         assertEquals(NonObjectJSONException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
         assertEquals(NonObjectJSONException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid2").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid2").getClass());
     }
 
     @Test
@@ -154,13 +163,13 @@ public class PayloadUploadDelegateTest {
         ArrayList<String> postedGuids = new ArrayList<>(1);
         postedGuids.add("testGuid1");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, true);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
 
         // Test that we catch absent tokens in 202 responses
         payloadUploadDelegate.handleRequestSuccess(makeSyncStorageResponse(202, "{\"success\": []}", "123"));
-        assertEquals(1, ((MockUploader) batchingUploader).failedRecords.size());
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
     }
 
     @Test
@@ -169,19 +178,19 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
 
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         // Test that if in batching mode and saw the token, 200 must be a response to a commit
         try {
-            batchingUploader.getCurrentBatch().setToken("MTIzNA", true);
+            payloadDispatcher.batchWhiteboard.setToken("MTIzNA", true);
         } catch (BatchingUploader.BatchingUploaderException e) {}
-        batchingUploader.setInBatchingMode(true);
+        payloadDispatcher.setInBatchingMode(true);
 
         // not a commit, so should fail
         payloadUploadDelegate.handleRequestSuccess(makeSyncStorageResponse(200, "{\"success\": []}", "123"));
-        assertEquals(1, ((MockUploader) batchingUploader).failedRecords.size());
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
         assertEquals(IllegalStateException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
     }
 
     @Test
@@ -191,32 +200,32 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("guid2");
         postedGuids.add("guid3");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid1\", \"guid2\", \"guid3\"]}", "123"));
-        assertEquals(0, ((MockUploader) batchingUploader).failedRecords.size());
-        assertEquals(3, ((MockUploader) batchingUploader).successRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
-        assertEquals(1, ((MockUploader) batchingUploader).successResponses.size());
-        assertEquals(0, ((MockUploader) batchingUploader).commitPayloadsSucceeded);
-        assertEquals(0, ((MockUploader) batchingUploader).lastPayloadsSucceeded);
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertEquals(3, payloadDispatcher.batchWhiteboard.getSuccessRecordGuids().length);
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).successResponses.size());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).commitPayloadsSucceeded);
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).lastPayloadsSucceeded);
 
         // These should fail, because we're returning a non-changed L-M in a non-batching mode
         postedGuids.add("guid4");
         postedGuids.add("guid6");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid4\", 5, \"guid6\"]}", "123"));
-        assertEquals(5, ((MockUploader) batchingUploader).failedRecords.size());
-        assertEquals(3, ((MockUploader) batchingUploader).successRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
-        assertEquals(1, ((MockUploader) batchingUploader).successResponses.size());
-        assertEquals(0, ((MockUploader) batchingUploader).commitPayloadsSucceeded);
-        assertEquals(0, ((MockUploader) batchingUploader).lastPayloadsSucceeded);
+        assertEquals(5, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertEquals(3, payloadDispatcher.batchWhiteboard.getSuccessRecordGuids().length);
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).successResponses.size());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).commitPayloadsSucceeded);
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).lastPayloadsSucceeded);
         assertEquals(BatchingUploader.LastModifiedDidNotChange.class,
-                ((MockUploader) batchingUploader).failedRecords.get("guid4").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("guid4").getClass());
     }
 
     @Test
@@ -226,7 +235,7 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("guid2");
         postedGuids.add("guid3");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid1\", \"guid2\", \"guid3\"], \"failed\": {}}", "123"));
 
@@ -234,94 +243,98 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("guid4");
         postedGuids.add("guid5");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid4\", \"guid5\"], \"failed\": {}}", "333"));
 
         postedGuids = new ArrayList<>();
         postedGuids.add("guid6");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, true);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid6\"], \"failed\": {}}", "444"));
 
-        assertEquals(0, ((MockUploader) batchingUploader).failedRecords.size());
-        assertEquals(6, ((MockUploader) batchingUploader).successRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
-        assertEquals(3, ((MockUploader) batchingUploader).successResponses.size());
-        assertEquals(0, ((MockUploader) batchingUploader).commitPayloadsSucceeded);
-        assertEquals(1, ((MockUploader) batchingUploader).lastPayloadsSucceeded);
-        assertFalse(batchingUploader.getInBatchingMode());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertEquals(6, payloadDispatcher.batchWhiteboard.getSuccessRecordGuids().length);
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).successResponses.size());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).commitPayloadsSucceeded);
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).lastPayloadsSucceeded);
+        assertFalse(payloadDispatcher.batchWhiteboard.getInBatchingMode());
 
         postedGuids = new ArrayList<>();
         postedGuids.add("guid7");
         postedGuids.add("guid8");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, true);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid8\"], \"failed\": {\"guid7\": \"reason\"}}", "555"));
-        assertEquals(1, ((MockUploader) batchingUploader).failedRecords.size());
-        assertTrue(((MockUploader) batchingUploader).failedRecords.containsKey("guid7"));
-        assertEquals(7, ((MockUploader) batchingUploader).successRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
-        assertEquals(4, ((MockUploader) batchingUploader).successResponses.size());
-        assertEquals(0, ((MockUploader) batchingUploader).commitPayloadsSucceeded);
-        assertEquals(2, ((MockUploader) batchingUploader).lastPayloadsSucceeded);
-        assertFalse(batchingUploader.getInBatchingMode());
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertTrue(((MockPayloadDispatcher) payloadDispatcher).failedRecords.containsKey("guid7"));
+        assertEquals(7, payloadDispatcher.batchWhiteboard.getSuccessRecordGuids().length);
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertEquals(4, ((MockPayloadDispatcher) payloadDispatcher).successResponses.size());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).commitPayloadsSucceeded);
+        assertEquals(2, ((MockPayloadDispatcher) payloadDispatcher).lastPayloadsSucceeded);
+        assertFalse(payloadDispatcher.batchWhiteboard.getInBatchingMode());
     }
 
     @Test
     public void testHandleRequestSuccessBatching() {
+        assertNull(payloadDispatcher.batchWhiteboard.getInBatchingMode());
+
         ArrayList<String> postedGuids = new ArrayList<>();
         postedGuids.add("guid1");
         postedGuids.add("guid2");
         postedGuids.add("guid3");
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(202, "{\"batch\": \"MTIzNA\", \"success\": [\"guid1\", \"guid2\", \"guid3\"], \"failed\": {}}", "123"));
 
-        assertTrue(batchingUploader.getInBatchingMode());
-        assertEquals("MTIzNA", batchingUploader.getCurrentBatch().getToken());
+        assertTrue(payloadDispatcher.batchWhiteboard.getInBatchingMode());
+        assertEquals("MTIzNA", payloadDispatcher.batchWhiteboard.getToken());
 
         postedGuids = new ArrayList<>();
         postedGuids.add("guid4");
         postedGuids.add("guid5");
         postedGuids.add("guid6");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, false, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(202, "{\"batch\": \"MTIzNA\", \"success\": [\"guid4\", \"guid5\", \"guid6\"], \"failed\": {}}", "123"));
 
-        assertTrue(batchingUploader.getInBatchingMode());
-        assertEquals("MTIzNA", batchingUploader.getCurrentBatch().getToken());
+        assertTrue(payloadDispatcher.batchWhiteboard.getInBatchingMode());
+        assertEquals("MTIzNA", payloadDispatcher.batchWhiteboard.getToken());
 
         postedGuids = new ArrayList<>();
         postedGuids.add("guid7");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, true, false);
+                authHeaderProvider, payloadDispatcher, postedGuids, true, false);
         payloadUploadDelegate.handleRequestSuccess(
-                makeSyncStorageResponse(200, "{\"success\": [\"guid6\"], \"failed\": {}}", "222"));
+                makeSyncStorageResponse(200, "{\"success\": [\"guid7\"], \"failed\": {}}", "222"));
+
+        assertEquals(7, ((MockPayloadDispatcher) payloadDispatcher).committedGuids);
 
         // Even though everything indicates we're not in a batching, we were, so test that
         // we don't reset the flag.
-        assertTrue(batchingUploader.getInBatchingMode());
-        assertNull(batchingUploader.getCurrentBatch().getToken());
+        assertTrue(payloadDispatcher.batchWhiteboard.getInBatchingMode());
+        assertNull(payloadDispatcher.batchWhiteboard.getToken());
 
         postedGuids = new ArrayList<>();
         postedGuids.add("guid8");
         payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, postedGuids, true, true);
+                authHeaderProvider, payloadDispatcher, postedGuids, true, true);
         payloadUploadDelegate.handleRequestSuccess(
                 makeSyncStorageResponse(200, "{\"success\": [\"guid7\"], \"failed\": {}}", "333"));
 
-        assertEquals(0, ((MockUploader) batchingUploader).failedRecords.size());
-        assertEquals(8, ((MockUploader) batchingUploader).successRecords.size());
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
-        assertEquals(4, ((MockUploader) batchingUploader).successResponses.size());
-        assertEquals(2, ((MockUploader) batchingUploader).commitPayloadsSucceeded);
-        assertEquals(1, ((MockUploader) batchingUploader).lastPayloadsSucceeded);
-        assertTrue(batchingUploader.getInBatchingMode());
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertEquals(8, ((MockPayloadDispatcher) payloadDispatcher).committedGuids);
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertEquals(4, ((MockPayloadDispatcher) payloadDispatcher).successResponses.size());
+        assertEquals(2, ((MockPayloadDispatcher) payloadDispatcher).commitPayloadsSucceeded);
+        assertEquals(1, ((MockPayloadDispatcher) payloadDispatcher).lastPayloadsSucceeded);
+        assertTrue(payloadDispatcher.batchWhiteboard.getInBatchingMode());
     }
 
     @Test
@@ -330,21 +343,23 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
         postedGuids.add("testGuid2");
         postedGuids.add("testGuid3");
-        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(batchingUploader, postedGuids, false, false);
+        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         IllegalStateException e = new IllegalStateException();
         payloadUploadDelegate.handleRequestError(e);
 
-        assertEquals(3, ((MockUploader) batchingUploader).failedRecords.size());
-        assertEquals(e, ((MockUploader) batchingUploader).failedRecords.get("testGuid1"));
-        assertEquals(e, ((MockUploader) batchingUploader).failedRecords.get("testGuid2"));
-        assertEquals(e, ((MockUploader) batchingUploader).failedRecords.get("testGuid3"));
-        assertFalse(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertEquals(e, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1"));
+        assertEquals(e, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid2"));
+        assertEquals(e, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid3"));
+        assertFalse(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
 
-        payloadUploadDelegate = new PayloadUploadDelegate(batchingUploader, postedGuids, false, true);
+        payloadUploadDelegate = new PayloadUploadDelegate(
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
         payloadUploadDelegate.handleRequestError(e);
-        assertEquals(3, ((MockUploader) batchingUploader).failedRecords.size());
-        assertTrue(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertTrue(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
     }
 
     @Test
@@ -353,35 +368,44 @@ public class PayloadUploadDelegateTest {
         postedGuids.add("testGuid1");
         postedGuids.add("testGuid2");
         postedGuids.add("testGuid3");
-        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(batchingUploader, postedGuids, false, false);
+        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
+                authHeaderProvider, payloadDispatcher, postedGuids, false, false);
 
         final HttpResponse response = new BasicHttpResponse(
                 new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 503, "Illegal method/protocol"));
         payloadUploadDelegate.handleRequestFailure(new SyncStorageResponse(response));
-        assertEquals(3, ((MockUploader) batchingUploader).failedRecords.size());
+        assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
         assertEquals(HTTPFailureException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid1").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid1").getClass());
         assertEquals(HTTPFailureException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid2").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid2").getClass());
         assertEquals(HTTPFailureException.class,
-                ((MockUploader) batchingUploader).failedRecords.get("testGuid3").getClass());
+                ((MockPayloadDispatcher) payloadDispatcher).failedRecords.get("testGuid3").getClass());
 
-        payloadUploadDelegate = new PayloadUploadDelegate(batchingUploader, postedGuids, false, true);
+        payloadUploadDelegate = new PayloadUploadDelegate(
+                authHeaderProvider, payloadDispatcher, postedGuids, false, true);
         payloadUploadDelegate.handleRequestFailure(new SyncStorageResponse(response));
-        assertEquals(3, ((MockUploader) batchingUploader).failedRecords.size());
-        assertTrue(((MockUploader) batchingUploader).didLastPayloadFail);
+        assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertTrue(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
     }
 
     @Test
-    public void testIfUnmodifiedSince() {
+    public void testIfUnmodifiedSinceNoLM() {
         PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
-                batchingUploader, new ArrayList<String>(), false, false);
+                authHeaderProvider, payloadDispatcher, new ArrayList<String>(), false, false);
 
         assertNull(payloadUploadDelegate.ifUnmodifiedSince());
+    }
 
+    @Test
+    public void testIfUnmodifiedSinceWithLM() {
+        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(
+                authHeaderProvider, payloadDispatcher, new ArrayList<String>(), false, false);
         try {
-            batchingUploader.getCurrentBatch().setLastModified(1471645412480L, true);
-        } catch (BatchingUploader.BatchingUploaderException e) {}
+            payloadDispatcher.batchWhiteboard.setLastModified(1471645412480L, true);
+        } catch (BatchingUploader.BatchingUploaderException e) {
+            fail();
+        }
 
         assertEquals("1471645412.480", payloadUploadDelegate.ifUnmodifiedSince());
     }

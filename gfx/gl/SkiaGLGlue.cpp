@@ -22,7 +22,6 @@
 using mozilla::gl::GLContext;
 using mozilla::gl::GLFeature;
 using mozilla::gl::SkiaGLGlue;
-using mozilla::gfx::DrawTarget;
 
 template<typename R, typename... A>
 static inline GrGLFunction<R (*)(A...)>

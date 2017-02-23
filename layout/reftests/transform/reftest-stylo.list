@@ -4,20 +4,20 @@
 # this test.
 fails == singular-1a.html singular-1a.html
 # Multiple transforms should act identically to nested divs.
-# == compound-1a.html compound-1a.html
-# == compound-1a.html compound-1a.html
-# == dynamic-inherit-1.html dynamic-inherit-1.html
+fails == compound-1a.html compound-1a.html # Bug 1341785
+fails == compound-1a.html compound-1a.html # Bug 1341785
+fails == dynamic-inherit-1.html dynamic-inherit-1.html # Bug 1341785
 == dynamic-addremove-1a.html dynamic-addremove-1a.html
 == dynamic-addremove-1b.html dynamic-addremove-1b.html
 == dynamic-addremove-1c.html dynamic-addremove-1c.html
 == dynamic-addremove-2.html dynamic-addremove-2.html
 # translatex should act like position: relative
-# == translatex-1a.html translatex-1a.html
+fails == translatex-1a.html translatex-1a.html # Bug 1341785
 fails == translatex-1b.html translatex-1b.html
 fails == translatex-1c.html translatex-1c.html
 fails == translatex-1d.html translatex-1d.html
 fails == translatex-1e.html translatex-1e.html
-# == translatex-1a.html translatex-1a.html
+fails == translatex-1a.html translatex-1a.html # Bug 1341785
 # translatey should act like position: relative
 fails == translatey-1a.html translatey-1a.html
 fails == translatey-1b.html translatey-1b.html
@@ -84,9 +84,9 @@ fails == origin-name-3b.html origin-name-3b.html
 # Snapping still applies after 90 degree rotations.
 == snapping-1.html snapping-1.html
 # SVG effects should work on transforms.
-# == transform-svg-1a.xhtml transform-svg-1a.xhtml
-# == transform-svg-2a.xhtml transform-svg-2a.xhtml
-# == transform-svg-2a.xhtml transform-svg-2a.xhtml
+fails == transform-svg-1a.xhtml transform-svg-1a.xhtml
+fails == transform-svg-2a.xhtml transform-svg-2a.xhtml
+fails == transform-svg-2a.xhtml transform-svg-2a.xhtml
 # skew should allow a mix of one and two parameters.
 fails == skew-1a.html skew-1a.html
 fails == skew-1b.html skew-1b.html
@@ -113,7 +113,7 @@ fails == scale-1b.html scale-1b.html
 fails == descendant-1.html descendant-1.html
 fails == propagate-inherit-boolean.html propagate-inherit-boolean.html
 # Ensure you can't move outside an iframe
-# == iframe-1.html iframe-1.html
+fails == iframe-1.html iframe-1.html
 # Bugs
 fails == 601894-1.html 601894-1.html
 fails == 601894-2.html 601894-2.html
@@ -136,8 +136,8 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-s
 == transform-origin-svg-2b.svg transform-origin-svg-2b.svg
 # Bug 1122526
 skip-if(stylo) == animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1.html # bug 1324620
-# == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html
-# == animate-layer-scale-inherit-3.html animate-layer-scale-inherit-3.html
+skip-if(stylo) == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html # Too intermittent.
+== animate-layer-scale-inherit-3.html animate-layer-scale-inherit-3.html
 # Bug 1301500
 == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1.html
-# == table-overflowed-by-animation.html table-overflowed-by-animation.html
+skip-if(stylo) == table-overflowed-by-animation.html table-overflowed-by-animation.html

@@ -272,16 +272,13 @@ this.SyncedTabs = {
     return this._internal.syncTabs(force);
   },
 
-  sortTabClientsByLastUsed(clients, maxTabs = Infinity) {
-    // First sort and filter the list of tabs for each client. Note that
+  sortTabClientsByLastUsed(clients) {
+    // First sort the list of tabs for each client. Note that
     // this module promises that the objects it returns are never
     // shared, so we are free to mutate those objects directly.
     for (let client of clients) {
       let tabs = client.tabs;
       tabs.sort((a, b) => b.lastUsed - a.lastUsed);
-      if (Number.isFinite(maxTabs)) {
-        client.tabs = tabs.slice(0, maxTabs);
-      }
     }
     // Now sort the clients - the clients are sorted in the order of the
     // most recent tab for that client (ie, it is important the tabs for

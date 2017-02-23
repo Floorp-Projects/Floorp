@@ -18,18 +18,20 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import java.util.ArrayList;
 
-public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
+class PayloadUploadDelegate implements SyncStorageRequestDelegate {
     private static final String LOG_TAG = "PayloadUploadDelegate";
 
     private static final String KEY_BATCH = "batch";
 
-    private final BatchingUploader uploader;
+    private final AuthHeaderProvider headerProvider;
+    private final PayloadDispatcher dispatcher;
     private ArrayList<String> postedRecordGuids;
     private final boolean isCommit;
     private final boolean isLastPayload;
 
-    public PayloadUploadDelegate(BatchingUploader uploader, ArrayList<String> postedRecordGuids, boolean isCommit, boolean isLastPayload) {
-        this.uploader = uploader;
+    PayloadUploadDelegate(AuthHeaderProvider headerProvider, PayloadDispatcher dispatcher, ArrayList<String> postedRecordGuids, boolean isCommit, boolean isLastPayload) {
+        this.headerProvider = headerProvider;
+        this.dispatcher = dispatcher;
         this.postedRecordGuids = postedRecordGuids;
         this.isCommit = isCommit;
         this.isLastPayload = isLastPayload;
@@ -37,16 +39,17 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
 
     @Override
     public AuthHeaderProvider getAuthHeaderProvider() {
-        return uploader.getRepositorySession().getServerRepository().getAuthHeaderProvider();
+        return headerProvider;
     }
 
     @Override
     public String ifUnmodifiedSince() {
-        final Long lastModified = uploader.getCurrentBatch().getLastModified();
+        final Long lastModified = dispatcher.batchWhiteboard.getLastModified();
         if (lastModified == null) {
             return null;
+        } else {
+            return Utils.millisecondsToDecimalSecondsString(lastModified);
         }
-        return Utils.millisecondsToDecimalSecondsString(lastModified);
     }
 
     @Override
@@ -80,8 +83,8 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
         // If we got a 200, it could be either a non-batching result, or a batch commit.
         // - if we're in a batching mode, we expect this to be a commit.
         // If we got a 202, we expect there to be a token present in the response
-        if (response.getStatusCode() == 200 && uploader.getCurrentBatch().getToken() != null) {
-            if (uploader.getInBatchingMode() && !isCommit) {
+        if (response.getStatusCode() == 200 && dispatcher.batchWhiteboard.getToken() != null) {
+            if (dispatcher.batchWhiteboard.getInBatchingMode() && !isCommit) {
                 handleRequestError(
                         new IllegalStateException("Got 200 OK in batching mode, but this was not a commit payload")
                 );
@@ -98,14 +101,14 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
 
         // With sanity checks out of the way, can now safely say if we're in a batching mode or not.
         // We only do this once per session.
-        if (uploader.getInBatchingMode() == null) {
-            uploader.setInBatchingMode(body.containsKey(KEY_BATCH));
+        if (dispatcher.batchWhiteboard.getInBatchingMode() == null) {
+            dispatcher.setInBatchingMode(body.containsKey(KEY_BATCH));
         }
 
         // Tell current batch about the token we've received.
         // Throws if token changed after being set once, or if we got a non-null token after a commit.
         try {
-            uploader.getCurrentBatch().setToken(body.getString(KEY_BATCH), isCommit);
+            dispatcher.batchWhiteboard.setToken(body.getString(KEY_BATCH), isCommit);
         } catch (BatchingUploader.BatchingUploaderException e) {
             handleRequestError(e);
             return;
@@ -113,9 +116,14 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
 
         // Will throw if Last-Modified changed when it shouldn't have.
         try {
-            uploader.setLastModified(
+            // In non-batching mode, every time we receive a Last-Modified timestamp, we expect it
+            // to change since records are "committed" (become visible to other clients) on every
+            // payload.
+            // In batching mode, we only expect Last-Modified to change when we commit a batch.
+            dispatcher.batchWhiteboard.setLastModified(
                     response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED),
-                    isCommit);
+                    isCommit || !dispatcher.batchWhiteboard.getInBatchingMode()
+            );
         } catch (BatchingUploader.BatchingUploaderException e) {
             handleRequestError(e);
             return;
@@ -134,7 +142,7 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
             Logger.trace(LOG_TAG, "Successful records: " + success.toString());
             for (Object o : success) {
                 try {
-                    uploader.recordSucceeded((String) o);
+                    dispatcher.batchWhiteboard.recordSucceeded((String) o);
                 } catch (ClassCastException e) {
                     Logger.error(LOG_TAG, "Got exception parsing POST success guid.", e);
                     // Not much to be done.
@@ -155,14 +163,23 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
         if (failed != null && !failed.object.isEmpty()) {
             Logger.debug(LOG_TAG, "Failed records: " + failed.object.toString());
             for (String guid : failed.keySet()) {
-                uploader.recordFailed(guid);
+                dispatcher.recordFailed(guid);
             }
         }
         // GC
         failed = null;
 
         // And we're done! Let uploader finish up.
-        uploader.payloadSucceeded(response, isCommit, isLastPayload);
+        dispatcher.payloadSucceeded(
+                response,
+                dispatcher.batchWhiteboard.getSuccessRecordGuids(),
+                isCommit,
+                isLastPayload
+        );
+
+        if (isCommit && !isLastPayload) {
+            dispatcher.prepareForNextBatch();
+        }
     }
 
     @Override
@@ -173,13 +190,13 @@ public class PayloadUploadDelegate implements SyncStorageRequestDelegate {
     @Override
     public void handleRequestError(Exception e) {
         for (String guid : postedRecordGuids) {
-            uploader.recordFailed(e, guid);
+            dispatcher.recordFailed(e, guid);
         }
         // GC
         postedRecordGuids = null;
 
         if (isLastPayload) {
-            uploader.lastPayloadFailed();
+            dispatcher.lastPayloadFailed();
         }
     }
 }

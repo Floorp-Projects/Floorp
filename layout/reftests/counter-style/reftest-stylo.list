@@ -18,14 +18,14 @@ fails == descriptor-prefix.html descriptor-prefix.html
 fails == descriptor-suffix.html descriptor-suffix.html
 fails == descriptor-range.html descriptor-range.html
 fails == descriptor-pad.html descriptor-pad.html
-# == descriptor-fallback.html descriptor-fallback.html
+fails == descriptor-fallback.html descriptor-fallback.html # Bug 1328319
 fails == descriptor-symbols.html descriptor-symbols.html
 fails == descriptor-negative-invalid.html descriptor-negative-invalid.html
 fails == descriptor-prefix-invalid.html descriptor-prefix-invalid.html
 fails == descriptor-suffix-invalid.html descriptor-suffix-invalid.html
 fails == descriptor-range-invalid.html descriptor-range-invalid.html
 fails == descriptor-pad-invalid.html descriptor-pad-invalid.html
-# == descriptor-fallback.html descriptor-fallback.html
+fails == descriptor-fallback.html descriptor-fallback.html
 fails == descriptor-symbols-invalid.html descriptor-symbols-invalid.html
 fails == name-case-sensitivity.html name-case-sensitivity.html
 fails == dependent-builtin.html dependent-builtin.html

@@ -10,10 +10,6 @@
 
 #include <gtk/gtk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 /*
  * MozContainer
  *
@@ -78,9 +74,5 @@ void       moz_container_move          (MozContainer *container,
                                         gint          y,
                                         gint          width,
                                         gint          height);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __MOZ_CONTAINER_H__ */

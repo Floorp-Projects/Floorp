@@ -996,7 +996,7 @@ private:
   IsOwnerAudible() const
   {
     // Muted or the volume should not be ~0
-    if (mOwner->Muted() || (std::fabs(mOwner->Volume()) <= 1e-7)) {
+    if (mOwner->mMuted || (std::fabs(mOwner->Volume()) <= 1e-7)) {
       return AudioChannelService::AudibleState::eNotAudible;
     }
 
@@ -2039,15 +2039,19 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
              (!aTrack->AsVideoTrack() || !aTrack->AsVideoTrack()->Selected()));
 
   if (aTrack->AsAudioTrack()) {
-    bool shouldMute = true;
-    for (uint32_t i = 0; i < AudioTracks()->Length(); ++i) {
-      if ((*AudioTracks())[i]->Enabled()) {
-        shouldMute = false;
-        break;
+    // If we don't have any alive track , we don't need to mute MediaElement.
+    if (AudioTracks()->Length() > 0) {
+      bool shouldMute = true;
+      for (uint32_t i = 0; i < AudioTracks()->Length(); ++i) {
+        if ((*AudioTracks())[i]->Enabled()) {
+          shouldMute = false;
+          break;
+        }
       }
-    }
-    if (shouldMute) {
-      SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
+
+      if (shouldMute) {
+        SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
+      }
     }
   } else if (aTrack->AsVideoTrack()) {
     if (mSrcStream) {

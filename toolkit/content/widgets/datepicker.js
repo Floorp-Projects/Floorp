@@ -62,6 +62,8 @@ function DatePicker(context) {
         isYearSet: false,
         isMonthSet: false,
         isDateSet: false,
+        datetimeOrders: new Intl.DateTimeFormat(locale)
+                          .formatToParts(new Date(0)).map(part => part.type),
         getDayString: new Intl.NumberFormat(locale).format,
         getWeekHeaderString: weekday => weekdayStrings[weekday],
         getMonthString: month => monthStrings[month],
@@ -110,6 +112,7 @@ function DatePicker(context) {
           setYear: this.state.setYear,
           setMonth: this.state.setMonth,
           getMonthString: this.state.getMonthString,
+          datetimeOrders: this.state.datetimeOrders,
           locale: this.state.locale
         }, {
           monthYear: this.context.monthYear,
@@ -287,6 +290,7 @@ function DatePicker(context) {
    *          {Function} setYear
    *          {Function} setMonth
    *          {Function} getMonthString
+   *          {Array<String>} datetimeOrders
    *        }
    * @param {DOMElement} context
    */
@@ -294,12 +298,18 @@ function DatePicker(context) {
     const spinnerSize = 5;
     const yearFormat = new Intl.DateTimeFormat(options.locale, { year: "numeric" }).format;
     const dateFormat = new Intl.DateTimeFormat(options.locale, { year: "numeric", month: "long" }).format;
+    const spinnerOrder =
+      options.datetimeOrders.indexOf("month") < options.datetimeOrders.indexOf("year") ?
+      "order-month-year" : "order-year-month";
+
+    context.monthYearView.classList.add(spinnerOrder);
 
     this.context = context;
     this.state = { dateFormat };
     this.props = {};
     this.components = {
       month: new Spinner({
+        id: "spinner-month",
         setValue: month => {
           this.state.isMonthSet = true;
           options.setMonth(month);
@@ -308,6 +318,7 @@ function DatePicker(context) {
         viewportSize: spinnerSize
       }, context.monthYearView),
       year: new Spinner({
+        id: "spinner-year",
         setValue: year => {
           this.state.isYearSet = true;
           options.setYear(year);

@@ -1028,7 +1028,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 #ifdef DEBUG
   // Note: break-before means ignore the reflow metrics since the
   // frame will be reflowed another time.
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+  if (!aReflowStatus.IsInlineBreakBefore()) {
     if ((CRAZY_SIZE(reflowOutput.ISize(lineWM)) ||
          CRAZY_SIZE(reflowOutput.BSize(lineWM))) &&
         !LineContainerFrame()->GetParent()->IsCrazySizeAssertSuppressed()) {
@@ -1067,12 +1067,12 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     *aMetrics = reflowOutput;
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
+  if (!aReflowStatus.IsInlineBreakBefore()) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up).
-    if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
+    if (aReflowStatus.IsComplete()) {
       nsIFrame* kidNextInFlow = aFrame->GetNextInFlow();
       if (nullptr != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
@@ -1136,7 +1136,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                           optionalBreakAfterFits,
                                           gfxBreakPriority::eNormalBreak)) {
             // If this returns true then we are being told to actually break here.
-            aReflowStatus = NS_INLINE_LINE_BREAK_AFTER(aReflowStatus);
+            aReflowStatus.SetInlineLineBreakAfter();
           }
         }
       }
@@ -1293,7 +1293,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
    * For box-decoration-break:clone we apply the end margin on all
    * continuations (that are not letter frames).
    */
-  if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
+  if ((aStatus.IsIncomplete() ||
        pfd->mFrame->LastInFlow()->GetNextContinuation() ||
        pfd->mFrame->FrameIsNonLastInIBSplit()) &&
       !pfd->mIsLetterFrame &&
@@ -1418,7 +1418,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 #ifdef NOISY_CAN_PLACE_FRAME
   printf("   ==> didn't fit\n");
 #endif
-  aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+  aStatus.SetInlineLineBreakBeforeAndReset();
   return false;
 }
 

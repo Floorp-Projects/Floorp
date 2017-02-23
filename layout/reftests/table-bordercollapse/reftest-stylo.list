@@ -96,7 +96,7 @@ fails == bordercolor-3.html bordercolor-3.html
 fails == bordercolor-4.html bordercolor-4.html
 == empty-toprow.html empty-toprow.html
 == double_borders.html double_borders.html
-# == border-collapse-rtl.html border-collapse-rtl.html
+== border-collapse-rtl.html border-collapse-rtl.html
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
