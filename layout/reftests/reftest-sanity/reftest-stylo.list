@@ -122,11 +122,11 @@ fails pref(not.a.real.pref.name,1) == font-download.html font-download.html
 #pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
 pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
 pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
-# pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
+pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
 #pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
 #pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
 # a string pref
-# pref(font.default.x-western,"serif") == font-serif.html font-serif.html
+pref(font.default.x-western,"serif") == font-serif.html font-serif.html
 pref(font.default.x-western,"serif") == font-sans-serif.html font-sans-serif.html
 pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-sans-serif.html
 #fails pref(font.default.x-western,"sans-serif") == font-serif.html font-serif.html
@@ -140,15 +140,15 @@ ref-pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
 # ref-pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
 # ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
 # font-default keeps failing
-# #fails test-pref(font.size.variable.x-western,16) == font-default.html font-default.html
-# #fails test-pref(font.size.variable.x-western,16) == font-default.html font-default.html
-# #fails test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
-# #fails test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
-# #fails test-pref(font.size.variable.x-western,false) == font-default.html font-default.html
-# #fails test-pref(font.size.variable.x-western,"foo") == font-default.html font-default.html
-# #fails ref-pref(font.size.variable.x-western,16) test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
-# #fails ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,16) == font-default.html font-default.html
-# #fails ref-pref(font.size.variable.x-western,24) test-pref(font.size.variable.x-western,24) == font-default.html font-default.html
+pref(font.size.variable.x-western,16) == font-default.html font-default.html
+pref(font.size.variable.x-western,16) == font-default.html font-default.html
+pref(font.size.variable.x-western,24) == font-default.html font-default.html
+pref(font.size.variable.x-western,24) == font-default.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-default.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,16) pref(font.size.variable.x-western,24) == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,24) pref(font.size.variable.x-western,16) == font-default.html font-default.html
+# #fails ref-pref(font.size.variable.x-western,24) pref(font.size.variable.x-western,24) == font-default.html font-default.html
 # reftest syntax: fuzzy(maxPixelDifference,maxNumberDifferingPixels)
 fuzzy(1,250000) == fuzzy.html fuzzy.html
 fuzzy(1,250000) == too-fuzzy.html too-fuzzy.html

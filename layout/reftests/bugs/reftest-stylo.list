@@ -744,8 +744,8 @@ fails == 385870-2.html 385870-2.html
 == 386014-1c.html 386014-1c.html
 fails == 386065-1.html 386065-1.html
 == 386065-2.html 386065-2.html
-fails test-pref(layout.float-fragments-inside-column.enabled,false) fails == 386147-1.html 386147-1.html
-fails test-pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.html 386147-1.html
+fails pref(layout.float-fragments-inside-column.enabled,false) == 386147-1.html 386147-1.html # Bug 1341095
+fails pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.html 386147-1.html # Bug 1341095
 == 386310-1a.html 386310-1a.html
 == 386310-1b.html 386310-1b.html
 == 386310-1c.html 386310-1c.html
@@ -1179,8 +1179,8 @@ fuzzy(127,2) == 448193.html 448193.html
 fails == 449149-1a.html 449149-1a.html
 fails == 449149-1b.html 449149-1b.html
 # Retry the above with XBL scopes
-fails test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1a.html 449149-1a.html
-fails test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.html
+fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1a.html 449149-1a.html
+fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.html
 == 449149-2.html 449149-2.html
 == 449171-1.html 449171-1.html
 fails == 449362-1.html 449362-1.html
@@ -1524,8 +1524,8 @@ fails == 562835-2.html 562835-2.html
 == 563584-3.html 563584-3.html
 == 563584-4.html 563584-4.html
 == 563584-5.html 563584-5.html
-# test-pref(layout.float-fragments-inside-column.enabled,false) == 563584-6-columns.html 563584-6-columns.html
-# test-pref(layout.float-fragments-inside-column.enabled,true) == 563584-6-columns.html 563584-6-columns.html
+pref(layout.float-fragments-inside-column.enabled,false) == 563584-6-columns.html 563584-6-columns.html
+pref(layout.float-fragments-inside-column.enabled,true) == 563584-6-columns.html 563584-6-columns.html
 fuzzy-if(Android,2,48) == 563584-6-printing.html 563584-6-printing.html
 fuzzy-if(Android,2,48) == 563584-7.html 563584-7.html
 # FIXME: It would be nice to have variants of these -8 tests for the
@@ -1844,7 +1844,7 @@ fails == 1042104-1.html 1042104-1.html
 == 1050493-1.html 1050493-1.html
 == 1050788-1.html 1050788-1.html
 fails == 1053035-1-flex.html 1053035-1-flex.html
-fails test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.html
+fails pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.html
 == 1059167-1.html 1059167-1.html
 fails == 1059498-1.html 1059498-1.html
 fails == 1059498-2.html 1059498-2.html
@@ -1852,10 +1852,10 @@ fails == 1059498-3.html 1059498-3.html
 == 1062108-1.html 1062108-1.html
 fails == 1062792-1.html 1062792-1.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
-# test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html
+fails pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html # Bug 1293844
 fails == 1069716-1.html 1069716-1.html
 == 1078262-1.html 1078262-1.html
-test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html
+pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html
 == 1081185-1.html 1081185-1.html
 == 1097437-1.html 1097437-1.html
 == 1103258-1.html 1103258-1.html
