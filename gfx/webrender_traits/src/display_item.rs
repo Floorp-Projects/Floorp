@@ -3,32 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use display_list::AuxiliaryListsBuilder;
-use {BorderRadius, BorderDisplayItem, ClipRegion, ColorF, ComplexClipRegion};
+use {BorderRadius, ClipRegion, ColorF, ComplexClipRegion};
 use {FontKey, ImageKey, PipelineId, ScrollLayerId, ScrollLayerInfo, ServoScrollRootId};
 use {ImageMask, ItemRange};
 use {LayoutSize, LayoutPoint, LayoutRect};
-
-impl BorderDisplayItem {
-    pub fn top_left_inner_radius(&self) -> LayoutSize {
-        LayoutSize::new((self.radius.top_left.width - self.left.width).max(0.0),
-                     (self.radius.top_left.height - self.top.width).max(0.0))
-    }
-
-    pub fn top_right_inner_radius(&self) -> LayoutSize {
-        LayoutSize::new((self.radius.top_right.width - self.right.width).max(0.0),
-                     (self.radius.top_right.height - self.top.width).max(0.0))
-    }
-
-    pub fn bottom_left_inner_radius(&self) -> LayoutSize {
-        LayoutSize::new((self.radius.bottom_left.width - self.left.width).max(0.0),
-                     (self.radius.bottom_left.height - self.bottom.width).max(0.0))
-    }
-
-    pub fn bottom_right_inner_radius(&self) -> LayoutSize {
-        LayoutSize::new((self.radius.bottom_right.width - self.right.width).max(0.0),
-                     (self.radius.bottom_right.height - self.bottom.width).max(0.0))
-    }
-}
 
 impl BorderRadius {
     pub fn zero() -> BorderRadius {
@@ -49,7 +27,23 @@ impl BorderRadius {
         }
     }
 
-    pub fn is_uniform(&self) -> Option<LayoutSize> {
+    pub fn uniform_size(radius: LayoutSize) -> BorderRadius {
+        BorderRadius {
+            top_left: radius,
+            top_right: radius,
+            bottom_left: radius,
+            bottom_right: radius,
+        }
+    }
+
+    pub fn is_uniform(&self) -> Option<f32> {
+        match self.is_uniform_size() {
+            Some(radius) if radius.width == radius.height => Some(radius.width),
+            _ => None
+        }
+    }
+
+    pub fn is_uniform_size(&self) -> Option<LayoutSize> {
         let uniform_radius = self.top_left;
         if self.top_right == uniform_radius &&
            self.bottom_left == uniform_radius &&
@@ -62,7 +56,7 @@ impl BorderRadius {
 
     pub fn is_zero(&self) -> bool {
         if let Some(radius) = self.is_uniform() {
-            radius.width == 0.0 && radius.height == 0.0
+            radius == 0.0
         } else {
             false
         }
