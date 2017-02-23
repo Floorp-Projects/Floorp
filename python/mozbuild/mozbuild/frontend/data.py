@@ -420,7 +420,7 @@ class HostSimpleProgram(HostMixin, BaseProgram):
     KIND = 'host'
 
 
-def cargo_target_directory(context, target_var):
+def cargo_output_directory(context, target_var):
     # cargo creates several directories and places its build artifacts
     # in those directories.  The directory structure depends not only
     # on the target, but also what sort of build we are doing.
@@ -446,7 +446,7 @@ class BaseRustProgram(ContextDerived):
         ContextDerived.__init__(self, context)
         self.name = name
         self.cargo_file = cargo_file
-        cargo_dir = cargo_target_directory(context, self.TARGET_SUBST_VAR)
+        cargo_dir = cargo_output_directory(context, self.TARGET_SUBST_VAR)
         exe_file = '%s%s' % (name, context.config.substs.get(self.SUFFIX_VAR, ''))
         self.location = mozpath.join(cargo_dir, exe_file)
 
@@ -542,7 +542,7 @@ class RustLibrary(StaticLibrary):
                                      basename.replace('-', '_'),
                                      context.config.lib_suffix)
         self.dependencies = dependencies
-        build_dir = cargo_target_directory(context, self.TARGET_SUBST_VAR)
+        build_dir = cargo_output_directory(context, self.TARGET_SUBST_VAR)
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
         self.features = features
