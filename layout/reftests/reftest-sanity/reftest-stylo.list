@@ -33,7 +33,7 @@ HTTP == about:blank about:blank
 == default.html default.html
 == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 HTTP == default.html default.html
-# HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
+HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 == blank.html blank.html
 HTTP == blank.html blank.html
 

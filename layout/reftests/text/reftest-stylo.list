@@ -225,7 +225,7 @@ fails pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == graphite-04-sd.
 # tests to compare graphite to opentype (will trivially pass when graphite not enabled)
 fails HTTP(..) == graphite-05-ot-only.html graphite-05-ot-only.html
 fails HTTP(..) == graphite-05-ot-only.html graphite-05-ot-only.html
-# HTTP(..) == graphite-05-simple.html graphite-05-simple.html
+fails HTTP(..) == graphite-05-simple.html graphite-05-simple.html # Bug 1290237
 fails HTTP(..) == graphite-05-multipass.html graphite-05-multipass.html
 fails HTTP(..) == graphite-05-lang.html graphite-05-lang.html
 fails HTTP(..) == graphite-05-badlang.html graphite-05-badlang.html

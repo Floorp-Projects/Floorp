@@ -5,7 +5,7 @@ fails HTTP(..) == 1079154-1-vertical-rl-columns.html 1079154-1-vertical-rl-colum
 == 1082844.html 1082844.html
 fails HTTP(..) == 1083748.html 1083748.html
 fails HTTP(..) == 1083848-1-inline-border.html 1083848-1-inline-border.html
-# HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background.html
+fails HTTP(..) == 1083848-2-inline-background.html 1083848-2-inline-background.html # Bug 1290237
 fails == 1083848-3-inline-background-repeat.html 1083848-3-inline-background-repeat.html
 == 1083892-1.html 1083892-1.html
 == 1086883-1a.html 1086883-1a.html
@@ -72,36 +72,36 @@ fails == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
 fails == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html
 # fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1.html
 
-# HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-default-horizontal-tb-ltr.html
-# HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-start-horizontal-tb-ltr.html
-# HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-end-horizontal-tb-ltr.html
-# HTTP(..) == 1127488-align-left-horizontal-tb-ltr.html 1127488-align-left-horizontal-tb-ltr.html
-# HTTP(..) == 1127488-align-right-horizontal-tb-ltr.html 1127488-align-right-horizontal-tb-ltr.html
-# HTTP(..) == 1127488-align-default-horizontal-tb-rtl.html 1127488-align-default-horizontal-tb-rtl.html
-# HTTP(..) == 1127488-align-start-horizontal-tb-rtl.html 1127488-align-start-horizontal-tb-rtl.html
-# HTTP(..) == 1127488-align-end-horizontal-tb-rtl.html 1127488-align-end-horizontal-tb-rtl.html
-# HTTP(..) == 1127488-align-left-horizontal-tb-rtl.html 1127488-align-left-horizontal-tb-rtl.html
-# HTTP(..) == 1127488-align-right-horizontal-tb-rtl.html 1127488-align-right-horizontal-tb-rtl.html
-# HTTP(..) == 1127488-align-default-vertical-rl-rtl.html 1127488-align-default-vertical-rl-rtl.html
-# HTTP(..) == 1127488-align-start-vertical-rl-rtl.html 1127488-align-start-vertical-rl-rtl.html
-# HTTP(..) == 1127488-align-end-vertical-rl-rtl.html 1127488-align-end-vertical-rl-rtl.html
-# HTTP(..) == 1127488-align-left-vertical-rl-rtl.html 1127488-align-left-vertical-rl-rtl.html
-# HTTP(..) == 1127488-align-right-vertical-rl-rtl.html 1127488-align-right-vertical-rl-rtl.html
-# HTTP(..) == 1127488-align-default-vertical-rl-ltr.html 1127488-align-default-vertical-rl-ltr.html
-# HTTP(..) == 1127488-align-start-vertical-rl-ltr.html 1127488-align-start-vertical-rl-ltr.html
-# HTTP(..) == 1127488-align-end-vertical-rl-ltr.html 1127488-align-end-vertical-rl-ltr.html
-# HTTP(..) == 1127488-align-left-vertical-rl-ltr.html 1127488-align-left-vertical-rl-ltr.html
-# HTTP(..) == 1127488-align-right-vertical-rl-ltr.html 1127488-align-right-vertical-rl-ltr.html
-# HTTP(..) == 1127488-align-default-vertical-lr-rtl.html 1127488-align-default-vertical-lr-rtl.html
-# HTTP(..) == 1127488-align-start-vertical-lr-rtl.html 1127488-align-start-vertical-lr-rtl.html
-# HTTP(..) == 1127488-align-end-vertical-lr-rtl.html 1127488-align-end-vertical-lr-rtl.html
-# HTTP(..) == 1127488-align-left-vertical-lr-rtl.html 1127488-align-left-vertical-lr-rtl.html
-# HTTP(..) == 1127488-align-right-vertical-lr-rtl.html 1127488-align-right-vertical-lr-rtl.html
-# HTTP(..) == 1127488-align-default-vertical-lr-ltr.html 1127488-align-default-vertical-lr-ltr.html
-# HTTP(..) == 1127488-align-start-vertical-lr-ltr.html 1127488-align-start-vertical-lr-ltr.html
-# HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-end-vertical-lr-ltr.html
-# HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-left-vertical-lr-ltr.html
-# HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-right-vertical-lr-ltr.html
+HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-default-horizontal-tb-ltr.html
+HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-start-horizontal-tb-ltr.html
+HTTP(..) == 1127488-align-end-horizontal-tb-ltr.html 1127488-align-end-horizontal-tb-ltr.html
+HTTP(..) == 1127488-align-left-horizontal-tb-ltr.html 1127488-align-left-horizontal-tb-ltr.html
+HTTP(..) == 1127488-align-right-horizontal-tb-ltr.html 1127488-align-right-horizontal-tb-ltr.html
+HTTP(..) == 1127488-align-default-horizontal-tb-rtl.html 1127488-align-default-horizontal-tb-rtl.html
+HTTP(..) == 1127488-align-start-horizontal-tb-rtl.html 1127488-align-start-horizontal-tb-rtl.html
+HTTP(..) == 1127488-align-end-horizontal-tb-rtl.html 1127488-align-end-horizontal-tb-rtl.html
+HTTP(..) == 1127488-align-left-horizontal-tb-rtl.html 1127488-align-left-horizontal-tb-rtl.html
+HTTP(..) == 1127488-align-right-horizontal-tb-rtl.html 1127488-align-right-horizontal-tb-rtl.html
+HTTP(..) == 1127488-align-default-vertical-rl-rtl.html 1127488-align-default-vertical-rl-rtl.html
+HTTP(..) == 1127488-align-start-vertical-rl-rtl.html 1127488-align-start-vertical-rl-rtl.html
+HTTP(..) == 1127488-align-end-vertical-rl-rtl.html 1127488-align-end-vertical-rl-rtl.html
+HTTP(..) == 1127488-align-left-vertical-rl-rtl.html 1127488-align-left-vertical-rl-rtl.html
+HTTP(..) == 1127488-align-right-vertical-rl-rtl.html 1127488-align-right-vertical-rl-rtl.html
+HTTP(..) == 1127488-align-default-vertical-rl-ltr.html 1127488-align-default-vertical-rl-ltr.html
+HTTP(..) == 1127488-align-start-vertical-rl-ltr.html 1127488-align-start-vertical-rl-ltr.html
+HTTP(..) == 1127488-align-end-vertical-rl-ltr.html 1127488-align-end-vertical-rl-ltr.html
+HTTP(..) == 1127488-align-left-vertical-rl-ltr.html 1127488-align-left-vertical-rl-ltr.html
+HTTP(..) == 1127488-align-right-vertical-rl-ltr.html 1127488-align-right-vertical-rl-ltr.html
+HTTP(..) == 1127488-align-default-vertical-lr-rtl.html 1127488-align-default-vertical-lr-rtl.html
+HTTP(..) == 1127488-align-start-vertical-lr-rtl.html 1127488-align-start-vertical-lr-rtl.html
+HTTP(..) == 1127488-align-end-vertical-lr-rtl.html 1127488-align-end-vertical-lr-rtl.html
+HTTP(..) == 1127488-align-left-vertical-lr-rtl.html 1127488-align-left-vertical-lr-rtl.html
+HTTP(..) == 1127488-align-right-vertical-lr-rtl.html 1127488-align-right-vertical-lr-rtl.html
+HTTP(..) == 1127488-align-default-vertical-lr-ltr.html 1127488-align-default-vertical-lr-ltr.html
+HTTP(..) == 1127488-align-start-vertical-lr-ltr.html 1127488-align-start-vertical-lr-ltr.html
+HTTP(..) == 1127488-align-end-vertical-lr-ltr.html 1127488-align-end-vertical-lr-ltr.html
+HTTP(..) == 1127488-align-left-vertical-lr-ltr.html 1127488-align-left-vertical-lr-ltr.html
+HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-right-vertical-lr-ltr.html
 == 1130907-intrinsic-sizing-1.html 1130907-intrinsic-sizing-1.html
 == 1130907-intrinsic-sizing-2.html 1130907-intrinsic-sizing-2.html
 == 1131013-vertical-bidi.html 1131013-vertical-bidi.html
