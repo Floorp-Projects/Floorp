@@ -20,6 +20,10 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 
+#ifdef XP_WIN
+#include "mozilla/TlsAllocationTracker.h"
+#endif
+
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "jsfriendapi.h"
@@ -44,7 +48,6 @@
 #include "breakpad-client/mac/crash_generation/client_info.h"
 #include "breakpad-client/mac/crash_generation/crash_generation_server.h"
 #include "breakpad-client/mac/handler/exception_handler.h"
-#include <string>
 #include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <crt_externs.h>
@@ -1414,6 +1417,13 @@ PrepareChildExceptionTimeAnnotations()
       WriteAnnotation(apiData, "TopPendingIPCType", topPendingIPCTypeBuffer);
     }
   }
+
+#ifdef XP_WIN
+  const char* tlsAllocations = mozilla::GetTlsAllocationStacks();
+  if (tlsAllocations) {
+    WriteAnnotation(apiData, "TlsAllocations", tlsAllocations);
+  }
+#endif
 }
 
 #ifdef XP_WIN
