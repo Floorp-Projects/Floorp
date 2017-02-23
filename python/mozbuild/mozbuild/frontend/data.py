@@ -523,13 +523,14 @@ class RustLibrary(StaticLibrary):
         'dependencies',
         'deps_path',
         'features',
+        'target_dir',
     )
     TARGET_SUBST_VAR = 'RUST_TARGET'
     FEATURES_VAR = 'RUST_LIBRARY_FEATURES'
     LIB_FILE_VAR = 'RUST_LIBRARY_FILE'
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
-                 features, **args):
+                 features, target_dir, **args):
         StaticLibrary.__init__(self, context, basename, **args)
         self.cargo_file = cargo_file
         self.crate_type = crate_type
@@ -542,10 +543,12 @@ class RustLibrary(StaticLibrary):
                                      basename.replace('-', '_'),
                                      context.config.lib_suffix)
         self.dependencies = dependencies
-        build_dir = cargo_output_directory(context, self.TARGET_SUBST_VAR)
+        build_dir = mozpath.join(target_dir,
+                                 cargo_output_directory(context, self.TARGET_SUBST_VAR))
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
         self.features = features
+        self.target_dir = target_dir
 
 
 class SharedLibrary(Library):

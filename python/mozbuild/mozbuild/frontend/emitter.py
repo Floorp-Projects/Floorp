@@ -465,6 +465,8 @@ class TreeMetadataEmitter(LoggingMixin):
                      ' in [profile.%s] section') % (libname, profile_name),
                     context)
 
+        cargo_target_dir = context.get('RUST_LIBRARY_TARGET_DIR', '.')
+
         dependencies = set(config.get('dependencies', {}).iterkeys())
 
         features = context.get(cls.FEATURES_VAR, [])
@@ -475,7 +477,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 context)
 
         return cls(context, libname, cargo_file, crate_type, dependencies,
-                   features, **static_args)
+                   features, cargo_target_dir, **static_args)
 
 
     def _handle_linkables(self, context, passthru, generated_files):
