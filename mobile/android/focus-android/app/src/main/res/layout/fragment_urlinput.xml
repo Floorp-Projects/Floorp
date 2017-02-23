@@ -16,7 +16,8 @@
         android:layout_height="81dp"
         android:paddingTop="25dp"
         android:background="@color/colorUrlInput"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:elevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
