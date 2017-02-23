@@ -255,7 +255,7 @@ UDPSocketParent::RecvConnect(const UDPAddressInfo& aAddressInfo)
   nsCOMPtr<nsIEventTarget> thread(NS_GetCurrentThread());
   Unused <<
     NS_WARN_IF(NS_FAILED(GetSTSThread()->Dispatch(WrapRunnable(
-                                                    this,
+                                                    RefPtr<UDPSocketParent>(this),
                                                     &UDPSocketParent::DoConnect,
                                                     mSocket,
                                                     thread,
@@ -277,7 +277,7 @@ UDPSocketParent::SendConnectResponse(nsIEventTarget *aThread,
 {
   Unused <<
     NS_WARN_IF(NS_FAILED(aThread->Dispatch(WrapRunnable(
-                                             this,
+                                             RefPtr<UDPSocketParent>(this),
                                              &UDPSocketParent::DoSendConnectResponse,
                                              aAddressInfo),
                                            NS_DISPATCH_NORMAL)));
@@ -596,7 +596,7 @@ UDPSocketParent::SendInternalError(nsIEventTarget *aThread,
   UDPSOCKET_LOG(("SendInternalError: %u", aLineNo));
   Unused <<
     NS_WARN_IF(NS_FAILED(aThread->Dispatch(WrapRunnable(
-                                             this,
+                                             RefPtr<UDPSocketParent>(this),
                                              &UDPSocketParent::FireInternalError,
                                              aLineNo),
                                            NS_DISPATCH_NORMAL)));
