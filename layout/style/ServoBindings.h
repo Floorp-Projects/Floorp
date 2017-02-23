@@ -99,6 +99,17 @@ public:
   ThreadSafePrincipalHolder* mPrincipal;
 };
 
+class GeckoParserExtraData
+{
+public:
+  GeckoParserExtraData(nsIURI* aBaseURI,
+                       nsIURI* aReferrer,
+                       nsIPrincipal* aPrincipal);
+  RefPtr<ThreadSafeURIHolder> mBaseURI;
+  RefPtr<ThreadSafeURIHolder> mReferrer;
+  RefPtr<ThreadSafePrincipalHolder> mPrincipal;
+};
+
 // DOM Traversal.
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
 bool Gecko_NodeIsElement(RawGeckoNodeBorrowed node);
