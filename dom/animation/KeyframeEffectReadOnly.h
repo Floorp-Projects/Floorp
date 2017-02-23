@@ -130,6 +130,13 @@ struct AnimationProperty
   }
 };
 
+struct ServoComputedStyleValues
+{
+  const ServoComputedValues* mCurrentStyle;
+  const ServoComputedValues* mParentStyle;
+  explicit operator bool() const { return true; }
+};
+
 struct ElementPropertyTransition;
 
 namespace dom {

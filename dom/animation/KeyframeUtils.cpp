@@ -595,8 +595,7 @@ KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
 KeyframeUtils::GetComputedKeyframeValues(
   const nsTArray<Keyframe>& aKeyframes,
   dom::Element* aElement,
-  const ServoComputedValues* aCurrentStyle,
-  const ServoComputedValues* aParentStyle)
+  const ServoComputedStyleValues& aServoValues)
 {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aElement->OwnerDoc()->IsStyledByServo());
@@ -610,8 +609,8 @@ KeyframeUtils::GetComputedKeyframeValues(
   result.AppendElements(aKeyframes.Length());
 
   Servo_GetComputedKeyframeValues(&aKeyframes,
-                                  aCurrentStyle,
-                                  aParentStyle,
+                                  aServoValues.mCurrentStyle,
+                                  aServoValues.mParentStyle,
                                   presContext,
                                   &result);
   return result;
