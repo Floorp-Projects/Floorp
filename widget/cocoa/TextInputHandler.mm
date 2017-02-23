@@ -2219,8 +2219,20 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   }
 
   // Don't let the same event be fired twice when hitting
-  // enter/return! (Bug 420502)
-  if (currentKeyEvent && !currentKeyEvent->CanDispatchKeyPressEvent()) {
+  // enter/return for Bug 420502.  However, Korean IME (or some other
+  // simple IME) may work without marked text.  For example, composing
+  // character may be inserted as committed text and it's modified with
+  // aReplacementRange.  When a keydown starts new composition with
+  // committing previous character, InsertText() may be called twice,
+  // one is for committing previous character and then, inserting new
+  // composing character as committed character.  In the latter case,
+  // |CanDispatchKeyPressEvent()| returns true but we need to dispatch
+  // keypress event for the new character.  So, when IME tries to insert
+  // printable characters, we should ignore current key event state even
+  // after the keydown has already caused dispatching composition event.
+  // XXX Anyway, we should sort out around this at fixing bug 1338460.
+  if (currentKeyEvent && !currentKeyEvent->CanDispatchKeyPressEvent() &&
+      (str.IsEmpty() || (str.Length() == 1 && !IsPrintableChar(str[0])))) {
     return;
   }
 
