@@ -18,7 +18,7 @@ fails == mask-mode-to-mask-type.html mask-mode-to-mask-type.html
 fails == mask-image-1a.html mask-image-1a.html
 fails == mask-image-1b.html mask-image-1b.html
 fails == mask-image-1c.html mask-image-1c.html
-fails == mask-image-1d.html mask-image-1d.html
+== mask-image-1d.html mask-image-1d.html
 == mask-image-2.html mask-image-2.html
 fails == mask-image-3a.html mask-image-3a.html
 fails == mask-image-3b.html mask-image-3b.html
@@ -85,21 +85,21 @@ fails == mask-size-percent-percent-stretch.html mask-size-percent-percent-stretc
 default-preferences pref(layout.css.clip-path-shapes.enabled,true)
 
 fuzzy-if(winWidget,1,21) == clip-path-contentBox-1a.html clip-path-contentBox-1a.html
-fails == clip-path-contentBox-1b.html clip-path-contentBox-1b.html
-fails == clip-path-contentBox-1c.html clip-path-contentBox-1c.html
+== clip-path-contentBox-1b.html clip-path-contentBox-1b.html
+== clip-path-contentBox-1c.html clip-path-contentBox-1c.html
 fuzzy-if(winWidget,1,21) == clip-path-paddingBox-1a.html clip-path-paddingBox-1a.html
-fails == clip-path-paddingBox-1b.html clip-path-paddingBox-1b.html
-fails == clip-path-paddingBox-1c.html clip-path-paddingBox-1c.html
+== clip-path-paddingBox-1b.html clip-path-paddingBox-1b.html
+== clip-path-paddingBox-1c.html clip-path-paddingBox-1c.html
 fuzzy(64,370) == clip-path-borderBox-1a.html clip-path-borderBox-1a.html
-fails == clip-path-borderBox-1b.html clip-path-borderBox-1b.html
-fails == clip-path-borderBox-1c.html clip-path-borderBox-1c.html
-fails == clip-path-marginBox-1a.html clip-path-marginBox-1a.html
-fails == clip-path-fillBox-1a.html clip-path-fillBox-1a.html
-fails == clip-path-strokeBox-1a.html clip-path-strokeBox-1a.html
-fails == clip-path-strokeBox-1b.html clip-path-strokeBox-1b.html
-fails == clip-path-viewBox-1a.html clip-path-viewBox-1a.html
-fails == clip-path-viewBox-1b.html clip-path-viewBox-1b.html
-fails == clip-path-viewBox-1c.html clip-path-viewBox-1c.html
+== clip-path-borderBox-1b.html clip-path-borderBox-1b.html
+== clip-path-borderBox-1c.html clip-path-borderBox-1c.html
+== clip-path-marginBox-1a.html clip-path-marginBox-1a.html
+== clip-path-fillBox-1a.html clip-path-fillBox-1a.html
+== clip-path-strokeBox-1a.html clip-path-strokeBox-1a.html
+== clip-path-strokeBox-1b.html clip-path-strokeBox-1b.html
+== clip-path-viewBox-1a.html clip-path-viewBox-1a.html
+== clip-path-viewBox-1b.html clip-path-viewBox-1b.html
+== clip-path-viewBox-1c.html clip-path-viewBox-1c.html
 == clip-path-geometryBox-2.html clip-path-geometryBox-2.html
 
 fails == clip-path-localRef-1.html clip-path-localRef-1.html

@@ -3,7 +3,7 @@
 fails asserts-if(stylo,15) == view-source:bug535530-2.html view-source:bug535530-2.html # bug 1335312
 == bug566280-1.html bug566280-1.html
 == bug569229-1.xml bug569229-1.xml
-fails == bug577418-1.html bug577418-1.html
+== bug577418-1.html bug577418-1.html
 == bug582788-1.html bug582788-1.html
 fails == bug582940-1.html bug582940-1.html
 == bug592656-1.html bug592656-1.html

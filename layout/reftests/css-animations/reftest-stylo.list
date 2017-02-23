@@ -29,7 +29,7 @@ pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context
 == stacking-context-paused-on-opacity-1.html stacking-context-paused-on-opacity-1.html
 == stacking-context-paused-on-transform-none.html stacking-context-paused-on-transform-none.html
 == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
-fails == stacking-context-transform-none-animation-on-svg.html stacking-context-transform-none-animation-on-svg.html
+== stacking-context-transform-none-animation-on-svg.html stacking-context-transform-none-animation-on-svg.html
 == stacking-context-transform-none-animation-with-backface-visibility.html stacking-context-transform-none-animation-with-backface-visibility.html
 == stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-transform-none-animation-with-preserve-3d.html
 == stacking-context-transform-none-with-fill-backwards.html stacking-context-transform-none-with-fill-backwards.html
