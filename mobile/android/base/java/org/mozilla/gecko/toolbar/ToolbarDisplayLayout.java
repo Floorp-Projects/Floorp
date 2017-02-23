@@ -19,6 +19,7 @@ import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
@@ -168,6 +169,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         super.onAttachedToWindow();
 
         mIsAttached = true;
+
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        if (selectedTab != null) {
+            // A tab was selected before we became ready; update to that tab now.
+            updateFromTab(selectedTab, EnumSet.allOf(UpdateFlags.class));
+        }
 
         mSiteIdentityPopup.registerListeners();
 
