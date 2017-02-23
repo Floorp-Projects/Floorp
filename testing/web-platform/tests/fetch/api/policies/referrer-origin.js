@@ -7,7 +7,7 @@ if (this.document === undefined) {
   importScripts("nested-policy.js");
 }
 
-var referrerOrigin = "http://{{host}}:{{ports[http][0]}}/";
+var referrerOrigin = self.location.origin + '/';
 var fetchedUrl = RESOURCES_DIR + "inspect-headers.py?headers=referer";
 
 promise_test(function(test) {
@@ -19,7 +19,7 @@ promise_test(function(test) {
 }, "Request's referrer is origin");
 
 promise_test(function(test) {
-  var referrerUrl = "http://{{domains[www]}}:{{ports[http][0]}}/";
+  var referrerUrl = "https://{{domains[www]}}:{{ports[https][0]}}/";
   return fetch(fetchedUrl, { "referrer": referrerUrl }).then(function(resp) {
     assert_equals(resp.status, 200, "HTTP status is 200");
     assert_equals(resp.type , "basic", "Response's type is basic");
