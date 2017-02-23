@@ -24,7 +24,7 @@ browser.engagement:
       The count of maximum number of tabs open during a subsession,
       across all windows, including tabs in private windows and restored
       at startup.
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -39,7 +39,7 @@ browser.engagement:
       The count of tab open events per subsession, across all windows, after the
       session has been restored. This includes tab open events from private windows
       and from manual session restorations (i.e. after crashes and from about:home).
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -53,7 +53,7 @@ browser.engagement:
     description: >
       The count of maximum number of browser windows open during a subsession. This
       includes private windows and the ones opened when starting the browser.
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -68,7 +68,7 @@ browser.engagement:
       The count of browser window open events per subsession, after the session
       has been restored. The count includes private windows and the ones from manual
       session restorations (i.e. after crashes and from about:home).
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -83,7 +83,7 @@ browser.engagement:
       The count of the total non-unique http(s) URIs visited in a subsession, including
       page reloads, after the session has been restored. This does not include background
       page requests and URIs from embedded pages or private browsing.
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -99,7 +99,7 @@ browser.engagement:
       a specific protocol, including page reloads and about:* pages (other than initial
       pages such as about:blank, ...), after the session has been restored. This does
       not include background page requests and URIs from embedded pages or private browsing.
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - bcolloran@mozilla.com
@@ -116,7 +116,7 @@ browser.engagement:
       (i.e. test.example.com and other.example.com are only counted once).
       This does not include background page requests and domains from embedded pages
       or private browsing. The count is limited to 100 unique domains.
-    expires: "55"
+    expires: never
     kind: uint
     notification_emails:
       - rweiss@mozilla.com
@@ -132,7 +132,7 @@ browser.engagement.navigation:
     description: >
       The count URI loads triggered in a subsession from the urlbar (awesomebar),
       broken down by the originating action.
-    expires: "55"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -147,7 +147,7 @@ browser.engagement.navigation:
     description: >
       The count URI loads triggered in a subsession from the searchbar,
       broken down by the originating action.
-    expires: "55"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -162,7 +162,7 @@ browser.engagement.navigation:
     description: >
       The count URI loads triggered in a subsession from about:home,
       broken down by the originating action.
-    expires: "55"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -177,7 +177,7 @@ browser.engagement.navigation:
     description: >
       The count URI loads triggered in a subsession from about:newtab,
       broken down by the originating action.
-    expires: "55"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -192,7 +192,7 @@ browser.engagement.navigation:
     description: >
       The count URI loads triggered in a subsession from the contextmenu,
       broken down by the originating action.
-    expires: "55"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
