@@ -44,7 +44,7 @@ public class TabStrip extends ThemedLinearLayout
         LayoutInflater.from(context).inflate(R.layout.tab_strip_inner, this);
         tabStripView = (TabStripView) findViewById(R.id.tab_strip);
 
-        addTabButton = (ThemedImageButton) findViewById(R.id.add_tab);
+        addTabButton = (ThemedImageButton) findViewById(R.id.tablet_add_tab);
         addTabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

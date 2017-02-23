@@ -10,6 +10,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.widget.ResizablePathDrawable;
 import org.mozilla.gecko.widget.ResizablePathDrawable.NonScaledPathShape;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
@@ -106,6 +107,11 @@ public class TabStripItemView extends ThemedLinearLayout
                 tabs.closeTab(tabs.getTab(id), true);
             }
         });
+    }
+
+    @RobocopTarget
+    public int getTabId() {
+        return id;
     }
 
     @Override
