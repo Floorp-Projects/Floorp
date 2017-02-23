@@ -212,6 +212,7 @@ extern const char* CacheKindNames[];
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
+    _(LoadDenseElementHoleExistsResult)   \
     _(LoadUnboxedArrayElementResult)      \
     _(LoadTypedElementResult)             \
     _(LoadInt32ArrayLengthResult)         \
@@ -804,6 +805,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::LoadDenseElementExistsResult, obj);
         writeOperandId(index);
     }
+    void loadDenseElementHoleExistsResult(ObjOperandId obj, Int32OperandId index) {
+        writeOpWithOperandId(CacheOp::LoadDenseElementHoleExistsResult, obj);
+        writeOperandId(index);
+    }
     void loadUnboxedArrayElementResult(ObjOperandId obj, Int32OperandId index, JSValueType elementType) {
         writeOpWithOperandId(CacheOp::LoadUnboxedArrayElementResult, obj);
         writeOperandId(index);
@@ -1186,6 +1191,8 @@ class MOZ_RAII InIRGenerator : public IRGenerator
 
     bool tryAttachDenseIn(uint32_t index, Int32OperandId indexId,
                           HandleObject obj, ObjOperandId objId);
+    bool tryAttachDenseInHole(uint32_t index, Int32OperandId indexId,
+                              HandleObject obj, ObjOperandId objId);
     bool tryAttachNativeIn(HandleId key, ValOperandId keyId,
                            HandleObject obj, ObjOperandId objId);
     bool tryAttachNativeInDoesNotExist(HandleId key, ValOperandId keyId,
