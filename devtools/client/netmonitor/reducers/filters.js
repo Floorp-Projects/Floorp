@@ -80,4 +80,8 @@ function filters(state = new Filters(), action) {
   }
 }
 
-module.exports = filters;
+module.exports = {
+  FilterTypes,
+  Filters,
+  filters
+};

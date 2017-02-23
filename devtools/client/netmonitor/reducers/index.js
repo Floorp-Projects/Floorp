@@ -6,16 +6,16 @@
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 const batchingReducer = require("./batching");
-const requests = require("./requests");
-const sort = require("./sort");
-const filters = require("./filters");
-const timingMarkers = require("./timing-markers");
-const ui = require("./ui");
+const { requestsReducer } = require("./requests");
+const { sortReducer } = require("./sort");
+const { filters } = require("./filters");
+const { timingMarkers } = require("./timing-markers");
+const { ui } = require("./ui");
 
 module.exports = batchingReducer(
   combineReducers({
-    requests,
-    sort,
+    requests: requestsReducer,
+    sort: sortReducer,
     filters,
     timingMarkers,
     ui,

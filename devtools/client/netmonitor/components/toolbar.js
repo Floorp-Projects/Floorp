@@ -56,10 +56,6 @@ const Toolbar = createClass({
     toggleRequestFilterType: PropTypes.func.isRequired,
   },
 
-  componentDidMount() {
-    Prefs.filters.forEach(this.props.toggleRequestFilterType);
-  },
-
   toggleRequestFilterType(evt) {
     if (evt.type === "keydown" && (evt.key !== "" || evt.key !== "Enter")) {
       return;
