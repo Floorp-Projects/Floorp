@@ -2480,6 +2480,12 @@ MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
     {
       mStream->RemoveTrackListenerImpl(mListener, mTrackID);
     }
+    void RunDuringShutdown() override
+    {
+      // During shutdown we still want the listener's NotifyRemoved to be
+      // called, since not doing that might block shutdown of other modules.
+      Run();
+    }
     RefPtr<MediaStreamTrackListener> mListener;
     TrackID mTrackID;
   };
@@ -2535,6 +2541,13 @@ MediaStream::RemoveDirectTrackListener(DirectMediaStreamTrackListener* aListener
     void Run() override
     {
       mStream->RemoveDirectTrackListenerImpl(mListener, mTrackID);
+    }
+    void RunDuringShutdown() override
+    {
+      // During shutdown we still want the listener's
+      // NotifyDirectListenerUninstalled to be called, since not doing that
+      // might block shutdown of other modules.
+      Run();
     }
     RefPtr<DirectMediaStreamTrackListener> mListener;
     TrackID mTrackID;
