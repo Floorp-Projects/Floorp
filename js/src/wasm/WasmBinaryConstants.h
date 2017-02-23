@@ -454,7 +454,8 @@ static const unsigned MaxStringBytes         =   100000;
 static const unsigned MaxLocals              =    50000;
 static const unsigned MaxParams              =     1000;
 static const unsigned MaxBrTableElems        =  1000000;
-static const unsigned MaxMemoryInitialBytes  = 1024 * 1024 * 1024;
+static const unsigned MaxMemoryInitialPages  = 16384;
+static const unsigned MaxMemoryMaximumPages  = 65536;
 static const unsigned MaxModuleBytes         = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes       =         128 * 1024;
 
