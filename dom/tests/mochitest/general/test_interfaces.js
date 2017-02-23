@@ -74,7 +74,7 @@ var ecmaGlobals =
     "URIError",
     "WeakMap",
     "WeakSet",
-    "WebAssembly"
+    {name: "WebAssembly", disabled: !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupported()}
   ];
 // IMPORTANT: Do not change the list above without review from
 //            a JavaScript Engine peer!
