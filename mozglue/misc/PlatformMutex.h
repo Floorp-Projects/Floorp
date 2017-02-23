@@ -10,6 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 
+#if !defined(XP_WIN)
+# include <pthread.h>
+#endif
+
 namespace mozilla {
 
 namespace detail {
@@ -40,19 +44,13 @@ private:
 
   PlatformData* platformData();
 
-// Linux and maybe other platforms define the storage size of pthread_mutex_t in
-// bytes. However, we must define it as an array of void pointers to ensure
-// proper alignment.
-#if defined(__APPLE__) && defined(__MACH__) && defined(__i386__)
-  void* platformData_[11];
-#elif defined(__APPLE__) && defined(__MACH__) && defined(__amd64__)
-  void* platformData_[8];
-#elif defined(__linux__)
-  void* platformData_[40 / sizeof(void*)];
-#elif defined(_WIN32)
-  void* platformData_[6];
+#if !defined(XP_WIN)
+  void* platformData_[sizeof(pthread_mutex_t) / sizeof(void*)];
+  static_assert(sizeof(pthread_mutex_t) / sizeof(void*) != 0 &&
+                sizeof(pthread_mutex_t) % sizeof(void*) == 0,
+                "pthread_mutex_t must have pointer alignment");
 #else
-  void* platformData_[64 / sizeof(void*)];
+  void* platformData_[6];
 #endif
 
   friend class mozilla::detail::ConditionVariableImpl;

@@ -66,12 +66,6 @@ interface nsIProfiler : nsISupports
    */
   readonly attribute nsIProfilerStartParams startParams;
 
-  /**
-   * The profileGatherer will be null if the profiler is not currently
-   * active.
-   */
-  readonly attribute nsISupports profileGatherer;
-
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);
 

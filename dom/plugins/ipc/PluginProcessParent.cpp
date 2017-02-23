@@ -97,13 +97,6 @@ AddSandboxAllowedFiles(int32_t aSandboxLevel,
         return;
     }
 
-    // Higher than level 2 currently removes the users own rights.
-    if (aSandboxLevel > 2) {
-        AddSandboxAllowedFile(aAllowedFilesRead, dirSvc, NS_WIN_HOME_DIR);
-        AddSandboxAllowedFile(aAllowedFilesRead, dirSvc, NS_WIN_HOME_DIR,
-                              NS_LITERAL_STRING("\\*"));
-    }
-
     // Level 2 and above is now using low integrity, so we need to give write
     // access to the Flash directories.
     // This should be made Flash specific (Bug 1171396).

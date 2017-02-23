@@ -5,8 +5,6 @@
 
 /* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
 .theme-light {
-  --toolbar-tab-hover: rgba(170, 170, 170, .2);
-  --toolbar-tab-hover-active: rgba(170, 170, 170, .4);
   --searchbox-background-color: #ffee99;
   --searchbox-border-color: #ffbf00;
   --searcbox-no-match-background-color: #ffe5e5;
@@ -19,8 +17,6 @@
 }
 
 .theme-dark {
-  --toolbar-tab-hover: rgba(110,120,130,0.1);
-  --toolbar-tab-hover-active: rgba(110,120,130,0.2);
   --searchbox-background-color: #4d4222;
   --searchbox-border-color: #d99f2b;
   --searcbox-no-match-background-color: #402325;

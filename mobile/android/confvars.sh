@@ -48,9 +48,6 @@ if test "$MOZ_NATIVE_DEVICES"; then
 fi
 fi
 
-# Mark as WebGL conformant
-MOZ_WEBGL_CONFORMANT=1
-
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
 

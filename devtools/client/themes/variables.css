@@ -21,6 +21,8 @@
 
   --theme-tab-toolbar-background: #fcfcfc;
   --theme-toolbar-background: #fcfcfc;
+  --theme-toolbar-hover: rgba(170, 170, 170, .2);
+  --theme-toolbar-hover-active: rgba(170, 170, 170, .4);
   --theme-selection-background: #4c9ed9;
   --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
   --theme-selection-color: #f5f7fa;
@@ -81,6 +83,8 @@
 
   --theme-tab-toolbar-background: #272b35;
   --theme-toolbar-background: #272b35;
+  --theme-toolbar-hover: rgba(110, 120, 130, 0.1);
+  --theme-toolbar-hover-active: rgba(110, 120, 130, 0.2);
   --theme-selection-background: #5675B9;
   --theme-selection-background-semitransparent: rgba(86, 117, 185, 0.5);
   --theme-selection-color: #f5f7fa;

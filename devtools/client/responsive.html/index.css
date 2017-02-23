@@ -21,7 +21,7 @@
 
 .theme-dark {
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
-  --submit-button-active-background-color: var(--toolbar-tab-hover-active);
+  --submit-button-active-background-color: var(--theme-toolbar-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
   --viewport-color: #c6ccd0;
   --viewport-hover-color: #dde1e4;
@@ -536,7 +536,7 @@ select > option.divider {
 }
 
 #device-submit-button:hover {
-  background-color: var(--toolbar-tab-hover);
+  background-color: var(--theme-toolbar-hover);
 }
 
 #device-submit-button:hover:active {

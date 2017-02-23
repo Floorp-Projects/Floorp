@@ -40,7 +40,7 @@
  *   containing indices corresponding to the tuple indices.
  *
  *     template <typename... Args, size_t... Indices>
- *     void Helper(const Tuple<Args...>& t, IndexSequence<Indices>)
+ *     void Helper(const Tuple<Args...>& t, IndexSequence<Indices...>)
  *     {
  *       Foo(Get<Indices>(t)...);
  *     }

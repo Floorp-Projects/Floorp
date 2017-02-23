@@ -93,8 +93,6 @@ bool profiler_verbose();
 #define PROFILE_JAVA
 #endif
 
-extern mozilla::TimeStamp gStartTime;
-
 typedef uint8_t* Address;
 
 // ----------------------------------------------------------------------------
@@ -132,22 +130,6 @@ public:
      defined(GP_PLAT_arm_android))
 # define HAVE_NATIVE_UNWIND
 #endif
-
-/* Some values extracted at startup from environment variables, that
-   control the behaviour of the breakpad unwinder. */
-extern const char* PROFILER_INTERVAL;
-extern const char* PROFILER_ENTRIES;
-extern const char* PROFILER_STACK;
-extern const char* PROFILER_FEATURES;
-
-void read_profiler_env_vars();
-void profiler_usage();
-
-// Helper methods to expose modifying profiler behavior
-bool set_profiler_interval(const char*);
-bool set_profiler_entries(const char*);
-bool set_profiler_scan(const char*);
-bool is_native_unwinding_avail();
 
 // ----------------------------------------------------------------------------
 // Miscellaneous

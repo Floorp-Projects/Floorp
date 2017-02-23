@@ -1290,7 +1290,7 @@ Inspector.prototype = {
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-copy-attribute",
       label: INSPECTOR_L10N.getFormatStr("inspectorCopyAttributeValue.label",
-                                        isAttributeClicked ? `"${nodeInfo.value}"` : ""),
+                                        isAttributeClicked ? `${nodeInfo.value}` : ""),
       accesskey: INSPECTOR_L10N.getStr("inspectorCopyAttributeValue.accesskey"),
       disabled: !isAttributeClicked,
       click: () => this.onCopyAttributeValue(),
@@ -1298,7 +1298,7 @@ Inspector.prototype = {
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-edit-attribute",
       label: INSPECTOR_L10N.getFormatStr("inspectorEditAttribute.label",
-                                        isAttributeClicked ? `"${nodeInfo.name}"` : ""),
+                                        isAttributeClicked ? `${nodeInfo.name}` : ""),
       accesskey: INSPECTOR_L10N.getStr("inspectorEditAttribute.accesskey"),
       disabled: !isAttributeClicked,
       click: () => this.onEditAttribute(),
@@ -1306,7 +1306,7 @@ Inspector.prototype = {
     attributesSubmenu.append(new MenuItem({
       id: "node-menu-remove-attribute",
       label: INSPECTOR_L10N.getFormatStr("inspectorRemoveAttribute.label",
-                                        isAttributeClicked ? `"${nodeInfo.name}"` : ""),
+                                        isAttributeClicked ? `${nodeInfo.name}` : ""),
       accesskey: INSPECTOR_L10N.getStr("inspectorRemoveAttribute.accesskey"),
       disabled: !isAttributeClicked,
       click: () => this.onRemoveAttribute(),

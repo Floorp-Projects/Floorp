@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 // Copyright (c) 2006-2011 The Chromium Authors. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -87,11 +89,10 @@ static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 class SamplerThread
 {
  public:
-  explicit SamplerThread(double interval)
+  explicit SamplerThread(double aInterval)
     : mThread(kNoThread)
-    , mInterval(interval)
+    , mInterval(floor(aInterval + 0.5))
   {
-    mInterval = floor(interval + 0.5);
     if (mInterval <= 0) {
       mInterval = 1;
     }
@@ -121,6 +122,9 @@ class SamplerThread
                        this,
                        /* initflag */ 0,
                        (unsigned int*) &mThreadId));
+    if (mThread == 0) {
+      MOZ_CRASH("_beginthreadex failed");
+    }
   }
 
   void Join() {
@@ -129,11 +133,11 @@ class SamplerThread
     }
   }
 
-  static void StartSampler() {
+  static void StartSampler(double aInterval) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!mInstance);
 
-    mInstance = new SamplerThread(gInterval);
+    mInstance = new SamplerThread(aInterval);
     mInstance->Start();
   }
 
@@ -170,7 +174,7 @@ class SamplerThread
           }
 
           if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-            info->DuplicateLastSample();
+            info->DuplicateLastSample(gStartTime);
             continue;
           }
 
@@ -273,13 +277,11 @@ PlatformInit()
 }
 
 static void
-PlatformStart()
+PlatformStart(double aInterval)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(!gIsActive);
-  gIsActive = true;
-  SamplerThread::StartSampler();
+  SamplerThread::StartSampler(aInterval);
 }
 
 static void
@@ -287,8 +289,6 @@ PlatformStop()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(gIsActive);
-  gIsActive = false;
   SamplerThread::StopSampler();
 }
 
