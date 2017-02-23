@@ -22,13 +22,13 @@ config = {
          "MAR_CHANNEL_ID=firefox-mozilla-esr"),
         ("build/mozconfig.common",
          "# Enable checking that add-ons are signed by the trusted root",
-         "# Disable checking that add-ons are signed by the trusted root")
+         "# Disable checking that add-ons are signed by the trusted root"),
         ("build/mozconfig.common",
          "MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-1}",
          "MOZ_ADDON_SIGNING=${MOZ_ADDON_SIGNING-0}"),
         ("build/mozconfig.common",
          "# Enable enforcing that add-ons are signed by the trusted root",
-         "# Disable enforcing that add-ons are signed by the trusted root")
+         "# Disable enforcing that add-ons are signed by the trusted root"),
         ("build/mozconfig.common",
          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-1}",
          "MOZ_REQUIRE_SIGNING=${MOZ_REQUIRE_SIGNING-0}"),
