@@ -367,6 +367,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
   mDomainImmutable = URIIsImmutable(mDomain);
+  mDomainSet = true;
 
   // Recompute all wrappers between compartments using this principal and other
   // non-chrome compartments.

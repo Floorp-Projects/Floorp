@@ -267,6 +267,8 @@ public:
 
   // Call this instead of Equals to avoid the cost of virtual dispatch.
   bool FastEquals(nsIPrincipal* aOther);
+  // Call this instead of Subsumes to avoid the const of virtual dispatch.
+  bool FastSubsumes(nsIPrincipal* aOther);
 
 protected:
   virtual ~BasePrincipal();
@@ -293,6 +295,7 @@ protected:
   nsCOMPtr<nsIAtom> mOriginSuffix;
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;
+  bool mDomainSet;
 };
 
 } // namespace mozilla
