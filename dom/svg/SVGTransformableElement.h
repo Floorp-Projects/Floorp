@@ -69,6 +69,17 @@ public:
   virtual bool IsTransformable() override { return true; }
 
 protected:
+  /**
+   * Helper for overrides of PrependLocalTransformsTo.  If both arguments are
+   * provided they are multiplied in the order in which the arguments appear,
+   * and the result is returned.  If neither argument is provided, the identity
+   * matrix is returned.  If only one argument is provided its transform is
+   * returned.
+   */
+  static gfxMatrix GetUserToParentTransform(
+                     const gfx::Matrix* aAnimateMotionTransform,
+                     const nsSVGAnimatedTransformList* aTransforms);
+
   nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
 
   // XXX maybe move this to property table, to save space on un-animated elems?
