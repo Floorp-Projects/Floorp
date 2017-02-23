@@ -1018,24 +1018,27 @@ typedef void (*IterateCellCallback)(JSRuntime* rt, void* data, void* thing,
  * This function calls |zoneCallback| on every zone, |compartmentCallback| on
  * every compartment, |arenaCallback| on every in-use arena, and |cellCallback|
  * on every in-use cell in the GC heap.
+ *
+ * Note that no read barrier is triggered on the cells passed to cellCallback,
+ * so no these pointers must not escape the callback.
  */
 extern void
-IterateZonesCompartmentsArenasCells(JSContext* cx, void* data,
-                                    IterateZoneCallback zoneCallback,
-                                    JSIterateCompartmentCallback compartmentCallback,
-                                    IterateArenaCallback arenaCallback,
-                                    IterateCellCallback cellCallback);
+IterateHeapUnbarriered(JSContext* cx, void* data,
+                       IterateZoneCallback zoneCallback,
+                       JSIterateCompartmentCallback compartmentCallback,
+                       IterateArenaCallback arenaCallback,
+                       IterateCellCallback cellCallback);
 
 /*
  * This function is like IterateZonesCompartmentsArenasCells, but does it for a
  * single zone.
  */
 extern void
-IterateZoneCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
-                                   IterateZoneCallback zoneCallback,
-                                   JSIterateCompartmentCallback compartmentCallback,
-                                   IterateArenaCallback arenaCallback,
-                                   IterateCellCallback cellCallback);
+IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
+                              IterateZoneCallback zoneCallback,
+                              JSIterateCompartmentCallback compartmentCallback,
+                              IterateArenaCallback arenaCallback,
+                              IterateCellCallback cellCallback);
 
 /*
  * Invoke chunkCallback on every in-use chunk.
