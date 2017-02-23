@@ -695,8 +695,7 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   const nsTArray<Keyframe>& aKeyframes,
   const nsTArray<ComputedKeyframeValues>& aComputedValues,
-  dom::CompositeOperation aEffectComposite,
-  nsStyleContext* aStyleContext)
+  dom::CompositeOperation aEffectComposite)
 {
   MOZ_ASSERT(aKeyframes.Length() == aComputedValues.Length(),
              "Array length mismatch");
