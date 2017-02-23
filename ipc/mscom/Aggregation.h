@@ -9,9 +9,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include <stddef.h>
-#include <unknwn.h>
-
 namespace mozilla {
 namespace mscom {
 
@@ -47,53 +44,8 @@ private:
   RefCntT& mRefCnt;
 };
 
-namespace detail {
-
-template <typename T>
-class InternalUnknown : public IUnknown
-{
-public:
-  STDMETHODIMP QueryInterface(REFIID aIid, void** aOutInterface) override
-  {
-    return This()->InternalQueryInterface(aIid, aOutInterface);
-  }
-
-  STDMETHODIMP_(ULONG) AddRef() override
-  {
-    return This()->InternalAddRef();
-  }
-
-  STDMETHODIMP_(ULONG) Release() override
-  {
-    return This()->InternalRelease();
-  }
-
-private:
-  T* This()
-  {
-    return reinterpret_cast<T*>(reinterpret_cast<char*>(this) -
-                                offsetof(T, mInternalUnknown));
-  }
-};
-
-} // namespace detail
 } // namespace mscom
 } // namespace mozilla
-
-#define DECLARE_AGGREGATABLE(Type) \
-  public: \
-    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override \
-    { return mOuter->QueryInterface(riid, ppv); } \
-    STDMETHODIMP_(ULONG) AddRef() override \
-    { return mOuter->AddRef(); } \
-    STDMETHODIMP_(ULONG) Release() override \
-    { return mOuter->Release(); } \
-  protected: \
-    STDMETHODIMP InternalQueryInterface(REFIID riid, void** ppv); \
-    STDMETHODIMP_(ULONG) InternalAddRef(); \
-    STDMETHODIMP_(ULONG) InternalRelease(); \
-    friend class mozilla::mscom::detail::InternalUnknown<Type>; \
-    mozilla::mscom::detail::InternalUnknown<Type> mInternalUnknown
 
 #endif // mozilla_mscom_Aggregation_h
 

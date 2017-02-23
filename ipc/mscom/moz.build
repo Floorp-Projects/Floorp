@@ -26,14 +26,9 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['ACCESSIBILITY']:
-    DIRS += [
-        'oop',
-    ]
-
     EXPORTS.mozilla.mscom += [
         'ActivationContext.h',
         'DispatchForwarder.h',
-        'IHandlerPayload.h',
         'Interceptor.h',
         'InterceptorLog.h',
         'MainThreadHandoff.h',

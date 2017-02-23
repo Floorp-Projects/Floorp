@@ -369,8 +369,8 @@ RegisteredProxy::operator=(RegisteredProxy&& aOther)
 }
 
 HRESULT
-RegisteredProxy::GetTypeInfoForGuid(REFGUID aGuid,
-                                    ITypeInfo** aOutTypeInfo) const
+RegisteredProxy::GetTypeInfoForInterface(REFIID aIid,
+                                         ITypeInfo** aOutTypeInfo) const
 {
   if (!aOutTypeInfo) {
     return E_INVALIDARG;
@@ -378,7 +378,7 @@ RegisteredProxy::GetTypeInfoForGuid(REFGUID aGuid,
   if (!mTypeLib) {
     return E_UNEXPECTED;
   }
-  return mTypeLib->lpVtbl->GetTypeInfoOfGuid(mTypeLib, aGuid, aOutTypeInfo);
+  return mTypeLib->lpVtbl->GetTypeInfoOfGuid(mTypeLib, aIid, aOutTypeInfo);
 }
 
 static StaticAutoPtr<Vector<RegisteredProxy*>> sRegistry;
@@ -418,7 +418,7 @@ RegisteredProxy::Find(REFIID aIid, ITypeInfo** aTypeInfo)
   }
 
   for (auto&& proxy : *sRegistry) {
-    if (SUCCEEDED(proxy->GetTypeInfoForGuid(aIid, aTypeInfo))) {
+    if (SUCCEEDED(proxy->GetTypeInfoForInterface(aIid, aTypeInfo))) {
       return true;
     }
   }
