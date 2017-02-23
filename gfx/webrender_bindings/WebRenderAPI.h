@@ -96,14 +96,14 @@ protected:
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
 public:
-  DisplayListBuilder(const LayerIntSize& aSize, wr::PipelineId aId);
+  explicit DisplayListBuilder(wr::PipelineId aId);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
 
   void Begin(const LayerIntSize& aSize);
 
-  void End(WebRenderAPI& aApi, wr::Epoch aEpoch);
+  void End();
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,

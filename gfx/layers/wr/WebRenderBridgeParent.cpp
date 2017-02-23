@@ -109,7 +109,7 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
     return IPC_OK();
   }
   MOZ_ASSERT(mApi);
-  mBuilder.emplace(LayerIntSize(aSize.width, aSize.height), mPipelineId);
+  mBuilder.emplace(mPipelineId);
 
   return IPC_OK();
 }
@@ -195,7 +195,8 @@ WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
 }
 
 void
-WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
+                                 InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId)
@@ -212,7 +213,7 @@ WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommand
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ProcessWebrenderCommands(aCommands, wr::NewEpoch(aTransactionId));
+  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(aTransactionId));
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -222,27 +223,30 @@ WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommand
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
+                                 InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId)
 {
-  HandleDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
+                                     InfallibleTArray<WebRenderCommand>&& aCommands,
                                      InfallibleTArray<OpDestroy>&& aToDestroy,
                                      const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId)
 {
-  HandleDPEnd(Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
   return IPC_OK();
 }
 
 void
-WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch)
+WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
+                                                InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch)
 {
   MOZ_ASSERT(mBuilder.isSome());
   wr::DisplayListBuilder& builder = mBuilder.ref();
@@ -406,7 +410,8 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  builder.End(*mApi, aEpoch);
+  builder.End();
+  mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height), builder);
 
   ScheduleComposition();
   DeleteOldImages();

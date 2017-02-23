@@ -71,11 +71,13 @@ public:
                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
   mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
-  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+  mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
+                                    InfallibleTArray<WebRenderCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
                                     const uint64_t& aTransactionId) override;
-  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+  mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
+                                        InfallibleTArray<WebRenderCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId) override;
@@ -131,12 +133,13 @@ private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands, const wr::Epoch& aEpoch);
+  void ProcessWebrenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderCommand>& commands, const wr::Epoch& aEpoch);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
-  void HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+  void HandleDPEnd(const gfx::IntSize& aSize,
+                   InfallibleTArray<WebRenderCommand>&& aCommands,
                    InfallibleTArray<OpDestroy>&& aToDestroy,
                    const uint64_t& aFwdTransactionId,
                    const uint64_t& aTransactionId);

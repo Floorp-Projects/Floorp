@@ -68,14 +68,14 @@ WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 }
 
 void
-WebRenderBridgeChild::DPEnd(bool aIsSync, uint64_t aTransactionId)
+WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
   if (aIsSync) {
-    this->SendDPSyncEnd(mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
+    this->SendDPSyncEnd(aSize, mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
   } else {
-    this->SendDPEnd(mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
+    this->SendDPEnd(aSize, mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId);
   }
 
   mCommands.Clear();

@@ -224,11 +224,10 @@ pub extern fn wr_window_new(window_id: WrWindowId,
 }
 
 #[no_mangle]
-pub extern fn wr_state_new(width: u32, height: u32, pipeline_id: PipelineId) -> *mut WrState {
+pub extern fn wr_state_new(pipeline_id: PipelineId) -> *mut WrState {
     assert!(unsafe { is_in_compositor_thread() });
 
     let state = Box::new(WrState {
-        size: (width, height),
         pipeline_id: pipeline_id,
         z_index: 0,
         frame_builder: WebRenderFrameBuilder::new(pipeline_id),
@@ -249,7 +248,6 @@ pub extern fn wr_state_delete(state:*mut WrState) {
 #[no_mangle]
 pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
     assert!( unsafe { is_in_compositor_thread() });
-    state.size = (width, height);
     state.frame_builder.dl_builder.list.clear();
     state.z_index = 0;
 
@@ -268,23 +266,9 @@ pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
 }
 
 #[no_mangle]
-pub extern fn wr_dp_end(state: &mut WrState, api: &mut RenderApi, epoch: u32) {
+pub extern fn wr_dp_end(state: &mut WrState) {
     assert!( unsafe { is_in_compositor_thread() });
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
-    let pipeline_id = state.pipeline_id;
-    let (width, height) = state.size;
-
     state.frame_builder.dl_builder.pop_stacking_context();
-
-    let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
-
-    let preserve_frame_state = true;
-    api.set_root_display_list(Some(root_background_color),
-                              Epoch(epoch),
-                              LayoutSize::new(width as f32, height as f32),
-                              fb.dl_builder,
-                              preserve_frame_state);
-    api.generate_frame(None);
 }
 
 #[no_mangle]
@@ -370,7 +354,6 @@ impl WebRenderFrameBuilder {
 }
 
 pub struct WrState {
-    size: (u32, u32),
     pipeline_id: PipelineId,
     z_index: i32,
     frame_builder: WebRenderFrameBuilder,
