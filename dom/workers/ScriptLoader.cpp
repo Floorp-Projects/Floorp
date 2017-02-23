@@ -1141,7 +1141,17 @@ private:
       // Store the channel info if needed.
       mWorkerPrivate->InitChannelInfo(channel);
 
+      // Our final channel principal should match the original principal
+      // in terms of the origin.
       MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->FinalChannelPrincipalIsValid(channel));
+
+      // However, we must still override the principal since the nsIPrincipal
+      // URL may be different due to same-origin redirects.  Unfortunately this
+      // URL must exactly match the final worker script URL in order to
+      // properly set the referrer header on fetch/xhr requests.  If bug 1340694
+      // is ever fixed this can be removed.
+      rv = mWorkerPrivate->SetPrincipalFromChannel(channel);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
       // should get it from the HTTP headers on the worker script.
@@ -1234,7 +1244,8 @@ private:
       // Override the principal on the WorkerPrivate.  This is only necessary
       // in order to get a principal with exactly the correct URL.  The fetch
       // referrer logic depends on the WorkerPrivate principal having a URL
-      // that matches the worker script URL.
+      // that matches the worker script URL.  If bug 1340694 is ever fixed
+      // this can be removed.
       rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal, loadGroup);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
