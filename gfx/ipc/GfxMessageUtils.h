@@ -922,6 +922,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
     WriteParam(aMsg, aParam.mParentBackend);
     WriteParam(aMsg, aParam.mParentProcessType);
     WriteParam(aMsg, aParam.mMaxTextureSize);
+    WriteParam(aMsg, aParam.mCompositorUseANGLE);
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
@@ -933,6 +934,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier>
     bool result = ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
                   ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
                   ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
+                  ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
                   ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&

@@ -168,6 +168,7 @@ struct TextureFactoryIdentifier
   LayersBackend mParentBackend;
   GeckoProcessType mParentProcessType;
   int32_t mMaxTextureSize;
+  bool mCompositorUseANGLE;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
@@ -176,6 +177,7 @@ struct TextureFactoryIdentifier
   explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
                                     GeckoProcessType aParentProcessType = GeckoProcessType_Default,
                                     int32_t aMaxTextureSize = 4096,
+                                    bool aCompositorUseANGLE = false,
                                     bool aSupportsTextureBlitting = false,
                                     bool aSupportsPartialUploads = false,
                                     bool aSupportsComponentAlpha = true,
@@ -183,6 +185,7 @@ struct TextureFactoryIdentifier
     : mParentBackend(aLayersBackend)
     , mParentProcessType(aParentProcessType)
     , mMaxTextureSize(aMaxTextureSize)
+    , mCompositorUseANGLE(aCompositorUseANGLE)
     , mSupportsTextureBlitting(aSupportsTextureBlitting)
     , mSupportsPartialUploads(aSupportsPartialUploads)
     , mSupportsComponentAlpha(aSupportsComponentAlpha)
