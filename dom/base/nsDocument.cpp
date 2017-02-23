@@ -6015,6 +6015,28 @@ nsDocument::IsWebComponentsEnabled(nsPIDOMWindowInner* aWindow)
 }
 
 void
+nsDocument::ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG)
+{
+  mLazySVGPresElements.PutEntry(aSVG);
+}
+
+void
+nsDocument::UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG)
+{
+  mLazySVGPresElements.RemoveEntry(aSVG);
+}
+
+void
+nsDocument::ResolveScheduledSVGPresAttrs()
+{
+  for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
+    nsSVGElement* svg = iter.Get()->GetKey();
+    svg->UpdateContentDeclarationBlock(StyleBackendType::Servo);
+  }
+  mLazySVGPresElements.Clear();
+}
+
+void
 nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
                             const ElementRegistrationOptions& aOptions,
                             JS::MutableHandle<JSObject*> aRetval,
