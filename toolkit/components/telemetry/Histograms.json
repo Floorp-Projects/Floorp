@@ -7025,8 +7025,8 @@
   },
   "DECODER_DOCTOR_INFOBAR_STATS": {
     "alert_emails": ["gsquelart@mozilla.com"],
-    "bug_numbers": [1271483],
-    "expires_in_version": "53",
+    "bug_numbers": [1271483, 1337566],
+    "expires_in_version": "59",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 8,
