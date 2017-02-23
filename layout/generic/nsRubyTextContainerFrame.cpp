@@ -130,10 +130,10 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
 
   // Although a ruby text container may have continuations, returning
-  // NS_FRAME_COMPLETE here is still safe, since its parent, ruby frame,
+  // complete reflow status is still safe, since its parent, ruby frame,
   // ignores the status, and continuations of the ruby base container
   // will take care of our continuations.
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();
 
   nscoord minBCoord = nscoord_MAX;

@@ -62,7 +62,7 @@ use msg::constellation_msg::{FrameId, FrameType, PipelineId};
 use net_traits::{Metadata, NetworkError, ReferrerPolicy, ResourceThreads};
 use net_traits::filemanager_thread::RelativePos;
 use net_traits::image::base::{Image, ImageMetadata};
-use net_traits::image_cache_thread::{ImageCacheChan, ImageCacheThread};
+use net_traits::image_cache_thread::{ImageCacheThread, PendingImageId};
 use net_traits::request::{Request, RequestInit};
 use net_traits::response::{Response, ResponseBody};
 use net_traits::response::HttpsState;
@@ -79,7 +79,7 @@ use script_traits::{UntrustedNodeAddress, WindowSizeData, WindowSizeType};
 use selectors::matching::ElementSelectorFlags;
 use serde::{Deserialize, Serialize};
 use servo_atoms::Atom;
-use servo_url::ServoUrl;
+use servo_url::{ImmutableOrigin, MutableOrigin, ServoUrl};
 use smallvec::SmallVec;
 use std::cell::{Cell, RefCell, UnsafeCell};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
@@ -104,7 +104,6 @@ use style::stylesheets::SupportsRule;
 use style::values::specified::Length;
 use style::viewport::ViewportRule;
 use time::Duration;
-use url::Origin as UrlOrigin;
 use uuid::Uuid;
 use webrender_traits::{WebGLBufferId, WebGLError, WebGLFramebufferId, WebGLProgramId};
 use webrender_traits::{WebGLRenderbufferId, WebGLShaderId, WebGLTextureId};
@@ -317,10 +316,11 @@ unsafe impl<A: JSTraceable, B: JSTraceable, C: JSTraceable> JSTraceable for (A, 
     }
 }
 
-unsafe_no_jsmanaged_fields!(bool, f32, f64, String, ServoUrl, AtomicBool, AtomicUsize, UrlOrigin, Uuid, char);
+unsafe_no_jsmanaged_fields!(bool, f32, f64, String, AtomicBool, AtomicUsize, Uuid, char);
 unsafe_no_jsmanaged_fields!(usize, u8, u16, u32, u64);
 unsafe_no_jsmanaged_fields!(isize, i8, i16, i32, i64);
-unsafe_no_jsmanaged_fields!(Image, ImageMetadata, ImageCacheChan, ImageCacheThread);
+unsafe_no_jsmanaged_fields!(ServoUrl, ImmutableOrigin, MutableOrigin);
+unsafe_no_jsmanaged_fields!(Image, ImageMetadata, ImageCacheThread, PendingImageId);
 unsafe_no_jsmanaged_fields!(Metadata);
 unsafe_no_jsmanaged_fields!(NetworkError);
 unsafe_no_jsmanaged_fields!(Atom, Prefix, LocalName, Namespace, QualName);

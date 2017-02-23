@@ -196,7 +196,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext,
                      childDesiredSize, childReflowInput, childStatus);
-    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+    //NS_ASSERTION(childStatus.IsComplete(), "bad status");
     if (0 == count) {
       // base 
       baseFrame = childFrame;
@@ -216,7 +216,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     // report an error, encourage people to get their markups in order
     ReportChildCountError();
     ReflowError(drawTarget, aDesiredSize);
-    aStatus = NS_FRAME_COMPLETE;
+    aStatus.Reset();
     NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
     // Call DidReflow() for the child frames we successfully did reflow.
     DidReflowChildren(mFrames.FirstChild(), childFrame);
@@ -354,7 +354,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   mReference.x = 0;
   mReference.y = aDesiredSize.BlockStartAscent();
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

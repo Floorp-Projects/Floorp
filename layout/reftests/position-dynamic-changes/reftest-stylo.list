@@ -8,4 +8,4 @@ include relative/reftest-stylo.list
 == multiple-changes.html multiple-changes.html
 == shrink-wrap.html shrink-wrap.html
 == max-width.html max-width.html
-# == min-width.html min-width.html
+== min-width.html min-width.html

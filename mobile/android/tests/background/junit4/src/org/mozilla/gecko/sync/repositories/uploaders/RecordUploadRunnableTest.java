@@ -17,22 +17,20 @@ import static org.junit.Assert.*;
 public class RecordUploadRunnableTest {
     @Test
     public void testBuildPostURI() throws Exception {
-        BatchMeta batchMeta = new BatchMeta(new Object(), 1, 1, null);
         URI postURI = RecordUploadRunnable.buildPostURI(
-                false, batchMeta, Uri.parse("http://example.com/"));
+                false, null, Uri.parse("http://example.com/"));
         assertEquals("http://example.com/?batch=true", postURI.toString());
 
         postURI = RecordUploadRunnable.buildPostURI(
-                true, batchMeta, Uri.parse("http://example.com/"));
+                true, null, Uri.parse("http://example.com/"));
         assertEquals("http://example.com/?batch=true&commit=true", postURI.toString());
 
-        batchMeta.setToken("MTIzNA", false);
         postURI = RecordUploadRunnable.buildPostURI(
-                false, batchMeta, Uri.parse("http://example.com/"));
+                false, "MTIzNA", Uri.parse("http://example.com/"));
         assertEquals("http://example.com/?batch=MTIzNA", postURI.toString());
 
         postURI = RecordUploadRunnable.buildPostURI(
-                true, batchMeta, Uri.parse("http://example.com/"));
+                true, "MTIzNA", Uri.parse("http://example.com/"));
         assertEquals("http://example.com/?batch=MTIzNA&commit=true", postURI.toString());
     }
 }

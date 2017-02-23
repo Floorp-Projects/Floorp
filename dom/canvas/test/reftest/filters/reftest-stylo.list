@@ -2,7 +2,7 @@
 default-preferences pref(canvas.filters.enabled,true)
 
 fails asserts-if(stylo,2) == default-color.html default-color.html # bug 1324700
-# == drop-shadow.html drop-shadow.html
+fails asserts-if(stylo,2) == drop-shadow.html drop-shadow.html # bug 1324700
 fails asserts-if(stylo,2) == drop-shadow-transformed.html drop-shadow-transformed.html # bug 1324700
 fails asserts-if(stylo,2) == global-alpha.html global-alpha.html # bug 1324700
 fails asserts-if(stylo,2) == global-composite-operation.html global-composite-operation.html # bug 1324700

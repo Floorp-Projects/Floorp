@@ -106,32 +106,4 @@ public class PayloadTest {
             assertTrue(true);
         }
     }
-
-    @Test
-    public void testReset() {
-        assertTrue(payload.getByteCount() == 2 * BatchingUploader.PER_PAYLOAD_OVERHEAD_BYTE_COUNT);
-        assertTrue(payload.getRecordCount() == 0);
-        assertTrue(payload.getRecordsBuffer().isEmpty());
-        assertTrue(payload.getRecordGuidsBuffer().isEmpty());
-        assertTrue(payload.isEmpty());
-
-        // Shouldn't throw even if already empty
-        payload.reset();
-        assertTrue(payload.getByteCount() == 2 * BatchingUploader.PER_PAYLOAD_OVERHEAD_BYTE_COUNT);
-        assertTrue(payload.getRecordCount() == 0);
-        assertTrue(payload.getRecordsBuffer().isEmpty());
-        assertTrue(payload.getRecordGuidsBuffer().isEmpty());
-        assertTrue(payload.isEmpty());
-
-        byte[] recordBytes1 = new byte[100];
-        assertFalse(payload.addAndEstimateIfFull(1, recordBytes1, "guid1"));
-        assertFalse(payload.isEmpty());
-        payload.reset();
-
-        assertTrue(payload.getByteCount() == 2 * BatchingUploader.PER_PAYLOAD_OVERHEAD_BYTE_COUNT);
-        assertTrue(payload.getRecordCount() == 0);
-        assertTrue(payload.getRecordsBuffer().isEmpty());
-        assertTrue(payload.getRecordGuidsBuffer().isEmpty());
-        assertTrue(payload.isEmpty());
-    }
 }

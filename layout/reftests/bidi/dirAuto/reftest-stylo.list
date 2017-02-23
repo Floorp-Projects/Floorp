@@ -42,8 +42,8 @@ fails == dynamicDirAuto-setLTR-InvalidDir3.html dynamicDirAuto-setLTR-InvalidDir
 fails == dynamicDirAuto-setLTR-InvalidDir4.html dynamicDirAuto-setLTR-InvalidDir4.html
 fails == dynamicDirAuto-setLTR-InvalidDir5.html dynamicDirAuto-setLTR-InvalidDir5.html
 fails == dynamicDirAuto-setLTR-InvalidDir6.html dynamicDirAuto-setLTR-InvalidDir6.html
-# == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
-# == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
+fails == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html # Bug 1340696, bug 1341086
+fails == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html # Bug 1340696, bug 1341086
 fails == dynamicDirAuto-setRTL-Auto1.html dynamicDirAuto-setRTL-Auto1.html
 fails == dynamicDirAuto-setRTL-Auto2.html dynamicDirAuto-setRTL-Auto2.html
 fails == dynamicDirAuto-setRTL-Auto3.html dynamicDirAuto-setRTL-Auto3.html
