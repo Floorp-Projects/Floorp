@@ -489,7 +489,6 @@ class BaseCompiler
     ValTypeVector               Sig_;
     Label                       returnLabel_;
     Label                       stackOverflowLabel_;
-    TrapOffset                  prologueTrapOffset_;
     CodeOffset                  stackAddOffset_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
@@ -2106,8 +2105,7 @@ class BaseCompiler
     // Labels
 
     void insertBreakablePoint(CallSiteDesc::Kind kind) {
-        const uint32_t offset = trapOffset().bytecodeOffset;
-        masm.nopPatchableToCall(CallSiteDesc(offset, kind));
+        masm.nopPatchableToCall(CallSiteDesc(iter_.errorOffset(), kind));
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -2271,7 +2269,8 @@ class BaseCompiler
         MOZ_ASSERT(localSize_ >= debugFrameReserved);
         if (localSize_ > debugFrameReserved)
             masm.addToStackPtr(Imm32(localSize_ - debugFrameReserved));
-        masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, debugFrameReserved));
+        TrapOffset prologueTrapOffset(func_.lineOrBytecode());
+        masm.jump(TrapDesc(prologueTrapOffset, Trap::StackOverflow, debugFrameReserved));
 
         masm.bind(&returnLabel_);
 
@@ -3513,7 +3512,7 @@ class BaseCompiler
     uint32_t readCallSiteLineOrBytecode() {
         if (!func_.callSiteLineNums().empty())
             return func_.callSiteLineNums()[lastReadCallSite_++];
-        return trapOffset().bytecodeOffset;
+        return iter_.errorOffset();
     }
 
     bool done() const {
@@ -7334,7 +7333,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
-      iter_(env, decoder, func.lineOrBytecode()),
+      iter_(env, decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -7346,7 +7345,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       deadCode_(false),
       debugEnabled_(debugEnabled),
       bceSafe_(0),
-      prologueTrapOffset_(trapOffset()),
       stackAddOffset_(0),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
@@ -7547,7 +7545,7 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
     const FuncBytes& func = unit->func();
     uint32_t bodySize = func.bytes().length();
 
-    Decoder d(func.bytes(), error);
+    Decoder d(func.bytes().begin(), func.bytes().end(), func.lineOrBytecode(), error);
 
     if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
         return false;
