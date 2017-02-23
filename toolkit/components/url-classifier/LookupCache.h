@@ -16,6 +16,7 @@
 #include "nsUrlClassifierPrefixSet.h"
 #include "VariableLengthPrefixSet.h"
 #include "mozilla/Logging.h"
+#include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -23,11 +24,31 @@ namespace safebrowsing {
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
 
+enum class MatchResult : uint8_t
+{
+  eNoMatch           = 0x00,
+  eV2Prefix          = 0x01,
+  eV4Prefix          = 0x02,
+  eV2Completion      = 0x04,
+  eV4Completion      = 0x08,
+  eTelemetryDisabled = 0x10,
+
+  eBothPrefix      = eV2Prefix     | eV4Prefix,
+  eBothCompletion  = eV2Completion | eV4Completion,
+  eV2PreAndCom     = eV2Prefix     | eV2Completion,
+  eV4PreAndCom     = eV4Prefix     | eV4Completion,
+  eBothPreAndV2Com = eBothPrefix   | eV2Completion,
+  eBothPreAndV4Com = eBothPrefix   | eV4Completion,
+  eAll             = eBothPrefix   | eBothCompletion,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MatchResult)
+
 class LookupResult {
 public:
   LookupResult() : mNoise(false), mProtocolConfirmed(false),
                    mPartialHashLength(0), mConfirmed(false),
-                   mProtocolV2(true) {}
+                   mProtocolV2(true),
+                   mMatchResult(MatchResult::eTelemetryDisabled) {}
 
   // The fragment that matched in the LookupCache
   union {
@@ -75,6 +96,9 @@ public:
   bool mConfirmed;
 
   bool mProtocolV2;
+
+  // This is only used by telemetry to record the match result.
+  MatchResult mMatchResult;
 };
 
 typedef nsTArray<LookupResult> LookupResultArray;
