@@ -14,19 +14,19 @@
 /***************************************************************************/
 
 inline void
-XPCJSContext::AddVariantRoot(XPCTraceableVariant* variant)
+XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant)
 {
     variant->AddToRootSet(&mVariantRoots);
 }
 
 inline void
-XPCJSContext::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
+XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
 {
     wrappedJS->AddToRootSet(&mWrappedJSRoots);
 }
 
 inline void
-XPCJSContext::AddObjectHolderRoot(XPCJSObjectHolder* holder)
+XPCJSRuntime::AddObjectHolderRoot(XPCJSObjectHolder* holder)
 {
     holder->AddToRootSet(&mObjectHolderRoots);
 }
