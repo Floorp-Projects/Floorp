@@ -18,6 +18,7 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
@@ -283,7 +284,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     return;
   }
 
-  nsTArray<AnimationProperty> properties = BuildProperties(aStyleContext);
+  nsTArray<AnimationProperty> properties = BuildProperties(Move(aStyleContext));
 
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
@@ -853,10 +854,16 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   return effect.forget();
 }
 
+template<typename StyleType>
 nsTArray<AnimationProperty>
-KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
+KeyframeEffectReadOnly::BuildProperties(StyleType&& aStyle)
 {
-  MOZ_ASSERT(aStyleContext);
+  static_assert(IsSame<StyleType, nsStyleContext*>::value ||
+                IsSame<StyleType, const ServoComputedStyleValues&>::value,
+                "StyleType should be nsStyleContext* or "
+                "const ServoComputedStyleValues&");
+
+  MOZ_ASSERT(aStyle);
 
   nsTArray<AnimationProperty> result;
   // If mTarget is null, return an empty property array.
@@ -875,15 +882,15 @@ KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
   nsTArray<ComputedKeyframeValues> computedValues =
     KeyframeUtils::GetComputedKeyframeValues(keyframesCopy,
                                              mTarget->mElement,
-                                             aStyleContext);
+                                             aStyle);
 
   // FIXME: Bug 1332633: we have to implement ComputeDistance for
   //        RawServoAnimationValue.
   if (mEffectOptions.mSpacingMode == SpacingMode::paced &&
-      aStyleContext->PresContext()->StyleSet()->IsGecko()) {
+      !mDocument->IsStyledByServo()) {
     KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
                                 mEffectOptions.mPacedProperty,
-                                computedValues, aStyleContext);
+                                computedValues, aStyle);
   }
 
   result =
