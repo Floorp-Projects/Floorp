@@ -69,6 +69,7 @@ public class SuggestedSiteLoader implements IconLoader {
             // be caused by a distribution (as opposed to Gecko), so we should just shout loudly,
             // as opposed to crashing:
             Log.e(LOGTAG, "Unable to find tile data definitions for site:" + siteURL);
+            return null;
         }
 
         final int backgroundColor = Color.parseColor(backgroundColorString);

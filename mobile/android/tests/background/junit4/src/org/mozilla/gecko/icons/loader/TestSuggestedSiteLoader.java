@@ -130,6 +130,16 @@ public class TestSuggestedSiteLoader {
     }
 
     @Test
+    public void testLoadingOtherIconFailsCleanly() throws IOException {
+        // Ensure that we return null (instead of crashing or providing wrong data) for a fake
+        // topsite.
+        final IconResponse response = loadIconForSite("http://www.arbitrary-not-bunled-site.notreal", false);
+
+        Assert.assertNull(response);
+    }
+
+
+    @Test
     public void testRespectsSkipDisk() throws IOException {
         for (final String site : DEFAULT_SUGGESTED_SITES_ICONS) {
             final IconResponse response = loadIconForSite(site, true);
