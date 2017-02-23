@@ -12,6 +12,7 @@
 #include "proxy/Proxy.h"
 
 #include "jscntxtinlines.h"
+#include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
 
