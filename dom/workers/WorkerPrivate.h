@@ -655,6 +655,9 @@ public:
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
   bool
   FinalChannelPrincipalIsValid(nsIChannel* aChannel);
+
+  bool
+  PrincipalURIMatchesScriptURL();
 #endif
 
   bool

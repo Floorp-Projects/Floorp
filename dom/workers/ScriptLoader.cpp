@@ -622,6 +622,10 @@ private:
     MOZ_ASSERT(!loadInfo.mLoadingFinished);
     loadInfo.mLoadingFinished = true;
 
+    if (IsMainWorkerScript() && NS_SUCCEEDED(aRv)) {
+      MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->PrincipalURIMatchesScriptURL());
+    }
+
     MaybeExecuteFinishedScripts(aIndex);
   }
 
