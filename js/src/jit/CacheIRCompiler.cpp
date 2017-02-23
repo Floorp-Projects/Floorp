@@ -8,6 +8,8 @@
 
 #include "jit/IonIC.h"
 
+#include "jscompartmentinlines.h"
+
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
