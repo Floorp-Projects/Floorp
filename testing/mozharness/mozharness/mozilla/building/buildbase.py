@@ -802,10 +802,16 @@ or run without that action (ie: --no-{action})"
                     'ascii', 'replace'
                 )
             else:
-                # for taskcluster, there are no buildbot properties, and we pass
+                # for taskcluster, there are no buildbot properties, and we must pass
                 # MOZ_BUILD_DATE into mozharness as an environment variable, only
                 # to have it pass the same value out with the same name.
-                buildid = os.environ.get('MOZ_BUILD_DATE')
+                try:
+                    buildid = os.environ['MOZ_BUILD_DATE']
+                except KeyError:
+                    self.fatal(
+                        "MOZ_BUILD_DATE must be provided as an environment var on Taskcluster"
+                    )
+
 
         if not buildid:
             self.info("Creating buildid through current time")
