@@ -762,7 +762,7 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libtest_library.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
@@ -777,7 +777,7 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'HOST_RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
@@ -792,7 +792,7 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'HOST_RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout',
@@ -808,7 +808,7 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libfeature_library.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'RUST_LIBRARY_FEATURES := musthave cantlivewithout',
