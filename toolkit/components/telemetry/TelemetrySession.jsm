@@ -65,6 +65,7 @@ const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
+const PREF_SHUTDOWN_PINGSENDER = PREF_BRANCH + "shutdownPingSender.enabled";
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_THREAD_HANGS = "Telemetry:ChildThreadHangs";
@@ -1737,6 +1738,7 @@ var Impl = {
       let options = {
         addClientId: true,
         addEnvironment: true,
+        usePingSender: Preferences.get(PREF_SHUTDOWN_PINGSENDER, false),
       };
       p.push(TelemetryController.submitExternalPing(getPingType(shutdownPayload), shutdownPayload, options)
                                 .catch(e => this._log.error("saveShutdownPings - failed to submit shutdown ping", e)));

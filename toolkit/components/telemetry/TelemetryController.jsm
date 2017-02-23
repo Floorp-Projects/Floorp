@@ -197,11 +197,13 @@ this.TelemetryController = Object.freeze({
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
    * @returns {Promise} Test-only - a promise that resolves with the ping id once the ping is stored or sent.
    */
   submitExternalPing(aType, aPayload, aOptions = {}) {
     aOptions.addClientId = aOptions.addClientId || false;
     aOptions.addEnvironment = aOptions.addEnvironment || false;
+    aOptions.usePingSender = aOptions.usePingSender || false;
 
     return Impl.submitExternalPing(aType, aPayload, aOptions);
   },
@@ -451,6 +453,7 @@ var Impl = {
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   _submitPingLogic: Task.async(function* (aType, aPayload, aOptions) {
@@ -473,7 +476,7 @@ var Impl = {
       .catch(e => this._log.error("submitExternalPing - Failed to archive ping " + pingData.id, e));
     let p = [ archivePromise ];
 
-    p.push(TelemetrySend.submitPing(pingData));
+    p.push(TelemetrySend.submitPing(pingData, {usePingSender: aOptions.usePingSender}));
 
     return Promise.all(p).then(() => pingData.id);
   }),
@@ -489,6 +492,7 @@ var Impl = {
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @param {Boolean} [aOptions.usePingSender=false] if true, send the ping using the PingSender.
    * @returns {Promise} Test-only - a promise that is resolved with the ping id once the ping is stored or sent.
    */
   submitExternalPing: function send(aType, aPayload, aOptions) {
