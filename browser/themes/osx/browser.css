@@ -53,12 +53,6 @@
   --lwt-header-image: none;
 }
 
-:root {
-  color: var(--lwt-textcolor);
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-header-image);
-}
-
 #urlbar:-moz-lwtheme:not([focused="true"]),
 .searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
   opacity: .9;
@@ -3361,11 +3355,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 
 #TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 0;
-}
-
-#browser-bottombox:-moz-lwtheme {
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-footer-image);
 }
 
 %include ../shared/UITour.inc.css
