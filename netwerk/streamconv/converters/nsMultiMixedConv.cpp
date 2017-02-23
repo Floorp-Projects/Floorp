@@ -606,7 +606,7 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
   nsresult rv;
 
   switch (mParserState) {
-    case BOUNDARY:
+    case PREAMBLE:
       if (token.Equals(mBoundaryTokenWithDashes)) {
         // The server first used boundary '--boundary'.  Hence, we no longer
         // accept plain 'boundary' token as a delimiter.
@@ -621,13 +621,7 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
         break;
       }
 
-      // In case the server didn't send the first boundary...
-      // This may be either a line-feed or a header.  Turn header tokens
-      // on and retry in a shifted parser state.
-      mParserState = HEADER_NAME;
-      mResponseHeader = HEADER_UNKNOWN;
-      SetHeaderTokensEnabled(true);
-      mTokenizer.Rollback();
+      // This is a preamble, just ignore it and wait for the boundary.
       break;
 
     case BOUNDARY_CRLF:
