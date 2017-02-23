@@ -57,9 +57,9 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = deepcopy(SIGNING_SCOPE_ALIAS_TO_PROJECT)
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-release-branches': 'project:releng:beetmover:bucket:release',
-    'all-nightly-branches': 'project:releng:beetmover:bucket:nightly',
-    'default': 'project:releng:beetmover:bucket:dep',
+    'all-release-branches': 'project:releng:beetmover:nightly',
+    'all-nightly-branches': 'project:releng:beetmover:nightly',
+    'default': 'project:releng:beetmover:nightly',
 }
 
 """Map balrog scope aliases to sets of projects.
@@ -87,11 +87,11 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
 """Map the balrog scope aliases to the actual scopes.
 """
 BALROG_SERVER_SCOPES = {
-    'nightly': 'project:releng:balrog:server:nightly',
-    'aurora': 'project:releng:balrog:server:aurora',
-    'beta': 'project:releng:balrog:server:beta',
-    'release': 'project:releng:balrog:server:release',
-    'default': 'project:releng:balrog:server:dep',
+    'nightly': 'project:releng:balrog:nightly',
+    'aurora': 'project:releng:balrog:nightly',
+    'beta': 'project:releng:balrog:nightly',
+    'release': 'project:releng:balrog:nightly',
+    'default': 'project:releng:balrog:nightly',
 }
 
 
