@@ -12,6 +12,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillContent.jsm");
 
 /**
  * Handles content's interactions for the frame.
@@ -38,14 +39,11 @@ var FormAutofillFrameScript = {
         if (!(doc instanceof Ci.nsIDOMHTMLDocument)) {
           return;
         }
-        this.FormAutofillContent._identifyAutofillFields(doc);
+        FormAutofillContent.identifyAutofillFields(doc);
         break;
       }
     }
   },
 };
-
-XPCOMUtils.defineLazyModuleGetter(FormAutofillFrameScript, "FormAutofillContent",
-                                  "resource://formautofill/FormAutofillContent.jsm");
 
 FormAutofillFrameScript.init();
