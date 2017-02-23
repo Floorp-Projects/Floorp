@@ -52,6 +52,8 @@
 #include "nsCharTraits.h"
 #include "harfbuzz/hb.h"
 
+using namespace mozilla::unicode;
+
 #define MOD(sp) ((sp) % PAREN_STACK_DEPTH)
 #define LIMIT_INC(sp) (((sp) < PAREN_STACK_DEPTH)? (sp) + 1 : PAREN_STACK_DEPTH)
 #define INC(sp,count) (MOD((sp) + (count)))
