@@ -97,6 +97,7 @@ nsSVGElement::nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
 
 nsSVGElement::~nsSVGElement()
 {
+  OwnerDoc()->UnscheduleSVGForPresAttrEvaluation(this);
 }
 
 JSObject*
@@ -303,9 +304,8 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   // just delete the style rule and lazily reconstruct it as needed).
   if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
     mContentDeclarationBlock = nullptr;
-    // TODO we should be doing this lazily by caching these on the styleset
     if (OwnerDoc()->GetStyleBackendType() == StyleBackendType::Servo) {
-      UpdateContentDeclarationBlock(StyleBackendType::Servo);
+      OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
     }
   }
 
@@ -905,6 +905,14 @@ bool
 nsSVGElement::IsNodeOfType(uint32_t aFlags) const
 {
   return !(aFlags & ~eCONTENT);
+}
+
+void
+nsSVGElement::NodeInfoChanged(nsIDocument* aOldDoc)
+{
+  aOldDoc->UnscheduleSVGForPresAttrEvaluation(this);
+  mContentDeclarationBlock = nullptr;
+  OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
 }
 
 NS_IMETHODIMP
