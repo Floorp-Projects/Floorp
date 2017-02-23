@@ -102,9 +102,8 @@ SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
 SERVO_BINDING_FUNC(Servo_ParseProperty,
                    RawServoDeclarationBlockStrong,
                    const nsACString* property, const nsACString* value,
-                   const nsACString* base_url, ThreadSafeURIHolder* base,
-                   ThreadSafeURIHolder* referrer,
-                   ThreadSafePrincipalHolder* principal)
+                   const nsACString* base,
+                   const GeckoParserExtraData* data)
 SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    RawGeckoKeyframeListBorrowed keyframes,
                    ServoComputedValuesBorrowed style,
@@ -167,11 +166,15 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetPropertyIsImportant, bool,
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetProperty, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property,
-                   nsACString* value, bool is_important)
+                   const nsACString* value, bool is_important,
+                   const nsACString* base,
+                   const GeckoParserExtraData* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SetPropertyById, bool,
                    RawServoDeclarationBlockBorrowed declarations,
                    nsCSSPropertyID property,
-                   nsACString* value, bool is_important)
+                   const nsACString* value, bool is_important,
+                   const nsACString* base,
+                   const GeckoParserExtraData* data)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_RemoveProperty, void,
                    RawServoDeclarationBlockBorrowed declarations,
                    const nsACString* property)
