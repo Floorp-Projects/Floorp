@@ -765,12 +765,10 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
                                     &pubKey->u.ec.DEREncodedParams);
             if (crv != CKR_OK)
                 break;
+            pubKey->u.ec.encoding = ECPoint_Undefined;
             crv = pk11_get_Decoded_ECPoint(arena,
                                            &pubKey->u.ec.DEREncodedParams, value,
                                            &pubKey->u.ec.publicValue);
-            if (seckey_SetPointEncoding(arena, pubKey) != SECSuccess) {
-                crv |= CKR_GENERAL_ERROR;
-            }
             break;
         case fortezzaKey:
         case nullKey:

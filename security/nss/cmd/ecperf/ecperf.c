@@ -563,7 +563,6 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads,
     ecParams.curve.seed.len = 0;
     ecParams.DEREncoding.data = NULL;
     ecParams.DEREncoding.len = 0;
-    ecParams.pointSize = ecCurve_map[curve]->pointSize;
 
     ecParams.fieldID.size = ecCurve_map[curve]->size;
     ecParams.fieldID.type = fieldType;
