@@ -85,6 +85,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -4088,6 +4089,72 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
                                mVisibleRect,
                                nsRect(offset, mFrame->GetSize()),
                                mFrame->StyleContext());
+}
+
+LayerState
+nsDisplayOutline::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aParameters)
+{
+  if (!gfxPrefs::LayersAllowOutlineLayers()) {
+    return LAYER_NONE;
+  }
+
+  uint8_t outlineStyle = mFrame->StyleContext()->StyleOutline()->mOutlineStyle;
+  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+      nsITheme* theme = mFrame->PresContext()->GetTheme();
+      if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
+                                              NS_THEME_FOCUS_OUTLINE)) {
+        return LAYER_NONE;
+      }
+  }
+
+  nsPoint offset = ToReferenceFrame();
+  Maybe<nsCSSBorderRenderer> br =
+    nsCSSRendering::CreateBorderRendererForOutline(mFrame->PresContext(),
+                                                   nullptr, mFrame,
+                                                   mVisibleRect,
+                                                   nsRect(offset, mFrame->GetSize()),
+                                                   mFrame->StyleContext());
+
+  if (!br) {
+    return LAYER_NONE;
+  }
+
+  mBorderRenderer = br;
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<Layer>
+nsDisplayOutline::BuildLayer(nsDisplayListBuilder* aBuilder,
+                             LayerManager* aManager,
+                             const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayOutline::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                          WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(mBorderRenderer.isSome());
+
+  Rect outlineTransformedRect = aLayer->RelativeToParent(mBorderRenderer->mOuterRect);
+
+  nsCSSBorderRenderer* br = mBorderRenderer.ptr();
+  WrBorderSide side[4];
+  NS_FOR_CSS_SIDES(i) {
+    side[i] = wr::ToWrBorderSide(br->mBorderWidths[i], ToDeviceColor(br->mBorderColors[i]), br->mBorderStyles[i]);
+  }
+  WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(br->mBorderRadii[0].width, br->mBorderRadii[0].height),
+                                                     LayerSize(br->mBorderRadii[1].width, br->mBorderRadii[1].height),
+                                                     LayerSize(br->mBorderRadii[3].width, br->mBorderRadii[3].height),
+                                                     LayerSize(br->mBorderRadii[2].width, br->mBorderRadii[2].height));
+  aCommands.AppendElement(OpDPPushBorder(wr::ToWrRect(outlineTransformedRect),
+                                         wr::ToWrRect(outlineTransformedRect),
+                                         side[0], side[1], side[2], side[3],
+                                         borderRadius));
 }
 
 bool
