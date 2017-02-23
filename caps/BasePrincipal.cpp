@@ -289,6 +289,7 @@ OriginAttributes::IsPrivateBrowsing(const nsACString& aOrigin)
 
 BasePrincipal::BasePrincipal(PrincipalKind aKind)
   : mKind(aKind)
+  , mDomainSet(false)
 {}
 
 BasePrincipal::~BasePrincipal()
@@ -381,16 +382,39 @@ NS_IMETHODIMP
 BasePrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  // If neither of the principals have document.domain set, we use the fast path
+  // in Equals().  Otherwise, we fall back to the slow path below.
+  auto other = Cast(aOther);
+  if (!mDomainSet && !other->mDomainSet) {
+    *aResult = FastEquals(aOther);
+    return NS_OK;
+  }
+
   *aResult = Subsumes(aOther, ConsiderDocumentDomain) &&
-             Cast(aOther)->Subsumes(this, ConsiderDocumentDomain);
+             other->Subsumes(this, ConsiderDocumentDomain);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
+bool
+BasePrincipal::EqualsIgnoringAddonId(nsIPrincipal *aOther)
 {
-  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+  MOZ_ASSERT(aOther);
 
+  // Note that this will not work for expanded principals, nor is it intended
+  // to.
+  if (!dom::ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(
+          OriginAttributesRef(), Cast(aOther)->OriginAttributesRef())) {
+    return false;
+  }
+
+  return SubsumesInternal(aOther, DontConsiderDocumentDomain) &&
+         Cast(aOther)->SubsumesInternal(this, DontConsiderDocumentDomain);
+}
+
+bool
+BasePrincipal::FastSubsumes(nsIPrincipal* aOther)
+{
   // If two principals are equal, then they both subsume each other.
   // We deal with two special cases first:
   // Null principals only subsume each other if they are equal, and are only
@@ -400,16 +424,23 @@ BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
   // infinite recursion.
   auto other = Cast(aOther);
   if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
-    *aResult = (this == other);
-    return NS_OK;
+    return this == other;
   }
   if (mOriginNoSuffix && FastEquals(aOther)) {
-    *aResult = true;
-    return NS_OK;
+    return true;
   }
 
   // Otherwise, fall back to the slow path.
-  *aResult = Subsumes(aOther, DontConsiderDocumentDomain);
+  return Subsumes(aOther, DontConsiderDocumentDomain);
+}
+
+NS_IMETHODIMP
+BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
+{
+  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  *aResult = FastSubsumes(aOther);
+
   return NS_OK;
 }
 
@@ -417,6 +448,15 @@ NS_IMETHODIMP
 BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  // If neither of the principals have document.domain set, we hand off to
+  // FastSubsumes() which has fast paths for some special cases. Otherwise, we fall
+  // back to the slow path below.
+  if (!mDomainSet && !Cast(aOther)->mDomainSet) {
+    *aResult = FastSubsumes(aOther);
+    return NS_OK;
+  }
+
   *aResult = Subsumes(aOther, ConsiderDocumentDomain);
   return NS_OK;
 }
