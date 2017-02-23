@@ -22,6 +22,7 @@
 
 #include "jsfun.h"
 #include "jsscript.h"
+#include "jscompartmentinlines.h"
 
 using namespace js;
 using namespace js::jit;
