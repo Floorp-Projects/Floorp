@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # basic sanity checking
-# == plugin-sanity.html plugin-sanity.html
-# == plugin-sanity.html plugin-sanity.html
+fails == plugin-sanity.html plugin-sanity.html # Bug 1341095
+fails == plugin-sanity.html plugin-sanity.html # Bug 1341095
 == plugin-alpha-zindex.html plugin-alpha-zindex.html
 == plugin-alpha-opacity.html plugin-alpha-opacity.html
 == windowless-clipping-1.html windowless-clipping-1.html
@@ -15,7 +15,7 @@
 == plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
 fails == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
 == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
-# == plugin-background.html plugin-background.html
+== plugin-background.html plugin-background.html
 == plugin-background-1-step.html plugin-background-1-step.html
 == plugin-background-2-step.html plugin-background-2-step.html
 == plugin-background-5-step.html plugin-background-5-step.html

@@ -26,14 +26,14 @@ fails HTTP(..) == src-list-format-4.html src-list-format-4.html
 fails HTTP(..) == src-list-format-5.html src-list-format-5.html
 fails HTTP(..) == src-list-format-6.html src-list-format-6.html
 # assumes AAT fonts are only supported on MacOS
-# == src-list-format-7.html src-list-format-7.html
-# == src-list-format-7.html src-list-format-7.html
+fails == src-list-format-7.html src-list-format-7.html
+fails == src-list-format-7.html src-list-format-7.html
 fails == src-list-local-full.html src-list-local-full.html
 fails == src-list-local-full-quotes.html src-list-local-full-quotes.html
 fails HTTP(..) == src-list-local-fallback.html src-list-local-fallback.html
 
 # data url tests (these don't need the HTTP server)
-# == src-list-data-1.html src-list-data-1.html
+fails == src-list-data-1.html src-list-data-1.html
 fails == src-list-data-2.html src-list-data-2.html
 fails == src-list-data-3.html src-list-data-3.html
 fails == src-list-data-4.html src-list-data-4.html
@@ -83,7 +83,7 @@ fails HTTP(..) == unicoderange-4.html unicoderange-4.html
 # HTTP(..) == disable-sheet-4.html disable-sheet-4.html
 # HTTP(..) == disable-sheet-5.html disable-sheet-5.html
 fails HTTP(..) == sheet-set-base-1.html sheet-set-base-1.html
-# == sheet-set-switch-1.html sheet-set-switch-1.html
+skip-if(stylo) == sheet-set-switch-1.html sheet-set-switch-1.html # times out?
 # HTTP(..) == insert-rule-1a.html insert-rule-1a.html
 # HTTP(..) == insert-rule-1b.html insert-rule-1b.html
 # HTTP(..) == delete-rule-1.html delete-rule-1.html
@@ -158,9 +158,9 @@ HTTP(..) == font-error-404-1.html font-error-404-1.html
 fails HTTP(..) == font-redirect.html font-redirect.html
 
 # Tests for potential regressions from bug 879963
-# == dynamic-duplicate-rule-1a.html dynamic-duplicate-rule-1a.html
-# == dynamic-duplicate-rule-1b.html dynamic-duplicate-rule-1b.html
-# == dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1c.html
+== dynamic-duplicate-rule-1a.html dynamic-duplicate-rule-1a.html
+== dynamic-duplicate-rule-1b.html dynamic-duplicate-rule-1b.html
+== dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1c.html
 
 # Test for COLR and CPAL support
 fails HTTP(..) == color-1a.html color-1a.html

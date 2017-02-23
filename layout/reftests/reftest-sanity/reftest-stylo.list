@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == data:text/html,<body> data:text/html,<body>
 == data:text/plain, data:text/plain,
-# == data:text/plain,HELLO data:text/plain,HELLO
+fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
 
 # these tests make sure async reftests work:
 == test-async.xul test-async.xul
@@ -31,7 +31,7 @@ HTTP == blank.html blank.html
 HTTP == about:blank about:blank
 # same for data:
 == default.html default.html
-# == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
+== data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 HTTP == default.html default.html
 # HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 == blank.html blank.html
@@ -79,15 +79,15 @@ include default-preferences-tests-stylo.list
 == page-width-3.9in.html page-width-3.9in.html
 == page-width-4.1in.html page-width-4.1in.html
 == page-width-auto.html page-width-auto.html
-# == page-height-2in.html page-height-2in.html
-# == page-height-2in.html page-height-2in.html
+== page-height-2in.html page-height-2in.html
+== page-height-2in.html page-height-2in.html
 == page-height-2.1in.html page-height-2.1in.html
 
 # Check that tests that need focus are skipped when it's not available
 needs-focus load needs-focus.html
 
 # Bug 632636
-# == data:text/plain,HELLO data:text/plain,HELLO
+fails == data:text/plain,HELLO data:text/plain,HELLO # Bug 1341637
 needs-focus == data:text/plain, data:text/plain,
 
 # Sanity check of viewport+displayport overrides
@@ -172,8 +172,8 @@ default-preferences
 == async-zoom-2.html async-zoom-2.html
 
 # reftest-opaque-layer
-# == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
-# == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
+fails == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html # Bug 1341095
+fails == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html # Bug 1341095
 == about:blank about:blank
 fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
@@ -187,7 +187,7 @@ fails == reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
 fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
-# == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
+fails == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-wait-pass.html
 fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
 fails == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-wait-fail.html
 

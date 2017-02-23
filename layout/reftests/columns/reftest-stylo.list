@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# == basic-1.html basic-1.html
+== basic-1.html basic-1.html
 == pref-width-1a.html pref-width-1a.html
 == pref-width-1b.html pref-width-1b.html
 == pref-width-1c.html pref-width-1c.html
@@ -18,7 +18,7 @@ fails == column-balancing-001.html column-balancing-001.html
 fails == column-balancing-002.html column-balancing-002.html
 fails == column-balancing-003.html column-balancing-003.html
 fails == column-balancing-004.html column-balancing-004.html
-# == column-box-alignment-rtl.html column-box-alignment-rtl.html
+== column-box-alignment-rtl.html column-box-alignment-rtl.html
 fails HTTP(..) == columnfill-balance.html columnfill-balance.html
 fails == columnfill-auto.html columnfill-auto.html
 fails HTTP(..) == columnfill-auto-2.html columnfill-auto-2.html
@@ -26,7 +26,7 @@ fails HTTP(..) == columnfill-auto-3.html columnfill-auto-3.html
 fails == columnrule-basic.html columnrule-basic.html
 fails == columnrule-complex.html columnrule-complex.html
 == columnrule-linestyles.html columnrule-linestyles.html
-# == columnrule-padding.html columnrule-padding.html
+== columnrule-padding.html columnrule-padding.html
 fails == columnfill-overflow.html columnfill-overflow.html
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2.html

@@ -27,7 +27,7 @@ default-preferences pref(layout.css.filters.enabled,true)
 == contrast-percent.html contrast-percent.html
 == contrast-reduce.html contrast-reduce.html
 == contrast-zero.html contrast-zero.html
-# == drop-shadow.html drop-shadow.html
+== drop-shadow.html drop-shadow.html
 == drop-shadow-default-color.html drop-shadow-default-color.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset.html
 == grayscale.html grayscale.html

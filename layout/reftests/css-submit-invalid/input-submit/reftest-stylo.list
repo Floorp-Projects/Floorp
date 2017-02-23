@@ -13,5 +13,5 @@ fails == add-submit-control.html add-submit-control.html
 fails == remove-submit-control.html remove-submit-control.html
 fails == change-type-submit-control.html change-type-submit-control.html
 fails == change-type-not-submit-control.html change-type-not-submit-control.html
-# == self-invalid.html self-invalid.html
+fails == self-invalid.html self-invalid.html
 fails == remove-form.html remove-form.html

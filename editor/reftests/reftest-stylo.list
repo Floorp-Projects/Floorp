@@ -19,31 +19,31 @@ fails == emptypasswd-1.html emptypasswd-1.html
 fails == emptypasswd-2.html emptypasswd-2.html
 fails == caret_on_positioned.html caret_on_positioned.html
 fails == spellcheck-input-disabled.html spellcheck-input-disabled.html
-# == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
-# == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
-# == spellcheck-input-attr-after.html spellcheck-input-attr-after.html
-# == spellcheck-input-attr-after.html spellcheck-input-attr-after.html
-# == spellcheck-input-attr-inherit.html spellcheck-input-attr-inherit.html
-# == spellcheck-input-attr-inherit.html spellcheck-input-attr-inherit.html
-# == spellcheck-input-attr-dynamic.html spellcheck-input-attr-dynamic.html
-# == spellcheck-input-attr-dynamic.html spellcheck-input-attr-dynamic.html
-# == spellcheck-input-attr-dynamic-inherit.html spellcheck-input-attr-dynamic-inherit.html
-# == spellcheck-input-attr-dynamic-inherit.html spellcheck-input-attr-dynamic-inherit.html
-# == spellcheck-input-property-dynamic.html spellcheck-input-property-dynamic.html
-# == spellcheck-input-property-dynamic.html spellcheck-input-property-dynamic.html
-# == spellcheck-input-property-dynamic-inherit.html spellcheck-input-property-dynamic-inherit.html
-# == spellcheck-input-property-dynamic-inherit.html spellcheck-input-property-dynamic-inherit.html
-# == spellcheck-input-attr-dynamic-override.html spellcheck-input-attr-dynamic-override.html
-# == spellcheck-input-attr-dynamic-override.html spellcheck-input-attr-dynamic-override.html
-# == spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-attr-dynamic-override-inherit.html
-# == spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-attr-dynamic-override-inherit.html
-# == spellcheck-input-property-dynamic-override.html spellcheck-input-property-dynamic-override.html
-# == spellcheck-input-property-dynamic-override.html spellcheck-input-property-dynamic-override.html
-# == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-property-dynamic-override-inherit.html
-# == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-property-dynamic-override-inherit.html
-# == spellcheck-textarea-attr.html spellcheck-textarea-attr.html
+fails == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
+fails == spellcheck-input-attr-before.html spellcheck-input-attr-before.html
+fails == spellcheck-input-attr-after.html spellcheck-input-attr-after.html
+fails == spellcheck-input-attr-after.html spellcheck-input-attr-after.html
+fails == spellcheck-input-attr-inherit.html spellcheck-input-attr-inherit.html
+fails == spellcheck-input-attr-inherit.html spellcheck-input-attr-inherit.html
+fails == spellcheck-input-attr-dynamic.html spellcheck-input-attr-dynamic.html
+fails == spellcheck-input-attr-dynamic.html spellcheck-input-attr-dynamic.html
+fails == spellcheck-input-attr-dynamic-inherit.html spellcheck-input-attr-dynamic-inherit.html
+fails == spellcheck-input-attr-dynamic-inherit.html spellcheck-input-attr-dynamic-inherit.html
+fails == spellcheck-input-property-dynamic.html spellcheck-input-property-dynamic.html
+fails == spellcheck-input-property-dynamic.html spellcheck-input-property-dynamic.html
+fails == spellcheck-input-property-dynamic-inherit.html spellcheck-input-property-dynamic-inherit.html
+fails == spellcheck-input-property-dynamic-inherit.html spellcheck-input-property-dynamic-inherit.html
+fails == spellcheck-input-attr-dynamic-override.html spellcheck-input-attr-dynamic-override.html
+fails == spellcheck-input-attr-dynamic-override.html spellcheck-input-attr-dynamic-override.html
+fails == spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-attr-dynamic-override-inherit.html
+fails == spellcheck-input-attr-dynamic-override-inherit.html spellcheck-input-attr-dynamic-override-inherit.html
+fails == spellcheck-input-property-dynamic-override.html spellcheck-input-property-dynamic-override.html
+fails == spellcheck-input-property-dynamic-override.html spellcheck-input-property-dynamic-override.html
+fails == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-property-dynamic-override-inherit.html
+fails == spellcheck-input-property-dynamic-override-inherit.html spellcheck-input-property-dynamic-override-inherit.html
+fails == spellcheck-textarea-attr.html spellcheck-textarea-attr.html
 #the random-if(Android) tests pass on android native, but fail on android-xul, see bug 728942
-# == spellcheck-textarea-attr.html spellcheck-textarea-attr.html
+fails == spellcheck-textarea-attr.html spellcheck-textarea-attr.html
 fails needs-focus == spellcheck-textarea-focused.html spellcheck-textarea-focused.html
 fails needs-focus == spellcheck-textarea-focused-reframe.html spellcheck-textarea-focused-reframe.html
 fails needs-focus == spellcheck-textarea-focused-notreadonly.html spellcheck-textarea-focused-notreadonly.html
@@ -63,8 +63,8 @@ fails needs-focus == caret_on_textarea_lastline.html caret_on_textarea_lastline.
 fails needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe.html
 fails needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe.html
 fails needs-focus == caret_after_reframe.html caret_after_reframe.html
-# == nobogusnode-1.html nobogusnode-1.html
-# == nobogusnode-2.html nobogusnode-2.html
+== nobogusnode-1.html nobogusnode-1.html
+== nobogusnode-2.html nobogusnode-2.html
 fails == spellcheck-hyphen-valid.html spellcheck-hyphen-valid.html
 fails == spellcheck-hyphen-invalid.html spellcheck-hyphen-invalid.html
 fails == spellcheck-slash-valid.html spellcheck-slash-valid.html
@@ -82,8 +82,8 @@ fails needs-focus == spellcheck-non-latin-hebrew.html spellcheck-non-latin-hebre
 fails needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese.html
 fails needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean.html
 fails == unneeded_scroll.html unneeded_scroll.html
-# == caret_on_presshell_reinit.html caret_on_presshell_reinit.html
-# == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-2.html
+== caret_on_presshell_reinit.html caret_on_presshell_reinit.html
+== caret_on_presshell_reinit-2.html caret_on_presshell_reinit-2.html
 fails == 642800.html 642800.html
 fails == selection_visibility_after_reframe.html selection_visibility_after_reframe.html
 fails == selection_visibility_after_reframe-2.html selection_visibility_after_reframe-2.html
@@ -106,33 +106,33 @@ fails == 388980-1.html 388980-1.html
 fails needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1.html
 fails == spellcheck-superscript-2.html spellcheck-superscript-2.html
 == 824080-1.html 824080-1.html
-# == 824080-2.html 824080-2.html
-# == 824080-3.html 824080-3.html
+== 824080-2.html 824080-2.html
+== 824080-3.html 824080-3.html
 # needs-focus == 824080-2.html 824080-2.html
-# == 824080-4.html 824080-4.html
-# == 824080-5.html 824080-5.html
+== 824080-4.html 824080-4.html
+== 824080-5.html 824080-5.html
 # needs-focus == 824080-4.html 824080-4.html
 # needs-focus == 824080-6.html 824080-6.html
 fails needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7.html
 # needs-focus == 824080-6.html 824080-6.html
 # Bug 674927: copy spellcheck-textarea tests to contenteditable
-# == spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
-# == spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
+== spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
+== spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
 # needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-focused.html
 # needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-focused-reframe.html
 == spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-nofocus.html
-# == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled.html
-# == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial.html
-# == spellcheck-contenteditable-attr-inherit.html spellcheck-contenteditable-attr-inherit.html
-# == spellcheck-contenteditable-attr-dynamic.html spellcheck-contenteditable-attr-dynamic.html
-# == spellcheck-contenteditable-attr-dynamic-inherit.html spellcheck-contenteditable-attr-dynamic-inherit.html
+== spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled.html
+== spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial.html
+== spellcheck-contenteditable-attr-inherit.html spellcheck-contenteditable-attr-inherit.html
+== spellcheck-contenteditable-attr-dynamic.html spellcheck-contenteditable-attr-dynamic.html
+== spellcheck-contenteditable-attr-dynamic-inherit.html spellcheck-contenteditable-attr-dynamic-inherit.html
 == spellcheck-contenteditable-property-dynamic.html spellcheck-contenteditable-property-dynamic.html
-# == spellcheck-contenteditable-property-dynamic-inherit.html spellcheck-contenteditable-property-dynamic-inherit.html
-# == spellcheck-contenteditable-attr-dynamic-override.html spellcheck-contenteditable-attr-dynamic-override.html
+== spellcheck-contenteditable-property-dynamic-inherit.html spellcheck-contenteditable-property-dynamic-inherit.html
+== spellcheck-contenteditable-attr-dynamic-override.html spellcheck-contenteditable-attr-dynamic-override.html
 == spellcheck-contenteditable-attr-dynamic-override-inherit.html spellcheck-contenteditable-attr-dynamic-override-inherit.html
-# == spellcheck-contenteditable-property-dynamic-override.html spellcheck-contenteditable-property-dynamic-override.html
+== spellcheck-contenteditable-property-dynamic-override.html spellcheck-contenteditable-property-dynamic-override.html
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-property-dynamic-override-inherit.html
-# == 911201.html 911201.html
+== 911201.html 911201.html
 fails needs-focus == 969773.html 969773.html
 fails == 997805.html 997805.html
 fails == 1088158.html 1088158.html

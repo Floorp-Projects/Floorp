@@ -59,7 +59,7 @@ skip-if(Android) == webgl-color-test.html?frame=1&aa&________&premult&alpha webg
 skip-if(Android) == webgl-color-test.html?frame=1&__&preserve&premult&alpha webgl-color-test.html?frame=1&__&preserve&premult&alpha
 skip-if(Android) == webgl-color-test.html?frame=1&aa&preserve&premult&alpha webgl-color-test.html?frame=1&aa&preserve&premult&alpha
 
-# == webgl-color-test.html?frame=6&__&________&_______&_____ webgl-color-test.html?frame=6&__&________&_______&_____
+== webgl-color-test.html?frame=6&__&________&_______&_____ webgl-color-test.html?frame=6&__&________&_______&_____
 skip-if(Android) == webgl-color-test.html?frame=6&aa&________&_______&_____ webgl-color-test.html?frame=6&aa&________&_______&_____
 skip-if(Android) == webgl-color-test.html?frame=6&__&preserve&_______&_____ webgl-color-test.html?frame=6&__&preserve&_______&_____
 skip-if(Android) == webgl-color-test.html?frame=6&aa&preserve&_______&_____ webgl-color-test.html?frame=6&aa&preserve&_______&_____

@@ -1,8 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# == first-letter-1.html first-letter-1.html
-# == first-letter-1.html first-letter-1.html
+fails == first-letter-1.html first-letter-1.html # Bug 1341086
+fails == first-letter-1.html first-letter-1.html # Bug 1341086
 
-# == max-height.html max-height.html
+fails == max-height.html max-height.html # Bug 1341086
 fails == min-height.html min-height.html
 
 # Android is off ever-so-slightly on the points where the text
@@ -15,7 +15,7 @@ fails == overflow-areas-1.html overflow-areas-1.html
 fuzzy-if(Android,125,20) == percent-height-child.html percent-height-child.html
 fuzzy-if(Android,125,20) == percent-width-child.html percent-width-child.html
 
-# == vertical-centering.html vertical-centering.html
+== vertical-centering.html vertical-centering.html
 
 fails == line-height-button-0.5.html line-height-button-0.5.html
 fails == line-height-button-1.5.html line-height-button-1.5.html
@@ -32,11 +32,11 @@ fails == disabled-4.html disabled-4.html
 fails == disabled-5.html disabled-5.html
 fails == disabled-6.html disabled-6.html
 
-# == width-auto-size-em-ltr.html width-auto-size-em-ltr.html
-# == width-auto-size-ltr.html width-auto-size-ltr.html
-# == width-exact-fit-ltr.html width-exact-fit-ltr.html
-# == width-auto-size-em-rtl.html width-auto-size-em-rtl.html
-# == width-auto-size-rtl.html width-auto-size-rtl.html
-# == width-exact-fit-rtl.html width-exact-fit-rtl.html
+== width-auto-size-em-ltr.html width-auto-size-em-ltr.html
+== width-auto-size-ltr.html width-auto-size-ltr.html
+fails == width-exact-fit-ltr.html width-exact-fit-ltr.html # Bug 1341086
+== width-auto-size-em-rtl.html width-auto-size-em-rtl.html
+== width-auto-size-rtl.html width-auto-size-rtl.html
+fails == width-exact-fit-rtl.html width-exact-fit-rtl.html # Bug 1341086
 fails == display-grid-flex-columnset.html display-grid-flex-columnset.html
 == 1317351.html 1317351.html
