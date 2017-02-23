@@ -35,6 +35,7 @@ git -C clang-tmp/clang checkout HEAD scripts/update.py
 clang-tmp/clang/scripts/update.py
 rm -fr clang-tmp
 
+# Generate locales.
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
 

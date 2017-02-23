@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0312
+#define FREEBL_VERSION 0x0313
 
 struct FREEBLVectorStr {
 
@@ -731,6 +731,10 @@ struct FREEBLVectorStr {
         const unsigned char *ad, unsigned int adLen);
 
     /* Version 3.018 came to here */
+
+    int (*p_EC_GetPointSize)(const ECParams *);
+
+    /* Version 3.019 came to here */
 
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */
