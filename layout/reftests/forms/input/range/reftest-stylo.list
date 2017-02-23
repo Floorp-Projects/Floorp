@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 
 # sanity checks:
-# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
-# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
-# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+== not-other-type-unthemed-1.html not-other-type-unthemed-1.html
 
 # dynamic type changes:
 fails == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1.html

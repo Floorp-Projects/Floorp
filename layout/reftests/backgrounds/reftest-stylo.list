@@ -16,7 +16,7 @@ fails == viewport-translucent-color-3.html viewport-translucent-color-3.html
 fails == translucent-color-2.html translucent-color-2.html
 fuzzy-if(skiaContent,1,1024) == translucent-color-3.html translucent-color-3.html
 == translucent-color-ref.html translucent-color-ref.html
-# == root-element-display-none-1.html root-element-display-none-1.html
+== root-element-display-none-1.html root-element-display-none-1.html
 fails == continuous-inline-1a.html continuous-inline-1a.html
 fails == continuous-inline-1b.html continuous-inline-1b.html
 fails == continuous-inline-1c.html continuous-inline-1c.html
@@ -41,8 +41,8 @@ fails == continuous-inline-5b.html continuous-inline-5b.html
 == background-position-1f.html background-position-1f.html
 == background-position-2a.html background-position-2a.html
 == background-position-2b.html background-position-2b.html
-# == background-position-2c.html background-position-2c.html
-# == background-position-2d.html background-position-2d.html
+== background-position-2c.html background-position-2c.html
+== background-position-2d.html background-position-2d.html
 == background-position-3a.html background-position-3a.html
 == background-position-3b.html background-position-3b.html
 == background-position-3c.html background-position-3c.html
@@ -92,11 +92,11 @@ fails == continuous-inline-5b.html continuous-inline-5b.html
 
 == background-size-zoom-no-repeat.html background-size-zoom-no-repeat.html
 
-# == background-size-contain-clip-padding.html background-size-contain-clip-padding.html
+== background-size-contain-clip-padding.html background-size-contain-clip-padding.html
 == background-size-contain-clip-border.html background-size-contain-clip-border.html
 == background-size-contain-position-fifty-fifty.html background-size-contain-position-fifty-fifty.html
 == background-size-contain-clip-padding-origin-border.html background-size-contain-clip-padding-origin-border.html
-# == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding.html
+== background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding.html
 
 == background-layers-1a.html background-layers-1a.html
 == background-layers-1b.html background-layers-1b.html
@@ -138,11 +138,11 @@ fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
 fails HTTP == root-background-1.html root-background-1.html
 fails HTTP == root-background-1.html root-background-1.html
 
-# == really-big-background.html really-big-background.html
-# == body-background.html body-background.html
-# == table-background.html table-background.html
+fails == really-big-background.html really-big-background.html # Bug 1341690
+fails == body-background.html body-background.html # Bug 1339711
+fails == table-background.html table-background.html # Bug 1339711
 fails == table-background-print.html table-background-print.html
-# == div-background.html div-background.html
+== div-background.html div-background.html
 
 == background-repeat-1-ref.html background-repeat-1-ref.html
 
@@ -179,11 +179,11 @@ fails == background-tiling-zoom-1.html background-tiling-zoom-1.html
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling.html
 
-# == background-clip-text-1a.html background-clip-text-1a.html
-# == background-clip-text-1b.html background-clip-text-1b.html
-# == background-clip-text-1c.html background-clip-text-1c.html
-# == background-clip-text-1d.html background-clip-text-1d.html
-# == background-clip-text-1e.html background-clip-text-1e.html
+== background-clip-text-1a.html background-clip-text-1a.html
+== background-clip-text-1b.html background-clip-text-1b.html
+== background-clip-text-1c.html background-clip-text-1c.html
+== background-clip-text-1d.html background-clip-text-1d.html
+== background-clip-text-1e.html background-clip-text-1e.html
 # pref(layout.css.background-clip-text.enabled,false) == background-clip-text-1a.html background-clip-text-1a.html
 
 # pref(layout.css.background-clip-text.enabled,true) == background-clip-text-2.html background-clip-text-2.html

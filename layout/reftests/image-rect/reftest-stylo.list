@@ -13,5 +13,5 @@ fails == background-zoom-1.html background-zoom-1.html
 fails == background-zoom-2.html background-zoom-2.html
 fails == background-zoom-3.html background-zoom-3.html
 fails == background-zoom-4.html background-zoom-4.html
-# == dom-api-computed-style.html dom-api-computed-style.html
+fails == dom-api-computed-style.html dom-api-computed-style.html # Bug 1341763
 fails == dom-api.html dom-api.html

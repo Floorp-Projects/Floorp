@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# == scalez-1a.html scalez-1a.html
+fails == scalez-1a.html scalez-1a.html
 fails == rotatey-1a.html rotatey-1a.html
 fails == rotatex-1a.html rotatex-1a.html
 # Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
@@ -11,7 +11,7 @@ fails == rotatex-perspective-1b.html rotatex-perspective-1b.html
 # -moz-perspective should only apply to child elements
 fails == rotatex-perspective-1c.html rotatex-perspective-1c.html
 fails == rotatex-perspective-3a.html rotatex-perspective-3a.html
-# == scalez-1a.html scalez-1a.html
+fails == scalez-1a.html scalez-1a.html
 fails == preserve3d-1a.html preserve3d-1a.html
 fails == preserve3d-1b.html preserve3d-1b.html
 fails == preserve3d-clipped.html preserve3d-clipped.html
@@ -43,10 +43,10 @@ fails == perspective-clipping-1.html perspective-clipping-1.html
 fails == perspective-origin-1a.html perspective-origin-1a.html
 fails == perspective-origin-1b.html perspective-origin-1b.html
 fails == perspective-origin-2a.html perspective-origin-2a.html
-# == perspective-origin-3a.html perspective-origin-3a.html
+== perspective-origin-3a.html perspective-origin-3a.html
 fails == perspective-origin-4a.html perspective-origin-4a.html
 == perspective-zindex.html perspective-zindex.html
-# == perspective-zindex-2.html perspective-zindex-2.html
+== perspective-zindex-2.html perspective-zindex-2.html
 fails == sorting-1a.html sorting-1a.html
 # Parallel planes, different z depth
 fails == sorting-2a.html sorting-2a.html
@@ -57,11 +57,11 @@ fails == sorting-3a.html sorting-3a.html
 fails == rotatex-transformorigin-1a.html rotatex-transformorigin-1a.html
 fails == overflow-hidden-1a.html overflow-hidden-1a.html
 fails == transform-style-flat-1a.html transform-style-flat-1a.html
-# == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
-# == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
+fails == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
+fails == willchange-containing-block.html?willchange willchange-containing-block.html?willchange
 fails == scroll-perspective-1.html scroll-perspective-1.html
 # Bugs
-# == 1035611-1.html 1035611-1.html
+== 1035611-1.html 1035611-1.html
 == 1157984-1.html 1157984-1.html
 fails == animate-cube-radians.html animate-cube-radians.html
 fails == animate-cube-radians-zoom.html animate-cube-radians-zoom.html
@@ -70,15 +70,15 @@ fails == animate-cube-degrees.html animate-cube-degrees.html
 fails == animate-cube-degrees-zoom.html animate-cube-degrees-zoom.html
 fails == animate-cube-degrees-ref.html animate-cube-degrees-ref.html
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) == preserves3d-nested.html preserves3d-nested.html
-# == animate-preserve3d-parent.html animate-preserve3d-parent.html
-# == animate-preserve3d-child.html animate-preserve3d-child.html
-# == animate-backface-hidden.html animate-backface-hidden.html
-# == 1245450-1.html 1245450-1.html
-# == opacity-preserve3d-1.html opacity-preserve3d-1.html
-# == opacity-preserve3d-2.html opacity-preserve3d-2.html
-# == opacity-preserve3d-3.html opacity-preserve3d-3.html
-# == opacity-preserve3d-4.html opacity-preserve3d-4.html
+== animate-preserve3d-parent.html animate-preserve3d-parent.html
+== animate-preserve3d-child.html animate-preserve3d-child.html
+== animate-backface-hidden.html animate-backface-hidden.html
+== 1245450-1.html 1245450-1.html
+== opacity-preserve3d-1.html opacity-preserve3d-1.html
+== opacity-preserve3d-2.html opacity-preserve3d-2.html
+== opacity-preserve3d-3.html opacity-preserve3d-3.html
+== opacity-preserve3d-4.html opacity-preserve3d-4.html
 == snap-perspective-1.html snap-perspective-1.html
-# == mask-layer-1.html mask-layer-1.html
-# == mask-layer-2.html mask-layer-2.html
-# == mask-layer-3.html mask-layer-3.html
+== mask-layer-1.html mask-layer-1.html
+== mask-layer-2.html mask-layer-2.html
+== mask-layer-3.html mask-layer-3.html

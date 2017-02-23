@@ -201,5 +201,5 @@ include empty/reftest-stylo.list
 == wide--cover--percent-width-percent-height.html wide--cover--percent-width-percent-height.html
 == wide--cover--percent-width-percent-height-viewbox.html wide--cover--percent-width-percent-height-viewbox.html
 
-# == diagonal-percentage-vector-background.html diagonal-percentage-vector-background.html
+== diagonal-percentage-vector-background.html diagonal-percentage-vector-background.html
 == no-aspect-ratio-wide.html no-aspect-ratio-wide.html

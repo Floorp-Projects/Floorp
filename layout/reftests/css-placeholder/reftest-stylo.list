@@ -4,5 +4,5 @@ include textarea/reftest-stylo.list
 
 fails == css-restrictions.html css-restrictions.html
 fails == css-simple-styling.html css-simple-styling.html
-# == css-background.html css-background.html
+fails == css-background.html css-background.html
 fails == ignore-pseudo-class.html ignore-pseudo-class.html

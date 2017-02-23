@@ -48,10 +48,10 @@ fails == box-shadow-listbox.html box-shadow-listbox.html
 fails == box-shadow-combobox.html box-shadow-combobox.html
 
 # RTL mirroring tests
-# == checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl.html
+== checkbox-not-mirrored-when-rtl.html checkbox-not-mirrored-when-rtl.html
 skip-if(!cocoaWidget) == menulist-mirrored-when-rtl.xul menulist-mirrored-when-rtl.xul
 skip-if(!cocoaWidget) == searchfield-mirrored-when-rtl.xul searchfield-mirrored-when-rtl.xul
-# == select-mirrored-when-rtl.html select-mirrored-when-rtl.html
+fails == select-mirrored-when-rtl.html select-mirrored-when-rtl.html
 
 == resizer-bottomend.xul resizer-bottomend.xul
 random-if(d2d) == resizer-bottomend.xul resizer-bottomend.xul
