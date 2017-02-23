@@ -104,7 +104,7 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
   FloatManager()->GetTranslation(mFloatManagerI, mFloatManagerB);
   FloatManager()->PushState(&mFloatManagerStateBefore); // never popped
 
-  mReflowStatus = NS_FRAME_COMPLETE;
+  mReflowStatus.Reset();
 
   mNextInFlow = static_cast<nsBlockFrame*>(mBlock->GetNextInFlow());
 
@@ -775,7 +775,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, false, reflowStatus);
     floatMarginISize = aFloat->ISize(wm) + floatMargin.IStartEnd(wm);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(reflowStatus),
+    NS_ASSERTION(reflowStatus.IsComplete(),
                  "letter frames and orthogonal floats with auto block-size "
                  "shouldn't break, and if they do now, then they're breaking "
                  "at the wrong point");
@@ -912,7 +912,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   }
   if (aFloat->GetPrevInFlow())
     floatMargin.BStart(wm) = 0;
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
+  if (reflowStatus.IsIncomplete())
     floatMargin.BEnd(wm) = 0;
 
   // In the case that we're in columns and not splitting floats, we need
@@ -920,16 +920,16 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
   // (controlled by the pref "layout.float-fragments-inside-column.enabled")
   //
   // Likewise, if none of the float fit, and it needs to be pushed in
-  // its entirety to the next page (NS_FRAME_IS_TRUNCATED or
-  // NS_INLINE_IS_BREAK_BEFORE), we need to do the same.
+  // its entirety to the next page (IsTruncated() or IsInlineBreakBefore()),
+  // we need to do the same.
   if ((ContentBSize() != NS_UNCONSTRAINEDSIZE &&
        !mFlags.mFloatFragmentsInsideColumnEnabled &&
        adjustedAvailableSpace.BSize(wm) == NS_UNCONSTRAINEDSIZE &&
        !mustPlaceFloat &&
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
        ContentBEnd() - floatPos.B(wm)) ||
-      NS_FRAME_IS_TRUNCATED(reflowStatus) ||
-      NS_INLINE_IS_BREAK_BEFORE(reflowStatus)) {
+      reflowStatus.IsTruncated() ||
+      reflowStatus.IsInlineBreakBefore()) {
     PushFloatPastBreak(aFloat);
     return false;
   }
@@ -941,7 +941,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
       !mustPlaceFloat &&
       (!mReflowInput.mFlags.mIsTopOfPage || floatPos.B(wm) > 0) &&
       NS_STYLE_PAGE_BREAK_AVOID == aFloat->StyleDisplay()->mBreakInside &&
-      (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus) ||
+      (!reflowStatus.IsFullyComplete() ||
        aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
        ContentBEnd() - floatPos.B(wm)) &&
       !aFloat->GetPrevInFlow()) {
@@ -980,7 +980,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     nsFloatManager::CalculateRegionFor(wm, aFloat, floatMargin,
                                        ContainerSize());
   // if the float split, then take up all of the vertical height
-  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus) &&
+  if (reflowStatus.IsIncomplete() &&
       (NS_UNCONSTRAINEDSIZE != ContentBSize())) {
     region.BSize(wm) = std::max(region.BSize(wm),
                                 ContentBSize() - floatPos.B(wm));
@@ -1002,7 +1002,7 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     FloatManager()->IncludeInDamage(blockStart, blockEnd);
   }
 
-  if (!NS_FRAME_IS_FULLY_COMPLETE(reflowStatus)) {
+  if (!reflowStatus.IsFullyComplete()) {
     mBlock->SplitFloat(*this, aFloat, reflowStatus);
   } else {
     MOZ_ASSERT(!aFloat->GetNextInFlow());
@@ -1053,7 +1053,7 @@ BlockReflowInput::PushFloatPastBreak(nsIFrame *aFloat)
   DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
   AppendPushedFloatChain(aFloat);
-  NS_FRAME_SET_OVERFLOW_INCOMPLETE(mReflowStatus);
+  mReflowStatus.SetOverflowIncomplete();
 }
 
 /**

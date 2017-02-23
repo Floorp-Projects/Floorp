@@ -259,6 +259,10 @@ add_test(function test_processInputSourceActionSequenceValidation() {
   check(`actionSequence.id: ${getTypeString(actionSequence.id)}`,
       /Expected 'id' to be a string/);
 
+  actionSequence.id = undefined;
+  check(`actionSequence.id: ${getTypeString(actionSequence.id)}`,
+      /Expected 'id' to be defined/);
+
   actionSequence.id = "some_id";
   actionSequence.actions = -1;
   check(`actionSequence.actions: ${getTypeString(actionSequence.actions)}`,
@@ -320,22 +324,6 @@ add_test(function test_processInputSourceActionSequenceKey() {
   run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequenceGenerateID() {
-  let actionItems = [
-    {
-      type: "pause",
-      duration: 5000,
-    },
-  ];
-  let actionSequence = {
-    type: "key",
-    actions: actionItems,
-  };
-  let actions = action.Sequence.fromJson(actionSequence);
-  equal(typeof actions[0].id, "string");
-  ok(actions[0].id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
-  run_next_test();
-});
 
 add_test(function test_processInputSourceActionSequenceInputStateMap() {
   let id = "1";
@@ -473,7 +461,8 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
   deepEqual(actionsByTick[2][0], expectedAction);
 
   // one empty action sequence
-  actionsByTick = action.Chain.fromJson([keyActionSequence, {type: "none", actions: []}]);
+  actionsByTick = action.Chain.fromJson(
+      [keyActionSequence, {type: "none", id: "some", actions: []}]);
   equal(keyActionItems.length, actionsByTick.length);
   equal(1, actionsByTick[0].length);
   run_next_test();

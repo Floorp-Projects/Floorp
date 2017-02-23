@@ -195,132 +195,159 @@ enum nsSpread {
 #define NS_CARRIED_BOTTOM_MARGIN_IS_AUTO 0x2
 
 //----------------------------------------------------------------------
+// Reflow status returned by the Reflow() methods.
+class nsReflowStatus final {
+  using StyleClear = mozilla::StyleClear;
 
-/**
- * Reflow status returned by the reflow methods. There are three
- * completion statuses, represented by two bit flags.
- *
- * NS_FRAME_COMPLETE means the frame is fully complete.
- *
- * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
- * content, and that the parent frame should create a continuing frame.
- * If this bit isn't set it means the frame does map all its content.
- * This bit is mutually exclusive with NS_FRAME_OVERFLOW_INCOMPLETE.
- *
- * NS_FRAME_OVERFLOW_INCOMPLETE bit flag means that the frame has
- * overflow that is not complete, but its own box is complete.
- * (This happens when content overflows a fixed-height box.)
- * The reflower should place and size the frame and continue its reflow,
- * but needs to create an overflow container as a continuation for this
- * frame. See nsContainerFrame.h for more information.
- * This bit is mutually exclusive with NS_FRAME_NOT_COMPLETE.
- * 
- * Please use the SET macro for handling
- * NS_FRAME_NOT_COMPLETE and NS_FRAME_OVERFLOW_INCOMPLETE.
- *
- * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
- * dirty, and also needs to be reflowed. This status only makes sense
- * for a frame that is not complete, i.e. you wouldn't set both
- * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW.
- *
- * The low 8 bits of the nsReflowStatus are reserved for future extensions;
- * the remaining 24 bits are zero (and available for extensions; however
- * API's that accept/return nsReflowStatus must not receive/return any
- * extension bits).
- *
- * @see #Reflow()
- */
-typedef uint32_t nsReflowStatus;
+public:
+  nsReflowStatus()
+    : mBreakType(StyleClear::None)
+    , mIncomplete(false)
+    , mOverflowIncomplete(false)
+    , mNextInFlowNeedsReflow(false)
+    , mTruncated(false)
+    , mInlineBreak(false)
+    , mInlineBreakAfter(false)
+    , mFirstLetterComplete(false)
+  {}
 
-#define NS_FRAME_COMPLETE             0       // Note: not a bit!
-#define NS_FRAME_NOT_COMPLETE         0x1
-#define NS_FRAME_REFLOW_NEXTINFLOW    0x2
-#define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
+  // Reset all the bit-fields.
+  void Reset() {
+    mBreakType = StyleClear::None;
+    mIncomplete = false;
+    mOverflowIncomplete = false;
+    mNextInFlowNeedsReflow = false;
+    mTruncated = false;
+    mInlineBreak = false;
+    mInlineBreakAfter = false;
+    mFirstLetterComplete = false;
+  }
 
-#define NS_FRAME_IS_COMPLETE(status) \
-  (0 == ((status) & NS_FRAME_NOT_COMPLETE))
+  // Return true if all flags are cleared.
+  bool IsEmpty() const {
+    return (!mIncomplete &&
+            !mOverflowIncomplete &&
+            !mNextInFlowNeedsReflow &&
+            !mTruncated &&
+            !mInlineBreak &&
+            !mInlineBreakAfter &&
+            !mFirstLetterComplete);
+  }
 
-#define NS_FRAME_IS_NOT_COMPLETE(status) \
-  (0 != ((status) & NS_FRAME_NOT_COMPLETE))
+  // mIncomplete bit flag means the frame does not map all its content, and
+  // that the parent frame should create a continuing frame. If this bit
+  // isn't set, it means the frame does map all its content. This bit is
+  // mutually exclusive with mOverflowIncomplete.
+  //
+  // mOverflowIncomplete bit flag means that the frame has overflow that is
+  // not complete, but its own box is complete. (This happens when content
+  // overflows a fixed-height box.) The reflower should place and size the
+  // frame and continue its reflow, but needs to create an overflow
+  // container as a continuation for this frame. See nsContainerFrame.h for
+  // more information. This bit is mutually exclusive with mIncomplete.
+  //
+  // If both mIncomplete and mOverflowIncomplete are not set, the frame is
+  // fully complete.
+  bool IsComplete() const { return !mIncomplete; }
+  bool IsIncomplete() const { return mIncomplete; }
+  bool IsOverflowIncomplete() const { return mOverflowIncomplete; }
+  bool IsFullyComplete() const {
+    return !IsIncomplete() && !IsOverflowIncomplete();
+  }
 
-#define NS_FRAME_OVERFLOW_IS_INCOMPLETE(status) \
-  (0 != ((status) & NS_FRAME_OVERFLOW_INCOMPLETE))
+  void SetIncomplete() {
+    mIncomplete = true;
+    mOverflowIncomplete = false;
+  }
+  void SetOverflowIncomplete() {
+    mIncomplete = false;
+    mOverflowIncomplete = true;
+  }
 
-#define NS_FRAME_IS_FULLY_COMPLETE(status) \
-  (NS_FRAME_IS_COMPLETE(status) && !NS_FRAME_OVERFLOW_IS_INCOMPLETE(status))
+  // mNextInFlowNeedsReflow bit flag means that the next-in-flow is dirty,
+  // and also needs to be reflowed. This status only makes sense for a frame
+  // that is not complete, i.e. you wouldn't set mNextInFlowNeedsReflow when
+  // IsComplete() is true.
+  bool NextInFlowNeedsReflow() const { return mNextInFlowNeedsReflow; }
+  void SetNextInFlowNeedsReflow() { mNextInFlowNeedsReflow = true; }
 
-// These macros set or switch incomplete statuses without touching the
-// NS_FRAME_REFLOW_NEXTINFLOW bit.
-#define NS_FRAME_SET_INCOMPLETE(status) \
-  status = (status & ~NS_FRAME_OVERFLOW_INCOMPLETE) | NS_FRAME_NOT_COMPLETE
+  // mTruncated bit flag means that the part of the frame before the first
+  // possible break point was unable to fit in the available space.
+  // Therefore, the entire frame should be moved to the next continuation of
+  // the parent frame. A frame that begins at the top of the page must never
+  // be truncated. Doing so would likely cause an infinite loop.
+  bool IsTruncated() const { return mTruncated; }
+  void UpdateTruncated(const mozilla::ReflowInput& aReflowInput,
+                       const mozilla::ReflowOutput& aMetrics);
 
-#define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
-  status = (status & ~NS_FRAME_NOT_COMPLETE) | NS_FRAME_OVERFLOW_INCOMPLETE
+  // Merge the frame completion status bits from aStatus into this.
+  void MergeCompletionStatusFrom(const nsReflowStatus& aStatus)
+  {
+    mIncomplete |= aStatus.mIncomplete;
+    mOverflowIncomplete |= aStatus.mOverflowIncomplete;
+    mNextInFlowNeedsReflow |= aStatus.mNextInFlowNeedsReflow;
+    mTruncated |= aStatus.mTruncated;
+    if (mIncomplete) {
+      mOverflowIncomplete = false;
+    }
+  }
 
-// This bit is set, when a break is requested. This bit is orthogonal
-// to the nsIFrame::nsReflowStatus completion bits.
-#define NS_INLINE_BREAK              0x0100
+  // mInlineBreak bit flag means a break is requested.
+  bool IsInlineBreak() const { return mInlineBreak; }
 
-// When a break is requested, this bit when set indicates that the
-// break should occur after the frame just reflowed; when the bit is
-// clear the break should occur before the frame just reflowed.
-#define NS_INLINE_BREAK_BEFORE       0x0000
-#define NS_INLINE_BREAK_AFTER        0x0200
+  // Suppose a break is requested. When mInlineBreakAfter is set, the break
+  // should occur after the frame just reflowed; when mInlineBreakAfter is
+  // clear, the break should occur before the frame just reflowed.
+  bool IsInlineBreakBefore() const { return mInlineBreak && !mInlineBreakAfter; }
+  bool IsInlineBreakAfter() const { return mInlineBreak && mInlineBreakAfter; }
+  StyleClear BreakType() const { return mBreakType; }
 
-// The type of break requested can be found in these bits.
-#define NS_INLINE_BREAK_TYPE_MASK    0xF000
+  // Set the inline line-break-before status, and reset other bit flags. The
+  // break type is StyleClear::Line. Note that other frame completion status
+  // isn't expected to matter after calling this method.
+  void SetInlineLineBreakBeforeAndReset() {
+    Reset();
+    mBreakType = StyleClear::Line;
+    mInlineBreak = true;
+    mInlineBreakAfter = false;
+  }
 
-// Set when a break was induced by completion of a first-letter
-#define NS_INLINE_BREAK_FIRST_LETTER_COMPLETE 0x10000
+  // Set the inline line-break-after status. The break type can be changed
+  // via the optional aBreakType param.
+  void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::Line) {
+    mBreakType = aBreakType;
+    mInlineBreak = true;
+    mInlineBreakAfter = true;
+  }
 
-//----------------------------------------
-// Macros that use those bits
+  // mFirstLetterComplete bit flag means the break was induced by
+  // completion of a first-letter.
+  bool FirstLetterComplete() const { return mFirstLetterComplete; }
+  void SetFirstLetterComplete() { mFirstLetterComplete = true; }
 
-#define NS_INLINE_IS_BREAK(_status) \
-  (0 != ((_status) & NS_INLINE_BREAK))
+private:
+  StyleClear mBreakType;
 
-#define NS_INLINE_IS_BREAK_AFTER(_status) \
-  (0 != ((_status) & NS_INLINE_BREAK_AFTER))
+  // Frame completion status bit flags.
+  bool mIncomplete : 1;
+  bool mOverflowIncomplete : 1;
+  bool mNextInFlowNeedsReflow : 1;
+  bool mTruncated : 1;
 
-#define NS_INLINE_IS_BREAK_BEFORE(_status) \
-  (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_AFTER)))
+  // Inline break status bit flags.
+  bool mInlineBreak : 1;
+  bool mInlineBreakAfter : 1;
+  bool mFirstLetterComplete : 1;
+};
 
-#define NS_INLINE_GET_BREAK_TYPE(_status) \
-  (static_cast<StyleClear>(((_status) >> 12) & 0xF))
+#define NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics) \
+  aStatus.UpdateTruncated(aReflowInput, aMetrics);
 
-#define NS_INLINE_MAKE_BREAK_TYPE(_type)  (static_cast<int>(_type) << 12)
-
-// Construct a line-break-before status. Note that there is no
-// completion status for a line-break before because we *know* that
-// the frame will be reflowed later and hence its current completion
-// status doesn't matter.
-#define NS_INLINE_LINE_BREAK_BEFORE()                                   \
-  (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
-   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
-
-// Take a completion status and add to it the desire to have a
-// line-break after. For this macro we do need the completion status
-// because the user of the status will need to know whether to
-// continue the frame or not.
-#define NS_INLINE_LINE_BREAK_AFTER(_completionStatus)                   \
-  ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
-   NS_INLINE_MAKE_BREAK_TYPE(StyleClear::Line))
-
-// A frame is "truncated" if the part of the frame before the first
-// possible break point was unable to fit in the available vertical
-// space.  Therefore, the entire frame should be moved to the next page.
-// A frame that begins at the top of the page must never be "truncated".
-// Doing so would likely cause an infinite loop.
-#define NS_FRAME_TRUNCATED  0x0010
-#define NS_FRAME_IS_TRUNCATED(status) \
-  (0 != ((status) & NS_FRAME_TRUNCATED))
-#define NS_FRAME_SET_TRUNCATION(status, aReflowInput, aMetrics) \
-  aReflowInput.SetTruncated(aMetrics, &status);
-
-// Merge the incompleteness, truncation and NS_FRAME_REFLOW_NEXTINFLOW
-// status from aSecondary into aPrimary.
-void NS_MergeReflowStatusInto(nsReflowStatus* aPrimary,
-                              nsReflowStatus aSecondary);
+#ifdef DEBUG
+// Convert nsReflowStatus to a human-readable string.
+std::ostream&
+operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
+#endif
 
 //----------------------------------------------------------------------
 
@@ -2296,7 +2323,7 @@ public:
    * frame state will be cleared.
    *
    * XXX This doesn't make sense. If the frame is reflowed but not complete, then
-   * the status should be NS_FRAME_NOT_COMPLETE and not NS_FRAME_COMPLETE
+   * the status should have mIncomplete bit set.
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */

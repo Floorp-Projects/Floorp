@@ -179,8 +179,13 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPreData || isIncrementalGCInProgress())
         return;
 
-    if (IsIncrementalGCUnsafe(rt) != AbortReason::None || TlsContext.get()->keepAtoms || rt->hasHelperThreadZones())
+    if (IsIncrementalGCUnsafe(rt) != AbortReason::None ||
+        TlsContext.get()->keepAtoms ||
+        rt->hasHelperThreadZones() ||
+        rt->cooperatingContexts().length() != 1)
+    {
         return;
+    }
 
     number++;
 

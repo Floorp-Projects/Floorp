@@ -262,6 +262,24 @@ BaselineCacheIRCompiler::emitGuardProto()
 }
 
 bool
+BaselineCacheIRCompiler::emitGuardCompartment()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    reader.stubOffset(); // Read global.
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address addr(stubAddress(reader.stubOffset()));
+    masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
+    masm.loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    masm.branchPtr(Assembler::NotEqual, addr, scratch, failure->label());
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitGuardSpecificObject()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -354,11 +372,11 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
     AutoOutputRegister output(*this);
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+    AutoScratchRegister scratch2(allocator, masm);
 
-    // We're about to return, so it's safe to clobber obj now.
     masm.load32(stubAddress(reader.stubOffset()), scratch);
-    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
-    masm.loadValue(BaseIndex(obj, scratch, TimesOne), output.valueReg());
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
+    masm.loadValue(BaseIndex(scratch2, scratch, TimesOne), output.valueReg());
     return true;
 }
 

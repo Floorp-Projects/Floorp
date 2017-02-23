@@ -632,7 +632,7 @@ JSObject*
 JSRuntime::getIncumbentGlobal(JSContext* cx)
 {
     MOZ_ASSERT(cx->runtime()->getIncumbentGlobalCallback,
-               "Must set a callback using JS_SetGetIncumbentGlobalCallback before using Promises");
+               "Must set a callback using SetGetIncumbentGlobalCallback before using Promises");
 
     return cx->runtime()->getIncumbentGlobalCallback(cx);
 }

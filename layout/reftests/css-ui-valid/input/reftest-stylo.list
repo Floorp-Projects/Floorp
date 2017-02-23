@@ -32,11 +32,11 @@ fails == input-fieldset-legend.html input-fieldset-legend.html
 == input-checkbox-valid-default.html input-checkbox-valid-default.html
 fails == input-file-valid-changed.html input-file-valid-changed.html
 fails == input-file-valid-default.html input-file-valid-default.html
-# == input-radio-required.html input-radio-required.html
-# == input-radio-customerror.html input-radio-customerror.html
-# == input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
-# == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
-# == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
-# == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
+== input-radio-required.html input-radio-required.html
+== input-radio-customerror.html input-radio-customerror.html
+== input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
+== input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
+== input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
+== input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
 fails == input-novalidate.html input-novalidate.html
 # input type='hidden' shouldn't show

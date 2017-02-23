@@ -8,6 +8,9 @@ const { createEnum } = require("devtools/client/shared/enum");
 
 createEnum([
 
+  // Update the color used for the overlay of a grid.
+  "UPDATE_GRID_COLOR",
+
   // Update the grid highlighted state.
   "UPDATE_GRID_HIGHLIGHTED",
 

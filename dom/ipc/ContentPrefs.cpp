@@ -159,6 +159,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "media.eme.video.blank",
   "media.ffmpeg.enabled",
   "media.ffvpx.enabled",
+  "media.ffvpx.low-latency.enabled",
   "media.flac.enabled",
   "media.forcestereo.enabled",
   "media.gmp.async-shutdown-timeout",

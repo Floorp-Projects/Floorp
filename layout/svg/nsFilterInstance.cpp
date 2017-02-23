@@ -359,6 +359,19 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter,
   return cssFilterInstance.BuildPrimitives(mPrimitiveDescriptions, aInputIsTainted);
 }
 
+static void
+UpdateNeededBounds(const nsIntRegion& aRegion, nsIntRect& aBounds)
+{
+  aBounds = aRegion.GetBounds();
+
+  bool overflow;
+  IntSize surfaceSize =
+   nsSVGUtils::ConvertToSurfaceSize(aBounds.Size(), &overflow);
+  if (overflow) {
+    aBounds.SizeTo(surfaceSize);
+  }
+}
+
 void
 nsFilterInstance::ComputeNeededBoxes()
 {
@@ -375,9 +388,9 @@ nsFilterInstance::ComputeNeededBoxes()
 
   sourceGraphicNeededRegion.And(sourceGraphicNeededRegion, mTargetBounds);
 
-  mSourceGraphic.mNeededBounds = sourceGraphicNeededRegion.GetBounds();
-  mFillPaint.mNeededBounds = fillPaintNeededRegion.GetBounds();
-  mStrokePaint.mNeededBounds = strokePaintNeededRegion.GetBounds();
+  UpdateNeededBounds(sourceGraphicNeededRegion, mSourceGraphic.mNeededBounds);
+  UpdateNeededBounds(fillPaintNeededRegion, mFillPaint.mNeededBounds);
+  UpdateNeededBounds(strokePaintNeededRegion, mStrokePaint.mNeededBounds);
 }
 
 DrawResult
@@ -385,6 +398,9 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
 {
   MOZ_ASSERT(mTargetFrame);
   nsIntRect neededRect = aSource->mNeededBounds;
+  if (neededRect.IsEmpty()) {
+    return DrawResult::SUCCESS;
+  }
 
   RefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
@@ -575,13 +591,7 @@ nsFilterInstance::OutputFilterSpaceBounds() const
   if (numPrimitives <= 0)
     return nsIntRect();
 
-  nsIntRect bounds =
-    mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion();
-  bool overflow;
-  IntSize surfaceSize =
-    nsSVGUtils::ConvertToSurfaceSize(bounds.Size(), &overflow);
-  bounds.SizeTo(surfaceSize);
-  return bounds;
+  return mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion();
 }
 
 nsIntRect

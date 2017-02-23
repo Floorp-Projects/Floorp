@@ -7,16 +7,17 @@
 #if !defined(PlatformDecoderModule_h_)
 #define PlatformDecoderModule_h_
 
+#include "GMPCrashHelper.h"
 #include "MediaDecoderReader.h"
 #include "MediaInfo.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/KnowsCompositor.h"
-#include "nsTArray.h"
-#include "mozilla/RefPtr.h"
-#include "GMPCrashHelper.h"
-#include <queue>
 #include "MediaResult.h"
+#include "mozilla/EnumSet.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/layers/KnowsCompositor.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "nsTArray.h"
+#include <queue>
 
 namespace mozilla {
 class TrackInfo;
@@ -41,10 +42,14 @@ static LazyLogModule sPDMLog("PlatformDecoderModule");
 
 struct MOZ_STACK_CLASS CreateDecoderParams final
 {
-  explicit CreateDecoderParams(const TrackInfo& aConfig)
-    : mConfig(aConfig)
+  explicit CreateDecoderParams(const TrackInfo& aConfig) : mConfig(aConfig) { }
+
+  enum class Option
   {
-  }
+    Default,
+    LowLatency,
+  };
+  using OptionSet = EnumSet<Option>;
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -83,6 +88,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   bool mUseBlankDecoder = false;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
+  OptionSet mOptions = OptionSet(Option::Default);
 
 private:
   void Set(TaskQueue* aTaskQueue) { mTaskQueue = aTaskQueue; }
@@ -97,6 +103,7 @@ private:
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
   void Set(bool aUseBlankDecoder) { mUseBlankDecoder = aUseBlankDecoder; }
+  void Set(OptionSet aOptions) { mOptions = aOptions; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
   {
     mKnowsCompositor = aKnowsCompositor;
@@ -138,14 +145,15 @@ public:
 
   // Perform any per-instance initialization.
   // This is called on the decode task queue.
-  virtual nsresult Startup() { return NS_OK; };
+  virtual nsresult Startup() { return NS_OK; }
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
-  virtual bool SupportsMimeType(
-    const nsACString& aMimeType,
-    DecoderDoctorDiagnostics* aDiagnostics) const = 0;
-  virtual bool Supports(const TrackInfo& aTrackInfo,
-                        DecoderDoctorDiagnostics* aDiagnostics) const
+  virtual bool
+  SupportsMimeType(const nsACString& aMimeType,
+                   DecoderDoctorDiagnostics* aDiagnostics) const = 0;
+  virtual bool
+  Supports(const TrackInfo& aTrackInfo,
+           DecoderDoctorDiagnostics* aDiagnostics) const
   {
     // By default, fall back to SupportsMimeType with just the MIME string.
     // (So PDMs do not need to override this method -- yet.)
@@ -207,7 +215,7 @@ protected:
 class MediaDataDecoder
 {
 protected:
-  virtual ~MediaDataDecoder() {};
+  virtual ~MediaDataDecoder() { }
 
 public:
   typedef TrackInfo::TrackType TrackType;
@@ -281,7 +289,7 @@ public:
   // Decoder may not honor this value. However, it'd be better that
   // video decoder implements this API to improve seek performance.
   // Note: it should be called before Input() or after Flush().
-  virtual void SetSeekThreshold(const media::TimeUnit& aTime) {}
+  virtual void SetSeekThreshold(const media::TimeUnit& aTime) { }
 
   // When playing adaptive playback, recreating an Android video decoder will
   // cause the transition not smooth during resolution change.

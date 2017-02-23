@@ -9,7 +9,7 @@
 # ::value (bug 648643), depending of the ::value behaviour (it could change the
 # caret colour and the text colour or just the text colour).
 
-# == placeholder-simple.html placeholder-simple.html
+fails == placeholder-simple.html placeholder-simple.html
 # needs-focus == placeholder-focus.html placeholder-focus.html
 fails needs-focus == placeholder-blur.html placeholder-blur.html
 fails == placeholder-value.html placeholder-value.html
@@ -20,7 +20,7 @@ fails == placeholder-value-set.html placeholder-value-set.html
 fails == placeholder-value-unset.html placeholder-value-unset.html
 fails == placeholder-value-reset.html placeholder-value-reset.html
 fails == placeholdershown.html placeholdershown.html
-# == css-resize.html css-resize.html
+fails == css-resize.html css-resize.html
 fails == css-display.html css-display.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.

@@ -92,11 +92,12 @@ public:
     mScrollbarThumbRatio = aThumbRatio;
     return true;
   }
-  bool SetIsScrollbarContainer() {
-    if (mIsScrollbarContainer) {
+  bool SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId) {
+    if (mIsScrollbarContainer && mScrollbarTargetContainerId == aScrollId) {
       return false;
     }
     mIsScrollbarContainer = true;
+    mScrollbarTargetContainerId = aScrollId;
     return true;
   }
   bool SetMixBlendMode(gfx::CompositionOp aMixBlendMode) {

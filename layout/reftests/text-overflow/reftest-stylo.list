@@ -3,13 +3,13 @@ fails == ellipsis-font-fallback.html ellipsis-font-fallback.html
 fails == line-clipping.html line-clipping.html
 fails == marker-basic.html marker-basic.html
 fails HTTP(..) == marker-string.html marker-string.html
-# == bidi-simple.html bidi-simple.html
+fails == bidi-simple.html bidi-simple.html # Bug 1321769?
 fails == bidi-simple-scrolled.html bidi-simple-scrolled.html
 fails == scroll-rounding.html scroll-rounding.html
 fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonymous-block.html anonymous-block.html
 fails HTTP(..) == false-marker-overlap.html false-marker-overlap.html
 fails HTTP(..) == visibility-hidden.html visibility-hidden.html
-# == block-padding.html block-padding.html
+fails == block-padding.html block-padding.html # Bug 1321769?
 fails HTTP(..) == quirks-decorations.html quirks-decorations.html
 fails HTTP(..) == quirks-line-height.html quirks-line-height.html
 fails HTTP(..) == standards-decorations.html standards-decorations.html
@@ -27,11 +27,11 @@ fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1235
 fails HTTP(..) == combobox-zoom.html combobox-zoom.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
-# == vertical-decorations-1.html vertical-decorations-1.html
-# == vertical-decorations-2.html vertical-decorations-2.html
-# == vertical-decorations-1.html vertical-decorations-1.html
-# == vertical-decorations-2.html vertical-decorations-2.html
-# == vertical-decorations-3.html vertical-decorations-3.html
-# == vertical-decorations-4.html vertical-decorations-4.html
-# == vertical-decorations-3.html vertical-decorations-3.html
-# == vertical-decorations-4.html vertical-decorations-4.html
+fails == vertical-decorations-1.html vertical-decorations-1.html # Bug 1341724
+fails == vertical-decorations-2.html vertical-decorations-2.html # Bug 1341724
+fails == vertical-decorations-1.html vertical-decorations-1.html # Bug 1341724
+fails == vertical-decorations-2.html vertical-decorations-2.html # Bug 1341724
+== vertical-decorations-3.html vertical-decorations-3.html
+== vertical-decorations-4.html vertical-decorations-4.html
+== vertical-decorations-3.html vertical-decorations-3.html
+== vertical-decorations-4.html vertical-decorations-4.html

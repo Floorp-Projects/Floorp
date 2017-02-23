@@ -189,6 +189,7 @@ VideoDecoderParent::ProcessDecodedData(
       MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                     data->mDuration, data->mFrames, data->mKeyframe),
       video->mDisplay,
+      texture ? texture->GetSize() : IntSize(),
       texture ? mParent->StoreImage(video->mImage, texture)
               : SurfaceDescriptorGPUVideo(0),
       video->mFrameID);

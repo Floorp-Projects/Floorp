@@ -364,6 +364,7 @@ public:
                      GeckoView::Param aView, jni::Object::Param aCompositor,
                      jni::Object::Param aDispatcher,
                      jni::String::Param aChromeURI,
+                     jni::Object::Param aSettings,
                      int32_t screenId);
 
     // Close and destroy the nsWindow.
@@ -956,6 +957,23 @@ NS_IMPL_ISUPPORTS(nsWindow::AndroidView,
                   nsIAndroidEventDispatcher,
                   nsIAndroidView)
 
+
+nsresult
+nsWindow::AndroidView::GetSettings(JSContext* aCx, JS::MutableHandleValue aOut)
+{
+    if (!mSettings) {
+        aOut.setNull();
+        return NS_OK;
+    }
+
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+    env->MonitorEnter(mSettings.Get());
+    nsresult rv = widget::EventDispatcher::UnboxBundle(aCx, mSettings, aOut);
+    env->MonitorExit(mSettings.Get());
+
+    return rv;
+}
+
 /**
  * Compositor has some unique requirements for its native calls, so make it
  * separate from GeckoViewSupport.
@@ -1371,6 +1389,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
                                  jni::Object::Param aCompositor,
                                  jni::Object::Param aDispatcher,
                                  jni::String::Param aChromeURI,
+                                 jni::Object::Param aSettings,
                                  int32_t aScreenId)
 {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1394,6 +1413,9 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     RefPtr<AndroidView> androidView = new AndroidView();
     androidView->mEventDispatcher->Attach(
             java::EventDispatcher::Ref::From(aDispatcher), nullptr);
+    if (aSettings) {
+        androidView->mSettings = java::GeckoBundle::Ref::From(aSettings);
+    }
 
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
     ww->OpenWindow(nullptr, url, nullptr, "chrome,dialog=0,resizable,scrollbars=yes",

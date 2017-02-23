@@ -67,9 +67,9 @@ fails == table-caption-splitaftercaption-4.html table-caption-splitaftercaption-
 fails == table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5.html
 fails == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6.html
 fails == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7.html
-# == table-caption-splitaftercaption-8.html table-caption-splitaftercaption-8.html
-# == table-caption-splitaftercaption-9.html table-caption-splitaftercaption-9.html
-# == table-caption-splitaftercaption-10.html table-caption-splitaftercaption-10.html
-# == table-caption-splitaftercaption-11.html table-caption-splitaftercaption-11.html
+fails == table-caption-splitaftercaption-8.html table-caption-splitaftercaption-8.html # Bug 1341648
+fails == table-caption-splitaftercaption-9.html table-caption-splitaftercaption-9.html # Bug 1341648
+fails == table-caption-splitaftercaption-10.html table-caption-splitaftercaption-10.html # Bug 1341648
+fails == table-caption-splitaftercaption-11.html table-caption-splitaftercaption-11.html # Bug 1341648
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2.html
 fails == combobox-page-break-inside.html combobox-page-break-inside.html

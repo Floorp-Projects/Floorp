@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } =
+const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
+
+const GridItem = createFactory(require("./GridItem"));
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
@@ -15,24 +17,20 @@ module.exports = createClass({
   displayName: "GridList",
 
   propTypes: {
+    getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    onSetGridOverlayColor: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
 
-  onGridCheckboxClick({ target }) {
-    let {
-      grids,
-      onToggleGridHighlighter,
-    } = this.props;
-
-    onToggleGridHighlighter(grids[target.value].nodeFront);
-  },
-
   render() {
     let {
+      getSwatchColorPickerTooltip,
       grids,
+      onSetGridOverlayColor,
+      onToggleGridHighlighter,
     } = this.props;
 
     return dom.div(
@@ -45,43 +43,14 @@ module.exports = createClass({
       ),
       dom.ul(
         {},
-        grids.map(grid => {
-          let { nodeFront } = grid;
-          let { displayName, attributes } = nodeFront;
-
-          let gridName = displayName;
-
-          let idIndex = attributes.findIndex(({ name }) => name === "id");
-          if (idIndex > -1 && attributes[idIndex].value) {
-            gridName += "#" + attributes[idIndex].value;
-          }
-
-          let classIndex = attributes.findIndex(({name}) => name === "class");
-          if (classIndex > -1 && attributes[classIndex].value) {
-            gridName += "." + attributes[classIndex].value.split(" ").join(".");
-          }
-
-          return dom.li(
-            {
-              key: grid.id,
-            },
-            dom.label(
-              {},
-              dom.input(
-                {
-                  type: "checkbox",
-                  value: grid.id,
-                  checked: grid.highlighted,
-                  onChange: this.onGridCheckboxClick,
-                }
-              ),
-              gridName
-            )
-          );
-        })
+        grids.map(grid => GridItem({
+          getSwatchColorPickerTooltip,
+          grid,
+          onSetGridOverlayColor,
+          onToggleGridHighlighter,
+        }))
       )
     );
   },
 
 });
-

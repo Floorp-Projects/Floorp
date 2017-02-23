@@ -803,7 +803,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
                                 nsTableFrame&            aTableFrame,
                                 nsReflowStatus&          aStatus)
 {
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   // XXXldb Should we be checking constrained bsize instead?
   const bool isPaginated = aPresContext->IsPaginated();
@@ -936,8 +936,9 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
 
         // allow the table to determine if/how the table needs to be rebalanced
         // If any of the cells are not complete, then we're not complete
-        if (NS_FRAME_IS_NOT_COMPLETE(status)) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
+        if (status.IsIncomplete()) {
+          aStatus.Reset();
+          aStatus.SetIncomplete();
         }
       } else {
         if (iCoord != origKidNormalPosition.I(wm)) {
@@ -1026,7 +1027,8 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       iCoord += kidFrame->ISize(wm);
 
       if (kidFrame->GetNextInFlow()) {
-        aStatus = NS_FRAME_NOT_COMPLETE;
+        aStatus.Reset();
+        aStatus.SetIncomplete();
       }
     }
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
@@ -1061,7 +1063,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
     nscoord styleBSize = CalcBSizeFromUnpaginatedBSize(*this, wm);
     if (styleBSize > aReflowInput.AvailableBSize()) {
       styleBSize = aReflowInput.AvailableBSize();
-      NS_FRAME_SET_INCOMPLETE(aStatus);
+      aStatus.SetIncomplete();
     }
     aDesiredSize.BSize(wm) = std::max(cellMaxBSize, styleBSize);
   }
@@ -1118,9 +1120,9 @@ nsTableRowFrame::Reflow(nsPresContext*           aPresContext,
 
   ReflowChildren(aPresContext, aDesiredSize, aReflowInput, *tableFrame, aStatus);
 
-  if (aPresContext->IsPaginated() && !NS_FRAME_IS_FULLY_COMPLETE(aStatus) &&
+  if (aPresContext->IsPaginated() && !aStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aReflowInput)) {
-    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    aStatus.SetInlineLineBreakBeforeAndReset();
   }
 
   // Just set our isize to what was available.
@@ -1177,7 +1179,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowInput,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  bool fullyComplete = NS_FRAME_IS_COMPLETE(aStatus) && !NS_FRAME_IS_TRUNCATED(aStatus);
+  bool fullyComplete = aStatus.IsComplete() && !aStatus.IsTruncated();
   if (fullyComplete) {
     desiredSize.BSize(wm) = aAvailableBSize;
   }

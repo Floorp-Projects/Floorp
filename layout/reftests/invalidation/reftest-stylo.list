@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == table-repaint-a.html table-repaint-a.html
-# == table-repaint-b.html table-repaint-b.html
+== table-repaint-b.html table-repaint-b.html
 == table-repaint-c.html table-repaint-c.html
 == table-repaint-d.html table-repaint-d.html
 == 540247-1.xul 540247-1.xul
@@ -9,7 +9,7 @@ fails == 1243409-1.html 1243409-1.html
 fails == test-image-layers.html test-image-layers.html
 fails == test-image-layers-multiple-displayitem.html test-image-layers-multiple-displayitem.html
 pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == test-animated-image-layers.html test-animated-image-layers.html
-# == test-animated-image-layers-background.html test-animated-image-layers-background.html
+skip-if(stylo) == test-animated-image-layers-background.html test-animated-image-layers-background.html
 == box-shadow-border-radius.html box-shadow-border-radius.html
 == filter-userspace-offset.svg?offsetContainer=rect filter-userspace-offset.svg?offsetContainer=rect
 == filter-userspace-offset.svg?offsetContainer=use filter-userspace-offset.svg?offsetContainer=use
@@ -49,8 +49,8 @@ fails == transform-floating-point-invalidation.html transform-floating-point-inv
 fails == transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
 fails == nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
 fails == nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
-# == clipped-animated-transform-1.html clipped-animated-transform-1.html
-# == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
+fails == clipped-animated-transform-1.html clipped-animated-transform-1.html
+fails == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
 fails == paintedlayer-recycling-2.html paintedlayer-recycling-2.html
 fails pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html
 fails == paintedlayer-recycling-4.html paintedlayer-recycling-4.html
@@ -72,8 +72,8 @@ fails pref(layers.single-tile.enabled,false) == fast-scrolling.html fast-scrolli
 == background-position-1.html background-position-1.html
 == background-position-2a.html background-position-2a.html
 == background-position-2b.html background-position-2b.html
-# == background-position-2c.html background-position-2c.html
-# == background-position-2d.html background-position-2d.html
+== background-position-2c.html background-position-2c.html
+== background-position-2d.html background-position-2d.html
 == background-position-2e.html background-position-2e.html
 == background-position-2f.html background-position-2f.html
 == zero-opacity-animation.html zero-opacity-animation.html

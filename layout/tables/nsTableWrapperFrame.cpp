@@ -855,7 +855,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
 
   // Initialize out parameters
   aDesiredSize.ClearSize();
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Set up our kids.  They're already present, on an overflow list,

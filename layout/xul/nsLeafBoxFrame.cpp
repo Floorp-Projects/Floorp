@@ -235,7 +235,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
 
 #endif
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
 
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowInput.mRenderingContext);

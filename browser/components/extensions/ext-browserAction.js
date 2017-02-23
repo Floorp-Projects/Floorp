@@ -38,7 +38,14 @@ function isAncestorOrSelf(target, node) {
 }
 
 // WeakMap[Extension -> BrowserAction]
-var browserActionMap = new WeakMap();
+const browserActionMap = new WeakMap();
+
+const browserAreas = {
+  "navbar": CustomizableUI.AREA_NAVBAR,
+  "menupanel": CustomizableUI.AREA_PANEL,
+  "tabstrip": CustomizableUI.AREA_TABSTRIP,
+  "personaltoolbar": CustomizableUI.AREA_BOOKMARKS,
+};
 
 // Responsible for the browser_action section of the manifest as well
 // as the associated popup.
@@ -62,6 +69,7 @@ function BrowserAction(options, extension) {
     badgeBackgroundColor: null,
     icon: IconDetails.normalize({path: options.default_icon}, extension),
     popup: options.default_popup || "",
+    area: browserAreas[options.default_area || "navbar"],
   };
 
   this.browserStyle = options.browser_style || false;
@@ -85,7 +93,7 @@ BrowserAction.prototype = {
       removable: true,
       label: this.defaults.title || this.extension.name,
       tooltiptext: this.defaults.title || "",
-      defaultArea: CustomizableUI.AREA_NAVBAR,
+      defaultArea: this.defaults.area,
 
       onBeforeCreated: document => {
         let view = document.createElementNS(XUL_NS, "panelview");

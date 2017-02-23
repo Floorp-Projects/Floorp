@@ -29,6 +29,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mLastError(NS_OK)
   , mType(aParams.mType)
   , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
+  , mDecoderOptions(aParams.mOptions)
 {
   CreateDecoder(aParams.mDiagnostics);
 }
@@ -210,7 +211,8 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     mKnowsCompositor,
     mGMPCrashHelper,
     mType,
-    mOnWaitingForKeyEvent
+    mOnWaitingForKeyEvent,
+    mDecoderOptions
   });
 
   if (!mDecoder) {
