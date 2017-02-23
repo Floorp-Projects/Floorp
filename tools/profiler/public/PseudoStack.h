@@ -49,18 +49,6 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 # error "Memory clobber not supported for your platform."
 #endif
 
-// A stack entry exists to allow the JS engine to inform the Gecko Profiler of
-// the current backtrace, but also to instrument particular points in C++ in
-// case stack walking is not available on the platform we are running on.
-//
-// Each entry has a descriptive string, a relevant stack address, and some extra
-// information the JS engine might want to inform the Gecko Profiler of. This
-// class inherits from the JS engine's version of the entry to ensure that the
-// size and layout of the two representations are consistent.
-class StackEntry : public js::ProfileEntry
-{
-};
-
 class ProfilerMarkerPayload;
 template<typename T>
 class ProfilerLinkedList;
@@ -273,7 +261,7 @@ public:
       return;
     }
 
-    volatile StackEntry& entry = mStack[mStackPointer];
+    volatile js::ProfileEntry& entry = mStack[mStackPointer];
 
     // Make sure we increment the pointer after the name has been written such
     // that mStack is always consistent.
@@ -412,7 +400,7 @@ private:
 
 public:
   // The list of active checkpoints.
-  StackEntry volatile mStack[1024];
+  js::ProfileEntry volatile mStack[1024];
 
 private:
   // A list of pending markers that must be moved to the circular buffer.
