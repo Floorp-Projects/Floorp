@@ -376,14 +376,16 @@ var snapshotFormatters = {
            apzInfo.length
            ? apzInfo.join("; ")
            : localizedMsg(["apzNone"]));
+    addRowFromKey("features", "webgl1WSIInfo");
     addRowFromKey("features", "webgl1Renderer");
     addRowFromKey("features", "webgl1Version");
+    addRowFromKey("features", "webgl1DriverExtensions");
     addRowFromKey("features", "webgl1Extensions");
-    addRowFromKey("features", "webgl1WSIInfo");
+    addRowFromKey("features", "webgl2WSIInfo");
     addRowFromKey("features", "webgl2Renderer");
     addRowFromKey("features", "webgl2Version");
+    addRowFromKey("features", "webgl2DriverExtensions");
     addRowFromKey("features", "webgl2Extensions");
-    addRowFromKey("features", "webgl2WSIInfo");
     addRowFromKey("features", "supportsHardwareH264", "hardwareH264");
     addRowFromKey("features", "currentAudioBackend", "audioBackend");
     addRowFromKey("features", "direct2DEnabled", "#Direct2D");
