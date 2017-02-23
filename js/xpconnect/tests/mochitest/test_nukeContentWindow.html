@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1322273
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1322273</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1322273">Mozilla Bug 1322273</a>
+
+<iframe id="subframe"></iframe>
+
+<script type="application/javascript">
+"use strict";
+
+add_task(function* () {
+  let frame = $('subframe');
+  frame.src = "data:text/html,";
+  yield new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
+
+  let win = frame.contentWindow;
+
+  win.eval("obj = {}");
+  win.obj.foo = {bar: "baz"};
+
+  let obj = win.obj;
+
+  let system = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal()
+  let sandbox = SpecialPowers.Cu.Sandbox(system);
+
+  sandbox.obj = obj;
+
+  let isWrapperDead = SpecialPowers.Cu.evalInSandbox(`(${
+      function isWrapperDead() {
+        return Components.utils.isDeadWrapper(obj);
+      }
+    })`,
+    sandbox);
+
+  is(isWrapperDead(), false, "Sandbox wrapper for content window should not be dead");
+  is(obj.foo.bar, "baz", "Content wrappers into and out of content window should be alive");
+
+  // Remove the frame, which should nuke the content window.
+  info("Remove the content frame");
+  frame.remove();
+
+  // Give the nuke wrappers task a chance to run.
+  yield new Promise(SimpleTest.executeSoon);
+
+  is(isWrapperDead(), true, "Sandbox wrapper for content window should be dead");
+  is(obj.foo.bar, "baz", "Content wrappers into and out of content window should be alive");
+});
+</script>
+
+</body>
+</html>
