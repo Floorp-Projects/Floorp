@@ -1024,7 +1024,7 @@ MediaStreamGraphImpl::OpenAudioInput(int aID,
     Message(MediaStreamGraphImpl *aGraph, int aID,
             AudioDataListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mID(aID), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mGraph->OpenAudioInputImpl(mID, mListener);
     }
@@ -1095,7 +1095,7 @@ MediaStreamGraphImpl::CloseAudioInput(AudioDataListener *aListener)
   public:
     Message(MediaStreamGraphImpl *aGraph, AudioDataListener *aListener) :
       ControlMessage(nullptr), mGraph(aGraph), mListener(aListener) {}
-    virtual void Run()
+    void Run() override
     {
       mGraph->CloseAudioInputImpl(mListener);
     }
@@ -2443,7 +2443,7 @@ MediaStream::AddTrackListener(MediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddTrackListenerImpl(mListener.forget(), mTrackID);
     }
@@ -2476,7 +2476,7 @@ MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveTrackListenerImpl(mListener, mTrackID);
     }
@@ -2505,7 +2505,7 @@ MediaStream::AddDirectTrackListener(DirectMediaStreamTrackListener* aListener,
     Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->AddDirectTrackListenerImpl(mListener.forget(), mTrackID);
     }
@@ -2532,7 +2532,7 @@ MediaStream::RemoveDirectTrackListener(DirectMediaStreamTrackListener* aListener
     Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
             TrackID aTrackID) :
       ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    virtual void Run()
+    void Run() override
     {
       mStream->RemoveDirectTrackListenerImpl(mListener, mTrackID);
     }
