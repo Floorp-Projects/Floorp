@@ -206,10 +206,14 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         super.onResume();
     }
 
+    // Usually should use onCreateOptionsMenu() to initialize menu items. But GeckoApp overwrite
+    // it to support custom menu(Bug 739412). Then the parameter *menu* in this.onCreateOptionsMenu()
+    // and this.onPrepareOptionsMenu() are different instances - GeckoApp.onCreatePanelMenu() changed it.
+    // CustomTabsActivity only use standard menu in ActionBar, so initialize menu here.
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
+    public boolean onCreatePanelMenu(final int id, final Menu menu) {
         insertActionButton(menu, getIntent());
-        return super.onPrepareOptionsMenu(menu);
+        return true;
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
