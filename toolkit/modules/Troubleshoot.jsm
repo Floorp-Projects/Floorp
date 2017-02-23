@@ -459,7 +459,7 @@ var dataProviders = {
 
         // //
 
-        data[keyPrefix + "Extensions"] = gl.getSupportedExtensions().join(' ');
+        data[keyPrefix + "Extensions"] = gl.getSupportedExtensions().join(" ");
 
         // //
 
