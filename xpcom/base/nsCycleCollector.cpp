@@ -155,6 +155,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HoldDropJSObjects.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
@@ -3833,7 +3834,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
   FixGrayBits(forceGC, timeLog);
   if (mJSContext) {
-    mJSContext->CheckGrayBits();
+    mJSContext->Runtime()->CheckGrayBits();
   }
 
   FreeSnowWhite(true);

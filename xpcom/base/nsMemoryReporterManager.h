@@ -8,6 +8,7 @@
 #define nsMemoryReporterManager_h__
 
 #include "mozilla/Mutex.h"
+#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIMemoryReporter.h"
 #include "nsITimer.h"
