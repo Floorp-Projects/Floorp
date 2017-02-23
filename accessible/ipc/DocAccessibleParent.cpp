@@ -477,8 +477,16 @@ DocAccessibleParent::Destroy()
     }
   }
 
-  for (uint32_t i = childDocCount - 1; i < childDocCount; i--)
-    ChildDocAt(i)->Destroy();
+  int32_t actorID = IProtocol::Id();
+  for (uint32_t i = childDocCount - 1; i < childDocCount; i--) {
+    DocAccessibleParent* thisDoc = LiveDocs().Get(actorID);
+    MOZ_ASSERT(thisDoc);
+    if (!thisDoc) {
+      break;
+    }
+
+    thisDoc->ChildDocAt(i)->Destroy();
+  }
 
   for (auto iter = mAccessibles.Iter(); !iter.Done(); iter.Next()) {
     MOZ_ASSERT(iter.Get()->mProxy != this);
@@ -488,13 +496,25 @@ DocAccessibleParent::Destroy()
 
   // The code above should have already completely cleared these, but to be
   // extra safe make sure they are cleared here.
-  mAccessibles.Clear();
-  mChildDocs.Clear();
+  DocAccessibleParent* thisDoc = LiveDocs().Get(actorID);
+  MOZ_ASSERT(thisDoc);
+  if (!thisDoc) {
+    return;
+  }
 
-  DocManager::NotifyOfRemoteDocShutdown(this);
-  ProxyDestroyed(this);
-  if (DocAccessibleParent* parentDoc = ParentDoc())
-    parentDoc->RemoveChildDoc(this);
+  thisDoc->mAccessibles.Clear();
+  thisDoc->mChildDocs.Clear();
+
+  DocManager::NotifyOfRemoteDocShutdown(thisDoc);
+  ProxyDestroyed(thisDoc);
+  thisDoc = LiveDocs().Get(actorID);
+  MOZ_ASSERT(thisDoc);
+  if (!thisDoc) {
+    return;
+  }
+
+  if (DocAccessibleParent* parentDoc = thisDoc->ParentDoc())
+    parentDoc->RemoveChildDoc(thisDoc);
   else if (IsTopLevel())
     GetAccService()->RemoteDocShutdown(this);
 }
