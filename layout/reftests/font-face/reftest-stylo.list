@@ -170,7 +170,7 @@ fails HTTP(..) == color-2a.html color-2a.html
 fails HTTP(..) == color-2a.html color-2a.html
 
 fails pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-1.html woff2-1.html
-# pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-totalsfntsize.html woff2-totalsfntsize.html
+fails pref(gfx.downloadable_fonts.woff2.enabled,true) HTTP(..) == woff2-totalsfntsize.html woff2-totalsfntsize.html # Bug 1290237
 
 # sanity tests for reflow behavior with downloadable fonts
 fails HTTP(..) == reflow-sanity-1.html reflow-sanity-1.html

@@ -11,7 +11,7 @@ fails == will-change-stacking-context-position-1.html will-change-stacking-conte
 fails == will-change-stacking-context-transform-1.html will-change-stacking-context-transform-1.html
 fails == will-change-stacking-context-transform-style-1.html will-change-stacking-context-transform-style-1.html
 fails == will-change-stacking-context-z-index-1.html will-change-stacking-context-z-index-1.html
-test-pref(layout.css.contain.enabled,true) == will-change-fixpos-cb-contain-1.html will-change-fixpos-cb-contain-1.html
+fails pref(layout.css.contain.enabled,true) == will-change-fixpos-cb-contain-1.html will-change-fixpos-cb-contain-1.html # Bug 1342139
 fails == will-change-fixpos-cb-filter-1.html will-change-fixpos-cb-filter-1.html
 == will-change-fixpos-cb-height-1.html will-change-fixpos-cb-height-1.html
 fails == will-change-fixpos-cb-perspective-1.html will-change-fixpos-cb-perspective-1.html
