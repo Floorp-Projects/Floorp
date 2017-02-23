@@ -143,7 +143,7 @@ fails == wordwrap-09.html wordwrap-09.html # Bug 1341637, bug 1321769?
 fails == overflowwrap-09.html overflowwrap-09.html # Bug 1341637, bug 1321769?
 == wordwrap-10.html wordwrap-10.html
 == overflowwrap-10.html overflowwrap-10.html
-fails == word-spacing-01.html word-spacing-01.html
+== word-spacing-01.html word-spacing-01.html
 # the following will fail when rendering with Core Text (see bug 389074) due to what appears to be
 # an Apple bug: the presence of ZWNJ disturbs the positioning of an adjacent glyph. rdar://6427865
 random-if(cocoaWidget) random-if(gtkWidget) HTTP(..) == zwnj-01.xhtml zwnj-01.xhtml
