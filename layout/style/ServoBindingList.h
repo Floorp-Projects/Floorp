@@ -113,12 +113,6 @@ SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    RawGeckoComputedKeyframeValuesListBorrowedMut result)
 
 // AnimationValues handling
-SERVO_BINDING_FUNC(Servo_AnimationValues_Populate, void,
-                   RawGeckoAnimationValueListBorrowedMut,
-                   RawServoDeclarationBlockBorrowed,
-                   ServoComputedValuesBorrowed,
-                   ServoComputedValuesBorrowedOrNull,
-                   RawGeckoPresContextBorrowed)
 SERVO_BINDING_FUNC(Servo_AnimationValues_Interpolate,
                    RawServoAnimationValueStrong,
                    RawServoAnimationValueBorrowed from,
