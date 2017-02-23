@@ -297,7 +297,22 @@ SpecifiedKeyframeArraysAreEqual(const nsTArray<Keyframe>& aA,
 void
 KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
-  DoUpdateProperties(Move(aStyleContext));
+  MOZ_ASSERT(aStyleContext);
+
+  if (!mDocument->IsStyledByServo()) {
+    DoUpdateProperties(Move(aStyleContext));
+    return;
+  }
+
+  const ServoComputedValues* currentStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+  const ServoComputedValues* parentStyle =
+    aStyleContext->GetParent()
+      ? aStyleContext->GetParent()->StyleSource().AsServoComputedValues()
+      : nullptr;
+
+  const ServoComputedStyleValues servoValues = { currentStyle, parentStyle };
+  DoUpdateProperties(servoValues);
 }
 
 void
