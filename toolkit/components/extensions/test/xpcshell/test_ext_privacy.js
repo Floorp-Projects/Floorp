@@ -20,7 +20,7 @@ AddonTestUtils.init(this);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 add_task(async function test_privacy() {
-  // Create a object to hold the values to which we will initialize the prefs.
+  // Create an object to hold the values to which we will initialize the prefs.
   const SETTINGS = {
     "network.networkPredictionEnabled": {
       "network.predictor.enabled": true,
