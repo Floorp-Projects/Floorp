@@ -331,7 +331,8 @@ protected:
   // Build properties by recalculating from |mKeyframes| using |aStyleContext|
   // to resolve specified values. This function also applies paced spacing if
   // needed.
-  nsTArray<AnimationProperty> BuildProperties(nsStyleContext* aStyleContext);
+  template<typename StyleType>
+  nsTArray<AnimationProperty> BuildProperties(StyleType&& aStyle);
 
   // This effect is registered with its target element so long as:
   //

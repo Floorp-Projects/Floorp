@@ -113,6 +113,14 @@ public:
                            nsCSSPropertyID aProperty,
                            nsTArray<ComputedKeyframeValues>& aComputedValues,
                            nsStyleContext* aStyleContext);
+  static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
+                           SpacingMode aSpacingMode,
+                           nsCSSPropertyID aProperty,
+                           nsTArray<ComputedKeyframeValues>& aComputedValues,
+                           const ServoComputedStyleValues& aServoValues)
+  {
+    NS_WARNING("stylo: ApplySpacing not implemented yet");
+  }
 
   /**
    * Wrapper for ApplySpacing to simplify using distribute spacing.
