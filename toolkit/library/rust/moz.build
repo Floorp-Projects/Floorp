@@ -14,4 +14,4 @@ if CONFIG['MOZ_STYLO']:
 if CONFIG['MOZ_ENABLE_WEBRENDER']:
     features += ['quantum_render']
 
-RustLibrary('gkrust', features)
+RustLibrary('gkrust', features, '..')
