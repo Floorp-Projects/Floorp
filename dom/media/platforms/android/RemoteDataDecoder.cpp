@@ -628,7 +628,9 @@ RemoteDataDecoder::Input(MediaRawData* aSample)
   }
   bufferInfo->Set(0, aSample->Size(), aSample->mTime, 0);
 
-  mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(aSample));
+  if (!mJavaDecoder->Input(bytes, bufferInfo, GetCryptoInfoFromSample(aSample))) {
+    mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+  }
 }
 
 } // mozilla
