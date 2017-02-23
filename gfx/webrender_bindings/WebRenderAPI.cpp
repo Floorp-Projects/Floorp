@@ -298,10 +298,10 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
   wr_api_send_external_event(mWrApi, event);
 }
 
-DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
+DisplayListBuilder::DisplayListBuilder(PipelineId aId)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aSize.width, aSize.height, aId);
+  mWrState = wr_state_new(aId);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
@@ -317,9 +317,9 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 }
 
 void
-DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
+DisplayListBuilder::End()
 {
-  wr_dp_end(mWrState, aApi.mWrApi, aEpoch);
+  wr_dp_end(mWrState);
 }
 
 void
