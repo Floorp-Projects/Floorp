@@ -2261,15 +2261,21 @@ MediaFormatReader::Update(TrackType aTrack)
 
   bool needInput = NeedInput(decoder);
 
-  LOGV("Update(%s) ni=%d no=%d in:%" PRIu64 " out:%" PRIu64
-       " qs=%u decoding:%d flushing:%d "
-       "shutdown:%d pending:%u waiting:%d promise:%d sid:%u",
-       TrackTypeToStr(aTrack), needInput, needOutput, decoder.mNumSamplesInput,
-       decoder.mNumSamplesOutput, uint32_t(size_t(decoder.mSizeOfQueue)),
-       decoder.mDecodeRequest.Exists(), decoder.mFlushRequest.Exists(),
-       decoder.mShutdownRequest.Exists(), uint32_t(decoder.mOutput.Length()),
-       decoder.mWaitingForData, decoder.HasPromise(),
-       decoder.mLastStreamSourceID);
+  LOGV(
+    "Update(%s) ni=%d no=%d in:%" PRIu64 " out:%" PRIu64
+    " qs=%u decoding:%d flushing:%d shutdown:%d pending:%u waiting:%d sid:%u",
+    TrackTypeToStr(aTrack),
+    needInput,
+    needOutput,
+    decoder.mNumSamplesInput,
+    decoder.mNumSamplesOutput,
+    uint32_t(size_t(decoder.mSizeOfQueue)),
+    decoder.mDecodeRequest.Exists(),
+    decoder.mFlushRequest.Exists(),
+    decoder.mShutdownRequest.Exists(),
+    uint32_t(decoder.mOutput.Length()),
+    decoder.mWaitingForData,
+    decoder.mLastStreamSourceID);
 
   if ((decoder.mWaitingForData
        && (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting))
@@ -2934,36 +2940,55 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
     result += nsPrintfCString(
-      "audio state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%" PRIu64
-      " out:%" PRIu64 " qs=%u pending:%u waiting:%d sid:%u\n",
-      NeedInput(mAudio), mAudio.HasPromise(), mAudio.mDemuxRequest.Exists(),
-      int(mAudio.mQueuedSamples.Length()),
+      "audio state: ni=%d no=%d wp:%d demuxr:%d demuxq:%u decoder:%d tt:%.1f "
+      "tths:%d in:%" PRIu64 " out:%" PRIu64
+      " qs=%u pending:%u wfd:%d wfk:%d sid:%u\n",
+      NeedInput(mAudio),
+      mAudio.HasPromise(),
+      !mAudio.mWaitingPromise.IsEmpty(),
+      mAudio.mDemuxRequest.Exists(),
+      uint32_t(mAudio.mQueuedSamples.Length()),
+      mAudio.mDecodeRequest.Exists(),
       mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().Time().ToSeconds()
                             : -1.0,
       mAudio.mTimeThreshold ? mAudio.mTimeThreshold.ref().mHasSeeked : -1,
-      mAudio.mNumSamplesInput, mAudio.mNumSamplesOutput,
-      unsigned(size_t(mAudio.mSizeOfQueue)), unsigned(mAudio.mOutput.Length()),
-      mAudio.mWaitingForData, mAudio.mLastStreamSourceID);
+      mAudio.mNumSamplesInput,
+      mAudio.mNumSamplesOutput,
+      unsigned(size_t(mAudio.mSizeOfQueue)),
+      unsigned(mAudio.mOutput.Length()),
+      mAudio.mWaitingForData,
+      mAudio.mWaitingForKey,
+      mAudio.mLastStreamSourceID);
   }
   result += nsPrintfCString("video decoder: %s\n", videoName);
   result +=
     nsPrintfCString("hardware video decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");
-  result += nsPrintfCString("video frames decoded: %" PRIu64 " (skipped:%" PRIu64 ")\n",
-                            mVideo.mNumSamplesOutputTotal,
-                            mVideo.mNumSamplesSkippedTotal);
+  result +=
+    nsPrintfCString("video frames decoded: %" PRIu64 " (skipped:%" PRIu64 ")\n",
+                    mVideo.mNumSamplesOutputTotal,
+                    mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
     result += nsPrintfCString(
-      "video state: ni=%d no=%d demuxr:%d demuxq:%d tt:%f tths:%d in:%" PRIu64
-      " out:%" PRIu64 " qs=%u pending:%u waiting:%d sid:%u\n",
-      NeedInput(mVideo), mVideo.HasPromise(), mVideo.mDemuxRequest.Exists(),
-      int(mVideo.mQueuedSamples.Length()),
+      "video state: ni=%d no=%d wp:%d demuxr:%d demuxq:%u decoder:%d tt:%.1f "
+      "tths:%d in:%" PRIu64 " out:%" PRIu64
+      " qs=%u pending:%u wfd:%d wfk:%d sid:%u\n",
+      NeedInput(mVideo),
+      mVideo.HasPromise(),
+      !mVideo.mWaitingPromise.IsEmpty(),
+      mVideo.mDemuxRequest.Exists(),
+      uint32_t(mVideo.mQueuedSamples.Length()),
+      mVideo.mDecodeRequest.Exists(),
       mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().Time().ToSeconds()
                             : -1.0,
       mVideo.mTimeThreshold ? mVideo.mTimeThreshold.ref().mHasSeeked : -1,
-      mVideo.mNumSamplesInput, mVideo.mNumSamplesOutput,
-      unsigned(size_t(mVideo.mSizeOfQueue)), unsigned(mVideo.mOutput.Length()),
-      mVideo.mWaitingForData, mVideo.mLastStreamSourceID);
+      mVideo.mNumSamplesInput,
+      mVideo.mNumSamplesOutput,
+      unsigned(size_t(mVideo.mSizeOfQueue)),
+      unsigned(mVideo.mOutput.Length()),
+      mVideo.mWaitingForData,
+      mVideo.mWaitingForKey,
+      mVideo.mLastStreamSourceID);
   }
   aString += result;
 }
