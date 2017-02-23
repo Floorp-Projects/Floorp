@@ -373,7 +373,7 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
                 "RefPtr should just be a pointer");
   const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
   if (!attrs) {
-    auto* svg = nsSVGElement::FromContentOrNull(const_cast<dom::Element*>(aElement));
+    auto* svg = nsSVGElement::FromContentOrNull(aElement);
     if (svg) {
       if (auto decl = svg->GetContentDeclarationBlock()) {
         return decl->AsServo()->RefRawStrong();

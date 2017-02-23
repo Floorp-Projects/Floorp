@@ -1037,7 +1037,15 @@ inline nsIContent* nsINode::AsContent()
   {                                                                            \
     return aContent->_check ? static_cast<_class*>(aContent) : nullptr;        \
   }                                                                            \
+  static const _class* FromContent(const nsIContent* aContent)                 \
+  {                                                                            \
+    return aContent->_check ? static_cast<const _class*>(aContent) : nullptr;  \
+  }                                                                            \
   static _class* FromContentOrNull(nsIContent* aContent)                       \
+  {                                                                            \
+    return aContent ? FromContent(aContent) : nullptr;                         \
+  }                                                                            \
+  static const _class* FromContentOrNull(const nsIContent* aContent)           \
   {                                                                            \
     return aContent ? FromContent(aContent) : nullptr;                         \
   }
