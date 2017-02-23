@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  var o1 = document.documentElement;
+  var o2 = document.createElement("frame");
+  document.documentElement.appendChild(o2);
+  var o3 = o2.contentWindow;
+  o1.parentNode.removeChild(o1);
+  o3.customElements;
+</script>
+</body>
+</html>
