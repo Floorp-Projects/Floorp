@@ -58,8 +58,8 @@ fails == pre-1.html pre-1.html
 == table-border-2.html table-border-2.html
 
 # Test imageset is using permissions.default.image
-# pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-with-srcset.html
-# pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-with-srcset.html
+pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-with-srcset.html
+pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-with-srcset.html
 
 # Test video with rotation information can be rotated.
 == bug1228601-video-rotation-90.html bug1228601-video-rotation-90.html

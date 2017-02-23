@@ -248,10 +248,10 @@ fails needs-focus == selectors-4/focus-within-004.html selectors-4/focus-within-
 fails needs-focus == selectors-4/focus-within-005.html selectors-4/focus-within-005.html
 fails needs-focus == selectors-4/focus-within-006.html selectors-4/focus-within-006.html
 needs-focus == selectors-4/focus-within-shadow-001.html selectors-4/focus-within-shadow-001.html
-# pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-002.html
-# pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-003.html
-# pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-004.html
-# pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-005.html
+skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-002.html selectors-4/focus-within-shadow-002.html # Bug 1292285
+skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-003.html selectors-4/focus-within-shadow-003.html # Bug 1292285
+skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-004.html selectors-4/focus-within-shadow-004.html # Bug 1292285
+skip-if(stylo) pref(dom.webcomponents.enabled,true) needs-focus == selectors-4/focus-within-shadow-005.html selectors-4/focus-within-shadow-005.html # Bug 1292285
 == selectors-4/of-type-selectors.xhtml selectors-4/of-type-selectors.xhtml
 fails == selectors-4/selector-required.html selectors-4/selector-required.html
 fails == selectors-4/selectors-dir-selector-ltr-001.html selectors-4/selectors-dir-selector-ltr-001.html

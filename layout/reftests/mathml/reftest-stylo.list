@@ -367,9 +367,9 @@ fails == mfrac-D-2.html mfrac-D-2.html
 fails == mfrac-D-3.html mfrac-D-3.html
 fails == mfrac-D-4.html mfrac-D-4.html
 fails == mfrac-E-1.html mfrac-E-1.html
-# test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
+fails pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1.html
 fails pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1.html
-fails test-pref(font.minimum-size.x-math,40) == default-font.html default-font.html
+fails pref(font.minimum-size.x-math,40) == default-font.html default-font.html
 fails == radicalbar-1.html radicalbar-1.html
 fails == radicalbar-1a.html radicalbar-1a.html
 fails == radicalbar-1b.html radicalbar-1b.html
