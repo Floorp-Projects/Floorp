@@ -2,8 +2,8 @@
 == 121142-1a.html 121142-1a.html
 == 121142-1b.html 121142-1b.html
 == 121142-2.html 121142-2.html
-fails == 156888-1.html 156888-1.html
-fails == 156888-2.html 156888-2.html
+== 156888-1.html 156888-1.html
+== 156888-2.html 156888-2.html
 == 162063-1.xhtml 162063-1.xhtml
 == 203923-1.html 203923-1.html
 == 203923-2.html 203923-2.html
@@ -12,29 +12,29 @@ fails == 156888-2.html 156888-2.html
 == 208305-3.html 208305-3.html
 == 208305-4.html 208305-4.html
 == 277995-1.html 277995-1.html
-fails == 293576-1.html 293576-1.html
+== 293576-1.html 293576-1.html
 == 302113-1.html 302113-1.html
-fails == 315146-1.xhtml 315146-1.xhtml
+== 315146-1.xhtml 315146-1.xhtml
 == 325543-1a.html 325543-1a.html
 == 325543-1b.html 325543-1b.html
-fails == 338735-1.html 338735-1.html
-fails == 339388-1a.html 339388-1a.html
-fails == 339388-1b.html 339388-1b.html
+== 338735-1.html 338735-1.html
+== 339388-1a.html 339388-1a.html
+== 339388-1b.html 339388-1b.html
 == 363326-1.html 363326-1.html
 == 368932-1.html 368932-1.html
 == 371054-1.html 371054-1.html
-fails == 372641-1a.xhtml 372641-1a.xhtml
-fails == 372641-1b.xhtml 372641-1b.xhtml
-fails == 372641-1c.xhtml 372641-1c.xhtml
+== 372641-1a.xhtml 372641-1a.xhtml
+== 372641-1b.xhtml 372641-1b.xhtml
+== 372641-1c.xhtml 372641-1c.xhtml
 == 372649-1.html 372649-1.html
 == 373379-1.html 373379-1.html
-fails == 394402-1a.html 394402-1a.html
-fails == 394402-1b.html 394402-1b.html
+== 394402-1a.html 394402-1a.html
+== 394402-1b.html 394402-1b.html
 == 398095-1.html 398095-1.html
 == 407115-1.html 407115-1.html
 fails == 443616-1a.xhtml 443616-1a.xhtml
 fails == 443616-1b.html 443616-1b.html
-fails == 448111-1.html 448111-1.html
+== 448111-1.html 448111-1.html
 fails == 490174-1.html 490174-1.html
 fails == 695538-1.html 695538-1.html
 fails == infer-first-row.html infer-first-row.html
@@ -58,7 +58,7 @@ fails == infer-cells-4.html infer-cells-4.html
 fails == cols-test-1.html cols-test-1.html
 fails == cols-test-2.html cols-test-2.html
 fails == cols-test-3.html cols-test-3.html
-fails == dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody.html
+== dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody.html
 fails == dynamic-removal-1.html dynamic-removal-1.html # Bug 1341775
 fails == dynamic-removal-2.html dynamic-removal-2.html # Bug 1341775
 fails == dynamic-removal-3.html dynamic-removal-3.html # Bug 1341775

@@ -53,7 +53,7 @@ fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 fails == href-attr-change-restyles.html href-attr-change-restyles.html
 == figure.html figure.html
 fails == pre-1.html pre-1.html
-fails == table-border-1.html table-border-1.html # Bug 1341651
+== table-border-1.html table-border-1.html
 == table-border-2.html table-border-2.html
 == table-border-2.html table-border-2.html
 
