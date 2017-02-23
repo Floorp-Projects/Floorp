@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.icons.preparation;
 
+import android.content.Context;
+import android.database.Cursor;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,10 +14,10 @@ import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
+import org.mozilla.gecko.helpers.MockUserManager;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.icons.loader.SuggestedSiteLoader;
-import org.mozilla.gecko.restrictions.Restrictions;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.IOException;
@@ -32,10 +35,19 @@ public class TestSuggestedSitePreparer {
 
     };
 
+    private Context context;
+
     @Before
     public void setUp() throws IOException {
-        Restrictions.createConfiguration(RuntimeEnvironment.application);
-        BrowserDB.from(RuntimeEnvironment.application).setSuggestedSites(new SuggestedSites(RuntimeEnvironment.application));
+        context = MockUserManager.getContextWithMockedUserManager();
+
+        final SuggestedSites sites = new SuggestedSites(context);
+        BrowserDB.from(context).setSuggestedSites(sites);
+
+        // Force loading sites, so that SuggestedSites is correctly initialised. Without this, we
+        // won't be able to retrieve site data (i.e. icon locations and colours).
+        final Cursor sitesCursor = sites.get(200);
+        sitesCursor.close();
     }
 
     @Test
