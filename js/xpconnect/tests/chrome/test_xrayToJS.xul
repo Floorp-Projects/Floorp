@@ -257,8 +257,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gConstructorProperties['ArrayBuffer'] =
     constructorProps(["isView", "slice", Symbol.species]);
 
-  gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
-  gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
+  if (!isReleaseOrBeta) {
+    gPrototypeProperties['SharedArrayBuffer'] = ["constructor", "slice", "byteLength", Symbol.toStringTag];
+    gConstructorProperties['SharedArrayBuffer'] = constructorProps([Symbol.species]);
+  } else {
+    is(typeof SharedArrayBuffer, "undefined", "Enable tests!");
+  }
 
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
@@ -896,7 +900,11 @@ for (var prop of props) {
   }
 
   function testArrayBuffer() {
-    let constructors = ['ArrayBuffer', 'SharedArrayBuffer'];
+    let constructors = ['ArrayBuffer'];
+
+    if (!isReleaseOrBeta) {
+      constructors.push('SharedArrayBuffer');
+    }
 
     for (const c of constructors) {
       testXray(c, new iwin[c](0), new iwin[c](12));
