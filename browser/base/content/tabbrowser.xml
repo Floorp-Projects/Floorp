@@ -1514,6 +1514,7 @@
             var aSameProcessAsFrameLoader;
             var aOriginPrincipal;
             var aOpener;
+            var aForceBrowserInsertion;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1537,6 +1538,7 @@
               aOriginPrincipal          = params.originPrincipal;
               aOpener                   = params.opener;
               aIsPrerendered            = params.isPrerendered;
+              aForceBrowserInsertion    = params.forceBrowserInsertion;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1556,6 +1558,7 @@
                                   skipAnimation: aSkipAnimation,
                                   allowMixedContent: aAllowMixedContent,
                                   forceNotRemote: aForceNotRemote,
+                                  forceBrowserInsertion: aForceBrowserInsertion,
                                   preferredRemoteType: aPreferredRemoteType,
                                   noReferrer: aNoReferrer,
                                   userContextId: aUserContextId,
@@ -1710,6 +1713,9 @@
             }
 
             let tab = this.getTabForBrowser(aBrowser);
+            // aBrowser needs to be inserted now if it hasn't been already.
+            this._insertBrowser(tab);
+
             let evt = document.createEvent("Events");
             evt.initEvent("BeforeTabRemotenessChange", true, false);
             tab.dispatchEvent(evt);
@@ -1842,8 +1848,10 @@
             // If we're in a LargeAllocation process, we prefer switching back
             // into a normal content process, as that way we can clean up the
             // L-A process.
-            let preferredRemoteType = aBrowser.remoteType;
-            if (aBrowser.remoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
+            let currentRemoteType = aBrowser.getAttribute("remoteType") || null;
+            let preferredRemoteType = currentRemoteType;
+
+            if (currentRemoteType == E10SUtils.LARGE_ALLOCATION_REMOTE_TYPE) {
               preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
             }
             aOptions.remoteType =
@@ -1854,7 +1862,7 @@
 
             // If this URL can't load in the current browser then flip it to the
             // correct type.
-            if (aBrowser.remoteType != aOptions.remoteType ||
+            if (currentRemoteType != aOptions.remoteType ||
                 aOptions.newFrameloader) {
               let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
               return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
@@ -1943,12 +1951,12 @@
           <![CDATA[
             // Supported parameters:
             // userContextId, remote, remoteType, isPreloadBrowser,
-            // uriIsAboutBlank, permanentKey, isPrerendered
+            // uriIsAboutBlank, sameProcessAsFrameLoader, isPrerendered
 
             const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
             let b = document.createElementNS(NS_XUL, "browser");
-            b.permanentKey = aParams.permanentKey || {};
+            b.permanentKey = {};
             b.setAttribute("type", "content");
             b.setAttribute("message", "true");
             b.setAttribute("messagemanagergroup", "browsers");
@@ -2034,59 +2042,92 @@
         </body>
       </method>
 
-      <method name="_linkBrowserToTab">
+      <!--
+        `_createLazyBrowser` will define properties on the unbound lazy browser
+        which correspond to properties defined in XBL which will be bound to
+        the browser when it is inserted into the document.  If any of these
+        properties are accessed by consumers, `_insertBrowser` is called and
+        the browser is inserted to ensure that things don't break.  This list
+        provides the names of properties that may be called while the browser
+        is in its unbound (lazy) state.
+      -->
+      <field name="_browserBindingProperties">[
+        "canGoBack", "canGoForward", "goBack", "goForward", "permitUnload",
+        "reload", "reloadWithFlags", "stop", "loadURI", "loadURIWithFlags",
+        "goHome", "homePage", "gotoIndex", "currentURI", "documentURI",
+        "preferences", "imageDocument", "isRemoteBrowser", "messageManager",
+        "getTabBrowser", "finder", "fastFind", "sessionHistory", "contentTitle",
+        "characterSet", "fullZoom", "textZoom", "webProgress",
+        "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
+        "audioPlaybackStopped", "adjustPriority", "pauseMedia", "stopMedia",
+        "blockMedia", "resumeMedia", "audioMuted", "mute", "unmute",
+        "blockedPopups", "mIconURL", "lastURI", "userTypedValue",
+        "purgeSessionHistory", "stopScroll", "startScroll"
+      ]</field>
+
+      <method name="_createLazyBrowser">
         <parameter name="aTab"/>
-        <parameter name="aURI"/>
-        <parameter name="aParams"/>
+        <body>
+          <![CDATA[
+            let browser = aTab.linkedBrowser;
+
+            let names = this._browserBindingProperties;
+
+            for (let i = 0; i < names.length; i++) {
+              let name = names[i];
+              let getter;
+              let setter;
+              switch (name) {
+                default:
+                  getter = () => {
+                    this._insertBrowser(aTab);
+                    return browser[name];
+                  };
+                  setter = (value) => {
+                    this._insertBrowser(aTab);
+                    return browser[name] = value;
+                  };
+              }
+              Object.defineProperty(browser, name, {
+                get: getter,
+                set: setter,
+                configurable: true,
+                enumerable: true
+              });
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_insertBrowser">
+        <parameter name="aTab"/>
         <body>
           <![CDATA[
             "use strict";
 
-            // Supported parameters:
-            // forceNotRemote, preferredRemoteType, userContextId, isPrerendered
+            // If browser is already inserted, or aTab doesn't have a
+            // browser, don't do anything.
+            if (aTab.linkedPanel || !aTab.linkedBrowser) {
+              return;
+            }
 
-            let uriIsAboutBlank = !aURI || aURI == "about:blank";
+            let browser = aTab.linkedBrowser;
 
-            let remoteType =
-              aParams.forceNotRemote ? E10SUtils.NOT_REMOTE
-              : E10SUtils.getRemoteTypeForURI(aURI, gMultiProcessBrowser,
-                                              aParams.preferredRemoteType);
-
-            let browser;
-            let usingPreloadedContent = false;
-
-            // If we open a new tab with the newtab URL in the default
-            // userContext, check if there is a preloaded browser ready.
-            // Private windows are not included because both the label and the
-            // icon for the tab would be set incorrectly (see bug 1195981).
-            if (aURI == BROWSER_NEW_TAB_URL &&
-                !aParams.userContextId &&
-                !PrivateBrowsingUtils.isWindowPrivate(window)) {
-              browser = this._getPreloadedBrowser();
-              if (browser) {
-                usingPreloadedContent = true;
-                aTab.permanentKey = browser.permanentKey;
+            // If browser is a lazy browser, delete the substitute properties.
+            if (this._browserBindingProperties[0] in browser) {
+              for (let name of this._browserBindingProperties) {
+                delete browser[name];
               }
             }
 
-            if (!browser) {
-              // No preloaded browser found, create one.
-              browser = this._createBrowser({permanentKey: aTab.permanentKey,
-                                             remoteType,
-                                             uriIsAboutBlank,
-                                             userContextId: aParams.userContextId,
-                                             sameProcessAsFrameLoader: aParams.sameProcessAsFrameLoader,
-                                             opener: aParams.opener,
-                                             isPrerendered: aParams.isPrerendered});
-            }
+            let { uriIsAboutBlank, remoteType, usingPreloadedContent } =
+                    aTab._browserParams;
+            delete aTab._browserParams;
 
             let notificationbox = this.getNotificationBox(browser);
             let uniqueId = this._generateUniquePanelID();
             notificationbox.id = uniqueId;
             aTab.linkedPanel = uniqueId;
-            aTab.linkedBrowser = browser;
-            aTab.hasBrowser = true;
-            this._tabForBrowser.set(browser, aTab);
 
             // Inject the <browser> into the DOM if necessary.
             if (!notificationbox.parentNode) {
@@ -2124,8 +2165,6 @@
 
             var evt = new CustomEvent("TabBrowserInserted", { bubbles: true, detail: {} });
             aTab.dispatchEvent(evt);
-
-            return { usingPreloadedContent };
           ]]>
         </body>
       </method>
@@ -2158,6 +2197,7 @@
             var aOriginPrincipal;
             var aDisallowInheritPrincipal;
             var aOpener;
+            var aForceBrowserInsertion;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -2183,6 +2223,7 @@
               aDisallowInheritPrincipal = params.disallowInheritPrincipal;
               aOpener                   = params.opener;
               aIsPrerendered            = params.isPrerendered;
+              aForceBrowserInsertion    = params.forceBrowserInsertion;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -2245,7 +2286,6 @@
 
             var position = this.tabs.length - 1;
             t._tPos = position;
-            t.permanentKey = {};
             this.tabContainer._setPositionalAttributes();
 
             this.tabContainer.updateVisibility();
@@ -2259,23 +2299,51 @@
                                               gMultiProcessBrowser);
             }
 
-            // Currently in this incarnation of bug 906076, we are forcing the
-            // browser to immediately be linked.  In future incarnations of this
-            // bug this will be removed so we can leave the tab in its "lazy"
-            // state to be exploited for startup optimization.  Note that for
-            // now this must occur before "TabOpen" event is fired, as that will
-            // trigger SessionStore.jsm to run code that expects the existence
-            // of tab.linkedBrowser.
-            let browserParams = {
-              forceNotRemote: aForceNotRemote,
-              preferredRemoteType: aPreferredRemoteType,
-              userContextId:  aUserContextId,
-              sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
-              opener: aOpener,
-              isPrerendered: aIsPrerendered,
-            };
-            let { usingPreloadedContent } = this._linkBrowserToTab(t, aURI, browserParams);
-            let b = t.linkedBrowser;
+            let remoteType =
+              aForceNotRemote ? E10SUtils.NOT_REMOTE
+              : E10SUtils.getRemoteTypeForURI(aURI, gMultiProcessBrowser,
+                                              aPreferredRemoteType);
+
+            let b;
+            let usingPreloadedContent = false;
+
+            // If we open a new tab with the newtab URL in the default
+            // userContext, check if there is a preloaded browser ready.
+            // Private windows are not included because both the label and the
+            // icon for the tab would be set incorrectly (see bug 1195981).
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !aUserContextId &&
+                !PrivateBrowsingUtils.isWindowPrivate(window)) {
+              b = this._getPreloadedBrowser();
+              if (b) {
+                usingPreloadedContent = true;
+              }
+            }
+
+            if (!b) {
+              // No preloaded browser found, create one.
+              b = this._createBrowser({ remoteType,
+                                        uriIsAboutBlank,
+                                        userContextId: aUserContextId,
+                                        sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
+                                        opener: aOpener,
+                                        isPrerendered: aIsPrerendered });
+            }
+
+            t.linkedBrowser = b;
+            this._tabForBrowser.set(b, t);
+            t.permanentKey = b.permanentKey;
+            t._browserParams = { uriIsAboutBlank,
+                                 remoteType,
+                                 usingPreloadedContent };
+
+            // If we're creating a blank tab, create a lazy browser.
+            // Otherwise insert the browser into the document now.
+            if (uriIsAboutBlank && !aForceBrowserInsertion) {
+              this._createLazyBrowser(t);
+            } else {
+              this._insertBrowser(t);
+            }
 
             // Dispatch a new tab notification.  We do this once we're
             // entirely done, so that things are in a consistent state
@@ -2494,6 +2562,9 @@
               var byMouse = aParams.byMouse;
               var skipPermitUnload = aParams.skipPermitUnload;
             }
+
+            // Ensure aTab's browser is inserted into the document.
+            this._insertBrowser(aTab);
 
             window.maybeRecordAbandonmentTelemetry(aTab, "tabClosed");
 
@@ -2994,6 +3065,9 @@
         <parameter name="aStateFlags"/>
         <body>
           <![CDATA[
+            // aOurTab's browser needs to be inserted now if it hasn't already.
+            this._insertBrowser(aOurTab);
+
             // Unhook our progress listener
             const filter = this._tabFilters.get(aOurTab);
             let tabListener = this._tabListeners.get(aOurTab);
@@ -4966,7 +5040,6 @@
           this.mCurrentTab._fullyOpen = true;
           this.mCurrentTab.cachePosition = 0;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
-          this.mCurrentTab.hasBrowser = true;
           this._tabForBrowser.set(this.mCurrentBrowser, this.mCurrentTab);
 
           // set up the shared autoscroll popup
@@ -6278,6 +6351,21 @@
               Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_INTERVAL_MS").add(averageInterval);
             }
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="getRelatedElement">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (!aTab)
+            return null;
+          // If the tab's browser is lazy, we need to `_insertBrowser` in order
+          // to have a linkedPanel.  This will also serve to bind the browser
+          // and make it ready to use when the tab is selected.
+          this.tabbrowser._insertBrowser(aTab);
+          return document.getElementById(aTab.linkedPanel);
         ]]>
         </body>
       </method>
