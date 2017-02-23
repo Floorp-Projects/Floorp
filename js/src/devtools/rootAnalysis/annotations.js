@@ -71,8 +71,8 @@ var ignoreCallees = {
     "js::ClassOps.finalize" : true,
     "JSRuntime.destroyPrincipals" : true,
     "icu_50::UObject.__deleting_dtor" : true, // destructors in ICU code can't cause GC
-    "mozilla::CycleCollectedJSContext.DescribeCustomObjects" : true, // During tracing, cannot GC.
-    "mozilla::CycleCollectedJSContext.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
+    "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
+    "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
     "PLDHashTableOps.hashKey" : true,
     "z_stream_s.zfree" : true,
     "z_stream_s.zalloc" : true,

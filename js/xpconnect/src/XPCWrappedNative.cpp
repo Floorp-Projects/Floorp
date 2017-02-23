@@ -280,7 +280,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     nsresult rv;
 
-    MOZ_ASSERT(!Scope->GetContext()->GCIsRunning(),
+    MOZ_ASSERT(!Scope->GetRuntime()->GCIsRunning(),
                "XPCWrappedNative::GetNewOrUsed called during GC");
 
     nsISupports* identity = helper.GetCanonical();
@@ -579,8 +579,8 @@ XPCWrappedNative::Destroy()
     }
 
     if (mIdentity) {
-        XPCJSContext* cx = GetContext();
-        if (cx && cx->GetDoingFinalization()) {
+        XPCJSRuntime* rt = GetRuntime();
+        if (rt && rt->GetDoingFinalization()) {
             DeferredFinalize(mIdentity.forget().take());
         } else {
             mIdentity = nullptr;
@@ -598,7 +598,7 @@ XPCWrappedNative::SetProto(XPCWrappedNativeProto* p)
     MOZ_ASSERT(HasProto());
 
     // Write barrier for incremental GC.
-    JSContext* cx = GetContext()->Context();
+    JSContext* cx = nsXPConnect::GetContextInstance()->Context();
     GetProto()->WriteBarrierPre(cx);
 
     mMaybeProto = p;
@@ -852,7 +852,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
 
         // We also need to release any native pointers held...
         RefPtr<nsISupports> native = to->TakeNative();
-        if (native && GetContext()) {
+        if (native && GetRuntime()) {
             DeferredFinalize(native.forget().take());
         }
 
@@ -2259,7 +2259,7 @@ XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
     : mJSObj(obj)
 {
     MOZ_ASSERT(obj);
-    XPCJSContext::Get()->AddObjectHolderRoot(this);
+    XPCJSRuntime::Get()->AddObjectHolderRoot(this);
 }
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
