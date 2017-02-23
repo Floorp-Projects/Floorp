@@ -217,7 +217,6 @@ protected:
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                         const nsCString& aMimeType,
-                        const uint16_t& aMode,
                         const InfallibleTArray<nsCString>& aNames,
                         const InfallibleTArray<nsCString>& aValues);
 
@@ -407,7 +406,6 @@ private:
 #endif // #if defined(OS_WIN)
     const NPPluginFuncs* mPluginIface;
     nsCString                   mMimeType;
-    uint16_t                    mMode;
     InfallibleTArray<nsCString> mNames;
     InfallibleTArray<nsCString> mValues;
     NPP_t mData;

@@ -70,7 +70,7 @@ public:
   virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) = 0;
 #endif
   virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
-                           uint16_t mode, int16_t argc, char* argn[],
+                           int16_t argc, char* argn[],
                            char* argv[], NPSavedData* saved,
                            NPError* error) = 0;
 
