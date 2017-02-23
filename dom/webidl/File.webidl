@@ -38,7 +38,11 @@ partial interface File {
 
   [GetterThrows, ChromeOnly, NeedsCallerType]
   readonly attribute DOMString mozFullPath;
+};
 
+// Mozilla extensions - main-thread only
+[Exposed=(Window)]
+partial interface File {
   [ChromeOnly, Throws, NeedsCallerType]
   static Promise<File> createFromNsIFile(nsIFile file,
                                          optional ChromeFilePropertyBag options);
