@@ -8,6 +8,7 @@
 #define gc_AtomMarking_h
 
 #include "NamespaceImports.h"
+#include "ds/Bitmap.h"
 #include "gc/Heap.h"
 #include "threading/ProtectedData.h"
 
@@ -21,12 +22,10 @@ class AtomMarkingRuntime
     // Unused arena atom bitmap indexes. Protected by the GC lock.
     js::ExclusiveAccessLockOrGCTaskData<Vector<size_t, 0, SystemAllocPolicy>> freeArenaIndexes;
 
+  public:
     // The extent of all allocated and free words in atom mark bitmaps.
     // This monotonically increases and may be read from without locking.
     mozilla::Atomic<size_t> allocatedWords;
-
-  public:
-    typedef Vector<uintptr_t, 0, SystemAllocPolicy> Bitmap;
 
     AtomMarkingRuntime()
       : allocatedWords(0)
@@ -41,11 +40,11 @@ class AtomMarkingRuntime
     // Fill |bitmap| with an atom marking bitmap based on the things that are
     // currently marked in the chunks used by atoms zone arenas. This returns
     // false on an allocation failure (but does not report an exception).
-    bool computeBitmapFromChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap);
+    bool computeBitmapFromChunkMarkBits(JSRuntime* runtime, DenseBitmap& bitmap);
 
     // Update the atom marking bitmap in |zone| according to another
     // overapproximation of the reachable atoms in |bitmap|.
-    void updateZoneBitmap(Zone* zone, const Bitmap& bitmap);
+    void updateZoneBitmap(Zone* zone, const DenseBitmap& bitmap);
 
     // Set any bits in the chunk mark bitmaps for atoms which are marked in any
     // zone in the runtime.
