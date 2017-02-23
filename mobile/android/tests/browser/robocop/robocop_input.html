@@ -19,7 +19,12 @@
       let contentEditable = document.getElementById("content-editable");
 
       let designMode = document.getElementById("design-mode");
-      designMode.contentDocument.designMode = "on";
+      try {
+        designMode.contentDocument.designMode = "on";
+      } catch (e) {
+        // Setting designMode above sometimes fails, so try again later.
+        setTimeout(function() { designMode.contentDocument.designMode = "on" }, 0);
+      }
 
       // Spatial navigation interferes with design-mode key event tests.
       SpecialPowers.setBoolPref("snav.enabled", false);
