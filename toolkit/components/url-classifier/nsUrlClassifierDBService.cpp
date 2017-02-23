@@ -1691,6 +1691,9 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
     return NS_ERROR_ABORT;
   }
 
+  using namespace mozilla::Telemetry;
+  auto startTime = TimeStamp::Now(); // For telemetry.
+
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
@@ -1709,7 +1712,7 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
     new nsMainThreadPtrHolder<nsIURIClassifierCallback>(aCallback));
 
   nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([worker, key, tables, callback] () -> void {
+    NS_NewRunnableFunction([worker, key, tables, callback, startTime] () -> void {
 
     nsCString matchedLists;
     nsAutoPtr<LookupResultArray> results(new LookupResultArray());
@@ -1726,7 +1729,11 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
     }
 
     nsCOMPtr<nsIRunnable> cbRunnable =
-      NS_NewRunnableFunction([callback, matchedLists] () -> void {
+      NS_NewRunnableFunction([callback, matchedLists, startTime] () -> void {
+        // Measure the time diff between calling and callback.
+        AccumulateDelta_impl<Millisecond>::compute(
+          Telemetry::URLCLASSIFIER_ASYNC_CLASSIFYLOCAL_TIME, startTime);
+
         // |callback| is captured as const value so ...
         auto cb = const_cast<nsIURIClassifierCallback*>(callback.get());
         cb->OnClassifyComplete(NS_OK,           // Not used.
