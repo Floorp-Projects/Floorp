@@ -334,7 +334,6 @@ protected:
   virtual ~nsNPAPIPluginInstance();
 
   nsresult GetTagType(nsPluginTagType *result);
-  nsresult GetMode(int32_t *result);
 
   // check if this is a Java applet and affected by bug 750480
   void CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
