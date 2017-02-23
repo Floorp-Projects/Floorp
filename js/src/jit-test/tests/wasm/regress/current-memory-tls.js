@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1341650:
 // - when compiled with Ion, pass the TLS register to current_memory;
 // - when compiled with Baseline, don't clobber the last stack slot when

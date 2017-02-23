@@ -2,8 +2,6 @@
 // Turn off baseline and since it messes up the GC finalization assertions by
 // adding spurious edges to the GC graph.
 
-load(libdir + 'wasm.js');
-
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;

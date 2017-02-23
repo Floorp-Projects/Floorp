@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 function testConversion(resultType, opcode, paramType, op, expect) {
   if (paramType === 'i64') {
     // i64 cannot be imported, so we use a wrapper function.
