@@ -36,16 +36,16 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { gStore, windowRequire } = monitor.panelWin;
+  let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { Prefs } = windowRequire("devtools/client/netmonitor/utils/prefs");
 
   gStore.dispatch(Actions.batchEnable(false));
 
-  is(Prefs.filters.length, 1,
-    "Only the valid filter types should be loaded, the others should be ignored");
-  is(Prefs.filters[0], "js",
-    "The only filter type is correct.");
+  is(Prefs.filters.length, 3,
+    "All the filter types should be loaded.");
+  is(Prefs.filters[0], "bogus",
+    "The first filter type is invalid, but loaded anyway.");
 
   let wait = waitForNetworkEvents(monitor, 9);
   loadCommonFrameScript();
@@ -55,9 +55,12 @@ add_task(function* () {
   testFilterButtons(monitor, "js");
   ok(true, "Only the correct filter type was taken into consideration.");
 
-  yield teardown(monitor);
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".requests-list-filter-html-button"));
 
   let filters = Services.prefs.getCharPref("devtools.netmonitor.filters");
-  is(filters, '["js"]',
-    "The bogus filter type was ignored and removed from the preferences.");
+  is(filters, '["html","js"]',
+    "The filters preferences were saved directly after the click and only with the valid.");
+
+  yield teardown(monitor);
 });
