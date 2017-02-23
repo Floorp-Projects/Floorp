@@ -119,8 +119,6 @@ protected:
   SampleQueue mQueue;
   // Durations are stored in microseconds.
   std::deque<media::TimeUnit> mDurations;
-
-  bool mIsCodecSupportAdaptivePlayback = false;
 };
 
 } // namespace mozilla

@@ -123,8 +123,6 @@ public:
     return NS_OK;
   }
 
-  bool SupportDecoderRecycling() const override { return mIsCodecSupportAdaptivePlayback; }
-
 protected:
   layers::ImageContainer* mImageContainer;
   const VideoInfo& mConfig;
@@ -273,18 +271,6 @@ MediaCodecDataDecoder::InitDecoder(Surface::Param aSurface)
     INVOKE_CALLBACK(Error,
                     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
     return NS_ERROR_FAILURE;
-  }
-
-  // Check if the video codec supports adaptive playback or not.
-  if (aSurface) {
-    mIsCodecSupportAdaptivePlayback =
-      java::HardwareCodecCapabilityUtils::CheckSupportsAdaptivePlayback(mDecoder,
-        nsCString(TranslateMimeType(mMimeType)));
-    if (mIsCodecSupportAdaptivePlayback) {
-        // TODO: may need to find a way to not use hard code to decide the max w/h.
-        mFormat->SetInteger(MediaFormat::KEY_MAX_WIDTH, 1920);
-        mFormat->SetInteger(MediaFormat::KEY_MAX_HEIGHT, 1080);
-    }
   }
 
   nsresult rv;

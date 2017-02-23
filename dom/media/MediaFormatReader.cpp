@@ -264,10 +264,6 @@ public:
   {
     mDecoder->SetSeekThreshold(aTime);
   }
-  bool SupportDecoderRecycling() const override
-  {
-    return mDecoder->SupportDecoderRecycling();
-  }
   void Shutdown() override
   {
     mDecoder->Shutdown();
@@ -1245,39 +1241,29 @@ MediaFormatReader::HandleDemuxedSamples(TrackType aTrack,
         return;
       }
 
-      bool supportRecycling = MediaPrefs::MediaDecoderCheckRecycling() &&
-                              decoder.mDecoder->SupportDecoderRecycling();
       if (decoder.mNextStreamSourceID.isNothing() ||
           decoder.mNextStreamSourceID.ref() != info->GetID()) {
-        if (!supportRecycling) {
-          LOG("%s stream id has changed from:%d to:%d, draining decoder.",
+        LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
             info->GetID());
-          decoder.mNeedDraining = true;
-          decoder.mNextStreamSourceID = Some(info->GetID());
-          ScheduleUpdate(aTrack);
-          return;
-        }
+        decoder.mNeedDraining = true;
+        decoder.mNextStreamSourceID = Some(info->GetID());
+        ScheduleUpdate(aTrack);
+        return;
       }
 
-      LOG("%s stream id has changed from:%d to:%d.",
+      LOG("%s stream id has changed from:%d to:%d, recreating decoder.",
           TrackTypeToStr(aTrack), decoder.mLastStreamSourceID,
           info->GetID());
       decoder.mLastStreamSourceID = info->GetID();
       decoder.mNextStreamSourceID.reset();
-      if (!supportRecycling) {
-        LOG("Decoder does not support recycling, recreate decoder.");
-        // Reset will clear our array of queued samples. So make a copy now.
-        nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
-        Reset(aTrack);
-        decoder.ShutdownDecoder();
-        if (sample->mKeyframe) {
-          decoder.mQueuedSamples.AppendElements(Move(samples));
-        }
-      }
-
+      // Reset will clear our array of queued samples. So make a copy now.
+      nsTArray<RefPtr<MediaRawData>> samples{decoder.mQueuedSamples};
+      Reset(aTrack);
+      decoder.ShutdownDecoder();
       decoder.mInfo = info;
       if (sample->mKeyframe) {
+        decoder.mQueuedSamples.AppendElements(Move(samples));
         ScheduleUpdate(aTrack);
       } else {
         TimeInterval time =
