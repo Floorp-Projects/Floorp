@@ -3281,11 +3281,6 @@ nsGlobalWindow::SetOpenerWindow(nsPIDOMWindowOuter* aOpener,
   mOpener = opener.forget();
   NS_ASSERTION(mOpener || !aOpener, "Opener must support weak references!");
 
-  // Check that the js visible opener matches!
-  nsPIDOMWindowOuter* contentOpener = GetSanitizedOpener(aOpener);
-  MOZ_RELEASE_ASSERT(!contentOpener || !mTabGroup ||
-    mTabGroup == Cast(contentOpener)->mTabGroup);
-
   if (aOriginalOpener) {
     MOZ_ASSERT(!mHadOriginalOpener,
                "Probably too late to call ComputeIsSecureContext again");
