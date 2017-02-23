@@ -309,8 +309,22 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
    */
   nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
   NS_ENSURE_STATE(node);
+
+  if (mAutofillInputs.Get(node)) {
+    return NS_OK;
+  }
+
   mAutofillInputs.Put(node, true);
   node->AddMutationObserverUnlessExists(this);
+
+  nsFocusManager *fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+    if (SameCOMIdentity(focusedContent, node)) {
+      nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(node);
+      MaybeStartControllingInput(input);
+    }
+  }
 
   return NS_OK;
 }
