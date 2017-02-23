@@ -1284,6 +1284,22 @@ CacheIRCompiler::emitGuardIsProxy()
 }
 
 bool
+CacheIRCompiler::emitGuardIsCrossCompartmentWrapper()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Address handlerAddr(obj, ProxyObject::offsetOfHandler());
+    masm.branchPtr(Assembler::NotEqual, handlerAddr, ImmPtr(&CrossCompartmentWrapper::singleton),
+                   failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardNotDOMProxy()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1416,6 +1432,17 @@ CacheIRCompiler::emitLoadEnclosingEnvironment()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     Register reg = allocator.defineRegister(masm, reader.objOperandId());
     masm.extractObject(Address(obj, EnvironmentObject::offsetOfEnclosingEnvironment()), reg);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadWrapperTarget()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), reg);
+    masm.unboxObject(Address(reg, detail::ProxyValueArray::offsetOfPrivateSlot()), reg);
     return true;
 }
 
@@ -1920,4 +1947,46 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
             MOZ_CRASH("Invalid ReferenceTypeDescr");
         }
     }
+}
+
+bool
+CacheIRCompiler::emitWrapResult()
+{
+    AutoOutputRegister output(*this);
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label done;
+    // We only have to wrap objects, because we are in the same zone.
+    masm.branchTestObject(Assembler::NotEqual, output.valueReg(), &done);
+
+    Register obj = output.valueReg().scratchReg();
+    masm.unboxObject(output.valueReg(), obj);
+
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    LiveRegisterSet save(regs.asLiveSet());
+    masm.PushRegsInMask(save);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, WrapObjectPure));
+    masm.mov(ReturnReg, obj);
+
+    LiveRegisterSet ignore;
+    ignore.add(obj);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
+    // We could not get a wrapper for this object.
+    masm.branchTestPtr(Assembler::Zero, obj, obj, failure->label());
+
+    // We clobbered the output register, so we have to retag.
+    masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+
+    masm.bind(&done);
+    return true;
 }

@@ -102,7 +102,7 @@ protected:
   }
 
   std::string
-  CreateOffer(const Maybe<JsepOfferOptions> options = Nothing())
+  CreateOffer(const Maybe<JsepOfferOptions>& options = Nothing())
   {
     JsepOfferOptions defaultOptions;
     const JsepOfferOptions& optionsRef = options ? *options : defaultOptions;
@@ -408,7 +408,7 @@ protected:
       return false;
     }
 
-    // We don't check things like mBundleLevel, since that can change without
+    // We don't check things like BundleLevel(), since that can change without
     // any changes to the transport, which is what we're really interested in.
 
     if (p1.mSending.get() != p2.mSending.get()) {
@@ -532,7 +532,7 @@ protected:
   static const uint32_t ALL_CHECKS = CHECK_SUCCESS | CHECK_TRACKS;
 
   void OfferAnswer(uint32_t checkFlags = ALL_CHECKS,
-                   const Maybe<JsepOfferOptions> options = Nothing()) {
+                   const Maybe<JsepOfferOptions>& options = Nothing()) {
     std::string offer = CreateOffer(options);
     SetLocalOffer(offer, checkFlags);
     SetRemoteOffer(offer, checkFlags);
@@ -922,10 +922,10 @@ protected:
 
     for (JsepTrackPair& pair : pairs) {
       if (types.size() == 1) {
-        ASSERT_FALSE(pair.mBundleLevel.isSome()) << context;
+        ASSERT_FALSE(pair.HasBundleLevel()) << context;
       } else {
-        ASSERT_TRUE(pair.mBundleLevel.isSome()) << context;
-        ASSERT_EQ(0U, *pair.mBundleLevel) << context;
+        ASSERT_TRUE(pair.HasBundleLevel()) << context;
+        ASSERT_EQ(0U, pair.BundleLevel()) << context;
       }
     }
   }
@@ -1637,10 +1637,10 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrack)
     ASSERT_EQ(oldPair.mLevel, newPair.mLevel);
     ASSERT_EQ(oldPair.mSending.get(), newPair.mSending.get());
     ASSERT_EQ(oldPair.mReceiving.get(), newPair.mReceiving.get());
-    ASSERT_TRUE(oldPair.mBundleLevel.isSome());
-    ASSERT_TRUE(newPair.mBundleLevel.isSome());
-    ASSERT_EQ(0U, *oldPair.mBundleLevel);
-    ASSERT_EQ(1U, *newPair.mBundleLevel);
+    ASSERT_TRUE(oldPair.HasBundleLevel());
+    ASSERT_TRUE(newPair.HasBundleLevel());
+    ASSERT_EQ(0U, oldPair.BundleLevel());
+    ASSERT_EQ(1U, newPair.BundleLevel());
   }
 
   ASSERT_EQ(answererPairs.size(), newAnswererPairs.size() + 1);
@@ -1651,10 +1651,10 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrack)
     ASSERT_EQ(oldPair.mLevel, newPair.mLevel);
     ASSERT_EQ(oldPair.mSending.get(), newPair.mSending.get());
     ASSERT_EQ(oldPair.mReceiving.get(), newPair.mReceiving.get());
-    ASSERT_TRUE(oldPair.mBundleLevel.isSome());
-    ASSERT_TRUE(newPair.mBundleLevel.isSome());
-    ASSERT_EQ(0U, *oldPair.mBundleLevel);
-    ASSERT_EQ(1U, *newPair.mBundleLevel);
+    ASSERT_TRUE(oldPair.HasBundleLevel());
+    ASSERT_TRUE(newPair.BundleLevel());
+    ASSERT_EQ(0U, oldPair.BundleLevel());
+    ASSERT_EQ(1U, newPair.BundleLevel());
   }
 }
 
@@ -2166,8 +2166,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererEnablesBundle)
 
   for (size_t i = 0; i < newOffererPairs.size(); ++i) {
     // No bundle initially
-    ASSERT_FALSE(offererPairs[i].mBundleLevel.isSome());
-    ASSERT_FALSE(answererPairs[i].mBundleLevel.isSome());
+    ASSERT_FALSE(offererPairs[i].HasBundleLevel());
+    ASSERT_FALSE(answererPairs[i].HasBundleLevel());
     if (i != 0) {
       ASSERT_NE(offererPairs[0].mRtpTransport.get(),
                 offererPairs[i].mRtpTransport.get());
@@ -2184,8 +2184,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererEnablesBundle)
     }
 
     // Verify that bundle worked after renegotiation
-    ASSERT_TRUE(newOffererPairs[i].mBundleLevel.isSome());
-    ASSERT_TRUE(newAnswererPairs[i].mBundleLevel.isSome());
+    ASSERT_TRUE(newOffererPairs[i].HasBundleLevel());
+    ASSERT_TRUE(newAnswererPairs[i].HasBundleLevel());
     ASSERT_EQ(newOffererPairs[0].mRtpTransport.get(),
               newOffererPairs[i].mRtpTransport.get());
     ASSERT_EQ(newOffererPairs[0].mRtcpTransport.get(),
@@ -2229,10 +2229,10 @@ TEST_P(JsepSessionTest, RenegotiationOffererDisablesBundleTransport)
   ASSERT_EQ(answererPairs.size(), newAnswererPairs.size() + 1);
 
   for (size_t i = 0; i < newOffererPairs.size(); ++i) {
-    ASSERT_TRUE(newOffererPairs[i].mBundleLevel.isSome());
-    ASSERT_TRUE(newAnswererPairs[i].mBundleLevel.isSome());
-    ASSERT_EQ(1U, *newOffererPairs[i].mBundleLevel);
-    ASSERT_EQ(1U, *newAnswererPairs[i].mBundleLevel);
+    ASSERT_TRUE(newOffererPairs[i].HasBundleLevel());
+    ASSERT_TRUE(newAnswererPairs[i].HasBundleLevel());
+    ASSERT_EQ(1U, newOffererPairs[i].BundleLevel());
+    ASSERT_EQ(1U, newAnswererPairs[i].BundleLevel());
     ASSERT_EQ(newOffererPairs[0].mRtpTransport.get(),
               newOffererPairs[i].mRtpTransport.get());
     ASSERT_EQ(newOffererPairs[0].mRtcpTransport.get(),
@@ -2287,10 +2287,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererDisablesBundleTransport)
   ASSERT_EQ(answererPairs.size(), newAnswererPairs.size() + 1);
 
   for (size_t i = 0; i < newOffererPairs.size(); ++i) {
-    ASSERT_TRUE(newOffererPairs[i].mBundleLevel.isSome());
-    ASSERT_TRUE(newAnswererPairs[i].mBundleLevel.isSome());
-    ASSERT_EQ(1U, *newOffererPairs[i].mBundleLevel);
-    ASSERT_EQ(1U, *newAnswererPairs[i].mBundleLevel);
+    ASSERT_TRUE(newOffererPairs[i].HasBundleLevel());
+    ASSERT_TRUE(newAnswererPairs[i].HasBundleLevel());
+    ASSERT_EQ(1U, newOffererPairs[i].BundleLevel());
+    ASSERT_EQ(1U, newAnswererPairs[i].BundleLevel());
     ASSERT_EQ(newOffererPairs[0].mRtpTransport.get(),
               newOffererPairs[i].mRtpTransport.get());
     ASSERT_EQ(newOffererPairs[0].mRtcpTransport.get(),

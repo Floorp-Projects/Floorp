@@ -39,7 +39,7 @@ class DelayedResolveOrReject : public Runnable
 public:
   DelayedResolveOrReject(TaskQueue* aTaskQueue,
                          TestPromise::Private* aPromise,
-                         TestPromise::ResolveOrRejectValue aValue,
+                         const TestPromise::ResolveOrRejectValue& aValue,
                          int aIterations)
   : mTaskQueue(aTaskQueue)
   , mPromise(aPromise)

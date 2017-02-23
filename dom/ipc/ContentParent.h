@@ -54,9 +54,6 @@ class nsIWidget;
 
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
-#ifdef MOZ_GECKO_PROFILER
-class ProfileGatherer;
-#endif
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
 class SandboxBroker;
@@ -675,9 +672,6 @@ private:
   ContentParent(ContentParent* aOpener,
                 const nsAString& aRemoteType);
 
-  // The common initialization for the constructors.
-  void InitializeMembers();
-
   // Launch the subprocess and associated initialization.
   // Returns false if the process fails to start.
   bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
@@ -1191,7 +1185,7 @@ private:
   PProcessHangMonitorParent* mHangMonitorActor;
 
 #ifdef MOZ_GECKO_PROFILER
-  RefPtr<mozilla::ProfileGatherer> mGatherer;
+  bool mIsProfilerActive;
 #endif
   nsCString mProfile;
 

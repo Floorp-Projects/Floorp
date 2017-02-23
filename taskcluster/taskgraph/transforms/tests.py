@@ -665,7 +665,6 @@ def make_job_description(config, tests):
             jobdesc['worker-type'] = 'buildbot-bridge/buildbot-bridge'
         elif implementation == 'native-engine':
             jobdesc['worker-type'] = 'tc-worker-provisioner/gecko-t-osx-10-10'
-            jobdesc['worker']['command'] = []
         elif implementation == 'generic-worker':
             test_platform = test['test-platform'].split('/')[0]
             jobdesc['worker-type'] = WORKER_TYPE[test_platform]

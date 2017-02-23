@@ -3,8 +3,13 @@
 <script>
 function loadHandler() {
   var outer = document.getElementById("outer");
-  var inner = document.createElement('iframe');
+  var inner = document.createElement("iframe");
+  inner.height = "1px";
   outer.contentDocument.body.appendChild(inner);
+
+  // Flush reflow inside our inner iframe. This ensures that our inner.height
+  // tweak further down will actually invoke the resize handler.
+  inner.contentWindow.offsetTop;
 
   // Set up resize handler (which ends the test, one way or another)
   inner.contentWindow.onresize = () => {
@@ -13,7 +18,7 @@ function loadHandler() {
   };
 
   // Trigger the resize handler:
-  inner.height = '0px';
+  inner.height = "5px";
   inner.offsetTop;
 }
 </script>
