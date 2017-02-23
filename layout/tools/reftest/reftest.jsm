@@ -845,6 +845,14 @@ function AddTestItem(aTest, aFilter)
     gURLs.push(aTest);
 }
 
+function AddStyloTestPrefs(aSandbox, aTestPrefSettings, aRefPrefSettings)
+{
+    AddPrefSettings("test-", "layout.css.servo.enabled", "true", aSandbox,
+                    aTestPrefSettings, aRefPrefSettings);
+    AddPrefSettings("ref-", "layout.css.servo.enabled", "false", aSandbox,
+                    aTestPrefSettings, aRefPrefSettings);
+}
+
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
 function ReadManifest(aURL, inherited_status, aFilter)
@@ -879,6 +887,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
     var lineNo = 0;
     var urlprefix = "";
     var defaultTestPrefSettings = [], defaultRefPrefSettings = [];
+    if (gCompareStyloToGecko) {
+        AddStyloTestPrefs(sandbox, defaultTestPrefSettings,
+                          defaultRefPrefSettings);
+    }
     for (var str of lines) {
         ++lineNo;
         if (str.charAt(0) == "#")
@@ -912,6 +924,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 if (!AddPrefSettings(m[1], m[2], m[3], sandbox, defaultTestPrefSettings, defaultRefPrefSettings)) {
                     throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
                 }
+            }
+            if (gCompareStyloToGecko) {
+                AddStyloTestPrefs(sandbox, defaultTestPrefSettings,
+                                  defaultRefPrefSettings);
             }
             continue;
         }
@@ -1320,16 +1336,6 @@ function StartCurrentURI(aState)
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
-
-    if (gCompareStyloToGecko) {
-        if (gState == 2){
-            logger.info("Disabling Servo-backed style system");
-            prefs.setBoolPref('layout.css.servo.enabled', false);
-        } else {
-            logger.info("Enabling Servo-backed style system");
-            prefs.setBoolPref('layout.css.servo.enabled', true);
-        }
-    }
 
     var prefSettings = gURLs[0]["prefSettings" + aState];
     if (prefSettings.length > 0) {
