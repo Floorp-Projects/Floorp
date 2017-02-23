@@ -224,11 +224,13 @@ function WebConsoleFrame(webConsoleOwner) {
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
 
-  let require = BrowserLoaderModule.BrowserLoader({
+  let toolbox = gDevTools.getToolbox(this.owner.target);
+  let {require} = BrowserLoaderModule.BrowserLoader({
     window: this.window,
     useOnlyShared: true,
-    commonLibRequire: gDevTools.getToolbox(this.owner.target).browserRequire,
-  }).require;
+    // The toolbox isn't available for the browser console.
+    commonLibRequire: toolbox ? toolbox.browserRequire : null,
+  });
 
   this.React = require("devtools/client/shared/vendor/react");
   this.ReactDOM = require("devtools/client/shared/vendor/react-dom");
