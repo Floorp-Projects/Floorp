@@ -11,7 +11,7 @@ pub struct GLLimits {
 
 #[cfg(feature = "serde")]
 impl Deserialize for GLLimits {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer
     {
         let values = try!(<[_; 3]>::deserialize(deserializer));
@@ -25,7 +25,7 @@ impl Deserialize for GLLimits {
 
 #[cfg(feature = "serde")]
 impl Serialize for GLLimits {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         [self.max_vertex_attribs, self.max_tex_size, self.max_cube_map_tex_size]

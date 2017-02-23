@@ -21,7 +21,7 @@ use threadpool::ThreadPool;
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
-use webrender_traits::{VRCompositorCommand, VRCompositorHandler};
+use webrender_traits::{BlobImageRenderer, VRCompositorCommand, VRCompositorHandler};
 use offscreen_gl_context::GLContextDispatcher;
 
 /// The render backend is responsible for transforming high level display lists into
@@ -68,9 +68,10 @@ impl RenderBackend {
                config: FrameBuilderConfig,
                recorder: Option<Box<ApiRecordingReceiver>>,
                main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
+               blob_image_renderer: Option<Box<BlobImageRenderer>>,
                vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>) -> RenderBackend {
 
-        let resource_cache = ResourceCache::new(texture_cache, workers, enable_aa);
+        let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer, enable_aa);
 
         register_thread_with_profiler("Backend".to_string());
 
@@ -231,7 +232,7 @@ impl RenderBackend {
                         ApiMsg::ScrollLayersWithScrollId(origin, pipeline_id, scroll_root_id) => {
                             profile_scope!("ScrollLayersWithScrollId");
                             let frame = profile_counters.total_time.profile(|| {
-                                if self.frame.scroll_layers(origin, pipeline_id, scroll_root_id) {
+                                if self.frame.scroll_nodes(origin, pipeline_id, scroll_root_id) {
                                     Some(self.render())
                                 } else {
                                     None
@@ -261,7 +262,7 @@ impl RenderBackend {
                         }
                         ApiMsg::GetScrollLayerState(tx) => {
                             profile_scope!("GetScrollLayerState");
-                            tx.send(self.frame.get_scroll_layer_state())
+                            tx.send(self.frame.get_scroll_node_state())
                               .unwrap()
                         }
                         ApiMsg::RequestWebGLContext(size, attributes, tx) => {

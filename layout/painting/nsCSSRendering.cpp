@@ -1369,6 +1369,56 @@ nsCSSRendering::EndFrameTreesLocked()
   }
 }
 
+bool
+nsCSSRendering::HasBoxShadowNativeTheme(nsIFrame* aFrame,
+                                        bool& aMaybeHasBorderRadius)
+{
+  const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
+  nsITheme::Transparency transparency;
+  if (aFrame->IsThemed(styleDisplay, &transparency)) {
+    aMaybeHasBorderRadius = false;
+    // For opaque (rectangular) theme widgets we can take the generic
+    // border-box path with border-radius disabled.
+    return transparency != nsITheme::eOpaque;
+  }
+
+  aMaybeHasBorderRadius = true;
+  return false;
+}
+
+gfx::Color
+nsCSSRendering::GetShadowColor(nsCSSShadowItem* aShadow,
+                               nsIFrame* aFrame,
+                               float aOpacity)
+{
+  // Get the shadow color; if not specified, use the foreground color
+  nscolor shadowColor;
+  if (aShadow->mHasColor)
+    shadowColor = aShadow->mColor;
+  else
+    shadowColor = aFrame->StyleColor()->mColor;
+
+  Color color = Color::FromABGR(shadowColor);
+  color.a *= aOpacity;
+  return color;
+}
+
+nsRect
+nsCSSRendering::GetShadowRect(const nsRect aFrameArea,
+                              bool aNativeTheme,
+                              nsIFrame* aForFrame)
+{
+  nsRect frameRect = aNativeTheme ?
+    aForFrame->GetVisualOverflowRectRelativeToSelf() + aFrameArea.TopLeft() :
+    aFrameArea;
+  Sides skipSides = aForFrame->GetSkipSides();
+  frameRect = ::BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
+
+  // Explicitly do not need to account for the spread radius here
+  // Webrender does it for us or PaintBoxShadow will for non-WR
+  return frameRect;
+}
+
 void
 nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     nsRenderingContext& aRenderingContext,
@@ -1383,25 +1433,11 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     return;
 
   bool hasBorderRadius;
-  bool nativeTheme; // mutually exclusive with hasBorderRadius
+  // mutually exclusive with hasBorderRadius
+  bool nativeTheme = HasBoxShadowNativeTheme(aForFrame, hasBorderRadius);
   const nsStyleDisplay* styleDisplay = aForFrame->StyleDisplay();
-  nsITheme::Transparency transparency;
-  if (aForFrame->IsThemed(styleDisplay, &transparency)) {
-    // We don't respect border-radius for native-themed widgets
-    hasBorderRadius = false;
-    // For opaque (rectangular) theme widgets we can take the generic
-    // border-box path with border-radius disabled.
-    nativeTheme = transparency != nsITheme::eOpaque;
-  } else {
-    nativeTheme = false;
-    hasBorderRadius = true; // we'll update this below
-  }
 
-  nsRect frameRect = nativeTheme ?
-    aForFrame->GetVisualOverflowRectRelativeToSelf() + aFrameArea.TopLeft() :
-    aFrameArea;
-  Sides skipSides = aForFrame->GetSkipSides();
-  frameRect = ::BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
+  nsRect frameRect = GetShadowRect(aFrameArea, nativeTheme, aForFrame);
 
   // Get any border radius, since box-shadow must also have rounded corners if
   // the frame does.
@@ -1465,15 +1501,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     shadowGfxRectPlusBlur.RoundOut();
     MaybeSnapToDevicePixels(shadowGfxRectPlusBlur, aDrawTarget, true);
 
-    // Set the shadow color; if not specified, use the foreground color
-    nscolor shadowColor;
-    if (shadowItem->mHasColor)
-      shadowColor = shadowItem->mColor;
-    else
-      shadowColor = aForFrame->StyleColor()->mColor;
-
-    Color gfxShadowColor(Color::FromABGR(shadowColor));
-    gfxShadowColor.a *= aOpacity;
+    Color gfxShadowColor = GetShadowColor(shadowItem, aForFrame, aOpacity);
 
     if (nativeTheme) {
       nsContextBoxBlur blurringArea;
@@ -1547,6 +1575,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
       // Clip the shadow so that we only get the part that applies to aForFrame.
       nsRect fragmentClip = shadowRectPlusBlur;
+      Sides skipSides = aForFrame->GetSkipSides();
       if (!skipSides.IsEmpty()) {
         if (skipSides.Left()) {
           nscoord xmost = fragmentClip.XMost();
@@ -1740,11 +1769,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     Rect shadowGfxRect = NSRectToRect(paddingRect, twipsPerPixel);
     shadowGfxRect.Round();
 
-    // Set the shadow color; if not specified, use the foreground color
-    Color shadowColor = Color::FromABGR(shadowItem->mHasColor ?
-                                          shadowItem->mColor :
-                                          aForFrame->StyleColor()->mColor);
-
+    Color shadowColor = GetShadowColor(shadowItem, aForFrame, 1.0);
     renderContext->Save();
 
     // This clips the outside border radius.

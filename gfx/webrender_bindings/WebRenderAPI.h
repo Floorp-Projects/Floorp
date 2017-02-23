@@ -71,12 +71,14 @@ public:
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
+  bool GetUseANGLE() const { return mUseANGLE; }
 
 protected:
-  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize)
+  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
     : mWrApi(aRawApi)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
+    , mUseANGLE(aUseANGLE)
   {}
 
   ~WebRenderAPI();
@@ -84,6 +86,7 @@ protected:
   WrAPI* mWrApi;
   wr::WindowId mId;
   GLint mMaxTextureSize;
+  bool mUseANGLE;
 
   friend class DisplayListBuilder;
 };
