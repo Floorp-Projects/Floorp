@@ -316,7 +316,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(sync, mLatestTransactionId);
+  WrBridge()->DPEnd(size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
 

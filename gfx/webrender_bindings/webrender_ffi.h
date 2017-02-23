@@ -454,7 +454,7 @@ wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
 WR_INLINE WrState*
-wr_state_new(uint32_t width, uint32_t height, WrPipelineId pipeline_id)
+wr_state_new(WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -488,7 +488,7 @@ wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(WrState* builder, WrAPI* api, WrEpoch epoch)
+wr_dp_end(WrState* wrState)
 WR_FUNC;
 
 WR_INLINE void

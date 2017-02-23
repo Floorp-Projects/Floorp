@@ -34,7 +34,7 @@ public:
   void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
