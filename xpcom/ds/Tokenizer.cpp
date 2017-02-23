@@ -272,6 +272,8 @@ Tokenizer::Claim(nsDependentCSubstring& aResult, ClaimInclusion aInclusion)
   nsACString::const_char_iterator close = aInclusion == EXCLUDE_LAST
     ? mRollback
     : mCursor;
+
+  MOZ_RELEASE_ASSERT(close >= mRecord, "Overflow!");
   aResult.Rebind(mRecord, close - mRecord);
 }
 
@@ -376,6 +378,7 @@ TokenizerBase::Parse(Token& aToken) const
     return mEnd;
   }
 
+  MOZ_RELEASE_ASSERT(mEnd >= mCursor, "Overflow!");
   nsACString::size_type available = mEnd - mCursor;
 
   uint32_t longestCustom = 0;
@@ -563,6 +566,10 @@ TokenizerBase::IsCustom(const nsACString::const_char_iterator & caret,
     *aLongest = std::max(*aLongest, aCustomToken.mCustom.Length());
   }
 
+  // This is not very likely to happen according to how we call this method
+  // and since it's on a hot path, it's just a diagnostic assert, 
+  // not a release assert.
+  MOZ_DIAGNOSTIC_ASSERT(mEnd >= caret, "Overflow?");
   uint32_t inputLength = mEnd - caret;
   if (aCustomToken.mCustom.Length() > inputLength) {
     return false;
@@ -623,6 +630,7 @@ void
 TokenizerBase::Token::AssignFragment(nsACString::const_char_iterator begin,
                                      nsACString::const_char_iterator end)
 {
+  MOZ_RELEASE_ASSERT(end >= begin, "Overflow!");
   mFragment.Rebind(begin, end - begin);
 }
 

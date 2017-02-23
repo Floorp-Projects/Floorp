@@ -70,9 +70,6 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
-    if (!QueryBroker(IPC_NTCREATEFILE_TAG, params.GetBase()))
-      break;
-
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     // The following call must match in the parameters with
@@ -152,9 +149,6 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     params[OpenFile::DISPOSITION] = ParamPickerMake(disposition_uint32);
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
-
-    if (!QueryBroker(IPC_NTOPENFILE_TAG, params.GetBase()))
-      break;
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};

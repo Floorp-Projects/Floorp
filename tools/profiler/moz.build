@@ -16,9 +16,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'public/PseudoStack.h',
         'public/shared-libraries.h',
     ]
-    EXPORTS.mozilla += [
-        'public/ProfileGatherer.h',
-    ]
     EXTRA_JS_MODULES += [
         'gecko/Profiler.jsm',
     ]

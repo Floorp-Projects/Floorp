@@ -110,8 +110,9 @@ class runnable_args_func : public detail::runnable_args_base<detail::NoResult>
 {
 public:
   // |explicit| to pacify static analysis when there are no |args|.
-  explicit runnable_args_func(FunType f, Args&&... args)
-    : mFunc(f), mArgs(Forward<Args>(args)...)
+  template<typename... Arguments>
+  explicit runnable_args_func(FunType f, Arguments&&... args)
+    : mFunc(f), mArgs(Forward<Arguments>(args)...)
   {}
 
   NS_IMETHOD Run() {
@@ -125,10 +126,10 @@ private:
 };
 
 template<typename FunType, typename... Args>
-runnable_args_func<FunType, Args...>*
-WrapRunnableNM(FunType f, Args... args)
+runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>*
+WrapRunnableNM(FunType f, Args&&... args)
 {
-  return new runnable_args_func<FunType, Args...>(f, Move(args)...);
+  return new runnable_args_func<FunType, typename mozilla::Decay<Args>::Type...>(f, Forward<Args>(args)...);
 }
 
 template<typename Ret, typename FunType, typename... Args>

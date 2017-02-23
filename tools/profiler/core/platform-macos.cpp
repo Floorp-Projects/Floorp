@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -80,8 +82,8 @@ PlatformDataDestructor::operator()(PlatformData* aData)
 class SamplerThread
 {
 public:
-  explicit SamplerThread(double interval)
-    : mIntervalMicro(floor(interval * 1000 + 0.5))
+  explicit SamplerThread(double aInterval)
+    : mIntervalMicro(floor(aInterval * 1000 + 0.5))
   {
     if (mIntervalMicro <= 0) {
       mIntervalMicro = 1;
@@ -112,7 +114,9 @@ public:
 
   void Start() {
     pthread_attr_t* attr_ptr = NULL;
-    pthread_create(&mThread, attr_ptr, ThreadEntry, this);
+    if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {
+      MOZ_CRASH("pthread_create failed");
+    }
     MOZ_ASSERT(mThread != kNoThread);
   }
 
@@ -120,12 +124,12 @@ public:
     pthread_join(mThread, NULL);
   }
 
-  static void StartSampler() {
+  static void StartSampler(double aInterval) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     MOZ_RELEASE_ASSERT(!mInstance);
 
     if (mInstance == NULL) {
-      mInstance = new SamplerThread(gInterval);
+      mInstance = new SamplerThread(aInterval);
       mInstance->Start();
     }
   }
@@ -160,7 +164,7 @@ public:
           }
 
           if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-            info->DuplicateLastSample();
+            info->DuplicateLastSample(gStartTime);
             continue;
           }
 
@@ -261,13 +265,11 @@ PlatformInit()
 }
 
 static void
-PlatformStart()
+PlatformStart(double aInterval)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(!gIsActive);
-  gIsActive = true;
-  SamplerThread::StartSampler();
+  SamplerThread::StartSampler(aInterval);
 }
 
 static void
@@ -275,8 +277,6 @@ PlatformStop()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(gIsActive);
-  gIsActive = false;
   SamplerThread::StopSampler();
 }
 

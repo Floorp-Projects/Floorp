@@ -67,11 +67,6 @@ function LayoutView(inspector, window) {
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
 
   this.init();
-
-  this.highlighters.on("grid-highlighter-hidden", this.onHighlighterChange);
-  this.highlighters.on("grid-highlighter-shown", this.onHighlighterChange);
-  this.inspector.selection.on("new-node-front", this.onNewSelection);
-  this.inspector.sidebar.on("select", this.onSidebarSelect);
 }
 
 LayoutView.prototype = {
@@ -88,6 +83,11 @@ LayoutView.prototype = {
     this.layoutInspector = yield this.inspector.walker.getLayoutInspector();
 
     this.loadHighlighterSettings();
+
+    this.highlighters.on("grid-highlighter-hidden", this.onHighlighterChange);
+    this.highlighters.on("grid-highlighter-shown", this.onHighlighterChange);
+    this.inspector.selection.on("new-node-front", this.onNewSelection);
+    this.inspector.sidebar.on("select", this.onSidebarSelect);
 
     // Create a shared SwatchColorPicker instance to be reused by all GridItem components.
     this.swatchColorPickerTooltip = new SwatchColorPickerTooltip(
