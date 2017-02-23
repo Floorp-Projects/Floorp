@@ -28,7 +28,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/focus_wordmark"
+            android:src="@drawable/wordmark"
             android:paddingBottom="30dp"
             android:layout_gravity="center_horizontal"/>
 
