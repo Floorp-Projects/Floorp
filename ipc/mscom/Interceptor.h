@@ -4,18 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_mscom_Interceptor_h
-#define mozilla_mscom_Interceptor_h
+#ifndef mozilla_mscom_interceptor_h
+#define mozilla_mscom_interceptor_h
 
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
-#include "mozilla/mscom/IHandlerPayload.h"
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/mscom/WeakRef.h"
 #include "mozilla/RefPtr.h"
 
-#include <objidl.h>
 #include <callobj.h>
 
 namespace mozilla {
@@ -26,7 +24,6 @@ DEFINE_GUID(IID_IInterceptorSink,
 0x8831eb53, 0xa937, 0x42bc, 0x99, 0x21, 0xb3, 0xe1, 0x12, 0x1f, 0xdf, 0x86);
 
 struct IInterceptorSink : public ICallFrameEvents
-                        , public HandlerPayload
 {
   virtual STDMETHODIMP SetInterceptor(IWeakReference* aInterceptor) = 0;
 };
@@ -60,8 +57,6 @@ struct IInterceptor : public IUnknown
  * (the mscom::Interceptor we implement and control).
  */
 class Interceptor final : public WeakReferenceSupport
-                        , public IStdMarshalInfo
-                        , public IMarshal
                         , public IInterceptor
 {
 public:
@@ -72,25 +67,6 @@ public:
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override;
   STDMETHODIMP_(ULONG) AddRef() override;
   STDMETHODIMP_(ULONG) Release() override;
-
-  // IStdMarshalInfo
-  STDMETHODIMP GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
-                                  CLSID* aHandlerClsid) override;
-
-  // IMarshal
-  STDMETHODIMP GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
-                                 void* pvDestContext, DWORD mshlflags,
-                                 CLSID* pCid) override;
-  STDMETHODIMP GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
-                                 void* pvDestContext, DWORD mshlflags,
-                                 DWORD* pSize) override;
-  STDMETHODIMP MarshalInterface(IStream* pStm, REFIID riid, void* pv,
-                                DWORD dwDestContext, void* pvDestContext,
-                                DWORD mshlflags) override;
-  STDMETHODIMP UnmarshalInterface(IStream* pStm, REFIID riid,
-                                  void** ppv) override;
-  STDMETHODIMP ReleaseMarshalData(IStream* pStm) override;
-  STDMETHODIMP DisconnectObject(DWORD dwReserved) override;
 
   // IInterceptor
   STDMETHODIMP GetTargetForIID(REFIID aIid, InterceptorTargetPtr& aTarget) override;
@@ -124,8 +100,6 @@ private:
   mozilla::Mutex            mMutex; // Guards mInterceptorMap
   // Using a nsTArray since the # of interfaces is not going to be very high
   nsTArray<MapEntry>        mInterceptorMap;
-  RefPtr<IUnknown>          mStdMarshalUnk;
-  IMarshal*                 mStdMarshal; // WEAK
 };
 
 template <typename InterfaceT>
@@ -148,4 +122,4 @@ CreateInterceptor(STAUniquePtr<InterfaceT> aTargetInterface,
 } // namespace mscom
 } // namespace mozilla
 
-#endif // mozilla_mscom_Interceptor_h
+#endif // mozilla_mscom_interceptor_h
