@@ -783,8 +783,13 @@ PrefHashEntry* pref_HashTableLookup(const char *key)
      * Consider moving it later or add it to the whitelist in ContentPrefs.cpp
      * and get review from a DOM peer
      */
-    MOZ_ASSERT((!XRE_IsContentProcess() || gPhase > END_INIT_PREFS || gWatchingPref || inInitArray(key)),
-               "accessing non-init pref before the rest of the prefs are sent");
+#ifdef DEBUG
+    if (XRE_IsContentProcess() && gPhase <= END_INIT_PREFS &&
+        !gWatchingPref && !inInitArray(key)) {
+      MOZ_CRASH_UNSAFE_PRINTF("accessing non-init pref %s before the rest of the prefs are sent",
+                              key);
+    }
+#endif
     return static_cast<PrefHashEntry*>(gHashTable->Search(key));
 }
 
