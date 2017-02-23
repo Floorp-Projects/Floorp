@@ -77,18 +77,18 @@
 # "A 16-bit image with the default color format: 5 bits each for red, green, and
 # blue, and 1 unused bit. The whitest colors should (I assume) be displayed as
 # pure white: (255,255,255), not (248,248,248)."
-# == rgb16.bmp rgb16.bmp
+== rgb16.bmp rgb16.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green, and 5 blue
 # bits. This is a standard 16-bit format, even supported by old versions of
 # Windows that don’t support any other non-default 16-bit formats. The whitest
 # colors should be displayed as pure white: (255,255,255), not (248,252,248)."
-# == rgb16.bmp rgb16.bmp
+== rgb16.bmp rgb16.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=256
 # "A 16-bit image with both a BITFIELDS segment and a palette."
-# == rgb16.bmp rgb16.bmp
+== rgb16.bmp rgb16.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=0
 # "A perfectly ordinary 24-bit (truecolor) image."

@@ -19,11 +19,19 @@ var prefs = [
   ['mousewheel.transaction.timeout', 0]
 ]
 
+// For helper_scroll_over_scrollbar, we need to set a pref to force
+// layerization of the scrollbar track to reproduce the bug being fixed.
+// Otherwise, the bug only manifests with overlay scrollbars on macOS,
+// or in a XUL RCD, both of which are hard to materialize in a test.
+var scrollbar_prefs = prefs.slice();  // make a copy
+scrollbar_prefs.push(["layout.scrollbars.always-layerize-track", true]);
+
 var subtests = [
   {'file': 'helper_scroll_on_position_fixed.html', 'prefs': prefs},
   {'file': 'helper_bug1271432.html', 'prefs': prefs},
   {'file': 'helper_scroll_inactive_perspective.html', 'prefs': prefs},
-  {'file': 'helper_scroll_inactive_zindex.html', 'prefs': prefs}
+  {'file': 'helper_scroll_inactive_zindex.html', 'prefs': prefs},
+  {'file': 'helper_scroll_over_scrollbar.html', 'prefs': scrollbar_prefs}
 ];
 
 if (isApzEnabled()) {

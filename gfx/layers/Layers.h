@@ -1297,9 +1297,11 @@ public:
   }
 
   // Set during construction for the container layer of scrollbar components.
-  void SetIsScrollbarContainer()
+  // |aScrollId| holds the scroll identifier of the scrollable content that
+  // the scrollbar is for.
+  void SetIsScrollbarContainer(FrameMetrics::ViewID aScrollId)
   {
-    if (mSimpleAttrs.SetIsScrollbarContainer()) {
+    if (mSimpleAttrs.SetIsScrollbarContainer(aScrollId)) {
       MutatedSimple();
     }
   }

@@ -28,22 +28,28 @@ import java.util.concurrent.ExecutorService;
 @RunWith(TestRunner.class)
 public class BatchingUploaderTest {
     class MockExecutorService implements Executor {
-        public int totalPayloads = 0;
-        public int commitPayloads = 0;
+        int totalPayloads = 0;
+        int commitPayloads = 0;
 
         @Override
         public void execute(@NonNull Runnable command) {
+            if (command instanceof PayloadDispatcher.NonPayloadContextRunnable) {
+                command.run();
+                return;
+            }
+
             ++totalPayloads;
-            if (((RecordUploadRunnable) command).isCommit) {
+            if (((PayloadDispatcher.BatchContextRunnable) command).isCommit) {
                 ++commitPayloads;
             }
+            command.run();
         }
     }
 
     class MockStoreDelegate implements RepositorySessionStoreDelegate {
-        public int storeFailed = 0;
-        public int storeSucceeded = 0;
-        public int storeCompleted = 0;
+        int storeFailed = 0;
+        int storeSucceeded = 0;
+        int storeCompleted = 0;
 
         @Override
         public void onRecordStoreFailed(Exception ex, String recordGuid) {
@@ -76,62 +82,76 @@ public class BatchingUploaderTest {
     }
 
     @Test
-    public void testProcessEvenPayloadBatch() {
-        BatchingUploader uploader = makeConstrainedUploader(2, 4);
+    public void testProcessEvenPayloadBatch() throws Exception {
+        TestRunnableWithTarget<BatchingUploader> tests = new TestRunnableWithTarget<BatchingUploader>() {
+            @Override
+            public void tests() {
+                MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false);
+                // 1st
+                target.process(record);
+                assertEquals(0, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
+                // 2nd -> payload full
+                target.process(record);
+                assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
+                // 3rd
+                target.process(record);
+                assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
+                // 4th -> batch & payload full
+                target.process(record);
+                assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
+                // 5th
+                target.process(record);
+                assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
+                // 6th -> payload full
+                target.process(record);
+                assertEquals(3, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
+                // 7th
+                target.process(record);
+                assertEquals(3, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
+                // 8th -> batch & payload full
+                target.process(record);
+                assertEquals(4, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
+                // 9th
+                target.process(record);
+                assertEquals(4, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
+                // 10th -> payload full
+                target.process(record);
+                assertEquals(5, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
+                // 11th
+                target.process(record);
+                assertEquals(5, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
+                // 12th -> batch & payload full
+                target.process(record);
+                assertEquals(6, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(3, ((MockExecutorService) workQueue).commitPayloads);
+                // 13th
+                target.process(record);
+                assertEquals(6, ((MockExecutorService) workQueue).totalPayloads);
+                assertEquals(3, ((MockExecutorService) workQueue).commitPayloads);
+            }
+        };
 
-        MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false);
-        // 1st
-        uploader.process(record);
-        assertEquals(0, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
-        // 2nd -> payload full
-        uploader.process(record);
-        assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
-        // 3rd
-        uploader.process(record);
-        assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
-        // 4th -> batch & payload full
-        uploader.process(record);
-        assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
-        // 5th
-        uploader.process(record);
-        assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
-        // 6th -> payload full
-        uploader.process(record);
-        assertEquals(3, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
-        // 7th
-        uploader.process(record);
-        assertEquals(3, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
-        // 8th -> batch & payload full
-        uploader.process(record);
-        assertEquals(4, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
-        // 9th
-        uploader.process(record);
-        assertEquals(4, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
-        // 10th -> payload full
-        uploader.process(record);
-        assertEquals(5, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
-        // 11th
-        uploader.process(record);
-        assertEquals(5, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(2, ((MockExecutorService) workQueue).commitPayloads);
-        // 12th -> batch & payload full
-        uploader.process(record);
-        assertEquals(6, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(3, ((MockExecutorService) workQueue).commitPayloads);
-        // 13th
-        uploader.process(record);
-        assertEquals(6, ((MockExecutorService) workQueue).totalPayloads);
-        assertEquals(3, ((MockExecutorService) workQueue).commitPayloads);
+        tests
+                .setTarget(makeConstrainedUploader(2, 4))
+                .run();
+
+        // clear up between test runs
+        setUp();
+
+        tests
+                .setTarget(makeConstrainedUploader(2, 4, true))
+                .run();
     }
 
     @Test
@@ -214,7 +234,7 @@ public class BatchingUploaderTest {
 
         // And now we tell uploader that batching isn't supported.
         // It shouldn't bother with batches from now on, just payloads.
-        uploader.setInBatchingMode(false);
+        uploader.setUnlimitedMode(true);
 
         // 6th
         uploader.process(record);
@@ -294,7 +314,7 @@ public class BatchingUploaderTest {
         BatchingUploader uploader = makeConstrainedUploader(2, 4);
 
         final Random random = new Random();
-        uploader.setInBatchingMode(false);
+        uploader.setUnlimitedMode(true);
         for (int i = 0; i < 15000; i++) {
             uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, random.nextInt(15000)));
         }
@@ -310,7 +330,7 @@ public class BatchingUploaderTest {
         final int delay = random.nextInt(20);
         for (int i = 0; i < 15000; i++) {
             if (delay == i) {
-                uploader.setInBatchingMode(false);
+                uploader.setUnlimitedMode(true);
             }
             uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, random.nextInt(15000)));
         }
@@ -325,8 +345,8 @@ public class BatchingUploaderTest {
         MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false);
         uploader.process(record);
         uploader.process(record);
-        uploader.setInBatchingMode(true);
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.payloadDispatcher.setInBatchingMode(true);
+        uploader.noMoreRecordsToUpload();
         // One will be a payload post, the other one is batch commit (empty payload)
         assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
@@ -342,7 +362,7 @@ public class BatchingUploaderTest {
         uploader.process(record);
         uploader.process(record);
         uploader.process(record);
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.noMoreRecordsToUpload();
         // One will be a payload post, the other one is batch commit (one record payload)
         assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
@@ -352,7 +372,7 @@ public class BatchingUploaderTest {
     public void testNoMoreRecordsNoOp() {
         BatchingUploader uploader = makeConstrainedUploader(2, 4);
 
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.noMoreRecordsToUpload();
         assertEquals(0, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
     }
@@ -369,7 +389,7 @@ public class BatchingUploaderTest {
         assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
 
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.noMoreRecordsToUpload();
         assertEquals(2, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
     }
@@ -383,8 +403,8 @@ public class BatchingUploaderTest {
         MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false);
         uploader.process(record);
         uploader.process(record);
-        uploader.setInBatchingMode(false);
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.setUnlimitedMode(true);
+        uploader.noMoreRecordsToUpload();
         // One will be a payload post, the other one is batch commit (one record payload)
         assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(0, ((MockExecutorService) workQueue).commitPayloads);
@@ -398,24 +418,28 @@ public class BatchingUploaderTest {
         MockRecord record = new MockRecord(Utils.generateGuid(), null, 0, false);
         uploader.process(record);
 
-        uploader.commitIfNecessaryAfterLastPayload();
+        uploader.noMoreRecordsToUpload();
         assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
     }
 
     private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords) {
+        return makeConstrainedUploader(maxPostRecords, maxTotalRecords, false);
+    }
+
+    private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
         Server11RepositorySession server11RepositorySession = new Server11RepositorySession(
-                makeCountConstrainedRepository(maxPostRecords, maxTotalRecords)
+                makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
         );
         server11RepositorySession.setStoreDelegate(storeDelegate);
         return new BatchingUploader(server11RepositorySession, workQueue, storeDelegate);
     }
 
-    private Server11Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords) {
-        return makeConstrainedRepository(1024, 1024, maxPostRecords, 4096, maxTotalRecords);
+    private Server11Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
+        return makeConstrainedRepository(1024, 1024, maxPostRecords, 4096, maxTotalRecords, firstSync);
     }
 
-    private Server11Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords) {
+    private Server11Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
         ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, maxTotalBytes);
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
@@ -425,17 +449,52 @@ public class BatchingUploaderTest {
 
         InfoConfiguration infoConfiguration = new InfoConfiguration(infoConfigurationJSON);
 
+        InfoCollections infoCollections;
+        if (firstSync) {
+            infoCollections = new InfoCollections() {
+                @Override
+                public Long getTimestamp(String collection) {
+                    return null;
+                }
+            };
+        } else {
+            infoCollections = new InfoCollections() {
+                @Override
+                public Long getTimestamp(String collection) {
+                    return 0L;
+                }
+            };
+        }
+
         try {
             return new Server11Repository(
                     "dummyCollection",
                     "http://dummy.url/",
                     null,
-                    new InfoCollections(),
+                    infoCollections,
                     infoConfiguration
             );
         } catch (URISyntaxException e) {
             // Won't throw, and this won't happen.
             return null;
         }
+    }
+
+    static abstract class TestRunnableWithTarget<T> {
+        T target;
+
+        TestRunnableWithTarget() {}
+
+        TestRunnableWithTarget<T> setTarget(T target) {
+            this.target = target;
+            return this;
+        }
+
+        TestRunnableWithTarget<T> run() {
+            tests();
+            return this;
+        }
+
+        abstract void tests();
     }
 }

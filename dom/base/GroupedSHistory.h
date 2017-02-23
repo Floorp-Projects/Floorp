@@ -11,6 +11,9 @@
 #include "nsIGroupedSHistory.h"
 #include "nsIPartialSHistory.h"
 #include "nsTArray.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
 
 namespace mozilla {

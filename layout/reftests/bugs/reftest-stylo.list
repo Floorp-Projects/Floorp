@@ -3,7 +3,7 @@
 # logical order for the tests for each bug).
 fails == 105-1.html 105-1.html
 fails == 647-1.html 647-1.html
-# == 9458-basic-1.html 9458-basic-1.html
+== 9458-basic-1.html 9458-basic-1.html
 fails == 9458-valign-1.html 9458-valign-1.html
 fails == 9458-valign-2.html 9458-valign-2.html
 == 9458-height-1.html 9458-height-1.html
@@ -12,7 +12,7 @@ fails == 9458-valign-2.html 9458-valign-2.html
 == 9458-width-1b.html 9458-width-1b.html
 == 9458-width-2a.html 9458-width-2a.html
 == 9458-width-2b.html 9458-width-2b.html
-# == 9458-zorder-1.html 9458-zorder-1.html
+== 9458-zorder-1.html 9458-zorder-1.html
 == 9458-zorder-2.html 9458-zorder-2.html
 == 9458-zorder-3.html 9458-zorder-3.html
 == 9458-zorder-4.html 9458-zorder-4.html
@@ -21,7 +21,7 @@ fails == 10036-1.html 10036-1.html
 fails == 10209-1.html 10209-1.html
 HTTP(..) == 10209-2.html 10209-2.html
 asserts(2) skip-if(!cocoaWidget) HTTP(..) == 10209-3.html 10209-3.html
-# == 18217-basic-1.html 18217-basic-1.html
+== 18217-basic-1.html 18217-basic-1.html
 == 18217-basic-2a.html 18217-basic-2a.html
 == 18217-basic-2b.html 18217-basic-2b.html
 fails == 18217-valign-1.html 18217-valign-1.html
@@ -31,7 +31,7 @@ fails == 18217-valign-1.html 18217-valign-1.html
 == 18217-width-1b.html 18217-width-1b.html
 == 18217-width-2a.html 18217-width-2a.html
 == 18217-width-2b.html 18217-width-2b.html
-# == 18217-zorder-1.html 18217-zorder-1.html
+== 18217-zorder-1.html 18217-zorder-1.html
 == 18217-zorder-2.html 18217-zorder-2.html
 == 18217-zorder-3.html 18217-zorder-3.html
 == 18217-zorder-4.html 18217-zorder-4.html
@@ -39,18 +39,18 @@ fails == 18217-valign-1.html 18217-valign-1.html
 fails == 23604-1.html 23604-1.html
 fails == 23604-2.html 23604-2.html
 == 24998-1.html 24998-1.html
-# == 25888-1l.html 25888-1l.html
-# == 25888-1l.html 25888-1l.html
-# == 25888-1r.html 25888-1r.html
-# == 25888-1r.html 25888-1r.html
+== 25888-1l.html 25888-1l.html
+== 25888-1l.html 25888-1l.html
+== 25888-1r.html 25888-1r.html
+== 25888-1r.html 25888-1r.html
 == 25888-2l.html 25888-2l.html
 == 25888-2r.html 25888-2r.html
 == 25888-3l.html 25888-3l.html
 == 25888-3r.html 25888-3r.html
-# == 25888-1l-block.html 25888-1l-block.html
-# == 25888-1l-block.html 25888-1l-block.html
-# == 25888-1r-block.html 25888-1r-block.html
-# == 25888-1r-block.html 25888-1r-block.html
+== 25888-1l-block.html 25888-1l-block.html
+== 25888-1l-block.html 25888-1l-block.html
+== 25888-1r-block.html 25888-1r-block.html
+== 25888-1r-block.html 25888-1r-block.html
 == 25888-2l-block.html 25888-2l-block.html
 == 25888-2r-block.html 25888-2r-block.html
 == 25888-3l-block.html 25888-3l-block.html
@@ -74,8 +74,8 @@ fails == 40596-1j.html 40596-1j.html
 == 50630-1c.html 50630-1c.html
 == 50630-2.html 50630-2.html
 == 50630-3.html 50630-3.html
-# == 50630-4.html 50630-4.html
-# == 50630-4.html 50630-4.html
+== 50630-4.html 50630-4.html
+== 50630-4.html 50630-4.html
 == 50630-5.html 50630-5.html
 == 67752-1.html 67752-1.html
 == 67752-2.html 67752-2.html
@@ -86,8 +86,8 @@ fails == 81947-1.html 81947-1.html
 fails == 82711-1.html 82711-1.html
 fails == 82711-2.html 82711-2.html
 fails == 82711-3.html 82711-3.html
-# == 82711-1-ref.html 82711-1-ref.html
-# == 82711-1-ref.html 82711-1-ref.html
+fails == 82711-1-ref.html 82711-1-ref.html # Bug 1341697, Bug 1341637
+fails == 82711-1-ref.html 82711-1-ref.html # Bug 1341697, Bug 1341637
 fails == 82711-2-ref.html 82711-2-ref.html
 fails == 84400-1.html 84400-1.html
 fails == 84400-2.html 84400-2.html
@@ -95,16 +95,16 @@ fails == 84400-2.html 84400-2.html
 fails == 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
 == 98223-2.html 98223-2.html
-# == 99850-1a.html 99850-1a.html # bug 1337695
-# == 99850-1b.html 99850-1b.html # bug 1337695
+skip-if(stylo) == 99850-1a.html 99850-1a.html # bug 1337695
+skip-if(stylo) == 99850-1b.html 99850-1b.html # bug 1337695
 fails == 99850-1c.html 99850-1c.html
-# == 99850-1d.html 99850-1d.html # bug 1337695
+skip-if(stylo) == 99850-1d.html 99850-1d.html # bug 1337695
 == 105030-1.html 105030-1.html
 == 109735-1.html 109735-1.html
 == 116882-1.html 116882-1.html
 == 120834-1a.html 120834-1a.html
 == 120834-2a.html 120834-2a.html
-# == 120834-2b.html 120834-2b.html
+== 120834-2b.html 120834-2b.html
 == 120834-2c.html 120834-2c.html
 == 120834-2d.html 120834-2d.html
 == 120834-2e.html 120834-2e.html
@@ -150,9 +150,9 @@ fails == 163504-2b.html 163504-2b.html
 fails == 175190-1.html 175190-1.html
 fails == 179596-1a.html 179596-1a.html
 fails == 179596-1b.html 179596-1b.html
-# == 179596-2.html 179596-2.html
-# == 179596-2.html 179596-2.html
-# == 179596-2.html 179596-2.html
+== 179596-2.html 179596-2.html
+== 179596-2.html 179596-2.html
+== 179596-2.html 179596-2.html
 fails == 180085-1.html 180085-1.html
 fails == 180085-2.html 180085-2.html
 fails == 185388-1.html 185388-1.html
@@ -212,7 +212,7 @@ fails == 223809-1.html 223809-1.html
 == 228856-1.html 228856-1.html
 == 228856-2.html 228856-2.html
 == 229591-1.html 229591-1.html
-# == 231823-1.html 231823-1.html
+fails == 231823-1.html 231823-1.html
 == 232990-1a.xhtml 232990-1a.xhtml
 == 232990-1b.xhtml 232990-1b.xhtml
 fails == 233094-1.html 233094-1.html
@@ -302,17 +302,17 @@ fails == 280708-1a.html 280708-1a.html
 fails == 280708-1b.html 280708-1b.html
 fails == 281241-1.html 281241-1.html
 fails == 281241-2.xhtml 281241-2.xhtml
-# == 283686-1.html 283686-1.html
+== 283686-1.html 283686-1.html
 == 283686-2.html 283686-2.html
-# == 283686-3.html 283686-3.html
+== 283686-3.html 283686-3.html
 fails == 289384-1.xhtml 289384-1.xhtml
-# == 289480.html#top 289480.html#top
+skip-if(stylo) == 289480.html#top 289480.html#top # Bug 1341705
 fails == 290129-1.html 290129-1.html
 fails == 291078-1.html 291078-1.html
 == 291078-2.html 291078-2.html
 == 291262-1.html 291262-1.html
-# == 294306-1.html 294306-1.html
-# == 294306-1.html 294306-1.html
+== 294306-1.html 294306-1.html
+== 294306-1.html 294306-1.html
 fails == 296361-1.html 296361-1.html
 == 296904-1.html 296904-1.html
 fails == 299136-1.html 299136-1.html
@@ -346,8 +346,8 @@ fails == 307102-3.html 307102-3.html
 == 311366-unknown-block-3.html 311366-unknown-block-3.html
 == 311366-unknown-block-2.html 311366-unknown-block-2.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2.html
-# == 311822-1.html 311822-1.html
-# == 311822-1.html 311822-1.html
+fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
+fails == 311822-1.html 311822-1.html # bug 1341712, bug 1341714
 fails == 315620-1a.html 315620-1a.html
 == 315620-1b.html 315620-1b.html
 fails == 315620-2a.xhtml 315620-2a.xhtml
@@ -434,9 +434,9 @@ random == 328829-1.xhtml 328829-1.xhtml
 == 329359-1.html 329359-1.html
 fails == 331809-1.html 331809-1.html
 == 332360.html 332360.html
-# == 332360-ltr.html 332360-ltr.html
+== 332360-ltr.html 332360-ltr.html
 == 332360-width.html 332360-width.html
-# == 332360-width-ltr.html 332360-width-ltr.html
+== 332360-width-ltr.html 332360-width-ltr.html
 fails == 332557-1.html 332557-1.html
 == 332975-1.html 332975-1.html
 == 333970-1.html 333970-1.html
@@ -470,8 +470,8 @@ fails == 347496-1.xhtml 347496-1.xhtml
 == 347912-1.html 347912-1.html
 fails == 348049-1.xhtml 348049-1.xhtml
 fails == 348516-1.html 348516-1.html
-# == 348516-2.html 348516-2.html
-# == 348516-2.html 348516-2.html
+fails == 348516-2.html 348516-2.html # Bug 1321769?
+fails == 348516-2.html 348516-2.html # Bug 1321769?
 fails == 348516-3.html 348516-3.html
 == 348597-1.html 348597-1.html
 == 348809-1a.html 348809-1a.html
@@ -531,17 +531,17 @@ fails == 359869-1.html 359869-1.html
 fails == 359903-1.html 359903-1.html
 fails == 359903-2.html 359903-2.html
 == 360065-1.html 360065-1.html
-# == 360746-1.html 360746-1.html
+asserts-if(stylo,1) == 360746-1.html 360746-1.html # Bug 1341721
 == 360757-1a.html 360757-1a.html
 == 360757-1b.html 360757-1b.html
 == 361091-1.html 361091-1.html
 fails == 362594-1a.html 362594-1a.html
 fails == 362594-1b.html 362594-1b.html
 fails == 362594-1c.html 362594-1c.html
-# == 362594-2a.html 362594-2a.html
-# == 362594-2a.html 362594-2a.html
-# == 362594-2b.html 362594-2b.html
-# == 362594-2b.html 362594-2b.html
+fails == 362594-2a.html 362594-2a.html # Bug 1341651
+fails == 362594-2a.html 362594-2a.html # Bug 1341651
+fails == 362594-2b.html 362594-2b.html # Bug 1341651
+fails == 362594-2b.html 362594-2b.html # Bug 1341651
 fails == 362594-2c.html 362594-2c.html
 fails == 362901-1.html 362901-1.html
 == 363247-1.html 363247-1.html
@@ -550,8 +550,8 @@ fails == 363329-2.html 363329-2.html
 fails == 363370-1.html 363370-1.html
 fails == 363402-1.html 363402-1.html
 == 363637-1.html 363637-1.html
-# == 363706-1.html 363706-1.html
-# == 363706-1.html 363706-1.html
+fails == 363706-1.html 363706-1.html # Bug 1324348
+fails == 363706-1.html 363706-1.html # Bug 1324348
 fails == 363728-1.html 363728-1.html
 == 363728-2.html 363728-2.html
 fails == 363858-1.html 363858-1.html
@@ -608,7 +608,7 @@ fails pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020
 fails asserts(4-8) == 368155-negative-margins-1.html 368155-negative-margins-1.html
 # we can't test this because there's antialiasing involved, and our comparison
 # is too exact
-# == 368247-1.html 368247-1.html
+== 368247-1.html 368247-1.html
 == 368247-2.html 368247-2.html
 == 368504-1.html 368504-1.html
 fails == 368504-2.html 368504-2.html
@@ -625,10 +625,10 @@ fails == 368651-1.html 368651-1.html
 fails == 369975-1.html 369975-1.html
 == 370353-1.html 370353-1.html
 fails == 370422-1.html 370422-1.html
-# == 370525-1.html 370525-1.html
-# == 370525-1.html 370525-1.html
-# == 370525-2.html 370525-2.html
-# == 370525-2.html 370525-2.html
+== 370525-1.html 370525-1.html
+== 370525-1.html 370525-1.html
+== 370525-2.html 370525-2.html
+== 370525-2.html 370525-2.html
 == 370525-rowspan-1a.html 370525-rowspan-1a.html
 == 370525-rowspan-1b.html 370525-rowspan-1b.html
 == 370525-rowspan-1c.html 370525-rowspan-1c.html
@@ -704,8 +704,8 @@ fails == 379361-2.html 379361-2.html
 fails == 379361-3.html 379361-3.html
 == 379461-1.xhtml 379461-1.xhtml
 == 379461-2.xhtml 379461-2.xhtml
-# == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
-# == 379461-3-container-xhtml.html 379461-3-container-xhtml.html
+fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 1341095
+fails == 379461-3-container-xhtml.html 379461-3-container-xhtml.html # Bug 1341095
 == 380004-1.html 380004-1.html
 == 380227-1.html 380227-1.html
 fails == 380825-1.html 380825-1.html
@@ -753,9 +753,9 @@ fails test-pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.h
 == 386401-1.html 386401-1.html
 == 386401-2.html 386401-2.html
 == 386401-3.html 386401-3.html
-# == 386470-1a.html 386470-1a.html
+fails == 386470-1a.html 386470-1a.html # Bug 1341725
 fails == 386470-1b.html 386470-1b.html
-# == 386470-1c.html 386470-1c.html
+fails == 386470-1c.html 386470-1c.html  # Bug 1341725
 == 386920-1.html 386920-1.html
 == 387201-1.html 387201-1.html
 == 387201-2.html 387201-2.html
@@ -769,8 +769,8 @@ fails == 386470-1b.html 386470-1b.html
 == 387876-3b.html 387876-3b.html
 == 388026-1.html 388026-1.html
 fails == 389074-1.html 389074-1.html
-# == 389224-1.html 389224-1.html
-# == 389224-2.html 389224-2.html
+== 389224-1.html 389224-1.html
+fails == 389224-2.html 389224-2.html # Bug 1341728
 fails == 389468-1.html 389468-1.html
 == 389623-1.html 389623-1.html
 == 389636-1.html 389636-1.html
@@ -808,7 +808,7 @@ fails == 393490-1.html 393490-1.html
 fuzzy-if(skiaContent,1,500) == 393760-2.xml 393760-2.xml
 == 394111-1.html 394111-1.html
 == 394534-1.html 394534-1.html
-# == 394676-1.xhtml 394676-1.xhtml
+skip-if(stylo) == 394676-1.xhtml 394676-1.xhtml # Bug 1341719
 fails == 395107-1.html 395107-1.html
 fails == 395107-2.html 395107-2.html
 fails == 395107-3.html 395107-3.html
@@ -887,7 +887,7 @@ fails == 403656-3.html 403656-3.html
 == 403656-5.html 403656-5.html
 #== 403657-1.html 403657-1.html
 fails == 403733-1.html 403733-1.html
-# == 403962-1.xhtml 403962-1.xhtml
+fails == 403962-1.xhtml 403962-1.xhtml # Bug 1290276
 == 404030-1.html 404030-1.html
 == 404030-1-notref.html 404030-1-notref.html
 == 404030-1-notref2.html 404030-1-notref2.html
@@ -911,7 +911,7 @@ fails == 405305-1.html 405305-1.html
 == 405517-1.xhtml 405517-1.xhtml
 == 405577-1.html 405577-1.html
 == 405584-1.html 405584-1.html
-# == 405952-1.html 405952-1.html
+fails == 405952-1.html 405952-1.html # Bug 1321769?
 == 406484-1.html 406484-1.html
 == 406568-1.html 406568-1.html
 fails == 407016-1-a.html 407016-1-a.html
@@ -1045,9 +1045,9 @@ random-if(gtkWidget) == 424074-1-ref2.xul 424074-1-ref2.xul
 == 424631-1.html 424631-1.html
 == 424710-1.html 424710-1.html
 fails == 424766-1.html 424766-1.html
-# == 425972-1.html 425972-1.html
+== 425972-1.html 425972-1.html
 == 425972-2.html 425972-2.html
-# == 425972-1.html 425972-1.html
+== 425972-1.html 425972-1.html
 fails == 426629-1.html 426629-1.html
 asserts(3-6) == 427017-1.xhtml 427017-1.xhtml
 == 427129-scrollframe.html 427129-scrollframe.html
@@ -1062,39 +1062,39 @@ fails == 427730-1.html 427730-1.html
 fails == 428521-1a.html 428521-1a.html
 fails == 428521-1b.html 428521-1b.html
 fails == 428521-1c.html 428521-1c.html
-# == 428810-1a-ltr.html 428810-1a-ltr.html
-# == 428810-1b-ltr.html 428810-1b-ltr.html
-# == 428810-1c-ltr.html 428810-1c-ltr.html
-# == 428810-1d-ltr.html 428810-1d-ltr.html
+== 428810-1a-ltr.html 428810-1a-ltr.html
+== 428810-1b-ltr.html 428810-1b-ltr.html
+== 428810-1c-ltr.html 428810-1c-ltr.html
+== 428810-1d-ltr.html 428810-1d-ltr.html
 == 428810-1-ltr-ref.html 428810-1-ltr-ref.html
-# == 428810-2a-ltr.html 428810-2a-ltr.html
-# == 428810-2b-ltr.html 428810-2b-ltr.html
-# == 428810-2e-ltr.html 428810-2e-ltr.html
-# == 428810-2f-ltr.html 428810-2f-ltr.html
+== 428810-2a-ltr.html 428810-2a-ltr.html
+== 428810-2b-ltr.html 428810-2b-ltr.html
+== 428810-2e-ltr.html 428810-2e-ltr.html
+== 428810-2f-ltr.html 428810-2f-ltr.html
 == 428810-2-ltr-ref.html 428810-2-ltr-ref.html
-# == 428810-3a-ltr.html 428810-3a-ltr.html
-# == 428810-3b-ltr.html 428810-3b-ltr.html
-# == 428810-3e-ltr.html 428810-3e-ltr.html
-# == 428810-3f-ltr.html 428810-3f-ltr.html
+== 428810-3a-ltr.html 428810-3a-ltr.html
+== 428810-3b-ltr.html 428810-3b-ltr.html
+== 428810-3e-ltr.html 428810-3e-ltr.html
+== 428810-3f-ltr.html 428810-3f-ltr.html
 == 428810-3-ltr-ref.html 428810-3-ltr-ref.html
-# == 428810-1a-rtl.html 428810-1a-rtl.html
-# == 428810-1b-rtl.html 428810-1b-rtl.html
-# == 428810-1c-rtl.html 428810-1c-rtl.html
-# == 428810-1d-rtl.html 428810-1d-rtl.html
-# == 428810-1-rtl-ref.html 428810-1-rtl-ref.html
-# == 428810-1-rtl-ref.html 428810-1-rtl-ref.html
-# == 428810-2a-rtl.html 428810-2a-rtl.html
-# == 428810-2b-rtl.html 428810-2b-rtl.html
-# == 428810-2e-rtl.html 428810-2e-rtl.html
-# == 428810-2f-rtl.html 428810-2f-rtl.html
-# == 428810-2-rtl-ref.html 428810-2-rtl-ref.html
-# == 428810-2-rtl-ref.html 428810-2-rtl-ref.html
-# == 428810-3a-rtl.html 428810-3a-rtl.html
-# == 428810-3b-rtl.html 428810-3b-rtl.html
-# == 428810-3e-rtl.html 428810-3e-rtl.html
-# == 428810-3f-rtl.html 428810-3f-rtl.html
-# == 428810-3-rtl-ref.html 428810-3-rtl-ref.html
-# == 428810-3-rtl-ref.html 428810-3-rtl-ref.html
+== 428810-1a-rtl.html 428810-1a-rtl.html
+== 428810-1b-rtl.html 428810-1b-rtl.html
+== 428810-1c-rtl.html 428810-1c-rtl.html
+== 428810-1d-rtl.html 428810-1d-rtl.html
+== 428810-1-rtl-ref.html 428810-1-rtl-ref.html
+== 428810-1-rtl-ref.html 428810-1-rtl-ref.html
+== 428810-2a-rtl.html 428810-2a-rtl.html
+== 428810-2b-rtl.html 428810-2b-rtl.html
+== 428810-2e-rtl.html 428810-2e-rtl.html
+== 428810-2f-rtl.html 428810-2f-rtl.html
+== 428810-2-rtl-ref.html 428810-2-rtl-ref.html
+== 428810-2-rtl-ref.html 428810-2-rtl-ref.html
+== 428810-3a-rtl.html 428810-3a-rtl.html
+== 428810-3b-rtl.html 428810-3b-rtl.html
+== 428810-3e-rtl.html 428810-3e-rtl.html
+== 428810-3f-rtl.html 428810-3f-rtl.html
+== 428810-3-rtl-ref.html 428810-3-rtl-ref.html
+== 428810-3-rtl-ref.html 428810-3-rtl-ref.html
 == 428810-1a-ltr-insets.html 428810-1a-ltr-insets.html
 == 428810-1b-ltr-insets.html 428810-1b-ltr-insets.html
 == 428810-1c-ltr-insets.html 428810-1c-ltr-insets.html
@@ -1114,20 +1114,20 @@ fails == 428521-1c.html 428521-1c.html
 == 428810-1b-rtl-insets.html 428810-1b-rtl-insets.html
 == 428810-1c-rtl-insets.html 428810-1c-rtl-insets.html
 == 428810-1d-rtl-insets.html 428810-1d-rtl-insets.html
-# == 428810-1-rtl-insets-ref.html 428810-1-rtl-insets-ref.html
-# == 428810-1-rtl-insets-ref.html 428810-1-rtl-insets-ref.html
+== 428810-1-rtl-insets-ref.html 428810-1-rtl-insets-ref.html
+== 428810-1-rtl-insets-ref.html 428810-1-rtl-insets-ref.html
 == 428810-2a-rtl-insets.html 428810-2a-rtl-insets.html
 == 428810-2b-rtl-insets.html 428810-2b-rtl-insets.html
 == 428810-2e-rtl-insets.html 428810-2e-rtl-insets.html
 == 428810-2f-rtl-insets.html 428810-2f-rtl-insets.html
-# == 428810-2-rtl-insets-ref.html 428810-2-rtl-insets-ref.html
-# == 428810-2-rtl-insets-ref.html 428810-2-rtl-insets-ref.html
+== 428810-2-rtl-insets-ref.html 428810-2-rtl-insets-ref.html
+== 428810-2-rtl-insets-ref.html 428810-2-rtl-insets-ref.html
 == 428810-3a-rtl-insets.html 428810-3a-rtl-insets.html
 == 428810-3b-rtl-insets.html 428810-3b-rtl-insets.html
 == 428810-3e-rtl-insets.html 428810-3e-rtl-insets.html
 == 428810-3f-rtl-insets.html 428810-3f-rtl-insets.html
-# == 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
-# == 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
+== 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
+== 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
 fails == 430412-1.html 430412-1.html
 == 430813-1.html 430813-1.html
 == 430813-2.html 430813-2.html
@@ -1191,7 +1191,7 @@ fails == 451168-1.html 451168-1.html
 == 451876-2.html 451876-2.html
 == 452915-1.html 452915-1.html
 == 452964-1.html 452964-1.html
-# == 454361.html 454361.html
+== 454361.html 454361.html
 == 455105-1.html 455105-1.html
 == 455105-2.html 455105-2.html
 fails == 455171-5.html 455171-5.html
@@ -1277,18 +1277,18 @@ fails == 474417-1.html 474417-1.html
 == 475986-3a.html 475986-3a.html
 == 475986-3b.html 475986-3b.html
 == 475986-4.html 475986-4.html
-# == 475986-1-ref.html 475986-1-ref.html
-# == 475986-1-ref.html 475986-1-ref.html
+== 475986-1-ref.html 475986-1-ref.html
+== 475986-1-ref.html 475986-1-ref.html
 == 475986-2-ref.html 475986-2-ref.html
 == 476063-1.html 476063-1.html
 fails == 476063-2.html 476063-2.html
 fails == 476063-3.html 476063-3.html
 == 476063-4.xhtml 476063-4.xhtml
 == 476357-1.html 476357-1.html
-# == 476598-1a.html 476598-1a.html
-# == 476598-1a.html 476598-1a.html
-# == 476598-1b.html 476598-1b.html
-# == 476598-1b.html 476598-1b.html
+fails == 476598-1a.html 476598-1a.html # Bug 1341785
+fails == 476598-1a.html 476598-1a.html # Bug 1341785
+fails == 476598-1b.html 476598-1b.html # Bug 1341785
+fails == 476598-1b.html 476598-1b.html # Bug 1341785
 == 476598-1-ref.html 476598-1-ref.html
 == 476856-1.html 476856-1.html
 random-if(d2d) == 478377-1.xul 478377-1.xul
@@ -1313,7 +1313,7 @@ fails == 478811-4.html 478811-4.html
 == 480880-1e.html 480880-1e.html
 == 480880-2a.html 480880-2a.html
 == 480880-2b.html 480880-2b.html
-# == 480880-2c.html 480880-2c.html
+== 480880-2c.html 480880-2c.html
 fails-if(Android) == 481024-1a.html 481024-1a.html
 fails-if(Android) == 481024-1b.html 481024-1b.html
 fails-if(Android) == 481024-1c.html 481024-1c.html
@@ -1353,7 +1353,7 @@ fails == 486065-1.html 486065-1.html
 == 489868-1.svg 489868-1.svg
 == 490173-1.html 490173-1.html
 fails == 490173-2.html 490173-2.html
-# == 490176-1.html 490176-1.html
+== 490176-1.html 490176-1.html
 == 490177-1.svg 490177-1.svg
 fails == 490182-1a.html 490182-1a.html
 fails == 490182-1b.html 490182-1b.html
@@ -1377,7 +1377,7 @@ fails == 495354-1b.xhtml 495354-1b.xhtml
 == 495385-2a.html 495385-2a.html
 == 495385-2b.html 495385-2b.html
 == 495385-2c.html 495385-2c.html
-# == 495385-2d.html 495385-2d.html
+== 495385-2d.html 495385-2d.html
 == 495385-2e.html 495385-2e.html
 fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2f.xhtml
 == 495385-2g.html 495385-2g.html
@@ -1475,7 +1475,7 @@ fails == 538909-1.html 538909-1.html
 == 539323-3.html 539323-3.html
 fails == 539880-1.html 539880-1.html
 fails == 539880-1-dynamic.html 539880-1-dynamic.html
-# == 539949-1.html#test2 539949-1.html#test2
+skip-if(stylo) == 539949-1.html#test2 539949-1.html#test2 # load fails???
 fails == 541382-1.html 541382-1.html
 == 541406-1.html 541406-1.html
 fails needs-focus == 542116-1.html 542116-1.html
@@ -1483,7 +1483,7 @@ fails needs-focus == 542116-2.html 542116-2.html
 needs-focus == 542116-3.html 542116-3.html
 == 542317-1.html 542317-1.html
 == 542620-1.html 542620-1.html
-# == 545049-1.html 545049-1.html
+fails == 545049-1.html 545049-1.html # Bug 1341785
 == 546033-1.html 546033-1.html
 == 546071-1.html 546071-1.html
 == 549184-1.html 549184-1.html
@@ -1554,9 +1554,9 @@ fails needs-focus == 568441.html 568441.html
 == 571281-1b.html 571281-1b.html
 == 571281-1c.html 571281-1c.html
 == 571347-1a.html 571347-1a.html
-# == 571347-1b.html 571347-1b.html
-# == 571347-2a.html 571347-2a.html
-# == 571347-2b.html 571347-2b.html
+== 571347-1b.html 571347-1b.html
+== 571347-2a.html 571347-2a.html
+== 571347-2b.html 571347-2b.html
 fails == 571347-2c.html 571347-2c.html
 == 571347-2d.html 571347-2d.html
 fails == 571347-3.html 571347-3.html
@@ -1600,7 +1600,7 @@ fails == 593544-1.html 593544-1.html
 == 594624-1.html 594624-1.html
 fails == 594737-1.html 594737-1.html
 fails == 597721-1.html 597721-1.html
-# == 598726-1.html 598726-1.html
+skip-if(stylo) == 598726-1.html 598726-1.html # Bug 1302946
 == 599113-1.html 599113-1.html
 == 599476.html 599476.html
 == 599882-1a.html 599882-1a.html
@@ -1625,15 +1625,15 @@ fails == 608636-1.html 608636-1.html
 == 608756-1b.html 608756-1b.html
 asserts-if(stylo,4) == 608756-2.html 608756-2.html # bug 1324633
 == 609272-1.html 609272-1.html
-# == 613433-1.html 613433-1.html
-# == 613433-1.html 613433-1.html
-# == 613433-1.html 613433-1.html
-# == 613433-2.html 613433-2.html
-# == 613433-2.html 613433-2.html
-# == 613433-2.html 613433-2.html
-# == 613433-3.html 613433-3.html
-# == 613433-3.html 613433-3.html
-# == 613433-3.html 613433-3.html
+fails == 613433-1.html 613433-1.html
+fails == 613433-1.html 613433-1.html
+fails == 613433-1.html 613433-1.html
+fails == 613433-2.html 613433-2.html
+fails == 613433-2.html 613433-2.html
+fails == 613433-2.html 613433-2.html
+fails == 613433-3.html 613433-3.html
+fails == 613433-3.html 613433-3.html
+fails == 613433-3.html 613433-3.html
 == 614272-1.svg 614272-1.svg
 fails HTTP(..) == 615121-1.html 615121-1.html
 fails HTTP(..) == 615121-2.html 615121-2.html
@@ -1654,10 +1654,10 @@ fails == 622585-1.html 622585-1.html
 == 631352-1.html 631352-1.html
 == 632423-1.html 632423-1.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-verybig.html
-# == 632781-normalsize.html 632781-normalsize.html
+== 632781-normalsize.html 632781-normalsize.html
 == 633344-1.html 633344-1.html
 fails == 634232-1.html 634232-1.html
-# == 635302-1.html 635302-1.html
+skip-if(stylo) == 635302-1.html 635302-1.html # Too intermittent.
 == 635373-1.html 635373-1.html
 == 635373-2.html 635373-2.html
 == 635373-3.html 635373-3.html
@@ -1813,8 +1813,8 @@ fails == 966510-1.html 966510-1.html
 fails == 966510-2.html 966510-2.html
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1.svg
 == 983084-1.html 983084-1.html
-# == 983084-2.html 983084-2.html
-# == 983084-3.html 983084-3.html
+skip-if(stylo) == 983084-2.html 983084-2.html # Bug 1302946
+skip-if(stylo) == 983084-3.html 983084-3.html # Bug 1302946
 fails == 983691-1.html 983691-1.html
 HTTP(..) == 983985-1.html 983985-1.html
 fails HTTP(..) == 983985-2.html 983985-2.html
@@ -1861,7 +1861,7 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 == 1103258-1.html 1103258-1.html
 == 1105137-1.html 1105137-1.html
 fails == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
-# == 1111753-1.html 1111753-1.html
+skip-if(stylo) == 1111753-1.html 1111753-1.html # Bug 1302946
 fails == 1114526-1.html 1114526-1.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1a.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1b.html
@@ -1872,10 +1872,10 @@ skip == 1121748-2.html 1121748-2.html
 == 1127107-1a-nowrap.html 1127107-1a-nowrap.html
 == 1127107-1b-pre.html 1127107-1b-pre.html
 == 1127107-2-capitalize.html 1127107-2-capitalize.html
-# == 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
+== 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
 == 1128354-1.html 1128354-1.html
-# == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
-# == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
+fails == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
+fails == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
 # The 1133905-*.html reftests only make sense on platforms where both APZ and
 # <meta viewport> are enabled.
 # (Note: bug 1308702 covers these tests' failures on Android)
@@ -1903,33 +1903,33 @@ skip-if(!Android) fails-if(Android) == 1133905-3-vh.html 1133905-3-vh.html
 skip-if(!Android) == 1133905-4-vh.html 1133905-4-vh.html
 skip-if(!Android) fails-if(Android) == 1133905-5-vh.html 1133905-5-vh.html
 skip-if(!Android) fails-if(Android) == 1133905-6-vh.html 1133905-6-vh.html
-# == 1133905-1-rtl.html 1133905-1-rtl.html
-# == 1133905-2-rtl.html 1133905-2-rtl.html
-# == 1133905-3-rtl.html 1133905-3-rtl.html
-# == 1133905-4-rtl.html 1133905-4-rtl.html
-# == 1133905-5-rtl.html 1133905-5-rtl.html
-# == 1133905-6-rtl.html 1133905-6-rtl.html
-# == 1133905-1-v-rtl.html 1133905-1-v-rtl.html
-# == 1133905-2-v-rtl.html 1133905-2-v-rtl.html
-# == 1133905-3-v-rtl.html 1133905-3-v-rtl.html
-# == 1133905-4-v-rtl.html 1133905-4-v-rtl.html
-# == 1133905-5-v-rtl.html 1133905-5-v-rtl.html
-# == 1133905-6-v-rtl.html 1133905-6-v-rtl.html
-# == 1133905-1-h-rtl.html 1133905-1-h-rtl.html
-# == 1133905-2-h-rtl.html 1133905-2-h-rtl.html
-# == 1133905-3-h-rtl.html 1133905-3-h-rtl.html
-# == 1133905-4-h-rtl.html 1133905-4-h-rtl.html
-# == 1133905-5-h-rtl.html 1133905-5-h-rtl.html
-# == 1133905-6-h-rtl.html 1133905-6-h-rtl.html
-# == 1133905-1-vh-rtl.html 1133905-1-vh-rtl.html
-# == 1133905-2-vh-rtl.html 1133905-2-vh-rtl.html
-# == 1133905-3-vh-rtl.html 1133905-3-vh-rtl.html
-# == 1133905-4-vh-rtl.html 1133905-4-vh-rtl.html
-# == 1133905-5-vh-rtl.html 1133905-5-vh-rtl.html
-# == 1133905-6-vh-rtl.html 1133905-6-vh-rtl.html
+== 1133905-1-rtl.html 1133905-1-rtl.html
+== 1133905-2-rtl.html 1133905-2-rtl.html
+== 1133905-3-rtl.html 1133905-3-rtl.html
+== 1133905-4-rtl.html 1133905-4-rtl.html
+== 1133905-5-rtl.html 1133905-5-rtl.html
+== 1133905-6-rtl.html 1133905-6-rtl.html
+fails == 1133905-1-v-rtl.html 1133905-1-v-rtl.html # Bug 1341095
+fails == 1133905-2-v-rtl.html 1133905-2-v-rtl.html # Bug 1341095
+fails == 1133905-3-v-rtl.html 1133905-3-v-rtl.html # Bug 1341095
+fails == 1133905-4-v-rtl.html 1133905-4-v-rtl.html # Bug 1341095
+fails == 1133905-5-v-rtl.html 1133905-5-v-rtl.html # Bug 1341095
+fails == 1133905-6-v-rtl.html 1133905-6-v-rtl.html # Bug 1341095
+== 1133905-1-h-rtl.html 1133905-1-h-rtl.html
+== 1133905-2-h-rtl.html 1133905-2-h-rtl.html
+== 1133905-3-h-rtl.html 1133905-3-h-rtl.html
+== 1133905-4-h-rtl.html 1133905-4-h-rtl.html
+== 1133905-5-h-rtl.html 1133905-5-h-rtl.html
+== 1133905-6-h-rtl.html 1133905-6-h-rtl.html
+fails == 1133905-1-vh-rtl.html 1133905-1-vh-rtl.html # Bug 1341095
+fails == 1133905-2-vh-rtl.html 1133905-2-vh-rtl.html # Bug 1341095
+fails == 1133905-3-vh-rtl.html 1133905-3-vh-rtl.html # Bug 1341095
+fails == 1133905-4-vh-rtl.html 1133905-4-vh-rtl.html # Bug 1341095
+fails == 1133905-5-vh-rtl.html 1133905-5-vh-rtl.html # Bug 1341095
+fails == 1133905-6-vh-rtl.html 1133905-6-vh-rtl.html # Bug 1341095
 == 1150021-1.xul 1150021-1.xul
 fails == 1151145-1.html 1151145-1.html
-# == 1151306-1.html 1151306-1.html
+== 1151306-1.html 1151306-1.html
 == 1153845-1.html 1153845-1.html
 fails == 1155828-1.html 1155828-1.html
 == 1156129-1.html 1156129-1.html

@@ -96,6 +96,7 @@ ccov-code-coverage-tests:
     - xpcshell
 
 jsdcov-code-coverage-tests:
+    - mochitest
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - xpcshell

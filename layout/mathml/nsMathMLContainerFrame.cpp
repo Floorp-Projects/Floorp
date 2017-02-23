@@ -894,7 +894,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
                                        childFrame, availSize);
     ReflowChild(childFrame, aPresContext, childDesiredSize,
                 childReflowInput, childStatus);
-    //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+    //NS_ASSERTION(childStatus.IsComplete(), "bad status");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
     childFrame = childFrame->GetNextSibling();
@@ -950,7 +950,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   // Place children now by re-adjusting the origins to align the baselines
   FinalizeReflow(drawTarget, aDesiredSize);
 
-  aStatus = NS_FRAME_COMPLETE;
+  aStatus.Reset();
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 

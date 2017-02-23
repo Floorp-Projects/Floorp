@@ -8,10 +8,10 @@ fails == 156888-2.html 156888-2.html
 == 203923-1.html 203923-1.html
 == 203923-2.html 203923-2.html
 == 208305-1.html 208305-1.html
-# == 208305-2.html 208305-2.html
+== 208305-2.html 208305-2.html
 == 208305-3.html 208305-3.html
-# == 208305-4.html 208305-4.html
-# == 277995-1.html 277995-1.html
+== 208305-4.html 208305-4.html
+== 277995-1.html 277995-1.html
 fails == 293576-1.html 293576-1.html
 == 302113-1.html 302113-1.html
 fails == 315146-1.xhtml 315146-1.xhtml
@@ -21,7 +21,7 @@ fails == 338735-1.html 338735-1.html
 fails == 339388-1a.html 339388-1a.html
 fails == 339388-1b.html 339388-1b.html
 == 363326-1.html 363326-1.html
-# == 368932-1.html 368932-1.html
+== 368932-1.html 368932-1.html
 == 371054-1.html 371054-1.html
 fails == 372641-1a.xhtml 372641-1a.xhtml
 fails == 372641-1b.xhtml 372641-1b.xhtml
@@ -47,8 +47,8 @@ fails == infer-table-around-headers-footers-3.html infer-table-around-headers-fo
 fails == infer-rows-inside-rowgroups.html infer-rows-inside-rowgroups.html
 fails == infer-table-row-cell.html infer-table-row-cell.html
 fails == infer-table.html infer-table.html
-# == 3-tables-ref.html 3-tables-ref.html
-# == 3-tables-ref.html 3-tables-ref.html
+fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
+fails == 3-tables-ref.html 3-tables-ref.html # Bug 1341775
 fails == blocks-divide-tables-1.html blocks-divide-tables-1.html
 fails == blocks-divide-tables-2.html blocks-divide-tables-2.html
 fails == infer-cells-1.html infer-cells-1.html
@@ -59,9 +59,9 @@ fails == cols-test-1.html cols-test-1.html
 fails == cols-test-2.html cols-test-2.html
 fails == cols-test-3.html cols-test-3.html
 fails == dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody.html
-# == dynamic-removal-1.html dynamic-removal-1.html
-# == dynamic-removal-2.html dynamic-removal-2.html
-# == dynamic-removal-3.html dynamic-removal-3.html
+fails == dynamic-removal-1.html dynamic-removal-1.html # Bug 1341775
+fails == dynamic-removal-2.html dynamic-removal-2.html # Bug 1341775
+fails == dynamic-removal-3.html dynamic-removal-3.html # Bug 1341775
 fails == dynamic-removal-4.html dynamic-removal-4.html
 fails == dynamic-removal-5.html dynamic-removal-5.html
 fails == dynamic-removal-6.html dynamic-removal-6.html
@@ -88,7 +88,7 @@ fails == dynamic-switch-inline-to-cell-3.html dynamic-switch-inline-to-cell-3.ht
 fails == dynamic-switch-inline-to-cell-4.html dynamic-switch-inline-to-cell-4.html
 fails == dynamic-switch-inline-to-cell-5.html dynamic-switch-inline-to-cell-5.html
 fails == white-space-1.html white-space-1.html
-# == white-space-2.html white-space-2.html
+fails == white-space-2.html white-space-2.html # Bug 1341775
 fails == white-space-3.html white-space-3.html
 fails == white-space-4.html white-space-4.html
 fails == white-space-5.html white-space-5.html

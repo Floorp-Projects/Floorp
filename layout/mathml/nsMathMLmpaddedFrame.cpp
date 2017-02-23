@@ -315,7 +315,7 @@ nsMathMLmpaddedFrame::Reflow(nsPresContext*          aPresContext,
   // Let the base class format our content like an inferred mrow
   nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
                                  aReflowInput, aStatus);
-  //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  //NS_ASSERTION(aStatus.IsComplete(), "bad status");
 }
 
 /* virtual */ nsresult

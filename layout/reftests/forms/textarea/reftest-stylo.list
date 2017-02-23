@@ -1,15 +1,15 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# == resize.html resize.html
+fails == resize.html resize.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
-# == resize-background.html resize-background.html
-# == ltr.html ltr.html
-# == ltr-scrollbar.html ltr-scrollbar.html
-# == in-ltr-doc-scrollbar.html in-ltr-doc-scrollbar.html
-# == ltr.html ltr.html
-# == rtl.html rtl.html
-# == rtl.html rtl.html
-# == rtl.html rtl.html
-# == rtl.html rtl.html
+fails == resize-background.html resize-background.html
+fails == ltr.html ltr.html
+fails == ltr-scrollbar.html ltr-scrollbar.html
+fails == in-ltr-doc-scrollbar.html in-ltr-doc-scrollbar.html
+fails == ltr.html ltr.html
+fails == rtl.html rtl.html
+fails == rtl.html rtl.html
+fails == rtl.html rtl.html
+fails == rtl.html rtl.html
 fails == setvalue-framereconstruction-1.html setvalue-framereconstruction-1.html
-# == padding-scrollbar-placement.html padding-scrollbar-placement.html
-# == various-cols.html various-cols.html
+fails == padding-scrollbar-placement.html padding-scrollbar-placement.html
+fails == various-cols.html various-cols.html
