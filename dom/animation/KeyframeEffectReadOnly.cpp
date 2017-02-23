@@ -273,7 +273,21 @@ SpecifiedKeyframeArraysAreEqual(const nsTArray<Keyframe>& aA,
 void
 KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
-  MOZ_ASSERT(aStyleContext);
+  DoUpdateProperties(Move(aStyleContext));
+}
+
+void
+KeyframeEffectReadOnly::UpdateProperties(
+  const ServoComputedStyleValues& aServoValues)
+{
+  DoUpdateProperties(aServoValues);
+}
+
+template<typename StyleType>
+void
+KeyframeEffectReadOnly::DoUpdateProperties(StyleType&& aStyle)
+{
+  MOZ_ASSERT_IF(IsPointer<StyleType>::value, aStyle);
 
   // Skip updating properties when we are composing style.
   // FIXME: Bug 1324966. Drop this check once we have a function to get
@@ -284,11 +298,12 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     return;
   }
 
-  nsTArray<AnimationProperty> properties = BuildProperties(Move(aStyleContext));
+  nsTArray<AnimationProperty> properties =
+    BuildProperties(Forward<StyleType>(aStyle));
 
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
-  EnsureBaseStyles(aStyleContext, properties);
+  EnsureBaseStyles(aStyle, properties);
 
   if (mProperties == properties) {
     return;
@@ -310,10 +325,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
 
-  // FIXME (bug 1303235): Do this for Servo too
-  if (aStyleContext->PresContext()->StyleSet()->IsGecko()) {
-    CalculateCumulativeChangeHint(aStyleContext);
-  }
+  CalculateCumulativeChangeHint(aStyle);
 
   MarkCascadeNeedsUpdate();
 
@@ -1574,6 +1586,10 @@ void
 KeyframeEffectReadOnly::CalculateCumulativeChangeHint(
   nsStyleContext *aStyleContext)
 {
+  if (aStyleContext->PresContext()->StyleSet()->IsServo()) {
+    // FIXME (bug 1303235): Do this for Servo too
+    return;
+  }
   mCumulativeChangeHint = nsChangeHint(0);
 
   for (const AnimationProperty& property : mProperties) {
