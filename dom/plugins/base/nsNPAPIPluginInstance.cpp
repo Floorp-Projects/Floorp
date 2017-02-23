@@ -341,15 +341,6 @@ nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
   return mOwner->GetTagType(result);
 }
 
-nsresult
-nsNPAPIPluginInstance::GetMode(int32_t *result)
-{
-  if (mOwner)
-    return mOwner->GetMode(result);
-  else
-    return NS_ERROR_FAILURE;
-}
-
 nsTArray<nsNPAPIPluginStreamListener*>*
 nsNPAPIPluginInstance::StreamListeners()
 {
@@ -418,11 +409,9 @@ nsNPAPIPluginInstance::Start()
     pos++;
   }
 
-  int32_t       mode;
   const char*   mimetype;
   NPError       error = NPERR_GENERIC_ERROR;
 
-  GetMode(&mode);
   GetMIMEType(&mimetype);
 
   CheckJavaC2PJSObjectQuirk(quirkParamLength, mCachedParamNames, mCachedParamValues);
@@ -446,14 +435,14 @@ nsNPAPIPluginInstance::Start()
   // before returning. If the plugin returns failure, we'll clear it out below.
   mRunning = RUNNING;
 
-  nsresult newResult = library->NPP_New((char*)mimetype, &mNPP, (uint16_t)mode,
+  nsresult newResult = library->NPP_New((char*)mimetype, &mNPP,
                                         quirkParamLength, mCachedParamNames,
                                         mCachedParamValues, nullptr, &error);
   mInPluginInitCall = oldVal;
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
-  this, &mNPP, mimetype, mode, quirkParamLength, error));
+  ("NPP New called: this=%p, npp=%p, mime=%s, argc=%d, return=%d\n",
+  this, &mNPP, mimetype, quirkParamLength, error));
 
   if (NS_FAILED(newResult) || error != NPERR_NO_ERROR) {
     mRunning = DESTROYED;

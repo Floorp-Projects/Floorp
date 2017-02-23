@@ -133,12 +133,10 @@ bool PluginInstanceChild::sIsIMEComposing = false;
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsCString& aMimeType,
-                                         const uint16_t& aMode,
                                          const InfallibleTArray<nsCString>& aNames,
                                          const InfallibleTArray<nsCString>& aValues)
     : mPluginIface(aPluginIface)
     , mMimeType(aMimeType)
-    , mMode(aMode)
     , mNames(aNames)
     , mValues(aValues)
 #if defined(XP_DARWIN) || defined (XP_WIN)
@@ -259,7 +257,7 @@ PluginInstanceChild::DoNPP_New()
     NPP npp = GetNPP();
 
     NPError rv = mPluginIface->newp((char*)NullableStringGet(mMimeType), npp,
-                                    mMode, argc, argn.get(), argv.get(), 0);
+                                    NP_EMBED, argc, argn.get(), argv.get(), 0);
     if (NPERR_NO_ERROR != rv) {
         return rv;
     }
