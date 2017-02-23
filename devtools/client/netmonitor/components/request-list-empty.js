@@ -31,7 +31,7 @@ const RequestListEmptyNotice = createClass({
   render() {
     return div(
       {
-        className: "requests-list-empty-notice",
+        className: "request-list-empty-notice",
       },
       div({ className: "notice-reload-message" },
         span(null, L10N.getStr("netmonitor.reloadNotice1")),
