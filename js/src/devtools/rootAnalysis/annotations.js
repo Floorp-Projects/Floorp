@@ -160,6 +160,7 @@ function isSuppressedVirtualMethod(csu, method)
 var ignoreFunctions = {
     "ptio.c:pt_MapError" : true,
     "je_malloc_printf" : true,
+    "malloc_usable_size" : true,
     "vprintf_stderr" : true,
     "PR_ExplodeTime" : true,
     "PR_ErrorInstallTable" : true,
