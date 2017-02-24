@@ -23,7 +23,6 @@
 struct ANPEvent;
 
 namespace mozilla {
-    class TextComposition;
     class WidgetTouchEvent;
 
     namespace layers {
@@ -31,6 +30,10 @@ namespace mozilla {
         class LayerManager;
         class APZCTreeManager;
     }
+
+    namespace widget {
+        class GeckoEditableSupport;
+    } // namespace widget
 }
 
 class nsWindow : public nsBaseWidget
@@ -58,6 +61,7 @@ private:
              class Impl = typename Lambda::TargetClass>
     class WindowEvent;
 
+public:
     // Smart pointer for holding a pointer back to the nsWindow inside a native
     // object class. The nsWindow pointer is automatically cleared when the
     // nsWindow is destroyed, and a WindowPtr<Impl>::Locked class is provided
@@ -96,6 +100,59 @@ private:
         void Detach();
     };
 
+    template<class Impl>
+    class WindowPtr final
+    {
+        friend NativePtr<Impl>;
+
+        NativePtr<Impl>* mPtr;
+        nsWindow* mWindow;
+        mozilla::Mutex mWindowLock;
+
+    public:
+        class Locked final : private mozilla::MutexAutoLock
+        {
+            nsWindow* const mWindow;
+
+        public:
+            Locked(WindowPtr<Impl>& aPtr)
+                : mozilla::MutexAutoLock(aPtr.mWindowLock)
+                , mWindow(aPtr.mWindow)
+            {}
+
+            operator nsWindow*() const { return mWindow; }
+            nsWindow* operator->() const { return mWindow; }
+        };
+
+        WindowPtr(NativePtr<Impl>* aPtr, nsWindow* aWindow)
+            : mPtr(aPtr)
+            , mWindow(aWindow)
+            , mWindowLock(NativePtr<Impl>::sName)
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            mPtr->mPtr = this;
+        }
+
+        ~WindowPtr()
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            if (!mPtr) {
+                return;
+            }
+            mPtr->mPtr = nullptr;
+            mPtr->mImpl = nullptr;
+        }
+
+        operator nsWindow*() const
+        {
+            MOZ_ASSERT(NS_IsMainThread());
+            return mWindow;
+        }
+
+        nsWindow* operator->() const { return operator nsWindow*(); }
+    };
+
+private:
     class AndroidView final : public nsIAndroidView
     {
         virtual ~AndroidView() {}
@@ -126,6 +183,10 @@ private:
     // Owned by the Java NativePanZoomController instance.
     NativePtr<NPZCSupport> mNPZCSupport;
 
+    // Object that implements native GeckoEditable calls.
+    // Strong referenced by the Java instance.
+    NativePtr<mozilla::widget::GeckoEditableSupport> mEditableSupport;
+
     class GeckoViewSupport;
     // Object that implements native GeckoView calls and associated states.
     // nullptr for nsWindows that were not opened from GeckoView.
@@ -138,6 +199,9 @@ private:
 
 public:
     static nsWindow* TopWindow();
+
+    static mozilla::Modifiers GetModifiers(int32_t aMetaState);
+    static mozilla::TimeStamp GetEventTimeStamp(int64_t aEventTime);
 
     void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 
@@ -202,6 +266,8 @@ public:
     virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
     virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override { return NS_ERROR_NOT_IMPLEMENTED; }
 
+
+    TextEventDispatcherListener* GetNativeTextEventDispatcherListener() override;
     virtual void SetInputContext(const InputContext& aContext,
                                  const InputContextAction& aAction) override;
     virtual InputContext GetInputContext() override;
@@ -244,26 +310,19 @@ public:
 
     mozilla::jni::DependentRef<mozilla::java::GeckoLayerClient> GetLayerClient();
 
+    // Call this function when the users activity is the direct cause of an
+    // event (like a keypress or mouse click).
+    void UserActivity();
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
     bool IsTopLevel();
 
-    RefPtr<mozilla::TextComposition> GetIMEComposition();
-    enum RemoveIMECompositionFlag {
-        CANCEL_IME_COMPOSITION,
-        COMMIT_IME_COMPOSITION
-    };
-    void RemoveIMEComposition(RemoveIMECompositionFlag aFlag = COMMIT_IME_COMPOSITION);
-
     void ConfigureAPZControllerThread() override;
     void DispatchHitTest(const mozilla::WidgetTouchEvent& aEvent);
 
     already_AddRefed<GeckoContentController> CreateRootContentController() override;
-
-    // Call this function when the users activity is the direct cause of an
-    // event (like a keypress or mouse click).
-    void UserActivity();
 
     bool mIsVisible;
     nsTArray<nsWindow*> mChildren;
@@ -276,9 +335,6 @@ protected:
 
     bool mAwaitingFullScreen;
     bool mIsFullScreen;
-
-    virtual nsresult NotifyIMEInternal(
-                         const IMENotification& aIMENotification) override;
 
     bool UseExternalCompositingSurface() const override {
       return true;

@@ -1223,7 +1223,8 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
       APZThreadUtils::RunOnControllerThread(r.forget());
       return nsEventStatus_eConsumeDoDefault;
     }
-    MOZ_CRASH();
+    // Allow dispatching keyboard events on Gecko thread.
+    MOZ_ASSERT(aEvent->AsKeyboardEvent());
   }
 
   nsEventStatus status;
