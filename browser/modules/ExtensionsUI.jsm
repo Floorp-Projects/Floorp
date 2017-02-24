@@ -192,11 +192,7 @@ this.ExtensionsUI = {
 
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 
-    let name = info.addon.name;
-    if (name.length > 50) {
-      name = name.slice(0, 49) + "…";
-    }
-    name = this._sanitizeName(name);
+    let name = this._sanitizeName(info.addon.name);
     let addonName = `<span class="addon-webext-name">${name}</span>`;
 
     result.header = bundle.formatStringFromName("webextPerms.header", [addonName], 1);
