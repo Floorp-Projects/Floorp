@@ -5541,6 +5541,7 @@ pref("dom.mozBrowserFramesEnabled", false);
 pref("layout.css.color-adjust.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", false);
+pref("dom.audiochannel.audioCompeting.allAgents", false);
 
 // Default media volume
 pref("media.default_volume", "1.0");
