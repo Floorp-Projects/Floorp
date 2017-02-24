@@ -2132,7 +2132,7 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
   if (haveRoundedCorners) {
     auto d2a = aForFrame->PresContext()->AppUnitsPerDevPixel();
     nsCSSRendering::ComputePixelRadii(aClipState->mRadii, d2a, &aClipState->mClippedRadii);
-    aClipState->mHasRoundedCorners = true;
+    aClipState->mHasRoundedCorners = !aClipState->mClippedRadii.IsEmpty();
   }
 
 
