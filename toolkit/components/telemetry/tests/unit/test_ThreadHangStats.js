@@ -84,15 +84,18 @@ function run_test() {
       notEqual(endHangs.hangs[0].stack.length, 0);
       equal(typeof endHangs.hangs[0].stack[0], "string");
 
-      // Make sure one of the hangs is a permanent
-      // hang containing a native stack.
-      ok(endHangs.hangs.some((hang) => (
-        hang.nativeStack &&
-        Array.isArray(hang.nativeStack.memoryMap) &&
-        hang.nativeStack.memoryMap.length !== 0 &&
-        Array.isArray(hang.nativeStack.stacks) &&
-        hang.nativeStack.stacks.length !== 0
-      )));
+      // Native stack gathering is only enabled on Windows.
+      if (mozinfo.os == "win") {
+        // Make sure one of the hangs is a permanent
+        // hang containing a native stack.
+        ok(endHangs.hangs.some((hang) => (
+          hang.nativeStack &&
+          Array.isArray(hang.nativeStack.memoryMap) &&
+          hang.nativeStack.memoryMap.length !== 0 &&
+          Array.isArray(hang.nativeStack.stacks) &&
+          hang.nativeStack.stacks.length !== 0
+        )));
+      }
 
       check_histogram(endHangs.hangs[0].histogram);
 
