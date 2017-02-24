@@ -75,7 +75,7 @@ public:
   // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
   // becomes the caller's responsibility.
   void Remove(nsFloatCache* aElement) { RemoveAndReturnPrev(aElement); }
-  
+
   // Steal away aList's nsFloatCache objects and put them in this
   // list.  aList must not be empty.
   void Append(nsFloatCacheFreeList& aList);
@@ -87,7 +87,7 @@ protected:
   // becomes the caller's responsibility. Returns the nsFloatCache that was
   // before aElement, or nullptr if aElement was the first.
   nsFloatCache* RemoveAndReturnPrev(nsFloatCache* aElement);
-  
+
   friend class nsFloatCacheFreeList;
 };
 
@@ -116,7 +116,7 @@ public:
   nsFloatCache* Tail() const {
     return mTail;
   }
-  
+
   bool NotEmpty() const {
     return nullptr != mHead;
   }
@@ -134,7 +134,7 @@ public:
   // Remove an nsFloatCache object from this list and return it, or create
   // a new one if this one is empty; Set its mFloat to aFloat.
   nsFloatCache* Alloc(nsIFrame* aFloat);
-  
+
 protected:
   nsFloatCache* mTail;
 
@@ -204,7 +204,7 @@ class nsLineBox final : public nsLineLink {
 private:
   nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock);
   ~nsLineBox();
-  
+
   // Infallible overloaded new operator. Uses an arena (which comes from the
   // presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell);
@@ -729,7 +729,7 @@ protected:
  *
  * API heavily based on the |list| class in the C++ standard.
  */
- 
+
 class nsLineList_iterator {
   public:
     friend class nsLineList;
