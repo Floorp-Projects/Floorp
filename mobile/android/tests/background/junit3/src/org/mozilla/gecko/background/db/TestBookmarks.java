@@ -746,6 +746,11 @@ public class TestBookmarks extends AndroidSyncTestCase {
           @Override
           public void onRecordStoreSucceeded(String guid) {
           }
+
+          @Override
+          public void onStoreFailed(Exception e) {
+
+          }
         };
         session.setStoreDelegate(storeDelegate);
         for (BookmarkRecord record : records) {

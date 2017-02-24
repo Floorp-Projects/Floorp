@@ -479,6 +479,11 @@ public class GlobalSession implements HttpResponseObserver {
     this.callback.handleError(this, e);
   }
 
+  public void handleIncompleteStage() {
+    // Let our delegate know that current stage is incomplete and needs to be synced again.
+    callback.handleIncompleteStage(this.currentState, this);
+  }
+
   public void handleHTTPError(SyncStorageResponse response, String reason) {
     // TODO: handling of 50x (backoff), 401 (node reassignment or auth error).
     // Fall back to aborting.

@@ -81,13 +81,8 @@ public class BufferingMiddlewareRepositorySessionTest {
 
     @Test
     public void storeDone() throws Exception {
-        // Verify that storage's flush is called.
-        verify(bufferStorageMocked, times(0)).flush();
-        bufferingSessionMocked.doStoreDonePrepare();
-        verify(bufferStorageMocked, times(1)).flush();
-
         // Trivial case, no records to merge.
-        bufferingSession.doStoreDone(123L);
+        bufferingSession.doMergeBuffer(123L);
         verify(innerRepositorySession, times(1)).storeDone(123L);
         verify(innerRepositorySession, never()).store(any(Record.class));
 
@@ -109,7 +104,7 @@ public class BufferingMiddlewareRepositorySessionTest {
         bufferingSession.store(record4);
 
         // Done storing.
-        bufferingSession.doStoreDone(123L);
+        bufferingSession.doMergeBuffer(123L);
 
         // Ensure all records where stored in the wrapped session.
         verify(innerRepositorySession, times(1)).store(record);
@@ -152,32 +147,6 @@ public class BufferingMiddlewareRepositorySessionTest {
         // Test that buffer storage is cleaned up.
         bufferingSession.performCleanup();
         assertEquals(0, bufferStorage.all().size());
-    }
-
-    @Test
-    public void sourceFailed() throws Exception {
-        // Source failes before any records have been stored.
-        bufferingSession.sourceFailed(new Exception());
-        assertEquals(0, bufferStorage.all().size());
-
-        // Store some records now.
-        MockRecord record = new MockRecord("guid1", null, 1, false);
-        bufferingSession.store(record);
-
-        MockRecord record2 = new MockRecord("guid2", null, 13, false);
-        bufferingSession.store(record2);
-
-        MockRecord record3 = new MockRecord("guid3", null, 5, false);
-        bufferingSession.store(record3);
-
-        // Verify that buffer is intact after source fails.
-        bufferingSession.sourceFailed(new Exception());
-        assertEquals(3, bufferStorage.all().size());
-
-        // Verify that buffer is flushed after source fails.
-        verify(bufferStorageMocked, times(0)).flush();
-        bufferingSessionMocked.sourceFailed(new Exception());
-        verify(bufferStorageMocked, times(1)).flush();
     }
 
     @Test

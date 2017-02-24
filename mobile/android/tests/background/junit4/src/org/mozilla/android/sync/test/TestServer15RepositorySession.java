@@ -12,6 +12,7 @@ import org.mozilla.android.sync.test.helpers.BaseTestStorageRequestDelegate;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
@@ -22,6 +23,7 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
@@ -112,7 +114,8 @@ public class TestServer15RepositorySession {
     final TrackingWBORepository local = getLocal(100);
     final Server15Repository remote = new Server15Repository(
             COLLECTION, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
-            getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration);
+            getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration,
+            new NonPersistentRepositoryStateProvider());
     KeyBundle collectionKey = new KeyBundle(TEST_USERNAME, SYNC_KEY);
     Crypto5MiddlewareRepository cryptoRepo = new Crypto5MiddlewareRepository(remote, collectionKey);
     cryptoRepo.recordFactory = new BookmarkRecordFactory();
@@ -140,6 +143,14 @@ public class TestServer15RepositorySession {
     Exception e = doSynchronize(server);
     assertNotNull(e);
     assertEquals(FetchFailedException.class, e.getClass());
+  }
+
+  @Test
+  public void testFetch412Failure() throws Exception {
+    MockServer server = new MockServer(412, "error");
+    Exception e = doSynchronize(server);
+    assertNotNull(e);
+    assertEquals(CollectionConcurrentModificationException.class, e.getClass());
   }
 
   @Test

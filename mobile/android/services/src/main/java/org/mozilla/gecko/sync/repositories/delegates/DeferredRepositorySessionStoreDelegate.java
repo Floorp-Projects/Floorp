@@ -54,4 +54,14 @@ public class DeferredRepositorySessionStoreDelegate implements
       }
     });
   }
+
+  @Override
+  public void onStoreFailed(final Exception e) {
+    executor.execute(new Runnable() {
+      @Override
+      public void run() {
+        inner.onStoreFailed(e);
+      }
+    });
+  }
 }

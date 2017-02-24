@@ -24,7 +24,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  *
  *<ul>
  * <li>Construct, with a reference to its parent {@link Repository}, by calling
- *   {@link Repository#createSession(RepositorySessionCreationDelegate, android.content.Context)}.</li>
+ *   {@link Repository#createSession(org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate, android.content.Context)}.</li>
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
  * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>
@@ -156,14 +156,6 @@ public abstract class RepositorySession {
    * and now would be a good time to flush records and perform any other similar operations.
    */
   public void storeFlush() {
-  }
-
-  /**
-   * During flow of records, indicates that source failed.
-   *
-   * @param e indicates reason of failure.
-     */
-  public void sourceFailed(Exception e) {
   }
 
   /**
