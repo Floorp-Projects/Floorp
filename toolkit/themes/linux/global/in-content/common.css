@@ -19,6 +19,11 @@ xul|menulist {
   margin: 2px 4px;
 }
 
+xul|button:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: -2px;
+}
+
 xul|button > xul|*.button-box,
 xul|menulist > xul|*.menulist-label-box {
   -moz-appearance: none;
