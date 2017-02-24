@@ -19,7 +19,7 @@ void main(void) {
     // The render task origin is in device-pixels. Offset that by
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = res.uv_rect.zw - res.uv_rect.xy;
-    vec2 origin = task.data0.xy + uDevicePixelRatio * (glyph.offset.xy - pg.local_rect.xy);
+    vec2 origin = task.data0.xy + uDevicePixelRatio * (glyph.offset.xy - pg.local_rect.p0);
     vec4 local_rect = vec4(origin, size);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));

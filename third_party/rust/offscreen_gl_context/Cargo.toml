@@ -1,7 +1,7 @@
 [package]
 name = "offscreen_gl_context"
 license = "MIT / Apache-2.0"
-version = "0.5.5"
+version = "0.6.1"
 authors = ["Emilio Cobos Álvarez <emilio@crisal.io>", "The Servo Project Developers"]
 description = "Creation and manipulation of HW accelerated offscreen rendering contexts in multiple platforms. Originally intended for the Servo project's WebGL implementation."
 repository = "https://github.com/emilio/rust-offscreen-rendering-context"
@@ -13,7 +13,6 @@ gl_generator = "0.5"
 [features]
 default = []
 osmesa = ["osmesa-sys"]
-serde_serialization = ["serde"]
 # NOTE: Just for testing use, there are no other changes
 test_egl_in_linux = []
 test_osmesa = []
@@ -21,8 +20,8 @@ test_osmesa = []
 [dependencies]
 log  = "0.3"
 gleam = "0.2.31"
-euclid = "0.10"
-serde = { version = "0.8", optional = true }
+euclid = "0.11"
+serde = { version = "0.9", optional = true }
 osmesa-sys = { version = "0.1", optional = true }
 
 [target.x86_64-apple-darwin.dependencies]

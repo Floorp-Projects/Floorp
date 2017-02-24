@@ -30,7 +30,7 @@ pub const MASK_DATA_GPU_SIZE: usize = 1;
 /// may grow. Storing them as texel coords and normalizing
 /// the UVs in the vertex shader means nothing needs to be
 /// updated on the CPU when the texture size changes.
-#[derive(Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct TexelRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
@@ -41,6 +41,15 @@ impl Default for TexelRect {
         TexelRect {
             uv0: DevicePoint::zero(),
             uv1: DevicePoint::zero(),
+        }
+    }
+}
+
+impl TexelRect {
+    pub fn new(u0: u32, v0: u32, u1: u32, v1: u32) -> TexelRect {
+        TexelRect {
+            uv0: DevicePoint::new(u0 as f32, v0 as f32),
+            uv1: DevicePoint::new(u1 as f32, v1 as f32),
         }
     }
 }
@@ -136,6 +145,7 @@ pub struct ImagePrimitiveCpu {
     pub kind: ImagePrimitiveKind,
     pub color_texture_id: SourceTexture,
     pub resource_address: GpuStoreAddress,
+    pub sub_rect: Option<TexelRect>,
 }
 
 #[derive(Debug, Clone)]
@@ -920,8 +930,18 @@ impl PrimitiveStore {
 
                     if let Some(cache_item) = cache_item {
                         let resource_rect = self.gpu_resource_rects.get_mut(image_cpu.resource_address);
-                        resource_rect.uv0 = cache_item.uv0;
-                        resource_rect.uv1 = cache_item.uv1;
+                        match image_cpu.sub_rect {
+                            Some(sub_rect) => {
+                                resource_rect.uv0.x = cache_item.uv0.x + sub_rect.uv0.x;
+                                resource_rect.uv0.y = cache_item.uv0.y + sub_rect.uv0.y;
+                                resource_rect.uv1.x = cache_item.uv0.x + sub_rect.uv1.x;
+                                resource_rect.uv1.y = cache_item.uv0.y + sub_rect.uv1.y;
+                            }
+                            None => {
+                                resource_rect.uv0 = cache_item.uv0;
+                                resource_rect.uv1 = cache_item.uv1;
+                            }
+                        }
                     }
                     image_cpu.color_texture_id = texture_id;
                 }

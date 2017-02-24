@@ -534,12 +534,13 @@ impl AlphaBatcher {
             for item in &task.alpha_items {
                 let (batch_key, item_bounding_rect) = match item {
                     &AlphaRenderItem::Blend(stacking_context_index, ..) => {
-                        let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
+                        let stacking_context =
+                            &ctx.stacking_context_store[stacking_context_index.0];
                         (AlphaBatchKey::new(AlphaBatchKind::Blend,
                                             AlphaBatchKeyFlags::empty(),
                                             BlendMode::Alpha,
                                             BatchTextures::no_texture()),
-                         &stacking_context.xf_rect.as_ref().unwrap().bounding_rect)
+                         &stacking_context.bounding_rect)
                     }
                     &AlphaRenderItem::HardwareComposite(stacking_context_index, _, composite_op, ..) => {
                         let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
@@ -547,7 +548,7 @@ impl AlphaBatcher {
                                             AlphaBatchKeyFlags::empty(),
                                             composite_op.to_blend_mode(),
                                             BatchTextures::no_texture()),
-                         &stacking_context.xf_rect.as_ref().unwrap().bounding_rect)
+                         &stacking_context.bounding_rect)
                     }
                     &AlphaRenderItem::Composite(stacking_context_index,
                                                 backdrop_id,
@@ -567,11 +568,10 @@ impl AlphaBatcher {
                         alpha_batches.push(batch);
                         continue;
                     }
-                    &AlphaRenderItem::Primitive(stacking_context_index, prim_index, _) => {
-                        let stacking_context =
-                            &ctx.stacking_context_store[stacking_context_index.0];
+                    &AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, _) => {
+                        let group = &ctx.clip_scroll_group_store[clip_scroll_group_index.0];
                         let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-                        let transform_kind = stacking_context.xf_rect.as_ref().unwrap().kind;
+                        let transform_kind = group.xf_rect.as_ref().unwrap().kind;
                         let needs_clipping = prim_metadata.clip_task.is_some();
                         let needs_blending = transform_kind == TransformedRectKind::Complex ||
                                              !prim_metadata.is_opaque ||
@@ -616,11 +616,7 @@ impl AlphaBatcher {
                             PrimitiveBatchItem::StackingContext(stacking_context_index) => {
                                 let stacking_context =
                                     &ctx.stacking_context_store[stacking_context_index.0];
-                                stacking_context.xf_rect
-                                                .as_ref()
-                                                .unwrap()
-                                                .bounding_rect
-                                                .intersects(item_bounding_rect)
+                                stacking_context.bounding_rect.intersects(item_bounding_rect)
                             }
                             PrimitiveBatchItem::Primitive(prim_index) => {
                                 let bounding_rect = &ctx.prim_store.cpu_bounding_rects[prim_index.0];
@@ -665,18 +661,19 @@ impl AlphaBatcher {
                                                           z);
                     }
                     &AlphaRenderItem::HardwareComposite(stacking_context_index, src_id, _, z) => {
-                        ctx.prim_store.add_hardware_composite_to_batch(stacking_context_index,
-                                                                       batch,
-                                                                       task_index,
-                                                                       render_tasks.get_static_task_index(&src_id),
-                                                                       z);
+                        ctx.prim_store.add_hardware_composite_to_batch(
+                            stacking_context_index,
+                            batch,
+                            task_index,
+                            render_tasks.get_static_task_index(&src_id),
+                            z);
                     }
-                    &AlphaRenderItem::Primitive(stacking_context_index, prim_index, z) => {
-                        let stacking_context =
-                            &ctx.stacking_context_store[stacking_context_index.0];
+                    &AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, z) => {
+                        let packed_layer = ctx.clip_scroll_group_store[clip_scroll_group_index.0]
+                                              .packed_layer_index;
                         ctx.prim_store.add_prim_to_batch(prim_index,
                                                          batch,
-                                                         stacking_context.packed_layer_index,
+                                                         packed_layer,
                                                          task_index,
                                                          render_tasks,
                                                          child_pass_index,
@@ -690,10 +687,10 @@ impl AlphaBatcher {
                     &AlphaRenderItem::Composite(..) => unreachable!(),
                     &AlphaRenderItem::Blend(..) => unreachable!(),
                     &AlphaRenderItem::HardwareComposite(..) => unreachable!(),
-                    &AlphaRenderItem::Primitive(stacking_context_index, prim_index, _) => {
-                        let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
+                    &AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, _) => {
+                        let group = &ctx.clip_scroll_group_store[clip_scroll_group_index.0];
+                        let transform_kind = group.xf_rect.as_ref().unwrap().kind;
                         let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-                        let transform_kind = stacking_context.xf_rect.as_ref().unwrap().kind;
                         let needs_clipping = prim_metadata.clip_task.is_some();
                         let needs_blending = transform_kind == TransformedRectKind::Complex ||
                                              !prim_metadata.is_opaque ||
@@ -745,12 +742,13 @@ impl AlphaBatcher {
                     &AlphaRenderItem::Composite(..) => unreachable!(),
                     &AlphaRenderItem::Blend(..) => unreachable!(),
                     &AlphaRenderItem::HardwareComposite(..) => unreachable!(),
-                    &AlphaRenderItem::Primitive(stacking_context_index, prim_index, z) => {
-                        let stacking_context =
-                            &ctx.stacking_context_store[stacking_context_index.0];
+                    &AlphaRenderItem::Primitive(clip_scroll_group_index, prim_index, z) => {
+                        let packed_layer_index =
+                            ctx.clip_scroll_group_store[clip_scroll_group_index.0]
+                               .packed_layer_index;
                         ctx.prim_store.add_prim_to_batch(prim_index,
                                                          batch,
-                                                         stacking_context.packed_layer_index,
+                                                         packed_layer_index,
                                                          task_index,
                                                          render_tasks,
                                                          child_pass_index,
@@ -848,6 +846,7 @@ impl ClipBatcher {
 
 pub struct RenderTargetContext<'a> {
     pub stacking_context_store: &'a [StackingContext],
+    pub clip_scroll_group_store: &'a [ClipScrollGroup],
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'a ResourceCache,
 }
@@ -1299,14 +1298,63 @@ pub struct PackedLayerIndex(pub usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct StackingContextIndex(pub usize);
 
+#[derive(Debug)]
 pub struct StackingContext {
     pub pipeline_id: PipelineId,
     pub local_transform: LayerToScrollTransform,
     pub local_rect: LayerRect,
-    pub scroll_layer_id: ScrollLayerId,
-    pub xf_rect: Option<TransformedRect>,
+    pub bounding_rect: DeviceIntRect,
     pub composite_ops: CompositeOps,
+    pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
+    pub is_visible: bool,
+}
+
+impl StackingContext {
+    pub fn new(pipeline_id: PipelineId,
+               local_transform: LayerToScrollTransform,
+               local_rect: LayerRect,
+               composite_ops: CompositeOps,
+               clip_scroll_group_index: ClipScrollGroupIndex)
+               -> StackingContext {
+        StackingContext {
+            pipeline_id: pipeline_id,
+            local_transform: local_transform,
+            local_rect: local_rect,
+            bounding_rect: DeviceIntRect::zero(),
+            composite_ops: composite_ops,
+            clip_scroll_groups: vec![clip_scroll_group_index],
+            is_visible: false,
+        }
+    }
+
+    pub fn clip_scroll_group(&self) -> ClipScrollGroupIndex {
+        // Currently there is only one scrolled stacking context per context,
+        // but eventually this will be selected from the vector based on the
+        // scroll layer of this primitive.
+        self.clip_scroll_groups[0]
+    }
+
+    pub fn can_contribute_to_scene(&self) -> bool {
+        !self.composite_ops.will_make_invisible()
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+pub struct ClipScrollGroupIndex(pub usize);
+
+#[derive(Debug)]
+pub struct ClipScrollGroup {
+    pub stacking_context_index: StackingContextIndex,
+    pub scroll_layer_id: ScrollLayerId,
     pub packed_layer_index: PackedLayerIndex,
+    pub pipeline_id: PipelineId,
+    pub xf_rect: Option<TransformedRect>,
+}
+
+impl ClipScrollGroup {
+    pub fn is_visible(&self) -> bool {
+        self.xf_rect.is_some()
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -1383,16 +1431,6 @@ impl CompositeOps {
             }
         }
         false
-    }
-}
-
-impl StackingContext {
-    pub fn is_visible(&self) -> bool {
-        self.xf_rect.is_some()
-    }
-
-    pub fn can_contribute_to_scene(&self) -> bool {
-        !self.composite_ops.will_make_invisible()
     }
 }
 

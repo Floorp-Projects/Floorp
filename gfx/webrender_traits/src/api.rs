@@ -54,20 +54,19 @@ impl RenderApi {
         RenderApiSender::new(self.api_sender.clone(), self.payload_sender.clone())
     }
 
-    pub fn add_raw_font(&self, bytes: Vec<u8>) -> FontKey {
+    pub fn generate_font_key(&self) -> FontKey {
         let new_id = self.next_unique_id();
-        let key = FontKey::new(new_id.0, new_id.1);
-        let msg = ApiMsg::AddRawFont(key, bytes);
-        self.api_sender.send(msg).unwrap();
-        key
+        FontKey::new(new_id.0, new_id.1)
     }
 
-    pub fn add_native_font(&self, native_font_handle: NativeFontHandle) -> FontKey {
-        let new_id = self.next_unique_id();
-        let key = FontKey::new(new_id.0, new_id.1);
+    pub fn add_raw_font(&self, key: FontKey, bytes: Vec<u8>) {
+        let msg = ApiMsg::AddRawFont(key, bytes);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn add_native_font(&self, key: FontKey, native_font_handle: NativeFontHandle) {
         let msg = ApiMsg::AddNativeFont(key, native_font_handle);
         self.api_sender.send(msg).unwrap();
-        key
     }
 
     /// Gets the dimensions for the supplied glyph keys
@@ -84,19 +83,18 @@ impl RenderApi {
     }
 
     /// Creates an `ImageKey`.
-    pub fn alloc_image(&self) -> ImageKey {
+    pub fn generate_image_key(&self) -> ImageKey {
         let new_id = self.next_unique_id();
         ImageKey::new(new_id.0, new_id.1)
     }
 
-    /// Adds an image and returns the corresponding `ImageKey`.
+    /// Adds an image identified by the `ImageKey`.
     pub fn add_image(&self,
+                     key: ImageKey,
                      descriptor: ImageDescriptor,
-                     data: ImageData) -> ImageKey {
-        let key = self.alloc_image();
+                     data: ImageData) {
         let msg = ApiMsg::AddImage(key, descriptor, data);
         self.api_sender.send(msg).unwrap();
-        key
     }
 
     /// Updates a specific image.

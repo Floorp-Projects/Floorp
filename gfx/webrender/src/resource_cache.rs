@@ -24,6 +24,7 @@ use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRen
 use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
 use webrender_traits::{DevicePoint, DeviceIntSize, ImageDescriptor, ColorF};
 use webrender_traits::{ExternalImageId, GlyphOptions, GlyphInstance};
+use webrender_traits::{BlobImageRenderer, BlobImageDescriptor, BlobImageError};
 use threadpool::ThreadPool;
 use euclid::Point2D;
 
@@ -209,11 +210,15 @@ pub struct ResourceCache {
     glyph_cache_tx: Sender<GlyphCacheMsg>,
     glyph_cache_result_queue: Receiver<GlyphCacheResultMsg>,
     pending_external_image_update_list: ExternalImageUpdateList,
+
+    blob_image_renderer: Option<Box<BlobImageRenderer>>,
+    blob_image_requests: HashSet<ImageRequest>,
 }
 
 impl ResourceCache {
     pub fn new(texture_cache: TextureCache,
                workers: Arc<Mutex<ThreadPool>>,
+               blob_image_renderer: Option<Box<BlobImageRenderer>>,
                enable_aa: bool) -> ResourceCache {
         let (glyph_cache_tx, glyph_cache_result_queue) = spawn_glyph_cache_thread(workers);
 
@@ -232,7 +237,14 @@ impl ResourceCache {
             glyph_cache_tx: glyph_cache_tx,
             glyph_cache_result_queue: glyph_cache_result_queue,
             pending_external_image_update_list: ExternalImageUpdateList::new(),
+
+            blob_image_renderer: blob_image_renderer,
+            blob_image_requests: HashSet::new(),
         }
+    }
+
+    pub fn max_texture_size(&self) -> u32 {
+        self.texture_cache.max_texture_size()
     }
 
     pub fn add_font_template(&mut self, font_key: FontKey, template: FontTemplate) {
@@ -248,6 +260,12 @@ impl ResourceCache {
                               image_key: ImageKey,
                               descriptor: ImageDescriptor,
                               data: ImageData) {
+        if descriptor.width > self.max_texture_size() || descriptor.height > self.max_texture_size() {
+            // TODO: we need to support handle this case gracefully, cf. issue #620.
+            println!("Warning: texture size ({} {}) larger than the maximum size",
+                     descriptor.width, descriptor.height);
+        }
+
         let resource = ImageResource {
             descriptor: descriptor,
             data: data,
@@ -321,14 +339,38 @@ impl ResourceCache {
         webgl_texture.size = size;
     }
 
-    pub fn request_image(&mut self,
-                         key: ImageKey,
-                         rendering: ImageRendering) {
+    pub fn request_image(&mut self, key: ImageKey, rendering: ImageRendering) {
         debug_assert!(self.state == State::AddResources);
-        self.pending_image_requests.push(ImageRequest {
+        let request = ImageRequest {
             key: key,
             rendering: rendering,
-        });
+        };
+
+        let template = self.image_templates.get(&key).unwrap();
+        if let ImageData::Blob(ref data) = template.data {
+            if let Some(ref mut renderer) = self.blob_image_renderer {
+                let same_epoch = match self.cached_images.resources.get(&request) {
+                    Some(entry) => entry.epoch == template.epoch,
+                    None => false,
+                };
+
+                if !same_epoch && self.blob_image_requests.insert(request) {
+                    renderer.request_blob_image(
+                        key,
+                        data.clone(),
+                        &BlobImageDescriptor {
+                            width: template.descriptor.width,
+                            height: template.descriptor.height,
+                            format: template.descriptor.format,
+                            // TODO(nical): figure out the scale factor (should change with zoom).
+                            scale_factor: 1.0,
+                        },
+                    );
+                }
+            }
+        } else {
+            self.pending_image_requests.push(request);
+        }
     }
 
     pub fn request_glyphs(&mut self,
@@ -453,7 +495,7 @@ impl ResourceCache {
         let external_id = match image_template.data {
             ImageData::ExternalHandle(id) => Some(id),
             // raw and externalBuffer are all use resource_cache.
-            ImageData::Raw(..) | ImageData::ExternalBuffer(..) => None,
+            ImageData::Raw(..) | ImageData::ExternalBuffer(..) | ImageData::Blob(..) => None,
         };
 
         ImageProperties {
@@ -539,50 +581,84 @@ impl ResourceCache {
             }
         }
 
-        for request in self.pending_image_requests.drain(..) {
-            let cached_images = &mut self.cached_images;
-            let image_template = &self.image_templates[&request.key];
-            let image_data = image_template.data.clone();
+        let mut image_requests = mem::replace(&mut self.pending_image_requests, Vec::new());
+        for request in image_requests.drain(..) {
+            self.finalize_image_request(request, None);
+        }
 
-            match image_template.data {
-                ImageData::ExternalHandle(..) => {
-                    // external handle doesn't need to update the texture_cache.
+        let mut blob_image_requests = mem::replace(&mut self.blob_image_requests, HashSet::new());
+        if self.blob_image_renderer.is_some() {
+            for request in blob_image_requests.drain() {
+                match self.blob_image_renderer.as_mut().unwrap()
+                                                .resolve_blob_image(request.key) {
+                    Ok(image) => {
+                        self.finalize_image_request(request, Some(ImageData::new(image.data)));
+                    }
+                    // TODO(nical): I think that we should handle these somewhat gracefully,
+                    // at least in the out-of-memory scenario.
+                    Err(BlobImageError::Oom) => {
+                        // This one should be recoverable-ish.
+                        panic!("Failed to render a vector image (OOM)");
+                    }
+                    Err(BlobImageError::InvalidKey) => {
+                        panic!("Invalid vector image key");
+                    }
+                    Err(BlobImageError::InvalidData) => {
+                        // TODO(nical): If we run into this we should kill the content process.
+                        panic!("Invalid vector image data");
+                    }
+                    Err(BlobImageError::Other(msg)) => {
+                        panic!("Vector image error {}", msg);
+                    }
                 }
-                ImageData::Raw(..) | ImageData::ExternalBuffer(..) => {
-                    match cached_images.entry(request.clone(), self.current_frame_id) {
-                        Occupied(entry) => {
-                            let image_id = entry.get().texture_cache_id;
+            }
+        }
+    }
 
-                            if entry.get().epoch != image_template.epoch {
-                                self.texture_cache.update(image_id,
-                                                          image_template.descriptor,
-                                                          image_data);
+    fn finalize_image_request(&mut self, request: ImageRequest, image_data: Option<ImageData>) {
+        let image_template = &self.image_templates[&request.key];
+        let image_data = image_data.unwrap_or_else(||{
+            image_template.data.clone()
+        });
 
-                                // Update the cached epoch
-                                *entry.into_mut() = CachedImageInfo {
-                                    texture_cache_id: image_id,
-                                    epoch: image_template.epoch,
-                                };
-                            }
-                        }
-                        Vacant(entry) => {
-                            let image_id = self.texture_cache.new_item_id();
+        match image_template.data {
+            ImageData::ExternalHandle(..) => {
+                // external handle doesn't need to update the texture_cache.
+            }
+            ImageData::Raw(..) | ImageData::ExternalBuffer(..) | ImageData::Blob(..) => {
+                match self.cached_images.entry(request.clone(), self.current_frame_id) {
+                    Occupied(entry) => {
+                        let image_id = entry.get().texture_cache_id;
 
-                            let filter = match request.rendering {
-                                ImageRendering::Pixelated => TextureFilter::Nearest,
-                                ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
-                            };
-
-                            self.texture_cache.insert(image_id,
+                        if entry.get().epoch != image_template.epoch {
+                            self.texture_cache.update(image_id,
                                                       image_template.descriptor,
-                                                      filter,
                                                       image_data);
 
-                            entry.insert(CachedImageInfo {
+                            // Update the cached epoch
+                            *entry.into_mut() = CachedImageInfo {
                                 texture_cache_id: image_id,
                                 epoch: image_template.epoch,
-                            });
+                            };
                         }
+                    }
+                    Vacant(entry) => {
+                        let image_id = self.texture_cache.new_item_id();
+
+                        let filter = match request.rendering {
+                            ImageRendering::Pixelated => TextureFilter::Nearest,
+                            ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
+                        };
+
+                        self.texture_cache.insert(image_id,
+                                                  image_template.descriptor,
+                                                  filter,
+                                                  image_data);
+
+                        entry.insert(CachedImageInfo {
+                            texture_cache_id: image_id,
+                            epoch: image_template.epoch,
+                        });
                     }
                 }
             }

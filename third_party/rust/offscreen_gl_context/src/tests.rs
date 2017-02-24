@@ -23,12 +23,17 @@ extern {}
 #[link(name="GL")]
 extern {}
 
+#[cfg(not(target_os="android"))]
 static LOAD_GL: Once = ONCE_INIT;
 
+#[cfg(not(target_os="android"))]
 fn load_gl() {
     LOAD_GL.call_once(|| {
         gl::load_with(|s| GLContext::<NativeGLContext>::get_proc_address(s) as *const _);
     });
+}
+#[cfg(target_os="android")]
+fn load_gl() {
 }
 
 fn test_gl_context<T: NativeGLContextMethods>(context: &GLContext<T>) {

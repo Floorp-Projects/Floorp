@@ -3,7 +3,7 @@ use std::{mem, slice};
 use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
-use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
+use webrender_traits::{BorderSide, BorderStyle, BorderRadius, BorderWidths, BorderDetails, NormalBorder};
 use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
 use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
@@ -189,20 +189,10 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     println!("WebRender - OpenGL version new {}", version);
 
     let opts = RendererOptions {
-        device_pixel_ratio: 1.0,
-        resource_override_path: None,
         enable_aa: false,
-        enable_subpixel_aa: false,
         enable_profiler: enable_profiler,
-        enable_scrollbars: false,
-        precache_shaders: false,
-        renderer_kind: RendererKind::Native,
-        debug: false,
-        clear_framebuffer: true,
-        render_target_debug: false,
-        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
         recorder: recorder,
-        workers: None,
+        .. Default::default()
     };
 
     let (mut renderer, sender) = match Renderer::new(opts) {
@@ -605,7 +595,9 @@ pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: Pipelin
 pub extern fn wr_api_add_image(api: &mut RenderApi, descriptor: &WrImageDescriptor, bytes: * const u8, size: usize) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    return api.add_image(
+    let image_key = api.generate_image_key();
+    api.add_image(
+        image_key,
         ImageDescriptor {
             width: descriptor.width,
             height: descriptor.height,
@@ -615,6 +607,7 @@ pub extern fn wr_api_add_image(api: &mut RenderApi, descriptor: &WrImageDescript
         },
         ImageData::new(bytes)
     );
+    image_key
 }
 
 #[no_mangle]
@@ -690,14 +683,24 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 radius: WrBorderRadius) {
     assert!( unsafe { is_in_compositor_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let border_widths = BorderWidths {
+        left: left.width,
+        top: top.width,
+        right: right.width,
+        bottom: bottom.width
+    };
+    let border_details = BorderDetails::Normal(NormalBorder {
+        left: left.to_border_side(),
+        right: right.to_border_side(),
+        top: top.to_border_side(),
+        bottom: bottom.to_border_side(),
+        radius: radius.to_border_radius(),
+    });
     state.frame_builder.dl_builder.push_border(
                                     rect.to_rect(),
                                     clip_region,
-                                    left.to_border_side(),
-                                    top.to_border_side(),
-                                    right.to_border_side(),
-                                    bottom.to_border_side(),
-                                    radius.to_border_radius());
+                                    border_widths,
+                                    border_details);
 }
 
 #[no_mangle]
@@ -803,7 +806,7 @@ impl WrBorderSide
 {
     pub fn to_border_side(&self) -> BorderSide
     {
-        BorderSide { width: self.width, color: self.color.to_color(), style: self.style }
+        BorderSide { color: self.color.to_color(), style: self.style }
     }
 }
 
@@ -929,7 +932,9 @@ pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    return api.add_raw_font(font_vector);
+    let font_key = api.generate_font_key();
+    api.add_raw_font(font_key, font_vector);
+    font_key
 }
 
 #[no_mangle]

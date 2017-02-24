@@ -1,113 +1,11 @@
 use std::io::Read;
-use std::io::Error as IoError;
-use std::error::Error;
-use std::fmt;
-use std::convert::From;
 
 use byteorder::{BigEndian, ReadBytesExt};
-use num_traits;
 use serde_crate as serde;
 use serde_crate::de::value::ValueDeserializer;
-
+use serde_crate::de::Error as DeError;
 use ::SizeLimit;
-
-#[derive(Eq, PartialEq, Clone, Debug)]
-pub struct InvalidEncoding {
-    pub desc: &'static str,
-    pub detail: Option<String>,
-}
-
-impl fmt::Display for InvalidEncoding {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            InvalidEncoding { detail: None, desc } =>
-                write!(fmt, "{}", desc),
-            InvalidEncoding { detail: Some(ref detail), desc } =>
-                write!(fmt, "{} ({})", desc, detail)
-        }
-    }
-}
-
-/// An error that can be produced during decoding.
-///
-/// If decoding from a Buffer, assume that the buffer has been left
-/// in an invalid state.
-#[derive(Debug)]
-pub enum DeserializeError {
-    /// If the error stems from the reader that is being used
-    /// during decoding, that error will be stored and returned here.
-    IoError(IoError),
-    /// If the bytes in the reader are not decodable because of an invalid
-    /// encoding, this error will be returned.  This error is only possible
-    /// if a stream is corrupted.  A stream produced from `encode` or `encode_into`
-    /// should **never** produce an InvalidEncoding error.
-    InvalidEncoding(InvalidEncoding),
-    /// If decoding a message takes more than the provided size limit, this
-    /// error is returned.
-    SizeLimit,
-    Serde(serde::de::value::Error)
-}
-
-impl Error for DeserializeError {
-    fn description(&self) -> &str {
-        match *self {
-            DeserializeError::IoError(ref err) => Error::description(err),
-            DeserializeError::InvalidEncoding(ref ib) => ib.desc,
-            DeserializeError::SizeLimit => "the size limit for decoding has been reached",
-            DeserializeError::Serde(ref s) => s.description(),
-
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            DeserializeError::IoError(ref err) => err.cause(),
-            DeserializeError::InvalidEncoding(_) => None,
-            DeserializeError::SizeLimit => None,
-            DeserializeError::Serde(ref s) => s.cause(),
-        }
-    }
-}
-
-impl From<IoError> for DeserializeError {
-    fn from(err: IoError) -> DeserializeError {
-        DeserializeError::IoError(err)
-    }
-}
-
-impl From<serde::de::value::Error> for DeserializeError {
-    fn from(err: serde::de::value::Error) -> DeserializeError {
-        DeserializeError::Serde(err)
-    }
-}
-
-impl fmt::Display for DeserializeError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            DeserializeError::IoError(ref ioerr) =>
-                write!(fmt, "IoError: {}", ioerr),
-            DeserializeError::InvalidEncoding(ref ib) =>
-                write!(fmt, "InvalidEncoding: {}", ib),
-            DeserializeError::SizeLimit =>
-                write!(fmt, "SizeLimit"),
-            DeserializeError::Serde(ref s) =>
-                s.fmt(fmt),
-        }
-    }
-}
-
-impl serde::de::Error for DeserializeError {
-    fn custom<T: Into<String>>(desc: T) -> DeserializeError {
-        DeserializeError::Serde(serde::de::value::Error::Custom(desc.into()))
-    }
-
-    fn end_of_stream() -> DeserializeError {
-        DeserializeError::Serde(serde::de::value::Error::EndOfStream)
-    }
-}
-
-pub type DeserializeResult<T> = Result<T, DeserializeError>;
-
+use super::{Result, Error, ErrorKind};
 
 /// A Deserializer that reads bytes from a buffer.
 ///
@@ -119,14 +17,14 @@ pub type DeserializeResult<T> = Result<T, DeserializeError>;
 /// serde::Deserialize::deserialize(&mut deserializer);
 /// let bytes_read = d.bytes_read();
 /// ```
-pub struct Deserializer<'a, R: 'a> {
-    reader: &'a mut R,
+pub struct Deserializer<R> {
+    reader: R,
     size_limit: SizeLimit,
     read: u64
 }
 
-impl<'a, R: Read> Deserializer<'a, R> {
-    pub fn new(r: &'a mut R, size_limit: SizeLimit) -> Deserializer<'a, R> {
+impl<R: Read> Deserializer<R> {
+    pub fn new(r: R, size_limit: SizeLimit) -> Deserializer<R> {
         Deserializer {
             reader: r,
             size_limit: size_limit,
@@ -139,39 +37,39 @@ impl<'a, R: Read> Deserializer<'a, R> {
         self.read
     }
 
-    fn read_bytes(&mut self, count: u64) -> Result<(), DeserializeError> {
+    fn read_bytes(&mut self, count: u64) -> Result<()> {
         self.read += count;
         match self.size_limit {
             SizeLimit::Infinite => Ok(()),
             SizeLimit::Bounded(x) if self.read <= x => Ok(()),
-            SizeLimit::Bounded(_) => Err(DeserializeError::SizeLimit)
+            SizeLimit::Bounded(_) => Err(ErrorKind::SizeLimit.into())
         }
     }
 
-    fn read_type<T>(&mut self) -> Result<(), DeserializeError> {
+    fn read_type<T>(&mut self) -> Result<()> {
         use std::mem::size_of;
         self.read_bytes(size_of::<T>() as u64)
     }
 
-    fn read_string(&mut self) -> DeserializeResult<String> {
-        let len = try!(serde::Deserialize::deserialize(self));
+    fn read_string(&mut self) -> Result<String> {
+        let len = try!(serde::Deserialize::deserialize(&mut *self));
         try!(self.read_bytes(len));
 
         let mut buffer = Vec::new();
         try!(self.reader.by_ref().take(len as u64).read_to_end(&mut buffer));
 
         String::from_utf8(buffer).map_err(|err|
-            DeserializeError::InvalidEncoding(InvalidEncoding {
+            ErrorKind::InvalidEncoding{
                 desc: "error while decoding utf8 string",
                 detail: Some(format!("Deserialize error: {}", err))
-            }))
+            }.into())
     }
 }
 
 macro_rules! impl_nums {
     ($ty:ty, $dser_method:ident, $visitor_method:ident, $reader_method:ident) => {
         #[inline]
-        fn $dser_method<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+        fn $dser_method<V>(self, visitor: V) -> Result<V::Value>
             where V: serde::de::Visitor,
         {
             try!(self.read_type::<$ty>());
@@ -182,18 +80,18 @@ macro_rules! impl_nums {
 }
 
 
-impl<'a, R: Read> serde::Deserializer for Deserializer<'a, R> {
-    type Error = DeserializeError;
+impl<'a, R: Read> serde::Deserializer for &'a mut Deserializer<R> {
+    type Error = Error;
 
     #[inline]
-    fn deserialize<V>(&mut self, _visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize<V>(self, _visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         let message = "bincode does not support Deserializer::deserialize";
-        Err(DeserializeError::Serde(serde::de::value::Error::Custom(message.into())))
+        Err(Error::custom(message))
     }
 
-    fn deserialize_bool<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         let value: u8 = try!(serde::Deserialize::deserialize(self));
@@ -201,10 +99,10 @@ impl<'a, R: Read> serde::Deserializer for Deserializer<'a, R> {
             1 => visitor.visit_bool(true),
             0 => visitor.visit_bool(false),
             value => {
-                Err(DeserializeError::InvalidEncoding(InvalidEncoding {
+                Err(ErrorKind::InvalidEncoding{
                     desc: "invalid u8 when decoding bool",
                     detail: Some(format!("Expected 0 or 1, got {}", value))
-                }))
+                }.into())
             }
         }
     }
@@ -220,7 +118,7 @@ impl<'a, R: Read> serde::Deserializer for Deserializer<'a, R> {
 
 
     #[inline]
-    fn deserialize_u8<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         try!(self.read_type::<u8>());
@@ -228,52 +126,28 @@ impl<'a, R: Read> serde::Deserializer for Deserializer<'a, R> {
     }
 
     #[inline]
-    fn deserialize_usize<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
-        where V: serde::de::Visitor,
-    {
-        try!(self.read_type::<u64>());
-        let value = try!(self.reader.read_u64::<BigEndian>());
-        match num_traits::cast(value) {
-            Some(value) => visitor.visit_usize(value),
-            None => Err(DeserializeError::Serde(serde::de::value::Error::Custom("expected usize".into())))
-        }
-    }
-
-    #[inline]
-    fn deserialize_i8<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         try!(self.read_type::<i8>());
         visitor.visit_i8(try!(self.reader.read_i8()))
     }
 
-    #[inline]
-    fn deserialize_isize<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
-        where V: serde::de::Visitor,
-    {
-        try!(self.read_type::<i64>());
-        let value = try!(self.reader.read_i64::<BigEndian>());
-        match num_traits::cast(value) {
-            Some(value) => visitor.visit_isize(value),
-            None => Err(DeserializeError::Serde(serde::de::value::Error::Custom("expected isize".into()))),
-        }
-    }
-
-    fn deserialize_unit<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         visitor.visit_unit()
     }
 
-    fn deserialize_char<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_char<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         use std::str;
 
-        let error = DeserializeError::InvalidEncoding(InvalidEncoding {
+        let error = ErrorKind::InvalidEncoding{
             desc: "Invalid char encoding",
             detail: None
-        });
+        }.into();
 
         let mut buf = [0];
 
@@ -303,245 +177,235 @@ impl<'a, R: Read> serde::Deserializer for Deserializer<'a, R> {
         visitor.visit_char(res)
     }
 
-    fn deserialize_str<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_str<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         visitor.visit_str(&try!(self.read_string()))
     }
 
-    fn deserialize_string<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         visitor.visit_string(try!(self.read_string()))
     }
 
-    fn deserialize_bytes<V>(&mut self, visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         self.deserialize_seq(visitor)
     }
 
-    fn deserialize_enum<V>(&mut self,
-                     _enum: &'static str,
-                     _variants: &'static [&'static str],
-                     mut visitor: V) -> Result<V::Value, Self::Error>
-        where V: serde::de::EnumVisitor,
-    {
-        visitor.visit(self)
-    }
-
-    fn deserialize_tuple<V>(&mut self,
-                      _len: usize,
-                      mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        struct TupleVisitor<'a, 'b: 'a, R: Read + 'b>(&'a mut Deserializer<'b, R>);
+        self.deserialize_seq(visitor)
+    }
 
-        impl<'a, 'b: 'a, R: Read + 'b> serde::de::SeqVisitor for TupleVisitor<'a, 'b, R> {
-            type Error = DeserializeError;
+    fn deserialize_enum<V>(self,
+                     _enum: &'static str,
+                     _variants: &'static [&'static str],
+                     visitor: V) -> Result<V::Value>
+        where V: serde::de::Visitor,
+    {
+        impl<'a, R: Read + 'a> serde::de::EnumVisitor for &'a mut Deserializer<R> {
+            type Error = Error;
+            type Variant = Self;
 
-            fn visit<T>(&mut self) -> Result<Option<T>, Self::Error>
-                where T: serde::de::Deserialize,
+            fn visit_variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant)>
+                where V: serde::de::DeserializeSeed,
             {
-                let value = try!(serde::Deserialize::deserialize(self.0));
-                Ok(Some(value))
+                let idx: u32 = try!(serde::de::Deserialize::deserialize(&mut *self));
+                let val: Result<_> = seed.deserialize(idx.into_deserializer());
+                Ok((try!(val), self))
             }
+        }
 
-            fn end(&mut self) -> Result<(), Self::Error> {
-                Ok(())
+        visitor.visit_enum(self)
+    }
+    
+    fn deserialize_tuple<V>(self,
+                      _len: usize,
+                      visitor: V) -> Result<V::Value>
+        where V: serde::de::Visitor,
+    {
+        struct TupleVisitor<'a, R: Read + 'a>(&'a mut Deserializer<R>);
+
+        impl<'a, 'b: 'a, R: Read + 'b> serde::de::SeqVisitor for TupleVisitor<'a, R> {
+            type Error = Error;
+
+            fn visit_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+                where T: serde::de::DeserializeSeed,
+            {
+                let value = try!(serde::de::DeserializeSeed::deserialize(seed, &mut *self.0));
+                Ok(Some(value))
             }
         }
 
         visitor.visit_seq(TupleVisitor(self))
     }
 
-    fn deserialize_seq_fixed_size<V>(&mut self,
-                            _: usize,
-                            visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_seq_fixed_size<V>(self,
+                            len: usize,
+                            visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        self.deserialize_seq(visitor)
-    }
-
-    fn deserialize_option<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
-        where V: serde::de::Visitor,
-    {
-        let value: u8 = try!(serde::de::Deserialize::deserialize(self));
-        match value {
-            0 => visitor.visit_none(),
-            1 => visitor.visit_some(self),
-            _ => Err(DeserializeError::InvalidEncoding(InvalidEncoding {
-                desc: "invalid tag when decoding Option",
-                detail: Some(format!("Expected 0 or 1, got {}", value))
-            })),
-        }
-    }
-
-    fn deserialize_seq<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
-        where V: serde::de::Visitor,
-    {
-        struct SeqVisitor<'a, 'b: 'a, R: Read + 'b> {
-            deserializer: &'a mut Deserializer<'b, R>,
+        struct SeqVisitor<'a, R: Read + 'a> {
+            deserializer: &'a mut Deserializer<R>,
             len: usize,
         }
 
-        impl<'a, 'b: 'a, R: Read + 'b> serde::de::SeqVisitor for SeqVisitor<'a, 'b, R> {
-            type Error = DeserializeError;
+        impl<'a, 'b: 'a, R: Read + 'b> serde::de::SeqVisitor for SeqVisitor<'a, R> {
+            type Error = Error;
 
-            fn visit<T>(&mut self) -> Result<Option<T>, Self::Error>
-                where T: serde::de::Deserialize,
+            fn visit_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+                where T: serde::de::DeserializeSeed,
             {
                 if self.len > 0 {
                     self.len -= 1;
-                    let value = try!(serde::Deserialize::deserialize(self.deserializer));
+                    let value = try!(serde::de::DeserializeSeed::deserialize(seed, &mut *self.deserializer));
                     Ok(Some(value))
                 } else {
                     Ok(None)
                 }
             }
-
-            fn end(&mut self) -> Result<(), Self::Error> {
-                if self.len == 0 {
-                    Ok(())
-                } else {
-                    Err(DeserializeError::Serde(serde::de::value::Error::Custom("expected end".into())))
-                }
-            }
         }
-
-        let len = try!(serde::Deserialize::deserialize(self));
 
         visitor.visit_seq(SeqVisitor { deserializer: self, len: len })
     }
 
-    fn deserialize_map<V>(&mut self, mut visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
-        struct MapVisitor<'a, 'b: 'a, R: Read + 'b> {
-            deserializer: &'a mut Deserializer<'b, R>,
+        let value: u8 = try!(serde::de::Deserialize::deserialize(&mut *self));
+        match value {
+            0 => visitor.visit_none(),
+            1 => visitor.visit_some(&mut *self),
+            _ => Err(ErrorKind::InvalidEncoding{
+                desc: "invalid tag when decoding Option",
+                detail: Some(format!("Expected 0 or 1, got {}", value))
+            }.into()),
+        }
+    }
+
+    fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value>
+        where V: serde::de::Visitor,
+    {
+        let len = try!(serde::Deserialize::deserialize(&mut *self));
+
+        self.deserialize_seq_fixed_size(len, visitor)
+    }
+
+    fn deserialize_map<V>(self, visitor: V) -> Result<V::Value>
+        where V: serde::de::Visitor,
+    {
+        struct MapVisitor<'a, R: Read + 'a> {
+            deserializer: &'a mut Deserializer<R>,
             len: usize,
         }
 
-        impl<'a, 'b: 'a, R: Read + 'b> serde::de::MapVisitor for MapVisitor<'a, 'b, R> {
-            type Error = DeserializeError;
+        impl<'a, 'b: 'a, R: Read + 'b> serde::de::MapVisitor for MapVisitor<'a, R> {
+            type Error = Error;
 
-            fn visit_key<K>(&mut self) -> Result<Option<K>, Self::Error>
-                where K: serde::de::Deserialize,
+            fn visit_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
+                where K: serde::de::DeserializeSeed,
             {
                 if self.len > 0 {
                     self.len -= 1;
-                    let key = try!(serde::Deserialize::deserialize(self.deserializer));
+                    let key = try!(serde::de::DeserializeSeed::deserialize(seed, &mut *self.deserializer));
                     Ok(Some(key))
                 } else {
                     Ok(None)
                 }
             }
 
-            fn visit_value<V>(&mut self) -> Result<V, Self::Error>
-                where V: serde::de::Deserialize,
+            fn visit_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
+                where V: serde::de::DeserializeSeed,
             {
-                let value = try!(serde::Deserialize::deserialize(self.deserializer));
+                let value = try!(serde::de::DeserializeSeed::deserialize(seed, &mut *self.deserializer));
                 Ok(value)
-            }
-
-            fn end(&mut self) -> Result<(), Self::Error> {
-                if self.len == 0 {
-                    Ok(())
-                } else {
-                    Err(DeserializeError::Serde(serde::de::value::Error::Custom("expected end".into())))
-                }
             }
         }
 
-        let len = try!(serde::Deserialize::deserialize(self));
+        let len = try!(serde::Deserialize::deserialize(&mut *self));
 
         visitor.visit_map(MapVisitor { deserializer: self, len: len })
     }
 
-    fn deserialize_struct<V>(&mut self,
+    fn deserialize_struct<V>(self,
                        _name: &str,
                        fields: &'static [&'static str],
-                       visitor: V) -> DeserializeResult<V::Value>
+                       visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         self.deserialize_tuple(fields.len(), visitor)
     }
 
-    fn deserialize_struct_field<V>(&mut self,
-                                   _visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_struct_field<V>(self,
+                                   _visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         let message = "bincode does not support Deserializer::deserialize_struct_field";
-        Err(DeserializeError::Serde(serde::de::value::Error::Custom(message.into())))
+        Err(Error::custom(message))
     }
 
-    fn deserialize_newtype_struct<V>(&mut self,
+    fn deserialize_newtype_struct<V>(self,
                                _name: &str,
-                               mut visitor: V) -> DeserializeResult<V::Value>
+                               visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         visitor.visit_newtype_struct(self)
     }
 
-    fn deserialize_unit_struct<V>(&mut self,
+    fn deserialize_unit_struct<V>(self,
                                   _name: &'static str,
-                                  mut visitor: V) -> DeserializeResult<V::Value>
+                                  visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         visitor.visit_unit()
     }
 
-    fn deserialize_tuple_struct<V>(&mut self,
+    fn deserialize_tuple_struct<V>(self,
                                    _name: &'static str,
                                    len: usize,
-                                   visitor: V) -> DeserializeResult<V::Value>
+                                   visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         self.deserialize_tuple(len, visitor)
     }
 
-    fn deserialize_ignored_any<V>(&mut self,
-                                  _visitor: V) -> DeserializeResult<V::Value>
+    fn deserialize_ignored_any<V>(self,
+                                  _visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         let message = "bincode does not support Deserializer::deserialize_ignored_any";
-        Err(DeserializeError::Serde(serde::de::value::Error::Custom(message.into())))
+        Err(Error::custom(message))
     }
 }
 
-impl<'a, R: Read> serde::de::VariantVisitor for Deserializer<'a, R> {
-    type Error = DeserializeError;
+impl<'a, R: Read> serde::de::VariantVisitor for &'a mut Deserializer<R> {
+    type Error = Error;
 
-    fn visit_variant<V>(&mut self) -> Result<V, Self::Error>
-        where V: serde::Deserialize,
-    {
-        let index: u32 = try!(serde::Deserialize::deserialize(self));
-        let mut deserializer = (index as usize).into_deserializer();
-        let attempt: Result<V, serde::de::value::Error> = serde::Deserialize::deserialize(&mut deserializer);
-        Ok(try!(attempt))
-    }
-
-    fn visit_unit(&mut self) -> Result<(), Self::Error> {
+    fn visit_unit(self) -> Result<()> {
         Ok(())
     }
 
-    fn visit_newtype<T>(&mut self) -> Result<T, Self::Error>
-        where T: serde::de::Deserialize,
+    fn visit_newtype_seed<T>(self, seed: T) -> Result<T::Value>
+        where T: serde::de::DeserializeSeed,
     {
-        serde::de::Deserialize::deserialize(self)
+        serde::de::DeserializeSeed::deserialize(seed, self)
     }
 
-    fn visit_tuple<V>(&mut self,
+    fn visit_tuple<V>(self,
                       len: usize,
-                      visitor: V) -> Result<V::Value, Self::Error>
+                      visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         serde::de::Deserializer::deserialize_tuple(self, len, visitor)
     }
 
-    fn visit_struct<V>(&mut self,
+    fn visit_struct<V>(self,
                        fields: &'static [&'static str],
-                       visitor: V) -> Result<V::Value, Self::Error>
+                       visitor: V) -> Result<V::Value>
         where V: serde::de::Visitor,
     {
         serde::de::Deserializer::deserialize_tuple(self, fields.len(), visitor)
