@@ -58,7 +58,7 @@ public:
   int32_t StyleRuleCount() const { return mRules.Count(); }
   Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  typedef IncrementalClearCOMRuleArray::nsCOMArrayEnumFunc RuleEnumFunc;
+  typedef bool (*RuleEnumFunc)(Rule* aElement, void* aData);
   bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
