@@ -8,13 +8,15 @@ use cssparser::Parser;
 use cssparser::ToCss as ParserToCss;
 use env_logger::LogBuilder;
 use euclid::Size2D;
+use num_cpus;
 use parking_lot::RwLock;
+use rayon;
 use selectors::Element;
 use servo_url::ServoUrl;
 use std::borrow::Cow;
+use std::cmp;
 use std::env;
 use std::fmt::Write;
-use std::mem;
 use std::ptr;
 use std::sync::{Arc, Mutex};
 use style::arc_ptr_eq;
@@ -23,7 +25,7 @@ use style::context::{ThreadLocalStyleContext, ThreadLocalStyleContextCreationInf
 use style::data::{ElementData, ElementStyles, RestyleData};
 use style::dom::{ShowSubtreeData, TElement, TNode};
 use style::error_reporting::StdoutErrorReporter;
-use style::gecko::data::{NUM_THREADS, PerDocumentStyleData, PerDocumentStyleDataImpl};
+use style::gecko::data::{PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{SelectorImpl, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
@@ -90,6 +92,45 @@ use stylesheet_loader::StylesheetLoader;
  * depend on but good enough for our purposes.
  */
 
+struct GlobalStyleData {
+    // How many threads parallel styling can use.
+    pub num_threads: usize,
+
+    // The parallel styling thread pool.
+    pub style_thread_pool: Option<rayon::ThreadPool>,
+}
+
+impl GlobalStyleData {
+    pub fn new() -> Self {
+        let stylo_threads = env::var("STYLO_THREADS")
+            .map(|s| s.parse::<usize>().expect("invalid STYLO_THREADS value"));
+        let num_threads = match stylo_threads {
+            Ok(num) => num,
+            _ => cmp::max(num_cpus::get() * 3 / 4, 1),
+        };
+
+        let pool = if num_threads <= 1 {
+            None
+        } else {
+            let configuration =
+                rayon::Configuration::new().set_num_threads(num_threads);
+            let pool = rayon::ThreadPool::new(configuration).ok();
+            pool
+        };
+
+        GlobalStyleData {
+            num_threads: num_threads,
+            style_thread_pool: pool,
+        }
+    }
+}
+
+lazy_static! {
+    static ref GLOBAL_STYLE_DATA: GlobalStyleData = {
+        GlobalStyleData::new()
+    };
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_Initialize() -> () {
     // Initialize logging.
@@ -148,7 +189,7 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
         }
     }
 
-    let mut per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
+    let per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
 
     let token = RecalcStyleOnly::pre_traverse(element, &per_doc_data.stylist, unstyled_children_only);
     if !token.should_traverse() {
@@ -159,7 +200,9 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
     debug!("{:?}", ShowSubtreeData(element.as_node()));
 
     let shared_style_context = create_shared_context(&per_doc_data);
-    let traversal_driver = if per_doc_data.num_threads == 1 || per_doc_data.work_queue.is_none() {
+    let ref global_style_data = *GLOBAL_STYLE_DATA;
+
+    let traversal_driver = if global_style_data.style_thread_pool.is_none() {
         TraversalDriver::Sequential
     } else {
         TraversalDriver::Parallel
@@ -169,7 +212,7 @@ fn traverse_subtree(element: GeckoElement, raw_data: RawServoStyleSetBorrowed,
     let known_depth = None;
     if traversal_driver.is_parallel() {
         parallel::traverse_dom(&traversal, element, known_depth, token,
-                               per_doc_data.work_queue.as_mut().unwrap());
+                               global_style_data.style_thread_pool.as_ref().unwrap());
     } else {
         sequential::traverse_dom(&traversal, element, token);
     }
@@ -334,7 +377,7 @@ pub extern "C" fn Servo_AnimationValues_Populate(anim: RawGeckoAnimationValueLis
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleWorkerThreadCount() -> u32 {
-    *NUM_THREADS as u32
+    GLOBAL_STYLE_DATA.num_threads as u32
 }
 
 #[no_mangle]
@@ -351,12 +394,10 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> RawServoStyl
         SheetParsingMode::eUserSheetFeatures => Origin::User,
         SheetParsingMode::eAgentSheetFeatures => Origin::UserAgent,
     };
-    let sheet = Arc::new(Stylesheet::from_str(
+    Arc::new(Stylesheet::from_str(
         "", url, origin, Default::default(), None,
-        Box::new(StdoutErrorReporter), extra_data));
-    unsafe {
-        mem::transmute(sheet)
-    }
+        Box::new(StdoutErrorReporter), extra_data)
+    ).into_strong()
 }
 
 #[no_mangle]
@@ -396,12 +437,10 @@ pub extern "C" fn Servo_StyleSheet_FromUTF8Bytes(loader: *mut Loader,
         Some(ref s) => Some(s),
     };
 
-    let sheet = Arc::new(Stylesheet::from_str(
+    Arc::new(Stylesheet::from_str(
         input, url, origin, Default::default(), loader,
-        Box::new(StdoutErrorReporter), extra_data));
-    unsafe {
-        mem::transmute(sheet)
-    }
+        Box::new(StdoutErrorReporter), extra_data)
+    ).into_strong()
 }
 
 #[no_mangle]
@@ -1260,7 +1299,7 @@ pub extern "C" fn Servo_ImportRule_GetSheet(import_rule:
                                             RawServoImportRuleBorrowed)
                                             -> RawServoStyleSheetStrong {
     let import_rule = RwLock::<ImportRule>::as_arc(&import_rule);
-    unsafe { mem::transmute(import_rule.read().stylesheet.clone()) }
+    import_rule.read().stylesheet.clone().into_strong()
 }
 
 #[no_mangle]

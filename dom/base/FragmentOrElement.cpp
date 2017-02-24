@@ -626,6 +626,12 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, 
       mCustomElementData->mCallbackQueue[i]->Traverse(cb);
     }
   }
+
+  for (auto iter = mRegisteredIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
+    DOMIntersectionObserver* observer = iter.Key();
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mRegisteredIntersectionObservers[i]");
+    cb.NoteXPCOMChild(observer);
+  }
 }
 
 void

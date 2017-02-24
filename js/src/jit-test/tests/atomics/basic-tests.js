@@ -212,8 +212,10 @@ function testRangeCAS(a) {
     assertErrorMessage(() => Atomics.compareExchange(a, -1, 0, 1), RangeError, msg);
     assertEq(a[0], 0);
 
-    assertErrorMessage(() => Atomics.compareExchange(a, "hi", 0, 1), RangeError, msg);
-    assertEq(a[0], 0);
+    // Converted to 0
+    assertEq(Atomics.compareExchange(a, "hi", 0, 33), 0);
+    assertEq(a[0], 33);
+    a[0] = 0;
 
     assertErrorMessage(() => Atomics.compareExchange(a, a.length + 5, 0, 1), RangeError, msg);
     assertEq(a[0], 0);

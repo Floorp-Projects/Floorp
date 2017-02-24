@@ -127,14 +127,12 @@ namespace mozilla {
 //
 
 
-CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
-                                       CORSMode aCORSMode,
+CSSStyleSheetInner::CSSStyleSheetInner(CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
                                        const SRIMetadata& aIntegrity)
   : StyleSheetInfo(aCORSMode, aReferrerPolicy, aIntegrity)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  mSheets.AppendElement(aPrimarySheet);
 }
 
 static bool SetStyleSheetReference(css::Rule* aRule, void* aSheet)
@@ -218,8 +216,8 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     // double-counting the inner.  We use last instead of first since the first
     // sheet may be held in the nsXULPrototypeCache and not used in a window at
     // all.
-    if (s->mInner->mSheets.LastElement() == s) {
-      n += s->mInner->SizeOfIncludingThis(aMallocSizeOf);
+    if (mInner->mSheets.LastElement() == s) {
+      n += Inner()->SizeOfIncludingThis(aMallocSizeOf);
     }
 
     // Measurement of the following members may be added later if DMD finds it
@@ -237,10 +235,9 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
                                        CSSStyleSheet* aPrimarySheet)
-  : StyleSheetInfo(aCopy)
+  : StyleSheetInfo(aCopy, aPrimarySheet)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  AddSheet(aPrimarySheet);
   aCopy.mOrderedRules.EnumerateForwards(css::GroupRule::CloneRuleInto, &mOrderedRules);
   mOrderedRules.EnumerateForwards(SetStyleSheetReference, aPrimarySheet);
 
@@ -263,30 +260,17 @@ CSSStyleSheetInner::CloneFor(CSSStyleSheet* aPrimarySheet)
 }
 
 void
-CSSStyleSheetInner::AddSheet(CSSStyleSheet* aSheet)
+CSSStyleSheetInner::RemoveSheet(StyleSheet* aSheet)
 {
-  mSheets.AppendElement(aSheet);
-}
+  if ((aSheet == mSheets.ElementAt(0)) && (mSheets.Length() > 1)) {
+    mOrderedRules.EnumerateForwards(SetStyleSheetReference, mSheets[1]);
 
-void
-CSSStyleSheetInner::RemoveSheet(CSSStyleSheet* aSheet)
-{
-  if (1 == mSheets.Length()) {
-    NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
-    delete this;
-    return;
+    ChildSheetListBuilder::ReparentChildList(mSheets[1], mFirstChild);
   }
-  if (aSheet == mSheets.ElementAt(0)) {
-    mSheets.RemoveElementAt(0);
-    NS_ASSERTION(mSheets.Length(), "no parents");
-    mOrderedRules.EnumerateForwards(SetStyleSheetReference,
-                                    mSheets.ElementAt(0));
 
-    ChildSheetListBuilder::ReparentChildList(mSheets[0], mFirstChild);
-  }
-  else {
-    mSheets.RemoveElement(aSheet);
-  }
+  // Don't do anything after this call, because superclass implementation
+  // may delete this.
+  StyleSheetInfo::RemoveSheet(aSheet);
 }
 
 static void
@@ -373,8 +357,9 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  mInner = new CSSStyleSheetInner(this, aCORSMode, aReferrerPolicy,
+  mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
                                   SRIMetadata());
+  mInner->AddSheet(this);
 }
 
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
@@ -388,8 +373,9 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
-  mInner = new CSSStyleSheetInner(this, aCORSMode, aReferrerPolicy,
+  mInner = new CSSStyleSheetInner(aCORSMode, aReferrerPolicy,
                                   aIntegrity);
+  mInner->AddSheet(this);
 }
 
 CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
@@ -402,12 +388,12 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mDirty(aCopy.mDirty),
     mInRuleProcessorCache(false),
     mScopeElement(nullptr),
-    mInner(aCopy.mInner),
     mRuleProcessors(nullptr)
 {
-  mParent = aParentToUse;
+  MOZ_ASSERT(mInner, "We should have an mInner after copy.");
+  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
 
-  mInner->AddSheet(this);
+  mParent = aParentToUse;
 
   if (mDirty) { // CSSOM's been there, force full copy now
     NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
@@ -421,7 +407,6 @@ CSSStyleSheet::~CSSStyleSheet()
   UnparentChildren();
 
   DropRuleCollection();
-  mInner->RemoveSheet(this);
   // XXX The document reference is not reference counted and should
   // not be released. The document will let us know when it is going
   // away.
@@ -452,30 +437,10 @@ CSSStyleSheet::UnlinkInner()
     return;
   }
 
-  mInner->mOrderedRules.EnumerateForwards(SetStyleSheetReference, nullptr);
-  mInner->mOrderedRules.Clear();
+  Inner()->mOrderedRules.EnumerateForwards(SetStyleSheetReference, nullptr);
+  Inner()->mOrderedRules.Clear();
 
-  // Have to be a bit careful with child sheets, because we want to
-  // drop their mNext pointers and null out their mParent and
-  // mDocument, but don't want to work with deleted objects.  And we
-  // don't want to do any addrefing in the process, just to make sure
-  // we don't confuse the cycle collector (though on the face of it,
-  // addref/release pairs during unlink should probably be ok).
-  RefPtr<StyleSheet> child;
-  child.swap(SheetInfo().mFirstChild);
-  while (child) {
-    MOZ_ASSERT(child->mParent == this, "We have a unique inner!");
-    child->mParent = nullptr;
-    child->mDocument = nullptr;
-
-    RefPtr<StyleSheet> next;
-    // Null out child->mNext, but don't let it die yet
-    next.swap(child->mNext);
-    // Switch to looking at the old value of child->mNext next iteration
-    child.swap(next);
-    // "next" is now our previous value of child; it'll get released
-    // as we loop around.
-  }
+  StyleSheet::UnlinkInner();
 }
 
 void
@@ -487,20 +452,15 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
     return;
   }
 
-  StyleSheet* childSheet = GetFirstChild();
-  while (childSheet) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
-    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
-    childSheet = childSheet->mNext;
-  }
-
-  const nsCOMArray<css::Rule>& rules = mInner->mOrderedRules;
+  const nsCOMArray<css::Rule>& rules = Inner()->mOrderedRules;
   for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
     if (!rules[i]->IsCCLeaf()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOrderedRules[i]");
       cb.NoteXPCOMChild(rules[i]);
     }
   }
+
+  StyleSheet::TraverseInner(cb);
 }
 
 // QueryInterface implementation for CSSStyleSheet
@@ -523,7 +483,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleSheet)
   // of child sheets and null out the back-references to it, if we got
   // unlinked before it does.
   tmp->DropRuleCollection();
-  tmp->UnlinkInner();
   tmp->mScopeElement = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(StyleSheet)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleSheet, StyleSheet)
@@ -531,7 +490,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSStyleSheet, StyleSheet)
   // comments in Unlink for why.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
-  tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 nsresult
@@ -630,7 +588,7 @@ CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
   NS_PRECONDITION(nullptr != aRule, "null arg");
 
   WillDirty();
-  mInner->mOrderedRules.AppendObject(aRule);
+  Inner()->mOrderedRules.AppendObject(aRule);
   aRule->SetStyleSheet(this);
   DidDirty();
 
@@ -647,7 +605,7 @@ CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 int32_t
 CSSStyleSheet::StyleRuleCount() const
 {
-  return mInner->mOrderedRules.Count();
+  return Inner()->mOrderedRules.Count();
 }
 
 css::Rule*
@@ -655,7 +613,7 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
 {
   // Important: If this function is ever made scriptable, we must add
   // a security check here. See GetCssRules below for an example.
-  return mInner->mOrderedRules.SafeObjectAt(aIndex);
+  return Inner()->mOrderedRules.SafeObjectAt(aIndex);
 }
 
 void
@@ -669,7 +627,7 @@ CSSStyleSheet::EnsureUniqueInner()
     // already unique
     return;
   }
-  CSSStyleSheetInner* clone = mInner->CloneFor(this);
+  CSSStyleSheetInner* clone = Inner()->CloneFor(this);
   MOZ_ASSERT(clone);
   mInner->RemoveSheet(this);
   mInner = clone;
@@ -695,17 +653,17 @@ CSSStyleSheet::AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray)
   }
 }
 
-already_AddRefed<CSSStyleSheet>
-CSSStyleSheet::Clone(CSSStyleSheet* aCloneParent,
+already_AddRefed<StyleSheet>
+CSSStyleSheet::Clone(StyleSheet* aCloneParent,
                      css::ImportRule* aCloneOwnerRule,
                      nsIDocument* aCloneDocument,
                      nsINode* aCloneOwningNode) const
 {
-  RefPtr<CSSStyleSheet> clone = new CSSStyleSheet(*this,
-                                                    aCloneParent,
-                                                    aCloneOwnerRule,
-                                                    aCloneDocument,
-                                                    aCloneOwningNode);
+  RefPtr<StyleSheet> clone = new CSSStyleSheet(*this,
+    static_cast<CSSStyleSheet*>(aCloneParent),
+    aCloneOwnerRule,
+    aCloneDocument,
+    aCloneOwningNode);
   return clone.forget();
 }
 
@@ -724,7 +682,7 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
   StyleSheet::List(out, aIndent);
 
   fprintf_stderr(out, "%s", "Rules in source order:\n");
-  ListRules(mInner->mOrderedRules, out, aIndent);
+  ListRules(Inner()->mOrderedRules, out, aIndent);
 }
 #endif
 
@@ -780,12 +738,12 @@ CSSStyleSheet::DidDirty()
 nsresult
 CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
 {
-  if (!mInner->mNameSpaceMap) {
-    nsresult rv = mInner->CreateNamespaceMap();
+  if (!Inner()->mNameSpaceMap) {
+    nsresult rv = Inner()->CreateNamespaceMap();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  AddNamespaceRuleToMap(aRule, mInner->mNameSpaceMap);
+  AddNamespaceRuleToMap(aRule, Inner()->mNameSpaceMap);
   return NS_OK;
 }
 
@@ -823,13 +781,13 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   MOZ_ASSERT(mInner->mComplete);
 
   WillDirty();
-  
-  if (aIndex > uint32_t(mInner->mOrderedRules.Count())) {
+
+  if (aIndex > uint32_t(Inner()->mOrderedRules.Count())) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return 0;
   }
-  
-  NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
+
+  NS_ASSERTION(uint32_t(Inner()->mOrderedRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
   // Hold strong ref to the CSSLoader in case the document update
@@ -855,7 +813,7 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   int32_t newType = rule->GetType();
 
   // check that we're not inserting before a charset rule
-  css::Rule* nextRule = mInner->mOrderedRules.SafeObjectAt(aIndex);
+  css::Rule* nextRule = Inner()->mOrderedRules.SafeObjectAt(aIndex);
   if (nextRule) {
     int32_t nextType = nextRule->GetType();
     if (nextType == css::Rule::CHARSET_RULE) {
@@ -886,7 +844,7 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
       return 0;
     }
 
-    css::Rule* prevRule = mInner->mOrderedRules.SafeObjectAt(aIndex - 1);
+    css::Rule* prevRule = Inner()->mOrderedRules.SafeObjectAt(aIndex - 1);
     int32_t prevType = prevRule->GetType();
 
     if (newType == css::Rule::IMPORT_RULE &&
@@ -905,7 +863,7 @@ CSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     }
   }
 
-  if (!mInner->mOrderedRules.InsertObjectAt(rule, aIndex)) {
+  if (!Inner()->mOrderedRules.InsertObjectAt(rule, aIndex)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return 0;
   }
@@ -940,21 +898,21 @@ CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
   // XXX TBI: handle @rule types
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
-    
+
   WillDirty();
 
-  if (aIndex >= uint32_t(mInner->mOrderedRules.Count())) {
+  if (aIndex >= uint32_t(Inner()->mOrderedRules.Count())) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
-  NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
+  NS_ASSERTION(uint32_t(Inner()->mOrderedRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
   // Hold a strong ref to the rule so it doesn't die when we RemoveObjectAt
-  RefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
+  RefPtr<css::Rule> rule = Inner()->mOrderedRules.ObjectAt(aIndex);
   if (rule) {
-    mInner->mOrderedRules.RemoveObjectAt(aIndex);
+    Inner()->mOrderedRules.RemoveObjectAt(aIndex);
     rule->SetStyleSheet(nullptr);
     DidDirty();
 
@@ -1114,9 +1072,9 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   // detach existing rules (including child sheets via import rules)
   css::LoaderReusableStyleSheets reusableSheets;
   int ruleCount;
-  while ((ruleCount = mInner->mOrderedRules.Count()) != 0) {
-    RefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(ruleCount - 1);
-    mInner->mOrderedRules.RemoveObjectAt(ruleCount - 1);
+  while ((ruleCount = Inner()->mOrderedRules.Count()) != 0) {
+    RefPtr<css::Rule> rule = Inner()->mOrderedRules.ObjectAt(ruleCount - 1);
+    Inner()->mOrderedRules.RemoveObjectAt(ruleCount - 1);
     rule->SetStyleSheet(nullptr);
     if (rule->GetType() == css::Rule::IMPORT_RULE) {
       nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(rule));
@@ -1145,7 +1103,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     child = next;
   }
   SheetInfo().mFirstChild = nullptr;
-  mInner->mNameSpaceMap = nullptr;
+  Inner()->mNameSpaceMap = nullptr;
 
   uint32_t lineNumber = 1;
   if (mOwningNode) {
@@ -1163,8 +1121,8 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
 
   // notify document of all new rules
   if (mDocument) {
-    for (int32_t index = 0; index < mInner->mOrderedRules.Count(); ++index) {
-      RefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(index);
+    for (int32_t index = 0; index < Inner()->mOrderedRules.Count(); ++index) {
+      RefPtr<css::Rule> rule = Inner()->mOrderedRules.ObjectAt(index);
       if (rule->GetType() == css::Rule::IMPORT_RULE &&
           RuleHasPendingChildSheet(rule)) {
         continue; // notify when loaded (see StyleSheetLoaded)

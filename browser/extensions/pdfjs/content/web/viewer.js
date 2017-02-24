@@ -321,8 +321,11 @@ function getVisibleElements(scrollEl, views, sortByVisibility) {
 function noContextMenuHandler(e) {
  e.preventDefault();
 }
-function getPDFFileNameFromURL(url) {
- var reURI = /^(?:([^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
+function getPDFFileNameFromURL(url, defaultFilename) {
+ if (typeof defaultFilename === 'undefined') {
+  defaultFilename = 'document.pdf';
+ }
+ var reURI = /^(?:(?:[^:]+:)?\/\/[^\/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
  var reFilename = /[^\/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
  var splitURI = reURI.exec(url);
  var suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
@@ -335,7 +338,7 @@ function getPDFFileNameFromURL(url) {
    }
   }
  }
- return suggestedFilename || 'document.pdf';
+ return suggestedFilename || defaultFilename;
 }
 function normalizeWheelEventDelta(evt) {
  var delta = Math.sqrt(evt.deltaX * evt.deltaX + evt.deltaY * evt.deltaY);
@@ -1148,11 +1151,15 @@ var PDFViewerApplication = {
  setTitleUsingUrl: function pdfViewSetTitleUsingUrl(url) {
   this.url = url;
   this.baseUrl = url.split('#')[0];
-  try {
-   this.setTitle(decodeURIComponent(pdfjsLib.getFilenameFromUrl(url)) || url);
-  } catch (e) {
-   this.setTitle(url);
+  var title = getPDFFileNameFromURL(url, '');
+  if (!title) {
+   try {
+    title = decodeURIComponent(pdfjsLib.getFilenameFromUrl(url)) || url;
+   } catch (e) {
+    title = url;
+   }
   }
+  this.setTitle(title);
  },
  setTitle: function pdfViewSetTitle(title) {
   if (this.isViewerEmbedded) {
@@ -1251,7 +1258,7 @@ var PDFViewerApplication = {
    downloadManager.downloadUrl(url, filename);
   }
   var url = this.baseUrl;
-  var filename = getPDFFileNameFromURL(url);
+  var filename = getPDFFileNameFromURL(this.url);
   var downloadManager = this.downloadManager;
   downloadManager.onerror = function (err) {
    PDFViewerApplication.error('PDF failed to download.');
@@ -3896,6 +3903,18 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
    });
    this._renderedCapability.resolve();
   },
+  _bindPdfLink: function PDFAttachmentViewer_bindPdfLink(button, content, filename) {
+   var blobUrl;
+   button.onclick = function () {
+    if (!blobUrl) {
+     blobUrl = pdfjsLib.createObjectURL(content, 'application/pdf', pdfjsLib.PDFJS.disableCreateObjectURL);
+    }
+    var viewerUrl;
+    viewerUrl = blobUrl + '?' + encodeURIComponent(filename);
+    window.open(viewerUrl);
+    return false;
+   };
+  },
   _bindLink: function PDFAttachmentViewer_bindLink(button, content, filename) {
    button.onclick = function downloadFile(e) {
     this.downloadManager.downloadData(content, filename, '');
@@ -3922,11 +3941,16 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
    for (var i = 0; i < attachmentsCount; i++) {
     var item = attachments[names[i]];
     var filename = pdfjsLib.getFilenameFromUrl(item.filename);
+    filename = pdfjsLib.removeNullCharacters(filename);
     var div = document.createElement('div');
     div.className = 'attachmentsItem';
     var button = document.createElement('button');
-    this._bindLink(button, item.content, filename);
-    button.textContent = pdfjsLib.removeNullCharacters(filename);
+    button.textContent = filename;
+    if (/\.pdf$/i.test(filename)) {
+     this._bindPdfLink(button, item.content, filename);
+    } else {
+     this._bindLink(button, item.content, filename);
+    }
     div.appendChild(button);
     this.container.appendChild(div);
    }

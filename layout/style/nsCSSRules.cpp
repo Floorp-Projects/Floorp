@@ -268,9 +268,9 @@ ImportRule::ImportRule(const ImportRule& aCopy)
   // property of that @import rule, since it is null only if the target
   // sheet failed security checks.
   if (aCopy.mChildSheet) {
-    RefPtr<CSSStyleSheet> sheet =
+    RefPtr<StyleSheet> sheet =
       aCopy.mChildSheet->Clone(nullptr, this, nullptr, nullptr);
-    SetSheet(sheet);
+    SetSheet(static_cast<CSSStyleSheet*>(sheet.get()));
     // SetSheet sets mMedia appropriately
   } else {
     // We better just copy mMedia from aCopy, since we have nowhere else to get

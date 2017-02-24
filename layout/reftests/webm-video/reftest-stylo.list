@@ -40,16 +40,16 @@ random-if(winWidget) random-if(cocoaWidget) skip-if(Android) == bug686957.html b
 # reftest directory. They live here because they use WebM video (VP9), and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on any
 # particular (non-spec-mandated) video codec.
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true) test-pref(gfx.ycbcr.accurate-conversion,true)
+default-preferences pref(layout.css.object-fit-and-position.enabled,true) pref(gfx.ycbcr.accurate-conversion,true)
 fails == object-fit-contain-webm-001.html object-fit-contain-webm-001.html
 fails == object-fit-contain-webm-002.html object-fit-contain-webm-002.html
 fails == object-fit-cover-webm-001.html object-fit-cover-webm-001.html
 fails == object-fit-cover-webm-002.html object-fit-cover-webm-002.html
 fails == object-fit-fill-webm-001.html object-fit-fill-webm-001.html
 fails == object-fit-fill-webm-002.html object-fit-fill-webm-002.html
-fails == object-fit-none-webm-001.html object-fit-none-webm-001.html
-fails == object-fit-none-webm-002.html object-fit-none-webm-002.html
-fails == object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001.html
-fails == object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002.html
-fails == object-position-webm-001.html object-position-webm-001.html
-fails == object-position-webm-002.html object-position-webm-002.html
+== object-fit-none-webm-001.html object-fit-none-webm-001.html
+== object-fit-none-webm-002.html object-fit-none-webm-002.html
+== object-fit-scale-down-webm-001.html object-fit-scale-down-webm-001.html
+== object-fit-scale-down-webm-002.html object-fit-scale-down-webm-002.html
+== object-position-webm-001.html object-position-webm-001.html
+== object-position-webm-002.html object-position-webm-002.html

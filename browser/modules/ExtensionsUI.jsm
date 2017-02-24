@@ -25,13 +25,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
 const DEFAULT_EXTENSION_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
-const BRAND_PROPERTIES = "chrome://browser/locale/brand.properties";
+const BRAND_PROPERTIES = "chrome://branding/locale/brand.properties";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 this.ExtensionsUI = {
   sideloaded: new Set(),
   updates: new Set(),
+  sideloadListener: null,
 
   init() {
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
@@ -53,6 +54,25 @@ this.ExtensionsUI = {
       }
 
       if (WEBEXT_PERMISSION_PROMPTS) {
+        if (!this.sideloadListener) {
+          this.sideloadListener = {
+            onEnabled: addon => {
+              if (!this.sideloaded.has(addon)) {
+                return;
+              }
+
+              this.sideloaded.delete(addon);
+              this.emit("change");
+
+              if (this.sideloaded.size == 0) {
+                AddonManager.removeAddonListener(this.sideloadListener);
+                this.sideloadListener = null;
+              }
+            },
+          };
+          AddonManager.addAddonListener(this.sideloadListener);
+        }
+
         for (let addon of sideloaded) {
           this.sideloaded.add(addon);
         }
@@ -120,22 +140,14 @@ this.ExtensionsUI = {
         progressNotification.remove();
       }
 
-      let reply = answer => {
+      let strings = this._buildStrings(info);
+      this.showPermissionsPrompt(target, strings, info.icon).then(answer => {
         if (answer) {
           info.resolve();
         } else {
           info.reject();
         }
-      };
-
-      let perms = info.addon.userPermissions;
-      if (!perms) {
-        reply(true);
-      } else {
-        info.permissions = perms;
-        let strings = this._buildStrings(info);
-        this.showPermissionsPrompt(target, strings, info.icon).then(reply);
-      }
+      });
     } else if (topic == "webextension-update-permissions") {
       let info = subject.wrappedJSObject;
       info.type = "update";

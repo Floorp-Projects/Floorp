@@ -38,8 +38,10 @@ ANRReporter::RequestNativeStack(bool aUnwind)
     const char *NATIVE_STACK_THREADS[] =
         {"GeckoMain", "Compositor"};
     // Buffer one sample and let the profiler wait a long time
-    profiler_start(100, 10000, features, features_size / sizeof(char*),
-        NATIVE_STACK_THREADS, sizeof(NATIVE_STACK_THREADS) / sizeof(char*));
+    profiler_start(/* entries */ 100, /* interval */ 10000,
+                   features, features_size / sizeof(char*),
+                   NATIVE_STACK_THREADS,
+                   sizeof(NATIVE_STACK_THREADS) / sizeof(char*));
     return true;
 }
 

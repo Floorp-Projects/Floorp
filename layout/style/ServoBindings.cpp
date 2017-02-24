@@ -1239,6 +1239,46 @@ Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
   aCSSValue->SetArrayValue(arr, eCSSUnit_Function);
 }
 
+void
+Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const nsString aString)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  aCSSValue->SetStringValue(aString, eCSSUnit_String);
+}
+
+void
+Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut aCSSValue, int32_t aLength)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  RefPtr<nsCSSValue::Array> array
+    = nsCSSValue::Array::Create(aLength);
+  aCSSValue->SetArrayValue(array, eCSSUnit_Array);
+}
+
+void
+Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut aCSSValue,
+                      ServoBundledURI aURI)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  RefPtr<css::URLValue> url = aURI.IntoCssUrl();
+  aCSSValue->SetURLValue(url.get());
+}
+
+void
+Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut aCSSValue, const nsString aFamily)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  aCSSValue->SetStringValue(aFamily, eCSSUnit_Local_Font);
+}
+
+void
+Gecko_CSSValue_SetInteger(nsCSSValueBorrowedMut aCSSValue, int32_t aInteger)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null ||
+    aCSSValue->GetUnit() == eCSSUnit_Integer);
+  aCSSValue->SetIntValue(aInteger, eCSSUnit_Integer);
+}
+
 nsCSSValueBorrowedMut
 Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut aCSSValue, int32_t aIndex)
 {

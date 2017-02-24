@@ -75,8 +75,7 @@ function* testHarnessSteps() {
       "set": [
         ["dom.indexedDB.testing", true],
         ["dom.indexedDB.experimental", true],
-        ["dom.archivereader.enabled", true],
-        ["javascript.options.wasm", true]
+        ["dom.archivereader.enabled", true]
       ]
     },
     nextTestHarnessStep

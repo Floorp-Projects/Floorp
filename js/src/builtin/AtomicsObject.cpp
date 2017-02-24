@@ -84,8 +84,8 @@ ReportBadArrayType(JSContext* cx)
 static bool
 ReportOutOfRange(JSContext* cx)
 {
-    // Use JSMSG_BAD_INDEX here even if it is generic, since that is
-    // the message used by NonStandardToIndex for its initial range checking.
+    // Use JSMSG_BAD_INDEX here, it is what ToIndex uses for some cases that it
+    // reports directly.
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
     return false;
 }
@@ -115,7 +115,7 @@ static bool
 GetTypedArrayIndex(JSContext* cx, HandleValue v, Handle<TypedArrayObject*> view, uint32_t* offset)
 {
     uint64_t index;
-    if (!NonStandardToIndex(cx, v, &index))
+    if (!ToIndex(cx, v, &index))
         return false;
     if (index >= view->length())
         return ReportOutOfRange(cx);

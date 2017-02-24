@@ -19,7 +19,7 @@ fails == flexbox-align-self-baseline-horiz-2.xhtml flexbox-align-self-baseline-h
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref
 fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) == flexbox-align-self-baseline-horiz-3.xhtml flexbox-align-self-baseline-horiz-3.xhtml
-fails == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4.xhtml
+== flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4.xhtml
 
 # Tests for box-sizing on flex containers and flex items.
 fails == flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1.html

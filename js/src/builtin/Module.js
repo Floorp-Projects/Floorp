@@ -65,12 +65,12 @@ function ModuleGetExportedNames(exportStarSet = [])
     return exportedNames;
 }
 
-// 15.2.1.16.3 ResolveExport(exportName, resolveSet, exportStarSet)
-function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
+// 15.2.1.16.3 ResolveExport(exportName, resolveSet)
+function ModuleResolveExport(exportName, resolveSet = [])
 {
     if (!IsObject(this) || !IsModule(this)) {
         return callFunction(CallModuleMethodIfWrapped, this, exportName, resolveSet,
-                            exportStarSet, "ModuleResolveExport");
+                            "ModuleResolveExport");
     }
 
     // Step 1
@@ -100,38 +100,29 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
         let e = indirectExportEntries[i];
         if (exportName === e.exportName) {
             let importedModule = CallModuleResolveHook(module, e.moduleRequest,
-                                                       MODULE_STATE_INSTANTIATED);
-            let indirectResolution = callFunction(importedModule.resolveExport, importedModule,
-                                                  e.importName, resolveSet, exportStarSet);
-            if (indirectResolution !== null)
-                return indirectResolution;
+                                                       MODULE_STATE_PARSED);
+            return callFunction(importedModule.resolveExport, importedModule, e.importName,
+                                resolveSet);
         }
     }
 
     // Step 6
     if (exportName === "default") {
         // A default export cannot be provided by an export *.
-        ThrowSyntaxError(JSMSG_BAD_DEFAULT_EXPORT);
+        return null;
     }
 
     // Step 7
-    if (callFunction(ArrayIncludes, exportStarSet, module))
-        return null;
-
-    // Step 8
-    _DefineDataProperty(exportStarSet, exportStarSet.length, module);
-
-    // Step 9
     let starResolution = null;
 
-    // Step 10
+    // Step 8
     let starExportEntries = module.starExportEntries;
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
         let importedModule = CallModuleResolveHook(module, e.moduleRequest,
-                                                   MODULE_STATE_INSTANTIATED);
+                                                   MODULE_STATE_PARSED);
         let resolution = callFunction(importedModule.resolveExport, importedModule,
-                                      exportName, resolveSet, exportStarSet);
+                                      exportName, resolveSet);
         if (resolution === "ambiguous")
             return resolution;
 
@@ -148,6 +139,7 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
         }
     }
 
+    // Step 9
     return starResolution;
 }
 
@@ -213,8 +205,8 @@ function GetModuleEnvironment(module)
 
 function RecordInstantationFailure(module)
 {
-    // Set the module's environment slot to 'null' to indicate a failed module
-    // instantiation.
+    // Set the module's state to 'failed' to indicate a failed module
+    // instantiation and reset the environment slot to 'undefined'.
     assert(IsModule(module), "Non-module passed to RecordInstantationFailure");
     SetModuleState(module, MODULE_STATE_FAILED);
     UnsafeSetReservedSlot(module, MODULE_OBJECT_ENVIRONMENT_SLOT, undefined);
@@ -275,11 +267,13 @@ function ModuleDeclarationInstantiation()
                     ThrowSyntaxError(JSMSG_MISSING_IMPORT, imp.importName);
                 if (resolution === "ambiguous")
                     ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT, imp.importName);
+                if (resolution.module.state < MODULE_STATE_INSTANTIATED)
+                    ThrowInternalError(JSMSG_BAD_MODULE_STATE);
                 CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
             }
         }
 
-        // Step 16.iv
+        // Step 17.a.iii
         InstantiateModuleFunctionDeclarations(module);
     } catch (e) {
         RecordInstantationFailure(module);

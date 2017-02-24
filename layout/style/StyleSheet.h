@@ -36,6 +36,7 @@ class SRIMetadata;
 } // namespace dom
 
 namespace css {
+class ImportRule;
 class Rule;
 }
 
@@ -107,6 +108,13 @@ public:
    */
   inline bool IsApplicable() const;
   inline bool HasRules() const;
+
+  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+                                             css::ImportRule* aCloneOwnerRule,
+                                             nsIDocument* aCloneDocument,
+                                             nsINode* aCloneOwningNode) const = 0;
+
+  virtual bool IsModified() const = 0;
 
   // style sheet owner info
   enum DocumentAssociationMode {
@@ -233,6 +241,11 @@ protected:
   // Called from SetEnabled when the enabled state changed.
   void EnabledStateChanged();
 
+  // Unlink our inner, if needed, for cycle collection
+  virtual void UnlinkInner();
+  // Traverse our inner, if needed, for cycle collection
+  virtual void TraverseInner(nsCycleCollectionTraversalCallback &);
+
   StyleSheet*           mParent;    // weak ref
 
   nsString              mTitle;
@@ -255,6 +268,10 @@ protected:
   // the sense that if it's known-live then we're known-live).  Always
   // NotOwnedByDocument when mDocument is null.
   DocumentAssociationMode mDocumentAssociationMode;
+
+  // Core information we get from parsed sheets, which are shared amongst
+  // StyleSheet clones.
+  StyleSheetInfo* mInner;
 
   friend class ::nsCSSRuleProcessor;
   friend struct mozilla::ChildSheetListBuilder;

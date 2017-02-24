@@ -78,6 +78,9 @@ test_description_schema = Schema({
     # the name by which this talos test is addressed in try syntax
     Optional('talos-try-name'): basestring,
 
+    # additional tags to mark up this type of test
+    Optional('tags'): {basestring: object},
+
     # the symbol, or group(symbol), under which this task should appear in
     # treeherder.
     'treeherder-symbol': basestring,
@@ -639,6 +642,7 @@ def make_job_description(config, tests):
         jobdesc['routes'] = []
         jobdesc['run-on-projects'] = test.get('run-on-projects', ['all'])
         jobdesc['scopes'] = []
+        jobdesc['tags'] = test.get('tags', {})
         jobdesc['extra'] = {
             'chunks': {
                 'current': test['this-chunk'],
