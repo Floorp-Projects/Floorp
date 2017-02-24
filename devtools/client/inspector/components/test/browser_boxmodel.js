@@ -10,118 +10,118 @@
 // Expected values:
 var res1 = [
   {
-    selector: ".boxmodel-element-size",
+    selector: "#old-boxmodel-element-size",
     value: "160" + "\u00D7" + "160.117"
   },
   {
-    selector: ".boxmodel-size > span",
+    selector: ".old-boxmodel-size > span",
     value: "100" + "\u00D7" + "100.117"
   },
   {
-    selector: ".boxmodel-margin.boxmodel-top > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-top > span",
     value: 30
   },
   {
-    selector: ".boxmodel-margin.boxmodel-left > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-left > span",
     value: "auto"
   },
   {
-    selector: ".boxmodel-margin.boxmodel-bottom > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-bottom > span",
     value: 30
   },
   {
-    selector: ".boxmodel-margin.boxmodel-right > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-right > span",
     value: "auto"
   },
   {
-    selector: ".boxmodel-padding.boxmodel-top > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-top > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-left > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-left > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-bottom > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-bottom > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-right > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-right > span",
     value: 20
   },
   {
-    selector: ".boxmodel-border.boxmodel-top > span",
+    selector: ".old-boxmodel-border.old-boxmodel-top > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-left > span",
+    selector: ".old-boxmodel-border.old-boxmodel-left > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-bottom > span",
+    selector: ".old-boxmodel-border.old-boxmodel-bottom > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-right > span",
+    selector: ".old-boxmodel-border.old-boxmodel-right > span",
     value: 10
   },
 ];
 
 var res2 = [
   {
-    selector: ".boxmodel-element-size",
+    selector: "#old-boxmodel-element-size",
     value: "190" + "\u00D7" + "210"
   },
   {
-    selector: ".boxmodel-size > span",
+    selector: ".old-boxmodel-size > span",
     value: "100" + "\u00D7" + "150"
   },
   {
-    selector: ".boxmodel-margin.boxmodel-top > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-top > span",
     value: 30
   },
   {
-    selector: ".boxmodel-margin.boxmodel-left > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-left > span",
     value: "auto"
   },
   {
-    selector: ".boxmodel-margin.boxmodel-bottom > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-bottom > span",
     value: 30
   },
   {
-    selector: ".boxmodel-margin.boxmodel-right > span",
+    selector: ".old-boxmodel-margin.old-boxmodel-right > span",
     value: "auto"
   },
   {
-    selector: ".boxmodel-padding.boxmodel-top > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-top > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-left > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-left > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-bottom > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-bottom > span",
     value: 20
   },
   {
-    selector: ".boxmodel-padding.boxmodel-right > span",
+    selector: ".old-boxmodel-padding.old-boxmodel-right > span",
     value: 50
   },
   {
-    selector: ".boxmodel-border.boxmodel-top > span",
+    selector: ".old-boxmodel-border.old-boxmodel-top > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-left > span",
+    selector: ".old-boxmodel-border.old-boxmodel-left > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-bottom > span",
+    selector: ".old-boxmodel-border.old-boxmodel-bottom > span",
     value: 10
   },
   {
-    selector: ".boxmodel-border.boxmodel-right > span",
+    selector: ".old-boxmodel-border.old-boxmodel-right > span",
     value: 10
   },
 ];
@@ -142,7 +142,7 @@ add_task(function* () {
 
 function* testInitialValues(inspector, view) {
   info("Test that the initial values of the box model are correct");
-  let viewdoc = view.document;
+  let viewdoc = view.doc;
 
   for (let i = 0; i < res1.length; i++) {
     let elt = viewdoc.querySelector(res1[i].selector);
@@ -153,7 +153,7 @@ function* testInitialValues(inspector, view) {
 
 function* testChangingValues(inspector, view, testActor) {
   info("Test that changing the document updates the box model");
-  let viewdoc = view.document;
+  let viewdoc = view.doc;
 
   let onUpdated = waitForUpdate(inspector);
   yield testActor.setAttribute("div", "style",

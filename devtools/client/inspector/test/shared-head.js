@@ -52,15 +52,7 @@ var openInspectorSidebarTab = Task.async(function* (id) {
   let {toolbox, inspector, testActor} = yield openInspector();
 
   info("Selecting the " + id + " sidebar");
-
-  if (id === "computedview" || id === "layoutview") {
-    // The layout and computed views should wait until the box-model widget is ready.
-    let onBoxModelViewReady = inspector.once("boxmodel-view-updated");
-    inspector.sidebar.select(id);
-    yield onBoxModelViewReady;
-  } else {
-    inspector.sidebar.select(id);
-  }
+  inspector.sidebar.select(id);
 
   return {
     toolbox,

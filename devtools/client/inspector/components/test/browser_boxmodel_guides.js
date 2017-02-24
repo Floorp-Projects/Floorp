@@ -28,16 +28,16 @@ add_task(function* () {
     highlighterOptions = options;
   };
 
-  let elt = view.document.querySelector(".boxmodel-margins");
+  let elt = view.doc.getElementById("old-boxmodel-margins");
   yield testGuideOnLayoutHover(elt, "margin", inspector, view);
 
-  elt = view.document.querySelector(".boxmodel-borders");
+  elt = view.doc.getElementById("old-boxmodel-borders");
   yield testGuideOnLayoutHover(elt, "border", inspector, view);
 
-  elt = view.document.querySelector(".boxmodel-paddings");
+  elt = view.doc.getElementById("old-boxmodel-padding");
   yield testGuideOnLayoutHover(elt, "padding", inspector, view);
 
-  elt = view.document.querySelector(".boxmodel-content");
+  elt = view.doc.getElementById("old-boxmodel-content");
   yield testGuideOnLayoutHover(elt, "content", inspector, view);
 });
 

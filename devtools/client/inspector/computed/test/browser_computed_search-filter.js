@@ -34,7 +34,7 @@ function* testToggleDefaultStyles(inspector, computedView) {
 function* testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
   let doc = computedView.styleDocument;
-  let boxModelWrapper = doc.getElementById("boxmodel-wrapper");
+  let boxModelWrapper = doc.querySelector("#old-boxmodel-wrapper");
   let searchField = computedView.searchField;
   let onRefreshed = inspector.once("computed-view-refreshed");
   let win = computedView.styleWindow;
