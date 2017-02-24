@@ -1,0 +1,76 @@
+# HG changeset patch
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  fb2b299f7dfd2bfaaea3f9a626f4022a85f24f34
+Bug 1341543: add_H444ToARGB() to libyuv r=sotaro
+
+MozReview-Commit-ID: 5NfATfZtWz
+
+diff --git a/media/libyuv/libyuv/include/libyuv/convert_argb.h b/media/libyuv/libyuv/include/libyuv/convert_argb.h
+--- a/media/libyuv/libyuv/include/libyuv/convert_argb.h
++++ b/media/libyuv/libyuv/include/libyuv/convert_argb.h
+@@ -84,16 +84,28 @@ int I444ToARGB(const uint8* src_y,
+                int src_stride_u,
+                const uint8* src_v,
+                int src_stride_v,
+                uint8* dst_argb,
+                int dst_stride_argb,
+                int width,
+                int height);
+ 
++LIBYUV_API
++int H444ToARGB(const uint8* src_y,
++               int src_stride_y,
++               const uint8* src_u,
++               int src_stride_u,
++               const uint8* src_v,
++               int src_stride_v,
++               uint8* dst_argb,
++               int dst_stride_argb,
++               int width,
++               int height);
++
+ // Convert J444 to ARGB.
+ LIBYUV_API
+ int J444ToARGB(const uint8* src_y,
+                int src_stride_y,
+                const uint8* src_u,
+                int src_stride_u,
+                const uint8* src_v,
+                int src_stride_v,
+diff --git a/media/libyuv/libyuv/source/convert_argb.cc b/media/libyuv/libyuv/source/convert_argb.cc
+--- a/media/libyuv/libyuv/source/convert_argb.cc
++++ b/media/libyuv/libyuv/source/convert_argb.cc
+@@ -524,16 +524,33 @@ int I444ToARGB(const uint8* src_y,
+                int dst_stride_argb,
+                int width,
+                int height) {
+   return I444ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
+                           src_stride_v, dst_argb, dst_stride_argb,
+                           &kYuvI601Constants, width, height);
+ }
+ 
++// Convert H444 to ARGB.
++LIBYUV_API
++int H444ToARGB(const uint8* src_y,
++               int src_stride_y,
++               const uint8* src_u,
++               int src_stride_u,
++               const uint8* src_v,
++               int src_stride_v,
++               uint8* dst_argb,
++               int dst_stride_argb,
++               int width,
++               int height) {
++  return I444ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
++                          src_stride_v, dst_argb, dst_stride_argb,
++                          &kYuvH709Constants, width, height);
++}
++
+ // Convert I444 to ABGR.
+ LIBYUV_API
+ int I444ToABGR(const uint8* src_y,
+                int src_stride_y,
+                const uint8* src_u,
+                int src_stride_u,
+                const uint8* src_v,
+                int src_stride_v,

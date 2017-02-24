@@ -1,0 +1,83 @@
+# HG changeset patch
+# Parent  034c99a4c2010c8d60ff52daf0a183ac1fd05777
+Bug 1341543: Update libyuv gyp file with mozilla changes r=sotaro
+
+diff --git a/media/libyuv/libyuv/libyuv.gyp b/media/libyuv/libyuv/libyuv.gyp
+--- a/media/libyuv/libyuv/libyuv.gyp
++++ b/media/libyuv/libyuv/libyuv.gyp
+@@ -47,17 +47,17 @@
+     {
+       'target_name': 'libyuv',
+       # Change type to 'shared_library' to build .so or .dll files.
+       'type': 'static_library',
+       'variables': {
+         'optimize': 'max',  # enable O2 and ltcg.
+       },
+       # Allows libyuv.a redistributable library without external dependencies.
+-      'standalone_static_library': 1,
++      # 'standalone_static_library': 1,
+       'conditions': [
+        # Disable -Wunused-parameter
+         ['clang == 1', {
+           'cflags': [
+             '-Wno-unused-parameter',
+          ],
+         }],
+         ['build_neon != 0', {
+@@ -65,39 +65,55 @@
+             'LIBYUV_NEON',
+           ],
+           'cflags!': [
+             '-mfpu=vfp',
+             '-mfpu=vfpv3',
+             '-mfpu=vfpv3-d16',
+             # '-mthumb',  # arm32 not thumb
+           ],
++          'cflags_mozilla!': [
++            '-mfpu=vfp',
++            '-mfpu=vfpv3',
++            '-mfpu=vfpv3-d16',
++          ],
+           'conditions': [
+             # Disable LTO in libyuv_neon target due to gcc 4.9 compiler bug.
+             ['clang == 0 and use_lto == 1', {
+               'cflags!': [
+                 '-flto',
+                 '-ffat-lto-objects',
+               ],
+             }],
+             # arm64 does not need -mfpu=neon option as neon is not optional
+             ['target_arch != "arm64"', {
+               'cflags': [
+                 '-mfpu=neon',
+                 # '-marm',  # arm32 not thumb
+               ],
++              'cflags_mozilla': [
++                '-mfpu=neon',
++              ],
+             }],
+           ],
+         }],
+         ['build_msa != 0', {
+           'defines': [
+             'LIBYUV_MSA',
+           ],
+         }],
+-        ['OS != "ios" and libyuv_disable_jpeg != 1', {
++        ['build_with_mozilla == 1', {
++          'defines': [
++            'HAVE_JPEG'
++          ],
++          'cflags_mozilla': [
++            '$(MOZ_JPEG_CFLAGS)',
++          ],
++        }],
++        ['OS != "ios" and libyuv_disable_jpeg != 1 and build_with_mozilla != 1', {
+           'defines': [
+             'HAVE_JPEG'
+           ],
+           'conditions': [
+             # Caveat system jpeg support may not support motion jpeg
+             [ 'use_system_libjpeg == 1', {
+               'dependencies': [
+                  '<(DEPTH)/third_party/libjpeg/libjpeg.gyp:libjpeg',
