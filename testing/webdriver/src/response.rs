@@ -12,6 +12,7 @@ pub enum WebDriverResponse {
     ElementRect(ElementRectResponse),
     Generic(ValueResponse),
     NewSession(NewSessionResponse),
+    Timeouts(TimeoutsResponse),
     Void,
     WindowPosition(WindowPositionResponse),
     WindowSize(WindowSizeResponse),
@@ -26,6 +27,7 @@ impl WebDriverResponse {
             WebDriverResponse::ElementRect(x) => json::encode(&x),
             WebDriverResponse::Generic(x) => json::encode(&x),
             WebDriverResponse::NewSession(x) => json::encode(&x),
+            WebDriverResponse::Timeouts(x) => json::encode(&x),
             WebDriverResponse::Void => Ok("{}".to_string()),
             WebDriverResponse::WindowPosition(x) => json::encode(&x),
             WebDriverResponse::WindowSize(x) => json::encode(&x),
@@ -57,6 +59,13 @@ impl NewSessionResponse {
             sessionId: session_id
         }
     }
+}
+
+#[derive(RustcEncodable, Debug)]
+pub struct TimeoutsResponse {
+    pub script: u64,
+    pub pageLoad: u64,
+    pub implicit: u64,
 }
 
 #[derive(RustcEncodable, Debug)]
