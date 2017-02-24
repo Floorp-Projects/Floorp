@@ -1,0 +1,510 @@
+# HG changeset patch
+# User Alex Chronopoulos <achronop@gmail.com>
+# Parent  d1c742cd2af9d3da481d227b4675279902259751
+Bug 1339816 - Uplift cubeb audiounit drift fix. r?padenot
+
+diff --git a/media/libcubeb/gtest/test_resampler.cpp b/media/libcubeb/gtest/test_resampler.cpp
+--- a/media/libcubeb/gtest/test_resampler.cpp
++++ b/media/libcubeb/gtest/test_resampler.cpp
+@@ -712,17 +712,18 @@ TEST(cubeb, resampler_passthrough_duplex
+   seq_idx = seq(input_buffer_prebuffer, input_channels, seq_idx,
+                 prebuffer_frames);
+ 
+   long got = cubeb_resampler_fill(resampler, input_buffer_prebuffer, &prebuffer_frames,
+                                   output_buffer, BUF_BASE_SIZE);
+ 
+   output_seq_idx += BUF_BASE_SIZE;
+ 
+-  ASSERT_EQ(prebuffer_frames, static_cast<long>(ARRAY_LENGTH(input_buffer_prebuffer) / input_params.channels));
++  // prebuffer_frames will hold the frames used by the resampler.
++  ASSERT_EQ(prebuffer_frames, BUF_BASE_SIZE);
+   ASSERT_EQ(got, BUF_BASE_SIZE);
+ 
+   for (uint32_t i = 0; i < 300; i++) {
+     long int frames = BUF_BASE_SIZE;
+     // Simulate that sometimes, we don't have the input callback on time
+     if (i != 0 && (i % 100) == 0) {
+       long zero = 0;
+       got = cubeb_resampler_fill(resampler, input_buffer_normal /* unused here */,
+diff --git a/media/libcubeb/src/cubeb_audiounit.cpp b/media/libcubeb/src/cubeb_audiounit.cpp
+--- a/media/libcubeb/src/cubeb_audiounit.cpp
++++ b/media/libcubeb/src/cubeb_audiounit.cpp
+@@ -41,16 +41,26 @@ typedef UInt32  AudioFormatFlags;
+ #define AU_IN_BUS     1
+ 
+ #define PRINT_ERROR_CODE(str, r) do {                           \
+     LOG("System call failed: %s (rv: %d)", str, (int) r);       \
+   } while(0)
+ 
+ const char * DISPATCH_QUEUE_LABEL = "org.mozilla.cubeb";
+ 
++#ifdef ALOGV
++#undef ALOGV
++#endif
++#define ALOGV(msg, ...) dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{LOGV(msg, ##__VA_ARGS__);})
++
++#ifdef ALOG
++#undef ALOG
++#endif
++#define ALOG(msg, ...) dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{LOG(msg, ##__VA_ARGS__);})
++
+ /* Testing empirically, some headsets report a minimal latency that is very
+  * low, but this does not work in practice. Lie and say the minimum is 256
+  * frames. */
+ const uint32_t SAFE_MIN_LATENCY_FRAMES = 256;
+ const uint32_t SAFE_MAX_LATENCY_FRAMES = 512;
+ 
+ void audiounit_stream_stop_internal(cubeb_stream * stm);
+ void audiounit_stream_start_internal(cubeb_stream * stm);
+@@ -156,35 +166,34 @@ struct cubeb_stream {
+   Float64 output_hw_rate = 0;
+   /* Expected I/O thread interleave,
+    * calculated from I/O hw rate. */
+   int expected_output_callbacks_in_a_row = 0;
+   owned_critical_section mutex;
+   /* Hold the input samples in every
+    * input callback iteration */
+   std::unique_ptr<auto_array_wrapper> input_linear_buffer;
++  // After the resampling some input data remains stored inside
++  // the resampler. This number is used in order to calculate
++  // the number of extra silence frames in input.
++  std::atomic<uint32_t> available_input_frames{ 0 };
+   /* Frames on input buffer */
+   std::atomic<uint32_t> input_buffer_frames{ 0 };
+   /* Frame counters */
+   std::atomic<uint64_t> frames_played{ 0 };
+   uint64_t frames_queued = 0;
+   std::atomic<int64_t> frames_read{ 0 };
+-  std::atomic<bool> shutdown{ false };
++  std::atomic<bool> shutdown{ true };
+   std::atomic<bool> draining{ false };
+   /* Latency requested by the user. */
+   uint32_t latency_frames = 0;
+   std::atomic<uint64_t> current_latency_frames{ 0 };
+   uint64_t hw_latency_frames = UINT64_MAX;
+   std::atomic<float> panning{ 0 };
+   std::unique_ptr<cubeb_resampler, decltype(&cubeb_resampler_destroy)> resampler;
+-  /* This is the number of output callback we got in a row. This is usually one,
+-   * but can be two when the input and output rate are different, and more when
+-   * a device has been plugged or unplugged, as there can be some time before
+-   * the device is ready. */
+-  std::atomic<int> output_callback_in_a_row{ 0 };
+   /* This is true if a device change callback is currently running.  */
+   std::atomic<bool> switching_device{ false };
+   std::atomic<bool> buffer_size_change_state{ false };
+ };
+ 
+ bool has_input(cubeb_stream * stm)
+ {
+   return stm->input_stream_params.rate != 0;
+@@ -276,26 +285,28 @@ audiounit_render_input(cubeb_stream * st
+     PRINT_ERROR_CODE("AudioUnitRender", r);
+     return r;
+   }
+ 
+   /* Copy input data in linear buffer. */
+   stm->input_linear_buffer->push(input_buffer_list.mBuffers[0].mData,
+                                  input_frames * stm->input_desc.mChannelsPerFrame);
+ 
+-  LOGV("(%p) input:  buffers %u, size %u, channels %u, frames %d.",
++  /* Advance input frame counter. */
++  assert(input_frames > 0);
++  stm->frames_read += input_frames;
++  stm->available_input_frames += input_frames;
++
++  ALOGV("(%p) input: buffers %u, size %u, channels %u, rendered frames %d, total frames %d.",
+        stm,
+        (unsigned int) input_buffer_list.mNumberBuffers,
+        (unsigned int) input_buffer_list.mBuffers[0].mDataByteSize,
+        (unsigned int) input_buffer_list.mBuffers[0].mNumberChannels,
+-       (unsigned int) input_frames);
+-
+-  /* Advance input frame counter. */
+-  assert(input_frames > 0);
+-  stm->frames_read += input_frames;
++       (unsigned int) input_frames,
++        stm->available_input_frames.load());
+ 
+   return noErr;
+ }
+ 
+ static OSStatus
+ audiounit_input_callback(void * user_ptr,
+                          AudioUnitRenderActionFlags * flags,
+                          AudioTimeStamp const * tstamp,
+@@ -304,37 +315,27 @@ audiounit_input_callback(void * user_ptr
+                          AudioBufferList * /* bufs */)
+ {
+   cubeb_stream * stm = static_cast<cubeb_stream *>(user_ptr);
+ 
+   assert(stm->input_unit != NULL);
+   assert(AU_IN_BUS == bus);
+ 
+   if (stm->shutdown) {
+-    LOG("(%p) input shutdown", stm);
++    ALOG("(%p) input shutdown", stm);
+     return noErr;
+   }
+ 
+-  // This happens when we're finally getting a new input callback after having
+-  // switched device, we can clear the input buffer now, only keeping the data
+-  // we just got.
+-  if (stm->output_callback_in_a_row > stm->expected_output_callbacks_in_a_row) {
+-    stm->input_linear_buffer->pop(
+-        stm->input_linear_buffer->length() -
+-        input_frames * stm->input_stream_params.channels);
+-  }
+-
+   OSStatus r = audiounit_render_input(stm, flags, tstamp, bus, input_frames);
+   if (r != noErr) {
+     return r;
+   }
+ 
+   // Full Duplex. We'll call data_callback in the AudioUnit output callback.
+   if (stm->output_unit != NULL) {
+-    stm->output_callback_in_a_row = 0;
+     return noErr;
+   }
+ 
+   /* Input only. Call the user callback through resampler.
+      Resampler will deliver input buffer in the correct rate. */
+   assert(input_frames <= stm->input_linear_buffer->length() / stm->input_desc.mChannelsPerFrame);
+   long total_input_frames = stm->input_linear_buffer->length() / stm->input_desc.mChannelsPerFrame;
+   long outframes = cubeb_resampler_fill(stm->resampler.get(),
+@@ -348,64 +349,60 @@ audiounit_input_callback(void * user_ptr
+   if (outframes < 0 || (UInt32) outframes != input_frames) {
+     stm->shutdown = true;
+     return noErr;
+   }
+ 
+   return noErr;
+ }
+ 
++static uint32_t
++minimum_resampling_input_frames(cubeb_stream *stm)
++{
++  return ceilf(stm->input_hw_rate / stm->output_hw_rate * stm->input_buffer_frames);
++}
++
+ static bool
+ is_extra_input_needed(cubeb_stream * stm)
+ {
+   /* If the output callback came first and this is a duplex stream, we need to
+     * fill in some additional silence in the resampler.
+     * Otherwise, if we had more than expected callbacks in a row, or we're currently
+     * switching, we add some silence as well to compensate for the fact that
+     * we're lacking some input data. */
+-
+-  /* If resampling is taking place after every output callback
+-   * the input buffer expected to be empty.  Any frame left over
+-   * from resampling is stored inside the resampler available to
+-   * be used in next iteration as needed.
+-   * BUT when noop_resampler is operating we have left over
+-   * frames since it does not store anything internally. */
+   return stm->frames_read == 0 ||
+-         (stm->input_linear_buffer->length() == 0 &&
+-         (stm->output_callback_in_a_row > stm->expected_output_callbacks_in_a_row ||
+-         stm->switching_device));
++         stm->available_input_frames.load() < minimum_resampling_input_frames(stm);
+ }
+ 
+ static OSStatus
+ audiounit_output_callback(void * user_ptr,
+                           AudioUnitRenderActionFlags * /* flags */,
+                           AudioTimeStamp const * tstamp,
+                           UInt32 bus,
+                           UInt32 output_frames,
+                           AudioBufferList * outBufferList)
+ {
+   assert(AU_OUT_BUS == bus);
+   assert(outBufferList->mNumberBuffers == 1);
+ 
+   cubeb_stream * stm = static_cast<cubeb_stream *>(user_ptr);
+ 
+-  stm->output_callback_in_a_row++;
++  ALOGV("(%p) output: buffers %u, size %u, channels %u, frames %u, total input frames %d.",
++        stm,
++        (unsigned int) outBufferList->mNumberBuffers,
++        (unsigned int) outBufferList->mBuffers[0].mDataByteSize,
++        (unsigned int) outBufferList->mBuffers[0].mNumberChannels,
++        (unsigned int) output_frames,
++        stm->available_input_frames.load());
+ 
+-  LOGV("(%p) output: buffers %u, size %u, channels %u, frames %u.",
+-       stm,
+-       (unsigned int) outBufferList->mNumberBuffers,
+-       (unsigned int) outBufferList->mBuffers[0].mDataByteSize,
+-       (unsigned int) outBufferList->mBuffers[0].mNumberChannels,
+-       (unsigned int) output_frames);
+-
+-  long input_frames = 0;
++  long input_frames = 0, input_frames_before_fill = 0;
+   void * output_buffer = NULL, * input_buffer = NULL;
+ 
+   if (stm->shutdown) {
+-    LOG("(%p) output shutdown.", stm);
++    ALOG("(%p) output shutdown.", stm);
+     audiounit_make_silent(&outBufferList->mBuffers[0]);
+     return noErr;
+   }
+ 
+   stm->current_latency_frames = audiotimestamp_to_latency(tstamp, stm);
+   if (stm->draining) {
+     OSStatus r = AudioOutputUnitStop(stm->output_unit);
+     assert(r == 0);
+@@ -417,37 +414,44 @@ audiounit_output_callback(void * user_pt
+     audiounit_make_silent(&outBufferList->mBuffers[0]);
+     return noErr;
+   }
+   /* Get output buffer. */
+   output_buffer = outBufferList->mBuffers[0].mData;
+   /* If Full duplex get also input buffer */
+   if (stm->input_unit != NULL) {
+     if (is_extra_input_needed(stm)) {
+-      uint32_t min_input_frames_required = ceilf(stm->input_hw_rate / stm->output_hw_rate *
+-                                                                      stm->input_buffer_frames);
+-      stm->input_linear_buffer->push_silence(min_input_frames_required * stm->input_desc.mChannelsPerFrame);
+-      LOG("(%p) %s pushed %u frames of input silence.", stm, stm->frames_read == 0 ? "Input hasn't started," :
+-          stm->switching_device ? "Device switching," : "Drop out,", min_input_frames_required);
++      uint32_t min_input_frames = minimum_resampling_input_frames(stm);
++      stm->input_linear_buffer->push_silence(min_input_frames * stm->input_desc.mChannelsPerFrame);
++      stm->available_input_frames += min_input_frames;
++
++      ALOG("(%p) %s pushed %u frames of input silence.", stm, stm->frames_read == 0 ? "Input hasn't started," :
++           stm->switching_device ? "Device switching," : "Drop out,", min_input_frames);
+     }
+-    // The input buffer
+     input_buffer = stm->input_linear_buffer->data();
+-    // Number of input frames in the buffer
++    // Number of input frames in the buffer. It will change to actually used frames
++    // inside fill
+     input_frames = stm->input_linear_buffer->length() / stm->input_desc.mChannelsPerFrame;
++    // Number of input frames pushed inside resampler.
++    input_frames_before_fill = input_frames;
+   }
+ 
+   /* Call user callback through resampler. */
+   long outframes = cubeb_resampler_fill(stm->resampler.get(),
+                                         input_buffer,
+                                         input_buffer ? &input_frames : NULL,
+                                         output_buffer,
+                                         output_frames);
+ 
+   if (input_buffer) {
+-    stm->input_linear_buffer->pop(input_frames * stm->input_desc.mChannelsPerFrame);
++    // Decrease counter by the number of frames used by resampler
++    stm->available_input_frames -= input_frames;
++    assert(stm->available_input_frames.load() >= 0);
++    // Pop from the buffer the frames pushed to the resampler.
++    stm->input_linear_buffer->pop(input_frames_before_fill * stm->input_desc.mChannelsPerFrame);
+   }
+ 
+   if (outframes < 0) {
+     stm->shutdown = true;
+     return noErr;
+   }
+ 
+   size_t outbpf = stm->output_desc.mBytesPerFrame;
+@@ -613,16 +617,19 @@ audiounit_property_listener_callback(Aud
+           }
+           // Allow restart to choose the new default. Event register only for input.
+           stm->input_device = 0;
+         }
+         break;
+       case kAudioDevicePropertyDataSource:
+         LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource", (unsigned int) i);
+         break;
++      default:
++        LOG("Event[%u] - mSelector == Unexpected Event id %d, return", (unsigned int) i, addresses[i].mSelector);
++        return noErr;
+     }
+   }
+ 
+   for (UInt32 i = 0; i < address_count; i++) {
+     switch(addresses[i].mSelector) {
+     case kAudioHardwarePropertyDefaultOutputDevice:
+     case kAudioHardwarePropertyDefaultInputDevice:
+     case kAudioDevicePropertyDeviceIsAlive:
+@@ -789,16 +796,26 @@ audiounit_uninstall_device_changed_callb
+       return CUBEB_ERROR;
+     }
+ 
+     r = audiounit_remove_listener(stm, kAudioObjectSystemObject, kAudioHardwarePropertyDefaultInputDevice,
+         kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
+     if (r != noErr) {
+       return CUBEB_ERROR;
+     }
++
++    /* Event to notify when the input is going away. */
++    AudioDeviceID dev = stm->input_device ? stm->input_device :
++                        audiounit_get_default_device_id(CUBEB_DEVICE_TYPE_INPUT);
++    r = audiounit_remove_listener(stm, dev, kAudioDevicePropertyDeviceIsAlive,
++                                  kAudioObjectPropertyScopeGlobal, &audiounit_property_listener_callback);
++    if (r != noErr) {
++      PRINT_ERROR_CODE("AudioObjectRemovePropertyListener/input/kAudioDevicePropertyDeviceIsAlive", r);
++      return CUBEB_ERROR;
++    }
+   }
+   return CUBEB_OK;
+ }
+ 
+ /* Get the acceptable buffer size (in frames) that this device can work with. */
+ static int
+ audiounit_get_acceptable_latency_range(AudioValueRange * latency_range)
+ {
+@@ -1106,28 +1123,18 @@ static int
+ audiounit_init_input_linear_buffer(cubeb_stream * stream, uint32_t capacity)
+ {
+   uint32_t size = capacity * stream->input_buffer_frames * stream->input_desc.mChannelsPerFrame;
+   if (stream->input_desc.mFormatFlags & kAudioFormatFlagIsSignedInteger) {
+     stream->input_linear_buffer.reset(new auto_array_wrapper_impl<short>(size));
+   } else {
+     stream->input_linear_buffer.reset(new auto_array_wrapper_impl<float>(size));
+   }
+-
+   assert(stream->input_linear_buffer->length() == 0);
+ 
+-  // Pre-buffer silence if needed
+-  if (capacity != 1) {
+-    size_t silence_size = stream->input_buffer_frames *
+-                          stream->input_desc.mChannelsPerFrame;
+-    stream->input_linear_buffer->push_silence(silence_size);
+-
+-    assert(stream->input_linear_buffer->length() == silence_size);
+-  }
+-
+   return CUBEB_OK;
+ }
+ 
+ static uint32_t
+ audiounit_clamp_latency(cubeb_stream * stm, uint32_t latency_frames)
+ {
+   // For the 1st stream set anything within safe min-max
+   assert(stm->context->active_streams > 0);
+diff --git a/media/libcubeb/src/cubeb_resampler.cpp b/media/libcubeb/src/cubeb_resampler.cpp
+--- a/media/libcubeb/src/cubeb_resampler.cpp
++++ b/media/libcubeb/src/cubeb_resampler.cpp
+@@ -67,16 +67,17 @@ long passthrough_resampler<T>::fill(void
+                                frames_to_samples(*input_frames_count));
+   }
+ 
+   long rv = data_callback(stream, user_ptr, internal_input_buffer.data(),
+                           output_buffer, output_frames);
+ 
+   if (input_buffer) {
+     internal_input_buffer.pop(nullptr, frames_to_samples(output_frames));
++    *input_frames_count = output_frames;
+   }
+ 
+   return rv;
+ }
+ 
+ template<typename T, typename InputProcessor, typename OutputProcessor>
+ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
+   ::cubeb_resampler_speex(InputProcessor * input_processor,
+@@ -174,17 +175,17 @@ cubeb_resampler_speex<T, InputProcessor,
+ 
+   /* The input data, after eventual resampling. This is passed to the callback. */
+   T * resampled_input = nullptr;
+   uint32_t resampled_frame_count = input_processor->output_for_input(*input_frames_count);
+ 
+   /* process the input, and present exactly `output_frames_needed` in the
+   * callback. */
+   input_processor->input(input_buffer, *input_frames_count);
+-  resampled_input = input_processor->output(resampled_frame_count);
++  resampled_input = input_processor->output(resampled_frame_count, (size_t*)input_frames_count);
+ 
+   long got = data_callback(stream, user_ptr,
+                            resampled_input, nullptr, resampled_frame_count);
+ 
+   /* Return the number of initial input frames or part of it.
+   * Since output_frames_needed == 0 in input scenario, the only
+   * available number outside resampler is the initial number of frames. */
+   return (*input_frames_count) * (got / resampled_frame_count);
+@@ -221,17 +222,17 @@ cubeb_resampler_speex<T, InputProcessor,
+   out_unprocessed =
+     output_processor->input_buffer(output_frames_before_processing);
+ 
+   if (in_buffer) {
+     /* process the input, and present exactly `output_frames_needed` in the
+     * callback. */
+     input_processor->input(in_buffer, *input_frames_count);
+     resampled_input =
+-      input_processor->output(output_frames_before_processing);
++      input_processor->output(output_frames_before_processing, (size_t*)input_frames_count);
+   } else {
+     resampled_input = nullptr;
+   }
+ 
+   got = data_callback(stream, user_ptr,
+                       resampled_input, out_unprocessed,
+                       output_frames_before_processing);
+ 
+diff --git a/media/libcubeb/src/cubeb_resampler_internal.h b/media/libcubeb/src/cubeb_resampler_internal.h
+--- a/media/libcubeb/src/cubeb_resampler_internal.h
++++ b/media/libcubeb/src/cubeb_resampler_internal.h
+@@ -217,33 +217,34 @@ public:
+   size_t output_for_input(uint32_t input_frames)
+   {
+     return (size_t)floorf((input_frames + samples_to_frames(resampling_in_buffer.length()))
+                          / resampling_ratio);
+   }
+ 
+   /** Returns a buffer containing exactly `output_frame_count` resampled frames.
+     * The consumer should not hold onto the pointer. */
+-  T * output(size_t output_frame_count)
++  T * output(size_t output_frame_count, size_t * input_frames_used)
+   {
+     if (resampling_out_buffer.capacity() < frames_to_samples(output_frame_count)) {
+       resampling_out_buffer.reserve(frames_to_samples(output_frame_count));
+     }
+ 
+     uint32_t in_len = samples_to_frames(resampling_in_buffer.length());
+     uint32_t out_len = output_frame_count;
+ 
+     speex_resample(resampling_in_buffer.data(), &in_len,
+                    resampling_out_buffer.data(), &out_len);
+ 
+     assert(out_len == output_frame_count);
+ 
+     /* This shifts back any unresampled samples to the beginning of the input
+        buffer. */
+     resampling_in_buffer.pop(nullptr, frames_to_samples(in_len));
++    *input_frames_used = in_len;
+ 
+     return resampling_out_buffer.data();
+   }
+ 
+   /** Get the latency of the resampler, in output frames. */
+   uint32_t latency() const
+   {
+     /* The documentation of the resampler talks about "samples" here, but it
+@@ -371,26 +372,27 @@ public:
+   void input(T * buffer, uint32_t frame_count)
+   {
+     delay_input_buffer.push(buffer, frames_to_samples(frame_count));
+   }
+   /** Pop some frames from the internal buffer, into a internal output buffer.
+    * @parameter frames_needed the number of frames to be returned.
+    * @return a buffer containing the delayed frames. The consumer should not
+    * hold onto the pointer. */
+-  T * output(uint32_t frames_needed)
++  T * output(uint32_t frames_needed, size_t * input_frames_used)
+   {
+     if (delay_output_buffer.capacity() < frames_to_samples(frames_needed)) {
+       delay_output_buffer.reserve(frames_to_samples(frames_needed));
+     }
+ 
+     delay_output_buffer.clear();
+     delay_output_buffer.push(delay_input_buffer.data(),
+                              frames_to_samples(frames_needed));
+     delay_input_buffer.pop(nullptr, frames_to_samples(frames_needed));
++    *input_frames_used = frames_needed;
+ 
+     return delay_output_buffer.data();
+   }
+   /** Get a pointer to the first writable location in the input buffer>
+    * @parameter frames_needed the number of frames the user needs to write into
+    * the buffer.
+    * @returns a pointer to a location in the input buffer where #frames_needed
+    * can be writen. */
