@@ -335,7 +335,8 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
   NotNull<RefPtr<imgFrame>> frame = WrapNotNull(new imgFrame());
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFrameRect, aFormat,
-                                      aPaletteDepth, nonPremult))) {
+                                      aPaletteDepth, nonPremult,
+                                      aFrameNum > 0))) {
     NS_WARNING("imgFrame::Init should succeed");
     return RawAccessFrameRef();
   }

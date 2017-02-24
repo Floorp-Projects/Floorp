@@ -104,12 +104,24 @@ public:
 
   /**
    * Indicates the buffer is not expected to be shared with any more processes.
-   * May release the handle if possible (see CloseHandleInternal). */
+   * May release the handle if possible (see CloseHandleInternal).
+   */
   void FinishedSharing()
   {
     MutexAutoLock lock(mMutex);
     mShared = true;
     CloseHandleInternal();
+  }
+
+  /**
+   * Indicates whether or not the buffer can be shared with another process
+   * without reallocating. Note that this is racy and should only be used for
+   * informational/reporting purposes.
+   */
+  bool CanShare() const
+  {
+    MutexAutoLock lock(mMutex);
+    return !mClosed;
   }
 
   /**
@@ -150,7 +162,7 @@ private:
    */
   void CloseHandleInternal();
 
-  Mutex mMutex;
+  mutable Mutex mMutex;
   int32_t mStride;
   int32_t mMapCount;
   IntSize mSize;

@@ -8,8 +8,7 @@
 #define mozilla_ThreadStackHelper_h
 
 #include "mozilla/ThreadHangStats.h"
-
-#include "GeckoProfiler.h"
+#include "js/ProfilingStack.h"
 
 #include <stddef.h>
 
@@ -79,7 +78,7 @@ private:
   void FillStackBuffer();
   void FillThreadContext(void* aContext = nullptr);
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  const char* AppendJSEntry(const volatile StackEntry* aEntry,
+  const char* AppendJSEntry(const volatile js::ProfileEntry* aEntry,
                             intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
 #endif

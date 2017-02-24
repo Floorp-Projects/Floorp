@@ -6,6 +6,10 @@
 
 #include "ContentPrefs.h"
 
+/************************************************************
+ *    DO NOT ADD PREFS TO THIS LIST WITHOUT DOM PEER REVIEW *
+ ************************************************************/
+
 const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "accessibility.monoaudio.enable",
   "accessibility.mouse_focuses_formcontrol",
@@ -52,6 +56,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "dom.vibrator.enabled",
   "dom.vibrator.max_vibrate_list_len",
   "dom.vibrator.max_vibrate_ms",
+  "dom.webcomponents.enabled",
   "focusmanager.testmode",
   "font.size.inflation.disabledInMasterProcess",
   "font.size.inflation.emPerLine",

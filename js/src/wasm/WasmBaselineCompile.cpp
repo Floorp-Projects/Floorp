@@ -489,7 +489,6 @@ class BaseCompiler
     ValTypeVector               Sig_;
     Label                       returnLabel_;
     Label                       stackOverflowLabel_;
-    TrapOffset                  prologueTrapOffset_;
     CodeOffset                  stackAddOffset_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
@@ -2046,31 +2045,31 @@ class BaseCompiler
         AllocatableGeneralRegisterSet knownGPR_ = availGPR_;
         AllocatableFloatRegisterSet knownFPU_ = availFPU_;
         for (size_t i = 0 ; i < stk_.length() ; i++) {
-	    Stk& item = stk_[i];
-	    switch (item.kind_) {
-	      case Stk::RegisterI32:
-		knownGPR_.add(item.i32reg());
-		break;
-	      case Stk::RegisterI64:
+            Stk& item = stk_[i];
+            switch (item.kind_) {
+              case Stk::RegisterI32:
+                knownGPR_.add(item.i32reg());
+                break;
+              case Stk::RegisterI64:
 #ifdef JS_PUNBOX64
-		knownGPR_.add(item.i64reg().reg);
+                knownGPR_.add(item.i64reg().reg);
 #else
-		knownGPR_.add(item.i64reg().high);
-		knownGPR_.add(item.i64reg().low);
+                knownGPR_.add(item.i64reg().high);
+                knownGPR_.add(item.i64reg().low);
 #endif
-		break;
-	      case Stk::RegisterF32:
-		knownFPU_.add(item.f32reg());
-		break;
-	      case Stk::RegisterF64:
-		knownFPU_.add(item.f64reg());
-		break;
-	      default:
-		break;
-	    }
-	}
-	MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
-	MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
+                break;
+              case Stk::RegisterF32:
+                knownFPU_.add(item.f32reg());
+                break;
+              case Stk::RegisterF64:
+                knownFPU_.add(item.f64reg());
+                break;
+              default:
+                break;
+            }
+        }
+        MOZ_ASSERT(knownGPR_.bits() == allGPR_.bits());
+        MOZ_ASSERT(knownFPU_.bits() == allFPU_.bits());
     }
 #endif
 
@@ -2106,8 +2105,7 @@ class BaseCompiler
     // Labels
 
     void insertBreakablePoint(CallSiteDesc::Kind kind) {
-        const uint32_t offset = trapOffset().bytecodeOffset;
-        masm.nopPatchableToCall(CallSiteDesc(offset, kind));
+        masm.nopPatchableToCall(CallSiteDesc(iter_.errorOffset(), kind));
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -2271,7 +2269,8 @@ class BaseCompiler
         MOZ_ASSERT(localSize_ >= debugFrameReserved);
         if (localSize_ > debugFrameReserved)
             masm.addToStackPtr(Imm32(localSize_ - debugFrameReserved));
-        masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, debugFrameReserved));
+        TrapOffset prologueTrapOffset(func_.lineOrBytecode());
+        masm.jump(TrapDesc(prologueTrapOffset, Trap::StackOverflow, debugFrameReserved));
 
         masm.bind(&returnLabel_);
 
@@ -2389,7 +2388,10 @@ class BaseCompiler
 
     void startCallArgs(FunctionCall& call, size_t stackArgAreaSize)
     {
-        call.stackArgAreaSize = stackArgAreaSize;
+        // It's possible the TLS pointer may have implicitly used stack before.
+        MOZ_ASSERT(call.stackArgAreaSize == 0 || call.stackArgAreaSize == sizeof(void*));
+
+        call.stackArgAreaSize += stackArgAreaSize;
 
         size_t adjustment = call.stackArgAreaSize + call.frameAlignAdjustment;
         if (adjustment)
@@ -2397,7 +2399,10 @@ class BaseCompiler
     }
 
     const ABIArg reservePointerArgument(FunctionCall& call) {
-        return call.abi.next(MIRType::Pointer);
+        ABIArg ret = call.abi.next(MIRType::Pointer);
+        if (ret.kind() == ABIArg::Stack)
+            call.stackArgAreaSize += sizeof(void*);
+        return ret;
     }
 
     // TODO / OPTIMIZE (Bug 1316821): Note passArg is used only in one place.
@@ -2908,7 +2913,8 @@ class BaseCompiler
         // movl clears the high bits if the two registers are the same.
         masm.movl(src.reg, dest);
 #elif defined(JS_NUNBOX32)
-        masm.move32(src.low, dest);
+        if (src.low != dest)
+            masm.move32(src.low, dest);
 #else
         MOZ_CRASH("BaseCompiler platform hook: wrapI64ToI32");
 #endif
@@ -2947,7 +2953,8 @@ class BaseCompiler
 #if defined(JS_CODEGEN_X64)
         masm.movl(src, dest.reg);
 #elif defined(JS_NUNBOX32)
-        masm.move32(src, dest.low);
+        if (src != dest.low)
+            masm.move32(src, dest.low);
         masm.move32(Imm32(0), dest.high);
 #else
         MOZ_CRASH("BaseCompiler platform hook: extendU32ToI64");
@@ -3505,7 +3512,7 @@ class BaseCompiler
     uint32_t readCallSiteLineOrBytecode() {
         if (!func_.callSiteLineNums().empty())
             return func_.callSiteLineNums()[lastReadCallSite_++];
-        return trapOffset().bytecodeOffset;
+        return iter_.errorOffset();
     }
 
     bool done() const {
@@ -7326,7 +7333,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
-      iter_(env, decoder, func.lineOrBytecode()),
+      iter_(env, decoder),
       func_(func),
       lastReadCallSite_(0),
       alloc_(*alloc),
@@ -7338,7 +7345,6 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       deadCode_(false),
       debugEnabled_(debugEnabled),
       bceSafe_(0),
-      prologueTrapOffset_(trapOffset()),
       stackAddOffset_(0),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
@@ -7539,7 +7545,7 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
     const FuncBytes& func = unit->func();
     uint32_t bodySize = func.bytes().length();
 
-    Decoder d(func.bytes(), error);
+    Decoder d(func.bytes().begin(), func.bytes().end(), func.lineOrBytecode(), error);
 
     if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
         return false;

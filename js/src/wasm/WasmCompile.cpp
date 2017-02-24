@@ -110,7 +110,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
 {
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    Decoder d(bytecode.begin(), bytecode.end(), error);
+    Decoder d(bytecode.bytes, error);
 
     auto env = js::MakeUnique<ModuleEnvironment>();
     if (!env)

@@ -71,6 +71,7 @@ const I32ConstCode     = 0x41;
 const I64ConstCode     = 0x42;
 const F32ConstCode     = 0x43;
 const F64ConstCode     = 0x44;
+const I32AddCode       = 0x6a;
 const I32DivSCode      = 0x6d;
 const I32DivUCode      = 0x6e;
 const I32RemSCode      = 0x6f;

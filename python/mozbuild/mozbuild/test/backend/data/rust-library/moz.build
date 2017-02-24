@@ -15,4 +15,4 @@ def RustLibrary(name):
     IS_RUST_LIBRARY = True
 
 
-RustLibrary('gkrust')
+RustLibrary('test-library')

@@ -57,7 +57,7 @@ class ThreadInfo {
 public:
   bool hasProfile() { return !!mBuffer; }
 
-  void addTag(const ProfileEntry& aTag);
+  void addTag(const ProfileBufferEntry& aTag);
 
   // Track a marker which has been inserted into the thread profile.
   // This marker can safely be deleted once the generation has

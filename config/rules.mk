@@ -936,7 +936,7 @@ rustflags_override = RUSTFLAGS='$(rustflags)'
 endif
 
 CARGO_BUILD = env $(rustflags_override) \
-	CARGO_TARGET_DIR=. \
+	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH) \

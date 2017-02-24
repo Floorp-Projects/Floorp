@@ -26,8 +26,13 @@ const {
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const BoxModelView = require("devtools/client/inspector/components/deprecated-box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
+
+const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+const { Provider } = require("devtools/client/shared/vendor/react-redux");
+
+const BoxModelApp = createFactory(require("devtools/client/inspector/boxmodel/components/BoxModelApp"));
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
@@ -154,6 +159,7 @@ UpdateProcess.prototype = {
 function CssComputedView(inspector, document, pageStyle) {
   this.inspector = inspector;
   this.highlighters = inspector.highlighters;
+  this.store = inspector.store;
   this.styleDocument = document;
   this.styleWindow = this.styleDocument.defaultView;
   this.pageStyle = pageStyle;
@@ -174,6 +180,7 @@ function CssComputedView(inspector, document, pageStyle) {
 
   let doc = this.styleDocument;
   this.element = doc.getElementById("propertyContainer");
+  this.boxModelWrapper = doc.getElementById("boxmodel-wrapper");
   this.searchField = doc.getElementById("computedview-searchbox");
   this.searchClearButton = doc.getElementById("computedview-searchinput-clear");
   this.includeBrowserStylesCheckbox =
@@ -209,6 +216,7 @@ function CssComputedView(inspector, document, pageStyle) {
   // The element that we're inspecting, and the document that it comes from.
   this._viewedElement = null;
 
+  this.createBoxModelView();
   this.createStyleViews();
 
   this._contextmenu = new StyleInspectorMenu(this, { isRuleView: false });
@@ -552,10 +560,10 @@ CssComputedView.prototype = {
     this._filterChangedTimeout = setTimeout(() => {
       if (this.searchField.value.length > 0) {
         this.searchField.setAttribute("filled", true);
-        this.inspector.emit("computed-view-filtered", true);
+        this.boxModelWrapper.hidden = true;
       } else {
         this.searchField.removeAttribute("filled");
-        this.inspector.emit("computed-view-filtered", false);
+        this.boxModelWrapper.hidden = false;
       }
 
       this.refreshPanel();
@@ -603,6 +611,29 @@ CssComputedView.prototype = {
       propView.updateSourceLinks();
     }
     this.inspector.emit("computed-view-sourcelinks-updated");
+  },
+
+  /**
+   * Render the box model view.
+   */
+  createBoxModelView: function () {
+    let {
+      onHideBoxModelHighlighter,
+      onShowBoxModelEditor,
+      onShowBoxModelHighlighter,
+    } = this.inspector.boxmodel.getComponentProps();
+
+    let provider = createElement(
+      Provider,
+      { store: this.store },
+      BoxModelApp({
+        showBoxModelProperties: false,
+        onHideBoxModelHighlighter,
+        onShowBoxModelEditor,
+        onShowBoxModelHighlighter,
+      })
+    );
+    ReactDOM.render(provider, this.boxModelWrapper);
   },
 
   /**
@@ -783,7 +814,7 @@ CssComputedView.prototype = {
 
     // Nodes used in templating
     this.element = null;
-    this.panel = null;
+    this.boxModelWrapper = null;
     this.searchField = null;
     this.searchClearButton = null;
     this.includeBrowserStylesCheckbox = null;
@@ -796,6 +827,7 @@ CssComputedView.prototype = {
 
     this.inspector = null;
     this.highlighters = null;
+    this.store = null;
     this.styleDocument = null;
     this.styleWindow = null;
 
@@ -1416,7 +1448,6 @@ function ComputedViewTool(inspector, window) {
 
   this.computedView = new CssComputedView(this.inspector, this.document,
     this.inspector.pageStyle);
-  this.boxModelView = new BoxModelView(this.inspector, this.document);
 
   this.onSelected = this.onSelected.bind(this);
   this.refresh = this.refresh.bind(this);
@@ -1525,9 +1556,8 @@ ComputedViewTool.prototype = {
     }
 
     this.computedView.destroy();
-    this.boxModelView.destroy();
 
-    this.computedView = this.boxModelView = this.document = this.inspector = null;
+    this.computedView = this.document = this.inspector = null;
   }
 };
 
