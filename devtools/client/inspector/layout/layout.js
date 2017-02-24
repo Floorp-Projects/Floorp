@@ -106,8 +106,6 @@ LayoutView.prototype = {
       showBoxModelProperties: true,
 
       onHideBoxModelHighlighter,
-      onShowBoxModelEditor,
-      onShowBoxModelHighlighter,
 
       /**
        * Handler for a change in the grid overlay color picker for a grid container.
@@ -130,6 +128,23 @@ LayoutView.prototype = {
             this.highlighters.showGridHighlighter(node, highlighterSettings);
           }
         }
+      },
+
+      onShowBoxModelEditor,
+      onShowBoxModelHighlighter,
+
+     /**
+       * Shows the box-model highlighter on the element corresponding to the provided
+       * NodeFront.
+       *
+       * @param  {NodeFront} nodeFront
+       *         The node to highlight.
+       * @param  {Object} options
+       *         Options passed to the highlighter actor.
+       */
+      onShowBoxModelHighlighterForNode: (nodeFront, options) => {
+        let toolbox = this.inspector.toolbox;
+        toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
       },
 
       /**
