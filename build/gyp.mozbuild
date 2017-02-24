@@ -35,7 +35,7 @@ gyp_vars.update({
     'build_json': 0,
     'build_icu': 0,
     'build_opus': 0,
-    'libyuv_dir': '/media/libyuv',
+    'libyuv_dir': '/media/libyuv/libyuv',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
     'use_openssl': 0,
