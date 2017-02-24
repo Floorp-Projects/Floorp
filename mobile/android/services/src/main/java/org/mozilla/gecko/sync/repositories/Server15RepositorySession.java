@@ -15,16 +15,16 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.downloaders.BatchingDownloader;
 import org.mozilla.gecko.sync.repositories.uploaders.BatchingUploader;
 
-public class Server11RepositorySession extends RepositorySession {
-  public static final String LOG_TAG = "Server11RepositorySession";
+public class Server15RepositorySession extends RepositorySession {
+  public static final String LOG_TAG = "Server15RepositorySession";
 
-  protected final Server11Repository serverRepository;
+  protected final Server15Repository serverRepository;
   private BatchingUploader uploader;
   private final BatchingDownloader downloader;
 
-  public Server11RepositorySession(Repository repository) {
+  public Server15RepositorySession(Repository repository) {
     super(repository);
-    this.serverRepository = (Server11Repository) repository;
+    this.serverRepository = (Server15Repository) repository;
     this.downloader = initializeDownloader(this);
   }
 
@@ -108,7 +108,7 @@ public class Server11RepositorySession extends RepositorySession {
     return serverRepository.updateNeeded(getLastSyncTimestamp());
   }
 
-  protected static BatchingDownloader initializeDownloader(final Server11RepositorySession serverRepositorySession) {
+  protected static BatchingDownloader initializeDownloader(final Server15RepositorySession serverRepositorySession) {
     return new BatchingDownloader(
             serverRepositorySession.serverRepository.authHeaderProvider,
             Uri.parse(serverRepositorySession.serverRepository.collectionURI().toString()),

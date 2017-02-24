@@ -18,8 +18,8 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 
 import java.net.URISyntaxException;
@@ -438,20 +438,20 @@ public class BatchingUploaderTest {
         infoConfigurationJSON.put(InfoConfiguration.MAX_POST_BYTES, 1024L);
         infoConfigurationJSON.put(InfoConfiguration.MAX_REQUEST_BYTES, 1024L);
 
-        Server11RepositorySession server11RepositorySession = new Server11RepositorySession(
+        Server15RepositorySession server15RepositorySession = new Server15RepositorySession(
                 makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
         );
-        server11RepositorySession.setStoreDelegate(storeDelegate);
+        server15RepositorySession.setStoreDelegate(storeDelegate);
         return new BatchingUploader(
-                server11RepositorySession, workQueue, storeDelegate, Uri.EMPTY, null,
+                server15RepositorySession, workQueue, storeDelegate, Uri.EMPTY, null,
                 new InfoConfiguration(infoConfigurationJSON), null);
     }
 
-    private Server11Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
+    private Server15Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
         return makeConstrainedRepository(1024, 1024, maxPostRecords, 4096, maxTotalRecords, firstSync);
     }
 
-    private Server11Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
+    private Server15Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
         ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, maxTotalBytes);
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
@@ -478,9 +478,8 @@ public class BatchingUploaderTest {
             };
         }
 
-
         try {
-            return new Server11Repository(
+            return new Server15Repository(
                     "dummyCollection",
                     SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                     "http://dummy.url/",

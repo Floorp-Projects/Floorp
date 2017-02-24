@@ -29,7 +29,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 
                  +------------------------------------+
-                 |    Server11RepositorySession       |
+                 |    Server15RepositorySession       |
                  +-------------------------+----------+
                            ^               |
                            |               |

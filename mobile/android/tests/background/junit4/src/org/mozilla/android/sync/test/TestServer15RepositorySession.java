@@ -22,7 +22,7 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecordFactory;
@@ -40,7 +40,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(TestRunner.class)
-public class TestServer11RepositorySession {
+public class TestServer15RepositorySession {
 
   public class POSTMockServer extends MockServer {
     @Override
@@ -110,7 +110,7 @@ public class TestServer11RepositorySession {
     final String COLLECTION = "test";
 
     final TrackingWBORepository local = getLocal(100);
-    final Server11Repository remote = new Server11Repository(
+    final Server15Repository remote = new Server15Repository(
             COLLECTION, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
             getCollectionURL(COLLECTION), authHeaderProvider, infoCollections, infoConfiguration);
     KeyBundle collectionKey = new KeyBundle(TEST_USERNAME, SYNC_KEY);

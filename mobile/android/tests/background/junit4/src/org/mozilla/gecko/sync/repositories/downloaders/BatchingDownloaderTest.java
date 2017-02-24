@@ -20,8 +20,8 @@ import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -41,8 +41,8 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(TestRunner.class)
 public class BatchingDownloaderTest {
-    private MockSever11Repository serverRepository;
-    private Server11RepositorySession repositorySession;
+    private MockSever15Repository serverRepository;
+    private Server15RepositorySession repositorySession;
     private MockSessionFetchRecordsDelegate sessionFetchRecordsDelegate;
     private MockDownloader mockDownloader;
     private String DEFAULT_COLLECTION_NAME = "dummyCollection";
@@ -149,15 +149,15 @@ public class BatchingDownloaderTest {
         }
     }
 
-    class MockSever11Repository extends Server11Repository {
-        public MockSever11Repository(@NonNull String collection, @NonNull String storageURL,
+    class MockSever15Repository extends Server15Repository {
+        public MockSever15Repository(@NonNull String collection, @NonNull String storageURL,
                                      AuthHeaderProvider authHeaderProvider, @NonNull InfoCollections infoCollections,
                                      @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
             super(collection, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30), storageURL, authHeaderProvider, infoCollections, infoConfiguration);
         }
     }
 
-    class MockRepositorySession extends Server11RepositorySession {
+    class MockRepositorySession extends Server15RepositorySession {
         public boolean abort;
 
         public MockRepositorySession(Repository repository) {
@@ -174,9 +174,9 @@ public class BatchingDownloaderTest {
     public void setUp() throws Exception {
         sessionFetchRecordsDelegate = new MockSessionFetchRecordsDelegate();
 
-        serverRepository = new MockSever11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL, null,
+        serverRepository = new MockSever15Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL, null,
                 new InfoCollections(), new InfoConfiguration());
-        repositorySession = new Server11RepositorySession(serverRepository);
+        repositorySession = new Server15RepositorySession(serverRepository);
         mockDownloader = new MockDownloader(repositorySession, true);
     }
 

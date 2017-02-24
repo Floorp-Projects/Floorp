@@ -30,7 +30,7 @@ import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -143,7 +143,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   // Override this in subclasses.
   protected Repository getRemoteRepository() throws URISyntaxException {
     String collection = getCollection();
-    return new Server11Repository(collection,
+    return new Server15Repository(collection,
                                   session.getSyncDeadline(),
                                   session.config.storageURL(),
                                   session.getAuthHeaderProvider(),
@@ -152,7 +152,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   }
 
   /**
-   * Return a Crypto5Middleware-wrapped Server11Repository.
+   * Return a Crypto5Middleware-wrapped Server15Repository.
    *
    * @throws NoCollectionKeysSetException
    * @throws URISyntaxException
