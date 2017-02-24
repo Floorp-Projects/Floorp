@@ -11,6 +11,7 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jspubtd.h"
 
@@ -255,6 +256,9 @@ class ParseContext : public Nestable<ParseContext>
     };
 
   private:
+    // Trace logging of parsing time.
+    AutoFrontendTraceLog traceLog_;
+
     // Context shared between parsing and bytecode generation.
     SharedContext* sc_;
 
@@ -351,6 +355,11 @@ class ParseContext : public Nestable<ParseContext>
     template <typename ParseHandler>
     ParseContext(Parser<ParseHandler>* prs, SharedContext* sc, Directives* newDirectives)
       : Nestable<ParseContext>(&prs->pc),
+        traceLog_(sc->context,
+                  mozilla::IsSame<ParseHandler, FullParseHandler>::value
+                  ? TraceLogger_ParsingFull
+                  : TraceLogger_ParsingSyntax,
+                  prs->tokenStream),
         sc_(sc),
         tokenStream_(prs->tokenStream),
         innermostStatement_(nullptr),
