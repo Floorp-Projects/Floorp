@@ -1113,7 +1113,7 @@ MediaFormatReader::Shutdown()
     mAudio.mTrackDemuxer->BreakCycles();
     mAudio.mTrackDemuxer = nullptr;
     mAudio.ResetState();
-    ShutdownDecoderWithPromise(TrackInfo::kAudioTrack);
+    ShutdownDecoder(TrackInfo::kAudioTrack);
   }
 
   if (HasVideo()) {
@@ -1121,7 +1121,7 @@ MediaFormatReader::Shutdown()
     mVideo.mTrackDemuxer->BreakCycles();
     mVideo.mTrackDemuxer = nullptr;
     mVideo.ResetState();
-    ShutdownDecoderWithPromise(TrackInfo::kVideoTrack);
+    ShutdownDecoder(TrackInfo::kVideoTrack);
   }
 
   mShutdownPromisePool->Track(mDemuxer->Shutdown());
@@ -1138,11 +1138,20 @@ MediaFormatReader::Shutdown()
 }
 
 void
-MediaFormatReader::ShutdownDecoderWithPromise(TrackType aTrack)
+MediaFormatReader::ShutdownDecoder(TrackType aTrack)
 {
   LOGV("%s", TrackTypeToStr(aTrack));
 
   auto& decoder = GetDecoderData(aTrack);
+  if (!decoder.mDecoder) {
+    LOGV("Already shut down");
+    return;
+  }
+  if (!decoder.mShutdownPromise.IsEmpty()) {
+    LOGV("Shutdown already in progress");
+    return;
+  }
+
   if (!decoder.mFlushed && decoder.mDecoder) {
     // The decoder has yet to be flushed.
     // We always flush the decoder prior to a shutdown to ensure that all the
@@ -1171,22 +1180,6 @@ MediaFormatReader::ShutdownDecoderWithPromise(TrackType aTrack)
   // Finally, let's just shut down the currently active decoder.
   decoder.ShutdownDecoder();
   mShutdownPromisePool->Track(decoder.mShutdownPromise.Ensure(__func__));
-}
-
-void
-MediaFormatReader::ShutdownDecoder(TrackType aTrack)
-{
-  LOG("%s", TrackTypeToStr(aTrack));
-  auto& decoder = GetDecoderData(aTrack);
-  if (!decoder.mDecoder) {
-    LOGV("Already shut down");
-    return;
-  }
-  if (!decoder.mShutdownPromise.IsEmpty()) {
-    LOGV("Shutdown already in progress");
-    return;
-  }
-  ShutdownDecoderWithPromise(aTrack);
 }
 
 RefPtr<ShutdownPromise>
