@@ -325,8 +325,7 @@ CrossProcessCompositorBridgeParent::DidComposite(
     Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
   } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
-    Unused << SendDidComposite(aId, wrbridge->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
-    wrbridge->SetPendingTransactionId(0);
+    Unused << SendDidComposite(aId, wrbridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
   }
 }
 
