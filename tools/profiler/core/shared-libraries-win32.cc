@@ -128,7 +128,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     }
   }
 
-  for (const auto& hMod : hMods) {
+  for (unsigned int i = 0; i < modulesNum; i++) {
     nsID pdbSig;
     uint32_t pdbAge;
     nsAutoString pdbNameStr;
@@ -136,12 +136,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     std::string breakpadId;
     WCHAR modulePath[MAX_PATH + 1];
 
-    if (!GetModuleFileNameEx(hProcess, hMod, modulePath, sizeof(modulePath) / sizeof(WCHAR))) {
+    if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath, sizeof(modulePath) / sizeof(WCHAR))) {
       continue;
     }
 
     MODULEINFO module = {0};
-    if (!GetModuleInformation(hProcess, hMod, &module, sizeof(MODULEINFO))) {
+    if (!GetModuleInformation(hProcess, hMods[i], &module, sizeof(MODULEINFO))) {
       continue;
     }
 
