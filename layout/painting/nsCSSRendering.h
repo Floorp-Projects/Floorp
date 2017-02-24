@@ -617,6 +617,8 @@ struct nsCSSRendering {
     {
       memset(mRadii, 0, sizeof(nscoord) * 8);
     }
+
+    bool IsValid() const;
   };
 
   static void
