@@ -1,0 +1,52 @@
+# HG changeset patch
+# Parent  b079f87bb602629bb8b51979d79f825be7aef1ae
+Bug 1341513: Make disable MJPEG fprintf warnings build-time option r=sotaro
+
+diff --git a/media/libyuv/libyuv/source/mjpeg_decoder.cc b/media/libyuv/libyuv/source/mjpeg_decoder.cc
+--- a/media/libyuv/libyuv/source/mjpeg_decoder.cc
++++ b/media/libyuv/libyuv/source/mjpeg_decoder.cc
+@@ -73,18 +73,20 @@ MJpegDecoder::MJpegDecoder()
+       databuf_strides_(NULL) {
+   decompress_struct_ = new jpeg_decompress_struct;
+   source_mgr_ = new jpeg_source_mgr;
+ #ifdef HAVE_SETJMP
+   error_mgr_ = new SetJmpErrorMgr;
+   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
+   // Override standard exit()-based error handler.
+   error_mgr_->base.error_exit = &ErrorHandler;
++#ifndef DEBUG_MJPEG
+   error_mgr_->base.output_message = &OutputHandler;
+ #endif
++#endif
+   decompress_struct_->client_data = NULL;
+   source_mgr_->init_source = &init_source;
+   source_mgr_->fill_input_buffer = &fill_input_buffer;
+   source_mgr_->skip_input_data = &skip_input_data;
+   source_mgr_->resync_to_restart = &jpeg_resync_to_restart;
+   source_mgr_->term_source = &term_source;
+   jpeg_create_decompress(decompress_struct_);
+   decompress_struct_->src = source_mgr_;
+@@ -450,21 +452,22 @@ void ErrorHandler(j_common_ptr cinfo) {
+ #endif
+ 
+   SetJmpErrorMgr* mgr = reinterpret_cast<SetJmpErrorMgr*>(cinfo->err);
+   // This rewinds the call stack to the point of the corresponding setjmp()
+   // and causes it to return (for a second time) with value 1.
+   longjmp(mgr->setjmp_buffer, 1);
+ }
+ 
++#ifndef DEBUG_MJPEG
+ // Suppress fprintf warnings.
+ void OutputHandler(j_common_ptr cinfo) {
+   (void)cinfo;
+ }
+-
++#endif
+ #endif  // HAVE_SETJMP
+ 
+ void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
+   if (num_outbufs != num_outbufs_) {
+     // We could perhaps optimize this case to resize the output buffers without
+     // necessarily having to delete and recreate each one, but it's not worth
+     // it.
+     DestroyOutputBuffers();
