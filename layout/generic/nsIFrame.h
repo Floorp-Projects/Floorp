@@ -612,7 +612,7 @@ public:
    * removal and destruction.
    */
   void Destroy() { DestroyFrom(this); }
- 
+
   /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return values.
     */
   enum FrameSearchResult {
@@ -692,7 +692,7 @@ public:
    */
   nsStyleContext* StyleContext() const { return mStyleContext; }
   void SetStyleContext(nsStyleContext* aContext)
-  { 
+  {
     if (aContext != mStyleContext) {
       nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
@@ -762,10 +762,10 @@ public:
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
    * of the frame's primary context and are NOT used as style contexts
-   * for any child frames. These contexts also MUST NOT have any child 
+   * for any child frames. These contexts also MUST NOT have any child
    * contexts whatsoever. If you need to insert style contexts into the
    * style tree, then you should create pseudo element frames to own them
-   * The indicies must be consecutive and implementations MUST return an 
+   * The indicies must be consecutive and implementations MUST return an
    * NS_ERROR_INVALID_ARG if asked for an index that is out of range.
    */
   virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const = 0;
@@ -999,7 +999,7 @@ public:
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
-  
+
   nsPoint GetPositionIgnoringScrolling();
 
   typedef AutoTArray<nsIContent*, 2> ContentArray;
@@ -1493,13 +1493,13 @@ public:
    * Builds the display lists for the content represented by this frame
    * and its descendants. The background+borders of this element must
    * be added first, before any other content.
-   * 
+   *
    * This should only be called by methods in nsFrame. Instead of calling this
    * directly, call either BuildDisplayListForStackingContext or
    * BuildDisplayListForChild.
-   * 
+   *
    * See nsDisplayList.h for more information about display lists.
-   * 
+   *
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
@@ -1523,7 +1523,7 @@ public:
    */
   virtual nscolor GetCaretColorAt(int32_t aOffset);
 
- 
+
   bool IsThemed(nsITheme::Transparency* aTransparencyState = nullptr) const {
     return IsThemed(StyleDisplay(), aTransparencyState);
   }
@@ -1543,7 +1543,7 @@ public:
     }
     return true;
   }
-  
+
   /**
    * Builds a display list for the content represented by this frame,
    * treating this frame as the root of a stacking context.
@@ -1701,7 +1701,7 @@ public:
   // cursor calculated from a point; the secondary offset, when it is different,
   // indicates that the point is in the boundaries of some selectable object.
   // Note that the primary offset can be after the secondary offset; for places
-  // that need the beginning and end of the object, the StartOffset and 
+  // that need the beginning and end of the object, the StartOffset and
   // EndOffset helpers can be used.
   struct MOZ_STACK_CLASS ContentOffsets
   {
@@ -1780,13 +1780,13 @@ public:
   virtual nsresult  GetCharacterRectsInRange(int32_t aInOffset,
                                              int32_t aLength,
                                              nsTArray<nsRect>& aRects) = 0;
-  
+
   /**
    * Get the child frame of this frame which contains the given
    * content offset. outChildFrame may be this frame, or nullptr on return.
    * outContentOffset returns the content offset relative to the start
    * of the returned node. You can also pass a hint which tells the method
-   * to stick to the end of the first found frame or the beginning of the 
+   * to stick to the end of the first found frame or the beginning of the
    * next in case the offset falls on a boundary.
    */
   virtual nsresult GetChildFrameContainingOffset(int32_t    inContentOffset,
@@ -1796,12 +1796,12 @@ public:
 
  /**
    * Get the current frame-state value for this frame. aResult is
-   * filled in with the state bits. 
+   * filled in with the state bits.
    */
   nsFrameState GetStateBits() const { return mState; }
 
   /**
-   * Update the current frame-state value for this frame. 
+   * Update the current frame-state value for this frame.
    */
   void AddStateBits(nsFrameState aBits) { mState |= aBits; }
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
@@ -1813,7 +1813,7 @@ public:
   {
     return (mState & aBits) == aBits;
   }
-  
+
   /**
    * Checks if the current frame-state includes any of the listed bits
    */
@@ -1830,7 +1830,7 @@ public:
 
   /**
    * This call is invoked when the value of a content objects's attribute
-   * is changed. 
+   * is changed.
    * The first frame that maps that content is asked to deal
    * with the change by doing whatever is appropriate.
    *
@@ -1889,7 +1889,7 @@ public:
   virtual void SetNextInFlow(nsIFrame*) = 0;
 
   /**
-   * Return the first frame in our current flow. 
+   * Return the first frame in our current flow.
    */
   virtual nsIFrame* FirstInFlow() const {
     return const_cast<nsIFrame*>(this);
@@ -2358,7 +2358,7 @@ public:
    * Helper method used by block reflow to identify runs of text so
    * that proper word-breaking can be done.
    *
-   * @return 
+   * @return
    *    true if we can continue a "text run" through the frame. A
    *    text run is text that should be treated contiguously for line
    *    and word breaking.
@@ -2439,7 +2439,7 @@ public:
    * will transform the point to the coordinate system of aOther.
    *
    * aOther must be non-null.
-   * 
+   *
    * This function is fastest when aOther is an ancestor of |this|.
    *
    * This function _DOES NOT_ work across document boundaries.
@@ -2459,7 +2459,7 @@ public:
    * ratio of |this|.
    *
    * aOther must be non-null.
-   * 
+   *
    * This function is fastest when aOther is an ancestor of |this|.
    *
    * This function works across document boundaries.
@@ -2564,7 +2564,7 @@ public:
     eTablePart =                        1 << 13,
     // If this bit is set, the frame doesn't allow ignorable whitespace as
     // children. For example, the whitespace between <table>\n<tr>\n<td>
-    // will be excluded during the construction of children. 
+    // will be excluded during the construction of children.
     eExcludesIgnorableWhitespace =      1 << 14,
     eSupportsCSSTransforms =            1 << 15,
 
@@ -2647,7 +2647,7 @@ public:
    * container types.
    *
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
@@ -2659,20 +2659,20 @@ public:
    * @param aRect The rect to invalidate, relative to the TopLeft of the
    * frame's border box.
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
-  
+
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
    * this one).
-   * 
+   *
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
    *
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
@@ -2688,7 +2688,7 @@ public:
    * entire overflow area of this frame has been rendered in its
    * layer(s).
    */
-  static void* LayerIsPrerenderedDataKey() { 
+  static void* LayerIsPrerenderedDataKey() {
     return &sLayerIsPrerenderedDataKey;
   }
   static uint8_t sLayerIsPrerenderedDataKey;
@@ -2713,9 +2713,9 @@ public:
    * If false, aRect is left unchanged.
    */
   bool IsInvalid(nsRect& aRect);
- 
+
   /**
-   * Check if any frame within the frame subtree (including this frame) 
+   * Check if any frame within the frame subtree (including this frame)
    * returns true for IsInvalid().
    */
   bool HasInvalidFrameInSubtree()
@@ -2730,16 +2730,16 @@ public:
   void ClearInvalidationStateBits();
 
   /**
-   * Ensures that the refresh driver is running, and schedules a view 
+   * Ensures that the refresh driver is running, and schedules a view
    * manager flush on the next tick.
    *
-   * The view manager flush will update the layer tree, repaint any 
+   * The view manager flush will update the layer tree, repaint any
    * invalid areas in the layer tree and schedule a layer tree
    * composite operation to display the layer tree.
    *
    * In general it is not necessary for frames to call this when they change.
    * For example, changes that result in a reflow will have this called for
-   * them by PresContext::DoReflow when the reflow begins. Style changes that 
+   * them by PresContext::DoReflow when the reflow begins. Style changes that
    * do not trigger a reflow should have this called for them by
    * DoApplyRenderingChangeToTree.
    *
@@ -2757,7 +2757,7 @@ public:
   void SchedulePaint(PaintType aType = PAINT_DEFAULT);
 
   /**
-   * Checks if the layer tree includes a dedicated layer for this 
+   * Checks if the layer tree includes a dedicated layer for this
    * frame/display item key pair, and invalidates at least aDamageRect
    * area within that layer.
    *
@@ -2952,7 +2952,7 @@ public:
    */
   bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
 
-  /** 
+  /**
    *  Called to retrieve the SelectionController associated with the frame.
    *  @param aSelCon will contain the selection controller associated with
    *  the frame.
@@ -2971,9 +2971,9 @@ public:
   const nsFrameSelection* GetConstFrameSelection() const;
 
   /**
-   *  called to find the previous/next character, word, or line  returns the actual 
+   *  called to find the previous/next character, word, or line  returns the actual
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
-   *  uses frame's begin selection state to start. if no selection on this frame will 
+   *  uses frame's begin selection state to start. if no selection on this frame will
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsFrameSelection
    */
@@ -3069,7 +3069,7 @@ public:
   /**
    * Overridable function to determine whether this frame should be considered
    * "in" the given non-null aSelection for visibility purposes.
-   */  
+   */
   virtual bool IsVisibleInSelection(nsISelection* aSelection);
 
   /**
@@ -3120,7 +3120,7 @@ public:
    *
    * @param aParentContent the content node corresponding to the parent frame
    * @return whether the frame is a pseudo frame
-   */   
+   */
   bool IsPseudoFrame(const nsIContent* aParentContent) {
     return mContent == aParentContent;
   }
@@ -3153,12 +3153,12 @@ public:
   /**
    * Check if this frame is focusable and in the current tab order.
    * Tabbable is indicated by a nonnegative tabindex & is a subset of focusable.
-   * For example, only the selected radio button in a group is in the 
+   * For example, only the selected radio button in a group is in the
    * tab order, unless the radio group has no selection in which case
-   * all of the visible, non-disabled radio buttons in the group are 
-   * in the tab order. On the other hand, all of the visible, non-disabled 
+   * all of the visible, non-disabled radio buttons in the group are
+   * in the tab order. On the other hand, all of the visible, non-disabled
    * radio buttons are always focusable via clicking or script.
-   * Also, depending on the pref accessibility.tabfocus some widgets may be 
+   * Also, depending on the pref accessibility.tabfocus some widgets may be
    * focusable but removed from the tab order. This is the default on
    * Mac OS X, where fewer items are focusable.
    * @param  [in, optional] aTabIndex the computed tab index
@@ -3209,7 +3209,7 @@ public:
    * This calculates the maximum size for a box based on its state
    * @param[in] aBoxLayoutState The desired state to calculate for
    * @return The maximum size
-   */    
+   */
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
 
   /**
@@ -3315,23 +3315,23 @@ public:
   /**
    * Clear the list of child PresShells generated during the last paint
    * so that we can begin generating a new one.
-   */  
-  void ClearPresShellsFromLastPaint() { 
-    PaintedPresShellList()->Clear(); 
+   */
+  void ClearPresShellsFromLastPaint() {
+    PaintedPresShellList()->Clear();
   }
-  
+
   /**
    * Flag a child PresShell as painted so that it will get its paint count
    * incremented during empty transactions.
-   */  
-  void AddPaintedPresShell(nsIPresShell* shell) { 
+   */
+  void AddPaintedPresShell(nsIPresShell* shell) {
     PaintedPresShellList()->AppendElement(do_GetWeakReference(shell));
   }
-  
+
   /**
    * Increment the paint count of all child PresShells that were painted during
    * the last repaint.
-   */  
+   */
   void UpdatePaintCountForPaintedPresShells() {
     for (nsWeakPtr& item : *PaintedPresShellList()) {
       nsCOMPtr<nsIPresShell> shell = do_QueryReferent(item);
@@ -3339,7 +3339,7 @@ public:
         shell->IncrementPaintCount();
       }
     }
-  }  
+  }
 
   /**
    * @return true if we painted @aShell during the last repaint.
@@ -3576,15 +3576,15 @@ private:
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(PaintedPresShellsProperty,
                                       nsTArray<nsWeakPtr>,
                                       DestroyPaintedPresShellList)
-  
+
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
     nsTArray<nsWeakPtr>* list = Properties().Get(PaintedPresShellsProperty());
-    
+
     if (!list) {
       list = new nsTArray<nsWeakPtr>();
       Properties().Set(PaintedPresShellsProperty(), list);
     }
-    
+
     return list;
   }
 
@@ -3640,7 +3640,7 @@ protected:
    *         see enum FrameSearchResult for more details.
    */
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) = 0;
-  
+
   /**
    * Search the frame for the next character
    * @param  aForward [in] Are we moving forward (or backward) in content order.
@@ -3656,7 +3656,7 @@ protected:
    */
   virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) = 0;
-  
+
   /**
    * Search the frame for the next word boundary
    * @param  aForward [in] Are we moving forward (or backward) in content order.
@@ -3714,7 +3714,7 @@ protected:
   /**
    * Search for the first paragraph boundary before or after the given position
    * @param  aPos See description in nsFrameSelection.h. The following fields are
-   *              used by this method: 
+   *              used by this method:
    *              Input: mDirection
    *              Output: mResultContent, mContentOffset
    */
