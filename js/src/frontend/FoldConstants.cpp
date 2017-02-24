@@ -1928,5 +1928,6 @@ frontend::FoldConstants(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>
     if (parser->pc->useAsmOrInsideUseAsm())
         return true;
 
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx), TraceLogger_BytecodeFoldConstants);
     return Fold(cx, pnp, *parser, false);
 }
