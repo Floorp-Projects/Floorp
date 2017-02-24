@@ -12,12 +12,6 @@
   -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem");
 }
 
-/* Treat @collpased="true" as display: none similar to how it is for XUL elements.
- * https://developer.mozilla.org/en-US/docs/Web/CSS/visibility#Values */
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"][collapsed="true"] {
-  display: none;
-}
-
 #PopupAutoComplete[firstresultstyle="autofill-profile"] {
   min-width: 150px !important;
 }
