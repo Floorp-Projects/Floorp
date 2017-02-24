@@ -651,7 +651,7 @@ fails == 371043-1.html 371043-1.html
 == 371925-1b.html 371925-1b.html
 fails == 372037-1.html 372037-1.html
 == 372062-1.html 372062-1.html
-fails == 372063-1.html 372063-1.html
+== 372063-1.html 372063-1.html
 == 372323-1.xhtml 372323-1.xhtml
 fails == 372553-1.html 372553-1.html
 fails == 372632-1.html 372632-1.html
@@ -770,7 +770,7 @@ fails == 386470-1c.html 386470-1c.html  # Bug 1341725
 == 388026-1.html 388026-1.html
 fails == 389074-1.html 389074-1.html
 == 389224-1.html 389224-1.html
-fails == 389224-2.html 389224-2.html # Bug 1341728
+== 389224-2.html 389224-2.html
 fails == 389468-1.html 389468-1.html
 == 389623-1.html 389623-1.html
 == 389636-1.html 389636-1.html
@@ -831,7 +831,7 @@ fails == 398101-1.html 398101-1.html
 == 398797-1d.html 398797-1d.html
 == 399209-1.html 399209-1.html
 == 399209-2.html 399209-2.html
-fails == 399258-1.html 399258-1.html
+== 399258-1.html 399258-1.html
 fails == 399384-1.html 399384-1.html
 random-if(gtkWidget) == 399636-standards-css.html 399636-standards-css.html
 random-if(gtkWidget) == 399636-standards-html.html 399636-standards-html.html
@@ -1761,7 +1761,7 @@ fails == 818276-1.html 818276-1.html
 fails == 825999.html 825999.html
 == 827577-1a.html 827577-1a.html
 == 827577-1b.html 827577-1b.html
-fails == 827799-1.html 827799-1.html
+== 827799-1.html 827799-1.html
 == 829958.html 829958.html
 == 836844-1.html 836844-1.html
 == 841192-1.html 841192-1.html

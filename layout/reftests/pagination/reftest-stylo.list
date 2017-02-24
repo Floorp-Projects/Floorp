@@ -5,14 +5,14 @@
 fails == abspos-breaking-000.xhtml abspos-breaking-000.xhtml
 fails == abspos-breaking-001.xhtml abspos-breaking-001.xhtml
 fails == abspos-breaking-002.xhtml abspos-breaking-002.xhtml
-fails == abspos-breaking-003.html abspos-breaking-003.html
-fails == abspos-breaking-004.html abspos-breaking-004.html
-fails == abspos-breaking-005.html abspos-breaking-005.html
-fails == abspos-breaking-006.html abspos-breaking-006.html
-fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007.html
-fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008.html
-fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009.html
-fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010.html
+== abspos-breaking-003.html abspos-breaking-003.html
+== abspos-breaking-004.html abspos-breaking-004.html
+== abspos-breaking-005.html abspos-breaking-005.html
+== abspos-breaking-006.html abspos-breaking-006.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009.html
+pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010.html
 == abspos-breaking-011.html abspos-breaking-011.html
 == abspos-overflow-01.xhtml abspos-overflow-01.xhtml
 == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.xhtml
