@@ -272,13 +272,11 @@ nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
   return NS_OK;
 }
 
-NrIceCtx::NrIceCtx(const std::string& name,
-                   bool offerer,
-                   Policy policy)
+NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
   : connection_state_(ICE_CTX_INIT),
     gathering_state_(ICE_CTX_GATHER_INIT),
     name_(name),
-    offerer_(offerer),
+    offerer_(false),
     ice_controlling_set_(false),
     streams_(),
     ctx_(nullptr),
@@ -288,8 +286,6 @@ NrIceCtx::NrIceCtx(const std::string& name,
     trickle_(true),
     policy_(policy),
     nat_ (nullptr) {
-  // XXX: offerer_ will be used eventually;  placate clang in the meantime.
-  (void)offerer_;
 }
 
 // Handler callbacks
@@ -545,9 +541,7 @@ NrIceCtx::Initialize(const std::string& ufrag,
   // Create the ICE context
   int r;
 
-  UINT4 flags = offerer_ ? NR_ICE_CTX_FLAGS_OFFERER:
-      NR_ICE_CTX_FLAGS_ANSWERER;
-  flags |= NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
+  UINT4 flags = NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION;
   switch (policy_) {
     case ICE_POLICY_RELAY:
       flags |= NR_ICE_CTX_FLAGS_RELAY_ONLY;
@@ -972,8 +966,10 @@ nsresult NrIceCtx::ParseGlobalAttributes(std::vector<std::string> attrs) {
   return NS_OK;
 }
 
-nsresult NrIceCtx::StartChecks() {
+nsresult NrIceCtx::StartChecks(bool offerer) {
   int r;
+
+  offerer_ = offerer;
 
   r=nr_ice_peer_ctx_pair_candidates(peer_);
   if (r) {
