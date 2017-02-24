@@ -124,4 +124,37 @@ FormAutofillHandler.prototype = {
       }
     }
   },
+
+  /**
+   * Populates result to the preview layers with given profile.
+   *
+   * @param {Object} profile
+   *        A profile to be previewed with
+   */
+  previewFormFields(profile) {
+    log.debug("preview profile in autofillFormFields:", profile);
+    for (let fieldDetail of this.fieldDetails) {
+      let value = profile[fieldDetail.fieldName] || "";
+
+      // Skip the fields that already has text entered
+      if (fieldDetail.element.value) {
+        continue;
+      }
+
+      // TODO: Set highlight style and preview text.
+    }
+  },
+
+  clearPreviewedFormFields() {
+    log.debug("clear previewed fields in:", this.form);
+    for (let fieldDetail of this.fieldDetails) {
+      // TODO: Clear preview text
+
+      // We keep the highlight of all fields if this form has
+      // already been auto-filled with a profile.
+      if (this.filledProfileGUID == null) {
+        // TODO: Remove highlight style
+      }
+    }
+  },
 };
