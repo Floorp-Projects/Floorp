@@ -295,7 +295,7 @@ class BeetMover(BaseScript, VirtualenvMixin, object):
                 )
                 beet_contents = '\n'.join([
                     '{hash} {fmt} {size} {name}'.format(
-                        hash=self.get_hash_for_file(downloaded_file, hash_type=algo),
+                        hash=self.get_hash_for_file(downloaded_file, hash_type=fmt),
                         fmt=fmt,
                         size=os.path.getsize(downloaded_file),
                         name=self._strip_prefix(s3_key)) for fmt in HASH_FORMATS
