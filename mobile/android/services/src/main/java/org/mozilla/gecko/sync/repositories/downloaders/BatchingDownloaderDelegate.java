@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.repositories.downloaders;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -14,8 +15,6 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.net.WBOCollectionRequestDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 
-
-import java.util.ConcurrentModificationException;
 
 /**
  * Delegate that gets passed into fetch methods to handle server response from fetch.
@@ -60,37 +59,38 @@ public class BatchingDownloaderDelegate extends WBOCollectionRequestDelegate {
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
         Logger.debug(LOG_TAG, "Fetch done.");
-        if (response.lastModified() != null) {
-            this.downloader.onFetchCompleted(response, this.fetchRecordsDelegate, this.request,
-                    this.newer, this.batchLimit, this.full, this.sort, this.ids);
+
+        // Sanity check.
+        if (response.lastModified() == null) {
+            this.downloader.handleFetchFailed(
+                    this.fetchRecordsDelegate,
+                    new IllegalStateException("Missing last modified header from response"),
+                    this.request
+            );
             return;
         }
-        this.downloader.onFetchFailed(
-                new IllegalStateException("Missing last modified header from response"),
-                this.fetchRecordsDelegate,
-                this.request);
+
+        this.downloader.onFetchCompleted(response, this.fetchRecordsDelegate, this.request,
+                this.newer, this.batchLimit, this.full, this.sort, this.ids);
     }
 
     @Override
     public void handleRequestFailure(SyncStorageResponse response) {
         Logger.warn(LOG_TAG, "Got a non-success response.");
-        // Handle concurrent modification errors separately. We will need to signal upwards that
-        // this happened, in case stage buffer will want to clean up.
+        // Handle concurrent modification errors separately.
+        final Exception ex;
         if (response.getStatusCode() == 412) {
-            this.downloader.onFetchFailed(
-                    new ConcurrentModificationException(),
-                    this.fetchRecordsDelegate,
-                    this.request
-            );
+            ex = new CollectionConcurrentModificationException();
         } else {
-            this.handleRequestError(new HTTPFailureException(response));
+            ex = new HTTPFailureException(response);
         }
+        this.handleRequestError(ex);
     }
 
     @Override
     public void handleRequestError(final Exception ex) {
         Logger.warn(LOG_TAG, "Got request error.", ex);
-        this.downloader.onFetchFailed(ex, this.fetchRecordsDelegate, this.request);
+        this.downloader.handleFetchFailed(this.fetchRecordsDelegate, ex, this.request);
     }
 
     @Override

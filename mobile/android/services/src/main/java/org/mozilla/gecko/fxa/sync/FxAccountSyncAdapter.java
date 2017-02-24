@@ -53,9 +53,10 @@ import org.mozilla.gecko.tokenserver.TokenServerToken;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -123,7 +124,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       super.rejectSync();
     }
 
+    /* package-local */ void requestFollowUpSync(String stage) {
+      this.stageNamesForFollowUpSync.add(stage);
+    }
+
     protected final Collection<String> stageNamesToSync;
+
+    // Keeps track of incomplete stages during this sync that need to be re-synced once we're done.
+    private final List<String> stageNamesForFollowUpSync = Collections.synchronizedList(new ArrayList<String>());
 
     public SyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
       super(latch, syncResult);
@@ -181,6 +189,15 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     @Override
     public void handleStageCompleted(Stage currentState, GlobalSession globalSession) {
+    }
+
+    /**
+     * Schedule an incomplete stage for a follow-up sync.
+     */
+    @Override
+    public void handleIncompleteStage(Stage currentState,
+                                      GlobalSession globalSession) {
+      syncDelegate.requestFollowUpSync(currentState.getRepositoryName());
     }
 
     @Override
@@ -574,7 +591,24 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       fxAccount.releaseSharedAccountStateLock();
     }
 
-    Logger.info(LOG_TAG, "Syncing done.");
+    // If there are any incomplete stages, request a follow-up sync. Otherwise, we're done.
+    // Incomplete stage is:
+    // - one that hit a 412 error during either upload or download of data, indicating that
+    //   its collection has been modified remotely, or
+    // - one that hit a sync deadline
+    final String[] stagesToSyncAgain;
+    synchronized (syncDelegate.stageNamesForFollowUpSync) {
+      stagesToSyncAgain = syncDelegate.stageNamesForFollowUpSync.toArray(
+              new String[syncDelegate.stageNamesForFollowUpSync.size()]
+      );
+    }
+
+    if (stagesToSyncAgain.length > 0) {
+      Logger.info(LOG_TAG, "Syncing done. Requesting an immediate follow-up sync.");
+      fxAccount.requestImmediateSync(stagesToSyncAgain, null);
+    } else {
+      Logger.info(LOG_TAG, "Syncing done.");
+    }
     lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
   }
 }

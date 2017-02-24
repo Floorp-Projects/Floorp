@@ -45,6 +45,12 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   }
 
   @Override
+  public void handleIncompleteStage(Stage currentState,
+                                    GlobalSession globalSession) {
+
+  }
+
+  @Override
   public boolean shouldBackOffStorage() {
     return false;
   }

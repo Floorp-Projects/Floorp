@@ -4,11 +4,15 @@
 
 package org.mozilla.gecko.sync.synchronizer;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.ReflowIsNecessaryException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
@@ -72,6 +76,8 @@ public class RecordsChannel implements
   private final RecordsChannelDelegate delegate;
   private long fetchEnd = -1;
 
+  private volatile ReflowIsNecessaryException reflowException;
+
   protected final AtomicInteger numFetched = new AtomicInteger();
   protected final AtomicInteger numFetchFailed = new AtomicInteger();
   protected final AtomicInteger numStored = new AtomicInteger();
@@ -93,7 +99,7 @@ public class RecordsChannel implements
    * Then we notify our delegate of completion.
    */
   private RecordConsumer consumer;
-  private boolean waitingForQueueDone = false;
+  private volatile boolean waitingForQueueDone = false;
   private final ConcurrentLinkedQueue<Record> toProcess = new ConcurrentLinkedQueue<Record>();
 
   @Override
@@ -204,9 +210,12 @@ public class RecordsChannel implements
 
   @Override
   public void onFetchFailed(Exception ex) {
-    Logger.warn(LOG_TAG, "onFetchFailed. Informing sink, calling for immediate stop.", ex);
-    sink.sourceFailed(ex);
+    Logger.warn(LOG_TAG, "onFetchFailed. Calling for immediate stop.", ex);
     numFetchFailed.incrementAndGet();
+    if (ex instanceof ReflowIsNecessaryException) {
+      setReflowException((ReflowIsNecessaryException) ex);
+    }
+    // Sink will be informed once consumer finishes.
     this.consumer.halt();
     delegate.onFlowFetchFailed(this, ex);
   }
@@ -246,16 +255,27 @@ public class RecordsChannel implements
     this.consumer.stored();
   }
 
-
   @Override
-  public void consumerIsDone(boolean allRecordsQueued) {
-    Logger.trace(LOG_TAG, "Consumer is done. Are we waiting for it? " + waitingForQueueDone);
+  public void consumerIsDoneFull() {
+    Logger.trace(LOG_TAG, "Consumer is done, processed all records. Are we waiting for it? " + waitingForQueueDone);
     if (waitingForQueueDone) {
       waitingForQueueDone = false;
-      if (!allRecordsQueued) {
-        this.sink.storeIncomplete();
-      }
-      this.sink.storeDone(); // Now we'll be waiting for onStoreCompleted.
+
+      // Now we'll be waiting for sink to call its delegate's onStoreCompleted or onStoreFailed.
+      this.sink.storeDone();
+    }
+  }
+
+  @Override
+  public void consumerIsDonePartial() {
+    Logger.trace(LOG_TAG, "Consumer is done, processed some records. Are we waiting for it? " + waitingForQueueDone);
+    if (waitingForQueueDone) {
+      waitingForQueueDone = false;
+
+      // Let sink clean up or flush records if necessary.
+      this.sink.storeIncomplete();
+
+      delegate.onFlowCompleted(this, fetchEnd, System.currentTimeMillis());
     }
   }
 
@@ -265,9 +285,40 @@ public class RecordsChannel implements
                           "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
     // Source might have used caches used to facilitate flow of records, so now is a good
     // time to clean up. Particularly pertinent for buffered sources.
+    // Rephrasing this in a more concrete way, buffers are cleared only once records have been merged
+    // locally and results of the merge have been uploaded to the server successfully.
     this.source.performCleanup();
-    // TODO: synchronize on consumer callback?
     delegate.onFlowCompleted(this, fetchEnd, storeEnd);
+
+  }
+
+  @Override
+  public void onStoreFailed(Exception ex) {
+    Logger.warn(LOG_TAG, "onStoreFailed. Calling for immediate stop.", ex);
+    if (ex instanceof ReflowIsNecessaryException) {
+      setReflowException((ReflowIsNecessaryException) ex);
+    }
+
+    // NB: consumer might or might not be running at this point. There are two cases here:
+    // 1) If we're storing records remotely, we might fail due to a 412.
+    // -- we might hit 412 at any point, so consumer might be in either state.
+    // Action: ignore consumer state, we have nothing else to do other to inform our delegate
+    // that we're done with this flow. Based on the reflow exception, it'll determine what to do.
+
+    // 2) If we're storing (merging) records locally, we might fail due to a sync deadline.
+    // -- we might hit a deadline only prior to attempting to merge records,
+    // -- at which point consumer would have finished already, and storeDone was called.
+    // Action: consumer state is known (done), so we can ignore it safely and inform our delegate
+    // that we're done.
+
+    // Prevent "once consumer is done..." actions from taking place. They already have (case 2), or
+    // we don't need them (case 1).
+    waitingForQueueDone = false;
+
+    // If consumer is still going at it, tell it to stop.
+    this.consumer.halt();
+
+    delegate.onFlowCompleted(this, fetchEnd, System.currentTimeMillis());
   }
 
   @Override
@@ -309,5 +360,18 @@ public class RecordsChannel implements
   public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
     // Lie outright. We know that all of our fetch methods are safe.
     return this;
+  }
+
+  @Nullable
+  /* package-local */ synchronized ReflowIsNecessaryException getReflowException() {
+    return reflowException;
+  }
+
+  private synchronized void setReflowException(@NonNull ReflowIsNecessaryException e) {
+    // It is a mistake to set reflow exception multiple times.
+    if (reflowException != null) {
+      throw new IllegalStateException("Reflow exception already set: " + reflowException);
+    }
+    reflowException = e;
   }
 }

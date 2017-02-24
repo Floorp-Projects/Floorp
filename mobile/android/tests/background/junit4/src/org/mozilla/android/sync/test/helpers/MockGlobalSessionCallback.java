@@ -57,6 +57,12 @@ public class MockGlobalSessionCallback implements GlobalSessionCallback {
   }
 
   @Override
+  public void handleIncompleteStage(Stage currentState,
+                                    GlobalSession globalSession) {
+
+  }
+
+  @Override
   public void handleStageCompleted(Stage currentState,
            GlobalSession globalSession) {
     stageCounter--;

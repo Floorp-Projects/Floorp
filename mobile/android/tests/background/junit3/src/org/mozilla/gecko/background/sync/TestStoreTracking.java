@@ -121,6 +121,11 @@ public class TestStoreTracking extends AndroidSyncTestCase {
           performNotify(e);
         }
       }
+
+      @Override
+      public void onStoreFailed(Exception e) {
+
+      }
     };
 
     session.setStoreDelegate(storeDelegate);

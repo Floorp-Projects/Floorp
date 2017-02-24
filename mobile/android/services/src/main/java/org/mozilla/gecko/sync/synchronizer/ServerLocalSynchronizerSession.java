@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.synchronizer;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.ReflowIsNecessaryException;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.StoreFailedException;
 
@@ -29,6 +30,15 @@ public class ServerLocalSynchronizerSession extends SynchronizerSession {
 
   @Override
   public void onFirstFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
+    // If a "reflow exception" was thrown, consider this synchronization failed.
+    final ReflowIsNecessaryException reflowException = recordsChannel.getReflowException();
+    if (reflowException != null) {
+      final String message = "Reflow is necessary: " + reflowException;
+      Logger.warn(LOG_TAG, message + " Aborting session.");
+      delegate.onSynchronizeFailed(this, reflowException, message);
+      return;
+    }
+
     // Fetch failures always abort.
     int numRemoteFetchFailed = recordsChannel.getFetchFailureCount();
     if (numRemoteFetchFailed > 0) {
@@ -53,6 +63,15 @@ public class ServerLocalSynchronizerSession extends SynchronizerSession {
 
   @Override
   public void onSecondFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
+    // If a "reflow exception" was thrown, consider this synchronization failed.
+    final ReflowIsNecessaryException reflowException = recordsChannel.getReflowException();
+    if (reflowException != null) {
+      final String message = "Reflow is necessary: " + reflowException;
+      Logger.warn(LOG_TAG, message + " Aborting session.");
+      delegate.onSynchronizeFailed(this, reflowException, message);
+      return;
+    }
+
     // Fetch failures always abort.
     int numLocalFetchFailed = recordsChannel.getFetchFailureCount();
     if (numLocalFetchFailed > 0) {
