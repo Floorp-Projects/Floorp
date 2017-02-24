@@ -21,7 +21,9 @@ module.exports = createClass({
   propTypes: {
     getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grid: PropTypes.shape(Types.grid).isRequired,
+    onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
+    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
   },
 
@@ -95,7 +97,11 @@ module.exports = createClass({
   },
 
   render() {
-    let { grid } = this.props;
+    let {
+      grid,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+    } = this.props;
     let { nodeFront } = grid;
 
     return dom.li(
@@ -113,10 +119,14 @@ module.exports = createClass({
             onChange: this.onGridCheckboxClick,
           }
         ),
-        Rep({
-          defaultRep: ElementNode,
-          object: this.translateNodeFrontToGrip(nodeFront),
-        })
+        Rep(
+          {
+            defaultRep: ElementNode,
+            object: this.translateNodeFrontToGrip(nodeFront),
+            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+          }
+        )
       ),
       dom.div(
         {
