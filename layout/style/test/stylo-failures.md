@@ -315,12 +315,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_storage.html `counter-increment` [4]
     * test_value_storage.html `counter-increment` [30]
   * clip property
-    * test_compute_data_with_start_struct.html `clip` [2]
-    * test_inherit_computation.html `clip` [2]
-    * test_inherit_storage.html `clip` [2]
-    * test_initial_computation.html `'clip'` [4]
-    * test_initial_storage.html `clip` [4]
-    * test_value_storage.html `on 'clip'` [12]
+    * test_value_storage.html `should be idempotent for 'clip` [1]
   * font-feature-settings property
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -517,7 +512,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... ` 2 ` [26]
     * ... `: 5 ` [84]
     * ... `border-spacing: ` [6]
-    * ... `rect(1, ` [1]
+    * ... `rect(1, ` [2]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_length.html [5]
@@ -566,6 +561,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_variables.html `url`: url in custom property [1]
 * test_pseudoelement_state.html: doesn't seem to work at all, but only range-thumb fails... [4]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [8]
+* test_value_storage.html `should be idempotent for 'clip` [1]
 
 ## Ignore
 
