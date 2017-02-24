@@ -404,7 +404,7 @@ public:
                aBreakType == StyleClear::Right ||
                aBreakType == StyleClear::Both,
                "Only float break types are allowed before a line");
-    mFlags.mBreakType = static_cast<int>(aBreakType);
+    mFlags.mBreakType = aBreakType;
   }
   StyleClear GetBreakTypeBefore() const {
     return IsBlock() ? BreakType() : StyleClear::None;
@@ -415,7 +415,7 @@ public:
   }
   void SetBreakTypeAfter(StyleClear aBreakType) {
     MOZ_ASSERT(!IsBlock(), "Only inlines have break-after");
-    mFlags.mBreakType = static_cast<int>(aBreakType);
+    mFlags.mBreakType = aBreakType;
   }
   bool HasFloatBreakAfter() const {
     return !IsBlock() &&
@@ -676,7 +676,7 @@ public:
     // that was pushed to a later column or page.
     bool mHadFloatPushed : 1;
     bool mHasHashedFrames: 1;
-    uint32_t mBreakType : 4;
+    StyleClear mBreakType;
   };
 
   struct ExtraData {
@@ -710,7 +710,7 @@ protected:
   };
 
   StyleClear BreakType() const {
-    return static_cast<StyleClear>(mFlags.mBreakType);
+    return mFlags.mBreakType;
   };
 
   union {
