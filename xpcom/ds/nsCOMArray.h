@@ -8,7 +8,9 @@
 #define nsCOMArray_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ArrayIterator.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ReverseIterator.h"
 
 #include "nsCycleCollectionNoteChild.h"
 #include "nsTArray.h"
@@ -231,6 +233,12 @@ template<class T>
 class nsCOMArray : public nsCOMArray_base
 {
 public:
+  typedef int32_t                                       index_type;
+  typedef mozilla::ArrayIterator<T*, nsCOMArray>        iterator;
+  typedef mozilla::ArrayIterator<const T*, nsCOMArray>  const_iterator;
+  typedef mozilla::ReverseIterator<iterator>            reverse_iterator;
+  typedef mozilla::ReverseIterator<const_iterator>      const_reverse_iterator;
+
   nsCOMArray() {}
   explicit nsCOMArray(int32_t aCount) : nsCOMArray_base(aCount) {}
   explicit nsCOMArray(const nsCOMArray<T>& aOther) : nsCOMArray_base(aOther) {}
@@ -442,6 +450,22 @@ public:
   {
     return nsCOMArray_base::Forget(reinterpret_cast<nsISupports***>(aElements));
   }
+
+  // Methods for range-based for loops.
+  iterator begin() { return iterator(*this, 0); }
+  const_iterator begin() const { return const_iterator(*this, 0); }
+  const_iterator cbegin() const { return begin(); }
+  iterator end() { return iterator(*this, Length()); }
+  const_iterator end() const { return const_iterator(*this, Length()); }
+  const_iterator cend() const { return end(); }
+
+  // Methods for reverse iterating.
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+  const_reverse_iterator crend() const { return rend(); }
 
 private:
 
