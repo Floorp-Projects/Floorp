@@ -549,7 +549,6 @@ private:
   bool mHasStartTime = false;
 
   void ShutdownDecoder(TrackType aTrack);
-  void ShutdownDecoderWithPromise(TrackType aTrack);
   RefPtr<ShutdownPromise> TearDownDecoders();
 };
 
