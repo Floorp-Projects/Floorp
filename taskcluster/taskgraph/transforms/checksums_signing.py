@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema
+from taskgraph.util.scriptworker import get_signing_cert_scope
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Schema, Any, Required, Optional
 
@@ -74,6 +75,7 @@ def make_checksums_signing_description(config, jobs):
             "formats": ["gpg"]
         }]
 
+        signing_cert_scope = get_signing_cert_scope(config)
         task = {
             'label': label,
             'description': "Checksum signing {} ".format(
@@ -83,7 +85,7 @@ def make_checksums_signing_description(config, jobs):
                        'upstream-artifacts': upstream_artifacts,
                        'max-run-time': 3600},
             'scopes': [
-                "project:releng:signing:cert:nightly-signing",
+                signing_cert_scope,
                 "project:releng:signing:format:gpg"
             ],
             'dependencies': dependencies,
