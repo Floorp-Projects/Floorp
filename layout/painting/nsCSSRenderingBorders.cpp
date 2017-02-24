@@ -677,7 +677,8 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::Side aSide)
 Point
 nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::Side aSide,
                                             Corner aCorner,
-                                            bool* aIsUnfilled)
+                                            bool* aIsUnfilled,
+                                            Float aDotOffset)
 {
   // Calculate the end point of the side for dashed/dotted border, that is also
   // the end point of the corner curve.  The point is specified by aSide and
@@ -735,6 +736,15 @@ nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::Side aSide,
   if (IsZeroSize(radius)) {
     radius.width = 0.0f;
     radius.height = 0.0f;
+  }
+  if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
+    // Offset the dot's location along the side toward the corner by a
+    // multiple of its width.
+    if (isHorizontal) {
+      P.x -= signs[0] * aDotOffset * borderWidth;
+    } else {
+      P.y -= signs[1] * aDotOffset * borderWidth;
+    }
   }
   if (style == NS_STYLE_BORDER_STYLE_DOTTED &&
       otherStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
@@ -1767,9 +1777,10 @@ nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
       // Draw half segments on both ends.
       aStrokeOptions->mDashOffset = halfDash;
     }
-  } else if (isCorner) {
+  } else if (style != NS_STYLE_BORDER_STYLE_DOTTED && isCorner) {
     // If side ends with filled full segment, corner should start with unfilled
-    // full segment.
+    // full segment. Not needed for dotted corners, as they overlap one dot with
+    // the side's end.
     //
     //     corner            side
     //   ------------>|<---------------------------
@@ -1853,8 +1864,10 @@ nsCSSBorderRenderer::DrawDashedOrDottedSide(mozilla::Side aSide)
 
   nscolor borderColor = mBorderColors[aSide];
   bool ignored;
-  Point start = GetStraightBorderPoint(aSide, GetCCWCorner(aSide), &ignored);
-  Point end = GetStraightBorderPoint(aSide, GetCWCorner(aSide), &ignored);
+  // Get the start and end points of the side, ensuring that any dot origins get
+  // pushed outward to account for stroking.
+  Point start = GetStraightBorderPoint(aSide, GetCCWCorner(aSide), &ignored, 0.5f);
+  Point end = GetStraightBorderPoint(aSide, GetCWCorner(aSide), &ignored, 0.5f);
   if (borderWidth < 2.0f) {
     // Round start to draw dot on each pixel.
     if (IsHorizontalSide(aSide)) {
@@ -1873,9 +1886,44 @@ nsCSSBorderRenderer::DrawDashedOrDottedSide(mozilla::Side aSide)
   Float dash[2];
   SetupDashedOptions(&strokeOptions, dash, aSide, borderLength, false);
 
+  // For dotted sides that can merge with their prior dotted sides, advance the
+  // dash offset to measure the distance around the combined path. This prevents
+  // two dots from bunching together at a corner.
+  mozilla::Side mergeSide = aSide;
+  while (IsCornerMergeable(GetCCWCorner(mergeSide))) {
+    mergeSide = PREV_SIDE(mergeSide);
+    // If we looped all the way around, measure starting at the top side, since
+    // we need to pick a fixed location to start measuring distance from still.
+    if (mergeSide == aSide) {
+      mergeSide = eSideTop;
+      break;
+    }
+  }
+  while (mergeSide != aSide) {
+    // Measure the length of the merged side starting from a possibly unmergeable
+    // corner up to the merged corner. A merged corner effectively has no border
+    // radius, so we can just use the cheaper AtCorner to find the end point.
+    Float mergeLength =
+      GetBorderLength(mergeSide,
+                      GetStraightBorderPoint(mergeSide, GetCCWCorner(mergeSide), &ignored, 0.5f),
+                      mOuterRect.AtCorner(GetCWCorner(mergeSide)));
+    // Add in the merged side length. Also offset the dash progress by an extra
+    // dot's width to avoid drawing a dot that would overdraw where the merged side
+    // would have ended in a gap, i.e. O_O_
+    //                                    O
+    strokeOptions.mDashOffset += mergeLength + borderWidth;
+    mergeSide = NEXT_SIDE(mergeSide);
+  }
+
+  DrawOptions drawOptions;
+  if (mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED) {
+    drawOptions.mAntialiasMode = AntialiasMode::NONE;
+  }
+
   mDrawTarget->StrokeLine(start, end,
                           ColorPattern(ToDeviceColor(borderColor)),
-                          strokeOptions);
+                          strokeOptions,
+                          drawOptions);
 }
 
 void
@@ -2335,8 +2383,11 @@ nsCSSBorderRenderer::DrawDashedOrDottedCorner(mozilla::Side aSide,
   nscolor borderColor = mBorderColors[aSide];
   Point points[4];
   bool ignored;
-  points[0] = GetStraightBorderPoint(sideH, aCorner, &ignored);
-  points[3] = GetStraightBorderPoint(sideV, aCorner, &ignored);
+  // Get the start and end points of the corner arc, ensuring that any dot
+  // origins get pushed backwards towards the edges of the corner rect to
+  // account for stroking.
+  points[0] = GetStraightBorderPoint(sideH, aCorner, &ignored, -0.5f);
+  points[3] = GetStraightBorderPoint(sideV, aCorner, &ignored, -0.5f);
   // Round points to draw dot on each pixel.
   if (borderWidthH < 2.0f) {
     points[0].x = round(points[0].x);
@@ -3210,29 +3261,6 @@ nsCSSBorderRenderer::DrawBorders()
     mDrawTarget->StrokeRect(rect, color, strokeOptions);
     return;
   }
-
-  if (allBordersSame &&
-      mCompositeColors[0] == nullptr &&
-      allBordersSameWidth &&
-      mBorderStyles[0] == NS_STYLE_BORDER_STYLE_DOTTED &&
-      mBorderWidths[0] < 3 &&
-      mNoBorderRadius &&
-      !mAvoidStroke)
-  {
-    // Very simple case. We draw this rectangular dotted borner without
-    // antialiasing. The dots should be pixel aligned.
-    Rect rect = mOuterRect;
-    rect.Deflate(mBorderWidths[0] / 2.0);
-    Float dash = mBorderWidths[0];
-    strokeOptions.mDashPattern = &dash;
-    strokeOptions.mDashLength = 1;
-    strokeOptions.mDashOffset = 0.5f * dash;
-    DrawOptions drawOptions;
-    drawOptions.mAntialiasMode = AntialiasMode::NONE;
-    mDrawTarget->StrokeRect(rect, color, strokeOptions, drawOptions);
-    return;
-  }
-
 
   if (allBordersSame &&
       mCompositeColors[0] == nullptr &&
