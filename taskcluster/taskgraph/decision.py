@@ -55,6 +55,15 @@ PER_PROJECT_PARAMETERS = {
         'optimize_target_tasks': True,
     },
 
+    'mozilla-beta': {
+        'target_tasks_method': 'mozilla_beta_tasks',
+        'optimize_target_tasks': True,
+    },
+    'mozilla-release': {
+        'target_tasks_method': 'mozilla_release_tasks',
+        'optimize_target_tasks': True,
+    },
+
     # the default parameters are used for projects that do not match above.
     'default': {
         'target_tasks_method': 'default',
