@@ -7178,6 +7178,60 @@
     "n_buckets": 20,
     "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
   },
+  "WEBRTC_ICE_OFFERER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_OFFERER_ABORT_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_OFFERER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_ANSWERER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_ANSWERER_ABORT_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_ANSWERER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
+  },
   "WEBRTC_ICE_SUCCESS_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1319268],
