@@ -4717,10 +4717,10 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     if (view && view->GetWidget() &&
         nsLayoutUtils::GetDisplayRootFrame(rootFrame) == rootFrame) {
       LayerManager* layerManager = view->GetWidget()->GetLayerManager();
-      // ClientLayerManagers in content processes don't support
-      // taking snapshots.
+      // ClientLayerManagers or WebRenderLayerManagers in content processes
+      // don't support taking snapshots.
       if (layerManager &&
-          (!layerManager->AsClientLayerManager() ||
+          (!layerManager->AsKnowsCompositor() ||
            XRE_IsParentProcess())) {
         flags |= PaintFrameFlags::PAINT_WIDGET_LAYERS;
       }
