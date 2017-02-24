@@ -44,21 +44,28 @@ impl GLFormats {
 
     #[cfg(target_os="android")]
     pub fn detect(attrs: &GLContextAttributes) -> GLFormats {
+        // detect if the GPU supports RGB8 and RGBA8 renderbuffer/texture storage formats.
+        // GL_ARM_rgba8 extension is similar to OES_rgb8_rgba8, but only exposes RGBA8.
+        let extensions = gl::get_string(gl::EXTENSIONS);
+        let extensions: Vec<&str> = extensions.split(&[',',' '][..]).collect();
+        let has_rgb8 = extensions.contains(&"GL_OES_rgb8_rgba8");
+        let has_rgba8 = has_rgb8 || extensions.contains(&"GL_ARM_rgba8");
+
         if attrs.alpha {
             GLFormats {
-                color_renderbuffer: gl::RGBA4,
+                color_renderbuffer: if has_rgba8 { gl::RGBA8 } else { gl::RGBA4 },
                 texture_internal: gl::RGBA,
                 texture: gl::RGBA,
-                texture_type: gl::UNSIGNED_SHORT_4_4_4_4,
+                texture_type: if has_rgba8 { gl::UNSIGNED_BYTE } else { gl::UNSIGNED_SHORT_4_4_4_4 },
                 depth: gl::DEPTH_COMPONENT16,
                 stencil: gl::STENCIL_INDEX8,
             }
         } else {
             GLFormats {
-                color_renderbuffer: gl::RGB565,
+                color_renderbuffer: if has_rgb8 { gl::RGB8 } else { gl::RGB565 },
                 texture_internal: gl::RGB,
                 texture: gl::RGB,
-                texture_type: gl::UNSIGNED_SHORT_4_4_4_4,
+                texture_type: if has_rgb8 { gl::UNSIGNED_BYTE } else { gl::UNSIGNED_SHORT_4_4_4_4 },
                 depth: gl::DEPTH_COMPONENT16,
                 stencil: gl::STENCIL_INDEX8,
             }

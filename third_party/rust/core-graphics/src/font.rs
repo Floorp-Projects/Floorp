@@ -32,17 +32,17 @@ unsafe impl Send for CGFont {}
 unsafe impl Sync for CGFont {}
 
 impl Serialize for CGFont {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
         let postscript_name = self.postscript_name().to_string();
         postscript_name.serialize(serializer)
     }
 }
 
 impl Deserialize for CGFont {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error> where D: Deserializer {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer {
         let postscript_name: String = try!(Deserialize::deserialize(deserializer));
         CGFont::from_name(&CFString::new(&*postscript_name)).map_err(|_| {
-            de::Error::invalid_value("Couldn't find a font with that PostScript name!")
+            de::Error::custom("Couldn't find a font with that PostScript name!")
         })
     }
 }

@@ -6,7 +6,7 @@
 void main(void) {
     Primitive prim = load_primitive();
     BoxShadow bs = fetch_boxshadow(prim.prim_index);
-    vec4 segment_rect = fetch_instance_geometry(prim.sub_index);
+    RectWithSize segment_rect = fetch_instance_geometry(prim.sub_index);
 
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
@@ -22,8 +22,8 @@ void main(void) {
     vec2 patch_size_device_pixels = child_task.data0.zw - vec2(2.0);
     vec2 patch_size = patch_size_device_pixels / uDevicePixelRatio;
 
-    vUv.xy = (vi.local_pos - prim.local_rect.xy) / patch_size;
-    vMirrorPoint = 0.5 * prim.local_rect.zw / patch_size;
+    vUv.xy = (vi.local_pos - prim.local_rect.p0) / patch_size;
+    vMirrorPoint = 0.5 * prim.local_rect.size / patch_size;
 
     vec2 texture_size = vec2(textureSize(sCache, 0));
     vCacheUvRectCoords = vec4(patch_origin, patch_origin + patch_size_device_pixels) / texture_size.xyxy;

@@ -48,7 +48,7 @@ use util::TransformedRectKind;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ImageData, ImageFormat, RenderApiSender, RendererKind};
 use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
-use webrender_traits::ImageDescriptor;
+use webrender_traits::{ImageDescriptor, BlobImageRenderer};
 use webrender_traits::channel;
 use webrender_traits::VRCompositorHandler;
 
@@ -463,6 +463,11 @@ pub struct Renderer {
     /// use a hashmap, and allows a flat vector for performance.
     cache_texture_id_map: Vec<TextureId>,
 
+    /// A special 1x1 dummy cache texture used for shaders that expect to work
+    /// with the cache but are actually running in the first pass
+    /// when no target is yet provided as a cache texture input.
+    dummy_cache_texture_id: TextureId,
+
     /// Optional trait object that allows the client
     /// application to provide external buffers for image data.
     external_image_handler: Option<Box<ExternalImageHandler>>,
@@ -675,7 +680,10 @@ impl Renderer {
                                      options.precache_shaders)
         };
 
-        let mut texture_cache = TextureCache::new();
+        let device_max_size = device.max_texture_size();
+        let max_texture_size = cmp::min(device_max_size, options.max_texture_size.unwrap_or(device_max_size));
+
+        let mut texture_cache = TextureCache::new(max_texture_size);
 
         let white_pixels: Vec<u8> = vec![
             0xff, 0xff, 0xff, 0xff,
@@ -711,6 +719,15 @@ impl Renderer {
                              },
                              TextureFilter::Linear,
                              ImageData::Raw(Arc::new(mask_pixels)));
+
+        let dummy_cache_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
+        device.init_texture(dummy_cache_texture_id,
+                            1,
+                            1,
+                            ImageFormat::RGBA8,
+                            TextureFilter::Linear,
+                            RenderTargetMode::LayerRenderTarget(1),
+                            None);
 
         let debug_renderer = DebugRenderer::new(&mut device);
 
@@ -780,6 +797,8 @@ impl Renderer {
             // TODO(gw): Use a heuristic to select best # of worker threads.
             Arc::new(Mutex::new(ThreadPool::new_with_name("WebRender:Worker".to_string(), 4)))
         });
+
+        let blob_image_renderer = options.blob_image_renderer.take();
         try!{ thread::Builder::new().name("RenderBackend".to_string()).spawn(move || {
             let mut backend = RenderBackend::new(api_rx,
                                                  payload_rx,
@@ -794,6 +813,7 @@ impl Renderer {
                                                  config,
                                                  recorder,
                                                  backend_main_thread_dispatcher,
+                                                 blob_image_renderer,
                                                  backend_vr_compositor);
             backend.run();
         })};
@@ -844,6 +864,7 @@ impl Renderer {
             pipeline_epoch_map: HashMap::with_hasher(Default::default()),
             main_thread_dispatcher: main_thread_dispatcher,
             cache_texture_id_map: Vec::new(),
+            dummy_cache_texture_id: dummy_cache_texture_id,
             external_image_handler: None,
             external_images: HashMap::with_hasher(Default::default()),
             vr_compositor_handler: vr_compositor
@@ -1163,7 +1184,7 @@ impl Renderer {
                     batch: &PrimitiveBatch,
                     projection: &Matrix4D<f32>,
                     render_task_data: &Vec<RenderTaskData>,
-                    cache_texture: Option<TextureId>,
+                    cache_texture: TextureId,
                     render_target: Option<(TextureId, i32)>,
                     target_dimensions: DeviceUintSize) {
         let transform_kind = batch.key.flags.transform_kind();
@@ -1256,8 +1277,7 @@ impl Renderer {
                 // Before submitting the composite batch, do the
                 // framebuffer readbacks that are needed for each
                 // composite operation in this batch.
-                let cache_texture_id = cache_texture.unwrap();
-                let cache_texture_dimensions = self.device.get_texture_dimensions(cache_texture_id);
+                let cache_texture_dimensions = self.device.get_texture_dimensions(cache_texture);
 
                 let backdrop = &render_task_data[instance.task_index as usize];
                 let readback = &render_task_data[instance.user_data[0] as usize];
@@ -1267,7 +1287,7 @@ impl Renderer {
                 // Called per-instance in case the layer (and therefore FBO)
                 // changes. The device will skip the GL call if the requested
                 // target is already bound.
-                let cache_draw_target = (cache_texture_id, readback.data[4] as i32);
+                let cache_draw_target = (cache_texture, readback.data[4] as i32);
                 self.device.bind_draw_target(Some(cache_draw_target), Some(cache_texture_dimensions));
 
                 let src_x = backdrop.data[0] - backdrop.data[4] + source.data[4];
@@ -1314,7 +1334,7 @@ impl Renderer {
                    render_target: Option<(TextureId, i32)>,
                    target: &RenderTarget,
                    target_size: DeviceUintSize,
-                   cache_texture: Option<TextureId>,
+                   cache_texture: TextureId,
                    should_clear: bool,
                    background_color: Option<ColorF>,
                    render_task_data: &Vec<RenderTaskData>) {
@@ -1327,9 +1347,7 @@ impl Renderer {
 
             self.device.set_blend(false);
             self.device.set_blend_mode_alpha();
-            if let Some(cache_texture) = cache_texture {
-                self.device.bind_texture(TextureSampler::Cache, cache_texture);
-            }
+            self.device.bind_texture(TextureSampler::Cache, cache_texture);
 
             let (color, projection) = match render_target {
                 Some(..) => (
@@ -1632,7 +1650,7 @@ impl Renderer {
             self.gpu_data_textures[self.gdt_index].init_frame(&mut self.device, frame);
             self.gdt_index = (self.gdt_index + 1) % GPU_DATA_TEXTURE_POOL;
 
-            let mut src_id = None;
+            let mut src_id = self.dummy_cache_texture_id;
 
             for (pass_index, pass) in frame.passes.iter().enumerate() {
                 let (do_clear, size, target_id) = if pass.is_framebuffer {
@@ -1657,7 +1675,7 @@ impl Renderer {
 
                 }
 
-                src_id = target_id;
+                src_id = target_id.unwrap_or(self.dummy_cache_texture_id);
             }
 
             self.draw_render_target_debug(framebuffer_size);
@@ -1716,6 +1734,14 @@ impl Renderer {
             }
         }
     }
+
+    // De-initialize the Renderer safely, assuming the GL is still alive and active.
+    pub fn deinit(mut self) {
+        //Note: this is a fake frame, only needed because texture deletion is require to happen inside a frame
+        self.device.begin_frame(1.0);
+        self.device.deinit_texture(self.dummy_cache_texture_id);
+        self.device.end_frame();
+    }
 }
 
 pub enum ExternalImageSource<'a> {
@@ -1756,7 +1782,6 @@ pub trait ExternalImageHandler {
     fn release(&mut self, key: ExternalImageId);
 }
 
-#[derive(Debug)]
 pub struct RendererOptions {
     pub device_pixel_ratio: f32,
     pub resource_override_path: Option<PathBuf>,
@@ -1770,7 +1795,9 @@ pub struct RendererOptions {
     pub clear_framebuffer: bool,
     pub clear_color: ColorF,
     pub render_target_debug: bool,
+    pub max_texture_size: Option<u32>,
     pub workers: Option<Arc<Mutex<ThreadPool>>>,
+    pub blob_image_renderer: Option<Box<BlobImageRenderer>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
 }
 
@@ -1789,7 +1816,9 @@ impl Default for RendererOptions {
             clear_framebuffer: true,
             clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
             render_target_debug: false,
+            max_texture_size: None,
             workers: None,
+            blob_image_renderer: None,
             recorder: None,
         }
     }

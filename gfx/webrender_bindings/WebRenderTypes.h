@@ -227,6 +227,14 @@ static inline WrRect ToWrRect(const gfx::IntRectTyped<T>& rect)
   return ToWrRect(IntRectToRect(rect));
 }
 
+static inline WrPoint ToWrPoint(const gfx::Point& point)
+{
+  WrPoint p;
+  p.x = point.x;
+  p.y = point.y;
+  return p;
+}
+
 struct ByteBuffer
 {
   ByteBuffer(size_t aLength, uint8_t* aData)

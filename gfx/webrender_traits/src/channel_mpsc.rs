@@ -67,26 +67,26 @@ pub fn msg_channel<T>() -> Result<(MsgSender<T>, MsgReceiver<T>), Error> {
 ///
 
 impl<T> Serialize for MsgReceiver<T> {
-    fn serialize<S: Serializer>(&self, _: &mut S) -> Result<(), S::Error> {
+    fn serialize<S: Serializer>(&self, _: S) -> Result<S::Ok, S::Error> {
         unreachable!();
     }
 }
 
 impl<T> Serialize for MsgSender<T> {
-    fn serialize<S: Serializer>(&self, _: &mut S) -> Result<(), S::Error> {
+    fn serialize<S: Serializer>(&self, _: S) -> Result<S::Ok, S::Error> {
         unreachable!();
     }
 }
 
 impl<T> Deserialize for MsgReceiver<T> {
-    fn deserialize<D>(_: &mut D) -> Result<MsgReceiver<T>, D::Error>
+    fn deserialize<D>(_: D) -> Result<MsgReceiver<T>, D::Error>
                       where D: Deserializer {
         unreachable!();
     }
 }
 
 impl<T> Deserialize for MsgSender<T> {
-    fn deserialize<D>(_: &mut D) -> Result<MsgSender<T>, D::Error>
+    fn deserialize<D>(_: D) -> Result<MsgSender<T>, D::Error>
                       where D: Deserializer {
         unreachable!();
     }

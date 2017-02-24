@@ -16,17 +16,16 @@
 //! ### Using Basic Functions
 //!
 //! ```rust
-//! #![allow(unstable)]
 //! extern crate bincode;
-//! use bincode::rustc_serialize::{encode, decode};
+//! use bincode::{serialize, deserialize};
 //! fn main() {
 //!     // The object that we will serialize.
 //!     let target = Some("hello world".to_string());
 //!     // The maximum size of the encoded message.
 //!     let limit = bincode::SizeLimit::Bounded(20);
 //!
-//!     let encoded: Vec<u8>        = encode(&target, limit).unwrap();
-//!     let decoded: Option<String> = decode(&encoded[..]).unwrap();
+//!     let encoded: Vec<u8>        = serialize(&target, limit).unwrap();
+//!     let decoded: Option<String> = deserialize(&encoded[..]).unwrap();
 //!     assert_eq!(target, decoded);
 //! }
 //! ```
@@ -37,21 +36,14 @@
 
 #![doc(html_logo_url = "./icon.png")]
 
-#[cfg(feature = "rustc-serialize")]
-extern crate rustc_serialize as rustc_serialize_crate;
 extern crate byteorder;
 extern crate num_traits;
-#[cfg(feature = "serde")]
 extern crate serde as serde_crate;
 
+pub mod refbox;
+mod serde;
 
-pub use refbox::{RefBox, StrBox, SliceBox};
-
-mod refbox;
-#[cfg(feature = "rustc-serialize")]
-pub mod rustc_serialize;
-#[cfg(feature = "serde")]
-pub mod serde;
+pub use serde::*;
 
 /// A limit on the amount of bytes that can be read or written.
 ///
@@ -76,4 +68,3 @@ pub enum SizeLimit {
     Infinite,
     Bounded(u64)
 }
-

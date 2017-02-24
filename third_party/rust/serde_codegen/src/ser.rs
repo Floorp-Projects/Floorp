@@ -1,4 +1,4 @@
-use syn::{self, aster};
+use syn::{self, aster, Ident};
 use quote::Tokens;
 
 use bound;
@@ -22,16 +22,16 @@ pub fn expand_derive_serialize(item: &syn::MacroInput) -> Result<Tokens, String>
 
     let where_clause = &impl_generics.where_clause;
 
-    let dummy_const = aster::id(format!("_IMPL_SERIALIZE_FOR_{}", item.ident));
+    let dummy_const = Ident::new(format!("_IMPL_SERIALIZE_FOR_{}", item.ident));
 
     Ok(quote! {
         #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
         const #dummy_const: () = {
             extern crate serde as _serde;
             #[automatically_derived]
-            impl #impl_generics _serde::ser::Serialize for #ty #where_clause {
-                fn serialize<__S>(&self, _serializer: &mut __S) -> ::std::result::Result<(), __S::Error>
-                    where __S: _serde::ser::Serializer
+            impl #impl_generics _serde::Serialize for #ty #where_clause {
+                fn serialize<__S>(&self, _serializer: __S) -> _serde::export::Result<__S::Ok, __S::Error>
+                    where __S: _serde::Serializer
                 {
                     #body
                 }
@@ -56,7 +56,7 @@ fn build_impl_generics(item: &Item) -> syn::Generics {
         None => {
             bound::with_bound(item, &generics,
                 needs_serialize_bound,
-                &aster::path().ids(&["_serde", "ser", "Serialize"]).build())
+                &aster::path().ids(&["_serde", "Serialize"]).build())
         }
     }
 }
@@ -159,7 +159,7 @@ fn serialize_tuple_struct(
         fields,
         impl_generics,
         false,
-        aster::id("serialize_tuple_struct_elt"),
+        quote!(_serde::ser::SerializeTupleStruct::serialize_field),
     );
 
     let type_name = item_attrs.name().serialize_name();
@@ -169,7 +169,7 @@ fn serialize_tuple_struct(
     quote! {
         let #let_mut __serde_state = try!(_serializer.serialize_tuple_struct(#type_name, #len));
         #(#serialize_stmts)*
-        _serializer.serialize_tuple_struct_end(__serde_state)
+        _serde::ser::SerializeTupleStruct::end(__serde_state)
     }
 }
 
@@ -184,7 +184,7 @@ fn serialize_struct(
         fields,
         impl_generics,
         false,
-        aster::id("serialize_struct_elt"),
+        quote!(_serde::ser::SerializeStruct::serialize_field),
     );
 
     let type_name = item_attrs.name().serialize_name();
@@ -210,7 +210,7 @@ fn serialize_struct(
     quote! {
         let #let_mut __serde_state = try!(_serializer.serialize_struct(#type_name, #len));
         #(#serialize_fields)*
-        _serializer.serialize_struct_end(__serde_state)
+        _serde::ser::SerializeStruct::end(__serde_state)
     }
 }
 
@@ -257,10 +257,10 @@ fn serialize_variant(
     let variant_name = variant.attrs.name().serialize_name();
 
     if variant.attrs.skip_serializing() {
-        let skipped_msg = format!("The enum variant {}::{} cannot be serialized",
+        let skipped_msg = format!("the enum variant {}::{} cannot be serialized",
                                 type_ident, variant_ident);
         let skipped_err = quote! {
-            Err(_serde::ser::Error::invalid_value(#skipped_msg))
+            Err(_serde::ser::Error::custom(#skipped_msg))
         };
         let fields_pat = match variant.style {
             Style::Unit => quote!(),
@@ -275,7 +275,7 @@ fn serialize_variant(
             Style::Unit => {
                 quote! {
                     #type_ident::#variant_ident =>
-                        _serde::ser::Serializer::serialize_unit_variant(
+                        _serde::Serializer::serialize_unit_variant(
                             _serializer,
                             #type_name,
                             #variant_index,
@@ -299,7 +299,7 @@ fn serialize_variant(
             },
             Style::Tuple => {
                 let field_names = (0 .. variant.fields.len())
-                    .map(|i| aster::id(format!("__field{}", i)));
+                    .map(|i| Ident::new(format!("__field{}", i)));
 
                 let block = serialize_tuple_variant(
                     type_name,
@@ -350,7 +350,7 @@ fn serialize_newtype_variant(
     }
 
     quote! {
-        _serde::ser::Serializer::serialize_newtype_variant(
+        _serde::Serializer::serialize_newtype_variant(
             _serializer,
             #type_name,
             #variant_index,
@@ -373,7 +373,7 @@ fn serialize_tuple_variant(
         fields,
         generics,
         true,
-        aster::id("serialize_tuple_variant_elt"),
+        quote!(_serde::ser::SerializeTupleVariant::serialize_field),
     );
 
     let len = serialize_stmts.len();
@@ -386,7 +386,7 @@ fn serialize_tuple_variant(
             #variant_name,
             #len));
         #(#serialize_stmts)*
-        _serializer.serialize_tuple_variant_end(__serde_state)
+        _serde::ser::SerializeTupleVariant::end(__serde_state)
     }
 }
 
@@ -403,7 +403,7 @@ fn serialize_struct_variant(
         fields,
         generics,
         true,
-        aster::id("serialize_struct_variant_elt"),
+        quote!(_serde::ser::SerializeStructVariant::serialize_field),
     );
 
     let item_name = item_attrs.name().serialize_name();
@@ -433,7 +433,7 @@ fn serialize_struct_variant(
             #len,
         ));
         #(#serialize_fields)*
-        _serializer.serialize_struct_variant_end(__serde_state)
+        _serde::ser::SerializeStructVariant::end(__serde_state)
     }
 }
 
@@ -442,16 +442,16 @@ fn serialize_tuple_struct_visitor(
     fields: &[Field],
     generics: &syn::Generics,
     is_enum: bool,
-    func: syn::Ident,
+    func: Tokens,
 ) -> Vec<Tokens> {
     fields.iter()
         .enumerate()
         .map(|(i, field)| {
             let mut field_expr = if is_enum {
-                let id = aster::id(format!("__field{}", i));
+                let id = Ident::new(format!("__field{}", i));
                 quote!(#id)
             } else {
-                let i = aster::id(i);
+                let i = Ident::new(i);
                 quote!(&self.#i)
             };
 
@@ -464,7 +464,7 @@ fn serialize_tuple_struct_visitor(
             }
 
             let ser = quote! {
-                try!(_serializer.#func(&mut __serde_state, #field_expr));
+                try!(#func(&mut __serde_state, #field_expr));
             };
 
             match skip {
@@ -480,7 +480,7 @@ fn serialize_struct_visitor(
     fields: &[Field],
     generics: &syn::Generics,
     is_enum: bool,
-    func: syn::Ident,
+    func: Tokens,
 ) -> Vec<Tokens> {
     fields.iter()
         .filter(|&field| !field.attrs.skip_serializing())
@@ -503,7 +503,7 @@ fn serialize_struct_visitor(
             }
 
             let ser = quote! {
-                try!(_serializer.#func(&mut __serde_state, #key_expr, #field_expr));
+                try!(#func(&mut __serde_state, #key_expr, #field_expr));
             };
 
             match skip {
@@ -540,15 +540,15 @@ fn wrap_serialize_with(
             phantom: ::std::marker::PhantomData<#item_ty>,
         }
 
-        impl #wrapper_generics _serde::ser::Serialize for #wrapper_ty #where_clause {
-            fn serialize<__S>(&self, __s: &mut __S) -> ::std::result::Result<(), __S::Error>
-                where __S: _serde::ser::Serializer
+        impl #wrapper_generics _serde::Serialize for #wrapper_ty #where_clause {
+            fn serialize<__S>(&self, __s: __S) -> _serde::export::Result<__S::Ok, __S::Error>
+                where __S: _serde::Serializer
             {
                 #path(self.value, __s)
             }
         }
 
-        __SerializeWith {
+        &__SerializeWith {
             value: #value,
             phantom: ::std::marker::PhantomData::<#item_ty>,
         }
@@ -558,7 +558,7 @@ fn wrap_serialize_with(
 // Serialization of an empty struct results in code like:
 //
 //     let mut __serde_state = try!(serializer.serialize_struct("S", 0));
-//     serializer.serialize_struct_end(__serde_state)
+//     _serde::ser::SerializeStruct::end(__serde_state)
 //
 // where we want to omit the `mut` to avoid a warning.
 fn mut_if(is_mut: bool) -> Option<Tokens> {
