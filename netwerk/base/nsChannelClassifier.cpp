@@ -436,11 +436,7 @@ nsChannelClassifier::StartInternal()
     }
 
     // Add an observer for shutdown
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    if (!observerService)
-      return NS_ERROR_FAILURE;
-
-    observerService->AddObserver(this, "profile-change-net-teardown", false);
+    AddShutdownObserver();
     return NS_OK;
 }
 
@@ -817,8 +813,27 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
     }
 
     mChannel = nullptr;
+    RemoveShutdownObserver();
 
     return NS_OK;
+}
+
+void
+nsChannelClassifier::AddShutdownObserver()
+{
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->AddObserver(this, "profile-change-net-teardown", false);
+  }
+}
+
+void
+nsChannelClassifier::RemoveShutdownObserver()
+{
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->RemoveObserver(this, "profile-change-net-teardown");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -836,6 +851,8 @@ nsChannelClassifier::Observe(nsISupports *aSubject, const char *aTopic,
       mChannel->Cancel(NS_ERROR_ABORT);
       mChannel->Resume();
     }
+
+    RemoveShutdownObserver();
   }
 
   return NS_OK;
