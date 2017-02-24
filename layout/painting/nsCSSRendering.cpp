@@ -3323,8 +3323,6 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   MOZ_ASSERT_IF(aParams.layer == -1,
                 aParams.compositionOp == CompositionOp::OP_OVER);
 
-  DrawResult result = DrawResult::SUCCESS;
-
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
   // XXXzw this ignores aParams.bgClipRect.
@@ -3382,16 +3380,6 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   if (!drawBackgroundImage && !drawBackgroundColor)
     return DrawResult::SUCCESS;
 
-  // Compute the outermost boundary of the area that might be painted.
-  // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
-  Sides skipSides = aParams.frame->GetSkipSides();
-  nsRect paintBorderArea =
-    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
-                                     skipSides, &aBorder);
-  nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
-                                 skipSides, &aBorder);
-
   // The 'bgClipArea' (used only by the image tiling logic, far below)
   // is the caller-provided aParams.bgClipRect if any, or else the area
   // determined by the value of 'background-clip' in
@@ -3418,12 +3406,9 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   }
 
   // If we might be using a background color, go ahead and set it now.
-  if (drawBackgroundColor && !isCanvasFrame)
+  if (drawBackgroundColor && !isCanvasFrame) {
     ctx->SetColor(Color::FromABGR(bgColor));
-
-  // NOTE: no Save() yet, we do that later by calling autoSR.EnsureSaved(ctx)
-  // in the cases we need it.
-  gfxContextAutoSaveRestore autoSR;
+  }
 
   // If there is no background image, draw a color.  (If there is
   // neither a background image nor a color, we wouldn't have gotten
@@ -3441,19 +3426,19 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     return DrawResult::SUCCESS;
   }
 
-  // Validate the layer range before we start iterating.
-  int32_t startLayer = aParams.layer;
-  int32_t nLayers = 1;
-  if (startLayer < 0) {
-    startLayer = (int32_t)layers.mImageCount - 1;
-    nLayers = layers.mImageCount;
-  }
+  MOZ_ASSERT((aParams.layer < 0) ||
+             (layers.mImageCount > uint32_t(aParams.layer)));
+  bool drawAllLayers = (aParams.layer < 0);
 
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
   if (aBackgroundSC != aParams.frame->StyleContext()) {
-    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, startLayer, nLayers) {
+    uint32_t startLayer = drawAllLayers ? layers.mImageCount - 1
+                                        : aParams.layer;
+    uint32_t count = drawAllLayers ? layers.mImageCount : 1;
+    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, startLayer,
+                                                         count) {
       aParams.frame->AssociateImage(layers.mLayers[i].mImage,
                                     &aParams.presCtx);
     }
@@ -3465,69 +3450,93 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     DrawBackgroundColor(clipState, ctx, appUnitsPerPixel);
   }
 
-  if (drawBackgroundImage) {
-    bool clipSet = false;
-    StyleGeometryBox currentBackgroundClip = StyleGeometryBox::Border;
-    NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, layers.mImageCount - 1,
-                                                         nLayers + (layers.mImageCount -
-                                                         startLayer - 1)) {
-      const nsStyleImageLayers::Layer& layer = layers.mLayers[i];
-      if (!aParams.bgClipRect) {
-        if (currentBackgroundClip != layer.mClip || !clipSet) {
-          currentBackgroundClip = layer.mClip;
-          // If clipSet is false that means this is the bottom layer and we
-          // already called GetImageLayerClip above and it stored its results
-          // in clipState.
-          if (clipSet) {
-            autoSR.Restore(); // reset the previous one
-            GetImageLayerClip(layer, aParams.frame,
-                              aBorder, aParams.borderArea, aParams.dirtyRect,
-                              (aParams.paintFlags & PAINTBG_WILL_PAINT_BORDER),
-                              appUnitsPerPixel, &clipState);
-          }
-          SetupImageLayerClip(clipState, ctx, appUnitsPerPixel, &autoSR);
-          clipSet = true;
-          if (!clipBorderArea.IsEqualEdges(aParams.borderArea)) {
-            // We're drawing the background for the joined continuation boxes
-            // so we need to clip that to the slice that we want for this
-            // frame.
-            gfxRect clip =
-              nsLayoutUtils::RectToGfxRect(aParams.borderArea, appUnitsPerPixel);
-            autoSR.EnsureSaved(ctx);
-            ctx->NewPath();
-            ctx->SnappedRectangle(clip);
-            ctx->Clip();
-          }
+  if (!drawBackgroundImage) {
+    return DrawResult::SUCCESS; // No need to draw layer image, we can early
+                                // return now.
+  }
+
+  // Compute the outermost boundary of the area that might be painted.
+  // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
+  Sides skipSides = aParams.frame->GetSkipSides();
+  nsRect paintBorderArea =
+    ::BoxDecorationRectForBackground(aParams.frame, aParams.borderArea,
+                                     skipSides, &aBorder);
+  nsRect clipBorderArea =
+    ::BoxDecorationRectForBorder(aParams.frame, aParams.borderArea,
+                                 skipSides, &aBorder);
+
+  DrawResult result = DrawResult::SUCCESS;
+  StyleGeometryBox currentBackgroundClip = StyleGeometryBox::Border;
+  uint32_t count = drawAllLayers
+    ? layers.mImageCount                  // iterate all image layers.
+    : layers.mImageCount - aParams.layer; // iterate from the bottom layer to
+                                          // the 'aParams.layer-th' layer.
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers,
+                                                       layers.mImageCount - 1,
+                                                       count) {
+    // NOTE: no Save() yet, we do that later by calling autoSR.EnsureSaved(ctx)
+    // in the cases we need it.
+    gfxContextAutoSaveRestore autoSR;
+    const nsStyleImageLayers::Layer& layer = layers.mLayers[i];
+
+    if (!aParams.bgClipRect) {
+      bool isBottomLayer = (i == layers.mImageCount - 1);
+      if (currentBackgroundClip != layer.mClip || isBottomLayer) {
+        currentBackgroundClip = layer.mClip;
+        // For  the bottom layer, we already called GetImageLayerClip above
+        // and it stored its results in clipState.
+        if (!isBottomLayer) {
+          GetImageLayerClip(layer, aParams.frame,
+                            aBorder, aParams.borderArea, aParams.dirtyRect,
+                            (aParams.paintFlags & PAINTBG_WILL_PAINT_BORDER),
+                            appUnitsPerPixel, &clipState);
+        }
+        SetupImageLayerClip(clipState, ctx, appUnitsPerPixel, &autoSR);
+        if (!clipBorderArea.IsEqualEdges(aParams.borderArea)) {
+          // We're drawing the background for the joined continuation boxes
+          // so we need to clip that to the slice that we want for this
+          // frame.
+          gfxRect clip =
+            nsLayoutUtils::RectToGfxRect(aParams.borderArea, appUnitsPerPixel);
+          autoSR.EnsureSaved(ctx);
+          ctx->NewPath();
+          ctx->SnappedRectangle(clip);
+          ctx->Clip();
         }
       }
-      if ((aParams.layer < 0 || i == (uint32_t)startLayer) &&
-          !clipState.mDirtyRectInDevPx.IsEmpty()) {
-        CompositionOp co = DetermineCompositionOp(aParams, layers, i);
-        nsBackgroundLayerState state =
-          PrepareImageLayer(&aParams.presCtx, aParams.frame,
-                            aParams.paintFlags, paintBorderArea, clipState.mBGClipArea,
-                            layer, nullptr);
-        result &= state.mImageRenderer.PrepareResult();
-        if (!state.mFillArea.IsEmpty()) {
-          if (co != CompositionOp::OP_OVER) {
-            NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
-                         "It is assumed the initial op is OP_OVER, when it is "
-                         "restored later");
-            ctx->SetOp(co);
-          }
+    }
 
-          result &=
-            state.mImageRenderer.DrawLayer(&aParams.presCtx,
-                                           aParams.renderingCtx,
-                                           state.mDestArea, state.mFillArea,
-                                           state.mAnchor + paintBorderArea.TopLeft(),
-                                           clipState.mDirtyRectInAppUnits,
-                                           state.mRepeatSize, aParams.opacity);
+    // Skip the following layer painting code if we found the dirty region is
+    // empty or the current layer is not selected for drawing.
+    if (clipState.mDirtyRectInDevPx.IsEmpty() ||
+        (aParams.layer >= 0 && i != (uint32_t)aParams.layer)) {
+      continue;
+    }
 
-          if (co != CompositionOp::OP_OVER) {
-            ctx->SetOp(CompositionOp::OP_OVER);
-          }
-        }
+    nsBackgroundLayerState state =
+      PrepareImageLayer(&aParams.presCtx, aParams.frame,
+                        aParams.paintFlags, paintBorderArea,
+                        clipState.mBGClipArea, layer, nullptr);
+    result &= state.mImageRenderer.PrepareResult();
+    if (!state.mFillArea.IsEmpty()) {
+      CompositionOp co = DetermineCompositionOp(aParams, layers, i);
+      if (co != CompositionOp::OP_OVER) {
+        NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
+                     "It is assumed the initial op is OP_OVER, when it is "
+                     "restored later");
+        ctx->SetOp(co);
+      }
+
+      result &=
+        state.mImageRenderer.DrawLayer(&aParams.presCtx,
+                                       aParams.renderingCtx,
+                                       state.mDestArea, state.mFillArea,
+                                       state.mAnchor + paintBorderArea.TopLeft(),
+                                       clipState.mDirtyRectInAppUnits,
+                                       state.mRepeatSize, aParams.opacity);
+
+      if (co != CompositionOp::OP_OVER) {
+        ctx->SetOp(CompositionOp::OP_OVER);
       }
     }
   }
