@@ -1974,9 +1974,9 @@ ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op, HandlePropert
         }
     } else {
         if (op == JSOP_GETBOUNDNAME) {
-            RootedObject env(cx, &val.toObject());
+            RootedObject obj(cx, &val.toObject());
             RootedId id(cx, NameToId(name));
-            if (!GetNameBoundInEnvironment(cx, env, id, res))
+            if (!GetPropertyForNameLookup(cx, obj, id, res))
                 return false;
         } else {
             MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH);
