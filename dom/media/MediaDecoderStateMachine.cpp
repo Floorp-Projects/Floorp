@@ -2805,11 +2805,6 @@ bool MediaDecoderStateMachine::IsPlaying() const
   return mMediaSink->IsPlaying();
 }
 
-void MediaDecoderStateMachine::SetMediaNotSeekable()
-{
-  mMediaSeekable = false;
-}
-
 nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2827,7 +2822,9 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
 
   mOnMediaNotSeekable = mReader->OnMediaNotSeekable().Connect(
-    OwnerThread(), this, &MediaDecoderStateMachine::SetMediaNotSeekable);
+    OwnerThread(), [this] () {
+      mMediaSeekable = false;
+    });
 
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
@@ -3115,10 +3112,9 @@ MediaDecoderStateMachine::RequestAudioData()
   SAMPLE_LOG("Queueing audio task - queued=%" PRIuSIZE ", decoder-queued=%" PRIuSIZE,
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
-  RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestAudioData()->Then(
     OwnerThread(), __func__,
-    [this, self] (MediaData* aAudio) {
+    [this] (MediaData* aAudio) {
       MOZ_ASSERT(aAudio);
       mAudioDataRequest.Complete();
       // audio->GetEndTime() is not always mono-increasing in chained ogg.
@@ -3128,7 +3124,7 @@ MediaDecoderStateMachine::RequestAudioData()
                  aAudio->GetEndTime());
       mStateObj->HandleAudioDecoded(aAudio);
     },
-    [this, self] (const MediaResult& aError) {
+    [this] (const MediaResult& aError) {
       SAMPLE_LOG("OnAudioNotDecoded aError=%" PRIu32, static_cast<uint32_t>(aError.Code()));
       mAudioDataRequest.Complete();
       switch (aError.Code()) {
@@ -3162,10 +3158,9 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
     aSkipToNextKeyframe, aCurrentTime.ToMicroseconds());
 
   TimeStamp videoDecodeStartTime = TimeStamp::Now();
-  RefPtr<MediaDecoderStateMachine> self = this;
   mReader->RequestVideoData(aSkipToNextKeyframe, aCurrentTime)->Then(
     OwnerThread(), __func__,
-    [this, self, videoDecodeStartTime] (MediaData* aVideo) {
+    [this, videoDecodeStartTime] (MediaData* aVideo) {
       MOZ_ASSERT(aVideo);
       mVideoDataRequest.Complete();
       // Handle abnormal or negative timestamps.
@@ -3175,7 +3170,7 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
                  aVideo->GetEndTime());
       mStateObj->HandleVideoDecoded(aVideo, videoDecodeStartTime);
     },
-    [this, self] (const MediaResult& aError) {
+    [this] (const MediaResult& aError) {
       SAMPLE_LOG("OnVideoNotDecoded aError=%" PRIu32 , static_cast<uint32_t>(aError.Code()));
       mVideoDataRequest.Complete();
       switch (aError.Code()) {
@@ -3199,30 +3194,29 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aType == MediaData::AUDIO_DATA || aType == MediaData::VIDEO_DATA);
-  RefPtr<MediaDecoderStateMachine> self = this;
   if (aType == MediaData::AUDIO_DATA) {
     mReader->WaitForData(MediaData::AUDIO_DATA)->Then(
       OwnerThread(), __func__,
-      [self] (MediaData::Type aType) {
-        self->mAudioWaitRequest.Complete();
+      [this] (MediaData::Type aType) {
+        mAudioWaitRequest.Complete();
         MOZ_ASSERT(aType == MediaData::AUDIO_DATA);
-        self->mStateObj->HandleAudioWaited(aType);
+        mStateObj->HandleAudioWaited(aType);
       },
-      [self] (const WaitForDataRejectValue& aRejection) {
-        self->mAudioWaitRequest.Complete();
-        self->DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
+      [this] (const WaitForDataRejectValue& aRejection) {
+        mAudioWaitRequest.Complete();
+        DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
       })->Track(mAudioWaitRequest);
   } else {
     mReader->WaitForData(MediaData::VIDEO_DATA)->Then(
       OwnerThread(), __func__,
-      [self] (MediaData::Type aType) {
-        self->mVideoWaitRequest.Complete();
+      [this] (MediaData::Type aType) {
+        mVideoWaitRequest.Complete();
         MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
-        self->mStateObj->HandleVideoWaited(aType);
+        mStateObj->HandleVideoWaited(aType);
       },
-      [self] (const WaitForDataRejectValue& aRejection) {
-        self->mVideoWaitRequest.Complete();
-        self->DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
+      [this] (const WaitForDataRejectValue& aRejection) {
+        mVideoWaitRequest.Complete();
+        DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
       })->Track(mVideoWaitRequest);
   }
 }
@@ -3583,10 +3577,9 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
 
   // It is OK to capture 'this' without causing UAF because the callback
   // always happens before shutdown.
-  RefPtr<MediaDecoderStateMachine> self = this;
-  mDelayedScheduler.Ensure(target, [self] () {
-    self->mDelayedScheduler.CompleteRequest();
-    self->RunStateMachine();
+  mDelayedScheduler.Ensure(target, [this] () {
+    mDelayedScheduler.CompleteRequest();
+    RunStateMachine();
   }, [] () {
     MOZ_DIAGNOSTIC_ASSERT(false);
   });
@@ -3803,9 +3796,8 @@ MediaDecoderStateMachine::RequestDebugInfo()
 {
   using PromiseType = MediaDecoder::DebugInfoPromise;
   RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
-  RefPtr<MediaDecoderStateMachine> self = this;
-  OwnerThread()->Dispatch(NS_NewRunnableFunction([self, p] () {
-    p->Resolve(self->GetDebugInfo(), __func__);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction([this, p] () {
+    p->Resolve(GetDebugInfo(), __func__);
   }), AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
   return p.forget();
 }
