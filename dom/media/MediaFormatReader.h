@@ -214,27 +214,7 @@ private:
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
     const char* mDescription;
-    void ShutdownDecoder()
-    {
-      MutexAutoLock lock(mMutex);
-      if (mDecoder) {
-        RefPtr<MediaFormatReader> owner = mOwner;
-        TrackType type = mType == MediaData::AUDIO_DATA
-                         ? TrackType::kAudioTrack
-                         : TrackType::kVideoTrack;
-        mShuttingDown = true;
-        mDecoder->Shutdown()
-          ->Then(mOwner->OwnerThread(), __func__,
-                 [owner, this, type]() {
-                   mShuttingDown = false;
-                   mShutdownPromise.ResolveIfExists(true, __func__);
-                   owner->ScheduleUpdate(type);
-                 },
-                 []() { MOZ_RELEASE_ASSERT(false, "Can't ever be here"); });
-      }
-      mDescription = "shutdown";
-      mDecoder = nullptr;
-    }
+    void ShutdownDecoder();
 
     // Only accessed from reader's task queue.
     bool mUpdateScheduled;
@@ -341,47 +321,7 @@ private:
 
     // Flush the decoder if present and reset decoding related data.
     // Following a flush, the decoder is ready to accept any new data.
-    void Flush()
-    {
-      if (mFlushing || mFlushed) {
-        // Flush still pending or already flushed, nothing more to do.
-        return;
-      }
-      mDecodeRequest.DisconnectIfExists();
-      mDrainRequest.DisconnectIfExists();
-      mDrainState = DrainState::None;
-      CancelWaitingForKey();
-      mOutput.Clear();
-      mNumSamplesInput = 0;
-      mNumSamplesOutput = 0;
-      mSizeOfQueue = 0;
-      if (mDecoder) {
-        RefPtr<MediaFormatReader> owner = mOwner;
-        TrackType type = mType == MediaData::AUDIO_DATA
-                         ? TrackType::kAudioTrack
-                         : TrackType::kVideoTrack;
-        mFlushing = true;
-        mDecoder->Flush()
-          ->Then(mOwner->OwnerThread(), __func__,
-                 [owner, type, this]() {
-                   mFlushing = false;
-                   if (!mShutdownPromise.IsEmpty()) {
-                     ShutdownDecoder();
-                     return;
-                   }
-                   owner->ScheduleUpdate(type);
-                 },
-                 [owner, type, this](const MediaResult& aError) {
-                   mFlushing = false;
-                   if (!mShutdownPromise.IsEmpty()) {
-                     ShutdownDecoder();
-                     return;
-                   }
-                   owner->NotifyError(type, aError);
-                 });
-      }
-      mFlushed = true;
-    }
+    void Flush();
 
     bool CancelWaitingForKey()
     {

@@ -374,6 +374,72 @@ MediaFormatReader::ShutdownPromisePool::Track(RefPtr<ShutdownPromise> aPromise)
     });
 }
 
+void
+MediaFormatReader::DecoderData::ShutdownDecoder()
+{
+  MutexAutoLock lock(mMutex);
+  if (mDecoder) {
+    RefPtr<MediaFormatReader> owner = mOwner;
+    TrackType type = mType == MediaData::AUDIO_DATA
+                     ? TrackType::kAudioTrack
+                     : TrackType::kVideoTrack;
+    mShuttingDown = true;
+    mDecoder->Shutdown()
+      ->Then(mOwner->OwnerThread(), __func__,
+             [owner, this, type]() {
+               mShuttingDown = false;
+               mShutdownPromise.ResolveIfExists(true, __func__);
+               owner->ScheduleUpdate(type);
+             },
+             []() { MOZ_RELEASE_ASSERT(false, "Can't ever be here"); });
+  }
+  mDescription = "shutdown";
+  mDecoder = nullptr;
+}
+
+void
+MediaFormatReader::DecoderData::Flush()
+{
+  if (mFlushing || mFlushed) {
+    // Flush still pending or already flushed, nothing more to do.
+    return;
+  }
+  mDecodeRequest.DisconnectIfExists();
+  mDrainRequest.DisconnectIfExists();
+  mDrainState = DrainState::None;
+  CancelWaitingForKey();
+  mOutput.Clear();
+  mNumSamplesInput = 0;
+  mNumSamplesOutput = 0;
+  mSizeOfQueue = 0;
+  if (mDecoder) {
+    RefPtr<MediaFormatReader> owner = mOwner;
+    TrackType type = mType == MediaData::AUDIO_DATA
+                     ? TrackType::kAudioTrack
+                     : TrackType::kVideoTrack;
+    mFlushing = true;
+    mDecoder->Flush()
+      ->Then(mOwner->OwnerThread(), __func__,
+             [owner, type, this]() {
+               mFlushing = false;
+               if (!mShutdownPromise.IsEmpty()) {
+                 ShutdownDecoder();
+                 return;
+               }
+               owner->ScheduleUpdate(type);
+             },
+             [owner, type, this](const MediaResult& aError) {
+               mFlushing = false;
+               if (!mShutdownPromise.IsEmpty()) {
+                 ShutdownDecoder();
+                 return;
+               }
+               owner->NotifyError(type, aError);
+             });
+  }
+  mFlushed = true;
+}
+
 class MediaFormatReader::DecoderFactory
 {
   using InitPromise = MediaDataDecoder::InitPromise;
