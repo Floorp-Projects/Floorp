@@ -27,5 +27,5 @@ fails HTTP(..) == CSS21-t100301.xhtml CSS21-t100301.xhtml
 == CSS21-t100303-simple.xhtml CSS21-t100303-simple.xhtml
 == CSS21-t100801-vertical-align.xhtml CSS21-t100801-vertical-align.xhtml
 == clip-auto.html clip-auto.html
-fails == clip-rect-auto.html clip-rect-auto.html
+== clip-rect-auto.html clip-rect-auto.html
 == width-rounding.html width-rounding.html
