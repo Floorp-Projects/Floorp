@@ -32,6 +32,10 @@ enum class FeatureStatus
   // This feature has been blocked by the graphics blacklist.
   Blacklisted,
 
+  // This feature is disabled by default, and so activation isn't attempted
+  // unless something explicitly enables it.
+  OptIn,
+
   // This feature was attempted but failed to activate.
   Failed,
 
