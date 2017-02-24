@@ -161,7 +161,7 @@ load 379920-1.svg
 load 379920-2.svg
 load 379975.html
 load 380096-1.html
-skip-if(stylo) load 382204-1.html # bug 1323680
+load 382204-1.html # bug 1323680
 load 383102-1.xhtml
 load 383129-1.html
 asserts-if(stylo,2) load 383806-1.xhtml # bug 1329454
@@ -206,7 +206,7 @@ load 401734-1.html
 load 401734-2.html
 needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 skip load 403175-1.html # times out occasionally, bug 473680
-skip-if(stylo) load 403245-1.html # bug 1323652
+load 403245-1.html # bug 1323652
 load 403454.html
 load 403569-1.xhtml
 load 403569-2.xhtml
@@ -231,11 +231,11 @@ load 413587-1.svg
 load 414058-1.html
 load 414175-1.xul
 load 415503.xhtml
-skip-if(stylo) load 416107.xhtml # bug 1323652
+load 416107.xhtml # bug 1323652
 HTTP load 419985.html
 load 420031-1.html
 load 420213-1.html
-skip-if(stylo) load 420219-1.html # bug 1323652
+load 420219-1.html # bug 1323652
 load 420651-1.xhtml
 load 421203-1.xul
 load 421432.html
@@ -273,7 +273,7 @@ load 455063-1.html
 load 455063-2.html
 load 455063-3.html
 load 455171-4.html
-skip-if(stylo) load 455623-1.html # bug 1323652
+load 455623-1.html # bug 1323652
 load 457362-1.xhtml
 load 457514.html
 asserts(0-1) load 460389-1.html # bug 780985
@@ -400,7 +400,7 @@ load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
 load 690247-1.html
 load 690619-1.html
-skip-if(stylo) load 691118-1.html # bug 1323652
+load 691118-1.html # bug 1323652
 load 695861.html
 load 695964-1.svg
 load 698335.html
@@ -409,8 +409,8 @@ load 701504.html
 load 707098.html
 load 709536-1.xhtml
 load 722137.html
-skip-if(stylo) load 725535.html # bug 1323652
-skip-if(stylo) load 727601.html # bug 1323652
+load 725535.html # bug 1323652
+load 727601.html # bug 1323652
 skip-if(Android) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 skip-if(stylo) load 736924-1.html # bug 1337695
@@ -421,7 +421,7 @@ load 767593-1.html
 load 767593-2.html
 load 770381-1.html
 load 772306.html
-skip-if(stylo) load 788360.html # bug 1323652
+load 788360.html # bug 1323652
 load 793848.html
 load 795646.html
 skip load 802902.html # bug 901752

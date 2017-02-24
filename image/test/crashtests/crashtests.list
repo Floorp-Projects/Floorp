@@ -47,5 +47,5 @@ load invalid-size.gif
 load invalid-size-second-frame.gif
 
 load multiple-png-hassize.ico # Bug 863958 - This icon's size is such that it leads to multiple writes to the PNG decoder after we've gotten our size.
-skip-if(stylo) asserts(0-2) load ownerdiscard.html # Bug 1323672, bug 807211
+asserts(0-2) load ownerdiscard.html # Bug 1323672, bug 807211
 load truncated-second-frame.png # Bug 863975
