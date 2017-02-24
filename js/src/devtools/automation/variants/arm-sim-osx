@@ -1,4 +1,5 @@
 {
-    "configure-args": "--enable-optimize --enable-debug --enable-stdcxx-compat --enable-simulator=arm --target=i686-apple-darwin10.0.0 --host=i686-apple-darwin10.0.0",
+    "configure-args": "--enable-debug --enable-stdcxx-compat --enable-simulator=arm --target=i686-apple-darwin10.0.0 --host=i686-apple-darwin10.0.0",
+    "optimize": true,
     "bits": 32
 }
