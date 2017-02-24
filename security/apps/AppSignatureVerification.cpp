@@ -864,9 +864,13 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   // Return the signer's certificate to the reader if they want it.
   // XXX: We should return an nsIX509CertList with the whole validated chain.
   if (aSignerCert) {
-    MOZ_ASSERT(CERT_LIST_HEAD(builtChain));
+    CERTCertListNode* signerCertNode = CERT_LIST_HEAD(builtChain);
+    if (!signerCertNode || CERT_LIST_END(signerCertNode, builtChain) ||
+        !signerCertNode->cert) {
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIX509Cert> signerCert =
-      nsNSSCertificate::Create(CERT_LIST_HEAD(builtChain)->cert);
+      nsNSSCertificate::Create(signerCertNode->cert);
     NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
     signerCert.forget(aSignerCert);
   }
@@ -938,9 +942,13 @@ VerifySignedManifest(AppTrustedRoot aTrustedRoot,
 
   // Return the signer's certificate to the reader if they want it.
   if (aSignerCert) {
-    MOZ_ASSERT(CERT_LIST_HEAD(builtChain));
+    CERTCertListNode* signerCertNode = CERT_LIST_HEAD(builtChain);
+    if (!signerCertNode || CERT_LIST_END(signerCertNode, builtChain) ||
+        !signerCertNode->cert) {
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIX509Cert> signerCert =
-      nsNSSCertificate::Create(CERT_LIST_HEAD(builtChain)->cert);
+      nsNSSCertificate::Create(signerCertNode->cert);
     if (NS_WARN_IF(!signerCert)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1491,9 +1499,13 @@ VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
   // Return the signer's certificate to the reader if they want it.
   // XXX: We should return an nsIX509CertList with the whole validated chain.
   if (aSignerCert) {
-    MOZ_ASSERT(CERT_LIST_HEAD(builtChain));
+    CERTCertListNode* signerCertNode = CERT_LIST_HEAD(builtChain);
+    if (!signerCertNode || CERT_LIST_END(signerCertNode, builtChain) ||
+        !signerCertNode->cert) {
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIX509Cert> signerCert =
-      nsNSSCertificate::Create(CERT_LIST_HEAD(builtChain)->cert);
+      nsNSSCertificate::Create(signerCertNode->cert);
     NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
     signerCert.forget(aSignerCert);
   }
