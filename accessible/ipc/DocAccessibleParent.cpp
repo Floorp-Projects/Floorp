@@ -402,9 +402,11 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   if (!result) {
     return result;
   }
+#else
+  result = IPC_OK();
 #endif
 
-  return IPC_OK();
+  return result;
 }
 
 ipc::IPCResult
