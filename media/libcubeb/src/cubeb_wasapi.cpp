@@ -747,15 +747,6 @@ refill_callback_duplex(cubeb_stream * stm)
     return true;
   }
 
-  // When WASAPI has not filled the input buffer yet, send silence.
-  double output_duration = double(output_frames) / stm->output_mix_params.rate;
-  double input_duration = double(stm->linear_input_buffer.length() / stm->input_stream_params.channels) / stm->input_mix_params.rate;
-  if (input_duration < output_duration) {
-    size_t padding = size_t(round((output_duration - input_duration) * stm->input_mix_params.rate));
-    LOG("padding silence: out=%f in=%f pad=%u", output_duration, input_duration, padding);
-    stm->linear_input_buffer.push_front_silence(padding * stm->input_stream_params.channels);
-  }
-
   LOGV("Duplex callback: input frames: %Iu, output frames: %Iu",
        stm->linear_input_buffer.length(), output_frames);
 
@@ -1651,6 +1642,14 @@ int setup_wasapi_stream(cubeb_stream * stm)
                                       stm->input_available_event,
                                       stm->capture_client,
                                       &stm->input_mix_params);
+
+    // We initializing an input stream, buffer ahead two buffers worth of silence.
+    // This delays the input side slightly, but allow to not glitch when no input
+    // is available when calling into the resampler to call the callback: the input
+    // refill event will be set shortly after to compensate for this lack of data.
+    stm->linear_input_buffer.push_silence(stm->input_buffer_frame_count *
+                                          stm->input_stream_params.channels * 2);
+
     if (rv != CUBEB_OK) {
       LOG("Failure to open the input side.");
       return rv;
