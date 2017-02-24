@@ -41,6 +41,7 @@ namespace {
 // If true, any new AudioChannelAgent will be muted when created.
 bool sAudioChannelMutedByDefault = false;
 bool sAudioChannelCompeting = false;
+bool sAudioChannelCompetingAllAgents = false;
 bool sXPCOMShuttingDown = false;
 
 class NotifyChannelActiveRunnable final : public Runnable
@@ -171,7 +172,7 @@ IsEnableAudioCompetingForAllAgents()
 #ifdef MOZ_WIDGET_ANDROID
   return true;
 #else
-  return false;
+  return sAudioChannelCompetingAllAgents;
 #endif
 }
 
@@ -299,6 +300,8 @@ AudioChannelService::AudioChannelService()
                                "dom.audiochannel.mutedByDefault");
   Preferences::AddBoolVarCache(&sAudioChannelCompeting,
                                "dom.audiochannel.audioCompeting");
+  Preferences::AddBoolVarCache(&sAudioChannelCompetingAllAgents,
+                               "dom.audiochannel.audioCompeting.allAgents");
 }
 
 AudioChannelService::~AudioChannelService()
