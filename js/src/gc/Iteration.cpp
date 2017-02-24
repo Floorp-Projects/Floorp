@@ -20,10 +20,10 @@ using namespace js;
 using namespace js::gc;
 
 static void
-IterateCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
-                               JSIterateCompartmentCallback compartmentCallback,
-                               IterateArenaCallback arenaCallback,
-                               IterateCellCallback cellCallback)
+IterateCompartmentsArenasCellsUnbarriered(JSContext* cx, Zone* zone, void* data,
+                                          JSIterateCompartmentCallback compartmentCallback,
+                                          IterateArenaCallback arenaCallback,
+                                          IterateCellCallback cellCallback)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         (*compartmentCallback)(cx, data, comp);
@@ -35,40 +35,40 @@ IterateCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
         for (ArenaIter aiter(zone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
             (*arenaCallback)(cx->runtime(), data, arena, traceKind, thingSize);
-            for (ArenaCellIter iter(arena); !iter.done(); iter.next())
+            for (ArenaCellIterUnbarriered iter(arena); !iter.done(); iter.next())
                 (*cellCallback)(cx->runtime(), data, iter.getCell(), traceKind, thingSize);
         }
     }
 }
 
 void
-js::IterateZonesCompartmentsArenasCells(JSContext* cx, void* data,
-                                        IterateZoneCallback zoneCallback,
-                                        JSIterateCompartmentCallback compartmentCallback,
-                                        IterateArenaCallback arenaCallback,
-                                        IterateCellCallback cellCallback)
+js::IterateHeapUnbarriered(JSContext* cx, void* data,
+                           IterateZoneCallback zoneCallback,
+                           JSIterateCompartmentCallback compartmentCallback,
+                           IterateArenaCallback arenaCallback,
+                           IterateCellCallback cellCallback)
 {
     AutoPrepareForTracing prop(cx, WithAtoms);
 
     for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
         (*zoneCallback)(cx->runtime(), data, zone);
-        IterateCompartmentsArenasCells(cx, zone, data,
-                                       compartmentCallback, arenaCallback, cellCallback);
+        IterateCompartmentsArenasCellsUnbarriered(cx, zone, data,
+                                                  compartmentCallback, arenaCallback, cellCallback);
     }
 }
 
 void
-js::IterateZoneCompartmentsArenasCells(JSContext* cx, Zone* zone, void* data,
-                                       IterateZoneCallback zoneCallback,
-                                       JSIterateCompartmentCallback compartmentCallback,
-                                       IterateArenaCallback arenaCallback,
-                                       IterateCellCallback cellCallback)
+js::IterateHeapUnbarrieredForZone(JSContext* cx, Zone* zone, void* data,
+                                  IterateZoneCallback zoneCallback,
+                                  JSIterateCompartmentCallback compartmentCallback,
+                                  IterateArenaCallback arenaCallback,
+                                  IterateCellCallback cellCallback)
 {
     AutoPrepareForTracing prop(cx, WithAtoms);
 
     (*zoneCallback)(cx->runtime(), data, zone);
-    IterateCompartmentsArenasCells(cx, zone, data,
-                                   compartmentCallback, arenaCallback, cellCallback);
+    IterateCompartmentsArenasCellsUnbarriered(cx, zone, data,
+                                              compartmentCallback, arenaCallback, cellCallback);
 }
 
 void

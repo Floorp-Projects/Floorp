@@ -8,12 +8,26 @@
 #define ds_PageProtectingVector_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Types.h"
 #include "mozilla/Vector.h"
+
+#ifdef MALLOC_H
+# include MALLOC_H
+#endif
 
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Memory.h"
 #include "js/Utility.h"
+
+#ifdef MOZ_MEMORY
+# ifdef XP_DARWIN
+#  define malloc_usable_size malloc_size
+# else
+extern "C" MFBT_API size_t malloc_usable_size(MALLOC_USABLE_SIZE_CONST_PTR void* p);
+# endif
+#endif
 
 namespace js {
 
@@ -455,23 +469,82 @@ PageProtectingVector<T, A, B, C, D, E, F, G>::appendSlow(const U* values, size_t
 
 class ProtectedReallocPolicy
 {
+    uintptr_t currAddr;
+    size_t currSize;
+    uintptr_t prevAddr;
+    size_t prevSize;
+
+    template <typename T> void update(T* newAddr, size_t newSize) {
+        prevAddr = currAddr;
+        prevSize = currSize;
+        currAddr = uintptr_t(newAddr);
+        currSize = newSize * sizeof(T);
+    }
+
+    template <typename T> void updateIfValid(T* newAddr, size_t newSize) {
+        if (newAddr)
+            update<T>(newAddr, newSize);
+    }
+
+    template <typename T> T* reallocUpdate(T* oldAddr, size_t oldSize, size_t newSize) {
+        T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
+        updateIfValid<T>(newAddr, newSize);
+        return newAddr;
+    }
+
   public:
+    ProtectedReallocPolicy() : currAddr(0), currSize(0), prevAddr(0), prevSize(0) {}
+
+    ~ProtectedReallocPolicy() {
+        MOZ_RELEASE_ASSERT(!currSize && !currAddr);
+    }
+
     template <typename T> T* maybe_pod_malloc(size_t numElems) {
-        return js_pod_malloc<T>(numElems);
+        MOZ_RELEASE_ASSERT(!currSize && !currAddr);
+        T* addr = js_pod_malloc<T>(numElems);
+        updateIfValid<T>(addr, numElems);
+        return addr;
     }
+
     template <typename T> T* maybe_pod_calloc(size_t numElems) {
-        return js_pod_calloc<T>(numElems);
+        MOZ_RELEASE_ASSERT(!currSize && !currAddr);
+        T* addr = js_pod_calloc<T>(numElems);
+        updateIfValid<T>(addr, numElems);
+        return addr;
     }
+
     template <typename T> T* maybe_pod_realloc(T* oldAddr, size_t oldSize, size_t newSize) {
+        if (uintptr_t(oldAddr) != currAddr) {
+            MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: oldAddr and currAddr don't match "
+                                    "(0x%" PRIx64 " != 0x%" PRIx64 ", %" PRIu64 ")!",
+                                    uint64_t(oldAddr), uint64_t(currAddr), uint64_t(currSize));
+        }
+        if (oldSize * sizeof(T) != currSize) {
+            MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: oldSize and currSize don't match "
+                                    "(%" PRIu64 " != %" PRIu64 ", 0x%" PRIx64 ")!",
+                                    uint64_t(oldSize * sizeof(T)), uint64_t(currSize),
+                                    uint64_t(currAddr));
+        }
+
         MOZ_ASSERT_IF(oldAddr, oldSize);
         if (MOZ_UNLIKELY(!newSize))
             return nullptr;
         if (MOZ_UNLIKELY(!oldAddr))
-            return js_pod_malloc<T>(newSize);
+            return maybe_pod_malloc<T>(newSize);
+
+#ifdef MOZ_MEMORY
+        size_t usableSize = malloc_usable_size(oldAddr);
+        if (usableSize < currSize) {
+            MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: usableSize < currSize "
+                                    "(%" PRIu64 " < %" PRIu64 ", %" PRIu64 ", %s)!",
+                                    uint64_t(usableSize), uint64_t(currSize),
+                                    uint64_t(prevSize), prevAddr == currAddr ? "true" : "false");
+        }
+#endif
 
         T* tmpAddr = js_pod_malloc<T>(newSize);
         if (MOZ_UNLIKELY(!tmpAddr))
-            return js_pod_realloc<T>(oldAddr, oldSize, newSize);
+            return reallocUpdate<T>(oldAddr, oldSize, newSize);
 
         size_t bytes = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
         memcpy(tmpAddr, oldAddr, bytes);
@@ -479,19 +552,27 @@ class ProtectedReallocPolicy
         T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
         if (MOZ_UNLIKELY(!newAddr)) {
             js_free(tmpAddr);
-            return js_pod_realloc<T>(oldAddr, oldSize, newSize);
+            return reallocUpdate<T>(oldAddr, oldSize, newSize);
         }
 
         const uint8_t* newAddrBytes = reinterpret_cast<const uint8_t*>(newAddr);
         const uint8_t* tmpAddrBytes = reinterpret_cast<const uint8_t*>(tmpAddr);
         if (!mozilla::PodEqual(tmpAddrBytes, newAddrBytes, bytes)) {
-            if (oldAddr == newAddr)
-                MOZ_CRASH("New buffer doesn't match the old buffer (newAddr == oldAddr)!");
-            else
-                MOZ_CRASH("New buffer doesn't match the old buffer (newAddr != oldAddr)!");
+#ifdef MOZ_MEMORY
+            MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: buffers don't match "
+                                    "(%" PRIu64 " >= %" PRIu64 ", %" PRIu64 ", %s)!",
+                                    uint64_t(usableSize), uint64_t(currSize),
+                                    uint64_t(prevSize), prevAddr == currAddr ? "true" : "false");
+#else
+            MOZ_CRASH_UNSAFE_PRINTF("maybe_pod_realloc: buffers don't match "
+                                    "(%" PRIu64 ", %" PRIu64 ", %s)!",
+                                    uint64_t(currSize), uint64_t(prevSize),
+                                    prevAddr == currAddr ? "true" : "false");
+#endif
         }
 
         js_free(tmpAddr);
+        update<T>(newAddr, newSize);
         return newAddr;
     }
 
@@ -500,7 +581,22 @@ class ProtectedReallocPolicy
     template <typename T> T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
         return maybe_pod_realloc<T>(p, oldSize, newSize);
     }
-    void free_(void* p) { js_free(p); }
+
+    void free_(void* p) {
+        MOZ_RELEASE_ASSERT(uintptr_t(p) == currAddr);
+#ifdef MOZ_MEMORY
+        size_t usableSize = malloc_usable_size(p);
+        if (usableSize < currSize) {
+            MOZ_CRASH_UNSAFE_PRINTF("free_: usableSize < currSize "
+                                    "(%" PRIu64 " < %" PRIu64 ", %" PRIu64 ", %s)!",
+                                    uint64_t(usableSize), uint64_t(currSize),
+                                    uint64_t(prevSize), prevAddr == currAddr ? "true" : "false");
+        }
+#endif
+        js_free(p);
+        update<uint8_t>(0, 0);
+    }
+
     void reportAllocOverflow() const {}
     bool checkSimulatedOOM() const {
         return !js::oom::ShouldFailWithOOM();

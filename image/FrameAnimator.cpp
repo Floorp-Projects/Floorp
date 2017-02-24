@@ -353,10 +353,11 @@ DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
   SurfaceMemoryCounter counter(key, /* aIsLocked = */ true, aType);
 
   // Extract the surface's memory usage information.
-  size_t heap = 0, nonHeap = 0;
-  aSurface->AddSizeOfExcludingThis(aMallocSizeOf, heap, nonHeap);
+  size_t heap = 0, nonHeap = 0, handles = 0;
+  aSurface->AddSizeOfExcludingThis(aMallocSizeOf, heap, nonHeap, handles);
   counter.Values().SetDecodedHeap(heap);
   counter.Values().SetDecodedNonHeap(nonHeap);
+  counter.Values().SetSharedHandles(handles);
 
   // Record it.
   aCounters.AppendElement(counter);

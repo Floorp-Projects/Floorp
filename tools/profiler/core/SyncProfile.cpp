@@ -12,7 +12,7 @@ SyncProfile::SyncProfile(int aThreadId, PseudoStack* aStack)
   , mOwnerState(REFERENCED)
 {
   MOZ_COUNT_CTOR(SyncProfile);
-  SetProfile(new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRY));
+  SetProfile(new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES));
 }
 
 SyncProfile::~SyncProfile()

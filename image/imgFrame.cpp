@@ -932,7 +932,8 @@ imgFrame::SetCompositingFailed(bool val)
 void
 imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                  size_t& aHeapSizeOut,
-                                 size_t& aNonHeapSizeOut) const
+                                 size_t& aNonHeapSizeOut,
+                                 size_t& aSharedHandlesOut) const
 {
   MonitorAutoLock lock(mMonitor);
 
@@ -949,6 +950,14 @@ imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     aHeapSizeOut += aMallocSizeOf(mRawSurface);
     mRawSurface->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
                                         aNonHeapSizeOut);
+
+    if (mRawSurface->GetType() == SurfaceType::DATA_SHARED) {
+      auto sharedSurface =
+        static_cast<SourceSurfaceSharedData*>(mRawSurface.get());
+      if (sharedSurface->CanShare()) {
+        ++aSharedHandlesOut;
+      }
+    }
   }
 }
 

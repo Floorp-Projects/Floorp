@@ -1650,6 +1650,69 @@ private:
            aType == NS_FORM_INPUT_TIME;
   }
 
+  /**
+   * Checks if aDateTimeInputType should be supported based on "dom.forms.datetime",
+   * "dom.forms.datepicker" and "dom.experimental_forms".
+   */
+  static bool
+  IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
+
+  /**
+   * Checks preference "dom.webkitBlink.dirPicker.enabled" to determine if
+   * webkitdirectory should be supported.
+   */
+  static bool
+  IsWebkitDirPickerEnabled();
+
+  /**
+   * Checks preference "dom.webkitBlink.filesystem.enabled" to determine if
+   * webkitEntries should be supported.
+   */
+  static bool
+  IsWebkitFileSystemEnabled();
+
+  /**
+   * Checks preference "dom.input.dirpicker" to determine if file and directory
+   * entries API should be supported.
+   */
+  static bool
+  IsDirPickerEnabled();
+
+  /**
+   * Checks preference "dom.forms.datepicker" to determine if date picker should
+   * be supported.
+   */
+  static bool
+  IsDatePickerEnabled();
+
+  /**
+   * Checks preference "dom.experimental_forms" to determine if experimental
+   * implementation of input element should be enabled.
+   */
+  static bool
+  IsExperimentalFormsEnabled();
+
+  /**
+   * Checks preference "dom.forms.datetime" to determine if input date/time
+   * related types should be supported.
+   */
+  static bool
+  IsInputDateTimeEnabled();
+
+  /**
+   * Checks preference "dom.forms.number" to determine if input type=number
+   * should be supported.
+   */
+  static bool
+  IsInputNumberEnabled();
+
+  /**
+   * Checks preference "dom.forms.color" to determine if date/time related
+   * types should be supported.
+   */
+  static bool
+  IsInputColorEnabled();
+
   struct nsFilePickerFilter {
     nsFilePickerFilter()
       : mFilterMask(0) {}

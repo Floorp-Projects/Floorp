@@ -400,6 +400,9 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
 nsIPrincipal* GetCompartmentPrincipal(JSCompartment* compartment);
 
+void NukeAllWrappersForCompartment(JSContext* cx, JSCompartment* compartment,
+                                   js::NukeReferencesToWindow nukeReferencesToWindow = js::NukeWindowReferences);
+
 void SetLocationForGlobal(JSObject* global, const nsACString& location);
 void SetLocationForGlobal(JSObject* global, nsIURI* locationURI);
 

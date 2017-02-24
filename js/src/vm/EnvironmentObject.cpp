@@ -488,7 +488,7 @@ ModuleEnvironmentObject::createImportBinding(JSContext* cx, HandleAtom importNam
 {
     RootedId importNameId(cx, AtomToId(importName));
     RootedId localNameId(cx, AtomToId(localName));
-    RootedModuleEnvironmentObject env(cx, module->environment());
+    RootedModuleEnvironmentObject env(cx, &module->initialEnvironment());
     if (!importBindings().putNew(cx, importNameId, env, localNameId)) {
         ReportOutOfMemory(cx);
         return false;

@@ -172,6 +172,7 @@ ChannelListener.prototype = {
     }
     try {
       this._closure(request, this._buffer, this._closurectx, this._isFromCache);
+      this._closurectx = null;
     } catch (ex) {
       do_throw("Error in closure function: " + ex);
     }

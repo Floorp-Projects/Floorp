@@ -107,8 +107,43 @@ struct TraceInfo
   nsTArray<nsCString> mStrs;
 };
 
+class TraceInfoHolder {
+public:
+  TraceInfoHolder() : mInfo(nullptr) {}
+  explicit TraceInfoHolder(TraceInfo* aInfo) : mInfo(aInfo) {
+    aInfo->mLogsMutex.AssertNotCurrentThreadOwns(); // in case of recursive
+    aInfo->mLogsMutex.Lock();
+    MOZ_ASSERT(aInfo);
+  }
+  TraceInfoHolder(const TraceInfoHolder& aOther) = delete;
+  TraceInfoHolder(TraceInfoHolder&& aOther) : mInfo(aOther.mInfo) {
+    if (!!aOther) {
+      aOther->mLogsMutex.AssertCurrentThreadOwns();
+    }
+    aOther.mInfo = nullptr;
+  }
+  ~TraceInfoHolder() { if (mInfo) mInfo->mLogsMutex.Unlock(); }
+  explicit operator bool() const { return !!mInfo; }
+  TraceInfo* operator ->() { return mInfo; }
+  bool operator ==(TraceInfo* aOther) const {
+    return mInfo == aOther;
+  }
+  bool operator ==(const TraceInfoHolder& aOther) const {
+    return mInfo == aOther.mInfo;
+  }
+  void Reset() {
+    if (mInfo) {
+      mInfo->mLogsMutex.Unlock();
+      mInfo = nullptr;
+    }
+  }
+
+private:
+  TraceInfo* mInfo;
+};
+
 // Return the TraceInfo of current thread, allocate a new one if not exit.
-TraceInfo* GetOrCreateTraceInfo();
+TraceInfoHolder GetOrCreateTraceInfo();
 
 uint64_t GenNewUniqueTaskId();
 

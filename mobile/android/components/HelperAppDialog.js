@@ -137,8 +137,16 @@ HelperAppLauncherDialog.prototype = {
     }
 
     if (this._shouldForwardToAndroidDownloadManager(aLauncher)) {
-      this._downloadWithAndroidDownloadManager(aLauncher);
-      aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+      Task.spawn(function* () {
+        try {
+          let hasPermission = yield RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE);
+          if (hasPermission) {
+            this._downloadWithAndroidDownloadManager(aLauncher);
+            aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+          }
+        } finally {
+        }
+      }.bind(this)).catch(Cu.reportError);
       return;
     }
 

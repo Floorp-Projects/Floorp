@@ -280,7 +280,8 @@ nsProfiler::GetStartParams(nsIProfilerStartParams** aRetVal)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration)
+nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
+                          uint32_t* aGeneration)
 {
   MOZ_ASSERT(aCurrentPosition);
   MOZ_ASSERT(aTotalSize);
