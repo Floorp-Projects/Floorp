@@ -125,6 +125,7 @@ MediaDataDecoderProxy::ConfigurationChanged(const TrackInfo& aConfig)
 
   if (!mProxyThread) {
     mProxyDecoder->ConfigurationChanged(aConfig);
+    return;
   }
   RefPtr<MediaDataDecoderProxy> self = this;
   RefPtr<TrackInfoSharedPtr> config = new TrackInfoSharedPtr(aConfig, 0);
