@@ -3288,19 +3288,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
   }
 
   if (!isDone(mIceConnectionState) && isDone(domState)) {
-    // mIceStartTime can be null if going directly from New to Closed, in which
-    // case we don't count it as a success or a failure.
-    if (!mIceStartTime.IsNull()){
-      TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
-      if (isSucceeded(domState)) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_SUCCESS_TIME,
-                              timeDelta.ToMilliseconds());
-      } else if (isFailed(domState)) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FAILURE_TIME,
-                              timeDelta.ToMilliseconds());
-      }
-    }
-
     if (isSucceeded(domState)) {
       Telemetry::Accumulate(
           Telemetry::WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS,
