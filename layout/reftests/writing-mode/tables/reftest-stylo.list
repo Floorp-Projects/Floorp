@@ -64,10 +64,10 @@ asserts(1-2) == vertical-table-specified-width-2.html vertical-table-specified-w
 == fixed-table-layout-030-vrl.html fixed-table-layout-030-vrl.html
 == fixed-table-layout-031-vrl.html fixed-table-layout-031-vrl.html
 
-# HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002.xht
-# HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-003.xht
-# HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-004.xht
-# HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-005.xht
+HTTP(../..) == s72-border-spacing-002.xht s72-border-spacing-002.xht
+HTTP(../..) == s72-border-spacing-003.xht s72-border-spacing-003.xht
+HTTP(../..) == s72-border-spacing-004.xht s72-border-spacing-004.xht
+HTTP(../..) == s72-border-spacing-005.xht s72-border-spacing-005.xht
 fails == wm-row-progression-002.xht wm-row-progression-002.xht
 fails == wm-row-progression-003.xht wm-row-progression-003.xht
 fails == wm-row-progression-004.xht wm-row-progression-004.xht

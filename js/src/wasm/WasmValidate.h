@@ -302,6 +302,7 @@ class Decoder
     const uint8_t* const beg_;
     const uint8_t* const end_;
     const uint8_t* cur_;
+    const size_t offsetInModule_;
     UniqueChars* error_;
     bool resilientMode_;
 
@@ -384,11 +385,12 @@ class Decoder
     }
 
   public:
-    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error,
+    Decoder(const uint8_t* begin, const uint8_t* end, size_t offsetInModule, UniqueChars* error,
             bool resilientMode = false)
       : beg_(begin),
         end_(end),
         cur_(begin),
+        offsetInModule_(offsetInModule),
         error_(error),
         resilientMode_(resilientMode)
     {
@@ -398,12 +400,18 @@ class Decoder
       : beg_(bytes.begin()),
         end_(bytes.end()),
         cur_(bytes.begin()),
+        offsetInModule_(0),
         error_(error),
         resilientMode_(false)
     {}
 
-    bool fail(const char* msg, ...) MOZ_FORMAT_PRINTF(2, 3);
-    bool fail(UniqueChars msg);
+    // These convenience functions use currentOffset() as the errorOffset.
+    bool fail(const char* msg) { return fail(currentOffset(), msg); }
+    bool failf(const char* msg, ...) MOZ_FORMAT_PRINTF(2, 3);
+
+    // Report an error at the given offset (relative to the whole module).
+    bool fail(size_t errorOffset, const char* msg);
+
     void clearError() {
         if (error_)
             error_->reset();
@@ -429,7 +437,7 @@ class Decoder
         return cur_;
     }
     size_t currentOffset() const {
-        return cur_ - beg_;
+        return offsetInModule_ + (cur_ - beg_);
     }
     const uint8_t* begin() const {
         return beg_;

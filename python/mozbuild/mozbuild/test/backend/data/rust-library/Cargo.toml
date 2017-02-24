@@ -1,5 +1,5 @@
 [package]
-name = "gkrust"
+name = "test-library"
 version = "0.1.0"
 authors = [
   "Nobody <nobody@mozilla.org>",

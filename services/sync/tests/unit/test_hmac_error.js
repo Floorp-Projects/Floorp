@@ -21,14 +21,11 @@ function shared_setup() {
   hmacErrorCount = 0;
 
   // Make sure RotaryEngine is the only one we sync.
-  Service.engineManager._engines = {};
-  Service.engineManager.register(RotaryEngine);
-  let engine = Service.engineManager.get("rotary");
-  engine.enabled = true;
+  let { engine, tracker } = registerRotaryEngine();
   engine.lastSync = 123; // Needs to be non-zero so that tracker is queried.
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
-  engine._tracker.addChangedID("scotsman", 0);
+  tracker.addChangedID("scotsman", 0);
   do_check_eq(1, Service.engineManager.getEnabled().length);
 
   let engines = {rotary:  {version: engine.version,
@@ -42,12 +39,12 @@ function shared_setup() {
   let rotaryColl  = new ServerCollection({}, true);
   let clientsColl = new ServerCollection({}, true);
 
-  return [engine, rotaryColl, clientsColl, keysWBO, global];
+  return [engine, rotaryColl, clientsColl, keysWBO, global, tracker];
 }
 
 add_task(async function hmac_error_during_404() {
   _("Attempt to replicate the HMAC error setup.");
-  let [engine, rotaryColl, clientsColl, keysWBO, global] = shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] = shared_setup();
 
   // Hand out 404s for crypto/keys.
   let keysHandler    = keysWBO.handler();
@@ -93,6 +90,8 @@ add_task(async function hmac_error_during_404() {
     // Two rotary items, one client record... no errors.
     do_check_eq(hmacErrorCount, 0)
   } finally {
+    tracker.clearChangedIDs();
+    Service.engineManager.unregister(engine);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await promiseStopServer(server);
@@ -101,7 +100,7 @@ add_task(async function hmac_error_during_404() {
 
 add_task(async function hmac_error_during_node_reassignment() {
   _("Attempt to replicate an HMAC error during node reassignment.");
-  let [engine, rotaryColl, clientsColl, keysWBO, global] = shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] = shared_setup();
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
@@ -219,9 +218,10 @@ add_task(async function hmac_error_during_node_reassignment() {
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);
 
+            tracker.clearChangedIDs();
+            Service.engineManager.unregister(engine);
             Svc.Prefs.resetBranch("");
             Service.recordManager.clearCache();
-            engine._tracker.clearChangedIDs();
             server.stop(resolve);
           };
 

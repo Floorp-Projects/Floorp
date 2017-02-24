@@ -1990,6 +1990,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 672,
+    "releaseChannelCollection": "opt-out",      
     "description": "SSL handshake result, 0=success, 1-255=NSS error offset, 256-511=SEC error offset + 256, 512-639=NSPR error offset + 512, 640-670=PKIX error, 671=unknown err"
   },
   "SSL_TIME_UNTIL_READY": {
@@ -4170,6 +4171,14 @@
     "n_values": 4,
     "bug_numbers": [1298257],
     "description": "Classifier prefix matching result (0 = no match, 1 = match only V2, 2 = match only V4, 3 = match both V2 and V4)"
+  },
+  "URLCLASSIFIER_MATCH_RESULT": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 16,
+    "bug_numbers": [1311931],
+    "description": "The result of each URL lookup against both google and google4 lists(0 = no match, 1 = V2 prefix only, 2 = V4 prefix only, 3 = V2 and V4 prefixes, 4 = V2 and V4 completions, 5 = V2 completion only, 6 = V4 completion only, 7 = V2 completion and v4 prefix, 8 = V2 prefix and V4 completion, 9 = unexpected result)"
   },
   "URLCLASSIFIER_POSITIVE_CACHE_DURATION": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
@@ -7017,8 +7026,8 @@
   },
   "DECODER_DOCTOR_INFOBAR_STATS": {
     "alert_emails": ["gsquelart@mozilla.com"],
-    "bug_numbers": [1271483],
-    "expires_in_version": "53",
+    "bug_numbers": [1271483, 1337566],
+    "expires_in_version": "59",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 8,

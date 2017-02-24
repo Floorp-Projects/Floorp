@@ -3,7 +3,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas.h
 pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image.html
-# pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking.html
 
 fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-color.html background-blending-gradient-color.html

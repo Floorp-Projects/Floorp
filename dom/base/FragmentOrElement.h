@@ -348,7 +348,8 @@ public:
     /**
      * Registered Intersection Observers on the element.
      */
-    nsDataHashtable<nsPtrHashKey<DOMIntersectionObserver>, int32_t> mRegisteredIntersectionObservers;
+    nsDataHashtable<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
+      mRegisteredIntersectionObservers;
   };
 
 protected:

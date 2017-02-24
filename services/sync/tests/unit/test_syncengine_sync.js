@@ -15,20 +15,21 @@ function makeRotaryEngine() {
   return new RotaryEngine(Service);
 }
 
-function clean(engine) {
+async function clean(engine) {
   Svc.Prefs.resetBranch("");
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   Service.recordManager.clearCache();
   engine._tracker.clearChangedIDs();
+  await engine.finalize();
 }
 
 async function cleanAndGo(engine, server) {
-  clean(engine);
+  await clean(engine);
   await promiseStopServer(server);
 }
 
 async function promiseClean(engine, server) {
-  clean(engine);
+  await clean(engine);
   await promiseStopServer(server);
 }
 

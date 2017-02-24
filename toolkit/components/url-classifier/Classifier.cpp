@@ -470,10 +470,12 @@ Classifier::Check(const nsACString& aSpec,
 
   // Only record telemetry when both v2 and v4 have data.
   bool isV2Empty = true, isV4Empty = true;
+  bool shouldDoTelemetry = false;
   for (auto&& cache : cacheArray) {
     bool& ref = LookupCache::Cast<LookupCacheV2>(cache) ? isV2Empty : isV4Empty;
     ref = ref ? cache->IsEmpty() : false;
     if (!isV2Empty && !isV4Empty) {
+      shouldDoTelemetry = true;
       break;
     }
   }
@@ -521,21 +523,38 @@ Classifier::Check(const nsACString& aSpec,
         result->mConfirmed = confirmed;
         result->mTableName.Assign(cache->TableName());
         result->mPartialHashLength = confirmed ? COMPLETE_SIZE : matchLength;
+        result->mProtocolV2 = LookupCache::Cast<LookupCacheV2>(cache);
 
-        if (LookupCache::Cast<LookupCacheV4>(cache)) {
-          matchingStatistics |= PrefixMatch::eMatchV4Prefix;
-          result->mProtocolV2 = false;
+        // There are two cases we are going to ignore the result for telemetry:
+        // 1. shouldDoTelemetry == false(when either v2 or v4 table is empty)
+        // 2. When match was found in the table which is not provided by google.
+        if (!shouldDoTelemetry ||
+            !StringBeginsWith(result->mTableName, NS_LITERAL_CSTRING("goog"))) {
+          continue;
+        }
+
+        if (result->mProtocolV2) {
+          matchingStatistics |= PrefixMatch::eMatchV2Prefix;
+          result->mMatchResult = MatchResult::eV2Prefix;
         } else {
           matchingStatistics |= PrefixMatch::eMatchV2Prefix;
-          result->mProtocolV2 = true;
+          result->mMatchResult = MatchResult::eV4Prefix;
         }
       }
     }
 
-    if (!isV2Empty && !isV4Empty) {
+    // TODO : This will be removed in Bug 1338033.
+    if (shouldDoTelemetry) {
       Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PREFIX_MATCH,
                             static_cast<uint8_t>(matchingStatistics));
     }
+  }
+
+  // If we cannot find the prefix in neither the v2 nor the v4 database, record the
+  // telemetry here because we won't reach nsUrlClassifierLookupCallback:::HandleResult.
+  if (shouldDoTelemetry && aResults.Length() == 0) {
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_RESULT,
+                          static_cast<uint8_t>(MatchResult::eNoMatch));
   }
 
   return NS_OK;

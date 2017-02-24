@@ -52,6 +52,7 @@ job_description_schema = Schema({
     Optional('expires-after'): task_description_schema['expires-after'],
     Optional('routes'): task_description_schema['routes'],
     Optional('scopes'): task_description_schema['scopes'],
+    Optional('tags'): task_description_schema['tags'],
     Optional('extra'): task_description_schema['extra'],
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('index'): task_description_schema['index'],

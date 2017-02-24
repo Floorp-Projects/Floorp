@@ -58,6 +58,6 @@ fails == select-3.html select-3.html
 fails == multi-column-1.html multi-column-1.html
 == button-1.html button-1.html
 == button-2.html button-2.html
-fails == relative-row-animation-1.html relative-row-animation-1.html
+== relative-row-animation-1.html relative-row-animation-1.html
 == fixed-pos-auto-offset-1a.html fixed-pos-auto-offset-1a.html
 == fixed-pos-auto-offset-1b.html fixed-pos-auto-offset-1b.html

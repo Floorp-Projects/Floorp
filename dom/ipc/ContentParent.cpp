@@ -3239,6 +3239,9 @@ mozilla::ipc::IPCResult
 ContentParent::RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor)
 {
 #ifdef MOZ_WEBSPEECH
+  if (!static_cast<SpeechSynthesisParent*>(aActor)->SendInit()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
   return IPC_OK();
 #else
   return IPC_FAIL_NO_REASON(this);

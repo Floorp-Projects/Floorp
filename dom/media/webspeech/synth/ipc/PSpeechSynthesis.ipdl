@@ -35,14 +35,14 @@ child:
 
     async NotifyVoicesChanged();
 
+    async InitialVoicesAndState(RemoteVoice[] aVoices, nsString[] aDefaults,
+                                bool aIsSpeaking);
+
 parent:
     async __delete__();
 
     async PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
                                   float aVolume, float aRate, float aPitch);
-
-    sync ReadVoicesAndState() returns (RemoteVoice[] aVoices,
-                                       nsString[] aDefaults, bool aIsSpeaking);
 };
 
 } // namespace dom

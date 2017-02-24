@@ -104,6 +104,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsNullPrincipal.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -1831,8 +1832,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnDemandBuiltInUASheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntersectionObservers)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSubImportLinks)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
@@ -2738,7 +2737,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (cspSandboxFlags & SANDBOXED_ORIGIN) {
     // If the new CSP sandbox flags do not have the allow-same-origin flag
     // reset the document principal to a null principal
-    principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    principal = nsNullPrincipal::Create();
     SetPrincipal(principal);
   }
 
@@ -5943,7 +5942,7 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
 
-  if (Preferences::GetBool("dom.webcomponents.enabled")) {
+  if (nsContentUtils::IsWebComponentsEnabled()) {
     return true;
   }
 
@@ -5959,7 +5958,7 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
 bool
 nsDocument::IsWebComponentsEnabled(dom::NodeInfo* aNodeInfo)
 {
-  if (Preferences::GetBool("dom.webcomponents.enabled")) {
+  if (nsContentUtils::IsWebComponentsEnabled()) {
     return true;
   }
 
@@ -9936,8 +9935,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           if (sheet->IsApplicable()) {
             // XXXheycam Need to make ServoStyleSheet cloning work.
             if (sheet->IsGecko()) {
-              RefPtr<CSSStyleSheet> clonedSheet =
-                sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
+              RefPtr<StyleSheet> clonedSheet =
+                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
               NS_WARNING_ASSERTION(clonedSheet,
                                    "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
@@ -9956,8 +9955,8 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
           if (sheet->IsApplicable()) {
             // XXXheycam Need to make ServoStyleSheet cloning work.
             if (sheet->IsGecko()) {
-              RefPtr<CSSStyleSheet> clonedSheet =
-                sheet->AsGecko()->Clone(nullptr, nullptr, clonedDoc, nullptr);
+              RefPtr<StyleSheet> clonedSheet =
+                sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
               NS_WARNING_ASSERTION(clonedSheet,
                                    "Cloning a stylesheet didn't work!");
               if (clonedSheet) {
@@ -12549,15 +12548,15 @@ nsDocument::ReportUseCounters(UseCounterReportKind aKind)
 void
 nsDocument::AddIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  NS_ASSERTION(mIntersectionObservers.IndexOf(aObserver) == nsTArray<int>::NoIndex,
-               "Intersection observer already in the list");
-  mIntersectionObservers.AppendElement(aObserver);
+  MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
+             "Intersection observer already in the list");
+  mIntersectionObservers.PutEntry(aObserver);
 }
 
 void
 nsDocument::RemoveIntersectionObserver(DOMIntersectionObserver* aObserver)
 {
-  mIntersectionObservers.RemoveElement(aObserver);
+  mIntersectionObservers.RemoveEntry(aObserver);
 }
 
 void
@@ -12574,7 +12573,8 @@ nsDocument::UpdateIntersectionObservations()
       time = perf->Now();
     }
   }
-  for (const auto& observer : mIntersectionObservers) {
+  for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
+    DOMIntersectionObserver* observer = iter.Get()->GetKey();
     observer->Update(this, time);
   }
 }
@@ -12585,7 +12585,6 @@ nsDocument::ScheduleIntersectionObserverNotification()
   if (mIntersectionObservers.IsEmpty()) {
     return;
   }
-
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> notification =
     NewRunnableMethod(this, &nsDocument::NotifyIntersectionObservers);
@@ -12596,7 +12595,11 @@ nsDocument::ScheduleIntersectionObserverNotification()
 void
 nsDocument::NotifyIntersectionObservers()
 {
-  nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers);
+  nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers.Count());
+  for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
+    DOMIntersectionObserver* observer = iter.Get()->GetKey();
+    observers.AppendElement(observer);
+  }
   for (const auto& observer : observers) {
     observer->Notify();
   }

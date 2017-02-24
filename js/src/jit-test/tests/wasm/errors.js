@@ -3,6 +3,7 @@ load(libdir + "wasm-binary.js");
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
+const CompileError = WebAssembly.CompileError;
 const RuntimeError = WebAssembly.RuntimeError;
 
 function isWasmFunction(name) {
@@ -153,3 +154,21 @@ for (var i = 1; i < N; i++) {
     assertEq(binary[stack[i].line], i == 3 ? CallIndirectCode : CallCode);
     assertEq(stack[i].column, 1);
 }
+
+function testCompileError(opcode, text) {
+    var binary = new Uint8Array(wasmTextToBinary(text));
+    var exn;
+    try {
+        new Instance(new Module(binary));
+    } catch (e) {
+        exn = e;
+    }
+
+    assertEq(exn instanceof CompileError, true);
+    var offset = Number(exn.message.match(/at offset (\d*)/)[1]);
+    assertEq(binary[offset], opcode);
+}
+
+testCompileError(CallCode, '(module (func $f (param i32)) (func $g call $f))');
+testCompileError(I32AddCode, '(module (func (i32.add (i32.const 1) (f32.const 1))))');
+testCompileError(EndCode, '(module (func (block i32)))');

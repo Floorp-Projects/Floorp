@@ -20,8 +20,21 @@ class ServoCSSRuleList;
 
 namespace css {
 class Loader;
-class Rule;
 }
+
+// -------------------------------
+// Servo Style Sheet Inner Data Container
+//
+
+struct ServoStyleSheetInner : public StyleSheetInfo
+{
+  ServoStyleSheetInner(CORSMode aCORSMode,
+                       ReferrerPolicy aReferrerPolicy,
+                       const dom::SRIMetadata& aIntegrity);
+
+  RefPtr<RawServoStyleSheet> mSheet;
+};
+
 
 /**
  * CSS style sheet object that is a wrapper for a Servo Stylesheet.
@@ -53,10 +66,12 @@ public:
    */
   void LoadFailed();
 
-  RawServoStyleSheet* RawSheet() const { return mSheet; }
+  RawServoStyleSheet* RawSheet() const {
+    return Inner()->mSheet;
+  }
   void SetSheetForImport(RawServoStyleSheet* aSheet) {
-    MOZ_ASSERT(!mSheet);
-    mSheet = aSheet;
+    MOZ_ASSERT(!Inner()->mSheet);
+    Inner()->mSheet = aSheet;
   }
 
   // WebIDL CSSStyleSheet API
@@ -68,8 +83,20 @@ public:
   void WillDirty() {}
   void DidDirty() {}
 
+  bool IsModified() const final { return false; }
+
+  virtual already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
+    css::ImportRule* aCloneOwnerRule,
+    nsIDocument* aCloneDocument,
+    nsINode* aCloneOwningNode) const final;
+
 protected:
   virtual ~ServoStyleSheet();
+
+  ServoStyleSheetInner* Inner() const
+  {
+    return static_cast<ServoStyleSheetInner*>(mInner);
+  }
 
   // Internal methods which do not have security check and completeness check.
   dom::CSSRuleList* GetCssRulesInternal(ErrorResult& aRv);
@@ -80,12 +107,15 @@ protected:
   void EnabledStateChangedInternal() {}
 
 private:
-  void DropSheet();
+  ServoStyleSheet(const ServoStyleSheet& aCopy,
+                  ServoStyleSheet* aParentToUse,
+                  css::ImportRule* aOwnerRuleToUse,
+                  nsIDocument* aDocumentToUse,
+                  nsINode* aOwningNodeToUse);
+
   void DropRuleList();
 
-  RefPtr<RawServoStyleSheet> mSheet;
   RefPtr<ServoCSSRuleList> mRuleList;
-  StyleSheetInfo mSheetInfo;
 
   friend class StyleSheet;
 };

@@ -286,12 +286,13 @@ CertVerifier::VerifyCertificateTransparencyPolicy(
   }
 
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(builtChain);
-  if (!endEntityNode) {
+  if (!endEntityNode || CERT_LIST_END(endEntityNode, builtChain)) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
   CERTCertListNode* issuerNode = CERT_LIST_NEXT(endEntityNode);
-  if (!issuerNode) {
+  if (!issuerNode || CERT_LIST_END(issuerNode, builtChain)) {
     // Issuer certificate is required for SCT verification.
+    // TODO(bug 1294580): change this to Result::FATAL_ERROR_INVALID_ARGS
     return Success;
   }
 
