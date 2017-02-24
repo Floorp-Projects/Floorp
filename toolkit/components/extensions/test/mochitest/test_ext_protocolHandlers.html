@@ -1,0 +1,253 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for protocol handlers</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* eslint-disable mozilla/balanced-listeners */
+/* global addMessageListener, sendAsyncMessage */
+
+add_task(function* test_protocolHandler() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "a foo protocol handler",
+          "uriTemplate": "foo.html?val=%s",
+        },
+      ],
+    },
+
+    background() {
+      browser.test.sendMessage("test-url", browser.runtime.getURL("foo.html"));
+    },
+
+    files: {
+      "foo.js": function() {
+        browser.test.sendMessage("test-query", location.search);
+      },
+      "foo.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="foo.js"><\/script>
+          </head>
+        </html>`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  let handlerUrl = yield extension.awaitMessage("test-url");
+
+  // Ensure that the protocol handler is configured, and set it as default to
+  // bypass the dialog.
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+    addMessageListener("setup", () => {
+      let data = {};
+      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                         .getService(Ci.nsIExternalProtocolService);
+      let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
+      data.preferredAction = protoInfo.preferredAction === protoInfo.useHelperApp;
+      data.preferredApplicationHandler = !protoInfo.preferredApplicationHandler;
+
+      let handlers = protoInfo.possibleApplicationHandlers;
+      data.handlers = handlers.length;
+
+      let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
+      data.isWebHandler = handler instanceof Ci.nsIWebHandlerApp;
+      data.uriTemplate =  handler.uriTemplate;
+
+      protoInfo.preferredApplicationHandler = handler;
+      protoInfo.alwaysAskBeforeHandling = false;
+      const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
+                           .getService(Ci.nsIHandlerService);
+      handlerSvc.store(protoInfo);
+
+      sendAsyncMessage("handlerData", data);
+    });
+  });
+
+  let msg = chromeScript.promiseOneMessage("handlerData");
+  chromeScript.sendAsyncMessage("setup");
+  let data = yield msg;
+  ok(data.preferredAction, "using a helper application is the preferred action");
+  ok(data.preferredApplicationHandler, "no preferred handler is set");
+  is(data.handlers, 1, "one handler is set");
+  ok(data.isWebHandler, "the handler is a web handler");
+  is(data.uriTemplate, `${handlerUrl}?val=%s`, "correct url template");
+  chromeScript.destroy();
+
+  let win = window.open("ext+foo:test");
+  let query = yield extension.awaitMessage("test-query");
+  is(query, "?val=ext%2Bfoo%3Atest", "test query ok");
+  win.close();
+
+  // Shutdown the addon, then ensure the protocol was removed.
+  yield extension.unload();
+  chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+    addMessageListener("setup", () => {
+      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                         .getService(Ci.nsIExternalProtocolService);
+      let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
+      sendAsyncMessage("preferredApplicationHandler", !protoInfo.preferredApplicationHandler);
+      let handlers = protoInfo.possibleApplicationHandlers;
+
+      sendAsyncMessage("handlerData", {
+        preferredApplicationHandler: !protoInfo.preferredApplicationHandler,
+        handlers: handlers.length,
+      });
+    });
+  });
+
+  msg = chromeScript.promiseOneMessage("handlerData");
+  chromeScript.sendAsyncMessage("setup");
+  data = yield msg;
+  ok(data.preferredApplicationHandler, "no preferred handler is set");
+  is(data.handlers, 0, "no handler is set");
+  chromeScript.destroy();
+});
+
+add_task(function* test_protocolHandler_https_target() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "http target",
+          "uriTemplate": "https://example.com/foo.html?val=%s",
+        },
+      ],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  ok(true, "https uriTemplate target works");
+  yield extension.unload();
+});
+
+add_task(function* test_protocolHandler_http_target() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "http target",
+          "uriTemplate": "http://example.com/foo.html?val=%s",
+        },
+      ],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  ok(true, "http uriTemplate target works");
+  yield extension.unload();
+});
+
+add_task(function* test_protocolHandler_restricted_protocol() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "http",
+          "name": "take over the http protocol",
+          "uriTemplate": "http.html?val=%s",
+        },
+      ],
+    },
+  };
+
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{message: /processing protocol_handlers\.0\.protocol/}]);
+  });
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield Assert.rejects(extension.startup(), "unable to register restricted handler protocol");
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
+});
+
+add_task(function* test_protocolHandler_restricted_uriTemplate() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "take over the http protocol",
+          "uriTemplate": "ftp://example.com/file.txt",
+        },
+      ],
+    },
+  };
+
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{message: /processing protocol_handlers\.0\.uriTemplate/}]);
+  });
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield Assert.rejects(extension.startup(), "unable to register restricted handler uriTemplate");
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
+});
+
+add_task(function* test_protocolHandler_duplicate() {
+  let extensionData = {
+    manifest: {
+      "protocol_handlers": [
+        {
+          "protocol": "ext+foo",
+          "name": "foo protocol",
+          "uriTemplate": "foo.html?val=%s",
+        },
+        {
+          "protocol": "ext+foo",
+          "name": "foo protocol",
+          "uriTemplate": "foo.html?val=%s",
+        },
+      ],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  // Get the count of handlers installed.
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+    addMessageListener("setup", () => {
+      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+                         .getService(Ci.nsIExternalProtocolService);
+      let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
+      let handlers = protoInfo.possibleApplicationHandlers;
+      sendAsyncMessage("handlerData", handlers.length);
+    });
+  });
+
+  let msg = chromeScript.promiseOneMessage("handlerData");
+  chromeScript.sendAsyncMessage("setup");
+  let data = yield msg;
+  is(data, 1, "cannot re-register the same handler config");
+  chromeScript.destroy();
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

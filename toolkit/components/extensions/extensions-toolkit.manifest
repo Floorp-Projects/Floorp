@@ -11,6 +11,7 @@ category webextension-scripts i18n chrome://extensions/content/ext-i18n.js
 category webextension-scripts idle chrome://extensions/content/ext-idle.js
 category webextension-scripts webRequest chrome://extensions/content/ext-webRequest.js
 category webextension-scripts webNavigation chrome://extensions/content/ext-webNavigation.js
+category webextension-scripts handlers chrome://extensions/content/ext-protocolHandlers.js
 category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts extension chrome://extensions/content/ext-extension.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
@@ -50,6 +51,7 @@ category webextension-schemas downloads chrome://extensions/content/schemas/down
 category webextension-schemas events chrome://extensions/content/schemas/events.json
 category webextension-schemas extension chrome://extensions/content/schemas/extension.json
 category webextension-schemas extension_types chrome://extensions/content/schemas/extension_types.json
+category webextension-schemas handlers chrome://extensions/content/schemas/extension_protocol_handlers.json
 category webextension-schemas i18n chrome://extensions/content/schemas/i18n.json
 #ifndef ANDROID
 category webextension-schemas identity chrome://extensions/content/schemas/identity.json
