@@ -1,7 +1,7 @@
 const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
 const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
-const ID = "update@tests.mozilla.org";
+const ID = "update2@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
 
 registerCleanupFunction(async function() {

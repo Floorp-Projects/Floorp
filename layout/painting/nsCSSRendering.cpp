@@ -5470,6 +5470,23 @@ nsImageRenderer::ComputeIntrinsicSize()
       if (haveHeight) {
         result.SetHeight(nsPresContext::CSSPixelsToAppUnits(imageIntSize.height));
       }
+
+      // If we know the aspect ratio and one of the dimensions,
+      // we can compute the other missing width or height.
+      if (!haveHeight && haveWidth && result.mRatio.width != 0) {
+        nscoord intrinsicHeight =
+          NSCoordSaturatingNonnegativeMultiply(imageIntSize.width,
+                                               float(result.mRatio.height) /
+                                               float(result.mRatio.width));
+        result.SetHeight(nsPresContext::CSSPixelsToAppUnits(intrinsicHeight));
+      } else if (haveHeight && !haveWidth && result.mRatio.height != 0) {
+        nscoord intrinsicWidth =
+          NSCoordSaturatingNonnegativeMultiply(imageIntSize.height,
+                                               float(result.mRatio.width) /
+                                               float(result.mRatio.height));
+        result.SetWidth(nsPresContext::CSSPixelsToAppUnits(intrinsicWidth));
+      }
+
       break;
     }
     case eStyleImageType_Element:

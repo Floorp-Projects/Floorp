@@ -1100,6 +1100,27 @@ nsUrlClassifierLookupCallback::Completion(const nsACString& completeHash,
   return NS_OK;
 }
 
+
+static uint8_t
+ConvertMatchResultToUint(const MatchResult& aResult)
+{
+  MOZ_ASSERT(!(aResult & MatchResult::eTelemetryDisabled));
+  switch (aResult) {
+  case MatchResult::eNoMatch:          return 0;
+  case MatchResult::eV2Prefix:         return 1;
+  case MatchResult::eV4Prefix:         return 2;
+  case MatchResult::eBothPrefix:       return 3;
+  case MatchResult::eAll:              return 4;
+  case MatchResult::eV2PreAndCom:      return 5;
+  case MatchResult::eV4PreAndCom:      return 6;
+  case MatchResult::eBothPreAndV2Com:  return 7;
+  case MatchResult::eBothPreAndV4Com:  return 8;
+  default:
+    MOZ_ASSERT_UNREACHABLE("Unexpected match result");
+    return 9;
+  }
+}
+
 nsresult
 nsUrlClassifierLookupCallback::HandleResults()
 {
@@ -1117,6 +1138,8 @@ nsUrlClassifierLookupCallback::HandleResults()
   nsCOMPtr<nsIUrlClassifierClassifyCallback> classifyCallback =
     do_QueryInterface(mCallback);
 
+  MatchResult matchResult = MatchResult::eTelemetryDisabled;
+
   nsTArray<nsCString> tables;
   // Build a stringified list of result tables.
   for (uint32_t i = 0; i < mResults->Length(); i++) {
@@ -1129,7 +1152,24 @@ nsUrlClassifierLookupCallback::HandleResults()
       LOG(("Skipping result %s from table %s (noise)",
            result.PartialHashHex().get(), result.mTableName.get()));
       continue;
-    } else if (!result.Confirmed()) {
+    }
+
+    bool confirmed = result.Confirmed();
+
+    // If mMatchResult is set to eTelemetryDisabled, then we don't need to
+    // set |matchResult| for this lookup.
+    if (result.mMatchResult != MatchResult::eTelemetryDisabled) {
+      matchResult &= ~(MatchResult::eTelemetryDisabled);
+      if (result.mProtocolV2) {
+        matchResult |=
+          confirmed ? MatchResult::eV2PreAndCom : MatchResult::eV2Prefix;
+      } else {
+        matchResult |=
+          confirmed ? MatchResult::eV4PreAndCom : MatchResult::eV4Prefix;
+      }
+    }
+
+    if (!confirmed) {
       LOG(("Skipping result %s from table %s (not confirmed)",
            result.PartialHashHex().get(), result.mTableName.get()));
       continue;
@@ -1147,6 +1187,11 @@ nsUrlClassifierLookupCallback::HandleResults()
       result.hash.fixedLengthPrefix.ToString(prefixString);
       classifyCallback->HandleResult(result.mTableName, prefixString);
     }
+  }
+
+  if (matchResult != MatchResult::eTelemetryDisabled) {
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_MATCH_RESULT,
+                          ConvertMatchResultToUint(matchResult));
   }
 
   // TODO: Bug 1333328, Refactor cache miss mechanism for v2.

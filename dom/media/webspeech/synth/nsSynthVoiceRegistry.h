@@ -20,6 +20,7 @@ namespace dom {
 class RemoteVoice;
 class SpeechSynthesisUtterance;
 class SpeechSynthesisChild;
+class SpeechSynthesisParent;
 class nsSpeechTask;
 class VoiceData;
 class GlobalQueueItem;
@@ -39,9 +40,7 @@ public:
              const nsAString& aUri, const float& aVolume,  const float& aRate,
              const float& aPitch, nsSpeechTask* aTask);
 
-  void SendVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                          InfallibleTArray<nsString>* aDefaults,
-                          bool* aIsSpeaking);
+  bool SendInitialVoicesAndState(SpeechSynthesisParent* aParent);
 
   void SpeakNext();
 
@@ -54,6 +53,10 @@ public:
   static nsSynthVoiceRegistry* GetInstance();
 
   static already_AddRefed<nsSynthVoiceRegistry> GetInstanceForService();
+
+  static void RecvInitialVoicesAndState(const nsTArray<RemoteVoice>& aVoices,
+                                        const nsTArray<nsString>& aDefaults,
+                                        const bool& aIsSpeaking);
 
   static void RecvRemoveVoice(const nsAString& aUri);
 

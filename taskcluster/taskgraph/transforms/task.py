@@ -59,6 +59,9 @@ task_description_schema = Schema({
     # added automatically
     Optional('scopes'): [basestring],
 
+    # Tags
+    Optional('tags'): {basestring: object},
+
     # custom "task.extra" content
     Optional('extra'): {basestring: object},
 
@@ -821,6 +824,9 @@ def build_task(config, tasks):
                 name=task['coalesce-name'])
             routes.append('coalesce.v1.' + key)
 
+        tags = task.get('tags', {})
+        tags.update({'createdForUser': config.params['owner']})
+
         task_def = {
             'provisionerId': provisioner_id,
             'workerType': worker_type,
@@ -839,7 +845,7 @@ def build_task(config, tasks):
                     config.path),
             },
             'extra': extra,
-            'tags': {'createdForUser': config.params['owner']},
+            'tags': tags,
         }
 
         if task_th:

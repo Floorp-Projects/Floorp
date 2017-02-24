@@ -24,9 +24,7 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
 public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                                                 InfallibleTArray<nsString>* aDefaults,
-                                                 bool* aIsSpeaking) override;
+  bool SendInit();
 
 protected:
   SpeechSynthesisParent();

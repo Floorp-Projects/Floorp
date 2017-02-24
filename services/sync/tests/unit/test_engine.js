@@ -71,7 +71,7 @@ async function cleanup(engine) {
   engine.wasSynced = false;
   engineObserver.reset();
   engine._tracker.clearChangedIDs();
-  await engine._tracker._storage.finalize();
+  await engine.finalize();
 }
 
 add_task(async function test_members() {

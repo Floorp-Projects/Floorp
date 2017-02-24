@@ -374,7 +374,7 @@ function makeSearchMatch(input, extra = {}) {
     params.alias = extra.alias;
   }
   let style = [ "action", "searchengine" ];
-  if (Array.isArray(extra.style)) {
+  if ("style" in extra && Array.isArray(extra.style)) {
     style.push(...extra.style);
   }
   if (extra.heuristic) {

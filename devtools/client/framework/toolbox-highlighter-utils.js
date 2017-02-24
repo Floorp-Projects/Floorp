@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,7 +31,6 @@ const flags = require("devtools/shared/flags");
 exports.getHighlighterUtils = function (toolbox) {
   if (!toolbox || !toolbox.target) {
     throw new Error("Missing or invalid toolbox passed to getHighlighterUtils");
-    return;
   }
 
   // Exported API properties will go here
@@ -97,12 +94,11 @@ exports.getHighlighterUtils = function (toolbox) {
    *                            activated.
    * @return A promise that resolves when done
    */
-  let togglePicker = exported.togglePicker = function (doFocus) {
+  exported.togglePicker = function (doFocus) {
     if (isPicking) {
       return cancelPicker();
-    } else {
-      return startPicker(doFocus);
     }
+    return startPicker(doFocus);
   };
 
   /**
@@ -250,8 +246,7 @@ exports.getHighlighterUtils = function (toolbox) {
    * highlightNodeFront, so it has the same signature.
    * @see highlightNodeFront
    */
-  let highlightDomValueGrip = exported.highlightDomValueGrip = requireInspector(
-  function* (valueGrip, options = {}) {
+  exported.highlightDomValueGrip = requireInspector(function* (valueGrip, options = {}) {
     let nodeFront = yield gripToNodeFront(valueGrip);
     if (nodeFront) {
       yield highlightNodeFront(nodeFront, options);
@@ -279,13 +274,13 @@ exports.getHighlighterUtils = function (toolbox) {
    * markup view, which is when this param is passed to true
    * @return a promise that resolves when the highlighter is hidden
    */
-  let unhighlight = exported.unhighlight = Task.async(
-  function* (forceHide = false) {
+  exported.unhighlight = Task.async(function* (forceHide = false) {
     forceHide = forceHide || !flags.testing;
 
     // Note that if isRemoteHighlightable is true, there's no need to hide the
     // highlighter as the walker uses setTimeout to hide it after some time
-    if (isNodeFrontHighlighted && forceHide && toolbox.highlighter && isRemoteHighlightable()) {
+    if (isNodeFrontHighlighted && forceHide && toolbox.highlighter &&
+        isRemoteHighlightable()) {
       isNodeFrontHighlighted = false;
       yield toolbox.highlighter.hideBoxModel();
     }
@@ -306,8 +301,7 @@ exports.getHighlighterUtils = function (toolbox) {
    * methods and needs to be released by the consumer when not needed anymore.
    * @return a promise that resolves to the highlighter
    */
-  let getHighlighterByType = exported.getHighlighterByType = requireInspector(
-  function* (typeName) {
+  exported.getHighlighterByType = requireInspector(function* (typeName) {
     let highlighter = null;
 
     if (supportsCustomHighlighters()) {
@@ -316,7 +310,6 @@ exports.getHighlighterUtils = function (toolbox) {
 
     return highlighter || promise.reject("The target doesn't support " +
         `creating highlighters by types or ${typeName} is unknown`);
-
   });
 
   // Return the public API

@@ -28,5 +28,5 @@ fails == calc-height-table-1.html calc-height-table-1.html
 == calc-vertical-align-1.html calc-vertical-align-1.html
 == calc-width-block-1.html calc-width-block-1.html
 == calc-width-block-intrinsic-1.html calc-width-block-intrinsic-1.html
-fails == calc-width-table-auto-1.html calc-width-table-auto-1.html
-fails == calc-width-table-fixed-1.html calc-width-table-fixed-1.html
+== calc-width-table-auto-1.html calc-width-table-auto-1.html
+== calc-width-table-fixed-1.html calc-width-table-fixed-1.html

@@ -10,9 +10,9 @@ fails == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden
 == partially-out-of-view-animation.html partially-out-of-view-animation.html
 skip-if(stylo) == animate-display-table-opacity.html animate-display-table-opacity.html # Too intermittent.
 # We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
-# test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-opacity-1-animation.html
+pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-opacity-1-animation.html
 # We need to run transform:none test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
-# test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
+pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
 == no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-opacity-removing-animation-in-delay.html
 == no-stacking-context-transform-removing-animation-in-delay.html no-stacking-context-transform-removing-animation-in-delay.html
 == stacking-context-lose-opacity-1.html stacking-context-lose-opacity-1.html

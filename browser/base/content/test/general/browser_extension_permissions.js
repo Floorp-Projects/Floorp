@@ -62,7 +62,7 @@ function checkNotification(panel, filename) {
     ok(icon.endsWith("/icon.png"), "Icon is icon.png inside a jar");
 
     is(header.getAttribute("hidden"), "", "Permission list header is visible");
-    is(ul.childElementCount, 4, "Permissions list has 4 entries");
+    is(ul.childElementCount, 5, "Permissions list has 5 entries");
     // Real checking of the contents here is deferred until bug 1316996 lands
   } else if (filename == NO_PERMS_XPI) {
     // This extension has no icon, it should have the default

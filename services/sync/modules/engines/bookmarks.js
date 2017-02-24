@@ -567,8 +567,8 @@ BookmarksEngine.prototype = {
     this._noteDeletedId(id);
   },
 
-  resetClient() {
-    SyncEngine.prototype.resetClient.call(this);
+  _resetClient() {
+    SyncEngine.prototype._resetClient.call(this);
     Async.promiseSpinningly(PlacesSyncUtils.bookmarks.reset());
   },
 

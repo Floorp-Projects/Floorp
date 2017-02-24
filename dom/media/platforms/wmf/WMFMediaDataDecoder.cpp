@@ -107,75 +107,57 @@ WMFMediaDataDecoder::Decode(MediaRawData* aSample)
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
+WMFMediaDataDecoder::ProcessError(HRESULT aError, const char* aReason)
+{
+  if (!mRecordedError) {
+    SendTelemetry(aError);
+    mRecordedError = true;
+  }
+  return DecodePromise::CreateAndReject(
+    MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                RESULT_DETAIL("%s:%x", aReason, aError)),
+    __func__);
+}
+
+RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
+  DecodedData results;
   HRESULT hr = mMFTManager->Input(aSample);
   if (hr == MF_E_NOTACCEPTING) {
-    ProcessOutput();
+    ProcessOutput(results);
     hr = mMFTManager->Input(aSample);
   }
 
   if (FAILED(hr)) {
     NS_WARNING("MFTManager rejected sample");
-    if (!mRecordedError) {
-      SendTelemetry(hr);
-      mRecordedError = true;
-    }
-    return DecodePromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                  RESULT_DETAIL("MFTManager::Input:%x", hr)),
-      __func__);
+    return ProcessError(hr, "MFTManager::Input");
   }
 
   mDrainStatus = DrainStatus::DRAINABLE;
   mLastStreamOffset = aSample->mOffset;
 
-  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-  ProcessOutput();
-  return p;
+  hr = ProcessOutput(results);
+  if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+    return DecodePromise::CreateAndResolve(Move(results), __func__);
+  }
+  return ProcessError(hr, "MFTManager::Output");
 }
 
-void
-WMFMediaDataDecoder::ProcessOutput()
+HRESULT
+WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults)
 {
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
-  DecodedData results;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output))) {
     MOZ_ASSERT(output.get(), "Upon success, we must receive an output");
     mHasSuccessfulOutput = true;
-    results.AppendElement(Move(output));
+    aResults.AppendElement(Move(output));
     if (mDrainStatus == DrainStatus::DRAINING) {
       break;
     }
   }
-
-  if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT && !mDrainPromise.IsEmpty()) {
-      mDrainStatus = DrainStatus::DRAINED;
-    }
-    if (!mDecodePromise.IsEmpty()) {
-      mDecodePromise.Resolve(Move(results), __func__);
-    } else {
-      mDrainPromise.Resolve(Move(results), __func__);
-    }
-    return;
-  }
-
-  NS_WARNING("WMFMediaDataDecoder failed to output data");
-  const auto error = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                  RESULT_DETAIL("MFTManager::Output:%x", hr));
-  if (!mDecodePromise.IsEmpty()) {
-    mDecodePromise.Reject(error, __func__);
-  }
-  else {
-    mDrainPromise.Reject(error, __func__);
-  }
-
-  if (!mRecordedError) {
-    SendTelemetry(hr);
-    mRecordedError = true;
-  }
+  return hr;
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>
@@ -203,15 +185,23 @@ WMFMediaDataDecoder::ProcessDrain()
   if (!mMFTManager || mDrainStatus == DrainStatus::DRAINED) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
+
   if (mDrainStatus != DrainStatus::DRAINING) {
     // Order the decoder to drain...
     mMFTManager->Drain();
     mDrainStatus = DrainStatus::DRAINING;
   }
+
   // Then extract all available output.
-  RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
-  ProcessOutput();
-  return p;
+  DecodedData results;
+  HRESULT hr = ProcessOutput(results);
+  if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+    mDrainStatus = DrainStatus::DRAINED;
+  }
+  if (SUCCEEDED(hr) || hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+    return DecodePromise::CreateAndResolve(Move(results), __func__);
+  }
+  return ProcessError(hr, "MFTManager::Output");
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>

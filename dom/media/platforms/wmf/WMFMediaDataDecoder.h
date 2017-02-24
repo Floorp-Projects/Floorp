@@ -117,13 +117,15 @@ public:
 
 private:
 
+  RefPtr<DecodePromise> ProcessError(HRESULT aError, const char* aReason);
+
   // Called on the task queue. Inserts the sample into the decoder, and
   // extracts output if available.
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
   // Called on the task queue. Extracts output if available, and delivers
   // it to the reader. Called after ProcessDecode() and ProcessDrain().
-  void ProcessOutput();
+  HRESULT ProcessOutput(DecodedData& aResults);
 
   // Called on the task queue. Orders the MFT to flush.  There is no output to
   // extract.
@@ -145,8 +147,6 @@ private:
 
   bool mIsShutDown = false;
 
-  MozPromiseHolder<DecodePromise> mDecodePromise;
-  MozPromiseHolder<DecodePromise> mDrainPromise;
   enum class DrainStatus
   {
     DRAINED,

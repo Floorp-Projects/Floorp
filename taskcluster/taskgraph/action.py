@@ -135,7 +135,7 @@ def load_decisions(s, project, resultsets, filters):
                 break
             offset += jobs_per_call
         filtered = [j for j in unfiltered if all([j[k] == filters[k] for k in filters])]
-        if all([j["result"] == "success" for j in filtered]):
+        if filtered and all([j["result"] == "success" for j in filtered]):
             logger.info("Push found with all green jobs for this type. Continuing.")
             break
         decisions += [t for t in unfiltered if t["job_type_name"] == "Gecko Decision Task"]
