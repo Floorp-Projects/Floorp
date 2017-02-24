@@ -344,24 +344,6 @@ public:
     nsCOMArray_base::ReplaceElementAt(aIndex, aElement);
   }
 
-  // Enumerator callback function. Return false to stop
-  // Here's a more readable form:
-  // bool enumerate(T* aElement, void* aData)
-  typedef bool (*nsCOMArrayEnumFunc)(T* aElement, void* aData);
-
-  // enumerate through the array with a callback.
-  bool EnumerateForwards(nsCOMArrayEnumFunc aFunc, void* aData)
-  {
-    return nsCOMArray_base::EnumerateForwards(nsBaseArrayEnumFunc(aFunc),
-                                              aData);
-  }
-
-  bool EnumerateBackwards(nsCOMArrayEnumFunc aFunc, void* aData)
-  {
-    return nsCOMArray_base::EnumerateBackwards(nsBaseArrayEnumFunc(aFunc),
-                                               aData);
-  }
-
   typedef int (*nsCOMArrayComparatorFunc)(T* aElement1, T* aElement2,
                                           void* aData);
 
