@@ -283,6 +283,7 @@ struct WrPoint
     return x == aRhs.x && y == aRhs.y;
   }
 
+  operator mozilla::gfx::Point() const { return mozilla::gfx::Point(x, y); }
 };
 
 struct WrImageMask

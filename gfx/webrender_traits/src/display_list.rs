@@ -5,8 +5,8 @@
 use app_units::Au;
 use std::mem;
 use std::slice;
-use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
-use {BorderSide, BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
+use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem};
+use {BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
 use {DisplayItem, DisplayListMode, ExtendMode, FilterOp, YuvColorSpace};
 use {FontKey, GlyphInstance, GradientDisplayItem, RadialGradientDisplayItem, GradientStop, IframeDisplayItem};
@@ -15,7 +15,7 @@ use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, 
 use {ScrollPolicy, ServoScrollRootId, SpecificDisplayItem, StackingContext, TextDisplayItem};
 use {WebGLContextId, WebGLDisplayItem, YuvImageDisplayItem};
 use {LayoutTransform, LayoutPoint, LayoutRect, LayoutSize};
-use {GlyphOptions, PropertyBinding};
+use {BorderDetails, BorderWidths, GlyphOptions, PropertyBinding};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
@@ -186,17 +186,11 @@ impl DisplayListBuilder {
     pub fn push_border(&mut self,
                        rect: LayoutRect,
                        clip: ClipRegion,
-                       left: BorderSide,
-                       top: BorderSide,
-                       right: BorderSide,
-                       bottom: BorderSide,
-                       radius: BorderRadius) {
+                       widths: BorderWidths,
+                       details: BorderDetails) {
         let item = BorderDisplayItem {
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
-            radius: radius,
+            details: details,
+            widths: widths,
         };
 
         let display_item = DisplayItem {

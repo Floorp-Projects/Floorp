@@ -9,7 +9,8 @@ void main(void) {
     Glyph glyph = fetch_glyph(prim.sub_index);
     ResourceRect res = fetch_resource_rect(prim.user_data.x);
 
-    vec4 local_rect = vec4(glyph.offset.xy, (res.uv_rect.zw - res.uv_rect.xy) / uDevicePixelRatio);
+    RectWithSize local_rect = RectWithSize(glyph.offset.xy,
+                                           (res.uv_rect.zw - res.uv_rect.xy) / uDevicePixelRatio);
 
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(local_rect,
@@ -19,7 +20,7 @@ void main(void) {
                                                     prim.task);
     vLocalRect = vi.clipped_local_rect;
     vLocalPos = vi.local_pos;
-    vec2 f = (vi.local_pos.xy / vi.local_pos.z - local_rect.xy) / local_rect.zw;
+    vec2 f = (vi.local_pos.xy / vi.local_pos.z - local_rect.p0) / local_rect.size;
 #else
     VertexInfo vi = write_vertex(local_rect,
                                  prim.local_clip_rect,

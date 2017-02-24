@@ -18,11 +18,13 @@ class NewRenderer : public RendererEvent
 public:
   NewRenderer(WrAPI** aApi, layers::CompositorBridgeParentBase* aBridge,
               GLint* aMaxTextureSize,
+              bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
               bool aEnableProfiler)
     : mWrApi(aApi)
     , mMaxTextureSize(aMaxTextureSize)
+    , mUseANGLE(aUseANGLE)
     , mBridge(aBridge)
     , mCompositorWidget(Move(aWidget))
     , mTask(aTask)
@@ -46,6 +48,7 @@ public:
     }
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, mMaxTextureSize);
+    *mUseANGLE = gl->IsANGLE();
 
     WrRenderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, nullptr, mWrApi, &wrRenderer)) {
@@ -67,6 +70,7 @@ public:
 private:
   WrAPI** mWrApi;
   GLint* mMaxTextureSize;
+  bool* mUseANGLE;
   layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
@@ -112,12 +116,13 @@ WebRenderAPI::Create(bool aEnableProfiler,
 
   WrAPI* wrApi = nullptr;
   GLint maxTextureSize = 0;
+  bool useANGLE = false;
 
   // Dispatch a synchronous task because the WrApi object needs to be created
   // on the render thread. If need be we could delay waiting on this task until
   // the next time we need to access the WrApi object.
   layers::SynchronousTask task("Create Renderer");
-  auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, &maxTextureSize,
+  auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, &maxTextureSize, &useANGLE,
                                        Move(aWidget), &task, aEnableProfiler);
   RenderThread::Get()->RunEvent(id, Move(event));
 
@@ -127,7 +132,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
     return nullptr;
   }
 
-  return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id, maxTextureSize)).forget();
+  return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id, maxTextureSize, useANGLE)).forget();
 }
 
 WebRenderAPI::~WebRenderAPI()
