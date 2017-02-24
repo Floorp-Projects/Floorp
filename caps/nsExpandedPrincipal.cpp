@@ -59,6 +59,15 @@ nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhit
 nsExpandedPrincipal::~nsExpandedPrincipal()
 { }
 
+already_AddRefed<nsExpandedPrincipal>
+nsExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
+                            const OriginAttributes& aAttrs)
+{
+  RefPtr<nsExpandedPrincipal> ep = new nsExpandedPrincipal(aWhiteList, aAttrs);
+  ep->FinishInit();
+  return ep.forget();
+}
+
 NS_IMETHODIMP
 nsExpandedPrincipal::GetDomain(nsIURI** aDomain)
 {

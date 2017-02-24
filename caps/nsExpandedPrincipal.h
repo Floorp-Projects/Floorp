@@ -15,9 +15,13 @@
 class nsExpandedPrincipal : public nsIExpandedPrincipal
                           , public mozilla::BasePrincipal
 {
-public:
   nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
                       const mozilla::OriginAttributes& aAttrs);
+
+public:
+  static already_AddRefed<nsExpandedPrincipal>
+  Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
+         const mozilla::OriginAttributes& aAttrs);
 
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
