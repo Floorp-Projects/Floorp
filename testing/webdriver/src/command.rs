@@ -522,30 +522,48 @@ impl ToJson for GetParameters {
 
 #[derive(PartialEq)]
 pub struct TimeoutsParameters {
-    pub type_: String,
-    pub ms: f64
+    pub script: Option<u64>,
+    pub page_load: Option<u64>,
+    pub implicit: Option<u64>,
 }
 
 impl Parameters for TimeoutsParameters {
     fn from_json(body: &Json) -> WebDriverResult<TimeoutsParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::UnknownError,
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::UnknownError,
                             "Message body was not an object");
-        let type_ = try_opt!(
-            try_opt!(data.get("type"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'type' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'type' not a string");
 
-        let ms = try_opt!(
-            try_opt!(data.get("ms"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'ms' parameter").as_f64(),
-            ErrorStatus::InvalidArgument,
-            "'ms' not a float");
-        return Ok(TimeoutsParameters {
-            type_: type_.to_string(),
-            ms: ms
+        let script = match data.get("script") {
+            Some(json) => {
+                Some(try_opt!(json.as_u64(),
+                              ErrorStatus::InvalidArgument,
+                              "Script timeout duration was not a signed integer"))
+            }
+            None => None,
+        };
+
+        let page_load = match data.get("pageLoad") {
+            Some(json) => {
+                Some(try_opt!(json.as_u64(),
+                              ErrorStatus::InvalidArgument,
+                              "Script timeout duration was not a signed integer"))
+            }
+            None => None,
+        };
+
+        let implicit = match data.get("script") {
+            Some(json) => {
+                Some(try_opt!(json.as_u64(),
+                              ErrorStatus::InvalidArgument,
+                              "Script timeout duration was not a signed integer"))
+            }
+            None => None,
+        };
+
+        Ok(TimeoutsParameters {
+            script: script,
+            page_load: page_load,
+            implicit: implicit,
         })
     }
 }
@@ -553,8 +571,15 @@ impl Parameters for TimeoutsParameters {
 impl ToJson for TimeoutsParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("type".to_string(), self.type_.to_json());
-        data.insert("ms".to_string(), self.ms.to_json());
+        if let Some(ms) = self.script {
+            data.insert("script".into(), ms.to_json());
+        }
+        if let Some(ms) = self.page_load {
+            data.insert("pageLoad".into(), ms.to_json());
+        }
+        if let Some(ms) = self.implicit {
+            data.insert("implicit".into(), ms.to_json());
+        }
         Json::Object(data)
     }
 }
