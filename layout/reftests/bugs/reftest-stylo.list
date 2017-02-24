@@ -885,7 +885,7 @@ fails == 403519-1.html 403519-1.html
 fails == 403656-3.html 403656-3.html
 == 403656-4.html 403656-4.html
 == 403656-5.html 403656-5.html
-#== 403657-1.html 403657-1.html
+== 403657-1.html 403657-1.html
 fails == 403733-1.html 403733-1.html
 fails == 403962-1.xhtml 403962-1.xhtml # Bug 1290276
 == 404030-1.html 404030-1.html
@@ -901,7 +901,7 @@ random-if(cocoaWidget) HTTP(..) == 404149-1.xul 404149-1.xul
 fails == 404309-1a.html 404309-1a.html
 fails == 404309-1b.html 404309-1b.html
 # Disabled due to compartments for now.
-#== data:application/xml,<foo/> data:application/xml,<foo/>
+== data:application/xml,<foo/> data:application/xml,<foo/>
 fails == 404553-1.html 404553-1.html
 == 404666-1.html 404666-1.html
 == 404666-2.html 404666-2.html
@@ -1402,7 +1402,7 @@ fails == 502795-1.html 502795-1.html
 == 503364-1b.html 503364-1b.html
 # Reftest for bug 503531 marked as failing; should be re-enabled when
 # bug 607548 gets resolved.
-# needs-focus fails == 503531-1.html 503531-1.html
+needs-focus == 503531-1.html 503531-1.html
 == 504032-1.html 504032-1.html
 == 505743-1.html 505743-1.html
 fails == 506481-1.html 506481-1.html
@@ -1503,8 +1503,8 @@ fails == 551463-1.html 551463-1.html
 fails random == 553571-1.html 553571-1.html
 == 555388-1.html 555388-1.html
 == 556661-1.html 556661-1.html
-# fuzzy-if(skiaContent,4,5) == 557087-1.html 557087-1.html
-# fails-if(Android) fuzzy-if(skiaContent&&!Android,2,5) == 557087-2.html 557087-2.html
+fails fuzzy-if(skiaContent,4,5) skip-if(stylo) == 557087-1.html 557087-1.html # Bug 1341973
+fails fails-if(Android) fuzzy-if(skiaContent&&!Android,2,5) skip-if(stylo) == 557087-2.html 557087-2.html # Bug 1341973
 fails == 557736-1.html 557736-1.html
 == 558011-1.xul 558011-1.xul
 == 559284-1.html 559284-1.html
@@ -1650,7 +1650,7 @@ random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2.svg
 fails == 622585-1.html 622585-1.html
 == 625409-1.html 625409-1.html
 == 627393-1.html 627393-1.html
-# fuzzy-if(skiaContent,1,500) == 630835-1.html 630835-1.html
+fuzzy-if(skiaContent,1,500) == 630835-1.html 630835-1.html
 == 631352-1.html 631352-1.html
 == 632423-1.html 632423-1.html
 skip-if(Android) random-if(winWidget||OSX==1010) == 632781-verybig.html 632781-verybig.html
