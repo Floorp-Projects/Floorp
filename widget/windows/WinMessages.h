@@ -15,6 +15,8 @@
 #define MOZ_WM_APP_QUIT                   (WM_APP+0x0300)
 // Used as a "tracer" event to probe event loop latency.
 #define MOZ_WM_TRACE                      (WM_APP+0x0301)
+// accessibility priming
+#define MOZ_WM_STARTA11Y                  (WM_APP+0x0302)
 // Our internal message for WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_VSCROLL and
 // WM_HSCROLL
 #define MOZ_WM_MOUSEVWHEEL                (WM_APP+0x0310)
