@@ -138,6 +138,14 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
     return NS_ERROR_FAILURE;
   }
 
+  if (!nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
+      NS_URIIsLocalFile(origin)) {
+    // If strict file origin policy is not in effect, all local files are
+    // considered to be same-origin, so return a known dummy origin here.
+    aOrigin.AssignLiteral("file://UNIVERSAL_FILE_URI_ORIGIN");
+    return NS_OK;
+  }
+
   nsAutoCString hostPort;
 
   // chrome: URLs don't have a meaningful origin, so make

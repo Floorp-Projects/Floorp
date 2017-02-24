@@ -286,4 +286,16 @@ function run_test() {
     do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
   });
 
+  var fileURI = makeURI('file:///foo/bar').QueryInterface(Ci.nsIFileURL);
+  var fileTests = [
+    [true, fileURI.spec],
+    [false, "file://UNIVERSAL_FILE_URI_ORIGIN"],
+  ];
+  fileTests.forEach(t => {
+    Services.prefs.setBoolPref("security.fileuri.strict_origin_policy", t[0]);
+    var filePrin = ssm.createCodebasePrincipal(fileURI, {});
+    do_check_eq(filePrin.origin, t[1]);
+  });
+  Services.prefs.clearUserPref("security.fileuri.strict_origin_policy");
+
 }
