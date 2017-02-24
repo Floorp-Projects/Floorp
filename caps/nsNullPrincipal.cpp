@@ -86,6 +86,8 @@ nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
     NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
   }
 
+  FinishInit();
+
   return NS_OK;
 }
 

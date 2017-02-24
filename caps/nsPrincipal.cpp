@@ -117,6 +117,8 @@ nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
   mCodebaseImmutable = URIIsImmutable(mCodebase);
   mOriginAttributes = aOriginAttributes;
 
+  FinishInit();
+
   return NS_OK;
 }
 

@@ -31,6 +31,14 @@ NS_IMPL_CI_INTERFACE_GETTER(nsSystemPrincipal,
 
 #define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
 
+already_AddRefed<nsSystemPrincipal>
+nsSystemPrincipal::Create()
+{
+  RefPtr<nsSystemPrincipal> sp = new nsSystemPrincipal();
+  sp->FinishInit();
+  return sp.forget();
+}
+
 nsresult
 nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 {

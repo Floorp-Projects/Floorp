@@ -279,8 +279,15 @@ protected:
   virtual bool MayLoadInternal(nsIURI* aURI) = 0;
   friend class ::nsExpandedPrincipal;
 
+  // This function should be called as the last step of the initialization of the
+  // principal objects.  It's typically called as the last step from the Init()
+  // method of the child classes.
+  void FinishInit();
+
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
+  nsCOMPtr<nsIAtom> mOriginNoSuffix;
+  nsCOMPtr<nsIAtom> mOriginSuffix;
   OriginAttributes mOriginAttributes;
   PrincipalKind mKind;
 };
