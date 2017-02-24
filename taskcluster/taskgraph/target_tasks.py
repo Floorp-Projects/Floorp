@@ -226,6 +226,18 @@ def target_tasks_mozilla_release(full_task_graph, parameters):
     return target_tasks_mozilla_beta(full_task_graph, parameters)
 
 
+@_target_task('pine_tasks')
+def target_tasks_pine(full_task_graph, parameters):
+    """Bug 1339179 - no mobile automation needed on pine"""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        # disable mobile jobs
+        if str(platform).startswith('android'):
+            return False
+        return True
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
 @_target_task('stylo_tasks')
 def target_tasks_stylo(full_task_graph, parameters):
     """Target stylotasks that only run on the m-c branch."""
