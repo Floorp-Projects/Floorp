@@ -21,6 +21,7 @@ module.exports = createClass({
   propTypes: {
     getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grid: PropTypes.shape(Types.grid).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
     onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -87,7 +88,16 @@ module.exports = createClass({
     };
   },
 
-  onGridCheckboxClick() {
+  onGridCheckboxClick(e) {
+    // If the click was on the svg icon to select the node in the inspector, bail out.
+    let originalTarget = e.nativeEvent && e.nativeEvent.explicitOriginalTarget;
+    if (originalTarget && originalTarget.namespaceURI === "http://www.w3.org/2000/svg") {
+      // We should be able to cancel the click event propagation after the following reps
+      // issue is implemented : https://github.com/devtools-html/reps/issues/95 .
+      e.preventDefault();
+      return;
+    }
+
     let {
       grid,
       onToggleGridHighlighter,
@@ -101,6 +111,7 @@ module.exports = createClass({
       grid,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      setSelectedNode,
     } = this.props;
     let { nodeFront } = grid;
 
@@ -125,6 +136,7 @@ module.exports = createClass({
             object: this.translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+            onInspectIconClick: () => setSelectedNode(nodeFront),
           }
         )
       ),
