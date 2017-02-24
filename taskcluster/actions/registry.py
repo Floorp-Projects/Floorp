@@ -224,19 +224,7 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                         """\
 cd /home/worker/checkouts/gecko &&
 ln -s /home/worker/artifacts artifacts &&
-./mach --log-no-times taskgraph action-callback """ + ' '.join([
-                            "--pushlog-id='{}'".format(parameters['pushlog_id']),
-                            "--pushdate='{}'".format(parameters['pushdate']),
-                            "--project='{}'".format(parameters['project']),
-                            "--message='{}'".format(parameters['message'].replace("'", "'\\''")),
-                            "--owner='{}'".format(parameters['owner']),
-                            "--level='{}'".format(parameters['level']),
-                            "--base-repository='https://hg.mozilla.org/mozilla-central'",
-                            "--head-repository='{}'".format(parameters['head_repository']),
-                            "--head-ref='{}'".format(parameters['head_ref']),
-                            "--head-rev='{}'".format(parameters['head_rev']),
-                            "--revision-hash='{}'\n".format(parameters['head_rev']),
-                        ]),
+./mach --log-no-times taskgraph action-callback""",
                     ],
                 },
                 'extra': {
