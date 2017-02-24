@@ -86,10 +86,53 @@ ivec2 get_fetch_uv_8(int index) {
     return get_fetch_uv(index, 8);
 }
 
+struct RectWithSize {
+    vec2 p0;
+    vec2 size;
+};
+
+struct RectWithEndpoint {
+    vec2 p0;
+    vec2 p1;
+};
+
+RectWithEndpoint to_rect_with_endpoint(RectWithSize rect) {
+    RectWithEndpoint result;
+    result.p0 = rect.p0;
+    result.p1 = rect.p0 + rect.size;
+
+    return result;
+}
+
+RectWithSize to_rect_with_size(RectWithEndpoint rect) {
+    RectWithSize result;
+    result.p0 = rect.p0;
+    result.size = rect.p1 - rect.p0;
+
+    return result;
+}
+
+vec2 clamp_rect(vec2 point, RectWithSize rect) {
+    return clamp(point, rect.p0, rect.p0 + rect.size);
+}
+
+vec2 clamp_rect(vec2 point, RectWithEndpoint rect) {
+    return clamp(point, rect.p0, rect.p1);
+}
+
+// Clamp 2 points at once.
+vec4 clamp_rect(vec4 points, RectWithSize rect) {
+    return clamp(points, rect.p0.xyxy, rect.p0.xyxy + rect.size.xyxy);
+}
+
+vec4 clamp_rect(vec4 points, RectWithEndpoint rect) {
+    return clamp(points, rect.p0.xyxy, rect.p1.xyxy);
+}
+
 struct Layer {
     mat4 transform;
     mat4 inv_transform;
-    vec4 local_clip_rect;
+    RectWithSize local_clip_rect;
     vec4 screen_vertices[4];
 };
 
@@ -114,7 +157,8 @@ Layer fetch_layer(int index) {
     layer.inv_transform[2] = texelFetchOffset(sLayers, uv0, 0, ivec2(6, 0));
     layer.inv_transform[3] = texelFetchOffset(sLayers, uv0, 0, ivec2(7, 0));
 
-    layer.local_clip_rect = texelFetchOffset(sLayers, uv1, 0, ivec2(0, 0));
+    vec4 clip_rect = texelFetchOffset(sLayers, uv1, 0, ivec2(0, 0));
+    layer.local_clip_rect = RectWithSize(clip_rect.xy, clip_rect.zw);
 
     layer.screen_vertices[0] = texelFetchOffset(sLayers, uv1, 0, ivec2(1, 0));
     layer.screen_vertices[1] = texelFetchOffset(sLayers, uv1, 0, ivec2(2, 0));
@@ -246,17 +290,17 @@ Glyph fetch_glyph(int index) {
     return glyph;
 }
 
-vec4 fetch_instance_geometry(int index) {
+RectWithSize fetch_instance_geometry(int index) {
     ivec2 uv = get_fetch_uv_1(index);
 
     vec4 rect = texelFetchOffset(sData16, uv, 0, ivec2(0, 0));
 
-    return rect;
+    return RectWithSize(rect.xy, rect.zw);
 }
 
 struct PrimitiveGeometry {
-    vec4 local_rect;
-    vec4 local_clip_rect;
+    RectWithSize local_rect;
+    RectWithSize local_clip_rect;
 };
 
 PrimitiveGeometry fetch_prim_geometry(int index) {
@@ -264,8 +308,10 @@ PrimitiveGeometry fetch_prim_geometry(int index) {
 
     ivec2 uv = get_fetch_uv(index, VECS_PER_PRIM_GEOM);
 
-    pg.local_rect = texelFetchOffset(sPrimGeometry, uv, 0, ivec2(0, 0));
-    pg.local_clip_rect = texelFetchOffset(sPrimGeometry, uv, 0, ivec2(1, 0));
+    vec4 local_rect = texelFetchOffset(sPrimGeometry, uv, 0, ivec2(0, 0));
+    pg.local_rect = RectWithSize(local_rect.xy, local_rect.zw);
+    vec4 local_clip_rect = texelFetchOffset(sPrimGeometry, uv, 0, ivec2(1, 0));
+    pg.local_clip_rect = RectWithSize(local_clip_rect.xy, local_clip_rect.zw);
 
     return pg;
 }
@@ -322,8 +368,8 @@ struct Primitive {
     Layer layer;
     ClipArea clip_area;
     AlphaBatchTask task;
-    vec4 local_rect;
-    vec4 local_clip_rect;
+    RectWithSize local_rect;
+    RectWithSize local_clip_rect;
     int prim_index;
     // when sending multiple primitives of the same type (e.g. border segments)
     // this index allows the vertex shader to recognize the difference
@@ -402,47 +448,28 @@ vec4 get_layer_pos(vec2 pos, Layer layer) {
     return untransform(pos, n, a, layer.inv_transform);
 }
 
-vec2 clamp_rect(vec2 point, vec4 rect) {
-    return clamp(point, rect.xy, rect.xy + rect.zw);
-}
-
-struct Rect {
-    vec2 p0;
-    vec2 p1;
-};
-
 struct VertexInfo {
-    Rect local_rect;
+    RectWithEndpoint local_rect;
     vec2 local_pos;
     vec2 screen_pos;
 };
 
-VertexInfo write_vertex(vec4 instance_rect,
-                        vec4 local_clip_rect,
+VertexInfo write_vertex(RectWithSize instance_rect,
+                        RectWithSize local_clip_rect,
                         float z,
                         Layer layer,
                         AlphaBatchTask task) {
-    // Get the min/max local space coords of the rectangle.
-    vec2 local_p0 = instance_rect.xy;
-    vec2 local_p1 = instance_rect.xy + instance_rect.zw;
-
-    // Get the min/max coords of the local space clip rect.
-    vec2 local_clip_p0 = local_clip_rect.xy;
-    vec2 local_clip_p1 = local_clip_rect.xy + local_clip_rect.zw;
-
-    // Get the min/max coords of the layer clip rect.
-    vec2 layer_clip_p0 = layer.local_clip_rect.xy;
-    vec2 layer_clip_p1 = layer.local_clip_rect.xy + layer.local_clip_rect.zw;
+    RectWithEndpoint local_rect = to_rect_with_endpoint(instance_rect);
 
     // Select the corner of the local rect that we are processing.
-    vec2 local_pos = mix(local_p0, local_p1, aPosition.xy);
+    vec2 local_pos = mix(local_rect.p0, local_rect.p1, aPosition.xy);
 
     // xy = top left corner of the local rect, zw = position of current vertex.
-    vec4 local_p0_pos = vec4(local_p0, local_pos);
+    vec4 local_p0_pos = vec4(local_rect.p0, local_pos);
 
     // Clamp to the two local clip rects.
-    local_p0_pos = clamp(local_p0_pos, local_clip_p0.xyxy, local_clip_p1.xyxy);
-    local_p0_pos = clamp(local_p0_pos, layer_clip_p0.xyxy, layer_clip_p1.xyxy);
+    local_p0_pos = clamp_rect(local_p0_pos, local_clip_rect);
+    local_p0_pos = clamp_rect(local_p0_pos, layer.local_clip_rect);
 
     // Transform the top corner and current vertex to world space.
     vec4 world_p0 = layer.transform * vec4(local_p0_pos.xy, 0.0, 1.0);
@@ -464,7 +491,7 @@ VertexInfo write_vertex(vec4 instance_rect,
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
-    VertexInfo vi = VertexInfo(Rect(local_p0, local_p1), local_p0_pos.zw, device_p0_pos.zw);
+    VertexInfo vi = VertexInfo(local_rect, local_p0_pos.zw, device_p0_pos.zw);
     return vi;
 }
 
@@ -476,13 +503,13 @@ struct TransformVertexInfo {
     vec4 clipped_local_rect;
 };
 
-TransformVertexInfo write_transform_vertex(vec4 instance_rect,
-                                           vec4 local_clip_rect,
+TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
+                                           RectWithSize local_clip_rect,
                                            float z,
                                            Layer layer,
                                            AlphaBatchTask task) {
-    vec2 lp0_base = instance_rect.xy;
-    vec2 lp1_base = instance_rect.xy + instance_rect.zw;
+    vec2 lp0_base = instance_rect.p0;
+    vec2 lp1_base = instance_rect.p0 + instance_rect.size;
 
     vec2 lp0 = clamp_rect(clamp_rect(lp0_base, local_clip_rect),
                           layer.local_clip_rect);

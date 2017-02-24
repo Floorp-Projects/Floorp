@@ -4838,45 +4838,54 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
   if (!shadows)
     return;
 
+  bool hasBorderRadius;
+  bool nativeTheme = nsCSSRendering::HasBoxShadowNativeTheme(mFrame,
+                                                             hasBorderRadius);
+
   // Everything here is in app units, change to device units.
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
-    Rect gfxBorderRect = NSRectToRect(borderRect, appUnitsPerDevPixel);
+    nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
 
-    Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
-    Rect deviceBoxRect = aLayer->RelativeToParent(gfxBorderRect);
+    for (uint32_t j = shadows->Length(); j  > 0; j--) {
+      nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
+      // Don't need the full size of the shadow rect like we do in
+      // nsCSSRendering since WR takes care of calculations for blur
+      // and spread radius.
+      nsRect shadowRect = nsCSSRendering::GetShadowRect(borderRect,
+                                                        nativeTheme,
+                                                        mFrame);
+      gfx::Color shadowColor = nsCSSRendering::GetShadowColor(shadow,
+                                                              mFrame,
+                                                              mOpacity);
+      shadowRect.MoveBy(shadow->mXOffset, shadow->mYOffset);
 
-    for (uint32_t j = shadows->Length(); j > 0; --j) {
-      nsCSSShadowItem* shadowItem = shadows->ShadowAt(j - 1);
-      nscoord blurRadius = shadowItem->mRadius;
-      float gfxBlurRadius = blurRadius / appUnitsPerDevPixel;
+      // Now translate everything to device pixels.
+      Point shadowOffset;
+      shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
+      shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
 
-      // TODO: Have to refactor our nsCSSRendering
-      // to get the acual rects correct.
-      nscolor shadowColor;
-      if (shadowItem->mHasColor)
-        shadowColor = shadowItem->mColor;
-      else
-        shadowColor = mFrame->StyleColor()->mColor;
+      Rect deviceBoxRect = NSRectToRect(shadowRect, appUnitsPerDevPixel);
+      deviceBoxRect = aLayer->RelativeToParent(deviceBoxRect);
 
-      Color gfxShadowColor(Color::FromABGR(shadowColor));
-      gfxShadowColor.a *= mOpacity;
+      Rect deviceClipRect = aLayer->RelativeToParent(clipRect + shadowOffset);
 
-      WrPoint offset;
-      offset.x = shadowItem->mXOffset;
-      offset.y = shadowItem->mYOffset;
+      float blurRadius = shadow->mRadius / appUnitsPerDevPixel;
+      // TODO: Calculate the border radius here.
+      float borderRadius = 0.0;
+      float spreadRadius = shadow->mSpread / appUnitsPerDevPixel;
 
       aCommands.AppendElement(OpDPPushBoxShadow(
                               wr::ToWrRect(deviceBoxRect),
                               wr::ToWrRect(deviceClipRect),
                               wr::ToWrRect(deviceBoxRect),
-                              offset,
-                              wr::ToWrColor(gfxShadowColor),
-                              gfxBlurRadius,
-                              0,
-                              0,
+                              wr::ToWrPoint(shadowOffset),
+                              wr::ToWrColor(shadowColor),
+                              blurRadius,
+                              spreadRadius,
+                              borderRadius,
                               WrBoxShadowClipMode::Outset
-      ));
+                              ));
     }
   }
 }

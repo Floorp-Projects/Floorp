@@ -141,6 +141,7 @@ public:
       TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
                                XRE_GetProcessType(),
                                GetMaxTextureSize(),
+                               false,
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
     return result;

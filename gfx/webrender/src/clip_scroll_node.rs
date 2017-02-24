@@ -19,7 +19,7 @@ const CAN_OVERSCROLL: bool = false;
 
 /// Contains scrolling and transform information stacking contexts.
 #[derive(Clone)]
-pub struct Layer {
+pub struct ClipScrollNode {
     /// Manages scrolling offset, overscroll state etc.
     pub scrolling: ScrollingState,
 
@@ -48,13 +48,13 @@ pub struct Layer {
     pub children: Vec<ScrollLayerId>,
 }
 
-impl Layer {
+impl ClipScrollNode {
     pub fn new(local_viewport_rect: &LayerRect,
                content_size: LayerSize,
                local_transform: &LayerToScrollTransform,
                pipeline_id: PipelineId)
-               -> Layer {
-        Layer {
+               -> ClipScrollNode {
+        ClipScrollNode {
             scrolling: ScrollingState::new(),
             content_size: content_size,
             local_viewport_rect: *local_viewport_rect,
@@ -244,7 +244,7 @@ impl Layer {
         }
     }
 
-    pub fn ray_intersects_layer(&self, cursor: &WorldPoint) -> bool {
+    pub fn ray_intersects_node(&self, cursor: &WorldPoint) -> bool {
         let inv = self.world_viewport_transform.inverse().unwrap();
         let z0 = -10000.0;
         let z1 =  10000.0;
