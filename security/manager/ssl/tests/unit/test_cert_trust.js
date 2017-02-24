@@ -204,4 +204,14 @@ function run_test() {
 
   setup_basic_trusts(ca_cert, int_cert);
   test_ca_distrust(ee_cert, int_cert, false);
+
+  // Reset trust to default ("inherit trust")
+  setCertTrust(ca_cert, ",,");
+  setCertTrust(int_cert, ",,");
+
+  // It turns out that if an end-entity certificate is manually trusted, it can
+  // be the root of its own verified chain. This will be removed in bug 1294580.
+  setCertTrust(ee_cert, "C,,");
+  checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
+                        certificateUsageSSLServer);
 }
