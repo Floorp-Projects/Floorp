@@ -1546,6 +1546,22 @@ NopStackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
 }
 #endif
 
+static void
+prefork()
+{
+  if (gStateLock) {
+    gStateLock->Lock();
+  }
+}
+
+static void
+postfork()
+{
+  if (gStateLock) {
+    gStateLock->Unlock();
+  }
+}
+
 // WARNING: this function runs *very* early -- before all static initializers
 // have run.  For this reason, non-scalar globals such as gStateLock and
 // gStackTraceTable are allocated dynamically (so we can guarantee their
@@ -1555,6 +1571,16 @@ Init(const malloc_table_t* aMallocTable)
 {
   gMallocTable = aMallocTable;
   gDMDBridge = InfallibleAllocPolicy::new_<DMDBridge>();
+
+#ifndef XP_WIN
+  // Avoid deadlocks when forking by acquiring our state lock prior to forking
+  // and releasing it after forking. See |LogAlloc|'s |replace_init| for
+  // in-depth details.
+  //
+  // Note: This must run after attempting an allocation so as to give the
+  // system malloc a chance to insert its own atfork handler.
+  pthread_atfork(prefork, postfork, postfork);
+#endif
 
   // DMD is controlled by the |DMD| environment variable.
   const char* e = getenv("DMD");
