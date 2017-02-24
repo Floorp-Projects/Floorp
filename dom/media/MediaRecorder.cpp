@@ -479,10 +479,13 @@ public:
     if (domStream) {
       // The callback reports back when tracks are available and can be
       // attached to MediaEncoder. This allows `recorder.start()` before any tracks are available.
-      // We have supported this historically and have mochitests assuming this.
+      // We have supported this historically and have mochitests assuming this behavior.
       TracksAvailableCallback* tracksAvailableCallback = new TracksAvailableCallback(this);
       domStream->OnTracksAvailable(tracksAvailableCallback);
-    } else if (mRecorder->mAudioNode) {
+      return;
+    }
+
+    if (mRecorder->mAudioNode) {
       // Check that we may access the audio node's content.
       if (!AudioNodePrincipalSubsumes()) {
         LOG(LogLevel::Warning, ("Session.Start AudioNode principal check failed"));
@@ -494,9 +497,10 @@ public:
 
       // Web Audio node has only audio.
       InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK, trackRate);
-    } else {
-      MOZ_ASSERT(false, "Unknown source");
+      return;
     }
+
+    MOZ_ASSERT(false, "Unknown source");
   }
 
   void Stop()
