@@ -295,63 +295,7 @@ class MediaRecorder::Session: public PrincipalChangeObserver<MediaStreamTrack>,
 
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
     {
-      if (mSession->mStopIssued) {
-        return;
-      }
-
-      MOZ_RELEASE_ASSERT(aStream);
-      mSession->MediaStreamReady(*aStream);
-
-      uint8_t trackTypes = 0;
-      nsTArray<RefPtr<mozilla::dom::AudioStreamTrack>> audioTracks;
-      aStream->GetAudioTracks(audioTracks);
-      if (!audioTracks.IsEmpty()) {
-        trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
-      }
-
-      nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
-      aStream->GetVideoTracks(videoTracks);
-      if (!videoTracks.IsEmpty()) {
-        trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
-      }
-
-      nsTArray<RefPtr<mozilla::dom::MediaStreamTrack>> tracks;
-      aStream->GetTracks(tracks);
-      for (auto& track : tracks) {
-        if (track->Ended()) {
-          continue;
-        }
-
-        mSession->ConnectMediaStreamTrack(*track);
-      }
-
-      if (audioTracks.Length() > 1 ||
-          videoTracks.Length() > 1) {
-        // When MediaRecorder supports multiple tracks, we should set up a single
-        // MediaInputPort from the input stream, and let main thread check
-        // track principals async later.
-        nsPIDOMWindowInner* window = mSession->mRecorder->GetParentObject();
-        nsIDocument* document = window ? window->GetExtantDoc() : nullptr;
-        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                        NS_LITERAL_CSTRING("Media"),
-                                        document,
-                                        nsContentUtils::eDOM_PROPERTIES,
-                                        "MediaRecorderMultiTracksNotSupported");
-        mSession->DoSessionEndTask(NS_ERROR_ABORT);
-        return;
-      }
-
-      NS_ASSERTION(trackTypes != 0, "TracksAvailableCallback without any tracks available");
-
-      // Check that we may access the tracks' content.
-      if (!mSession->MediaStreamTracksPrincipalSubsumes()) {
-        LOG(LogLevel::Warning, ("Session.NotifyTracksAvailable MediaStreamTracks principal check failed"));
-        mSession->DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
-        return;
-      }
-
-      LOG(LogLevel::Debug, ("Session.NotifyTracksAvailable track type = (%d)", trackTypes));
-      mSession->InitEncoder(trackTypes, aStream->GraphRate());
+      mSession->MediaStreamReady(aStream);
     }
   private:
     RefPtr<Session> mSession;
@@ -690,9 +634,66 @@ private:
     }
   }
 
-  void MediaStreamReady(DOMMediaStream& aStream) {
-    mMediaStream = &aStream;
-    aStream.RegisterTrackListener(this);
+  void MediaStreamReady(DOMMediaStream* aStream) {
+    MOZ_RELEASE_ASSERT(aStream);
+
+    if (mStopIssued) {
+      return;
+    }
+
+    mMediaStream = aStream;
+    aStream->RegisterTrackListener(this);
+
+    uint8_t trackTypes = 0;
+    nsTArray<RefPtr<mozilla::dom::AudioStreamTrack>> audioTracks;
+    aStream->GetAudioTracks(audioTracks);
+    if (!audioTracks.IsEmpty()) {
+      trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
+    }
+
+    nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+    aStream->GetVideoTracks(videoTracks);
+    if (!videoTracks.IsEmpty()) {
+      trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
+    }
+
+    nsTArray<RefPtr<mozilla::dom::MediaStreamTrack>> tracks;
+    aStream->GetTracks(tracks);
+    for (auto& track : tracks) {
+      if (track->Ended()) {
+        continue;
+      }
+
+      ConnectMediaStreamTrack(*track);
+    }
+
+    if (audioTracks.Length() > 1 ||
+        videoTracks.Length() > 1) {
+      // When MediaRecorder supports multiple tracks, we should set up a single
+      // MediaInputPort from the input stream, and let main thread check
+      // track principals async later.
+      nsPIDOMWindowInner* window = mRecorder->GetParentObject();
+      nsIDocument* document = window ? window->GetExtantDoc() : nullptr;
+      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                      NS_LITERAL_CSTRING("Media"),
+                                      document,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "MediaRecorderMultiTracksNotSupported");
+      DoSessionEndTask(NS_ERROR_ABORT);
+      return;
+    }
+
+    NS_ASSERTION(trackTypes != 0, "TracksAvailableCallback without any tracks available");
+
+    // Check that we may access the tracks' content.
+    if (!MediaStreamTracksPrincipalSubsumes()) {
+      LOG(LogLevel::Warning, ("Session.NotifyTracksAvailable MediaStreamTracks principal check failed"));
+      DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
+      return;
+    }
+
+    LOG(LogLevel::Debug, ("Session.NotifyTracksAvailable track type = (%d)", trackTypes));
+    InitEncoder(trackTypes, aStream->GraphRate());
   }
 
   void ConnectMediaStreamTrack(MediaStreamTrack& aTrack)
