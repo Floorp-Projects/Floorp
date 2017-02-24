@@ -34,8 +34,6 @@ public:
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
 
-  PrincipalKind Kind() override { return eExpandedPrincipal; }
-
 protected:
   virtual ~nsExpandedPrincipal();
 
