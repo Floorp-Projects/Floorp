@@ -25,13 +25,14 @@ class VariableLengthPrefixSet final
 public:
   VariableLengthPrefixSet();
 
-  NS_IMETHOD Init(const nsACString& aName);
-  NS_IMETHOD SetPrefixes(const mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
-  NS_IMETHOD GetPrefixes(mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
-  NS_IMETHOD Matches(const nsACString& aFullHash, uint32_t* aLength);
-  NS_IMETHOD IsEmpty(bool* aEmpty);
-  NS_IMETHOD LoadFromFile(nsIFile* aFile);
-  NS_IMETHOD StoreToFile(nsIFile* aFile);
+  nsresult Init(const nsACString& aName);
+  nsresult SetPrefixes(const mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
+  nsresult GetPrefixes(mozilla::safebrowsing::PrefixStringMap& aPrefixMap);
+  nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
+  nsresult Matches(const nsACString& aFullHash, uint32_t* aLength);
+  nsresult IsEmpty(bool* aEmpty);
+  nsresult LoadFromFile(nsIFile* aFile);
+  nsresult StoreToFile(nsIFile* aFile);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 

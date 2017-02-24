@@ -140,6 +140,12 @@ LookupCacheV4::GetPrefixes(PrefixStringMap& aPrefixMap)
 }
 
 nsresult
+LookupCacheV4::GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes)
+{
+  return mVLPrefixSet->GetFixedLengthPrefixes(aPrefixes);
+}
+
+nsresult
 LookupCacheV4::ClearPrefixes()
 {
   // Clear by seting a empty map

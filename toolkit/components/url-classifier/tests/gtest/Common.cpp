@@ -77,3 +77,40 @@ PrefixArrayToPrefixStringMap(const nsTArray<nsCString>& prefixArray,
   }
 }
 
+nsresult
+PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
+                              AddPrefixArray& out)
+{
+  out.Clear();
+
+  for (size_t i = 0; i < prefixArray.Length(); i++) {
+    // Create prefix hash from string
+    Prefix hash;
+    static_assert(sizeof(hash.buf) == PREFIX_SIZE, "Prefix must be 4 bytes length");
+    memcpy(hash.buf, prefixArray[i].BeginReading(), PREFIX_SIZE);
+    MOZ_ASSERT(prefixArray[i].Length() == PREFIX_SIZE);
+
+    AddPrefix *add = out.AppendElement(fallible);
+    if (!add) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    add->addChunk = i;
+    add->prefix = hash;
+  }
+
+  return NS_OK;
+}
+
+nsCString
+GeneratePrefix(const nsCString& aFragment, uint8_t aLength)
+{
+  Completion complete;
+  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+  complete.FromPlaintext(aFragment, cryptoHash);
+
+  nsCString hash;
+  hash.Assign((const char *)complete.buf, aLength);
+  return hash;
+}
+
