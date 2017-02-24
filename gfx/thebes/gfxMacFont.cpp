@@ -563,7 +563,8 @@ gfxMacFont::CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
         ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
         ::CFRelease(varDesc);
     } else {
-        ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
+        ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr,
+                                                aFontDesc);
     }
     return ctFont;
 }
