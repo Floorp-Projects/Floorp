@@ -64,16 +64,26 @@ private:
   Stack* mStackToFill;
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const PseudoStack* const mPseudoStack;
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  class ThreadContext;
+  // Set to non-null if GetStack should get the thread context.
+  ThreadContext* mContextToFill;
+  intptr_t mThreadStackBase;
+#endif
   size_t mMaxStackSize;
   size_t mMaxBufferSize;
 #endif
 
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
+  void FillThreadContext(void* aContext = nullptr);
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const char* AppendJSEntry(const volatile js::ProfileEntry* aEntry,
                             intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
+#endif
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  void GetThreadStackBase();
 #endif
 
 public:
