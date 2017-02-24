@@ -82,7 +82,8 @@ devtools/client/commandline/**
 devtools/client/debugger/**
 devtools/client/framework/**
 !devtools/client/framework/selection.js
-!devtools/client/framework/toolbox.js
+!devtools/client/framework/target*
+!devtools/client/framework/toolbox*
 devtools/client/netmonitor/test/**
 devtools/client/netmonitor/har/test/**
 devtools/client/projecteditor/**

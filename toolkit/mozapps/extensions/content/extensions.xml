@@ -666,6 +666,7 @@
                   info: {
                     addon: info.addon,
                     icon: info.addon.iconURL,
+                    permissions: info.addon.userPermissions,
                     resolve,
                     reject,
                   },
@@ -1107,7 +1108,13 @@
           return this.mAddon.userDisabled;
         ]]></getter>
         <setter><![CDATA[
-          this.mAddon.userDisabled = val;
+          if (val === true) {
+            gViewController.commands["cmd_disableItem"].doCommand(this.mAddon);
+          } else if (val === false) {
+            gViewController.commands["cmd_enableItem"].doCommand(this.mAddon);
+          } else {
+            this.mAddon.userDisabled = val;
+          }
         ]]></setter>
       </property>
 

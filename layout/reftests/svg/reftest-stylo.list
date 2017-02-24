@@ -414,18 +414,18 @@ fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
 
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge.svg
-# pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color.svg
+skip-if(stylo) pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color.svg # Too intermittent
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference.svg
 skip-if(Android) fuzzy-if(skiaContent,1,1600) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion.svg
-# pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light.svg
-# pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue.svg
+skip-if(stylo) pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light.svg # Too intermittent
+skip-if(stylo) pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue.svg # Too intermittent
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten.svg
-# pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity.svg
+skip-if(stylo) pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity.svg # Too intermittent
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.svg

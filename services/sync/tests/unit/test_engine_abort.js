@@ -62,6 +62,9 @@ add_task(async function test_processIncoming_abort() {
   await promiseStopServer(server);
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
+
+  engine._tracker.clearChangedIDs();
+  await engine.finalize();
 });
 
 function run_test() {

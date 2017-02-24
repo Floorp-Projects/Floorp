@@ -8,10 +8,10 @@ fails == spacing-invariance-standards-pref.html spacing-invariance-standards-pre
 == min-width-ref.html min-width-ref.html
 == percent-large.html percent-large.html
 == percent-large-min.html percent-large-min.html
-fails == percent-large-nested.html percent-large-nested.html
+== percent-large-nested.html percent-large-nested.html
 == percent-small.html percent-small.html
 == percent-small-min.html percent-small-min.html
-fails == percent-small-nested.html percent-small-nested.html
+== percent-small-nested.html percent-small-nested.html
 == percent-small-2.html percent-small-2.html
 == percent-zero.html percent-zero.html
 == shrink-wrap-pref.html shrink-wrap-pref.html
@@ -55,10 +55,10 @@ fails == percent-basis.html percent-basis.html
 == spanning-cell-sort-2-large.html spanning-cell-sort-2-large.html
 == spanning-cell-sort-2-small-fixed.html spanning-cell-sort-2-small-fixed.html
 == spanning-cell-sort-2-large-fixed.html spanning-cell-sort-2-large-fixed.html
-fails == colgroup-vs-column-1.html colgroup-vs-column-1.html
-fails == colgroup-vs-column-2.html colgroup-vs-column-2.html
-fails == colgroup-vs-column-3.html colgroup-vs-column-3.html
-fails == colgroup-vs-column-4.html colgroup-vs-column-4.html
+== colgroup-vs-column-1.html colgroup-vs-column-1.html
+== colgroup-vs-column-2.html colgroup-vs-column-2.html
+== colgroup-vs-column-3.html colgroup-vs-column-3.html
+== colgroup-vs-column-4.html colgroup-vs-column-4.html
 == dynamic-fixed-layout-1.html dynamic-fixed-layout-1.html
 == cell-pref-width-border-box.html cell-pref-width-border-box.html
 fails == colspan-distribute-to-empty-1a.html colspan-distribute-to-empty-1a.html

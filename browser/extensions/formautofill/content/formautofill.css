@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.autocomplete-richlistitem[originaltype="autofill-profile"] {
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="autofill-profile"] {
+  display: block;
+  margin: 0;
+  padding: 0;
+  height: auto;
+  min-height: auto;
+
   -moz-binding: url("chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem");
+}
+
+#PopupAutoComplete[firstresultstyle="autofill-profile"] {
+  min-width: 150px !important;
 }

@@ -22,6 +22,10 @@ class SpeechSynthesisChild : public PSpeechSynthesisChild
   friend class nsSynthVoiceRegistry;
 
 public:
+  mozilla::ipc::IPCResult RecvInitialVoicesAndState(nsTArray<RemoteVoice>&& aVoices,
+                                                    nsTArray<nsString>&& aDefaults,
+                                                    const bool& aIsSpeaking) override;
+
   mozilla::ipc::IPCResult RecvVoiceAdded(const RemoteVoice& aVoice) override;
 
   mozilla::ipc::IPCResult RecvVoiceRemoved(const nsString& aUri) override;

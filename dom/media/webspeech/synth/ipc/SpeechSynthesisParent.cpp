@@ -24,14 +24,10 @@ SpeechSynthesisParent::ActorDestroy(ActorDestroyReason aWhy)
   // Implement me! Bug 1005141
 }
 
-mozilla::ipc::IPCResult
-SpeechSynthesisParent::RecvReadVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
-                                              InfallibleTArray<nsString>* aDefaults,
-                                              bool* aIsSpeaking)
+bool
+SpeechSynthesisParent::SendInit()
 {
-  nsSynthVoiceRegistry::GetInstance()->SendVoicesAndState(aVoices, aDefaults,
-                                                          aIsSpeaking);
-  return IPC_OK();
+  return nsSynthVoiceRegistry::GetInstance()->SendInitialVoicesAndState(this);
 }
 
 PSpeechSynthesisRequestParent*

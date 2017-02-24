@@ -43,7 +43,7 @@ fails HTTP(..) == font-features-turkish-override-4.html font-features-turkish-ov
 fails HTTP(..) == font-features-turkish-override-5.html font-features-turkish-override-5.html
 
 # check that last value wins if a feature is repeated
-# HTTP(..) == font-features-order-1.html font-features-order-1.html
+fails HTTP(..) == font-features-order-1.html font-features-order-1.html # Bug 1290237
 fails HTTP(..) == font-features-order-2.html font-features-order-2.html
 
 # check priority of feature settings vs. font-variant subproperty
@@ -118,4 +118,4 @@ fails HTTP(..) == subsuper-fallback-omega.html subsuper-fallback-omega.html
 fails HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
 fails == subsuper-nofallback.html subsuper-nofallback.html
 fails HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
-# HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size.html
+fails HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size.html # Bug 1290237

@@ -44,6 +44,7 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
       // sheets been appended/prepended/etc after we had mRawSet.  But hopefully
       // that's OK (e.g. because servo doesn't care about the relative ordering
       // of sheets from different cascade levels in the list?).
+      MOZ_ASSERT(sheet->RawSheet(), "We should only append non-null raw sheets.");
       Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
     }
   }
@@ -340,6 +341,7 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   MOZ_ASSERT(aSheet->IsApplicable());
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
 
+  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place before insertion.");
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].AppendElement(aSheet);
 
@@ -359,6 +361,7 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   MOZ_ASSERT(aSheet->IsApplicable());
   MOZ_ASSERT(nsStyleSet::IsCSSSheetType(aType));
 
+  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place before insertion.");
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].InsertElementAt(0, aSheet);
 
@@ -407,6 +410,7 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
 
   if (mRawSet) {
     for (ServoStyleSheet* sheet : mSheets[aType]) {
+      MOZ_ASSERT(sheet->RawSheet(), "Raw sheet should be in place before replacement.");
       Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
     }
   }
@@ -432,7 +436,9 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
   if (idx == mSheets[aType].NoIndex) {
     return NS_ERROR_INVALID_ARG;
   }
+  MOZ_ASSERT(aReferenceSheet->RawSheet(), "Reference sheet should have a raw sheet.");
 
+  MOZ_ASSERT(aNewSheet->RawSheet(), "Raw sheet should be in place before insertion.");
   mSheets[aType].InsertElementAt(idx, aNewSheet);
 
   if (mRawSet) {
@@ -470,20 +476,23 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
                                 nsIDocument* aDocument)
 {
   MOZ_ASSERT(aSheet->IsApplicable());
+  MOZ_ASSERT(aSheet->RawSheet(), "Raw sheet should be in place by this point.");
 
   RefPtr<StyleSheet> strong(aSheet);
 
-  mSheets[SheetType::Doc].RemoveElement(aSheet);
+  nsTArray<RefPtr<ServoStyleSheet>>& sheetsArray = mSheets[SheetType::Doc];
+
+  sheetsArray.RemoveElement(aSheet);
 
   size_t index =
-    aDocument->FindDocStyleSheetInsertionPoint(mSheets[SheetType::Doc], aSheet);
-  mSheets[SheetType::Doc].InsertElementAt(index, aSheet);
+    aDocument->FindDocStyleSheetInsertionPoint(sheetsArray, aSheet);
+  sheetsArray.InsertElementAt(index, aSheet);
 
   if (mRawSet) {
     // Maintain a mirrored list of sheets on the servo side.
-    ServoStyleSheet* followingSheet =
-      mSheets[SheetType::Doc].SafeElementAt(index + 1);
+    ServoStyleSheet* followingSheet = sheetsArray.SafeElementAt(index + 1);
     if (followingSheet) {
+      MOZ_ASSERT(followingSheet->RawSheet(), "Every mSheets element should have a raw sheet");
       Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet->RawSheet(),
                                             followingSheet->RawSheet(), !mBatching);
     } else {
