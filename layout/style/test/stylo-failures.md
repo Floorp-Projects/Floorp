@@ -396,7 +396,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `mask-repeat` [24]
   * lack glue for function values of content property bug 1296477
     * test_rule_insertion.html `decimal counter` [3]
-    * test_value_storage.html `'content` [41]
+    * test_value_storage.html `'content` [40]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
@@ -431,6 +431,8 @@ Any line which doesn't follow the format above would be ignored like comment.
       * test_property_syntax_errors.html `transform-origin'` [50]
       * ... `perspective-origin'` [30]
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
+  * -moz-alt-content parsing is wrong: servo/servo#15726
+    * test_property_syntax_errors.html `-moz-alt-content` [4]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
