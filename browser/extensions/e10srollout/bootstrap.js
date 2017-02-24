@@ -186,5 +186,15 @@ function getTemporaryDisqualification() {
  * string must be returned.
  */
 function getTemporaryQualification() {
+  // Whenever the DevTools toolbox is opened for the first time in a release, it
+  // records this fact in the following pref as part of the DevTools telemetry
+  // system.  If this pref is set, then it means the user has opened DevTools at
+  // some point in time.
+  const PREF_OPENED_DEVTOOLS = "devtools.telemetry.tools.opened.version";
+  let hasOpenedDevTools = Preferences.isSet(PREF_OPENED_DEVTOOLS);
+  if (hasOpenedDevTools) {
+    return "devtools";
+  }
+
   return "";
 }
