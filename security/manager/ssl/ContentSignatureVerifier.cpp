@@ -158,7 +158,7 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
   }
 
   CERTCertListNode* node = CERT_LIST_HEAD(certCertList.get());
-  if (!node || !node->cert) {
+  if (!node || CERT_LIST_END(node, certCertList.get()) || !node->cert) {
     return NS_ERROR_FAILURE;
   }
 
