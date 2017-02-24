@@ -314,8 +314,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `counter-increment` [4]
     * test_initial_storage.html `counter-increment` [4]
     * test_value_storage.html `counter-increment` [30]
-  * clip property
-    * test_value_storage.html `should be idempotent for 'clip` [1]
+  * clip property: servo/servo#15729
+    * test_value_storage.html `should be idempotent for 'clip` [4]
   * font-feature-settings property
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -433,8 +433,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
-  * Length parsing is lossy and not rounding: servo/servo#15729
-    * test_value_storage.html `should be idempotent for 'clip` [1]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -488,7 +486,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
-  * ... `75.5667px` [2]
   * ... `105.333px` [2]
 * test_viewport_units.html: viewport units support [12]
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
