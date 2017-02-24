@@ -210,7 +210,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/xul',
-    '/media/libyuv/include',
+    '/media/libyuv/libyuv/include',
 ]
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
