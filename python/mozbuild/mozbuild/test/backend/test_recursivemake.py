@@ -762,8 +762,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libtest_library.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
 
         self.assertEqual(lines, expected)
@@ -776,8 +777,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'HOST_RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
 
         self.assertEqual(lines, expected)
@@ -790,8 +792,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'HOST_RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libhostrusttool.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout',
         ]
 
@@ -805,8 +808,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libgkrust.a',
+            'RUST_LIBRARY_FILE := ./x86_64-unknown-linux-gnu/release/libfeature_library.a',
             'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'RUST_LIBRARY_FEATURES := musthave cantlivewithout',
         ]
 
@@ -821,6 +825,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             'CARGO_FILE := %s/code/Cargo.toml' % env.topsrcdir,
+            'CARGO_TARGET_DIR := .',
             'RUST_PROGRAMS += i686-pc-windows-msvc/release/target.exe',
             'RUST_CARGO_PROGRAMS += target',
             'HOST_RUST_PROGRAMS += i686-pc-windows-msvc/release/host.exe',

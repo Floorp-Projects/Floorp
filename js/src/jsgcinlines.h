@@ -154,8 +154,6 @@ class ArenaCellIterImpl
     void init(Arena* arena, CellIterNeedsBarrier mayNeedBarrier) {
         MOZ_ASSERT(!initialized);
         MOZ_ASSERT(arena);
-        MOZ_ASSERT_IF(!mayNeedBarrier,
-                      CurrentThreadIsPerformingGC() || CurrentThreadIsGCSweeping());
         initialized = true;
         AllocKind kind = arena->getAllocKind();
         firstThingOffset = Arena::firstThingOffset(kind);
@@ -241,6 +239,14 @@ class ArenaCellIterUnderFinalize : public ArenaCellIterImpl
     {
         MOZ_ASSERT(CurrentThreadIsGCSweeping());
     }
+};
+
+class ArenaCellIterUnbarriered : public ArenaCellIterImpl
+{
+  public:
+    explicit ArenaCellIterUnbarriered(Arena* arena)
+      : ArenaCellIterImpl(arena, CellIterDoesntNeedBarrier)
+    {}
 };
 
 template <typename T>

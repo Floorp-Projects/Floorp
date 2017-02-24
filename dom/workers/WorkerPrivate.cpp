@@ -1985,6 +1985,57 @@ WorkerLoadInfo::PrincipalIsValid() const
          mPrincipalInfo->type() != PrincipalInfo::T__None &&
          mPrincipalInfo->type() <= PrincipalInfo::T__Last;
 }
+
+bool
+WorkerLoadInfo::PrincipalURIMatchesScriptURL()
+{
+  AssertIsOnMainThread();
+
+  nsAutoCString scheme;
+  nsresult rv = mBaseURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // A system principal must either be a blob URL or a resource JSM.
+  if (mPrincipal->GetIsSystemPrincipal()) {
+    if (scheme == NS_LITERAL_CSTRING("blob")) {
+      return true;
+    }
+
+    bool isResource = false;
+    nsresult rv = NS_URIChainHasFlags(mBaseURI,
+                                      nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                                      &isResource);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    return isResource;
+  }
+
+  // A null principal can occur for a data URL worker script or a blob URL
+  // worker script from a sandboxed iframe.
+  if (mPrincipal->GetIsNullPrincipal()) {
+    return scheme == NS_LITERAL_CSTRING("data") ||
+           scheme == NS_LITERAL_CSTRING("blob");
+  }
+
+  // The principal for a blob: URL worker script does not have a matching URL.
+  // This is likely a bug in our referer setting logic, but exempt it for now.
+  // This is another reason we should fix bug 1340694 so that referer does not
+  // depend on the principal URI.
+  if (scheme == NS_LITERAL_CSTRING("blob")) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> principalURI;
+  rv = mPrincipal->GetURI(getter_AddRefs(principalURI));
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(principalURI, false);
+
+  bool equal = false;
+  rv = principalURI->Equals(mBaseURI, &equal);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return equal;
+}
 #endif // defined(DEBUG) || !defined(RELEASE_OR_BETA)
 
 bool
@@ -2638,6 +2689,26 @@ WorkerPrivateParent<Derived>::SetCSPFromHeaderValues(const nsACString& aCSPHeade
   }
 
   return NS_OK;
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::SetReferrerPolicyFromHeaderValue(
+                                  const nsACString& aReferrerPolicyHeaderValue)
+{
+  NS_ConvertUTF8toUTF16 headerValue(aReferrerPolicyHeaderValue);
+
+  if (headerValue.IsEmpty()) {
+    return;
+  }
+
+  net::ReferrerPolicy policy =
+    nsContentUtils::GetReferrerPolicyFromHeader(headerValue);
+  if (policy == net::RP_Unset) {
+    return;
+  }
+
+  SetReferrerPolicy(policy);
 }
 
 
@@ -3868,6 +3939,13 @@ bool
 WorkerPrivateParent<Derived>::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 {
   return mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
+}
+
+template <class Derived>
+bool
+WorkerPrivateParent<Derived>::PrincipalURIMatchesScriptURL()
+{
+  return mLoadInfo.PrincipalURIMatchesScriptURL();
 }
 #endif
 

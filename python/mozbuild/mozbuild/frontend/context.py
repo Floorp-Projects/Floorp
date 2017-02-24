@@ -959,6 +959,15 @@ VARIABLES = {
         RustLibrary template instead.
         """),
 
+    'RUST_LIBRARY_TARGET_DIR': (unicode, unicode,
+        """Where CARGO_TARGET_DIR should point when compiling this library.  If
+        not set, it defaults to the current objdir.  It should be a relative path
+        to the current objdir; absolute paths should not be used.
+
+        This variable should not be used directly; you should be using the
+        RustLibrary template instead.
+        """),
+
     'HOST_RUST_LIBRARY_FEATURES': (List, list,
         """Cargo features to activate for this host library.
 

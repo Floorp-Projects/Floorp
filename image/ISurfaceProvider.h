@@ -64,14 +64,16 @@ public:
   /// implementation is appropriate for static ISurfaceProviders.
   virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t& aHeapSizeOut,
-                                      size_t& aNonHeapSizeOut)
+                                      size_t& aNonHeapSizeOut,
+                                      size_t& aSharedHandlesOut)
   {
     DrawableFrameRef ref = DrawableRef(/* aFrame = */ 0);
     if (!ref) {
       return;
     }
 
-    ref->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut, aNonHeapSizeOut);
+    ref->AddSizeOfExcludingThis(aMallocSizeOf, aHeapSizeOut,
+                                aNonHeapSizeOut, aSharedHandlesOut);
   }
 
   /// @return the availability state of this ISurfaceProvider, which indicates

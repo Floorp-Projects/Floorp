@@ -31,9 +31,10 @@ Linker::newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges /* = fa
     bytesNeeded = AlignBytes(bytesNeeded, sizeof(void*));
 
     ExecutableAllocator& execAlloc = hasPatchableBackedges
-        ? cx->runtime()->jitRuntime()->backedgeExecAlloc()
-        : cx->runtime()->jitRuntime()->execAlloc();
-    uint8_t* result = (uint8_t*)execAlloc.alloc(bytesNeeded, &pool, kind);
+                                     ? cx->runtime()->jitRuntime()->backedgeExecAlloc()
+                                     : cx->runtime()->jitRuntime()->execAlloc();
+
+    uint8_t* result = (uint8_t*)execAlloc.alloc(cx, bytesNeeded, &pool, kind);
     if (!result)
         return fail(cx);
 

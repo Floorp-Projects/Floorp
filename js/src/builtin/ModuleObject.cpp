@@ -994,7 +994,7 @@ GlobalObject::initModuleProto(JSContext* cx, Handle<GlobalObject*> global)
 
     static const JSFunctionSpec protoFunctions[] = {
         JS_SELF_HOSTED_FN("getExportedNames", "ModuleGetExportedNames", 1, 0),
-        JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 3, 0),
+        JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 2, 0),
         JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleDeclarationInstantiation", 0, 0),
         JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluation", 0, 0),
         JS_FS_END
