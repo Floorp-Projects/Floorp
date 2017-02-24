@@ -79,4 +79,4 @@ to make sure that mozjs_sys also has its Cargo.lock file updated if needed, henc
 the need to run the cargo update command in js/src as well. Hopefully this will
 be resolved soon.
 
-Latest Commit: 938b32ca93bf5e878422ac4bafcdd53f8058f880
+Latest Commit: edc74274d28b1fa1229a1d1ea05027f57172b992

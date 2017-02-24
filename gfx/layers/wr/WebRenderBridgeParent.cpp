@@ -696,7 +696,8 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
 
   return TextureFactoryIdentifier(LayersBackend::LAYERS_WR,
                                   XRE_GetProcessType(),
-                                  mApi->GetMaxTextureSize());
+                                  mApi->GetMaxTextureSize(),
+                                  mApi->GetUseANGLE());
 }
 
 } // namespace layers

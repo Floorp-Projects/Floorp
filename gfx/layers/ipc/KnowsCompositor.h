@@ -62,6 +62,11 @@ public:
     return mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
+  bool GetCompositorUseANGLE() const
+  {
+    return mTextureFactoryIdentifier.mCompositorUseANGLE;
+  }
+
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
   {
     return mTextureFactoryIdentifier;

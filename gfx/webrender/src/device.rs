@@ -42,12 +42,6 @@ const SHADER_VERSION: &'static str = "#version 300 es\n";
 
 static SHADER_PREAMBLE: &'static str = "shared";
 
-lazy_static! {
-    pub static ref MAX_TEXTURE_SIZE: gl::GLint = {
-        gl::get_integer_v(gl::MAX_TEXTURE_SIZE)
-    };
-}
-
 #[repr(u32)]
 pub enum DepthFunction {
     Less = gl::LESS,
@@ -825,6 +819,8 @@ pub struct Device {
     // Used on android only
     #[allow(dead_code)]
     next_vao_id: gl::GLuint,
+
+    max_texture_size: u32,
 }
 
 impl Device {
@@ -863,7 +859,13 @@ impl Device {
 
             next_vao_id: 1,
             //file_watcher: file_watcher,
+
+            max_texture_size: gl::get_integer_v(gl::MAX_TEXTURE_SIZE) as u32
         }
+    }
+
+    pub fn max_texture_size(&self) -> u32 {
+        self.max_texture_size
     }
 
     pub fn get_capabilities(&self) -> &Capabilities {

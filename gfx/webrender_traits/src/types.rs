@@ -6,7 +6,7 @@
 // for the serde implementations.
 
 use app_units::Au;
-use euclid::Point2D;
+use euclid::{Point2D, SideOffsets2D};
 use channel::{PayloadSender, MsgSender};
 #[cfg(feature = "nightly")]
 use core::nonzero::NonZero;
@@ -175,12 +175,48 @@ pub struct AuxiliaryListsDescriptor {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct BorderDisplayItem {
+pub struct NormalBorder {
     pub left: BorderSide,
     pub right: BorderSide,
     pub top: BorderSide,
     pub bottom: BorderSide,
     pub radius: BorderRadius,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum RepeatMode {
+    Stretch,
+    Repeat,
+    Round,
+    Space,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct NinePatchDescriptor {
+    pub width: u32,
+    pub height: u32,
+    pub slice: SideOffsets2D<u32>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ImageBorder {
+    pub image_key: ImageKey,
+    pub patch: NinePatchDescriptor,
+    pub outset: SideOffsets2D<f32>,
+    pub repeat_horizontal: RepeatMode,
+    pub repeat_vertical: RepeatMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum BorderDetails {
+    Normal(NormalBorder),
+    Image(ImageBorder),
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderDisplayItem {
+    pub widths: BorderWidths,
+    pub details: BorderDetails,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -191,10 +227,17 @@ pub struct BorderRadius {
     pub bottom_right: LayoutSize,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderWidths {
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BorderSide {
-    pub width: f32,
     pub color: ColorF,
     pub style: BorderStyle,
 }
@@ -605,9 +648,44 @@ pub enum YuvColorSpace {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
+pub trait BlobImageRenderer: Send {
+    fn request_blob_image(&mut self,
+                            key: ImageKey,
+                            data: Arc<BlobImageData>,
+                            descriptor: &BlobImageDescriptor);
+    fn resolve_blob_image(&mut self, key: ImageKey) -> BlobImageResult;
+}
+
+pub type BlobImageData = Vec<u8>;
+
+#[derive(Copy, Clone, Debug)]
+pub struct BlobImageDescriptor {
+    pub width: u32,
+    pub height: u32,
+    pub format: ImageFormat,
+    pub scale_factor: f32,
+}
+
+pub struct RasterizedBlobImage {
+    pub width: u32,
+    pub height: u32,
+    pub data: Vec<u8>,
+}
+
+#[derive(Clone, Debug)]
+pub enum BlobImageError {
+    Oom,
+    InvalidKey,
+    InvalidData,
+    Other(String),
+}
+
+pub type BlobImageResult = Result<RasterizedBlobImage, BlobImageError>;
+
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ImageData {
     Raw(Arc<Vec<u8>>),
+    Blob(Arc<BlobImageData>),
     ExternalHandle(ExternalImageId),
     ExternalBuffer(ExternalImageId),
 }
@@ -619,6 +697,14 @@ impl ImageData {
 
     pub fn new_shared(bytes: Arc<Vec<u8>>) -> ImageData {
         ImageData::Raw(bytes)
+    }
+
+    pub fn new_blob_image(commands: Vec<u8>) -> ImageData {
+        ImageData::Blob(Arc::new(commands))
+    }
+
+    pub fn new_shared_blob_image(commands: Arc<Vec<u8>>) -> ImageData {
+        ImageData::Blob(commands)
     }
 }
 
@@ -987,12 +1073,12 @@ macro_rules! define_resource_id {
         define_resource_id_struct!($name);
 
         impl ::serde::Deserialize for $name {
-            fn deserialize<D>(deserializer: &mut D) -> Result<Self, D::Error>
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
                 where D: ::serde::Deserializer
             {
                 let id = try!(u32::deserialize(deserializer));
                 if id == 0 {
-                    Err(::serde::Error::invalid_value("expected a non-zero value"))
+                    Err(::serde::de::Error::custom("expected a non-zero value"))
                 } else {
                     Ok(unsafe { $name::new(id) })
                 }
@@ -1000,7 +1086,7 @@ macro_rules! define_resource_id {
         }
 
         impl ::serde::Serialize for $name {
-            fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
                 where S: ::serde::Serializer
             {
                 self.get().serialize(serializer)

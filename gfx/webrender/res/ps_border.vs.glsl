@@ -32,29 +32,30 @@ void main(void) {
     Border border = fetch_border(prim.prim_index);
     int sub_part = prim.sub_index;
 
-    vec2 tl_outer = prim.local_rect.xy;
+    vec2 tl_outer = prim.local_rect.p0;
     vec2 tl_inner = tl_outer + vec2(max(border.radii[0].x, border.widths.x),
                                     max(border.radii[0].y, border.widths.y));
 
-    vec2 tr_outer = vec2(prim.local_rect.x + prim.local_rect.z,
-                         prim.local_rect.y);
+    vec2 tr_outer = vec2(prim.local_rect.p0.x + prim.local_rect.size.x,
+                         prim.local_rect.p0.y);
     vec2 tr_inner = tr_outer + vec2(-max(border.radii[0].z, border.widths.z),
                                     max(border.radii[0].w, border.widths.y));
 
-    vec2 br_outer = vec2(prim.local_rect.x + prim.local_rect.z,
-                         prim.local_rect.y + prim.local_rect.w);
+    vec2 br_outer = vec2(prim.local_rect.p0.x + prim.local_rect.size.x,
+                         prim.local_rect.p0.y + prim.local_rect.size.y);
     vec2 br_inner = br_outer - vec2(max(border.radii[1].x, border.widths.z),
                                     max(border.radii[1].y, border.widths.w));
 
-    vec2 bl_outer = vec2(prim.local_rect.x,
-                         prim.local_rect.y + prim.local_rect.w);
+    vec2 bl_outer = vec2(prim.local_rect.p0.x,
+                         prim.local_rect.p0.y + prim.local_rect.size.y);
     vec2 bl_inner = bl_outer + vec2(max(border.radii[1].z, border.widths.x),
                                     -max(border.radii[1].w, border.widths.w));
 
-    vec4 segment_rect;
+    RectWithSize segment_rect;
     switch (sub_part) {
         case PST_TOP_LEFT:
-            segment_rect = vec4(tl_outer, tl_inner - tl_outer);
+            segment_rect.p0 = tl_outer;
+            segment_rect.size = tl_inner - tl_outer;
             vBorderStyle = int(border.style.x);
             vHorizontalColor = border.colors[BORDER_LEFT];
             vVerticalColor = border.colors[BORDER_TOP];
@@ -62,10 +63,8 @@ void main(void) {
                           border.radii[0].xy - border.widths.xy);
             break;
         case PST_TOP_RIGHT:
-            segment_rect = vec4(tr_inner.x,
-                                tr_outer.y,
-                                tr_outer.x - tr_inner.x,
-                                tr_inner.y - tr_outer.y);
+            segment_rect.p0 = vec2(tr_inner.x, tr_outer.y);
+            segment_rect.size = vec2(tr_outer.x - tr_inner.x, tr_inner.y - tr_outer.y);
             vBorderStyle = int(border.style.y);
             vHorizontalColor = border.colors[BORDER_TOP];
             vVerticalColor = border.colors[BORDER_RIGHT];
@@ -73,7 +72,8 @@ void main(void) {
                           border.radii[0].zw - border.widths.zy);
             break;
         case PST_BOTTOM_RIGHT:
-            segment_rect = vec4(br_inner, br_outer - br_inner);
+            segment_rect.p0 = br_inner;
+            segment_rect.size = br_outer - br_inner;
             vBorderStyle = int(border.style.z);
             vHorizontalColor = border.colors[BORDER_BOTTOM];
             vVerticalColor = border.colors[BORDER_RIGHT];
@@ -81,10 +81,8 @@ void main(void) {
                           border.radii[1].xy - border.widths.zw);
             break;
         case PST_BOTTOM_LEFT:
-            segment_rect = vec4(bl_outer.x,
-                                bl_inner.y,
-                                bl_inner.x - bl_outer.x,
-                                bl_outer.y - bl_inner.y);
+            segment_rect.p0 = vec2(bl_outer.x, bl_inner.y);
+            segment_rect.size = vec2(bl_inner.x - bl_outer.x, bl_outer.y - bl_inner.y);
             vBorderStyle = int(border.style.w);
             vHorizontalColor = border.colors[BORDER_BOTTOM];
             vVerticalColor = border.colors[BORDER_LEFT];
@@ -92,40 +90,32 @@ void main(void) {
                           border.radii[1].zw - border.widths.xw);
             break;
         case PST_LEFT:
-            segment_rect = vec4(tl_outer.x,
-                                tl_inner.y,
-                                border.widths.x,
-                                bl_inner.y - tl_inner.y);
+            segment_rect.p0 = vec2(tl_outer.x, tl_inner.y);
+            segment_rect.size = vec2(border.widths.x, bl_inner.y - tl_inner.y);
             vBorderStyle = int(border.style.x);
             vHorizontalColor = border.colors[BORDER_LEFT];
             vVerticalColor = border.colors[BORDER_LEFT];
             vRadii = vec4(0.0);
             break;
         case PST_RIGHT:
-            segment_rect = vec4(tr_outer.x - border.widths.z,
-                                tr_inner.y,
-                                border.widths.z,
-                                br_inner.y - tr_inner.y);
+            segment_rect.p0 = vec2(tr_outer.x - border.widths.z, tr_inner.y);
+            segment_rect.size = vec2(border.widths.z, br_inner.y - tr_inner.y);
             vBorderStyle = int(border.style.z);
             vHorizontalColor = border.colors[BORDER_RIGHT];
             vVerticalColor = border.colors[BORDER_RIGHT];
             vRadii = vec4(0.0);
             break;
         case PST_BOTTOM:
-            segment_rect = vec4(bl_inner.x,
-                                bl_outer.y - border.widths.w,
-                                br_inner.x - bl_inner.x,
-                                border.widths.w);
+            segment_rect.p0 = vec2(bl_inner.x, bl_outer.y - border.widths.w);
+            segment_rect.size = vec2(br_inner.x - bl_inner.x, border.widths.w);
             vBorderStyle = int(border.style.w);
             vHorizontalColor = border.colors[BORDER_BOTTOM];
             vVerticalColor = border.colors[BORDER_BOTTOM];
             vRadii = vec4(0.0);
             break;
         case PST_TOP:
-            segment_rect = vec4(tl_inner.x,
-                                tl_outer.y,
-                                tr_inner.x - tl_inner.x,
-                                border.widths.y);
+            segment_rect.p0 = vec2(tl_inner.x, tl_outer.y);
+            segment_rect.size = vec2(tr_inner.x - tl_inner.x, border.widths.y);
             vBorderStyle = int(border.style.y);
             vHorizontalColor = border.colors[BORDER_TOP];
             vVerticalColor = border.colors[BORDER_TOP];
@@ -152,53 +142,53 @@ void main(void) {
     vLocalPos = vi.local_pos.xy;
 
     // Local space
-    vLocalRect = prim.local_rect;
+    vLocalRect = vec4(prim.local_rect.p0, prim.local_rect.size);
 #endif
 
     float x0, y0, x1, y1;
     switch (sub_part) {
         // These are the layer tile part PrimitivePart as uploaded by the tiling.rs
         case PST_TOP_LEFT:
-            x0 = segment_rect.x;
-            y0 = segment_rect.y;
+            x0 = segment_rect.p0.x;
+            y0 = segment_rect.p0.y;
             // These are width / heights
-            x1 = segment_rect.x + segment_rect.z;
-            y1 = segment_rect.y + segment_rect.w;
+            x1 = segment_rect.p0.x + segment_rect.size.x;
+            y1 = segment_rect.p0.y + segment_rect.size.y;
 
             // The radius here is the border-radius. This is 0, so vRefPoint will
             // just be the top left (x,y) corner.
             vRefPoint = vec2(x0, y0) + vRadii.xy;
             break;
         case PST_TOP_RIGHT:
-            x0 = segment_rect.x + segment_rect.z;
-            y0 = segment_rect.y;
-            x1 = segment_rect.x;
-            y1 = segment_rect.y + segment_rect.w;
+            x0 = segment_rect.p0.x + segment_rect.size.x;
+            y0 = segment_rect.p0.y;
+            x1 = segment_rect.p0.x;
+            y1 = segment_rect.p0.y + segment_rect.size.y;
             vRefPoint = vec2(x0, y0) + vec2(-vRadii.x, vRadii.y);
             break;
         case PST_BOTTOM_LEFT:
-            x0 = segment_rect.x;
-            y0 = segment_rect.y + segment_rect.w;
-            x1 = segment_rect.x + segment_rect.z;
-            y1 = segment_rect.y;
+            x0 = segment_rect.p0.x;
+            y0 = segment_rect.p0.y + segment_rect.size.y;
+            x1 = segment_rect.p0.x + segment_rect.size.x;
+            y1 = segment_rect.p0.y;
             vRefPoint = vec2(x0, y0) + vec2(vRadii.x, -vRadii.y);
             break;
         case PST_BOTTOM_RIGHT:
-            x0 = segment_rect.x;
-            y0 = segment_rect.y;
-            x1 = segment_rect.x + segment_rect.z;
-            y1 = segment_rect.y + segment_rect.w;
+            x0 = segment_rect.p0.x;
+            y0 = segment_rect.p0.y;
+            x1 = segment_rect.p0.x + segment_rect.size.x;
+            y1 = segment_rect.p0.y + segment_rect.size.y;
             vRefPoint = vec2(x1, y1) + vec2(-vRadii.x, -vRadii.y);
             break;
         case PST_TOP:
         case PST_LEFT:
         case PST_BOTTOM:
         case PST_RIGHT:
-            vRefPoint = segment_rect.xy;
-            x0 = segment_rect.x;
-            y0 = segment_rect.y;
-            x1 = segment_rect.x + segment_rect.z;
-            y1 = segment_rect.y + segment_rect.w;
+            vRefPoint = segment_rect.p0.xy;
+            x0 = segment_rect.p0.x;
+            y0 = segment_rect.p0.y;
+            x1 = segment_rect.p0.x + segment_rect.size.x;
+            y1 = segment_rect.p0.y + segment_rect.size.y;
             break;
     }
 
