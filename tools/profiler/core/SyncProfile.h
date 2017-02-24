@@ -7,7 +7,6 @@
 #ifndef __SYNCPROFILE_H
 #define __SYNCPROFILE_H
 
-#include "ProfileEntry.h"
 #include "ThreadInfo.h"
 
 class SyncProfile : public ThreadInfo

@@ -405,14 +405,6 @@ class PageBitSet
 #endif
 };
 
-// Limit on the number of bytes of executable memory to prevent JIT spraying
-// attacks.
-#if JS_BITS_PER_WORD == 32
-static const size_t MaxCodeBytesPerProcess = 128 * 1024 * 1024;
-#else
-static const size_t MaxCodeBytesPerProcess = 640 * 1024 * 1024;
-#endif
-
 // Per-process executable memory allocator. It reserves a block of memory of
 // MaxCodeBytesPerProcess bytes, then allocates/deallocates pages from that.
 //

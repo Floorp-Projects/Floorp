@@ -197,10 +197,12 @@ public:
       // for surfaces with PlaybackType::eAnimated.)
       size_t heap = 0;
       size_t nonHeap = 0;
+      size_t handles = 0;
       aCachedSurface->mProvider
-        ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap);
+        ->AddSizeOfExcludingThis(mMallocSizeOf, heap, nonHeap, handles);
       counter.Values().SetDecodedHeap(heap);
       counter.Values().SetDecodedNonHeap(nonHeap);
+      counter.Values().SetSharedHandles(handles);
 
       mCounters.AppendElement(counter);
     }

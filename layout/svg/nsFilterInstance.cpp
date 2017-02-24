@@ -264,7 +264,6 @@ nsFilterInstance::ComputeTargetBBoxInFilterSpace()
 bool
 nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
-  gfxMatrix canvasTransform;
   if (mTargetFrame) {
     mUserSpaceToFilterSpaceScale = mPaintTransform.ScaleFactors(true);
     if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
@@ -279,6 +278,7 @@ nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
   mFilterSpaceToUserSpaceScale =
     gfxSize(1.0f / mUserSpaceToFilterSpaceScale.width,
             1.0f / mUserSpaceToFilterSpaceScale.height);
+
   return true;
 }
 

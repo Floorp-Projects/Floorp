@@ -183,6 +183,13 @@ this.BrowserTestUtils = {
    * @resolves When a load event is triggered for the browser.
    */
   browserLoaded(browser, includeSubFrames=false, wantLoad=null) {
+    // If browser belongs to tabbrowser-tab, ensure it has been
+    // inserted into the document.
+    let tabbrowser = browser.ownerGlobal.gBrowser;
+    if (tabbrowser && tabbrowser.getTabForBrowser) {
+      tabbrowser._insertBrowser(tabbrowser.getTabForBrowser(browser));
+    }
+
     function isWanted(url) {
       if (!wantLoad) {
         return true;

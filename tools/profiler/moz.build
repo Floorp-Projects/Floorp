@@ -22,7 +22,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     UNIFIED_SOURCES += [
         'core/platform.cpp',
         'core/ProfileBuffer.cpp',
-        'core/ProfileEntry.cpp',
+        'core/ProfileBufferEntry.cpp',
         'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerMarkers.cpp',
