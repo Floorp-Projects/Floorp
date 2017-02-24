@@ -174,11 +174,7 @@ GetLengthProperty(const Value& lval, MutableHandleValue vp)
     return false;
 }
 
-enum class GetNameMode
-{
-    Normal,
-    TypeOf
-};
+enum class GetNameMode { Normal, TypeOf };
 
 template <GetNameMode mode>
 inline bool
@@ -202,9 +198,7 @@ FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePrope
             return false;
     } else {
         RootedShape shape(cx, prop.shape());
-        RootedObject normalized(cx, receiver);
-        if (normalized->is<WithEnvironmentObject>() && !shape->hasDefaultGetter())
-            normalized = &normalized->as<WithEnvironmentObject>().object();
+        RootedObject normalized(cx, MaybeUnwrapSyntacticWithEnvironment(receiver));
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
             MOZ_ASSERT(shape->hasSlot());
