@@ -477,8 +477,10 @@ class MochitestArguments(ArgumentContainer):
          {"action": "store_true",
           "default": False,
           "dest": "dumpDMDAfterTest",
-          "help": "Dump a DMD log after each test in the directory specified "
-                  "by --dump-output-directory.",
+          "help": "Dump a DMD log (and an accompanying about:memory log) after each test. "
+                  "These will be dumped into your default temp directory, NOT the directory "
+                  "specified by --dump-output-directory. The logs are numbered by test, and "
+                  "each test will include output that indicates the DMD output filename.",
           }],
         [["--screenshot-on-fail"],
          {"action": "store_true",
