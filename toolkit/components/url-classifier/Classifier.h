@@ -113,6 +113,9 @@ public:
   // update intermediaries.
   nsresult SwapInNewTablesAndCleanup();
 
+  LookupCache *GetLookupCache(const nsACString& aTable,
+                              bool aForUpdate = false);
+
 private:
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
@@ -146,9 +149,6 @@ private:
                          const nsACString& aTable);
 
   nsresult UpdateCache(TableUpdate* aUpdates);
-
-  LookupCache *GetLookupCache(const nsACString& aTable,
-                              bool aForUpdate = false);
 
   LookupCache *GetLookupCacheForUpdate(const nsACString& aTable) {
     return GetLookupCache(aTable, true);
