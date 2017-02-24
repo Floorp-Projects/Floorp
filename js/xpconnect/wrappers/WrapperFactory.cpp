@@ -473,19 +473,24 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 
     const Wrapper* wrapper;
 
+    CompartmentPrivate* originCompartmentPrivate =
+      CompartmentPrivate::Get(origin);
+    CompartmentPrivate* targetCompartmentPrivate =
+      CompartmentPrivate::Get(target);
+
     //
     // First, handle the special cases.
     //
 
     // If UniversalXPConnect is enabled, this is just some dumb mochitest. Use
     // a vanilla CCW.
-    if (xpc::IsUniversalXPConnectEnabled(target)) {
+    if (targetCompartmentPrivate->universalXPConnectEnabled) {
         CrashIfNotInAutomation();
         wrapper = &CrossCompartmentWrapper::singleton;
     }
 
     // Let the SpecialPowers scope make its stuff easily accessible to content.
-    else if (CompartmentPrivate::Get(origin)->forcePermissiveCOWs) {
+    else if (originCompartmentPrivate->forcePermissiveCOWs) {
         CrashIfNotInAutomation();
         wrapper = &CrossCompartmentWrapper::singleton;
     }
@@ -533,8 +538,8 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
         //
         // Xrays are a bidirectional protection, since it affords clarity to the
         // caller and privacy to the callee.
-        bool sameOriginXrays = CompartmentPrivate::Get(origin)->wantXrays ||
-                               CompartmentPrivate::Get(target)->wantXrays;
+        bool sameOriginXrays = originCompartmentPrivate->wantXrays ||
+                               targetCompartmentPrivate->wantXrays;
         bool wantXrays = !sameOrigin || sameOriginXrays;
 
         XrayType xrayType = wantXrays ? GetXrayType(obj) : NotXray;
@@ -542,14 +547,14 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
         // If Xrays are warranted, the caller may waive them for non-security
         // wrappers (unless explicitly forbidden from doing so).
         bool waiveXrays = wantXrays && !securityWrapper &&
-                          CompartmentPrivate::Get(target)->allowWaivers &&
+                          targetCompartmentPrivate->allowWaivers &&
                           HasWaiveXrayFlag(obj);
 
         wrapper = SelectWrapper(securityWrapper, xrayType, waiveXrays, obj);
 
         // If we want to apply add-on interposition in the target compartment,
         // then we try to "upgrade" the wrapper to an interposing one.
-        if (CompartmentPrivate::Get(target)->scope->HasInterposition())
+        if (targetCompartmentPrivate->scope->HasInterposition())
             wrapper = SelectAddonWrapper(cx, obj, wrapper);
     }
 
