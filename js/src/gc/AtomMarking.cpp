@@ -44,29 +44,6 @@ namespace gc {
 // bits for space between things being unused when things are larger than a
 // single Cell.
 
-static inline void
-SetBit(uintptr_t* bitmap, size_t bit)
-{
-    bitmap[bit / JS_BITS_PER_WORD] |= uintptr_t(1) << (bit % JS_BITS_PER_WORD);
-}
-
-static inline bool
-GetBit(uintptr_t* bitmap, size_t bit)
-{
-    return bitmap[bit / JS_BITS_PER_WORD] & (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-}
-
-static inline bool
-EnsureBitmapLength(AtomMarkingRuntime::Bitmap& bitmap, size_t nwords)
-{
-    if (nwords > bitmap.length()) {
-        size_t needed = nwords - bitmap.length();
-        if (needed)
-            return bitmap.appendN(0, needed);
-    }
-    return true;
-}
-
 void
 AtomMarkingRuntime::registerArena(Arena* arena)
 {
@@ -98,12 +75,11 @@ AtomMarkingRuntime::unregisterArena(Arena* arena)
 }
 
 bool
-AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap)
+AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, DenseBitmap& bitmap)
 {
     MOZ_ASSERT(runtime->currentThreadHasExclusiveAccess());
 
-    MOZ_ASSERT(bitmap.empty());
-    if (!EnsureBitmapLength(bitmap, allocatedWords))
+    if (!bitmap.ensureSpace(allocatedWords))
         return false;
 
     Zone* atomsZone = runtime->unsafeAtomsCompartment()->zone();
@@ -111,8 +87,7 @@ AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, Bitmap& b
         for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
             uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
-            uintptr_t* bitmapWords = &bitmap[arena->atomBitmapStart()];
-            mozilla::PodCopy(bitmapWords, chunkWords, ArenaBitmapWords);
+            bitmap.copyBitsFrom(arena->atomBitmapStart(), ArenaBitmapWords, chunkWords);
         }
     }
 
@@ -120,25 +95,21 @@ AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, Bitmap& b
 }
 
 void
-AtomMarkingRuntime::updateZoneBitmap(Zone* zone, const Bitmap& bitmap)
+AtomMarkingRuntime::updateZoneBitmap(Zone* zone, const DenseBitmap& bitmap)
 {
     if (zone->isAtomsZone())
         return;
 
-    // |bitmap| was produced by computeBitmapFromChunkMarkBits, so it should
-    // have the maximum possible size.
-    MOZ_ASSERT(zone->markedAtoms().length() <= bitmap.length());
-
     // Take the bitwise and between the two mark bitmaps to get the best new
     // overapproximation we can. |bitmap| might include bits that are not in
     // the zone's mark bitmap, if additional zones were collected by the GC.
-    for (size_t i = 0; i < zone->markedAtoms().length(); i++)
-        zone->markedAtoms()[i] &= bitmap[i];
+    zone->markedAtoms().bitwiseAndWith(bitmap);
 }
 
 // Set any bits in the chunk mark bitmaps for atoms which are marked in bitmap.
+template <typename Bitmap>
 static void
-AddBitmapToChunkMarkBits(JSRuntime* runtime, AtomMarkingRuntime::Bitmap& bitmap)
+AddBitmapToChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap)
 {
     // Make sure that by copying the mark bits for one arena in word sizes we
     // do not affect the mark bits for other arenas.
@@ -150,16 +121,7 @@ AddBitmapToChunkMarkBits(JSRuntime* runtime, AtomMarkingRuntime::Bitmap& bitmap)
         for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
             uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
-
-            // The bitmap might not be long enough, in which case remaining
-            // bits are implicitly zero.
-            if (bitmap.length() <= arena->atomBitmapStart())
-                continue;
-            MOZ_ASSERT(bitmap.length() >= arena->atomBitmapStart() + ArenaBitmapWords);
-
-            uintptr_t* bitmapWords = &bitmap[arena->atomBitmapStart()];
-            for (size_t i = 0; i < ArenaBitmapWords; i++)
-                chunkWords[i] |= bitmapWords[i];
+            bitmap.bitwiseOrRangeInto(arena->atomBitmapStart(), ArenaBitmapWords, chunkWords);
         }
     }
 }
@@ -172,17 +134,14 @@ AtomMarkingRuntime::updateChunkMarkBits(JSRuntime* runtime)
     // Try to compute a simple union of the zone atom bitmaps before updating
     // the chunk mark bitmaps. If this allocation fails then fall back to
     // updating the chunk mark bitmaps separately for each zone.
-    Bitmap markedUnion;
-    if (EnsureBitmapLength(markedUnion, allocatedWords)) {
+    DenseBitmap markedUnion;
+    if (markedUnion.ensureSpace(allocatedWords)) {
         for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
             // We only need to update the chunk mark bits for zones which were
             // not collected in the current GC. Atoms which are referenced by
             // collected zones have already been marked.
-            if (!zone->isCollectingFromAnyThread()) {
-                MOZ_ASSERT(zone->markedAtoms().length() <= allocatedWords);
-                for (size_t i = 0; i < zone->markedAtoms().length(); i++)
-                    markedUnion[i] |= zone->markedAtoms()[i];
-            }
+            if (!zone->isCollectingFromAnyThread())
+                zone->markedAtoms().bitwiseOrInto(markedUnion);
         }
         AddBitmapToChunkMarkBits(runtime, markedUnion);
     } else {
@@ -225,14 +184,9 @@ AtomMarkingRuntime::markAtom(JSContext* cx, TenuredCell* thing)
         return;
 
     size_t bit = GetAtomBit(thing);
+    MOZ_ASSERT(bit / JS_BITS_PER_WORD < allocatedWords);
 
-    {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!EnsureBitmapLength(cx->zone()->markedAtoms(), allocatedWords))
-            oomUnsafe.crash("Atom bitmap OOM");
-    }
-
-    SetBit(cx->zone()->markedAtoms().begin(), bit);
+    cx->zone()->markedAtoms().setBit(bit);
 
     if (!cx->helperThread()) {
         // Trigger a read barrier on the atom, in case there is an incremental
@@ -272,18 +226,7 @@ void
 AtomMarkingRuntime::adoptMarkedAtoms(Zone* target, Zone* source)
 {
     MOZ_ASSERT(target->runtimeFromAnyThread()->currentThreadHasExclusiveAccess());
-
-    Bitmap* targetBitmap = &target->markedAtoms();
-    Bitmap* sourceBitmap = &source->markedAtoms();
-    if (targetBitmap->length() < sourceBitmap->length())
-        std::swap(targetBitmap, sourceBitmap);
-    for (size_t i = 0; i < sourceBitmap->length(); i++)
-        (*targetBitmap)[i] |= (*sourceBitmap)[i];
-
-    if (targetBitmap != &target->markedAtoms())
-        target->markedAtoms() = Move(source->markedAtoms());
-    else
-        source->markedAtoms().clear();
+    target->markedAtoms().bitwiseOrWith(source->markedAtoms());
 }
 
 #ifdef DEBUG
@@ -309,9 +252,7 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, Cell* thingArg)
     }
 
     size_t bit = GetAtomBit(thing);
-    if (bit >= zone->markedAtoms().length() * JS_BITS_PER_WORD)
-        return false;
-    return GetBit(zone->markedAtoms().begin(), bit);
+    return zone->markedAtoms().getBit(bit);
 }
 
 bool

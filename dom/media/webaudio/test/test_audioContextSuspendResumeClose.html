@@ -48,10 +48,12 @@ function tryToCreateNodeOnClosedContext(ctx) {
 }
 
 function loadFile(url, callback) {
+  todo(false, "loadFile: " + url);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
+    todo(false, "loadFile: " + url + " calling callback...");
     callback(xhr.response);
   };
   xhr.send();

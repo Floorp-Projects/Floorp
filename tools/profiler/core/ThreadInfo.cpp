@@ -64,7 +64,7 @@ ThreadInfo::CanInvokeJS() const
 }
 
 void
-ThreadInfo::addTag(const ProfileEntry& aTag)
+ThreadInfo::addTag(const ProfileBufferEntry& aTag)
 {
   mBuffer->addTag(aTag);
 }

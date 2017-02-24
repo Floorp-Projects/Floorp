@@ -9406,21 +9406,16 @@ public:
         nsAutoString addonId;
         if (NS_SUCCEEDED(pc->GetAddonId(addonId)) && !addonId.IsEmpty()) {
           // We want to nuke all references to the add-on compartment.
-          js::NukeCrossCompartmentWrappers(cx, js::AllCompartments(),
-                                           js::SingleCompartment(cpt),
-                                           win->IsInnerWindow() ? js::DontNukeWindowReferences
-                                                                : js::NukeWindowReferences);
-
-          // Now mark the compartment as nuked and non-scriptable.
-          auto compartmentPrivate = xpc::CompartmentPrivate::Get(cpt);
-          compartmentPrivate->wasNuked = true;
-          compartmentPrivate->scriptability.Block();
+          xpc::NukeAllWrappersForCompartment(cx, cpt,
+                                             win->IsInnerWindow() ? js::DontNukeWindowReferences
+                                                                  : js::NukeWindowReferences);
         } else {
           // We only want to nuke wrappers for the chrome->content case
           js::NukeCrossCompartmentWrappers(cx, BrowserCompartmentMatcher(),
                                            js::SingleCompartment(cpt),
                                            win->IsInnerWindow() ? js::DontNukeWindowReferences
-                                                                : js::NukeWindowReferences);
+                                                                : js::NukeWindowReferences,
+                                           js::NukeIncomingReferences);
         }
       }
     }

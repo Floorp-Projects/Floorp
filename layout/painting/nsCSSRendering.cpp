@@ -948,13 +948,13 @@ GetOutlineInnerRect(nsIFrame* aFrame)
   return nsRect(nsPoint(0, 0), aFrame->GetSize());
 }
 
-void
-nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
-                             nsRenderingContext& aRenderingContext,
-                             nsIFrame* aForFrame,
-                             const nsRect& aDirtyRect,
-                             const nsRect& aBorderArea,
-                             nsStyleContext* aStyleContext)
+Maybe<nsCSSBorderRenderer>
+nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
+                                               nsRenderingContext* aRenderingContext,
+                                               nsIFrame* aForFrame,
+                                               const nsRect& aDirtyRect,
+                                               const nsRect& aBorderArea,
+                                               nsStyleContext* aStyleContext)
 {
   nscoord             twipsRadii[8];
 
@@ -968,7 +968,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
   if (width == 0 && outlineStyle != NS_STYLE_BORDER_STYLE_AUTO) {
     // Empty outline
-    return;
+    return Nothing();
   }
 
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame
@@ -997,7 +997,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // encroach into the content area.  A safer calculation would be to
   // shorten insideRect by the radius one each side before performing this test.
   if (innerRect.Contains(aDirtyRect))
-    return;
+    return Nothing();
 
   nsRect outerRect = innerRect;
   outerRect.Inflate(width, width);
@@ -1022,14 +1022,14 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                               NS_THEME_FOCUS_OUTLINE)) {
-        theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
+        theme->DrawWidgetBackground(aRenderingContext, aForFrame,
                                     NS_THEME_FOCUS_OUTLINE, innerRect,
                                     aDirtyRect);
-        return;
+        return Nothing();
       }
     }
     if (width == 0) {
-      return; // empty outline
+      return Nothing(); // empty outline
     }
     // http://dev.w3.org/csswg/css-ui/#outline
     // "User agents may treat 'auto' as 'solid'."
@@ -1061,11 +1061,10 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     document = content->OwnerDoc();
   }
 
-  // start drawing
-
+  DrawTarget* dt = aRenderingContext ? aRenderingContext->GetDrawTarget() : nullptr;
   nsCSSBorderRenderer br(aPresContext,
                          document,
-                         aRenderingContext.GetDrawTarget(),
+                         dt,
                          dirtyRect,
                          oRect,
                          outlineStyles,
@@ -1074,7 +1073,30 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                          outlineColors,
                          nullptr,
                          bgColor);
-  br.DrawBorders();
+
+  return Some(br);
+}
+
+void
+nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
+                             nsRenderingContext& aRenderingContext,
+                             nsIFrame* aForFrame,
+                             const nsRect& aDirtyRect,
+                             const nsRect& aBorderArea,
+                             nsStyleContext* aStyleContext)
+{
+  Maybe<nsCSSBorderRenderer> br = CreateBorderRendererForOutline(aPresContext,
+                                                                 &aRenderingContext,
+                                                                 aForFrame,
+                                                                 aDirtyRect,
+                                                                 aBorderArea,
+                                                                 aStyleContext);
+  if (!br) {
+    return;
+  }
+
+  // start drawing
+  br->DrawBorders();
 
   PrintAsStringNewline();
 }
