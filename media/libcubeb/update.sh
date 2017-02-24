@@ -62,3 +62,9 @@ if [ -n "$rev" ]; then
 else
   echo "Remember to update README_MOZILLA with the version details."
 fi
+
+echo "Applying a patch on top of $version"
+patch -p1 < ./wasapi-drift-fix-passthrough-resampler.patch
+
+echo "Applying a patch on top of $version"
+patch -p1 < ./audiounit-drift-fix.patch
