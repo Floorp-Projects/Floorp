@@ -237,7 +237,8 @@ nsAppShell::Init()
   }
 
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
-                           0, 0, 0, 10, 10, nullptr, nullptr, module, nullptr);
+                            0, 0, 0, 10, 10, HWND_MESSAGE, nullptr, module,
+                            nullptr);
   NS_ENSURE_STATE(mEventWnd);
 
   return nsBaseAppShell::Init();

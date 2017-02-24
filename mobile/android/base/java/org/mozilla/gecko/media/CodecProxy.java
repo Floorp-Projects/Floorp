@@ -40,13 +40,6 @@ public final class CodecProxy {
         void onError(boolean fatal);
     }
 
-    private static Callbacks sNoOpCallbacks = new Callbacks() {
-        public void onInputExhausted() { }
-        public void onOutputFormatChanged(MediaFormat format) { }
-        public void onOutput(Sample output) { output.dispose(); }
-        public void onError(boolean fatal) { }
-    };
-
     @WrapForJNI
     public static class NativeCallbacks extends JNIObject implements Callbacks {
         public native void onInputExhausted();
@@ -59,7 +52,7 @@ public final class CodecProxy {
     }
 
     private class CallbacksForwarder extends ICodecCallbacks.Stub {
-        private Callbacks mCallbacks;
+        private final Callbacks mCallbacks;
         private boolean mEndOfInput;
 
         CallbacksForwarder(Callbacks callbacks) {
@@ -67,19 +60,19 @@ public final class CodecProxy {
         }
 
         @Override
-        public synchronized void onInputExhausted() throws RemoteException {
+        public void onInputExhausted() throws RemoteException {
             if (!mEndOfInput) {
                 mCallbacks.onInputExhausted();
             }
         }
 
         @Override
-        public synchronized void onOutputFormatChanged(FormatParam format) throws RemoteException {
+        public void onOutputFormatChanged(FormatParam format) throws RemoteException {
             mCallbacks.onOutputFormatChanged(format.asFormat());
         }
 
         @Override
-        public synchronized void onOutput(Sample sample) throws RemoteException {
+        public void onOutput(Sample sample) throws RemoteException {
             if (mOutputSurface != null) {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
@@ -97,16 +90,12 @@ public final class CodecProxy {
             reportError(fatal);
         }
 
-        private synchronized void reportError(boolean fatal) {
+        private void reportError(boolean fatal) {
             mCallbacks.onError(fatal);
         }
 
         private void setEndOfInput(boolean end) {
             mEndOfInput = end;
-        }
-
-        private synchronized void cancel() {
-            mCallbacks = sNoOpCallbacks;
         }
     }
 
@@ -229,8 +218,6 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean release() {
-        mCallbacks.cancel();
-
         if (mRemote == null) {
             Log.w(LOGTAG, "codec already ended");
             return true;

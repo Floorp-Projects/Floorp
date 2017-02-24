@@ -19,6 +19,15 @@ SpeechSynthesisChild::~SpeechSynthesisChild()
 }
 
 mozilla::ipc::IPCResult
+SpeechSynthesisChild::RecvInitialVoicesAndState(nsTArray<RemoteVoice>&& aVoices,
+                                                nsTArray<nsString>&& aDefaults,
+                                                const bool& aIsSpeaking)
+{
+  nsSynthVoiceRegistry::RecvInitialVoicesAndState(aVoices, aDefaults, aIsSpeaking);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 SpeechSynthesisChild::RecvVoiceAdded(const RemoteVoice& aVoice)
 {
   nsSynthVoiceRegistry::RecvAddVoice(aVoice);

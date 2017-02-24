@@ -33,7 +33,7 @@ add_task(function* () {
     yield targetFromURL(new URL("http://foo?type=x"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "targetFromURL, unsupported type='x' parameter");
+    is(e.message, "targetFromURL, unsupported type 'x' parameter");
   }
 
   info("Test browser window");
@@ -61,7 +61,7 @@ add_task(function* () {
     yield targetFromURL(new URL("http://foo?type=tab&id=10000"));
     ok(false, "Shouldn't pass");
   } catch (e) {
-    is(e.message, "targetFromURL, tab with outerWindowID:'10000' doesn't exist");
+    is(e.message, "targetFromURL, tab with outerWindowID '10000' doesn't exist");
   }
 
   info("Test parent process");

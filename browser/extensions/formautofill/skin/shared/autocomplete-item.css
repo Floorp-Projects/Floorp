@@ -1,0 +1,65 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+
+xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .profile-item-box {
+  background-color: #F2F2F2;
+}
+
+.profile-item-box {
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(38,38,38,.15);
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-inline-start: 16px;
+  padding-inline-end: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.profile-item-box:last-child {
+  border-bottom: 0;
+}
+
+.profile-item-box > .profile-item-col {
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 50%;
+}
+
+.profile-item-box > .profile-label-col {
+  padding-inline-end: 10px;
+  text-align: start;
+}
+
+.profile-item-box > .profile-comment-col {
+  text-align: end;
+  color: GrayText;
+}
+
+.profile-item-box[size="small"] {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  flex-direction: column;
+}
+
+.profile-item-box[size="small"] > .profile-item-col {
+  width: 100%;
+}
+
+.profile-item-box[size="small"] > .profile-label-col {
+  padding-inline-end: 0;
+}
+
+.profile-item-box[size="small"] > .profile-comment-col {
+  margin-top: 7px;
+  text-align: start;
+}

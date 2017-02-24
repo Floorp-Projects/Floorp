@@ -1130,11 +1130,16 @@ class RegExpGuard;
 extern JS_FRIEND_API(bool)
 RegExpToSharedNonInline(JSContext* cx, JS::HandleObject regexp, RegExpGuard* shared);
 
-/* Implemented in jswrapper.cpp. */
+/* Implemented in CrossCompartmentWrapper.cpp. */
 typedef enum NukeReferencesToWindow {
     NukeWindowReferences,
     DontNukeWindowReferences
 } NukeReferencesToWindow;
+
+typedef enum NukeReferencesFromTarget {
+    NukeAllReferences,
+    NukeIncomingReferences,
+} NukeReferencesFromTarget;
 
 /*
  * These filters are designed to be ephemeral stack classes, and thus don't
@@ -1178,7 +1183,8 @@ extern JS_FRIEND_API(bool)
 NukeCrossCompartmentWrappers(JSContext* cx,
                              const CompartmentFilter& sourceFilter,
                              const CompartmentFilter& targetFilter,
-                             NukeReferencesToWindow nukeReferencesToWindow);
+                             NukeReferencesToWindow nukeReferencesToWindow,
+                             NukeReferencesFromTarget nukeReferencesFromTarget);
 
 /* Specify information about DOMProxy proxies in the DOM, for use by ICs. */
 

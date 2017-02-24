@@ -269,17 +269,99 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
 	}
 	
+	// Map from character code to the corresponding escape sequence.  \0
+	// isn't here because it would require special treatment in some
+	// situations.  \b, \f, and \v aren't here because they aren't very
+	// common.  \' isn't here because there's no need, we only
+	// double-quote strings.
+	const escapeMap = {
+	  // Tab.
+	  9: "\\t",
+	  // Newline.
+	  0xa: "\\n",
+	  // Carriage return.
+	  0xd: "\\r",
+	  // Quote.
+	  0x22: "\\\"",
+	  // Backslash.
+	  0x5c: "\\\\"
+	};
+	
+	// Regexp that matches any character we might possibly want to escape.
+	// Note that we over-match here, because it's difficult to, say, match
+	// an unpaired surrogate with a regexp.  The details are worked out by
+	// the replacement function; see |escapeString|.
+	const escapeRegexp = new RegExp("[" +
+	// Quote and backslash.
+	"\"\\\\" +
+	// Controls.
+	"\x00-\x1f" +
+	// More controls.
+	"\x7f-\x9f" +
+	// BOM
+	"\ufeff" +
+	// Replacement characters and non-characters.
+	"\ufffc-\uffff" +
+	// Surrogates.
+	"\ud800-\udfff" +
+	// Mathematical invisibles.
+	"\u2061-\u2064" +
+	// Line and paragraph separators.
+	"\u2028-\u2029" +
+	// Private use area.
+	"\ue000-\uf8ff" + "]", "g");
+	
+	/**
+	 * Escape a string so that the result is viewable and valid JS.
+	 * Control characters, other invisibles, invalid characters,
+	 * backslash, and double quotes are escaped.  The resulting string is
+	 * surrounded by double quotes.
+	 *
+	 * @param {String} str
+	 *        the input
+	 * @return {String} the escaped string
+	 */
+	function escapeString(str) {
+	  return "\"" + str.replace(escapeRegexp, (match, offset) => {
+	    let c = match.charCodeAt(0);
+	    if (c in escapeMap) {
+	      return escapeMap[c];
+	    }
+	    if (c >= 0xd800 && c <= 0xdfff) {
+	      // Find the full code point containing the surrogate, with a
+	      // special case for a trailing surrogate at the start of the
+	      // string.
+	      if (c >= 0xdc00 && offset > 0) {
+	        --offset;
+	      }
+	      let codePoint = str.codePointAt(offset);
+	      if (codePoint >= 0xd800 && codePoint <= 0xdfff) {
+	        // Unpaired surrogate.
+	        return "\\u" + codePoint.toString(16);
+	      } else if (codePoint >= 0xf0000 && codePoint <= 0x10fffd) {
+	        // Private use area.  Because we visit each pair of a such a
+	        // character, return the empty string for one half and the
+	        // real result for the other, to avoid duplication.
+	        if (c <= 0xdbff) {
+	          return "\\u{" + codePoint.toString(16) + "}";
+	        }
+	        return "";
+	      }
+	      // Other surrogate characters are passed through.
+	      return match;
+	    }
+	    return "\\u" + ("0000" + c.toString(16)).substr(-4);
+	  }) + "\"";
+	}
+	
 	function cropMultipleLines(text, limit) {
 	  return escapeNewLines(cropString(text, limit));
 	}
 	
-	function cropString(text, limit, alternativeText) {
+	function rawCropString(text, limit, alternativeText) {
 	  if (!alternativeText) {
 	    alternativeText = "\u2026";
 	  }
-	
-	  // Make sure it's a string and sanitize it.
-	  text = sanitizeString(text + "");
 	
 	  // Crop the string only if a limit is actually specified.
 	  if (!limit || limit <= 0) {
@@ -301,12 +383,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return text;
 	}
 	
+	function cropString(text, limit, alternativeText) {
+	  return rawCropString(sanitizeString(text + ""), limit, alternativeText);
+	}
+	
 	function sanitizeString(text) {
 	  // Replace all non-printable characters, except of
 	  // (horizontal) tab (HT: \x09) and newline (LF: \x0A, CR: \x0D),
 	  // with unicode replacement character (u+fffd).
 	  // eslint-disable-next-line no-control-regex
-	  let re = new RegExp("[\x00-\x08\x0B\x0C\x0E-\x1F\x80-\x9F]", "g");
+	  let re = new RegExp("[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]", "g");
 	  return text.replace(re, "\ufffd");
 	}
 	
@@ -492,7 +578,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  createFactories,
 	  isGrip,
 	  cropString,
+	  rawCropString,
 	  sanitizeString,
+	  escapeString,
 	  wrapRender,
 	  cropMultipleLines,
 	  parseURLParams,
@@ -613,7 +701,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	const React = __webpack_require__(3);
 	
 	const {
-	  cropString,
+	  escapeString,
+	  rawCropString,
+	  sanitizeString,
 	  wrapRender
 	} = __webpack_require__(4);
 	
@@ -650,15 +740,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	      config.style = style;
 	    }
 	
-	    if (member && member.open) {
-	      return span(config, "\"" + text + "\"");
+	    if (this.props.useQuotes) {
+	      text = escapeString(text);
+	    } else {
+	      text = sanitizeString(text);
 	    }
 	
-	    let croppedString = this.props.cropLimit ? cropString(text, this.props.cropLimit) : cropString(text);
+	    if ((!member || !member.open) && this.props.cropLimit) {
+	      text = rawCropString(text, this.props.cropLimit);
+	    }
 	
-	    let formattedString = this.props.useQuotes ? "\"" + croppedString + "\"" : croppedString;
-	
-	    return span(config, formattedString);
+	    return span(config, text);
 	  })
 	});
 	
@@ -680,6 +772,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Dependencies
 	const React = __webpack_require__(3);
 	const {
+	  escapeString,
 	  sanitizeString,
 	  isGrip,
 	  wrapRender
@@ -727,8 +820,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (string.length < length) {
 	      string += "\u2026";
 	    }
-	    let formattedString = useQuotes ? `"${string}"` : string;
-	    return span(config, sanitizeString(formattedString));
+	    let formattedString = useQuotes ? escapeString(string) : sanitizeString(string);
+	    return span(config, formattedString);
 	  })
 	});
 	
@@ -2569,7 +2662,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 31 */
 /***/ function(module, exports) {
 
-	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg , viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
+	module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
 
 /***/ },
 /* 32 */

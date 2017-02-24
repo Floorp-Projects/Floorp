@@ -102,20 +102,19 @@ public class StringUtils {
             return url;
         }
 
-        int start = 0;
-        int end = url.length();
+        String newURL = url;
 
-        if (url.startsWith("http://")) {
-            start = 7;
-        } else if (url.startsWith("https://") && flags == UrlFlags.STRIP_HTTPS) {
-            start = 8;
+        if (newURL.startsWith("http://")) {
+            newURL = newURL.replace("http://", "");
+        } else if (newURL.startsWith("https://") && flags == UrlFlags.STRIP_HTTPS) {
+            newURL = newURL.replace("https://", "");
         }
 
-        if (url.endsWith("/")) {
-            end--;
+        if (newURL.endsWith("/")) {
+            newURL = newURL.substring(0, newURL.length()-1);
         }
 
-        return url.substring(start, end);
+        return newURL;
     }
 
     public static boolean isHttpOrHttps(String url) {

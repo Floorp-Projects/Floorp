@@ -4713,6 +4713,7 @@ ScrollFrameHelper::ScrollEvent::WillRefresh(mozilla::TimeStamp aTime)
 void
 ScrollFrameHelper::FireScrollEvent()
 {
+  GeckoProfilerTracingRAII tracer("Paint", "FireScrollEvent");
   MOZ_ASSERT(mScrollEvent);
   mScrollEvent = nullptr;
 

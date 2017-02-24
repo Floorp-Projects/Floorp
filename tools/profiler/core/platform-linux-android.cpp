@@ -63,7 +63,6 @@
 #include "prenv.h"
 #include "mozilla/LinuxSignal.h"
 #include "mozilla/DebugOnly.h"
-#include "ProfileEntry.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
@@ -458,10 +457,12 @@ static uint32_t readCSVArray(char* csvList, const char** buffer) {
   return count;
 }
 
-// Currently support only the env variables
-// reported in read_profiler_env
-static void ReadProfilerVars(const char* fileName, const char** features,
-                            uint32_t* featureCount, const char** threadNames, uint32_t* threadCount) {
+// Support some of the env variables reported in ReadProfilerEnvVars, plus some
+// extra stuff.
+static void
+ReadProfilerVars(const char* fileName,
+                 const char** features, uint32_t* featureCount,
+                 const char** threadNames, uint32_t* threadCount) {
   FILE* file = fopen(fileName, "r");
   const int bufferSize = 1024;
   char line[bufferSize];
@@ -474,11 +475,11 @@ static void ReadProfilerVars(const char* fileName, const char** features,
       feature = strtok_r(line, "=", &savePtr);
       value = strtok_r(NULL, "", &savePtr);
 
-      if (strncmp(feature, PROFILER_INTERVAL, bufferSize) == 0) {
+      if (strncmp(feature, "MOZ_PROFILER_INTERVAL", bufferSize) == 0) {
         set_profiler_interval(value);
-      } else if (strncmp(feature, PROFILER_ENTRIES, bufferSize) == 0) {
+      } else if (strncmp(feature, "MOZ_PROFILER_ENTRIES", bufferSize) == 0) {
         set_profiler_entries(value);
-      } else if (strncmp(feature, PROFILER_FEATURES, bufferSize) == 0) {
+      } else if (strncmp(feature, "MOZ_PROFILER_FEATURES", bufferSize) == 0) {
         *featureCount = readCSVArray(value, features);
       } else if (strncmp(feature, "threads", bufferSize) == 0) {
         *threadCount = readCSVArray(value, threadNames);
@@ -505,9 +506,8 @@ static void DoStartTask() {
   MOZ_ASSERT(featureCount < 10);
   MOZ_ASSERT(threadCount < 10);
 
-  profiler_start(PROFILE_DEFAULT_ENTRY, 1,
-      features, featureCount,
-      threadNames, threadCount);
+  profiler_start(PROFILE_DEFAULT_ENTRIES, /* interval */ 1,
+                 features, featureCount, threadNames, threadCount);
 
   freeArray(threadNames, threadCount);
   freeArray(features, featureCount);
