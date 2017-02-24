@@ -11,7 +11,6 @@ XPIDL_SOURCES += [
     'nsIContentPermissionPrompt.idl',
     'nsIContentPrefService.idl',
     'nsIContentPrefService2.idl',
-    'nsIContentProcess.idl',
     'nsIContentURIGrouper.idl',
     'nsIDOMChromeWindow.idl',
     'nsIDOMClientRect.idl',
