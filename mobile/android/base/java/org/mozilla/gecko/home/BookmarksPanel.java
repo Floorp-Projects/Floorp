@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -20,11 +21,13 @@ import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.BookmarksListAdapter.RefreshType;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.media.MediaControlService;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MergeCursor;
@@ -45,6 +48,8 @@ import android.widget.TextView;
 public class BookmarksPanel extends HomeFragment {
     public static final String LOGTAG = "GeckoBookmarksPanel";
 
+    public static final String BOOKMARK_MOBILE_FOLDER_PREF = "ui.bookmark.mobilefolder.enabled";
+
     // Cursor loader ID for list of bookmarks.
     private static final int LOADER_ID_BOOKMARKS_LIST = 0;
 
@@ -56,6 +61,12 @@ public class BookmarksPanel extends HomeFragment {
 
     // Position that the list view should be scrolled to after loading has finished.
     private static final String BOOKMARKS_SCROLL_POSITION = "listview_position";
+
+    private final String[] mPrefs = { BOOKMARK_MOBILE_FOLDER_PREF };
+
+    private PrefsHelper.PrefHandler mPrefsObserver;
+
+    private boolean mIfMobileFolderPrefOn = true;
 
     // List of bookmarks.
     private BookmarksListView mList;
@@ -91,6 +102,9 @@ public class BookmarksPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        setupPrefHandler();
+
         final View view = inflater.inflate(R.layout.home_bookmarks_panel, container, false);
 
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
@@ -113,6 +127,18 @@ public class BookmarksPanel extends HomeFragment {
         });
 
         return view;
+    }
+
+    private void setupPrefHandler() {
+        mPrefsObserver = new PrefsHelper.PrefHandlerBase() {
+            @Override
+            public void prefValue(String pref, boolean value) {
+                if (pref.equals(BOOKMARK_MOBILE_FOLDER_PREF)) {
+                    mIfMobileFolderPrefOn = value;
+                }
+            }
+        };
+        PrefsHelper.addObserver(mPrefs, mPrefsObserver);
     }
 
     @Override
