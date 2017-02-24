@@ -265,6 +265,9 @@ public:
   // use of all_urls permission, requiring the domain in its permissions.
   bool AddonAllowsLoad(nsIURI* aURI, bool aExplicit = false);
 
+  // Call this instead of Equals to avoid the cost of virtual dispatch.
+  bool FastEquals(nsIPrincipal* aOther);
+
 protected:
   virtual ~BasePrincipal();
 
