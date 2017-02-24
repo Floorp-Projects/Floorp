@@ -464,8 +464,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * animation and transition shorthand serialization is wrong servo/servo#15398
-    * test_shorthand_property_getters.html `animation` [9]
-    * ... `transition` [5]
+    * test_shorthand_property_getters.html `transition` [5]
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
