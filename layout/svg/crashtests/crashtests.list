@@ -76,7 +76,7 @@ load 441368-1.svg
 load 453754-1.svg
 load 455314-1.xhtml
 load 458453.html
-skip-if(stylo) load 459666-1.html # bug 1323652
+load 459666-1.html # bug 1323652
 load 459883.xhtml
 load 461289-1.svg
 load 464374-1.svg
@@ -149,7 +149,7 @@ load 780963-1.html
 load 782141-1.svg
 load 784061-1.svg
 load 788831-1.svg
-skip-if(stylo) load 789390-1.html # bug 1323652
+load 789390-1.html # bug 1323652
 load 790072.svg
 load 791826-1.svg
 load 808318-1.svg
