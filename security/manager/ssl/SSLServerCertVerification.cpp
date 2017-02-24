@@ -1180,12 +1180,12 @@ void
 GatherEndEntityTelemetry(const UniqueCERTCertList& certList)
 {
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
-  PR_ASSERT(endEntityNode);
-  if (!endEntityNode) {
+  MOZ_ASSERT(endEntityNode && !CERT_LIST_END(endEntityNode, certList));
+  if (!endEntityNode || CERT_LIST_END(endEntityNode, certList)) {
     return;
   }
 
-  CERTCertificate * endEntityCert = endEntityNode->cert;
+  CERTCertificate* endEntityCert = endEntityNode->cert;
   PR_ASSERT(endEntityCert);
   if (!endEntityCert) {
     return;
