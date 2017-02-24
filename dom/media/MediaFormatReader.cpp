@@ -1704,6 +1704,7 @@ MediaFormatReader::NotifyWaitingForKey(TrackType aTrack)
   }
   if (!decoder.mDecodeRequest.Exists()) {
     LOGV("WaitingForKey received while no pending decode. Ignoring");
+    return;
   }
   decoder.mWaitingForKey = true;
   ScheduleUpdate(aTrack);

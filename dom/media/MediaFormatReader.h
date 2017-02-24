@@ -388,7 +388,7 @@ private:
         return false;
       }
       mWaitingForKey = false;
-      if (IsWaiting() || mWaitingPromise.IsEmpty()) {
+      if (IsWaiting() || !HasWaitingPromise()) {
         return false;
       }
       mWaitingPromise.Resolve(mType, __func__);
