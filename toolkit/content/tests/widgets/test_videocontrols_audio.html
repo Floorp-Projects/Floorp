@@ -20,7 +20,7 @@
     getService(SpecialPowers.Ci.inIDOMUtils);
 
   function findElementByAttribute(element, aName, aValue) {
-    if (!('getAttribute' in element)) {
+    if (!("getAttribute" in element)) {
       return false;
     }
     if (element.getAttribute(aName) === aValue) {
