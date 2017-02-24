@@ -3,15 +3,22 @@
 
 package org.mozilla.gecko.sync.repositories.uploaders;
 
+import android.net.Uri;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.HTTPFailureException;
+import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 
 import static org.mockito.Mockito.mock;
 
@@ -19,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.ProtocolVersion;
@@ -32,6 +40,8 @@ import static org.junit.Assert.*;
 public class PayloadUploadDelegateTest {
     private PayloadDispatcher payloadDispatcher;
     private AuthHeaderProvider authHeaderProvider;
+
+    private RepositorySessionStoreDelegate sessionStoreDelegate;
 
     class MockPayloadDispatcher extends PayloadDispatcher {
         public final HashMap<String, Exception> failedRecords = new HashMap<>();
@@ -66,6 +76,7 @@ public class PayloadUploadDelegateTest {
 
         @Override
         public void recordFailed(final Exception e, final String recordGuid) {
+            recordUploadFailed = true;
             failedRecords.put(recordGuid, e);
         }
 
@@ -75,11 +86,44 @@ public class PayloadUploadDelegateTest {
         }
     }
 
+    class MockRepositorySessionStoreDelegate implements RepositorySessionStoreDelegate {
+        Exception storeFailedException;
+        ArrayList<String> succeededGuids = new ArrayList<>();
+        HashMap<String, Exception> failedGuids = new HashMap<>();
+
+        @Override
+        public void onRecordStoreFailed(Exception ex, String recordGuid) {
+            failedGuids.put(recordGuid, ex);
+        }
+
+        @Override
+        public void onRecordStoreSucceeded(String guid) {
+            succeededGuids.add(guid);
+        }
+
+        @Override
+        public void onStoreCompleted(long storeEnd) {
+
+        }
+
+        @Override
+        public void onStoreFailed(Exception e) {
+            storeFailedException = e;
+        }
+
+        @Override
+        public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
+            return null;
+        }
+    }
+
     @Before
     public void setUp() throws Exception {
+        sessionStoreDelegate = new MockRepositorySessionStoreDelegate();
+
         payloadDispatcher = new MockPayloadDispatcher(
                 null,
-                mock(BatchingUploader.class)
+                new BatchingUploader(mock(RepositorySession.class), null, sessionStoreDelegate, Uri.parse("https://example.com"), 0L, mock(InfoConfiguration.class), mock(AuthHeaderProvider.class))
         );
 
         authHeaderProvider = mock(AuthHeaderProvider.class);
@@ -368,6 +412,26 @@ public class PayloadUploadDelegateTest {
         payloadUploadDelegate.handleRequestFailure(new SyncStorageResponse(response));
         assertEquals(3, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
         assertTrue(((MockPayloadDispatcher) payloadDispatcher).didLastPayloadFail);
+        assertTrue(payloadDispatcher.recordUploadFailed);
+    }
+
+    @Test
+    public void testHandleRequestFailure412() {
+        ArrayList<String> postedGuids = new ArrayList<>(3);
+        postedGuids.add("testGuid1");
+        postedGuids.add("testGuid2");
+        postedGuids.add("testGuid3");
+        PayloadUploadDelegate payloadUploadDelegate = new PayloadUploadDelegate(authHeaderProvider, payloadDispatcher, postedGuids, false, false);
+
+        final HttpResponse response = new BasicHttpResponse(
+                new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), 412, "Precondition failed"));
+        payloadUploadDelegate.handleRequestFailure(new SyncStorageResponse(response));
+
+        assertEquals(0, ((MockPayloadDispatcher) payloadDispatcher).failedRecords.size());
+        assertTrue(payloadDispatcher.recordUploadFailed);
+        assertTrue(payloadDispatcher.storeFailed);
+
+        assertTrue(((MockRepositorySessionStoreDelegate) sessionStoreDelegate).storeFailedException instanceof CollectionConcurrentModificationException);
     }
 
     @Test

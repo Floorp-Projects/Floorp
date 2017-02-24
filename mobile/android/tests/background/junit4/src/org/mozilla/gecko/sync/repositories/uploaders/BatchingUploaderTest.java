@@ -18,19 +18,28 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RunWith(TestRunner.class)
 public class BatchingUploaderTest {
-    class MockExecutorService implements Executor {
+    class MockExecutorService implements ExecutorService {
         int totalPayloads = 0;
         int commitPayloads = 0;
 
@@ -46,6 +55,71 @@ public class BatchingUploaderTest {
                 ++commitPayloads;
             }
             command.run();
+        }
+
+        @Override
+        public void shutdown() {}
+
+        @NonNull
+        @Override
+        public List<Runnable> shutdownNow() {
+            return null;
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return false;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return false;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return false;
+        }
+
+        @NonNull
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Future<?> submit(Runnable task) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+            return null;
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return null;
         }
     }
 
@@ -70,12 +144,17 @@ public class BatchingUploaderTest {
         }
 
         @Override
+        public void onStoreFailed(Exception e) {
+
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return null;
         }
     }
 
-    private Executor workQueue;
+    private ExecutorService workQueue;
     private RepositorySessionStoreDelegate storeDelegate;
 
     @Before
@@ -442,9 +521,39 @@ public class BatchingUploaderTest {
                 makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
         );
         server15RepositorySession.setStoreDelegate(storeDelegate);
-        return new BatchingUploader(
-                server15RepositorySession, workQueue, storeDelegate, Uri.EMPTY, null,
+        return new MockUploader(
+                server15RepositorySession, workQueue, storeDelegate, Uri.EMPTY, 0L,
                 new InfoConfiguration(infoConfigurationJSON), null);
+    }
+
+    class MockPayloadDispatcher extends PayloadDispatcher {
+        MockPayloadDispatcher(final Executor workQueue, final BatchingUploader uploader, Long lastModified) {
+            super(workQueue, uploader, lastModified);
+        }
+
+        @Override
+        Runnable createRecordUploadRunnable(ArrayList<byte[]> outgoing, ArrayList<String> outgoingGuids, long byteCount, boolean isCommit, boolean isLastPayload) {
+            // No-op runnable. We don't want this to actually do any work for these tests.
+            return new Runnable() {
+                @Override
+                public void run() {}
+            };
+        }
+    }
+
+    class MockUploader extends BatchingUploader {
+        MockUploader(final RepositorySession repositorySession, final ExecutorService workQueue,
+                     final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
+                     final Long localCollectionLastModified, final InfoConfiguration infoConfiguration,
+                     final AuthHeaderProvider authHeaderProvider) {
+            super(repositorySession, workQueue, sessionStoreDelegate, baseCollectionUri,
+                    localCollectionLastModified, infoConfiguration, authHeaderProvider);
+        }
+
+        @Override
+        PayloadDispatcher createPayloadDispatcher(ExecutorService workQueue, Long localCollectionLastModified) {
+            return new MockPayloadDispatcher(workQueue, this, localCollectionLastModified);
+        }
     }
 
     private Server15Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {

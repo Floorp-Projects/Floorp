@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.middleware;
 import android.os.SystemClock;
 import android.support.annotation.VisibleForTesting;
 
+import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.middleware.storage.BufferStorage;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
@@ -34,8 +35,6 @@ import java.util.concurrent.Executors;
     private final long syncDeadlineMillis;
 
     private ExecutorService storeDelegateExecutor = Executors.newSingleThreadExecutor();
-
-    private volatile boolean storeMarkedIncomplete = false;
 
     /* package-local */ BufferingMiddlewareRepositorySession(
             RepositorySession repositorySession, MiddlewareRepository repository,
@@ -75,9 +74,23 @@ import java.util.concurrent.Executors;
         bufferStorage.addOrReplace(record);
     }
 
+    /**
+     * When source fails to provide all records, we need to decide what to do with the buffer.
+     * We might fail because of a network partition, or because of a concurrent modification of a
+     * collection, or because we ran out of time fetching records, or some other reason.
+     *
+     * Either way we do not clear the buffer in any error scenario, but rather
+     * allow it to be re-filled, replacing existing records with their newer versions if necessary.
+     *
+     * If a collection has been modified, affected records' last-modified timestamps will be bumped,
+     * and we will receive those records during the next sync. If we already have them in our buffer,
+     * we replace our now-old copy. Otherwise, they are new records and we just append them.
+     *
+     * Incoming records are mapped to existing ones via GUIDs.
+     */
     @Override
     public void storeIncomplete() {
-        storeMarkedIncomplete = true;
+        bufferStorage.flush();
     }
 
     @Override
@@ -92,67 +105,41 @@ import java.util.concurrent.Executors;
 
     @Override
     public void storeDone(final long end) {
-        doStoreDonePrepare();
+        bufferStorage.flush();
 
-        // Determine if we have enough time to perform consistency checks on the buffered data and
-        // then store it. If we don't have enough time now, we keep our buffer and try again later.
-        // We don't store results of a buffer consistency check anywhere, so we can't treat it
-        // separately from storage.
-        if (storeMarkedIncomplete || !mayProceedToMergeBuffer()) {
+        // Determine if we have enough time to merge the buffer data.
+        // If we don't have enough time now, we keep our buffer and try again later.
+        if (!mayProceedToMergeBuffer()) {
             super.abort();
-            storeDelegate.deferredStoreDelegate(storeDelegateExecutor).onStoreCompleted(end);
+            storeDelegate.deferredStoreDelegate(storeDelegateExecutor).onStoreFailed(new SyncDeadlineReachedException());
             return;
         }
 
-        // Separate actual merge, so that it may be tested without involving system clock.
-        doStoreDone(end);
+        doMergeBuffer(end);
     }
 
     @VisibleForTesting
-    public void doStoreDonePrepare() {
-        // Now that records stopped flowing, persist them.
-        bufferStorage.flush();
-    }
-
-    @VisibleForTesting
-    public void doStoreDone(final long end) {
-        final Collection<Record> buffer = bufferStorage.all();
+    /* package-local */ void doMergeBuffer(long end) {
+        final Collection<Record> bufferData = bufferStorage.all();
 
         // Trivial case of an empty buffer.
-        if (buffer.isEmpty()) {
+        if (bufferData.isEmpty()) {
             super.storeDone(end);
             return;
         }
 
-        // Flush our buffer to the wrapped local repository. Data goes live!
+        // Let session handle actual storing of records as it pleases.
+        // See Bug 1332094 which is concerned with allowing merge to proceed transactionally.
         try {
-            for (Record record : buffer) {
+            for (Record record : bufferData) {
                 this.inner.store(record);
             }
         } catch (NoStoreDelegateException e) {
-            // At this point we should have a delegate, so this won't happen.
+            // At this point we should have a store delegate set on the session, so this won't happen.
         }
 
-        // And, we're done!
+        // Let session know that there are no more records to store.
         super.storeDone(end);
-    }
-
-    /**
-     * When source fails to provide more records, we need to decide what to do with the buffer.
-     * We might fail because of a network partition, or because of a concurrent modification of a
-     * collection. Either way we do not clear the buffer in a general case. If a collection has been
-     * modified, affected records' last-modified timestamps will be bumped, and we will receive those
-     * records during the next sync. If we already have them in our buffer, we replace our now-old
-     * copy. Otherwise, they are new records and we just append them.
-     *
-     * We depend on GUIDs to be a primary key for incoming records.
-     *
-     * @param e indicates reason of failure.
-     */
-    @Override
-    public void sourceFailed(Exception e) {
-        bufferStorage.flush();
-        super.sourceFailed(e);
     }
 
     /**

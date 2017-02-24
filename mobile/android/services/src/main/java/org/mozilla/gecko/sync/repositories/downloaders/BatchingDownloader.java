@@ -10,8 +10,10 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.DelayedWorkTracker;
+import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
@@ -24,7 +26,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -185,9 +186,9 @@ public class BatchingDownloader {
         // We expected server to fail our request with 412 in case of concurrent modifications, so
         // this is unexpected. However, let's treat this case just as if we received a 412.
         if (lastModifiedChanged) {
-            this.abort(
+            this.handleFetchFailed(
                     fetchRecordsDelegate,
-                    new ConcurrentModificationException("Last-modified timestamp has changed unexpectedly")
+                    new CollectionConcurrentModificationException()
             );
             return;
         }
@@ -222,7 +223,7 @@ public class BatchingDownloader {
 
         // Should we proceed, however? Do we have enough time?
         if (!mayProceedWithBatching(fetchDeadline)) {
-            this.abort(fetchRecordsDelegate, new Exception("Not enough time to complete next batch"));
+            this.handleFetchFailed(fetchRecordsDelegate, new SyncDeadlineReachedException());
             return;
         }
 
@@ -242,10 +243,16 @@ public class BatchingDownloader {
         }
     }
 
-    public void onFetchFailed(final Exception ex,
-                              final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
-                              final SyncStorageCollectionRequest request) {
-        removeRequestFromPending(request);
+    private void handleFetchFailed(final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+                                  final Exception ex) {
+        handleFetchFailed(fetchRecordsDelegate, ex, null);
+    }
+
+    /* package-local */ void handleFetchFailed(final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+                              final Exception ex,
+                              @Nullable final SyncStorageCollectionRequest request) {
+        this.removeRequestFromPending(request);
+        this.abortRequests();
         this.workTracker.delayWorkItem(new Runnable() {
             @Override
             public void run() {
@@ -289,18 +296,6 @@ public class BatchingDownloader {
     @Nullable
     protected synchronized String getLastModified() {
         return this.lastModified;
-    }
-
-    private void abort(final RepositorySessionFetchRecordsDelegate delegate, final Exception exception) {
-        Logger.error(LOG_TAG, exception.getMessage());
-        this.abortRequests();
-        this.workTracker.delayWorkItem(new Runnable() {
-            @Override
-            public void run() {
-                Logger.debug(LOG_TAG, "Delayed onFetchCompleted running.");
-                delegate.onFetchFailed(exception);
-            }
-        });
     }
 
     private static boolean mayProceedWithBatching(long deadline) {

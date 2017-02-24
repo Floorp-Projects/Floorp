@@ -6,6 +6,8 @@ package org.mozilla.android.sync.test;
 import android.content.Context;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
+import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
@@ -23,10 +25,38 @@ import java.util.concurrent.ExecutorService;
 public class SynchronizerHelpers {
   public static final String FAIL_SENTINEL = "Fail";
 
+  enum FailMode {
+    COLLECTION_MODIFIED,
+    DEADLINE_REACHED,
+    FETCH,
+    STORE
+  }
+
+  private static Exception getFailException(FailMode failMode) {
+    switch (failMode) {
+      case COLLECTION_MODIFIED:
+        return new CollectionConcurrentModificationException();
+      case DEADLINE_REACHED:
+        return new SyncDeadlineReachedException();
+      case FETCH:
+        return new FetchFailedException();
+      case STORE:
+        return new StoreFailedException();
+      default:
+        throw new IllegalStateException();
+    }
+  }
+
   /**
    * Store one at a time, failing if the guid contains FAIL_SENTINEL.
    */
   public static class FailFetchWBORepository extends WBORepository {
+    private final FailMode failMode;
+
+    public FailFetchWBORepository(FailMode failMode) {
+      this.failMode = failMode;
+    }
+
     @Override
     public void createSession(RepositorySessionCreationDelegate delegate,
                               Context context) {
@@ -38,7 +68,7 @@ public class SynchronizerHelpers {
             @Override
             public void onFetchedRecord(Record record) {
               if (record.guid.contains(FAIL_SENTINEL)) {
-                delegate.onFetchFailed(new FetchFailedException());
+                delegate.onFetchFailed(getFailException(failMode));
               } else {
                 delegate.onFetchedRecord(record);
               }
@@ -73,6 +103,12 @@ public class SynchronizerHelpers {
    * Store one at a time, failing if the guid contains FAIL_SENTINEL.
    */
   public static class SerialFailStoreWBORepository extends WBORepository {
+    private final FailMode failMode;
+
+    public SerialFailStoreWBORepository(FailMode failMode) {
+      this.failMode = failMode;
+    }
+
     @Override
     public void createSession(RepositorySessionCreationDelegate delegate,
                               Context context) {
@@ -83,7 +119,12 @@ public class SynchronizerHelpers {
             throw new NoStoreDelegateException();
           }
           if (record.guid.contains(FAIL_SENTINEL)) {
-            storeDelegate.onRecordStoreFailed(new StoreFailedException(), record.guid);
+            Exception ex = getFailException(failMode);
+            if (ex instanceof CollectionConcurrentModificationException) {
+              storeDelegate.onStoreFailed(ex);
+            } else {
+              storeDelegate.onRecordStoreFailed(ex, record.guid);
+            }
           } else {
             super.store(record);
           }

@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.InfoCollections;
@@ -66,8 +67,8 @@ public class BatchingDownloaderDelegateTest {
         }
 
         @Override
-        public void onFetchFailed(final Exception ex,
-                                  final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+        public void handleFetchFailed(final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+                                  final Exception ex,
                                   final SyncStorageCollectionRequest request) {
             this.isFailure = true;
             this.ex = ex;
@@ -169,6 +170,18 @@ public class BatchingDownloaderDelegateTest {
         downloaderDelegate.handleRequestFailure(response);
         assertTrue(mockDownloader.isFailure);
         assertEquals(HTTPFailureException.class, mockDownloader.ex.getClass());
+        assertFalse(mockDownloader.isSuccess);
+        assertFalse(mockDownloader.isFetched);
+    }
+
+    @Test
+    public void testFailure412() throws Exception {
+        BatchingDownloaderDelegate downloaderDelegate = new BatchingDownloaderDelegate(mockDownloader, null,
+                new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL)), 0, 0, true, null, null);
+        SyncStorageResponse response = makeSyncStorageResponse(412, null);
+        downloaderDelegate.handleRequestFailure(response);
+        assertTrue(mockDownloader.isFailure);
+        assertEquals(CollectionConcurrentModificationException.class, mockDownloader.ex.getClass());
         assertFalse(mockDownloader.isSuccess);
         assertFalse(mockDownloader.isFetched);
     }

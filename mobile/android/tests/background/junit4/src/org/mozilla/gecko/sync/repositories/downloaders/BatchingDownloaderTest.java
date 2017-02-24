@@ -353,7 +353,7 @@ public class BatchingDownloaderTest {
     public void testFailureException() throws Exception {
         Exception ex = new IllegalStateException();
         SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI("http://dummy.url"));
-        mockDownloader.onFetchFailed(ex, sessionFetchRecordsDelegate, request);
+        mockDownloader.handleFetchFailed(sessionFetchRecordsDelegate, ex, request);
 
         assertFalse(sessionFetchRecordsDelegate.isSuccess);
         assertFalse(sessionFetchRecordsDelegate.isFetched);
