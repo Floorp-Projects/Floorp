@@ -40,9 +40,9 @@ use webdriver::command::{
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
     GetNamedCookieParameters, AddCookieParameters, TimeoutsParameters,
     ActionsParameters, TakeScreenshotParameters, WindowPositionParameters};
-use webdriver::response::{
-    WebDriverResponse, NewSessionResponse, ValueResponse, WindowSizeResponse,
-    WindowPositionResponse, ElementRectResponse, CookieResponse, Cookie};
+use webdriver::response::{Cookie, CookieResponse, ElementRectResponse, NewSessionResponse,
+                          TimeoutsResponse, ValueResponse, WebDriverResponse,
+                          WindowPositionResponse, WindowSizeResponse};
 use webdriver::common::{
     Date, Nullable, WebElement, FrameId, ELEMENT_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
@@ -532,8 +532,33 @@ impl MarionetteSession {
                 WebDriverResponse::Generic(ValueResponse::new(value.clone()))
             },
             GetTimeouts => {
-                return Err(WebDriverError::new(ErrorStatus::UnsupportedOperation,
-                                               "Getting timeouts not yet supported"));
+                let script = try_opt!(try_opt!(resp.result
+                                                   .find("script"),
+                                               ErrorStatus::UnknownError,
+                                               "Missing field: script")
+                                          .as_u64(),
+                                      ErrorStatus::UnknownError,
+                                      "Failed to interpret script timeout duration as u64");
+                let page_load = try_opt!(try_opt!(resp.result
+                                                      .find("pageLoad"),
+                                                  ErrorStatus::UnknownError,
+                                                  "Missing field: pageLoad")
+                                             .as_u64(),
+                                         ErrorStatus::UnknownError,
+                                         "Failed to interpret page load duration as u64");
+                let implicit = try_opt!(try_opt!(resp.result
+                                                     .find("implicit"),
+                                                 ErrorStatus::UnknownError,
+                                                 "Missing field: implicit")
+                                            .as_u64(),
+                                        ErrorStatus::UnknownError,
+                                        "Failed to interpret implicit search duration as u64");
+
+                WebDriverResponse::Timeouts(TimeoutsResponse {
+                    script: script,
+                    pageLoad: page_load,
+                    implicit: implicit,
+                })
             },
             Status => panic!("Got status command that should already have been handled"),
             GetWindowHandles => {
@@ -810,7 +835,7 @@ impl MarionetteCommand {
             GetWindowHandle => (Some("getWindowHandle"), None),
             GetWindowHandles => (Some("getWindowHandles"), None),
             CloseWindow => (Some("close"), None),
-            GetTimeouts => (None, None),
+            GetTimeouts => (Some("getTimeouts"), None),
             SetTimeouts(ref x) => (Some("timeouts"), Some(x.to_marionette())),
             SetWindowSize(ref x) => (Some("setWindowSize"), Some(x.to_marionette())),
             GetWindowSize => (Some("getWindowSize"), None),
