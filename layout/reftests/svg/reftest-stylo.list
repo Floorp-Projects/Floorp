@@ -257,7 +257,7 @@ fails == overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03.svg
-#fuzzy(23,60) fails-if(d2d) == path-01.svg path-01.svg
+fuzzy(23,60) fails-if(d2d) == path-01.svg path-01.svg
 == path-02.svg path-02.svg
 == path-03.svg path-03.svg
 == path-04.svg path-04.svg
@@ -426,13 +426,13 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mas
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten.svg
 skip-if(stylo) pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity.svg # Too intermittent
-#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha.svg
+skip-if(stylo) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.svg
-#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay.svg
-#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation.svg
-#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen.svg
-#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay.svg
+skip-if(stylo) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation.svg
+skip-if(stylo) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light.svg
 == blend-difference-stacking.html blend-difference-stacking.html
 
 # test case for Fragment URLs
