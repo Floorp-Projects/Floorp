@@ -4,8 +4,8 @@
 skip-if(cocoaWidget||Android) == accesskey-1.xul accesskey-1.xul
 skip-if(cocoaWidget||Android) == accesskey-2.xul accesskey-2.xul
 # accesskey-3 fails because of defects in XUL bidi support
-# fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
-# skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
+skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
+skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
 skip-if(cocoaWidget||Android) == accesskey-4.xul accesskey-4.xul
 skip-if(cocoaWidget||Android) == accesskey-4.xul accesskey-4.xul
 skip-if(Android) == align-baseline-1.xul align-baseline-1.xul

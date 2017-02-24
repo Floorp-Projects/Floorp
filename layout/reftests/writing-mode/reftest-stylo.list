@@ -70,7 +70,7 @@ fails == ua-style-sheet-textarea-1.html ua-style-sheet-textarea-1.html
 fails == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
 fails == ua-style-sheet-button-1.html ua-style-sheet-button-1.html
 fails == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1.html
-# fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1.html
+fuzzy-if(gtkWidget,1,15) skip-if(stylo) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1.html # Bug 1341973
 
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-default-horizontal-tb-ltr.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-start-horizontal-tb-ltr.html
@@ -188,7 +188,9 @@ fails == 1302389-scrolled-rect-2d.html 1302389-scrolled-rect-2d.html
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
 # Too many intermittents
-# skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest-stylo.list
+# Can't use skip-if(stylo) here, because any conditions used in the manifest we
+# include will override it!
+# skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest-stylo.list # Loads fail
 
 # Tests for tables with vertical writing modes
 include tables/reftest-stylo.list
