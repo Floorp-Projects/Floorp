@@ -8,7 +8,7 @@
   <div id="display" style="white-space:pre; font-family:monospace; display:inline;"></div>
 <script type="text/javascript">
 let bc = new BroadcastChannel("testBroadcastChannel");
-bc.onmessage = function (e) {
+bc.onmessage = function(e) {
   window.parent.postMessage(e.data, "*");
 };
 </script>

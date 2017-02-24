@@ -61,10 +61,10 @@
 
       switch (mode) {
         case "compactInfo":
-          document.getElementById("btnTryAgain").style.display = 'none';
+          document.getElementById("btnTryAgain").style.display = "none";
           break;
         case "tryAgainOnly":
-          //intentional fall-through
+          // intentional fall-through
         case "tryAgain":
           config.tryAgainCallback = loadQueryURL;
           config.queryURL = url;

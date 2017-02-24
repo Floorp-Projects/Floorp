@@ -9,7 +9,7 @@
   <iframe id="iframe" src="file_broadcastChanneliFrame.html"></iframe>>
 <script type="text/javascript">
 let bc = new BroadcastChannel("testBroadcastChannel");
-bc.onmessage = function (e) {
+bc.onmessage = function(e) {
   document.getElementById("display").innerHTML = e.data;
 };
 </script>

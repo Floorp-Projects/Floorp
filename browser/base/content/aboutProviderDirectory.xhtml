@@ -44,7 +44,7 @@
     Cu.import("resource://gre/modules/Services.jsm");
 
     function openDirectory() {
-      let url = Services.prefs.getCharPref("social.directories").split(',')[0];
+      let url = Services.prefs.getCharPref("social.directories").split(",")[0];
       window.open(url);
       window.close();
     }
