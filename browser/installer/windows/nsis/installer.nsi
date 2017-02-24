@@ -387,48 +387,12 @@ Section "-Application" APP_IDX
   ; For post win8, the keys below can be set in HKCU if needed.
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Registered App HKLM registry keys.
-    ; If we're upgrading an existing install, replacing the old registry entries
-    ; (without a path hash) would cause the default browser to be reset.
-    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\FIREFOX.EXE\DefaultIcon" ""
-    StrCpy $0 $0 -2
-    ${If} $0 != "$INSTDIR\${FileMainEXE}"
-      ${SetStartMenuInternet} "HKLM"
-      ${FixShellIconHandler} "HKLM"
-    ${EndIf}
-
-    ; If we are writing to HKLM and create either the desktop or start menu
-    ; shortcuts set IconsVisible to 1 otherwise to 0.
-    ; Taskbar shortcuts imply having a start menu shortcut.
-    StrCpy $0 "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\InstallInfo"
-    ${If} $AddDesktopSC == 1
-    ${OrIf} $AddStartMenuSC == 1
-    ${OrIf} $AddTaskbarSC == 1
-      WriteRegDWORD HKLM "$0" "IconsVisible" 1
-    ${Else}
-      WriteRegDWORD HKLM "$0" "IconsVisible" 0
-    ${EndIf}
+    ${SetStartMenuInternet} "HKLM"
+    ${FixShellIconHandler} "HKLM"
   ${ElseIf} ${AtLeastWin8}
     ; Set the Start Menu Internet and Registered App HKCU registry keys.
-    ; If we're upgrading an existing install, replacing the old registry entries
-    ; (without a path hash) would cause the default browser to be reset.
-    ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\FIREFOX.EXE\DefaultIcon" ""
-    StrCpy $0 $0 -2
-    ${If} $0 != "$INSTDIR\${FileMainEXE}"
-      ${SetStartMenuInternet} "HKCU"
-      ${FixShellIconHandler} "HKCU"
-    ${EndIf}
-
-    ; If we create either the desktop or start menu shortcuts, then
-    ; set IconsVisible to 1 otherwise to 0.
-    ; Taskbar shortcuts imply having a start menu shortcut.
-    StrCpy $0 "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\InstallInfo"
-    ${If} $AddDesktopSC == 1
-    ${OrIf} $AddStartMenuSC == 1
-    ${OrIf} $AddTaskbarSC == 1
-      WriteRegDWORD HKCU "$0" "IconsVisible" 1
-    ${Else}
-      WriteRegDWORD HKCU "$0" "IconsVisible" 0
-    ${EndIf}
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
   ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
