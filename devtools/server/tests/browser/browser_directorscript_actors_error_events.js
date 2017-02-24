@@ -8,8 +8,7 @@ const {DirectorManagerFront} = require("devtools/shared/fronts/director-manager"
 const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "director-script-target.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -43,12 +42,13 @@ function* testErrorOnRequire(directorManager) {
   assertIsDirectorScriptError(errorOnRequire);
 
   let { message } = errorOnRequire;
-  is(message, "Error: NOT IMPLEMENTED", "error.message contains the expected error message");
+  is(message, "Error: NOT IMPLEMENTED",
+    "error.message contains the expected error message");
 }
 
 function* testErrorOnEvaluate(directorManager) {
-  // director scripts should send an error events if the director script raise an exception on
-  // evaluation
+  // director scripts should send an error events if the director script
+  // raise an exception on evaluation
   let errorOnEvaluate = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnEvaluate",
     scriptCode: "(" + (function () {
@@ -62,8 +62,8 @@ function* testErrorOnEvaluate(directorManager) {
 }
 
 function* testErrorOnAttach(directorManager) {
-  // director scripts should send an error events if the director script raise an exception on
-  // evaluation
+  // director scripts should send an error events if the director script
+  // raise an exception on evaluation
   let errorOnAttach = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnAttach",
     scriptCode: "(" + (function () {
@@ -79,9 +79,9 @@ function* testErrorOnAttach(directorManager) {
 }
 
 function* testErrorOnDetach(directorManager) {
-  // director scripts should send an error events if the director script raise an exception on
-  // evaluation
-  let attach = yield installAndEnableDirectorScript(directorManager, {
+  // director scripts should send an error events if the director script
+  // raise an exception on evaluation
+  yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_errorOnDetach",
     scriptCode: "(" + (function () {
       module.exports = function ({onUnload}) {
@@ -97,7 +97,8 @@ function* testErrorOnDetach(directorManager) {
   let waitForDetach = once(directorManager, "director-script-detach");
   let waitForError = once(directorManager, "director-script-error");
 
-  directorManager.disableByScriptIds(["testDirectorScript_errorOnDetach"], {reload: false});
+  directorManager.disableByScriptIds(["testDirectorScript_errorOnDetach"],
+                                    {reload: false});
 
   let detach = yield waitForDetach;
   let error = yield waitForError;
