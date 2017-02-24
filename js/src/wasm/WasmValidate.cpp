@@ -34,7 +34,7 @@ using mozilla::CheckedInt;
 // Decoder implementation.
 
 bool
-Decoder::fail(const char* msg, ...)
+Decoder::failf(const char* msg, ...)
 {
     va_list ap;
     va_start(ap, msg);
@@ -43,14 +43,14 @@ Decoder::fail(const char* msg, ...)
     if (!str)
         return false;
 
-    return fail(Move(str));
+    return fail(str.get());
 }
 
 bool
-Decoder::fail(UniqueChars msg)
+Decoder::fail(size_t errorOffset, const char* msg)
 {
     MOZ_ASSERT(error_);
-    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", currentOffset(), msg.get()));
+    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", errorOffset, msg));
     if (!strWithOffset)
         return false;
 
@@ -110,7 +110,7 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, uint32_t* sectionSta
     return true;
 
   fail:
-    return fail("failed to start %s section", sectionName);
+    return failf("failed to start %s section", sectionName);
 }
 
 bool
@@ -119,7 +119,7 @@ Decoder::finishSection(uint32_t sectionStart, uint32_t sectionSize, const char* 
     if (resilientMode_)
         return true;
     if (sectionSize != (cur_ - beg_) - sectionStart)
-        return fail("byte size mismatch in %s section", sectionName);
+        return failf("byte size mismatch in %s section", sectionName);
     return true;
 }
 
@@ -617,9 +617,9 @@ DecodePreamble(Decoder& d)
     if (!d.readFixedU32(&u32) || u32 != MagicNumber)
         return d.fail("failed to match magic number");
 
-    if (!d.readFixedU32(&u32) || (u32 != EncodingVersion && u32 != PrevEncodingVersion)) {
-        return d.fail("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
-                      u32, EncodingVersion);
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion) {
+        return d.failf("binary version 0x%" PRIx32 " does not match expected version 0x%" PRIx32,
+                       u32, EncodingVersion);
     }
 
     return true;
@@ -735,7 +735,7 @@ DecodeLimits(Decoder& d, Limits* limits)
         return d.fail("expected flags");
 
     if (flags & ~uint32_t(0x1))
-        return d.fail("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x1)));
+        return d.failf("unexpected bits set in flags: %" PRIu32, (flags & ~uint32_t(0x1)));
 
     if (!d.readVarU32(&limits->initial))
         return d.fail("expected initial length");
@@ -746,9 +746,9 @@ DecodeLimits(Decoder& d, Limits* limits)
             return d.fail("expected maximum length");
 
         if (limits->initial > maximum) {
-            return d.fail("memory size minimum must not be greater than maximum; "
-                          "maximum length %" PRIu32 " is less than initial length %" PRIu32,
-                          maximum, limits->initial);
+            return d.failf("memory size minimum must not be greater than maximum; "
+                           "maximum length %" PRIu32 " is less than initial length %" PRIu32,
+                           maximum, limits->initial);
         }
 
         limits->maximum.emplace(maximum);
@@ -1580,7 +1580,7 @@ wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
 bool
 wasm::Validate(const ShareableBytes& bytecode, UniqueChars* error)
 {
-    Decoder d(bytecode.begin(), bytecode.end(), error);
+    Decoder d(bytecode.bytes, error);
 
     ModuleEnvironment env;
     if (!DecodeModuleEnvironment(d, &env))

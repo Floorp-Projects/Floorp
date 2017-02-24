@@ -89,11 +89,7 @@ Keyed Histograms
 ----------------
 
 Keyed histograms are collections of one of the histogram types above, indexed by a string key. This is for example useful when you want to break down certain counts by a name, like how often searches happen with which search engine.
-
-Note that:
-
-- keys can't be empty strings;
-- when you need to record for a small set of known keys, using separate plain histograms is more efficient.
+Note that when you need to record for a small set of known keys, using separate plain histograms is more efficient.
 
 .. warning::
 
@@ -207,11 +203,7 @@ A Telemetry probe is the code that measures and stores values in a histogram. Pr
   let keyed = Services.telemetry.getKeyedHistogramById("TAG_SEEN_COUNTS");
   keyed.add("blink");
 
-Note that:
-
-- ``nsITelemetry.getHistogramById()`` will throw an ``NS_ERROR_ILLEGAL_VALUE`` JavaScript exception if it is called with an invalid histogram ID;
-- the ``add()`` function will not throw on failure, but log an error to the browser console;
-- for keyed histograms, calling ``add()`` with an empty key will be ignored and log an error.
+Note that ``nsITelemetry.getHistogramById()`` will throw an ``NS_ERROR_ILLEGAL_VALUE`` JavaScript exception if it is called with an invalid histogram ID. The ``add()`` function will not throw if it fails, instead it prints an error in the browser console.
 
 For histograms measuring time, `TelemetryStopwatch <https://mxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/TelemetryStopwatch.jsm>`_ can be used to avoid working with Dates manually:
 

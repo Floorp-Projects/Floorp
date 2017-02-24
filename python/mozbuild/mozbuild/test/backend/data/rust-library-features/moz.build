@@ -16,4 +16,4 @@ def RustLibrary(name, features):
     RUST_LIBRARY_FEATURES = features
 
 
-RustLibrary('gkrust', ['musthave', 'cantlivewithout'])
+RustLibrary('feature-library', ['musthave', 'cantlivewithout'])

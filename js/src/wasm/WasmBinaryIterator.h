@@ -326,13 +326,12 @@ class MOZ_STACK_CLASS OpIter : private Policy
 
     Decoder& d_;
     const ModuleEnvironment& env_;
-    const size_t offsetInModule_;
 
     Vector<TypeAndValue<Value>, 8, SystemAllocPolicy> valueStack_;
     Vector<ControlStackEntry<ControlItem>, 8, SystemAllocPolicy> controlStack_;
 
     DebugOnly<Op> op_;
-    size_t offsetOfExpr_;
+    size_t offsetOfLastReadOp_;
 
     MOZ_MUST_USE bool readFixedU8(uint8_t* out) {
         if (Validate)
@@ -485,8 +484,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
   public:
     typedef Vector<Value, 8, SystemAllocPolicy> ValueVector;
 
-    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder, uint32_t offsetInModule = 0)
-      : d_(decoder), env_(env), offsetInModule_(offsetInModule), op_(Op::Limit), offsetOfExpr_(0)
+    explicit OpIter(const ModuleEnvironment& env, Decoder& decoder)
+      : d_(decoder), env_(env), op_(Op::Limit), offsetOfLastReadOp_(0)
     {}
 
     // Return the decoding byte offset.
@@ -494,9 +493,14 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return d_.currentOffset();
     }
 
-    // Returning the offset within the entire module of the last-read Op.
+    // Return the offset within the entire module of the last-read op.
+    size_t errorOffset() const {
+        return offsetOfLastReadOp_ ? offsetOfLastReadOp_ : d_.currentOffset();
+    }
+
+    // Return a TrapOffset describing where the current op should be reported to trap.
     TrapOffset trapOffset() const {
-        return TrapOffset(offsetInModule_ + offsetOfExpr_);
+        return TrapOffset(errorOffset());
     }
 
     // Test whether the iterator has reached the end of the buffer.
@@ -661,7 +665,7 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::fail(const char* msg)
 {
-    return d_.fail("%s", msg);
+    return d_.fail(errorOffset(), msg);
 }
 
 // This function pops exactly one value from the stack, yielding Any types in
@@ -904,7 +908,7 @@ OpIter<Policy>::readOp(uint16_t* op)
 {
     MOZ_ASSERT(!controlStack_.empty());
 
-    offsetOfExpr_ = d_.currentOffset();
+    offsetOfLastReadOp_ = d_.currentOffset();
 
     if (Validate) {
         if (MOZ_UNLIKELY(!d_.readOp(op)))

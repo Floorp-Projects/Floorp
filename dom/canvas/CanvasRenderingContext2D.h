@@ -682,7 +682,7 @@ protected:
   /**
    * Disposes an old target and prepares to lazily create a new target.
    */
-  void ClearTarget(bool aRetainBuffer = false);
+  void ClearTarget();
 
   /*
    * Returns the target to the buffer provider. i.e. this will queue a frame for

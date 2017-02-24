@@ -221,6 +221,11 @@ var VERBOSITY_LEVELS = {
  warnings: 1,
  infos: 5
 };
+var CMapCompressionType = {
+ NONE: 0,
+ BINARY: 1,
+ STREAM: 2
+};
 var OPS = {
  dependency: 1,
  setLineWidth: 2,
@@ -1166,6 +1171,12 @@ function isArrayBuffer(v) {
 function isSpace(ch) {
  return ch === 0x20 || ch === 0x09 || ch === 0x0D || ch === 0x0A;
 }
+function isNodeJS() {
+ if (typeof __pdfjsdev_webpack__ === 'undefined') {
+  return typeof process === 'object' && process + '' === '[object process]';
+ }
+ return false;
+}
 function createPromiseCapability() {
  var capability = {};
  capability.promise = new Promise(function (resolve, reject) {
@@ -1438,6 +1449,7 @@ exports.AnnotationFlag = AnnotationFlag;
 exports.AnnotationType = AnnotationType;
 exports.FontType = FontType;
 exports.ImageKind = ImageKind;
+exports.CMapCompressionType = CMapCompressionType;
 exports.InvalidPDFException = InvalidPDFException;
 exports.MessageHandler = MessageHandler;
 exports.MissingDataException = MissingDataException;
@@ -1474,6 +1486,7 @@ exports.isInt = isInt;
 exports.isNum = isNum;
 exports.isString = isString;
 exports.isSpace = isSpace;
+exports.isNodeJS = isNodeJS;
 exports.isSameOrigin = isSameOrigin;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.isLittleEndian = isLittleEndian;
@@ -1506,6 +1519,8 @@ var removeNullCharacters = sharedUtil.removeNullCharacters;
 var warn = sharedUtil.warn;
 var deprecated = sharedUtil.deprecated;
 var createValidAbsoluteUrl = sharedUtil.createValidAbsoluteUrl;
+var stringToBytes = sharedUtil.stringToBytes;
+var CMapCompressionType = sharedUtil.CMapCompressionType;
 var DEFAULT_LINK_REL = 'noopener noreferrer nofollow';
 function DOMCanvasFactory() {
 }
@@ -1535,6 +1550,48 @@ DOMCanvasFactory.prototype = {
   canvasAndContextPair.context = null;
  }
 };
+var DOMCMapReaderFactory = function DOMCMapReaderFactoryClosure() {
+ function DOMCMapReaderFactory(params) {
+  this.baseUrl = params.baseUrl || null;
+  this.isCompressed = params.isCompressed || false;
+ }
+ DOMCMapReaderFactory.prototype = {
+  fetch: function (params) {
+   if (!params.name) {
+    return Promise.reject(new Error('CMap name must be specified.'));
+   }
+   return new Promise(function (resolve, reject) {
+    var url = this.baseUrl + params.name;
+    var request = new XMLHttpRequest();
+    if (this.isCompressed) {
+     url += '.bcmap';
+     request.responseType = 'arraybuffer';
+    }
+    request.onreadystatechange = function () {
+     if (request.readyState === XMLHttpRequest.DONE && (request.status === 200 || request.status === 0)) {
+      var data;
+      if (this.isCompressed && request.response) {
+       data = new Uint8Array(request.response);
+      } else if (!this.isCompressed && request.responseText) {
+       data = stringToBytes(request.responseText);
+      }
+      if (data) {
+       resolve({
+        cMapData: data,
+        compressionType: this.isCompressed ? CMapCompressionType.BINARY : CMapCompressionType.NONE
+       });
+       return;
+      }
+      reject(new Error('Unable to load ' + (this.isCompressed ? 'binary' : '') + ' CMap at: ' + url));
+     }
+    }.bind(this);
+    request.open('GET', url, true);
+    request.send(null);
+   }.bind(this));
+  }
+ };
+ return DOMCMapReaderFactory;
+}();
 var CustomStyle = function CustomStyleClosure() {
  var prefixes = [
   'ms',
@@ -1694,6 +1751,7 @@ exports.hasCanvasTypedArrays = hasCanvasTypedArrays;
 exports.getDefaultSetting = getDefaultSetting;
 exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 exports.DOMCanvasFactory = DOMCanvasFactory;
+exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
 
 /***/ }),
 /* 2 */
@@ -2358,6 +2416,7 @@ var CanvasGraphics = displayCanvas.CanvasGraphics;
 var Metadata = displayMetadata.Metadata;
 var getDefaultSetting = displayDOMUtils.getDefaultSetting;
 var DOMCanvasFactory = displayDOMUtils.DOMCanvasFactory;
+var DOMCMapReaderFactory = displayDOMUtils.DOMCMapReaderFactory;
 var DEFAULT_RANGE_CHUNK_SIZE = 65536;
 var isWorkerDisabled = false;
 var workerSrc;
@@ -2431,6 +2490,7 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
  }
  params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
  params.disableNativeImageDecoder = params.disableNativeImageDecoder === true;
+ var CMapReaderFactory = params.CMapReaderFactory || DOMCMapReaderFactory;
  if (!worker) {
   worker = new PDFWorker();
   task._worker = worker;
@@ -2445,7 +2505,7 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
     throw new Error('Loading aborted');
    }
    var messageHandler = new MessageHandler(docId, workerId, worker.port);
-   var transport = new WorkerTransport(messageHandler, task, rangeTransport);
+   var transport = new WorkerTransport(messageHandler, task, rangeTransport, CMapReaderFactory);
    task._transport = transport;
    messageHandler.send('Ready', null);
   });
@@ -2468,8 +2528,6 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   source: source,
   disableRange: getDefaultSetting('disableRange'),
   maxImageSize: getDefaultSetting('maxImageSize'),
-  cMapUrl: getDefaultSetting('cMapUrl'),
-  cMapPacked: getDefaultSetting('cMapPacked'),
   disableFontFace: getDefaultSetting('disableFontFace'),
   disableCreateObjectURL: getDefaultSetting('disableCreateObjectURL'),
   postMessageTransfers: getDefaultSetting('postMessageTransfers') && !isPostMessageTransfersDisabled,
@@ -3081,12 +3139,16 @@ var PDFWorker = function PDFWorkerClosure() {
  return PDFWorker;
 }();
 var WorkerTransport = function WorkerTransportClosure() {
- function WorkerTransport(messageHandler, loadingTask, pdfDataRangeTransport) {
+ function WorkerTransport(messageHandler, loadingTask, pdfDataRangeTransport, CMapReaderFactory) {
   this.messageHandler = messageHandler;
   this.loadingTask = loadingTask;
   this.pdfDataRangeTransport = pdfDataRangeTransport;
   this.commonObjs = new PDFObjects();
   this.fontLoader = new FontLoader(loadingTask.docId);
+  this.CMapReaderFactory = new CMapReaderFactory({
+   baseUrl: getDefaultSetting('cMapUrl'),
+   isCompressed: getDefaultSetting('cMapPacked')
+  });
   this.destroyed = false;
   this.destroyCapability = null;
   this._passwordCapability = null;
@@ -3371,6 +3433,12 @@ var WorkerTransport = function WorkerTransportClosure() {
      img.src = imageUrl;
     });
    }, this);
+   messageHandler.on('FetchBuiltInCMap', function (data) {
+    if (this.destroyed) {
+     return Promise.reject(new Error('Worker was destroyed'));
+    }
+    return this.CMapReaderFactory.fetch({ name: data.name });
+   }, this);
   },
   getData: function WorkerTransport_getData() {
    return this.messageHandler.sendWithPromise('GetData', null);
@@ -3632,8 +3700,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
   }
  };
 }();
-exports.version = '1.7.297';
-exports.build = '425ad309';
+exports.version = '1.7.312';
+exports.build = 'cada411a';
 exports.getDocument = getDocument;
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
 exports.PDFWorker = PDFWorker;
@@ -4650,8 +4718,8 @@ if (!globalScope.PDFJS) {
  globalScope.PDFJS = {};
 }
 var PDFJS = globalScope.PDFJS;
-PDFJS.version = '1.7.297';
-PDFJS.build = '425ad309';
+PDFJS.version = '1.7.312';
+PDFJS.build = 'cada411a';
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
  sharedUtil.setVerbosityLevel(PDFJS.verbosity);
@@ -7143,8 +7211,8 @@ exports.TilingPattern = TilingPattern;
 
 "use strict";
 
-var pdfjsVersion = '1.7.297';
-var pdfjsBuild = '425ad309';
+var pdfjsVersion = '1.7.312';
+var pdfjsBuild = 'cada411a';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
