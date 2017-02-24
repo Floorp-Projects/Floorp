@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'grids.js',
-    'highlighter-settings.js',
+    'box-model.js',
     'index.js',
 )
