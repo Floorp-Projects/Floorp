@@ -355,7 +355,7 @@ private:
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
       mSizeOfQueue = 0;
-      if (mDecoder && !mFlushed) {
+      if (mDecoder) {
         RefPtr<MediaFormatReader> owner = mOwner;
         TrackType type = mType == MediaData::AUDIO_DATA
                          ? TrackType::kAudioTrack
