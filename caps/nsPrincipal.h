@@ -42,8 +42,6 @@ public:
    */
   static void InitializeStatics();
 
-  PrincipalKind Kind() override { return eCodebasePrincipal; }
-
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable

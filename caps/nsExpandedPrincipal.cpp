@@ -45,6 +45,7 @@ struct OriginComparator
 
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
                                          const OriginAttributes& aAttrs)
+  : BasePrincipal(eExpandedPrincipal)
 {
   // We force the principals to be sorted by origin so that nsExpandedPrincipal
   // origins can have a canonical form.
