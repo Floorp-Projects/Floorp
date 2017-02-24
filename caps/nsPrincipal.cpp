@@ -77,10 +77,12 @@ nsPrincipal::InitializeStatics()
 }
 
 nsPrincipal::nsPrincipal()
-  : mCodebaseImmutable(false)
+  : BasePrincipal(eCodebasePrincipal)
+  , mCodebaseImmutable(false)
   , mDomainImmutable(false)
   , mInitialized(false)
-{ }
+{
+}
 
 nsPrincipal::~nsPrincipal()
 {

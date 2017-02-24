@@ -203,7 +203,14 @@ public:
 class BasePrincipal : public nsJSPrincipals
 {
 public:
-  BasePrincipal();
+  enum PrincipalKind {
+    eNullPrincipal,
+    eCodebasePrincipal,
+    eExpandedPrincipal,
+    eSystemPrincipal
+  };
+
+  explicit BasePrincipal(PrincipalKind aKind);
 
   enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
   bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
@@ -249,14 +256,7 @@ public:
   uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }
   bool IsInIsolatedMozBrowserElement() const { return mOriginAttributes.mInIsolatedMozBrowser; }
 
-  enum PrincipalKind {
-    eNullPrincipal,
-    eCodebasePrincipal,
-    eExpandedPrincipal,
-    eSystemPrincipal
-  };
-
-  virtual PrincipalKind Kind() = 0;
+  PrincipalKind Kind() const { return mKind; }
 
   already_AddRefed<BasePrincipal> CloneStrippingUserContextIdAndFirstPartyDomain();
 
@@ -282,6 +282,7 @@ protected:
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
   OriginAttributes mOriginAttributes;
+  PrincipalKind mKind;
 };
 
 } // namespace mozilla
