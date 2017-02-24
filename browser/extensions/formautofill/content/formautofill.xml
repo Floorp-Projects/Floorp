@@ -43,12 +43,33 @@
         ]]>
       </constructor>
 
+      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
+        <setter><![CDATA[
+          /* global Cu */
+          if (val) {
+            this.setAttribute("selected", "true");
+          } else {
+            this.removeAttribute("selected");
+          }
+
+          let {AutoCompletePopup} = Cu.import("resource://gre/modules/AutoCompletePopup.jsm", {});
+
+          AutoCompletePopup.sendMessageToBrowser("FormAutofill:PreviewProfile");
+
+          return val;
+        ]]></setter>
+      </property>
+
       <method name="_cleanup">
         <body>
         <![CDATA[
             this._itemBox.removeAttribute("size");
         ]]>
         </body>
+      </method>
+
+      <method name="_onChanged">
+        <body></body>
       </method>
 
       <method name="_onOverflow">

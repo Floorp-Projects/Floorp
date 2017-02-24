@@ -8,6 +8,8 @@
 
 "use strict";
 
+/* global content */
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -22,6 +24,8 @@ Cu.import("resource://formautofill/FormAutofillContent.jsm");
 var FormAutofillFrameScript = {
   init() {
     addEventListener("DOMContentLoaded", this);
+    addMessageListener("FormAutofill:PreviewProfile", this);
+    addMessageListener("FormAutoComplete:PopupClosed", this);
   },
 
   handleEvent(evt) {
@@ -42,6 +46,19 @@ var FormAutofillFrameScript = {
         FormAutofillContent.identifyAutofillFields(doc);
         break;
       }
+    }
+  },
+
+  receiveMessage(aMessage) {
+    if (!Services.prefs.getBoolPref("browser.formautofill.enabled")) {
+      return;
+    }
+
+    switch (aMessage.name) {
+      case "FormAutofill:PreviewProfile":
+      case "FormAutoComplete:PopupClosed":
+        FormAutofillContent._previewProfile(content.document);
+        break;
     }
   },
 };
