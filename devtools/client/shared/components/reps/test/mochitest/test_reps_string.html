@@ -17,60 +17,80 @@ Test String rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, StringRep } = REPS;
+
+  const test_cases = [{
+    name: "testMultiline",
+    props: {
+      object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
+    },
+    result: "\"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n\""
+  }, {
+    name: "testMultilineLimit",
+    props: {
+      object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
+      cropLimit: 20
+    },
+    result: "\"aaaaaaaaa…cccccc\\n\""
+  }, {
+    name: "testMultilineOpen",
+    props: {
+      object: "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n",
+      member: { open: true }
+    },
+    result: "\"aaaaaaaaaaaaaaaaaaaaa\\nbbbbbbbbbbbbbbbbbbb\\ncccccccccccccccc\\n\""
+  }, {
+    name: "testUseQuotes",
+    props: {
+      object: "abc",
+      useQuotes: false
+    },
+    result: "abc"
+  }, {
+    name: "testNonPrintableCharacters",
+    props: {
+      object: "a\x01b",
+      useQuotes: false
+    },
+    result: "a\ufffdb"
+  }, {
+    name: "testQuoting",
+    props: {
+      object: "\t\n\r\"'\\\x1f\x9f\ufeff\ufffe\ud8000\u2063\ufffc\u2028\ueeee",
+      useQuotes: true
+    },
+    result: "\"\\t\\n\\r\\\"'\\\\\\u001f\\u009f\\ufeff\\ufffe\\ud8000\\u2063\\ufffc\\u2028\\ueeee\""
+  }, {
+    name: "testUnpairedSurrogate",
+    props: {
+      object: "\uDC23",
+      useQuotes: true
+    },
+    result: "\"\\udc23\""
+  }, {
+    name: "testValidSurrogate",
+    props: {
+      object: "\ud83d\udeec",
+      useQuotes: true
+    },
+    result: "\"\ud83d\udeec\""
+  }];
 
   try {
     // Test that correct rep is chosen
-    const renderedRep = shallowRenderComponent(Rep, { object: getGripStub("testMultiline") });
+    const renderedRep = shallowRenderComponent(Rep, test_cases[0].props);
     is(renderedRep.type, StringRep.rep, `Rep correctly selects ${StringRep.rep.displayName}`);
 
     // Test rendering
-    yield testMultiline();
-    yield testMultilineOpen();
-    yield testMultilineLimit();
-    yield testUseQuotes();
-    yield testNonPritableCharacters();
+    for (let test of test_cases) {
+      const renderedComponent = renderComponent(StringRep.rep, test.props);
+      is(renderedComponent.textContent, test.result, "String rep " + test.name);
+    }
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
     SimpleTest.finish();
-  }
-
-  function testMultiline() {
-    const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline") });
-    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n\"", "String rep has expected text content for multiline string");
-  }
-
-  function testMultilineLimit() {
-    const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline"), cropLimit: 20 });
-    is(renderedComponent.textContent, "\"aaaaaaaaaa…cccccccc\n\"", "String rep has expected text content for multiline string with specified number of characters");
-  }
-
-  function testMultilineOpen() {
-    const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testMultiline"), member: {open: true} });
-    is(renderedComponent.textContent, "\"aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n\"", "String rep has expected text content for multiline string when open");
-  }
-
-  function testUseQuotes(){
-     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testUseQuotes"), useQuotes: false });
-     is(renderedComponent.textContent, "abc", "String rep was expected to omit quotes");
-  }
-
-  function testNonPritableCharacters(){
-     const renderedComponent = renderComponent(StringRep.rep, { object: getGripStub("testNonPritableCharacters"), useQuotes: false });
-     is(renderedComponent.textContent, "a\ufffdb", "String rep was expected to omit non printable characters");
-  }
-
-  function getGripStub(name) {
-    switch (name) {
-      case "testMultiline":
-        return "aaaaaaaaaaaaaaaaaaaaa\nbbbbbbbbbbbbbbbbbbb\ncccccccccccccccc\n";
-      case "testUseQuotes":
-        return "abc";
-      case "testNonPritableCharacters":
-        return "a\x01b";
-    }
   }
 });
 </script>

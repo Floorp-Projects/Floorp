@@ -26,6 +26,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mType(aType)
   , mDisabled(false)
   , mDocumentAssociationMode(NotOwnedByDocument)
+  , mInner(nullptr)
 {
 }
 
@@ -42,7 +43,11 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
     // We only use this constructor during cloning.  It's the cloner's
     // responsibility to notify us if we end up being owned by a document.
   , mDocumentAssociationMode(NotOwnedByDocument)
+  , mInner(aCopy.mInner) // Shallow copy, but concrete subclasses will fix up.
 {
+  MOZ_ASSERT(mInner, "Should only copy StyleSheets with an mInner.");
+  mInner->AddSheet(this);
+
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!
@@ -52,7 +57,61 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
 
 StyleSheet::~StyleSheet()
 {
+  MOZ_ASSERT(mInner, "Should have an mInner at time of destruction.");
+  MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
+  mInner->RemoveSheet(this);
+  mInner = nullptr;
+
   DropMedia();
+}
+
+void
+StyleSheet::UnlinkInner()
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  // Have to be a bit careful with child sheets, because we want to
+  // drop their mNext pointers and null out their mParent and
+  // mDocument, but don't want to work with deleted objects.  And we
+  // don't want to do any addrefing in the process, just to make sure
+  // we don't confuse the cycle collector (though on the face of it,
+  // addref/release pairs during unlink should probably be ok).
+  RefPtr<StyleSheet> child;
+  child.swap(SheetInfo().mFirstChild);
+  while (child) {
+    MOZ_ASSERT(child->mParent == this, "We have a unique inner!");
+    child->mParent = nullptr;
+    child->mDocument = nullptr;
+
+    RefPtr<StyleSheet> next;
+    // Null out child->mNext, but don't let it die yet
+    next.swap(child->mNext);
+    // Switch to looking at the old value of child->mNext next iteration
+    child.swap(next);
+    // "next" is now our previous value of child; it'll get released
+    // as we loop around.
+  }
+}
+
+void
+StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
+{
+  // We can only have a cycle through our inner if we have a unique inner,
+  // because otherwise there are no JS wrappers for anything in the inner.
+  if (mInner->mSheets.Length() != 1) {
+    return;
+  }
+
+  StyleSheet* childSheet = GetFirstChild();
+  while (childSheet) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
+    childSheet = childSheet->mNext;
+  }
 }
 
 // QueryInterface implementation for StyleSheet
@@ -69,10 +128,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(StyleSheet)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+  tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StyleSheet)
   tmp->DropMedia();
+  tmp->UnlinkInner();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -152,6 +213,43 @@ StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
   if (!mPrincipal) {
     NS_RUNTIMEABORT("nsNullPrincipal::Init failed");
   }
+}
+
+StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
+                               StyleSheet* aPrimarySheet)
+  : mSheetURI(aCopy.mSheetURI)
+  , mOriginalSheetURI(aCopy.mOriginalSheetURI)
+  , mBaseURI(aCopy.mBaseURI)
+  , mPrincipal(aCopy.mPrincipal)
+  , mCORSMode(aCopy.mCORSMode)
+  , mReferrerPolicy(aCopy.mReferrerPolicy)
+  , mIntegrity(aCopy.mIntegrity)
+  , mComplete(aCopy.mComplete)
+  , mFirstChild()  // We don't rebuild the child because we're making a copy
+                   // without children.
+#ifdef DEBUG
+  , mPrincipalSet(aCopy.mPrincipalSet)
+#endif
+{
+  AddSheet(aPrimarySheet);
+}
+
+void
+StyleSheetInfo::AddSheet(StyleSheet* aSheet)
+{
+  mSheets.AppendElement(aSheet);
+}
+
+void
+StyleSheetInfo::RemoveSheet(StyleSheet* aSheet)
+{
+  if (1 == mSheets.Length()) {
+    NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
+    delete this;
+    return;
+  }
+
+  mSheets.RemoveElement(aSheet);
 }
 
 // nsIDOMStyleSheet interface

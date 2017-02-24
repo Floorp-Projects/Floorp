@@ -190,7 +190,7 @@ nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument)
 }
 
 nsresult
-nsXULPrototypeCache::PutStyleSheet(CSSStyleSheet* aStyleSheet)
+nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet)
 {
     nsIURI* uri = aStyleSheet->GetSheetURI();
 

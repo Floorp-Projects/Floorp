@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="div1" style="width:200px">Here is some text that <a href="#">will wrap</a> in <a href="#">this small</a>-ish container.</div>
+<div id="div2">Into another <a href="#">container</a></div>
+<div id="div3">A very <span>deep <span>deep <span>deep</span></span></span> bit of text.</div>
+
+<script>
+if (typeof(is) == "undefined") {
+  var is = function(a, b, m) {
+    if(a != b) {
+      window.console.log("Expected '" + b + "' but got '" + a + "': " + m);
+    }
+  };
+}
+
+if (typeof(todo_is) == "undefined") {
+  var todo_is = is;
+}
+
+function testRangeTexts(startNode, startOffset, endNode, endOffset, expectedText, todo) {
+  let r = new Range();
+  r.setStart(startNode, startOffset);
+  r.setEnd(endNode, endOffset);
+
+  let texts = r.getClientRectsAndTexts().textList;
+  let concatText = "";
+  for (let i = 0; i < texts.length; i++) {
+    concatText += texts[i];
+  }
+
+  if (todo) {
+    todo_is(concatText, expectedText, "Text matches.");
+  } else {
+    is(concatText, expectedText, "Text matches.");
+  }
+}
+
+let d1c1 = div1.firstChild;
+let d1c2 = d1c1.nextSibling;
+let d1c3 = d1c2.nextSibling;
+let d1c4 = d1c3.nextSibling;
+let d1c5 = d1c4.nextSibling;
+
+let link1 = d1c2.firstChild;
+let link2 = d1c4.firstChild;
+
+let d2c1 = div2.firstChild;
+let d2c2 = d2c1.nextSibling;
+
+let link3 = d2c2.firstChild;
+
+let d3c1 = div3.firstChild;
+let d3c2 = d3c1.nextSibling;
+let d3c3 = d3c2.nextSibling;
+
+let data = [
+  [d1c1, 0, d1c1, 0, ""],
+  [d1c1, 0, d1c1, 4, "Here"],
+  [d1c1, 4, d1c1, 7, " is"],
+  [d1c1, 22, link1, 0, " "],
+  [d1c1, 22, link1, 1, " w"],
+  [d1c1, 22, d1c3, 1, " will wrap "],
+  [link1, 2, link2, 3, "ll wrap in thi"],
+  [link2, 5, link3, 3, "small-ish container.Into another con"],
+  [d3c1, 3, d3c3, 4, "ery deep deep deep bit"],
+];
+
+data.forEach(function (d) { testRangeTexts.apply(null, d); });
+
+</script>
+
+</body>
+</html>

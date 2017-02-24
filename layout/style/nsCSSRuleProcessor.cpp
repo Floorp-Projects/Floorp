@@ -3673,7 +3673,7 @@ nsCSSRuleProcessor::CascadeSheet(CSSStyleSheet* aSheet, CascadeEnumData* aData)
       child = child->mNext;
     }
 
-    if (!aSheet->mInner->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
+    if (!aSheet->Inner()->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
                                                          aData))
       return false;
   }

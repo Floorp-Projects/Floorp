@@ -87,7 +87,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_bug389464.html: also font-size computation [1]
   * test_html_attribute_computed_values.html: also list-style-type [8]
 * test_bug387615.html: getComputedStyle value not updated bug 1331294 ##important## (when that gets fixed, servo/servo#15006) [1]
-* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [2]
+* test_bug397427.html: @import issue bug 1331291 and CSSOM support of @import [3]
 * console support:
   * test_bug413958.html `monitorConsole` [3]
   * test_parser_diagnostics_unprintables.html [550]
@@ -392,7 +392,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_pointer-events.html [2]
     * test_value_storage.html `pointer-events` [8]
   * new syntax of rgba?() and hsla?() functions servo/rust-cssparser#113
-    * test_parse_rule.html `128.0` [1]
     * test_value_storage.html `'color'` [37]
     * ... `rgb(100, 100.0, 100)` [1]
   * color interpolation hint not supported servo/servo#15166
@@ -465,8 +464,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * animation and transition shorthand serialization is wrong servo/servo#15398
-    * test_shorthand_property_getters.html `animation` [9]
-    * ... `transition` [5]
+    * test_shorthand_property_getters.html `transition` [5]
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
@@ -475,8 +473,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * :default ##easy##
     * test_bug302186.html [24]
   * test_bug98997.html: pseudo-class :empty and :-moz-only-whitespace bug 1337068 [75]
-  * :lang() servo/servo#15415
-    * test_parse_rule.html `:lang` [2]
   * :-moz-{first,last}-node
     * test_selectors.html `:-moz-` [4]
     * ... `unexpected rule index` [2]
@@ -534,7 +530,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_variable_serialization_computed.html [36]
   * test_variables.html `custom property name` [2]
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
-* test_load_events_on_stylesheets.html: stylesheets from data uri are not sync loaded [3]
 
 ## Assertions
 
@@ -542,10 +537,10 @@ Any line which doesn't follow the format above would be ignored like comment.
   * assertion in frame constructor bug 1324704
     * test_rule_insertion.html asserts [1]
   * assertion in computed style bug 1337635
-    * test_value_cloning.html asserts [24]
+    * test_value_cloning.html asserts [12]
     * test_value_computation.html asserts [24]
     * test_value_storage.html asserts [44]
-* test_value_cloning.html asserts: negative radius bug 1337618 [6]
+* test_value_cloning.html asserts: negative radius bug 1337618 [4]
 
 ## Need Gecko change
 
@@ -570,6 +565,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 * test_variables.html `url`: url in custom property [1]
 * test_pseudoelement_state.html: doesn't seem to work at all, but only range-thumb fails... [4]
+* test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [8]
 
 ## Ignore
 

@@ -30,14 +30,14 @@ var processes = new Set();
 /**
  * Constructor for creating a process that will hold a chrome toolbox.
  *
- * @param function aOnClose [optional]
+ * @param function onClose [optional]
  *        A function called when the process stops running.
- * @param function aOnRun [optional]
+ * @param function onRun [optional]
  *        A function called when the process starts running.
- * @param object aOptions [optional]
+ * @param object options [optional]
  *        An object with properties for configuring BrowserToolboxProcess.
  */
-this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aOptions) {
+this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun, options) {
   let emitter = new EventEmitter();
   this.on = emitter.on.bind(emitter);
   this.off = emitter.off.bind(emitter);
@@ -50,22 +50,22 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aO
 
   // If first argument is an object, use those properties instead of
   // all three arguments
-  if (typeof aOnClose === "object") {
-    if (aOnClose.onClose) {
-      this.once("close", aOnClose.onClose);
+  if (typeof onClose === "object") {
+    if (onClose.onClose) {
+      this.once("close", onClose.onClose);
     }
-    if (aOnClose.onRun) {
-      this.once("run", aOnClose.onRun);
+    if (onClose.onRun) {
+      this.once("run", onClose.onRun);
     }
-    this._options = aOnClose;
+    this._options = onClose;
   } else {
-    if (aOnClose) {
-      this.once("close", aOnClose);
+    if (onClose) {
+      this.once("close", onClose);
     }
-    if (aOnRun) {
-      this.once("run", aOnRun);
+    if (onRun) {
+      this.once("run", onRun);
     }
-    this._options = aOptions || {};
+    this._options = options || {};
   }
 
   this._telemetry = new Telemetry();
@@ -85,24 +85,24 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function (aOnClose, aOnRun, aOptions) {
-  return new BrowserToolboxProcess(aOnClose, aOnRun, aOptions);
+BrowserToolboxProcess.init = function (onClose, onRun, options) {
+  return new BrowserToolboxProcess(onClose, onRun, options);
 };
 
 /**
  * Passes a set of options to the BrowserAddonActors for the given ID.
  *
- * @param aId string
+ * @param id string
  *        The ID of the add-on to pass the options to
- * @param aOptions object
+ * @param options object
  *        The options.
  * @return a promise that will be resolved when complete.
  */
-BrowserToolboxProcess.setAddonOptions = function DSC_setAddonOptions(aId, aOptions) {
+BrowserToolboxProcess.setAddonOptions = function (id, options) {
   let promises = [];
 
   for (let process of processes.values()) {
-    promises.push(process.debuggerServer.setAddonOptions(aId, aOptions));
+    promises.push(process.debuggerServer.setAddonOptions(id, options));
   }
 
   return promise.all(promises);
@@ -190,7 +190,8 @@ BrowserToolboxProcess.prototype = {
     // always works:
     Services.prefs.savePrefFile(prefsFile);
 
-    dumpn("Finished creating the chrome toolbox user profile at: " + this._dbgProfilePath);
+    dumpn("Finished creating the chrome toolbox user profile at: " +
+          this._dbgProfilePath);
   },
 
   /**
@@ -198,7 +199,8 @@ BrowserToolboxProcess.prototype = {
    */
   _create: function () {
     dumpn("Initializing chrome debugging process.");
-    let process = this._dbgProcess = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    this._dbgProcess = process;
     process.init(Services.dirsvc.get("XREExeF", Ci.nsIFile));
 
     let xulURI = DBG_XUL;
@@ -208,7 +210,12 @@ BrowserToolboxProcess.prototype = {
     }
 
     dumpn("Running chrome debugging process.");
-    let args = ["-no-remote", "-foreground", "-profile", this._dbgProfilePath, "-chrome", xulURI];
+    let args = [
+      "-no-remote",
+      "-foreground",
+      "-profile", this._dbgProfilePath,
+      "-chrome", xulURI
+    ];
 
     // During local development, incremental builds can trigger the main process
     // to clear its startup cache with the "flag file" .purgecaches, but this
@@ -223,7 +230,8 @@ BrowserToolboxProcess.prototype = {
 
     // Disable safe mode for the new process in case this was opened via the
     // keyboard shortcut.
-    let nsIEnvironment = Components.classes["@mozilla.org/process/environment;1"].getService(Components.interfaces.nsIEnvironment);
+    let nsIEnvironment = Cc["@mozilla.org/process/environment;1"]
+                           .getService(Ci.nsIEnvironment);
     let originalValue = nsIEnvironment.get("MOZ_DISABLE_SAFE_MODE_KEY");
     nsIEnvironment.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
@@ -288,7 +296,9 @@ function dumpn(str) {
 var wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 
 Services.prefs.addObserver("devtools.debugger.log", {
-  observe: (...args) => wantLogging = Services.prefs.getBoolPref(args.pop())
+  observe: (...args) => {
+    wantLogging = Services.prefs.getBoolPref(args.pop());
+  }
 }, false);
 
 Services.obs.notifyObservers(null, "ToolboxProcessLoaded", null);

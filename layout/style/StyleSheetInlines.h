@@ -18,19 +18,13 @@ MOZ_DEFINE_STYLO_METHODS(StyleSheet, CSSStyleSheet, ServoStyleSheet)
 StyleSheetInfo&
 StyleSheet::SheetInfo()
 {
-  if (IsServo()) {
-    return AsServo()->mSheetInfo;
-  }
-  return *AsGecko()->mInner;
+  return *mInner;
 }
 
 const StyleSheetInfo&
 StyleSheet::SheetInfo() const
 {
-  if (IsServo()) {
-    return AsServo()->mSheetInfo;
-  }
-  return *AsGecko()->mInner;
+  return *mInner;
 }
 
 bool

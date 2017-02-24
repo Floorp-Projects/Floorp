@@ -335,6 +335,11 @@ void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent
 void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
+void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const nsString string);
+void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
+void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
+void Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut css_value, const nsString family);
+void Gecko_CSSValue_SetInteger(nsCSSValueBorrowedMut css_value, int32_t integer);
 void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);

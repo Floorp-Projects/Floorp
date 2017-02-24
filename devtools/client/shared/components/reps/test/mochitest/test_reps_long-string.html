@@ -17,7 +17,7 @@ Test LongString rep
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
-  const { REPS } = browserRequire("devtools/client/shared/components/reps/load-reps");
+  const { REPS } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, LongStringRep } = REPS;
 
   try {
@@ -38,12 +38,16 @@ window.onload = Task.async(function* () {
     SimpleTest.finish();
   }
 
+  function quoteNewlines(text) {
+    return text.split("\n").join("\\n");
+  }
+
   function testMultiline() {
     const stub = getGripStub("testMultiline");
     const renderedComponent = renderComponent(
       LongStringRep.rep, { object: stub });
 
-    is(renderedComponent.textContent, `"${stub.initial}…"`,
+    is(renderedComponent.textContent, quoteNewlines(`"${stub.initial}…"`),
       "LongString rep has expected text content for multiline string");
   }
 
@@ -53,7 +57,7 @@ window.onload = Task.async(function* () {
 
     is(
       renderedComponent.textContent,
-      `"a\naaaaaaaaaaaaaaaaaa…"`,
+      `"a\\naaaaaaaaaaaaaaaaaa…"`,
       "LongString rep has expected text content for multiline string " +
       "with specified number of characters");
   }
@@ -63,7 +67,7 @@ window.onload = Task.async(function* () {
     const renderedComponent = renderComponent(
       LongStringRep.rep, { object: stub, member: {open: true}, cropLimit: 20 });
 
-    is(renderedComponent.textContent, `"${stub.initial}…"`,
+    is(renderedComponent.textContent, quoteNewlines(`"${stub.initial}…"`),
       "LongString rep has expected text content for multiline string when open");
   }
 
@@ -72,7 +76,7 @@ window.onload = Task.async(function* () {
     const renderedComponentOpen = renderComponent(
       LongStringRep.rep, { object: stub, member: {open: true}, cropLimit: 20 });
 
-    is(renderedComponentOpen.textContent, `"${stub.fullText}"`,
+    is(renderedComponentOpen.textContent, quoteNewlines(`"${stub.fullText}"`),
       "LongString rep has expected text content when grip has a fullText " +
       "property and is open");
 
@@ -80,7 +84,7 @@ window.onload = Task.async(function* () {
       LongStringRep.rep, { object: stub, cropLimit: 20 });
 
     is(renderedComponentNotOpen.textContent,
-      `"a\naaaaaaaaaaaaaaaaaa…"`,
+      `"a\\naaaaaaaaaaaaaaaaaa…"`,
       "LongString rep has expected text content when grip has a fullText " +
       "property and is not open");
   }
