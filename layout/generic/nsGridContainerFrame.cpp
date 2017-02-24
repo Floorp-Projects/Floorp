@@ -6657,20 +6657,14 @@ nsGridContainerFrame::CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
              "This method should only be called for abspos children");
 
   uint16_t alignment = (aLogicalAxis == eLogicalAxisInline) ?
-    aChildRI.mStylePosition->UsedJustifySelf(nullptr) :
-    aChildRI.mStylePosition->UsedAlignSelf(nullptr);
+    aChildRI.mStylePosition->UsedJustifySelf(StyleContext()) :
+    aChildRI.mStylePosition->UsedAlignSelf(StyleContext());
 
   // XXX strip off <overflow-position> bits until we implement it
   // (bug 1311892)
   alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
 
-  // We group 'auto' with 'normal', because the spec says:
-  //    "The 'auto' keyword is interpreted as 'normal'
-  //     if the box is absolutely positioned [...]"
-  // https://drafts.csswg.org/css-align-3/#valdef-align-self-auto
-  // https://drafts.csswg.org/css-align-3/#valdef-justify-self-auto
-  if (alignment == NS_STYLE_ALIGN_AUTO ||
-      alignment == NS_STYLE_ALIGN_NORMAL) {
+  if (alignment == NS_STYLE_ALIGN_NORMAL) {
     // "the 'normal' keyword behaves as 'start' on replaced
     // absolutely-positioned boxes, and behaves as 'stretch' on all other
     // absolutely-positioned boxes."
