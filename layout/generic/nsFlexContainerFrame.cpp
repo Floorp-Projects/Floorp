@@ -1289,7 +1289,7 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     } else {
       // Single-line, or multi-line but the (one) line stretches to fill
       // container. Respect align-self.
-      alignment = aChildRI.mStylePosition->UsedAlignSelf(nullptr);
+      alignment = aChildRI.mStylePosition->UsedAlignSelf(StyleContext());
       // XXX strip off <overflow-position> bits until we implement it
       // (bug 1311892)
       alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
@@ -1310,8 +1310,6 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     alignment = isAxisReversed ? NS_STYLE_ALIGN_END : NS_STYLE_ALIGN_START;
   } else if (alignment == NS_STYLE_ALIGN_FLEX_END) {
     alignment = isAxisReversed ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
-  } else if (alignment == NS_STYLE_ALIGN_AUTO) {
-    alignment = NS_STYLE_ALIGN_START;
   } else if (alignment == NS_STYLE_ALIGN_LEFT ||
              alignment == NS_STYLE_ALIGN_RIGHT) {
     if (aLogicalAxis == eLogicalAxisInline) {
