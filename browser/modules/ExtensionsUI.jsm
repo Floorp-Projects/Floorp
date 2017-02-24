@@ -192,32 +192,6 @@ this.ExtensionsUI = {
 
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 
-    let name = this._sanitizeName(info.addon.name);
-    let addonName = `<span class="addon-webext-name">${name}</span>`;
-
-    result.header = bundle.formatStringFromName("webextPerms.header", [addonName], 1);
-    result.text = "";
-    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
-
-    result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
-    result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
-    result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
-    result.cancelKey = bundle.GetStringFromName("webextPerms.cancel.accessKey");
-
-    if (info.type == "sideload") {
-      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [addonName], 1);
-      result.text = bundle.GetStringFromName("webextPerms.sideloadText2");
-      result.acceptText = bundle.GetStringFromName("webextPerms.sideloadEnable.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
-      result.cancelText = bundle.GetStringFromName("webextPerms.sideloadCancel.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
-    } else if (info.type == "update") {
-      result.header = "";
-      result.text = bundle.formatStringFromName("webextPerms.updateText", [addonName], 1);
-      result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
-    }
-
     let perms = info.permissions || {hosts: [], permissions: []};
 
     // First classify our host permissions
@@ -293,6 +267,35 @@ this.ExtensionsUI = {
         // We deliberately do not include all permissions in the prompt.
         // So if we don't find one then just skip it.
       }
+    }
+
+    // Now figure out all the rest of the notification text.
+    let name = this._sanitizeName(info.addon.name);
+    let addonName = `<span class="addon-webext-name">${name}</span>`;
+
+    result.header = bundle.formatStringFromName("webextPerms.header", [addonName], 1);
+    result.text = "";
+    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
+
+    result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
+    result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
+    result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
+    result.cancelKey = bundle.GetStringFromName("webextPerms.cancel.accessKey");
+
+    if (info.type == "sideload") {
+      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [addonName], 1);
+      let key = result.msgs.length == 0 ?
+                "webextPerms.sideloadTextNoPerms" : "webextPerms.sideloadText2";
+      result.text = bundle.GetStringFromName(key);
+      result.acceptText = bundle.GetStringFromName("webextPerms.sideloadEnable.label");
+      result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
+      result.cancelText = bundle.GetStringFromName("webextPerms.sideloadCancel.label");
+      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
+    } else if (info.type == "update") {
+      result.header = "";
+      result.text = bundle.formatStringFromName("webextPerms.updateText", [addonName], 1);
+      result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
+      result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
     }
 
     return result;
