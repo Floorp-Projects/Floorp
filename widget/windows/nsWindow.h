@@ -414,6 +414,7 @@ protected:
   TimeStamp               GetMessageTimeStamp(LONG aEventTime) const;
   static void             UpdateFirstEventTime(DWORD aEventTime);
   void                    FinishLiveResizing(ResizeState aNewState);
+  nsIntPoint              GetTouchCoordinates(WPARAM wParam, LPARAM lParam);
 
   /**
    * Event handlers
