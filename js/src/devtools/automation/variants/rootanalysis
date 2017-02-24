@@ -1,5 +1,6 @@
 {
-    "configure-args": "--enable-optimize --enable-debug --enable-stdcxx-compat --enable-ctypes",
+    "configure-args": "--enable-debug --enable-stdcxx-compat --enable-ctypes",
+    "optimize": true,
     "env": {
         "JS_GC_ZEAL": "GenerationalGC",
         "JSTESTS_EXTRA_ARGS": "--jitflags=debug"
