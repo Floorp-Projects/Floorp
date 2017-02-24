@@ -100,6 +100,19 @@ nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
 
   mInitialized = true;
 
+  // Assert that the URI we get here isn't any of the schemes that we know we
+  // should not get here.  These schemes always either inherit their principal
+  // or fall back to a null principal.  These are schemes which return
+  // URI_INHERITS_SECURITY_CONTEXT from their protocol handler's
+  // GetProtocolFlags function.
+  bool hasFlag;
+  Unused << hasFlag; // silence possible compiler warnings.
+  MOZ_DIAGNOSTIC_ASSERT(
+      NS_SUCCEEDED(NS_URIChainHasFlags(aCodebase,
+                                       nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                                       &hasFlag)) &&
+      !hasFlag);
+
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
   mOriginAttributes = aOriginAttributes;
