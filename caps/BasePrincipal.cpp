@@ -333,12 +333,47 @@ BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsi
   return SubsumesInternal(aOther, aConsideration);
 }
 
+bool
+BasePrincipal::FastEquals(nsIPrincipal* aOther)
+{
+  auto other = Cast(aOther);
+  if (Kind() != other->Kind()) {
+    // Principals of different kinds can't be equal.
+    return false;
+  }
+
+  // Two principals are considered to be equal if their origins are the same.
+  // If the two principals are codebase principals, their origin attributes
+  // (aka the origin suffix) must also match.
+  // If the two principals are null principals, they're only equal if they're
+  // the same object.
+  if (Kind() == eNullPrincipal || Kind() == eSystemPrincipal) {
+    return this == other;
+  }
+
+  if (mOriginNoSuffix) {
+    if (Kind() == eCodebasePrincipal) {
+      return mOriginNoSuffix == other->mOriginNoSuffix &&
+             mOriginSuffix == other->mOriginSuffix;
+    }
+
+    MOZ_ASSERT(Kind() == eExpandedPrincipal);
+    return mOriginNoSuffix == other->mOriginNoSuffix;
+  }
+
+  // If mOriginNoSuffix is null on one of our principals, we must fall back
+  // to the slow path.
+  return Subsumes(aOther, DontConsiderDocumentDomain) &&
+         other->Subsumes(this, DontConsiderDocumentDomain);
+}
+
 NS_IMETHODIMP
 BasePrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
-  *aResult = Subsumes(aOther, DontConsiderDocumentDomain) &&
-             Cast(aOther)->Subsumes(this, DontConsiderDocumentDomain);
+
+  *aResult = FastEquals(aOther);
+
   return NS_OK;
 }
 
@@ -355,6 +390,25 @@ NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  // If two principals are equal, then they both subsume each other.
+  // We deal with two special cases first:
+  // Null principals only subsume each other if they are equal, and are only
+  // equal if they're the same object.
+  // Also, if mOriginNoSuffix is null, FastEquals falls back to the slow path
+  // using Subsumes, so we don't want to use it in that case to avoid an
+  // infinite recursion.
+  auto other = Cast(aOther);
+  if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
+    *aResult = (this == other);
+    return NS_OK;
+  }
+  if (mOriginNoSuffix && FastEquals(aOther)) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  // Otherwise, fall back to the slow path.
   *aResult = Subsumes(aOther, DontConsiderDocumentDomain);
   return NS_OK;
 }
