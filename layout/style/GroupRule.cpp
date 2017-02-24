@@ -366,24 +366,6 @@ GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
-// -------------------------------
-// ConditionRule
-//
-
-ConditionRule::ConditionRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-  : GroupRule(aLineNumber, aColumnNumber)
-{
-}
-
-ConditionRule::ConditionRule(const ConditionRule& aCopy)
-  : GroupRule(aCopy)
-{
-}
-
-ConditionRule::~ConditionRule()
-{
-}
-
 
 } // namespace css
 } // namespace mozill
