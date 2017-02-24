@@ -54,12 +54,36 @@ Currently this mirrors the signing scope alias behavior.
 """
 BEETMOVER_SCOPE_ALIAS_TO_PROJECT = deepcopy(SIGNING_SCOPE_ALIAS_TO_PROJECT)
 
+"""Map beetmover tasks aliases to sets of target task methods.
+
+This is a list of list-pairs, for ordering.
+"""
+BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
+    'all-nightly-tasks', set([
+        'nightly_fennec',
+        'nightly_linux',
+    ])
+], [
+    'all-release-tasks', set([
+        'mozilla_beta_tasks',
+        'mozilla_release_tasks',
+    ])
+]]
+
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
     'all-release-branches': 'project:releng:beetmover:nightly',
     'all-nightly-branches': 'project:releng:beetmover:nightly',
     'default': 'project:releng:beetmover:nightly',
+}
+
+"""Map the beetmover tasks aliases to the actual action scopes.
+"""
+BEETMOVER_ACTION_SCOPES = {
+    'all-release-tasks': 'project:releng:beetmover:action:push-to-candidates',
+    'all-nightly-tasks': 'project:releng:beetmover:action:push-to-nightly',
+    'default': 'project:releng:beetmover:action:push-to-staging',
 }
 
 """Map balrog scope aliases to sets of projects.
@@ -113,6 +137,24 @@ def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
     return alias_to_scope_map['default']
 
 
+def get_scope_from_target_method(alias_to_tasks_map, alias_to_scope_map, config):
+    """Determine the restricted scope from `config.params['target_tasks_method']`.
+
+    Args:
+        alias_to_tasks_map (list of lists): each list pair contains the
+            alias alias and the set of target methods that match. This is ordered.
+        alias_to_scope_map (dict): the alias alias to scope
+        config (dict): the task config that defines the target task method.
+
+    Returns:
+        string: the scope to use.
+    """
+    for alias, tasks in alias_to_tasks_map:
+        if config.params['target_tasks_method'] in tasks and alias in alias_to_scope_map:
+            return alias_to_scope_map[alias]
+    return alias_to_scope_map['default']
+
+
 get_signing_cert_scope = functools.partial(
     get_scope_from_project,
     SIGNING_SCOPE_ALIAS_TO_PROJECT,
@@ -123,6 +165,12 @@ get_beetmover_bucket_scope = functools.partial(
     get_scope_from_project,
     BEETMOVER_SCOPE_ALIAS_TO_PROJECT,
     BEETMOVER_BUCKET_SCOPES
+)
+
+get_beetmover_action_scope = functools.partial(
+    get_scope_from_target_method,
+    BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
+    BEETMOVER_ACTION_SCOPES
 )
 
 get_balrog_server_scope = functools.partial(
