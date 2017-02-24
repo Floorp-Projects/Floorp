@@ -16,6 +16,8 @@
 #include <unistd.h>
 #endif
 
+#include "cubeb/cubeb.h"
+
 template<typename T, size_t N>
 constexpr size_t
 ARRAY_LENGTH(T(&)[N])
