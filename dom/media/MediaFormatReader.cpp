@@ -1085,7 +1085,7 @@ MediaFormatReader::ShutdownDecoderWithPromise(TrackType aTrack)
     return decoder.mShutdownPromise.Ensure(__func__);
   }
 
-  if (decoder.mFlushing || decoder.mShutdownRequest.Exists()) {
+  if (decoder.mFlushing || decoder.mShuttingDown) {
     // Let the current flush or shutdown operation complete, Flush will continue
     // shutting down the current decoder now that the shutdown promise is set.
     return decoder.mShutdownPromise.Ensure(__func__);
@@ -1892,7 +1892,7 @@ MediaFormatReader::HandleDemuxedSamples(
 
   auto& decoder = GetDecoderData(aTrack);
 
-  if (decoder.mFlushing || decoder.mShutdownRequest.Exists()) {
+  if (decoder.mFlushing || decoder.mShuttingDown) {
     LOGV("Decoder operation in progress, let it complete.");
     return;
   }
@@ -2275,7 +2275,7 @@ MediaFormatReader::Update(TrackType aTrack)
     uint32_t(size_t(decoder.mSizeOfQueue)),
     decoder.mDecodeRequest.Exists(),
     decoder.mFlushing,
-    decoder.mShutdownRequest.Exists(),
+    decoder.mShuttingDown,
     uint32_t(decoder.mOutput.Length()),
     decoder.mWaitingForData,
     decoder.mLastStreamSourceID);
