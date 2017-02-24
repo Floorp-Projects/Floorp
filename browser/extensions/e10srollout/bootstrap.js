@@ -84,6 +84,7 @@ function defineCohort() {
   let testGroup = (getUserSample() < TEST_THRESHOLD[updateChannel]);
   let hasNonExemptAddon = Preferences.get(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
   let temporaryDisqualification = getTemporaryDisqualification();
+  let temporaryQualification = getTemporaryQualification();
 
   let cohortPrefix = "";
   if (disqualified) {
@@ -107,6 +108,9 @@ function defineCohort() {
     // here will be accumulated as "2 - Disabled", which is fine too.
     setCohort(`temp-disqualified-${temporaryDisqualification}`);
     Preferences.reset(PREF_TOGGLE_E10S);
+  } else if (!disqualified && temporaryQualification != "") {
+    setCohort(`temp-qualified-${temporaryQualification}`);
+    Preferences.set(PREF_TOGGLE_E10S, true);
   } else if (testGroup) {
     setCohort(`${cohortPrefix}test`);
     Preferences.set(PREF_TOGGLE_E10S, true);
@@ -172,5 +176,15 @@ function optedOut() {
  * string must be returned.
  */
 function getTemporaryDisqualification() {
+  return "";
+}
+
+/* If this function returns a non-empty string, it
+ * means that this particular user should be temporarily
+ * qualified due to some particular reason.
+ * If a user shouldn't be qualified, then an empty
+ * string must be returned.
+ */
+function getTemporaryQualification() {
   return "";
 }
