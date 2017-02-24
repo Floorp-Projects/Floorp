@@ -9,7 +9,7 @@ import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
-import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
+import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
 
@@ -50,7 +50,7 @@ public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHi
 
     @Override
     protected Repository getRemoteRepository() throws URISyntaxException {
-        return new ConstrainedServer11Repository(
+        return new ConfigurableServer15Repository(
                 getCollection(),
                 session.getSyncDeadline(),
                 session.config.storageURL(),

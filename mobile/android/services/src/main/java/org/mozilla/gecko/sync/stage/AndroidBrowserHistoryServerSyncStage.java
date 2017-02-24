@@ -7,7 +7,7 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.MetaGlobalException;
-import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
+import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
@@ -44,7 +44,7 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
-    return new ConstrainedServer11Repository(
+    return new ConfigurableServer15Repository(
             getCollection(),
             session.getSyncDeadline(),
             session.config.storageURL(),

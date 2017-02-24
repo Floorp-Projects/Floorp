@@ -19,8 +19,8 @@ import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
 
 @RunWith(TestRunner.class)
 public class BatchingDownloaderDelegateTest {
-    private Server11RepositorySession repositorySession;
+    private Server15RepositorySession repositorySession;
     private MockDownloader mockDownloader;
     private String DEFAULT_COLLECTION_URL = "http://dummy.url/";
 
@@ -109,7 +109,7 @@ public class BatchingDownloaderDelegateTest {
 
     @Before
     public void setUp() throws Exception {
-        repositorySession = new Server11RepositorySession(new Server11Repository(
+        repositorySession = new Server15RepositorySession(new Server15Repository(
                 "dummyCollection",
                 SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                 DEFAULT_COLLECTION_URL,
