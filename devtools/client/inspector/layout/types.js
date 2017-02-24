@@ -7,6 +7,16 @@
 const { PropTypes } = require("devtools/client/shared/vendor/react");
 
 /**
+ * The box model data for the current selected node.
+ */
+exports.boxModel = {
+
+  // The layout information of the current selected node
+  layout: PropTypes.object,
+
+};
+
+/**
  * A single grid container in the document.
  */
 exports.grid = {

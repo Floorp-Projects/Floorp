@@ -14,20 +14,20 @@ add_task(function* () {
   yield assertBoxModelView(inspector, view, testActor);
 
   info("Reload the page");
-  let onMarkupLoaded = waitForMarkupLoaded(inspector);
   yield testActor.reload();
-  yield onMarkupLoaded;
+  yield inspector.once("markuploaded");
 
   info("Test that the box model view works on the reloaded page");
   yield assertBoxModelView(inspector, view, testActor);
 });
 
 function* assertBoxModelView(inspector, view, testActor) {
+  info("Selecting the test node");
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = view.document.querySelector(
-    ".boxmodel-padding.boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(
+    ".old-boxmodel-padding.old-boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
