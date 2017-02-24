@@ -5517,6 +5517,18 @@ nsRuleNode::ComputeTimingFunction(const nsCSSValue& aValue,
         aResult = nsTimingFunction(type, array->Item(0).GetIntValue());
       }
       break;
+    case eCSSUnit_Function:
+      {
+        nsCSSValue::Array* array = aValue.GetArrayValue();
+        NS_ASSERTION(array && array->Count() == 2, "Need 2 items");
+        NS_ASSERTION(array->Item(0).GetKeywordValue() == eCSSKeyword_frames,
+                     "should be frames function");
+        NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Integer,
+                     "unexpected frames function value");
+        aResult = nsTimingFunction(nsTimingFunction::Type::Frames,
+                                   array->Item(1).GetIntValue());
+      }
+      break;
     default:
       NS_NOTREACHED("Invalid transition property unit");
   }
