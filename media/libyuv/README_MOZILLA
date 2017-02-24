@@ -1,0 +1,12 @@
+YUV-format image scaling and conversion library
+
+The source in this directory was copied from upstream by running the
+update.py script from media/libyuv. Any changes made relative to upstream
+should be reflected in that script, e.g. by applying patch files after the
+copy step.
+
+The upstream repository is https://chromium.googlesource.com/libyuv/libyuv
+Updates before this file was added were done manually; the last import was
+r1602 (svn).
+
+The git commit ID last used to import was 054ec37f8e31e6131c8f19eb74395d29009d6604
