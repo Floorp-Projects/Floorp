@@ -386,6 +386,7 @@ private:
   GatheringState gathering_state_;
   const std::string name_;
   bool offerer_;
+  TimeStamp ice_start_time_;
   bool ice_controlling_set_;
   std::vector<RefPtr<NrIceMediaStream> > streams_;
   nr_ice_ctx *ctx_;

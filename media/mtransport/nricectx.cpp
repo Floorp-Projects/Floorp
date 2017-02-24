@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+#include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 
 #include "logging.h"
@@ -710,6 +711,21 @@ NrIceStats NrIceCtx::Destroy() {
     stats.turn_438s = ctx_->stats.turn_438s;
   }
 
+  if (!ice_start_time_.IsNull()) {
+    TimeDuration time_delta = TimeStamp::Now() - ice_start_time_;
+    ice_start_time_ = TimeStamp(); // null out
+
+    if (offerer_) {
+      Telemetry::Accumulate(
+          Telemetry::WEBRTC_ICE_OFFERER_ABORT_TIME,
+          time_delta.ToMilliseconds());
+    } else {
+      Telemetry::Accumulate(
+          Telemetry::WEBRTC_ICE_ANSWERER_ABORT_TIME,
+          time_delta.ToMilliseconds());
+    }
+  }
+
   if (peer_) {
     nr_ice_peer_ctx_destroy(&peer_);
   }
@@ -970,6 +986,7 @@ nsresult NrIceCtx::StartChecks(bool offerer) {
   int r;
 
   offerer_ = offerer;
+  ice_start_time_ = TimeStamp::Now();
 
   r=nr_ice_peer_ctx_pair_candidates(peer_);
   if (r) {
@@ -1027,6 +1044,47 @@ void NrIceCtx::UpdateNetworkState(bool online) {
 void NrIceCtx::SetConnectionState(ConnectionState state) {
   if (state == connection_state_)
     return;
+
+  if (!ice_start_time_.IsNull() && (state > ICE_CTX_CHECKING)) {
+    TimeDuration time_delta = TimeStamp::Now() - ice_start_time_;
+    ice_start_time_ = TimeStamp();
+
+    switch (state) {
+      case ICE_CTX_INIT:
+      case ICE_CTX_CHECKING:
+        MOZ_CRASH();
+        break;
+      case ICE_CTX_CONNECTED:
+      case ICE_CTX_COMPLETED:
+        if (offerer_) {
+          Telemetry::Accumulate(
+              Telemetry::WEBRTC_ICE_OFFERER_SUCCESS_TIME,
+              time_delta.ToMilliseconds());
+        } else {
+          Telemetry::Accumulate(
+              Telemetry::WEBRTC_ICE_ANSWERER_SUCCESS_TIME,
+              time_delta.ToMilliseconds());
+        }
+        break;
+      case ICE_CTX_FAILED:
+        if (offerer_) {
+          Telemetry::Accumulate(
+              Telemetry::WEBRTC_ICE_OFFERER_FAILURE_TIME,
+              time_delta.ToMilliseconds());
+        } else {
+          Telemetry::Accumulate(
+              Telemetry::WEBRTC_ICE_ANSWERER_FAILURE_TIME,
+              time_delta.ToMilliseconds());
+        }
+        break;
+      case ICE_CTX_DISCONNECTED:
+        MOZ_CRASH("Transition from checking->disconnected should never happen");
+        break;
+      case ICE_CTX_CLOSED:
+        // This doesn't seem to be used...
+        break;
+    }
+  }
 
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): state " <<
             connection_state_ << "->" << state);
