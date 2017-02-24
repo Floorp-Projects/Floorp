@@ -87,9 +87,11 @@ function run_test() {
       // Make sure one of the hangs is a permanent
       // hang containing a native stack.
       ok(endHangs.hangs.some((hang) => (
-        Array.isArray(hang.nativeStack) &&
-        hang.nativeStack.length !== 0 &&
-        typeof hang.nativeStack[0] === "string"
+        hang.nativeStack &&
+        Array.isArray(hang.nativeStack.memoryMap) &&
+        hang.nativeStack.memoryMap.length !== 0 &&
+        Array.isArray(hang.nativeStack.stacks) &&
+        hang.nativeStack.stacks.length !== 0
       )));
 
       check_histogram(endHangs.hangs[0].histogram);
