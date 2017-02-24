@@ -536,6 +536,19 @@ NS_InitAtomTable()
   gAtomTable = new PLDHashTable(&AtomTableOps, sizeof(AtomTableEntry),
                                 ATOM_HASHTABLE_INITIAL_LENGTH);
   gAtomTableLock = new Mutex("Atom Table Lock");
+
+  // Bug 1340710 has caused us to generate an empty atom at arbitrary times
+  // after startup.  If we end up creating one before nsGkAtoms::_empty is
+  // registered, we get an assertion about transmuting a dynamic atom into a
+  // static atom.  In order to avoid that, we register an empty string static
+  // atom as soon as we initialize the atom table to guarantee that the empty
+  // string atom will always be static.
+  NS_STATIC_ATOM_BUFFER(empty, "");
+  static nsIAtom* empty_atom = nullptr;
+  static const nsStaticAtom default_atoms[] = {
+    NS_STATIC_ATOM(empty, &empty_atom)
+  };
+  NS_RegisterStaticAtoms(default_atoms);
 }
 
 void
