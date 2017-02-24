@@ -284,7 +284,6 @@
       },
       {
         "name": "onCreatedNavigationTarget",
-        "unsupported": true,
         "type": "function",
         "description": "Fired when a new window, or a new tab in an existing window, is created to host a navigation.",
         "parameters": [
