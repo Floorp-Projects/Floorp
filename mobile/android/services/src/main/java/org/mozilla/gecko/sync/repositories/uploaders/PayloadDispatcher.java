@@ -8,7 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.Server11RecordPostFailedException;
+import org.mozilla.gecko.sync.Server15RecordPostFailedException;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
@@ -133,7 +133,7 @@ class PayloadDispatcher {
     }
 
     void recordFailed(final String recordGuid) {
-        recordFailed(new Server11RecordPostFailedException(), recordGuid);
+        recordFailed(new Server15RecordPostFailedException(), recordGuid);
     }
 
     void recordFailed(final Exception e, final String recordGuid) {

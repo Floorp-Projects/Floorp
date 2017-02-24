@@ -9,7 +9,7 @@ import java.net.URISyntaxException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
-import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
+import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FormHistoryRepositorySession;
@@ -42,7 +42,7 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
     String collection = getCollection();
-    return new ConstrainedServer11Repository(
+    return new ConfigurableServer15Repository(
             collection,
             session.getSyncDeadline(),
             session.config.storageURL(),

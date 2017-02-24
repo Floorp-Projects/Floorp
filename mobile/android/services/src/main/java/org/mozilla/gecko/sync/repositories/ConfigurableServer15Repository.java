@@ -11,18 +11,18 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 
 /**
- * A kind of Server11Repository that supports explicit setting of per-batch fetch limit,
+ * A kind of Server15Repository that supports explicit setting of per-batch fetch limit,
  * batching mode (single batch vs multi-batch), and a sort order.
  *
  * @author rnewman
  *
  */
-public class ConstrainedServer11Repository extends Server11Repository {
+public class ConfigurableServer15Repository extends Server15Repository {
   private final String sortOrder;
   private final long batchLimit;
   private final boolean allowMultipleBatches;
 
-  public ConstrainedServer11Repository(
+  public ConfigurableServer15Repository(
           String collection,
           long syncDeadline,
           String storageURL,
