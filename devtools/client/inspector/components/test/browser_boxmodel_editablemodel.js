@@ -36,21 +36,21 @@ function* testEditingMargins(inspector, view, testActor) {
      "Should be no margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "5px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("3", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("3", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "margin-top")), "3px",
      "Should have updated the margin.");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "margin-top")), "",
@@ -66,35 +66,35 @@ function* testKeyBindings(inspector, view, testActor) {
      "Should be no margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.document.querySelector(".boxmodel-margin.boxmodel-left > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-left > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "10px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_UP", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_UP", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "11px", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "margin-left")), "11px",
      "Should have updated the margin.");
 
-  EventUtils.synthesizeKey("VK_DOWN", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_DOWN", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "10px", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "margin-left")), "10px",
      "Should have updated the margin.");
 
-  EventUtils.synthesizeKey("VK_UP", { shiftKey: true }, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_UP", { shiftKey: true }, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "20px", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "margin-left")), "20px",
      "Should have updated the margin.");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
   is((yield getStyle(testActor, "#div1", "margin-left")), "20px",
      "Should be the right margin-top on the element.");
@@ -109,22 +109,22 @@ function* testEscapeToUndo(inspector, view, testActor) {
      "Should be the right margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.document.querySelector(".boxmodel-margin.boxmodel-left > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-left > span");
   is(span.textContent, 20, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "20px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_DELETE", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_DELETE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "margin-left")), "",
      "Should have updated the margin.");
 
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is((yield getStyle(testActor, "#div1", "margin-left")), "20px",
@@ -140,22 +140,22 @@ function* testDeletingValue(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.document.querySelector(".boxmodel-margin.boxmodel-right > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-right > span");
   is(span.textContent, 15, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
   is(editor.value, "15px", "Should have the right value in the editor.");
 
-  EventUtils.synthesizeKey("VK_DELETE", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_DELETE", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div1", "margin-right")), "",
      "Should have updated the margin.");
 
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
   is((yield getStyle(testActor, "#div1", "margin-right")), "",
      "Should be the right margin-top on the element.");
@@ -167,26 +167,26 @@ function* testRefocusingOnClick(inspector, view, testActor) {
 
   yield selectNode("#div4", inspector);
 
-  let span = view.document.querySelector(".boxmodel-margin.boxmodel-top > span");
+  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
   is(span.textContent, 1, "Should have the right value in the box model.");
 
-  EventUtils.synthesizeMouseAtCenter(span, {}, view.document.defaultView);
-  let editor = view.document.querySelector(".styleinspector-propertyeditor");
+  EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
+  let editor = view.doc.querySelector(".styleinspector-propertyeditor");
   ok(editor, "Should have opened the editor.");
 
   info("Click in the already opened editor input");
-  EventUtils.synthesizeMouseAtCenter(editor, {}, view.document.defaultView);
-  is(editor, view.document.activeElement,
+  EventUtils.synthesizeMouseAtCenter(editor, {}, view.doc.defaultView);
+  is(editor, view.doc.activeElement,
     "Inplace editor input should still have focus.");
 
   info("Check the input can still be used as expected");
-  EventUtils.synthesizeKey("VK_UP", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_UP", {}, view.doc.defaultView);
   yield waitForUpdate(inspector);
 
   is(editor.value, "2px", "Should have the right value in the editor.");
   is((yield getStyle(testActor, "#div4", "margin-top")), "2px",
      "Should have updated the margin.");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.document.defaultView);
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
   is((yield getStyle(testActor, "#div4", "margin-top")), "2px",
      "Should be the right margin-top on the element.");

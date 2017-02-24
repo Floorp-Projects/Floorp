@@ -58,7 +58,7 @@ function openBoxModelView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      view: data.inspector.computedview,
+      view: data.inspector.computedview.boxModelView,
       testActor: data.testActor
     };
   });
@@ -66,37 +66,10 @@ function openBoxModelView() {
 
 /**
  * Wait for the boxmodel-view-updated event.
- *
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox.
- * @param {Boolean} waitForSelectionUpdate
- *        Should the boxmodel-view-updated event come from a new selection.
- * @return {Promise} a promise
+ * @return a promise
  */
-function waitForUpdate(inspector, waitForSelectionUpdate) {
-  return new Promise(resolve => {
-    inspector.on("boxmodel-view-updated", function onUpdate(e, reasons) {
-      // Wait for another update event if we are waiting for a selection related event.
-      if (waitForSelectionUpdate && !reasons.includes("new-selection")) {
-        return;
-      }
-
-      inspector.off("boxmodel-view-updated", onUpdate);
-      resolve();
-    });
-  });
-}
-
-/**
- * Wait for both boxmode-view-updated and markuploaded events.
- *
- * @return {Promise} a promise that resolves when both events have been received.
- */
-function waitForMarkupLoaded(inspector) {
-  return Promise.all([
-    waitForUpdate(inspector),
-    inspector.once("markuploaded"),
-  ]);
+function waitForUpdate(inspector) {
+  return inspector.once("boxmodel-view-updated");
 }
 
 function getStyle(testActor, selector, propertyName) {
@@ -112,15 +85,3 @@ function setStyle(testActor, selector, propertyName, value) {
                     .style.${propertyName} = "${value}";
   `);
 }
-
-/**
- * The box model doesn't participate in the inspector's update mechanism, so simply
- * calling the default selectNode isn't enough to guarantee that the box model view has
- * finished updating. We also need to wait for the "boxmodel-view-updated" event.
- */
-var _selectNode = selectNode;
-selectNode = function* (node, inspector, reason) {
-  let onUpdate = waitForUpdate(inspector, true);
-  yield _selectNode(node, inspector, reason);
-  yield onUpdate;
-};
