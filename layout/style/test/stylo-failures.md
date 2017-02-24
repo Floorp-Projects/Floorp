@@ -433,6 +433,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
+  * Length parsing is lossy and not rounding: servo/servo#15729
+    * test_value_storage.html `should be idempotent for 'clip` [1]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -563,7 +565,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_variables.html `url`: url in custom property [1]
 * test_pseudoelement_state.html: doesn't seem to work at all, but only range-thumb fails... [4]
 * test_parse_rule.html `rgb(0, 128, 0)`: color properties not getting computed [8]
-* test_value_storage.html `should be idempotent for 'clip` [1]
 
 ## Ignore
 
