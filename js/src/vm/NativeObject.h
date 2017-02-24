@@ -1393,7 +1393,7 @@ NativeGetExistingProperty(JSContext* cx, HandleObject receiver, HandleNativeObje
 /* * */
 
 extern bool
-GetNameBoundInEnvironment(JSContext* cx, HandleObject env, HandleId id, MutableHandleValue vp);
+GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
 } /* namespace js */
 
