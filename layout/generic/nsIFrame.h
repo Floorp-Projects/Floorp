@@ -202,8 +202,7 @@ class nsReflowStatus final {
 public:
   nsReflowStatus()
     : mBreakType(StyleClear::None)
-    , mIncomplete(false)
-    , mOverflowIncomplete(false)
+    , mCompletion(Completion::FullyComplete)
     , mNextInFlowNeedsReflow(false)
     , mTruncated(false)
     , mInlineBreak(false)
@@ -211,11 +210,10 @@ public:
     , mFirstLetterComplete(false)
   {}
 
-  // Reset all the bit-fields.
+  // Reset all the member variables.
   void Reset() {
     mBreakType = StyleClear::None;
-    mIncomplete = false;
-    mOverflowIncomplete = false;
+    mCompletion = Completion::FullyComplete;
     mNextInFlowNeedsReflow = false;
     mTruncated = false;
     mInlineBreak = false;
@@ -223,10 +221,9 @@ public:
     mFirstLetterComplete = false;
   }
 
-  // Return true if all flags are cleared.
+  // Return true if all member variables have their default values.
   bool IsEmpty() const {
-    return (!mIncomplete &&
-            !mOverflowIncomplete &&
+    return (IsFullyComplete() &&
             !mNextInFlowNeedsReflow &&
             !mTruncated &&
             !mInlineBreak &&
@@ -234,34 +231,45 @@ public:
             !mFirstLetterComplete);
   }
 
-  // mIncomplete bit flag means the frame does not map all its content, and
-  // that the parent frame should create a continuing frame. If this bit
-  // isn't set, it means the frame does map all its content. This bit is
-  // mutually exclusive with mOverflowIncomplete.
+  // There are three possible completion statuses, represented by
+  // mCompletion.
   //
-  // mOverflowIncomplete bit flag means that the frame has overflow that is
-  // not complete, but its own box is complete. (This happens when content
+  // Incomplete means the frame does *not* map all its content, and the
+  // parent frame should create a continuing frame.
+  //
+  // OverflowIncomplete means that the frame has an overflow that is not
+  // complete, but its own box is complete. (This happens when the content
   // overflows a fixed-height box.) The reflower should place and size the
-  // frame and continue its reflow, but needs to create an overflow
-  // container as a continuation for this frame. See nsContainerFrame.h for
-  // more information. This bit is mutually exclusive with mIncomplete.
+  // frame and continue its reflow, but it needs to create an overflow
+  // container as a continuation for this frame. See "Overflow containers"
+  // documentation in nsContainerFrame.h for more information.
   //
-  // If both mIncomplete and mOverflowIncomplete are not set, the frame is
-  // fully complete.
-  bool IsComplete() const { return !mIncomplete; }
-  bool IsIncomplete() const { return mIncomplete; }
-  bool IsOverflowIncomplete() const { return mOverflowIncomplete; }
-  bool IsFullyComplete() const {
-    return !IsIncomplete() && !IsOverflowIncomplete();
+  // FullyComplete means the frame is neither Incomplete nor
+  // OverflowIncomplete. This is the default state for a nsReflowStatus.
+  //
+  enum class Completion : uint8_t {
+    // The order of the enum values is important, which represents the
+    // precedence when merging.
+    FullyComplete,
+    OverflowIncomplete,
+    Incomplete,
+  };
+
+  bool IsIncomplete() const { return mCompletion == Completion::Incomplete; }
+  bool IsOverflowIncomplete() const {
+    return mCompletion == Completion::OverflowIncomplete;
   }
+  bool IsFullyComplete() const {
+    return mCompletion == Completion::FullyComplete;
+  }
+  // Just for convenience; not a distinct state.
+  bool IsComplete() const { return !IsIncomplete(); }
 
   void SetIncomplete() {
-    mIncomplete = true;
-    mOverflowIncomplete = false;
+    mCompletion = Completion::Incomplete;
   }
   void SetOverflowIncomplete() {
-    mIncomplete = false;
-    mOverflowIncomplete = true;
+    mCompletion = Completion::OverflowIncomplete;
   }
 
   // mNextInFlowNeedsReflow bit flag means that the next-in-flow is dirty,
@@ -283,13 +291,18 @@ public:
   // Merge the frame completion status bits from aStatus into this.
   void MergeCompletionStatusFrom(const nsReflowStatus& aStatus)
   {
-    mIncomplete |= aStatus.mIncomplete;
-    mOverflowIncomplete |= aStatus.mOverflowIncomplete;
+    if (mCompletion < aStatus.mCompletion) {
+      mCompletion = aStatus.mCompletion;
+    }
+
+    // These asserts ensure that the mCompletion merging works as we expect.
+    // (Incomplete beats OverflowIncomplete, which beats FullyComplete.)
+    static_assert(Completion::Incomplete > Completion::OverflowIncomplete &&
+                  Completion::OverflowIncomplete > Completion::FullyComplete,
+                  "mCompletion merging won't work without this!");
+
     mNextInFlowNeedsReflow |= aStatus.mNextInFlowNeedsReflow;
     mTruncated |= aStatus.mTruncated;
-    if (mIncomplete) {
-      mOverflowIncomplete = false;
-    }
   }
 
   // mInlineBreak bit flag means a break is requested.
@@ -327,10 +340,7 @@ public:
 
 private:
   StyleClear mBreakType;
-
-  // Frame completion status bit flags.
-  bool mIncomplete : 1;
-  bool mOverflowIncomplete : 1;
+  Completion mCompletion;
   bool mNextInFlowNeedsReflow : 1;
   bool mTruncated : 1;
 
@@ -2323,7 +2333,7 @@ public:
    * frame state will be cleared.
    *
    * XXX This doesn't make sense. If the frame is reflowed but not complete, then
-   * the status should have mIncomplete bit set.
+   * the status should have IsIncomplete() equal to true.
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
