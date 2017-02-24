@@ -375,11 +375,21 @@ struct nsCSSRendering {
    */
   static void Shutdown();
   
+  static bool GetShadowInnerRadii(nsIFrame* aFrame,
+                                  const nsRect& aFrameArea,
+                                  RectCornerRadii& aOutInnerRadii);
+  static nsRect GetBoxShadowInnerPaddingRect(nsIFrame* aFrame,
+                                             const nsRect& aFrameArea);
+  static bool CanPaintBoxShadowInner(nsIFrame* aFrame);
   static void PaintBoxShadowInner(nsPresContext* aPresContext,
                                   nsRenderingContext& aRenderingContext,
                                   nsIFrame* aForFrame,
                                   const nsRect& aFrameArea);
 
+  static bool GetBorderRadii(const nsRect& aFrameRect,
+                             const nsRect& aBorderRect,
+                             nsIFrame* aFrame,
+                             RectCornerRadii& aOutRadii);
   static nsRect GetShadowRect(const nsRect aFrameArea,
                               bool aNativeTheme,
                               nsIFrame* aForFrame);
