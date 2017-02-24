@@ -4,8 +4,14 @@ All notable changes to this program is documented in this file.
 
 ## Unreleased
 
+### Added
+- Added routing and parsing for the [Get Timeouts](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-get-timeouts) command
+
 ### Changed
 - Now uses about:blank as the new tab document; this was previously disabled due to [bug 1333736](https://bugzilla.mozilla.org/show_bug.cgi?id=1333736) in Marionette
+
+### Fixed
+- Aligned the data structure accepted by the [Set Timeouts](https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts) command with the WebDriver specification
 
 ## 0.14.0 (2017-01-31)
 
