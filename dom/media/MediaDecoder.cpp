@@ -1813,14 +1813,13 @@ MediaDecoder::DumpDebugInfo()
     return;
   }
 
-  RefPtr<MediaDecoder> self = this;
   GetStateMachine()->RequestDebugInfo()->Then(
     AbstractThread::MainThread(), __func__,
-    [this, self, str] (const nsACString& aString) {
+    [this, str] (const nsACString& aString) {
       DUMP_LOG("%s", str.get());
       DUMP_LOG("%s", aString.Data());
     },
-    [this, self, str] () {
+    [this, str] () {
       DUMP_LOG("%s", str.get());
     });
 }

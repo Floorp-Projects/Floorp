@@ -1316,9 +1316,8 @@ CompositorBridgeParent::FlushApzRepaints(const LayerTransactionParent* aLayerTre
     // use the compositor's root layer tree id.
     layersId = mRootLayerTreeID;
   }
-  RefPtr<CompositorBridgeParent> self = this;
   APZThreadUtils::RunOnControllerThread(NS_NewRunnableFunction([=] () {
-    self->mApzcTreeManager->FlushApzRepaints(layersId);
+    mApzcTreeManager->FlushApzRepaints(layersId);
   }));
 }
 
