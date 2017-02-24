@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const { addons, createClass, createFactory, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+
+// Reps
+const { REPS } = require("devtools/client/shared/components/reps/reps");
+const Rep = createFactory(REPS.Rep);
+const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
@@ -50,6 +55,36 @@ module.exports = createClass({
     this.props.onSetGridOverlayColor(this.props.grid.nodeFront, color);
   },
 
+  /**
+   * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+   * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
+   *
+   * @params  {NodeFront} nodeFront
+   *          The NodeFront for which we want to create a grip-like object.
+   * @returns {Object} a grip-like object that can be used with Reps.
+   */
+  translateNodeFrontToGrip(nodeFront) {
+    let { attributes } = nodeFront;
+
+    // The main difference between NodeFront and grips is that attributes are treated as
+    // a map in grips and as an array in NodeFronts.
+    let attributesMap = {};
+    for (let {name, value} of attributes) {
+      attributesMap[name] = value;
+    }
+
+    return {
+      actor: nodeFront.actorID,
+      preview: {
+        attributes: attributesMap,
+        attributesLength: attributes.length,
+        // nodeName is already lowerCased in Node grips
+        nodeName: nodeFront.nodeName.toLowerCase(),
+        nodeType: nodeFront.nodeType,
+      }
+    };
+  },
+
   onGridCheckboxClick() {
     let {
       grid,
@@ -62,19 +97,6 @@ module.exports = createClass({
   render() {
     let { grid } = this.props;
     let { nodeFront } = grid;
-    let { displayName, attributes } = nodeFront;
-
-    let gridName = displayName;
-
-    let idIndex = attributes.findIndex(({ name }) => name === "id");
-    if (idIndex > -1 && attributes[idIndex].value) {
-      gridName += "#" + attributes[idIndex].value;
-    }
-
-    let classIndex = attributes.findIndex(({name}) => name === "class");
-    if (classIndex > -1 && attributes[classIndex].value) {
-      gridName += "." + attributes[classIndex].value.split(" ").join(".");
-    }
 
     return dom.li(
       {
@@ -91,7 +113,10 @@ module.exports = createClass({
             onChange: this.onGridCheckboxClick,
           }
         ),
-        gridName
+        Rep({
+          defaultRep: ElementNode,
+          object: this.translateNodeFrontToGrip(nodeFront),
+        })
       ),
       dom.div(
         {
