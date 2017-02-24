@@ -101,12 +101,9 @@ protected:
 class ConditionRule : public GroupRule
 {
 protected:
-  ConditionRule(uint32_t aLineNumber, uint32_t aColumnNumber);
-  ConditionRule(const ConditionRule& aCopy);
-  virtual ~ConditionRule();
+  using GroupRule::GroupRule;
 
 public:
-
   // GetConditionText signature matches nsIDOMCSSConditionRule, so subclasses
   // can implement this easily.  The implementations should never return
   // anything other than NS_OK.
