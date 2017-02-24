@@ -17,6 +17,7 @@ toolkit.jar:
     content/extensions/ext-idle.js
     content/extensions/ext-webRequest.js
     content/extensions/ext-webNavigation.js
+    content/extensions/ext-protocolHandlers.js
     content/extensions/ext-runtime.js
     content/extensions/ext-extension.js
     content/extensions/ext-storage.js
