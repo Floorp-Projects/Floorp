@@ -1,10 +1,12 @@
 [package]
-
 name = "webdriver"
 version = "0.19.0"
-authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
-description = "Library implementing the wire protocol for the W3C WebDriver specification."
-repository = "https://github.com/jgraham/webdriver-rust"
+authors = ["Mozilla Tools and Automation <tools@lists.mozilla.com>"]
+description = "Library implementing the wire protocol for the W3C WebDriver specification"
+documentation = "https://docs.rs/webdriver"
+repository = "https://github.com/mozilla/webdriver-rust"
+readme = "README.md"
+keywords = ["webdriver", "browser", "automation", "protocol", "w3c"]
 license = "MPL-2.0"
 
 [dependencies]
