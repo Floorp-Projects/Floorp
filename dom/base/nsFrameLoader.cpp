@@ -3485,7 +3485,8 @@ NS_IMETHODIMP
 nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
 {
   nsCOMPtr<nsILoadContext> loadContext;
-  if (mRemoteBrowser) {
+  if (IsRemoteFrame() &&
+      (mRemoteBrowser || TryRemoteBrowser())) {
     loadContext = mRemoteBrowser->GetLoadContext();
   } else {
     nsCOMPtr<nsIDocShell> docShell;
