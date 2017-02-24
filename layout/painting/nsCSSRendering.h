@@ -598,8 +598,8 @@ struct nsCSSRendering {
   struct ImageLayerClipState {
     nsRect mBGClipArea;            // Affected by mClippedRadii
     nsRect mAdditionalBGClipArea;  // Not affected by mClippedRadii
-    nsRect mDirtyRect;
-    gfxRect mDirtyRectGfx;
+    nsRect mDirtyRectInAppUnits;
+    gfxRect mDirtyRectInDevPx;
 
     nscoord mRadii[8];
     RectCornerRadii mClippedRadii;
