@@ -3388,10 +3388,10 @@ NameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, Handl
 
     // Look first. Don't generate cache entries if the lookup fails.
     if (cache.isTypeOf()) {
-        if (!FetchName<GetNameMode::TypeOf>(cx, obj, holder, name, prop, vp))
+        if (!FetchName<true>(cx, obj, holder, name, prop, vp))
             return false;
     } else {
-        if (!FetchName<GetNameMode::Normal>(cx, obj, holder, name, prop, vp))
+        if (!FetchName<false>(cx, obj, holder, name, prop, vp))
             return false;
     }
 
