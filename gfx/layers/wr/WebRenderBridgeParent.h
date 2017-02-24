@@ -100,9 +100,6 @@ public:
 
   void Destroy();
 
-  const uint64_t& GetPendingTransactionId() { return mPendingTransactionId; }
-  void SetPendingTransactionId(uint64_t aId) { mPendingTransactionId = aId; }
-
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override { }
@@ -116,7 +113,10 @@ public:
   void SendPendingAsyncMessages() override;
   void SetAboutToSendAsyncMessages() override;
 
-  void DidComposite(uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd);
+  void HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId);
+  uint64_t LastPendingTransactionId();
+  uint64_t FlushPendingTransactionIds();
+  uint64_t FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -148,6 +148,15 @@ private:
                    const uint64_t& aTransactionId);
 
 private:
+  struct PendingTransactionId {
+    PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)
+      : mEpoch(aEpoch)
+      , mId(aId)
+    {}
+    wr::Epoch mEpoch;
+    uint64_t mId;
+  };
+
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
@@ -166,7 +175,8 @@ private:
   uint64_t mChildLayerObserverEpoch;
   uint64_t mParentLayerObserverEpoch;
 
-  uint64_t mPendingTransactionId;
+  std::queue<PendingTransactionId> mPendingTransactionIds;
+  uint32_t mWrEpoch;
 
   bool mDestroyed;
 };

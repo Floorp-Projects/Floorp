@@ -88,7 +88,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mCompositableHolder(aHolder)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
-  , mPendingTransactionId(0)
+  , mWrEpoch(0)
   , mDestroyed(false)
 {
   MOZ_ASSERT(mCompositableHolder);
@@ -230,13 +230,9 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(aTransactionId));
-
-  // The transaction ID might get reset to 1 if the page gets reloaded, see
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
-  // Otherwise, it should be continually increasing.
-  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > mPendingTransactionId);
-  mPendingTransactionId = aTransactionId;
+  ++mWrEpoch; // Update webrender epoch
+  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch));
+  HoldPendingTransactionId(mWrEpoch, aTransactionId);
 }
 
 mozilla::ipc::IPCResult
@@ -578,9 +574,55 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 }
 
 void
-WebRenderBridgeParent::DidComposite(uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
+WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId)
 {
-  mCompositorBridge->NotifyDidComposite(aTransactionId, aStart, aEnd);
+  // The transaction ID might get reset to 1 if the page gets reloaded, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
+  // Otherwise, it should be continually increasing.
+  MOZ_ASSERT(aTransactionId == 1 || aTransactionId > LastPendingTransactionId());
+  // Handle TransactionIdAllocator(RefreshDriver) change.
+  if (aTransactionId == 1) {
+    FlushPendingTransactionIds();
+  }
+  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId));
+}
+
+uint64_t
+WebRenderBridgeParent::LastPendingTransactionId()
+{
+  uint64_t id = 0;
+  if (!mPendingTransactionIds.empty()) {
+    id = mPendingTransactionIds.back().mId;
+  }
+  return id;
+}
+
+uint64_t
+WebRenderBridgeParent::FlushPendingTransactionIds()
+{
+  uint64_t id = 0;
+  while (!mPendingTransactionIds.empty()) {
+    id = mPendingTransactionIds.front().mId;
+    mPendingTransactionIds.pop();
+  }
+  return id;
+}
+
+
+
+uint64_t
+WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
+{
+  uint64_t id = 0;
+  while (!mPendingTransactionIds.empty()) {
+    id = mPendingTransactionIds.front().mId;
+    if (mPendingTransactionIds.front().mEpoch == aEpoch) {
+      mPendingTransactionIds.pop();
+      break;
+    }
+    mPendingTransactionIds.pop();
+  }
+  return id;
 }
 
 WebRenderBridgeParent::~WebRenderBridgeParent()
