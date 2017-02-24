@@ -29,7 +29,7 @@
 #  endif
 #endif
 
-#if defined(MOZ_THREADSTACKHELPER_PSEUDO) && defined(XP_WIN)
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
 #  define MOZ_THREADSTACKHELPER_NATIVE
 #  if defined(__i386__) || defined(_M_IX86)
 #    define MOZ_THREADSTACKHELPER_X86
