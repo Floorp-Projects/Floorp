@@ -297,11 +297,12 @@ BasePrincipal::~BasePrincipal()
 NS_IMETHODIMP
 BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
-  nsresult rv = GetOriginInternal(aOrigin);
+  nsresult rv = GetOriginNoSuffix(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString suffix;
-  mOriginAttributes.CreateSuffix(suffix);
+  rv = GetOriginSuffix(suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
   aOrigin.Append(suffix);
   return NS_OK;
 }
@@ -309,6 +310,9 @@ BasePrincipal::GetOrigin(nsACString& aOrigin)
 NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
 {
+  if (mOriginNoSuffix) {
+    return mOriginNoSuffix->ToUTF8String(aOrigin);
+  }
   return GetOriginInternal(aOrigin);
 }
 
@@ -532,8 +536,8 @@ BasePrincipal::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> 
 NS_IMETHODIMP
 BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 {
-  mOriginAttributes.CreateSuffix(aOriginAttributes);
-  return NS_OK;
+  MOZ_ASSERT(mOriginSuffix);
+  return mOriginSuffix->ToUTF8String(aOriginAttributes);
 }
 
 NS_IMETHODIMP
@@ -692,6 +696,27 @@ BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
   bool allowed = false;
   nsresult rv = aps->AddonMayLoadURI(addonId, aURI, aExplicit, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
+}
+
+void
+BasePrincipal::FinishInit()
+{
+  // First compute the origin suffix since it's infallible.
+  nsAutoCString originSuffix;
+  mOriginAttributes.CreateSuffix(originSuffix);
+  mOriginSuffix = NS_Atomize(originSuffix);
+
+  // Then compute the origin without the suffix.
+  nsAutoCString originNoSuffix;
+  nsresult rv = GetOriginInternal(originNoSuffix);
+  if (NS_FAILED(rv)) {
+    // If GetOriginInternal fails, we will get a null atom for mOriginNoSuffix,
+    // which we deal with anywhere mOriginNoSuffix is used.
+    // Once this is made infallible we can remove those null checks.
+    mOriginNoSuffix = nullptr;
+    return;
+  }
+  mOriginNoSuffix = NS_Atomize(originNoSuffix);
 }
 
 } // namespace mozilla
