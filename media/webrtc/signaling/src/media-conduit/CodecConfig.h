@@ -90,6 +90,10 @@ public:
   bool mRembFbSet;
   bool mFECFbSet;
 
+  int mULPFECPayloadType;
+  int mREDPayloadType;
+  int mREDRTXPayloadType;
+
   uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
   struct SimulcastEncoding {
@@ -116,6 +120,9 @@ public:
         mCcmFbTypes != aRhs.mCcmFbTypes ||
         mRembFbSet != aRhs.mRembFbSet ||
         mFECFbSet != aRhs.mFECFbSet ||
+        mULPFECPayloadType != aRhs.mULPFECPayloadType ||
+        mREDPayloadType != aRhs.mREDPayloadType ||
+        mREDRTXPayloadType != aRhs.mREDRTXPayloadType ||
         mTias != aRhs.mTias ||
         !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
         !(mSimulcastEncodings == aRhs.mSimulcastEncodings) ||
@@ -137,6 +144,9 @@ public:
     mType(type),
     mName(name),
     mFECFbSet(false),
+    mULPFECPayloadType(123),
+    mREDPayloadType(122),
+    mREDRTXPayloadType(-1),
     mTias(0),
     mEncodingConstraints(constraints),
     mProfile(0x42),
