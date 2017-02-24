@@ -4698,8 +4698,6 @@ pref("layers.bufferrotation.enabled", true);
 pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
 
-pref("layers.advanced.border-layers", false);
-
 pref("gfx.content.always-paint", false);
 
 #ifdef ANDROID
@@ -5626,4 +5624,12 @@ pref("dom.moduleScripts.enabled", false);
 
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
+#endif
+
+// Set advanced layers preferences here.
+pref("layers.advanced.border-layers", false);
+#ifdef MOZ_ENABLE_WEBRENDER
+pref("layers.advanced.caret-layers", true);
+#else
+pref("layers.advanced.caret-layers", false);
 #endif
