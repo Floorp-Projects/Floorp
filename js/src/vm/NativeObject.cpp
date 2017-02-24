@@ -2125,24 +2125,12 @@ js::NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receive
 }
 
 bool
-js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg, HandleId id, MutableHandleValue vp)
+js::GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    // Manually unwrap 'with' environments to prevent looking up @@unscopables
-    // twice.
-    //
-    // This is unfortunate because internally, the engine does not distinguish
-    // HasProperty from HasBinding: both are implemented as a HasPropertyOp
-    // hook on a WithEnvironmentObject.
-    //
-    // In the case of attempting to get the value of a binding already looked
-    // up via BINDNAME, calling HasProperty on the WithEnvironmentObject is
-    // equivalent to calling HasBinding a second time. This results in the
-    // incorrect behavior of performing the @@unscopables check again.
-    RootedObject env(cx, MaybeUnwrapSyntacticWithEnvironment(envArg));
-    RootedValue receiver(cx, ObjectValue(*env));
-    if (env->getOpsGetProperty())
-        return GeneralizedGetProperty(cx, env, id, receiver, NameLookup, vp);
-    return NativeGetPropertyInline<CanGC>(cx, env.as<NativeObject>(), receiver, id, NameLookup, vp);
+    RootedValue receiver(cx, ObjectValue(*obj));
+    if (obj->getOpsGetProperty())
+        return GeneralizedGetProperty(cx, obj, id, receiver, NameLookup, vp);
+    return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), receiver, id, NameLookup, vp);
 }
 
 

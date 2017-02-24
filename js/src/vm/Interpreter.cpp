@@ -2682,10 +2682,10 @@ END_CASE(JSOP_GETPROP_SUPER)
 
 CASE(JSOP_GETBOUNDNAME)
 {
-    ReservedRooted<JSObject*> env(&rootObject0, &REGS.sp[-1].toObject());
+    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
     ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
     MutableHandleValue rval = REGS.stackHandleAt(-1);
-    if (!GetNameBoundInEnvironment(cx, env, id, rval))
+    if (!GetPropertyForNameLookup(cx, obj, id, rval))
         goto error;
 
     TypeScript::Monitor(cx, script, REGS.pc, rval);
