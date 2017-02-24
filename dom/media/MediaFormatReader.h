@@ -185,6 +185,7 @@ private:
       , mWaitingForData(false)
       , mWaitingForKey(false)
       , mReceivedNewData(false)
+      , mFlushing(false)
       , mFlushed(true)
       , mDrainState(DrainState::None)
       , mNumOfConsecutiveError(0)
@@ -264,7 +265,7 @@ private:
 
     // MediaDataDecoder handler's variables.
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDecodeRequest;
-    MozPromiseRequestHolder<MediaDataDecoder::FlushPromise> mFlushRequest;
+    bool mFlushing; // True if flush is in action.
     // Set to true if the last operation run on the decoder was a flush.
     bool mFlushed;
     MozPromiseHolder<ShutdownPromise> mShutdownPromise;
@@ -342,7 +343,7 @@ private:
     // Following a flush, the decoder is ready to accept any new data.
     void Flush()
     {
-      if (mFlushRequest.Exists() || mFlushed) {
+      if (mFlushing || mFlushed) {
         // Flush still pending or already flushed, nothing more to do.
         return;
       }
@@ -359,10 +360,11 @@ private:
         TrackType type = mType == MediaData::AUDIO_DATA
                          ? TrackType::kAudioTrack
                          : TrackType::kVideoTrack;
+        mFlushing = true;
         mDecoder->Flush()
           ->Then(mOwner->OwnerThread(), __func__,
                  [owner, type, this]() {
-                   mFlushRequest.Complete();
+                   mFlushing = false;
                    if (!mShutdownPromise.IsEmpty()) {
                      ShutdownDecoder();
                      return;
@@ -370,14 +372,13 @@ private:
                    owner->ScheduleUpdate(type);
                  },
                  [owner, type, this](const MediaResult& aError) {
-                   mFlushRequest.Complete();
+                   mFlushing = false;
                    if (!mShutdownPromise.IsEmpty()) {
                      ShutdownDecoder();
                      return;
                    }
                    owner->NotifyError(type, aError);
-                 })
-          ->Track(mFlushRequest);
+                 });
       }
       mFlushed = true;
     }
