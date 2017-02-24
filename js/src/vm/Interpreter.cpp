@@ -2680,7 +2680,7 @@ CASE(JSOP_GETPROP_SUPER)
 }
 END_CASE(JSOP_GETPROP_SUPER)
 
-CASE(JSOP_GETBOUNDNAME)
+CASE(JSOP_GETXPROP)
 {
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
     ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
@@ -2691,7 +2691,7 @@ CASE(JSOP_GETBOUNDNAME)
     TypeScript::Monitor(cx, script, REGS.pc, rval);
     assertSameCompartmentDebugOnly(cx, rval);
 }
-END_CASE(JSOP_GETBOUNDNAME)
+END_CASE(JSOP_GETXPROP)
 
 CASE(JSOP_SETINTRINSIC)
 {
