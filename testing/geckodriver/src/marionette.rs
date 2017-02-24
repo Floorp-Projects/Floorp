@@ -56,10 +56,13 @@ const DEFAULT_HOST: &'static str = "localhost";
 
 pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
     return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
-                (Method::Post, "/session/{sessionId}/moz/context", GeckoExtensionRoute::SetContext),
-                (Method::Post, "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children", GeckoExtensionRoute::XblAnonymousChildren),
-                (Method::Post, "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute", GeckoExtensionRoute::XblAnonymousByAttribute),
-]
+             (Method::Post, "/session/{sessionId}/moz/context", GeckoExtensionRoute::SetContext),
+             (Method::Post,
+              "/session/{sessionId}/moz/xbl/{elementId}/anonymous_children",
+              GeckoExtensionRoute::XblAnonymousChildren),
+             (Method::Post,
+              "/session/{sessionId}/moz/xbl/{elementId}/anonymous_by_attribute",
+              GeckoExtensionRoute::XblAnonymousByAttribute)];
 }
 
 #[derive(Clone, PartialEq)]
