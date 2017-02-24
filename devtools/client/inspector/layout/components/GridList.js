@@ -19,6 +19,7 @@ module.exports = createClass({
   propTypes: {
     getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
     onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -31,6 +32,7 @@ module.exports = createClass({
     let {
       getSwatchColorPickerTooltip,
       grids,
+      setSelectedNode,
       onHideBoxModelHighlighter,
       onSetGridOverlayColor,
       onShowBoxModelHighlighterForNode,
@@ -50,6 +52,7 @@ module.exports = createClass({
         grids.map(grid => GridItem({
           getSwatchColorPickerTooltip,
           grid,
+          setSelectedNode,
           onHideBoxModelHighlighter,
           onSetGridOverlayColor,
           onShowBoxModelHighlighterForNode,

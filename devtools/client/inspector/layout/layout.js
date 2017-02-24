@@ -100,6 +100,15 @@ LayoutView.prototype = {
       },
 
       /**
+       * Set the inspector selection.
+       * @param {NodeFront} nodeFront
+       *        The NodeFront corresponding to the new selection.
+       */
+      setSelectedNode: (nodeFront) => {
+        this.inspector.selection.setNodeFront(nodeFront, "layout-panel");
+      },
+
+      /**
        * Shows the box model properties under the box model if true, otherwise, hidden by
        * default.
        */
