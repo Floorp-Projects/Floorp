@@ -30,6 +30,7 @@ const App = createClass({
     getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
     showBoxModelProperties: PropTypes.bool.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
