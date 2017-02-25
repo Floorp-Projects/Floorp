@@ -10,6 +10,10 @@ public class InactiveSessionException extends SyncException {
 
   private static final long serialVersionUID = 537241160815940991L;
 
+  public InactiveSessionException() {
+    super();
+  }
+
   public InactiveSessionException(Exception ex) {
     super(ex);
   }

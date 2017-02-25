@@ -53,13 +53,15 @@ import org.mozilla.gecko.tokenserver.TokenServerToken;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
@@ -73,6 +75,11 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   // successfully synced within this duration.
   private static final int MINIMUM_SYNC_DELAY_MILLIS = 15 * 1000;        // 15 seconds.
   private volatile long lastSyncRealtimeMillis;
+
+  // Non-user initiated sync can't take longer than 30 minutes.
+  // To ensure we're not churning through device's battery/resources, we limit sync to 10 minutes,
+  // and request a re-sync if we hit that deadline.
+  private static final long SYNC_DEADLINE_DELTA_MILLIS = TimeUnit.MINUTES.toMillis(10);
 
   protected final ExecutorService executor;
   protected final FxAccountNotificationManager notificationManager;
@@ -117,7 +124,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       super.rejectSync();
     }
 
+    /* package-local */ void requestFollowUpSync(String stage) {
+      this.stageNamesForFollowUpSync.add(stage);
+    }
+
     protected final Collection<String> stageNamesToSync;
+
+    // Keeps track of incomplete stages during this sync that need to be re-synced once we're done.
+    private final List<String> stageNamesForFollowUpSync = Collections.synchronizedList(new ArrayList<String>());
 
     public SyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
       super(latch, syncResult);
@@ -177,6 +191,15 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     public void handleStageCompleted(Stage currentState, GlobalSession globalSession) {
     }
 
+    /**
+     * Schedule an incomplete stage for a follow-up sync.
+     */
+    @Override
+    public void handleIncompleteStage(Stage currentState,
+                                      GlobalSession globalSession) {
+      syncDelegate.requestFollowUpSync(currentState.getRepositoryName());
+    }
+
     @Override
     public void handleSuccess(GlobalSession globalSession) {
       Logger.info(LOG_TAG, "Global session succeeded.");
@@ -231,8 +254,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     return forced;
   }
 
-  protected void syncWithAssertion(final String audience,
-                                   final String assertion,
+  protected void syncWithAssertion(final String assertion,
                                    final URI tokenServerEndpointURI,
                                    final BackoffHandler tokenBackoffHandler,
                                    final SharedPreferences sharedPrefs,
@@ -240,7 +262,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                                    final String clientState,
                                    final SessionCallback callback,
                                    final Bundle extras,
-                                   final AndroidFxAccount fxAccount) {
+                                   final AndroidFxAccount fxAccount,
+                                   final long syncDeadline) {
     final TokenServerClientDelegate delegate = new TokenServerClientDelegate() {
       private boolean didReceiveBackoff = false;
 
@@ -321,7 +344,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           syncConfig.setClusterURL(storageServerURI);
 
           globalSession = new GlobalSession(syncConfig, callback, context, clientsDataDelegate);
-          globalSession.start();
+          globalSession.start(syncDeadline);
         } catch (Exception e) {
           callback.handleError(globalSession, e);
           return;
@@ -385,6 +408,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final Context context = getContext();
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+
+    // NB: we use elapsedRealtime which is time since boot, to ensure our clock is monotonic and isn't
+    // paused while CPU is in the power-saving mode.
+    final long syncDeadline = SystemClock.elapsedRealtime() + SYNC_DEADLINE_DELTA_MILLIS;
 
     Logger.info(LOG_TAG, "Syncing FxAccount" +
         " account named like " + Utils.obfuscateEmail(account.name) +
@@ -536,7 +563,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             final SessionCallback sessionCallback = new SessionCallback(syncDelegate, schedulePolicy);
             final KeyBundle syncKeyBundle = married.getSyncKeyBundle();
             final String clientState = married.getClientState();
-            syncWithAssertion(audience, assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs, syncKeyBundle, clientState, sessionCallback, extras, fxAccount);
+            syncWithAssertion(
+                    assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs,
+                    syncKeyBundle, clientState, sessionCallback, extras, fxAccount, syncDeadline);
 
             // Register the device if necessary (asynchronous, in another thread)
             if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
@@ -562,7 +591,24 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       fxAccount.releaseSharedAccountStateLock();
     }
 
-    Logger.info(LOG_TAG, "Syncing done.");
+    // If there are any incomplete stages, request a follow-up sync. Otherwise, we're done.
+    // Incomplete stage is:
+    // - one that hit a 412 error during either upload or download of data, indicating that
+    //   its collection has been modified remotely, or
+    // - one that hit a sync deadline
+    final String[] stagesToSyncAgain;
+    synchronized (syncDelegate.stageNamesForFollowUpSync) {
+      stagesToSyncAgain = syncDelegate.stageNamesForFollowUpSync.toArray(
+              new String[syncDelegate.stageNamesForFollowUpSync.size()]
+      );
+    }
+
+    if (stagesToSyncAgain.length > 0) {
+      Logger.info(LOG_TAG, "Syncing done. Requesting an immediate follow-up sync.");
+      fxAccount.requestImmediateSync(stagesToSyncAgain, null);
+    } else {
+      Logger.info(LOG_TAG, "Syncing done.");
+    }
     lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
   }
 }

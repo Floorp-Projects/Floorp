@@ -117,7 +117,7 @@ public class TestResetCommands {
     };
 
     stagesToRun.put(Stage.syncBookmarks, stageGetsReset);
-    stagesToRun.put(Stage.syncHistory,   stageNotReset);
+    stagesToRun.put(Stage.syncFullHistory, stageNotReset);
 
     final String resetBookmarks = "{\"args\":[\"bookmarks\"],\"command\":\"resetEngine\"}";
     ExtendedJSONObject unparsedCommand = new ExtendedJSONObject(resetBookmarks);

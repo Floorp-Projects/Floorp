@@ -224,6 +224,12 @@
         ]
       },
       {
+        "id": "HttpURL",
+        "type": "string",
+        "format": "url",
+        "pattern": "^https?://.*$"
+      },
+      {
         "id": "ExtensionURL",
         "type": "string",
         "format": "strictRelativeUrl"
