@@ -17,6 +17,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Bundle;
 
 public class AndroidBrowserHistoryDataAccessor extends
     AndroidBrowserRepositoryDataAccessor {
@@ -45,7 +46,7 @@ public class AndroidBrowserHistoryDataAccessor extends
       // The rest of Sync works in microseconds. This is the conversion point for records coming form Sync.
       cv.put(BrowserContract.History.DATE_LAST_VISITED, mostRecent / 1000);
       cv.put(BrowserContract.History.REMOTE_DATE_LAST_VISITED, mostRecent / 1000);
-      cv.put(BrowserContract.History.VISITS, Long.toString(visits.size()));
+      cv.put(BrowserContract.History.VISITS, visits.size());
     }
     return cv;
   }
@@ -109,63 +110,38 @@ public class AndroidBrowserHistoryDataAccessor extends
    *          the number of records actually inserted.
    * @throws NullCursorException
    */
-  public int bulkInsert(ArrayList<HistoryRecord> records) throws NullCursorException {
-    if (records.isEmpty()) {
-      Logger.debug(LOG_TAG, "No records to insert, returning.");
-    }
-
-    int size = records.size();
-    ContentValues[] cvs = new ContentValues[size];
-    int index = 0;
-    for (Record record : records) {
+  public boolean bulkInsert(ArrayList<HistoryRecord> records) throws NullCursorException {
+    final Bundle[] historyBundles = new Bundle[records.size()];
+    int i = 0;
+    for (HistoryRecord record : records) {
       if (record.guid == null) {
-        throw new IllegalArgumentException("Record with null GUID passed in to bulkInsert.");
+        throw new IllegalArgumentException("Record with null GUID passed into bulkInsert.");
       }
-      cvs[index] = getContentValues(record);
-      index += 1;
+      final Bundle historyBundle = new Bundle();
+      historyBundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, getContentValues(record));
+      historyBundle.putSerializable(
+              BrowserContract.History.VISITS,
+              VisitsHelper.getVisitsContentValues(record.guid, record.visits)
+      );
+      historyBundles[i] = historyBundle;
+      i++;
     }
 
-    // First update the history records.
-    int inserted = context.getContentResolver().bulkInsert(getUri(), cvs);
-    if (inserted == size) {
-      Logger.debug(LOG_TAG, "Inserted " + inserted + " records, as expected.");
-    } else {
-      Logger.debug(LOG_TAG, "Inserted " +
-                   inserted + " records but expected " +
-                   size     + " records; continuing to update visits.");
+    final Bundle data = new Bundle();
+    data.putSerializable(BrowserContract.METHOD_PARAM_DATA, historyBundles);
+
+    // Let our ContentProvider handle insertion of everything.
+    final Bundle result = context.getContentResolver().call(
+            getUri(),
+            BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC,
+            getUri().toString(),
+            data
+    );
+    if (result == null) {
+      throw new IllegalStateException("Unexpected null result while bulk inserting history");
     }
-
-    final ContentValues remoteVisitAggregateValues = new ContentValues();
-    final Uri historyIncrementRemoteAggregateUri = getUri().buildUpon()
-            .appendQueryParameter(BrowserContract.PARAM_INCREMENT_REMOTE_AGGREGATES, "true")
-            .build();
-    for (Record record : records) {
-      HistoryRecord rec = (HistoryRecord) record;
-      if (rec.visits != null && rec.visits.size() != 0) {
-        int remoteVisitsInserted = context.getContentResolver().bulkInsert(
-                BrowserContract.Visits.CONTENT_URI,
-                VisitsHelper.getVisitsContentValues(rec.guid, rec.visits)
-        );
-
-        // If we just inserted any visits, update remote visit aggregate values.
-        // While inserting visits, we might not insert all of rec.visits - if we already have a local
-        // visit record with matching (guid,date), we will skip that visit.
-        // Remote visits aggregate value will be incremented by number of visits inserted.
-        // Note that we don't need to set REMOTE_DATE_LAST_VISITED, because it already gets set above.
-        if (remoteVisitsInserted > 0) {
-          // Note that REMOTE_VISITS must be set before calling cr.update(...) with a URI
-          // that has PARAM_INCREMENT_REMOTE_AGGREGATES=true.
-          remoteVisitAggregateValues.put(BrowserContract.History.REMOTE_VISITS, remoteVisitsInserted);
-          context.getContentResolver().update(
-                  historyIncrementRemoteAggregateUri,
-                  remoteVisitAggregateValues,
-                  BrowserContract.History.GUID + " = ?", new String[] {rec.guid}
-          );
-        }
-      }
-    }
-
-    return inserted;
+    final Exception thrownException = (Exception) result.getSerializable(BrowserContract.METHOD_RESULT);
+    return thrownException == null;
   }
 
   /**

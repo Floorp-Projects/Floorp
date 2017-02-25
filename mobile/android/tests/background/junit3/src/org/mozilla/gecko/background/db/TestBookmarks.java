@@ -665,6 +665,11 @@ public class TestBookmarks extends AndroidSyncTestCase {
         public void onFetchCompleted(long end) {
           finishAndNotify(session);
         }
+
+        @Override
+        public void onBatchCompleted() {
+
+        }
       };
       session.fetchSince(0, fetchDelegate);
     }
@@ -694,6 +699,11 @@ public class TestBookmarks extends AndroidSyncTestCase {
         @Override
         public void onFetchCompleted(long end) {
           finishAndNotify(session);
+        }
+
+        @Override
+        public void onBatchCompleted() {
+
         }
       };
       try {
@@ -735,6 +745,11 @@ public class TestBookmarks extends AndroidSyncTestCase {
 
           @Override
           public void onRecordStoreSucceeded(String guid) {
+          }
+
+          @Override
+          public void onStoreFailed(Exception e) {
+
           }
         };
         session.setStoreDelegate(storeDelegate);

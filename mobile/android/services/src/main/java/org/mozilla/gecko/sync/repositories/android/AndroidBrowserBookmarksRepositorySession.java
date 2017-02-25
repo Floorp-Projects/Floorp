@@ -614,7 +614,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     try {
       Uri recordURI = dbHelper.insert(toStore);
       if (recordURI == null) {
-        delegate.onRecordStoreFailed(new RuntimeException("Got null URI inserting folder with guid " + toStore.guid + "."), record.guid);
+        storeDelegate.onRecordStoreFailed(new RuntimeException("Got null URI inserting folder with guid " + toStore.guid + "."), record.guid);
         return false;
       }
       toStore.androidID = ContentUris.parseId(recordURI);
@@ -622,11 +622,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
       updateBookkeeping(toStore);
     } catch (Exception e) {
-      delegate.onRecordStoreFailed(e, record.guid);
+      storeDelegate.onRecordStoreFailed(e, record.guid);
       return false;
     }
     trackRecord(toStore);
-    delegate.onRecordStoreSucceeded(record.guid);
+    storeDelegate.onRecordStoreSucceeded(record.guid);
     return true;
   }
 
@@ -649,13 +649,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         // Something failed; most pessimistic action is to declare that all insertions failed.
         // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
         for (Record failed : toStores) {
-          delegate.onRecordStoreFailed(new RuntimeException("Possibly failed to bulkInsert non-folder with guid " + failed.guid + "."), failed.guid);
+          storeDelegate.onRecordStoreFailed(new RuntimeException("Possibly failed to bulkInsert non-folder with guid " + failed.guid + "."), failed.guid);
         }
         return;
       }
     } catch (NullCursorException e) {
       for (Record failed : toStores) {
-        delegate.onRecordStoreFailed(e, failed.guid);
+        storeDelegate.onRecordStoreFailed(e, failed.guid);
       }
       return;
     }
@@ -668,7 +668,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         Logger.warn(LOG_TAG, "Got exception updating bookkeeping of non-folder with guid " + succeeded.guid + ".", e);
       }
       trackRecord(succeeded);
-      delegate.onRecordStoreSucceeded(succeeded.guid);
+      storeDelegate.onRecordStoreSucceeded(succeeded.guid);
     }
   }
 
@@ -902,46 +902,42 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
   @SuppressWarnings("unchecked")
   private void finishUp() {
-    try {
-      flushQueues();
-      Logger.debug(LOG_TAG, "Have " + parentToChildArray.size() + " folders whose children might need repositioning.");
-      for (Entry<String, JSONArray> entry : parentToChildArray.entrySet()) {
-        String guid = entry.getKey();
-        JSONArray onServer = entry.getValue();
-        try {
-          final long folderID = getIDForGUID(guid);
-          final JSONArray inDB = new JSONArray();
-          final boolean clean = getChildrenArray(folderID, false, inDB);
-          final boolean sameArrays = Utils.sameArrays(onServer, inDB);
+    flushQueues();
+    Logger.debug(LOG_TAG, "Have " + parentToChildArray.size() + " folders whose children might need repositioning.");
+    for (Entry<String, JSONArray> entry : parentToChildArray.entrySet()) {
+      String guid = entry.getKey();
+      JSONArray onServer = entry.getValue();
+      try {
+        final long folderID = getIDForGUID(guid);
+        final JSONArray inDB = new JSONArray();
+        final boolean clean = getChildrenArray(folderID, false, inDB);
+        final boolean sameArrays = Utils.sameArrays(onServer, inDB);
 
-          // If the local children and the remote children are already
-          // the same, then we don't need to bump the modified time of the
-          // parent: we wouldn't upload a different record, so avoid the cycle.
-          if (!sameArrays) {
-            int added = 0;
-            for (Object o : inDB) {
-              if (!onServer.contains(o)) {
-                onServer.add(o);
-                added++;
-              }
+        // If the local children and the remote children are already
+        // the same, then we don't need to bump the modified time of the
+        // parent: we wouldn't upload a different record, so avoid the cycle.
+        if (!sameArrays) {
+          int added = 0;
+          for (Object o : inDB) {
+            if (!onServer.contains(o)) {
+              onServer.add(o);
+              added++;
             }
-            Logger.debug(LOG_TAG, "Added " + added + " items locally.");
-            Logger.debug(LOG_TAG, "Untracking and bumping " + guid + "(" + folderID + ")");
-            dataAccessor.bumpModified(folderID, now());
-            untrackGUID(guid);
           }
-
-          // If the arrays are different, or they're the same but not flushed to disk,
-          // write them out now.
-          if (!sameArrays || !clean) {
-            dataAccessor.updatePositions(new ArrayList<String>(onServer));
-          }
-        } catch (Exception e) {
-          Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
+          Logger.debug(LOG_TAG, "Added " + added + " items locally.");
+          Logger.debug(LOG_TAG, "Untracking and bumping " + guid + "(" + folderID + ")");
+          dataAccessor.bumpModified(folderID, now());
+          untrackGUID(guid);
         }
+
+        // If the arrays are different, or they're the same but not flushed to disk,
+        // write them out now.
+        if (!sameArrays || !clean) {
+          dataAccessor.updatePositions(new ArrayList<String>(onServer));
+        }
+      } catch (Exception e) {
+        Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
       }
-    } finally {
-      super.storeDone();
     }
   }
 
@@ -977,7 +973,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     Runnable command = new Runnable() {
       @Override
       public void run() {
-        finishUp();
+        try {
+          finishUp();
+        } finally {
+          AndroidBrowserBookmarksRepositorySession.super.storeDone();
+        }
       }
     };
     storeWorkQueue.execute(command);

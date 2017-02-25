@@ -7,7 +7,10 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
+import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
+import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
+import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FormHistoryRepositorySession;
@@ -19,11 +22,8 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
 
   // Eventually this kind of sync stage will be data-driven,
   // and all this hard-coding can go away.
-  private static final String FORM_HISTORY_SORT          = "index";
-  // Sanity limit. Batch and total limit are the same for now, and will be adjusted
-  // once buffer and high water mark are in place. See Bug 730142.
+  private static final String FORM_HISTORY_SORT = "oldest";
   private static final long FORM_HISTORY_BATCH_LIMIT = 5000;
-  private static final long FORM_HISTORY_TOTAL_LIMIT = 5000;
 
   @Override
   protected String getCollection() {
@@ -40,23 +40,52 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
     return VersionConstants.FORMS_ENGINE_VERSION;
   }
 
+  /**
+   * We're downloading records into a non-persistent buffer for safety, so we can't use a H.W.M.
+   * Once this stage is using a persistent buffer, this should change.
+   *
+   * @return HighWaterMark.Disabled
+   */
+  @Override
+  protected HighWaterMark getAllowedToUseHighWaterMark() {
+    return HighWaterMark.Disabled;
+  }
+
+  /**
+   * Full batching is allowed, because we want all of the records.
+   *
+   * @return MultipleBatches.Enabled
+   */
+  @Override
+  protected MultipleBatches getAllowedMultipleBatches() {
+    return MultipleBatches.Enabled;
+  }
+
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
     String collection = getCollection();
-    return new ConstrainedServer11Repository(
-        collection,
-        session.config.storageURL(),
-        session.getAuthHeaderProvider(),
-        session.config.infoCollections,
-        session.config.infoConfiguration,
-        FORM_HISTORY_BATCH_LIMIT,
-        FORM_HISTORY_TOTAL_LIMIT,
-        FORM_HISTORY_SORT);
+    return new ConfigurableServer15Repository(
+            collection,
+            session.getSyncDeadline(),
+            session.config.storageURL(),
+            session.getAuthHeaderProvider(),
+            session.config.infoCollections,
+            session.config.infoConfiguration,
+            FORM_HISTORY_BATCH_LIMIT,
+            FORM_HISTORY_SORT,
+            getAllowedMultipleBatches(),
+            getAllowedToUseHighWaterMark(),
+            getRepositoryStateProvider()
+    );
   }
 
   @Override
   protected Repository getLocalRepository() {
-    return new FormHistoryRepositorySession.FormHistoryRepository();
+    return new BufferingMiddlewareRepository(
+            session.getSyncDeadline(),
+            new MemoryBufferStorage(),
+            new FormHistoryRepositorySession.FormHistoryRepository()
+    );
   }
 
   public class FormHistoryRecordFactory extends RecordFactory {

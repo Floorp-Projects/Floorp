@@ -22,8 +22,7 @@ public class BrowserProviderHistoryVisitsTestBase {
     /* package-private */ ContentProviderClient visitsClient;
     /* package-private */ Uri historyTestUri;
     /* package-private */ Uri visitsTestUri;
-
-    private BrowserProvider provider;
+    /* package-private */ BrowserProvider provider;
 
     @Before
     public void setUp() throws Exception {
@@ -51,14 +50,18 @@ public class BrowserProviderHistoryVisitsTestBase {
     }
 
     /* package-private */  Uri insertHistoryItem(String url, String guid) throws RemoteException {
-        return insertHistoryItem(url, guid, System.currentTimeMillis(), null, null);
+        return insertHistoryItem(url, guid, System.currentTimeMillis(), null, null, null);
     }
 
     /* package-private */  Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount) throws RemoteException {
-        return insertHistoryItem(url, guid, lastVisited, visitCount, null);
+        return insertHistoryItem(url, guid, lastVisited, visitCount, null, null);
     }
 
     /* package-private */  Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount, String title) throws RemoteException {
+        return insertHistoryItem(url, guid, lastVisited, visitCount, null, title);
+    }
+
+    /* package-private */  Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount, Integer remoteVisits, String title) throws RemoteException {
         ContentValues historyItem = new ContentValues();
         historyItem.put(BrowserContract.History.URL, url);
         if (guid != null) {
@@ -66,6 +69,9 @@ public class BrowserProviderHistoryVisitsTestBase {
         }
         if (visitCount != null) {
             historyItem.put(BrowserContract.History.VISITS, visitCount);
+        }
+        if (remoteVisits != null) {
+            historyItem.put(BrowserContract.History.REMOTE_VISITS, remoteVisits);
         }
         historyItem.put(BrowserContract.History.DATE_LAST_VISITED, lastVisited);
         if (title != null) {

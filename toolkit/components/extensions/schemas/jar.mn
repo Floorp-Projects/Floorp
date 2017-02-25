@@ -12,6 +12,7 @@ toolkit.jar:
     content/extensions/schemas/experiments.json
     content/extensions/schemas/extension.json
     content/extensions/schemas/extension_types.json
+    content/extensions/schemas/extension_protocol_handlers.json
     content/extensions/schemas/i18n.json
 #ifndef ANDROID
     content/extensions/schemas/identity.json

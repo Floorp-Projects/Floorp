@@ -94,7 +94,7 @@ load 398157-1.xhtml
 load 399209-1.xhtml
 load 403249-1.html
 load 403579-1.html
-skip-if(stylo) load 404301-1.xhtml # bug 1323652
+load 404301-1.xhtml # bug 1323652
 load 408753-1.xhtml
 load 410426-1.html
 load 410428-1.xhtml
