@@ -1667,7 +1667,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     if (Simulator::Current()->overRecursed(uintptr_t(newsp)))
         overRecursed = true;
 #else
-    JS_CHECK_RECURSION_WITH_SP_DONT_REPORT(cx, newsp, overRecursed = true);
+    if (!CheckRecursionLimitWithStackPointerDontReport(cx, newsp))
+        overRecursed = true;
 #endif
     if (overRecursed) {
         JitSpew(JitSpew_BaselineBailouts, "  Overrecursion check failed!");

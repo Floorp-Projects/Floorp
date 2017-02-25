@@ -272,7 +272,8 @@ STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool
 CallJSNative(JSContext* cx, Native native, const CallArgs& args)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
 #ifdef DEBUG
     bool alreadyThrowing = cx->isExceptionPending();
@@ -346,7 +347,8 @@ MOZ_ALWAYS_INLINE bool
 CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
                MutableHandleValue vp)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     assertSameCompartment(cx, obj, id, vp);
     bool ok = op(cx, obj, id, vp);
@@ -359,7 +361,8 @@ MOZ_ALWAYS_INLINE bool
 CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj, HandleId id, MutableHandleValue vp,
                ObjectOpResult& result)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     assertSameCompartment(cx, obj, id, vp);
     return op(cx, obj, id, vp, result);
@@ -369,7 +372,8 @@ inline bool
 CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op, HandleObject obj, HandleId id,
                     HandleValue v)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     assertSameCompartment(cx, obj, id, v);
     return op(cx, obj, id, v);
@@ -379,7 +383,8 @@ inline bool
 CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
                        ObjectOpResult& result)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     assertSameCompartment(cx, receiver, id);
     if (op)
