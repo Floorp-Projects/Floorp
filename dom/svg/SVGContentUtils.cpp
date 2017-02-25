@@ -304,8 +304,8 @@ SVGContentUtils::GetFontSize(nsStyleContext *aStyleContext)
   MOZ_ASSERT(presContext, "NULL pres context in GetFontSize");
 
   nscoord fontSize = aStyleContext->StyleFont()->mSize;
-  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) / 
-         presContext->TextZoom();
+  return nsPresContext::AppUnitsToFloatCSSPixels(fontSize) /
+         presContext->EffectiveTextZoom();
 }
 
 float
@@ -352,7 +352,7 @@ SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
 
   nscoord xHeight = fontMetrics->XHeight();
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-         presContext->TextZoom();
+         presContext->EffectiveTextZoom();
 }
 nsresult
 SVGContentUtils::ReportToConsole(nsIDocument* doc,
