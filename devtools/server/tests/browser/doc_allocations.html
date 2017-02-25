@@ -5,11 +5,13 @@
 </head>
 <body>
 <script>
+"use strict";
+
 window.allocs = [];
-window.onload = function() {
+window.onload = function () {
   function allocator() {
-    for (var i = 0; i < 1000; i++) {
-      window.allocs.push(new Object);
+    for (let i = 0; i < 1000; i++) {
+      window.allocs.push(new Object());
     }
   }
 

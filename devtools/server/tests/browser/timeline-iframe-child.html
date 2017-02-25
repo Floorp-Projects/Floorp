@@ -7,12 +7,13 @@
 <body>
   <h1>Child frame</h1>
   <script>
+    "use strict";
     var h1 = document.querySelector("h1");
-    setInterval(function() {
-      h1.style.backgroundColor = "rgb(" + ((Math.random()*255)|0) + "," +
-                                          ((Math.random()*255)|0) + "," +
-                                          ((Math.random()*255)|0) +")";
-      h1.style.width = ((Math.random()*500)|0) + "px";
+    setInterval(function () {
+      h1.style.backgroundColor = "rgb(" + ((Math.random() * 255)|0) + "," +
+                                          ((Math.random() * 255)|0) + "," +
+                                          ((Math.random() * 255)|0) + ")";
+      h1.style.width = ((Math.random() * 500)|0) + "px";
     }, 300);
   </script>
 </body>

@@ -6,8 +6,10 @@
  * is destroyed if there are other consumers using it.
  */
 
+"use strict";
+
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
-const { pmmIsProfilerActive, pmmStopProfiler, pmmLoadFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
+const { pmmIsProfilerActive, pmmLoadFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 
 add_task(function* () {
   yield addTab(MAIN_DOMAIN + "doc_perf.html");

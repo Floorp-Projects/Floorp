@@ -6,21 +6,21 @@
 
 include('/build/gyp.mozbuild')
 
-GYP_DIRS += ['.']
-
 libyuv_non_unified_sources = [
-    'source/convert.cc',
-    'source/convert_from.cc',
-    'source/mjpeg_decoder.cc',
-    'source/rotate_argb.cc',
-    'source/row_common.cc',
-    'source/scale.cc',
-    'source/scale_common.cc',
+    'libyuv/source/convert.cc',
+    'libyuv/source/convert_from.cc',
+    'libyuv/source/mjpeg_decoder.cc',
+    'libyuv/source/rotate_argb.cc',
+    'libyuv/source/row_common.cc',
+    'libyuv/source/scale.cc',
+    'libyuv/source/scale_common.cc',
 ]
-GYP_DIRS['.'].input = 'libyuv.gyp'
-GYP_DIRS['.'].variables = gyp_vars
-GYP_DIRS['.'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-GYP_DIRS['.'].non_unified_sources += libyuv_non_unified_sources
+
+GYP_DIRS += ['libyuv']
+GYP_DIRS['libyuv'].input = 'libyuv/libyuv.gyp'
+GYP_DIRS['libyuv'].variables = gyp_vars
+GYP_DIRS['libyuv'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+GYP_DIRS['libyuv'].non_unified_sources += libyuv_non_unified_sources
 
 # We allow warnings for third-party code that can be updated from upstream.
-GYP_DIRS['.'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True
+GYP_DIRS['libyuv'].sandbox_vars['ALLOW_COMPILER_WARNINGS'] = True

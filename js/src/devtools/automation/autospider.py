@@ -46,6 +46,9 @@ parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
 parser.add_argument('--objdir', type=str, metavar='DIR',
                     default=env.get('OBJDIR', 'obj-spider'),
                     help='object directory')
+parser.add_argument('--optimize', type=bool, metavar='OPT',
+                    default=None,
+                    help='whether to generate an optimized build. Overrides variant setting.')
 parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     default='',
                     help="comma-separated set of test suites to add to the variant's default set")
@@ -133,8 +136,14 @@ POBJDIR = posixpath.join(PDIR.source, args.objdir)
 AUTOMATION = env.get('AUTOMATION', False)
 MAKE = env.get('MAKE', 'make')
 MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
-CONFIGURE_ARGS = variant['configure-args']
 UNAME_M = subprocess.check_output(['uname', '-m']).strip()
+
+CONFIGURE_ARGS = variant['configure-args']
+opt = args.optimize
+if opt is None:
+    opt = variant.get('optimize')
+if opt is not None:
+    CONFIGURE_ARGS += (" --enable-optimize" if opt else " --disable-optimize")
 
 # Any jobs that wish to produce additional output can save them into the upload
 # directory if there is such a thing, falling back to OBJDIR.

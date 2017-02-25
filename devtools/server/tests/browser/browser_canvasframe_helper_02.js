@@ -19,6 +19,7 @@ const {
 
 add_task(function* () {
   let browser = yield addTab("about:preferences");
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = browser.contentDocument;
 
   let nodeBuilder = () => {

@@ -174,7 +174,7 @@ protected:
 
     // Current state of the incremental parser
     enum EParserState {
-      BOUNDARY,
+      PREAMBLE,
       BOUNDARY_CRLF,
       HEADER_NAME,
       HEADER_SEP,
@@ -185,7 +185,7 @@ protected:
       TRAIL_DASH2,
       EPILOGUE,
 
-      INIT = BOUNDARY
+      INIT = PREAMBLE
     } mParserState;
 
     // Response part header value, valid when we find a header name

@@ -128,7 +128,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     }
   }
 
-  for (unsigned int i = 0; i <= modulesNum; i++) {
+  for (unsigned int i = 0; i < modulesNum; i++) {
     nsID pdbSig;
     uint32_t pdbAge;
     nsAutoString pdbNameStr;

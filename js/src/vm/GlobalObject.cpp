@@ -630,7 +630,7 @@ js::DefinePropertiesAndFunctions(JSContext* cx, HandleObject obj,
 }
 
 bool
-js::DefineToStringTag(JSContext *cx, HandleObject obj, JSAtom* tag)
+js::DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag)
 {
     RootedId toStringTagId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
     RootedValue tagString(cx, StringValue(tag));

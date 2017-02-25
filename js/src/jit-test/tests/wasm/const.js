@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 function testConst(type, str, expect) {
     if (type === 'i64')
         wasmFullPassI64(`(module (func (result i64) (i64.const ${str})) (export "run" 0))`, expect);

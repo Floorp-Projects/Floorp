@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+        /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -13,7 +13,7 @@ namespace plugins {
 
 /**
  * PPluginWidget - a nsIWidget'ish protocol for windowed plugins in e10s.
- * On windows and linux we create native widgets in chrome which we then manage
+ * On windows we create native widgets in chrome which we then manage
  * from content.  On the content side there's PluginWidgetProxy which
  * implements nsIWidget. We hand this around layout and plugins code. Anything
  * not dealt with via PluginWidgetProxy falls through to PuppetWidget. Native

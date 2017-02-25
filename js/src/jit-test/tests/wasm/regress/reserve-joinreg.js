@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1280933, excerpted from binary test case provided there.
 
 wasmEvalText(

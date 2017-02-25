@@ -9,13 +9,14 @@ typedef long nsDateFormatSelector;
 %{ C++
 enum
 {
+    // Do not change the order of the values below (see bug 1225696).
     kDateFormatNone = 0,            // do not include the date  in the format string
     kDateFormatLong,                // provides the long date format for the given locale
     kDateFormatShort,               // provides the short date format for the given locale
-    kDateFormatYearMonth,           // formats using only the year and month 
+    kDateFormatYearMonth,           // formats using only the year and month
+    kDateFormatWeekday,             // week day (e.g. Mon, Tue)
     kDateFormatYearMonthLong,       // long version of kDateFormatYearMonth
-    kDateFormatMonthLong,           // long format of month name only
-    kDateFormatWeekday              // week day (e.g. Mon, Tue)
+    kDateFormatMonthLong            // long format of month name only
 };
 %}
 

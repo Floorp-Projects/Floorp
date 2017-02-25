@@ -48,7 +48,9 @@ RInstruction::readRecoverData(CompactBufferReader& reader, RInstructionStorage* 
 #   define MATCH_OPCODES_(op)                                           \
       case Recover_##op:                                                \
         static_assert(sizeof(R##op) <= sizeof(RInstructionStorage),     \
-                      "Storage space is too small to decode R" #op " instructions."); \
+                      "storage space must be big enough to store R" #op); \
+        static_assert(alignof(R##op) <= alignof(RInstructionStorage),   \
+                      "storage space must be aligned adequate to store R" #op); \
         new (raw->addr()) R##op(reader);                                \
         break;
 
