@@ -209,7 +209,7 @@ namespace SkOpts {
     #elif defined(SK_CPU_ARM64)
         if (SkCpu::Supports(SkCpu::CRC32)) { Init_crc32(); }
 
-    #elif defined(SK_CPU_ARM32) && !defined(SK_ARM_HAS_NEON)
+    #elif defined(SK_CPU_ARM32) && !defined(SK_ARM_HAS_NEON) && defined(SK_ARM_HAS_OPTIONAL_NEON)
         if (SkCpu::Supports(SkCpu::NEON)) { Init_neon(); }
 
     #endif
