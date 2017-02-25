@@ -111,6 +111,24 @@ function doPageErrors() {
       warning: true,
       exception: false,
     },
+    "let a, a;": {
+      errorMessage: /redeclaration of/,
+      errorMessageName: "JSMSG_REDECLARED_VAR",
+      sourceName: /test_page_errors/,
+      category: "chrome javascript",
+      timeStamp: /^\d+$/,
+      error: false,
+      warning: false,
+      exception: true,
+      notes: [
+        {
+          messageBody: /Previously declared at line/,
+          frame: {
+            source: /test_page_errors/,
+          }
+        }
+      ]
+    },
   };
 
   let container = document.createElement("script");
