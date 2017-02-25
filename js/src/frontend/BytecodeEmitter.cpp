@@ -2991,7 +2991,8 @@ BytecodeEmitter::strictifySetNameOp(JSOp op)
 bool
 BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
  restart:
 
@@ -10108,7 +10109,8 @@ BytecodeEmitter::emitClass(ParseNode* pn)
 bool
 BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     EmitLevelManager elm(this);
 
