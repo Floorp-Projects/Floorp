@@ -1,5 +1,10 @@
 // -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
 
+/* import-globals-from ../../../content/globalOverlay.js */
+/* import-globals-from ../../printing/content/printUtils.js */
+/* import-globals-from ../../../content/viewZoomOverlay.js */
+/* import-globals-from ../../../content/contentAreaUtils.js */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 
+/* global gBrowser, gViewSourceBundle, gContextMenu */
 [
   ["gBrowser",          "content"],
   ["gViewSourceBundle", "viewSourceBundle"],

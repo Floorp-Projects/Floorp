@@ -19,6 +19,7 @@
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // For PropertyValuesPair etc.
 #include "jsapi.h" // For ForOfIterator etc.
 #include "nsClassHashtable.h"
+#include "nsContentUtils.h" // For GetContextForContent
 #include "nsCSSParser.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
@@ -591,6 +592,31 @@ KeyframeUtils::ApplyDistributeSpacing(nsTArray<Keyframe>& aKeyframes)
 }
 
 /* static */ nsTArray<ComputedKeyframeValues>
+KeyframeUtils::GetComputedKeyframeValues(
+  const nsTArray<Keyframe>& aKeyframes,
+  dom::Element* aElement,
+  const ServoComputedStyleValues& aServoValues)
+{
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aElement->OwnerDoc()->IsStyledByServo());
+
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
+  MOZ_ASSERT(presContext);
+
+  nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
+
+  // Construct each nsTArray<PropertyStyleAnimationValuePair> here.
+  result.AppendElements(aKeyframes.Length());
+
+  Servo_GetComputedKeyframeValues(&aKeyframes,
+                                  aServoValues.mCurrentStyle,
+                                  aServoValues.mParentStyle,
+                                  presContext,
+                                  &result);
+  return result;
+}
+
+/* static */ nsTArray<ComputedKeyframeValues>
 KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                                          dom::Element* aElement,
                                          nsStyleContext* aStyleContext)
@@ -598,32 +624,19 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   MOZ_ASSERT(aStyleContext);
   MOZ_ASSERT(aElement);
 
-  StyleBackendType styleBackend = aElement->OwnerDoc()->GetStyleBackendType();
-
   const size_t len = aKeyframes.Length();
   nsTArray<ComputedKeyframeValues> result(len);
-
-  const ServoComputedValues* currentStyle = nullptr;
-  const ServoComputedValues* parentStyle = nullptr;
-
-  if (styleBackend == StyleBackendType::Servo) {
-    currentStyle = aStyleContext->StyleSource().AsServoComputedValues();
-    if (aStyleContext->GetParent()) {
-      parentStyle = aStyleContext->GetParent()->StyleSource().AsServoComputedValues();
-    }
-  }
 
   for (const Keyframe& frame : aKeyframes) {
     nsCSSPropertyIDSet propertiesOnThisKeyframe;
     ComputedKeyframeValues* computedValues = result.AppendElement();
     for (const PropertyValuePair& pair :
            PropertyPriorityIterator(frame.mPropertyValues)) {
-      MOZ_ASSERT(!pair.mServoDeclarationBlock ||
-                 styleBackend == StyleBackendType::Servo,
+      MOZ_ASSERT(!pair.mServoDeclarationBlock,
                  "Animation values were parsed using Servo backend but target"
                  " element is not using Servo backend?");
 
-      if (IsInvalidValuePair(pair, styleBackend)) {
+      if (IsInvalidValuePair(pair, StyleBackendType::Gecko)) {
         continue;
       }
 
@@ -631,48 +644,25 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
       // a KeyframeValueEntry for each value.
       nsTArray<PropertyStyleAnimationValuePair> values;
 
-      if (styleBackend == StyleBackendType::Servo) {
-        if (nsCSSProps::IsShorthand(pair.mProperty)) {
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, pair.mProperty,
-                                               CSSEnabledState::eForAllContent) {
-            if (nsCSSProps::kAnimTypeTable[*p] == eStyleAnimType_None) {
-              // Skip non-animatable component longhands.
-              continue;
-            }
-            PropertyStyleAnimationValuePair* valuePair = values.AppendElement();
-            valuePair->mProperty = *p;
-          }
-        } else {
-          PropertyStyleAnimationValuePair* valuePair = values.AppendElement();
-          valuePair->mProperty = pair.mProperty;
+      // For shorthands, we store the string as a token stream so we need to
+      // extract that first.
+      if (nsCSSProps::IsShorthand(pair.mProperty)) {
+        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
+        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+              CSSEnabledState::eForAllContent, aElement, aStyleContext,
+              tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
+            IsComputeValuesFailureKey(pair)) {
+          continue;
         }
-
-        Servo_AnimationValues_Populate(&values,
-                                       pair.mServoDeclarationBlock,
-                                       currentStyle,
-                                       parentStyle,
-                                       aStyleContext->PresContext());
       } else {
-        // For shorthands, we store the string as a token stream so we need to
-        // extract that first.
-        if (nsCSSProps::IsShorthand(pair.mProperty)) {
-          nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
-          if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-                CSSEnabledState::eForAllContent, aElement, aStyleContext,
-                tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
-              IsComputeValuesFailureKey(pair)) {
-            continue;
-          }
-        } else {
-          if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-                CSSEnabledState::eForAllContent, aElement, aStyleContext,
-                pair.mValue, /* aUseSVGMode */ false, values)) {
-            continue;
-          }
-          MOZ_ASSERT(values.Length() == 1,
-                    "Longhand properties should produce a single"
-                    " StyleAnimationValue");
+        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
+              CSSEnabledState::eForAllContent, aElement, aStyleContext,
+              pair.mValue, /* aUseSVGMode */ false, values)) {
+          continue;
         }
+        MOZ_ASSERT(values.Length() == 1,
+                  "Longhand properties should produce a single"
+                  " StyleAnimationValue");
       }
 
       for (auto& value : values) {
@@ -695,8 +685,7 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   const nsTArray<Keyframe>& aKeyframes,
   const nsTArray<ComputedKeyframeValues>& aComputedValues,
-  dom::CompositeOperation aEffectComposite,
-  nsStyleContext* aStyleContext)
+  dom::CompositeOperation aEffectComposite)
 {
   MOZ_ASSERT(aKeyframes.Length() == aComputedValues.Length(),
              "Array length mismatch");

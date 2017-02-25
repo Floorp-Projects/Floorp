@@ -970,19 +970,19 @@
       _showControlsTimeout : 0,
       SHOW_CONTROLS_TIMEOUT_MS: 500,
       _showControlsFn() {
-        if (Utils.video.matches("video:hover")) {
-          Utils.startFadeIn(Utils.controlBar, false);
-          Utils._showControlsTimeout = 0;
-          Utils._controlsHiddenByTimeout = false;
+        if (this.Utils.video.matches("video:hover")) {
+          this.Utils.startFadeIn(this.Utils.controlBar, false);
+          this.Utils._showControlsTimeout = 0;
+          this.Utils._controlsHiddenByTimeout = false;
         }
       },
 
       _hideControlsTimeout : 0,
       _hideControlsFn() {
-        if (!Utils.scrubber.isDragging) {
-          Utils.startFade(Utils.controlBar, false);
-          Utils._hideControlsTimeout = 0;
-          Utils._controlsHiddenByTimeout = true;
+        if (!this.Utils.scrubber.isDragging) {
+          this.Utils.startFade(this.Utils.controlBar, false);
+          this.Utils._hideControlsTimeout = 0;
+          this.Utils._controlsHiddenByTimeout = true;
         }
       },
       HIDE_CONTROLS_TIMEOUT_MS : 2000,
@@ -1067,7 +1067,7 @@
           this.startFadeOut(this.controlBar, false);
           this.textTrackList.setAttribute("hidden", "true");
           clearTimeout(this._showControlsTimeout);
-          Utils._controlsHiddenByTimeout = false;
+          this.Utils._controlsHiddenByTimeout = false;
         }
       },
 
@@ -1231,7 +1231,7 @@
 
       onFullscreenChange() {
         if (this.isVideoInFullScreen()) {
-          Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+          this.Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
         }
         this.setFullscreenButtonState();
       },

@@ -23,7 +23,7 @@ function check_audio_onplay() {
   var audio = list[0];
   return new Promise((resolve, reject) => {
     audio.onplay = () => {
-      ok(needToReceiveOnPlay, "Should not receive play event!");
+      ok(false, "Should not receive play event!");
       this.onplay = null;
       reject();
     };

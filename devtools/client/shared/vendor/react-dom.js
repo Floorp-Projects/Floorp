@@ -150,8 +150,11 @@
 
     let doc = node.ownerDocument;
     const inspectorUrl = "chrome://devtools/content/inspector/inspector.xhtml";
+    const netMonitorUrl = "chrome://devtools/content/netmonitor/netmonitor.xhtml";
 
-    while (doc instanceof XULDocument || doc.location.href === inspectorUrl) {
+    while (doc instanceof XULDocument ||
+           doc.location.href === inspectorUrl ||
+           doc.location.href === netMonitorUrl) {
       const {frameElement} = doc.defaultView;
 
       if (!frameElement) {

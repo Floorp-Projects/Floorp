@@ -316,7 +316,7 @@ fails == auto-hyphenation-pl-1.html auto-hyphenation-pl-1.html
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-# fails-if(!cocoaWidget||OSX==1006||OSX==1007) == osx-font-smoothing.html osx-font-smoothing.html
+== osx-font-smoothing.html osx-font-smoothing.html
 == osx-font-smoothing-2.html osx-font-smoothing-2.html
 == osx-font-smoothing-2.html osx-font-smoothing-2.html
 
