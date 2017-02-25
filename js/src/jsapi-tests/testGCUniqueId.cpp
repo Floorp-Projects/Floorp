@@ -97,7 +97,7 @@ BEGIN_TEST(testGCUID)
     JS::Rooted<ObjectVector> vec2(cx, ObjectVector(cx));
     for (size_t i = 0; i < N; ++i) {
         if (i % 2 == 1)
-            vec2.append(vec[i]);
+            CHECK(vec2.append(vec[i]));
     }
     vec.clear();
     MinimizeHeap(cx);

@@ -13,8 +13,7 @@
 const {TimelineFront} = require("devtools/shared/fronts/timeline");
 
 add_task(function* () {
-  let browser = yield addTab("data:text/html;charset=utf-8,mop");
-  let doc = browser.contentDocument;
+  yield addTab("data:text/html;charset=utf-8,mop");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -27,7 +26,10 @@ add_task(function* () {
   ok(!isActive, "The TimelineFront is not initially recording");
 
   info("Flush any pending reflows");
-  let forceSyncReflow = doc.body.innerHeight;
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    // forceSyncReflow
+    content.document.body.innerHeight;
+  });
 
   info("Start recording");
   yield front.start({ withMarkers: true });
@@ -37,18 +39,25 @@ add_task(function* () {
 
   info("Change some style on the page to cause style/reflow/paint");
   let onMarkers = once(front, "markers");
-  doc.body.style.padding = "10px";
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    content.document.body.style.padding = "10px";
+  });
   let markers = yield onMarkers;
 
   ok(true, "The markers event was fired");
   ok(markers.length > 0, "Markers were returned");
 
   info("Flush pending reflows again");
-  forceSyncReflow = doc.body.innerHeight;
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    // forceSyncReflow
+    content.document.body.innerHeight;
+  });
 
   info("Change some style on the page to cause style/paint");
   onMarkers = once(front, "markers");
-  doc.body.style.backgroundColor = "red";
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    content.document.body.style.backgroundColor = "red";
+  });
   markers = yield onMarkers;
 
   ok(markers.length > 0, "markers were returned");

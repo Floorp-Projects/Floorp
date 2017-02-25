@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 var params = '';
 var locals = '';
 for (let i = 0; i < 20; i++) {

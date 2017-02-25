@@ -6,11 +6,12 @@
  * completed, and rec data.
  */
 
+"use strict";
+
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -18,7 +19,8 @@ add_task(function* () {
   let front = PerformanceFront(client, form);
   yield front.connect();
 
-  let rec = yield front.startRecording({ withMarkers: true, withTicks: true, withMemory: true });
+  let rec = yield front.startRecording(
+    { withMarkers: true, withTicks: true, withMemory: true });
   ok(rec.isRecording(), "RecordingModel is recording when created");
   yield busyWait(100);
   yield waitUntil(() => rec.getMemory().length);
@@ -43,7 +45,8 @@ add_task(function* () {
     ok(rec.isCompleted(), "recording is completed once it has profile data");
   } else {
     ok(!rec.isCompleted(), "recording is not yet completed on 'recording-stopping'");
-    ok(rec.isFinalizing(), "recording is considered finalizing between 'recording-stopping' and 'recording-stopped'");
+    ok(rec.isFinalizing(),
+      "recording is finalized between 'recording-stopping' and 'recording-stopped'");
   }
 
   yield stopped;

@@ -86,7 +86,6 @@ protected:
 
     PPluginInstanceParent*
     AllocPPluginInstanceParent(const nsCString& aMimeType,
-                               const uint16_t& aMode,
                                const InfallibleTArray<nsCString>& aNames,
                                const InfallibleTArray<nsCString>& aValues)
                                override;
@@ -220,7 +219,7 @@ protected:
 
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
-    nsresult NPP_NewInternal(NPMIMEType pluginType, NPP instance, uint16_t mode,
+    nsresult NPP_NewInternal(NPMIMEType pluginType, NPP instance,
                              InfallibleTArray<nsCString>& names,
                              InfallibleTArray<nsCString>& values,
                              NPSavedData* saved, NPError* error);
@@ -288,7 +287,7 @@ protected:
     virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) override;
 #endif
     virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
-                             uint16_t mode, int16_t argc, char* argn[],
+                             int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
                              NPError* error) override;
     virtual nsresult NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge,

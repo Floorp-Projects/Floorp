@@ -44,6 +44,8 @@ _OPT\.OBJ/
 # SpiderMonkey test result logs
 ^js/src/tests/results-.*\.(html|txt)$
 ^js/src/devtools/rootAnalysis/t/out
+# SpiderMonkey clone of the webassembly spec repository
+^js/src/wasm/spec
 
 # Java HTML5 parser classes
 ^parser/html/java/(html|java)parser/

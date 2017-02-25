@@ -68,17 +68,17 @@ class GCVector
     const T& back() const { return vector.back(); }
 
     bool initCapacity(size_t cap) { return vector.initCapacity(cap); }
-    bool reserve(size_t req) { return vector.reserve(req); }
+    MOZ_MUST_USE bool reserve(size_t req) { return vector.reserve(req); }
     void shrinkBy(size_t amount) { return vector.shrinkBy(amount); }
-    bool growBy(size_t amount) { return vector.growBy(amount); }
-    bool resize(size_t newLen) { return vector.resize(newLen); }
+    MOZ_MUST_USE bool growBy(size_t amount) { return vector.growBy(amount); }
+    MOZ_MUST_USE bool resize(size_t newLen) { return vector.resize(newLen); }
 
     void clear() { return vector.clear(); }
 
     template<typename U> bool append(U&& item) { return vector.append(mozilla::Forward<U>(item)); }
 
     template<typename... Args>
-    bool
+    MOZ_MUST_USE bool
     emplaceBack(Args&&... args) {
         return vector.emplaceBack(mozilla::Forward<Args>(args)...);
     }
@@ -99,16 +99,20 @@ class GCVector
     }
 
     template<typename U, size_t O, class BP>
-    bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vector.appendAll(aU); }
+    MOZ_MUST_USE bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vector.appendAll(aU); }
     template<typename U, size_t O, class BP>
-    bool appendAll(const GCVector<U, O, BP>& aU) { return vector.append(aU.begin(), aU.length()); }
+    MOZ_MUST_USE bool appendAll(const GCVector<U, O, BP>& aU) {
+        return vector.append(aU.begin(), aU.length());
+    }
 
-    bool appendN(const T& val, size_t count) { return vector.appendN(val, count); }
+    MOZ_MUST_USE bool appendN(const T& val, size_t count) { return vector.appendN(val, count); }
 
-    template<typename U> bool append(const U* aBegin, const U* aEnd) {
+    template<typename U>
+    MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
         return vector.append(aBegin, aEnd);
     }
-    template<typename U> bool append(const U* aBegin, size_t aLength) {
+    template<typename U>
+    MOZ_MUST_USE bool append(const U* aBegin, size_t aLength) {
         return vector.append(aBegin, aLength);
     }
 
@@ -128,6 +132,20 @@ class GCVector
     void trace(JSTracer* trc) {
         for (auto& elem : vector)
             GCPolicy<T>::trace(trc, &elem, "vector element");
+    }
+
+    void sweep() {
+        uint32_t src, dst = 0;
+        for (src = 0; src < length(); src++) {
+            if (!GCPolicy<T>::needsSweep(&vector[src])) {
+                if (dst != src)
+                    vector[dst] = vector[src].unbarrieredGet();
+                dst++;
+            }
+        }
+
+        if (dst != length())
+            vector.shrinkTo(dst);
     }
 };
 
@@ -180,29 +198,33 @@ class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrappe
         return JS::MutableHandle<T>::fromMarkedLocation(&vec().operator[](aIndex));
     }
 
-    bool initCapacity(size_t aRequest) { return vec().initCapacity(aRequest); }
-    bool reserve(size_t aRequest) { return vec().reserve(aRequest); }
+    MOZ_MUST_USE bool initCapacity(size_t aRequest) { return vec().initCapacity(aRequest); }
+    MOZ_MUST_USE bool reserve(size_t aRequest) { return vec().reserve(aRequest); }
     void shrinkBy(size_t aIncr) { vec().shrinkBy(aIncr); }
-    bool growBy(size_t aIncr) { return vec().growBy(aIncr); }
-    bool resize(size_t aNewLength) { return vec().resize(aNewLength); }
-    bool growByUninitialized(size_t aIncr) { return vec().growByUninitialized(aIncr); }
+    MOZ_MUST_USE bool growBy(size_t aIncr) { return vec().growBy(aIncr); }
+    MOZ_MUST_USE bool resize(size_t aNewLength) { return vec().resize(aNewLength); }
+    MOZ_MUST_USE bool growByUninitialized(size_t aIncr) { return vec().growByUninitialized(aIncr); }
     void infallibleGrowByUninitialized(size_t aIncr) { vec().infallibleGrowByUninitialized(aIncr); }
-    bool resizeUninitialized(size_t aNewLength) { return vec().resizeUninitialized(aNewLength); }
+    MOZ_MUST_USE bool resizeUninitialized(size_t aNewLength) { return vec().resizeUninitialized(aNewLength); }
     void clear() { vec().clear(); }
     void clearAndFree() { vec().clearAndFree(); }
-    template<typename U> bool append(U&& aU) { return vec().append(mozilla::Forward<U>(aU)); }
-    template<typename... Args> bool emplaceBack(Args&&... aArgs) {
+    template<typename U>
+    MOZ_MUST_USE bool append(U&& aU) { return vec().append(mozilla::Forward<U>(aU)); }
+    template<typename... Args>
+    MOZ_MUST_USE bool emplaceBack(Args&&... aArgs) {
         return vec().emplaceBack(mozilla::Forward<Args...>(aArgs...));
     }
     template<typename U, size_t O, class BP>
-    bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vec().appendAll(aU); }
+    MOZ_MUST_USE bool appendAll(const mozilla::Vector<U, O, BP>& aU) { return vec().appendAll(aU); }
     template<typename U, size_t O, class BP>
-    bool appendAll(const JS::GCVector<U, O, BP>& aU) { return vec().appendAll(aU); }
-    bool appendN(const T& aT, size_t aN) { return vec().appendN(aT, aN); }
-    template<typename U> bool append(const U* aBegin, const U* aEnd) {
+    MOZ_MUST_USE bool appendAll(const JS::GCVector<U, O, BP>& aU) { return vec().appendAll(aU); }
+    MOZ_MUST_USE bool appendN(const T& aT, size_t aN) { return vec().appendN(aT, aN); }
+    template<typename U>
+    MOZ_MUST_USE bool append(const U* aBegin, const U* aEnd) {
         return vec().append(aBegin, aEnd);
     }
-    template<typename U> bool append(const U* aBegin, size_t aLength) {
+    template<typename U>
+    MOZ_MUST_USE bool append(const U* aBegin, size_t aLength) {
         return vec().append(aBegin, aLength);
     }
     template<typename U> void infallibleAppend(U&& aU) {

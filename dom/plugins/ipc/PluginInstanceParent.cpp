@@ -1440,24 +1440,6 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
         return NPERR_NO_ERROR;
     }
 
-#ifdef MOZ_X11
-    case NPPVpluginNeedsXEmbed: {
-        bool needsXEmbed;
-        NPError rv;
-
-        if (!CallNPP_GetValue_NPPVpluginNeedsXEmbed(&needsXEmbed, &rv)) {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (NPERR_NO_ERROR != rv) {
-            return rv;
-        }
-
-        (*(NPBool*)_retval) = needsXEmbed;
-        return NPERR_NO_ERROR;
-    }
-#endif
-
     case NPPVpluginScriptableNPObject: {
         PPluginScriptableObjectParent* actor;
         NPError rv;
@@ -2083,17 +2065,6 @@ PluginInstanceParent::RecvRedrawPlugin()
     }
 
     inst->RedrawPlugin();
-    return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-PluginInstanceParent::RecvNegotiatedCarbon()
-{
-    nsNPAPIPluginInstance *inst = static_cast<nsNPAPIPluginInstance*>(mNPP->ndata);
-    if (!inst) {
-        return IPC_FAIL_NO_REASON(this);
-    }
-    inst->CarbonNPAPIFailure();
     return IPC_OK();
 }
 

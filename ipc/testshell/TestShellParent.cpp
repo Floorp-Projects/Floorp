@@ -17,7 +17,6 @@ using namespace mozilla;
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
 using mozilla::ipc::PTestShellCommandParent;
-using mozilla::dom::ContentParent;
 
 void
 TestShellParent::ActorDestroy(ActorDestroyReason aWhy)

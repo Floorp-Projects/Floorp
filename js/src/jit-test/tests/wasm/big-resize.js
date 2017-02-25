@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 wasmFullPass(`(module
     (memory 1 32768)
     (func $test (result i32)

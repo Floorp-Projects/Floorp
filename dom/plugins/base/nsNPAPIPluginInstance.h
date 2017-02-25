@@ -302,10 +302,6 @@ public:
   NPError FinalizeAsyncSurface(NPAsyncSurface *surface);
   void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
 
-  // Called when the instance fails to instantiate beceause the Carbon
-  // event model is not supported.
-  void CarbonNPAPIFailure();
-
   // Returns the contents scale factor of the screen the plugin is drawn on.
   double GetContentsScaleFactor();
 
@@ -334,7 +330,6 @@ protected:
   virtual ~nsNPAPIPluginInstance();
 
   nsresult GetTagType(nsPluginTagType *result);
-  nsresult GetMode(int32_t *result);
 
   // check if this is a Java applet and affected by bug 750480
   void CheckJavaC2PJSObjectQuirk(uint16_t paramCount,

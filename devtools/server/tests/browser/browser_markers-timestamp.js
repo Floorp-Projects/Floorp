@@ -4,14 +4,15 @@
 /**
  * Test that we get a "TimeStamp" marker.
  */
+"use strict";
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
-const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
+const { pmmConsoleMethod, pmmLoadFrameScripts, pmmClearFrameScripts }
+  = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -24,12 +25,14 @@ add_task(function* () {
   pmmConsoleMethod("timeStamp");
   pmmConsoleMethod("timeStamp", "myLabel");
 
-  let markers = yield waitForMarkerType(front, MARKER_NAME, markers => markers.length >= 2);
+  let markers = yield waitForMarkerType(front, MARKER_NAME, m => m.length >= 2);
 
   yield front.stopRecording(rec);
 
-  ok(markers.every(({stack}) => typeof stack === "number"), "All markers have stack references.");
-  ok(markers.every(({name}) => name === "TimeStamp"), "All markers found are TimeStamp markers");
+  ok(markers.every(({stack}) => typeof stack === "number"),
+    "All markers have stack references.");
+  ok(markers.every(({name}) => name === "TimeStamp"),
+    "All markers found are TimeStamp markers");
   ok(markers.length === 2, "found 2 TimeStamp markers");
   ok(markers.every(({start, end}) => typeof start === "number" && start === end),
     "All markers have equal start and end times");
