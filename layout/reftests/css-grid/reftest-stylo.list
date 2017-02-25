@@ -63,7 +63,7 @@ fails == grid-auto-min-sizing-transferred-size-003.html grid-auto-min-sizing-tra
 fails == grid-auto-min-sizing-transferred-size-004.html grid-auto-min-sizing-transferred-size-004.html
 fails == grid-auto-min-sizing-min-content-min-size-001.html grid-auto-min-sizing-min-content-min-size-001.html
 fails == grid-auto-min-sizing-min-content-min-size-002.html grid-auto-min-sizing-min-content-min-size-002.html
-fails == grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003.html
+# == grid-auto-min-sizing-min-content-min-size-003.html grid-auto-min-sizing-min-content-min-size-003.html
 fails == grid-auto-min-sizing-min-content-min-size-004.html grid-auto-min-sizing-min-content-min-size-004.html
 fails == grid-min-content-min-sizing-transferred-size-001.html grid-min-content-min-sizing-transferred-size-001.html
 fails == grid-min-content-min-sizing-transferred-size-002.html grid-min-content-min-sizing-transferred-size-002.html
@@ -173,7 +173,7 @@ fails == grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006.html
 fails == grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007.html
 fails == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008.html
 fails == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009.html
-fails == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010.html
+# == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010.html
 fails == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-011.html
 fails asserts-if(stylo,48) == grid-item-blockifying-001.html grid-item-blockifying-001.html # bug 1335339
 fails == grid-fragmentation-001.html grid-fragmentation-001.html
