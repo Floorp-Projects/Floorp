@@ -638,9 +638,6 @@ JS::InitSelfHostedCode(JSContext* cx)
     if (!rt->initializeAtoms(cx))
         return false;
 
-    if (!cx->cycleDetectorSet().init())
-        return false;
-
     if (!rt->initSelfHosting(cx))
         return false;
 
