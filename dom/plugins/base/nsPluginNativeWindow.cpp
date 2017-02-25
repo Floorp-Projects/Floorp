@@ -12,42 +12,54 @@
 #include "nsDebug.h"
 #include "nsPluginNativeWindow.h"
 
-class nsPluginNativeWindowPLATFORM : public nsPluginNativeWindow {
-public: 
-  nsPluginNativeWindowPLATFORM();
-  virtual ~nsPluginNativeWindowPLATFORM();
+class nsPluginNativeWindowImpl : public nsPluginNativeWindow
+{
+public:
+  nsPluginNativeWindowImpl();
+  virtual ~nsPluginNativeWindowImpl();
+
+#ifdef MOZ_WIDGET_GTK
+  NPSetWindowCallbackStruct mWsInfo;
+#endif
 };
 
-nsPluginNativeWindowPLATFORM::nsPluginNativeWindowPLATFORM() : nsPluginNativeWindow()
+nsPluginNativeWindowImpl::nsPluginNativeWindowImpl() : nsPluginNativeWindow()
 {
   // initialize the struct fields
-  window = nullptr; 
-  x = 0; 
-  y = 0; 
-  width = 0; 
-  height = 0; 
+  window = nullptr;
+  x = 0;
+  y = 0;
+  width = 0;
+  height = 0;
   memset(&clipRect, 0, sizeof(clipRect));
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+  type = NPWindowTypeWindow;
+
+#ifdef MOZ_WIDGET_GTK
+  ws_info = &mWsInfo;
+  mWsInfo.type = 0;
+  mWsInfo.display = nullptr;
+  mWsInfo.visual = nullptr;
+  mWsInfo.colormap = 0;
+  mWsInfo.depth = 0;
+#elif defined(XP_UNIX) && !defined(XP_MACOSX)
   ws_info = nullptr;
 #endif
-  type = NPWindowTypeWindow;
 }
 
-nsPluginNativeWindowPLATFORM::~nsPluginNativeWindowPLATFORM() 
+nsPluginNativeWindowImpl::~nsPluginNativeWindowImpl()
 {
 }
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
 {
   NS_ENSURE_ARG_POINTER(aPluginNativeWindow);
-  *aPluginNativeWindow = new nsPluginNativeWindowPLATFORM();
+  *aPluginNativeWindow = new nsPluginNativeWindowImpl();
   return NS_OK;
 }
 
 nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
 {
   NS_ENSURE_ARG_POINTER(aPluginNativeWindow);
-  nsPluginNativeWindowPLATFORM *p = (nsPluginNativeWindowPLATFORM *)aPluginNativeWindow;
-  delete p;
+  delete static_cast<nsPluginNativeWindowImpl*>(aPluginNativeWindow);
   return NS_OK;
 }

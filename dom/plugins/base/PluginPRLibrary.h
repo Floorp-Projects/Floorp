@@ -100,7 +100,7 @@ public:
 #endif
 
     virtual nsresult NPP_New(NPMIMEType aPluginType, NPP aInstance,
-                             uint16_t aMode, int16_t aArgc, char* aArgn[],
+                             int16_t aArgc, char* aArgn[],
                              char* aArgv[], NPSavedData* aSaved,
                              NPError* aError) override;
 

@@ -7,8 +7,6 @@
 // of the generated code has verified that the optimization is
 // being applied.
 
-load(libdir + "wasm.js");
-
 // Memory is one page and minimum memory is one page, so accesses across
 // the end of the first page should fail.
 

@@ -8,8 +8,7 @@ const {DirectorManagerFront} = require("devtools/shared/fronts/director-manager"
 const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "director-script-target.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "director-script-target.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -50,8 +49,8 @@ function* testDirectorScriptMessagePort(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_MessagePort",
     scriptCode: "(" + (function () {
-      exports.attach = function ({port}) {
-        port.onmessage = function (evt) {
+      exports.attach = function ({port: messagePort}) {
+        messagePort.onmessage = function (evt) {
           // echo messages
           evt.target.postMessage(evt.data);
         };
@@ -69,22 +68,23 @@ function* testDirectorScriptMessagePort(directorManager) {
   // needs to explicit start the port
   port.start();
 
-  var msg = { k1: "v1", k2: [1, 2, 3] };
+  let msg = { k1: "v1", k2: [1, 2, 3] };
   port.postMessage(msg);
 
-  var reply = yield waitForMessagePortEvent;
+  let reply = yield waitForMessagePortEvent;
 
-  is(JSON.stringify(reply.data), JSON.stringify(msg), "echo reply received on the MessagePortClient");
+  is(JSON.stringify(reply.data), JSON.stringify(msg),
+    "echo reply received on the MessagePortClient");
 }
 
 function* testDirectorScriptWindowEval(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_WindowEval",
     scriptCode: "(" + (function () {
-      exports.attach = function ({window, port}) {
-        var onpageloaded = function () {
-          var globalVarValue = window.eval("globalAccessibleVar;");
-          port.postMessage(globalVarValue);
+      exports.attach = function ({window, port: evalPort}) {
+        let onpageloaded = function () {
+          let globalVarValue = window.eval("globalAccessibleVar;");
+          evalPort.postMessage(globalVarValue);
         };
 
         if (window.document && window.document.readyState === "complete") {
@@ -106,19 +106,20 @@ function* testDirectorScriptWindowEval(directorManager) {
   // needs to explicit start the port
   port.start();
 
-  var portEvent = yield waitForMessagePortEvent;
+  let portEvent = yield waitForMessagePortEvent;
 
   ok(portEvent.data !== "unsecure-eval", "window.eval should be wrapped and safe");
-  is(portEvent.data, "global-value", "globalAccessibleVar should be accessible through window.eval");
+  is(portEvent.data, "global-value",
+    "globalAccessibleVar should be accessible through window.eval");
 }
 
 function* testDirectorScriptUnloadOnDetach(directorManager) {
   let { port } = yield installAndEnableDirectorScript(directorManager, {
     scriptId: "testDirectorScript_unloadOnDetach",
     scriptCode: "(" + (function () {
-      exports.attach = function ({port, onUnload}) {
+      exports.attach = function ({port: unloadPort, onUnload}) {
         onUnload(function () {
-          port.postMessage("ONUNLOAD");
+          unloadPort.postMessage("ONUNLOAD");
         });
       };
     }).toString() + ")();",
@@ -133,7 +134,8 @@ function* testDirectorScriptUnloadOnDetach(directorManager) {
   let waitForDetach = once(directorManager, "director-script-detach");
   let waitForMessage = once(port, "message");
 
-  directorManager.disableByScriptIds(["testDirectorScript_unloadOnDetach"], {reload: false});
+  directorManager.disableByScriptIds(["testDirectorScript_unloadOnDetach"],
+                                    {reload: false});
 
   let { directorScriptId } = yield waitForDetach;
   is(directorScriptId, "testDirectorScript_unloadOnDetach",

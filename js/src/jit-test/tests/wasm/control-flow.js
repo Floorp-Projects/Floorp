@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 const RuntimeError = WebAssembly.RuntimeError;
 
 // ----------------------------------------------------------------------------

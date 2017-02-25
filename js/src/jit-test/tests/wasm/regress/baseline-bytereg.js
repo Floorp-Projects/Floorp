@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1322450 is about the baseline compiler not properly handling a byte store
 // from a wider datum on 32-bit x86 because it does not move the value to be
 // stored to a valid byte register if it is in a 32-bit register that does not

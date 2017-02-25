@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 let bodies = [
     `
     i32.const 1

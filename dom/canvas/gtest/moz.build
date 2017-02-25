@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/canvas',
-    '/media/libyuv/include'
+    '/media/libyuv/libyuv/include'
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
