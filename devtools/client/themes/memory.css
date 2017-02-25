@@ -470,16 +470,17 @@ html, body, #app, #memory-tool {
 
 .heap-tree-item-name {
   /**
-   * Flex: contains an .arrow and some text, which need to be laid out
-   * horizontally, vertically aligned in the middle of the container.
-   */
-  display: flex;
-  align-items: center;
-  /**
    * Flexing to fill out remaining vertical space.
    * @see .header and .heap-tree-item */
   flex: 1;
   padding-inline-start: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heap-tree-item-name .arrow {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /**
@@ -520,19 +521,16 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-item-individuals {
-  width: 38px;
-  min-width: 20px;
+  min-width: 38px;
   overflow: hidden;
   margin: 0;
 }
 
 .heap-tree-item-individuals > button {
-  height: 10px;
   width: 32px;
-
   /* Override default styles for toolbar buttons to fix entire row height. */
   margin: 0 auto !important;
-  padding: 0;
+  color: inherit;
 }
 
 /**
