@@ -19,6 +19,8 @@
 
 #include "frontend/Parser.h"
 
+#include "mozilla/Sprintf.h"
+
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
@@ -198,11 +200,12 @@ ParseContext::Scope::addCatchParameters(ParseContext* pc, Scope& catchParamScope
 
     for (DeclaredNameMap::Range r = catchParamScope.declared_->all(); !r.empty(); r.popFront()) {
         DeclarationKind kind = r.front().value()->kind();
+        uint32_t pos = r.front().value()->pos();
         MOZ_ASSERT(DeclarationKindIsCatchParameter(kind));
         JSAtom* name = r.front().key();
         AddDeclaredNamePtr p = lookupDeclaredNameForAdd(name);
         MOZ_ASSERT(!p);
-        if (!addDeclaredName(pc, p, name, kind))
+        if (!addDeclaredName(pc, p, name, kind, pos))
             return false;
     }
 
@@ -341,7 +344,8 @@ ParseContext::init()
                 namedLambdaScope_->lookupDeclaredNameForAdd(fun->explicitName());
             MOZ_ASSERT(!p);
             if (!namedLambdaScope_->addDeclaredName(this, p, fun->explicitName(),
-                                                    DeclarationKind::Const))
+                                                    DeclarationKind::Const,
+                                                    DeclaredNameInfo::npos))
             {
                 return false;
             }
@@ -994,13 +998,42 @@ Parser<ParseHandler>::hasValidSimpleStrictParameterNames()
 
 template <typename ParseHandler>
 void
-Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKind kind,
-                                          TokenPos pos)
+Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind,
+                                          TokenPos pos, uint32_t prevPos)
 {
     JSAutoByteString bytes;
     if (!AtomToPrintableString(context, name, &bytes))
         return;
-    errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(kind), bytes.ptr());
+
+    if (prevPos == DeclaredNameInfo::npos) {
+        errorAt(pos.begin, JSMSG_REDECLARED_VAR, DeclarationKindString(prevKind), bytes.ptr());
+        return;
+    }
+
+    auto notes = MakeUnique<JSErrorNotes>();
+    if (!notes)
+        return;
+
+    uint32_t line, column;
+    tokenStream.srcCoords.lineNumAndColumnIndex(prevPos, &line, &column);
+
+    const size_t MaxWidth = sizeof("4294967295");
+    char columnNumber[MaxWidth];
+    SprintfLiteral(columnNumber, "%" PRIu32, column);
+    char lineNumber[MaxWidth];
+    SprintfLiteral(lineNumber, "%" PRIu32, line);
+
+    if (!notes->addNoteLatin1(pc->sc()->context,
+                              getFilename(), line, column,
+                              GetErrorMessage, nullptr,
+                              JSMSG_REDECLARED_PREV,
+                              lineNumber, columnNumber))
+    {
+        return;
+    }
+
+    errorWithNotesAt(Move(notes), pos.begin, JSMSG_REDECLARED_VAR,
+                     DeclarationKindString(prevKind), bytes.ptr());
 }
 
 // notePositionalFormalParameter is called for both the arguments of a regular
@@ -1015,6 +1048,7 @@ Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKi
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::notePositionalFormalParameter(Node fn, HandlePropertyName name,
+                                                    uint32_t beginPos,
                                                     bool disallowDuplicateParams,
                                                     bool* duplicatedParam)
 {
@@ -1041,7 +1075,7 @@ Parser<ParseHandler>::notePositionalFormalParameter(Node fn, HandlePropertyName 
         *duplicatedParam = true;
     } else {
         DeclarationKind kind = DeclarationKind::PositionalFormalParameter;
-        if (!pc->functionScope().addDeclaredName(pc, p, name, kind))
+        if (!pc->functionScope().addDeclaredName(pc, p, name, kind, beginPos))
             return false;
     }
 
@@ -1145,8 +1179,8 @@ DeclarationKindIsParameter(DeclarationKind kind)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
-                                    Maybe<DeclarationKind>* redeclaredKind)
+Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
+                                    Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos)
 {
     MOZ_ASSERT(DeclarationKindIsVar(kind));
 
@@ -1219,23 +1253,29 @@ Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kin
 
                 if (!annexB35Allowance && !annexB33Allowance) {
                     *redeclaredKind = Some(declaredKind);
+                    *prevPos = p->value()->pos();
                     return true;
                 }
             } else if (kind == DeclarationKind::VarForAnnexBLexicalFunction) {
                 MOZ_ASSERT(DeclarationKindIsParameter(declaredKind));
 
                 // Annex B.3.3.1 disallows redeclaring parameter names.
+                // We don't need to set *prevPos here since this case is not
+                // an error.
                 *redeclaredKind = Some(declaredKind);
                 return true;
             }
         } else {
-            if (!scope->addDeclaredName(pc, p, name, kind))
+            if (!scope->addDeclaredName(pc, p, name, kind, beginPos))
                 return false;
         }
     }
 
-    if (!pc->sc()->strict() && pc->sc()->isEvalContext())
+    if (!pc->sc()->strict() && pc->sc()->isEvalContext()) {
         *redeclaredKind = isVarRedeclaredInEval(name, kind);
+        // We don't have position information at runtime.
+        *prevPos = DeclaredNameInfo::npos;
+    }
 
     return true;
 }
@@ -1243,13 +1283,17 @@ Parser<ParseHandler>::tryDeclareVar(HandlePropertyName name, DeclarationKind kin
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name,
-                                                            bool* tryAnnexB)
+                                                            uint32_t beginPos, bool* tryAnnexB)
 {
     AutoTraceLog traceLog(TraceLoggerForCurrentThread(context), TraceLogger_FrontendNameAnalysis);
 
     Maybe<DeclarationKind> redeclaredKind;
-    if (!tryDeclareVar(name, DeclarationKind::VarForAnnexBLexicalFunction, &redeclaredKind))
+    uint32_t unused;
+    if (!tryDeclareVar(name, DeclarationKind::VarForAnnexBLexicalFunction, beginPos,
+                       &redeclaredKind, &unused))
+    {
         return false;
+    }
 
     if (!redeclaredKind && pc->isFunctionBox()) {
         ParseContext::Scope& funScope = pc->functionScope();
@@ -1323,11 +1367,12 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
       case DeclarationKind::BodyLevelFunction:
       case DeclarationKind::ForOfVar: {
         Maybe<DeclarationKind> redeclaredKind;
-        if (!tryDeclareVar(name, kind, &redeclaredKind))
+        uint32_t prevPos;
+        if (!tryDeclareVar(name, kind, pos.begin, &redeclaredKind, &prevPos))
             return false;
 
         if (redeclaredKind) {
-            reportRedeclaration(name, *redeclaredKind, pos);
+            reportRedeclaration(name, *redeclaredKind, pos, prevPos);
             return false;
         }
 
@@ -1344,7 +1389,7 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
             return false;
         }
 
-        if (!pc->functionScope().addDeclaredName(pc, p, name, kind))
+        if (!pc->functionScope().addDeclaredName(pc, p, name, kind, pos.begin))
             return false;
 
         break;
@@ -1367,7 +1412,7 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
                 (p->value()->kind() != DeclarationKind::LexicalFunction &&
                  p->value()->kind() != DeclarationKind::VarForAnnexBLexicalFunction))
             {
-                reportRedeclaration(name, p->value()->kind(), pos);
+                reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
                 return false;
             }
 
@@ -1375,7 +1420,7 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
             // declaration that shadows the VarForAnnexBLexicalFunction.
             p->value()->alterKind(kind);
         } else {
-            if (!scope->addDeclaredName(pc, p, name, kind))
+            if (!scope->addDeclaredName(pc, p, name, kind, pos.begin))
                 return false;
         }
 
@@ -1415,7 +1460,7 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
         if (pc->isFunctionExtraBodyVarScopeInnermost()) {
             DeclaredNamePtr p = pc->functionScope().lookupDeclaredName(name);
             if (p && DeclarationKindIsParameter(p->value()->kind())) {
-                reportRedeclaration(name, p->value()->kind(), pos);
+                reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
                 return false;
             }
         }
@@ -1432,12 +1477,12 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
                 p = scope->lookupDeclaredNameForAdd(name);
                 MOZ_ASSERT(!p);
             } else {
-                reportRedeclaration(name, p->value()->kind(), pos);
+                reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
                 return false;
             }
         }
 
-        if (!p && !scope->addDeclaredName(pc, p, name, kind))
+        if (!p && !scope->addDeclaredName(pc, p, name, kind, pos.begin))
             return false;
 
         break;
@@ -2187,8 +2232,11 @@ Parser<ParseHandler>::declareFunctionThis()
         ParseContext::Scope& funScope = pc->functionScope();
         AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotThis);
         MOZ_ASSERT(!p);
-        if (!funScope.addDeclaredName(pc, p, dotThis, DeclarationKind::Var))
+        if (!funScope.addDeclaredName(pc, p, dotThis, DeclarationKind::Var,
+                                      DeclaredNameInfo::npos))
+        {
             return false;
+        }
         funbox->setHasThisBinding();
     }
 
@@ -2230,8 +2278,11 @@ Parser<ParseHandler>::declareDotGeneratorName()
     ParseContext::Scope& funScope = pc->functionScope();
     HandlePropertyName dotGenerator = context->names().dotGenerator;
     AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
-    if (!p && !funScope.addDeclaredName(pc, p, dotGenerator, DeclarationKind::Var))
+    if (!p && !funScope.addDeclaredName(pc, p, dotGenerator, DeclarationKind::Var,
+                                        DeclaredNameInfo::npos))
+    {
         return false;
+    }
     return true;
 }
 
@@ -2454,8 +2505,11 @@ Parser<ParseHandler>::declareFunctionArgumentsObject()
     if (tryDeclareArguments) {
         AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(argumentsName);
         if (!p) {
-            if (!funScope.addDeclaredName(pc, p, argumentsName, DeclarationKind::Var))
+            if (!funScope.addDeclaredName(pc, p, argumentsName, DeclarationKind::Var,
+                                          DeclaredNameInfo::npos))
+            {
                 return false;
+            }
             funbox->declaredArguments = true;
             funbox->usesArguments = true;
         } else if (hasExtraBodyVarScope) {
@@ -2937,8 +2991,8 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 if (!name)
                     return false;
 
-                if (!notePositionalFormalParameter(funcpn, name, disallowDuplicateParams,
-                                                   &duplicatedParam))
+                if (!notePositionalFormalParameter(funcpn, name, pos().begin,
+                                                   disallowDuplicateParams, &duplicatedParam))
                 {
                     return false;
                 }
@@ -3657,7 +3711,7 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
             // early error, do so. This 'var' binding would be assigned
             // the function object when its declaration is reached, not at
             // the start of the block.
-            if (!tryDeclareVarForAnnexBLexicalFunction(name, &tryAnnexB))
+            if (!tryDeclareVarForAnnexBLexicalFunction(name, pos().begin, &tryAnnexB))
                 return null();
         }
 

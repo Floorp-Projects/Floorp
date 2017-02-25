@@ -147,9 +147,9 @@ class ParseContext : public Nestable<ParseContext>
         }
 
         MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p, JSAtom* name,
-                                          DeclarationKind kind)
+                                          DeclarationKind kind, uint32_t pos)
         {
-            return maybeReportOOM(pc, declared_->add(p, name, DeclaredNameInfo(kind)));
+            return maybeReportOOM(pc, declared_->add(p, name, DeclaredNameInfo(kind, pos)));
         }
 
         // Remove all VarForAnnexBLexicalFunction declarations of a certain
@@ -1442,15 +1442,17 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool hasValidSimpleStrictParameterNames();
 
-    void reportRedeclaration(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
-    bool notePositionalFormalParameter(Node fn, HandlePropertyName name,
+    void reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind, TokenPos pos,
+                             uint32_t prevPos);
+    bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
     mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
                                                           DeclarationKind kind);
-    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
-                       mozilla::Maybe<DeclarationKind>* redeclaredKind);
-    bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, bool* tryAnnexB);
+    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
+                       mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
+    bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, uint32_t beginPos,
+                                               bool* tryAnnexB);
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
     bool noteDeclaredName(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
