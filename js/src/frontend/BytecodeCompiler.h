@@ -13,6 +13,7 @@
 
 #include "vm/Scope.h"
 #include "vm/String.h"
+#include "vm/TraceLogging.h"
 
 class JSLinearString;
 
@@ -25,6 +26,10 @@ class ScriptSourceObject;
 struct SourceCompressionTask;
 
 namespace frontend {
+
+class TokenStream;
+class FunctionBox;
+class ParseNode;
 
 JSScript*
 CompileGlobalScript(JSContext* cx, LifoAlloc& alloc, ScopeKind scopeKind,
@@ -118,6 +123,29 @@ IsKeyword(JSLinearString* str);
 /* Trace all GC things reachable from parser. Defined in Parser.cpp. */
 void
 TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
+
+class MOZ_STACK_CLASS AutoFrontendTraceLog
+{
+#ifdef JS_TRACE_LOGGING
+    TraceLoggerThread* logger_;
+    mozilla::Maybe<TraceLoggerEvent> frontendEvent_;
+    mozilla::Maybe<AutoTraceLog> frontendLog_;
+    mozilla::Maybe<AutoTraceLog> typeLog_;
+#endif
+
+  public:
+    AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
+                         const char* filename, size_t line, size_t column);
+
+    AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
+                         const TokenStream& tokenStream);
+
+    AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
+                         const TokenStream& tokenStream, FunctionBox* funbox);
+
+    AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextId id,
+                         const TokenStream& tokenStream, ParseNode* pn);
+};
 
 } /* namespace frontend */
 } /* namespace js */

@@ -421,6 +421,13 @@ function* generatePageErrorStubs() {
       });
     });
 
+    // On e10s, the exception is triggered in child process
+    // and is ignored by test harness
+    // expectUncaughtException should be called for each uncaught exception.
+    if (!Services.appinfo.browserTabsRemoteAutostart) {
+      expectUncaughtException();
+    }
+
     yield ContentTask.spawn(
       gBrowser.selectedBrowser,
       [key, code],
