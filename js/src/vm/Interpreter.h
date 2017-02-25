@@ -420,14 +420,6 @@ ThrowingOperation(JSContext* cx, HandleValue v);
 bool
 GetProperty(JSContext* cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
-bool
-GetEnvironmentName(JSContext* cx, HandleObject obj, HandlePropertyName name,
-                   MutableHandleValue vp);
-
-bool
-GetEnvironmentNameForTypeOf(JSContext* cx, HandleObject obj, HandlePropertyName name,
-                            MutableHandleValue vp);
-
 JSObject*
 Lambda(JSContext* cx, HandleFunction fun, HandleObject parent);
 
