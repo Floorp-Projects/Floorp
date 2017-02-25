@@ -1118,10 +1118,6 @@
             }
 
             this._fireEvent("monthchange", this);
-            if (this.hasAttribute("monthchange")) {
-              var fn = new Function("event", aTarget.getAttribute("onmonthchange"));
-              fn.call(aTarget, event);
-            }
           ]]>
         </body>
       </method>

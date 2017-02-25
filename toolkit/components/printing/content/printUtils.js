@@ -1,3 +1,6 @@
+// This file is loaded into the browser window scope.
+/* eslint mozilla/import-browserjs-globals:"warn" */
+
 // -*- tab-width: 2; indent-tabs-mode: nil; js-indent-level: 2 -*-
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

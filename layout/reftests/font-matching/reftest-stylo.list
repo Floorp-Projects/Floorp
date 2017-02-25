@@ -51,7 +51,7 @@ fails == localized-family-names-003.html localized-family-names-003.html
 fails == localized-family-names-004.html localized-family-names-004.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
-# fails-if(http.oscpu=="Linux\u0020x86_64") == familyname-escapedidents.html familyname-escapedidents.html
+== familyname-escapedidents.html familyname-escapedidents.html
 
 # weight mapping tests
 fails HTTP(..) == normalmedium.html normalmedium.html
@@ -117,12 +117,12 @@ fails == italic-oblique-9.html italic-oblique-9.html
 # Bug 1212731 - initial implementation caused startup regression and
 # regression with full-width digits display in UI elements. Disable
 # tests until these problems are corrected.
-# random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1.html
-# random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2.html
-# random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3.html
-# random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4.html
-# random-if(!OSX) == system-generic-fallback-ko.html system-generic-fallback-ko.html
-# random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
-# random-if(!OSX) == system-generic-fallback-zh-cn.html system-generic-fallback-zh-cn.html
-# random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
+random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4.html
+random-if(!OSX) == system-generic-fallback-ko.html system-generic-fallback-ko.html
+random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
+random-if(!OSX) == system-generic-fallback-zh-cn.html system-generic-fallback-zh-cn.html
+random-if(!OSX) == system-generic-fallback-zh-tw.html system-generic-fallback-zh-tw.html
 

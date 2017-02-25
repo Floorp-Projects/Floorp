@@ -287,6 +287,7 @@ toolkit/components/osfile/**
 
 # External code:
 toolkit/components/microformats/test/**
+toolkit/components/microformats/microformat-shiv.js
 toolkit/components/reader/Readability.js
 toolkit/components/reader/JSDOMParser.js
 
