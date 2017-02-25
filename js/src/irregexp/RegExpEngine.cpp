@@ -1220,7 +1220,10 @@ LoopChoiceNode::FilterASCII(int depth, bool ignore_case, bool unicode)
 void
 Analysis::EnsureAnalyzed(RegExpNode* that)
 {
-    JS_CHECK_RECURSION(cx, failASCII("Stack overflow"); return);
+    if (!CheckRecursionLimit(cx)) {
+        failASCII("Stack overflow");
+        return;
+    }
 
     if (that->info()->been_analyzed || that->info()->being_analyzed)
         return;
@@ -2496,7 +2499,11 @@ BoyerMooreLookahead::EmitSkipInstructions(RegExpMacroAssembler* masm)
 bool
 BoyerMooreLookahead::CheckOverRecursed()
 {
-    JS_CHECK_RECURSION(compiler()->cx(), compiler()->SetRegExpTooBig(); return false);
+    if (!CheckRecursionLimit(compiler()->cx())) {
+        compiler()->SetRegExpTooBig();
+        return false;
+    }
+
     return true;
 }
 
