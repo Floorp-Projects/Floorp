@@ -20,18 +20,29 @@ pub enum WebDriverResponse {
 
 impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
-        match self {
-            WebDriverResponse::CloseWindow(x) => json::encode(&x),
-            WebDriverResponse::Cookie(x) => json::encode(&x),
+        let obj = match self {
+            WebDriverResponse::CloseWindow(ref x) => json::encode(x),
+            WebDriverResponse::Cookie(ref x) => json::encode(x),
             WebDriverResponse::DeleteSession => Ok("{}".to_string()),
-            WebDriverResponse::ElementRect(x) => json::encode(&x),
-            WebDriverResponse::Generic(x) => json::encode(&x),
-            WebDriverResponse::NewSession(x) => json::encode(&x),
-            WebDriverResponse::Timeouts(x) => json::encode(&x),
+            WebDriverResponse::ElementRect(ref x) => json::encode(x),
+            WebDriverResponse::Generic(ref x) => json::encode(x),
+            WebDriverResponse::NewSession(ref x) => json::encode(x),
+            WebDriverResponse::Timeouts(ref x) => json::encode(x),
             WebDriverResponse::Void => Ok("{}".to_string()),
-            WebDriverResponse::WindowPosition(x) => json::encode(&x),
-            WebDriverResponse::WindowSize(x) => json::encode(&x),
-        }.unwrap()
+            WebDriverResponse::WindowPosition(ref x) => json::encode(x),
+            WebDriverResponse::WindowSize(ref x) => json::encode(x),
+        }.unwrap();
+
+        match self {
+            WebDriverResponse::Generic(_) => obj,
+            _ => {
+                let mut data = String::with_capacity(11 + obj.len());
+                data.push_str("{\"value\": ");
+                data.push_str(&*obj);
+                data.push_str("}");
+                data
+            }
+        }
     }
 }
 
