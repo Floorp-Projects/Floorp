@@ -83,8 +83,7 @@ body,
   background: none;
 }
 
-.toolbar-button:active::before,
-.toolbar-button.active::before {
+.toolbar-button:active::before {
   filter: var(--checked-icon-filter);
 }
 
