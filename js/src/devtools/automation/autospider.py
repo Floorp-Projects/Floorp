@@ -137,7 +137,7 @@ OUTDIR = os.path.join(OBJDIR, "out")
 POBJDIR = posixpath.join(PDIR.source, args.objdir)
 AUTOMATION = env.get('AUTOMATION', False)
 MAKE = env.get('MAKE', 'make')
-MAKEFLAGS = env.get('MAKEFLAGS', '-j6')
+MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 UNAME_M = subprocess.check_output(['uname', '-m']).strip()
 
 CONFIGURE_ARGS = variant['configure-args']
@@ -295,7 +295,7 @@ if not args.nobuild:
         run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
 
     # Run make
-    run_command('%s -s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
+    run_command('%s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
 
 COMMAND_PREFIX = []
 # On Linux, disable ASLR to make shell builds a bit more reproducible.

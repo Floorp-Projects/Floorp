@@ -5,8 +5,8 @@
 package org.mozilla.gecko.sync;
 
 /**
- * The server rejected a record in its "failure" array.
+ * A previous POST failed, so we won't send any more records this session.
  */
-public class Server11RecordPostFailedException extends SyncException {
-  private static final long serialVersionUID = -8517471217486190314L;
+public class Server15PreviousPostFailedException extends SyncException {
+  private static final long serialVersionUID = -3582490631414624310L;
 }

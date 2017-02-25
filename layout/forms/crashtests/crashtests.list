@@ -57,12 +57,12 @@ load 682684.xhtml
 load 865602.html
 load 893332-1.html
 load 944198.html
-skip-if(stylo) load 949891.xhtml # bug 1323693
+skip-if(stylo) load 949891.xhtml # bug 1323693, bug 1341973
 load 959311.html
 load 960277-2.html
 load 997709-1.html
 load 1102791.html
-skip-if(stylo) load 1140216.html # bug 1323693
+skip-if(stylo) load 1140216.html # bug 1323693, bug 1341973
 load 1182414.html
 load 1212688.html
 load 1228670.xhtml

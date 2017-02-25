@@ -213,6 +213,11 @@ EXPORTS.mozilla.dom += [
     'WindowOrientationObserver.h',
 ]
 
+if CONFIG['FUZZING']:
+    EXPORTS.mozilla.dom += [
+        'FuzzingFunctions.h',
+    ]
+
 UNIFIED_SOURCES += [
     'AnonymousContent.cpp',
     'Attr.cpp',
@@ -358,6 +363,11 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_WEBRTC']:
     UNIFIED_SOURCES += [
         'nsDOMDataChannel.cpp',
+    ]
+
+if CONFIG['FUZZING']:
+    UNIFIED_SOURCES += [
+        'FuzzingFunctions.cpp',
     ]
 
 # these files couldn't be in UNIFIED_SOURCES for now for reasons given below:

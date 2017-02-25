@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.stage;
 
 import android.content.Context;
+import android.os.SystemClock;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.EngineSettings;
@@ -13,6 +14,7 @@ import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.ReflowIsNecessaryException;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -25,11 +27,13 @@ import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
+import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -57,6 +61,20 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
 
   protected long stageStartTimestamp = -1;
   protected long stageCompleteTimestamp = -1;
+
+  /**
+   * Poor-man's boolean typing.
+   * These enums are used to configure {@link org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository}.
+   */
+  public enum HighWaterMark {
+    Enabled,
+    Disabled
+  }
+
+  public enum MultipleBatches {
+    Enabled,
+    Disabled
+  }
 
   /**
    * Override these in your subclasses.
@@ -139,18 +157,48 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   protected abstract Repository getLocalRepository();
   protected abstract RecordFactory getRecordFactory();
 
-  // Override this in subclasses.
-  protected Repository getRemoteRepository() throws URISyntaxException {
-    String collection = getCollection();
-    return new Server11Repository(collection,
-                                  session.config.storageURL(),
-                                  session.getAuthHeaderProvider(),
-                                  session.config.infoCollections,
-                                  session.config.infoConfiguration);
+  /**
+   * Used to configure a {@link org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository}.
+   * Override this if you need a persistent repository state provider.
+   *
+   * @return Non-persistent state provider.
+   */
+  protected RepositoryStateProvider getRepositoryStateProvider() {
+    return new NonPersistentRepositoryStateProvider();
   }
 
   /**
-   * Return a Crypto5Middleware-wrapped Server11Repository.
+   * Used to configure a {@link org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository}.
+   * Override this if you want to restrict downloader to just a single batch.
+   */
+  protected MultipleBatches getAllowedMultipleBatches() {
+    return MultipleBatches.Enabled;
+  }
+
+  /**
+   * Used to configure a {@link org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository}.
+   * Override this if you want to allow resuming record downloads from a high-water-mark.
+   * Ensure you're using a {@link org.mozilla.gecko.sync.repositories.PersistentRepositoryStateProvider}
+   * to persist high-water-mark across syncs.
+   */
+  protected HighWaterMark getAllowedToUseHighWaterMark() {
+    return HighWaterMark.Disabled;
+  }
+
+  // Override this in subclasses.
+  protected Repository getRemoteRepository() throws URISyntaxException {
+    String collection = getCollection();
+    return new Server15Repository(collection,
+                                  session.getSyncDeadline(),
+                                  session.config.storageURL(),
+                                  session.getAuthHeaderProvider(),
+                                  session.config.infoCollections,
+                                  session.config.infoConfiguration,
+                                  new NonPersistentRepositoryStateProvider());
+  }
+
+  /**
+   * Return a Crypto5Middleware-wrapped Server15Repository.
    *
    * @throws NoCollectionKeysSetException
    * @throws URISyntaxException
@@ -165,6 +213,10 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
 
   protected String bundlePrefix() {
     return this.getCollection() + ".";
+  }
+
+  protected String statePreferencesPrefix() {
+    return this.getCollection() + ".state.";
   }
 
   protected SynchronizerConfiguration getConfig() throws NonObjectJSONException, IOException {
@@ -187,11 +239,21 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   }
 
   /**
-   * Reset timestamps.
+   * Reset timestamps and any repository state.
    */
   @Override
   protected void resetLocal() {
     resetLocalWithSyncID(null);
+    if (!getRepositoryStateProvider().resetAndCommit()) {
+      // At the very least, we can log this.
+      // Failing to reset at this point means that we'll have lingering state for any stages using a
+      // persistent provider. In certain cases this might negatively affect first sync of this stage
+      // in the future.
+      // Our timestamp resetting code in `persistConfig` is affected by the same problem.
+      // A way to work around this is to further prefix our persisted SharedPreferences with
+      // clientID/syncID, ensuring a very defined scope for any persisted state. See Bug 1332431.
+      Logger.warn(LOG_TAG, "Failed to reset repository state");
+    }
   }
 
   /**
@@ -475,7 +537,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     final String name = getEngineName();
     Logger.debug(LOG_TAG, "Starting execute for " + name);
 
-    stageStartTimestamp = System.currentTimeMillis();
+    stageStartTimestamp = SystemClock.elapsedRealtime();
 
     try {
       if (!this.isEnabled()) {
@@ -575,7 +637,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
    */
   @Override
   public void onSynchronized(Synchronizer synchronizer) {
-    stageCompleteTimestamp = System.currentTimeMillis();
+    stageCompleteTimestamp = SystemClock.elapsedRealtime();
     Logger.debug(LOG_TAG, "onSynchronized.");
 
     SynchronizerConfiguration newConfig = synchronizer.save();
@@ -605,7 +667,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   @Override
   public void onSynchronizeFailed(Synchronizer synchronizer,
                                   Exception lastException, String reason) {
-    stageCompleteTimestamp = System.currentTimeMillis();
+    stageCompleteTimestamp = SystemClock.elapsedRealtime();
     Logger.warn(LOG_TAG, "Synchronize failed: " + reason, lastException);
 
     // This failure could be due to a 503 or a 401 and it could have headers.
@@ -618,6 +680,12 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
       } else {
         session.interpretHTTPFailure(response.httpResponse()); // Does not call session.abort().
       }
+    }
+
+    // Let global session know that this stage is not complete (due to a 412 or hitting a deadline).
+    // This stage will be re-synced once current sync is complete.
+    if (lastException instanceof ReflowIsNecessaryException) {
+      session.handleIncompleteStage();
     }
 
     Logger.info(LOG_TAG, "Advancing session even though stage failed (took " + getStageDurationString() +

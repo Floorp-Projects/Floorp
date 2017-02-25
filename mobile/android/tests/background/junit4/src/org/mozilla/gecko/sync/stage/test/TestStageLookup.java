@@ -24,7 +24,8 @@ public class TestStageLookup {
     expected.add(Stage.syncBookmarks);
     expected.add(Stage.syncTabs);
     expected.add(Stage.syncFormHistory);
-    expected.add(Stage.syncHistory);
+    expected.add(Stage.syncFullHistory);
+    expected.add(Stage.syncRecentHistory);
     expected.add(Stage.syncPasswords);
 
     assertEquals(expected, namedStages);
@@ -32,7 +33,8 @@ public class TestStageLookup {
     assertEquals(Stage.syncTabs,          Stage.byName("tabs"));
     assertEquals(Stage.syncBookmarks,     Stage.byName("bookmarks"));
     assertEquals(Stage.syncFormHistory,   Stage.byName("forms"));
-    assertEquals(Stage.syncHistory,       Stage.byName("history"));
+    assertEquals(Stage.syncFullHistory,   Stage.byName("history"));
+    assertEquals(Stage.syncRecentHistory, Stage.byName("recentHistory"));
     assertEquals(Stage.syncPasswords,     Stage.byName("passwords"));
 
     assertEquals(null, Stage.byName("foobar"));

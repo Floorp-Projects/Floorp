@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.stage;
 
+import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
+import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
@@ -30,7 +32,11 @@ public class FennecTabsServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getLocalRepository() {
-    return new FennecTabsRepository(session.getClientsDelegate());
+    return new BufferingMiddlewareRepository(
+            session.getSyncDeadline(),
+            new MemoryBufferStorage(),
+            new FennecTabsRepository(session.getClientsDelegate())
+    );
   }
 
   @Override

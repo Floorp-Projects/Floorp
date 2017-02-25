@@ -27,6 +27,7 @@ import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.stage.AndroidBrowserBookmarksServerSyncStage;
 import org.mozilla.gecko.sync.stage.AndroidBrowserHistoryServerSyncStage;
+import org.mozilla.gecko.sync.stage.AndroidBrowserRecentHistoryServerSyncStage;
 import org.mozilla.gecko.sync.stage.CheckPreconditionsStage;
 import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
@@ -73,6 +74,8 @@ public class GlobalSession implements HttpResponseObserver {
   public final GlobalSessionCallback callback;
   protected final Context context;
   protected final ClientsDataDelegate clientsDelegate;
+
+  private long syncDeadline;
 
   /**
    * Map from engine name to new settings for an updated meta/global record.
@@ -186,9 +189,14 @@ public class GlobalSession implements HttpResponseObserver {
 
     stages.put(Stage.syncTabs,                new FennecTabsServerSyncStage());
     stages.put(Stage.syncPasswords,           new PasswordsServerSyncStage());
+
+    // Will only run if syncFullHistory stage never completed.
+    // Bug 1316110 tracks follow up work to improve efficiency of this stage.
+    stages.put(Stage.syncRecentHistory,       new AndroidBrowserRecentHistoryServerSyncStage());
+
     stages.put(Stage.syncBookmarks,           new AndroidBrowserBookmarksServerSyncStage());
-    stages.put(Stage.syncHistory,             new AndroidBrowserHistoryServerSyncStage());
     stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage());
+    stages.put(Stage.syncFullHistory,         new AndroidBrowserHistoryServerSyncStage());
 
     stages.put(Stage.uploadMetaGlobal,        new UploadMetaGlobalStage());
     stages.put(Stage.completed,               new CompletedStage());
@@ -232,6 +240,10 @@ public class GlobalSession implements HttpResponseObserver {
       }
     }
     return out;
+  }
+
+  public long getSyncDeadline() {
+    return syncDeadline;
   }
 
   /**
@@ -293,10 +305,14 @@ public class GlobalSession implements HttpResponseObserver {
    *
    * @throws AlreadySyncingException
    */
-  public void start() throws AlreadySyncingException {
+  public void start(final long syncDeadline) throws AlreadySyncingException {
     if (this.currentState != GlobalSyncStage.Stage.idle) {
       throw new AlreadySyncingException(this.currentState);
     }
+
+    // Make the deadline value available to stages via its getter.
+    this.syncDeadline = syncDeadline;
+
     installAsHttpResponseObserver(); // Uninstalled by completeSync or abort.
     this.advance();
   }
@@ -311,7 +327,8 @@ public class GlobalSession implements HttpResponseObserver {
       this.callback.handleAborted(this, "Told to back off.");
       return;
     }
-    this.start();
+    // Restart with the same deadline as before.
+    this.start(syncDeadline);
   }
 
   /**
@@ -460,6 +477,11 @@ public class GlobalSession implements HttpResponseObserver {
       }
     }
     this.callback.handleError(this, e);
+  }
+
+  public void handleIncompleteStage() {
+    // Let our delegate know that current stage is incomplete and needs to be synced again.
+    callback.handleIncompleteStage(this.currentState, this);
   }
 
   public void handleHTTPError(SyncStorageResponse response, String reason) {
