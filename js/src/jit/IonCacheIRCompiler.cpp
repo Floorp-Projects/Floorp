@@ -14,6 +14,8 @@
 #include "jit/SharedICHelpers.h"
 #include "proxy/Proxy.h"
 
+#include "jscompartmentinlines.h"
+
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;

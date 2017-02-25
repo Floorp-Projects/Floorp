@@ -53,7 +53,7 @@ load 387033-1.xhtml
 load 387080-1.xul
 load 391974-1.html
 load 394120-1.xhtml
-skip-if(stylo) load 397293.xhtml # bug 1323652
+load 397293.xhtml # bug 1323652
 load 397304-1.html
 asserts-if(stylo,0-2) load 398326-1.xhtml # bug 1324660
 load 399013.xul
