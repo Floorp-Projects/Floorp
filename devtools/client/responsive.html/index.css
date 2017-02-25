@@ -171,7 +171,7 @@ select > option.divider {
 }
 
 #global-exit-button::before {
-  background-image: url("./images/close.svg");
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 #global-screenshot-button:disabled {
@@ -468,7 +468,7 @@ select > option.divider {
 }
 
 #device-close-button::before {
-  background-image: url("./images/close.svg");
+  background-image: url("chrome://devtools/skin/images/close.svg");
   margin: -6px 0 0 -6px;
 }
 
@@ -507,7 +507,7 @@ select > option.divider {
 }
 
 .device-remove-button:empty::before {
-  background-image: url("./images/close.svg");
+  background-image: url("chrome://devtools/skin/images/close.svg");
   margin: -6px 0 0 -6px;
 }
 
