@@ -1283,10 +1283,10 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
     static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
                   "Otherwise our check for JSOP_TYPEOF isn't ok");
     if (JSOp(pc[JSOP_GETGNAME_LENGTH]) == JSOP_TYPEOF) {
-        if (!GetEnvironmentNameForTypeOf(cx, envChain, name, res))
+        if (!GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, res))
             return false;
     } else {
-        if (!GetEnvironmentName(cx, envChain, name, res))
+        if (!GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, res))
             return false;
     }
 
