@@ -964,7 +964,7 @@ IsObjectInContextCompartment(JSObject* obj, const JSContext* cx);
 JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext* cx);
 
-inline uintptr_t
+MOZ_ALWAYS_INLINE uintptr_t
 GetNativeStackLimit(JSContext* cx, JS::StackKind kind, int extraAllowance = 0)
 {
     uintptr_t limit = JS::RootingContext::get(cx)->nativeStackLimit[kind];
@@ -976,7 +976,7 @@ GetNativeStackLimit(JSContext* cx, JS::StackKind kind, int extraAllowance = 0)
     return limit;
 }
 
-inline uintptr_t
+MOZ_ALWAYS_INLINE uintptr_t
 GetNativeStackLimit(JSContext* cx, int extraAllowance = 0)
 {
     JS::StackKind kind = RunningWithTrustedPrincipals(cx) ? JS::StackForTrustedScript
@@ -985,12 +985,12 @@ GetNativeStackLimit(JSContext* cx, int extraAllowance = 0)
 }
 
 /*
- * These macros report a stack overflow and run |onerror| if we are close to
- * using up the C stack. The JS_CHECK_CHROME_RECURSION variant gives us a
- * little extra space so that we can ensure that crucial code is able to run.
- * JS_CHECK_RECURSION_CONSERVATIVE allows less space than any other check,
- * including a safety buffer (as in, it uses the untrusted limit and subtracts
- * a little more from it).
+ * These functions return |false| if we are close to using up the C++ stack.
+ * They also report an overrecursion error, except for the DontReport variants.
+ * The CheckSystemRecursionLimit variant gives us a little extra space so we
+ * can ensure that crucial code is able to run. CheckRecursionLimitConservative
+ * allows less space than any other check, including a safety buffer (as in, it
+ * uses the untrusted limit and subtracts a little more from it).
  */
 
 MOZ_ALWAYS_INLINE bool
@@ -1005,16 +1005,23 @@ CheckRecursionLimit(JSContext* cx, uintptr_t limit)
 }
 
 MOZ_ALWAYS_INLINE bool
-CheckRecursionLimit(JSContext* cx)
-{
-    return CheckRecursionLimit(cx, GetNativeStackLimit(cx));
-}
-
-MOZ_ALWAYS_INLINE bool
 CheckRecursionLimitDontReport(JSContext* cx, uintptr_t limit)
 {
     int stackDummy;
     return JS_CHECK_STACK_SIZE(limit, &stackDummy);
+}
+
+MOZ_ALWAYS_INLINE bool
+CheckRecursionLimit(JSContext* cx)
+{
+    // GetNativeStackLimit(cx) is pretty slow because it has to do an uninlined
+    // call to RunningWithTrustedPrincipals to determine which stack limit to
+    // use. To work around this, check the untrusted limit first to avoid the
+    // overhead in most cases.
+    uintptr_t untrustedLimit = GetNativeStackLimit(cx, JS::StackForUntrustedScript);
+    if (MOZ_LIKELY(CheckRecursionLimitDontReport(cx, untrustedLimit)))
+        return true;
+    return CheckRecursionLimit(cx, GetNativeStackLimit(cx));
 }
 
 MOZ_ALWAYS_INLINE bool
