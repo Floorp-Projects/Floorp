@@ -580,6 +580,8 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
     }
 
     NameLocation lookup(BytecodeEmitter* bce, JSAtom* name) {
+        AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx),
+                              TraceLogger_FrontendNameAnalysis);
         if (Maybe<NameLocation> loc = lookupInCache(bce, name))
             return *loc;
         return searchAndCache(bce, name);
@@ -866,6 +868,8 @@ Maybe<NameLocation>
 BytecodeEmitter::EmitterScope::locationBoundInScope(BytecodeEmitter* bce, JSAtom* name,
                                                     EmitterScope* target)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     // The target scope must be an intra-frame enclosing scope of this
     // one. Count the number of extra hops to reach it.
     uint8_t extraHops = 0;
@@ -923,6 +927,8 @@ bool
 BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
                                             Handle<LexicalScope::Data*> bindings)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(kind != ScopeKind::NamedLambda && kind != ScopeKind::StrictNamedLambda);
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
@@ -993,6 +999,8 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
 bool
 BytecodeEmitter::EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
     MOZ_ASSERT(funbox->namedLambdaBindings());
 
@@ -1060,6 +1068,8 @@ BytecodeEmitter::EmitterScope::enterComprehensionFor(BytecodeEmitter* bce,
 bool
 BytecodeEmitter::EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     if (!ensureCache(bce))
@@ -1181,6 +1191,8 @@ BytecodeEmitter::EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* 
 bool
 BytecodeEmitter::EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbox)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(funbox->hasParameterExprs);
     MOZ_ASSERT(funbox->extraVarScopeBindings() ||
                funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings());
@@ -1270,6 +1282,8 @@ class DynamicBindingIter : public BindingIter
 bool
 BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedContext* globalsc)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1330,6 +1344,8 @@ BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1385,6 +1401,8 @@ BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext
 bool
 BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1442,6 +1460,8 @@ BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterWith(BytecodeEmitter* bce)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     if (!ensureCache(bce))
@@ -1468,6 +1488,8 @@ BytecodeEmitter::EmitterScope::enterWith(BytecodeEmitter* bce)
 bool
 BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
+
     // If we aren't leaving the scope due to a non-local jump (e.g., break),
     // we must be the innermost scope.
     MOZ_ASSERT_IF(!nonLocal, this == bce->innermostEmitterScope);
@@ -1525,6 +1547,8 @@ BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
 Maybe<MaybeCheckTDZ>
 BytecodeEmitter::TDZCheckCache::needsTDZCheck(BytecodeEmitter* bce, JSAtom* name)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendTDZAnalysis);
+
     if (!ensureCache(bce))
         return Nothing();
 
@@ -1554,6 +1578,8 @@ bool
 BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
                                              MaybeCheckTDZ check)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendTDZAnalysis);
+
     if (!ensureCache(bce))
         return false;
 
@@ -3448,8 +3474,8 @@ BytecodeEmitter::needsImplicitThis()
 bool
 BytecodeEmitter::maybeSetDisplayURL()
 {
-    if (tokenStream()->hasDisplayURL()) {
-        if (!parser->ss->setDisplayURL(cx, tokenStream()->displayURL()))
+    if (tokenStream().hasDisplayURL()) {
+        if (!parser->ss->setDisplayURL(cx, tokenStream().displayURL()))
             return false;
     }
     return true;
@@ -3458,9 +3484,9 @@ BytecodeEmitter::maybeSetDisplayURL()
 bool
 BytecodeEmitter::maybeSetSourceMap()
 {
-    if (tokenStream()->hasSourceMapURL()) {
+    if (tokenStream().hasSourceMapURL()) {
         MOZ_ASSERT(!parser->ss->hasSourceMapURL());
-        if (!parser->ss->setSourceMapURL(cx, tokenStream()->sourceMapURL()))
+        if (!parser->ss->setSourceMapURL(cx, tokenStream().sourceMapURL()))
             return false;
     }
 
@@ -3499,21 +3525,21 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx)
         Debugger::onNewScript(cx, script);
 }
 
-inline TokenStream*
+inline TokenStream&
 BytecodeEmitter::tokenStream()
 {
-    return &parser->tokenStream;
+    return parser->tokenStream;
 }
 
 bool
 BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream()->currentToken().pos;
+    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportCompileErrorNumberVA(nullptr, pos.begin, JSREPORT_ERROR,
-                                                            errorNumber, args);
+    bool result = tokenStream().reportCompileErrorNumberVA(nullptr, pos.begin, JSREPORT_ERROR,
+                                                           errorNumber, args);
     va_end(args);
     return result;
 }
@@ -3521,12 +3547,12 @@ BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...)
 bool
 BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream()->currentToken().pos;
+    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportExtraWarningErrorNumberVA(nullptr, pos.begin,
-                                                                 errorNumber, args);
+    bool result = tokenStream().reportExtraWarningErrorNumberVA(nullptr, pos.begin,
+                                                                errorNumber, args);
     va_end(args);
     return result;
 }
@@ -3534,12 +3560,12 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
 bool
 BytecodeEmitter::reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...)
 {
-    TokenPos pos = pn ? pn->pn_pos : tokenStream()->currentToken().pos;
+    TokenPos pos = pn ? pn->pn_pos : tokenStream().currentToken().pos;
 
     va_list args;
     va_start(args, errorNumber);
-    bool result = tokenStream()->reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
-                                                               errorNumber, args);
+    bool result = tokenStream().reportStrictModeErrorNumberVA(nullptr, pos.begin, sc->strict(),
+                                                              errorNumber, args);
     va_end(args);
     return result;
 }
@@ -4047,6 +4073,29 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitGetNameAtLocationForCompoundAssignment(JSAtom* name, const NameLocation& loc)
+{
+    if (loc.kind() == NameLocation::Kind::Dynamic) {
+        // For dynamic accesses we need to emit GETBOUNDNAME instead of
+        // GETNAME for correctness: looking up @@unscopables on the
+        // environment chain (due to 'with' environments) must only happen
+        // once.
+        //
+        // GETBOUNDNAME uses the environment already pushed on the stack from
+        // the earlier BINDNAME.
+        if (!emit1(JSOP_DUP))                              // ENV ENV
+            return false;
+        if (!emitAtomOp(name, JSOP_GETBOUNDNAME))          // ENV V
+            return false;
+    } else {
+        if (!emitGetNameAtLocation(name, loc))             // ENV? V
+            return false;
+    }
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitNameIncDec(ParseNode* pn)
 {
     MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
@@ -4058,21 +4107,21 @@ BytecodeEmitter::emitNameIncDec(ParseNode* pn)
                                      bool emittedBindOp)
     {
         JSAtom* name = pn->pn_kid->name();
-        if (!bce->emitGetNameAtLocation(name, loc, false)) // SCOPE? V
+        if (!bce->emitGetNameAtLocationForCompoundAssignment(name, loc)) // ENV? V
             return false;
-        if (!bce->emit1(JSOP_POS))                         // SCOPE? N
+        if (!bce->emit1(JSOP_POS))                         // ENV? N
             return false;
-        if (post && !bce->emit1(JSOP_DUP))                 // SCOPE? N? N
+        if (post && !bce->emit1(JSOP_DUP))                 // ENV? N? N
             return false;
-        if (!bce->emit1(JSOP_ONE))                         // SCOPE? N? N 1
+        if (!bce->emit1(JSOP_ONE))                         // ENV? N? N 1
             return false;
-        if (!bce->emit1(binop))                            // SCOPE? N? N+1
+        if (!bce->emit1(binop))                            // ENV? N? N+1
             return false;
 
         if (post && emittedBindOp) {
-            if (!bce->emit2(JSOP_PICK, 2))                 // N? N+1 SCOPE?
+            if (!bce->emit2(JSOP_PICK, 2))                 // N? N+1 ENV?
                 return false;
-            if (!bce->emit1(JSOP_SWAP))                    // N? SCOPE? N+1
+            if (!bce->emit1(JSOP_SWAP))                    // N? ENV? N+1
                 return false;
         }
 
@@ -4766,6 +4815,8 @@ BytecodeEmitter::emitSetThis(ParseNode* pn)
 bool
 BytecodeEmitter::emitScript(ParseNode* body)
 {
+    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), body);
+
     TDZCheckCache tdzCache(this);
     EmitterScope emitterScope(this);
     if (sc->isGlobalContext()) {
@@ -4833,6 +4884,7 @@ bool
 BytecodeEmitter::emitFunctionScript(ParseNode* body)
 {
     FunctionBox* funbox = sc->asFunctionBox();
+    AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission, tokenStream(), funbox);
 
     // The ordering of these EmitterScopes is important. The named lambda
     // scope needs to enclose the function scope needs to enclose the extra
@@ -5865,19 +5917,8 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
             // For compound assignments, first get the LHS value, then emit
             // the RHS and the op.
             if (op != JSOP_NOP) {
-                if (lhsLoc.kind() == NameLocation::Kind::Dynamic) {
-                    // For dynamic accesses we can do better than a GETNAME
-                    // since the assignment already emitted a BINDNAME on the
-                    // top of the stack. As an optimization, use that to get
-                    // the name.
-                    if (!bce->emit1(JSOP_DUP))
-                        return false;
-                    if (!bce->emitAtomOp(lhs, JSOP_GETXPROP))
-                        return false;
-                } else {
-                    if (!bce->emitGetNameAtLocation(lhs->name(), lhsLoc))
-                        return false;
-                }
+                if (!bce->emitGetNameAtLocationForCompoundAssignment(lhs->name(), lhsLoc))
+                    return false;
             }
 
             // Emit the RHS. If we emitted a BIND[G]NAME, then the scope is on

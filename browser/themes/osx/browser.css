@@ -15,6 +15,8 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
+%include ../shared/browser.inc.css
+
 :root {
   --space-above-tabbar: 9px;
   --tabs-toolbar-color: #333;
@@ -1647,36 +1649,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   100% {
     transform: scale(1.0);
   }
-}
-
-#urlbar-zoom-button {
-  margin: 0 3px;
-  font-size: .8em;
-  padding: 0 8px;
-  border-radius: 1em;
-  background-color: hsla(0,0%,0%,.05);
-  border: 1px solid ThreeDLightShadow;
-}
-
-#urlbar-zoom-button[animate="true"] {
-  animation-name: urlbar-zoom-reset-pulse;
-  animation-duration: 250ms;
-}
-
-#urlbar-zoom-button:hover {
-  background-color: hsla(0,0%,0%,.1);
-}
-
-#urlbar-zoom-button:hover:active {
-  background-color: hsla(0,0%,0%,.15);
-}
-
-#urlbar-zoom-button > .toolbarbutton-text {
-  display: -moz-box;
-}
-
-#urlbar-zoom-button > .toolbarbutton-icon {
-  display: none;
 }
 
 #urlbar-search-footer {
