@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'TestLocaleService.cpp',
+    'TestLocaleServiceNegotiate.cpp',
 ]
 
 if CONFIG['ENABLE_INTL_API']:
