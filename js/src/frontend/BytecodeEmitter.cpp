@@ -5901,7 +5901,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
                     // the name.
                     if (!bce->emit1(JSOP_DUP))
                         return false;
-                    if (!bce->emitAtomOp(lhs, JSOP_GETXPROP))
+                    if (!bce->emitAtomOp(lhs, JSOP_GETBOUNDNAME))
                         return false;
                 } else {
                     if (!bce->emitGetNameAtLocation(lhs->name(), lhsLoc))
