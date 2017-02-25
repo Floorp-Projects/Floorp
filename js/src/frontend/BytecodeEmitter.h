@@ -352,7 +352,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool maybeSetSourceMap();
     void tellDebuggerAboutCompiledScript(JSContext* cx);
 
-    inline TokenStream* tokenStream();
+    inline TokenStream& tokenStream();
 
     BytecodeVector& code() const { return current->code; }
     jsbytecode* code(ptrdiff_t offset) const { return current->code.begin() + offset; }
@@ -545,6 +545,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter
 
     MOZ_MUST_USE bool emitGetNameAtLocation(JSAtom* name, const NameLocation& loc,
                                             bool callContext = false);
+    MOZ_MUST_USE bool emitGetNameAtLocationForCompoundAssignment(JSAtom* name,
+                                                                 const NameLocation& loc);
     MOZ_MUST_USE bool emitGetName(JSAtom* name, bool callContext = false) {
         return emitGetNameAtLocation(name, lookupName(name), callContext);
     }

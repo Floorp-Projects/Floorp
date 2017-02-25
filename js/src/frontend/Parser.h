@@ -11,6 +11,7 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jspubtd.h"
 
@@ -146,9 +147,9 @@ class ParseContext : public Nestable<ParseContext>
         }
 
         MOZ_MUST_USE bool addDeclaredName(ParseContext* pc, AddDeclaredNamePtr& p, JSAtom* name,
-                                          DeclarationKind kind)
+                                          DeclarationKind kind, uint32_t pos)
         {
-            return maybeReportOOM(pc, declared_->add(p, name, DeclaredNameInfo(kind)));
+            return maybeReportOOM(pc, declared_->add(p, name, DeclaredNameInfo(kind, pos)));
         }
 
         // Remove all VarForAnnexBLexicalFunction declarations of a certain
@@ -255,6 +256,9 @@ class ParseContext : public Nestable<ParseContext>
     };
 
   private:
+    // Trace logging of parsing time.
+    AutoFrontendTraceLog traceLog_;
+
     // Context shared between parsing and bytecode generation.
     SharedContext* sc_;
 
@@ -351,6 +355,11 @@ class ParseContext : public Nestable<ParseContext>
     template <typename ParseHandler>
     ParseContext(Parser<ParseHandler>* prs, SharedContext* sc, Directives* newDirectives)
       : Nestable<ParseContext>(&prs->pc),
+        traceLog_(sc->context,
+                  mozilla::IsSame<ParseHandler, FullParseHandler>::value
+                  ? TraceLogger_ParsingFull
+                  : TraceLogger_ParsingSyntax,
+                  prs->tokenStream),
         sc_(sc),
         tokenStream_(prs->tokenStream),
         innermostStatement_(nullptr),
@@ -1433,15 +1442,17 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool hasValidSimpleStrictParameterNames();
 
-    void reportRedeclaration(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
-    bool notePositionalFormalParameter(Node fn, HandlePropertyName name,
+    void reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind, TokenPos pos,
+                             uint32_t prevPos);
+    bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
     bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
     mozilla::Maybe<DeclarationKind> isVarRedeclaredInEval(HandlePropertyName name,
                                                           DeclarationKind kind);
-    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind,
-                       mozilla::Maybe<DeclarationKind>* redeclaredKind);
-    bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, bool* tryAnnexB);
+    bool tryDeclareVar(HandlePropertyName name, DeclarationKind kind, uint32_t beginPos,
+                       mozilla::Maybe<DeclarationKind>* redeclaredKind, uint32_t* prevPos);
+    bool tryDeclareVarForAnnexBLexicalFunction(HandlePropertyName name, uint32_t beginPos,
+                                               bool* tryAnnexB);
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
     bool noteDeclaredName(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
