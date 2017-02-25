@@ -110,7 +110,7 @@
     macro(JSOP_GETRVAL,   2,  "getrval",    NULL,         1,  0,  1, JOF_BYTE) \
     /*
      * Pops the top of stack value, converts it to an object, and adds a
-     * 'WithEnvironmentObject' wrapping that object to the scope chain.
+     * 'WithEnvironmentObject' wrapping that object to the environment chain.
      *
      * There is a matching JSOP_LEAVEWITH instruction later. All name
      * lookups between the two that may need to consult the With object
@@ -122,7 +122,7 @@
      */ \
     macro(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         5,  1,  0, JOF_SCOPE) \
     /*
-     * Pops the scope chain object pushed by JSOP_ENTERWITH.
+     * Pops the environment chain object pushed by JSOP_ENTERWITH.
      *   Category: Statements
      *   Type: With Statement
      *   Operands:
@@ -332,9 +332,9 @@
      */ \
     macro(JSOP_POS,       35, "pos",        "+ ",         1,  1,  1, JOF_BYTE|JOF_ARITH) \
     /*
-     * Looks up name on the scope chain and deletes it, pushes 'true' onto the
-     * stack if succeeded (if the property was present and deleted or if the
-     * property wasn't present in the first place), 'false' if not.
+     * Looks up name on the environment chain and deletes it, pushes 'true'
+     * onto the stack if succeeded (if the property was present and deleted or
+     * if the property wasn't present in the first place), 'false' if not.
      *
      * Strict mode code should never contain this opcode.
      *   Category: Variables and Scopes
@@ -468,13 +468,13 @@
      */ \
     macro(JSOP_STRICTSETPROP,   48, "strict-setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
-     * Pops a scope and value from the stack, assigns value to the given name,
-     * and pushes the value back on the stack. If the set failed, then throw
-     * a TypeError, per usual strict mode semantics.
+     * Pops a environment and value from the stack, assigns value to the given
+     * name, and pushes the value back on the stack. If the set failed, then
+     * throw a TypeError, per usual strict mode semantics.
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
-     *   Stack: scope, val => val
+     *   Stack: env, val => val
      */ \
     macro(JSOP_STRICTSETNAME,   49, "strict-setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
@@ -566,7 +566,7 @@
      */ \
     macro(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     /*
-     * Looks up name on the scope chain and pushes its value onto the stack.
+     * Looks up name on the environment chain and pushes its value onto the stack.
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
@@ -1084,22 +1084,22 @@
     \
     /* ECMA-compliant assignment ops. */ \
     /*
-     * Looks up name on the scope chain and pushes the scope which contains
-     * the name onto the stack. If not found, pushes global scope onto the
-     * stack.
+     * Looks up name on the environment chain and pushes the environment which
+     * contains the name onto the stack. If not found, pushes global
+     * lexical environment onto the stack.
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
-     *   Stack: => scope
+     *   Stack: => env
      */ \
     macro(JSOP_BINDNAME,  110,"bindname",   NULL,         5,  0,  1,  JOF_ATOM|JOF_NAME) \
     /*
-     * Pops a scope and value from the stack, assigns value to the given name,
-     * and pushes the value back on the stack
+     * Pops an environment and value from the stack, assigns value to the
+     * given name, and pushes the value back on the stack
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
-     *   Stack: scope, val => val
+     *   Stack: env, val => val
      */ \
     macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     \
@@ -1306,10 +1306,11 @@
      *   Stack: fun =>
      */ \
     macro(JSOP_DEFFUN,    127,"deffun",     NULL,         1,  1,  0,  JOF_BYTE) \
-    /* Defines the new constant binding on global lexical scope.
+    /* Defines the new constant binding on global lexical environment.
      *
-     * Throws if a binding with the same name already exists on the scope, or
-     * if a var binding with the same name exists on the global.
+     * Throws if a binding with the same name already exists on the
+     * environment, or if a var binding with the same name exists on the
+     * global.
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
@@ -1318,10 +1319,11 @@
     macro(JSOP_DEFCONST,  128,"defconst",   NULL,         5,  0,  0,  JOF_ATOM) \
     /*
      * Defines the new binding on the frame's current variables-object (the
-     * scope object on the scope chain designated to receive new variables).
+     * environment on the environment chain designated to receive new
+     * variables).
      *
      * Throws if the current variables-object is the global object and a
-     * binding with the same name exists on the global lexical scope.
+     * binding with the same name exists on the global lexical environment.
      *
      * This is used for global scripts and also in some cases for function
      * scripts where use of dynamic scoping inhibits optimization.
@@ -1403,10 +1405,10 @@
      * CallObject to own the aliased variable.
      *
      * An ALIASEDVAR opcode contains the following immediates:
-     *  uint8 hops:  the number of scope objects to skip to find the ScopeObject
-     *               containing the variable being accessed
-     *  uint24 slot: the slot containing the variable in the ScopeObject (this
-     *               'slot' does not include RESERVED_SLOTS).
+     *  uint8 hops: the number of environment objects to skip to find the
+     *               EnvironmentObject containing the variable being accessed
+     *  uint24 slot: the slot containing the variable in the EnvironmentObject
+     *               (this 'slot' does not include RESERVED_SLOTS).
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
      *   Operands: uint8_t hops, uint24_t slot
@@ -1585,7 +1587,7 @@
     macro(JSOP_RETRVAL,       153,"retrval",    NULL,       1,  0,  0,  JOF_BYTE) \
     \
     /*
-     * Looks up name on global scope and pushes its value onto the stack,
+     * Looks up name on global environment and pushes its value onto the stack,
      * unless the script has a non-syntactic global scope, in which case it
      * acts just like JSOP_NAME.
      *
@@ -1598,29 +1600,29 @@
      */ \
     macro(JSOP_GETGNAME,      154,"getgname",  NULL,       5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME) \
     /*
-     * Pops the top two values on the stack as 'val' and 'scope', sets property
-     * of 'scope' as 'val' and pushes 'val' back on the stack.
+     * Pops the top two values on the stack as 'val' and 'env', sets property
+     * of 'env' as 'val' and pushes 'val' back on the stack.
      *
-     * 'scope' should be the global scope unless the script has a non-syntactic
-     * global scope, in which case acts like JSOP_SETNAME.
+     * 'env' should be the global lexical environment unless the script has a
+     * non-syntactic global scope, in which case acts like JSOP_SETNAME.
      *   Category: Variables and Scopes
      *   Type: Free Variables
      *   Operands: uint32_t nameIndex
-     *   Stack: scope, val => val
+     *   Stack: env, val => val
      */ \
     macro(JSOP_SETGNAME,      155,"setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY) \
     \
     /*
-     * Pops the top two values on the stack as 'val' and 'scope', sets property
-     * of 'scope' as 'val' and pushes 'val' back on the stack. Throws a
+     * Pops the top two values on the stack as 'val' and 'env', sets property
+     * of 'env' as 'val' and pushes 'val' back on the stack. Throws a
      * TypeError if the set fails, per strict mode semantics.
      *
-     * 'scope' should be the global scope unless the script has a non-syntactic
-     * global scope, in which case acts like JSOP_STRICTSETNAME.
+     * 'env' should be the global lexical environment unless the script has a
+     * non-syntactic global scope, in which case acts like JSOP_STRICTSETNAME.
      *   Category: Variables and Scopes
      *   Type: Free Variables
      *   Operands: uint32_t nameIndex
-     *   Stack: scope, val => val
+     *   Stack: env, val => val
      */ \
     macro(JSOP_STRICTSETGNAME, 156, "strict-setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT) \
     /*
@@ -1673,10 +1675,11 @@
      */ \
     macro(JSOP_INITGLEXICAL,  161,"initglexical", NULL,   5,  1,  1,  JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME) \
     \
-    /* Defines the new mutable binding on global lexical scope.
+    /* Defines the new mutable binding on global lexical environment.
      *
-     * Throws if a binding with the same name already exists on the scope, or
-     * if a var binding with the same name exists on the global.
+     * Throws if a binding with the same name already exists on the
+     * environment, or if a var binding with the same name exists on the
+     * global.
      *   Category: Variables and Scopes
      *   Type: Variables
      *   Operands: uint32_t nameIndex
@@ -1692,7 +1695,7 @@
      */ \
     macro(JSOP_CHECKOBJCOERCIBLE, 163, "checkobjcoercible", NULL, 1,  1,  1, JOF_BYTE) \
     /*
-     * Find the function to invoke with |super()| on the scope chain.
+     * Find the function to invoke with |super()| on the environment chain.
      *
      *   Category: Variables and Scopes
      *   Type: Super
@@ -1751,7 +1754,7 @@
     macro(JSOP_THROWSETCONST,        169, "throwsetconst",        NULL, 4,  1,  1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * Throws a runtime TypeError for invalid assignment to 'const'. The
-     * scope coordinate is used for better error messages.
+     * environment coordinate is used for better error messages.
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
@@ -2149,11 +2152,11 @@
      *   Category: Variables and Scopes
      *   Type: Free Variables
      *   Operands:
-     *   Stack: => scope
+     *   Stack: => env
      */ \
     macro(JSOP_BINDVAR,       213, "bindvar",      NULL,  1,  0,  1,  JOF_BYTE) \
     /*
-     * Pushes the global scope onto the stack if the script doesn't have a
+     * Pushes the global environment onto the stack if the script doesn't have a
      * non-syntactic global scope.  Otherwise will act like JSOP_BINDNAME.
      *
      * 'nameIndex' is only used when acting like JSOP_BINDNAME.
