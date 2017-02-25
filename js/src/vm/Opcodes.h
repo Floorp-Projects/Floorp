@@ -1995,14 +1995,15 @@
     macro(JSOP_MUTATEPROTO,   194, "mutateproto",NULL,    1,  2,  1, JOF_BYTE) \
     \
     /*
-     * Pops the top of stack value, gets an extant property value of it,
-     * throwing ReferenceError if the identified property does not exist.
+     * Pops an environment, gets the value of a bound name on it. If the name
+     * is not bound to the environment, throw a ReferenceError. Used in
+     * conjunction with BINDNAME.
      *   Category: Literals
      *   Type: Object
      *   Operands: uint32_t nameIndex
-     *   Stack: obj => obj[name]
+     *   Stack: env => v
      */ \
-    macro(JSOP_GETXPROP,      195,"getxprop",    NULL,    5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
+    macro(JSOP_GETBOUNDNAME,  195,"getboundname",NULL,    5,  1,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET) \
     \
     /*
      * Pops the top stack value as 'val' and pushes 'typeof val'.  Note that
