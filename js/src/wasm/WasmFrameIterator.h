@@ -60,7 +60,6 @@ class FrameIterator
     const CallSite* callsite_;
     const CodeRange* codeRange_;
     uint8_t* fp_;
-    uint8_t* pc_;
     Unwind unwind_;
     bool missingFrameMessage_;
 
