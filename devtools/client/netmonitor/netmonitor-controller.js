@@ -5,7 +5,6 @@
 "use strict";
 
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/event-emitter");
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
@@ -892,14 +891,6 @@ NetworkEventsHandler.prototype = {
   }
 };
 
-/**
- * Convenient way of emitting events from the panel window.
- */
-EventEmitter.decorate(window);
-
-/**
- * Preliminary setup for the NetMonitorController object.
- */
 NetMonitorController.TargetEventsHandler = new TargetEventsHandler();
 NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
 window.gNetwork = NetMonitorController.NetworkEventsHandler;

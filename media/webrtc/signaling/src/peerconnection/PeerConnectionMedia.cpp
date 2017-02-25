@@ -24,9 +24,7 @@
 #include "signaling/src/jsep/JsepTransport.h"
 
 #include "MediaSegment.h"
-#ifdef MOZILLA_INTERNAL_API
 #include "MediaStreamGraph.h"
-#endif
 
 #include "MediaStreamGraphImpl.h"
 

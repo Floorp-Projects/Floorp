@@ -1374,10 +1374,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               this.richlistbox.appendChild(item);
             }
 
-            if (typeof item.onChanged == "function") {
+            if (typeof item._onChanged == "function") {
               // The binding may have not been applied yet.
               setTimeout(() => {
-                item.onChanged();
+                item._onChanged();
               }, 0);
             }
 
@@ -2047,10 +2047,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_onChanged">
         <body>
           <![CDATA[
-            let iconChanged = item.adjustSiteIconStart(this.popup._siteIconStart);
+            let popup = this.parentNode.parentNode;
+            let iconChanged = this.adjustSiteIconStart(popup._siteIconStart);
 
             if (iconChanged) {
-              item.handleOverUnderflow();
+              this.handleOverUnderflow();
             }
           ]]>
         </body>

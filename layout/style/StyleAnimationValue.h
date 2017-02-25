@@ -576,11 +576,7 @@ struct AnimationValue
   StyleAnimationValue mGecko;
   RefPtr<RawServoAnimationValue> mServo;
 
-  bool operator==(const AnimationValue& aOther) const
-  {
-    // FIXME: Bug 1337229: add a deep == impl for RawServoAnimationValue.
-    return mGecko == aOther.mGecko && mServo == aOther.mServo;
-  }
+  inline bool operator==(const AnimationValue& aOther) const;
 
   bool IsNull() const { return mGecko.IsNull() && !mServo; }
 

@@ -48,7 +48,12 @@ const SCRIPTS = [
   "browser/base/content/browser-thumbnails.js",
   "browser/base/content/browser-trackingprotection.js",
   "browser/base/content/browser-data-submission-info-bar.js",
-  "browser/base/content/browser-fxaccounts.js"
+  "browser/base/content/browser-fxaccounts.js",
+  // This gets loaded into the same scopes as browser.js via browser.xul and
+  // placesOverlay.xul.
+  "toolkit/content/globalOverlay.js",
+  // Via editMenuOverlay.xul
+  "toolkit/content/editMenuOverlay.js"
 ];
 
 module.exports = function(context) {

@@ -10,8 +10,8 @@ fails == plugin-sanity.html plugin-sanity.html # Bug 1341095
 == border-padding-2.html border-padding-2.html
 == border-padding-3.html border-padding-3.html
 # The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
-#random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-1.html pluginproblemui-direction-1.html
-#random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-2.html pluginproblemui-direction-2.html
+random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) skip-if(stylo) == pluginproblemui-direction-1.html pluginproblemui-direction-1.html
+random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) skip-if(stylo) == pluginproblemui-direction-2.html pluginproblemui-direction-2.html
 == plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
 fails == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
 == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html

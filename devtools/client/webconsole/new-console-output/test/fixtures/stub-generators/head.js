@@ -413,12 +413,11 @@ function* generatePageErrorStubs() {
   for (let [key, code] of pageError) {
     let received = new Promise(resolve => {
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
+        toolbox.target.client.removeListener("pageError", onPacket);
         let message = prepareMessage(packet, {getNextId: () => 1});
         stubs.packets.push(formatPacket(message.messageText, packet));
         stubs.preparedMessages.push(formatStub(message.messageText, packet));
         resolve();
-      }, {
-        once: true
       });
     });
 

@@ -258,9 +258,6 @@
           ],
         }],
         ['(build_for_test==0) and (build_for_standalone==0)', {
-          'defines' : [
-            'MOZILLA_INTERNAL_API',
-          ],
           'sources': [
             './src/peerconnection/MediaStreamList.cpp',
             './src/peerconnection/MediaStreamList.h',
@@ -274,9 +271,7 @@
           ],
           'defines' : [
             'NO_CHROMIUM_LOGGING',
-            'USE_FAKE_MEDIA_STREAMS',
             'USE_FAKE_PCOBSERVER',
-            'MOZILLA_EXTERNAL_LINKAGE',
           ],
         }],
         ['build_for_standalone==0', {
@@ -290,10 +285,7 @@
             './test'
           ],
           'defines' : [
-            'MOZILLA_INTERNAL_API',
-            'MOZILLA_EXTERNAL_LINKAGE',
             'NO_CHROMIUM_LOGGING',
-            'USE_FAKE_MEDIA_STREAMS',
             'USE_FAKE_PCOBSERVER',
           ],
         }],
