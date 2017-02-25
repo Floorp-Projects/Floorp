@@ -108,18 +108,18 @@ fails == spellcheck-superscript-2.html spellcheck-superscript-2.html
 == 824080-1.html 824080-1.html
 == 824080-2.html 824080-2.html
 == 824080-3.html 824080-3.html
-# needs-focus == 824080-2.html 824080-2.html
+needs-focus == 824080-2.html 824080-2.html
 == 824080-4.html 824080-4.html
 == 824080-5.html 824080-5.html
-# needs-focus == 824080-4.html 824080-4.html
-# needs-focus == 824080-6.html 824080-6.html
+needs-focus == 824080-4.html 824080-4.html
+fails needs-focus == 824080-6.html 824080-6.html
 fails needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessiblecaret.enabled_on_touch,false) == 824080-7.html 824080-7.html
-# needs-focus == 824080-6.html 824080-6.html
+fails needs-focus == 824080-6.html 824080-6.html
 # Bug 674927: copy spellcheck-textarea tests to contenteditable
 == spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
 == spellcheck-contenteditable-attr.html spellcheck-contenteditable-attr.html
-# needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-focused.html
-# needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-focused-reframe.html
+needs-focus == spellcheck-contenteditable-focused.html spellcheck-contenteditable-focused.html
+needs-focus == spellcheck-contenteditable-focused-reframe.html spellcheck-contenteditable-focused-reframe.html
 == spellcheck-contenteditable-nofocus.html spellcheck-contenteditable-nofocus.html
 == spellcheck-contenteditable-disabled.html spellcheck-contenteditable-disabled.html
 == spellcheck-contenteditable-disabled-partial.html spellcheck-contenteditable-disabled-partial.html

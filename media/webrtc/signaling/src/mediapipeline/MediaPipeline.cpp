@@ -1454,11 +1454,6 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
   } else {
     MOZ_ASSERT(false, "Unknown track type");
   }
-
-#ifndef MOZILLA_INTERNAL_API
-  // this enables the unit tests that can't fiddle with principals and the like
-  listener_->SetEnabled(true);
-#endif
 }
 
 bool
@@ -2089,10 +2084,8 @@ public:
     : GenericReceiveListener(source, track_id),
       width_(0),
       height_(0),
-#if defined(MOZILLA_INTERNAL_API)
       image_container_(),
       image_(),
-#endif
       monitor_("Video PipelineListener")
   {
     image_container_ =
@@ -2152,16 +2145,11 @@ public:
                         int64_t render_time,
                         const RefPtr<layers::Image>& video_image)
   {
-#ifdef MOZILLA_INTERNAL_API
     ReentrantMonitorAutoEnter enter(monitor_);
 
     if (buffer) {
       // Create a video frame using |buffer|.
-#ifdef MOZ_WIDGET_GONK
-      RefPtr<PlanarYCbCrImage> yuvImage = new GrallocImage();
-#else
       RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
-#endif // MOZ_WIDGET_GONK
       uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
 
       PlanarYCbCrData yuvData;
@@ -2184,23 +2172,13 @@ public:
 
       image_ = yuvImage;
     }
-#ifdef WEBRTC_GONK
-    else {
-      // Decoder produced video frame that can be appended to the track directly.
-      MOZ_ASSERT(video_image);
-      image_ = video_image;
-    }
-#endif // WEBRTC_GONK
-#endif // MOZILLA_INTERNAL_API
   }
 
 private:
   int width_;
   int height_;
-#if defined(MOZILLA_INTERNAL_API)
   RefPtr<layers::ImageContainer> image_container_;
   RefPtr<layers::Image> image_;
-#endif
   mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
                                       // Protects image_ against:
                                       // - Writing from the GIPS thread
@@ -2296,9 +2274,7 @@ nsresult MediaPipelineReceiveVideo::Init() {
   description_ += track_id_;
   description_ += "]";
 
-#if defined(MOZILLA_INTERNAL_API)
   listener_->AddSelf();
-#endif
 
   // Always happens before we can DetachMedia()
   static_cast<VideoSessionConduit *>(conduit_.get())->

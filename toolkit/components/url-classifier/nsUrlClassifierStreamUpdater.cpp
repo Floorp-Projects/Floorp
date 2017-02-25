@@ -509,6 +509,32 @@ nsUrlClassifierStreamUpdater::AddRequestBody(const nsACString &aRequestBody)
   return NS_OK;
 }
 
+// We might need to expand the bucket here if telemetry shows lots of errors
+// are neither connection errors nor DNS errors.
+static uint8_t NetworkErrorToBucket(nsresult rv)
+{
+  switch(rv) {
+  // Connection errors
+  case NS_ERROR_ALREADY_CONNECTED:        return 2;
+  case NS_ERROR_NOT_CONNECTED:            return 3;
+  case NS_ERROR_CONNECTION_REFUSED:       return 4;
+  case NS_ERROR_NET_TIMEOUT:              return 5;
+  case NS_ERROR_OFFLINE:                  return 6;
+  case NS_ERROR_PORT_ACCESS_NOT_ALLOWED:  return 7;
+  case NS_ERROR_NET_RESET:                return 8;
+  case NS_ERROR_NET_INTERRUPT:            return 9;
+  case NS_ERROR_PROXY_CONNECTION_REFUSED: return 10;
+  case NS_ERROR_NET_PARTIAL_TRANSFER:     return 11;
+  case NS_ERROR_NET_INADEQUATE_SECURITY:  return 12;
+  // DNS errors
+  case NS_ERROR_UNKNOWN_HOST:             return 13;
+  case NS_ERROR_DNS_LOOKUP_QUEUE_FULL:    return 14;
+  case NS_ERROR_UNKNOWN_PROXY_HOST:       return 15;
+  // Others
+  default:                                return 1;
+  }
+}
+
 // Map the HTTP response code to a Telemetry bucket
 static uint32_t HTTPStatusToBucket(uint32_t status)
 {
@@ -649,12 +675,14 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
            spec.get(), this));
     }
 
+    uint8_t netErrCode = NS_FAILED(status) ? NetworkErrorToBucket(status) : 0;
+    mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::URLCLASSIFIER_UPDATE_REMOTE_NETWORK_ERROR,
+      mTelemetryProvider, netErrCode);
+
     if (NS_FAILED(status)) {
       // Assume we're overloading the server and trigger backoff.
       downloadError = true;
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_REMOTE_STATUS2,
-                                     mTelemetryProvider, 15 /* unknown response code */);
-
     } else {
       bool succeeded = false;
       rv = httpChannel->GetRequestSucceeded(&succeeded);

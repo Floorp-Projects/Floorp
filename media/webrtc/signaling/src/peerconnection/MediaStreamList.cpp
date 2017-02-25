@@ -5,9 +5,7 @@
 #include "CSFLog.h"
 #include "base/basictypes.h"
 #include "MediaStreamList.h"
-#ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/MediaStreamListBinding.h"
-#endif
 #include "nsIScriptGlobalObject.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
@@ -26,17 +24,7 @@ MediaStreamList::~MediaStreamList()
 {
 }
 
-#ifdef MOZILLA_INTERNAL_API
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(MediaStreamList)
-#else
-NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaStreamList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaStreamList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(MediaStreamList)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-#endif
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaStreamList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaStreamList)
@@ -48,11 +36,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 MediaStreamList::WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
 {
-#ifdef MOZILLA_INTERNAL_API
   return MediaStreamListBinding::Wrap(cx, this, aGivenProto);
-#else
-  return nullptr;
-#endif
 }
 
 nsISupports*

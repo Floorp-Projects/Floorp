@@ -9,6 +9,7 @@ import android.database.Cursor;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.loader.SuggestedSiteLoader;
@@ -25,8 +26,19 @@ public class SuggestedSitePreparer implements Preparer {
     // sites is low, and a HashSet containing them is therefore likely to be exceedingly small.
     // Hence we opt to iterate over the list once, and do an immediate lookup every time a favicon
     // is requested:
-    private void initialise(final Context context) {
-        final Cursor cursor = BrowserDB.from(context).getSuggestedSites().get(Integer.MAX_VALUE);
+    // Loading can fail if suggested sites haven't been initialised yet, only proceed if we return true.
+    private boolean initialise(final Context context) {
+        final SuggestedSites suggestedSites = BrowserDB.from(context).getSuggestedSites();
+
+        // suggestedSites may not have been initialised yet if BrowserApp isn't running yet. Suggested
+        // Sites are initialised in BrowserApp.onCreate(), but we might need to load icons when running
+        // custom tabs, as geckoview, etc. (But we don't care as much about the bundled icons in those
+        // scenarios.)
+        if (suggestedSites == null) {
+            return false;
+        }
+
+        final Cursor cursor = suggestedSites.get(Integer.MAX_VALUE);
         try {
             final int urlColumnIndex = cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.URL);
 
@@ -37,6 +49,8 @@ public class SuggestedSitePreparer implements Preparer {
         } finally {
             cursor.close();
         }
+
+        return true;
     }
 
     @Override
@@ -46,9 +60,13 @@ public class SuggestedSitePreparer implements Preparer {
         }
 
         if (!initialised) {
-            initialise(request.getContext());
+            initialised = initialise(request.getContext());
 
-            initialised = true;
+            if (!initialised) {
+                // Early return: if we were unable to load suggested sites metdata, we won't be able
+                // to provide sites (but we'll still try again next time).
+                return;
+            }
         }
 
         final String siteURL = request.getPageUrl();
