@@ -1001,25 +1001,30 @@ DefineOS(JSContext* cx, HandleObject global,
 
     // For backwards compatibility, expose various os.file.* functions as
     // direct methods on the global.
-    RootedValue val(cx);
-
-    struct {
+    struct Export {
         const char* src;
         const char* dst;
-    } osfile_exports[] = {
+    };
+
+    const Export osfile_exports[] = {
         { "readFile", "read" },
         { "readFile", "snarf" },
         { "readRelativeToScript", "readRelativeToScript" },
-        { "redirect", "redirect" },
-        { "redirectErr", "redirectErr" }
     };
 
     for (auto pair : osfile_exports) {
-        if (!JS_GetProperty(cx, osfile, pair.src, &val))
+        if (!CreateAlias(cx, pair.dst, osfile, pair.src))
             return false;
-        if (val.isObject()) {
-            RootedObject function(cx, &val.toObject());
-            if (!JS_DefineProperty(cx, global, pair.dst, function, 0))
+    }
+
+    if (!fuzzingSafe) {
+        const Export unsafe_osfile_exports[] = {
+            { "redirect", "redirect" },
+            { "redirectErr", "redirectErr" }
+        };
+
+        for (auto pair : unsafe_osfile_exports) {
+            if (!CreateAlias(cx, pair.dst, osfile, pair.src))
                 return false;
         }
     }

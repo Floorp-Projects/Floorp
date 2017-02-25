@@ -116,11 +116,23 @@ void LinearScaleYUVToRGB32Row_C(const uint8* y_buf,
                                 int source_dx);
 
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__CLR_VER) && !defined(__clang__)
+#if defined(VISUALC_HAS_AVX2)
+#define SIMD_ALIGNED(var) __declspec(align(32)) var
+#else
 #define SIMD_ALIGNED(var) __declspec(align(16)) var
+#endif
+#elif defined(__GNUC__) || defined(__clang__)
+// Caveat GCC 4.2 to 4.7 have a known issue using vectors with const.
+#if defined(CLANG_HAS_AVX2) || defined(GCC_HAS_AVX2)
+#define SIMD_ALIGNED(var) var __attribute__((aligned(32)))
 #else
 #define SIMD_ALIGNED(var) var __attribute__((aligned(16)))
 #endif
+#else
+#define SIMD_ALIGNED(var) var
+#endif
+
 extern SIMD_ALIGNED(const int16 kCoefficientsRgbY[768][4]);
 
 // x64 uses MMX2 (SSE) so emms is not required.

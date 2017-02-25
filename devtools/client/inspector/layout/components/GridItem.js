@@ -4,8 +4,13 @@
 
 "use strict";
 
-const { addons, createClass, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
+const { addons, createClass, createFactory, DOM: dom, PropTypes } = require("devtools/client/shared/vendor/react");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
+
+// Reps
+const { REPS } = require("devtools/client/shared/components/reps/reps");
+const Rep = createFactory(REPS.Rep);
+const ElementNode = REPS.ElementNode;
 
 const Types = require("../types");
 
@@ -16,7 +21,10 @@ module.exports = createClass({
   propTypes: {
     getSwatchColorPickerTooltip: PropTypes.func.isRequired,
     grid: PropTypes.shape(Types.grid).isRequired,
+    setSelectedNode: PropTypes.func.isRequired,
+    onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
+    onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
   },
 
@@ -50,7 +58,46 @@ module.exports = createClass({
     this.props.onSetGridOverlayColor(this.props.grid.nodeFront, color);
   },
 
-  onGridCheckboxClick() {
+  /**
+   * While waiting for a reps fix in https://github.com/devtools-html/reps/issues/92,
+   * translate nodeFront to a grip-like object that can be used with an ElementNode rep.
+   *
+   * @params  {NodeFront} nodeFront
+   *          The NodeFront for which we want to create a grip-like object.
+   * @returns {Object} a grip-like object that can be used with Reps.
+   */
+  translateNodeFrontToGrip(nodeFront) {
+    let { attributes } = nodeFront;
+
+    // The main difference between NodeFront and grips is that attributes are treated as
+    // a map in grips and as an array in NodeFronts.
+    let attributesMap = {};
+    for (let {name, value} of attributes) {
+      attributesMap[name] = value;
+    }
+
+    return {
+      actor: nodeFront.actorID,
+      preview: {
+        attributes: attributesMap,
+        attributesLength: attributes.length,
+        // nodeName is already lowerCased in Node grips
+        nodeName: nodeFront.nodeName.toLowerCase(),
+        nodeType: nodeFront.nodeType,
+      }
+    };
+  },
+
+  onGridCheckboxClick(e) {
+    // If the click was on the svg icon to select the node in the inspector, bail out.
+    let originalTarget = e.nativeEvent && e.nativeEvent.explicitOriginalTarget;
+    if (originalTarget && originalTarget.namespaceURI === "http://www.w3.org/2000/svg") {
+      // We should be able to cancel the click event propagation after the following reps
+      // issue is implemented : https://github.com/devtools-html/reps/issues/95 .
+      e.preventDefault();
+      return;
+    }
+
     let {
       grid,
       onToggleGridHighlighter,
@@ -60,21 +107,13 @@ module.exports = createClass({
   },
 
   render() {
-    let { grid } = this.props;
+    let {
+      grid,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
     let { nodeFront } = grid;
-    let { displayName, attributes } = nodeFront;
-
-    let gridName = displayName;
-
-    let idIndex = attributes.findIndex(({ name }) => name === "id");
-    if (idIndex > -1 && attributes[idIndex].value) {
-      gridName += "#" + attributes[idIndex].value;
-    }
-
-    let classIndex = attributes.findIndex(({name}) => name === "class");
-    if (classIndex > -1 && attributes[classIndex].value) {
-      gridName += "." + attributes[classIndex].value.split(" ").join(".");
-    }
 
     return dom.li(
       {
@@ -91,7 +130,15 @@ module.exports = createClass({
             onChange: this.onGridCheckboxClick,
           }
         ),
-        gridName
+        Rep(
+          {
+            defaultRep: ElementNode,
+            object: this.translateNodeFrontToGrip(nodeFront),
+            onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
+            onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+            onInspectIconClick: () => setSelectedNode(nodeFront),
+          }
+        )
       ),
       dom.div(
         {

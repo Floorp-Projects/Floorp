@@ -1,5 +1,6 @@
 {
-    "configure-args": "--enable-optimize",
+    "configure-args": "",
+    "optimize": true,
     "env": {
         "JSTESTS_EXTRA_ARGS": "--jitflags=all"
     }

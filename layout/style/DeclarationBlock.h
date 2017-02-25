@@ -63,7 +63,7 @@ public:
    * Mark this declaration as unmodifiable.  It's 'const' so it can
    * be called from ToString.
    */
-  void SetImmutable() const { mImmutable = true; }
+  void SetImmutable() { mImmutable = true; }
 
   /**
    * Copy |this|, if necessary to ensure that it can be modified.
@@ -135,8 +135,7 @@ private:
   } mContainer;
 
   // set when declaration put in the rule tree;
-  // also by ToString (hence the 'mutable').
-  mutable bool mImmutable;
+  bool mImmutable;
 
   const StyleBackendType mType;
 };

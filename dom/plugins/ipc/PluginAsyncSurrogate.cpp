@@ -101,7 +101,6 @@ bool RecursionGuard::sHasEntered = false;
 
 PluginAsyncSurrogate::PluginAsyncSurrogate(PluginModuleParent* aParent)
   : mParent(aParent)
-  , mMode(0)
   , mWindow(nullptr)
   , mAcceptCalls(false)
   , mInstantiated(false)
@@ -118,7 +117,7 @@ PluginAsyncSurrogate::~PluginAsyncSurrogate()
 }
 
 bool
-PluginAsyncSurrogate::Init(NPMIMEType aPluginType, NPP aInstance, uint16_t aMode,
+PluginAsyncSurrogate::Init(NPMIMEType aPluginType, NPP aInstance,
                            int16_t aArgc, char* aArgn[], char* aArgv[])
 {
   mMimeType = aPluginType;
@@ -126,7 +125,6 @@ PluginAsyncSurrogate::Init(NPMIMEType aPluginType, NPP aInstance, uint16_t aMode
     static_cast<nsNPAPIPluginInstance*>(aInstance->ndata);
   MOZ_ASSERT(instance);
   mInstance = instance;
-  mMode = aMode;
   for (int i = 0; i < aArgc; ++i) {
     mNames.AppendElement(NullableString(aArgn[i]));
     mValues.AppendElement(NullableString(aArgv[i]));
@@ -136,11 +134,11 @@ PluginAsyncSurrogate::Init(NPMIMEType aPluginType, NPP aInstance, uint16_t aMode
 
 /* static */ bool
 PluginAsyncSurrogate::Create(PluginModuleParent* aParent, NPMIMEType aPluginType,
-                             NPP aInstance, uint16_t aMode, int16_t aArgc,
+                             NPP aInstance, int16_t aArgc,
                              char* aArgn[], char* aArgv[])
 {
   RefPtr<PluginAsyncSurrogate> surrogate(new PluginAsyncSurrogate(aParent));
-  if (!surrogate->Init(aPluginType, aInstance, aMode, aArgc, aArgn, aArgv)) {
+  if (!surrogate->Init(aPluginType, aInstance, aArgc, aArgn, aArgv)) {
     return false;
   }
   PluginAsyncSurrogate* rawSurrogate = nullptr;
@@ -169,7 +167,7 @@ PluginAsyncSurrogate::NPP_New(NPError* aError)
   }
 
   nsresult rv = mParent->NPP_NewInternal(mMimeType.BeginWriting(), GetNPP(),
-                                         mMode, mNames, mValues, nullptr,
+                                         mNames, mValues, nullptr,
                                          aError);
   if (NS_FAILED(rv)) {
     return rv;
