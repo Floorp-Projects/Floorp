@@ -41,7 +41,7 @@ typedef HashSet<Shape*> ShapeSet;
 class MOZ_RAII AutoCycleDetector
 {
   public:
-    using Set = HashSet<JSObject*, MovableCellHasher<JSObject*>, SystemAllocPolicy>;
+    using Vector = GCVector<JSObject*, 8>;
 
     AutoCycleDetector(JSContext* cx, HandleObject objArg
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -57,17 +57,11 @@ class MOZ_RAII AutoCycleDetector
     bool foundCycle() { return cyclic; }
 
   private:
-    Generation hashsetGenerationAtInit;
     JSContext* cx;
     RootedObject obj;
-    Set::AddPtr hashsetAddPointer;
     bool cyclic;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-/* Updates references in the cycle detection set if the GC moves them. */
-extern void
-TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set);
 
 struct AutoResolving;
 
@@ -640,11 +634,15 @@ struct JSContext : public JS::RootingContext,
 
   private:
     /* State for object and array toSource conversion. */
-    js::ThreadLocalData<js::AutoCycleDetector::Set> cycleDetectorSet_;
+    js::ThreadLocalData<js::AutoCycleDetector::Vector> cycleDetectorVector_;
 
   public:
-    js::AutoCycleDetector::Set& cycleDetectorSet() { return cycleDetectorSet_.ref(); }
-    const js::AutoCycleDetector::Set& cycleDetectorSet() const { return cycleDetectorSet_.ref(); }
+    js::AutoCycleDetector::Vector& cycleDetectorVector() {
+        return cycleDetectorVector_.ref();
+    }
+    const js::AutoCycleDetector::Vector& cycleDetectorVector() const {
+        return cycleDetectorVector_.ref();
+    }
 
     /* Client opaque pointer. */
     js::UnprotectedData<void*> data;

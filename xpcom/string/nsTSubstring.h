@@ -272,17 +272,9 @@ public:
     return CharAt(aIndex);
   }
 
-  char_type First() const
-  {
-    NS_ASSERTION(mLength > 0, "|First()| called on an empty string");
-    return mData[0];
-  }
+  char_type First() const;
 
-  inline   char_type Last() const
-  {
-    NS_ASSERTION(mLength > 0, "|Last()| called on an empty string");
-    return mData[mLength - 1];
-  }
+  char_type Last() const;
 
   size_type NS_FASTCALL CountChar(char_type) const;
   int32_t NS_FASTCALL FindChar(char_type, index_type aOffset = 0) const;
