@@ -18,6 +18,18 @@ using namespace JS;
 namespace js {
 namespace shell {
 
+// Generate 'usage' and 'help' properties for the given object.
+// JS_DefineFunctionsWithHelp will define individual function objects with both
+// of those properties (eg getpid.usage = "getpid()" and getpid.help = "return
+// the process id"). This function will generate strings for an "interface
+// object", eg os.file, which contains some number of functions.
+//
+// .usage will be set to "<name> - interface object".
+//
+// .help will be set to a newline-separated list of functions that have either
+// 'help' or 'usage' properties. Functions are described with their usage
+// strings, if they have them, else with just their names.
+//
 bool
 GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name)
 {
@@ -26,45 +38,68 @@ GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name)
         return false;
 
     StringBuffer buf(cx);
-    if (!buf.append(' '))
+    if (!buf.append(name, strlen(name)) || !buf.append(" - interface object", 19))
         return false;
+    RootedString s(cx, buf.finishString());
+    if (!s || !JS_DefineProperty(cx, obj, "usage", s, 0))
+        return false;
+    buf.clear();
 
+    bool first = true;
     for (size_t i = 0; i < idv.length(); i++) {
-        RootedValue v(cx);
         RootedId id(cx, idv[i]);
+        RootedValue v(cx);
         if (!JS_GetPropertyById(cx, obj, id, &v))
             return false;
         if (!v.isObject())
             continue;
-        bool hasHelp = false;
         RootedObject prop(cx, &v.toObject());
-        if (!JS_GetProperty(cx, prop, "usage", &v))
+
+        RootedValue usage(cx);
+        RootedValue help(cx);
+        if (!JS_GetProperty(cx, prop, "usage", &usage))
             return false;
-        if (v.isString())
-            hasHelp = true;
-        if (!JS_GetProperty(cx, prop, "help", &v))
+        if (!JS_GetProperty(cx, prop, "help", &help))
             return false;
-        if (v.isString())
-            hasHelp = true;
-        if (hasHelp) {
-            if (!buf.append(' ') ||
-                !buf.append(name, strlen(name)) ||
-                !buf.append('.') ||
-                !buf.append(JSID_TO_FLAT_STRING(id)))
-            {
-                return false;
-            }
-        }
+        if (!usage.isString() && !help.isString())
+            continue;
+
+        if (!first && !buf.append("\n"))
+            return false;
+        first = false;
+
+        if (!buf.append("  ", 2))
+            return false;
+
+        if (!buf.append(usage.isString() ? usage.toString() : JSID_TO_FLAT_STRING(id)))
+            return false;
     }
 
-    RootedString s(cx, buf.finishString());
+    s = buf.finishString();
     if (!s || !JS_DefineProperty(cx, obj, "help", s, 0))
         return false;
 
-    if (!buf.append(name, strlen(name)) || !buf.append(" - interface object", 20))
+    return true;
+}
+
+bool
+CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, const char* srcName)
+{
+    RootedObject global(cx, JS_GetGlobalForObject(cx, namespaceObj));
+    if (!global)
         return false;
-    s = buf.finishString();
-    if (!s || !JS_DefineProperty(cx, obj, "usage", s, 0))
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, namespaceObj, srcName, &val))
+        return false;
+
+    if (!val.isObject()) {
+        JS_ReportErrorASCII(cx, "attempted to alias nonexistent function");
+        return false;
+    }
+    
+    RootedObject function(cx, &val.toObject());
+    if (!JS_DefineProperty(cx, global, dstName, function, 0))
         return false;
 
     return true;

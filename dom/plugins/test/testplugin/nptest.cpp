@@ -876,12 +876,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 
   instanceData->instanceCountWatchGeneration = sCurrentInstanceCountWatchGeneration;
 
-  if (NP_FULL == mode) {
-    instanceData->streamMode = NP_SEEK;
-    instanceData->frame = "testframe";
-    addRange(instanceData, "100,100");
-  }
-
   AsyncDrawing requestAsyncDrawing = AD_NONE;
 
   bool requestWindow = false;
@@ -1015,7 +1009,16 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "salign") == 0) {
       alreadyHasSalign = true;
     }
-}
+
+    // We don't support NP_FULL any more, but name="plugin" is an indication
+    // that we're a full-page plugin. We use default seek parameters for
+    // test_fullpage.html
+    if (strcmp(argn[i], "name") == 0 && strcmp(argv[i], "plugin") == 0) {
+      instanceData->streamMode = NP_SEEK;
+      instanceData->frame = "testframe";
+      addRange(instanceData, "100,100");
+    }
+  }
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
     requestWindow = true;

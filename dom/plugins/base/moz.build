@@ -31,7 +31,6 @@ EXPORTS += [
     'nsPluginInstanceOwner.h',
     'nsPluginLogging.h',
     'nsPluginNativeWindow.h',
-    'nsPluginNativeWindowGtk.h',
     'nsPluginsCID.h',
     'nsPluginsDir.h',
     'nsPluginTags.h',
@@ -70,17 +69,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 else:
     UNIFIED_SOURCES += [
+        'nsPluginNativeWindow.cpp',
         'nsPluginsDirUnix.cpp',
     ]
-    if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-        # This file cannot be built in unified mode because of name clashes in X11 headers.
-        SOURCES += [
-            'nsPluginNativeWindowGtk.cpp',
-        ]
-    else:
-        UNIFIED_SOURCES += [
-            'nsPluginNativeWindow.cpp',
-        ]
 
 LOCAL_INCLUDES += [
     '/dom/base',

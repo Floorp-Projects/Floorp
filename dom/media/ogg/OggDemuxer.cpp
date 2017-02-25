@@ -128,8 +128,13 @@ OggDemuxer::~OggDemuxer()
     // If we were able to initialize our decoders, report whether we encountered
     // a chained stream or not.
     bool isChained = mIsChained;
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() -> void {
-      OGG_DEBUG("Reporting telemetry MEDIA_OGG_LOADED_IS_CHAINED=%d", isChained);
+    void* ptr = this;
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([ptr, isChained]() -> void {
+      // We can't use OGG_DEBUG here because it implicitly refers to `this`,
+      // which we can't capture in this runnable.
+      MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug,
+              ("OggDemuxer(%p)::%s: Reporting telemetry MEDIA_OGG_LOADED_IS_CHAINED=%d",
+               ptr, __func__, isChained));
       Telemetry::Accumulate(Telemetry::HistogramID::MEDIA_OGG_LOADED_IS_CHAINED, isChained);
     });
     // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.

@@ -108,8 +108,6 @@ devtools/server/actors/object.js
 devtools/server/actors/script.js
 devtools/server/actors/styleeditor.js
 devtools/server/actors/stylesheets.js
-devtools/server/tests/browser/**
-!devtools/server/tests/browser/browser_webextension_inspected_window.js
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
 devtools/shared/heapsnapshot/**

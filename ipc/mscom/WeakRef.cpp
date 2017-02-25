@@ -11,6 +11,7 @@
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
+#include "nsProxyRelease.h"
 
 static void
 InitializeCS(CRITICAL_SECTION& aCS)
@@ -70,7 +71,6 @@ void
 SharedRef::Clear()
 {
   AutoCriticalSection lock(&mCS);
-  MOZ_ASSERT(mSupport);
   mSupport = nullptr;
 }
 
@@ -147,14 +147,11 @@ WeakReferenceSupport::Release()
     if (mFlags != Flags::eDestroyOnMainThread || NS_IsMainThread()) {
       delete this;
     } else {
-      // It is possible for the last Release() call to happen off-main-thread.
-      // If so, we need to dispatch an event to delete ourselves.
-      mozilla::DebugOnly<nsresult> rv =
-        NS_DispatchToMainThread(NS_NewRunnableFunction([this]() -> void
-        {
-          delete this;
-        }));
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      // We need to delete this object on the main thread, but we aren't on the
+      // main thread right now, so we send a reference to ourselves to the main
+      // thread to be re-released there.
+      RefPtr<WeakReferenceSupport> self = this;
+      NS_ReleaseOnMainThread(self.forget());
     }
   }
   return newRefCnt;

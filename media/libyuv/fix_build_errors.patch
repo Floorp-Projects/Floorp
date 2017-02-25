@@ -1,0 +1,94 @@
+# HG changeset patch
+# Parent  034c99a4c2010c8d60ff52daf0a183ac1fd05777
+Bug 1341543: Fix build errors for libyuv in mozilla tree r=sotaro
+
+diff --git a/media/libyuv/libyuv/include/libyuv/basic_types.h b/media/libyuv/libyuv/include/libyuv/basic_types.h
+--- a/media/libyuv/libyuv/include/libyuv/basic_types.h
++++ b/media/libyuv/libyuv/include/libyuv/basic_types.h
+@@ -8,22 +8,36 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+ 
+ #ifndef INCLUDE_LIBYUV_BASIC_TYPES_H_
+ #define INCLUDE_LIBYUV_BASIC_TYPES_H_
+ 
+ #include <stddef.h>  // for NULL, size_t
+ 
+-#if defined(_MSC_VER) && (_MSC_VER < 1600)
+-#include <sys/types.h>  // for uintptr_t on x86
+-#else
++#if !defined(_MSC_VER) && (_MSC_VER < 1600)
+ #include <stdint.h>  // for uintptr_t
+ #endif
+ 
++typedef uint64_t uint64;
++typedef int64_t  int64;
++#if defined(_MSC_VER)
++// nsprpub/pr/include/obsolete/protypes.h defines these weirdly
++typedef long int32;
++typedef unsigned long uint32;
++#else
++typedef uint32_t uint32;
++typedef int32_t  int32;
++#endif
++typedef uint16_t uint16;
++typedef int16_t  int16;
++typedef uint8_t  uint8;
++typedef int8_t   int8;
++#define INT_TYPES_DEFINED 1
++
+ #ifndef GG_LONGLONG
+ #ifndef INT_TYPES_DEFINED
+ #define INT_TYPES_DEFINED
+ #ifdef COMPILER_MSVC
+ typedef unsigned __int64 uint64;
+ typedef __int64 int64;
+ #ifndef INT64_C
+ #define INT64_C(x) x##I64
+diff --git a/media/libyuv/libyuv/include/libyuv/row.h b/media/libyuv/libyuv/include/libyuv/row.h
+--- a/media/libyuv/libyuv/include/libyuv/row.h
++++ b/media/libyuv/libyuv/include/libyuv/row.h
+@@ -169,18 +169,19 @@ extern "C" {
+ #define HAS_SOBELROW_SSE2
+ #define HAS_SOBELTOPLANEROW_SSE2
+ #define HAS_SOBELXROW_SSE2
+ #define HAS_SOBELXYROW_SSE2
+ #define HAS_SOBELYROW_SSE2
+ 
+ // The following functions fail on gcc/clang 32 bit with fpic and framepointer.
+ // caveat: clangcl uses row_win.cc which works.
+-#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+-    defined(_MSC_VER)
++#if !defined(MOZ_PROFILING) && \
++  (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) ||  \
++   defined(_MSC_VER))
+ // TODO(fbarchard): fix build error on android_full_debug=1
+ // https://code.google.com/p/libyuv/issues/detail?id=517
+ #define HAS_I422ALPHATOARGBROW_SSSE3
+ #endif
+ #endif
+ 
+ // The following are available on all x86 platforms, but
+ // require VS2012, clang 3.4 or gcc 4.7.
+@@ -231,18 +232,19 @@ extern "C" {
+ // Effects:
+ #define HAS_ARGBADDROW_AVX2
+ #define HAS_ARGBATTENUATEROW_AVX2
+ #define HAS_ARGBMULTIPLYROW_AVX2
+ #define HAS_ARGBSUBTRACTROW_AVX2
+ #define HAS_ARGBUNATTENUATEROW_AVX2
+ #define HAS_BLENDPLANEROW_AVX2
+ 
+-#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+-    defined(_MSC_VER)
++#if !defined(MOZ_PROFILING) && \
++  (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) ||  \
++   defined(_MSC_VER))
+ // TODO(fbarchard): fix build error on android_full_debug=1
+ // https://code.google.com/p/libyuv/issues/detail?id=517
+ #define HAS_I422ALPHATOARGBROW_AVX2
+ #endif
+ #endif
+ 
+ // The following are available for AVX2 Visual C and clangcl 32 bit:
+ // TODO(fbarchard): Port to gcc.

@@ -7,8 +7,6 @@
 // Check that the AnimationPlayerActor exposes a getFrames method that returns
 // the list of keyframes in the animation.
 
-const URL = MAIN_DOMAIN + "animation.html";
-
 add_task(function* () {
   let {client, walker, animations} =
     yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
