@@ -93,11 +93,11 @@ final class GeckoEditable extends JNIObject
     private static final int IME_RANGE_BACKCOLOR = 4;
     private static final int IME_RANGE_LINECOLOR = 8;
 
-    @WrapForJNI(dispatchTo = "proxy") // Dispatch a UI-activity event through proxy.
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
-                                   int keyPressMetaState, long time, int domPrintableKeyValue,
-                                   int repeatCount, int flags, boolean isSynthesizedImeKey,
-                                   KeyEvent event);
+                                   long time, int unicodeChar, int baseUnicodeChar,
+                                   int domPrintableKeyValue, int repeatCount, int flags,
+                                   boolean isSynthesizedImeKey, KeyEvent event);
 
     private void onKeyEvent(KeyEvent event, int action, int savedMetaState,
                             boolean isSynthesizedImeKey) {
@@ -112,40 +112,35 @@ final class GeckoEditable extends JNIObject
         final int metaState = event.getMetaState() | savedMetaState;
         final int unmodifiedMetaState = metaState &
                 ~(KeyEvent.META_ALT_MASK | KeyEvent.META_CTRL_MASK | KeyEvent.META_META_MASK);
-
         final int unicodeChar = event.getUnicodeChar(metaState);
-        final int unmodifiedUnicodeChar = event.getUnicodeChar(unmodifiedMetaState);
         final int domPrintableKeyValue =
                 unicodeChar >= ' '               ? unicodeChar :
-                unmodifiedMetaState != metaState ? unmodifiedUnicodeChar : 0;
-
-        // If a modifier (e.g. meta key) caused a different character to be entered, we
-        // drop that modifier from the metastate for the generated keypress event.
-        final int keyPressMetaState = (unicodeChar >= ' ' &&
-                unicodeChar != unmodifiedUnicodeChar) ? unmodifiedMetaState : metaState;
-
+                unmodifiedMetaState != metaState ? event.getUnicodeChar(unmodifiedMetaState) :
+                                                   0;
         onKeyEvent(action, event.getKeyCode(), event.getScanCode(),
-                   metaState, keyPressMetaState, event.getEventTime(),
-                   domPrintableKeyValue, event.getRepeatCount(), event.getFlags(),
-                   isSynthesizedImeKey, event);
+                   metaState, event.getEventTime(), unicodeChar,
+                   // e.g. for Ctrl+A, Android returns 0 for unicodeChar,
+                   // but Gecko expects 'a', so we return that in baseUnicodeChar.
+                   event.getUnicodeChar(0), domPrintableKeyValue, event.getRepeatCount(),
+                   event.getFlags(), isSynthesizedImeKey, event);
     }
 
-    @WrapForJNI(dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeSynchronize();
 
-    @WrapForJNI(dispatchTo = "proxy") // Dispatch a UI-activity event through proxy.
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeReplaceText(int start, int end, String text);
 
-    @WrapForJNI(dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeAddCompositionRange(int start, int end, int rangeType,
                                                  int rangeStyles, int rangeLineStyle,
                                                  boolean rangeBoldLine, int rangeForeColor,
                                                  int rangeBackColor, int rangeLineColor);
 
-    @WrapForJNI(dispatchTo = "proxy") // Dispatch a UI-activity event through proxy.
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeUpdateComposition(int start, int end);
 
-    @WrapForJNI(dispatchTo = "gecko")
+    @WrapForJNI(dispatchTo = "proxy")
     private native void onImeRequestCursorUpdates(int requestMode);
 
     /**
@@ -587,7 +582,7 @@ final class GeckoEditable extends JNIObject
         onViewChange(v);
     }
 
-    @WrapForJNI(dispatchTo = "gecko") @Override
+    @WrapForJNI(dispatchTo = "proxy") @Override
     protected native void disposeNative();
 
     @WrapForJNI(calledFrom = "gecko")

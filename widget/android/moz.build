@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'AndroidUiThread.cpp',
     'ANRReporter.cpp',
     'EventDispatcher.cpp',
-    'GeckoEditableSupport.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'nsAndroidProtocolHandler.cpp',
