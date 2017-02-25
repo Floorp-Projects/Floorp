@@ -43,10 +43,10 @@ def cargo_info(cargo):
         version=Version(version),
     )
 
-@depends(rustc, cargo, rustc_info)
+@depends(rustc_info, cargo_info)
 @imports(_from='textwrap', _import='dedent')
-def rust_compiler(rustc, cargo, rustc_info):
-    if not rustc:
+def rust_compiler(rustc_info, cargo_info):
+    if not rustc_info:
         die(dedent('''\
         Rust compiler not found.
         To compile rust language sources, you must have 'rustc' in your path.
@@ -74,25 +74,27 @@ def rust_compiler(rustc, cargo, rustc_info):
         installer is available from https://rustup.rs/
         '''.format(version, rustc_min_version)))
 
-        if not cargo:
-            die(dedent('''\
-            Cargo package manager not found.
-            To compile Rust language sources, you must have 'cargo' in your path.
-            See https://www.rust-lang.org/ for more information.
+    if not cargo_info:
+        die(dedent('''\
+        Cargo package manager not found.
+        To compile Rust language sources, you must have 'cargo' in your path.
+        See https://www.rust-lang.org/ for more information.
 
-            You can install cargo by running './mach bootstrap'
-            or by directly running the installer from https://rustup.rs/
-            '''))
-        version = cargo_info.version
-        if version < cargo_min_version:
-            die(dedent('''\
-            Cargo package manager {} is too old.
+        You can install cargo by running './mach bootstrap'
+        or by directly running the installer from https://rustup.rs/
+        '''))
 
-            To compile Rust language sources please install at least
-            version {} of 'cargo' and make sure it is first in your path.
+    version = cargo_info.version
+    if version < cargo_min_version:
+        die(dedent('''\
+        Cargo package manager {} is too old.
 
-            You can verify this by typing 'cargo --version'.
-            ''').format(version, cargo_min_version))
+        To compile Rust language sources please install at least
+        version {} of 'cargo' and make sure it is first in your path.
+
+        You can verify this by typing 'cargo --version'.
+        ''').format(version, cargo_min_version))
+
     return True
 
 set_config('MOZ_RUST', rust_compiler)
