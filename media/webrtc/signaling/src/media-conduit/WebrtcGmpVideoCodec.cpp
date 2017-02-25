@@ -31,19 +31,8 @@ namespace mozilla {
 #undef LOG
 #endif
 
-#ifdef MOZILLA_INTERNAL_API
 extern mozilla::LogModule* GetGMPLog();
-#else
-// For CPP unit tests
-PRLogModuleInfo*
-GetGMPLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("GMP");
-  return sLog;
-}
-#endif
+
 #define LOGD(msg) MOZ_LOG(GetGMPLog(), mozilla::LogLevel::Debug, msg)
 #define LOG(level, msg) MOZ_LOG(GetGMPLog(), (level), msg)
 
@@ -90,12 +79,10 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   , mCallback(nullptr)
   , mCachedPluginId(0)
 {
-#ifdef MOZILLA_INTERNAL_API
   if (mPCHandle.empty()) {
     mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
   }
   MOZ_ASSERT(!mPCHandle.empty());
-#endif
 }
 
 WebrtcGmpVideoEncoder::~WebrtcGmpVideoEncoder()
@@ -657,12 +644,10 @@ WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder() :
   mCachedPluginId(0),
   mDecoderStatus(GMPNoErr)
 {
-#ifdef MOZILLA_INTERNAL_API
   if (mPCHandle.empty()) {
     mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
   }
   MOZ_ASSERT(!mPCHandle.empty());
-#endif
 }
 
 WebrtcGmpVideoDecoder::~WebrtcGmpVideoDecoder()

@@ -53,6 +53,7 @@
 #include "nsIContentPolicy.h"
 #include "nsILoadInfo.h"
 #include "nsContentUtils.h"
+#include "nsWeakReference.h"
 
 using mozilla::ArrayLength;
 using mozilla::BasePrincipal;
@@ -94,7 +95,8 @@ class PendingDBLookup;
 // This class is private to ApplicationReputationService.
 class PendingLookup final : public nsIStreamListener,
                             public nsITimerCallback,
-                            public nsIObserver
+                            public nsIObserver,
+                            public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -374,7 +376,8 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
 NS_IMPL_ISUPPORTS(PendingLookup,
                   nsIStreamListener,
                   nsIRequestObserver,
-                  nsIObserver)
+                  nsIObserver,
+                  nsISupportsWeakReference)
 
 PendingLookup::PendingLookup(nsIApplicationReputationQuery* aQuery,
                              nsIApplicationReputationCallback* aCallback) :
@@ -1543,6 +1546,6 @@ nsresult ApplicationReputationService::QueryReputationInternal(
     return NS_ERROR_FAILURE;
   }
 
-  observerService->AddObserver(lookup, "quit-application", false);
+  observerService->AddObserver(lookup, "quit-application", true);
   return lookup->StartLookup();
 }

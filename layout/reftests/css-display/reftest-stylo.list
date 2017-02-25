@@ -3,7 +3,7 @@
 # http://dev.w3.org/csswg/css-display
 
 fails == display-contents-acid.html display-contents-acid.html
-# fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
+fails fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
 fails == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html # bug 1337700
 fails == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
 skip-if(stylo) == display-contents-generated-content.html display-contents-generated-content.html # Bug 1341083
@@ -18,7 +18,7 @@ skip-if(stylo) == display-contents-style-inheritance-1-dom-mutations.html displa
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-2.html
 == display-contents-495385-2d.html display-contents-495385-2d.html
 fails == display-contents-xbl.xhtml display-contents-xbl.xhtml
-# fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1.html
+fuzzy-if(Android,7,1186) skip-if(stylo) pref(dom.webcomponents.enabled,true) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1.html # Bug 1293844
 == display-contents-xbl-2.xul display-contents-xbl-2.xul
 asserts(2) == display-contents-xbl-3.xul display-contents-xbl-3.xul
 skip-if(stylo) == display-contents-xbl-4.xul display-contents-xbl-4.xul # Too intermittent.

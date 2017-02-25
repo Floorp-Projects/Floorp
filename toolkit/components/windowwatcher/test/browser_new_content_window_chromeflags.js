@@ -238,6 +238,8 @@ add_task(function* test_new_remote_window_flags() {
     // as part of the TabChild, so we have to check those too.
     let b = win.gBrowser.selectedBrowser;
     let contentChromeFlags = yield ContentTask.spawn(b, null, function*() {
+      // Content scripts provide docShell as a global.
+      /* global docShell */
       docShell.QueryInterface(Ci.nsIInterfaceRequestor);
       try {
         // This will throw if we're not a remote browser.

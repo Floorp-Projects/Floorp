@@ -9,6 +9,10 @@ consistency.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from taskgraph.util.attributes import keymatch
+
+
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 SECRET_SCOPE = 'secrets:get:project/releng/gecko/{}/level-{}/{}'
 
 
@@ -55,6 +59,35 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
     })
+
+
+def docker_worker_add_build_dependency(config, job, taskdesc):
+    """Add build dependency to the task description and installer_url to env."""
+    key = job['platform']
+    build_labels = config.config.get('dependent-build-platforms', {})
+    matches = keymatch(build_labels, key)
+    if not matches:
+        raise Exception("No build platform found for '{}'. "
+                        "Define 'dependent-build-platforms' in the kind config.".format(key))
+
+    if len(matches) > 1:
+        raise Exception("More than one build platform found for '{}'.".format(key))
+
+    label = matches[0]
+    deps = taskdesc.setdefault('dependencies', {})
+    deps.update({'build': label})
+
+    if 'macosx' in label:
+        target = 'target.dmg'
+    elif 'android' in label:
+        target = 'target.apk'
+    else:
+        target = 'target.tar.bz2'
+    build_artifact = 'public/build/{}'.format(target)
+    installer_url = ARTIFACT_URL.format('<build>', build_artifact)
+
+    env = taskdesc['worker'].setdefault('env', {})
+    env.update({'GECKO_INSTALLER_URL': {'task-reference': installer_url}})
 
 
 def docker_worker_support_vcs_checkout(config, job, taskdesc):

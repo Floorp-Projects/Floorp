@@ -67,10 +67,10 @@ random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-# fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1a.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) skip-if(stylo) == linear-gradient-1a.html linear-gradient-1a.html # Too random.
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-# fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1b.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) skip-if(stylo) == linear-gradient-1b.html linear-gradient-1b.html # Too random.
 
 == zero-dimensions.html zero-dimensions.html
 
