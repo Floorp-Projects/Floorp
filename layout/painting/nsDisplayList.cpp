@@ -7697,7 +7697,7 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
                                        false, /* aWillPaintBorder */
                                        appUnitsPerDevPixel,
                                        &clipState);
-      currentMaskSurfaceRect = clipState.mDirtyRectGfx;
+      currentMaskSurfaceRect = clipState.mDirtyRectInDevPx;
     }
 
     maskInUserSpace = maskInUserSpace.Union(currentMaskSurfaceRect);

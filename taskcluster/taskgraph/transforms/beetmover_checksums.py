@@ -9,7 +9,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema
-from taskgraph.util.scriptworker import get_beetmover_bucket_scope
+from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
+                                         get_beetmover_action_scope)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Schema, Any, Required, Optional
 
@@ -72,12 +73,14 @@ def make_beetmover_checksums_description(config, jobs):
             attributes['locale'] = dep_job.attributes.get('locale')
 
         bucket_scope = get_beetmover_bucket_scope(config)
+        action_scope = get_beetmover_action_scope(config)
+
         task = {
             'label': label,
             'description': "Beetmover {} ".format(
                 dep_job.task["metadata"]["description"]),
             'worker-type': 'scriptworker-prov-v1/beetmoverworker-v1',
-            'scopes': [bucket_scope],
+            'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),

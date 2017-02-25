@@ -24,7 +24,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  *
  *<ul>
  * <li>Construct, with a reference to its parent {@link Repository}, by calling
- *   {@link Repository#createSession(RepositorySessionCreationDelegate, android.content.Context)}.</li>
+ *   {@link Repository#createSession(org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate, android.content.Context)}.</li>
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
  * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>
@@ -55,7 +55,7 @@ public abstract class RepositorySession {
 
   private SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
-  protected RepositorySessionStoreDelegate delegate;
+  protected RepositorySessionStoreDelegate storeDelegate;
 
   /**
    * A queue of Runnables which call out into delegates.
@@ -122,9 +122,11 @@ public abstract class RepositorySession {
    */
   public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
     Logger.debug(LOG_TAG, "Setting store delegate to " + delegate);
-    this.delegate = delegate;
+    this.storeDelegate = delegate;
   }
   public abstract void store(Record record) throws NoStoreDelegateException;
+
+  public void storeIncomplete() {}
 
   public void storeDone() {
     // Our default behavior will be to assume that the Runnable is
@@ -138,10 +140,23 @@ public abstract class RepositorySession {
     Runnable command = new Runnable() {
       @Override
       public void run() {
-        delegate.onStoreCompleted(end);
+        storeDelegate.onStoreCompleted(end);
       }
     };
     storeWorkQueue.execute(command);
+  }
+
+  /**
+   * Indicates that a number of records have been stored, more are still to come but after some time,
+   * and now would be a good time to flush records and perform any other similar operations.
+   */
+  public void storeFlush() {
+  }
+
+  /**
+   * Indicates that a flow of records have been completed.
+   */
+  public void performCleanup() {
   }
 
   public abstract void wipe(RepositorySessionWipeDelegate delegate);
@@ -252,14 +267,14 @@ public abstract class RepositorySession {
   protected synchronized void executeDelegateCommand(Runnable command)
       throws InactiveSessionException {
     if (!isActive() || delegateQueue.isShutdown()) {
-      throw new InactiveSessionException(null);
+      throw new InactiveSessionException();
     }
     delegateQueue.execute(command);
   }
 
   public synchronized void ensureActive() throws InactiveSessionException {
     if (!isActive()) {
-      throw new InactiveSessionException(null);
+      throw new InactiveSessionException();
     }
   }
 
