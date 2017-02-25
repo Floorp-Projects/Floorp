@@ -3,6 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- This files relies on these specific Chrome/XBL globals -->
+<!-- globals PopupBoxObject -->
 
 <bindings id="popupBindings"
    xmlns="http://www.mozilla.org/xbl"

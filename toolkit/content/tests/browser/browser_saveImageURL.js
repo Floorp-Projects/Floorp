@@ -3,6 +3,8 @@
 const IMAGE_PAGE = "https://example.com/browser/toolkit/content/tests/browser/image_page.html";
 const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
 
+var MockFilePicker = SpecialPowers.MockFilePicker;
+
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 

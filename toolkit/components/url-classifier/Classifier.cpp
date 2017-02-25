@@ -1113,7 +1113,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
                             const nsACString& aTable)
 {
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
-    return NS_ERROR_ABORT;
+    return NS_ERROR_UC_UPDATE_SHUTDOWNING;
   }
 
   LOG(("Classifier::UpdateHashStore(%s)", PromiseFlatCString(aTable).get()));
@@ -1133,7 +1133,7 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   LookupCacheV2* lookupCache =
     LookupCache::Cast<LookupCacheV2>(GetLookupCacheForUpdate(store.TableName()));
   if (!lookupCache) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
   // Clear cache when update
@@ -1193,13 +1193,13 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
   // At this point the store is updated and written out to disk, but
   // the data is still in memory.  Build our quick-lookup table here.
   rv = lookupCache->Build(store.AddPrefixes(), store.AddCompletes());
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE);
 
 #if defined(DEBUG)
   lookupCache->DumpCompletions();
 #endif
   rv = lookupCache->WriteFile();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
 
   int64_t now = (PR_Now() / PR_USEC_PER_SEC);
   LOG(("Successfully updated %s", store.TableName().get()));
@@ -1215,7 +1215,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   MOZ_ASSERT(!NS_IsMainThread(),
              "UpdateTableV4 must be called on the classifier worker thread.");
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {
-    return NS_ERROR_ABORT;
+    return NS_ERROR_UC_UPDATE_SHUTDOWNING;
   }
 
   LOG(("Classifier::UpdateTableV4(%s)", PromiseFlatCString(aTable).get()));
@@ -1227,7 +1227,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   LookupCacheV4* lookupCache =
     LookupCache::Cast<LookupCacheV4>(GetLookupCacheForUpdate(aTable));
   if (!lookupCache) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
   nsresult rv = NS_OK;
@@ -1246,7 +1246,7 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
     }
 
     auto updateV4 = TableUpdate::Cast<TableUpdateV4>(update);
-    NS_ENSURE_TRUE(updateV4, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(updateV4, NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND);
 
     if (updateV4->IsFullUpdate()) {
       input->Clear();
@@ -1286,15 +1286,15 @@ Classifier::UpdateTableV4(nsTArray<TableUpdate*>* aUpdates,
   }
 
   rv = lookupCache->Build(*output);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE);
 
   rv = lookupCache->WriteFile();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
 
   if (lastAppliedUpdate) {
     LOG(("Write meta data of the last applied update."));
     rv = lookupCache->WriteMetadata(lastAppliedUpdate);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
   }
 
 
@@ -1382,31 +1382,45 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                              uint32_t aCount,
                              PrefixArray* aNoiseEntries)
 {
-  // TODO : Bug 1297962, support adding noise for v4
-  LookupCacheV2 *cache =
-    LookupCache::Cast<LookupCacheV2>(GetLookupCache(aTableName));
+  FallibleTArray<uint32_t> prefixes;
+  nsresult rv;
+
+  LookupCache *cache = GetLookupCache(aTableName);
   if (!cache) {
     return NS_ERROR_FAILURE;
   }
 
-  FallibleTArray<uint32_t> prefixes;
-  nsresult rv = cache->GetPrefixes(prefixes);
+  LookupCacheV2* cacheV2 = LookupCache::Cast<LookupCacheV2>(cache);
+  if (cacheV2) {
+    rv = cacheV2->GetPrefixes(prefixes);
+  } else {
+    rv = LookupCache::Cast<LookupCacheV4>(cache)->GetFixedLengthPrefixes(prefixes);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
-  size_t idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
-
-  if (idx == nsTArray<uint32_t>::NoIndex) {
+  if (prefixes.Length() == 0) {
     NS_WARNING("Could not find prefix in PrefixSet during noise lookup");
     return NS_ERROR_FAILURE;
   }
 
-  idx -= idx % aCount;
+  for (size_t i = 0; i < aCount; i++) {
+    // Pick some prefixes from cache as noise
+    // We pick a random prefix index from 0 to prefixes.Length() - 1;
+    uint32_t idx = rand() % prefixes.Length();
 
-  for (size_t i = 0; (i < aCount) && ((idx+i) < prefixes.Length()); i++) {
-    Prefix newPref;
-    newPref.FromUint32(prefixes[idx+i]);
-    if (newPref != aPrefix) {
-      aNoiseEntries->AppendElement(newPref);
+    Prefix newPrefix;
+    uint32_t hash = prefixes[idx];
+    // In the case V4 little endian, we did swapping endian when converting from char* to
+    // int, should revert endian to make sure we will send hex string correctly
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1283007#c23
+    if (!cacheV2 && !bool(MOZ_BIG_ENDIAN)) {
+      hash = NativeEndian::swapFromBigEndian(prefixes[idx]);
+    }
+
+    newPrefix.FromUint32(hash);
+    if (newPrefix != aPrefix) {
+      aNoiseEntries->AppendElement(newPrefix);
     }
   }
 

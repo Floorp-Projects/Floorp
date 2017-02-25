@@ -314,13 +314,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `counter-increment` [4]
     * test_initial_storage.html `counter-increment` [4]
     * test_value_storage.html `counter-increment` [30]
-  * clip property
-    * test_compute_data_with_start_struct.html `clip` [2]
-    * test_inherit_computation.html `clip` [2]
-    * test_inherit_storage.html `clip` [2]
-    * test_initial_computation.html `'clip'` [4]
-    * test_initial_storage.html `clip` [4]
-    * test_value_storage.html `on 'clip'` [12]
+  * clip property: servo/servo#15729
+    * test_value_storage.html `should be idempotent for 'clip` [4]
   * font-feature-settings property
     * test_compute_data_with_start_struct.html `font-feature-settings` [2]
     * test_inherit_computation.html `font-feature-settings` [8]
@@ -401,7 +396,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `mask-repeat` [24]
   * lack glue for function values of content property bug 1296477
     * test_rule_insertion.html `decimal counter` [3]
-    * test_value_storage.html `'content` [41]
+    * test_value_storage.html `'content` [40]
   * SVG-in-OpenType values not supported servo/servo#15211
     * test_value_storage.html `context-` [2]
   * writing-mode: sideways-{lr,rl} and SVG values servo/servo#15213
@@ -436,6 +431,8 @@ Any line which doesn't follow the format above would be ignored like comment.
       * test_property_syntax_errors.html `transform-origin'` [50]
       * ... `perspective-origin'` [30]
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
+  * -moz-alt-content parsing is wrong: servo/servo#15726
+    * test_property_syntax_errors.html `-moz-alt-content` [4]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -489,7 +486,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
-  * ... `75.5667px` [2]
   * ... `105.333px` [2]
 * test_viewport_units.html: viewport units support [12]
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
@@ -517,7 +513,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... ` 2 ` [26]
     * ... `: 5 ` [84]
     * ... `border-spacing: ` [6]
-    * ... `rect(1, ` [1]
+    * ... `rect(1, ` [2]
 * test_pseudoelement_parsing.html: support parsing some pseudo-classes on some pseudo-elements [5]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_length.html [5]

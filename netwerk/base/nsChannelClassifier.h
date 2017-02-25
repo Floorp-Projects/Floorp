@@ -60,6 +60,8 @@ private:
                                                     bool *result);
 
     bool AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri);
+    void AddShutdownObserver();
+    void RemoveShutdownObserver();
 public:
     // If we are blocking content, update the corresponding flag in the respective
     // docshell and call nsISecurityEventSink::onSecurityChange.
