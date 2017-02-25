@@ -202,32 +202,29 @@ class nsReflowStatus final {
 public:
   nsReflowStatus()
     : mBreakType(StyleClear::None)
+    , mInlineBreak(InlineBreak::None)
     , mCompletion(Completion::FullyComplete)
     , mNextInFlowNeedsReflow(false)
     , mTruncated(false)
-    , mInlineBreak(false)
-    , mInlineBreakAfter(false)
     , mFirstLetterComplete(false)
   {}
 
   // Reset all the member variables.
   void Reset() {
     mBreakType = StyleClear::None;
+    mInlineBreak = InlineBreak::None;
     mCompletion = Completion::FullyComplete;
     mNextInFlowNeedsReflow = false;
     mTruncated = false;
-    mInlineBreak = false;
-    mInlineBreakAfter = false;
     mFirstLetterComplete = false;
   }
 
   // Return true if all member variables have their default values.
   bool IsEmpty() const {
     return (IsFullyComplete() &&
+            !IsInlineBreak() &&
             !mNextInFlowNeedsReflow &&
             !mTruncated &&
-            !mInlineBreak &&
-            !mInlineBreakAfter &&
             !mFirstLetterComplete);
   }
 
@@ -305,14 +302,28 @@ public:
     mTruncated |= aStatus.mTruncated;
   }
 
-  // mInlineBreak bit flag means a break is requested.
-  bool IsInlineBreak() const { return mInlineBreak; }
+  // There are three possible inline-break statuses, represented by
+  // mInlineBreak.
+  //
+  // "None" means no break is requested.
+  // "Before" means the break should occur before the frame.
+  // "After" means the break should occur after the frame.
+  // (Here, "the frame" is the frame whose reflow results are being reported by
+  // this nsReflowStatus.)
+  //
+  enum class InlineBreak : uint8_t {
+    None,
+    Before,
+    After,
+  };
 
-  // Suppose a break is requested. When mInlineBreakAfter is set, the break
-  // should occur after the frame just reflowed; when mInlineBreakAfter is
-  // clear, the break should occur before the frame just reflowed.
-  bool IsInlineBreakBefore() const { return mInlineBreak && !mInlineBreakAfter; }
-  bool IsInlineBreakAfter() const { return mInlineBreak && mInlineBreakAfter; }
+  bool IsInlineBreak() const { return mInlineBreak != InlineBreak::None; }
+  bool IsInlineBreakBefore() const {
+    return mInlineBreak == InlineBreak::Before;
+  }
+  bool IsInlineBreakAfter() const {
+    return mInlineBreak == InlineBreak::After;
+  }
   StyleClear BreakType() const { return mBreakType; }
 
   // Set the inline line-break-before status, and reset other bit flags. The
@@ -321,16 +332,16 @@ public:
   void SetInlineLineBreakBeforeAndReset() {
     Reset();
     mBreakType = StyleClear::Line;
-    mInlineBreak = true;
-    mInlineBreakAfter = false;
+    mInlineBreak = InlineBreak::Before;
   }
 
   // Set the inline line-break-after status. The break type can be changed
   // via the optional aBreakType param.
   void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::Line) {
+    MOZ_ASSERT(aBreakType != StyleClear::None,
+               "Break-after with StyleClear::None is meaningless!");
     mBreakType = aBreakType;
-    mInlineBreak = true;
-    mInlineBreakAfter = true;
+    mInlineBreak = InlineBreak::After;
   }
 
   // mFirstLetterComplete bit flag means the break was induced by
@@ -340,13 +351,10 @@ public:
 
 private:
   StyleClear mBreakType;
+  InlineBreak mInlineBreak;
   Completion mCompletion;
   bool mNextInFlowNeedsReflow : 1;
   bool mTruncated : 1;
-
-  // Inline break status bit flags.
-  bool mInlineBreak : 1;
-  bool mInlineBreakAfter : 1;
   bool mFirstLetterComplete : 1;
 };
 
