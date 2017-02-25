@@ -118,11 +118,8 @@ Any line which doesn't follow the format above would be ignored like comment.
   * ... `url` [3]
 * test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [11]
 * auto value for min-{width,height} servo/servo#15045
-  * test_computed_style_min_size_auto.html [14]
-  * test_compute_data_with_start_struct.html `height` [4]
-  * ... `min-width` [2]
+  * test_compute_data_with_start_struct.html `height` [1]
   * ... ` width` [1]
-  * test_value_storage.html `'auto' on 'min-` [4]
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * test_condition_text.html: @-moz-document, CSSOM support of @media, @support [2]
 * @counter-style support:
