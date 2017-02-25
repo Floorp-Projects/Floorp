@@ -161,7 +161,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
     private void initialize() {
         if (mInitialize ||
-            !isAndroidVersionLollopopOrHigher()) {
+            !isAndroidVersionLollipopOrHigher()) {
             return;
         }
 
@@ -190,7 +190,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         stopSelf();
     }
 
-    private boolean isAndroidVersionLollopopOrHigher() {
+    private boolean isAndroidVersionLollipopOrHigher() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 
