@@ -321,13 +321,14 @@ bool
 BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
 {
   MOZ_ASSERT(aOther);
+  MOZ_ASSERT_IF(Kind() == eCodebasePrincipal, mOriginSuffix);
 
   // Expanded principals handle origin attributes for each of their
   // sub-principals individually, null principals do only simple checks for
   // pointer equality, and system principals are immune to origin attributes
   // checks, so only do this check for codebase principals.
   if (Kind() == eCodebasePrincipal &&
-      OriginAttributesRef() != Cast(aOther)->OriginAttributesRef()) {
+      mOriginSuffix != Cast(aOther)->mOriginSuffix) {
     return false;
   }
 
