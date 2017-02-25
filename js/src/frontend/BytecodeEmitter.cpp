@@ -4073,6 +4073,29 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitGetNameAtLocationForCompoundAssignment(JSAtom* name, const NameLocation& loc)
+{
+    if (loc.kind() == NameLocation::Kind::Dynamic) {
+        // For dynamic accesses we need to emit GETBOUNDNAME instead of
+        // GETNAME for correctness: looking up @@unscopables on the
+        // environment chain (due to 'with' environments) must only happen
+        // once.
+        //
+        // GETBOUNDNAME uses the environment already pushed on the stack from
+        // the earlier BINDNAME.
+        if (!emit1(JSOP_DUP))                              // ENV ENV
+            return false;
+        if (!emitAtomOp(name, JSOP_GETBOUNDNAME))          // ENV V
+            return false;
+    } else {
+        if (!emitGetNameAtLocation(name, loc))             // ENV? V
+            return false;
+    }
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitNameIncDec(ParseNode* pn)
 {
     MOZ_ASSERT(pn->pn_kid->isKind(PNK_NAME));
@@ -4084,21 +4107,21 @@ BytecodeEmitter::emitNameIncDec(ParseNode* pn)
                                      bool emittedBindOp)
     {
         JSAtom* name = pn->pn_kid->name();
-        if (!bce->emitGetNameAtLocation(name, loc, false)) // SCOPE? V
+        if (!bce->emitGetNameAtLocationForCompoundAssignment(name, loc)) // ENV? V
             return false;
-        if (!bce->emit1(JSOP_POS))                         // SCOPE? N
+        if (!bce->emit1(JSOP_POS))                         // ENV? N
             return false;
-        if (post && !bce->emit1(JSOP_DUP))                 // SCOPE? N? N
+        if (post && !bce->emit1(JSOP_DUP))                 // ENV? N? N
             return false;
-        if (!bce->emit1(JSOP_ONE))                         // SCOPE? N? N 1
+        if (!bce->emit1(JSOP_ONE))                         // ENV? N? N 1
             return false;
-        if (!bce->emit1(binop))                            // SCOPE? N? N+1
+        if (!bce->emit1(binop))                            // ENV? N? N+1
             return false;
 
         if (post && emittedBindOp) {
-            if (!bce->emit2(JSOP_PICK, 2))                 // N? N+1 SCOPE?
+            if (!bce->emit2(JSOP_PICK, 2))                 // N? N+1 ENV?
                 return false;
-            if (!bce->emit1(JSOP_SWAP))                    // N? SCOPE? N+1
+            if (!bce->emit1(JSOP_SWAP))                    // N? ENV? N+1
                 return false;
         }
 
@@ -5894,19 +5917,8 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
             // For compound assignments, first get the LHS value, then emit
             // the RHS and the op.
             if (op != JSOP_NOP) {
-                if (lhsLoc.kind() == NameLocation::Kind::Dynamic) {
-                    // For dynamic accesses we can do better than a GETNAME
-                    // since the assignment already emitted a BINDNAME on the
-                    // top of the stack. As an optimization, use that to get
-                    // the name.
-                    if (!bce->emit1(JSOP_DUP))
-                        return false;
-                    if (!bce->emitAtomOp(lhs, JSOP_GETBOUNDNAME))
-                        return false;
-                } else {
-                    if (!bce->emitGetNameAtLocation(lhs->name(), lhsLoc))
-                        return false;
-                }
+                if (!bce->emitGetNameAtLocationForCompoundAssignment(lhs->name(), lhsLoc))
+                    return false;
             }
 
             // Emit the RHS. If we emitted a BIND[G]NAME, then the scope is on
