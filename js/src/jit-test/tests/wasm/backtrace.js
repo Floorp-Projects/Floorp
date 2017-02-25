@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 var code = `(module
   (import $i "env" "test")
   (func $t (call $i))

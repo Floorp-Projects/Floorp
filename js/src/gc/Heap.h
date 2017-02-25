@@ -1373,6 +1373,52 @@ static const int32_t ChunkLocationOffsetFromLastByte =
     int32_t(gc::ChunkLocationOffset) - int32_t(gc::ChunkMask);
 
 } /* namespace gc */
+
+namespace debug {
+
+// Utility functions meant to be called from an interactive debugger.
+enum class MarkInfo : int {
+    BLACK = js::gc::BLACK,
+    GRAY = js::gc::GRAY,
+    UNMARKED = -1,
+    NURSERY = -2,
+};
+
+// Get the mark color for a cell, in a way easily usable from a debugger.
+MOZ_NEVER_INLINE MarkInfo
+GetMarkInfo(js::gc::Cell* cell);
+
+// Sample usage from gdb:
+//
+//   (gdb) p $word = js::debug::GetMarkWordAddress(obj)
+//   $1 = (uintptr_t *) 0x7fa56d5fe360
+//   (gdb) p/x $mask = js::debug::GetMarkMask(obj, js::gc::GRAY)
+//   $2 = 0x200000000
+//   (gdb) watch *$word
+//   Hardware watchpoint 7: *$word
+//   (gdb) cond 7 *$word & $mask
+//   (gdb) cont
+//
+// Note that this is *not* a watchpoint on a single bit. It is a watchpoint on
+// the whole word, which will trigger whenever the word changes and the
+// selected bit is set after the change.
+//
+// So if the bit changing is the desired one, this is exactly what you want.
+// But if a different bit changes (either set or cleared), you may still stop
+// execution if the $mask bit happened to already be set. gdb does not expose
+// enough information to restrict the watchpoint to just a single bit.
+
+// Return the address of the word containing the mark bits for the given cell,
+// or nullptr if the cell is in the nursery.
+MOZ_NEVER_INLINE uintptr_t*
+GetMarkWordAddress(js::gc::Cell* cell);
+
+// Return the mask for the given cell and color, or 0 if the cell is in the
+// nursery.
+MOZ_NEVER_INLINE uintptr_t
+GetMarkMask(js::gc::Cell* cell, uint32_t color);
+
+} /* namespace debug */
 } /* namespace js */
 
 #endif /* gc_Heap_h */

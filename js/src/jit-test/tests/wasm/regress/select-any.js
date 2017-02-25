@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1280921
 
 var m1 = wasmEvalText(

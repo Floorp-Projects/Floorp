@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Single-step profiling currently only works in the ARM simulator
 if (!getBuildConfiguration()["arm-simulator"])
     quit();

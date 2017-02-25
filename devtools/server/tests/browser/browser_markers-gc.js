@@ -4,13 +4,13 @@
 /**
  * Test that we get "GarbageCollection" markers.
  */
+"use strict";
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const MARKER_NAME = "GarbageCollection";
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "doc_force_gc.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "doc_force_gc.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -37,7 +37,8 @@ add_task(function* () {
       return current.start;
     }
     if (current.start < previousStart) {
-      ok(false, `markers must be in order. ${current.name} marker has later start time (${current.start}) thanprevious: ${previousStart}`);
+      ok(false, `markers must be in order. ${current.name} marker has later\
+        start time (${current.start}) thanprevious: ${previousStart}`);
       ordered = false;
     }
     return current.start;

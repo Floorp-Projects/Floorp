@@ -78,7 +78,6 @@ protected:
 
     virtual PPluginInstanceChild*
     AllocPPluginInstanceChild(const nsCString& aMimeType,
-                              const uint16_t& aMode,
                               const InfallibleTArray<nsCString>& aNames,
                               const InfallibleTArray<nsCString>& aValues)
                               override;
@@ -89,7 +88,6 @@ protected:
     virtual mozilla::ipc::IPCResult
     RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                    const nsCString& aMimeType,
-                                   const uint16_t& aMode,
                                    InfallibleTArray<nsCString>&& aNames,
                                    InfallibleTArray<nsCString>&& aValues)
                                    override;

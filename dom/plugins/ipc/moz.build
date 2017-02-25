@@ -39,8 +39,6 @@ EXPORTS.mozilla.plugins += [
     'PluginStreamChild.h',
     'PluginStreamParent.h',
     'PluginUtilsOSX.h',
-    'PluginWidgetChild.h',
-    'PluginWidgetParent.h',
     'StreamNotifyChild.h',
     'StreamNotifyParent.h',
 ]
@@ -89,8 +87,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'PluginInstanceChild.cpp', # 'PluginThreadCallback' : ambiguous symbol
     'PluginModuleChild.cpp',   # Redefinition of mozilla::WindowsDllInterceptor sUser32Intercept
-    'PluginWidgetChild.cpp',
-    'PluginWidgetParent.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
@@ -100,9 +96,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS.mozilla.plugins += [
+        'PluginWidgetChild.h',
+        'PluginWidgetParent.h',
+    ]
     UNIFIED_SOURCES += [
         'D3D11SurfaceHolder.cpp',
         'PluginUtilsWin.cpp'
+    ]
+    SOURCES += [
+        'PluginWidgetChild.cpp',
+        'PluginWidgetParent.cpp',
     ]
 
 IPDL_SOURCES += [

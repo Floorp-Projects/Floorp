@@ -62,7 +62,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 #endif /* MOZ_LOGGING */
 
 class gfxPattern;
-class nsPluginNativeWindowGtk;
 
 namespace mozilla {
 class TimeStamp;
@@ -140,7 +139,6 @@ public:
                                  uint32_t aHotspotX, uint32_t aHotspotY) override;
     virtual void       Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual void*      GetNativeData(uint32_t aDataType) override;
-    void               SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
     virtual nsresult   SetTitle(const nsAString& aTitle) override;
     virtual void       SetIcon(const nsAString& aIconSpec) override;
     virtual void       SetWindowClass(const nsAString& xulWinType) override;
@@ -236,18 +234,6 @@ private:
     void               UpdateClientOffset();
 
 public:
-    enum PluginType {
-        PluginType_NONE = 0,   /* do not have any plugin */
-        PluginType_XEMBED,     /* the plugin support xembed */
-        PluginType_NONXEMBED   /* the plugin does not support xembed */
-    };
-
-    void               SetPluginType(PluginType aPluginType);
-#ifdef MOZ_X11
-    void               SetNonXEmbedPluginFocus(void);
-    void               LoseNonXEmbedPluginFocus(void);
-#endif /* MOZ_X11 */
-
     void               ThemeChanged(void);
     void               OnDPIChanged(void);
     void               OnCheckResize(void);
@@ -417,7 +403,6 @@ private:
     GtkWidget         *GetToplevelWidget();
     nsWindow          *GetContainerWindow();
     void               SetUrgencyHint(GtkWidget *top_window, bool state);
-    void              *SetupPluginPort(void);
     void               SetDefaultIcon(void);
     void               InitButtonEvent(mozilla::WidgetMouseEvent& aEvent,
                                        GdkEventButton* aGdkEvent);
@@ -444,7 +429,6 @@ private:
                         mIsFullyObscured : 1,
                         mRetryPointerGrab : 1;
     nsSizeMode          mSizeState;
-    PluginType          mPluginType;
 
     int32_t             mTransparencyBitmapWidth;
     int32_t             mTransparencyBitmapHeight;
@@ -516,12 +500,6 @@ private:
      */
     void                DispatchRestoreEventAccessible();
 #endif
-
-    // Updates the bounds of the socket widget we manage for remote plugins.
-    void ResizePluginSocketWidget();
-
-    // e10s specific - for managing the socket widget this window hosts.
-    nsPluginNativeWindowGtk* mPluginNativeWindow;
 
     // The cursor cache
     static GdkCursor   *gsGtkCursorCache[eCursorCount];

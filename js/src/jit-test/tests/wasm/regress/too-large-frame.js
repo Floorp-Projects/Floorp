@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1280934, equivalent test case.
 
 try {

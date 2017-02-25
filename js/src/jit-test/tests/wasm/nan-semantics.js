@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 var f64 = new Float64Array(2);
 var f32 = new Float32Array(f64.buffer);
 var u8 = new Uint8Array(f64.buffer);

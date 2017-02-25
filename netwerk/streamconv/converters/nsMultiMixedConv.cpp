@@ -606,7 +606,7 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
   nsresult rv;
 
   switch (mParserState) {
-    case BOUNDARY:
+    case PREAMBLE:
       if (token.Equals(mBoundaryTokenWithDashes)) {
         // The server first used boundary '--boundary'.  Hence, we no longer
         // accept plain 'boundary' token as a delimiter.
@@ -621,13 +621,7 @@ nsMultiMixedConv::ConsumeToken(Token const & token)
         break;
       }
 
-      // In case the server didn't send the first boundary...
-      // This may be either a line-feed or a header.  Turn header tokens
-      // on and retry in a shifted parser state.
-      mParserState = HEADER_NAME;
-      mResponseHeader = HEADER_UNKNOWN;
-      SetHeaderTokensEnabled(true);
-      mTokenizer.Rollback();
+      // This is a preamble, just ignore it and wait for the boundary.
       break;
 
     case BOUNDARY_CRLF:
@@ -807,9 +801,14 @@ nsMultiMixedConv::SwitchToControlParsing()
 nsMultiMixedConv::nsMultiMixedConv() :
     mCurrentPartID(0),
     mInOnDataAvailable(false),
-    mTokenizer([this](Token const& token, mozilla::IncrementalTokenizer&) -> nsresult {
-        return this->ConsumeToken(token);
-    })
+    // XXX: This is a hack to bypass the raw pointer to refcounted object in
+    // lambda analysis. It should be removed and replaced when the
+    // IncrementalTokenizer API is improved to avoid the need for such
+    // workarounds.
+    //
+    // This is safe because `mTokenizer` will not outlive `this`, meaning that
+    // this std::bind object will be destroyed before `this` dies.
+    mTokenizer(std::bind(&nsMultiMixedConv::ConsumeToken, this, std::placeholders::_1))
 {
     mContentLength      = UINT64_MAX;
     mByteRangeStart     = 0;

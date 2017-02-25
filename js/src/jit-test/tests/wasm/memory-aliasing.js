@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 var i = wasmEvalText(
 `(module
    (memory 1) (data (i32.const 0) "\\01\\02\\03\\04\\05\\06\\07\\08")

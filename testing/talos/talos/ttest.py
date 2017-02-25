@@ -173,6 +173,10 @@ class TTest(object):
                     on_started=(counter_management.start
                                 if counter_management else None),
                 )
+            except:
+                self.check_for_crashes(browser_config, minidump_dir,
+                                       test_config['name'])
+                raise
             finally:
                 if counter_management:
                     counter_management.stop()

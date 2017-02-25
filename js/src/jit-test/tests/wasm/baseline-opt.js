@@ -1,7 +1,5 @@
 // Point-testing various optimizations in the wasm baseline compiler.
 
-load(libdir + "wasm.js");
-
 // Boolean optimization for control (bug 1286816).
 //
 // These optimizations combine a test (a comparison or Eqz) with an

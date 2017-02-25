@@ -114,7 +114,7 @@ namespace jit {
 class RResumePoint;
 class SnapshotIterator;
 
-class RInstruction
+class MOZ_NON_PARAM RInstruction
 {
   public:
     enum Opcode

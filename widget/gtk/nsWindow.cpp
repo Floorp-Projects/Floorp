@@ -80,7 +80,6 @@
 #include "nsIPropertyBag2.h"
 #include "GLContext.h"
 #include "gfx2DGlue.h"
-#include "nsPluginNativeWindowGtk.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
@@ -242,12 +241,6 @@ extern "C" {
 static GdkFilterReturn popup_take_focus_filter (GdkXEvent *gdk_xevent,
                                                 GdkEvent *event,
                                                 gpointer data);
-static GdkFilterReturn plugin_window_filter_func (GdkXEvent *gdk_xevent,
-                                                  GdkEvent *event,
-                                                  gpointer data);
-static GdkFilterReturn plugin_client_message_filter (GdkXEvent *xevent,
-                                                     GdkEvent *event,
-                                                     gpointer data);
 #endif /* MOZ_X11 */
 #ifdef __cplusplus
 }
@@ -360,7 +353,6 @@ static nsWindow         *gFocusWindow          = nullptr;
 static bool              gBlockActivateEvent   = false;
 static bool              gGlobalsInitialized   = false;
 static bool              gRaiseWindows         = true;
-static nsWindow         *gPluginFocusWindow    = nullptr;
 
 #if GTK_CHECK_VERSION(3,4,0)
 static uint32_t          gLastTouchID = 0;
@@ -440,7 +432,6 @@ nsWindow::nsWindow()
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
     mShell               = nullptr;
-    mPluginNativeWindow  = nullptr;
     mHasMappedToplevel   = false;
     mIsFullyObscured     = false;
     mRetryPointerGrab    = false;
@@ -457,8 +448,6 @@ nsWindow::nsWindow()
     mXVisual  = nullptr;
     mXDepth   = 0;
 #endif /* MOZ_X11 */
-    mPluginType          = PluginType_NONE;
-
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = true;
 
@@ -764,13 +753,6 @@ nsWindow::Destroy()
         LOGFOCUS(("automatically losing focus...\n"));
         gFocusWindow = nullptr;
     }
-
-#if (MOZ_WIDGET_GTK == 2) && defined(MOZ_X11)
-    // make sure that we remove ourself as the plugin focus window
-    if (gPluginFocusWindow == this) {
-        gPluginFocusWindow->LoseNonXEmbedPluginFocus();
-    }
-#endif /* MOZ_X11 && MOZ_WIDGET_GTK == 2 && defined(MOZ_X11) */
 
     GtkWidget *owningWidget = GetMozContainerWidget();
     if (mShell) {
@@ -1130,7 +1112,6 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     NativeResize();
 
     NotifyRollupGeometryChange();
-    ResizePluginSocketWidget();
 
     // send a resize notification if this is a toplevel
     if (mIsTopLevel || mListenForResizes) {
@@ -1161,30 +1142,12 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     NativeMoveResize();
 
     NotifyRollupGeometryChange();
-    ResizePluginSocketWidget();
 
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized();
     }
 
     return;
-}
-
-void
-nsWindow::ResizePluginSocketWidget()
-{
-    // e10s specific, a eWindowType_plugin_ipc_chrome holds its own
-    // nsPluginNativeWindowGtk wrapper. We are responsible for resizing
-    // the embedded socket widget.
-    if (mWindowType == eWindowType_plugin_ipc_chrome) {
-        auto* wrapper = (nsPluginNativeWindowGtk*)
-          GetNativeData(NS_NATIVE_PLUGIN_OBJECT_PTR);
-        if (wrapper) {
-            wrapper->width = mBounds.width;
-            wrapper->height = mBounds.height;
-            wrapper->SetAllocation();
-        }
-    }
 }
 
 void
@@ -1717,17 +1680,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
         return mGdkWindow;
     }
 
-    case NS_NATIVE_PLUGIN_PORT:
-        return SetupPluginPort();
-
-    case NS_NATIVE_PLUGIN_ID:
-        if (!mPluginNativeWindow) {
-          NS_WARNING("no native plugin instance!");
-          return nullptr;
-        }
-        // Return the socket widget XID
-        return (void*)mPluginNativeWindow->window;
-
     case NS_NATIVE_DISPLAY: {
 #ifdef MOZ_X11
         GdkDisplay* gdkDisplay = gdk_display_get_default();
@@ -1742,8 +1694,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
 
     case NS_NATIVE_SHAREABLE_WINDOW:
         return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
-    case NS_NATIVE_PLUGIN_OBJECT_PTR:
-        return (void *) mPluginNativeWindow;
     case NS_RAW_NATIVE_IME_CONTEXT: {
         void* pseudoIMEContext = GetPseudoIMEContext();
         if (pseudoIMEContext) {
@@ -1766,16 +1716,6 @@ nsWindow::GetNativeData(uint32_t aDataType)
         NS_WARNING("nsWindow::GetNativeData called with bad value");
         return nullptr;
     }
-}
-
-void
-nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
-{
-    if (aDataType != NS_NATIVE_PLUGIN_OBJECT_PTR) {
-        NS_WARNING("nsWindow::SetNativeData called with bad value");
-        return;
-    }
-    mPluginNativeWindow = (nsPluginNativeWindowGtk*)aVal;
 }
 
 nsresult
@@ -2626,13 +2566,6 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
             synthEvent = true;
             XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
         }
-#if (MOZ_WIDGET_GTK == 2)
-        // if plugins still keeps the focus, get it back
-        if (gPluginFocusWindow && gPluginFocusWindow != this) {
-            RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
-            gPluginFocusWindow->LoseNonXEmbedPluginFocus();
-        }
-#endif /* MOZ_WIDGET_GTK == 2 */
     }
 #endif /* MOZ_X11 */
 
@@ -2949,14 +2882,6 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
             CheckForRollup(0, 0, false, true);
         }
     }
-
-#if (MOZ_WIDGET_GTK == 2) && defined(MOZ_X11)
-    // plugin lose focus
-    if (gPluginFocusWindow) {
-        RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
-        gPluginFocusWindow->LoseNonXEmbedPluginFocus();
-    }
-#endif /* MOZ_X11 && MOZ_WIDGET_GTK == 2 */
 
     if (gFocusWindow) {
         RefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
@@ -3821,6 +3746,9 @@ nsWindow::Create(nsIWidget* aParent,
     case eWindowType_plugin:
     case eWindowType_plugin_ipc_chrome:
     case eWindowType_plugin_ipc_content:
+        MOZ_ASSERT_UNREACHABLE();
+        return NS_ERROR_FAILURE;
+
     case eWindowType_child: {
         if (parentMozContainer) {
             mGdkWindow = CreateGdkWindow(parentGdkWindow, parentMozContainer);
@@ -4776,156 +4704,11 @@ nsWindow::SetUrgencyHint(GtkWidget *top_window, bool state)
     gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
 }
 
-void *
-nsWindow::SetupPluginPort(void)
-{
-    if (!mGdkWindow)
-        return nullptr;
-
-    if (gdk_window_is_destroyed(mGdkWindow) == TRUE)
-        return nullptr;
-
-    Window window = gdk_x11_window_get_xid(mGdkWindow);
-
-    // we have to flush the X queue here so that any plugins that
-    // might be running on separate X connections will be able to use
-    // this window in case it was just created
-#ifdef MOZ_X11
-    XWindowAttributes xattrs;
-    Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-    XGetWindowAttributes(display, window, &xattrs);
-    XSelectInput (display, window,
-                  xattrs.your_event_mask |
-                  SubstructureNotifyMask);
-
-    gdk_window_add_filter(mGdkWindow, plugin_window_filter_func, this);
-
-    XSync(display, False);
-#endif /* MOZ_X11 */
-
-    return (void *)window;
-}
-
 void
 nsWindow::SetDefaultIcon(void)
 {
     SetIcon(NS_LITERAL_STRING("default"));
 }
-
-void
-nsWindow::SetPluginType(PluginType aPluginType)
-{
-    mPluginType = aPluginType;
-}
-
-#ifdef MOZ_X11
-void
-nsWindow::SetNonXEmbedPluginFocus()
-{
-    if (gPluginFocusWindow == this || mPluginType!=PluginType_NONXEMBED) {
-        return;
-    }
-
-    if (gPluginFocusWindow) {
-        RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
-        gPluginFocusWindow->LoseNonXEmbedPluginFocus();
-    }
-
-    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus\n"));
-
-    Window curFocusWindow;
-    int focusState;
-
-    GdkDisplay *gdkDisplay = gdk_window_get_display(mGdkWindow);
-    XGetInputFocus(gdk_x11_display_get_xdisplay(gdkDisplay),
-                   &curFocusWindow,
-                   &focusState);
-
-    LOGFOCUS(("\t curFocusWindow=%ld\n", curFocusWindow));
-
-    GdkWindow* toplevel = gdk_window_get_toplevel(mGdkWindow);
-#if (MOZ_WIDGET_GTK == 2)
-    GdkWindow *gdkfocuswin = gdk_window_lookup(curFocusWindow);
-#else
-    GdkWindow *gdkfocuswin = gdk_x11_window_lookup_for_display(gdkDisplay,
-                                                               curFocusWindow);
-#endif
-
-    // lookup with the focus proxy window is supposed to get the
-    // same GdkWindow as toplevel. If the current focused window
-    // is not the focus proxy, we return without any change.
-    if (gdkfocuswin != toplevel) {
-        return;
-    }
-
-    // switch the focus from the focus proxy to the plugin window
-    mOldFocusWindow = curFocusWindow;
-    XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                 gdk_x11_window_get_xid(mGdkWindow));
-    gdk_error_trap_push();
-    XSetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                   gdk_x11_window_get_xid(mGdkWindow),
-                   RevertToNone,
-                   CurrentTime);
-    gdk_flush();
-#if (MOZ_WIDGET_GTK == 3)
-    gdk_error_trap_pop_ignored();
-#else
-    gdk_error_trap_pop();
-#endif
-    gPluginFocusWindow = this;
-    gdk_window_add_filter(nullptr, plugin_client_message_filter, this);
-
-    LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%lu new=%lu\n",
-              mOldFocusWindow, gdk_x11_window_get_xid(mGdkWindow)));
-}
-
-void
-nsWindow::LoseNonXEmbedPluginFocus()
-{
-    LOGFOCUS(("nsWindow::LoseNonXEmbedPluginFocus\n"));
-
-    // This method is only for the nsWindow which contains a
-    // Non-XEmbed plugin, for example, JAVA plugin.
-    if (gPluginFocusWindow != this || mPluginType!=PluginType_NONXEMBED) {
-        return;
-    }
-
-    Window curFocusWindow;
-    int focusState;
-
-    XGetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                   &curFocusWindow,
-                   &focusState);
-
-    // we only switch focus between plugin window and focus proxy. If the
-    // current focused window is not the plugin window, just removing the
-    // event filter that blocks the WM_TAKE_FOCUS is enough. WM and gtk2
-    // will take care of the focus later.
-    if (!curFocusWindow ||
-        curFocusWindow == gdk_x11_window_get_xid(mGdkWindow)) {
-
-        gdk_error_trap_push();
-        XRaiseWindow(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                     mOldFocusWindow);
-        XSetInputFocus(GDK_WINDOW_XDISPLAY(mGdkWindow),
-                       mOldFocusWindow,
-                       RevertToParent,
-                       CurrentTime);
-        gdk_flush();
-#if (MOZ_WIDGET_GTK == 3)
-        gdk_error_trap_pop_ignored();
-#else
-        gdk_error_trap_pop();
-#endif
-    }
-    gPluginFocusWindow = nullptr;
-    mOldFocusWindow = 0;
-    gdk_window_remove_filter(nullptr, plugin_client_message_filter, this);
-
-    LOGFOCUS(("nsWindow::LoseNonXEmbedPluginFocus end\n"));
-}
-#endif /* MOZ_X11 */
 
 gint
 nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
@@ -5819,110 +5602,6 @@ popup_take_focus_filter(GdkXEvent *gdk_xevent,
     // raising the parent window.
     gdk_window_focus(parent_window, timestamp);
     return GDK_FILTER_REMOVE;
-}
-
-static GdkFilterReturn
-plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
-{
-    GdkWindow  *plugin_window;
-    XEvent     *xevent;
-    Window      xeventWindow;
-
-    RefPtr<nsWindow> nswindow = (nsWindow*)data;
-    GdkFilterReturn return_val;
-
-    xevent = (XEvent *)gdk_xevent;
-    return_val = GDK_FILTER_CONTINUE;
-
-    switch (xevent->type)
-    {
-        case CreateNotify:
-        case ReparentNotify:
-            if (xevent->type==CreateNotify) {
-                xeventWindow = xevent->xcreatewindow.window;
-            }
-            else {
-                if (xevent->xreparent.event != xevent->xreparent.parent)
-                    break;
-                xeventWindow = xevent->xreparent.window;
-            }
-#if (MOZ_WIDGET_GTK == 2)
-            plugin_window = gdk_window_lookup(xeventWindow);
-#else
-            plugin_window = gdk_x11_window_lookup_for_display(
-                                  gdk_x11_lookup_xdisplay(xevent->xcreatewindow.display), xeventWindow);
-#endif
-            if (plugin_window) {
-                GtkWidget *widget =
-                    get_gtk_widget_for_gdk_window(plugin_window);
-
-// TODO GTK3
-#if (MOZ_WIDGET_GTK == 2)
-                if (GTK_IS_XTBIN(widget)) {
-                    nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
-                    break;
-                }
-                else
-#endif
-                if(GTK_IS_SOCKET(widget)) {
-                    if (!g_object_get_data(G_OBJECT(widget), "enable-xt-focus")) {
-                        nswindow->SetPluginType(nsWindow::PluginType_XEMBED);
-                        break;
-                    }
-                }
-            }
-            nswindow->SetPluginType(nsWindow::PluginType_NONXEMBED);
-            return_val = GDK_FILTER_REMOVE;
-            break;
-        case EnterNotify:
-            nswindow->SetNonXEmbedPluginFocus();
-            break;
-        case DestroyNotify:
-            gdk_window_remove_filter
-                ((GdkWindow*)(nswindow->GetNativeData(NS_NATIVE_WINDOW)),
-                 plugin_window_filter_func,
-                 nswindow);
-            // Currently we consider all plugins are non-xembed and calls
-            // LoseNonXEmbedPluginFocus without any checking.
-            nswindow->LoseNonXEmbedPluginFocus();
-            break;
-        default:
-            break;
-    }
-    return return_val;
-}
-
-static GdkFilterReturn
-plugin_client_message_filter(GdkXEvent *gdk_xevent,
-                             GdkEvent *event,
-                             gpointer data)
-{
-    XEvent    *xevent;
-    xevent = (XEvent *)gdk_xevent;
-
-    GdkFilterReturn return_val;
-    return_val = GDK_FILTER_CONTINUE;
-
-    if (!gPluginFocusWindow || xevent->type!=ClientMessage) {
-        return return_val;
-    }
-
-    // When WM sends out WM_TAKE_FOCUS, gtk2 will use XSetInputFocus
-    // to set the focus to the focus proxy. To prevent this happen
-    // while the focus is on the plugin, we filter the WM_TAKE_FOCUS
-    // out.
-    if (gdk_x11_get_xatom_by_name("WM_PROTOCOLS")
-            != xevent->xclient.message_type) {
-        return return_val;
-    }
-
-    if ((Atom) xevent->xclient.data.l[0] ==
-            gdk_x11_get_xatom_by_name("WM_TAKE_FOCUS")) {
-        // block it from gtk2.0 focus proxy
-        return_val = GDK_FILTER_REMOVE;
-    }
-
-    return return_val;
 }
 #endif /* MOZ_X11 */
 
