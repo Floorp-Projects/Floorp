@@ -2112,7 +2112,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
     struct NotifyIME_t {
@@ -2201,7 +2201,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
     struct OnImeReplaceText_t {
@@ -2239,7 +2239,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
     struct OnImeSynchronize_t {
@@ -2256,7 +2256,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
     struct OnImeUpdateComposition_t {
@@ -2287,8 +2287,9 @@ public:
                 int32_t,
                 int32_t,
                 int32_t,
-                int32_t,
                 int64_t,
+                int32_t,
+                int32_t,
                 int32_t,
                 int32_t,
                 int32_t,
@@ -2296,7 +2297,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "onKeyEvent";
         static constexpr char signature[] =
-                "(IIIIIJIIIZLandroid/view/KeyEvent;)V";
+                "(IIIIJIIIIIZLandroid/view/KeyEvent;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
