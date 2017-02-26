@@ -135,6 +135,10 @@ public class TabStripView extends RecyclerView
         adapter.notifyTabChanged(tab);
     }
 
+    /* package */ boolean isPrivate() {
+        return isPrivate;
+    }
+
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
         return adapter.moveTab(fromPosition, toPosition);
