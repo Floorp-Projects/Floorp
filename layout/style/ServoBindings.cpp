@@ -9,6 +9,7 @@
 #include "ChildIterator.h"
 #include "gfxFontFamilyList.h"
 #include "nsAttrValueInlines.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
@@ -279,11 +280,21 @@ Gecko_GetStyleContext(RawGeckoNodeBorrowed aNode, nsIAtom* aPseudoTagOrNull)
   nsIFrame* relevantFrame =
     ServoRestyleManager::FrameForPseudoElement(aNode->AsContent(),
                                                aPseudoTagOrNull);
-  if (!relevantFrame) {
+  if (relevantFrame) {
+    return relevantFrame->StyleContext();
+  }
+
+  if (aPseudoTagOrNull) {
     return nullptr;
   }
 
-  return relevantFrame->StyleContext();
+  // FIXME(emilio): Is there a shorter path?
+  nsCSSFrameConstructor* fc =
+    aNode->OwnerDoc()->GetShell()->GetPresContext()->FrameConstructor();
+
+  // NB: This is only called for CalcStyleDifference, and we handle correctly
+  // the display: none case since Servo still has the older style.
+  return fc->GetDisplayContentsStyleFor(aNode->AsContent());
 }
 
 nsChangeHint
