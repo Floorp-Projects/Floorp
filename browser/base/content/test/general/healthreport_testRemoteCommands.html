@@ -1,10 +1,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-<script type="application/javascript;version=1.7"
+<script type="application/javascript"
             src="healthreport_pingData.js">
 </script>
-<script type="application/javascript;version=1.7">
+<script type="application/javascript">
 
 function init() {
   window.addEventListener("message", doTest);
@@ -16,7 +16,7 @@ function checkSubmissionValue(payload, expectedValue) {
 }
 
 function isArray(arg) {
-  return Object.prototype.toString.call(arg) === '[object Array]';
+  return Object.prototype.toString.call(arg) === "[object Array]";
 }
 
 function writeDiagnostic(text) {
@@ -62,7 +62,7 @@ function validateTelemetryPingList(list) {
   }
 
   let valid = true;
-  for (let i=0; i<list.length; ++i) {
+  for (let i = 0; i < list.length; ++i) {
     let received = list[i];
     let expected = TEST_PINGS[i];
     if (received.type != expected.type ||
@@ -76,7 +76,7 @@ function validateTelemetryPingList(list) {
     }
   }
 
-  return true;
+  return valid;
 }
 
 function validateTelemetryPingData(expected, received) {
@@ -99,7 +99,7 @@ var tests = [
   info: "Checking initial value is enabled",
   event: "RequestCurrentPrefs",
   payloadType: "prefs",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkSubmissionValue(payload, true);
   },
 },
@@ -107,7 +107,7 @@ var tests = [
   info: "Verifying disabling works",
   event: "DisableDataSubmission",
   payloadType: "prefs",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkSubmissionValue(payload, false);
   },
 },
@@ -115,7 +115,7 @@ var tests = [
   info: "Verifying we're still disabled",
   event: "RequestCurrentPrefs",
   payloadType: "prefs",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkSubmissionValue(payload, false);
   },
 },
@@ -123,7 +123,7 @@ var tests = [
   info: "Verifying that we can get the current ping data while submission is disabled",
   event: "RequestCurrentPingData",
   payloadType: "telemetry-current-ping-data",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return validateCurrentTelemetryPingData(payload);
   },
 },
@@ -131,7 +131,7 @@ var tests = [
   info: "Verifying enabling works",
   event: "EnableDataSubmission",
   payloadType: "prefs",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkSubmissionValue(payload, true);
   },
 },
@@ -139,7 +139,7 @@ var tests = [
   info: "Verifying we're still re-enabled",
   event: "RequestCurrentPrefs",
   payloadType: "prefs",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkSubmissionValue(payload, true);
   },
 },
@@ -147,7 +147,7 @@ var tests = [
   info: "Verifying that we can get the current Telemetry environment data",
   event: "RequestCurrentEnvironment",
   payloadType: "telemetry-current-environment-data",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return validateCurrentTelemetryEnvironment(payload);
   },
 },
@@ -155,7 +155,7 @@ var tests = [
   info: "Verifying that we can get the current Telemetry ping data",
   event: "RequestCurrentPingData",
   payloadType: "telemetry-current-ping-data",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return validateCurrentTelemetryPingData(payload);
   },
 },
@@ -163,7 +163,7 @@ var tests = [
   info: "Verifying that we get the proper Telemetry ping list",
   event: "RequestTelemetryPingList",
   payloadType: "telemetry-ping-list",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     // Validate the ping list
     if (!validateTelemetryPingList(payload)) {
       return false;
@@ -171,15 +171,15 @@ var tests = [
 
     // Now that we received the ping ids, set up additional test tasks
     // that check loading the individual pings.
-    for (let i=0; i<TEST_PINGS.length; ++i) {
+    for (let i = 0; i < TEST_PINGS.length; ++i) {
       TEST_PINGS[i].id = payload[i].id;
       tests.push({
         info: "Verifying that we can get the proper Telemetry ping data #" + (i + 1),
         event: "RequestTelemetryPingData",
         eventData: { id: TEST_PINGS[i].id },
         payloadType: "telemetry-ping-data",
-        validateResponse: function(payload) {
-          return validateTelemetryPingData(TEST_PINGS[i], payload.pingData);
+        validateResponse(payload2) {
+          return validateTelemetryPingData(TEST_PINGS[i], payload2.pingData);
         },
       });
     }
@@ -214,14 +214,14 @@ function doTest(evt) {
 }
 
 function reportResult(info, pass, error) {
-  var data = {type: "testResult", info: info, pass: pass, error: error};
-  var event = new CustomEvent("FirefoxHealthReportTestResponse", {detail: {data: data}, bubbles: true});
+  var data = {type: "testResult", info, pass, error};
+  var event = new CustomEvent("FirefoxHealthReportTestResponse", {detail: {data}, bubbles: true});
   document.dispatchEvent(event);
 }
 
 function reportFinished(cmd) {
   var data = {type: "testsComplete", count: tests.length};
-  var event = new CustomEvent("FirefoxHealthReportTestResponse", {detail: {data: data}, bubbles: true});
+  var event = new CustomEvent("FirefoxHealthReportTestResponse", {detail: {data}, bubbles: true});
   document.dispatchEvent(event);
 }
 
@@ -232,7 +232,7 @@ function sendToBrowser(type, eventData) {
     detail[key] = eventData[key];
   }
 
-  var event = new CustomEvent("RemoteHealthReportCommand", {detail: detail, bubbles: true});
+  var event = new CustomEvent("RemoteHealthReportCommand", {detail, bubbles: true});
   document.dispatchEvent(event);
 }
 

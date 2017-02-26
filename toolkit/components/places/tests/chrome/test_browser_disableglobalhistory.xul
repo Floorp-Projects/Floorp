@@ -12,7 +12,7 @@
   <body xmlns="http://www.w3.org/1999/xhtml">
   </body>
 
-  <script type="text/javascript;version=1.7">
+  <script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
 
   let w = window.open('browser_disableglobalhistory.xul', '_blank', 'chrome,resizable=yes,width=400,height=600');

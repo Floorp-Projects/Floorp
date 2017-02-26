@@ -16,14 +16,14 @@ pub fn parse_nth(input: &mut Parser) -> Result<(i32, i32), ()> {
         Token::Number(value) => Ok((0, try!(value.int_value.ok_or(())) as i32)),
         Token::Dimension(value, unit) => {
             let a = try!(value.int_value.ok_or(())) as i32;
-            match_ignore_ascii_case! { unit,
+            match_ignore_ascii_case! { &unit,
                 "n" => parse_b(input, a),
                 "n-" => parse_signless_b(input, a, -1),
                 _ => Ok((a, try!(parse_n_dash_digits(&*unit))))
             }
         }
         Token::Ident(value) => {
-            match_ignore_ascii_case! { value,
+            match_ignore_ascii_case! { &value,
                 "even" => Ok((2, 0)),
                 "odd" => Ok((2, 1)),
                 "n" => parse_b(input, 1),
@@ -39,7 +39,7 @@ pub fn parse_nth(input: &mut Parser) -> Result<(i32, i32), ()> {
         }
         Token::Delim('+') => match try!(input.next_including_whitespace()) {
             Token::Ident(value) => {
-                match_ignore_ascii_case! { value,
+                match_ignore_ascii_case! { &value,
                     "n" => parse_b(input, 1),
                     "n-" => parse_signless_b(input, 1, -1),
                     _ => Ok((1, try!(parse_n_dash_digits(&*value))))
