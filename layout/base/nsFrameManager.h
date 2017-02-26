@@ -102,7 +102,7 @@ public:
   void      ClearPlaceholderFrameMap();
 
   // Mapping undisplayed content
-  nsStyleContext* GetUndisplayedContent(nsIContent* aContent)
+  nsStyleContext* GetUndisplayedContent(const nsIContent* aContent)
   {
     if (!mUndisplayedMap) {
       return nullptr;
@@ -127,7 +127,7 @@ public:
   /**
    * Return the registered display:contents style context for aContent, if any.
    */
-  nsStyleContext* GetDisplayContentsStyleFor(nsIContent* aContent)
+  nsStyleContext* GetDisplayContentsStyleFor(const nsIContent* aContent)
   {
     if (!mDisplayContentsMap) {
       return nullptr;
@@ -140,6 +140,19 @@ public:
    * display:contents children of aParentContent, if any.
    */
   mozilla::UndisplayedNode* GetAllDisplayContentsIn(nsIContent* aParentContent);
+
+  /**
+   * Return the relevant undisplayed node for a given content with display:
+   * contents style.
+   */
+  mozilla::UndisplayedNode* GetDisplayContentsNodeFor(
+      const nsIContent* aContent) {
+    if (!mDisplayContentsMap) {
+      return nullptr;
+    }
+    return GetUndisplayedNodeInMapFor(mDisplayContentsMap, aContent);
+  }
+
   /**
    * Register aContent having a display:contents style context.
    */
@@ -207,7 +220,10 @@ public:
                                         nsILayoutHistoryState* aState);
 protected:
   static nsStyleContext* GetStyleContextInMap(UndisplayedMap* aMap,
-                                              nsIContent* aContent);
+                                              const nsIContent* aContent);
+  static mozilla::UndisplayedNode*
+    GetUndisplayedNodeInMapFor(UndisplayedMap* aMap,
+                               const nsIContent* aContent);
   static mozilla::UndisplayedNode*
     GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
                                    nsIContent* aParentContent);

@@ -40,7 +40,36 @@
 
 #layout-grid-container {
   display: flex;
+  flex-direction: column;
   margin: 5px;
+}
+
+/**
+ * Grid Content
+ */
+
+.grid-content {
+  display: flex;
+  flex: 1;
+}
+
+/**
+ * Grid Outline
+ */
+
+#grid-outline {
+  margin: 5px auto;
+}
+
+.grid-outline-border {
+  stroke-width: 0.75;
+  fill: none;
+}
+
+.grid-outline-cell {
+  fill: none;
+  pointer-events: all;
+  stroke-dasharray: 0.5, 2;
 }
 
 /**
