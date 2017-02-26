@@ -30,7 +30,8 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.conca
 ]);
 
 add_task(function* () {
-  Services.prefs.setCharPref("devtools.netmonitor.filters", '["bogus", "js", "alsobogus"]');
+  Services.prefs.setCharPref("devtools.netmonitor.filters",
+                             '["bogus", "js", "alsobogus"]');
 
   let { monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");

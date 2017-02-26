@@ -41,8 +41,7 @@ add_task(function* () {
     header("Cache-Control: no-cache")
   ];
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { document } = monitor.panelWin;
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
