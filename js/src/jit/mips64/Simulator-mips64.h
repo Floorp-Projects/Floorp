@@ -452,14 +452,6 @@ class SimulatorProcess
     }
 };
 
-#define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)     \
-    JS_BEGIN_MACRO                                                              \
-        if (cx->simulator()->overRecursedWithExtra(extra)) {                    \
-            js::ReportOverRecursed(cx);                                         \
-            onerror;                                                            \
-        }                                                                       \
-    JS_END_MACRO
-
 } // namespace jit
 } // namespace js
 
