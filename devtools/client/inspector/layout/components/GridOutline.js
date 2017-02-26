@@ -23,6 +23,7 @@ module.exports = createClass({
 
   propTypes: {
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
+    onShowGridAreaHighlight: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -39,29 +40,48 @@ module.exports = createClass({
     });
   },
 
-  renderGridCell(columnNumber, rowNumber, color) {
-    return dom.rect(
-      {
-        className: "grid-outline-cell",
-        x: columnNumber,
-        y: rowNumber,
-        width: 10,
-        height: 10,
-        stroke: color,
-      }
+  /**
+   * Returns the grid area name if the given grid cell is part of a grid area, otherwise
+   * null.
+   *
+   * @param  {Number} columnNumber
+   *         The column number of the grid cell.
+   * @param  {Number} rowNumber
+   *         The row number of the grid cell.
+   * @param  {Array} areas
+   *         Array of grid areas data stored in the grid fragment.
+   * @return {String} If there is a grid area return area name, otherwise null.
+   */
+  getGridAreaName(columnNumber, rowNumber, areas) {
+    const gridArea = areas.find(area =>
+      (area.rowStart <= rowNumber && area.rowEnd > rowNumber) &&
+      (area.columnStart <= columnNumber && area.columnEnd > columnNumber)
     );
+
+    if (!gridArea) {
+      return null;
+    }
+
+    return gridArea.name;
   },
 
-  renderGridFragment({ color, gridFragments }) {
+  /**
+   * Renders the grid outline for the given grid container object.
+   *
+   * @param  {Object} grid
+   *         A single grid container in the document.
+   */
+  renderGrid(grid) {
+    const { id, color, gridFragments } = grid;
     // TODO: We are drawing the first fragment since only one is currently being stored.
-    // In future we will need to iterate over all fragments of a grid.
-    const { rows, cols } = gridFragments[0];
-    const numOfColLines = cols.lines.length - 1;
-    const numOfRowLines = rows.lines.length - 1;
+    // In the future we will need to iterate over all fragments of a grid.
+    const { rows, cols, areas } = gridFragments[0];
+    const numberOfColumns = cols.lines.length - 1;
+    const numberOfRows = rows.lines.length - 1;
     const rectangles = [];
 
-    // Draw a rectangle that acts as a border for the grid outline
-    const border = this.renderGridOutlineBorder(numOfRowLines, numOfColLines, color);
+    // Draw a rectangle that acts as a border for the grid outline.
+    const border = this.renderGridOutlineBorder(numberOfRows, numberOfColumns, color);
     rectangles.push(border);
 
     let x = 1;
@@ -69,10 +89,14 @@ module.exports = createClass({
     const width = 10;
     const height = 10;
 
-    // Draw the cells within the grid outline border
-    for (let row = 0; row < numOfRowLines; row++) {
-      for (let col = 0; col < numOfColLines; col++) {
-        rectangles.push(this.renderGridCell(x, y, color));
+    // Draw the cells within the grid outline border.
+    for (let rowNumber = 1; rowNumber <= numberOfRows; rowNumber++) {
+      for (let columnNumber = 1; columnNumber <= numberOfColumns; columnNumber++) {
+        const gridAreaName = this.getGridAreaName(columnNumber, rowNumber, areas);
+        const gridCell = this.renderGridCell(id, x, y, rowNumber, columnNumber, color,
+          gridAreaName);
+
+        rectangles.push(gridCell);
         x += width;
       }
 
@@ -83,26 +107,87 @@ module.exports = createClass({
     return rectangles;
   },
 
-  renderGridOutline(gridFragments) {
+  /**
+   * Renders the grid cell of a grid fragment.
+   *
+   * @param  {Number} id
+   *         The grid id stored on the grid fragment
+   * @param  {Number} x
+   *         The x-position of the grid cell.
+   * @param  {Number} y
+   *         The y-position of the grid cell.
+   * @param  {Number} rowNumber
+   *         The row number of the grid cell.
+   * @param  {Number} columnNumber
+   *         The column number of the grid cell.
+   * @param  {String|null} gridAreaName
+   *         The grid area name or null if the grid cell is not part of a grid area.
+   */
+  renderGridCell(id, x, y, rowNumber, columnNumber, color, gridAreaName) {
+    return dom.rect(
+      {
+        className: "grid-outline-cell",
+        "data-grid-area-name": gridAreaName,
+        "data-grid-id": id,
+        x,
+        y,
+        width: 10,
+        height: 10,
+        fill: "none",
+        stroke: color,
+        onMouseOver: this.onMouseOverCell,
+        onMouseOut: this.onMouseLeaveCell,
+      }
+    );
+  },
+
+  renderGridOutline(grids) {
     return dom.g(
       {
         className: "grid-cell-group",
       },
-      gridFragments.map(gridFragment => this.renderGridFragment(gridFragment))
+      grids.map(grid => this.renderGrid(grid))
     );
   },
 
-  renderGridOutlineBorder(numberOfRows, numberOfCols, color) {
+  renderGridOutlineBorder(numberOfRows, numberOfColumns, color) {
     return dom.rect(
       {
         className: "grid-outline-border",
         x: 1,
         y: 1,
-        width: numberOfCols * 10,
+        width: numberOfColumns * 10,
         height: numberOfRows * 10,
         stroke: color,
       }
     );
+  },
+
+  onMouseLeaveCell({ target }) {
+    const {
+      grids,
+      onShowGridAreaHighlight,
+    } = this.props;
+    const id = target.getAttribute("data-grid-id");
+    const color = target.getAttribute("stroke");
+
+    target.setAttribute("fill", "none");
+
+    onShowGridAreaHighlight(grids[id].nodeFront, null, color);
+  },
+
+  onMouseOverCell({ target }) {
+    const {
+      grids,
+      onShowGridAreaHighlight,
+    } = this.props;
+    const name = target.getAttribute("data-grid-area-name");
+    const id = target.getAttribute("data-grid-id");
+    const color = target.getAttribute("stroke");
+
+    target.setAttribute("fill", color);
+
+    onShowGridAreaHighlight(grids[id].nodeFront, name, color);
   },
 
   render() {
