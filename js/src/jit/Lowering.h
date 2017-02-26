@@ -329,6 +329,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGuardSharedTypedArray(MGuardSharedTypedArray* ins);
     void visitCheckReturn(MCheckReturn* ins);
     void visitCheckIsObj(MCheckIsObj* ins);
+    void visitCheckIsCallable(MCheckIsCallable* ins);
     void visitCheckObjCoercible(MCheckObjCoercible* ins);
     void visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins);
 };
