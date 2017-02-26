@@ -1623,7 +1623,7 @@ fails == 605138-1.html 605138-1.html
 fails == 608636-1.html 608636-1.html
 == 608756-1a.html 608756-1a.html
 == 608756-1b.html 608756-1b.html
-asserts-if(stylo,4) == 608756-2.html 608756-2.html # bug 1324633
+== 608756-2.html 608756-2.html
 == 609272-1.html 609272-1.html
 fails == 613433-1.html 613433-1.html
 fails == 613433-1.html 613433-1.html
