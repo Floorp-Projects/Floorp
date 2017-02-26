@@ -15,6 +15,7 @@
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRTGlue.h"
+#include "nsDependentString.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsICryptoHash.h"
 #include "nsIFileStreams.h"
@@ -23,6 +24,7 @@
 #include "nsIX509Cert.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsPromiseFlatString.h"
 #include "nsTHashtable.h"
 #include "nsThreadUtils.h"
 #include "pkix/Input.h"
@@ -312,31 +314,31 @@ CertBlocklist::EnsureBackingFileInitialized(MutexAutoLock& lock)
 }
 
 NS_IMETHODIMP
-CertBlocklist::RevokeCertBySubjectAndPubKey(const char* aSubject,
-                                            const char* aPubKeyHash)
+CertBlocklist::RevokeCertBySubjectAndPubKey(const nsACString& aSubject,
+                                            const nsACString& aPubKeyHash)
 {
   MOZ_LOG(gCertBlockPRLog, LogLevel::Debug,
          ("CertBlocklist::RevokeCertBySubjectAndPubKey - subject is: %s and pubKeyHash: %s",
-          aSubject, aPubKeyHash));
+          PromiseFlatCString(aSubject).get(),
+          PromiseFlatCString(aPubKeyHash).get()));
   MutexAutoLock lock(mMutex);
 
-  return AddRevokedCertInternal(nsDependentCString(aSubject),
-                                nsDependentCString(aPubKeyHash),
+  return AddRevokedCertInternal(aSubject, aPubKeyHash,
                                 BlockBySubjectAndPubKey,
                                 CertNewFromBlocklist, lock);
 }
 
 NS_IMETHODIMP
-CertBlocklist::RevokeCertByIssuerAndSerial(const char* aIssuer,
-                                           const char* aSerialNumber)
+CertBlocklist::RevokeCertByIssuerAndSerial(const nsACString& aIssuer,
+                                           const nsACString& aSerialNumber)
 {
   MOZ_LOG(gCertBlockPRLog, LogLevel::Debug,
          ("CertBlocklist::RevokeCertByIssuerAndSerial - issuer is: %s and serial: %s",
-          aIssuer, aSerialNumber));
+          PromiseFlatCString(aIssuer).get(),
+          PromiseFlatCString(aSerialNumber).get()));
   MutexAutoLock lock(mMutex);
 
-  return AddRevokedCertInternal(nsDependentCString(aIssuer),
-                                nsDependentCString(aSerialNumber),
+  return AddRevokedCertInternal(aIssuer, aSerialNumber,
                                 BlockByIssuerAndSerial,
                                 CertNewFromBlocklist, lock);
 }
