@@ -249,7 +249,6 @@ private:
     // Set to true if the last operation run on the decoder was a flush.
     bool mFlushed;
     MozPromiseHolder<ShutdownPromise> mShutdownPromise;
-    bool mShuttingDown = false; // True if shutdown is in action.
 
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDrainRequest;
     DrainState mDrainState;
