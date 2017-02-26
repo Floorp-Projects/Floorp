@@ -517,13 +517,6 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
                 return true;
             break;
 
-          case JSTRY_ITERCLOSE:
-            // Code that need to call IteratorClose have the iterator on the
-            // stack.
-            if (stackDepth == tn->stackDepth)
-                return true;
-            break;
-
           case JSTRY_DESTRUCTURING_ITERCLOSE:
             // Destructuring code that need to call IteratorClose have both
             // the iterator and the "done" value on the stack.
