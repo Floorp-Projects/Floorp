@@ -1936,7 +1936,7 @@ MediaFormatReader::HandleDemuxedSamples(
 
   auto& decoder = GetDecoderData(aTrack);
 
-  if (decoder.mFlushing || decoder.mShuttingDown) {
+  if (decoder.mFlushing) {
     LOGV("Decoder operation in progress, let it complete.");
     return;
   }
@@ -2310,7 +2310,7 @@ MediaFormatReader::Update(TrackType aTrack)
 
   LOGV(
     "Update(%s) ni=%d no=%d in:%" PRIu64 " out:%" PRIu64
-    " qs=%u decoding:%d flushing:%d shutdown:%d pending:%u waiting:%d sid:%u",
+    " qs=%u decoding:%d flushing:%d desc:%s pending:%u waiting:%d sid:%u",
     TrackTypeToStr(aTrack),
     needInput,
     needOutput,
@@ -2319,7 +2319,7 @@ MediaFormatReader::Update(TrackType aTrack)
     uint32_t(size_t(decoder.mSizeOfQueue)),
     decoder.mDecodeRequest.Exists(),
     decoder.mFlushing,
-    decoder.mShuttingDown,
+    decoder.mDescription,
     uint32_t(decoder.mOutput.Length()),
     decoder.mWaitingForData,
     decoder.mLastStreamSourceID);
