@@ -36,6 +36,11 @@ public:
                mType == nsTimingFunction::Type::StepEnd);
     return mStepsOrFrames;
   }
+  uint32_t GetFrames() const
+  {
+    MOZ_ASSERT(mType == nsTimingFunction::Type::Frames);
+    return mStepsOrFrames;
+  }
   bool operator==(const ComputedTimingFunction& aOther) const
   {
     return mType == aOther.mType &&
