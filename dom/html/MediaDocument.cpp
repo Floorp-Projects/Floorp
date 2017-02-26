@@ -349,7 +349,7 @@ MediaDocument::LinkScript(const nsAString& aScript)
   NS_ENSURE_TRUE(script, NS_ERROR_OUT_OF_MEMORY);
 
   script->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                  NS_LITERAL_STRING("text/javascript;version=1.8"), true);
+                  NS_LITERAL_STRING("text/javascript"), true);
 
   script->SetAttr(kNameSpaceID_None, nsGkAtoms::src, aScript, true);
 
