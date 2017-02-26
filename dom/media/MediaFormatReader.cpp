@@ -378,23 +378,36 @@ void
 MediaFormatReader::DecoderData::ShutdownDecoder()
 {
   MutexAutoLock lock(mMutex);
-  if (mDecoder) {
-    RefPtr<MediaFormatReader> owner = mOwner;
-    TrackType type = mType == MediaData::AUDIO_DATA
-                     ? TrackType::kAudioTrack
-                     : TrackType::kVideoTrack;
-    mShuttingDown = true;
-    mDecoder->Shutdown()
-      ->Then(mOwner->OwnerThread(), __func__,
-             [owner, this, type]() {
-               mShuttingDown = false;
-               mShutdownPromise.ResolveIfExists(true, __func__);
-               owner->ScheduleUpdate(type);
-             },
-             []() { MOZ_RELEASE_ASSERT(false, "Can't ever be here"); });
+
+  if (!mDecoder) {
+    // No decoder to shut down.
+    return;
   }
-  mDescription = "shutdown";
+
+  if (mFlushing) {
+    // Flush is is in action. Shutdown will be initiated after flush completes.
+    if (mShutdownPromise.IsEmpty()) {
+      mOwner->mShutdownPromisePool->Track(mShutdownPromise.Ensure(__func__));
+    }
+    return;
+  }
+
+  if (!mShutdownPromise.IsEmpty()) {
+    // This is called from the resolve/reject function of Flush.
+    // Let's continue shutdown.
+    mDecoder->Shutdown()->ChainTo(mShutdownPromise.Steal(), __func__);
+  } else {
+    // No flush is in action. We can shut down the decoder now.
+    mOwner->mShutdownPromisePool->Track(mDecoder->Shutdown());
+  }
+
+  // mShutdownPromisePool will handle the order of decoder shutdown so
+  // we can forget mDecoder and be ready to create a new one.
   mDecoder = nullptr;
+  mDescription = "shutdown";
+  mOwner->ScheduleUpdate(mType == MediaData::AUDIO_DATA
+                         ? TrackType::kAudioTrack
+                         : TrackType::kVideoTrack);
 }
 
 void
@@ -1142,44 +1155,14 @@ MediaFormatReader::ShutdownDecoder(TrackType aTrack)
 {
   LOGV("%s", TrackTypeToStr(aTrack));
 
+  // Shut down the pending decoder if any.
+  mDecoderFactory->ShutdownDecoder(aTrack);
+
   auto& decoder = GetDecoderData(aTrack);
-  if (!decoder.mDecoder) {
-    LOGV("Already shut down");
-    return;
-  }
-  if (!decoder.mShutdownPromise.IsEmpty()) {
-    LOGV("Shutdown already in progress");
-    return;
-  }
-
-  if (!decoder.mFlushed && decoder.mDecoder) {
-    // The decoder has yet to be flushed.
-    // We always flush the decoder prior to a shutdown to ensure that all the
-    // potentially pending operations on the decoder are completed.
-    decoder.Flush();
-    mShutdownPromisePool->Track(decoder.mShutdownPromise.Ensure(__func__));
-    return;
-  }
-
-  if (decoder.mFlushing || decoder.mShuttingDown) {
-    // Let the current flush or shutdown operation complete, Flush will continue
-    // shutting down the current decoder now that the shutdown promise is set.
-    mShutdownPromisePool->Track(decoder.mShutdownPromise.Ensure(__func__));
-    return;
-  }
-
-  if (!decoder.mDecoder) {
-    // Shutdown any decoders that may be in the process of being initialized
-    // in the Decoder Factory.
-    // This will be a no-op until we're processing the final decoder shutdown
-    // prior to the MediaFormatReader being shutdown.
-    mDecoderFactory->ShutdownDecoder(aTrack);
-    return;
-  }
-
-  // Finally, let's just shut down the currently active decoder.
+  // Flush the decoder if necessary.
+  decoder.Flush();
+  // Shut down the decoder if any.
   decoder.ShutdownDecoder();
-  mShutdownPromisePool->Track(decoder.mShutdownPromise.Ensure(__func__));
 }
 
 RefPtr<ShutdownPromise>
