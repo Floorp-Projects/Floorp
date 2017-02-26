@@ -9,6 +9,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.graphics.Rect;
+import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -32,6 +33,10 @@ public class TabStrip extends ThemedLinearLayout
 
     private final TabsListener tabsListener;
     private OnTabAddedOrRemovedListener tabChangedListener;
+
+    // True when the tab strip isn't visible to the user due to something being drawn over it.
+    private boolean tabStripIsCovered;
+    private boolean tabsNeedUpdating;
 
     public TabStrip(Context context) {
         this(context, null);
@@ -140,6 +145,14 @@ public class TabStrip extends ThemedLinearLayout
                 case AUDIO_PLAYING_CHANGE:
                     tabStripView.updateTab(tab);
                     break;
+
+                case MOVED:
+                    if (tabStripIsCovered && tab.isPrivate() == tabStripView.isPrivate()) {
+                        // One of our tabs got moved while we're visible but covered; be sure to
+                        // update the tabs list before the user can see us again.
+                        tabsNeedUpdating = true;
+                    }
+                    break;
             }
         }
     }
@@ -147,6 +160,16 @@ public class TabStrip extends ThemedLinearLayout
     @Override
     public void refresh() {
         tabStripView.refresh();
+    }
+
+    @UiThread
+    @Override
+    public void tabStripIsCovered(boolean covered) {
+        tabStripIsCovered = covered;
+        if (!tabStripIsCovered && tabsNeedUpdating) {
+            tabStripView.refreshTabs();
+            tabsNeedUpdating = false;
+        }
     }
 
     @Override
