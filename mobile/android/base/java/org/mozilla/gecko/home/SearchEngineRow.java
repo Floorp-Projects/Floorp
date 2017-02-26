@@ -408,9 +408,11 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
 
         List<String> searchEngineSuggestions = new ArrayList<String>();
-        for (String suggestion : searchEngine.getSuggestions()) {
-            searchHistorySuggestions.remove(suggestion);
-            searchEngineSuggestions.add(suggestion);
+        if (searchSuggestionsEnabled) {
+            for (String suggestion : searchEngine.getSuggestions()) {
+                searchHistorySuggestions.remove(suggestion);
+                searchEngineSuggestions.add(suggestion);
+            }
         }
         // Make sure the search term itself isn't duplicated. This is more important on phones than tablets where screen
         // space is more precious.
