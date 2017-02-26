@@ -15,6 +15,9 @@
     <p>POST raw test</p>
 
     <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
       function post(address, message, callback) {
         let xhr = new XMLHttpRequest();
         xhr.open("POST", address, true);

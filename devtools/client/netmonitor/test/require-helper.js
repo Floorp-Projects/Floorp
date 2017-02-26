@@ -31,4 +31,6 @@ requireHacker.global_hook("default", path => {
     case "devtools/client/shared/redux/create-store":
       return `module.exports = require("devtools/client/netmonitor/test/fixtures/create-store")`;
   }
+
+  return null;
 });

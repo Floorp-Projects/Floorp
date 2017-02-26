@@ -11,10 +11,9 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
+  let { gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let {
-    getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");
 

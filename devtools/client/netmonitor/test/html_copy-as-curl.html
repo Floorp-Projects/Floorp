@@ -15,9 +15,12 @@
     <p>Performing a GET request</p>
 
     <script type="text/javascript">
-      function performRequest(aUrl) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aUrl, true);
+      /* exported performRequest */
+      "use strict";
+
+      function performRequest(url) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
         xhr.setRequestHeader("Accept-Language", window.navigator.language);
         xhr.setRequestHeader("X-Custom-Header-1", "Custom value");
         xhr.setRequestHeader("X-Custom-Header-2", "8.8.8.8");
