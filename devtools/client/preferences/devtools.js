@@ -74,6 +74,7 @@ pref("devtools.layoutview.enabled", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.showGridLineNumbers", false);
+pref("devtools.gridinspector.showGridOutline", false);
 pref("devtools.gridinspector.showInfiniteLines", false);
 
 // By how many times eyedropper will magnify pixels

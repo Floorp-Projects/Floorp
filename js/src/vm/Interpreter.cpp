@@ -343,7 +343,8 @@ ExecuteState::pushInterpreterFrame(JSContext* cx)
 bool
 js::RunScript(JSContext* cx, RunState& state)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     // Since any script can conceivably GC, make sure it's safe to do so.
     cx->verifyIsSafeToGC();
@@ -618,7 +619,8 @@ js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHand
 {
     // Invoke could result in another try to get or set the same id again, see
     // bug 355497.
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     FixedInvokeArgs<0> args(cx);
 
@@ -628,7 +630,8 @@ js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHand
 bool
 js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue v)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     FixedInvokeArgs<1> args(cx);
 
@@ -1176,17 +1179,6 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
                 // onExceptionUnwind should be called anew with the new
                 // location of the throw (the iterator). Indeed, we must
                 // settle to avoid infinitely handling the same exception.
-                SettleOnTryNote(cx, tn, ei, regs);
-                return ErrorReturnContinuation;
-            }
-            break;
-          }
-
-          case JSTRY_ITERCLOSE: {
-            // The iterator object is at the top of the stack.
-            Value* sp = regs.spForStackDepth(tn->stackDepth);
-            RootedObject iterObject(cx, &sp[-1].toObject());
-            if (!IteratorCloseForException(cx, iterObject)) {
                 SettleOnTryNote(cx, tn, ei, regs);
                 return ErrorReturnContinuation;
             }
@@ -1881,7 +1873,6 @@ CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
 CASE(JSOP_UNUSED211)
-CASE(JSOP_UNUSED219)
 CASE(JSOP_UNUSED220)
 CASE(JSOP_UNUSED221)
 CASE(JSOP_UNUSED222)
@@ -2626,6 +2617,15 @@ CASE(JSOP_CHECKISOBJ)
     }
 }
 END_CASE(JSOP_CHECKISOBJ)
+
+CASE(JSOP_CHECKISCALLABLE)
+{
+    if (!IsCallable(REGS.sp[-1])) {
+        MOZ_ALWAYS_FALSE(ThrowCheckIsCallable(cx, CheckIsCallableKind(GET_UINT8(REGS.pc))));
+        goto error;
+    }
+}
+END_CASE(JSOP_CHECKISCALLABLE)
 
 CASE(JSOP_CHECKTHIS)
 {
@@ -5033,6 +5033,19 @@ js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
         break;
       case CheckIsObjectKind::GetIterator:
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+        break;
+      default:
+        MOZ_CRASH("Unknown kind");
+    }
+    return false;
+}
+
+bool
+js::ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind)
+{
+    switch (kind) {
+      case CheckIsCallableKind::IteratorReturn:
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RETURN_NOT_CALLABLE);
         break;
       default:
         MOZ_CRASH("Unknown kind");
