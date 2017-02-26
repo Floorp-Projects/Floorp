@@ -56,7 +56,8 @@ ListContainsHoistedDeclaration(JSContext* cx, ListNode* list, bool* result)
 static bool
 ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
   restart:
 
@@ -1635,7 +1636,8 @@ FoldName(JSContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
 bool
 Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGenexpLambda)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     ParseNode* pn = *pnp;
 
