@@ -13,7 +13,7 @@ interface nsITokenDialogs : nsISupports
   void ChooseToken(in nsIInterfaceRequestor ctx,
                    [array, size_is(count)] in wstring tokenNameList,
                    in unsigned long count,
-                   out wstring tokenName,
+                   out AString tokenName,
                    out boolean canceled);
 
     /**

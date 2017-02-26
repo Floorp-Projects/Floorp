@@ -175,7 +175,7 @@ SecretDecoderRing::ChangePassword()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   bool canceled; // Ignored
-  return dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+  return dialogs->SetPassword(ctx, tokenName, &canceled);
 }
 
 NS_IMETHODIMP
