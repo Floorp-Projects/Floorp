@@ -35,13 +35,6 @@ interface nsIVerifySignedDirectoryCallback : nsISupports
                                      in nsIX509Cert aSignerCert);
 };
 
-[scriptable, function, uuid(3d6a9c87-5c5f-46fc-9410-96da6092f0f2)]
-interface nsIVerifySignedManifestCallback : nsISupports
-{
-  void verifySignedManifestFinished(in nsresult rv,
-                                    in nsIX509Cert aSignerCert);
-};
-
 /**
  * Callback type for use with asyncVerifyCertAtTime.
  * If aPRErrorCode is PRErrorCodeSuccess (i.e. 0), aVerifiedChain represents the
@@ -276,22 +269,6 @@ interface nsIX509CertDB : nsISupports {
   void verifySignedDirectoryAsync(in AppTrustedRoot trustedRoot,
                                   in nsIFile aUnpackedDir,
                                   in nsIVerifySignedDirectoryCallback callback);
-
-  /**
-   * Given streams containing a signature and a manifest file, verifies
-   * that the signature is valid for the manifest. The signature must
-   * come from a certificate that is trusted for code signing and that
-   * was issued by the given trusted root.
-   *
-   *  On success, NS_OK and the trusted certificate that signed the
-   *  Manifest are returned.
-   *
-   *  On failure, an error code is returned.
-   */
-  void verifySignedManifestAsync(in AppTrustedRoot trustedRoot,
-                                 in nsIInputStream aManifestStream,
-                                 in nsIInputStream aSignatureStream,
-                                 in nsIVerifySignedManifestCallback callback);
 
   /*
    * Add a cert to a cert DB from a binary string.

@@ -878,87 +878,6 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   return NS_OK;
 }
 
-nsresult
-VerifySignedManifest(AppTrustedRoot aTrustedRoot,
-                     nsIInputStream* aManifestStream,
-                     nsIInputStream* aSignatureStream,
-                     /*out, optional */ nsIX509Cert** aSignerCert)
-{
-  NS_ENSURE_ARG(aManifestStream);
-  NS_ENSURE_ARG(aSignatureStream);
-
-  if (aSignerCert) {
-    *aSignerCert = nullptr;
-  }
-
-  // Load signature file in buffer
-  ScopedAutoSECItem signatureBuffer;
-  nsresult rv = ReadStream(aSignatureStream, signatureBuffer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  signatureBuffer.type = siBuffer;
-
-  // Load manifest file in buffer
-  ScopedAutoSECItem manifestBuffer;
-  rv = ReadStream(aManifestStream, manifestBuffer);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Calculate SHA1 digest of the manifest buffer
-  Digest manifestCalculatedDigest;
-  rv = manifestCalculatedDigest.DigestBuf(SEC_OID_SHA1,
-                                          manifestBuffer.data,
-                                          manifestBuffer.len - 1); // buffer is null terminated
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Get base64 encoded string from manifest buffer digest
-  UniquePORTString
-    base64EncDigest(NSSBase64_EncodeItem(nullptr, nullptr, 0,
-                      const_cast<SECItem*>(&manifestCalculatedDigest.get())));
-  if (NS_WARN_IF(!base64EncDigest)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Calculate SHA1 digest of the base64 encoded string
-  Digest doubleDigest;
-  rv = doubleDigest.DigestBuf(SEC_OID_SHA1,
-                              BitwiseCast<uint8_t*, char*>(base64EncDigest.get()),
-                              strlen(base64EncDigest.get()));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Verify the manifest signature (signed digest of the base64 encoded string)
-  UniqueCERTCertList builtChain;
-  rv = VerifySignature(aTrustedRoot, signatureBuffer,
-                       doubleDigest.get(), builtChain);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Return the signer's certificate to the reader if they want it.
-  if (aSignerCert) {
-    CERTCertListNode* signerCertNode = CERT_LIST_HEAD(builtChain);
-    if (!signerCertNode || CERT_LIST_END(signerCertNode, builtChain) ||
-        !signerCertNode->cert) {
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIX509Cert> signerCert =
-      nsNSSCertificate::Create(signerCertNode->cert);
-    if (NS_WARN_IF(!signerCert)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    signerCert.forget(aSignerCert);
-  }
-
-  return NS_OK;
-}
-
 class OpenSignedAppFileTask final : public CryptoTask
 {
 public:
@@ -994,44 +913,6 @@ private:
   nsCOMPtr<nsIX509Cert> mSignerCert; // out
 };
 
-class VerifySignedmanifestTask final : public CryptoTask
-{
-public:
-  VerifySignedmanifestTask(AppTrustedRoot aTrustedRoot,
-                           nsIInputStream* aManifestStream,
-                           nsIInputStream* aSignatureStream,
-                           nsIVerifySignedManifestCallback* aCallback)
-    : mTrustedRoot(aTrustedRoot)
-    , mManifestStream(aManifestStream)
-    , mSignatureStream(aSignatureStream)
-    , mCallback(
-      new nsMainThreadPtrHolder<nsIVerifySignedManifestCallback>(aCallback))
-  {
-  }
-
-private:
-  virtual nsresult CalculateResult() override
-  {
-    return VerifySignedManifest(mTrustedRoot, mManifestStream,
-                                mSignatureStream, getter_AddRefs(mSignerCert));
-  }
-
-  // nsNSSCertificate implements nsNSSShutdownObject, so there's nothing that
-  // needs to be released
-  virtual void ReleaseNSSResources() override { }
-
-  virtual void CallCallback(nsresult rv) override
-  {
-    (void) mCallback->VerifySignedManifestFinished(rv, mSignerCert);
-  }
-
-  const AppTrustedRoot mTrustedRoot;
-  const nsCOMPtr<nsIInputStream> mManifestStream;
-  const nsCOMPtr<nsIInputStream> mSignatureStream;
-  nsMainThreadPtrHandle<nsIVerifySignedManifestCallback> mCallback;
-  nsCOMPtr<nsIX509Cert> mSignerCert; // out
-};
-
 } // unnamed namespace
 
 NS_IMETHODIMP
@@ -1046,22 +927,6 @@ nsNSSCertificateDB::OpenSignedAppFileAsync(
                                                                aCallback));
   return task->Dispatch("SignedJAR");
 }
-
-NS_IMETHODIMP
-nsNSSCertificateDB::VerifySignedManifestAsync(
-  AppTrustedRoot aTrustedRoot, nsIInputStream* aManifestStream,
-  nsIInputStream* aSignatureStream, nsIVerifySignedManifestCallback* aCallback)
-{
-  NS_ENSURE_ARG_POINTER(aManifestStream);
-  NS_ENSURE_ARG_POINTER(aSignatureStream);
-  NS_ENSURE_ARG_POINTER(aCallback);
-
-  RefPtr<VerifySignedmanifestTask> task(
-    new VerifySignedmanifestTask(aTrustedRoot, aManifestStream,
-                                 aSignatureStream, aCallback));
-  return task->Dispatch("SignedManifest");
-}
-
 
 //
 // Signature verification for archives unpacked into a file structure
