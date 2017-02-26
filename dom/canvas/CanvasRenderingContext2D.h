@@ -29,6 +29,7 @@
 #include "FilterSupport.h"
 #include "nsSVGEffects.h"
 #include "Layers.h"
+#include "nsBidi.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -863,6 +864,8 @@ protected:
   };
 
   nsTArray<RegionInfo> mHitRegionsOptions;
+
+  nsBidi mBidiEngine;
 
   /**
     * Returns true if a shadow should be drawn along with a
