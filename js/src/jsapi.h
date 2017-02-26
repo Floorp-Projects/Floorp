@@ -6662,5 +6662,14 @@ SetGetPerformanceGroupsCallback(JSContext*, GetGroupsCallback, void*);
 
 } /* namespace js */
 
+namespace js {
+
+enum class CompletionKind {
+    Normal,
+    Return,
+    Throw
+};
+
+} /* namespace js */
 
 #endif /* jsapi_h */

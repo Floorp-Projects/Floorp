@@ -2600,8 +2600,6 @@ TryNoteName(JSTryNoteKind kind)
         return "for-of";
       case JSTRY_LOOP:
         return "loop";
-      case JSTRY_ITERCLOSE:
-        return "iterclose";
       case JSTRY_DESTRUCTURING_ITERCLOSE:
         return "dstr-iterclose";
     }
