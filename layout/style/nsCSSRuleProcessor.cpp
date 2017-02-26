@@ -3673,9 +3673,11 @@ nsCSSRuleProcessor::CascadeSheet(CSSStyleSheet* aSheet, CascadeEnumData* aData)
       child = child->mNext;
     }
 
-    if (!aSheet->Inner()->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
-                                                         aData))
-      return false;
+    for (css::Rule* rule : aSheet->Inner()->mOrderedRules) {
+      if (!CascadeRuleEnumFunc(rule, aData)) {
+        return false;
+      }
+    }
   }
   return true;
 }
