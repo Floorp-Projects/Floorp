@@ -46,8 +46,8 @@ add_task(function* () {
 
   // Host
   is(tabpanel.querySelectorAll(".treeLabel.objectLabel")[1].textContent,
-    "Host example.com:",
-    "Label has the expected value.");
+     "Host example.com:",
+     "Label has the expected value.");
   is(textboxes[2].value, "Disabled", "Label has the expected value.");
   is(textboxes[3].value, "Disabled", "Label has the expected value.");
 
@@ -56,7 +56,8 @@ add_task(function* () {
   is(textboxes[5].value, "<Not Available>", "Label has the expected value.");
   is(textboxes[6].value, "<Not Available>", "Label has the expected value.");
 
-  is(textboxes[7].value, "Temporary Certificate Authority", "Label has the expected value.");
+  is(textboxes[7].value, "Temporary Certificate Authority",
+     "Label has the expected value.");
   is(textboxes[8].value, "Mozilla Testing", "Label has the expected value.");
   is(textboxes[9].value, "Profile Guided Optimization", "Label has the expected value.");
 

@@ -15,27 +15,30 @@
     <p>Performing a custom number of GETs</p>
 
     <script type="text/javascript">
-      function get(aAddress, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress, true);
+      /* exported performRequests */
+      "use strict";
 
-        xhr.onreadystatechange = function() {
+      function get(address, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send(null);
       }
 
       // Use a count parameter to defeat caching.
-      var count = 0;
+      let count = 0;
 
-      function performRequests(aTotal, aUrl, aTimeout = 0) {
-        if (!aTotal) {
+      function performRequests(total, url, timeout = 0) {
+        if (!total) {
           return;
         }
-        get(aUrl || "request_" + (count++), function() {
-          setTimeout(performRequests.bind(this, --aTotal, aUrl, aTimeout), aTimeout);
+        get(url || "request_" + (count++), function () {
+          setTimeout(performRequests.bind(this, --total, url, timeout), timeout);
         });
       }
     </script>

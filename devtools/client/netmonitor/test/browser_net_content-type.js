@@ -41,8 +41,9 @@ add_task(function* () {
       fullMimeType: "text/xml; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 42),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(1),
@@ -55,8 +56,9 @@ add_task(function* () {
       fullMimeType: "text/css; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(2),
@@ -69,8 +71,9 @@ add_task(function* () {
       fullMimeType: "application/javascript; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(3),
@@ -83,26 +86,30 @@ add_task(function* () {
       fullMimeType: "application/json; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(4),
     "GET",
-    CONTENT_TYPE_SJS + "?fmt=bogus", {
+    CONTENT_TYPE_SJS + "?fmt=bogus",
+    {
       status: 404,
       statusText: "Not Found",
       type: "html",
       fullMimeType: "text/html; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 24),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(5),
     "GET",
-    TEST_IMAGE, {
+    TEST_IMAGE,
+    {
       fuzzyUrl: true,
       status: 200,
       statusText: "OK",
@@ -110,13 +117,15 @@ add_task(function* () {
       fullMimeType: "image/png",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 580),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(6),
     "GET",
-    CONTENT_TYPE_SJS + "?fmt=gzip", {
+    CONTENT_TYPE_SJS + "?fmt=gzip",
+    {
       status: 200,
       statusText: "OK",
       type: "plain",
@@ -124,7 +133,8 @@ add_task(function* () {
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 73),
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
       time: true
-    });
+    }
+  );
 
   yield selectIndexAndWaitForEditor(0);
   yield testResponseTab("xml");

@@ -17,8 +17,10 @@
     <img src="img_request" />
     <iframe src="html_frame-subdocument.html"></iframe>
     <script type="text/javascript">
+      "use strict";
+
       function performXhrRequest() {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("GET", "xhr_request", true);
         xhr.send();
       }

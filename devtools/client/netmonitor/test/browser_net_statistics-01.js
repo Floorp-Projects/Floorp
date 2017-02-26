@@ -27,21 +27,25 @@ add_task(function* () {
   info("Waiting for placeholder to display");
 
   yield waitUntil(
-    () => document.querySelectorAll(".pie-chart-container[placeholder=true]").length == 2);
+    () => document.querySelectorAll(".pie-chart-container[placeholder=true]")
+                  .length == 2);
   ok(true, "Two placeholder pie charts appear to be rendered correctly.");
 
   yield waitUntil(
-    () => document.querySelectorAll(".table-chart-container[placeholder=true]").length == 2);
+    () => document.querySelectorAll(".table-chart-container[placeholder=true]")
+                  .length == 2);
   ok(true, "Two placeholde table charts appear to be rendered correctly.");
 
   info("Waiting for chart to display");
 
   yield waitUntil(
-    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])").length == 2);
+    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])")
+                  .length == 2);
   ok(true, "Two real pie charts appear to be rendered correctly.");
 
   yield waitUntil(
-    () => document.querySelectorAll(".table-chart-container:not([placeholder=true])").length == 2);
+    () => document.querySelectorAll(".table-chart-container:not([placeholder=true])")
+                  .length == 2);
   ok(true, "Two real table charts appear to be rendered correctly.");
 
   yield teardown(monitor);

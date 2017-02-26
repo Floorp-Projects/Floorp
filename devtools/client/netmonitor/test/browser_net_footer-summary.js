@@ -49,8 +49,9 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    let value = document.querySelector(".requests-list-network-summary-button").textContent;
-   info("Current summary: " + value);
+    let value = document.querySelector(".requests-list-network-summary-button")
+                        .textContent;
+    info("Current summary: " + value);
 
     let state = gStore.getState();
     let totalRequestsCount = state.requests.requests.size;

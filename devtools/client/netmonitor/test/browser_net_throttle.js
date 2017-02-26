@@ -14,8 +14,7 @@ function* throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
-  let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
-  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
   let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let {

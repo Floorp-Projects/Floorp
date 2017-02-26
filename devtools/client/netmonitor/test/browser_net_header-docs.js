@@ -16,7 +16,6 @@ add_task(function* () {
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let {
-    getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");
 
@@ -40,17 +39,19 @@ add_task(function* () {
    * and only if a header is documented in MDN.
    */
   function testShowLearnMore(data) {
-    document.querySelectorAll(".properties-view .treeRow.stringRow").forEach((rowEl, index) => {
-      let headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0].textContent;
+    let selector = ".properties-view .treeRow.stringRow";
+    document.querySelectorAll(selector).forEach((rowEl, index) => {
+      let headerName = rowEl.querySelectorAll(".treeLabelCell .treeLabel")[0]
+                            .textContent;
       let headerDocURL = getHeadersURL(headerName);
       let learnMoreEl = rowEl.querySelectorAll(".treeValueCell .learn-more-link");
 
       if (headerDocURL === null) {
         ok(learnMoreEl.length === 0,
-          "undocumented header does not include a \"Learn More\" button");
+           "undocumented header does not include a \"Learn More\" button");
       } else {
         ok(learnMoreEl[0].getAttribute("title") === headerDocURL,
-          "documented header includes a \"Learn More\" button with a link to MDN");
+           "documented header includes a \"Learn More\" button with a link to MDN");
       }
     });
   }
