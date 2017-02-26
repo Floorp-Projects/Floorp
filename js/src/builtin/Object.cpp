@@ -114,7 +114,9 @@ static bool
 obj_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_CHECK_RECURSION(cx, return false);
+
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)

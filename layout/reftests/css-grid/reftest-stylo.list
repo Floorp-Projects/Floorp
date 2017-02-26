@@ -174,8 +174,8 @@ fails == grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007.html
 fails == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008.html
 fails == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009.html
 fails == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010.html
-# == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-011.html # bug 1342710
-fails == grid-item-blockifying-001.html grid-item-blockifying-001.html # bug 1335339
+fails == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-011.html
+fails == grid-item-blockifying-001.html grid-item-blockifying-001.html
 fails == grid-fragmentation-001.html grid-fragmentation-001.html
 fails == grid-fragmentation-002.html grid-fragmentation-002.html
 fails == grid-fragmentation-003.html grid-fragmentation-003.html

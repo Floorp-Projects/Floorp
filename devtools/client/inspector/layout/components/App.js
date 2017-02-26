@@ -32,6 +32,7 @@ const App = createClass({
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
     setSelectedNode: PropTypes.func.isRequired,
     showBoxModelProperties: PropTypes.bool.isRequired,
+    showGridOutline: PropTypes.bool.isRequired,
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,

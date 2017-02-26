@@ -78,7 +78,7 @@ public:
   // This function does not call ProcessAttachedQueue() on the binding manager.
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
-  nsresult ProcessRestyledFrames(nsStyleChangeList& aChangeList);
+  void ProcessRestyledFrames(nsStyleChangeList& aChangeList);
 
   bool IsInStyleRefresh() const { return mInStyleRefresh; }
 
