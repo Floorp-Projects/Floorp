@@ -13,6 +13,7 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/JitFrames.h"
+#include "vm/Interpreter.h"
 
 namespace js {
 
@@ -818,6 +819,9 @@ CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
 
 MOZ_MUST_USE bool
 EqualStringsHelper(JSString* str1, JSString* str2);
+
+MOZ_MUST_USE bool
+CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind);
 
 } // namespace jit
 } // namespace js

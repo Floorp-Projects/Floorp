@@ -1398,5 +1398,14 @@ EqualStringsHelper(JSString* str1, JSString* str2)
     return EqualChars(&str1->asLinear(), str2Linear);
 }
 
+bool
+CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind)
+{
+    if (!IsCallable(v))
+        return ThrowCheckIsCallable(cx, kind);
+
+    return true;
+}
+
 } // namespace jit
 } // namespace js

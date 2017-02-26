@@ -11517,25 +11517,35 @@ class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
+template <CodeGenerator::CallableOrConstructor mode>
 void
-CodeGenerator::visitIsCallable(LIsCallable* ins)
+CodeGenerator::emitIsCallableOrConstructor(Register object, Register output, Label* failure)
 {
-    Register object = ToRegister(ins->object());
-    Register output = ToRegister(ins->output());
-
-    OutOfLineIsCallable* ool = new(alloc()) OutOfLineIsCallable(ins);
-    addOutOfLineCode(ool, ins->mir());
-
     Label notFunction, hasCOps, done;
     masm.loadObjClass(object, output);
 
-    // Just skim proxies off. Their notion of isCallable() is more complicated.
-    masm.branchTestClassIsProxy(true, output, ool->entry());
+    // Just skim proxies off. Their notion of isCallable()/isConstructor() is
+    // more complicated.
+    masm.branchTestClassIsProxy(true, output, failure);
 
     // An object is callable iff:
     //   is<JSFunction>() || (getClass()->cOps && getClass()->cOps->call).
+    // An object is constructor iff:
+    //  ((is<JSFunction>() && as<JSFunction>().isConstructor) ||
+    //   (getClass()->cOps && getClass()->cOps->construct)).
     masm.branchPtr(Assembler::NotEqual, output, ImmPtr(&JSFunction::class_), &notFunction);
-    masm.move32(Imm32(1), output);
+    if (mode == Callable) {
+        masm.move32(Imm32(1), output);
+    } else {
+        Label notConstructor;
+        masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
+        masm.and32(Imm32(JSFunction::CONSTRUCTOR), output);
+        masm.branchTest32(Assembler::Zero, output, output, &notConstructor);
+        masm.move32(Imm32(1), output);
+        masm.jump(&done);
+        masm.bind(&notConstructor);
+        masm.move32(Imm32(0), output);
+    }
     masm.jump(&done);
 
     masm.bind(&notFunction);
@@ -11546,10 +11556,26 @@ CodeGenerator::visitIsCallable(LIsCallable* ins)
 
     masm.bind(&hasCOps);
     masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
-    masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, call)),
+    size_t opsOffset = mode == Callable
+                       ? offsetof(js::ClassOps, call)
+                       : offsetof(js::ClassOps, construct);
+    masm.cmpPtrSet(Assembler::NonZero, Address(output, opsOffset),
                    ImmPtr(nullptr), output);
 
     masm.bind(&done);
+}
+
+void
+CodeGenerator::visitIsCallable(LIsCallable* ins)
+{
+    Register object = ToRegister(ins->object());
+    Register output = ToRegister(ins->output());
+
+    OutOfLineIsCallable* ool = new(alloc()) OutOfLineIsCallable(ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    emitIsCallableOrConstructor<Callable>(object, output, ool->entry());
+
     masm.bind(ool->rejoin());
 }
 
@@ -11567,6 +11593,36 @@ CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool)
     masm.storeCallBoolResult(output);
     restoreVolatile(output);
     masm.jump(ool->rejoin());
+}
+
+typedef bool (*CheckIsCallableFn)(JSContext*, HandleValue, CheckIsCallableKind);
+static const VMFunction CheckIsCallableInfo =
+    FunctionInfo<CheckIsCallableFn>(CheckIsCallable, "CheckIsCallable");
+
+void
+CodeGenerator::visitCheckIsCallable(LCheckIsCallable* ins)
+{
+    ValueOperand checkValue = ToValue(ins, LCheckIsCallable::CheckValue);
+    Register temp = ToRegister(ins->temp());
+
+    // OOL code is used in the following 2 cases:
+    //   * checkValue is not callable
+    //   * checkValue is proxy and it's unknown whether it's callable or not
+    // CheckIsCallable checks if passed value is callable, regardless of the
+    // cases above.  IsCallable operation is not observable and checking it
+    // again doesn't matter.
+    OutOfLineCode* ool = oolCallVM(CheckIsCallableInfo, ins,
+                                   ArgList(checkValue, Imm32(ins->mir()->checkKind())),
+                                   StoreNothing());
+
+    masm.branchTestObject(Assembler::NotEqual, checkValue, ool->entry());
+
+    Register object = masm.extractObject(checkValue, temp);
+    emitIsCallableOrConstructor<Callable>(object, temp, ool->entry());
+
+    masm.branchTest32(Assembler::Zero, temp, temp, ool->entry());
+
+    masm.bind(ool->rejoin());
 }
 
 class OutOfLineIsConstructor : public OutOfLineCodeBase<CodeGenerator>
@@ -11595,37 +11651,8 @@ CodeGenerator::visitIsConstructor(LIsConstructor* ins)
     OutOfLineIsConstructor* ool = new(alloc()) OutOfLineIsConstructor(ins);
     addOutOfLineCode(ool, ins->mir());
 
-    Label notFunction, notConstructor, hasCOps, done;
-    masm.loadObjClass(object, output);
+    emitIsCallableOrConstructor<Constructor>(object, output, ool->entry());
 
-    // Just skim proxies off. Their notion of isConstructor() is more complicated.
-    masm.branchTestClassIsProxy(true, output, ool->entry());
-
-    // An object is constructor iff
-    //  ((is<JSFunction>() && as<JSFunction>().isConstructor) ||
-    //   (getClass()->cOps && getClass()->cOps->construct)).
-    masm.branchPtr(Assembler::NotEqual, output, ImmPtr(&JSFunction::class_), &notFunction);
-    masm.load16ZeroExtend(Address(object, JSFunction::offsetOfFlags()), output);
-    masm.and32(Imm32(JSFunction::CONSTRUCTOR), output);
-    masm.branchTest32(Assembler::Zero, output, output, &notConstructor);
-    masm.move32(Imm32(1), output);
-    masm.jump(&done);
-    masm.bind(&notConstructor);
-    masm.move32(Imm32(0), output);
-    masm.jump(&done);
-
-    masm.bind(&notFunction);
-    masm.branchPtr(Assembler::NonZero, Address(output, offsetof(js::Class, cOps)),
-                   ImmPtr(nullptr), &hasCOps);
-    masm.move32(Imm32(0), output);
-    masm.jump(&done);
-
-    masm.bind(&hasCOps);
-    masm.loadPtr(Address(output, offsetof(js::Class, cOps)), output);
-    masm.cmpPtrSet(Assembler::NonZero, Address(output, offsetof(js::ClassOps, construct)),
-                   ImmPtr(nullptr), output);
-
-    masm.bind(&done);
     masm.bind(ool->rejoin());
 }
 
