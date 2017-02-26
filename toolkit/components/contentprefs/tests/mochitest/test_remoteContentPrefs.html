@@ -10,8 +10,9 @@
 </head>
 <body>
 
-  <script type="application/javascript;version=1.8">
+  <script type="application/javascript">
     "use strict";
+    /* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
 
     SimpleTest.waitForExplicitFinish();
 
@@ -20,7 +21,9 @@
 
     function childFrameScript(isFramePrivate) {
       "use strict";
+      /* global addMessageListener */
 
+      /* eslint no-shadow: 0 */
       function Defer() {
         let d = {};
         d.promise = new Promise((resolve, reject) => {
@@ -60,7 +63,7 @@
 
         let setPref = Defer();
         cps.setGlobal("testing", 42, null, {
-          handleCompletion: function(reason) {
+          handleCompletion(reason) {
             tester.is(reason, 0, "set a pref?");
             setPref.resolve();
           }
@@ -71,13 +74,13 @@
         let numResults = 0;
         let gotGlobal = Defer();
         cps.getGlobal("testing", null, {
-          handleResult: function(pref) {
+          handleResult(pref) {
             numResults++;
             tester.is(pref.name, "testing", "pref has the right name");
             tester.is(pref.value, 42, "pref has the right value");
           },
 
-          handleCompletion: function(reason) {
+          handleCompletion(reason) {
             tester.is(reason, 0, "get a pref?");
             tester.is(numResults, 1, "got the right number of prefs");
             gotGlobal.resolve();
@@ -95,7 +98,7 @@
         let gotSet = Defer();
         let gotRemoved = Defer();
         cps.addObserverForName("testName", observer = {
-          onContentPrefSet: function(group, name, value, isPrivate) {
+          onContentPrefSet(group, name, value, isPrivate) {
             tester.info("received prefSet notification");
             if (removed) {
               mm.sendAsyncMessage("testRemoteContentPrefs:fail",
@@ -109,7 +112,7 @@
             gotSet.resolve();
           },
 
-          onContentPrefRemoved: function(group, name, isPrivate) {
+          onContentPrefRemoved(group, name, isPrivate) {
             tester.info("received prefRemoved notification");
             tester.is(group, null, "group should be null");
             tester.is(name, "testName", "name should match");
@@ -134,10 +137,11 @@
 
         let setGlobalDone = Defer();
         cps.setGlobal("testName", 42, null, {
-          handleCompletion: function(reason) {
+          handleCompletion(reason) {
             tester.is(reason, 0, "set a pref");
             cps.set("http://mochi.test", "testpref", "str", null, {
-              handleCompletion: function(reason) {
+              /* eslint no-shadow: 0 */
+              handleCompletion(reason) {
                 tester.is(reason, 0, "set a pref");
                 setGlobalDone.resolve();
               }
@@ -149,17 +153,17 @@
 
         let removeDone = Defer();
         cps.removeByDomain("http://mochi.test", null, {
-          handleCompletion: function(reason) {
+          handleCompletion(reason) {
             tester.is(reason, 0, "remove succeeded");
             cps.getByDomainAndName("http://mochi.test", "testpref", null, {
-              handleResult: function() {
+              handleResult() {
                 mm.sendAsyncMessage("testRemoteContentPrefs:fail",
                                     { reason: "got removed pref in test3" });
               },
-              handleCompletion: function() {
+              handleCompletion() {
                 removeDone.resolve();
               },
-              handleError: function(rv) {
+              handleError(rv) {
                 mm.sendAsyncMessage("testRemoteContentPrefs:fail",
                                     { reason: `got a pref error ${rv}` });
               }
@@ -175,10 +179,10 @@
 
         let observed = Defer();
         let prefObserver = {
-          onContentPrefSet: function(group, name, value, isPrivate) {
+          onContentPrefSet(group, name, value, isPrivate) {
             observed.resolve({ group, name, value, isPrivate });
           },
-          onContentPrefRemoved: function(group, name, isPrivate) {
+          onContentPrefRemoved(group, name, isPrivate) {
             observed.reject("got unexpected notification");
           }
         };
@@ -278,15 +282,15 @@
       mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
         let results = [];
         cps.getByDomainAndName(msg.data.group, msg.data.name, null, {
-          handleResult: function(pref) {
+          handleResult(pref) {
             info("received handleResult");
             results.push(pref);
           },
-          handleCompletion: function(reason) {
+          handleCompletion(reason) {
             mm.sendAsyncMessage("testRemoteContentPrefs:prefResults",
                                 { results });
           },
-          handleError: function(rv) {
+          handleError(rv) {
             ok(false, `failed to get pref ${rv}`);
             curTest.reject("got unexpected error");
           }
@@ -296,7 +300,7 @@
       mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
       yield curTest.promise;
 
-      document.getElementById('iframe').remove();
+      document.getElementById("iframe").remove();
     }
 
     function runTest(isPrivate) {

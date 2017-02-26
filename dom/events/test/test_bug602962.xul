@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602962
 </div>
 </body>
 
-<script class="testbody" type="application/javascript;version=1.8"><![CDATA[
+<script class="testbody" type="application/javascript"><![CDATA[
 /** Test for Bug 602962 **/
 var scrollbox, sbo, content;
 var scrollX = 0, scrollY = 0;

@@ -12,7 +12,7 @@
   </body>
 
   <!-- test code goes here -->
-  <script type="application/javascript;version=1.7"><![CDATA[
+  <script type="application/javascript"><![CDATA[
 "use strict";
 /** Test for Bug 816410 **/
 

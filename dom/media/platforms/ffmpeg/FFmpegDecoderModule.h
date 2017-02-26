@@ -42,7 +42,7 @@ public:
     }
     if (aParams.mOptions.contains(
           CreateDecoderParams::Option::LowLatency) &&
-        !MediaPrefs::PDMFFVPXLowLatencyEnabled()) {
+        !MediaPrefs::PDMFFmpegLowLatencyEnabled()) {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(

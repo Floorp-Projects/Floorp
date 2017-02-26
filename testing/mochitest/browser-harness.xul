@@ -62,7 +62,7 @@
       text-decoration: underline;
     }
   ]]></style>
-  <script type="application/javascript;version=1.7"><![CDATA[
+  <script type="application/javascript"><![CDATA[
     if (Cc === undefined) {
       var Cc = Components.classes;
       var Ci = Components.interfaces;

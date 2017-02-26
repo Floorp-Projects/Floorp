@@ -2064,6 +2064,12 @@ const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kTextSizeAdjustKTable[] = {
+  { eCSSKeyword_none, NS_STYLE_TEXT_SIZE_ADJUST_NONE },
+  { eCSSKeyword_auto, NS_STYLE_TEXT_SIZE_ADJUST_AUTO },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 const KTableEntry nsCSSProps::kTextTransformKTable[] = {
   { eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE },
   { eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE },

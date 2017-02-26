@@ -114,16 +114,17 @@ pub mod parsing {
     use super::*;
     use Lifetime;
     use generics::parsing::lifetime;
-    use ident::parsing::{ident, word};
+    use ident::parsing::word;
     use lit::parsing::lit;
-    use space::{block_comment, whitespace};
+    use synom::space::{block_comment, whitespace};
+    use ty::parsing::path;
 
     named!(pub mac -> Mac, do_parse!(
-        name: ident >>
+        what: path >>
         punct!("!") >>
         body: delimited >>
         (Mac {
-            path: name.into(),
+            path: what,
             tts: vec![TokenTree::Delimited(body)],
         })
     ));
@@ -150,7 +151,7 @@ pub mod parsing {
         ) => { |tts| Delimited { delim: DelimToken::Brace, tts: tts } }
     ));
 
-    named!(token_tree -> TokenTree, alt!(
+    named!(pub token_tree -> TokenTree, alt!(
         map!(token, TokenTree::Token)
         |
         map!(delimited, TokenTree::Delimited)
@@ -282,7 +283,7 @@ pub mod parsing {
         |
         do_parse!(
             punct!("///") >>
-            not!(peek!(tag!("/"))) >>
+            not!(tag!("/")) >>
             content: take_until!("\n") >>
             (format!("///{}", content))
         )
