@@ -331,7 +331,6 @@ static void
 CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote* tn)
 {
     MOZ_ASSERT(tn->kind == JSTRY_FOR_IN ||
-               tn->kind == JSTRY_ITERCLOSE ||
                tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE);
 
     bool isDestructuring = tn->kind == JSTRY_DESTRUCTURING_ITERCLOSE;
@@ -442,7 +441,6 @@ HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame, ResumeFromEx
 
         switch (tn->kind) {
           case JSTRY_FOR_IN:
-          case JSTRY_ITERCLOSE:
           case JSTRY_DESTRUCTURING_ITERCLOSE:
             MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN,
                           JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
@@ -632,19 +630,6 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
                 // ProcessTryNotes.
                 SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
                 MOZ_ASSERT(**pc == JSOP_ENDITER);
-                return false;
-            }
-            break;
-          }
-
-          case JSTRY_ITERCLOSE: {
-            uint8_t* framePointer;
-            uint8_t* stackPointer;
-            BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer, &stackPointer);
-            Value iterValue(*reinterpret_cast<Value*>(stackPointer));
-            RootedObject iterObject(cx, &iterValue.toObject());
-            if (!IteratorCloseForException(cx, iterObject)) {
-                SettleOnTryNote(cx, tn, frame, ei, rfe, pc);
                 return false;
             }
             break;
