@@ -88,7 +88,7 @@ load 370174-1.html
 load 370174-2.html
 load 370174-3.html
 load 370174-4.html
-asserts-if(stylo,4) load 370699-1.html # bug 1324633
+load 370699-1.html
 load 370794-1.html
 load 370866-1.xhtml
 load 370884-1.xhtml
@@ -360,7 +360,7 @@ load 494300-1.xul
 load 494332-1.html
 load 495875-1.html
 load 495875-2.html
-asserts-if(stylo,4-16) load 496742.html # bug 1324633
+load 496742.html
 load 499138.html
 asserts-if(stylo,1) load 499857-1.html # bug 1324665
 load 499862-1.html
