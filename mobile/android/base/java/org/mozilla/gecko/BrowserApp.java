@@ -2219,6 +2219,9 @@ public class BrowserApp extends GeckoApp
             if (mDoorHangerPopup != null) {
                 mDoorHangerPopup.disable();
             }
+            if (mTabStrip != null) {
+                mTabStrip.tabStripIsCovered(true);
+            }
             mTabsPanel.show(panel);
 
             // Hide potentially visible "find in page" bar (Bug 1177338)
@@ -2233,6 +2236,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void hideTabs() {
         mTabsPanel.hide();
+        if (mTabStrip != null) {
+            mTabStrip.tabStripIsCovered(false);
+        }
         if (mDoorHangerPopup != null) {
             mDoorHangerPopup.enable();
         }
@@ -4132,6 +4138,10 @@ public class BrowserApp extends GeckoApp
 
     public static interface TabStripInterface {
         public void refresh();
+        /** Called to let the tab strip know it is now, or is now no longer, being hidden by
+         *  something being drawn over it.
+         */
+        void tabStripIsCovered(boolean covered);
         void setOnTabChangedListener(OnTabAddedOrRemovedListener listener);
         interface OnTabAddedOrRemovedListener {
             void onTabChanged();

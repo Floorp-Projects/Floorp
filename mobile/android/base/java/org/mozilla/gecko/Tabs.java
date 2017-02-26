@@ -697,6 +697,7 @@ public class Tabs implements BundleEventListener {
         UNSELECTED,
         ADDED,
         RESTORED,
+        MOVED,
         LOCATION_CHANGE,
         MENU_UPDATED,
         PAGE_SHOW,
@@ -1176,6 +1177,8 @@ public class Tabs implements BundleEventListener {
         }
 
         queuePersistAllTabs();
+
+        notifyListeners(mOrder.get(toPosition), TabEvents.MOVED);
 
         final GeckoBundle data = new GeckoBundle();
         data.putInt("fromTabId", fromTabId);
