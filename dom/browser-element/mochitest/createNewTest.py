@@ -21,7 +21,7 @@ html_template = textwrap.dedent("""\
       <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     </head>
     <body>
-    <script type="application/javascript;version=1.7" src="browserElement_{test}.js">
+    <script type="application/javascript" src="browserElement_{test}.js">
     </script>
     </body>
     </html>""")
