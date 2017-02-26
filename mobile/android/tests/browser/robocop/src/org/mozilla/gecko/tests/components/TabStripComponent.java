@@ -12,22 +12,19 @@ import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 
+import java.util.List;
+
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
 /**
  * A class representing any interactions that take place on the tablet tab strip.
  */
-public class TabStripComponent extends BaseComponent {
+public class TabStripComponent extends TabsPresenterComponent {
     // Using a text id because the layout and therefore the id might be stripped from the (non-tablet) build
     private static final String TAB_STRIP_ID = "tab_strip";
 
     public TabStripComponent(final UITestContext testContext) {
         super(testContext);
-    }
-
-    public TabStripComponent assertTabCount(int count) {
-        fAssertEquals("The tab strip tab count is " + count, count, getTabStripView().getAdapter().getItemCount());
-        return this;
     }
 
     /**
@@ -44,6 +41,7 @@ public class TabStripComponent extends BaseComponent {
         mSolo.clickOnView(tabView);
     }
 
+    @Override
     public void clickNewTabButton() {
         final int preNewTabCount = getTabCount();
 
@@ -61,11 +59,21 @@ public class TabStripComponent extends BaseComponent {
         });
     }
 
+    @Override
+    protected void addVisibleTabIdsToList(List<Integer> idList) {
+        final RecyclerView tabsLayout = getPresenter();
+        final int tabsLayoutChildCount = tabsLayout.getChildCount();
+        for (int i = 0; i < tabsLayoutChildCount; i++) {
+            final TabStripItemView tabView = (TabStripItemView) tabsLayout.getChildAt(i);
+            idList.add(tabView.getTabId());
+        }
+    }
+
     /**
      * Add tabs until scrolling is required to view all tabs, and then add at least one more.
      */
     public void fillStripWithTabs() {
-        if (getTabCount() > getTabStripView().getChildCount() + 1) {
+        if (getTabCount() > getPresenter().getChildCount() + 1) {
             // We're already full and then some.
             return;
         }
@@ -89,20 +97,20 @@ public class TabStripComponent extends BaseComponent {
      * @return the tab view at the given visual index.
      */
     public TabStripItemView getTabViewAtVisualIndex(int index) {
-        final RecyclerView tabStripView = getTabStripView();
+        final RecyclerView tabStripView = getPresenter();
         fAssertTrue("The tab at index " + index + " is visible", index >= 0 && index < tabStripView.getChildCount());
         return (TabStripItemView) tabStripView.getChildAt(index);
     }
 
 
     public int getTabCount() {
-        return getTabStripView().getAdapter().getItemCount();
+        return getPresenter().getAdapter().getItemCount();
     }
 
     private View waitForTabView(final int index) {
         final View[] childView = { null };
 
-        final RecyclerView tabStrip = getTabStripView();
+        final RecyclerView tabStrip = getPresenter();
 
         RobocopUtils.runOnUiThreadSync(mTestContext.getActivity(), new Runnable() {
             @Override
@@ -132,20 +140,12 @@ public class TabStripComponent extends BaseComponent {
 
         return childView[0];
     }
-
     /**
-     * You should generally use {@link #getTabStripView()} instead unless you're sure the view
-     * exists; this version may return {@code null}.
+     * You should generally use {@link TabsPresenterComponent#getPresenter()} instead unless you're
+     * sure the view exists; this version may return {@code null}.
      */
-    private RecyclerView maybeGetTabStripView() {
+    @Override
+    protected RecyclerView maybeGetPresenter() {
         return (RecyclerView) mSolo.getView("tab_strip");
-    }
-
-    private RecyclerView getTabStripView() {
-        RecyclerView tabStrip = maybeGetTabStripView();
-
-        fAssertNotNull("Tab strip is not null", tabStrip);
-
-        return tabStrip;
     }
 }
