@@ -22,17 +22,19 @@ pub enum Ty {
     ///
     /// Type parameters are stored in the Path itself
     Path(Option<QSelf>, Path),
-    /// Something like `A+B`. Note that `B` must always be a path.
-    ObjectSum(Box<Ty>, Vec<TyParamBound>),
-    /// A type like `for<'a> Foo<&'a Bar>`
-    PolyTraitRef(Vec<TyParamBound>),
-    /// An `impl TraitA+TraitB` type.
+    /// A trait object type `Bound1 + Bound2 + Bound3`
+    /// where `Bound` is a trait or a lifetime.
+    TraitObject(Vec<TyParamBound>),
+    /// An `impl Bound1 + Bound2 + Bound3` type
+    /// where `Bound` is a trait or a lifetime.
     ImplTrait(Vec<TyParamBound>),
     /// No-op; kept solely so that we can pretty-print faithfully
     Paren(Box<Ty>),
     /// TyKind::Infer means the type should be inferred instead of it having been
     /// specified. This can appear anywhere in a type.
     Infer,
+    /// A macro in the type position.
+    Mac(Mac),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -55,7 +57,10 @@ pub enum Mutability {
 /// E.g. `std::cmp::PartialEq`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Path {
+    /// A `::foo` path, is relative to the crate root rather than current
+    /// module (like paths in an import).
     pub global: bool,
+    /// The segments in the path: the things separated by `::`.
     pub segments: Vec<PathSegment>,
 }
 
@@ -75,7 +80,13 @@ impl<T> From<T> for Path
 /// E.g. `std`, `String` or `Box<T>`
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PathSegment {
+    /// The identifier portion of this path segment.
     pub ident: Ident,
+    /// Type/lifetime parameters attached to this path. They come in
+    /// two flavors: `Path<A,B,C>` and `Path(A,B) -> C`. Note that
+    /// this is more than just simple syntactic sugar; the use of
+    /// parens affects the region binding rules, so we preserve the
+    /// distinction.
     pub parameters: PathParameters,
 }
 
@@ -220,6 +231,7 @@ pub enum FunctionRetTy {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
+    use {TyParamBound, TraitBoundModifier};
     #[cfg(feature = "full")]
     use ConstExpr;
     use constant::parsing::const_expr;
@@ -228,10 +240,13 @@ pub mod parsing {
     use generics::parsing::{lifetime, lifetime_def, ty_param_bound, bound_lifetimes};
     use ident::parsing::ident;
     use lit::parsing::quoted_string;
+    use mac::parsing::mac;
     use std::str;
 
     named!(pub ty -> Ty, alt!(
         ty_paren // must be before ty_tup
+        |
+        ty_mac // must be before ty_path
         |
         ty_path // must be before ty_poly_trait_ref
         |
@@ -253,6 +268,8 @@ pub mod parsing {
         |
         ty_impl_trait
     ));
+
+    named!(ty_mac -> Ty, map!(mac, Ty::Mac));
 
     named!(ty_vec -> Ty, do_parse!(
         punct!("[") >>
@@ -363,11 +380,18 @@ pub mod parsing {
             if let Some(Some(parenthesized)) = parenthesized {
                 path.segments.last_mut().unwrap().parameters = parenthesized;
             }
-            let path = Ty::Path(qself, path);
             if bounds.is_empty() {
-                path
+                Ty::Path(qself, path)
             } else {
-                Ty::ObjectSum(Box::new(path), bounds)
+                let path = TyParamBound::Trait(
+                    PolyTraitRef {
+                        bound_lifetimes: Vec::new(),
+                        trait_ref: path,
+                    },
+                    TraitBoundModifier::None,
+                );
+                let bounds = Some(path).into_iter().chain(bounds).collect();
+                Ty::TraitObject(bounds)
             }
         })
     ));
@@ -423,7 +447,7 @@ pub mod parsing {
 
     named!(ty_poly_trait_ref -> Ty, map!(
         separated_nonempty_list!(punct!("+"), ty_param_bound),
-        Ty::PolyTraitRef
+        Ty::TraitObject
     ));
 
     named!(ty_impl_trait -> Ty, do_parse!(
@@ -463,7 +487,7 @@ pub mod parsing {
                 cond!(!lifetimes.is_empty(), punct!(",")),
                 separated_nonempty_list!(
                     punct!(","),
-                    terminated!(ty, not!(peek!(punct!("="))))
+                    terminated!(ty, not!(punct!("=")))
                 )
             )) >>
             bindings: opt_vec!(preceded!(
@@ -528,7 +552,7 @@ pub mod parsing {
         name: option!(do_parse!(
             name: ident >>
             punct!(":") >>
-            not!(peek!(tag!(":"))) >> // not ::
+            not!(tag!(":")) >> // not ::
             (name)
         )) >>
         ty: ty >>
@@ -626,14 +650,7 @@ mod printing {
                         segment.to_tokens(tokens);
                     }
                 }
-                Ty::ObjectSum(ref ty, ref bounds) => {
-                    ty.to_tokens(tokens);
-                    for bound in bounds {
-                        tokens.append("+");
-                        bound.to_tokens(tokens);
-                    }
-                }
-                Ty::PolyTraitRef(ref bounds) => {
+                Ty::TraitObject(ref bounds) => {
                     tokens.append_separated(bounds, "+");
                 }
                 Ty::ImplTrait(ref bounds) => {
@@ -648,6 +665,7 @@ mod printing {
                 Ty::Infer => {
                     tokens.append("_");
                 }
+                Ty::Mac(ref mac) => mac.to_tokens(tokens),
             }
         }
     }

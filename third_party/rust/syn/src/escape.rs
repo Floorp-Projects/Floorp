@@ -1,6 +1,6 @@
 use std::{char, str};
 use std::num::ParseIntError;
-use nom::IResult;
+use synom::IResult;
 
 pub fn cooked_string(input: &str) -> IResult<&str, String> {
     let mut s = String::new();
@@ -229,7 +229,7 @@ macro_rules! from_hex {
     }};
 }
 
-#[cfg_attr(feature = "clippy", allow(diverging_sub_expression))]
+#[cfg_attr(feature = "cargo-clippy", allow(diverging_sub_expression))]
 fn backslash_x_char<I>(chars: &mut I) -> Option<char>
     where I: Iterator<Item = (usize, char)>
 {
@@ -238,7 +238,7 @@ fn backslash_x_char<I>(chars: &mut I) -> Option<char>
     char::from_u32(from_hex!(a b))
 }
 
-#[cfg_attr(feature = "clippy", allow(diverging_sub_expression))]
+#[cfg_attr(feature = "cargo-clippy", allow(diverging_sub_expression))]
 fn backslash_x_byte<I>(chars: &mut I) -> Option<u8>
     where I: Iterator<Item = (usize, u8)>
 {
@@ -247,7 +247,7 @@ fn backslash_x_byte<I>(chars: &mut I) -> Option<u8>
     Some(from_hex!(a b))
 }
 
-#[cfg_attr(feature = "clippy", allow(diverging_sub_expression, many_single_char_names))]
+#[cfg_attr(feature = "cargo-clippy", allow(diverging_sub_expression, many_single_char_names))]
 fn backslash_u<I>(chars: &mut I) -> Option<char>
     where I: Iterator<Item = (usize, char)>
 {
