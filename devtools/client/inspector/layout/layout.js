@@ -102,6 +102,7 @@ LayoutView.prototype = {
 
       /**
        * Set the inspector selection.
+       *
        * @param {NodeFront} nodeFront
        *        The NodeFront corresponding to the new selection.
        */
@@ -150,17 +151,39 @@ LayoutView.prototype = {
       onShowBoxModelHighlighter,
 
      /**
-       * Shows the box-model highlighter on the element corresponding to the provided
-       * NodeFront.
-       *
-       * @param  {NodeFront} nodeFront
-       *         The node to highlight.
-       * @param  {Object} options
-       *         Options passed to the highlighter actor.
-       */
+      * Shows the box-model highlighter on the element corresponding to the provided
+      * NodeFront.
+      *
+      * @param  {NodeFront} nodeFront
+      *         The node to highlight.
+      * @param  {Object} options
+      *         Options passed to the highlighter actor.
+      */
       onShowBoxModelHighlighterForNode: (nodeFront, options) => {
         let toolbox = this.inspector.toolbox;
         toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+      },
+
+      /**
+       * Highlights the grid area in the CSS Grid Highlighter for the given grid.
+       *
+       * @param  {NodeFront} node
+       *         The NodeFront of the grid container element for which the grid
+       *         highlighter is highlighted for.
+       * @param  {String} gridAreaName
+       *         The name of the grid area for which the grid highlighter
+       *         is highlighted for.
+       * @param  {String} color
+       *         The color of the grid area for which the grid highlighter
+       *         is highlighted for.
+       */
+      onShowGridAreaHighlight: (node, gridAreaName, color) => {
+        let { highlighterSettings } = this.store.getState();
+
+        highlighterSettings.showGridArea = gridAreaName;
+        highlighterSettings.color = color;
+
+        this.highlighters.showGridHighlighter(node, highlighterSettings);
       },
 
       /**

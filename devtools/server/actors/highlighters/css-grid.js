@@ -325,6 +325,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     // The grid pattern cache should be cleared in case the color changed.
     this._clearCache();
 
+    // Hide the canvas, grid element highlights and infobar.
+    this._hide();
+
     return this._update();
   },
 
