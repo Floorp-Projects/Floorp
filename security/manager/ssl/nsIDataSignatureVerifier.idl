@@ -31,10 +31,7 @@ interface nsIDataSignatureVerifier : nsISupports
   const long VERIFY_ERROR_UNKNOWN_ISSUER = 1;
   const long VERIFY_ERROR_OTHER = 2;
 
-  nsIX509Cert verifySignature(in string aSignature,
-                              in unsigned long aSignatureLen,
-                              in string plaintext,
-                              in unsigned long plaintextLen,
+  nsIX509Cert verifySignature(in ACString signature, in ACString plaintext,
                               out long errorCode);
 
 };

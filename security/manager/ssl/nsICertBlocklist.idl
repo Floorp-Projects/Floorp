@@ -20,14 +20,16 @@ interface nsICertBlocklist : nsISupports {
    * Add details of a revoked certificate :
    * issuer name (base-64 encoded DER) and serial number (base-64 encoded DER).
    */
-   void revokeCertByIssuerAndSerial(in string issuer, in string serialNumber);
+   void revokeCertByIssuerAndSerial(in ACString issuer,
+                                    in ACString serialNumber);
 
   /**
    * Add details of a revoked certificate :
    * subject name (base-64 encoded DER) and hash of public key (base-64 encoded
    * sha-256 hash of the public key).
    */
-   void revokeCertBySubjectAndPubKey(in string subject, in string pubKeyHash);
+   void revokeCertBySubjectAndPubKey(in ACString subject,
+                                     in ACString pubKeyHash);
 
   /**
    * Persist (fresh) blocklist entries to the profile (if a profile directory is

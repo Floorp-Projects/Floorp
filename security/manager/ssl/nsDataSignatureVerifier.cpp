@@ -4,6 +4,8 @@
 
 #include "nsDataSignatureVerifier.h"
 
+#include "ScopedNSSTypes.h"
+#include "SharedCertVerifier.h"
 #include "cms.h"
 #include "cryptohi.h"
 #include "keyhi.h"
@@ -11,12 +13,11 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsNSSComponent.h"
+#include "nsString.h"
 #include "nssb64.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
-#include "ScopedNSSTypes.h"
 #include "secerr.h"
-#include "SharedCertVerifier.h"
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -273,14 +274,12 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
 } // namespace
 
 NS_IMETHODIMP
-nsDataSignatureVerifier::VerifySignature(const char* aRSABuf,
-                                         uint32_t aRSABufLen,
-                                         const char* aPlaintext,
-                                         uint32_t aPlaintextLen,
+nsDataSignatureVerifier::VerifySignature(const nsACString& aRSABuf,
+                                         const nsACString& aPlaintext,
                                          int32_t* aErrorCode,
                                          nsIX509Cert** aSigningCert)
 {
-  if (!aRSABuf || !aPlaintext || !aErrorCode || !aSigningCert) {
+  if (!aErrorCode || !aSigningCert) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -295,16 +294,16 @@ nsDataSignatureVerifier::VerifySignature(const char* aRSABuf,
   Digest digest;
   nsresult rv = digest.DigestBuf(
     SEC_OID_SHA1,
-    BitwiseCast<const uint8_t*, const char*>(aPlaintext),
-    aPlaintextLen);
+    BitwiseCast<const uint8_t*, const char*>(aPlaintext.BeginReading()),
+    aPlaintext.Length());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   SECItem buffer = {
     siBuffer,
-    BitwiseCast<unsigned char*, const char*>(aRSABuf),
-    aRSABufLen
+    BitwiseCast<unsigned char*, const char*>(aRSABuf.BeginReading()),
+    aRSABuf.Length(),
   };
 
   VerifyCertificateContext context;

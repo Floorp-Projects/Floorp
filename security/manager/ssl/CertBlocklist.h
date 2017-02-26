@@ -7,12 +7,13 @@
 #define CertBlocklist_h
 
 #include "mozilla/Mutex.h"
-#include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
+#include "nsClassHashtable.h"
 #include "nsICertBlocklist.h"
 #include "nsIOutputStream.h"
-#include "nsTHashtable.h"
 #include "nsIX509CertDB.h"
+#include "nsString.h"
+#include "nsTHashtable.h"
 #include "pkix/Input.h"
 
 #define NS_CERT_BLOCKLIST_CID \
