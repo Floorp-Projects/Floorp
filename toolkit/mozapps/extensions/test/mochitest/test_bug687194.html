@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <script type="application/javascript;version=1.8">
+  <script type="application/javascript">
     "use strict";
 
     SimpleTest.waitForExplicitFinish();
@@ -23,6 +23,7 @@
       var ios =
           Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
+      /* global Ci, addMessageListener */
       let cr =
           Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                     .getService(Ci.nsIXULChromeRegistry);
@@ -38,7 +39,7 @@
         }
 
         message.target.sendAsyncMessage("test687194:resolveChromeURI:Answer",
-                                        { threw: threw, result: result });
+                                        { threw, result });
       });
     }
 
@@ -61,7 +62,8 @@
       AddonManager.getInstallForURL(INSTALL_URI, (install) => {
         install = SpecialPowers.wrap(install);
         install.addListener(SpecialPowers.wrapCallbackObject({
-          onInstallEnded: function(install, addon) {
+          /* eslint no-shadow: 0 */
+          onInstallEnded(install, addon) {
             SimpleTest.executeSoon(() => test.next(addon));
           }
         }));
@@ -76,7 +78,7 @@
       is(lastResult.threw, false, "able to resolve after the installation");
 
       let listener = SpecialPowers.wrapCallbackObject({
-        onUninstalled: function(removedAddon) {
+        onUninstalled(removedAddon) {
           if (removedAddon.id === addon.id) {
             AddonManager.removeAddonListener(listener);
             SimpleTest.executeSoon(() => test.next());

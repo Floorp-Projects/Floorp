@@ -106,7 +106,7 @@ function* testHarnessSteps() {
 
     let workerScriptBlob =
       new Blob([ "(" + workerScript.toString() + ")();" ],
-               { type: "text/javascript;version=1.7" });
+               { type: "text/javascript" });
     let workerScriptURL = URL.createObjectURL(workerScriptBlob);
 
     let worker = new Worker(workerScriptURL);

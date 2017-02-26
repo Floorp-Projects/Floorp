@@ -35,7 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=253481
 <textbox id="replacewithcommas" newlines="replacewithcommas"/>
 <textbox id="stripsurroundingwhitespace" newlines="stripsurroundingwhitespace"/>
 </vbox>
-<script class="testbody" type="application/javascript;version=1.7">
+<script class="testbody" type="application/javascript">
 <![CDATA[
 /** Test for Bug 253481 **/
 function testPaste(name, element, expected) {

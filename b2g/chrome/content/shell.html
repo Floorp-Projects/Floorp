@@ -22,27 +22,27 @@
   <!-- Add raptor performance marker -->
   window.performance.mark('gecko-shell-html-load');
   </script>
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/settings.js"> </script>
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/shell.js"> </script>
 
 #ifndef ANDROID
 #ifndef MOZ_GRAPHENE
   <!-- various task that has to happen only on desktop -->
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/desktop.js"> </script>
   <!-- this script handles the screen argument for desktop builds -->
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/screen.js"> </script>
 #endif
 #else
   <!-- this file is only loaded on Gonk to manage ADB state -->
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/devtools/adb.js"> </script>
 #endif
   <!-- manages DevTools server state -->
-  <script type="application/javascript;version=1.8"
+  <script type="application/javascript"
           src="chrome://b2g/content/devtools/debugger.js"> </script>
 </head>
   <body id="container">
