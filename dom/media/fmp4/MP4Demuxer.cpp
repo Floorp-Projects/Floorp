@@ -124,6 +124,9 @@ MP4Demuxer::Init()
 {
   AutoPinned<mp4_demuxer::ResourceStream> stream(mStream);
 
+  // 'result' will capture the first warning, if any.
+  MediaResult result{NS_OK};
+
   RefPtr<MediaByteBuffer> initData = mp4_demuxer::MP4Metadata::Metadata(stream);
   if (!initData) {
     return InitPromise::CreateAndReject(
@@ -151,13 +154,24 @@ MP4Demuxer::Init()
     for (size_t i = 0; i < audioTrackCount; i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
-      if (info) {
-        UniquePtr<mp4_demuxer::IndiceWrapper> indices =
-          metadata.GetTrackIndice(info->mTrackId);
-        if (indices) {
-          mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
+      if (!info) {
+        if (result == NS_OK) {
+          result = MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                               RESULT_DETAIL("Invalid MP4 audio track"));
         }
+        continue;
       }
+      UniquePtr<mp4_demuxer::IndiceWrapper> indices =
+        metadata.GetTrackIndice(info->mTrackId);
+      if (!indices) {
+        if (result == NS_OK) {
+          result =
+            MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                        RESULT_DETAIL("Invalid MP4 audio track index list"));
+        }
+        continue;
+      }
+      mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
     }
   }
 
@@ -166,13 +180,24 @@ MP4Demuxer::Init()
     for (size_t i = 0; i < videoTrackCount; i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
-      if (info) {
-        UniquePtr<mp4_demuxer::IndiceWrapper> indices =
-          metadata.GetTrackIndice(info->mTrackId);
-        if (indices) {
-          mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
+      if (!info) {
+        if (result == NS_OK) {
+          result = MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                               RESULT_DETAIL("Invalid MP4 video track"));
         }
+        continue;
       }
+      UniquePtr<mp4_demuxer::IndiceWrapper> indices =
+        metadata.GetTrackIndice(info->mTrackId);
+      if (!indices) {
+        if (result == NS_OK) {
+          result =
+            MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                        RESULT_DETAIL("Invalid MP4 video track index list"));
+        }
+        continue;
+      }
+      mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
     }
   }
 
@@ -186,7 +211,7 @@ MP4Demuxer::Init()
 
   mIsSeekable = metadata.CanSeek();
 
-  return InitPromise::CreateAndResolve(NS_OK, __func__);
+  return InitPromise::CreateAndResolve(result, __func__);
 }
 
 bool
