@@ -859,7 +859,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     if (aDirtyRect) {
       // aDirtyRect is in outer-<svg> device pixels, but the filter code needs
       // it in frame space.
-      gfxMatrix userToDeviceSpace = GetUserToCanvasTM(aFrame);
+      gfxMatrix userToDeviceSpace = aTransform;
       if (userToDeviceSpace.IsSingular()) {
         return DrawResult::SUCCESS;
       }
