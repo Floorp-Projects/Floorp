@@ -327,8 +327,6 @@ struct ShellContext
     uint32_t geckoProfilingStackSize;
 
     OffThreadState offThreadState;
-
-    UniqueChars moduleLoadPath;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
@@ -366,6 +364,7 @@ static bool reportWarnings = true;
 static bool compileOnly = false;
 static bool fuzzingSafe = false;
 static bool disableOOMFunctions = false;
+static const char* moduleLoadPath = ".";
 
 #ifdef DEBUG
 static bool dumpEntrainedVariables = false;
@@ -4282,10 +4281,7 @@ static bool
 GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    ShellContext* sc = GetShellContext(cx);
-    MOZ_ASSERT(sc->moduleLoadPath);
-    args.rval().setString(JS_NewStringCopyZ(cx, sc->moduleLoadPath.get()));
+    args.rval().setString(JS_NewStringCopyZ(cx, moduleLoadPath));
     return true;
 }
 
@@ -7578,22 +7574,8 @@ ProcessArgs(JSContext* cx, OptionParser* op)
         return Process(cx, nullptr, true); /* Interactive. */
     }
 
-    if (const char* path = op->getStringOption("module-load-path")) {
-        RootedString jspath(cx, JS_NewStringCopyZ(cx, path));
-        if (!jspath)
-            return false;
-
-        JSString* absolutePath = js::shell::ResolvePath(cx, jspath, RootRelative);
-        if (!absolutePath)
-            return false;
-
-        sc->moduleLoadPath = UniqueChars(JS_EncodeString(cx, absolutePath));
-    } else {
-        sc->moduleLoadPath = js::shell::GetCWD();
-    }
-
-    if (!sc->moduleLoadPath)
-        return false;
+    if (const char* path = op->getStringOption("module-load-path"))
+        moduleLoadPath = path;
 
     if (!modulePaths.empty() && !InitModuleLoader(cx))
         return false;
