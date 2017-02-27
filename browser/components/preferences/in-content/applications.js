@@ -1348,9 +1348,10 @@ var gApplicationsPane = {
     while (menuPopup.hasChildNodes())
       menuPopup.removeChild(menuPopup.lastChild);
 
+    let internalMenuItem;
     // Add the "Preview in Firefox" option for optional internal handlers.
     if (handlerInfo instanceof InternalHandlerInfoWrapper) {
-      let internalMenuItem = document.createElement("menuitem");
+      internalMenuItem = document.createElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
       let label = this._prefsBundle.getFormattedString("previewInApp",
                                                        [this._brandShortName]);
@@ -1392,7 +1393,7 @@ var gApplicationsPane = {
 
     // If this is the feed type, add a Live Bookmarks item.
     if (isFeedType(handlerInfo.type)) {
-      let internalMenuItem = document.createElement("menuitem");
+      internalMenuItem = document.createElement("menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
       let label = this._prefsBundle.getFormattedString("addLiveBookmarksInApp",
                                                        [this._brandShortName]);
@@ -1504,7 +1505,11 @@ var gApplicationsPane = {
       menu.selectedItem = askMenuItem;
     else switch (handlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.handleInternally:
-        menu.selectedItem = internalMenuItem;
+        if (internalMenuItem) {
+          menu.selectedItem = internalMenuItem;
+        } else {
+          Cu.reportError("No menu item defined to set!")
+        }
         break;
       case Ci.nsIHandlerInfo.useSystemDefault:
         menu.selectedItem = defaultMenuItem;
