@@ -330,7 +330,6 @@ SelectorAutocompleter.prototype = {
    */
   _onSearchKeypress: function (event) {
     let popup = this.searchPopup;
-
     switch (event.keyCode) {
       case KeyCodes.DOM_VK_RETURN:
       case KeyCodes.DOM_VK_TAB:
@@ -373,6 +372,9 @@ SelectorAutocompleter.prototype = {
       case KeyCodes.DOM_VK_ESCAPE:
         if (popup.isOpen) {
           this.hidePopup();
+        } else {
+          this.emit("processing-done");
+          return;
         }
         break;
 
