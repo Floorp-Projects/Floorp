@@ -31,6 +31,7 @@ void protobuf_ShutdownFile_safebrowsing_2eproto() {
   delete ThreatHit::default_instance_;
   delete ThreatHit_ThreatSource::default_instance_;
   delete ClientInfo::default_instance_;
+  delete ChromeClientInfo::default_instance_;
   delete Checksum::default_instance_;
   delete ThreatEntry::default_instance_;
   delete ThreatEntrySet::default_instance_;
@@ -70,6 +71,7 @@ void protobuf_AddDesc_safebrowsing_2eproto() {
   ThreatHit::default_instance_ = new ThreatHit();
   ThreatHit_ThreatSource::default_instance_ = new ThreatHit_ThreatSource();
   ClientInfo::default_instance_ = new ClientInfo();
+  ChromeClientInfo::default_instance_ = new ChromeClientInfo();
   Checksum::default_instance_ = new Checksum();
   ThreatEntry::default_instance_ = new ThreatEntry();
   ThreatEntrySet::default_instance_ = new ThreatEntrySet();
@@ -95,6 +97,7 @@ void protobuf_AddDesc_safebrowsing_2eproto() {
   ThreatHit::default_instance_->InitAsDefaultInstance();
   ThreatHit_ThreatSource::default_instance_->InitAsDefaultInstance();
   ClientInfo::default_instance_->InitAsDefaultInstance();
+  ChromeClientInfo::default_instance_->InitAsDefaultInstance();
   Checksum::default_instance_->InitAsDefaultInstance();
   ThreatEntry::default_instance_->InitAsDefaultInstance();
   ThreatEntrySet::default_instance_->InitAsDefaultInstance();
@@ -132,6 +135,11 @@ bool ThreatType_IsValid(int value) {
     case 4:
     case 5:
     case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 13:
       return true;
     default:
       return false;
@@ -172,6 +180,9 @@ bool ThreatEntryType_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+    case 4:
+    case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -2061,6 +2072,7 @@ void FetchThreatListUpdatesRequest_ListUpdateRequest::Swap(FetchThreatListUpdate
 #ifndef _MSC_VER
 const int FetchThreatListUpdatesRequest::kClientFieldNumber;
 const int FetchThreatListUpdatesRequest::kListUpdateRequestsFieldNumber;
+const int FetchThreatListUpdatesRequest::kChromeClientInfoFieldNumber;
 #endif  // !_MSC_VER
 
 FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest()
@@ -2076,6 +2088,12 @@ void FetchThreatListUpdatesRequest::InitAsDefaultInstance() {
 #else
   client_ = const_cast< ::mozilla::safebrowsing::ClientInfo*>(&::mozilla::safebrowsing::ClientInfo::default_instance());
 #endif
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  chrome_client_info_ = const_cast< ::mozilla::safebrowsing::ChromeClientInfo*>(
+      ::mozilla::safebrowsing::ChromeClientInfo::internal_default_instance());
+#else
+  chrome_client_info_ = const_cast< ::mozilla::safebrowsing::ChromeClientInfo*>(&::mozilla::safebrowsing::ChromeClientInfo::default_instance());
+#endif
 }
 
 FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest(const FetchThreatListUpdatesRequest& from)
@@ -2088,6 +2106,7 @@ FetchThreatListUpdatesRequest::FetchThreatListUpdatesRequest(const FetchThreatLi
 void FetchThreatListUpdatesRequest::SharedCtor() {
   _cached_size_ = 0;
   client_ = NULL;
+  chrome_client_info_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2103,6 +2122,7 @@ void FetchThreatListUpdatesRequest::SharedDtor() {
   if (this != default_instance_) {
   #endif
     delete client_;
+    delete chrome_client_info_;
   }
 }
 
@@ -2127,8 +2147,13 @@ FetchThreatListUpdatesRequest* FetchThreatListUpdatesRequest::New() const {
 }
 
 void FetchThreatListUpdatesRequest::Clear() {
-  if (has_client()) {
-    if (client_ != NULL) client_->::mozilla::safebrowsing::ClientInfo::Clear();
+  if (_has_bits_[0 / 32] & 5) {
+    if (has_client()) {
+      if (client_ != NULL) client_->::mozilla::safebrowsing::ClientInfo::Clear();
+    }
+    if (has_chrome_client_info()) {
+      if (chrome_client_info_ != NULL) chrome_client_info_->::mozilla::safebrowsing::ChromeClientInfo::Clear();
+    }
   }
   list_update_requests_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -2171,6 +2196,19 @@ bool FetchThreatListUpdatesRequest::MergePartialFromCodedStream(
           goto handle_unusual;
         }
         if (input->ExpectTag(26)) goto parse_list_update_requests;
+        if (input->ExpectTag(34)) goto parse_chrome_client_info;
+        break;
+      }
+
+      // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
+      case 4: {
+        if (tag == 34) {
+         parse_chrome_client_info:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_chrome_client_info()));
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -2212,6 +2250,12 @@ void FetchThreatListUpdatesRequest::SerializeWithCachedSizes(
       3, this->list_update_requests(i), output);
   }
 
+  // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
+  if (has_chrome_client_info()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      4, this->chrome_client_info(), output);
+  }
+
   output->WriteRaw(unknown_fields().data(),
                    unknown_fields().size());
   // @@protoc_insertion_point(serialize_end:mozilla.safebrowsing.FetchThreatListUpdatesRequest)
@@ -2226,6 +2270,13 @@ int FetchThreatListUpdatesRequest::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->client());
+    }
+
+    // optional .mozilla.safebrowsing.ChromeClientInfo chrome_client_info = 4;
+    if (has_chrome_client_info()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->chrome_client_info());
     }
 
   }
@@ -2257,6 +2308,9 @@ void FetchThreatListUpdatesRequest::MergeFrom(const FetchThreatListUpdatesReques
     if (from.has_client()) {
       mutable_client()->::mozilla::safebrowsing::ClientInfo::MergeFrom(from.client());
     }
+    if (from.has_chrome_client_info()) {
+      mutable_chrome_client_info()->::mozilla::safebrowsing::ChromeClientInfo::MergeFrom(from.chrome_client_info());
+    }
   }
   mutable_unknown_fields()->append(from.unknown_fields());
 }
@@ -2276,6 +2330,7 @@ void FetchThreatListUpdatesRequest::Swap(FetchThreatListUpdatesRequest* other) {
   if (other != this) {
     std::swap(client_, other->client_);
     list_update_requests_.Swap(&other->list_update_requests_);
+    std::swap(chrome_client_info_, other->chrome_client_info_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.swap(other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -4470,6 +4525,224 @@ void ClientInfo::Swap(ClientInfo* other) {
 
 ::std::string ClientInfo::GetTypeName() const {
   return "mozilla.safebrowsing.ClientInfo";
+}
+
+
+// ===================================================================
+
+bool ChromeClientInfo_SafeBrowsingReportingPopulation_IsValid(int value) {
+  switch(value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#ifndef _MSC_VER
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::UNSPECIFIED;
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::OPT_OUT;
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::EXTENDED;
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SCOUT;
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SafeBrowsingReportingPopulation_MIN;
+const ChromeClientInfo_SafeBrowsingReportingPopulation ChromeClientInfo::SafeBrowsingReportingPopulation_MAX;
+const int ChromeClientInfo::SafeBrowsingReportingPopulation_ARRAYSIZE;
+#endif  // _MSC_VER
+#ifndef _MSC_VER
+const int ChromeClientInfo::kReportingPopulationFieldNumber;
+#endif  // !_MSC_VER
+
+ChromeClientInfo::ChromeClientInfo()
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:mozilla.safebrowsing.ChromeClientInfo)
+}
+
+void ChromeClientInfo::InitAsDefaultInstance() {
+}
+
+ChromeClientInfo::ChromeClientInfo(const ChromeClientInfo& from)
+  : ::google::protobuf::MessageLite() {
+  SharedCtor();
+  MergeFrom(from);
+  // @@protoc_insertion_point(copy_constructor:mozilla.safebrowsing.ChromeClientInfo)
+}
+
+void ChromeClientInfo::SharedCtor() {
+  _cached_size_ = 0;
+  reporting_population_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+ChromeClientInfo::~ChromeClientInfo() {
+  // @@protoc_insertion_point(destructor:mozilla.safebrowsing.ChromeClientInfo)
+  SharedDtor();
+}
+
+void ChromeClientInfo::SharedDtor() {
+  #ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  if (this != &default_instance()) {
+  #else
+  if (this != default_instance_) {
+  #endif
+  }
+}
+
+void ChromeClientInfo::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ChromeClientInfo& ChromeClientInfo::default_instance() {
+#ifdef GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER
+  protobuf_AddDesc_safebrowsing_2eproto();
+#else
+  if (default_instance_ == NULL) protobuf_AddDesc_safebrowsing_2eproto();
+#endif
+  return *default_instance_;
+}
+
+ChromeClientInfo* ChromeClientInfo::default_instance_ = NULL;
+
+ChromeClientInfo* ChromeClientInfo::New() const {
+  return new ChromeClientInfo;
+}
+
+void ChromeClientInfo::Clear() {
+  reporting_population_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->clear();
+}
+
+bool ChromeClientInfo::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::io::StringOutputStream unknown_fields_string(
+      mutable_unknown_fields());
+  ::google::protobuf::io::CodedOutputStream unknown_fields_stream(
+      &unknown_fields_string);
+  // @@protoc_insertion_point(parse_start:mozilla.safebrowsing.ChromeClientInfo)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoff(127);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
+      case 1: {
+        if (tag == 8) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::mozilla::safebrowsing::ChromeClientInfo_SafeBrowsingReportingPopulation_IsValid(value)) {
+            set_reporting_population(static_cast< ::mozilla::safebrowsing::ChromeClientInfo_SafeBrowsingReportingPopulation >(value));
+          } else {
+            unknown_fields_stream.WriteVarint32(tag);
+            unknown_fields_stream.WriteVarint32(value);
+          }
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectAtEnd()) goto success;
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(
+            input, tag, &unknown_fields_stream));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:mozilla.safebrowsing.ChromeClientInfo)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:mozilla.safebrowsing.ChromeClientInfo)
+  return false;
+#undef DO_
+}
+
+void ChromeClientInfo::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:mozilla.safebrowsing.ChromeClientInfo)
+  // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
+  if (has_reporting_population()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->reporting_population(), output);
+  }
+
+  output->WriteRaw(unknown_fields().data(),
+                   unknown_fields().size());
+  // @@protoc_insertion_point(serialize_end:mozilla.safebrowsing.ChromeClientInfo)
+}
+
+int ChromeClientInfo::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // optional .mozilla.safebrowsing.ChromeClientInfo.SafeBrowsingReportingPopulation reporting_population = 1;
+    if (has_reporting_population()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->reporting_population());
+    }
+
+  }
+  total_size += unknown_fields().size();
+
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ChromeClientInfo::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ChromeClientInfo*>(&from));
+}
+
+void ChromeClientInfo::MergeFrom(const ChromeClientInfo& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_reporting_population()) {
+      set_reporting_population(from.reporting_population());
+    }
+  }
+  mutable_unknown_fields()->append(from.unknown_fields());
+}
+
+void ChromeClientInfo::CopyFrom(const ChromeClientInfo& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ChromeClientInfo::IsInitialized() const {
+
+  return true;
+}
+
+void ChromeClientInfo::Swap(ChromeClientInfo* other) {
+  if (other != this) {
+    std::swap(reporting_population_, other->reporting_population_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.swap(other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::std::string ChromeClientInfo::GetTypeName() const {
+  return "mozilla.safebrowsing.ChromeClientInfo";
 }
 
 
