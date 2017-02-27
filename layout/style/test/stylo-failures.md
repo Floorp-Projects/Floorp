@@ -428,8 +428,8 @@ Any line which doesn't follow the format above would be ignored like comment.
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
   * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
-    * test_value_storage.html `'center left'` [9]
-    * ... `'center right'` [9]
+    * test_value_storage.html `'center left'` [8]
+    * ... `'center right'` [8]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
