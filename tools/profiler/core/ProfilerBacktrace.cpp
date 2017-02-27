@@ -19,9 +19,7 @@ ProfilerBacktrace::ProfilerBacktrace(SyncProfile* aProfile)
 ProfilerBacktrace::~ProfilerBacktrace()
 {
   MOZ_COUNT_DTOR(ProfilerBacktrace);
-  if (mProfile->ShouldDestroy()) {
-    delete mProfile;
-  }
+  delete mProfile;
 }
 
 void
