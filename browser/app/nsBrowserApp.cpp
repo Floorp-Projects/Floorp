@@ -21,7 +21,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
-#include "nsStringGlue.h"
 
 #ifdef XP_WIN
 #ifdef MOZ_ASAN
@@ -40,7 +39,7 @@
 #include "nsXPCOMPrivate.h" // for MAXPATHLEN and XPCOM_DLL
 
 #include "mozilla/Sprintf.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/StartupTimeline.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
 #ifdef LIBFUZZER
