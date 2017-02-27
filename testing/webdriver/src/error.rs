@@ -148,7 +148,9 @@ impl ToJson for WebDriverError {
         data.insert("message".into(), self.message.to_json());
         data.insert("stacktrace".into(),
                     format!("{:?}", self.backtrace).to_json());
-        Json::Object(data)
+        let mut wrapper = BTreeMap::new();
+        wrapper.insert("value".into(), Json::Object(data));
+        Json::Object(wrapper)
     }
 }
 
