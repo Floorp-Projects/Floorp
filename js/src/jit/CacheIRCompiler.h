@@ -75,6 +75,7 @@ class OperandLocation
     enum Kind {
         Uninitialized = 0,
         PayloadReg,
+        DoubleReg,
         ValueReg,
         PayloadStack,
         ValueStack,
@@ -90,6 +91,7 @@ class OperandLocation
             Register reg;
             JSValueType type;
         } payloadReg;
+        FloatRegister doubleReg;
         ValueOperand valueReg;
         struct {
             uint32_t stackPushed;
@@ -120,6 +122,10 @@ class OperandLocation
         MOZ_ASSERT(kind_ == PayloadReg);
         return data_.payloadReg.reg;
     }
+    FloatRegister doubleReg() const {
+        MOZ_ASSERT(kind_ == DoubleReg);
+        return data_.doubleReg;
+    }
     uint32_t payloadStack() const {
         MOZ_ASSERT(kind_ == PayloadStack);
         return data_.payloadStack.stackPushed;
@@ -147,6 +153,10 @@ class OperandLocation
         kind_ = PayloadReg;
         data_.payloadReg.reg = reg;
         data_.payloadReg.type = type;
+    }
+    void setDoubleReg(FloatRegister reg) {
+        kind_ = DoubleReg;
+        data_.doubleReg = reg;
     }
     void setValueReg(ValueOperand reg) {
         kind_ = ValueReg;
@@ -294,6 +304,8 @@ class MOZ_RAII CacheRegisterAllocator
     }
     void initAvailableRegsAfterSpill();
 
+    void fixupAliasedInputs(MacroAssembler& masm);
+
     OperandLocation operandLocation(size_t i) const {
         return operandLocations_[i];
     }
@@ -311,6 +323,10 @@ class MOZ_RAII CacheRegisterAllocator
     void initInputLocation(size_t i, Register reg, JSValueType type) {
         origInputLocations_[i].setPayloadReg(reg, type);
         operandLocations_[i].setPayloadReg(reg, type);
+    }
+    void initInputLocation(size_t i, FloatRegister reg) {
+        origInputLocations_[i].setDoubleReg(reg);
+        operandLocations_[i].setDoubleReg(reg);
     }
     void initInputLocation(size_t i, const Value& v) {
         origInputLocations_[i].setConstant(v);
@@ -380,6 +396,8 @@ class MOZ_RAII CacheRegisterAllocator
     ValueOperand useValueRegister(MacroAssembler& masm, ValOperandId val);
     ValueOperand useFixedValueRegister(MacroAssembler& masm, ValOperandId valId, ValueOperand reg);
     Register useRegister(MacroAssembler& masm, TypedOperandId typedId);
+
+    ConstantOrRegister useConstantOrRegister(MacroAssembler& masm, ValOperandId val);
 
     // Allocates an output register for the given operand.
     Register defineRegister(MacroAssembler& masm, TypedOperandId typedId);
@@ -546,6 +564,9 @@ class MOZ_RAII CacheIRCompiler
     void emitLoadTypedObjectResultShared(const Address& fieldAddr, Register scratch,
                                          TypedThingLayout layout, uint32_t typeDescr,
                                          const AutoOutputRegister& output);
+
+    void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
+                                           const Address& dest, Register scratch);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
