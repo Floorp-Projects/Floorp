@@ -202,21 +202,20 @@ class SamplerThread
     CONTEXT context;
     memset(&context, 0, sizeof(context));
 
-    TickSample sample_obj;
-    TickSample* sample = &sample_obj;
+    TickSample sample;
 
     // Grab the timestamp before pausing the thread, to avoid deadlocks.
-    sample->timestamp = mozilla::TimeStamp::Now();
-    sample->threadInfo = aThreadInfo;
+    sample.timestamp = mozilla::TimeStamp::Now();
+    sample.threadInfo = aThreadInfo;
 
     if (isFirstProfiledThread && gProfileMemory) {
-      sample->rssMemory = nsMemoryReporterManager::ResidentFast();
+      sample.rssMemory = nsMemoryReporterManager::ResidentFast();
     } else {
-      sample->rssMemory = 0;
+      sample.rssMemory = 0;
     }
 
     // Unique Set Size is not supported on Windows.
-    sample->ussMemory = 0;
+    sample.ussMemory = 0;
 
     static const DWORD kSuspendFailed = static_cast<DWORD>(-1);
     if (SuspendThread(profiled_thread) == kSuspendFailed)
@@ -239,18 +238,18 @@ class SamplerThread
     }
 
 #if defined(GP_ARCH_amd64)
-    sample->pc = reinterpret_cast<Address>(context.Rip);
-    sample->sp = reinterpret_cast<Address>(context.Rsp);
-    sample->fp = reinterpret_cast<Address>(context.Rbp);
+    sample.pc = reinterpret_cast<Address>(context.Rip);
+    sample.sp = reinterpret_cast<Address>(context.Rsp);
+    sample.fp = reinterpret_cast<Address>(context.Rbp);
 #else
-    sample->pc = reinterpret_cast<Address>(context.Eip);
-    sample->sp = reinterpret_cast<Address>(context.Esp);
-    sample->fp = reinterpret_cast<Address>(context.Ebp);
+    sample.pc = reinterpret_cast<Address>(context.Eip);
+    sample.sp = reinterpret_cast<Address>(context.Esp);
+    sample.fp = reinterpret_cast<Address>(context.Ebp);
 #endif
 
-    sample->context = &context;
+    sample.context = &context;
 
-    Tick(sample);
+    Tick(&sample);
 
     ResumeThread(profiled_thread);
   }
