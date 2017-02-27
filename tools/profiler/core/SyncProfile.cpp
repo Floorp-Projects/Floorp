@@ -11,7 +11,7 @@ SyncProfile::SyncProfile(int aThreadId, PseudoStack* aStack)
                /* stackTop = */ nullptr)
 {
   MOZ_COUNT_CTOR(SyncProfile);
-  SetProfile(new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES));
+  SetHasProfile();
 }
 
 SyncProfile::~SyncProfile()
@@ -22,7 +22,9 @@ SyncProfile::~SyncProfile()
 // SyncProfiles' stacks are deduplicated in the context of the containing
 // profile in which the backtrace is as a marker payload.
 void
-SyncProfile::StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks)
+SyncProfile::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
+                        UniqueStacks& aUniqueStacks)
 {
-  ThreadInfo::StreamSamplesAndMarkers(aWriter, /* aSinceTime = */ 0, aUniqueStacks);
+  ThreadInfo::StreamSamplesAndMarkers(aBuffer, aWriter, /* aSinceTime = */ 0,
+                                      aUniqueStacks);
 }

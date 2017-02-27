@@ -362,12 +362,12 @@ SigprofSender(void* aArg)
         ThreadInfo* info = (*gRegisteredThreads)[i];
 
         // This will be null if we're not interested in profiling this thread.
-        if (!info->hasProfile() || info->IsPendingDelete()) {
+        if (!info->HasProfile() || info->IsPendingDelete()) {
           continue;
         }
 
         if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-          info->DuplicateLastSample(gStartTime);
+          info->DuplicateLastSample(gBuffer, gStartTime);
           continue;
         }
 
@@ -420,7 +420,7 @@ SigprofSender(void* aArg)
         sample.rssMemory = rssMemory;
         sample.ussMemory = ussMemory;
 
-        Tick(&sample);
+        Tick(gBuffer, &sample);
 
         // Send message 3 to the samplee, which tells it to resume.
         r = sem_post(&gSigHandlerCoordinator->mMessage3);
