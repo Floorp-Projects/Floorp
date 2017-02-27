@@ -23,6 +23,7 @@ ${maybeErr.stack}`);
 }
 
 function promise_test(func, description) {
+    let maybeError = null;
     func()
     .then(_ => {
         print(`${description}: PASS.`);
@@ -30,8 +31,11 @@ function promise_test(func, description) {
     .catch(err => {
         print(`${description}: FAIL.
 ${err}`);
+        maybeError = err;
     });
     drainJobQueue();
+    if (maybeError)
+        throw maybeError;
 }
 
 let assert_equals = assertEq;

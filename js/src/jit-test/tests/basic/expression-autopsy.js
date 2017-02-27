@@ -87,20 +87,101 @@ for (let tok of ["|", "^", "&", "==", "!==", "===", "!==", "<", "<=", ">", ">=",
     check("o[(undef " + tok + " 4)]");
 }
 
-check("o[!(o)]");
-check("o[~(o)]");
-check("o[+ (o)]");
-check("o[- (o)]");
+check("o[(!o)]");
+check("o[(~o)]");
+check("o[(+ o)]");
+check("o[(- o)]");
 
+check("o[(!(o + 1))]");
+check("o[(~(o + 1))]");
+check("o[(+ (o + 1))]");
+check("o[(- (o + 1))]");
 
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
 check_one("4", (function() { (4||eval)(); }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
-check_one("(intermediate value)[Symbol.iterator](...).next(...).value",
+check_one("[...][Symbol.iterator](...).next(...).value",
           function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
-check_one("void 1", function() { (void 1)(); }, " is not a function");
-check_one("void o[1]", function() { var o = []; (void o[1])() }, " is not a function");
+check_one("(void 1)", function() { (void 1)(); }, " is not a function");
+check_one("(void o[1])", function() { var o = []; (void o[1])() }, " is not a function");
+
+check_one("(typeof 1)", function() { (typeof 1)(); }, " is not a function");
+check_one("(typeof o[1])", function() { var o = []; (typeof o[1])() }, " is not a function");
+
+check_one("(delete foo)",
+          function() { (delete foo)(); },
+          " is not a function");
+check_one("(delete obj.foo)",
+          function() { var obj = {}; (delete obj.foo)(); },
+          " is not a function");
+check_one("(delete obj.foo)",
+          function() { "use strict"; var obj = {}; (delete obj.foo)(); },
+          " is not a function");
+check_one("(delete obj[y])",
+          function() { var obj = {}, y = {}; (delete obj[y])(); },
+          " is not a function");
+check_one("(delete obj[y])",
+          function() { "use strict"; var obj = {}, y = {}; (delete obj[y])(); },
+          " is not a function");
+
+check_one("foo.apply(...)",
+          function() { function foo() {} foo.apply()(); },
+          " is not a function");
+
+check_one("super(...)",
+          function() {
+            class X extends Object {
+              constructor() {
+                super()();
+              }
+            }
+            new X();
+          },
+          " is not a function");
+check_one("super(...)",
+          function() {
+            class X extends Object {
+              constructor() {
+                super(...[])();
+              }
+            }
+            new X();
+          },
+          " is not a function");
+
+check_one("eval(...)",
+          function() { eval("")(); },
+          " is not a function");
+check_one("eval(...)",
+          function() { "use strict"; eval("")(); },
+          " is not a function");
+check_one("eval(...)",
+          function() { eval(...[""])(); },
+          " is not a function");
+check_one("eval(...)",
+          function() { "use strict"; eval(...[""])(); },
+          " is not a function");
+
+check_one("(new foo(...))",
+          function() { function foo() {}; new foo()(); },
+          " is not a function");
+check_one("(new foo(...))",
+          function() { function foo() {}; new foo(...[])(); },
+          " is not a function");
+check_one("(new foo.x(...))",
+          function() { var foo = { x: function() {} }; new foo.x()(); },
+          " is not a function");
+check_one("(new foo.x(...))",
+          function() { var foo = { x: function() {} }; new foo.x(...[])(); },
+          " is not a function");
+
+check_one("[...].foo",
+          function() { [undefined].foo(); },
+          " is not a function");
+check_one("[...].foo",
+          function() { [undefined, ...[]].foo(); },
+          " is not a function");
 
 // Manual testing for this case: the only way to trigger an error is *not* on
 // an attempted property access during destructuring, and the error message

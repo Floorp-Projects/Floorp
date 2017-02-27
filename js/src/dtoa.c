@@ -253,7 +253,7 @@ extern void *MALLOC(size_t);
 #endif
 
 #if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
-Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
+#error "Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined."
 #endif
 
 typedef union { double d; ULong L[2]; } U;

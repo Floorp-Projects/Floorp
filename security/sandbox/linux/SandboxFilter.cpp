@@ -696,10 +696,8 @@ public:
     case __NR_mprotect:
     case __NR_brk:
     case __NR_madvise:
-#if !defined(MOZ_MEMORY)
-      // libc's realloc uses mremap (Bug 1286119).
+      // libc's realloc uses mremap (Bug 1286119); wasm does too (bug 1342385).
     case __NR_mremap:
-#endif
       return Allow();
 
     case __NR_sigaltstack:
