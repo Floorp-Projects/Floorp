@@ -5,16 +5,17 @@
 #ifndef MP4METADATA_H_
 #define MP4METADATA_H_
 
+#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mp4_demuxer/Index.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
+#include "MediaResult.h"
 #include "Stream.h"
 #include "mp4parse.h"
 
-namespace mp4_demuxer
-{
+namespace mp4_demuxer {
 
 class MP4MetadataStagefright;
 class MP4MetadataRust;
@@ -36,7 +37,32 @@ public:
   explicit MP4Metadata(Stream* aSource);
   ~MP4Metadata();
 
-  static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
+  // Simple template class containing a MediaResult and another type.
+  template <typename T>
+  class ResultAndType
+  {
+  public:
+    template <typename M2, typename T2>
+    ResultAndType(M2&& aM, T2&& aT)
+      : mResult(Forward<M2>(aM)), mT(Forward<T2>(aT))
+    {
+    }
+    ResultAndType(const ResultAndType&) = default;
+    ResultAndType& operator=(const ResultAndType&) = default;
+    ResultAndType(ResultAndType&&) = default;
+    ResultAndType& operator=(ResultAndType&&) = default;
+
+    mozilla::MediaResult& Result() { return mResult; }
+    T& Ref() { return mT; }
+
+  private:
+    mozilla::MediaResult mResult;
+    typename mozilla::Decay<T>::Type mT;
+  };
+
+  using ResultAndByteBuffer = ResultAndType<RefPtr<mozilla::MediaByteBuffer>>;
+  static ResultAndByteBuffer Metadata(Stream* aSource);
+
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;

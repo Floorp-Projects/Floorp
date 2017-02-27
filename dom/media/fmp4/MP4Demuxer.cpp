@@ -127,16 +127,21 @@ MP4Demuxer::Init()
   // 'result' will capture the first warning, if any.
   MediaResult result{NS_OK};
 
-  RefPtr<MediaByteBuffer> initData = mp4_demuxer::MP4Metadata::Metadata(stream);
-  if (!initData) {
+  mp4_demuxer::MP4Metadata::ResultAndByteBuffer initData =
+    mp4_demuxer::MP4Metadata::Metadata(stream);
+  if (!initData.Ref()) {
     return InitPromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                  RESULT_DETAIL("Invalid MP4 metadata or OOM")),
+      NS_FAILED(initData.Result())
+      ? Move(initData.Result())
+      : MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                    RESULT_DETAIL("Invalid MP4 metadata or OOM")),
       __func__);
+  } else if (NS_FAILED(initData.Result()) && result == NS_OK) {
+    result = Move(initData.Result());
   }
 
   RefPtr<mp4_demuxer::BufferStream> bufferstream =
-    new mp4_demuxer::BufferStream(initData);
+    new mp4_demuxer::BufferStream(initData.Ref());
 
   mp4_demuxer::MP4Metadata metadata{bufferstream};
 
