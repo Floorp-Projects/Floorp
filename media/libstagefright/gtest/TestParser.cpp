@@ -92,11 +92,9 @@ TEST(stagefright_MP4Metadata, EmptyStream)
               E == metadata.GetNumberTracks(TrackInfo::kTextTrack).Ref());
   EXPECT_TRUE(0u == metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)).Ref() ||
               E == metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)).Ref());
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
+  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0).Ref());
+  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0).Ref());
+  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0).Ref());
   // We can seek anywhere in any MPEG4.
   EXPECT_TRUE(metadata.CanSeek());
   EXPECT_FALSE(metadata.Crypto().valid);
@@ -305,14 +303,15 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
         << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
       EXPECT_EQ(None, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)).Ref())
         << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
-      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
-      UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
+      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0).Ref());
+      MP4Metadata::ResultAndTrackInfo trackInfo =
+        metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
       if (tests[test].mNumberVideoTracks == 0 ||
           tests[test].mNumberVideoTracks == E) {
-        EXPECT_TRUE(!trackInfo);
+        EXPECT_TRUE(!trackInfo.Ref());
       } else {
-        ASSERT_TRUE(!!trackInfo);
-        const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
+        ASSERT_TRUE(!!trackInfo.Ref());
+        const VideoInfo* videoInfo = trackInfo.Ref()->GetAsVideoInfo();
         ASSERT_TRUE(!!videoInfo);
         EXPECT_TRUE(videoInfo->IsValid());
         EXPECT_TRUE(videoInfo->IsVideo());
@@ -332,10 +331,10 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
       if (tests[test].mNumberAudioTracks == 0 ||
           tests[test].mNumberAudioTracks == E) {
-        EXPECT_TRUE(!trackInfo);
+        EXPECT_TRUE(!trackInfo.Ref());
       } else {
-        ASSERT_TRUE(!!trackInfo);
-        const AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
+        ASSERT_TRUE(!!trackInfo.Ref());
+        const AudioInfo* audioInfo = trackInfo.Ref()->GetAsAudioInfo();
         ASSERT_TRUE(!!audioInfo);
         EXPECT_TRUE(audioInfo->IsValid());
         EXPECT_TRUE(audioInfo->IsAudio());
@@ -354,8 +353,8 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
           EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
         }
       }
-      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
-      EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
+      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0).Ref());
+      EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0).Ref());
       // We can see anywhere in any MPEG4.
       EXPECT_TRUE(metadata.CanSeek());
       EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().valid);
@@ -582,9 +581,8 @@ TEST(stagefright_MP4Metadata, EmptyCTTS)
   MP4Metadata metadata(stream);
 
   EXPECT_EQ(1u, metadata.GetNumberTracks(TrackInfo::kVideoTrack).Ref());
-  mozilla::UniquePtr<mozilla::TrackInfo> track =
-    metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-  EXPECT_TRUE(track != nullptr);
+  MP4Metadata::ResultAndTrackInfo track = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
+  EXPECT_TRUE(track.Ref() != nullptr);
   // We can seek anywhere in any MPEG4.
   EXPECT_TRUE(metadata.CanSeek());
   EXPECT_FALSE(metadata.Crypto().valid);
