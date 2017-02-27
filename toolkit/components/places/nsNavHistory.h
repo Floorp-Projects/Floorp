@@ -444,7 +444,8 @@ public:
                      const nsACString& aGuid,
                      bool aHidden,
                      uint32_t aVisitCount,
-                     uint32_t aTyped);
+                     uint32_t aTyped,
+                     const nsAString& aLastKnownTitle);
 
   /**
    * Fires onTitleChanged event to nsINavHistoryService observers

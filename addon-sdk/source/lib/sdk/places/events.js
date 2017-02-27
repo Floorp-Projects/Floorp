@@ -115,6 +115,20 @@ function formatValue (type, data) {
 }
 
 var historyObserver = createObserverInstance(HISTORY_EVENTS, HISTORY_ARGS);
+// Hack alert: we sometimes need to send extra title-changed notifications
+// ourselves for backwards compat. Replace the original onVisit callback to
+// add on that logic:
+historyObserver.realOnVisit = historyObserver.onVisit;
+historyObserver.onVisit = function(url, visitId, time, sessionId,
+                                   referringId, transitionType, guid, hidden,
+                                   visitCount, typed, lastKnownTitle) {
+  // If this is the first visit we're adding, fire title-changed
+  // in case anyone cares.
+  if (visitCount == 1) {
+    historyObserver.onTitleChanged(url, lastKnownTitle);
+  }
+  this.realOnVisit(url, visitId, time, sessionId, referringId, transitionType);
+};
 historyService.addObserver(historyObserver, false);
 
 var bookmarkObserver = createObserverInstance(BOOKMARK_EVENTS, BOOKMARK_ARGS);
