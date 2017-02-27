@@ -11,6 +11,7 @@
 #include "mozilla/layers/ImageBridgeParent.h" // for ImageBridgeParent
 #include "mozilla/layers/TextureHost.h"       // for TextureHost
 #include "mozilla/layers/TextureForwarder.h"
+#include "mozilla/layers/CompositableForwarder.h"
 
 namespace mozilla {
 namespace layers {
@@ -18,6 +19,17 @@ namespace layers {
 NS_IMPL_ISUPPORTS(GfxMemoryImageReporter, nsIMemoryReporter)
 
 mozilla::Atomic<ptrdiff_t> GfxMemoryImageReporter::sAmount(0);
+
+/* static */ uint32_t
+CompositableForwarder::GetMaxFileDescriptorsPerMessage() {
+#if defined(OS_POSIX)
+  static const uint32_t kMaxFileDescriptors = FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE;
+#else
+  // default number that works everywhere else
+  static const uint32_t kMaxFileDescriptors = 250;
+#endif
+  return kMaxFileDescriptors;
+}
 
 mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType()
 {
