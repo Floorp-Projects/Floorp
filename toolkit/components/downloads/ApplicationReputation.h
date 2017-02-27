@@ -20,6 +20,14 @@ class nsIRequest;
 class PendingDBLookup;
 class PendingLookup;
 
+namespace mozilla {
+namespace downloads {
+
+bool LookupTablesInPrefs(const nsACString& tables, const char* aPref);
+
+} // namespace downloads
+} // namespace mozilla
+
 class ApplicationReputationService final :
   public nsIApplicationReputationService {
 public:
