@@ -744,13 +744,13 @@ test(() => {
     assertInstantiateError([emptyModule, null], TypeError);
     assertInstantiateError([importingModuleBinary, null], TypeError);
     assertInstantiateError([importingModuleBinary, undefined], TypeError);
-    assertInstantiateError([importingModuleBinary, {}], LinkError);
+    assertInstantiateError([importingModuleBinary, {}], TypeError);
     assertInstantiateError([importingModuleBinary, {"":{g:()=>{}}}], LinkError);
-    assertInstantiateError([importingModuleBinary, {t:{f:()=>{}}}], LinkError);
+    assertInstantiateError([importingModuleBinary, {t:{f:()=>{}}}], TypeError);
     assertInstantiateError([complexImportingModuleBinary, null], TypeError);
     assertInstantiateError([complexImportingModuleBinary, undefined], TypeError);
-    assertInstantiateError([complexImportingModuleBinary, {}], LinkError);
-    assertInstantiateError([complexImportingModuleBinary, {"c": {"d": scratch_memory}}], LinkError);
+    assertInstantiateError([complexImportingModuleBinary, {}], TypeError);
+    assertInstantiateError([complexImportingModuleBinary, {"c": {"d": scratch_memory}}], TypeError);
 
     function assertInstantiateSuccess(module, imports) {
         promise_test(()=> {
