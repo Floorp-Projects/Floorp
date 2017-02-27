@@ -386,16 +386,14 @@ MediaFormatReader::DecoderData::ShutdownDecoder()
 
   if (mFlushing) {
     // Flush is is in action. Shutdown will be initiated after flush completes.
-    if (mShutdownPromise.IsEmpty()) {
-      mOwner->mShutdownPromisePool->Track(mShutdownPromise.Ensure(__func__));
-    }
-    return;
-  }
-
-  if (!mShutdownPromise.IsEmpty()) {
-    // This is called from the resolve/reject function of Flush.
-    // Let's continue shutdown.
-    mDecoder->Shutdown()->ChainTo(mShutdownPromise.Steal(), __func__);
+    MOZ_DIAGNOSTIC_ASSERT(mShutdownPromise);
+    mOwner->mShutdownPromisePool->Track(mShutdownPromise->Ensure(__func__));
+    // The order of decoder creation and shutdown is handled by LocalAllocPolicy
+    // and ShutdownPromisePool. MFR can now reset these members to a fresh state
+    // and be ready to create new decoders again without explicitly waiting for
+    // flush/shutdown to complete.
+    mShutdownPromise = nullptr;
+    mFlushing = false;
   } else {
     // No flush is in action. We can shut down the decoder now.
     mOwner->mShutdownPromisePool->Track(mDecoder->Shutdown());
@@ -426,28 +424,36 @@ MediaFormatReader::DecoderData::Flush()
   mNumSamplesOutput = 0;
   mSizeOfQueue = 0;
   if (mDecoder) {
-    RefPtr<MediaFormatReader> owner = mOwner;
     TrackType type = mType == MediaData::AUDIO_DATA
                      ? TrackType::kAudioTrack
                      : TrackType::kVideoTrack;
     mFlushing = true;
+    MOZ_DIAGNOSTIC_ASSERT(!mShutdownPromise);
+    mShutdownPromise = new SharedShutdownPromiseHolder();
+    RefPtr<SharedShutdownPromiseHolder> p = mShutdownPromise;
+    RefPtr<MediaDataDecoder> d = mDecoder;
     mDecoder->Flush()
       ->Then(mOwner->OwnerThread(), __func__,
-             [owner, type, this]() {
-               mFlushing = false;
-               if (!mShutdownPromise.IsEmpty()) {
-                 ShutdownDecoder();
+             [type, this, p, d]() {
+               if (!p->IsEmpty()) {
+                 // Shutdown happened before flush completes. Let's continue to
+                 // shut down the decoder. Note we don't access |this| because
+                 // this decoder is no longer managed by MFR::DecoderData.
+                 d->Shutdown()->ChainTo(p->Steal(), __func__);
                  return;
                }
-               owner->ScheduleUpdate(type);
+               mFlushing = false;
+               mShutdownPromise = nullptr;
+               mOwner->ScheduleUpdate(type);
              },
-             [owner, type, this](const MediaResult& aError) {
-               mFlushing = false;
-               if (!mShutdownPromise.IsEmpty()) {
-                 ShutdownDecoder();
+             [type, this, p, d](const MediaResult& aError) {
+               if (!p->IsEmpty()) {
+                 d->Shutdown()->ChainTo(p->Steal(), __func__);
                  return;
                }
-               owner->NotifyError(type, aError);
+               mFlushing = false;
+               mShutdownPromise = nullptr;
+               mOwner->NotifyError(type, aError);
              });
   }
   mFlushed = true;
