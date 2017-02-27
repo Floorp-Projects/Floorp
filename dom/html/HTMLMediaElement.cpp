@@ -5286,6 +5286,14 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   }
 }
 
+void HTMLMediaElement::DecodeWarning(const MediaResult& aError)
+{
+  nsAutoString src;
+  GetCurrentSrc(src);
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);
+}
+
 bool HTMLMediaElement::HasError() const
 {
   return GetError();
