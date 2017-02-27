@@ -5135,16 +5135,25 @@ pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 #endif
 
 // Tables for application reputation.
+#ifdef NIGHTLY_BUILD
+pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar,goog-badbinurl-proto");
+#else
 pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
+#endif
 
 #ifdef XP_WIN
  // Only download the whitelist on Windows, since the whitelist is
  // only useful for suppressing remote lookups for signed binaries which we can
  // only verify on Windows (Bug 974579). Other platforms always do remote lookups.
+#ifdef NIGHTLY_BUILD
+pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256,goog-downloadwhite-proto");
+#else
 pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
+#endif // NIGHTLY_BUILD
+
 #else
 pref("urlclassifier.downloadAllowTable", "");
-#endif
+#endif // XP_WIN
 
 pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,test-flashallow-simple,testexcept-flashallow-simple,test-flash-simple,testexcept-flash-simple,test-flashsubdoc-simple,testexcept-flashsubdoc-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256");
 
@@ -5196,7 +5205,7 @@ pref("browser.safebrowsing.provider.google.reportMalwareMistakeURL", "https://%L
 
 // Prefs for v4.
 pref("browser.safebrowsing.provider.google4.pver", "4");
-pref("browser.safebrowsing.provider.google4.lists", "goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto");
+pref("browser.safebrowsing.provider.google4.lists", "goog-badbinurl-proto,goog-downloadwhite-proto,goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto");
 pref("browser.safebrowsing.provider.google4.updateURL", "https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%");
 // Leave it empty until we roll out v4 hash completion feature. See Bug 1323856.
 pref("browser.safebrowsing.provider.google4.gethashURL", "");
