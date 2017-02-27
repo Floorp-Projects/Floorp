@@ -471,13 +471,8 @@
     </style>
 
     <!-- TabsLayout -->
-    <style name="TabsLayoutBase">
+    <style name="TabsLayout">
          <item name="android:background">@android:color/transparent</item>
-         <item name="android:listSelector">@android:color/transparent</item>
-    </style>
-
-    <style name="TabsLayout" parent="TabsLayoutBase">
-         <item name="android:orientation">vertical</item>
          <item name="android:scrollbars">vertical</item>
     </style>
 
