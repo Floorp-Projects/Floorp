@@ -75,6 +75,8 @@ private:
   InfallibleTArray<OpDestroy>* mActorsToDestroy;
 };
 
+/* static */ uint32_t WebRenderBridgeParent::sIdNameSpace = 0;
+
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
@@ -91,6 +93,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
+  , mIdNameSpace(++sIdNameSpace)
   , mDestroyed(false)
 {
   MOZ_ASSERT(mCompositableHolder);
