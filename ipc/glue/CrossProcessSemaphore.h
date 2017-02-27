@@ -11,7 +11,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Maybe.h"
 
-#if !defined(OS_WIN) && !defined(OS_NETBSD) && !defined(OS_OPENBSD) && !defined(OS_MACOSX)
+#if !defined(OS_WIN) && !defined(OS_MACOSX)
 #include <pthread.h>
 #include <semaphore.h>
 #include "SharedMemoryBasic.h"
@@ -30,7 +30,7 @@ struct ParamTraits;
 namespace mozilla {
 #if defined(OS_WIN)
 typedef HANDLE CrossProcessSemaphoreHandle;
-#elif !defined(OS_NETBSD) && !defined(OS_OPENBSD) && !defined(OS_MACOSX)
+#elif !defined(OS_MACOSX)
 typedef mozilla::ipc::SharedMemoryBasic::Handle CrossProcessSemaphoreHandle;
 #else
 // Stub for other platforms. We can't use uintptr_t here since different
@@ -86,7 +86,7 @@ private:
 
 #if defined(OS_WIN)
   HANDLE mSemaphore;
-#elif !defined(OS_NETBSD) && !defined(OS_OPENBSD) && !defined(OS_MACOSX)
+#elif !defined(OS_MACOSX)
   RefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;
   sem_t* mSemaphore;
   mozilla::Atomic<int32_t>* mRefCount;
