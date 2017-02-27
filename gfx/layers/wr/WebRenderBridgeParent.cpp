@@ -78,6 +78,7 @@ private:
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
+                                             CompositorVsyncScheduler* aScheduler,
                                              RefPtr<wr::WebRenderAPI>&& aApi,
                                              RefPtr<WebRenderCompositableHolder>&& aHolder)
   : mCompositorBridge(aCompositorBridge)
@@ -86,6 +87,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mBuilder(Nothing())
   , mApi(aApi)
   , mCompositableHolder(aHolder)
+  , mCompositorScheduler(aScheduler)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
@@ -93,6 +95,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 {
   MOZ_ASSERT(mCompositableHolder);
   if (mWidget) {
+    MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 }
@@ -471,6 +474,11 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
+  if (mCompositorScheduler->NeedsComposite()) {
+    mCompositorScheduler->CancelCurrentCompositeTask();
+    mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
+  }
+
   MOZ_ASSERT(mBuilder.isSome());
   mApi->Readback(size, buffer, buffer_size);
 
@@ -568,9 +576,7 @@ WebRenderBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 void
 WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
-  // TODO(bug 1328602) With the RenderThread, calling SetRootStackingContext
-  // should trigger the composition on the render thread.
-  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  mApi->GenerateFrame();
 }
 
 void
@@ -641,11 +647,9 @@ WebRenderBridgeParent::DeleteOldImages()
 void
 WebRenderBridgeParent::ScheduleComposition()
 {
-  MOZ_ASSERT(mApi);
-  // TODO(bug 1328602) should probably send a message to the render
-  // thread and force rendering, although in most cases where this is
-  // called, rendering should be triggered automatically already (maybe
-  // not in the ImageBridge case).
+  if (mCompositorScheduler) {
+    mCompositorScheduler->ScheduleComposition();
+  }
 }
 
 void
@@ -663,11 +667,10 @@ WebRenderBridgeParent::ClearResources()
   if (mBuilder.isSome()) {
     mBuilder.reset();
   }
-  if (mCompositorScheduler) {
+  if (mWidget && mCompositorScheduler) {
     mCompositorScheduler->Destroy();
-    mCompositorScheduler = nullptr;
   }
-
+  mCompositorScheduler = nullptr;
   mApi = nullptr;
   mCompositorBridge = nullptr;
 }
