@@ -140,6 +140,8 @@
   skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)
   skin/classic/browser/privatebrowsing/tracking-protection-off.svg (../shared/privatebrowsing/tracking-protection-off.svg)
   skin/classic/browser/privatebrowsing/tracking-protection.svg (../shared/privatebrowsing/tracking-protection.svg)
+  skin/classic/browser/compacttheme/loading-inverted.png (../shared/compacttheme/loading-inverted.png)
+  skin/classic/browser/compacttheme/loading-inverted@2x.png (../shared/compacttheme/loading-inverted@2x.png)
   skin/classic/browser/devedition/urlbar-history-dropmarker.svg (../shared/devedition/urlbar-history-dropmarker.svg)
   skin/classic/browser/urlbar-star.svg                         (../shared/urlbar-star.svg)
   skin/classic/browser/urlbar-tab.svg                          (../shared/urlbar-tab.svg)
