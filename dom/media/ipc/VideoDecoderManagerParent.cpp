@@ -213,7 +213,7 @@ VideoDecoderManagerParent::RecvReadback(const SurfaceDescriptorGPUVideo& aSD, Su
     return IPC_OK();
   }
 
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
                                                            buffer.get<uint8_t>(), size,
                                                            ImageDataSerializer::ComputeRGBStride(format, size.width),
                                                            format);
