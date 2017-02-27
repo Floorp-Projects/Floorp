@@ -168,7 +168,11 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
                               LayoutSize::new(viewport_width, viewport_height),
                               frame_builder.dl_builder,
                               preserve_frame_state);
-    api.generate_frame(None);
+}
+
+#[no_mangle]
+pub extern fn wr_api_generate_frame(api: &mut RenderApi) {
+  api.generate_frame(None);
 }
 
 // Call MakeCurrent before this.

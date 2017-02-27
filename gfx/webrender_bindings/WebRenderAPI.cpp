@@ -151,6 +151,12 @@ WebRenderAPI::~WebRenderAPI()
 }
 
 void
+WebRenderAPI::GenerateFrame()
+{
+  wr_api_generate_frame(mWrApi);
+}
+
+void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
