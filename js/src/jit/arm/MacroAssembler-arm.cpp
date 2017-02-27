@@ -4841,8 +4841,6 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 void
 MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
 {
-    MOZ_ASSERT(!set.has(scratch));
-
     int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 

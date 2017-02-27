@@ -1031,6 +1031,19 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set>
 #error "Bad architecture"
 #endif
     }
+
+    using Parent::addUnchecked;
+    void addUnchecked(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        addUnchecked(value.payloadReg());
+        addUnchecked(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        addUnchecked(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
+
     void add(TypedOrValueRegister reg) {
         if (reg.hasValue())
             add(reg.valueReg());

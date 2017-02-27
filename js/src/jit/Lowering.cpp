@@ -3975,15 +3975,11 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
     // that calls this script recursively.
     gen->setPerformsCall();
 
-    // If the index might be an integer, we need some extra temp registers for
-    // the dense and typed array element stubs.
-    LDefinition tempToUnboxIndex = LDefinition::BogusTemp();
+    // We need a double/float32 temp register for typed array stubs if this is
+    // a SETELEM.
     LDefinition tempD = LDefinition::BogusTemp();
     LDefinition tempF32 = LDefinition::BogusTemp();
-
-    if (id->mightBeType(MIRType::Int32)) {
-        if (id->type() != MIRType::Int32)
-            tempToUnboxIndex = tempToUnbox();
+    if (IsSetElemPC(ins->resumePoint()->pc())) {
         tempD = tempDouble();
         tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
     }
@@ -3992,8 +3988,7 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
         new(alloc()) LSetPropertyCache(useRegister(ins->object()),
                                        useBoxOrTypedOrConstant(id, useConstId),
                                        useBoxOrTypedOrConstant(ins->value(), useConstValue),
-                                       temp(),
-                                       tempToUnboxIndex, tempD, tempF32);
+                                       temp(), tempD, tempF32);
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

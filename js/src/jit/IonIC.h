@@ -57,6 +57,7 @@ class IonICStub
 };
 
 class IonGetPropertyIC;
+class IonSetPropertyIC;
 
 class IonIC
 {
@@ -125,6 +126,8 @@ class IonIC
     // Discard all stubs.
     void reset(Zone* zone);
 
+    void togglePreBarriers(bool enabled, ReprotectCode reprotect);
+
     CacheKind kind() const { return kind_; }
     uint8_t** codeRawPtr() { return &codeRaw_; }
 
@@ -138,6 +141,10 @@ class IonIC
         MOZ_ASSERT(kind_ == CacheKind::GetProp || kind_ == CacheKind::GetElem);
         return (IonGetPropertyIC*)this;
     }
+    IonSetPropertyIC* asSetPropertyIC() {
+        MOZ_ASSERT(kind_ == CacheKind::SetProp || kind_ == CacheKind::SetElem);
+        return (IonSetPropertyIC*)this;
+    }
 
     void updateBaseAddress(JitCode* code, MacroAssembler& masm);
 
@@ -148,7 +155,8 @@ class IonIC
     void trace(JSTracer* trc);
 
     bool attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-                           HandleScript outerScript);
+                           IonScript* ionScript,
+                           const PropertyTypeCheckInfo* typeCheckInfo = nullptr);
 };
 
 class IonGetPropertyIC : public IonIC
@@ -193,6 +201,55 @@ class IonGetPropertyIC : public IonIC
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonGetPropertyIC* ic,
                                     HandleValue val, HandleValue idVal, MutableHandleValue res);
+};
+
+class IonSetPropertyIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+
+    Register object_;
+    Register temp1_;
+    FloatRegister maybeTempDouble_;
+    FloatRegister maybeTempFloat32_;
+    ConstantOrRegister id_;
+    ConstantOrRegister rhs_;
+    bool strict_ : 1;
+    bool needsTypeBarrier_ : 1;
+    bool guardHoles_ : 1;
+
+  public:
+    IonSetPropertyIC(CacheKind kind, LiveRegisterSet liveRegs, Register object, Register temp1,
+                     FloatRegister maybeTempDouble, FloatRegister maybeTempFloat32,
+                     const ConstantOrRegister& id, const ConstantOrRegister& rhs, bool strict,
+                     bool needsTypeBarrier, bool guardHoles)
+      : IonIC(kind),
+        liveRegs_(liveRegs),
+        object_(object),
+        temp1_(temp1),
+        maybeTempDouble_(maybeTempDouble),
+        maybeTempFloat32_(maybeTempFloat32),
+        id_(id),
+        rhs_(rhs),
+        strict_(strict),
+        needsTypeBarrier_(needsTypeBarrier),
+        guardHoles_(guardHoles)
+    { }
+
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+    Register object() const { return object_; }
+    ConstantOrRegister id() const { return id_; }
+    ConstantOrRegister rhs() const { return rhs_; }
+
+    Register temp1() const { return temp1_; }
+    FloatRegister maybeTempDouble() const { return maybeTempDouble_; }
+    FloatRegister maybeTempFloat32() const { return maybeTempFloat32_; }
+
+    bool strict() const { return strict_; }
+    bool needsTypeBarrier() const { return needsTypeBarrier_; }
+    bool guardHoles() const { return guardHoles_; }
+
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonSetPropertyIC* ic,
+                                    HandleObject obj, HandleValue idVal, HandleValue rhs);
 };
 
 } // namespace jit
