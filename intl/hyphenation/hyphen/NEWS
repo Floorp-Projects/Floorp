@@ -1,0 +1,106 @@
+2014-09-18 Hyphen 2.8.8:
+  - remove last coverity warning, 0 remaining
+
+2014-06-27 Hyphen 2.8.7:
+  - various clang scan-build warning fixes
+
+2012-09-13 Hyphen 2.8.6:
+  - righthyphenmin fix for 3-byte or more UTF-8
+    multibyte characters by Steven Dickson
+  - fix for fdo#43931 (removing hard hyphen hyphenation for LibreOffice)
+
+2012-07-12 Hyphen 2.8.5:
+  - fix short alloc
+
+2012-06-29 Hyphen 2.8.4:
+  - coverity warnings
+
+2011-10-10 Hyphen 2.8.3:
+  - fix NOHYPHEN
+  - fix unbalanced hyphenation of LibreOffice/OOo
+  - set default COMPOUNDHYPHENMIN=3 at hyphens and apostrophes
+  - fix VERBOSE in hyphen.c
+  - new ./example option: -n to print hyphenation vector
+
+2011-10-07 Hyphen 2.8.2:
+  - fix for explicite COMPOUNDHYPHENMIN values
+
+2011-10-06 Hyphen 2.8.1:
+  - force minimal lefthyphenmin and righthyphenmin values of the dictionary
+    (eg. righthyphenmin=3 of English dictionaries in LibreOffice/OOo,
+    also the original TeX hyphenation patterns are correct only with this
+    righthyphenmin value).
+
+2011-10-04 Hyphen 2.8:
+  - Ignore leading and ending numbers (eg. manual/field based indexes
+    in LibreOffice/OOo)
+
+  - Fix LibreOffice/OpenOffice.org hyphenation errors at apostrophes and
+    hyphens, n-dashes with default NOHYPHEN separators.
+    Eg. *o'c=lock -> o'clock.
+
+2010-12-01 Hyphen 2.7.1 bug fix release
+
+2010-11-27 Hyphen 2.7 release:
+  - The new hyphenation problem of OpenOffice.org 3.2, related to its
+    modified word breaking of words with hyphen characters, can be fixed
+    with the new NOHYPHEN feature. Also it's possible to solve the similar old
+    problem with apostrophes. More information: README.compound.
+
+  - improved English dictionaries
+
+2010-08-10 Hyphen 2.6 release:
+  - maintainance release, fix all warnings, tidy up
+    make check with VALGRIND=memcheck, etc.
+
+2010-02-23 Hyphen 2.5 release:
+  - add Unicode ligature support for correct hyphenmin calculation
+    (ff, fi, fl, St, st are 1-character, ffi and ffl are 2-character length for
+    hyphenation)
+  - fix lefthyphenmin calculation for UTF-8 encoded input
+
+  - en_US hyphenation dictionary:
+      - add OpenOffice.org patch to fix apostrophe handling
+      - add correct hyphenation for words with Unicode f-ligatures
+        (NOTE: hyphenation within ligatures is not supported yet
+        because of an implementation problem of OpenOffice.org,
+        see OOo issue 71608.)
+
+    - small patches from OpenOffice.org
+
+2008-05-01 Hyphen 2.4 release:
+  - compound word hyphenation support by recursive pattern matching
+    based on two hyphenation pattern sets, see README.compound.
+    Especially useful for languages with arbitrary number of compounds (Danish,
+    Dutch, Finnish, German, Hungarian, Icelandic, Norwegian, Swedish etc.).
+
+  - new dictionary parameters (minimal character numbers for hyph. distances):
+    LEFTHYPHENMIN: minimal hyphenation distance from the left end of the word
+    RIGHTHYPHENMIN: minimal hyphenation distance from the right end of the word
+    COMPOUNDLEFTHYPHENMIN: min. hyph. dist. from the left compound word boundary
+    COMPOUNDRIGHTHYPHENMIN: min. hyph. dist. from the right comp. word boundary
+
+  - new API function: hnj_hyphen_hyphenate3() (like hyphenate2(), but
+    with hyphenmin options)
+
+en_US hyphenation patterns:
+
+  - extended hyph_en_US.dic with TugBoat hyphenation log (fix thousand 
+    incompletely or badly hyphenated words, for example acad-e-my, acro-nym,
+    acryl-amide, adren-a-line, aero-space, am-phet-a-mine, anom-aly etc.)
+
+  - fixed hyph_en_US.dic: set the right default hyphenation distance of
+    the original TeX hyphenation patterns:
+    LEFTHYPHENMIN 2
+    RIGHTHYPHENMIN 3 (not 2!)
+    It is not only a typographical issue. It seems, TeX hyphenation
+    patterns are right only with these settings, for example,
+    the bad "anoma-ly" is restricted in TeX only by the default
+    \righthyphenmin=3 (but not restricted in OpenOffice.org, until now).
+
+  - documentation (README_hyph_en_US.dic)
+
+  - fixes for automake configuration, compiling and checking, see ChangeLog
+
+2008-02-19: Hyphen 2.3.1 release:
+  - fix obsolete API function hnj_hyphen_hyphenate()
