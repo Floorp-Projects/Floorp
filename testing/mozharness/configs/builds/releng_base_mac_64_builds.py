@@ -31,8 +31,8 @@ config = {
     'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
-    'enable_talos_sendchange': True,
-    'enable_unittest_sendchange': True,
+    'enable_talos_sendchange': False,
+    'enable_unittest_sendchange': False,
     #########################################################################
 
 

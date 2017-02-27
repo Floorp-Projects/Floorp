@@ -134,23 +134,26 @@ windows-vm-tests:
 macosx64-tests-debug:
     - cppunit
     - crashtest
-    # - gtest
+    - external-media-tests-base
+    - external-media-tests-youtube
+    - gtest
+    - jittest
     - jsreftest
-    # - marionette
-    # - mochitest
-    # - mochitest-a11y
-    # - mochitest-browser-chrome
-    # - mochitest-chrome
-    # - mochitest-clipboard
-    # - mochitest-devtools-chrome
-    # - mochitest-gpu
-    # - mochitest-jetpack
-    # - mochitest-media
+    - marionette
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
     - mochitest-webgl
-    # - reftest
-    # - web-platform-tests
-    # - web-platform-tests-reftests
-    # - xpcshell
+    - reftest
+    - web-platform-tests
+    - web-platform-tests-reftests
+    - xpcshell
 
 macosx64-tests-talos:
     - talos-chrome
