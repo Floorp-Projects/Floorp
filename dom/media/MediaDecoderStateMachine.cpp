@@ -2114,6 +2114,44 @@ void MediaDecoderStateMachine::SetMediaNotSeekable()
   mMediaSeekable = false;
 }
 
+void
+MediaDecoderStateMachine::OnAudioCallback(AudioCallbackData aData)
+{
+  if (aData.is<MediaData*>()) {
+    OnAudioDecoded(aData.as<MediaData*>());
+  } else {
+    OnNotDecoded(MediaData::AUDIO_DATA, aData.as<MediaResult>());
+  }
+}
+
+void
+MediaDecoderStateMachine::OnVideoCallback(VideoCallbackData aData)
+{
+  typedef Tuple<MediaData*, TimeStamp> Type;
+  if (aData.is<Type>()) {
+    auto&& v = aData.as<Type>();
+    OnVideoDecoded(Get<0>(v), Get<1>(v));
+  } else {
+    OnNotDecoded(MediaData::VIDEO_DATA, aData.as<MediaResult>());
+  }
+}
+
+void
+MediaDecoderStateMachine::OnAudioWaitCallback(WaitCallbackData aData)
+{
+  if (aData.is<MediaData::Type>()) {
+    EnsureAudioDecodeTaskQueued();
+  }
+}
+
+void
+MediaDecoderStateMachine::OnVideoWaitCallback(WaitCallbackData aData)
+{
+  if (aData.is<MediaData::Type>()) {
+    EnsureVideoDecodeTaskQueued();
+  }
+}
+
 nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2160,40 +2198,20 @@ MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  RefPtr<MediaDecoderStateMachine> self = this;
+  // The use of raw pointer references is safe because the lifecycle of a
+  // MediaDecoderStateMachine guarantees that the callbacks are disconnected
+  // before the MediaDecoderStateMachine is destroyed.
   mAudioCallback = mReader->AudioCallback().Connect(
-    mTaskQueue, [self] (AudioCallbackData aData) {
-    if (aData.is<MediaData*>()) {
-      self->OnAudioDecoded(aData.as<MediaData*>());
-    } else {
-      self->OnNotDecoded(MediaData::AUDIO_DATA, aData.as<MediaResult>());
-    }
-  });
+    mTaskQueue, this, &MediaDecoderStateMachine::OnAudioCallback);
 
   mVideoCallback = mReader->VideoCallback().Connect(
-    mTaskQueue, [self] (VideoCallbackData aData) {
-    typedef Tuple<MediaData*, TimeStamp> Type;
-    if (aData.is<Type>()) {
-      auto&& v = aData.as<Type>();
-      self->OnVideoDecoded(Get<0>(v), Get<1>(v));
-    } else {
-      self->OnNotDecoded(MediaData::VIDEO_DATA, aData.as<MediaResult>());
-    }
-  });
+    mTaskQueue, this, &MediaDecoderStateMachine::OnVideoCallback);
 
   mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
-    mTaskQueue, [self] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      self->EnsureAudioDecodeTaskQueued();
-    }
-  });
+    mTaskQueue, this, &MediaDecoderStateMachine::OnAudioWaitCallback);
 
   mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
-    mTaskQueue, [self] (WaitCallbackData aData) {
-    if (aData.is<MediaData::Type>()) {
-      self->EnsureVideoDecodeTaskQueued();
-    }
-  });
+    mTaskQueue, this, &MediaDecoderStateMachine::OnVideoWaitCallback);
 }
 
 void
