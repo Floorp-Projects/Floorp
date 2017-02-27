@@ -42,6 +42,15 @@ I know you are trying to run a %s test. Unfortunately, I can't run those
 tests yet. Sorry!
 '''.strip()
 
+CONFIG_ENVIRONMENT_NOT_FOUND = '''
+No config environment detected. This means we are unable to properly
+detect test files in the specified paths or tags. Please run:
+
+    $ mach configure
+
+and try again.
+'''.lstrip()
+
 MOCHITEST_CHUNK_BY_DIR = 4
 MOCHITEST_TOTAL_CHUNKS = 5
 
@@ -652,6 +661,10 @@ class PushToTry(MachCommandBase):
         builds, platforms, tests, talos, paths, tags, extra = self.validate_args(**kwargs)
 
         if paths or tags:
+            if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
+                print(CONFIG_ENVIRONMENT_NOT_FOUND)
+                sys.exit(1)
+
             paths = [os.path.relpath(os.path.normpath(os.path.abspath(item)), self.topsrcdir)
                      for item in paths]
             paths_by_flavor = at.paths_by_flavor(paths=paths, tags=tags)
