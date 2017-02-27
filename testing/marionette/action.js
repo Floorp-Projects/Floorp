@@ -327,11 +327,46 @@ const KEY_CODE_LOOKUP = {
   "\uE004": "Tab",
 };
 
+/** Represents possible values for a pointer-move origin. */
+action.PointerOrigin = {
+  Viewport: "viewport",
+  Pointer: "pointer",
+};
+
+/**
+ * Look up a PointerOrigin.
+ *
+ * @param {?} obj
+ *     Origin for a pointerMove action.
+ *
+ * @return {?}
+ *     A pointer origin that is either "viewport" (default), "pointer", or a
+ *     web-element reference.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |obj| is not a valid origin.
+ */
+action.PointerOrigin.get = function(obj) {
+  let origin = obj;
+  if (typeof obj == "undefined") {
+    origin = this.Viewport;
+  } else if (typeof obj == "string") {
+    let name = capitalize(obj);
+    assert.in(name, this, error.pprint`Unknown pointer-move origin: ${obj}`);
+    origin = this[name];
+  } else if (!element.isWebElementReference(obj)) {
+    throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
+      `web element reference, got: ${obj}`);
+  }
+  return origin;
+};
+
 /** Represents possible subtypes for a pointer input source. */
 action.PointerType = {
   Mouse: "mouse",
-  Pen: "pen",
-  Touch: "touch",
+  // TODO For now, only mouse is supported
+  //Pen: "pen",
+  //Touch: "touch",
 };
 
 /**
@@ -348,9 +383,7 @@ action.PointerType = {
  */
 action.PointerType.get = function (str) {
   let name = capitalize(str);
-  if (!(name in this)) {
-    throw new InvalidArgumentError(`Unknown pointerType: ${str}`);
-  }
+  assert.in(name, this, error.pprint`Unknown pointerType: ${str}`);
   return this[name];
 };
 
@@ -400,8 +433,8 @@ class InputState {
 
   /**
    * @param {?} obj
-   *     Object with property |type|, representing an action sequence or an
-   *     action item.
+   *     Object with property |type| and optionally |parameters| or |pointerType|,
+   *     representing an action sequence or an action item.
    *
    * @return {action.InputState}
    *     An |action.InputState| object for the type of the |actionSequence|.
@@ -411,11 +444,18 @@ class InputState {
    */
   static fromJson(obj) {
     let type = obj.type;
-    if (!(type in ACTIONS)) {
-      throw new InvalidArgumentError(`Unknown action type: ${type}`);
-    }
+    assert.in(type, ACTIONS, error.pprint`Unknown action type: ${type}`);
     let name = type == "none" ? "Null" : capitalize(type);
-    return new action.InputState[name]();
+    if (name == "Pointer") {
+      if (!obj.pointerType && (!obj.parameters || !obj.parameters.pointerType)) {
+        throw new InvalidArgumentError(
+            error.pprint`Expected obj to have pointerType, got: ${obj}`);
+      }
+      let pointerType = obj.pointerType || obj.parameters.pointerType;
+      return new action.InputState[name](pointerType);
+    } else {
+      return new action.InputState[name]();
+    }
   }
 }
 
@@ -488,7 +528,7 @@ action.InputState.Key = class Key extends InputState {
    *     Normalized key value.
    *
    * @return {boolean}
-   *     True if |key| is removed successfully, false otherwise.
+   *     True if |key| was present before removal, false otherwise.
    */
   release(key) {
     return this.pressed.delete(key);
@@ -510,17 +550,60 @@ action.InputState.Null = class Null extends InputState {
  *
  * @param {string} subtype
  *     Kind of pointing device: mouse, pen, touch.
- * @param {boolean} primary
- *     Whether the pointing device is primary.
+ *
+ * @throws {InvalidArgumentError}
+ *     If subtype is undefined or an invalid pointer type.
  */
 action.InputState.Pointer = class Pointer extends InputState {
-  constructor(subtype, primary) {
+  constructor(subtype) {
     super();
     this.pressed = new Set();
-    this.subtype = subtype;
-    this.primary = primary;
+    assert.defined(subtype, error.pprint`Expected subtype to be defined, got: ${subtype}`);
+    this.subtype = action.PointerType.get(subtype);
     this.x = 0;
     this.y = 0;
+  }
+
+  /**
+   * Check whether |button| is pressed.
+   *
+   * @param {number} button
+   *     Positive integer that refers to a mouse button.
+   *
+   * @return {boolean}
+   *     True if |button| is in set of pressed buttons.
+   */
+  isPressed(button) {
+    assert.positiveInteger(button);
+    return this.pressed.has(button);
+  }
+
+  /**
+   * Add |button| to the set of pressed keys.
+   *
+   * @param {number} button
+   *     Positive integer that refers to a mouse button.
+   *
+   * @return {Set}
+   *     Set of pressed buttons.
+   */
+  press(button) {
+    assert.positiveInteger(button);
+    return this.pressed.add(button);
+  }
+
+   /**
+   * Remove |button| from the set of pressed buttons.
+   *
+   * @param {number} button
+   *     A positive integer that refers to a mouse button.
+   *
+   * @return {boolean}
+   *     True if |button| was present before removals, false otherwise.
+   */
+  release(button) {
+    assert.positiveInteger(button);
+    return this.pressed.delete(button);
   }
 };
 
@@ -543,9 +626,7 @@ action.Action = class {
       throw new InvalidArgumentError("Missing id, type or subtype");
     }
     for (let attr of [id, type, subtype]) {
-      if (typeof attr != "string") {
-        throw new InvalidArgumentError(`Expected string, got: ${attr}`);
-      }
+      assert.string(attr, error.pprint`Expected string, got: ${attr}`);
     }
     this.id = id;
     this.type = type;
@@ -595,11 +676,9 @@ action.Action = class {
         // TODO countGraphemes
         // TODO key.value could be a single code point like "\uE012" (see rawKey)
         // or "grapheme cluster"
-        if (typeof key != "string") {
-          throw new InvalidArgumentError(
-              "Expected 'value' to be a string that represents single code point " +
-              "or grapheme cluster, got: " + key);
-        }
+        assert.string(key,
+            error.pprint("Expected 'value' to be a string that represents single code point " +
+                `or grapheme cluster, got: ${key}`));
         item.value = key;
         break;
 
@@ -616,14 +695,7 @@ action.Action = class {
           assert.positiveInteger(item.duration,
               error.pprint`Expected 'duration' (${item.duration}) to be >= 0`);
         }
-        if (typeof actionItem.element != "undefined" &&
-            !element.isWebElementReference(actionItem.element)) {
-          throw new InvalidArgumentError(
-              "Expected 'actionItem.element' to be a web element reference, " +
-              `got: ${actionItem.element}`);
-        }
-        item.element = actionItem.element;
-
+        item.origin = action.PointerOrigin.get(actionItem.origin);
         item.x = actionItem.x;
         if (typeof item.x != "undefined") {
           assert.positiveInteger(item.x, error.pprint`Expected 'x' (${item.x}) to be >= 0`);
@@ -710,18 +782,18 @@ action.Sequence = class extends Array {
    *     If |actionSequence.actions| is not an Array.
    */
   static fromJson(actionSequence) {
-    // used here only to validate 'type' and InputState type
+    // used here to validate 'type' in addition to InputState type below
     let inputSourceState = InputState.fromJson(actionSequence);
     let id = actionSequence.id;
     assert.defined(id, "Expected 'id' to be defined");
     assert.string(id, error.pprint`Expected 'id' to be a string, got: ${id}`);
     let actionItems = actionSequence.actions;
-    if (!Array.isArray(actionItems)) {
-      throw new InvalidArgumentError(
-          `Expected 'actionSequence.actions' to be an Array, got: ${actionSequence.actions}`);
-    }
-
-    if (action.inputStateMap.has(id) && !action.inputStateMap.get(id).is(inputSourceState)) {
+    assert.array(actionItems,
+        error.pprint("Expected 'actionSequence.actions' to be an Array, " +
+            `got: ${actionSequence.actions}`));
+    if (!action.inputStateMap.has(id)) {
+      action.inputStateMap.set(id, inputSourceState);
+    } else if (!action.inputStateMap.get(id).is(inputSourceState)) {
       throw new InvalidArgumentError(
           `Expected ${id} to be mapped to ${inputSourceState}, ` +
           `got: ${action.inputStateMap.get(id)}`);
@@ -739,19 +811,14 @@ action.Sequence = class extends Array {
  *
  * @param {string=} pointerType
  *     Type of pointing device. If the parameter is undefined, "mouse" is used.
- * @param {boolean=} primary
- *     Whether the input source is the primary pointing device.
- *     If the parameter is undefined, true is used.
  */
 action.PointerParameters = class {
-  constructor(pointerType = "mouse", primary = true) {
+  constructor(pointerType = "mouse") {
     this.pointerType = action.PointerType.get(pointerType);
-    assert.boolean(primary);
-    this.primary = primary;
   }
 
   toString() {
-    return `[pointerParameters ${this.pointerType}, primary=${this.primary}]`;
+    return `[pointerParameters ${this.pointerType}]`;
   }
 
   /**
@@ -765,13 +832,13 @@ action.PointerParameters = class {
     if (typeof parametersData == "undefined") {
       return new action.PointerParameters();
     } else {
-      return new action.PointerParameters(parametersData.pointerType, parametersData.primary);
+      return new action.PointerParameters(parametersData.pointerType);
     }
   }
 };
 
 /**
- * Adds |pointerType| and |primary| attributes to Action |act|. Helper function
+ * Adds |pointerType| attribute to Action |act|. Helper function
  * for |action.Action.fromJson|.
  *
  * @param {string} id
@@ -783,17 +850,21 @@ action.PointerParameters = class {
  *
  * @throws {InvalidArgumentError}
  *     If |id| is already mapped to an |action.InputState| that is
- *     not compatible with |act.subtype|.
+ *     not compatible with |act.type| or |pointerParams.pointerType|.
  */
 action.processPointerAction = function processPointerAction(id, pointerParams, act) {
-  let subtype = act.subtype;
-  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).subtype !== subtype) {
+  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).type !== act.type) {
+    throw new InvalidArgumentError(
+        `Expected 'id' ${id} to be mapped to InputState whose type is ` +
+        `${action.inputStateMap.get(id).type}, got: ${act.type}`);
+  }
+  let pointerType = pointerParams.pointerType;
+  if (action.inputStateMap.has(id) && action.inputStateMap.get(id).subtype !== pointerType) {
     throw new InvalidArgumentError(
         `Expected 'id' ${id} to be mapped to InputState whose subtype is ` +
-        `${action.inputStateMap.get(id).subtype}, got: ${subtype}`);
+        `${action.inputStateMap.get(id).subtype}, got: ${pointerType}`);
   }
   act.pointerType = pointerParams.pointerType;
-  act.primary = pointerParams.primary;
 };
 
 /** Collect properties associated with KeyboardEvent */
@@ -817,6 +888,21 @@ action.Key = class {
     this.shiftKey = inputState.shift;
     this.ctrlKey = inputState.ctrl;
     this.metaKey = inputState.meta;
+  }
+};
+
+/** Collect properties associated with MouseEvent */
+action.Mouse = class {
+  constructor(type, button = 0) {
+    this.type = type;
+    assert.positiveInteger(button);
+    this.button = button;
+    this.buttons = 0;
+  }
+
+  update(inputState) {
+    let allButtons = Array.from(inputState.pressed);
+    this.buttons = allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
   }
 };
 
@@ -897,6 +983,40 @@ action.computeTickDuration = function(tickActions) {
 };
 
 /**
+ * Compute viewport coordinates of pointer target based on given origin.
+ *
+ * @param {action.Action} a
+ *     Action that specifies pointer origin and x and y coordinates of target.
+ * @param {action.InputState} inputState
+ *     Input state that specifies current x and y coordinates of pointer.
+ * @param {Map.<string, number>=} center
+ *     Object representing x and y coordinates of an element center-point.
+ *     This is only used if |a.origin| is a web element reference.
+ *
+ * @return {Map.<string, number>}
+ *     x and y coordinates of pointer destination.
+ */
+action.computePointerDestination = function(a, inputState, center = undefined) {
+  let {x, y} = a;
+  switch (a.origin) {
+    case action.PointerOrigin.Viewport:
+      break;
+    case action.PointerOrigin.Pointer:
+      x += inputState.x;
+      y += inputState.y;
+      break;
+    default:
+      // origin represents web element
+      assert.defined(center);
+      assert.in("x", center);
+      assert.in("y", center);
+      x += center.x;
+      y += center.y;
+  }
+  return {"x": x, "y": y};
+};
+
+/**
  * Create a closure to use as a map from action definitions to Promise events.
  *
  * @param {number} tickDuration
@@ -912,9 +1032,6 @@ action.computeTickDuration = function(tickActions) {
  */
 function toEvents(tickDuration, seenEls, container) {
   return function (a) {
-    if (!action.inputStateMap.has(a.id)) {
-      action.inputStateMap.set(a.id, InputState.fromJson(a));
-    }
     let inputState = action.inputStateMap.get(a.id);
     switch (a.subtype) {
       case action.KeyUp:
@@ -924,8 +1041,14 @@ function toEvents(tickDuration, seenEls, container) {
         return dispatchKeyDown(a, inputState, container.frame);
 
       case action.PointerDown:
+        return dispatchPointerDown(a, inputState, container.frame);
+
       case action.PointerUp:
+        return dispatchPointerUp(a, inputState, container.frame);
+
       case action.PointerMove:
+        return dispatchPointerMove(a, inputState, tickDuration, seenEls, container);
+
       case action.PointerCancel:
         throw new UnsupportedOperationError();
 
@@ -997,6 +1120,180 @@ function dispatchKeyUp(a, inputState, win) {
 }
 
 /**
+ * Dispatch a pointerDown action equivalent to pressing a pointer-device
+ * button.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {nsIDOMWindow} win
+ *     Current window.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least a pointerdown event.
+ */
+function dispatchPointerDown(a, inputState, win) {
+  return new Promise(resolve => {
+    if (inputState.isPressed(a.button)) {
+      resolve();
+      return;
+    }
+    inputState.press(a.button);
+    // Append a copy of |a| with pointerUp subtype
+    action.inputsToCancel.push(Object.assign({}, a, {subtype: action.PointerUp}));
+    switch (inputState.subtype) {
+      case action.PointerType.Mouse:
+        let mouseEvent = new action.Mouse("mousedown", a.button);
+        mouseEvent.update(inputState);
+        event.synthesizeMouseAtPoint(inputState.x, inputState.y, mouseEvent, win);
+        break;
+      case action.PointerType.Pen:
+      case action.PointerType.Touch:
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
+        break;
+      default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+    }
+    resolve();
+  });
+}
+
+/**
+ * Dispatch a pointerUp action equivalent to releasing a pointer-device
+ * button.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {nsIDOMWindow} win
+ *     Current window.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least a pointerup event.
+ */
+function dispatchPointerUp(a, inputState, win) {
+  return new Promise(resolve => {
+    if (!inputState.isPressed(a.button)) {
+      resolve();
+      return;
+    }
+    inputState.release(a.button);
+    switch (inputState.subtype) {
+      case action.PointerType.Mouse:
+        let mouseEvent = new action.Mouse("mouseup", a.button);
+        mouseEvent.update(inputState);
+        event.synthesizeMouseAtPoint(inputState.x, inputState.y,
+            mouseEvent, win);
+        break;
+      case action.PointerType.Pen:
+      case action.PointerType.Touch:
+        throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
+      default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+    }
+    resolve();
+  });
+}
+
+/**
+ * Dispatch a pointerMove action equivalent to moving pointer device in a line.
+ *
+ * If the action duration is 0, the pointer jumps immediately to the target coordinates.
+ * Otherwise, events are synthesized to mimic a pointer travelling in a discontinuous,
+ * approximately straight line, with the pointer coordinates being updated around 60
+ * times per second.
+ *
+ * @param {action.Action} a
+ *     Action to dispatch.
+ * @param {action.InputState} inputState
+ *     Input state for this action's input source.
+ * @param {element.Store} seenEls
+ *     Element store.
+ * @param {?} container
+ *     Object with |frame| attribute of type |nsIDOMWindow|.
+ *
+ * @return {Promise}
+ *     Promise to dispatch at least one pointermove event, as well as mousemove events
+ *     as appropriate.
+ */
+function dispatchPointerMove(a, inputState, tickDuration, seenEls, container) {
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  // interval between pointermove increments in ms, based on common vsync
+  const fps60 = 17;
+  return new Promise(resolve => {
+    const start = Date.now();
+    const [startX, startY] = [inputState.x, inputState.y];
+    let target = action.computePointerDestination(a, inputState,
+        getElementCenter(a.origin, seenEls, container));
+    const [targetX, targetY] = [target.x, target.y];
+    if (!inViewPort(targetX, targetY, container.frame)) {
+      throw new MoveTargetOutOfBoundsError(
+          `(${targetX}, ${targetY}) is out of bounds of viewport ` +
+          `width (${container.frame.innerWidth}) and height (${container.frame.innerHeight})`);
+    }
+
+    const duration = typeof a.duration == "undefined" ? tickDuration : a.duration;
+    if (duration === 0) {
+      // move pointer to destination in one step
+      performOnePointerMove(inputState, targetX, targetY, container.frame);
+      resolve();
+      return;
+    }
+
+    const distanceX = targetX - startX;
+    const distanceY = targetY - startY;
+    const ONE_SHOT = Ci.nsITimer.TYPE_ONE_SHOT;
+    let intermediatePointerEvents = Task.spawn(function* () {
+      // wait |fps60| ms before performing first incremental pointer move
+      yield new Promise(resolveTimer =>
+          timer.initWithCallback(resolveTimer, fps60, ONE_SHOT)
+      );
+      let durationRatio = Math.floor(Date.now() - start) / duration;
+      const epsilon = fps60 / duration / 10;
+      while ((1 - durationRatio) > epsilon) {
+        let x = Math.floor(durationRatio * distanceX + startX);
+        let y = Math.floor(durationRatio * distanceY + startY);
+        performOnePointerMove(inputState, x, y, container.frame);
+        // wait |fps60| ms before performing next pointer move
+        yield new Promise(resolveTimer =>
+            timer.initWithCallback(resolveTimer, fps60, ONE_SHOT));
+        durationRatio = Math.floor(Date.now() - start) / duration;
+      }
+    });
+    // perform last pointer move after all incremental moves are resolved and
+    // durationRatio is close enough to 1
+    intermediatePointerEvents.then(() => {
+      performOnePointerMove(inputState, targetX, targetY, container.frame);
+      resolve();
+    });
+
+  });
+}
+
+function performOnePointerMove(inputState, targetX, targetY, win) {
+  if (targetX == inputState.x && targetY == inputState.y) {
+    return;
+  }
+  switch (inputState.subtype) {
+    case action.PointerType.Mouse:
+      let mouseEvent = new action.Mouse("mousemove");
+      mouseEvent.update(inputState);
+      //TODO both pointermove (if available) and mousemove
+      event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
+      break;
+    case action.PointerType.Pen:
+    case action.PointerType.Touch:
+      throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
+    default:
+        throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
+  }
+  inputState.x = targetX;
+  inputState.y = targetY;
+}
+
+/**
  * Dispatch a pause action equivalent waiting for |a.duration| milliseconds, or a
  * default time interval of |tickDuration|.
  *
@@ -1031,8 +1328,21 @@ function flushEvents(container) {
 }
 
 function capitalize(str) {
-  if (typeof str != "string") {
-    throw new InvalidArgumentError(`Expected string, got: ${str}`);
-  }
+  assert.string(str);
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function inViewPort(x, y, win) {
+  assert.number(x);
+  assert.number(y);
+  // Viewport includes scrollbars if rendered.
+  return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
+}
+
+function getElementCenter(elementReference, seenEls, container) {
+  if (element.isWebElementReference(elementReference)) {
+    let uuid = elementReference[element.Key] || elementReference[element.LegacyKey];
+    let el = seenEls.get(uuid, container);
+    return element.coordinates(el);
+  }
 }

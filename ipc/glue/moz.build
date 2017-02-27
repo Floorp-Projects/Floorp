@@ -86,7 +86,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'CrossProcessSemaphore_windows.cpp',
     ]
-elif not CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'Darwin'):
+elif CONFIG['OS_ARCH'] != 'Darwin':
     UNIFIED_SOURCES += [
         'CrossProcessSemaphore_posix.cpp',
     ]
