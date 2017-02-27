@@ -152,7 +152,7 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'non_session_non_path_subdomain',
                    'session_non_path_pub_domain'], BASE_URI);
 
-    // Evict oldest session cookie that does not match example.org/foo (session_bar_path)
+    // Evict oldest cookie that does not match example.org/foo (session_bar_path)
     yield setCookie("session_foo_path_2", null, "/foo", null, FOO_PATH);
     verifyCookies(['non_session_non_path_non_domain',
                    'session_foo_path',
@@ -160,7 +160,7 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'session_non_path_pub_domain',
                    'session_foo_path_2'], BASE_URI);
 
-    // Evict oldest session cookie that does not match example.org/bar (session_foo_path)
+    // Evict oldest cookie that does not match example.org/bar (session_foo_path)
     yield setCookie("session_bar_path_2", null, "/bar", null, BAR_PATH);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
@@ -168,7 +168,7 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'session_foo_path_2',
                    'session_bar_path_2'], BASE_URI);
 
-    // Evict oldest session cookie that does not match example.org/ (session_non_path_pub_domain)
+    // Evict oldest cookie that does not match example.org/ (session_non_path_pub_domain)
     yield setCookie("non_session_non_path_non_domain_2", null, null, 100000, BASE_URI);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
@@ -176,7 +176,7 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'session_bar_path_2',
                    'non_session_non_path_non_domain_2'], BASE_URI);
 
-    // Evict oldest session cookie that does not match example.org/ (session_foo_path_2)
+    // Evict oldest cookie that does not match example.org/ (session_foo_path_2)
     yield setCookie("session_non_path_non_domain_3", null, null, null, BASE_URI);
     verifyCookies(['non_session_non_path_non_domain',
                    'non_session_non_path_subdomain',
@@ -184,43 +184,40 @@ function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
                    'non_session_non_path_non_domain_2',
                    'session_non_path_non_domain_3'], BASE_URI);
 
-    // Evict oldest session cookie; all such cookies match example.org/bar (session_bar_path_2)
-    // note: this new cookie doesn't have an explicit path, but empty paths inherit the
-    // request's path
+    // Evict oldest cookie; all such cookies match example.org/bar (non_session_non_path_non_domain)
     yield setCookie("non_session_bar_path_non_domain", null, null, 100000, BAR_PATH);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
+    verifyCookies(['non_session_non_path_subdomain',
+                   'session_bar_path_2',
                    'non_session_non_path_non_domain_2',
                    'session_non_path_non_domain_3',
                    'non_session_bar_path_non_domain'], BASE_URI);
 
-    // Evict oldest session cookie, even though it matches pub.example.org (session_non_path_non_domain_3)
+    // Evict oldest cookie that deose not match example.org/ (session_bar_path_2)
     yield setCookie("non_session_non_path_pub_domain", null, null, 100000, OTHER_SUBDOMAIN_URI);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
+    verifyCookies(['non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
+                   'session_non_path_non_domain_3',
                    'non_session_bar_path_non_domain',
                    'non_session_non_path_pub_domain'], BASE_URI);
 
-    // All session cookies have been evicted.
-    // Evict oldest non-session non-domain-matching cookie (non_session_non_path_pub_domain)
+    // Evict oldest cookie that does not match example.org/bar (non_session_non_path_pub_domain)
     yield setCookie("non_session_bar_path_non_domain_2", null, '/bar', 100000, BAR_PATH);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
+    verifyCookies(['non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
+                   'session_non_path_non_domain_3',
                    'non_session_bar_path_non_domain',
                    'non_session_bar_path_non_domain_2'], BASE_URI);
 
-    // Evict oldest non-session non-path-matching cookie (non_session_bar_path_non_domain)
+    // Evict oldest cookie that does not match example.org/ (non_session_bar_path_non_domain)
     yield setCookie("non_session_non_path_non_domain_4", null, null, 100000, BASE_URI);
-    verifyCookies(['non_session_non_path_non_domain',
-                   'non_session_non_path_subdomain',
+    verifyCookies(['non_session_non_path_subdomain',
                    'non_session_non_path_non_domain_2',
+                   'session_non_path_non_domain_3',
                    'non_session_bar_path_non_domain_2',
                    'non_session_non_path_non_domain_4'], BASE_URI);
 
-    // At this point all remaining cookies are non-session cookies, have a path of /,
-    // and either don't have a domain or have one that matches subdomains.
+    // At this point all remaining cookies have a path of / and either don't have a domain
+    // or have one that matches subdomains.
     // They will therefore be evicted from oldest to newest if all new cookies added share
     // similar characteristics.
 }

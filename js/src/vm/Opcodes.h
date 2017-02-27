@@ -2214,7 +2214,7 @@
      *   Category: Statements
      *   Type: Function
      *   Operands: uint8_t kind
-     *   Stack: result => result, callable
+     *   Stack: obj => obj
      */ \
     macro(JSOP_CHECKISCALLABLE, 219, "checkiscallable", NULL, 2, 1, 1, JOF_UINT8) \
     macro(JSOP_UNUSED220,     220,"unused220",     NULL,  1,  0,  0,  JOF_BYTE) \
