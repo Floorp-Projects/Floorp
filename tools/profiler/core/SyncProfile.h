@@ -17,7 +17,8 @@ public:
 
   // SyncProfiles' stacks are deduplicated in the context of the containing
   // profile in which the backtrace is as a marker payload.
-  void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks);
+  void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
+                  UniqueStacks& aUniqueStacks);
 
 private:
   friend class ProfilerBacktrace;
