@@ -431,16 +431,13 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
 
       case JSOP_DUP:
         MOZ_ASSERT(ndefs == 2);
-        if (offsetStack)
-            offsetStack[stackDepth + 1] = offsetStack[stackDepth];
+        offsetStack[stackDepth + 1] = offsetStack[stackDepth];
         break;
 
       case JSOP_DUP2:
         MOZ_ASSERT(ndefs == 4);
-        if (offsetStack) {
-            offsetStack[stackDepth + 2] = offsetStack[stackDepth];
-            offsetStack[stackDepth + 3] = offsetStack[stackDepth + 1];
-        }
+        offsetStack[stackDepth + 2] = offsetStack[stackDepth];
+        offsetStack[stackDepth + 3] = offsetStack[stackDepth + 1];
         break;
 
       case JSOP_DUPAT: {
@@ -448,31 +445,27 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
         jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT24(pc);
         MOZ_ASSERT(n < stackDepth);
-        if (offsetStack)
-            offsetStack[stackDepth] = offsetStack[stackDepth - 1 - n];
+        offsetStack[stackDepth] = offsetStack[stackDepth - 1 - n];
         break;
       }
 
-      case JSOP_SWAP:
+      case JSOP_SWAP: {
         MOZ_ASSERT(ndefs == 2);
-        if (offsetStack) {
-            uint32_t tmp = offsetStack[stackDepth + 1];
-            offsetStack[stackDepth + 1] = offsetStack[stackDepth];
-            offsetStack[stackDepth] = tmp;
-        }
+        uint32_t tmp = offsetStack[stackDepth + 1];
+        offsetStack[stackDepth + 1] = offsetStack[stackDepth];
+        offsetStack[stackDepth] = tmp;
         break;
+      }
 
       case JSOP_PICK: {
         jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT8(pc);
         MOZ_ASSERT(ndefs == n + 1);
-        if (offsetStack) {
-            uint32_t top = stackDepth + n;
-            uint32_t tmp = offsetStack[stackDepth];
-            for (uint32_t i = stackDepth; i < top; i++)
-                offsetStack[i] = offsetStack[i + 1];
-            offsetStack[top] = tmp;
-        }
+        uint32_t top = stackDepth + n;
+        uint32_t tmp = offsetStack[stackDepth];
+        for (uint32_t i = stackDepth; i < top; i++)
+            offsetStack[i] = offsetStack[i + 1];
+        offsetStack[top] = tmp;
         break;
       }
 
@@ -480,13 +473,11 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
         jsbytecode* pc = script_->offsetToPC(offset);
         unsigned n = GET_UINT8(pc);
         MOZ_ASSERT(ndefs == n + 1);
-        if (offsetStack) {
-            uint32_t top = stackDepth + n;
-            uint32_t tmp = offsetStack[top];
-            for (uint32_t i = top; i > stackDepth; i--)
-                offsetStack[i] = offsetStack[i - 1];
-            offsetStack[stackDepth] = tmp;
-        }
+        uint32_t top = stackDepth + n;
+        uint32_t tmp = offsetStack[top];
+        for (uint32_t i = top; i > stackDepth; i--)
+            offsetStack[i] = offsetStack[i - 1];
+        offsetStack[stackDepth] = tmp;
         break;
       }
 
