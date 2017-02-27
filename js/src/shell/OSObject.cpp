@@ -23,7 +23,6 @@
 // For JSFunctionSpecWithHelp
 #include "jsfriendapi.h"
 #include "jsobj.h"
-#include "jsstr.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -227,19 +226,6 @@ FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr)
         }
     }
     return obj;
-}
-
-/**
- * Return the current working directory or |null| on failure.
- */
-UniqueChars
-GetCWD()
-{
-    static char buffer[PATH_MAX + 1];
-    const char* cwd = getcwd(buffer, PATH_MAX);
-    if (!cwd)
-        return UniqueChars();
-    return js::DuplicateString(buffer);
 }
 
 static bool
