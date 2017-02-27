@@ -17,6 +17,7 @@
 #include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -33,12 +34,13 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
     friend class AutoSaveLiveRegisters;
 
     IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript,
-                       IonICStub* stub)
+                       IonICStub* stub, const PropertyTypeCheckInfo* typeCheckInfo)
       : CacheIRCompiler(cx, writer, Mode::Ion),
         writer_(writer),
         ic_(ic),
         ionScript_(ionScript),
         stub_(stub),
+        typeCheckInfo_(typeCheckInfo),
         nextStubField_(0),
 #ifdef DEBUG
         calledPrepareVMCall_(false),
@@ -59,6 +61,10 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
 
     // The stub we're generating code for.
     IonICStub* stub_;
+
+    // Information necessary to generate property type checks. Non-null iff
+    // this is a SetProp/SetElem stub.
+    const PropertyTypeCheckInfo* typeCheckInfo_;
 
     CodeOffsetJump rejoinOffset_;
     Vector<CodeOffset, 4, SystemAllocPolicy> nextCodeOffsets_;
@@ -125,6 +131,8 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
     void prepareVMCall(MacroAssembler& masm);
     MOZ_MUST_USE bool callVM(MacroAssembler& masm, const VMFunction& fun);
 
+    MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
+
     void pushStubCodePointer() {
         stubJitCodeOffset_.emplace(masm.PushWithPatch(ImmPtr((void*)-1)));
     }
@@ -174,8 +182,6 @@ void
 CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterSet liveRegs,
                                              Register scratch, IonScript* ionScript)
 {
-    MOZ_ASSERT(!liveRegs.has(scratch));
-
     // We have to push all registers in liveRegs on the stack. It's possible we
     // stored other values in our live registers and stored operands on the
     // stack (where our live registers should go), so this requires some careful
@@ -290,6 +296,10 @@ CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm, LiveRegisterS
     // available.
     availableRegs_.set() = GeneralRegisterSet::Not(inputRegisterSet());
     availableRegsAfterSpill_.set() = GeneralRegisterSet();
+
+    // Step 8. We restored our input state, so we have to fix up aliased input
+    // registers again.
+    fixupAliasedInputs(masm);
 }
 
 void
@@ -350,7 +360,9 @@ IonCacheIRCompiler::init()
 
     AllocatableGeneralRegisterSet available;
 
-    if (ic_->kind() == CacheKind::GetProp || ic_->kind() == CacheKind::GetElem) {
+    switch (ic_->kind()) {
+      case CacheKind::GetProp:
+      case CacheKind::GetElem: {
         IonGetPropertyIC* ic = ic_->asGetPropertyIC();
         TypedOrValueRegister output = ic->output();
 
@@ -372,7 +384,30 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(0, ic->value());
         if (numInputs > 1)
             allocator.initInputLocation(1, ic->id());
-    } else {
+        break;
+      }
+      case CacheKind::SetProp:
+      case CacheKind::SetElem: {
+        IonSetPropertyIC* ic = ic_->asSetPropertyIC();
+
+        available.add(ic->temp1());
+
+        liveRegs_.emplace(ic->liveRegs());
+
+        allocator.initInputLocation(0, ic->object(), JSVAL_TYPE_OBJECT);
+
+        if (ic->kind() == CacheKind::SetProp) {
+            MOZ_ASSERT(numInputs == 2);
+            allocator.initInputLocation(1, ic->rhs());
+        } else {
+            MOZ_ASSERT(numInputs == 3);
+            allocator.initInputLocation(1, ic->id());
+            allocator.initInputLocation(2, ic->rhs());
+        }
+        break;
+      }
+      case CacheKind::GetName:
+      case CacheKind::In:
         MOZ_CRASH("Invalid cache");
     }
 
@@ -387,6 +422,8 @@ IonCacheIRCompiler::compile()
     masm.setFramePushed(ionScript_->frameSize());
     if (cx_->runtime()->geckoProfiler().enabled())
         masm.enableProfilingInstrumentation();
+
+    allocator.fixupAliasedInputs(masm);
 
     do {
         switch (reader.readOp()) {
@@ -861,112 +898,708 @@ IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
     MOZ_CRASH("Baseline-specific op");
 }
 
+static bool
+GroupHasPropertyTypes(ObjectGroup* group, jsid* id, Value* v)
+{
+    if (group->unknownProperties())
+        return true;
+    HeapTypeSet* propTypes = group->maybeGetProperty(*id);
+    if (!propTypes)
+        return true;
+    if (!propTypes->nonConstantProperty())
+        return false;
+    return propTypes->hasType(TypeSet::GetValueType(*v));
+}
+
+static void
+EmitCheckPropertyTypes(MacroAssembler& masm, const PropertyTypeCheckInfo* typeCheckInfo,
+                       Register obj, const ConstantOrRegister& val,
+                       const LiveRegisterSet& liveRegs, Label* failures)
+{
+    // Emit code to check |val| is part of the property's HeapTypeSet.
+
+    if (!typeCheckInfo->isSet())
+        return;
+
+    ObjectGroup* group = typeCheckInfo->group();
+    if (group->unknownProperties())
+        return;
+
+    jsid id = typeCheckInfo->id();
+    HeapTypeSet* propTypes = group->maybeGetProperty(id);
+    if (propTypes && propTypes->unknown())
+        return;
+
+    // Use the object register as scratch, as we don't need it here.
+    masm.Push(obj);
+    Register scratch1 = obj;
+
+    bool checkTypeSet = true;
+    Label failedFastPath;
+
+    if (propTypes && !propTypes->nonConstantProperty())
+        masm.jump(&failedFastPath);
+
+    if (val.constant()) {
+        // If the input is a constant, then don't bother if the barrier will always fail.
+        if (!propTypes || !propTypes->hasType(TypeSet::GetValueType(val.value())))
+            masm.jump(&failedFastPath);
+        checkTypeSet = false;
+    } else {
+        // We can do the same trick as above for primitive types of specialized
+        // registers.
+        TypedOrValueRegister reg = val.reg();
+        if (reg.hasTyped() && reg.type() != MIRType::Object) {
+            JSValueType valType = ValueTypeFromMIRType(reg.type());
+            if (!propTypes || !propTypes->hasType(TypeSet::PrimitiveType(valType)))
+                masm.jump(&failedFastPath);
+            checkTypeSet = false;
+        }
+    }
+
+    Label done;
+    if (checkTypeSet) {
+        TypedOrValueRegister valReg = val.reg();
+        if (propTypes) {
+            // guardTypeSet can read from type sets without triggering read barriers.
+            TypeSet::readBarrier(propTypes);
+            masm.guardTypeSet(valReg, propTypes, BarrierKind::TypeSet, scratch1, &failedFastPath);
+            masm.jump(&done);
+        } else {
+            masm.jump(&failedFastPath);
+        }
+    }
+
+    if (failedFastPath.used()) {
+        // The inline type check failed. Do a callWithABI to check the current
+        // TypeSet in case the type was added after we generated this stub.
+        masm.bind(&failedFastPath);
+
+        AllocatableRegisterSet regs(GeneralRegisterSet::Volatile(), liveRegs.fpus());
+        LiveRegisterSet save(regs.asLiveSet());
+        masm.PushRegsInMask(save);
+
+        regs.takeUnchecked(scratch1);
+
+        // Push |val| first to make sure everything is fine if |val| aliases
+        // scratch2.
+        Register scratch2 = regs.takeAnyGeneral();
+        masm.Push(val);
+        masm.moveStackPtrTo(scratch2);
+
+        Register scratch3 = regs.takeAnyGeneral();
+        masm.Push(id, scratch3);
+        masm.moveStackPtrTo(scratch3);
+
+        masm.setupUnalignedABICall(scratch1);
+        masm.movePtr(ImmGCPtr(group), scratch1);
+        masm.passABIArg(scratch1);
+        masm.passABIArg(scratch3);
+        masm.passABIArg(scratch2);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GroupHasPropertyTypes));
+        masm.mov(ReturnReg, scratch1);
+
+        masm.adjustStack(sizeof(Value) + sizeof(jsid));
+
+        LiveRegisterSet ignore;
+        ignore.add(scratch1);
+        masm.PopRegsInMaskIgnore(save, ignore);
+
+        masm.branchIfTrueBool(scratch1, &done);
+        masm.pop(obj);
+        masm.jump(failures);
+    }
+
+    masm.bind(&done);
+    masm.Pop(obj);
+}
+
 bool
 IonCacheIRCompiler::emitStoreFixedSlot()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    if (typeCheckInfo_->isSet()) {
+        FailurePath* failure;
+        if (!addFailurePath(&failure))
+            return false;
+
+        EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+    }
+
+    Address slot(obj, offset);
+    EmitPreBarrier(masm, slot, MIRType::Value);
+    masm.storeConstantOrRegister(val, slot);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreDynamicSlot()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    AutoScratchRegister scratch(allocator, masm);
+
+    if (typeCheckInfo_->isSet()) {
+        FailurePath* failure;
+        if (!addFailurePath(&failure))
+            return false;
+
+        EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+    }
+
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
+    Address slot(scratch, offset);
+    EmitPreBarrier(masm, slot, MIRType::Value);
+    masm.storeConstantOrRegister(val, slot);
+    return true;
+}
+
+bool
+IonCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch1(allocator, masm);
+
+    Maybe<AutoScratchRegister> scratch2;
+    if (op == CacheOp::AllocateAndStoreDynamicSlot)
+        scratch2.emplace(allocator, masm);
+
+    bool changeGroup = reader.readBool();
+    ObjectGroup* newGroup = groupStubField(reader.stubOffset());
+    Shape* newShape = shapeStubField(reader.stubOffset());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+
+    if (op == CacheOp::AllocateAndStoreDynamicSlot) {
+        // We have to (re)allocate dynamic slots. Do this first, as it's the
+        // only fallible operation here. This simplifies the callTypeUpdateIC
+        // call below: it does not have to worry about saving registers used by
+        // failure paths.
+        int32_t numNewSlots = int32StubField(reader.stubOffset());
+        MOZ_ASSERT(numNewSlots > 0);
+
+        AllocatableRegisterSet regs(RegisterSet::Volatile());
+        LiveRegisterSet save(regs.asLiveSet());
+
+        masm.PushRegsInMask(save);
+
+        masm.setupUnalignedABICall(scratch1);
+        masm.loadJSContext(scratch1);
+        masm.passABIArg(scratch1);
+        masm.passABIArg(obj);
+        masm.move32(Imm32(numNewSlots), scratch2.ref());
+        masm.passABIArg(scratch2.ref());
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsDontReportOOM));
+        masm.mov(ReturnReg, scratch1);
+
+        LiveRegisterSet ignore;
+        ignore.add(scratch1);
+        masm.PopRegsInMaskIgnore(save, ignore);
+
+        masm.branchIfFalseBool(scratch1, failure->label());
+    }
+
+    if (changeGroup) {
+        // Changing object's group from a partially to fully initialized group,
+        // per the acquired properties analysis. Only change the group if the
+        // old group still has a newScript. This only applies to PlainObjects.
+        Label noGroupChange;
+        masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch1);
+        masm.branchPtr(Assembler::Equal,
+                       Address(scratch1, ObjectGroup::offsetOfAddendum()),
+                       ImmWord(0),
+                       &noGroupChange);
+
+        Address groupAddr(obj, JSObject::offsetOfGroup());
+        EmitPreBarrier(masm, groupAddr, MIRType::ObjectGroup);
+        masm.storePtr(ImmGCPtr(newGroup), groupAddr);
+
+        masm.bind(&noGroupChange);
+    }
+
+    // Update the object's shape.
+    Address shapeAddr(obj, ShapedObject::offsetOfShape());
+    EmitPreBarrier(masm, shapeAddr, MIRType::Shape);
+    masm.storePtr(ImmGCPtr(newShape), shapeAddr);
+
+    // Perform the store. No pre-barrier required since this is a new
+    // initialization.
+    if (op == CacheOp::AddAndStoreFixedSlot) {
+        Address slot(obj, offset);
+        masm.storeConstantOrRegister(val, slot);
+    } else {
+        MOZ_ASSERT(op == CacheOp::AddAndStoreDynamicSlot ||
+                   op == CacheOp::AllocateAndStoreDynamicSlot);
+        masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch1);
+        Address slot(scratch1, offset);
+        masm.storeConstantOrRegister(val, slot);
+    }
+
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitAddAndStoreFixedSlot()
 {
-    MOZ_CRASH("Baseline-specific op");
+    return emitAddAndStoreSlotShared(CacheOp::AddAndStoreFixedSlot);
 }
 
 bool
 IonCacheIRCompiler::emitAddAndStoreDynamicSlot()
 {
-    MOZ_CRASH("Baseline-specific op");
+    return emitAddAndStoreSlotShared(CacheOp::AddAndStoreDynamicSlot);
 }
 
 bool
 IonCacheIRCompiler::emitAllocateAndStoreDynamicSlot()
 {
-    MOZ_CRASH("Baseline-specific op");
+    return emitAddAndStoreSlotShared(CacheOp::AllocateAndStoreDynamicSlot);
 }
 
 bool
 IonCacheIRCompiler::emitStoreUnboxedProperty()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSValueType fieldType = reader.valueType();
+    int32_t offset = int32StubField(reader.stubOffset());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    if (fieldType == JSVAL_TYPE_OBJECT && typeCheckInfo_->isSet()) {
+        FailurePath* failure;
+        if (!addFailurePath(&failure))
+            return false;
+        EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+    }
+
+    // Note that the storeUnboxedProperty call here is infallible, as the
+    // IR emitter is responsible for guarding on |val|'s type.
+    Address fieldAddr(obj, offset);
+    EmitICUnboxedPreBarrier(masm, fieldAddr, fieldType);
+    masm.storeUnboxedProperty(fieldAddr, fieldType, val, /* failure = */ nullptr);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    TypedThingLayout layout = reader.typedThingLayout();
+    ReferenceTypeDescr::Type type = reader.referenceTypeDescrType();
+
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    // We don't need to check property types if the property is always a
+    // string.
+    if (type != ReferenceTypeDescr::TYPE_STRING) {
+        FailurePath* failure;
+        if (!addFailurePath(&failure))
+            return false;
+        EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, TypedOrValueRegister(val),
+                               *liveRegs_, failure->label());
+    }
+
+    // Compute the address being written to.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+    Address dest(scratch1, offset);
+
+    emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreTypedObjectScalarProperty()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    int32_t offset = int32StubField(reader.stubOffset());
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type type = reader.scalarType();
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Compute the address being written to.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+    Address dest(scratch1, offset);
+
+    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreDenseElement()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+
+    // Load obj->elements in scratch.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Bounds check.
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, failure->label());
+
+    // Hole check.
+    BaseObjectElementIndex element(scratch, index);
+    masm.branchTestMagic(Assembler::Equal, element, failure->label());
+
+    EmitPreBarrier(masm, element, MIRType::Value);
+    EmitIonStoreDenseElement(masm, val, scratch, element);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreDenseElementHole()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    // handleAdd boolean is only relevant for Baseline. Ion ICs can always
+    // handle adds as we don't have to set any flags on the fallback stub to
+    // track this.
+    reader.readBool();
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
+
+    // Load obj->elements in scratch.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    BaseObjectElementIndex element(scratch, index);
+
+    Label inBounds, doStore;
+    masm.branch32(Assembler::Above, initLength, index, &inBounds);
+    masm.branch32(Assembler::NotEqual, initLength, index, failure->label());
+
+    // Check the capacity.
+    Address capacity(scratch, ObjectElements::offsetOfCapacity());
+    masm.branch32(Assembler::BelowOrEqual, capacity, index, failure->label());
+
+    // Increment initLength.
+    masm.add32(Imm32(1), initLength);
+
+    // If length is now <= index, increment length too.
+    Label skipIncrementLength;
+    Address length(scratch, ObjectElements::offsetOfLength());
+    masm.branch32(Assembler::Above, length, index, &skipIncrementLength);
+    masm.add32(Imm32(1), length);
+    masm.bind(&skipIncrementLength);
+
+    // Skip EmitPreBarrier as the memory is uninitialized.
+    masm.jump(&doStore);
+
+    masm.bind(&inBounds);
+
+    EmitPreBarrier(masm, element, MIRType::Value);
+
+    masm.bind(&doStore);
+    EmitIonStoreDenseElement(masm, val, scratch, element);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreTypedElement()
 {
-    MOZ_CRASH("Baseline-specific op");
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type arrayType = reader.scalarType();
+    bool handleOOB = reader.readBool();
+
+    AutoScratchRegister scratch1(allocator, masm);
+
+    Maybe<AutoScratchRegister> scratch2;
+    if (arrayType != Scalar::Float32 && arrayType != Scalar::Float64)
+        scratch2.emplace(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Bounds check.
+    Label done;
+    LoadTypedThingLength(masm, layout, obj, scratch1);
+    masm.branch32(Assembler::BelowOrEqual, scratch1, index, handleOOB ? &done : failure->label());
+
+    // Load the elements vector.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+
+    BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(arrayType)));
+
+    FloatRegister maybeTempDouble = ic_->asSetPropertyIC()->maybeTempDouble();
+    FloatRegister maybeTempFloat32 = ic_->asSetPropertyIC()->maybeTempFloat32();
+    MOZ_ASSERT(maybeTempDouble != InvalidFloatReg);
+    MOZ_ASSERT_IF(jit::hasUnaliasedDouble(), maybeTempFloat32 != InvalidFloatReg);
+
+    if (arrayType == Scalar::Float32) {
+        FloatRegister tempFloat = hasUnaliasedDouble() ? maybeTempFloat32 : maybeTempDouble;
+        if (!masm.convertConstantOrRegisterToFloat(cx_, val, tempFloat, failure->label()))
+            return false;
+        masm.storeToTypedFloatArray(arrayType, tempFloat, dest);
+    } else if (arrayType == Scalar::Float64) {
+        if (!masm.convertConstantOrRegisterToDouble(cx_, val, maybeTempDouble, failure->label()))
+            return false;
+        masm.storeToTypedFloatArray(arrayType, maybeTempDouble, dest);
+    } else {
+        Register valueToStore = scratch2.ref();
+        if (arrayType == Scalar::Uint8Clamped) {
+            if (!masm.clampConstantOrRegisterToUint8(cx_, val, maybeTempDouble, valueToStore,
+                                                     failure->label()))
+            {
+                return false;
+            }
+        } else {
+            if (!masm.truncateConstantOrRegisterToInt32(cx_, val, maybeTempDouble, valueToStore,
+                                                        failure->label()))
+            {
+                return false;
+            }
+        }
+        masm.storeToTypedIntArray(arrayType, valueToStore, dest);
+    }
+
+    masm.bind(&done);
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitStoreUnboxedArrayElement()
 {
+    // --unboxed-arrays is currently untested and broken.
     MOZ_CRASH("Baseline-specific op");
 }
 
 bool
 IonCacheIRCompiler::emitStoreUnboxedArrayElementHole()
 {
+    // --unboxed-arrays is currently untested and broken.
     MOZ_CRASH("Baseline-specific op");
 }
 
 bool
 IonCacheIRCompiler::emitCallNativeSetter()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
+    MOZ_ASSERT(target->isNative());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister argJSContext(allocator, masm);
+    AutoScratchRegister argVp(allocator, masm);
+    AutoScratchRegister argUintN(allocator, masm);
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    // Set up the call:
+    //  bool (*)(JSContext*, unsigned, Value* vp)
+    // vp[0] is callee/outparam
+    // vp[1] is |this|
+    // vp[2] is the value
+
+    // Build vp and move the base into argVpReg.
+    masm.Push(val);
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+    masm.Push(ObjectValue(*target));
+    masm.moveStackPtrTo(argVp.get());
+
+    // Preload other regs.
+    masm.loadJSContext(argJSContext);
+    masm.move32(Imm32(1), argUintN);
+
+    // Push marking data for later use.
+    masm.Push(argUintN);
+    pushStubCodePointer();
+
+    if (!masm.icBuildOOLFakeExitFrame(GetReturnAddressToIonCode(cx_), save))
+        return false;
+    masm.enterFakeExitFrame(scratch, IonOOLNativeExitFrameLayoutToken);
+
+    // Make the call.
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(argJSContext);
+    masm.passABIArg(argUintN);
+    masm.passABIArg(argVp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()));
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
+    return true;
 }
 
 bool
 IonCacheIRCompiler::emitCallScriptedSetter()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    uint32_t framePushedBefore = masm.framePushed();
+
+    // Construct IonICCallFrameLayout.
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS,
+                                              IonICCallFrameLayout::Size());
+    pushStubCodePointer();
+    masm.Push(Imm32(descriptor));
+    masm.Push(ImmPtr(GetReturnAddressToIonCode(cx_)));
+
+    // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
+    // so we just have to make sure the stack is aligned after we push the
+    // |this| + argument Values.
+    size_t numArgs = Max<size_t>(1, target->nargs());
+    uint32_t argSize = (numArgs + 1) * sizeof(Value);
+    uint32_t padding = ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
+    MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
+    MOZ_ASSERT(padding < JitStackAlignment);
+    masm.reserveStack(padding);
+
+    for (size_t i = 1; i < target->nargs(); i++)
+        masm.Push(UndefinedValue());
+    masm.Push(val);
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
+
+    masm.movePtr(ImmGCPtr(target), scratch);
+
+    descriptor = MakeFrameDescriptor(argSize + padding, JitFrame_IonICCall,
+                                     JitFrameLayout::Size());
+    masm.Push(Imm32(1)); // argc
+    masm.Push(scratch);
+    masm.Push(Imm32(descriptor));
+
+    // Check stack alignment. Add sizeof(uintptr_t) for the return address.
+    MOZ_ASSERT(((masm.framePushed() + sizeof(uintptr_t)) % JitStackAlignment) == 0);
+
+    // The setter has JIT code now and we will only discard the setter's JIT
+    // code when discarding all JIT code in the Zone, so we can assume it'll
+    // still have JIT code.
+    MOZ_ASSERT(target->hasJITCode());
+    masm.loadPtr(Address(scratch, JSFunction::offsetOfNativeOrScript()), scratch);
+    masm.loadBaselineOrIonRaw(scratch, scratch, nullptr);
+    masm.callJit(scratch);
+
+    masm.freeStack(masm.framePushed() - framePushedBefore);
+    return true;
 }
+
+typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
+static const VMFunction SetArrayLengthInfo =
+    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
 
 bool
 IonCacheIRCompiler::emitCallSetArrayLength()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    bool strict = reader.readBool();
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+
+    allocator.discardStack(masm);
+    prepareVMCall(masm);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(obj);
+
+    return callVM(masm, SetArrayLengthInfo);
 }
+
+typedef bool (*ProxySetPropertyFn)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+static const VMFunction ProxySetPropertyInfo =
+    FunctionInfo<ProxySetPropertyFn>(ProxySetProperty, "ProxySetProperty");
 
 bool
 IonCacheIRCompiler::emitCallProxySet()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    jsid id = idStubField(reader.stubOffset());
+    bool strict = reader.readBool();
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+    prepareVMCall(masm);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(id, scratch);
+    masm.Push(obj);
+
+    return callVM(masm, ProxySetPropertyInfo);
 }
+
+typedef bool (*ProxySetPropertyByValueFn)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+static const VMFunction ProxySetPropertyByValueInfo =
+    FunctionInfo<ProxySetPropertyByValueFn>(ProxySetPropertyByValue, "ProxySetPropertyByValue");
 
 bool
 IonCacheIRCompiler::emitCallProxySetByValue()
 {
-    MOZ_CRASH("Baseline-specific op");
+    AutoSaveLiveRegisters save(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ConstantOrRegister idVal = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    ConstantOrRegister val = allocator.useConstantOrRegister(masm, reader.valOperandId());
+    bool strict = reader.readBool();
+
+    allocator.discardStack(masm);
+    prepareVMCall(masm);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(idVal);
+    masm.Push(obj);
+
+    return callVM(masm, ProxySetPropertyByValueInfo);
 }
 
 bool
@@ -1079,15 +1712,18 @@ IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
 
 bool
 IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind kind,
-                         HandleScript outerScript)
+                         IonScript* ionScript, const PropertyTypeCheckInfo* typeCheckInfo)
 {
     // We shouldn't GC or report OOM (or any other exception) here.
     AutoAssertNoPendingException aanpe(cx);
     JS::AutoCheckCannotGC nogc;
 
+    // SetProp/SetElem stubs must have non-null typeCheckInfo.
+    MOZ_ASSERT(!!typeCheckInfo == (kind == CacheKind::SetProp || kind == CacheKind::SetElem));
+
     // Do nothing if the IR generator failed or triggered a GC that invalidated
     // the script.
-    if (writer.failed() || !outerScript->hasIonScript())
+    if (writer.failed() || ionScript->invalidated())
         return false;
 
     JitZone* jitZone = cx->zone()->jitZone();
@@ -1144,7 +1780,7 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     writer.copyStubData(newStub->stubDataStart());
 
     JitContext jctx(cx, nullptr);
-    IonCacheIRCompiler compiler(cx, writer, this, outerScript->ionScript(), newStub);
+    IonCacheIRCompiler compiler(cx, writer, this, ionScript, newStub, typeCheckInfo);
     if (!compiler.init())
         return false;
 
