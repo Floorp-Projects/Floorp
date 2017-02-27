@@ -311,12 +311,6 @@ nsSVGDisplayContainerFrame::GetFrameForPoint(const gfxPoint& aPoint)
   return nsSVGUtils::HitTestChildren(this, aPoint);
 }
 
-nsRect
-nsSVGDisplayContainerFrame::GetCoveredRegion()
-{
-  return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
 void
 nsSVGDisplayContainerFrame::ReflowSVG()
 {

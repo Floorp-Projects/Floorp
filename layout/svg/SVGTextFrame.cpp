@@ -3760,13 +3760,6 @@ SVGTextFrame::GetFrameForPoint(const gfxPoint& aPoint)
   return hit;
 }
 
-nsRect
-SVGTextFrame::GetCoveredRegion()
-{
-  return nsSVGUtils::TransformFrameRectToOuterSVG(
-           mRect, GetCanvasTM(), PresContext());
-}
-
 void
 SVGTextFrame::ReflowSVG()
 {
@@ -3880,6 +3873,15 @@ SVGTextFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
 {
   NS_ASSERTION(PrincipalChildList().FirstChild(), "must have a child frame");
   SVGBBox bbox;
+
+  if (aFlags & nsSVGUtils::eForGetClientRects) {
+    Rect rect = NSRectToRect(mRect, PresContext()->AppUnitsPerCSSPixel());
+    if (!rect.IsEmpty()) {
+      bbox = aToBBoxUserspace.TransformBounds(rect);
+    }
+    return bbox;
+  }
+
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (kid && NS_SUBTREE_DIRTY(kid)) {
     // Return an empty bbox if our kid's subtree is dirty. This may be called
