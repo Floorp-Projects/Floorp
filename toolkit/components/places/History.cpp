@@ -658,7 +658,8 @@ public:
                                 mPlace.referrerVisitId, mPlace.transitionType,
                                 mPlace.guid, mPlace.hidden,
                                 mPlace.visitCount + 1, // Add current visit.
-                                static_cast<uint32_t>(mPlace.typed));
+                                static_cast<uint32_t>(mPlace.typed),
+                                mPlace.title);
     }
 
     nsCOMPtr<nsIObserverService> obsService =
@@ -1045,7 +1046,7 @@ public:
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Notify about title change if needed.
-      if ((!known && !place.title.IsVoid()) || place.titleChanged) {
+      if (place.titleChanged) {
         event = new NotifyTitleObservers(place.spec, place.title, place.guid);
         rv = NS_DispatchToMainThread(event);
         NS_ENSURE_SUCCESS(rv, rv);

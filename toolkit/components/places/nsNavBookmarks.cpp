@@ -3221,7 +3221,8 @@ NS_IMETHODIMP
 nsNavBookmarks::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                         int64_t aSessionID, int64_t aReferringID,
                         uint32_t aTransitionType, const nsACString& aGUID,
-                        bool aHidden, uint32_t aVisitCount, uint32_t aTyped)
+                        bool aHidden, uint32_t aVisitCount, uint32_t aTyped,
+                        const nsAString& aLastKnownTitle)
 {
   NS_ENSURE_ARG(aURI);
 

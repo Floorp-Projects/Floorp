@@ -98,14 +98,17 @@ VisitObserver.prototype = {
                     aSessionId,
                     aReferringId,
                     aTransitionType,
-                    aGUID) {
-    do_print("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
-             ", " + aSessionId + ", " + aReferringId + ", " +
-             aTransitionType + ", " + aGUID + ")");
+                    aGUID,
+                    aHidden,
+                    aVisitCount,
+                    aTyped,
+                    aLastKnownTitle) {
+    let args = [...arguments].slice(1);
+    do_print("onVisit(" + aURI.spec + args.join(", ") + ")");
     if (!this.uri.equals(aURI) || this.guid != aGUID) {
       return;
     }
-    this.callback(aTime, aTransitionType);
+    this.callback(aTime, aTransitionType, aLastKnownTitle);
   },
 };
 
@@ -951,37 +954,45 @@ add_task(function* test_title_change_notifies() {
     do_throw("Unexpected error.");
   }
 
-  // The second case to test is that we get the notification when we add
+  // The second case to test is that we don't get the notification when we add
   // it for the first time.  The first case will fail before our callback if it
   // is busted, so we can do this now.
   place.uri = NetUtil.newURI(place.uri.spec + "/new-visit-with-title");
   place.title = "title 1";
-  function promiseTitleChangedObserver(aPlace) {
-    return new Promise((resolve, reject) => {
-      let callbackCount = 0;
-      let observer = new TitleChangedObserver(aPlace.uri, aPlace.title, function() {
-        switch (++callbackCount) {
-          case 1:
-            // The third case to test is to make sure we get a notification when
-            // we change an existing place.
-            observer.expectedTitle = place.title = "title 2";
-            place.visits = [new VisitInfo()];
-            PlacesUtils.asyncHistory.updatePlaces(place);
-            break;
-          case 2:
-            PlacesUtils.history.removeObserver(silentObserver);
-            PlacesUtils.history.removeObserver(observer);
-            resolve();
-            break;
-        }
-      });
-
-      PlacesUtils.history.addObserver(observer, false);
-      PlacesUtils.asyncHistory.updatePlaces(aPlace);
+  let expectedNotification = false;
+  let titleChangeObserver;
+  let titleChangePromise = new Promise((resolve, reject) => {
+    titleChangeObserver = new TitleChangedObserver(place.uri, place.title, function() {
+      Assert.ok(expectedNotification, "Should not get notified for " + place.uri.spec + " with title " + place.title);
+      if (expectedNotification) {
+        PlacesUtils.history.removeObserver(silentObserver);
+        PlacesUtils.history.removeObserver(titleChangeObserver);
+        resolve();
+      }
     });
-  }
+    PlacesUtils.history.addObserver(titleChangeObserver, false);
+  });
 
-  yield promiseTitleChangedObserver(place);
+  let visitPromise = new Promise(resolve => {
+    PlacesUtils.history.addObserver({
+      onVisit(uri) {
+        Assert.equal(uri.spec, place.uri.spec, "Should get notified for visiting the new URI.");
+        PlacesUtils.history.removeObserver(this);
+        resolve();
+      }
+    }, false);
+  });
+  PlacesUtils.asyncHistory.updatePlaces(place);
+  yield visitPromise;
+
+  // The third case to test is to make sure we get a notification when
+  // we change an existing place.
+  expectedNotification = true;
+  titleChangeObserver.expectedTitle = place.title = "title 2";
+  place.visits = [new VisitInfo()];
+  PlacesUtils.asyncHistory.updatePlaces(place);
+
+  yield titleChangePromise;
   yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
@@ -1234,4 +1245,76 @@ add_task(function* test_ignore_results_and_errors() {
   Assert.equal(placesResult.resultCount, 1,
                "Should know that we updated 1 item from the completion callback.");
   yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_title_on_initial_visit() {
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    title: "My title",
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "mnopqrstuvwx",
+  };
+  let visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(place.title, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
+
+  // Now check an empty title doesn't get reported as null
+  place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    title: "",
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "fghijklmnopq",
+  };
+  visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(place.title, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
+
+  // and that a missing title correctly gets reported as null.
+  place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "fghijklmnopq",
+  };
+  visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(null, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
 });

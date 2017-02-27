@@ -33,16 +33,17 @@ function queryHistoryVisits(uri) {
   return queryPlaces(uri, options);
 }
 
-function onNextTitleChanged(callback) {
+function onNextVisit(callback) {
   PlacesUtils.history.addObserver({
     onBeginUpdateBatch: function onBeginUpdateBatch() {},
     onEndUpdateBatch: function onEndUpdateBatch() {},
     onPageChanged: function onPageChanged() {},
     onTitleChanged: function onTitleChanged() {
+    },
+    onVisit: function onVisit() {
       PlacesUtils.history.removeObserver(this);
       Utils.nextTick(callback);
     },
-    onVisit: function onVisit() {},
     onDeleteVisits: function onDeleteVisits() {},
     onPageExpired: function onPageExpired() {},
     onDeleteURI: function onDeleteURI() {},
@@ -125,7 +126,7 @@ add_test(function test_store() {
     _("Let's modify the record and have the store update the database.");
     let secondvisit = {date: TIMESTAMP2,
                        type: Ci.nsINavHistoryService.TRANSITION_TYPED};
-    onNextTitleChanged(ensureThrows(function() {
+    onNextVisit(ensureThrows(function() {
       let queryres = queryHistoryVisits(fxuri);
       do_check_eq(queryres.length, 2);
       do_check_eq(queryres[0].time, TIMESTAMP1);
@@ -147,7 +148,7 @@ add_test(function test_store_create() {
   _("Create a brand new record through the store.");
   tbguid = Utils.makeGUID();
   tburi = Utils.makeURI("http://getthunderbird.com");
-  onNextTitleChanged(ensureThrows(function() {
+  onNextVisit(ensureThrows(function() {
     do_check_attribute_count(store.getAllIDs(), 2);
     let queryres = queryHistoryVisits(tburi);
     do_check_eq(queryres.length, 1);

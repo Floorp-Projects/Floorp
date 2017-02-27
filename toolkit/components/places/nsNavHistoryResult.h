@@ -94,7 +94,9 @@ private:
   NS_IMETHOD OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,      \
                      int64_t aSessionId, int64_t aReferringId,          \
                      uint32_t aTransitionType, const nsACString& aGUID, \
-                     bool aHidden, uint32_t aVisitCount, uint32_t aTyped) __VA_ARGS__;
+                     bool aHidden, uint32_t aVisitCount,                \
+                     uint32_t aTyped, const nsAString& aLastKnownTitle) \
+                     __VA_ARGS__;
 
 // nsNavHistoryResult
 //
