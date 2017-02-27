@@ -66,8 +66,12 @@ public:
   static constexpr uint32_t NumberTracksError() { return UINT32_MAX; }
   using ResultAndTrackCount = ResultAndType<uint32_t>;
   ResultAndTrackCount GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
-  mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
-                                                      size_t aTrackNumber) const;
+
+  using ResultAndTrackInfo =
+    ResultAndType<mozilla::UniquePtr<mozilla::TrackInfo>>;
+  ResultAndTrackInfo GetTrackInfo(mozilla::TrackInfo::TrackType aType,
+                                  size_t aTrackNumber) const;
+
   bool CanSeek() const;
 
   const CryptoFile& Crypto() const;
