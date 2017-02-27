@@ -32,6 +32,7 @@ XPIDL_MODULE = 'rdf'
 
 EXPORTS += [
     'nsIRDFContentSink.h',
+    'nsRDFResource.h',
     'rdf.h',
 ]
 
@@ -44,6 +45,7 @@ UNIFIED_SOURCES += [
     'nsRDFContainer.cpp',
     'nsRDFContainerUtils.cpp',
     'nsRDFContentSink.cpp',
+    'nsRDFResource.cpp',
     'nsRDFService.cpp',
     'nsRDFXMLDataSource.cpp',
     'nsRDFXMLParser.cpp',
