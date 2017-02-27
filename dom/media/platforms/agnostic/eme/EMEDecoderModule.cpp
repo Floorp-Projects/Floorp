@@ -20,6 +20,7 @@
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsServiceManagerUtils.h"
+#include "DecryptThroughputLimit.h"
 
 namespace mozilla {
 
@@ -37,6 +38,7 @@ public:
     , mProxy(aProxy)
     , mSamplesWaitingForKey(
         new SamplesWaitingForKey(mProxy, aType, aOnWaitingForKey))
+    , mThroughputLimiter(aDecodeTaskQueue)
     , mIsShutdown(false)
   {
   }
@@ -53,8 +55,35 @@ public:
     MOZ_RELEASE_ASSERT(mDecrypts.Count() == 0,
                        "Can only process one sample at a time");
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
-    AttemptDecode(aSample);
+
+    RefPtr<EMEDecryptor> self = this;
+    mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
+      ->Then(mTaskQueue, __func__,
+             [self, this](MediaRawData* aSample) {
+               mKeyRequest.Complete();
+               ThrottleDecode(aSample);
+             },
+             [self, this]() {
+               mKeyRequest.Complete();
+             })
+      ->Track(mKeyRequest);
+
     return p;
+  }
+
+  void ThrottleDecode(MediaRawData* aSample)
+  {
+    RefPtr<EMEDecryptor> self = this;
+    mThroughputLimiter.Throttle(aSample)
+      ->Then(mTaskQueue, __func__,
+             [self, this] (MediaRawData* aSample) {
+               mThrottleRequest.Complete();
+               AttemptDecode(aSample);
+             },
+             [self, this]() {
+                mThrottleRequest.Complete();
+             })
+      ->Track(mThrottleRequest);
   }
 
   void AttemptDecode(MediaRawData* aSample)
@@ -66,24 +95,16 @@ public:
       return;
     }
 
-    RefPtr<EMEDecryptor> self = this;
-    mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)
-      ->Then(mTaskQueue, __func__,
-             [self, this](MediaRawData* aSample) {
-               mKeyRequest.Complete();
-               nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
-               mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                             writer->mCrypto.mSessionIds);
+    nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
+    mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
+                                  writer->mCrypto.mSessionIds);
 
-               mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
-               mProxy->Decrypt(aSample)
-                 ->Then(mTaskQueue, __func__, this,
-                        &EMEDecryptor::Decrypted,
-                        &EMEDecryptor::Decrypted)
-                 ->Track(*mDecrypts.Get(aSample));
-             },
-             [self, this]() { mKeyRequest.Complete(); })
-      ->Track(mKeyRequest);
+    mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
+    mProxy->Decrypt(aSample)
+      ->Then(mTaskQueue, __func__, this,
+            &EMEDecryptor::Decrypted,
+            &EMEDecryptor::Decrypted)
+      ->Track(*mDecrypts.Get(aSample));
   }
 
   void Decrypted(const DecryptResult& aDecrypted)
@@ -142,8 +163,10 @@ public:
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     mKeyRequest.DisconnectIfExists();
+    mThrottleRequest.DisconnectIfExists();
     mDecodeRequest.DisconnectIfExists();
     mDecodePromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
+    mThroughputLimiter.Flush();
     for (auto iter = mDecrypts.Iter(); !iter.Done(); iter.Next()) {
       nsAutoPtr<DecryptPromiseRequestHolder>& holder = iter.Data();
       holder->DisconnectIfExists();
@@ -202,6 +225,8 @@ private:
     mDecrypts;
   RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   MozPromiseRequestHolder<SamplesWaitingForKey::WaitForKeyPromise> mKeyRequest;
+  DecryptThroughputLimit mThroughputLimiter;
+  MozPromiseRequestHolder<DecryptThroughputLimit::ThrottlePromise> mThrottleRequest;
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
   MozPromiseHolder<FlushPromise> mFlushPromise;
