@@ -342,8 +342,40 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
     test_name = test.get('talos-try-name', test['test-name'])
     mozharness = test['mozharness']
 
-    if test['e10s'] and not test_name.endswith('-e10s'):
+    # mochitest e10s follows the pattern mochitest-e10s-<suffix>
+    # in buildbot, except for these special cases
+    buildbot_specials = [
+        'mochitest-webgl',
+        'mochitest-clipboard',
+        'mochitest-media',
+        'mochitest-gpu',
+        'mochitest-e10s',
+    ]
+    test_name = test.get(
+                    'talos-try-name',
+                    test.get(
+                        'unittest-try-name',
+                        test['test-name']
+                    )
+                )
+    if test['e10s'] and 'e10s' not in test_name:
         test_name += '-e10s'
+
+    if test_name.startswith('mochitest') \
+            and test_name.endswith('e10s') \
+            and not any(map(
+                lambda name: test_name.startswith(name),
+                buildbot_specials
+            )):
+        split_mochitest = test_name.split('-')
+        test_name = '-'.join([
+            split_mochitest[0],
+            split_mochitest[-1],
+            '-'.join(split_mochitest[1:-1])
+        ])
+
+    # in buildbot, mochitest-webgl is called mochitest-gl
+    test_name = test_name.replace('webgl', 'gl')
 
     if mozharness.get('chunked', False):
         this_chunk = test.get('this-chunk')

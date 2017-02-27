@@ -30,13 +30,6 @@ private:
     // tests if the host part of an uri is fully qualified
     bool TestNonFqdn(nsIURI *uri);
 
-    // returns true if URI is accepted by the list of hosts in the pref
-    bool TestPref(nsIURI *, const char *pref);
-
-    bool MatchesBaseURI(const nsCSubstring &scheme,
-                        const nsCSubstring &host,
-                        int32_t             port,
-                        nsDependentCSubstring const& url);
     // Thread for GenerateCredentialsAsync
     RefPtr<mozilla::LazyIdleThread> mNegotiateThread;
 };

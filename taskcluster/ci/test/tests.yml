@@ -63,6 +63,7 @@ crashtest:
         by-test-platform:
             windows.*: false # Bug 1304435
             linux64-ccov/opt: false
+            macosx64/debug: true
             default: both
     mozharness:
         by-test-platform:
@@ -75,7 +76,7 @@ crashtest:
                     - --test-suite=crashtest
             default:
                 script: desktop_unittest.py
-                chunked: true
+                chunked: false
                 no-read-buildbot-config: true
                 config:
                     by-test-platform:
@@ -93,6 +94,7 @@ crashtest:
 external-media-tests-base:
     description: "External Media Test run"
     suite: external-media-tests
+    unittest-try-name: 'media-tests'
     treeherder-symbol: tc-VP(b-m)
     e10s: false
     tier: 2
@@ -116,6 +118,7 @@ external-media-tests-twitch:
     description: "External Media Test Twitch run"
     suite: external-media-tests/twitch
     treeherder-symbol: tc-VP(b-t)
+    unittest-try-name: media-twitch-tests
     e10s: false
     tier: 2
     max-run-time: 5400
@@ -139,6 +142,7 @@ external-media-tests-twitch:
 external-media-tests-youtube:
     description: "External Media Test Youtube run"
     suite: external-media-tests/youtube
+    unittest-try-name: media-youtube-tests
     treeherder-symbol: tc-VP(b-y)
     e10s: false
     tier: 2
@@ -232,8 +236,14 @@ jittest:
     chunks:
         by-test-platform:
             windows.*: 1
+            macosx.*: 1
             default: 6
     mozharness:
+        chunked:
+          by-test-platform:
+            windows.*: false
+            macosx.*: false
+            default: true
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
@@ -264,6 +274,7 @@ jsreftest:
             android.*: 10
             windows.*: 2
             linux64-qr/.*: 4
+            macosx.*: 2
             default: 3
     e10s:
         by-test-platform:
@@ -293,6 +304,7 @@ jsreftest:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
+                chunked: true
                 config:
                     by-test-platform:
                         windows.*:
@@ -331,6 +343,7 @@ marionette:
     e10s:
         by-test-platform:
             linux64-ccov/opt: false
+            macosx.*: true
             default: both
     mozharness:
         by-test-platform:
@@ -379,6 +392,7 @@ mochitest:
             linux64-ccov/opt: false
             linux64-jsdcov/opt: false
             android.*: false
+            macosx64/debug: true
             default: both
     max-run-time:
         by-test-platform:
@@ -430,7 +444,7 @@ mochitest-a11y:
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
-        chunked: true
+        chunked: false
         config:
             by-test-platform:
                 windows.*:
@@ -463,6 +477,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux64-jsdcov/opt: false
             linux64-ccov/opt: false
+            macosx64/debug: true
             default: both
     max-run-time:
         by-test-platform:
@@ -474,6 +489,7 @@ mochitest-browser-chrome:
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
+        chunked: true
         config:
             by-test-platform:
                 windows.*:
@@ -540,7 +556,6 @@ mochitest-chrome:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 4
             android.*: 2
-            macosx.*: 1
             default: 3
     max-run-time: 3600
     e10s: false
@@ -560,6 +575,7 @@ mochitest-chrome:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
+                chunked: true
                 config:
                     by-test-platform:
                         windows.*:
@@ -579,6 +595,10 @@ mochitest-clipboard:
     treeherder-symbol: tc-M(cl)
     loopback-video: true
     instance-size: xlarge
+    e10s:
+      by-test-platform:
+        macosx64/debug: true
+        default: both
     mozharness:
         by-test-platform:
             android.*:
@@ -592,7 +612,7 @@ mochitest-clipboard:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
-                chunked: true
+                chunked: false
                 config:
                     by-test-platform:
                         windows.*:
@@ -618,6 +638,7 @@ mochitest-devtools-chrome:
     chunks:
         by-test-platform:
             windows.*: 8
+            macosx.*: 8
             default: 10
     run-on-projects:
         by-test-platform:
@@ -629,10 +650,12 @@ mochitest-devtools-chrome:
             linux64-jsdcov/opt: false
             # Bug 1304433: mochitest-devtools-chrome (e10s) not greened on windows
             windows.*: false
+            macosx64/debug: true
             default: both
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
+        chunked: true
         config:
             by-test-platform:
                 windows.*:
@@ -671,6 +694,7 @@ mochitest-gpu:
         by-test-platform:
             windows.*: both
             android.*: false
+            macosx64/opt: both
             default: true
     mozharness:
         by-test-platform:
@@ -685,7 +709,7 @@ mochitest-gpu:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
-                chunked: true
+                chunked: false
                 config:
                     by-test-platform:
                         windows.*:
@@ -714,7 +738,7 @@ mochitest-jetpack:
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
-        chunked: true
+        chunked: false
         config:
             by-test-platform:
                 windows.*:
@@ -735,6 +759,10 @@ mochitest-media:
     treeherder-symbol: tc-M(mda)
     max-run-time: 5400
     loopback-video: true
+    e10s:
+      by-test-platform:
+        macosx64/debug: true
+        default: both
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -742,6 +770,7 @@ mochitest-media:
     chunks:
         by-test-platform:
             android.*: 3
+            macosx64.*: 1
             default: 3
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
@@ -756,7 +785,10 @@ mochitest-media:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
-                chunked: true
+                chunked:
+                  by-test-platform:
+                    macosx64.*: false
+                    default: true
                 config:
                     by-test-platform:
                         windows.*:
@@ -805,6 +837,10 @@ mochitest-webgl:
         by-test-platform:
             android.*: 10
             default: 3
+    e10s:
+      by-test-platform:
+        macosx64/opt: false
+        default: both
     loopback-video: true
     max-run-time:
         by-test-platform:
@@ -876,7 +912,8 @@ reftest:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 48
             android.*: 16
-            macosx.*: 1
+            macosx64/opt: 1
+            macosx64/debug: 2
             default: 8
     max-run-time:
         by-test-platform:
@@ -898,6 +935,10 @@ reftest:
             default:
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
+                chunked:
+                  by-test-platform:
+                    macosx64/opt: false
+                    default: true
                 config:
                     by-test-platform:
                         windows.*:
@@ -1154,14 +1195,16 @@ talos-tp5o:
 web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
-    treeherder-symbol: tc-W()
+    treeherder-symbol: tc-W(wpt)
     chunks:
       by-test-platform:
-        macosx.*: 5
+        macosx64/opt: 5
+        macosx64/debug: 10
         default: 12
     e10s:
         by-test-platform:
             linux64-ccov/opt: false
+            macosx.*: true
             default: both
     max-run-time: 7200
     instance-size: xlarge
@@ -1174,6 +1217,7 @@ web-platform-tests:
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
+        chunked: true
         config:
             by-test-platform:
                 windows.*:
@@ -1241,7 +1285,7 @@ xpcshell:
         by-test-platform:
             linux64-jsdcov/opt: xpcshell-coverage
             default: xpcshell
-    treeherder-symbol: tc-X()
+    treeherder-symbol: tc-X(X)
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['graphics']

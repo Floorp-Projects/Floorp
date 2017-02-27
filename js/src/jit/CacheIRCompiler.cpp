@@ -1912,6 +1912,44 @@ CacheIRCompiler::emitLoadDenseElementExistsResult()
 }
 
 bool
+CacheIRCompiler::emitLoadDenseElementHoleExistsResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Register index = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Make sure the index is nonnegative.
+    masm.branch32(Assembler::LessThan, index, Imm32(0), failure->label());
+
+    // Load obj->elements.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Guard on the initialized length.
+    Label hole;
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, index, &hole);
+
+    // Load value and replace with true.
+    Label done;
+    masm.loadValue(BaseObjectElementIndex(scratch, index), output.valueReg());
+    masm.branchTestMagic(Assembler::Equal, output.valueReg(), &hole);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    // Load false for the hole.
+    masm.bind(&hole);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadUnboxedArrayElementResult()
 {
     AutoOutputRegister output(*this);
