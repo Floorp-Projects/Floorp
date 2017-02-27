@@ -107,7 +107,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_transitions_computed_values.html [10]
   * test_transitions_dynamic_changes.html [10]
   * test_transitions_step_functions.html [24]
-  * test_value_storage.html `transition` [635]
+  * test_value_storage.html `transition` [620]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * url value in style attribute bug 1310886
@@ -139,7 +139,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [930]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [822]
 * flex-basis glue not implemented bug 1331529
   * test_flexbox_flex_shorthand.html `flex-basis` [28]
   * test_flexbox_layout.html [355]
@@ -218,7 +218,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `transform`: for -moz-transform [3]
     * test_initial_computation.html `-moz-transform`: need different parsing rules [4]
     * test_initial_storage.html `transform`: for -moz-transform [6]
-    * test_value_storage.html `-moz-transform`: need different parsing rules [280]
+    * test_value_storage.html `-moz-transform`: need different parsing rules [284]
   * test_variables.html `var(--var6)`: -x-system-font [1]
 * Unimplemented CSS properties:
   * will-change longhand property
@@ -424,12 +424,12 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `circle(at ` [2]
     * ... `ellipse(at ` [2]
   * accepts rubbish for second part of value:
-    * {transform,perspective}-origin servo/servo#15487
-      * test_property_syntax_errors.html `transform-origin'` [50]
-      * ... `perspective-origin'` [30]
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726
     * test_property_syntax_errors.html `-moz-alt-content` [4]
+  * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
+    * test_value_storage.html `'center left'` [9]
+    * ... `'center right'` [9]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -457,8 +457,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_shorthand_property_getters.html `should not be able to serialize border` [7]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
-  * animation and transition shorthand serialization is wrong servo/servo#15398
-    * test_shorthand_property_getters.html `transition` [5]
   * background-position invalid 3-value form **issue to be filed**
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
