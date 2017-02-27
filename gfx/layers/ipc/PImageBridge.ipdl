@@ -38,6 +38,11 @@ child:
 parent:
   async ImageBridgeThreadId(PlatformThreadId aTreahdId);
 
+  // Creates a set of mappings between TextureReadLocks and an associated
+  // ReadLockHandle that can be used in Update, and persist until the
+  // next Update call.
+  async InitReadLocks(ReadLockInit[] locks);
+
   async Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
 
   // First step of the destruction sequence. This puts ImageBridge

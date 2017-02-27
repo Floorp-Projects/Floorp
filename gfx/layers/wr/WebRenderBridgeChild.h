@@ -114,6 +114,8 @@ private:
   nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
+  nsTArray<nsTArray<ReadLockInit>> mReadLocks;
+  uint64_t mReadLockSequenceNumber;
   bool mIsInTransaction;
   uint32_t mIdNamespace;
   uint32_t mResourceId;
