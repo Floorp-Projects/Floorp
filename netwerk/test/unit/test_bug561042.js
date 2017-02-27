@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
@@ -18,13 +24,13 @@ var listener = {
 
   onStopRequest: function (request, ctx, status) {
       do_check_eq(status, Components.results.NS_OK);
-      do_test_finished();
+      server.stop(do_test_finished);
   },
 
 };
 
+var server = new HttpServer();
 function run_test() {
-    var server = new HttpServer();
     server.start(SERVER_PORT);
     server.registerPathHandler('/', function(metadata, response) {
         response.setStatusLine(metadata.httpVersion, 200, "OK");
