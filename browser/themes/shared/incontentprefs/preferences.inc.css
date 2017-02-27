@@ -491,6 +491,10 @@ description > html|a {
   margin-inline-end: 14px !important;
 }
 
+#verifiedManage:visited {
+  color: var(--in-content-link-color);
+}
+
 .fxaSyncIllustration {
   width: 231px;
 }
