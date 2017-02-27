@@ -89,9 +89,8 @@ AccessCheck::wrapperSubsumes(JSObject* wrapper)
 bool
 AccessCheck::isChrome(JSCompartment* compartment)
 {
-    bool privileged;
     nsIPrincipal* principal = GetCompartmentPrincipal(compartment);
-    return NS_SUCCEEDED(nsXPConnect::SecurityManager()->IsSystemPrincipal(principal, &privileged)) && privileged;
+    return nsXPConnect::SystemPrincipal() == principal;
 }
 
 bool
