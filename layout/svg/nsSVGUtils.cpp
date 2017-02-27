@@ -385,10 +385,23 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
   if (outer == svg) {
     return nullptr;
   }
-  nsMargin bp = outer->GetUsedBorderAndPadding();
-  *aRect = ((aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) ?
-             nsRect(0, 0, 0, 0) : svg->GetCoveredRegion()) +
-                 nsPoint(bp.left, bp.top);
+
+  if (aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+    *aRect = nsRect(0, 0, 0, 0);
+  } else {
+    uint32_t flags = nsSVGUtils::eForGetClientRects |
+                     nsSVGUtils::eBBoxIncludeFill |
+                     nsSVGUtils::eBBoxIncludeStroke |
+                     nsSVGUtils::eBBoxIncludeMarkers;
+    gfxMatrix m = nsSVGUtils::GetUserToCanvasTM(aFrame);
+    SVGBBox bbox = nsSVGUtils::GetBBox(aFrame, flags, &m);
+    nsRect bounds =
+      nsLayoutUtils::RoundGfxRectToAppRect(bbox,
+                       aFrame->PresContext()->AppUnitsPerDevPixel());
+    nsMargin bp = outer->GetUsedBorderAndPadding();
+    *aRect = bounds + nsPoint(bp.left, bp.top);
+  }
+
   return outer;
 }
 
@@ -980,24 +993,6 @@ nsSVGUtils::HitTestChildren(nsSVGDisplayContainerFrame* aFrame,
 }
 
 nsRect
-nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
-{
-  nsRect rect;
-
-  for (nsIFrame* kid = aFrames.FirstChild();
-       kid;
-       kid = kid->GetNextSibling()) {
-    nsSVGDisplayableFrame* child = do_QueryFrame(kid);
-    if (child) {
-      nsRect childRect = child->GetCoveredRegion();
-      rect.UnionRect(rect, childRect);
-    }
-  }
-
-  return rect;
-}
-
-nsRect
 nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
                                          const gfxMatrix& aMatrix,
                                          nsPresContext* aPresContext)
@@ -1100,7 +1095,8 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
 }
 
 gfxRect
-nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
+nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
+                    const gfxMatrix* aToBoundsSpace)
 {
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
@@ -1147,7 +1143,9 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
 
   FrameProperties props = aFrame->Properties();
 
-  if (aFlags == eBBoxIncludeFillGeometry) {
+  if (aFlags == eBBoxIncludeFillGeometry &&
+      // We only cache bbox in element's own user space
+      !aToBoundsSpace) {
     gfxRect* prop = props.Get(ObjectBoundingBoxProperty());
     if (prop) {
       return *prop;
@@ -1155,6 +1153,10 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
   }
 
   gfxMatrix matrix;
+  if (aToBoundsSpace) {
+    matrix = *aToBoundsSpace;
+  }
+
   if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
     // The spec says getBBox "Returns the tight bounding box in *current user
     // space*". So we should really be doing this for all elements, but that
@@ -1219,7 +1221,9 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     }
   }
 
-  if (aFlags == eBBoxIncludeFillGeometry) {
+  if (aFlags == eBBoxIncludeFillGeometry &&
+      // We only cache bbox in element's own user space
+      !aToBoundsSpace) {
     // Obtaining the bbox for objectBoundingBox calculations is common so we
     // cache the result for future calls, since calculation can be expensive:
     props.Set(ObjectBoundingBoxProperty(), new gfxRect(bbox));
