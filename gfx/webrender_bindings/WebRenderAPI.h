@@ -41,6 +41,8 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
+  void GenerateFrame();
+
   void SetRootDisplayList(gfx::Color aBgColor,
                           wr::Epoch aEpoch,
                           LayerSize aViewportSize,

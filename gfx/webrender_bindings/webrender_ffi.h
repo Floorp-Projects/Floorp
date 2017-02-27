@@ -447,6 +447,10 @@ wr_api_set_root_display_list(WrAPI* api, WrState* state, WrEpoch epoch, float w,
 WR_FUNC;
 
 WR_INLINE void
+wr_api_generate_frame(WrAPI* api)
+WR_FUNC;
+
+WR_INLINE void
 wr_api_send_external_event(WrAPI* api, uintptr_t evt)
 WR_DESTRUCTOR_SAFE_FUNC;
 
