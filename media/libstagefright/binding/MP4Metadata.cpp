@@ -79,7 +79,8 @@ public:
   explicit MP4MetadataStagefright(Stream* aSource);
   ~MP4MetadataStagefright();
 
-  static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
+  static MP4Metadata::ResultAndByteBuffer Metadata(Stream* aSource);
+
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;
@@ -126,7 +127,8 @@ public:
   explicit MP4MetadataRust(Stream* aSource);
   ~MP4MetadataRust();
 
-  static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
+  static MP4Metadata::ResultAndByteBuffer Metadata(Stream* aSource);
+
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;
@@ -243,7 +245,7 @@ MP4Metadata::~MP4Metadata()
 {
 }
 
-/*static*/ already_AddRefed<mozilla::MediaByteBuffer>
+/*static*/ MP4Metadata::ResultAndByteBuffer
 MP4Metadata::Metadata(Stream* aSource)
 {
   return MP4MetadataStagefright::Metadata(aSource);
@@ -685,11 +687,17 @@ MP4MetadataStagefright::GetTrackNumber(mozilla::TrackID aTrackID)
   return -1;
 }
 
-/*static*/ already_AddRefed<mozilla::MediaByteBuffer>
+/*static*/ MP4Metadata::ResultAndByteBuffer
 MP4MetadataStagefright::Metadata(Stream* aSource)
 {
   auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
-  return parser->Metadata();
+  RefPtr<mozilla::MediaByteBuffer> buffer = parser->Metadata();
+  if (!buffer) {
+    return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
+                        RESULT_DETAIL("Cannot parse metadata")),
+            nullptr};
+  }
+  return {NS_OK, Move(buffer)};
 }
 
 bool
@@ -951,11 +959,11 @@ MP4MetadataRust::ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID 
   return true;
 }
 
-/*static*/ already_AddRefed<mozilla::MediaByteBuffer>
+/*static*/ MP4Metadata::ResultAndByteBuffer
 MP4MetadataRust::Metadata(Stream* aSource)
 {
   MOZ_ASSERT(false, "Not yet implemented");
-  return nullptr;
+  return {NS_ERROR_NOT_IMPLEMENTED, nullptr};
 }
 
 } // namespace mp4_demuxer
