@@ -1030,7 +1030,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     aKeyEvent.mKeyNameIndex = ComputeGeckoKeyNameIndex(nativeKeyCode);
   }
 
-  aKeyEvent.mCodeNameIndex = ComputeGeckoCodeNameIndex(nativeKeyCode);
+  aKeyEvent.mCodeNameIndex = ComputeGeckoCodeNameIndex(nativeKeyCode, kbType);
   MOZ_ASSERT(aKeyEvent.mCodeNameIndex != CODE_NAME_INDEX_USE_STRING);
 
   NS_OBJC_END_TRY_ABORT_BLOCK
@@ -1417,8 +1417,21 @@ TISInputSourceWrapper::ComputeGeckoKeyNameIndex(UInt32 aNativeKeyCode)
 
 // static
 CodeNameIndex
-TISInputSourceWrapper::ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode)
+TISInputSourceWrapper::ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode,
+                                                 UInt32 aKbType)
 {
+  // macOS swaps native key code between Backquote key and IntlBackslash key
+  // only when the keyboard type is ISO.  Let's treat the key code after
+  // swapping them here because Chromium does so only when computing .code
+  // value.
+  if (::KBGetLayoutType(aKbType) == kKeyboardISO) {
+    if (aNativeKeyCode == kVK_ISO_Section) {
+      aNativeKeyCode = kVK_ANSI_Grave;
+    } else if (aNativeKeyCode == kVK_ANSI_Grave) {
+      aNativeKeyCode = kVK_ISO_Section;
+    }
+  }
+
   switch (aNativeKeyCode) {
 
 #define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
