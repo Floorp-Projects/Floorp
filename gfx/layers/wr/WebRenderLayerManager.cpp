@@ -228,6 +228,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
+  WrBridge()->SetNamespace(id_namespace);
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
 }
 

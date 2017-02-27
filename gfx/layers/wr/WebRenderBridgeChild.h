@@ -28,7 +28,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
 public:
-  explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId, uint32_t aIdNamespace);
+  explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
   void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
@@ -56,6 +56,10 @@ public:
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
   uint32_t GetNamespace() { return mIdNamespace; }
+  void SetNamespace(uint32_t aIdNamespace)
+  {
+    mIdNamespace = aIdNamespace;
+  }
 
 private:
   friend class CompositorBridgeChild;
