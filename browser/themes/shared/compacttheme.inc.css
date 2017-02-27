@@ -301,6 +301,16 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(
   background-color: var(--tab-selection-background-color);
 }
 
+.tab-throbber[selected][progress] {
+  list-style-image: url("chrome://browser/skin/compacttheme/loading-inverted.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .tab-throbber[selected][progress] {
+    list-style-image: url("chrome://browser/skin/compacttheme/loading-inverted@2x.png");
+  }
+}
+
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted] {
   filter: url(chrome://global/skin/filters.svg#fill) !important; /* removes drop-shadow filter */
