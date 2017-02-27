@@ -63,7 +63,9 @@ public:
   using ResultAndByteBuffer = ResultAndType<RefPtr<mozilla::MediaByteBuffer>>;
   static ResultAndByteBuffer Metadata(Stream* aSource);
 
-  uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
+  static constexpr uint32_t NumberTracksError() { return UINT32_MAX; }
+  using ResultAndTrackCount = ResultAndType<uint32_t>;
+  ResultAndTrackCount GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;
   bool CanSeek() const;

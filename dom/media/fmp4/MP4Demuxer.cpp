@@ -10,6 +10,7 @@
 
 #include "MP4Demuxer.h"
 
+#include "MediaPrefs.h"
 // Used for telemetry
 #include "mozilla/Telemetry.h"
 #include "mp4_demuxer/AnnexB.h"
@@ -146,17 +147,48 @@ MP4Demuxer::Init()
   mp4_demuxer::MP4Metadata metadata{bufferstream};
 
   auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
+  if (audioTrackCount.Ref() == mp4_demuxer::MP4Metadata::NumberTracksError()) {
+    if (MediaPrefs::MediaWarningsAsErrors()) {
+      return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                    RESULT_DETAIL("Invalid audio track (%s)",
+                                  audioTrackCount.Result().Description().get())),
+        __func__);
+    }
+    audioTrackCount.Ref() = 0;
+  }
+
   auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);
-  if (audioTrackCount == 0 && videoTrackCount == 0) {
+  if (videoTrackCount.Ref() == mp4_demuxer::MP4Metadata::NumberTracksError()) {
+    if (MediaPrefs::MediaWarningsAsErrors()) {
+      return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                    RESULT_DETAIL("Invalid video track (%s)",
+                                  videoTrackCount.Result().Description().get())),
+        __func__);
+    }
+    videoTrackCount.Ref() = 0;
+  }
+
+  if (audioTrackCount.Ref() == 0 && videoTrackCount.Ref() == 0) {
     return InitPromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                  RESULT_DETAIL("No MP4 audio or video tracks")),
+                  RESULT_DETAIL("No MP4 audio (%s) or video (%s) tracks",
+                                audioTrackCount.Result().Description().get(),
+                                videoTrackCount.Result().Description().get())),
       __func__);
   }
 
-  if (audioTrackCount != 0) {
-    mAudioDemuxers.SetLength(audioTrackCount);
-    for (size_t i = 0; i < audioTrackCount; i++) {
+  if (NS_FAILED(audioTrackCount.Result()) && result == NS_OK) {
+    result = Move(audioTrackCount.Result());
+  }
+  if (NS_FAILED(videoTrackCount.Result()) && result == NS_OK) {
+    result = Move(videoTrackCount.Result());
+  }
+
+  if (audioTrackCount.Ref() != 0) {
+    mAudioDemuxers.SetLength(audioTrackCount.Ref());
+    for (size_t i = 0; i < audioTrackCount.Ref(); i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
       if (!info) {
@@ -180,9 +212,9 @@ MP4Demuxer::Init()
     }
   }
 
-  if (videoTrackCount != 0) {
-    mVideoDemuxers.SetLength(videoTrackCount);
-    for (size_t i = 0; i < videoTrackCount; i++) {
+  if (videoTrackCount.Ref() != 0) {
+    mVideoDemuxers.SetLength(videoTrackCount.Ref());
+    for (size_t i = 0; i < videoTrackCount.Ref(); i++) {
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
       if (!info) {
