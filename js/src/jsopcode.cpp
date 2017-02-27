@@ -1253,6 +1253,11 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
     }
 
     switch (op) {
+      case JSOP_DELNAME:
+        return write("(delete ") &&
+               write(loadAtom(pc)) &&
+               write(")");
+
       case JSOP_GETGNAME:
       case JSOP_GETNAME:
       case JSOP_GETINTRINSIC:
@@ -1292,19 +1297,21 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         MOZ_ASSERT(atom);
         return write(atom);
       }
+
+      case JSOP_DELPROP:
+      case JSOP_STRICTDELPROP:
       case JSOP_LENGTH:
       case JSOP_GETPROP:
+      case JSOP_GETBOUNDNAME:
       case JSOP_CALLPROP: {
+        bool hasDelete = op == JSOP_DELPROP || op == JSOP_STRICTDELPROP;
         RootedAtom prop(cx, (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc));
-        if (!decompilePCForStackOperand(pc, -1))
-            return false;
-        if (IsIdentifier(prop)) {
-            return write(".") &&
-                   quote(prop, '\0');
-        }
-        return write("[") &&
-               quote(prop, '\'') &&
-               write("]");
+        return (hasDelete ? write("(delete ") : true) &&
+               decompilePCForStackOperand(pc, -1) &&
+               (IsIdentifier(prop)
+                ? write(".") && quote(prop, '\0')
+                : write("[") && quote(prop, '\'') && write("]")) &&
+               (hasDelete ? write(")") : true);
       }
       case JSOP_GETPROP_SUPER:
       {
@@ -1322,12 +1329,20 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
                write("[") &&
                decompilePCForStackOperand(pc, -2) &&
                write("]");
+
+      case JSOP_DELELEM:
+      case JSOP_STRICTDELELEM:
       case JSOP_GETELEM:
-      case JSOP_CALLELEM:
-        return decompilePCForStackOperand(pc, -2) &&
+      case JSOP_CALLELEM: {
+        bool hasDelete = (op == JSOP_DELELEM || op == JSOP_STRICTDELELEM);
+        return (hasDelete ? write("(delete ") : true) &&
+               decompilePCForStackOperand(pc, -2) &&
                write("[") &&
                decompilePCForStackOperand(pc, -1) &&
-               write("]");
+               write("]") &&
+               (hasDelete ? write(")") : true);
+      }
+
       case JSOP_GETELEM_SUPER:
         return write("super[") &&
                decompilePCForStackOperand(pc, -3) &&
@@ -1365,6 +1380,7 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
       case JSOP_CALL:
       case JSOP_CALLITER:
       case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
         return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
                write("(...)");
       case JSOP_SPREADCALL:
@@ -1386,6 +1402,34 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return decompilePCForStackOperand(pc, -1);
       case JSOP_VOID:
         return write("(void ") &&
+               decompilePCForStackOperand(pc, -1) &&
+               write(")");
+
+      case JSOP_SUPERCALL:
+      case JSOP_SPREADSUPERCALL:
+        return write("super(...)");
+      case JSOP_SUPERFUN:
+        return write("super");
+
+      case JSOP_EVAL:
+      case JSOP_SPREADEVAL:
+      case JSOP_STRICTEVAL:
+      case JSOP_STRICTSPREADEVAL:
+        return write("eval(...)");
+
+      case JSOP_NEW:
+        return write("(new ") &&
+               decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 3)) &&
+               write("(...))");
+
+      case JSOP_SPREADNEW:
+        return write("(new ") &&
+               decompilePCForStackOperand(pc, -4) &&
+               write("(...))");
+
+      case JSOP_TYPEOF:
+      case JSOP_TYPEOFEXPR:
+        return write("(typeof ") &&
                decompilePCForStackOperand(pc, -1) &&
                write(")");
       default:
