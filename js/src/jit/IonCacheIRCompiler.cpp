@@ -17,6 +17,7 @@
 #include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "vm/TypeInference-inl.h"
 
 using namespace js;
 using namespace js::jit;
