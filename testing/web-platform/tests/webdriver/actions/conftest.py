@@ -6,6 +6,14 @@ def key_chain(session):
     return session.actions.sequence("key", "keyboard_id")
 
 
+@pytest.fixture
+def mouse_chain(session):
+    return session.actions.sequence(
+        "pointer",
+        "pointer_id",
+        {"pointerType": "mouse"})
+
+
 @pytest.fixture(autouse=True)
 def release_actions(session, request):
     # release all actions after each test
