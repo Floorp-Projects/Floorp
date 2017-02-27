@@ -168,9 +168,6 @@ skip script test262/built-ins/TypedArray/prototype/forEach/callbackfn-detachbuff
 skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-same-targettype.js
-skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-custom-ctor-other-targettype.js
-skip script test262/built-ins/TypedArray/prototype/slice/detached-buffer-get-ctor.js
 skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer-realm.js
 skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer.js
