@@ -1739,7 +1739,7 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
-    if (lts->mCrossProcessParent) {
+    if (lts->mCrossProcessParent && lts->mParent == this) {
       CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
       cpcp->DidComposite(aLayersId, aCompositeStart, aCompositeEnd);
     }
