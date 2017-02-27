@@ -334,20 +334,24 @@ add_test(function test_processInputSourceActionSequenceValidation() {
   let check = (message, regex) => checkErrors(
       regex, action.Sequence.fromJson, [actionSequence], message);
   check(`actionSequence.type: ${actionSequence.type}`, /Unknown action type/);
+  action.inputStateMap.clear();
 
   actionSequence.type = "none";
   actionSequence.id = -1;
   check(`actionSequence.id: ${getTypeString(actionSequence.id)}`,
       /Expected 'id' to be a string/);
+  action.inputStateMap.clear();
 
   actionSequence.id = undefined;
   check(`actionSequence.id: ${getTypeString(actionSequence.id)}`,
       /Expected 'id' to be defined/);
+  action.inputStateMap.clear();
 
   actionSequence.id = "some_id";
   actionSequence.actions = -1;
   check(`actionSequence.actions: ${getTypeString(actionSequence.actions)}`,
       /Expected 'actionSequence.actions' to be an Array/);
+  action.inputStateMap.clear();
 
   run_next_test();
 });
@@ -364,6 +368,7 @@ add_test(function test_processInputSourceActionSequence() {
   let actions = action.Sequence.fromJson(actionSequence);
   equal(actions.length, 1);
   deepEqual(actions[0], expectedAction);
+  action.inputStateMap.clear();
   run_next_test();
 });
 
@@ -384,6 +389,7 @@ add_test(function test_processInputSourceActionSequencePointer() {
   let actions = action.Sequence.fromJson(actionSequence);
   equal(actions.length, 1);
   deepEqual(actions[0], expectedAction);
+  action.inputStateMap.clear();
   run_next_test();
 });
 
@@ -400,6 +406,7 @@ add_test(function test_processInputSourceActionSequenceKey() {
   let actions = action.Sequence.fromJson(actionSequence);
   equal(actions.length, 1);
   deepEqual(actions[0], expectedAction);
+  action.inputStateMap.clear();
   run_next_test();
 });
 
@@ -505,6 +512,7 @@ add_test(function test_extractActionChain_oneTickOneInput() {
   equal(1, actionsByTick.length);
   equal(1, actionsByTick[0].length);
   deepEqual(actionsByTick, [[expectedAction]]);
+  action.inputStateMap.clear();
   run_next_test();
 });
 
@@ -555,12 +563,14 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
   let expectedAction = new action.Action(keyActionSequence.id, "key", keyActionItems[2].type);
   expectedAction.value = keyActionItems[2].value;
   deepEqual(actionsByTick[2][0], expectedAction);
+  action.inputStateMap.clear();
 
   // one empty action sequence
   actionsByTick = action.Chain.fromJson(
       [keyActionSequence, {type: "none", id: "some", actions: []}]);
   equal(keyActionItems.length, actionsByTick.length);
   equal(1, actionsByTick[0].length);
+  action.inputStateMap.clear();
   run_next_test();
 });
 
