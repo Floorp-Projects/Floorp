@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global getModuleLoadPath setModuleResolveHook parseModule os */
+
 // A basic synchronous module loader for testing the shell.
 {
 // Save standard built-ins before scripts can modify them.
@@ -54,10 +56,13 @@ const ReflectLoader = new class {
             drive = ReflectApply(StringPrototypeSubstring, path, [0, 2]);
             path = ReflectApply(StringPrototypeSubstring, path, [2]);
         }
+#endif
 
-        const pathsep = "\\";
+        const pathsep =
+#ifdef XP_WIN
+        "\\";
 #else
-        const pathsep = "/";
+        "/";
 #endif
 
         let n = 0;
