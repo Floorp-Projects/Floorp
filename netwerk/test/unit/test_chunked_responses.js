@@ -1,9 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 /*
  * Test Chunked-Encoded response parsing.
  */
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test infrastructure
+
+"use strict";
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -27,11 +33,11 @@ function run_test()
 
 function run_test_number(num)
 {
-  testPath = testPathBase + num;
+  var testPath = testPathBase + num;
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
-  flags = test_flags[num];   // OK if flags undefined for test
+  var flags = test_flags[num];   // OK if flags undefined for test
   channel.asyncOpen2(new ChannelListener(eval("completeTest" + num),
                                         channel, flags));
 }
