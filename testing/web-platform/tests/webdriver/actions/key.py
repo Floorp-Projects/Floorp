@@ -1,6 +1,7 @@
 import pytest
 
 from support.keys import Keys
+from support.refine import get_keys, filter_dict
 
 
 def get_events(session):
@@ -15,58 +16,6 @@ def get_events(session):
             hex_suffix = key[key.index("+") + 1:]
             e["key"] = unichr(int(hex_suffix, 16))
     return events
-
-
-def get_keys(input_el):
-    """Get printable characters entered into `input_el`.
-
-    :param input_el: HTML input element.
-    """
-    rv = input_el.property("value")
-    if rv is None:
-        return ""
-    else:
-        return rv
-
-
-def filter_dict(source, d):
-    """Filter `source` dict to only contain same keys as `d` dict.
-
-    :param source: dictionary to filter.
-    :param d: dictionary whose keys determine the filtering.
-    """
-    return {k: source[k] for k in d.keys()}
-
-
-@pytest.fixture
-def key_reporter(session, test_keys_page, request):
-    """Represents focused input element from `test_keys_page` fixture."""
-    input_el = session.find.css("#keys", all=False)
-    input_el.click()
-    return input_el
-
-
-@pytest.fixture
-def test_keys_page(session, server):
-    session.url = server.where_is("test_keys_wdspec.html")
-
-
-@pytest.fixture
-def key_chain(session):
-    return session.actions.sequence("key", "keyboard_id")
-
-
-@pytest.fixture(autouse=True)
-def release_actions(session, request):
-    # release all actions after each test
-    # equivalent to a teardown_function, but with access to session fixture
-    request.addfinalizer(session.actions.release)
-
-
-def test_no_actions_send_no_events(session, key_reporter, key_chain):
-    key_chain.perform()
-    assert len(get_keys(key_reporter)) == 0
-    assert len(get_events(session)) == 0
 
 
 def test_lone_keyup_sends_no_events(session, key_reporter, key_chain):
@@ -220,24 +169,6 @@ def test_sequence_of_keydown_printable_keys_sends_events(session,
     assert get_keys(key_reporter) == "ab"
 
 
-def test_release_char_sequence_sends_keyup_events_in_reverse(session,
-                                                             key_reporter,
-                                                             key_chain):
-    key_chain \
-        .key_down("a") \
-        .key_down("b") \
-        .perform()
-    # reset so we only see the release events
-    session.execute_script("resetEvents();")
-    session.actions.release()
-    expected = [
-        {"code": "KeyB", "key": "b", "type": "keyup"},
-        {"code": "KeyA", "key": "a", "type": "keyup"},
-    ]
-    events = [filter_dict(e, expected[0]) for e in get_events(session)]
-    assert events == expected
-
-
 def test_sequence_of_keydown_character_keys(session, key_reporter, key_chain):
     key_chain.send_keys("ef").perform()
     expected = [
@@ -251,9 +182,3 @@ def test_sequence_of_keydown_character_keys(session, key_reporter, key_chain):
     events = [filter_dict(e, expected[0]) for e in get_events(session)]
     assert events == expected
     assert get_keys(key_reporter) == "ef"
-
-
-def test_release_no_actions_sends_no_events(session, key_reporter, key_chain):
-    session.actions.release()
-    assert len(get_keys(key_reporter)) == 0
-    assert len(get_events(session)) == 0
