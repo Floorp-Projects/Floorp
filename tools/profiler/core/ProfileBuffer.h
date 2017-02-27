@@ -22,7 +22,9 @@ public:
   void addTag(const ProfileBufferEntry& aTag);
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
                            JSContext* cx, UniqueStacks& aUniqueStacks);
-  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
+  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+                           const mozilla::TimeStamp& aStartTime,
+                           double aSinceTime,
                            UniqueStacks& aUniqueStacks);
   bool DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime);
 

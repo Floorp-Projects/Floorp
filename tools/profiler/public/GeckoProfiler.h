@@ -282,7 +282,6 @@ PROFILER_FUNC(bool profiler_thread_is_sleeping(), false)
 PROFILER_FUNC_VOID(profiler_js_operation_callback())
 
 PROFILER_FUNC(double profiler_time(), 0)
-PROFILER_FUNC(double profiler_time(const mozilla::TimeStamp& aTime), 0)
 
 PROFILER_FUNC(bool profiler_in_privacy_mode(), false)
 

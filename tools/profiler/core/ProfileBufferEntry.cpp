@@ -719,8 +719,12 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
   }
 }
 
-void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                                        double aSinceTime, UniqueStacks& aUniqueStacks)
+void
+ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
+                                   int aThreadId,
+                                   const TimeStamp& aStartTime,
+                                   double aSinceTime,
+                                   UniqueStacks& aUniqueStacks)
 {
   int readPos = mReadPos;
   int currentThreadID = -1;
@@ -731,7 +735,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThre
     } else if (currentThreadID == aThreadId && entry.isMarker()) {
       const ProfilerMarker* marker = entry.getMarker();
       if (marker->GetTime() >= aSinceTime) {
-        entry.getMarker()->StreamJSON(aWriter, aUniqueStacks);
+        entry.getMarker()->StreamJSON(aWriter, aStartTime, aUniqueStacks);
       }
     }
     readPos = (readPos + 1) % mEntrySize;
