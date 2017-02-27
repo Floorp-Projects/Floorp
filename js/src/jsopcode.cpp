@@ -618,10 +618,9 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
         // Opcodes that modifies the object but keeps it on the stack while
         // initialization should be listed here instead of switch below.
         // For error message, they shouldn't be shown as the original object
-        // like "[]" after adding elements.
+        // after adding properties.
         // For stack dump, keeping the input is better.
         switch (op) {
-          case JSOP_INITELEM_ARRAY:
           case JSOP_INITHIDDENPROP:
           case JSOP_INITHIDDENPROP_GETTER:
           case JSOP_INITHIDDENPROP_SETTER:
@@ -644,13 +643,6 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
             // Keep the third value.
             MOZ_ASSERT(nuses == 3);
             MOZ_ASSERT(ndefs == 1);
-            goto end;
-
-          case JSOP_INITELEM_INC:
-            // Keep the third value and push one more value.
-            MOZ_ASSERT(nuses == 3);
-            MOZ_ASSERT(ndefs == 2);
-            offsetStack[stackDepth + 1].set(offset, 1);
             goto end;
 
           default:
@@ -1930,6 +1922,21 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
         return write("(typeof ") &&
                decompilePCForStackOperand(pc, -1) &&
                write(")");
+
+      case JSOP_INITELEM_ARRAY:
+        return write("[...]");
+
+      case JSOP_INITELEM_INC:
+        if (defIndex == 0)
+            return write("[...]");
+        MOZ_ASSERT(defIndex == 1);
+#ifdef DEBUG
+        // INDEX won't be be exposed to error message.
+        if (isStackDump)
+            return write("INDEX");
+#endif
+        break;
+
       default:
         break;
     }
@@ -1995,11 +2002,6 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex)
 
           case JSOP_HOLE:
             return write("HOLE");
-
-          case JSOP_INITELEM_INC:
-            // For stack dump, defIndex == 0 is not used.
-            MOZ_ASSERT(defIndex == 1);
-            return write("INDEX");
 
           case JSOP_ISGENCLOSING:
             // For stack dump, defIndex == 0 is not used.
