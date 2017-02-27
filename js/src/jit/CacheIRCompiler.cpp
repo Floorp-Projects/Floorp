@@ -7,6 +7,7 @@
 #include "jit/CacheIRCompiler.h"
 
 #include "jit/IonIC.h"
+#include "jit/SharedICHelpers.h"
 
 #include "jscompartmentinlines.h"
 
@@ -49,9 +50,12 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
       }
 
       case OperandLocation::PayloadReg: {
+        // Temporarily add the payload register to currentOpRegs_ so
+        // allocateValueRegister will stay away from it.
+        currentOpRegs_.add(loc.payloadReg());
         ValueOperand reg = allocateValueRegister(masm);
         masm.tagValue(loc.payloadType(), loc.payloadReg(), reg);
-        MOZ_ASSERT(!currentOpRegs_.has(loc.payloadReg()), "Payload register shouldn't be in use");
+        currentOpRegs_.take(loc.payloadReg());
         availableRegs_.add(loc.payloadReg());
         loc.setValueReg(reg);
         return reg;
@@ -64,6 +68,14 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
         loc.setValueReg(reg);
         return reg;
       }
+
+      case OperandLocation::DoubleReg: {
+        ValueOperand reg = allocateValueRegister(masm);
+        masm.boxDouble(loc.doubleReg(), reg);
+        loc.setValueReg(reg);
+        return reg;
+      }
+
       case OperandLocation::Uninitialized:
         break;
     }
@@ -103,6 +115,9 @@ CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm, ValOperandId
       case OperandLocation::PayloadStack:
         popPayload(masm, &loc, reg.scratchReg());
         masm.tagValue(loc.payloadType(), reg.scratchReg(), reg);
+        break;
+      case OperandLocation::DoubleReg:
+        masm.boxDouble(loc.doubleReg(), reg);
         break;
       case OperandLocation::Uninitialized:
         MOZ_CRASH();
@@ -179,6 +194,37 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
         return reg;
       }
 
+      case OperandLocation::DoubleReg:
+      case OperandLocation::Uninitialized:
+        break;
+    }
+
+    MOZ_CRASH();
+}
+
+ConstantOrRegister
+CacheRegisterAllocator::useConstantOrRegister(MacroAssembler& masm, ValOperandId val)
+{
+    OperandLocation& loc = operandLocations_[val.id()];
+    switch (loc.kind()) {
+      case OperandLocation::Constant:
+        return loc.constant();
+
+      case OperandLocation::PayloadReg:
+      case OperandLocation::PayloadStack: {
+        JSValueType payloadType = loc.payloadType();
+        Register reg = useRegister(masm, TypedOperandId(val, payloadType));
+        return TypedOrValueRegister(MIRTypeFromValueType(payloadType), AnyRegister(reg));
+      }
+
+      case OperandLocation::ValueReg:
+      case OperandLocation::ValueStack:
+      case OperandLocation::BaselineFrame:
+        return TypedOrValueRegister(useValueRegister(masm, val));
+
+      case OperandLocation::DoubleReg:
+        return TypedOrValueRegister(MIRType::Double, AnyRegister(loc.doubleReg()));
+
       case OperandLocation::Uninitialized:
         break;
     }
@@ -231,6 +277,7 @@ CacheRegisterAllocator::freeDeadOperandRegisters()
           case OperandLocation::ValueStack:
           case OperandLocation::BaselineFrame:
           case OperandLocation::Constant:
+          case OperandLocation::DoubleReg:
             break;
         }
         loc.setUninitialized();
@@ -389,6 +436,42 @@ CacheRegisterAllocator::initAvailableRegsAfterSpill()
                                       GeneralRegisterSet::Not(inputRegisterSet()));
 }
 
+void
+CacheRegisterAllocator::fixupAliasedInputs(MacroAssembler& masm)
+{
+    // If IC inputs alias each other, make sure they are stored in different
+    // locations so we don't have to deal with this complexity in the rest of
+    // the allocator.
+    //
+    // Note that this can happen in IonMonkey with something like |o.foo = o|
+    // or |o[i] = i|.
+
+    size_t numInputs = writer_.numInputOperands();
+    MOZ_ASSERT(origInputLocations_.length() == numInputs);
+
+    for (size_t i = 1; i < numInputs; i++) {
+        OperandLocation& loc1 = operandLocations_[i];
+        if (!loc1.isInRegister())
+            continue;
+
+        for (size_t j = 0; j < i; j++) {
+            OperandLocation& loc2 = operandLocations_[j];
+            if (!loc1.aliasesReg(loc2))
+                continue;
+
+            if (loc1.kind() == OperandLocation::ValueReg) {
+                MOZ_ASSERT_IF(loc2.kind() == OperandLocation::ValueReg,
+                              loc1 == loc2);
+                spillOperandToStack(masm, &loc1);
+                break;
+            }
+
+            MOZ_ASSERT(loc1.kind() == OperandLocation::PayloadReg);
+            spillOperandToStack(masm, &loc2);
+        }
+    }
+}
+
 GeneralRegisterSet
 CacheRegisterAllocator::inputRegisterSet() const
 {
@@ -401,15 +484,16 @@ CacheRegisterAllocator::inputRegisterSet() const
 
         switch (loc.kind()) {
           case OperandLocation::PayloadReg:
-            result.add(loc.payloadReg());
+            result.addUnchecked(loc.payloadReg());
             continue;
           case OperandLocation::ValueReg:
-            result.add(loc.valueReg());
+            result.addUnchecked(loc.valueReg());
             continue;
           case OperandLocation::PayloadStack:
           case OperandLocation::ValueStack:
           case OperandLocation::BaselineFrame:
           case OperandLocation::Constant:
+          case OperandLocation::DoubleReg:
             continue;
           case OperandLocation::Uninitialized:
             break;
@@ -440,6 +524,9 @@ CacheRegisterAllocator::knownType(ValOperandId val) const
                ? JSVAL_TYPE_DOUBLE
                : loc.constant().extractNonDoubleType();
 
+      case OperandLocation::DoubleReg:
+        return JSVAL_TYPE_DOUBLE;
+
       case OperandLocation::Uninitialized:
         break;
     }
@@ -452,8 +539,10 @@ CacheRegisterAllocator::initInputLocation(size_t i, const TypedOrValueRegister& 
 {
     if (reg.hasValue()) {
         initInputLocation(i, reg.valueReg());
+    } else if (reg.typedReg().isFloat()) {
+        MOZ_ASSERT(reg.type() == MIRType::Double);
+        initInputLocation(i, reg.typedReg().fpu());
     } else {
-        MOZ_ASSERT(!reg.typedReg().isFloat());
         initInputLocation(i, reg.typedReg().gpr(), ValueTypeFromMIRType(reg.type()));
     }
 }
@@ -566,6 +655,7 @@ OperandLocation::aliasesReg(const OperandLocation& other) const
       case ValueStack:
       case BaselineFrame:
       case Constant:
+      case DoubleReg:
         return false;
       case Uninitialized:
         break;
@@ -617,6 +707,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
                 continue;
               case OperandLocation::Constant:
               case OperandLocation::BaselineFrame:
+              case OperandLocation::DoubleReg:
               case OperandLocation::Uninitialized:
                 break;
             }
@@ -645,11 +736,13 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
                 continue;
               case OperandLocation::Constant:
               case OperandLocation::BaselineFrame:
+              case OperandLocation::DoubleReg:
               case OperandLocation::Uninitialized:
                 break;
             }
         } else if (dest.kind() == OperandLocation::Constant ||
-                   dest.kind() == OperandLocation::BaselineFrame)
+                   dest.kind() == OperandLocation::BaselineFrame ||
+                   dest.kind() == OperandLocation::DoubleReg)
         {
             // Nothing to do.
             continue;
@@ -984,6 +1077,8 @@ OperandLocation::operator==(const OperandLocation& other) const
         return baselineFrameSlot() == other.baselineFrameSlot();
       case Constant:
         return constant() == other.constant();
+      case DoubleReg:
+        return doubleReg() == other.doubleReg();
     }
 
     MOZ_CRASH("Invalid OperandLocation kind");
@@ -1403,7 +1498,6 @@ CacheIRCompiler::emitGuardAndGetIndexFromString()
     AllocatableRegisterSet regs(RegisterSet::Volatile());
     LiveRegisterSet save(regs.asLiveSet());
     masm.PushRegsInMask(save);
-    regs.takeUnchecked(str);
 
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
@@ -1950,6 +2044,38 @@ CacheIRCompiler::emitLoadTypedObjectResultShared(const Address& fieldAddr, Regis
         }
     }
 }
+
+void
+CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
+                                                   const Address& dest, Register scratch)
+{
+    switch (type) {
+      case ReferenceTypeDescr::TYPE_ANY:
+        EmitPreBarrier(masm, dest, MIRType::Value);
+        masm.storeValue(val, dest);
+        break;
+
+      case ReferenceTypeDescr::TYPE_OBJECT: {
+        EmitPreBarrier(masm, dest, MIRType::Object);
+        Label isNull, done;
+        masm.branchTestObject(Assembler::NotEqual, val, &isNull);
+        masm.unboxObject(val, scratch);
+        masm.storePtr(scratch, dest);
+        masm.jump(&done);
+        masm.bind(&isNull);
+        masm.storePtr(ImmWord(0), dest);
+        masm.bind(&done);
+        break;
+      }
+
+      case ReferenceTypeDescr::TYPE_STRING:
+        EmitPreBarrier(masm, dest, MIRType::String);
+        masm.unboxString(val, scratch);
+        masm.storePtr(scratch, dest);
+        break;
+    }
+}
+
 
 bool
 CacheIRCompiler::emitWrapResult()
