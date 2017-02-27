@@ -68,6 +68,7 @@ public:
   const char* GetMarkerName() const { return mMarkerName; }
 
   void StreamJSON(SpliceableJSONWriter& aWriter,
+                  const mozilla::TimeStamp& aStartTime,
                   UniqueStacks& aUniqueStacks) const;
 
   void SetGeneration(uint32_t aGenID);
