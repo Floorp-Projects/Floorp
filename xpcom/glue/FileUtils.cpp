@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 #include "nscore.h"
-#include "nsStringGlue.h"
 #include "private/pprio.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FileUtils.h"
@@ -36,7 +35,9 @@
 
 // Functions that are not to be used in standalone glue must be implemented
 // within this #if block
-#if !defined(XPCOM_GLUE)
+#if defined(MOZILLA_INTERNAL_API)
+
+#include "nsString.h"
 
 bool
 mozilla::fallocate(PRFileDesc* aFD, int64_t aLength)
