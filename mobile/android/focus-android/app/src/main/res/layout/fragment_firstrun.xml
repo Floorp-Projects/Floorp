@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_inactive"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/firstrun_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:padding="24dp"
+        android:text="@string/firstrun_title"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"/>
+
+    <TextView
+        android:id="@+id/firstrun_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lineSpacingExtra="5sp"
+        android:paddingBottom="60dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:text="@string/firstrun_description"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"/>
+
+    <Button
+        android:id="@+id/firstrun_exitbutton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:gravity="center"
+        android:text="@string/firstrun_button"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/firstrun_footer"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:text="@string/firstrun_footer"
+        android:textAlignment="center"
+        android:textColor="#80FFFFFF"
+        android:textSize="14sp"/>
+
+</LinearLayout>

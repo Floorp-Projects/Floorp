@@ -11,6 +11,7 @@ import android.content.res.Resources;
 import android.preference.PreferenceManager;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.fragment.FirstrunFragment;
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
@@ -28,5 +29,9 @@ public class Settings {
         return preferences.getBoolean(
                 resources.getString(R.string.pref_key_performance_block_images),
                 false);
+    }
+
+    public static boolean shouldShowFirstrun(final Context context) {
+        return !PreferenceManager.getDefaultSharedPreferences(context).getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
     }
 }
