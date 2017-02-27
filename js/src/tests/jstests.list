@@ -538,9 +538,6 @@ skip script test262/language/expressions/async-generators/expression-yield-newli
 skip script test262/language/expressions/async-generators/expression-await-promise-as-yield-operand.js
 skip script test262/language/expressions/async-generators/expression-yield-star-before-newline.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1050755
-skip script test262/built-ins/Date/UTC/return-value.js
-
 # SIMD.
 skip script test262/built-ins/Simd/check.js
 skip script test262/built-ins/Simd/from.js
