@@ -734,6 +734,14 @@ var PlacesProvider = {
     }
   },
 
+  onVisit(aURI, aVisitId, aTime, aSessionId, aReferrerVisitId, aTransitionType,
+          aGuid, aHidden, aVisitCount, aTyped, aLastKnownTitle) {
+    // For new visits, if we're not batch processing, notify for a title // update
+    if (!this._batchProcessingDepth && aVisitCount == 1 && aLastKnownTitle) {
+      this.onTitleChanged(aURI, aLastKnownTitle, aGuid);
+    }
+  },
+
   onDeleteURI: function PlacesProvider_onDeleteURI(aURI, aGUID, aReason) {
     // let observers remove sensetive data associated with deleted visit
     this._callObservers("onDeleteURI", {

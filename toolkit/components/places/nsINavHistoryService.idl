@@ -671,6 +671,9 @@ interface nsINavHistoryObserver : nsISupports
    *        Whether the URI has been typed or not.
    *        TODO (Bug 1271801): This will become a count, rather than a boolean.
    *        For future compatibility, always compare it with "> 0".
+   * @param aLastKnownTitle
+   *        The last known title of the page. Might not be from the current visit,
+   *        and might be null if it is not known.
    */
   void onVisit(in nsIURI aURI,
                in long long aVisitId,
@@ -681,7 +684,8 @@ interface nsINavHistoryObserver : nsISupports
                in ACString aGuid,
                in boolean aHidden,
                in unsigned long aVisitCount,
-               in unsigned long aTyped);
+               in unsigned long aTyped,
+               in AString aLastKnownTitle);
 
   /**
    * Called whenever either the "real" title or the custom title of the page
