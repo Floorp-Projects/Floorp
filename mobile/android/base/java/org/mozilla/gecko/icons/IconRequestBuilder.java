@@ -10,20 +10,22 @@ import android.support.annotation.CheckResult;
 
 import org.mozilla.gecko.GeckoAppShell;
 
+import java.util.TreeSet;
+
 import ch.boye.httpclientandroidlib.util.TextUtils;
 
 /**
  * Builder for creating a request to load an icon.
  */
 public class IconRequestBuilder {
-    private final IconRequest request;
+    private final IconRequest internal;
 
     /* package-private */ IconRequestBuilder(Context context) {
-        this(new IconRequest(context));
+        internal = new IconRequest(context);
     }
 
     /* package-private */ IconRequestBuilder(IconRequest request) {
-        this.request = request;
+        internal = request;
     }
 
     /**
@@ -31,7 +33,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder pageUrl(String pageUrl) {
-        request.pageUrl = pageUrl;
+        internal.pageUrl = pageUrl;
         return this;
     }
 
@@ -43,7 +45,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder privileged(boolean privileged) {
-        request.privileged = privileged;
+        internal.privileged = privileged;
         return this;
     }
 
@@ -54,7 +56,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder icon(IconDescriptor descriptor) {
-        request.icons.add(descriptor);
+        internal.icons.add(descriptor);
         return this;
     }
 
@@ -63,7 +65,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder skipNetwork() {
-        request.skipNetwork = true;
+        internal.skipNetwork = true;
         return this;
     }
 
@@ -72,7 +74,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder skipNetworkIf(boolean shouldSkipNetwork) {
-        request.skipNetwork = shouldSkipNetwork;
+        internal.skipNetwork = shouldSkipNetwork;
         return this;
     }
 
@@ -81,7 +83,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder skipDisk() {
-        request.skipDisk = true;
+        internal.skipDisk = true;
         return this;
     }
 
@@ -90,7 +92,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder skipMemory() {
-        request.skipMemory = true;
+        internal.skipMemory = true;
         return this;
     }
 
@@ -99,7 +101,7 @@ public class IconRequestBuilder {
      * preferred Android launcher icon size.
      */
     public IconRequestBuilder forLauncherIcon() {
-        request.targetSize = GeckoAppShell.getPreferredIconSize();
+        internal.targetSize = GeckoAppShell.getPreferredIconSize();
         return this;
     }
 
@@ -109,7 +111,7 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequestBuilder executeCallbackOnBackgroundThread() {
-        request.backgroundThread = true;
+        internal.backgroundThread = true;
         return this;
     }
 
@@ -119,7 +121,7 @@ public class IconRequestBuilder {
      * perform a lookup of the URL but doesn't want to load the icon yet.
      */
     public IconRequestBuilder prepareOnly() {
-        request.prepareOnly = true;
+        internal.prepareOnly = true;
         return this;
     }
 
@@ -128,10 +130,20 @@ public class IconRequestBuilder {
      */
     @CheckResult
     public IconRequest build() {
-        if (TextUtils.isEmpty(request.pageUrl)) {
+        if (TextUtils.isEmpty(internal.pageUrl)) {
             throw new IllegalStateException("Page URL is required");
         }
 
+        IconRequest request = new IconRequest(internal.getContext());
+        request.pageUrl = internal.pageUrl;
+        request.privileged = internal.privileged;
+        request.icons = new TreeSet<>(internal.icons);
+        request.skipNetwork = internal.skipNetwork;
+        request.backgroundThread = internal.backgroundThread;
+        request.skipDisk = internal.skipDisk;
+        request.skipMemory = internal.skipMemory;
+        request.targetSize = internal.targetSize;
+        request.prepareOnly = internal.prepareOnly;
         return request;
     }
 

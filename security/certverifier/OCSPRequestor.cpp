@@ -166,7 +166,7 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
     if (!StringEndsWith(path, NS_LITERAL_CSTRING("/"))) {
       path.Append("/");
     }
-    nsresult nsrv = AppendEscapedBase64Item(encodedRequest, path);
+    nsrv = AppendEscapedBase64Item(encodedRequest, path);
     if (NS_WARN_IF(NS_FAILED(nsrv))) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
