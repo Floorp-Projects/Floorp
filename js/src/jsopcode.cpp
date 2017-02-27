@@ -1243,8 +1243,8 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
             break;
           }
           case 1:
-            return write(token) &&
-                   write("(") &&
+            return write("(") &&
+                   write(token) &&
                    decompilePCForStackOperand(pc, -1) &&
                    write(")");
           default:
@@ -1385,7 +1385,9 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
       case JSOP_CHECKISOBJ:
         return decompilePCForStackOperand(pc, -1);
       case JSOP_VOID:
-        return write("void ") && decompilePCForStackOperand(pc, -1);
+        return write("(void ") &&
+               decompilePCForStackOperand(pc, -1) &&
+               write(")");
       default:
         break;
     }
