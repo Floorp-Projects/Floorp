@@ -19,12 +19,6 @@ SyncProfile::~SyncProfile()
   MOZ_COUNT_DTOR(SyncProfile);
 }
 
-void
-SyncProfile::EndUnwind()
-{
-  ThreadInfo::EndUnwind();
-}
-
 // SyncProfiles' stacks are deduplicated in the context of the containing
 // profile in which the backtrace is as a marker payload.
 void
