@@ -68,3 +68,6 @@ patch -p1 < ./wasapi-drift-fix-passthrough-resampler.patch
 
 echo "Applying a patch on top of $version"
 patch -p1 < ./audiounit-drift-fix.patch
+
+echo "Applying a patch on top of $version"
+patch -p1 < ./uplift-wasapi-fixes-aurora.patch
