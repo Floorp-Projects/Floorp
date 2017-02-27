@@ -4609,17 +4609,9 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
 
   const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
 
-  int64_t oldestNonMatchingSessionCookieTime = 0;
-  nsListIter oldestNonMatchingSessionCookie;
-  oldestNonMatchingSessionCookie.entry = nullptr;
-
-  int64_t oldestSessionCookieTime = 0;
-  nsListIter oldestSessionCookie;
-  oldestSessionCookie.entry = nullptr;
-
-  int64_t oldestNonMatchingNonSessionCookieTime = 0;
-  nsListIter oldestNonMatchingNonSessionCookie;
-  oldestNonMatchingNonSessionCookie.entry = nullptr;
+  int64_t oldestNonMatchingCookieTime = 0;
+  nsListIter oldestNonMatchingCookie;
+  oldestNonMatchingCookie.entry = nullptr;
 
   int64_t oldestCookieTime = 0;
   nsListIter oldestCookie;
@@ -4652,11 +4644,6 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
       }
     }
 
-    // Update our various records of oldest cookies fitting several restrictions:
-    // * session cookies
-    // * non-session cookies
-    // * cookies with paths and domains that don't match the cookie triggering this purge
-
     // This cookie is a candidate for eviction if we have no information about
     // the source request, or if it is not a path or domain match against the
     // source request.
@@ -4665,26 +4652,12 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
       isPrimaryEvictionCandidate = !PathMatches(cookie, sourcePath) || !DomainMatches(cookie, sourceHost);
     }
 
-    if (cookie->IsSession()) {
-      if (!oldestSessionCookie.entry || oldestSessionCookieTime > lastAccessed) {
-        oldestSessionCookieTime = lastAccessed;
-        oldestSessionCookie.entry = aEntry;
-        oldestSessionCookie.index = i;
-      }
-
-      if (isPrimaryEvictionCandidate &&
-          (!oldestNonMatchingSessionCookie.entry ||
-           oldestNonMatchingSessionCookieTime > lastAccessed)) {
-        oldestNonMatchingSessionCookieTime = lastAccessed;
-        oldestNonMatchingSessionCookie.entry = aEntry;
-        oldestNonMatchingSessionCookie.index = i;
-      }
-    } else if (isPrimaryEvictionCandidate &&
-               (!oldestNonMatchingNonSessionCookie.entry ||
-                oldestNonMatchingNonSessionCookieTime > lastAccessed)) {
-      oldestNonMatchingNonSessionCookieTime = lastAccessed;
-      oldestNonMatchingNonSessionCookie.entry = aEntry;
-      oldestNonMatchingNonSessionCookie.index = i;
+    if (isPrimaryEvictionCandidate &&
+        (!oldestNonMatchingCookie.entry ||
+         oldestNonMatchingCookieTime > lastAccessed)) {
+      oldestNonMatchingCookieTime = lastAccessed;
+      oldestNonMatchingCookie.entry = aEntry;
+      oldestNonMatchingCookie.index = i;
     }
 
     // Check if we've found the oldest cookie so far.
@@ -4695,16 +4668,10 @@ nsCookieService::FindStaleCookie(nsCookieEntry *aEntry,
     }
   }
 
-  // Prefer to evict the oldest session cookies with a non-matching path/domain,
-  // followed by the oldest session cookie with a matching path/domain,
-  // followed by the oldest non-session cookie with a non-matching path/domain,
-  // resorting to the oldest non-session cookie with a matching path/domain.
-  if (oldestNonMatchingSessionCookie.entry) {
-    aIter = oldestNonMatchingSessionCookie;
-  } else if (oldestSessionCookie.entry) {
-    aIter = oldestSessionCookie;
-  } else if (oldestNonMatchingNonSessionCookie.entry) {
-    aIter = oldestNonMatchingNonSessionCookie;
+  // Prefer to evict the oldest cookie with a non-matching path/domain,
+  // followed by the oldest matching cookie.
+  if (oldestNonMatchingCookie.entry) {
+    aIter = oldestNonMatchingCookie;
   } else {
     aIter = oldestCookie;
   }
