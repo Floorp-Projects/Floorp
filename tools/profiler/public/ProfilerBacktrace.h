@@ -24,7 +24,9 @@ public:
   // That is, markers that contain backtraces should not need their own stack,
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
-  void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks);
+  void StreamJSON(SpliceableJSONWriter& aWriter,
+                  const mozilla::TimeStamp& aStartTime,
+                  UniqueStacks& aUniqueStacks);
 
 private:
   ProfilerBacktrace(const ProfilerBacktrace&);
