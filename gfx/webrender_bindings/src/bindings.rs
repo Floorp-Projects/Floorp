@@ -64,6 +64,19 @@ pub struct WrImageDescriptor {
     pub is_opaque: bool,
 }
 
+impl WrImageDescriptor {
+    pub fn to_descriptor(&self) -> ImageDescriptor {
+        ImageDescriptor {
+            width: self.width,
+            height: self.height,
+            stride: if self.stride != 0 { Some(self.stride) } else { None },
+            format: self.format,
+            is_opaque: self.is_opaque,
+            offset: 0,
+        }
+    }
+}
+
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
     extern  {
@@ -166,7 +179,7 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
     api.set_root_display_list(Some(root_background_color),
                               epoch,
                               LayoutSize::new(viewport_width, viewport_height),
-                              frame_builder.dl_builder,
+                              frame_builder.dl_builder.finalize(),
                               preserve_frame_state);
 }
 
@@ -597,14 +610,9 @@ pub extern fn wr_api_add_image(api: &mut RenderApi, image_key: ImageKey, descrip
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
     api.add_image(
         image_key,
-        ImageDescriptor {
-            width: descriptor.width,
-            height: descriptor.height,
-            stride: if descriptor.stride != 0 { Some(descriptor.stride) } else { None },
-            format: descriptor.format,
-            is_opaque: descriptor.is_opaque,
-        },
-        ImageData::new(bytes)
+        descriptor.to_descriptor(),
+        ImageData::new(bytes),
+        None
     );
 }
 
@@ -622,13 +630,7 @@ pub extern fn wr_api_update_image(api: &mut RenderApi, key: ImageKey, descriptor
 
     api.update_image(
         key,
-        ImageDescriptor {
-            width: descriptor.width,
-            height: descriptor.height,
-            stride: if descriptor.stride != 0 { Some(descriptor.stride) } else { None },
-            format: descriptor.format,
-            is_opaque: descriptor.is_opaque,
-        },
+        descriptor.to_descriptor(),
         bytes
     );
 }
