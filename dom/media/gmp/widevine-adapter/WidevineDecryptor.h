@@ -64,8 +64,7 @@ public:
                             uint32_t aServerCertSize) override;
 
   void Decrypt(GMPBuffer* aBuffer,
-               GMPEncryptedBufferMetadata* aMetadata,
-               uint64_t aDurationUsecs) override;
+               GMPEncryptedBufferMetadata* aMetadata) override;
 
   void DecryptingComplete() override;
 

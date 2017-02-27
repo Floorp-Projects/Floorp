@@ -332,8 +332,7 @@ GMPDecryptorChild::RecvSetServerCertificate(const uint32_t& aPromiseId,
 mozilla::ipc::IPCResult
 GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
                                InfallibleTArray<uint8_t>&& aBuffer,
-                               const GMPDecryptionData& aMetadata,
-                               const uint64_t& aDurationUsecs)
+                               const GMPDecryptionData& aMetadata)
 {
   if (!mSession) {
     return IPC_FAIL_NO_REASON(this);
@@ -347,7 +346,7 @@ GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
   GMPEncryptedBufferDataImpl* metadata = new GMPEncryptedBufferDataImpl(aMetadata);
   buffer->SetMetadata(metadata);
 
-  mSession->Decrypt(buffer, metadata, aDurationUsecs);
+  mSession->Decrypt(buffer, metadata);
   return IPC_OK();
 }
 

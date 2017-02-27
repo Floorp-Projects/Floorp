@@ -160,8 +160,7 @@ WidevineDecryptor::SetServerCertificate(uint32_t aPromiseId,
 
 void
 WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
-                           GMPEncryptedBufferMetadata* aMetadata,
-                           uint64_t aDurationUsecs)
+                           GMPEncryptedBufferMetadata* aMetadata)
 {
   if (!mCallback) {
     CDM_LOG("WidevineDecryptor::Decrypt() this=%p FAIL; !mCallback", this);

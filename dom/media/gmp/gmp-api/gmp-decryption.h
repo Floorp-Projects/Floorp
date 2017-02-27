@@ -324,8 +324,7 @@ public:
   // is deleted. Don't forget to call Decrypted(), as otherwise aBuffer's
   // memory will leak!
   virtual void Decrypt(GMPBuffer* aBuffer,
-                       GMPEncryptedBufferMetadata* aMetadata,
-                       uint64_t aDurationUsecs) = 0;
+                       GMPEncryptedBufferMetadata* aMetadata) = 0;
 
   // Called when the decryption operations are complete.
   // Do not call the GMPDecryptorCallback's functions after this is called.
