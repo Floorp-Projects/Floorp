@@ -931,11 +931,6 @@ struct MOZ_STACK_CLASS PrintfAppend_CharT : public mozilla::PrintfTarget
       return true;
     }
 
-    // Printf sends us the final null terminator even though we don't want it
-    if (aStr[aLen - 1] == '\0') {
-      --aLen;
-    }
-
     mString->AppendASCII(aStr, aLen);
     return true;
   }
