@@ -48,7 +48,7 @@
       window.open(url);
       window.close();
     }
-    
+
     if (Services.prefs.getBoolPref("social.share.activationPanelEnabled")) {
       let url = Services.prefs.getCharPref("social.shareDirectory");
       document.getElementById("activation-frame").setAttribute("src", url);
