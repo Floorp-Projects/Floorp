@@ -65,6 +65,9 @@ Windows/Mac use the term "Folder" instead of "Directory" -->
 
 <!ENTITY aboutSupport.appBasicsMultiProcessSupport "Multiprocess Windows">
 
+<!ENTITY aboutSupport.appBasicsKeyGoogle "Google Key">
+<!ENTITY aboutSupport.appBasicsKeyMozilla "Mozilla Location Service Key">
+
 <!ENTITY aboutSupport.appBasicsSafeMode "Safe Mode">
 
 <!ENTITY aboutSupport.showDir.label "Open Directory">

@@ -6,13 +6,15 @@
  * normalized before passed to consumers.
  */
 
-const WAIT_TIME = 1000; // ms
+"use strict";
+
+// time in ms
+const WAIT_TIME = 1000;
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
 add_task(function* () {
-  let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
-  let doc = browser.contentDocument;
+  yield addTab(MAIN_DOMAIN + "doc_perf.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -26,7 +28,8 @@ add_task(function* () {
   let firstRecordingStartTime = firstRecording._startTime;
   info("Started profiling at: " + firstRecordingStartTime);
 
-  busyWait(WAIT_TIME); // allow the profiler module to sample some cpu activity
+  // allow the profiler module to sample some cpu activity
+  busyWait(WAIT_TIME);
 
   yield front.stopRecording(firstRecording);
 
@@ -39,7 +42,8 @@ add_task(function* () {
   let secondRecordingStartTime = secondRecording._startTime;
   info("Started profiling at: " + secondRecordingStartTime);
 
-  busyWait(WAIT_TIME); // allow the profiler module to sample more cpu activity
+  // allow the profiler module to sample more cpu activity
+  busyWait(WAIT_TIME);
 
   yield front.stopRecording(secondRecording);
   let secondRecordingProfile = secondRecording.getProfile();
@@ -53,7 +57,9 @@ add_task(function* () {
     "The second recorded sample times were normalized.");
   ok(secondRecordingSamples[0][TIME_SLOT] > 0,
     "The second recorded sample times were normalized correctly.");
-  ok(!secondRecordingSamples.find(e => e[TIME_SLOT] + secondRecordingStartTime <= firstRecording.getDuration()),
+  ok(!secondRecordingSamples.find(
+        e => e[TIME_SLOT] + secondRecordingStartTime <= firstRecording.getDuration()
+    ),
     "There should be no samples from the first recording in the second one, " +
     "even though the total number of frames did not overflow.");
 

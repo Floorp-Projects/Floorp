@@ -414,9 +414,10 @@ class VFPRegister
       : kind(Double), code_(id), _isInvalid(false), _isMissing(false)
     { }
     bool operator==(const VFPRegister& other) const {
-        MOZ_ASSERT(!isInvalid());
-        MOZ_ASSERT(!other.isInvalid());
-        return kind == other.kind && code_ == other.code_;
+        return kind == other.kind && code_ == other.code_ && isInvalid() == other.isInvalid();
+    }
+    bool operator!=(const VFPRegister& other) const {
+        return !operator==(other);
     }
 
     bool isSingle() const { return kind == Single; }
@@ -487,9 +488,6 @@ class VFPRegister
         if (isDouble())
             return FloatRegisters::GetDoubleName(Encoding(code_));
         return FloatRegisters::GetSingleName(Encoding(code_));
-    }
-    bool operator != (const VFPRegister& other) const {
-        return other.kind != kind || code_ != other.code_;
     }
     bool aliases(const VFPRegister& other) {
         if (kind == other.kind)

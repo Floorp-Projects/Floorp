@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported AppConstants */
+/* exported AppConstants, Assert */
 
 var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
@@ -34,6 +34,16 @@ if (location.pathname.includes("test-oop-extensions")) {
     }
   });
 }
+
+let Assert = {
+  rejects(promise, msg) {
+    return promise.then(() => {
+      ok(false, msg);
+    }, () => {
+      ok(true, msg);
+    });
+  },
+};
 
 /* exported waitForLoad */
 

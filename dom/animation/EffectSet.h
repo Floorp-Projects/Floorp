@@ -169,16 +169,13 @@ public:
     return mAnimationRule[aCascadeLevel];
   }
 
-  const TimeStamp& AnimationRuleRefreshTime(EffectCompositor::CascadeLevel
-                                              aCascadeLevel) const
+  const TimeStamp& LastTransformSyncTime() const
   {
-    return mAnimationRuleRefreshTime[aCascadeLevel];
+    return mLastTransformSyncTime;
   }
-  void UpdateAnimationRuleRefreshTime(EffectCompositor::CascadeLevel
-                                        aCascadeLevel,
-                                      const TimeStamp& aRefreshTime)
+  void UpdateLastTransformSyncTime(const TimeStamp& aRefreshTime)
   {
-    mAnimationRuleRefreshTime[aCascadeLevel] = aRefreshTime;
+    mLastTransformSyncTime = aRefreshTime;
   }
 
   bool CascadeNeedsUpdate() const { return mCascadeNeedsUpdate; }
@@ -214,14 +211,11 @@ private:
                     EffectCompositor::kCascadeLevelCount),
                   mozilla::AnimationRule> mAnimationRule;
 
-  // A parallel array to mAnimationRule that records the refresh driver
-  // timestamp when the rule was last updated. This is used for certain
-  // animations which are updated only periodically (e.g. transform animations
-  // running on the compositor that affect the scrollable overflow region).
-  EnumeratedArray<EffectCompositor::CascadeLevel,
-                  EffectCompositor::CascadeLevel(
-                    EffectCompositor::kCascadeLevelCount),
-                  TimeStamp> mAnimationRuleRefreshTime;
+  // Refresh driver timestamp from the moment when transform animations in this
+  // effect set were last updated and sent to the compositor. This is used for
+  // transform animations that run on the compositor but need to be updated on
+  // the main thread periodically (e.g. so scrollbars can be updated).
+  TimeStamp mLastTransformSyncTime;
 
   // Dirty flag to represent when the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel on effects in this set might need to be

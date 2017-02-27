@@ -29,7 +29,7 @@ class PluginAsyncSurrogate : public PluginDataResolver
 public:
   NS_INLINE_DECL_REFCOUNTING(PluginAsyncSurrogate)
 
-  bool Init(NPMIMEType aPluginType, NPP aInstance, uint16_t aMode,
+  bool Init(NPMIMEType aPluginType, NPP aInstance,
             int16_t aArgc, char* aArgn[], char* aArgv[]);
   nsresult NPP_New(NPError* aError);
   NPError NPP_Destroy(NPSavedData** aSave);
@@ -45,7 +45,7 @@ public:
   NPError NPP_DestroyStream(NPStream* aStream, NPReason aReason);
   void OnInstanceCreated(PluginInstanceParent* aInstance);
   static bool Create(PluginModuleParent* aParent, NPMIMEType aPluginType,
-                     NPP aInstance, uint16_t aMode, int16_t aArgc,
+                     NPP aInstance, int16_t aArgc,
                      char* aArgn[], char* aArgv[]);
   static const NPClass* GetClass() { return &sNPClass; }
   static void NP_GetEntryPoints(NPPluginFuncs* aFuncs);
@@ -141,7 +141,6 @@ private:
   // These values are used to construct the plugin instance
   nsCString                       mMimeType;
   mozilla::WeakPtr<nsNPAPIPluginInstance> mInstance;
-  uint16_t                        mMode;
   InfallibleTArray<nsCString>     mNames;
   InfallibleTArray<nsCString>     mValues;
   // This is safe to store as a pointer because the spec says it will remain

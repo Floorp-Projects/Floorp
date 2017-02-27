@@ -6870,6 +6870,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 LOG(("  connection is not persistent, not reusing it"));
                 conn = nullptr;
             }
+            // We do not use a sticky connection in case of a nsHttpPipeline as
+            // well (see bug 1337826). This is a quick fix, because
+            // nsHttpPipeline is turned off by default.
+            RefPtr<nsAHttpTransaction> tranConn = do_QueryObject(conn);
+            if (tranConn && tranConn->QueryPipeline()) {
+                LOG(("Do not use this connection, it is a nsHttpPipeline."));
+                conn = nullptr;
+            }
         }
 
         RefPtr<nsAHttpConnection> stickyConn;

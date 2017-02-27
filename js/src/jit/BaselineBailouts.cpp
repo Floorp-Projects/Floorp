@@ -517,13 +517,6 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
                 return true;
             break;
 
-          case JSTRY_ITERCLOSE:
-            // Code that need to call IteratorClose have the iterator on the
-            // stack.
-            if (stackDepth == tn->stackDepth)
-                return true;
-            break;
-
           case JSTRY_DESTRUCTURING_ITERCLOSE:
             // Destructuring code that need to call IteratorClose have both
             // the iterator and the "done" value on the stack.
@@ -1667,7 +1660,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     if (Simulator::Current()->overRecursed(uintptr_t(newsp)))
         overRecursed = true;
 #else
-    JS_CHECK_RECURSION_WITH_SP_DONT_REPORT(cx, newsp, overRecursed = true);
+    if (!CheckRecursionLimitWithStackPointerDontReport(cx, newsp))
+        overRecursed = true;
 #endif
     if (overRecursed) {
         JitSpew(JitSpew_BaselineBailouts, "  Overrecursion check failed!");

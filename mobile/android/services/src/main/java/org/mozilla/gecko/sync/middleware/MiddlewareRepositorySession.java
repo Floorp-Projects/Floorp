@@ -154,6 +154,11 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   }
 
   @Override
+  public void storeIncomplete() {
+    inner.storeIncomplete();
+  }
+
+  @Override
   public void storeDone() {
     inner.storeDone();
   }

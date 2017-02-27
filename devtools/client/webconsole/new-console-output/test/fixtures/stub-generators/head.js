@@ -413,14 +413,20 @@ function* generatePageErrorStubs() {
   for (let [key, code] of pageError) {
     let received = new Promise(resolve => {
       toolbox.target.client.addListener("pageError", function onPacket(e, packet) {
+        toolbox.target.client.removeListener("pageError", onPacket);
         let message = prepareMessage(packet, {getNextId: () => 1});
         stubs.packets.push(formatPacket(message.messageText, packet));
         stubs.preparedMessages.push(formatStub(message.messageText, packet));
         resolve();
-      }, {
-        once: true
       });
     });
+
+    // On e10s, the exception is triggered in child process
+    // and is ignored by test harness
+    // expectUncaughtException should be called for each uncaught exception.
+    if (!Services.appinfo.browserTabsRemoteAutostart) {
+      expectUncaughtException();
+    }
 
     yield ContentTask.spawn(
       gBrowser.selectedBrowser,

@@ -23,7 +23,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
-#include "nsPromiseFlatString.h"
 #include "nsStreamUtils.h"
 #include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
@@ -35,45 +34,44 @@ using namespace mozilla::psm;
 #define CERT_OVERRIDE_FILE_NAME "cert_override.txt"
 
 void
-nsCertOverride::convertBitsToString(OverrideBits ob, nsACString &str)
+nsCertOverride::convertBitsToString(OverrideBits ob, /*out*/ nsACString& str)
 {
   str.Truncate();
 
-  if (ob & ob_Mismatch)
+  if (ob & OverrideBits::Mismatch) {
     str.Append('M');
+  }
 
-  if (ob & ob_Untrusted)
+  if (ob & OverrideBits::Untrusted) {
     str.Append('U');
+  }
 
-  if (ob & ob_Time_error)
+  if (ob & OverrideBits::Time) {
     str.Append('T');
+  }
 }
 
 void
-nsCertOverride::convertStringToBits(const nsACString &str, OverrideBits &ob)
+nsCertOverride::convertStringToBits(const nsACString& str,
+                            /*out*/ OverrideBits& ob)
 {
-  const nsPromiseFlatCString &flat = PromiseFlatCString(str);
-  const char *walk = flat.get();
+  ob = OverrideBits::None;
 
-  ob = ob_None;
-
-  for ( ; *walk; ++walk)
-  {
-    switch (*walk)
-    {
+  for (uint32_t i = 0; i < str.Length(); i++) {
+    switch (str.CharAt(i)) {
       case 'm':
       case 'M':
-        ob = (OverrideBits)(ob | ob_Mismatch);
+        ob |= OverrideBits::Mismatch;
         break;
 
       case 'u':
       case 'U':
-        ob = (OverrideBits)(ob | ob_Untrusted);
+        ob |= OverrideBits::Untrusted;
         break;
 
       case 't':
       case 'T':
-        ob = (OverrideBits)(ob | ob_Time_error);
+        ob |= OverrideBits::Time;
         break;
 
       default:
@@ -459,7 +457,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = false;
-  *aOverrideBits = nsCertOverride::ob_None;
+  *aOverrideBits = static_cast<uint32_t>(nsCertOverride::OverrideBits::None);
 
   nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
@@ -475,7 +473,7 @@ nsCertOverrideService::HasMatchingOverride(const nsACString & aHostName, int32_t
     settings = entry->mSettings; // copy
   }
 
-  *aOverrideBits = settings.mOverrideBits;
+  *aOverrideBits = static_cast<uint32_t>(settings.mOverrideBits);
   *aIsTemporary = settings.mIsTemporary;
 
   nsAutoCString fpStr;
@@ -509,7 +507,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, int32_t
   NS_ENSURE_ARG_POINTER(aIsTemporary);
   NS_ENSURE_ARG_POINTER(aOverrideBits);
   *_found = false;
-  *aOverrideBits = nsCertOverride::ob_None;
+  *aOverrideBits = static_cast<uint32_t>(nsCertOverride::OverrideBits::None);
 
   nsAutoCString hostPort;
   GetHostWithPort(aHostName, aPort, hostPort);
@@ -526,7 +524,7 @@ nsCertOverrideService::GetValidityOverride(const nsACString & aHostName, int32_t
   }
 
   if (*_found) {
-    *aOverrideBits = settings.mOverrideBits;
+    *aOverrideBits = static_cast<uint32_t>(settings.mOverrideBits);
     *aIsTemporary = settings.mIsTemporary;
     aFingerprint = settings.mFingerprint;
     aHashAlg = settings.mFingerprintAlgOID;

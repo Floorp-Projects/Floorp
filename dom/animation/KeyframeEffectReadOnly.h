@@ -23,7 +23,7 @@
 #include "mozilla/KeyframeEffectParams.h"
 // RawServoDeclarationBlock and associated RefPtrTraits
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/StyleAnimationValue.h"
+#include "mozilla/StyleAnimationValueInlines.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
@@ -130,6 +130,13 @@ struct AnimationProperty
   }
 };
 
+struct ServoComputedStyleValues
+{
+  const ServoComputedValues* mCurrentStyle;
+  const ServoComputedValues* mParentStyle;
+  explicit operator bool() const { return true; }
+};
+
 struct ElementPropertyTransition;
 
 namespace dom {
@@ -196,6 +203,8 @@ public:
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                     nsStyleContext* aStyleContext);
+  void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
+                    const ServoComputedStyleValues& aServoValues);
 
   // Returns true if the effect includes |aProperty| regardless of whether the
   // property is overridden by !important rule.
@@ -223,6 +232,8 @@ public:
   // Update |mProperties| by recalculating from |mKeyframes| using
   // |aStyleContext| to resolve specified values.
   void UpdateProperties(nsStyleContext* aStyleContext);
+  // Servo version of the above function.
+  void UpdateProperties(const ServoComputedStyleValues& aServoValues);
 
   // Updates |aStyleRule| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
@@ -277,6 +288,10 @@ public:
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
   void CalculateCumulativeChangeHint(nsStyleContext* aStyleContext);
+  void CalculateCumulativeChangeHint(
+    const ServoComputedStyleValues& aServoValues)
+  {
+  }
 
   // Returns true if all of animation properties' change hints
   // can ignore painting if the animation is not visible.
@@ -324,7 +339,8 @@ protected:
   // Build properties by recalculating from |mKeyframes| using |aStyleContext|
   // to resolve specified values. This function also applies paced spacing if
   // needed.
-  nsTArray<AnimationProperty> BuildProperties(nsStyleContext* aStyleContext);
+  template<typename StyleType>
+  nsTArray<AnimationProperty> BuildProperties(StyleType&& aStyle);
 
   // This effect is registered with its target element so long as:
   //
@@ -377,6 +393,11 @@ protected:
   // Ensure the base styles is available for any properties in |aProperties|.
   void EnsureBaseStyles(nsStyleContext* aStyleContext,
                         const nsTArray<AnimationProperty>& aProperties);
+  void EnsureBaseStyles(const ServoComputedStyleValues& aServoValues,
+                        const nsTArray<AnimationProperty>& aProperties)
+  {
+    // FIXME: Bug 1311257: Support missing keyframes.
+  }
 
   // Returns the base style resolved by |aStyleContext| for |aProperty|.
   StyleAnimationValue ResolveBaseStyle(nsCSSPropertyID aProperty,
@@ -413,6 +434,12 @@ protected:
 
 private:
   nsChangeHint mCumulativeChangeHint;
+
+  template<typename StyleType>
+  void DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes, StyleType&& aStyle);
+
+  template<typename StyleType>
+  void DoUpdateProperties(StyleType&& aStyle);
 
   nsIFrame* GetAnimationFrame() const;
 

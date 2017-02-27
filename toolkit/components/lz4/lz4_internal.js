@@ -20,6 +20,7 @@ if (typeof Components != "undefined") {
   this.Primitives = Primitives;
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
+  /* global require:false */
   SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 } else {
   throw new Error("Please load this module with Component.utils.import or with require()");
@@ -56,6 +57,7 @@ libxul.declareLazyFFI(Primitives, "maxCompressedSize",
 );
 
 if (typeof module != "undefined") {
+  /* global module:false */
   module.exports = {
     get compress() {
       return Primitives.compress;

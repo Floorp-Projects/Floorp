@@ -106,7 +106,7 @@ impl Expression {
             let name = try!(input.expect_ident());
             try!(input.expect_colon());
             // TODO: Handle other media features
-            Ok(Expression(match_ignore_ascii_case! { name,
+            Ok(Expression(match_ignore_ascii_case! { &name,
                 "min-width" => {
                     ExpressionKind::Width(Range::Min(try!(specified::Length::parse_non_negative(input))))
                 },
@@ -180,6 +180,7 @@ impl Range<specified::Length> {
             is_root_element: false,
             viewport_size: viewport_size,
             inherited_style: default_values,
+            layout_parent_style: default_values,
             // This cloning business is kind of dumb.... It's because Context
             // insists on having an actual ComputedValues inside itself.
             style: default_values.clone(),

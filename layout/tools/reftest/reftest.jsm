@@ -1762,7 +1762,12 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                         message += (", max difference: " + extra.max_difference +
                                     ", number of differing pixels: " + differences);
                     } else {
-                        extra.image1 = gCanvas1.toDataURL();
+                        var image1 = gCanvas1.toDataURL();
+                        extra.reftest_screenshots = [
+                            {url:gURLs[0].identifier[0],
+                             screenshot: image1.slice(image1.indexOf(",") + 1)}
+                        ];
+                        extra.image1 = image1;
                     }
                 }
                 logger.testEnd(gURLs[0].identifier, output.s[0], output.s[1], message, null, extra);

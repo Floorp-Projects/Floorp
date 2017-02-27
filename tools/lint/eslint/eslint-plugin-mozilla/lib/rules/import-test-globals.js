@@ -20,7 +20,9 @@ var globals = require("../globals");
 
 const simpleTestFiles = [
   "EventUtils.js",
-  "SimpleTest.js"
+  "MockObjects.js",
+  "SimpleTest.js",
+  "WindowSnapshot.js"
 ];
 const simpleTestPath = "testing/mochitest/tests/SimpleTest";
 

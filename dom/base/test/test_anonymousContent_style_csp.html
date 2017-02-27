@@ -11,7 +11,7 @@
 <div>
   <div id="test-element" style="color:red;">text content</div>
 </div>
-<script type="application/javascript;version=1.8">
+<script type="application/javascript">
   let chromeDocument = SpecialPowers.wrap(document);
   let testElement = document.querySelector("div");
   let anonymousContent = chromeDocument.insertAnonymousContent(testElement);

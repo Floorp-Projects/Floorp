@@ -251,9 +251,13 @@ module.exports = {
     "ChromeUtils": false,
     "Components": false,
     "dump": true,
+    // Specific to Firefox
+    // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError
+    "InternalError": true,
     "KeyEvent": false,
     "openDialog": false,
     "MenuBoxObject": false,
+    "SimpleGestureEvent": false,
     "sizeToContent": false,
     "SharedArrayBuffer": false,
     // Note: StopIteration will likely be removed as part of removing legacy

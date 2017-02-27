@@ -18,7 +18,7 @@
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/KeyframeUtils.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleAnimationValueInlines.h"
+#include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
 #include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
@@ -190,6 +190,27 @@ void
 KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                      nsStyleContext* aStyleContext)
 {
+  DoSetKeyframes(Move(aKeyframes), Move(aStyleContext));
+}
+
+void
+KeyframeEffectReadOnly::SetKeyframes(
+  nsTArray<Keyframe>&& aKeyframes,
+  const ServoComputedStyleValues& aServoValues)
+{
+  DoSetKeyframes(Move(aKeyframes), aServoValues);
+}
+
+template<typename StyleType>
+void
+KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
+                                       StyleType&& aStyle)
+{
+  static_assert(IsSame<StyleType, nsStyleContext*>::value ||
+                IsSame<StyleType, const ServoComputedStyleValues&>::value,
+                "StyleType should be nsStyleContext* or "
+                "const ServoComputedStyleValues&");
+
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
   }
@@ -205,8 +226,11 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
     nsNodeUtils::AnimationChanged(mAnimation);
   }
 
-  if (aStyleContext) {
-    UpdateProperties(aStyleContext);
+  // We need to call UpdateProperties() if the StyleType is
+  // 'const ServoComputedStyleValues&' (i.e. not a pointer) or nsStyleContext*
+  // is not nullptr.
+  if (!IsPointer<StyleType>::value || aStyle) {
+    UpdateProperties(aStyle);
     MaybeUpdateFrameForCompositor();
   }
 }
@@ -275,6 +299,35 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
+  if (!mDocument->IsStyledByServo()) {
+    DoUpdateProperties(Move(aStyleContext));
+    return;
+  }
+
+  const ServoComputedValues* currentStyle =
+    aStyleContext->StyleSource().AsServoComputedValues();
+  const ServoComputedValues* parentStyle =
+    aStyleContext->GetParent()
+      ? aStyleContext->GetParent()->StyleSource().AsServoComputedValues()
+      : nullptr;
+
+  const ServoComputedStyleValues servoValues = { currentStyle, parentStyle };
+  DoUpdateProperties(servoValues);
+}
+
+void
+KeyframeEffectReadOnly::UpdateProperties(
+  const ServoComputedStyleValues& aServoValues)
+{
+  DoUpdateProperties(aServoValues);
+}
+
+template<typename StyleType>
+void
+KeyframeEffectReadOnly::DoUpdateProperties(StyleType&& aStyle)
+{
+  MOZ_ASSERT_IF(IsPointer<StyleType>::value, aStyle);
+
   // Skip updating properties when we are composing style.
   // FIXME: Bug 1324966. Drop this check once we have a function to get
   // nsStyleContext without resolving animating style.
@@ -284,11 +337,12 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
     return;
   }
 
-  nsTArray<AnimationProperty> properties = BuildProperties(aStyleContext);
+  nsTArray<AnimationProperty> properties =
+    BuildProperties(Forward<StyleType>(aStyle));
 
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
-  EnsureBaseStyles(aStyleContext, properties);
+  EnsureBaseStyles(aStyle, properties);
 
   if (mProperties == properties) {
     return;
@@ -310,10 +364,7 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
       runningOnCompositorProperties.HasProperty(property.mProperty);
   }
 
-  // FIXME (bug 1303235): Do this for Servo too
-  if (aStyleContext->PresContext()->StyleSet()->IsGecko()) {
-    CalculateCumulativeChangeHint(aStyleContext);
-  }
+  CalculateCumulativeChangeHint(aStyle);
 
   MarkCascadeNeedsUpdate();
 
@@ -854,10 +905,16 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(const GlobalObject& aGlobal,
   return effect.forget();
 }
 
+template<typename StyleType>
 nsTArray<AnimationProperty>
-KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
+KeyframeEffectReadOnly::BuildProperties(StyleType&& aStyle)
 {
-  MOZ_ASSERT(aStyleContext);
+  static_assert(IsSame<StyleType, nsStyleContext*>::value ||
+                IsSame<StyleType, const ServoComputedStyleValues&>::value,
+                "StyleType should be nsStyleContext* or "
+                "const ServoComputedStyleValues&");
+
+  MOZ_ASSERT(aStyle);
 
   nsTArray<AnimationProperty> result;
   // If mTarget is null, return an empty property array.
@@ -876,22 +933,22 @@ KeyframeEffectReadOnly::BuildProperties(nsStyleContext* aStyleContext)
   nsTArray<ComputedKeyframeValues> computedValues =
     KeyframeUtils::GetComputedKeyframeValues(keyframesCopy,
                                              mTarget->mElement,
-                                             aStyleContext);
+                                             aStyle);
 
   // FIXME: Bug 1332633: we have to implement ComputeDistance for
   //        RawServoAnimationValue.
   if (mEffectOptions.mSpacingMode == SpacingMode::paced &&
-      aStyleContext->PresContext()->StyleSet()->IsGecko()) {
+      !mDocument->IsStyledByServo()) {
     KeyframeUtils::ApplySpacing(keyframesCopy, SpacingMode::paced,
                                 mEffectOptions.mPacedProperty,
-                                computedValues, aStyleContext);
+                                computedValues, aStyle);
   }
 
   result =
-    KeyframeUtils::GetAnimationPropertiesFromKeyframes(keyframesCopy,
-                                                       computedValues,
-                                                       mEffectOptions.mComposite,
-                                                       aStyleContext);
+    KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+      keyframesCopy,
+      computedValues,
+      mEffectOptions.mComposite);
 
 #ifdef DEBUG
   MOZ_ASSERT(SpecifiedKeyframeArraysAreEqual(mKeyframes, keyframesCopy),
@@ -1303,13 +1360,7 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
     return true;
   }
 
-  nsPresContext* presContext = GetPresContext();
-  // CanThrottleTransformChanges is only called as part of a refresh driver tick
-  // in which case we expect to has a pres context.
-  MOZ_ASSERT(presContext);
-
-  TimeStamp now =
-    presContext->RefreshDriver()->MostRecentRefresh();
+  TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
   EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
                                                  mTarget->mPseudoType);
@@ -1317,11 +1368,10 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
                         " on an effect in an effect set");
   MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
                          " on an effect with a parent animation");
-  TimeStamp animationRuleRefreshTime =
-    effectSet->AnimationRuleRefreshTime(mAnimation->CascadeLevel());
+  TimeStamp lastSyncTime = effectSet->LastTransformSyncTime();
   // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!animationRuleRefreshTime.IsNull() &&
-      (now - animationRuleRefreshTime) < OverflowRegionRefreshInterval()) {
+  if (!lastSyncTime.IsNull() &&
+      (now - lastSyncTime) < OverflowRegionRefreshInterval()) {
     return true;
   }
 
@@ -1568,6 +1618,10 @@ void
 KeyframeEffectReadOnly::CalculateCumulativeChangeHint(
   nsStyleContext *aStyleContext)
 {
+  if (aStyleContext->PresContext()->StyleSet()->IsServo()) {
+    // FIXME (bug 1303235): Do this for Servo too
+    return;
+  }
   mCumulativeChangeHint = nsChangeHint(0);
 
   for (const AnimationProperty& property : mProperties) {

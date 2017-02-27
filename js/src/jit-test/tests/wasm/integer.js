@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 assertEq(wasmEvalText('(module (func (result i32) (i32.const -1)) (export "" 0))').exports[""](), -1);
 assertEq(wasmEvalText('(module (func (result i32) (i32.const -2147483648)) (export "" 0))').exports[""](), -2147483648);
 assertEq(wasmEvalText('(module (func (result i32) (i32.const 4294967295)) (export "" 0))').exports[""](), -1);

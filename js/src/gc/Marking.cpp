@@ -3373,3 +3373,47 @@ JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr thing)
 {
     return js::UnmarkGrayCellRecursively(thing.asCell(), thing.kind());
 }
+
+namespace js {
+namespace debug {
+
+MarkInfo
+GetMarkInfo(Cell* rawCell)
+{
+    if (!rawCell->isTenured())
+        return MarkInfo::NURSERY;
+
+    TenuredCell* cell = &rawCell->asTenured();
+    if (cell->isMarked(GRAY))
+        return MarkInfo::GRAY;
+    if (cell->isMarked(BLACK))
+        return MarkInfo::BLACK;
+    return MarkInfo::UNMARKED;
+}
+
+uintptr_t*
+GetMarkWordAddress(Cell* cell)
+{
+    if (!cell->isTenured())
+        return nullptr;
+
+    uintptr_t* wordp;
+    uintptr_t mask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::BLACK, &wordp, &mask);
+    return wordp;
+}
+
+uintptr_t
+GetMarkMask(Cell* cell, uint32_t color)
+{
+    if (!cell->isTenured())
+        return 0;
+
+    uintptr_t* wordp;
+    uintptr_t mask;
+    js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), color, &wordp, &mask);
+    return mask;
+}
+
+}
+}

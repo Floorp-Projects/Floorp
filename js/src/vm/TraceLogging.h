@@ -88,8 +88,7 @@ class TraceLoggerEvent {
 #ifdef JS_TRACE_LOGGING
     explicit TraceLoggerEvent(TraceLoggerTextId textId);
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script);
-    TraceLoggerEvent(TraceLoggerTextId type,
-                     const JS::ReadOnlyCompileOptions& compileOptions);
+    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column);
     explicit TraceLoggerEvent(const char* text);
     TraceLoggerEvent(const TraceLoggerEvent& event);
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
@@ -97,8 +96,7 @@ class TraceLoggerEvent {
 #else
     explicit TraceLoggerEvent(TraceLoggerTextId textId) {}
     TraceLoggerEvent(TraceLoggerTextId type, JSScript* script) {}
-    TraceLoggerEvent(TraceLoggerTextId type,
-                     const JS::ReadOnlyCompileOptions& compileOptions) {}
+    TraceLoggerEvent(TraceLoggerTextId type, const char* filename, size_t line, size_t column) {}
     explicit TraceLoggerEvent(const char* text) {}
     TraceLoggerEvent(const TraceLoggerEvent& event) {}
     TraceLoggerEvent& operator=(const TraceLoggerEvent& other) { return *this; };
@@ -383,9 +381,6 @@ class TraceLoggerThreadState
     TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId textId);
     TraceLoggerEventPayload* getOrCreateEventPayload(const char* text);
     TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script);
-    TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type,
-                                                     const JS::ReadOnlyCompileOptions& script);
-  private:
     TraceLoggerEventPayload* getOrCreateEventPayload(TraceLoggerTextId type, const char* filename,
                                                      size_t lineno, size_t colno, const void* p);
 #endif

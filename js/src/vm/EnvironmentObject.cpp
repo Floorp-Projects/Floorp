@@ -28,6 +28,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -2751,7 +2752,8 @@ DebugEnvironments::onCompartmentUnsetIsDebuggee(JSCompartment* c)
 bool
 DebugEnvironments::updateLiveEnvironments(JSContext* cx)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     /*
      * Note that we must always update the top frame's environment objects'
@@ -2992,7 +2994,8 @@ GetDebugEnvironmentForNonEnvironmentObject(const EnvironmentIter& ei)
 static JSObject*
 GetDebugEnvironment(JSContext* cx, const EnvironmentIter& ei)
 {
-    JS_CHECK_RECURSION(cx, return nullptr);
+    if (!CheckRecursionLimit(cx))
+        return nullptr;
 
     if (ei.done())
         return GetDebugEnvironmentForNonEnvironmentObject(ei);

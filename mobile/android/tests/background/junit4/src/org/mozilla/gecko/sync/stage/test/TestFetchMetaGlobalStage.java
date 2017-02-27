@@ -3,6 +3,8 @@
 
 package org.mozilla.gecko.sync.stage.test;
 
+import android.os.SystemClock;
+
 import org.json.simple.JSONArray;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +40,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
@@ -163,7 +166,7 @@ public class TestFetchMetaGlobalStage {
       @Override
       public void run() {
         try {
-          session.start();
+          session.start(SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30));
         } catch (AlreadySyncingException e) {
           WaitHelper.getTestWaiter().performNotify(e);
         }

@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.repositories.downloaders;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
@@ -14,21 +15,22 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.net.WBOCollectionRequestDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 
+
 /**
  * Delegate that gets passed into fetch methods to handle server response from fetch.
  */
 public class BatchingDownloaderDelegate extends WBOCollectionRequestDelegate {
     public static final String LOG_TAG = "BatchingDownloaderDelegate";
 
-    private BatchingDownloader downloader;
-    private RepositorySessionFetchRecordsDelegate fetchRecordsDelegate;
-    public SyncStorageCollectionRequest request;
+    private final BatchingDownloader downloader;
+    private final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate;
+    public final SyncStorageCollectionRequest request;
     // Used to pass back to BatchDownloader to start another fetch with these parameters if needed.
-    private long newer;
-    private long batchLimit;
-    private boolean full;
-    private String sort;
-    private String ids;
+    private final long newer;
+    private final long batchLimit;
+    private final boolean full;
+    private final String sort;
+    private final String ids;
 
     public BatchingDownloaderDelegate(final BatchingDownloader downloader,
                                       final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
@@ -46,7 +48,7 @@ public class BatchingDownloaderDelegate extends WBOCollectionRequestDelegate {
 
     @Override
     public AuthHeaderProvider getAuthHeaderProvider() {
-        return this.downloader.getServerRepository().getAuthHeaderProvider();
+        return this.downloader.authHeaderProvider;
     }
 
     @Override
@@ -57,26 +59,38 @@ public class BatchingDownloaderDelegate extends WBOCollectionRequestDelegate {
     @Override
     public void handleRequestSuccess(SyncStorageResponse response) {
         Logger.debug(LOG_TAG, "Fetch done.");
-        if (response.lastModified() != null) {
-            this.downloader.onFetchCompleted(response, this.fetchRecordsDelegate, this.request,
-                    this.newer, this.batchLimit, this.full, this.sort, this.ids);
+
+        // Sanity check.
+        if (response.lastModified() == null) {
+            this.downloader.handleFetchFailed(
+                    this.fetchRecordsDelegate,
+                    new IllegalStateException("Missing last modified header from response"),
+                    this.request
+            );
             return;
         }
-        this.downloader.onFetchFailed(
-                new IllegalStateException("Missing last modified header from response"),
-                this.fetchRecordsDelegate,
-                this.request);
+
+        this.downloader.onFetchCompleted(response, this.fetchRecordsDelegate, this.request,
+                this.newer, this.batchLimit, this.full, this.sort, this.ids);
     }
 
     @Override
     public void handleRequestFailure(SyncStorageResponse response) {
-        this.handleRequestError(new HTTPFailureException(response));
+        Logger.warn(LOG_TAG, "Got a non-success response.");
+        // Handle concurrent modification errors separately.
+        final Exception ex;
+        if (response.getStatusCode() == 412) {
+            ex = new CollectionConcurrentModificationException();
+        } else {
+            ex = new HTTPFailureException(response);
+        }
+        this.handleRequestError(ex);
     }
 
     @Override
     public void handleRequestError(final Exception ex) {
         Logger.warn(LOG_TAG, "Got request error.", ex);
-        this.downloader.onFetchFailed(ex, this.fetchRecordsDelegate, this.request);
+        this.downloader.handleFetchFailed(this.fetchRecordsDelegate, ex, this.request);
     }
 
     @Override

@@ -2034,7 +2034,7 @@ static const JSFunctionSpec WebAssembly_static_methods[] =
     JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
 #endif
     JS_FN("compile", WebAssembly_compile, 1, 0),
-    JS_FN("instantiate", WebAssembly_instantiate, 2, 0),
+    JS_FN("instantiate", WebAssembly_instantiate, 1, 0),
     JS_FN("validate", WebAssembly_validate, 1, 0),
     JS_FS_END
 };
@@ -2068,6 +2068,18 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
         return false;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
+        return false;
+
+    UniqueChars tagStr(JS_smprintf("WebAssembly.%s", name));
+    if (!tagStr) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    RootedAtom tag(cx, Atomize(cx, tagStr.get(), strlen(tagStr.get())));
+    if (!tag)
+        return false;
+    if (!DefineToStringTag(cx, proto, tag))
         return false;
 
     RootedId id(cx, AtomToId(className));

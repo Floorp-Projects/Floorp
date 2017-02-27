@@ -16,8 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1170334
   <iframe src="bug1170334_iframe.xml" id="iframe"></iframe>
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript;version=1.7">
-const nameStem="test_bug1170334_" + Date.now();
+<script class="testbody" type="text/javascript">
+const nameStem = "test_bug1170334_" + Date.now();
 const { Ci, Cc, Cu, Cr } = SpecialPowers;
 let iframe = document.getElementById("iframe");
 
@@ -41,10 +41,10 @@ iframe.onload = function iframe_onload1() {
 
   // When the document in the iframe is saved, try to load the result.
   wbp.progressListener = {
-    onProgressChange: function(){},
-    onLocationChange: function(){},
-    onStatusChange: function(){},
-    onSecurityChange: function(){},
+    onProgressChange() {},
+    onLocationChange() {},
+    onStatusChange() {},
+    onSecurityChange() {},
     onStateChange: function wbp_stateChange(_wbp, _req, state, status) {
       if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
 	return;

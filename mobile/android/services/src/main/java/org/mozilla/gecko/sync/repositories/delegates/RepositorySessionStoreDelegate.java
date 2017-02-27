@@ -14,10 +14,11 @@ import java.util.concurrent.ExecutorService;
  *
  */
 public interface RepositorySessionStoreDelegate {
-  public void onRecordStoreFailed(Exception ex, String recordGuid);
+  void onRecordStoreFailed(Exception ex, String recordGuid);
 
   // Called with a GUID when store has succeeded.
-  public void onRecordStoreSucceeded(String guid);
-  public void onStoreCompleted(long storeEnd);
-  public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor);
+  void onRecordStoreSucceeded(String guid);
+  void onStoreCompleted(long storeEnd);
+  void onStoreFailed(Exception e);
+  RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor);
 }

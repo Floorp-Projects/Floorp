@@ -107,7 +107,7 @@ public class TestServerLocalSynchronizer {
   @Test
   public void testLocalFetchErrors() {
     WBORepository remote = new TrackingWBORepository();
-    WBORepository local  = new FailFetchWBORepository();
+    WBORepository local  = new FailFetchWBORepository(SynchronizerHelpers.FailMode.FETCH);
 
     Synchronizer synchronizer = getSynchronizer(remote, local);
     Exception e = doSynchronize(synchronizer);
@@ -121,7 +121,7 @@ public class TestServerLocalSynchronizer {
 
   @Test
   public void testRemoteFetchErrors() {
-    WBORepository remote = new FailFetchWBORepository();
+    WBORepository remote = new FailFetchWBORepository(SynchronizerHelpers.FailMode.FETCH);
     WBORepository local  = new TrackingWBORepository();
 
     Synchronizer synchronizer = getSynchronizer(remote, local);
@@ -137,7 +137,7 @@ public class TestServerLocalSynchronizer {
   @Test
   public void testLocalSerialStoreErrorsAreIgnored() {
     WBORepository remote = new TrackingWBORepository();
-    WBORepository local  = new SerialFailStoreWBORepository();
+    WBORepository local  = new SerialFailStoreWBORepository(SynchronizerHelpers.FailMode.FETCH);
 
     Synchronizer synchronizer = getSynchronizer(remote, local);
     assertNull(doSynchronize(synchronizer));
@@ -158,7 +158,7 @@ public class TestServerLocalSynchronizer {
 
   @Test
   public void testRemoteSerialStoreErrorsAreNotIgnored() throws Exception {
-    Synchronizer synchronizer = getSynchronizer(new SerialFailStoreWBORepository(), new TrackingWBORepository()); // Tracking so we don't send incoming records back.
+    Synchronizer synchronizer = getSynchronizer(new SerialFailStoreWBORepository(SynchronizerHelpers.FailMode.STORE), new TrackingWBORepository()); // Tracking so we don't send incoming records back.
 
     Exception e = doSynchronize(synchronizer);
     assertNotNull(e);

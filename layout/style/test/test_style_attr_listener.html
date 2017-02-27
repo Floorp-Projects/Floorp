@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for Bug 338679 (from bug 1340341)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div style=""></div>
+<script>
+let div = document.querySelector('div');
+let expectation;
+let count = 0;
+div.style.color = "red";
+div.addEventListener('DOMAttrModified', function(evt) {
+  count++;
+  is(evt.prevValue, expectation.prevValue, "Previous value for event ${count}");
+  is(evt.newValue, expectation.newValue, "New value for event ${count}");
+});
+expectation = { prevValue: 'color: red;', newValue: 'color: green;' };
+div.style.color = "green";
+expectation = { prevValue: 'color: green;', newValue: '' };
+div.style.color = '';
+</script>
+</body>
+</html>

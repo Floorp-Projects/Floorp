@@ -247,6 +247,11 @@ struct RectCornerRadii {
 
   const Size BottomLeft() const { return radii[eCornerBottomLeft]; }
   Size& BottomLeft() { return radii[eCornerBottomLeft]; }
+
+  bool IsEmpty() const {
+    return TopLeft().IsEmpty() && TopRight().IsEmpty() &&
+           BottomRight().IsEmpty() && BottomLeft().IsEmpty();
+  }
 };
 
 /**

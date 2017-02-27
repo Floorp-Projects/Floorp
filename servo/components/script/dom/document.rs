@@ -87,6 +87,7 @@ use dom::treewalker::TreeWalker;
 use dom::uievent::UIEvent;
 use dom::webglcontextevent::WebGLContextEvent;
 use dom::window::{ReflowReason, Window};
+use dom_struct::dom_struct;
 use encoding::EncodingRef;
 use encoding::all::UTF_8;
 use euclid::point::Point2D;
@@ -2710,8 +2711,7 @@ impl DocumentMethods for Document {
             "progressevent" =>
                 Ok(Root::upcast(ProgressEvent::new_uninitialized(self.window.upcast()))),
             "storageevent" => {
-                let USVString(url) = self.URL();
-                Ok(Root::upcast(StorageEvent::new_uninitialized(&self.window, DOMString::from(url))))
+                Ok(Root::upcast(StorageEvent::new_uninitialized(&self.window, "".into())))
             },
             "touchevent" =>
                 Ok(Root::upcast(

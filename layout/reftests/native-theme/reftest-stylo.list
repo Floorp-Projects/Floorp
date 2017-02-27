@@ -68,7 +68,7 @@ skip-if(gtkWidget) random-if(d2d) == resizer-bottomstart-rtl.xul resizer-bottoms
 
 # Windows-only, depends on native scrollbar metrics
 skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minimum-size-notheme.html
-# skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme.html
+skip-if(!winWidget) == scroll-thumb-minimum-size-theme.html scroll-thumb-minimum-size-theme.html
 
 == border-radius.html border-radius.html
 

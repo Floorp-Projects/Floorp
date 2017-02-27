@@ -18,8 +18,8 @@
 	*/
 
 // configuration
-var deployDir = "../"
-	exportedSymbol = 'try {\n    // mozilla jsm support\n    Components.utils.importGlobalProperties(["URL"]);\n} catch(e) {}\nthis.EXPORTED_SYMBOLS = [\'Microformats\'];';
+var deployDir = "../";
+var exportedSymbol = 'try {\n    // mozilla jsm support\n    Components.utils.importGlobalProperties(["URL"]);\n} catch(e) {}\nthis.EXPORTED_SYMBOLS = [\'Microformats\'];';
 
 
 

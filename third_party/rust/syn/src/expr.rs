@@ -22,7 +22,7 @@ pub enum ExprKind {
     /// First expr is the place; second expr is the value.
     InPlace(Box<Expr>, Box<Expr>),
     /// An array (`[a, b, c, d]`)
-    Vec(Vec<Expr>),
+    Array(Vec<Expr>),
     /// A function call
     ///
     /// The first field resolves to the function itself,
@@ -85,10 +85,10 @@ pub enum ExprKind {
     Loop(Block, Option<Ident>),
     /// A `match` block.
     Match(Box<Expr>, Vec<Arm>),
-    /// A closure (for example, `move |a, b, c| {a + b + c}`)
-    Closure(CaptureBy, Box<FnDecl>, Block),
+    /// A closure (for example, `move |a, b, c| a + b + c`)
+    Closure(CaptureBy, Box<FnDecl>, Box<Expr>),
     /// A block (`{ ... }` or `unsafe { ... }`)
-    Block(BlockCheckMode, Block),
+    Block(Unsafety, Block),
 
     /// An assignment (`a = foo()`)
     Assign(Box<Expr>, Box<Expr>),
@@ -116,8 +116,8 @@ pub enum ExprKind {
 
     /// A referencing operation (`&a` or `&mut a`)
     AddrOf(Mutability, Box<Expr>),
-    /// A `break`, with an optional label to break
-    Break(Option<Ident>),
+    /// A `break`, with an optional label to break, and an optional expression
+    Break(Option<Ident>, Option<Box<Expr>>),
     /// A `continue`, with an optional label
     Continue(Option<Ident>),
     /// A `return`, with an optional value to be returned
@@ -150,6 +150,7 @@ pub struct FieldValue {
     pub ident: Ident,
     pub expr: Expr,
     pub is_shorthand: bool,
+    pub attrs: Vec<Attribute>,
 }
 
 /// A Block (`{ .. }`).
@@ -159,12 +160,6 @@ pub struct FieldValue {
 pub struct Block {
     /// Statements in a block
     pub stmts: Vec<Stmt>,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum BlockCheckMode {
-    Default,
-    Unsafe,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -209,7 +204,7 @@ pub struct Local {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 // Clippy false positive
 // https://github.com/Manishearth/rust-clippy/issues/1241
-#[cfg_attr(feature = "clippy", allow(enum_variant_names))]
+#[cfg_attr(feature = "cargo-clippy", allow(enum_variant_names))]
 pub enum Pat {
     /// Represents a wildcard pattern (`_`)
     Wild,
@@ -300,6 +295,7 @@ pub struct FieldPat {
     /// The pattern the field is destructured to
     pub pat: Box<Pat>,
     pub is_shorthand: bool,
+    pub attrs: Vec<Attribute>,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -312,22 +308,22 @@ pub enum BindingMode {
 pub mod parsing {
     use super::*;
     use {BinOp, Delimited, DelimToken, FnArg, FnDecl, FunctionRetTy, Ident, Lifetime, Mac,
-         TokenTree, Ty, UnOp};
+         TokenTree, Ty, UnOp, Unsafety};
     use attr::parsing::outer_attr;
     use generics::parsing::lifetime;
     use ident::parsing::{ident, wordlike};
     use item::parsing::item;
     use lit::parsing::{digits, lit};
     use mac::parsing::{mac, token_trees};
-    use nom::IResult::{self, Error};
+    use synom::IResult::{self, Error};
     use op::parsing::{assign_op, binop, unop};
-    use ty::parsing::{mutability, path, qpath, ty};
+    use ty::parsing::{mutability, path, qpath, ty, unsafety};
 
     // Struct literals are ambiguous in certain positions
     // https://github.com/rust-lang/rfcs/pull/92
     macro_rules! named_ambiguous_expr {
         ($name:ident -> $o:ty, $allow_struct:ident, $submac:ident!( $($args:tt)* )) => {
-            fn $name(i: &str, $allow_struct: bool) -> $crate::nom::IResult<&str, $o> {
+            fn $name(i: &str, $allow_struct: bool) -> $crate::synom::IResult<&str, $o> {
                 $submac!(i, $($args)*)
             }
         };
@@ -343,6 +339,7 @@ pub mod parsing {
 
     named!(expr_no_struct -> Expr, ambiguous_expr!(false));
 
+    #[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
     fn ambiguous_expr(i: &str, allow_struct: bool, allow_block: bool) -> IResult<&str, Expr> {
         do_parse!(
             i,
@@ -355,7 +352,7 @@ pub mod parsing {
                 |
                 expr_mac // must be before expr_path
                 |
-                expr_break // must be before expr_path
+                call!(expr_break, allow_struct) // must be before expr_path
                 |
                 expr_continue // must be before expr_path
                 |
@@ -365,7 +362,7 @@ pub mod parsing {
                 |
                 expr_in_place
                 |
-                expr_vec
+                expr_array
                 |
                 expr_tup
                 |
@@ -474,17 +471,17 @@ pub mod parsing {
         punct!("}") >>
         (ExprKind::InPlace(
             Box::new(place),
-            Box::new(ExprKind::Block(BlockCheckMode::Default, Block {
+            Box::new(ExprKind::Block(Unsafety::Normal, Block {
                 stmts: value,
             }).into()),
         ))
     ));
 
-    named!(expr_vec -> ExprKind, do_parse!(
+    named!(expr_array -> ExprKind, do_parse!(
         punct!("[") >>
         elems: terminated_list!(punct!(","), expr) >>
         punct!("]") >>
-        (ExprKind::Vec(elems))
+        (ExprKind::Array(elems))
     ));
 
     named!(and_call -> Vec<Expr>, do_parse!(
@@ -571,7 +568,7 @@ pub mod parsing {
                     punct!("{") >>
                     else_block: within_block >>
                     punct!("}") >>
-                    (ExprKind::Block(BlockCheckMode::Default, Block {
+                    (ExprKind::Block(Unsafety::Normal, Block {
                         stmts: else_block,
                     }).into())
                 )
@@ -632,7 +629,7 @@ pub mod parsing {
     ));
 
     fn arm_requires_comma(arm: &Arm) -> bool {
-        if let ExprKind::Block(BlockCheckMode::Default, _) = arm.body.node {
+        if let ExprKind::Block(Unsafety::Normal, _) = arm.body.node {
             false
         } else {
             true
@@ -645,7 +642,7 @@ pub mod parsing {
         guard: option!(preceded!(keyword!("if"), expr)) >>
         punct!("=>") >>
         body: alt!(
-            map!(block, |blk| ExprKind::Block(BlockCheckMode::Default, blk).into())
+            map!(block, |blk| ExprKind::Block(Unsafety::Normal, blk).into())
             |
             expr
         ) >>
@@ -667,15 +664,10 @@ pub mod parsing {
                 punct!("->") >>
                 ty: ty >>
                 body: block >>
-                ((FunctionRetTy::Ty(ty), body))
+                (FunctionRetTy::Ty(ty), ExprKind::Block(Unsafety::Normal, body).into())
             )
             |
-            map!(ambiguous_expr!(allow_struct), |e| (
-                FunctionRetTy::Default,
-                Block {
-                    stmts: vec![Stmt::Expr(Box::new(e))],
-                },
-            ))
+            map!(ambiguous_expr!(allow_struct), |e| (FunctionRetTy::Default, e))
         ) >>
         (ExprKind::Closure(
             capture,
@@ -684,7 +676,7 @@ pub mod parsing {
                 output: ret_and_body.0,
                 variadic: false,
             }),
-            ret_and_body.1,
+            Box::new(ret_and_body.1),
         ))
     ));
 
@@ -720,10 +712,11 @@ pub mod parsing {
         (ExprKind::Continue(lbl))
     ));
 
-    named!(expr_break -> ExprKind, do_parse!(
+    named_ambiguous_expr!(expr_break -> ExprKind, allow_struct, do_parse!(
         keyword!("break") >>
         lbl: option!(label) >>
-        (ExprKind::Break(lbl))
+        val: option!(call!(ambiguous_expr, allow_struct, false)) >>
+        (ExprKind::Break(lbl, val.map(Box::new)))
     ));
 
     named_ambiguous_expr!(expr_ret -> ExprKind, allow_struct, do_parse!(
@@ -756,6 +749,7 @@ pub mod parsing {
                 ident: name,
                 expr: value,
                 is_shorthand: false,
+                attrs: Vec::new(),
             })
         )
         |
@@ -763,6 +757,7 @@ pub mod parsing {
             ident: name.clone(),
             expr: ExprKind::Path(None, name.into()).into(),
             is_shorthand: true,
+            attrs: Vec::new(),
         })
     ));
 
@@ -776,7 +771,7 @@ pub mod parsing {
     ));
 
     named!(expr_block -> ExprKind, do_parse!(
-        rules: block_check_mode >>
+        rules: unsafety >>
         b: block >>
         (ExprKind::Block(rules, Block {
             stmts: b.stmts,
@@ -834,12 +829,6 @@ pub mod parsing {
         })
     ));
 
-    named!(block_check_mode -> BlockCheckMode, alt!(
-        keyword!("unsafe") => { |_| BlockCheckMode::Unsafe }
-        |
-        epsilon!() => { |_| BlockCheckMode::Default }
-    ));
-
     named!(pub within_block -> Vec<Stmt>, do_parse!(
         many0!(punct!(";")) >>
         mut standalone: many0!(terminated!(standalone_stmt, many0!(punct!(";")))) >>
@@ -865,7 +854,7 @@ pub mod parsing {
 
     named!(stmt_mac -> Stmt, do_parse!(
         attrs: many0!(outer_attr) >>
-        name: ident >>
+        what: path >>
         punct!("!") >>
     // Only parse braces here; paren and bracket will get parsed as
     // expression statements
@@ -875,7 +864,7 @@ pub mod parsing {
         semi: option!(punct!(";")) >>
         (Stmt::Mac(Box::new((
             Mac {
-                path: name.into(),
+                path: what,
                 tts: vec![TokenTree::Delimited(Delimited {
                     delim: DelimToken::Brace,
                     tts: tts,
@@ -982,8 +971,8 @@ pub mod parsing {
             |
             keyword!("self") => { Into::into }
         ) >>
-        not!(peek!(punct!("<"))) >>
-        not!(peek!(punct!("::"))) >>
+        not!(punct!("<")) >>
+        not!(punct!("::")) >>
         subpat: option!(preceded!(punct!("@"), pat)) >>
         (Pat::Ident(
             if mode.is_some() {
@@ -1024,6 +1013,7 @@ pub mod parsing {
                 ident: ident,
                 pat: Box::new(pat),
                 is_shorthand: false,
+                attrs: Vec::new(),
             })
         )
         |
@@ -1049,6 +1039,7 @@ pub mod parsing {
                     ident: ident,
                     pat: Box::new(pat),
                     is_shorthand: true,
+                    attrs: Vec::new(),
                 }
             })
         )
@@ -1159,7 +1150,7 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use {FnArg, FunctionRetTy, Mutability, Ty};
+    use {FnArg, FunctionRetTy, Mutability, Ty, Unsafety};
     use attr::FilterAttrs;
     use quote::{Tokens, ToTokens};
 
@@ -1176,7 +1167,7 @@ mod printing {
                     place.to_tokens(tokens);
                     value.to_tokens(tokens);
                 }
-                ExprKind::Vec(ref tys) => {
+                ExprKind::Array(ref tys) => {
                     tokens.append("[");
                     tokens.append_separated(tys, ",");
                     tokens.append("]");
@@ -1297,7 +1288,7 @@ mod printing {
                     tokens.append_all(arms);
                     tokens.append("}");
                 }
-                ExprKind::Closure(capture, ref decl, ref body) => {
+                ExprKind::Closure(capture, ref decl, ref expr) => {
                     capture.to_tokens(tokens);
                     tokens.append("|");
                     for (i, input) in decl.inputs.iter().enumerate() {
@@ -1313,23 +1304,13 @@ mod printing {
                     }
                     tokens.append("|");
                     match decl.output {
-                        FunctionRetTy::Default => {
-                            if body.stmts.len() == 1 {
-                                if let Stmt::Expr(ref expr) = body.stmts[0] {
-                                    expr.to_tokens(tokens);
-                                } else {
-                                    body.to_tokens(tokens);
-                                }
-                            } else {
-                                body.to_tokens(tokens);
-                            }
-                        }
+                        FunctionRetTy::Default => { /* nothing */ }
                         FunctionRetTy::Ty(ref ty) => {
                             tokens.append("->");
                             ty.to_tokens(tokens);
-                            body.to_tokens(tokens);
                         }
                     }
+                    expr.to_tokens(tokens);
                 }
                 ExprKind::Block(rules, ref block) => {
                     rules.to_tokens(tokens);
@@ -1396,9 +1377,10 @@ mod printing {
                     mutability.to_tokens(tokens);
                     expr.to_tokens(tokens);
                 }
-                ExprKind::Break(ref opt_label) => {
+                ExprKind::Break(ref opt_label, ref opt_val) => {
                     tokens.append("break");
                     opt_label.to_tokens(tokens);
+                    opt_val.to_tokens(tokens);
                 }
                 ExprKind::Continue(ref opt_label) => {
                     tokens.append("continue");
@@ -1465,7 +1447,7 @@ mod printing {
             tokens.append("=>");
             self.body.to_tokens(tokens);
             match self.body.node {
-                ExprKind::Block(BlockCheckMode::Default, _) => {
+                ExprKind::Block(Unsafety::Normal, _) => {
                     // no comma
                 }
                 _ => tokens.append(","),
@@ -1643,17 +1625,6 @@ mod printing {
             tokens.append("{");
             tokens.append_all(&self.stmts);
             tokens.append("}");
-        }
-    }
-
-    impl ToTokens for BlockCheckMode {
-        fn to_tokens(&self, tokens: &mut Tokens) {
-            match *self {
-                BlockCheckMode::Default => {
-                    // nothing
-                }
-                BlockCheckMode::Unsafe => tokens.append("unsafe"),
-            }
         }
     }
 

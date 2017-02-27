@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1322288 is about the floating join register not being reserved properly
 // in the presence of boolean evaluation for control.  The situation is that a
 // conditional branch passes a floating point value to the join point; the join register

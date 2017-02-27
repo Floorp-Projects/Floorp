@@ -127,6 +127,10 @@ DocAccessibleWrap::GetNativeWindow() const
 {
   if (XRE_IsContentProcess()) {
     DocAccessibleChild* ipcDoc = IPCDoc();
+    if (!ipcDoc) {
+      return nullptr;
+    }
+
     HWND hWnd = ipcDoc->GetEmulatedWindowHandle();
     if (hWnd) {
       return hWnd;

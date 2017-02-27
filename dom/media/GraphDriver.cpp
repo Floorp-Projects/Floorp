@@ -653,7 +653,6 @@ AudioCallbackDriver::Init()
   } else {
     if (cubeb_get_min_latency(cubebContext, output, &latency_frames) != CUBEB_OK) {
       NS_WARNING("Could not get minimal latency from cubeb.");
-      return false;
     }
   }
 
@@ -715,12 +714,16 @@ AudioCallbackDriver::Init()
       if (!mFromFallback) {
         CubebUtils::ReportCubebStreamInitFailure(firstStream);
       }
-      // Fall back to a driver using a normal thread.
+      // Fall back to a driver using a normal thread. If needed,
+      // the graph will try to re-open an audio stream later.
       MonitorAutoLock lock(GraphImpl()->GetMonitor());
       SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
       SetNextDriver(nextDriver);
       nextDriver->MarkAsFallback();
       nextDriver->SetGraphTime(this, mIterationStart, mIterationEnd);
+      // We're not using SwitchAtNextIteration here, because there
+      // won't be a next iteration if we don't restart things manually:
+      // the audio stream just signaled that it's in error state.
       mGraphImpl->SetCurrentDriver(nextDriver);
       nextDriver->Start();
       return true;
@@ -1049,6 +1052,21 @@ void
 AudioCallbackDriver::StateCallback(cubeb_state aState)
 {
   LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
+  if (aState == CUBEB_STATE_ERROR) {
+    // Fall back to a driver using a normal thread. If needed,
+    // the graph will try to re-open an audio stream later.
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    SystemClockDriver* nextDriver = new SystemClockDriver(GraphImpl());
+    SetNextDriver(nextDriver);
+    RemoveCallback();
+    nextDriver->MarkAsFallback();
+    nextDriver->SetGraphTime(this, mIterationStart, mIterationEnd);
+    // We're not using SwitchAtNextIteration here, because there
+    // won't be a next iteration if we don't restart things manually:
+    // the audio stream just signaled that it's in error state.
+    mGraphImpl->SetCurrentDriver(nextDriver);
+    nextDriver->Start();
+  }
 }
 
 void

@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=679494
 </div>
 </body>
 
-<script class="testbody" type="application/javascript;version=1.8"><![CDATA[
+<script class="testbody" type="application/javascript"><![CDATA[
 
 /* Test for bug 679494 */
 function doTest() {

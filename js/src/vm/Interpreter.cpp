@@ -195,8 +195,8 @@ GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, j
 static inline bool
 GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHandleValue vp)
 {
-    JSObject* obj = fp->environmentChain();
-    PropertyName* name = fp->script()->getName(pc);
+    RootedObject envChain(cx, fp->environmentChain());
+    RootedPropertyName name(cx, fp->script()->getName(pc));
 
     /*
      * Skip along the env chain to the enclosing global object. This is
@@ -208,29 +208,13 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
      * before the global object.
      */
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasNonSyntacticScope())
-        obj = &obj->global().lexicalEnvironment();
-
-    PropertyResult prop;
-    JSObject* env = nullptr;
-    JSObject* pobj = nullptr;
-    if (LookupNameNoGC(cx, name, obj, &env, &pobj, &prop)) {
-        if (FetchNameNoGC(pobj, prop, vp))
-            return true;
-    }
-
-    RootedObject objRoot(cx, obj), envRoot(cx), pobjRoot(cx);
-    RootedPropertyName nameRoot(cx, name);
-    Rooted<PropertyResult> propRoot(cx);
-
-    if (!LookupName(cx, nameRoot, objRoot, &envRoot, &pobjRoot, &propRoot))
-        return false;
+        envChain = &envChain->global().lexicalEnvironment();
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_GETNAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, envRoot, pobjRoot, nameRoot, propRoot, vp);
-
-    return FetchName<false>(cx, envRoot, pobjRoot, nameRoot, propRoot, vp);
+        return GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, vp);
+    return GetEnvironmentName<GetNameMode::Normal>(cx, envChain, name, vp);
 }
 
 static inline bool
@@ -243,7 +227,7 @@ GetImportOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableH
     MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &env, &pobj, &prop));
     MOZ_ASSERT(env && env->is<ModuleEnvironmentObject>());
     MOZ_ASSERT(env->as<ModuleEnvironmentObject>().hasImportBinding(name));
-    return FetchName<false>(cx, env, pobj, name, prop, vp);
+    return FetchName<GetNameMode::Normal>(cx, env, pobj, name, prop, vp);
 }
 
 static bool
@@ -359,7 +343,8 @@ ExecuteState::pushInterpreterFrame(JSContext* cx)
 bool
 js::RunScript(JSContext* cx, RunState& state)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     // Since any script can conceivably GC, make sure it's safe to do so.
     cx->verifyIsSafeToGC();
@@ -634,7 +619,8 @@ js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHand
 {
     // Invoke could result in another try to get or set the same id again, see
     // bug 355497.
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     FixedInvokeArgs<0> args(cx);
 
@@ -644,7 +630,8 @@ js::CallGetter(JSContext* cx, HandleValue thisv, HandleValue getter, MutableHand
 bool
 js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter, HandleValue v)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     FixedInvokeArgs<1> args(cx);
 
@@ -1192,17 +1179,6 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
                 // onExceptionUnwind should be called anew with the new
                 // location of the throw (the iterator). Indeed, we must
                 // settle to avoid infinitely handling the same exception.
-                SettleOnTryNote(cx, tn, ei, regs);
-                return ErrorReturnContinuation;
-            }
-            break;
-          }
-
-          case JSTRY_ITERCLOSE: {
-            // The iterator object is at the top of the stack.
-            Value* sp = regs.spForStackDepth(tn->stackDepth);
-            RootedObject iterObject(cx, &sp[-1].toObject());
-            if (!IteratorCloseForException(cx, iterObject)) {
                 SettleOnTryNote(cx, tn, ei, regs);
                 return ErrorReturnContinuation;
             }
@@ -1897,7 +1873,6 @@ CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
 CASE(JSOP_UNUSED211)
-CASE(JSOP_UNUSED219)
 CASE(JSOP_UNUSED220)
 CASE(JSOP_UNUSED221)
 CASE(JSOP_UNUSED222)
@@ -2643,6 +2618,15 @@ CASE(JSOP_CHECKISOBJ)
 }
 END_CASE(JSOP_CHECKISOBJ)
 
+CASE(JSOP_CHECKISCALLABLE)
+{
+    if (!IsCallable(REGS.sp[-1])) {
+        MOZ_ALWAYS_FALSE(ThrowCheckIsCallable(cx, CheckIsCallableKind(GET_UINT8(REGS.pc))));
+        goto error;
+    }
+}
+END_CASE(JSOP_CHECKISCALLABLE)
+
 CASE(JSOP_CHECKTHIS)
 {
     if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
@@ -2696,18 +2680,18 @@ CASE(JSOP_GETPROP_SUPER)
 }
 END_CASE(JSOP_GETPROP_SUPER)
 
-CASE(JSOP_GETXPROP)
+CASE(JSOP_GETBOUNDNAME)
 {
-    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
+    ReservedRooted<JSObject*> env(&rootObject0, &REGS.sp[-1].toObject());
     ReservedRooted<jsid> id(&rootId0, NameToId(script->getName(REGS.pc)));
     MutableHandleValue rval = REGS.stackHandleAt(-1);
-    if (!GetPropertyForNameLookup(cx, obj, id, rval))
+    if (!GetNameBoundInEnvironment(cx, env, id, rval))
         goto error;
 
     TypeScript::Monitor(cx, script, REGS.pc, rval);
     assertSameCompartmentDebugOnly(cx, rval);
 }
-END_CASE(JSOP_GETXPROP)
+END_CASE(JSOP_GETBOUNDNAME)
 
 CASE(JSOP_SETINTRINSIC)
 {
@@ -4314,54 +4298,6 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
     return GetProperty(cx, obj, receiver, name, vp);
 }
 
-bool
-js::GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name,
-                       MutableHandleValue vp)
-{
-    Rooted<PropertyResult> prop(cx);
-    RootedObject obj(cx), pobj(cx);
-    if (!LookupName(cx, name, envChain, &obj, &pobj, &prop))
-        return false;
-
-    if (!prop)
-        return ReportIsNotDefined(cx, name);
-
-    if (!GetProperty(cx, obj, obj, name, vp))
-        return false;
-
-    // We do our own explicit checking for |this|
-    if (name == cx->names().dotThis)
-        return true;
-
-    // See note in FetchName.
-    return CheckUninitializedLexical(cx, name, vp);
-}
-
-/*
- * Alternate form for NAME opcodes followed immediately by a TYPEOF,
- * which do not report an exception on (typeof foo == "undefined") tests.
- */
-bool
-js::GetEnvironmentNameForTypeOf(JSContext* cx, HandleObject envChain, HandlePropertyName name,
-                                MutableHandleValue vp)
-{
-    Rooted<PropertyResult> prop(cx);
-    RootedObject obj(cx), pobj(cx);
-    if (!LookupName(cx, name, envChain, &obj, &pobj, &prop))
-        return false;
-
-    if (!prop) {
-        vp.set(UndefinedValue());
-        return true;
-    }
-
-    if (!GetProperty(cx, obj, obj, name, vp))
-        return false;
-
-    // See note in FetchName.
-    return CheckUninitializedLexical(cx, name, vp);
-}
-
 JSObject*
 js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent)
 {
@@ -5097,6 +5033,19 @@ js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
         break;
       case CheckIsObjectKind::GetIterator:
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_GET_ITER_RETURNED_PRIMITIVE);
+        break;
+      default:
+        MOZ_CRASH("Unknown kind");
+    }
+    return false;
+}
+
+bool
+js::ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind)
+{
+    switch (kind) {
+      case CheckIsCallableKind::IteratorReturn:
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_RETURN_NOT_CALLABLE);
         break;
       default:
         MOZ_CRASH("Unknown kind");

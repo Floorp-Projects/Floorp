@@ -13,9 +13,7 @@
 #include <android/log.h>
 #include <dlfcn.h>
 
-#ifdef MOZILLA_INTERNAL_API
 #include "OpenSLESProvider.h"
-#endif
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
@@ -305,15 +303,9 @@ bool OpenSLESPlayer::CreateEngine() {
   const SLEngineOption option[] = {
     {SL_ENGINEOPTION_THREADSAFE, static_cast<SLuint32>(SL_BOOLEAN_TRUE)}};
 
-#ifndef MOZILLA_INTERNAL_API
-  RETURN_ON_ERROR(slCreateEngine_(&engine_object_, 1, option, 0, NULL, NULL),
-                  false);
-  RETURN_ON_ERROR((*engine_object_)->Realize(engine_object_, SL_BOOLEAN_FALSE), false);
-#else
   RETURN_ON_ERROR(mozilla_get_sles_engine(&engine_object_, 1, option),
                   false);
   RETURN_ON_ERROR(mozilla_realize_sles_engine(engine_object_), false);
-#endif
   RETURN_ON_ERROR(
     (*engine_object_)->GetInterface(engine_object_, SL_IID_ENGINE_, &engine_),
     false);
@@ -327,11 +319,7 @@ void OpenSLESPlayer::DestroyEngine() {
   if (!engine_object_)
     return;
   engine_ = nullptr;
-#ifndef MOZILLA_INTERNAL_API
-  (*engine_object_)->Destroy(engine_object_);
-#else
   mozilla_destroy_sles_engine(&engine_object_);
-#endif
 }
 
 bool OpenSLESPlayer::CreateMix() {

@@ -136,7 +136,7 @@ namespace jit {
     _(JSOP_DELPROP)            \
     _(JSOP_STRICTDELPROP)      \
     _(JSOP_LENGTH)             \
-    _(JSOP_GETXPROP)           \
+    _(JSOP_GETBOUNDNAME)       \
     _(JSOP_GETALIASEDVAR)      \
     _(JSOP_SETALIASEDVAR)      \
     _(JSOP_GETNAME)            \
@@ -218,6 +218,7 @@ namespace jit {
     _(JSOP_FUNCTIONTHIS)       \
     _(JSOP_GLOBALTHIS)         \
     _(JSOP_CHECKISOBJ)         \
+    _(JSOP_CHECKISCALLABLE)    \
     _(JSOP_CHECKTHIS)          \
     _(JSOP_CHECKRETURN)        \
     _(JSOP_NEWTARGET)          \

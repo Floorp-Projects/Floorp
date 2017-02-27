@@ -142,6 +142,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mSynchronousRatePaceRequest(false)
     , mClassOfService(0)
     , m0RTTInProgress(false)
+    , mTransportStatus(NS_OK)
 {
     LOG(("Creating nsHttpTransaction @%p\n", this));
     gHttpHandler->GetMaxPipelineObjectSize(&mMaxPipelineObjectSize);
@@ -534,6 +535,50 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
 {
     LOG(("nsHttpTransaction::OnSocketStatus [this=%p status=%" PRIx32 " progress=%" PRId64 "]\n",
          this, static_cast<uint32_t>(status), progress));
+
+    // A transaction can given to multiple HalfOpen sockets (this is a bug in
+    // nsHttpConnectionMgr). We are going to fix it here as a work around to be
+    // able to uplift it.
+    switch(status) {
+    case NS_NET_STATUS_RESOLVING_HOST:
+        if (mTransportStatus != NS_OK) {
+            LOG(("nsHttpTransaction::OnSocketStatus - ignore socket events "
+                 "from backup transport"));
+            return;
+        }
+        break;
+    case NS_NET_STATUS_RESOLVED_HOST:
+        if (mTransportStatus != NS_NET_STATUS_RESOLVING_HOST &&
+            mTransportStatus != NS_OK) {
+            LOG(("nsHttpTransaction::OnSocketStatus - ignore socket events "
+                 "from backup transport"));
+            return;
+        }
+        break;
+    case NS_NET_STATUS_CONNECTING_TO:
+        if (mTransportStatus != NS_NET_STATUS_RESOLVING_HOST &&
+            mTransportStatus != NS_NET_STATUS_RESOLVED_HOST  &&
+            mTransportStatus != NS_OK) {
+            LOG(("nsHttpTransaction::OnSocketStatus - ignore socket events "
+                 "from backup transport"));
+            return;
+        }
+        break;
+    case NS_NET_STATUS_CONNECTED_TO:
+        if (mTransportStatus != NS_NET_STATUS_RESOLVING_HOST &&
+            mTransportStatus != NS_NET_STATUS_RESOLVED_HOST &&
+            mTransportStatus != NS_NET_STATUS_CONNECTING_TO &&
+            mTransportStatus != NS_OK) {
+            LOG(("nsHttpTransaction::OnSocketStatus - ignore socket events "
+                 "from backup transport"));
+            return;
+        }
+        break;
+    default:
+        LOG(("nsHttpTransaction::OnSocketStatus - a new event"));
+    }
+
+    mTransportStatus = status;
 
     if (status == NS_NET_STATUS_CONNECTED_TO ||
         status == NS_NET_STATUS_WAITING_FOR) {
@@ -1274,6 +1319,8 @@ nsHttpTransaction::Restart()
             mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("0"));
         }
     }
+
+    mTransportStatus = NS_OK;
 
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }

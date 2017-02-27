@@ -6,8 +6,7 @@
 <% from data import Method %>
 
 <% data.new_style_struct("Font",
-                         inherited=True,
-                         additional_methods=[Method("compute_font_hash", is_mut=True)]) %>
+                         inherited=True) %>
 <%helpers:longhand name="font-family" animatable="False" need_index="True"
                    spec="https://drafts.csswg.org/css-fonts/#propdef-font-family">
     use self::computed_value::{FontFamily, FamilyName};
@@ -63,7 +62,7 @@
                     }
                     _ => {}
                 }
-                match_ignore_ascii_case! { input,
+                match_ignore_ascii_case! { &input,
                     "serif" => return FontFamily::Generic(atom!("serif")),
                     "sans-serif" => return FontFamily::Generic(atom!("sans-serif")),
                     "cursive" => return FontFamily::Generic(atom!("cursive")),
@@ -85,7 +84,7 @@
                 // string (as lowercase) in the static atoms table. We don't have an
                 // API to do that yet though, so we do the simple thing for now.
                 let mut css_wide_keyword = false;
-                match_ignore_ascii_case! { first_ident,
+                match_ignore_ascii_case! { &first_ident,
                     "serif" => return Ok(FontFamily::Generic(atom!("serif"))),
                     "sans-serif" => return Ok(FontFamily::Generic(atom!("sans-serif"))),
                     "cursive" => return Ok(FontFamily::Generic(atom!("cursive"))),
@@ -254,7 +253,7 @@ ${helpers.single_keyword("font-variant-caps",
     /// normal | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900
     pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
         input.try(|input| {
-            match_ignore_ascii_case! { try!(input.expect_ident()),
+            match_ignore_ascii_case! { &try!(input.expect_ident()),
                 "normal" => Ok(SpecifiedValue::Normal),
                 "bold" => Ok(SpecifiedValue::Bold),
                 "bolder" => Ok(SpecifiedValue::Bolder),
@@ -557,7 +556,7 @@ ${helpers.single_keyword("font-variant-caps",
 
     pub fn parse(_context: &ParserContext, input: &mut Parser) -> Result<SpecifiedValue, ()> {
         let mut result = SpecifiedValue { weight: false, style: false };
-        match_ignore_ascii_case! {try!(input.expect_ident()),
+        match_ignore_ascii_case! { &try!(input.expect_ident()),
             "none" => Ok(result),
             "weight" => {
                 result.weight = true;

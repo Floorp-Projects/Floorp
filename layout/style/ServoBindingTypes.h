@@ -27,6 +27,7 @@ class StyleChildrenIterator;
 } // namespace dom
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;
+using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
 
 class nsCSSValue;
@@ -42,6 +43,7 @@ typedef mozilla::dom::Element RawGeckoElement;
 typedef nsIDocument RawGeckoDocument;
 typedef nsPresContext RawGeckoPresContext;
 typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
+typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
 typedef nsTArray<mozilla::PropertyStyleAnimationValuePair> RawGeckoAnimationValueList;
 typedef nsTArray<const RawServoAnimationValue*> RawServoAnimationValueBorrowedList;
 
@@ -116,6 +118,8 @@ DECL_BORROWED_REF_TYPE_FOR(RawGeckoPresContext)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoAnimationValueList)
 DECL_BORROWED_REF_TYPE_FOR(RawServoAnimationValueBorrowedList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
+DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
 
 #undef DECL_ARC_REF_TYPE_FOR
 #undef DECL_OWNED_REF_TYPE_FOR

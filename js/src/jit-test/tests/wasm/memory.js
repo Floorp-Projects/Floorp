@@ -1,5 +1,4 @@
 // |jit-test| test-also-wasm-check-bce
-load(libdir + "wasm.js");
 
 const RuntimeError = WebAssembly.RuntimeError;
 
@@ -276,7 +275,8 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
     wasmFailValidateText('(module (memory 1) (func (i32.store offset=0 (i32.const 0) (f64.const 0))))', mismatchError("f64", "i32"));
 
     wasmEvalText('(module (memory 0 65535))')
-    wasmFailValidateText('(module (memory 0 65536))', /maximum memory size too big/);
+    wasmEvalText('(module (memory 0 65536))')
+    wasmFailValidateText('(module (memory 0 65537))', /maximum memory size too big/);
 
     // Test high charge of registers
     function testRegisters() {

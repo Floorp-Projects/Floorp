@@ -5,6 +5,7 @@
  * Test that we get "MinorGC" markers when we continue to steadily allocate
  * objects.
  */
+"use strict";
 
 const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
@@ -12,7 +13,7 @@ add_task(function* () {
   // This test runs very slowly on linux32 debug EC2 instances.
   requestLongerTimeout(2);
 
-  let doc = yield addTab(MAIN_DOMAIN + "doc_allocations.html");
+  yield addTab(MAIN_DOMAIN + "doc_allocations.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
