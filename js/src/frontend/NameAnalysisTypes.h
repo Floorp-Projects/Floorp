@@ -78,6 +78,7 @@ enum class DeclarationKind : uint8_t
     Const,
     Import,
     BodyLevelFunction,
+    ModuleBodyLevelFunction,
     LexicalFunction,
     VarForAnnexBLexicalFunction,
     SimpleCatchParameter,
@@ -95,6 +96,7 @@ DeclarationKindToBindingKind(DeclarationKind kind)
 
       case DeclarationKind::Var:
       case DeclarationKind::BodyLevelFunction:
+      case DeclarationKind::ModuleBodyLevelFunction:
       case DeclarationKind::VarForAnnexBLexicalFunction:
       case DeclarationKind::ForOfVar:
         return BindingKind::Var;
