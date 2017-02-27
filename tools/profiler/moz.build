@@ -27,7 +27,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerMarkers.cpp',
         'core/StackTop.cpp',
-        'core/SyncProfile.cpp',
         'core/ThreadInfo.cpp',
         'gecko/nsProfiler.cpp',
         'gecko/nsProfilerFactory.cpp',

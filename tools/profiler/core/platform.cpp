@@ -2441,10 +2441,13 @@ profiler_get_backtrace()
   Thread::tid_t tid = Thread::GetCurrentId();
 
   ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
-  SyncProfile* profile = new SyncProfile(tid, stack);
+  ThreadInfo* threadInfo =
+    new ThreadInfo("SyncProfile", tid, NS_IsMainThread(), stack,
+                   /* stackTop */ nullptr);
+  threadInfo->SetHasProfile();
 
   TickSample sample;
-  sample.threadInfo = profile;
+  sample.threadInfo = threadInfo;
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2462,7 +2465,7 @@ profiler_get_backtrace()
 
   Tick(buffer, &sample);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, profile));
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, threadInfo));
 }
 
 void
