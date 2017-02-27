@@ -171,6 +171,13 @@ private:
     DrainAborted,
   };
 
+  class SharedShutdownPromiseHolder : public MozPromiseHolder<ShutdownPromise>
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedShutdownPromiseHolder)
+  private:
+    ~SharedShutdownPromiseHolder() { }
+  };
+
   struct DecoderData
   {
     DecoderData(MediaFormatReader* aOwner,
@@ -248,7 +255,7 @@ private:
     bool mFlushing; // True if flush is in action.
     // Set to true if the last operation run on the decoder was a flush.
     bool mFlushed;
-    MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+    RefPtr<SharedShutdownPromiseHolder> mShutdownPromise;
 
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDrainRequest;
     DrainState mDrainState;
