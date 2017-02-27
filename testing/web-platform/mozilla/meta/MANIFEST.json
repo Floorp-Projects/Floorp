@@ -890,7 +890,7 @@
    "support"
   ],
   "wasm/js/binary.wast.js": [
-   "e8b37fad4e8ad066c8a40b635032394711eb1edb",
+   "b8a9c73e523f62a6af2971273cf11c2d11d75787",
    "support"
   ],
   "wasm/js/block.wast.js": [
@@ -1002,7 +1002,7 @@
    "support"
   ],
   "wasm/js/harness/wasm-constants.js": [
-   "055ddc4d0ddf6a7d0da8967127a58d7080378b74",
+   "6aba4f5fb4127cd56e1381bfb18204edde41abb2",
    "support"
   ],
   "wasm/js/harness/wasm-module-builder.js": [
@@ -1042,7 +1042,7 @@
    "support"
   ],
   "wasm/js/jsapi.js": [
-   "724096f3561f14c2244f8c31caecbd91d79f223d",
+   "c2ce0201a9607a35a1f535743f9b4e1e8b15a0f7",
    "support"
   ],
   "wasm/js/labels.wast.js": [
