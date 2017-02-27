@@ -32,7 +32,8 @@ public:
     void Start();
     // Whether or not tracking protection should be enabled on this channel.
     nsresult ShouldEnableTrackingProtection(bool *result);
-
+    void AddShutdownObserver();
+    void RemoveShutdownObserver();
 private:
     // True if the channel is on the allow list.
     bool mIsAllowListed;
