@@ -30,7 +30,7 @@ add_task(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
 
-  refreshTab(gBrowser.selectedTab);
+  yield refreshTab(gBrowser.selectedTab);
 
   info("Check that the grid highlighter can be displayed after reloading the page");
   yield checkGridHighlighter();
