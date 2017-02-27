@@ -1,0 +1,51 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "id": "ProtocolHandler",
+        "type": "object",
+        "description": "Represents a protocol handler definition.",
+        "properties": {
+          "name": {
+            "description": "A user-readable title string for the protocol handler. This will be displayed to the user in interface objects as needed.",
+            "type": "string"
+          },
+          "protocol": {
+            "description": "The protocol the site wishes to handle, specified as a string. For example, you can register to handle SMS text message links by registering to handle the \"sms\" scheme.",
+            "choices": [{
+              "type": "string",
+              "enum": [
+                "bitcoin", "geo", "im", "irc", "ircs", "magnet", "mailto",
+                "mms", "news", "nntp", "sip", "sms", "smsto", "ssh", "tel",
+                "urn", "webcal", "wtai", "xmpp"
+              ]
+            }, {
+              "type": "string",
+              "pattern": "^(ext|web)\\+[a-z0-9.+-]+$"
+            }]
+          },
+          "uriTemplate": {
+            "description": "The URL of the handler, as a string. This string should include \"%s\" as a placeholder which will be replaced with the escaped URL of the document to be handled. This URL might be a true URL, or it could be a phone number, email address, or so forth.",
+            "preprocess": "localize",
+            "choices": [
+              {"$ref": "ExtensionURL"},
+              {"$ref": "HttpURL"}
+            ]
+          }
+        }
+      },
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "protocol_handlers": {
+            "description": "A list of protocol handler definitions.",
+            "optional": true,
+            "type": "array",
+            "items": {"$ref": "ProtocolHandler"}
+          }
+        }
+      }
+    ]
+  }
+]

@@ -127,36 +127,64 @@ impl_from_for_lit! {Float, [
 ]}
 
 #[cfg(feature = "parsing")]
+#[derive(Debug, Clone)]
+pub struct StrLit {
+    pub value: String,
+    pub style: StrStyle,
+}
+
+#[cfg(feature = "parsing")]
+#[derive(Debug, Clone)]
+pub struct ByteStrLit {
+    pub value: Vec<u8>,
+    pub style: StrStyle,
+}
+
+#[cfg(feature = "parsing")]
+#[derive(Debug, Clone)]
+pub struct IntLit {
+    pub value: u64,
+    pub suffix: IntTy,
+}
+
+#[cfg(feature = "parsing")]
+#[derive(Debug, Clone)]
+pub struct FloatLit {
+    pub value: String,
+    pub suffix: FloatTy,
+}
+
+#[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
     use escape::{cooked_byte, cooked_byte_string, cooked_char, cooked_string, raw_string};
-    use space::skip_whitespace;
-    use nom::IResult;
+    use synom::space::skip_whitespace;
+    use synom::IResult;
     use unicode_xid::UnicodeXID;
 
     named!(pub lit -> Lit, alt!(
-        string
+        string => { |StrLit { value, style }| Lit::Str(value, style) }
         |
-        byte_string
+        byte_string => { |ByteStrLit { value, style }| Lit::ByteStr(value, style) }
         |
-        byte
+        byte => { |b| Lit::Byte(b) }
         |
-        character
+        character => { |ch| Lit::Char(ch) }
         |
-        float // must be before int
+        float => { |FloatLit { value, suffix }| Lit::Float(value, suffix) } // must be before int
         |
-        int => { |(value, ty)| Lit::Int(value, ty) }
+        int => { |IntLit { value, suffix }| Lit::Int(value, suffix) }
         |
-        boolean
+        boolean => { |value| Lit::Bool(value) }
     ));
 
-    named!(string -> Lit, alt!(
-        quoted_string => { |s| Lit::Str(s, StrStyle::Cooked) }
+    named!(pub string -> StrLit, alt!(
+        quoted_string => { |s| StrLit { value: s, style: StrStyle::Cooked } }
         |
         preceded!(
             punct!("r"),
             raw_string
-        ) => { |(s, n)| Lit::Str(s, StrStyle::Raw(n)) }
+        ) => { |(s, n)| StrLit { value: s, style: StrStyle::Raw(n) }}
     ));
 
     named!(pub quoted_string -> String, delimited!(
@@ -165,35 +193,35 @@ pub mod parsing {
         tag!("\"")
     ));
 
-    named!(byte_string -> Lit, alt!(
+    named!(pub byte_string -> ByteStrLit, alt!(
         delimited!(
             punct!("b\""),
             cooked_byte_string,
             tag!("\"")
-        ) => { |vec| Lit::ByteStr(vec, StrStyle::Cooked) }
+        ) => { |vec| ByteStrLit { value: vec, style: StrStyle::Cooked } }
         |
         preceded!(
             punct!("br"),
             raw_string
-        ) => { |(s, n): (String, _)| Lit::ByteStr(s.into_bytes(), StrStyle::Raw(n)) }
+        ) => { |(s, n): (String, _)| ByteStrLit { value: s.into_bytes(), style: StrStyle::Raw(n) } }
     ));
 
-    named!(byte -> Lit, do_parse!(
+    named!(pub byte -> u8, do_parse!(
         punct!("b") >>
         tag!("'") >>
         b: cooked_byte >>
         tag!("'") >>
-        (Lit::Byte(b))
+        (b)
     ));
 
-    named!(character -> Lit, do_parse!(
+    named!(pub character -> char, do_parse!(
         punct!("'") >>
         ch: cooked_char >>
         tag!("'") >>
-        (Lit::Char(ch))
+        (ch)
     ));
 
-    named!(float -> Lit, do_parse!(
+    named!(pub float -> FloatLit, do_parse!(
         value: float_string >>
         suffix: alt!(
             tag!("f32") => { |_| FloatTy::F32 }
@@ -202,12 +230,12 @@ pub mod parsing {
             |
             epsilon!() => { |_| FloatTy::Unsuffixed }
         ) >>
-        (Lit::Float(value, suffix))
+        (FloatLit { value: value, suffix: suffix })
     ));
 
-    named!(pub int -> (u64, IntTy), tuple!(
-        digits,
-        alt!(
+    named!(pub int -> IntLit, do_parse!(
+        value: digits >>
+        suffix: alt!(
             tag!("isize") => { |_| IntTy::Isize }
             |
             tag!("i8") => { |_| IntTy::I8 }
@@ -229,13 +257,14 @@ pub mod parsing {
             tag!("u64") => { |_| IntTy::U64 }
             |
             epsilon!() => { |_| IntTy::Unsuffixed }
-        )
+        ) >>
+        (IntLit { value: value, suffix: suffix })
     ));
 
-    named!(boolean -> Lit, alt!(
-        keyword!("true") => { |_| Lit::Bool(true) }
+    named!(pub boolean -> bool, alt!(
+        keyword!("true") => { |_| true }
         |
-        keyword!("false") => { |_| Lit::Bool(false) }
+        keyword!("false") => { |_| false }
     ));
 
     fn float_string(mut input: &str) -> IResult<&str, String> {

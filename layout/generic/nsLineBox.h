@@ -75,7 +75,7 @@ public:
   // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
   // becomes the caller's responsibility.
   void Remove(nsFloatCache* aElement) { RemoveAndReturnPrev(aElement); }
-  
+
   // Steal away aList's nsFloatCache objects and put them in this
   // list.  aList must not be empty.
   void Append(nsFloatCacheFreeList& aList);
@@ -87,7 +87,7 @@ protected:
   // becomes the caller's responsibility. Returns the nsFloatCache that was
   // before aElement, or nullptr if aElement was the first.
   nsFloatCache* RemoveAndReturnPrev(nsFloatCache* aElement);
-  
+
   friend class nsFloatCacheFreeList;
 };
 
@@ -116,7 +116,7 @@ public:
   nsFloatCache* Tail() const {
     return mTail;
   }
-  
+
   bool NotEmpty() const {
     return nullptr != mHead;
   }
@@ -134,7 +134,7 @@ public:
   // Remove an nsFloatCache object from this list and return it, or create
   // a new one if this one is empty; Set its mFloat to aFloat.
   nsFloatCache* Alloc(nsIFrame* aFloat);
-  
+
 protected:
   nsFloatCache* mTail;
 
@@ -204,7 +204,7 @@ class nsLineBox final : public nsLineLink {
 private:
   nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock);
   ~nsLineBox();
-  
+
   // Infallible overloaded new operator. Uses an arena (which comes from the
   // presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell);
@@ -223,7 +223,7 @@ public:
     return mFlags.mBlock;
   }
   bool IsInline() const {
-    return 0 == mFlags.mBlock;
+    return !mFlags.mBlock;
   }
 
   // mDirty bit
@@ -404,7 +404,7 @@ public:
                aBreakType == StyleClear::Right ||
                aBreakType == StyleClear::Both,
                "Only float break types are allowed before a line");
-    mFlags.mBreakType = static_cast<int>(aBreakType);
+    mFlags.mBreakType = aBreakType;
   }
   StyleClear GetBreakTypeBefore() const {
     return IsBlock() ? BreakType() : StyleClear::None;
@@ -415,7 +415,7 @@ public:
   }
   void SetBreakTypeAfter(StyleClear aBreakType) {
     MOZ_ASSERT(!IsBlock(), "Only inlines have break-after");
-    mFlags.mBreakType = static_cast<int>(aBreakType);
+    mFlags.mBreakType = aBreakType;
   }
   bool HasFloatBreakAfter() const {
     return !IsBlock() &&
@@ -657,26 +657,26 @@ public:
   };
 
   struct FlagBits {
-    uint32_t mDirty : 1;
-    uint32_t mPreviousMarginDirty : 1;
-    uint32_t mHasClearance : 1;
-    uint32_t mBlock : 1;
-    uint32_t mImpactedByFloat : 1;
-    uint32_t mLineWrapped: 1;
-    uint32_t mInvalidateTextRuns : 1;
+    bool mDirty : 1;
+    bool mPreviousMarginDirty : 1;
+    bool mHasClearance : 1;
+    bool mBlock : 1;
+    bool mImpactedByFloat : 1;
+    bool mLineWrapped: 1;
+    bool mInvalidateTextRuns : 1;
     // default 0 = means that the opt potentially applies to this line.
     // 1 = never skip reflowing this line for a resize reflow
-    uint32_t mResizeReflowOptimizationDisabled: 1;
-    uint32_t mEmptyCacheValid: 1;
-    uint32_t mEmptyCacheState: 1;
+    bool mResizeReflowOptimizationDisabled: 1;
+    bool mEmptyCacheValid: 1;
+    bool mEmptyCacheState: 1;
     // mHasBullet indicates that this is an inline line whose block's
     // bullet is adjacent to this line and non-empty.
-    uint32_t mHasBullet : 1;
+    bool mHasBullet : 1;
     // Indicates that this line *may* have a placeholder for a float
     // that was pushed to a later column or page.
-    uint32_t mHadFloatPushed : 1;
-    uint32_t mHasHashedFrames: 1;
-    uint32_t mBreakType : 4;
+    bool mHadFloatPushed : 1;
+    bool mHasHashedFrames: 1;
+    StyleClear mBreakType;
   };
 
   struct ExtraData {
@@ -710,7 +710,7 @@ protected:
   };
 
   StyleClear BreakType() const {
-    return static_cast<StyleClear>(mFlags.mBreakType);
+    return mFlags.mBreakType;
   };
 
   union {
@@ -729,7 +729,7 @@ protected:
  *
  * API heavily based on the |list| class in the C++ standard.
  */
- 
+
 class nsLineList_iterator {
   public:
     friend class nsLineList;

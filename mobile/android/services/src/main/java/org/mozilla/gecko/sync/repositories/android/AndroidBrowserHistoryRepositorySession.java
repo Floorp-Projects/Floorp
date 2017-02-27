@@ -28,7 +28,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   /**
    * The number of records to queue for insertion before writing to databases.
    */
-  public static final int INSERT_RECORD_THRESHOLD = 50;
+  public static final int INSERT_RECORD_THRESHOLD = 5000;
   public static final int RECENT_VISITS_LIMIT = 20;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
@@ -162,13 +162,10 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     final ArrayList<HistoryRecord> outgoing = recordsBuffer;
     recordsBuffer = new ArrayList<HistoryRecord>();
     Logger.debug(LOG_TAG, "Flushing " + outgoing.size() + " records to database.");
-    // TODO: move bulkInsert to AndroidBrowserDataAccessor?
-    int inserted = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
-    if (inserted != outgoing.size()) {
-      // Something failed; most pessimistic action is to declare that all insertions failed.
-      // TODO: perform the bulkInsert in a transaction and rollback unless all insertions succeed?
+    boolean transactionSuccess = ((AndroidBrowserHistoryDataAccessor) dbHelper).bulkInsert(outgoing);
+    if (!transactionSuccess) {
       for (HistoryRecord failed : outgoing) {
-        delegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
+        storeDelegate.onRecordStoreFailed(new RuntimeException("Failed to insert history item with guid " + failed.guid + "."), failed.guid);
       }
       return;
     }
@@ -185,12 +182,23 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
         throw e;
       }
       trackRecord(succeeded);
-      delegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
+      storeDelegate.onRecordStoreSucceeded(succeeded.guid); // At this point, we are really inserted.
     }
   }
 
   @Override
   public void storeDone() {
+    storeDone(System.currentTimeMillis());
+  }
+
+  /**
+   * We need to flush our internal buffer of records in case of any interruptions of record flow
+   * from our "source". Downloader might be maintaining a "high-water-mark" based on the records
+   * it tried to store, so it's pertinent that all of the records that were queued for storage
+   * are eventually persisted.
+   */
+  @Override
+  public void storeIncomplete() {
     storeWorkQueue.execute(new Runnable() {
       @Override
       public void run() {
@@ -201,7 +209,23 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
             Logger.warn(LOG_TAG, "Error flushing records to database.", e);
           }
         }
-        storeDone(System.currentTimeMillis());
+      }
+    });
+  }
+
+  @Override
+  public void storeDone(final long end) {
+    storeWorkQueue.execute(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (recordsBufferMonitor) {
+          try {
+            flushNewRecords();
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Error flushing records to database.", e);
+          }
+        }
+        AndroidBrowserHistoryRepositorySession.super.storeDone(end);
       }
     });
   }

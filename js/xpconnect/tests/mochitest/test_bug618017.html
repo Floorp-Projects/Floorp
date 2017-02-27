@@ -12,14 +12,14 @@ Parsing XML must not override the version.
 </head>
 <body>
 
-<script type='application/javascript;version=1.7'>
+<script type='application/javascript'>
 let x = 12;
 function doLetEval() {
   ok(eval('let x = 13; x') === 13, 'let statement is valid syntax in version 1.7');
 }
 </script>
 
-<script type='application/javascript;version=1.5'>
+<script type='application/javascript'>
 doLetEval(); // Call to a function with a different version.
 </script>
 

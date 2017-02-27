@@ -1440,13 +1440,8 @@ Substring(const nsAString& aStr, uint32_t aStartPos, uint32_t aLength)
   return nsDependentSubstring(aStr, aStartPos, aLength);
 }
 
-inline const nsDependentSubstring
-Substring(const char16_t* aStart, const char16_t* aEnd)
-{
-  MOZ_ASSERT(uint32_t(aEnd - aStart) == uintptr_t(aEnd - aStart),
-             "string too long");
-  return nsDependentSubstring(aStart, uint32_t(aEnd - aStart));
-}
+const nsDependentSubstring
+Substring(const char16_t* aStart, const char16_t* aEnd);
 
 inline const nsDependentSubstring
 Substring(const char16_t* aStart, uint32_t aLength)
@@ -1460,11 +1455,8 @@ StringHead(const nsAString& aStr, uint32_t aCount)
   return nsDependentSubstring(aStr, 0, aCount);
 }
 
-inline const nsDependentSubstring
-StringTail(const nsAString& aStr, uint32_t aCount)
-{
-  return nsDependentSubstring(aStr, aStr.Length() - aCount, aCount);
-}
+const nsDependentSubstring
+StringTail(const nsAString& aStr, uint32_t aCount);
 
 // char
 inline const nsDependentCSubstring
@@ -1479,13 +1471,8 @@ Substring(const nsACString& aStr, uint32_t aStartPos, uint32_t aLength)
   return nsDependentCSubstring(aStr, aStartPos, aLength);
 }
 
-inline const nsDependentCSubstring
-Substring(const char* aStart, const char* aEnd)
-{
-  MOZ_ASSERT(uint32_t(aEnd - aStart) == uintptr_t(aEnd - aStart),
-             "string too long");
-  return nsDependentCSubstring(aStart, uint32_t(aEnd - aStart));
-}
+const nsDependentCSubstring
+Substring(const char* aStart, const char* aEnd);
 
 inline const nsDependentCSubstring
 Substring(const char* aStart, uint32_t aLength)
@@ -1499,11 +1486,8 @@ StringHead(const nsACString& aStr, uint32_t aCount)
   return nsDependentCSubstring(aStr, 0, aCount);
 }
 
-inline const nsDependentCSubstring
-StringTail(const nsACString& aStr, uint32_t aCount)
-{
-  return nsDependentCSubstring(aStr, aStr.Length() - aCount, aCount);
-}
+const nsDependentCSubstring
+StringTail(const nsACString& aStr, uint32_t aCount);
 
 
 inline bool

@@ -64,7 +64,7 @@ TESTCASES.forEach(testcase => {
 
     let doc = MockDocument.createTestDocument(
       "http://localhost:8080/test/", testcase.document);
-    FormAutofillContent._identifyAutofillFields(doc);
+    FormAutofillContent.identifyAutofillFields(doc);
 
     Assert.deepEqual(markedFieldId, testcase.expectedResult,
       "Check the fields were marked correctly.");

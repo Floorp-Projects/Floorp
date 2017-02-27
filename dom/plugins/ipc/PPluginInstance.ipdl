@@ -87,10 +87,6 @@ child:
   intr NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
     returns (bool value, NPError result);
 
-  // this message is not used on non-X platforms
-  intr NPP_GetValue_NPPVpluginNeedsXEmbed()
-    returns (bool value, NPError result);
-
   intr NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
 
@@ -261,11 +257,6 @@ parent:
     returns (double destX, double destY, bool result);
 
   async RedrawPlugin();
-
-  // Send notification that a plugin tried to negotiate Carbon NPAPI so that
-  // users can be notified that restarting the browser in i386 mode may allow
-  // them to use the plugin.
-  sync NegotiatedCarbon();
 
   // Notifies the parent of its NPP_New result code.
   async AsyncNPP_NewResult(NPError aResult);

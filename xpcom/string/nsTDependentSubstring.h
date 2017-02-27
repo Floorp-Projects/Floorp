@@ -29,10 +29,7 @@ public:
 
   void Rebind(const char_type* aData, size_type aLength);
 
-  void Rebind(const char_type* aStart, const char_type* aEnd)
-  {
-    Rebind(aStart, size_type(aEnd - aStart));
-  }
+  void Rebind(const char_type* aStart, const char_type* aEnd);
 
   nsTDependentSubstring_CharT(const substring_type& aStr, uint32_t aStartPos,
                               uint32_t aLength = size_type(-1))
@@ -46,11 +43,7 @@ public:
   {
   }
 
-  nsTDependentSubstring_CharT(const char_type* aStart, const char_type* aEnd)
-    : substring_type(const_cast<char_type*>(aStart), uint32_t(aEnd - aStart),
-                     F_NONE)
-  {
-  }
+  nsTDependentSubstring_CharT(const char_type* aStart, const char_type* aEnd);
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   nsTDependentSubstring_CharT(char16ptr_t aData, size_type aLength)
@@ -58,19 +51,11 @@ public:
   {
   }
 
-  nsTDependentSubstring_CharT(char16ptr_t aStart, char16ptr_t aEnd)
-    : nsTDependentSubstring_CharT(static_cast<const char16_t*>(aStart),
-                                  static_cast<const char16_t*>(aEnd))
-  {
-  }
+  nsTDependentSubstring_CharT(char16ptr_t aStart, char16ptr_t aEnd);
 #endif
 
   nsTDependentSubstring_CharT(const const_iterator& aStart,
-                              const const_iterator& aEnd)
-    : substring_type(const_cast<char_type*>(aStart.get()),
-                     uint32_t(aEnd.get() - aStart.get()), F_NONE)
-  {
-  }
+                              const const_iterator& aEnd);
 
   // Create a nsTDependentSubstring to be bound later
   nsTDependentSubstring_CharT()
@@ -105,11 +90,8 @@ Substring(const CharT* aData, uint32_t aLength)
   return nsTDependentSubstring_CharT(aData, aLength);
 }
 
-inline const nsTDependentSubstring_CharT
-Substring(const CharT* aStart, const CharT* aEnd)
-{
-  return nsTDependentSubstring_CharT(aStart, aEnd);
-}
+const nsTDependentSubstring_CharT
+Substring(const CharT* aStart, const CharT* aEnd);
 
 inline const nsTDependentSubstring_CharT
 StringHead(const nsTSubstring_CharT& aStr, uint32_t aCount)

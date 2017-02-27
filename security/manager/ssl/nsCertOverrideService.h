@@ -4,29 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NSCERTOVERRIDESERVICE_H__
-#define __NSCERTOVERRIDESERVICE_H__
+#ifndef nsCertOverrideService_h
+#define nsCertOverrideService_h
 
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsICertOverrideService.h"
-#include "nsTHashtable.h"
+#include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsString.h"
-#include "nsIFile.h"
-#include "secoidt.h"
+#include "nsTHashtable.h"
 #include "nsWeakReference.h"
-#include "mozilla/Attributes.h"
+#include "secoidt.h"
 
 class nsCertOverride
 {
 public:
-
-  enum OverrideBits { ob_None=0, ob_Untrusted=1, ob_Mismatch=2,
-                      ob_Time_error=4 };
+  enum class OverrideBits {
+    None = 0,
+    Untrusted = nsICertOverrideService::ERROR_UNTRUSTED,
+    Mismatch = nsICertOverrideService::ERROR_MISMATCH,
+    Time = nsICertOverrideService::ERROR_TIME,
+  };
 
   nsCertOverride()
-  :mPort(-1)
-  ,mOverrideBits(ob_None)
+    : mPort(-1)
+    , mOverrideBits(OverrideBits::None)
   {
   }
 
@@ -61,6 +64,7 @@ public:
   static void convertStringToBits(const nsACString &str, OverrideBits &ob);
 };
 
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsCertOverride::OverrideBits)
 
 // hash entry class
 class nsCertOverrideEntry final : public PLDHashEntryHdr
@@ -184,4 +188,4 @@ protected:
     {0x95, 0x2c, 0x2e, 0xe3, 0x37, 0xff, 0xdc, 0xd6}                   \
   }
 
-#endif
+#endif // nsCertOverrideService_h

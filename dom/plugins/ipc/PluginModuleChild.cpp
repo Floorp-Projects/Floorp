@@ -1105,19 +1105,20 @@ _getvalue(NPP aNPP,
             *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().isOffline();
             return NPERR_NO_ERROR;
         case NPNVSupportsXEmbedBool:
-            *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().supportsXembed();
+            // We don't support windowed xembed any more. But we still deliver
+            // events based on X/GTK, not Xt, so we continue to return true
+            // (and Flash requires that we return true).
+            *(NPBool*)aValue = true;
             return NPERR_NO_ERROR;
         case NPNVSupportsWindowless:
-            *(NPBool*)aValue = PluginModuleChild::GetChrome()->Settings().supportsWindowless();
+            *(NPBool*)aValue = true;
             return NPERR_NO_ERROR;
 #if defined(MOZ_WIDGET_GTK)
         case NPNVxDisplay: {
-            if (aNPP) {
-                return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+            if (!aNPP) {
+                return NPERR_INVALID_INSTANCE_ERROR;
             }
-            *(void
-              **)aValue = xt_client_get_display();
-            return NPERR_NO_ERROR;
+            return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
         }
         case NPNVxtAppContext:
             return NPERR_GENERIC_ERROR;
@@ -2244,7 +2245,6 @@ PMCGetOpenFileNameW(LPOPENFILENAMEW aLpofn)
 
 PPluginInstanceChild*
 PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
-                                             const uint16_t& aMode,
                                              const InfallibleTArray<nsCString>& aNames,
                                              const InfallibleTArray<nsCString>& aValues)
 {
@@ -2285,7 +2285,7 @@ PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
     }
 #endif
 
-    return new PluginInstanceChild(&mFunctions, aMimeType, aMode, aNames,
+    return new PluginInstanceChild(&mFunctions, aMimeType, aNames,
                                    aValues);
 }
 
@@ -2314,7 +2314,6 @@ PluginModuleChild::AnswerModuleSupportsAsyncRender(bool* aResult)
 mozilla::ipc::IPCResult
 PluginModuleChild::RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
                                                   const nsCString& aMimeType,
-                                                  const uint16_t& aMode,
                                                   InfallibleTArray<nsCString>&& aNames,
                                                   InfallibleTArray<nsCString>&& aValues)
 {

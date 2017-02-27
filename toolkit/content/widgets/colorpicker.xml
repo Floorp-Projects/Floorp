@@ -401,7 +401,7 @@
 
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (!mIsPopup && this.getAttribute("focused") != "true") {
+        if (!this.mIsPopup && this.getAttribute("focused") != "true") {
           this.setAttribute("focused", "true");
           document.addEventListener("keydown", this, true);
           if (this.mSelectedCell)
@@ -412,7 +412,7 @@
 
       <handler event="blur" phase="capturing">
       <![CDATA[
-        if (!mIsPopup && this.getAttribute("focused") == "true") {
+        if (!this.mIsPopup && this.getAttribute("focused") == "true") {
           document.removeEventListener("keydown", this, true);
           this.removeAttribute("focused");
           this.resetHover();
@@ -559,4 +559,3 @@
   </binding>
 
 </bindings>
-

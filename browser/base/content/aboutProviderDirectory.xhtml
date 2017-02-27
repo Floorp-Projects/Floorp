@@ -38,13 +38,13 @@
     </div>
   </body>
 
-  <script type="text/javascript;version=1.8"><![CDATA[
+  <script type="text/javascript"><![CDATA[
     const Cu = Components.utils;
 
     Cu.import("resource://gre/modules/Services.jsm");
 
     function openDirectory() {
-      let url = Services.prefs.getCharPref("social.directories").split(',')[0];
+      let url = Services.prefs.getCharPref("social.directories").split(",")[0];
       window.open(url);
       window.close();
     }

@@ -25,7 +25,7 @@
 ]]>
 </html:style>
 
-<script type="application/javascript;version=1.8"><![CDATA[
+<script type="application/javascript"><![CDATA[
 
 function cE(elem) {
   return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", elem);

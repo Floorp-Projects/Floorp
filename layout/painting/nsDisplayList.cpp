@@ -595,9 +595,10 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "inconsistent property flags");
 
-  DebugOnly<EffectSet*> effects = EffectSet::GetEffectSet(aFrame);
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   MOZ_ASSERT(effects);
 
+  bool sentAnimations = false;
   // Add from first to last (since last overrides)
   for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
     dom::Animation* anim = aAnimations[animIdx];
@@ -644,6 +645,12 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
 
     AddAnimationForProperty(aFrame, *property, anim, aLayer, aData, aPending);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
+    sentAnimations = true;
+  }
+
+  if (sentAnimations && aProperty == eCSSProperty_transform) {
+    TimeStamp now = aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
+    effects->UpdateLastTransformSyncTime(now);
   }
 }
 
@@ -7697,7 +7704,7 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
                                        false, /* aWillPaintBorder */
                                        appUnitsPerDevPixel,
                                        &clipState);
-      currentMaskSurfaceRect = clipState.mDirtyRectGfx;
+      currentMaskSurfaceRect = clipState.mDirtyRectInDevPx;
     }
 
     maskInUserSpace = maskInUserSpace.Union(currentMaskSurfaceRect);

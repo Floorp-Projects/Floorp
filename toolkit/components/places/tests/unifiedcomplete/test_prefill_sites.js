@@ -130,12 +130,12 @@ add_task(function* test_data_file() {
 
   let lastSite = sites.pop();
   let uri = NetUtil.newURI(lastSite[0]);
-  let title = lastSite[1];
 
   do_print("Storage is populated from JSON correctly");
   yield check_autocomplete({
-    search: uri.host.slice(1), // omit 1st letter to avoid style:"autofill" result
-    matches: [ { uri, title,  style: ["prefill-site"] } ],
+    search: uri.host,
+    autofilled: stripPrefix(uri.spec),
+    completed: uri.spec,
   });
 
   yield cleanup();

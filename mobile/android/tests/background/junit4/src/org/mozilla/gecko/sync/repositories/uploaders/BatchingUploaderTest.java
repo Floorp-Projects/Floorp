@@ -3,6 +3,8 @@
 
 package org.mozilla.gecko.sync.repositories.uploaders;
 
+import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 
 import static org.junit.Assert.*;
@@ -16,18 +18,29 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RunWith(TestRunner.class)
 public class BatchingUploaderTest {
-    class MockExecutorService implements Executor {
+    class MockExecutorService implements ExecutorService {
         int totalPayloads = 0;
         int commitPayloads = 0;
 
@@ -43,6 +56,71 @@ public class BatchingUploaderTest {
                 ++commitPayloads;
             }
             command.run();
+        }
+
+        @Override
+        public void shutdown() {}
+
+        @NonNull
+        @Override
+        public List<Runnable> shutdownNow() {
+            return null;
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return false;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return false;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return false;
+        }
+
+        @NonNull
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Future<?> submit(Runnable task) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+            return null;
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return null;
         }
     }
 
@@ -67,12 +145,17 @@ public class BatchingUploaderTest {
         }
 
         @Override
+        public void onStoreFailed(Exception e) {
+
+        }
+
+        @Override
         public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor) {
             return null;
         }
     }
 
-    private Executor workQueue;
+    private ExecutorService workQueue;
     private RepositorySessionStoreDelegate storeDelegate;
 
     @Before
@@ -428,18 +511,57 @@ public class BatchingUploaderTest {
     }
 
     private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
-        Server11RepositorySession server11RepositorySession = new Server11RepositorySession(
+        ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
+        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, 4096L);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_RECORDS, maxPostRecords);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_POST_BYTES, 1024L);
+        infoConfigurationJSON.put(InfoConfiguration.MAX_REQUEST_BYTES, 1024L);
+
+        Server15RepositorySession server15RepositorySession = new Server15RepositorySession(
                 makeCountConstrainedRepository(maxPostRecords, maxTotalRecords, firstSync)
         );
-        server11RepositorySession.setStoreDelegate(storeDelegate);
-        return new BatchingUploader(server11RepositorySession, workQueue, storeDelegate);
+        server15RepositorySession.setStoreDelegate(storeDelegate);
+        return new MockUploader(
+                server15RepositorySession, workQueue, storeDelegate, Uri.EMPTY, 0L,
+                new InfoConfiguration(infoConfigurationJSON), null);
     }
 
-    private Server11Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
+    class MockPayloadDispatcher extends PayloadDispatcher {
+        MockPayloadDispatcher(final Executor workQueue, final BatchingUploader uploader, Long lastModified) {
+            super(workQueue, uploader, lastModified);
+        }
+
+        @Override
+        Runnable createRecordUploadRunnable(ArrayList<byte[]> outgoing, ArrayList<String> outgoingGuids, long byteCount, boolean isCommit, boolean isLastPayload) {
+            // No-op runnable. We don't want this to actually do any work for these tests.
+            return new Runnable() {
+                @Override
+                public void run() {}
+            };
+        }
+    }
+
+    class MockUploader extends BatchingUploader {
+        MockUploader(final RepositorySession repositorySession, final ExecutorService workQueue,
+                     final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
+                     final Long localCollectionLastModified, final InfoConfiguration infoConfiguration,
+                     final AuthHeaderProvider authHeaderProvider) {
+            super(repositorySession, workQueue, sessionStoreDelegate, baseCollectionUri,
+                    localCollectionLastModified, infoConfiguration, authHeaderProvider);
+        }
+
+        @Override
+        PayloadDispatcher createPayloadDispatcher(ExecutorService workQueue, Long localCollectionLastModified) {
+            return new MockPayloadDispatcher(workQueue, this, localCollectionLastModified);
+        }
+    }
+
+    private Server15Repository makeCountConstrainedRepository(long maxPostRecords, long maxTotalRecords, boolean firstSync) {
         return makeConstrainedRepository(1024, 1024, maxPostRecords, 4096, maxTotalRecords, firstSync);
     }
 
-    private Server11Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
+    private Server15Repository makeConstrainedRepository(long maxRequestBytes, long maxPostBytes, long maxPostRecords, long maxTotalBytes, long maxTotalRecords, boolean firstSync) {
         ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, maxTotalBytes);
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
@@ -467,12 +589,14 @@ public class BatchingUploaderTest {
         }
 
         try {
-            return new Server11Repository(
+            return new Server15Repository(
                     "dummyCollection",
+                    SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                     "http://dummy.url/",
                     null,
                     infoCollections,
-                    infoConfiguration
+                    infoConfiguration,
+                    new NonPersistentRepositoryStateProvider()
             );
         } catch (URISyntaxException e) {
             // Won't throw, and this won't happen.

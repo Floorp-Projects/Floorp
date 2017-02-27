@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Register allocation issue with LCompareI64AndBranch.
 let params = '';
 let locals = '';

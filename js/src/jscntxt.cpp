@@ -68,34 +68,34 @@ using mozilla::PointerRangeSize;
 bool
 js::AutoCycleDetector::init()
 {
-    AutoCycleDetector::Set& set = cx->cycleDetectorSet();
-    hashsetAddPointer = set.lookupForAdd(obj);
-    if (!hashsetAddPointer) {
-        if (!set.add(hashsetAddPointer, obj)) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
-        cyclic = false;
-        hashsetGenerationAtInit = set.generation();
+    MOZ_ASSERT(cyclic);
+
+    AutoCycleDetector::Vector& vector = cx->cycleDetectorVector();
+
+    for (JSObject* obj2 : vector) {
+        if (MOZ_UNLIKELY(obj == obj2))
+            return true;
     }
+
+    if (!vector.append(obj))
+        return false;
+
+    cyclic = false;
     return true;
 }
 
 js::AutoCycleDetector::~AutoCycleDetector()
 {
-    if (!cyclic) {
-        if (hashsetGenerationAtInit == cx->cycleDetectorSet().generation())
-            cx->cycleDetectorSet().remove(hashsetAddPointer);
-        else
-            cx->cycleDetectorSet().remove(obj);
+    if (MOZ_LIKELY(!cyclic)) {
+        AutoCycleDetector::Vector& vec = cx->cycleDetectorVector();
+        MOZ_ASSERT(vec.back() == obj);
+        if (vec.length() > 1) {
+            vec.popBack();
+        } else {
+            // Avoid holding on to unused heap allocations.
+            vec.clearAndFree();
+        }
     }
-}
-
-void
-js::TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set)
-{
-    for (AutoCycleDetector::Set::Enum e(set); !e.empty(); e.popFront())
-        TraceRoot(trc, &e.mutableFront(), "cycle detector table entry");
 }
 
 bool
@@ -1197,6 +1197,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     enteredPolicy(nullptr),
 #endif
     generatingError(false),
+    cycleDetectorVector_(this),
     data(nullptr),
     outstandingRequests(0),
     jitIsBroken(false),
@@ -1391,14 +1392,13 @@ JSContext::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
      * ones have been found by DMD to be worth measuring.  More stuff may be
      * added later.
      */
-    return cycleDetectorSet().sizeOfExcludingThis(mallocSizeOf);
+    return cycleDetectorVector().sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
 JSContext::trace(JSTracer* trc)
 {
-    if (cycleDetectorSet().initialized())
-        TraceCycleDetectionSet(trc, cycleDetectorSet());
+    cycleDetectorVector().trace(trc);
 
     if (trc->isMarkingTracer() && compartment_)
         compartment_->mark();

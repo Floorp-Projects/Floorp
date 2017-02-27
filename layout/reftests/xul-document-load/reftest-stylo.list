@@ -14,7 +14,7 @@
 == test013.xul test013.xul
 == test014.xul test014.xul
 # Disabled due to compartments for now.
-#== test015.xul test015.xul
+== test015.xul test015.xul
 == test016.xul test016.xul
 == test017.xul test017.xul
 == test018.xul test018.xul

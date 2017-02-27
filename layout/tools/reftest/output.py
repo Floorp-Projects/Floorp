@@ -52,14 +52,14 @@ class ReftestFormatter(TbplFormatter):
         if "reftest_screenshots" in extra:
             screenshots = extra["reftest_screenshots"]
             image_1 = screenshots[0]["screenshot"]
-            image_2 = screenshots[2]["screenshot"]
 
             if len(screenshots) == 3:
+                image_2 = screenshots[2]["screenshot"]
                 output_text += ("\nREFTEST   IMAGE 1 (TEST): data:image/png;base64,%s\n"
                                 "REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,%s") % (
                                 image_1, image_2)
             elif len(screenshots) == 1:
-                output_text += "\nREFTEST   IMAGE: data:image/png;base64,%(image1)s" % image_1
+                output_text += "\nREFTEST   IMAGE: data:image/png;base64,%s" % image_1
 
         output_text += "\nREFTEST TEST-END | %s" % test
         return "%s\n" % output_text

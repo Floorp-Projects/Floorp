@@ -19,9 +19,9 @@ fails == placeholder-4.html placeholder-4.html
 fails == placeholder-5.html placeholder-5.html
 fails == placeholder-6.html placeholder-6.html
 fails == placeholder-6-textarea.html placeholder-6-textarea.html
-# needs-focus == placeholder-7.html placeholder-7.html
-# needs-focus == placeholder-8.html placeholder-8.html
-# needs-focus == placeholder-9.html placeholder-9.html
+fails needs-focus == placeholder-7.html placeholder-7.html
+fails needs-focus == placeholder-8.html placeholder-8.html
+fails needs-focus == placeholder-9.html placeholder-9.html
 fails needs-focus == placeholder-10.html placeholder-10.html
 fails == placeholder-11.html placeholder-11.html
 fails == placeholder-12.html placeholder-12.html
@@ -29,8 +29,8 @@ fails == placeholder-13.html placeholder-13.html
 fails == placeholder-14.html placeholder-14.html
 fails == placeholder-18.html placeholder-18.html
 random-if(winWidget) == placeholder-19.xul placeholder-19.xul
-# needs-focus == placeholder-20.html placeholder-20.html
-# needs-focus == placeholder-21.html placeholder-21.html
+fails needs-focus == placeholder-20.html placeholder-20.html
+fails needs-focus == placeholder-21.html placeholder-21.html
 fails needs-focus == placeholder-22.html placeholder-22.html
 fails == placeholder-rtl.html placeholder-rtl.html # Bug 1340696
 fails pref(dom.placeholder.show_on_focus,false) needs-focus == placeholder-focus-pref.html placeholder-focus-pref.html

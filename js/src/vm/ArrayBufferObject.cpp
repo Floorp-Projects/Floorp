@@ -945,7 +945,9 @@ ArrayBufferObject::wasmGrowToSizeInPlace(uint32_t newSize,
     // wasm-visible length of the buffer has been increased so it must be the
     // last fallible operation.
 
-    // byteLength can be at most INT32_MAX.
+    // byteLength can be at most INT32_MAX. Note: if this hard limit changes,
+    // update the clamping behavior in wasm::DecodeMemoryLimits and remove this
+    // comment as well as the one in wasmMovingGrowToSize.
     if (newSize > INT32_MAX)
         return false;
 
@@ -976,6 +978,7 @@ ArrayBufferObject::wasmMovingGrowToSize(uint32_t newSize,
     // unmodified and valid.
 
     // byteLength can be at most INT32_MAX.
+    // See comment in wasmGrowToSizeInPlace about wasm::DecodeMemoryLimits.
     if (newSize > INT32_MAX)
         return false;
 

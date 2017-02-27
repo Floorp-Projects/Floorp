@@ -95,11 +95,11 @@ NS_IMPL_ISUPPORTS0(nsCertAddonInfo)
 NS_IMPL_ISUPPORTS(nsCertTreeDispInfo, nsICertTreeItem)
 
 nsCertTreeDispInfo::nsCertTreeDispInfo()
-:mAddonInfo(nullptr)
-,mTypeOfEntry(direct_db)
-,mPort(-1)
-,mOverrideBits(nsCertOverride::ob_None)
-,mIsTemporary(true)
+  : mAddonInfo(nullptr)
+  , mTypeOfEntry(direct_db)
+  , mPort(-1)
+  , mOverrideBits(nsCertOverride::OverrideBits::None)
+  , mIsTemporary(true)
 {
 }
 
@@ -572,7 +572,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
         certai->mUsageCount++;
         certdi->mTypeOfEntry = nsCertTreeDispInfo::direct_db;
         // not necessary: certdi->mAsciiHost.Clear(); certdi->mPort = -1;
-        certdi->mOverrideBits = nsCertOverride::ob_None;
+        certdi->mOverrideBits = nsCertOverride::OverrideBits::None;
         certdi->mIsTemporary = false;
         mDispInfo.InsertElementAt(InsertPosition, certdi);
         ++count;

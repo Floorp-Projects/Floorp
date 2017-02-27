@@ -11,6 +11,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsContentUtils.h"
+#include "nsCSSFrameConstructor.h"
 #include "nsPrintfCString.h"
 #include "nsRefreshDriver.h"
 #include "nsStyleChangeList.h"
@@ -196,6 +197,17 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   RefPtr<nsStyleContext> oldStyleContext =
     styleFrame ? styleFrame->StyleContext() : nullptr;
 
+  UndisplayedNode* displayContentsNode = nullptr;
+  // FIXME(emilio, bug 1303605): This can be simpler for Servo.
+  // Note that we intentionally don't check for display: none content.
+  if (!oldStyleContext) {
+    displayContentsNode =
+      PresContext()->FrameConstructor()->GetDisplayContentsNodeFor(aElement);
+    if (displayContentsNode) {
+      oldStyleContext = displayContentsNode->mStyle;
+    }
+  }
+
   RefPtr<ServoComputedValues> computedValues =
     aStyleSet->ResolveServoStyle(aElement);
 
@@ -212,10 +224,14 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   const bool recreateContext = oldStyleContext &&
     oldStyleContext->StyleSource().AsServoComputedValues() != computedValues;
 
+  RefPtr<nsStyleContext> newContext = nullptr;
   if (recreateContext) {
-    RefPtr<nsStyleContext> newContext =
+    MOZ_ASSERT(styleFrame || displayContentsNode);
+    newContext =
       aStyleSet->GetContext(computedValues.forget(), aParentContext, nullptr,
                             CSSPseudoElementType::NotPseudo, aElement);
+
+    newContext->EnsureStructsForServo(oldStyleContext);
 
     // XXX This could not always work as expected: there are kinds of content
     // with the first split and the last sharing style, but others not. We
@@ -231,6 +247,11 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
                    nsCSSAnonBoxes::tableWrapper,
                  "What sort of frame is this?");
       UpdateStyleContextForTableWrapper(primaryFrame, newContext, aStyleSet);
+    }
+
+    if (MOZ_UNLIKELY(displayContentsNode)) {
+      MOZ_ASSERT(!styleFrame);
+      displayContentsNode->mStyle = newContext;
     }
 
     // Update pseudo-elements state if appropriate.
@@ -271,24 +292,16 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   bool traverseElementChildren = aElement->HasDirtyDescendantsForServo();
   bool traverseTextChildren = recreateContext;
   if (traverseElementChildren || traverseTextChildren) {
+    nsStyleContext* upToDateContext =
+      recreateContext ? newContext : oldStyleContext;
+
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
-        if (!styleFrame) {
-          // The frame constructor presumably decided to suppress frame
-          // construction on this subtree. Just clear the dirty descendants
-          // bit from the subtree, since there's no point in harvesting the
-          // change hints.
-          MOZ_ASSERT(!n->AsElement()->GetPrimaryFrame(),
-                     "Only display:contents should do this, and we don't handle that yet");
-          ClearDirtyDescendantsFromSubtree(n->AsElement());
-        } else {
-          RecreateStyleContexts(n->AsElement(), styleFrame->StyleContext(),
-                                aStyleSet, aChangeListToProcess);
-        }
+        RecreateStyleContexts(n->AsElement(), upToDateContext,
+                              aStyleSet, aChangeListToProcess);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        RecreateStyleContextsForText(n, styleFrame->StyleContext(),
-                                     aStyleSet);
+        RecreateStyleContextsForText(n, upToDateContext, aStyleSet);
       }
     }
   }
@@ -325,6 +338,7 @@ ServoRestyleManager::FrameForPseudoElement(const nsIContent* aContent,
     return primaryFrame;
   }
 
+  // FIXME(emilio): Need to take into account display: contents pseudos!
   if (!primaryFrame) {
     return nullptr;
   }

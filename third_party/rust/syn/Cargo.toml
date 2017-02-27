@@ -1,32 +1,31 @@
 [package]
 name = "syn"
-version = "0.10.8" # don't forget to update version in readme for breaking changes
+version = "0.11.6" # don't forget to update version in readme for breaking changes
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "Nom parser for Rust source code"
 repository = "https://github.com/dtolnay/syn"
 documentation = "https://dtolnay.github.io/syn/syn/"
-include = ["Cargo.toml", "src/**/*.rs"]
+categories = ["development-tools::procedural-macro-helpers"]
+include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
 [features]
 default = ["parsing", "printing"]
 aster = []
-expand = ["full", "parsing", "printing"]
 full = []
-parsing = ["unicode-xid"]
-pretty = ["syntex_syntax"]
+parsing = ["unicode-xid", "synom"]
 printing = ["quote"]
 visit = []
+fold = []
 
 [dependencies]
-clippy = { version = "0.*", optional = true }
-quote = { version = "0.3.0", optional = true }
-syntex_syntax = { version = "0.50.0", optional = true }
+quote = { version = "0.3", optional = true }
 unicode-xid = { version = "0.0.4", optional = true }
+synom = { version = "0.11", path = "synom", optional = true }
 
 [dev-dependencies]
-syntex_pos = "0.50.0"
-syntex_syntax = "0.50.0"
+syntex_pos = "0.58"
+syntex_syntax = "0.58"
 tempdir = "0.3.5"
 time = "0.1.35"
 walkdir = "1.0.1"

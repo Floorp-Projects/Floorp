@@ -9,7 +9,7 @@
         sizemode="normal"
         onload="nextStep()">
 
-<script type="text/javascript;version=1.8">
+<script type="text/javascript">
 let tests = [
   function test1() {
     checkAndContinue("normal");

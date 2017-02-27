@@ -4,10 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import re
 import copy
 import pprint
 import voluptuous
+
+from .attributes import keymatch
 
 
 def validate_schema(schema, obj, msg_prefix):
@@ -112,25 +113,14 @@ def resolve_keyed_by(item, field, item_name, **extra_values):
         key = extra_values.get(keyed_by) if keyed_by in extra_values else item[keyed_by]
         alternatives = value.values()[0]
 
-        # exact match
-        if key in alternatives:
-            value = container[subfield] = alternatives[key]
-            continue
-
-        # regular expression match
-        matches = [(k, v) for k, v in alternatives.iteritems() if re.match(k + '$', key)]
+        matches = keymatch(alternatives, key)
         if len(matches) > 1:
             raise Exception(
                 "Multiple matching values for {} {!r} found while "
                 "determining item {} in {}".format(
                     keyed_by, key, field, item_name))
         elif matches:
-            value = container[subfield] = matches[0][1]
-            continue
-
-        # default
-        if 'default' in alternatives:
-            value = container[subfield] = alternatives['default']
+            value = container[subfield] = matches[0]
             continue
 
         raise Exception(

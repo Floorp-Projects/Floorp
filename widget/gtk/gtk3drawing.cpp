@@ -2506,11 +2506,11 @@ void
 moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
                           gint* scale_height)
 {
-  WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
-                           MOZ_GTK_SCALE_HORIZONTAL :
-                           MOZ_GTK_SCALE_VERTICAL;
-
   if (gtk_check_version(3, 20, 0) != nullptr) {
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_HORIZONTAL :
+                               MOZ_GTK_SCALE_VERTICAL;
+
       gint thumb_length, thumb_height, trough_border;
       moz_gtk_get_scalethumb_metrics(orient, &thumb_length, &thumb_height);
 
@@ -2526,12 +2526,10 @@ moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
       }
       ReleaseStyleContext(style);
   } else {
-      GtkStyleContext* style = ClaimStyleContext(widget);
-      gtk_style_context_get(style, gtk_style_context_get_state(style),
-                            "min-width", scale_width,
-                            "min-height", scale_height,
-                            nullptr);
-      ReleaseStyleContext(style);
+      WidgetNodeType widget = (orient == GTK_ORIENTATION_HORIZONTAL) ?
+                               MOZ_GTK_SCALE_TROUGH_HORIZONTAL :
+                               MOZ_GTK_SCALE_TROUGH_VERTICAL;
+      moz_gtk_get_widget_min_size(widget, scale_width, scale_height);
   }
 }
 
@@ -2554,10 +2552,28 @@ moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length, gint* 
                                MOZ_GTK_SCALE_THUMB_HORIZONTAL:
                                MOZ_GTK_SCALE_THUMB_VERTICAL;
       GtkStyleContext* style = ClaimStyleContext(widget);
-      gtk_style_context_get(style, gtk_style_context_get_state(style),
-                            "min-width", thumb_length,
-                            "min-height", thumb_height,
+
+      gint min_width, min_height;
+      GtkStateFlags state = gtk_style_context_get_state(style);
+      gtk_style_context_get(style, state,
+                            "min-width", &min_width,
+                            "min-height", &min_height,
                              nullptr);
+      GtkBorder margin;
+      gtk_style_context_get_margin(style, state, &margin);
+      gint margin_width = margin.left + margin.right;
+      gint margin_height = margin.top + margin.bottom;
+
+      // Negative margin of slider element also determines its minimal size
+      // so use bigger of those two values.
+      if (min_width < -margin_width)
+          min_width = -margin_width;
+      if (min_height < -margin_height)
+          min_height = -margin_height;
+
+      *thumb_length = min_width;
+      *thumb_height = min_height;
+
       ReleaseStyleContext(style);
   }
 

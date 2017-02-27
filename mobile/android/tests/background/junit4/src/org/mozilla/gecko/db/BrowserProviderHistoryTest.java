@@ -8,6 +8,7 @@ import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.RemoteException;
 
 import org.junit.After;
@@ -257,6 +258,98 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
             assertHistoryAggregates(BrowserContract.History.URL + " = ?", new String[] {url},
                     2, 19, lastVisited3, 8, lastVisited3);
         }
+    }
+
+    @Test
+    public void testBulkHistoryInsert() throws Exception {
+        // Test basic error conditions.
+        String historyTestUriArg = historyTestUri.toString();
+        Bundle result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, new Bundle());
+        assertNotNull(result);
+        assertNotNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+
+        final Bundle data = new Bundle();
+
+        Bundle[] recordBundles = new Bundle[0];
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+        result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, 0);
+
+        // Test insert three history records with 10 visits each.
+        recordBundles = new Bundle[3];
+        for (int i = 0; i < 3; i++) {
+            final Bundle bundle = new Bundle();
+            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/" + i, 10L, 10L, 10));
+            bundle.putSerializable(BrowserContract.History.VISITS, buildHistoryVisitsCVs(10, "guid" + i, 1L, 3, false));
+            recordBundles[i] = bundle;
+        }
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+
+        result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, 3);
+        assertRowCount(visitsClient, visitsTestUri, 30);
+
+        // Test insert mixed data.
+        recordBundles = new Bundle[3];
+        final Bundle bundle = new Bundle();
+        bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid4", null, "https://www.mozilla.org/1", null, null, null));
+        bundle.putSerializable(BrowserContract.History.VISITS, new ContentValues[0]);
+        recordBundles[0] = bundle;
+        final Bundle bundle2 = new Bundle();
+        bundle2.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid5", "Test", "https://www.mozilla.org/2", null, null, null));
+        bundle2.putSerializable(BrowserContract.History.VISITS, new ContentValues[0]);
+        recordBundles[1] = bundle2;
+        final Bundle bundle3 = new Bundle();
+        bundle3.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid6", "Test", "https://www.mozilla.org/3", 5L, 5L, 5));
+        bundle3.putSerializable(BrowserContract.History.VISITS, buildHistoryVisitsCVs(5, "guid6", 1L, 2, false));
+        recordBundles[2] = bundle3;
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+
+        result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, 6);
+        assertRowCount(visitsClient, visitsTestUri, 35);
+
+        assertHistoryAggregates(BrowserContract.History.URL + " = ?", new String[] {"https://www.mozilla.org/3"},
+                5, 0, 0, 5, 5);
+    }
+
+    private ContentValues[] buildHistoryVisitsCVs(int numberOfVisits, String guid, long baseDate, int visitType, boolean isLocal) {
+        final ContentValues[] visits = new ContentValues[numberOfVisits];
+        for (int i = 0; i < numberOfVisits; i++) {
+            final ContentValues visit = new ContentValues();
+            visit.put(BrowserContract.Visits.HISTORY_GUID, guid);
+            visit.put(BrowserContract.Visits.DATE_VISITED, baseDate + i);
+            visit.put(BrowserContract.Visits.VISIT_TYPE, visitType);
+            visit.put(BrowserContract.Visits.IS_LOCAL, isLocal ? BrowserContract.Visits.VISIT_IS_LOCAL : BrowserContract.Visits.VISIT_IS_REMOTE);
+            visits[i] = visit;
+        }
+        return visits;
+    }
+
+    private ContentValues buildHistoryCV(String guid, String title, String url, Long lastVisited, Long remoteLastVisited, Integer visits) {
+        ContentValues cv = new ContentValues();
+        cv.put(BrowserContract.History.GUID, guid);
+        if (title != null) {
+            cv.put(BrowserContract.History.TITLE, title);
+        }
+        cv.put(BrowserContract.History.URL, url);
+        if (lastVisited != null) {
+            cv.put(BrowserContract.History.DATE_LAST_VISITED, lastVisited);
+        }
+        if (remoteLastVisited != null) {
+            cv.put(BrowserContract.History.REMOTE_DATE_LAST_VISITED, remoteLastVisited);
+        }
+        if (visits != null) {
+            cv.put(BrowserContract.History.VISITS, visits);
+            cv.put(BrowserContract.History.REMOTE_VISITS, visits);
+        }
+        return cv;
     }
 
     private void assertHistoryAggregates(String selection, String[] selectionArg, int visits, int localVisits, long localLastVisited, int remoteVisits, long remoteLastVisited) throws Exception {

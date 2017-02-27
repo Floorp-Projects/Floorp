@@ -1,23 +1,14 @@
-#![cfg_attr(feature = "clippy", feature(plugin))]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
+#![cfg_attr(feature = "cargo-clippy", allow(large_enum_variant))]
 
 #[cfg(feature = "printing")]
-#[macro_use]
 extern crate quote;
-
-#[cfg(feature = "pretty")]
-extern crate syntex_syntax as syntax;
 
 #[cfg(feature = "parsing")]
 extern crate unicode_xid;
 
 #[cfg(feature = "parsing")]
 #[macro_use]
-mod nom;
-
-#[cfg(feature = "parsing")]
-#[macro_use]
-mod helper;
+extern crate synom;
 
 #[cfg(feature = "aster")]
 pub mod aster;
@@ -37,14 +28,15 @@ mod escape;
 #[cfg(feature = "full")]
 mod expr;
 #[cfg(feature = "full")]
-pub use expr::{Arm, BindingMode, Block, BlockCheckMode, CaptureBy, Expr, ExprKind, FieldPat,
-               FieldValue, Local, MacStmtStyle, Pat, RangeLimits, Stmt};
+pub use expr::{Arm, BindingMode, Block, CaptureBy, Expr, ExprKind, FieldPat, FieldValue,
+               Local, MacStmtStyle, Pat, RangeLimits, Stmt};
 
 mod generics;
 pub use generics::{Generics, Lifetime, LifetimeDef, TraitBoundModifier, TyParam, TyParamBound,
-                   WhereBoundPredicate, WhereClause, WherePredicate, WhereRegionPredicate};
+                   WhereBoundPredicate, WhereClause, WhereEqPredicate, WherePredicate,
+                   WhereRegionPredicate};
 #[cfg(feature = "printing")]
-pub use generics::{ImplGenerics, TyGenerics};
+pub use generics::{ImplGenerics, Turbofish, TyGenerics};
 
 mod ident;
 pub use ident::Ident;
@@ -63,25 +55,20 @@ pub use krate::Crate;
 
 mod lit;
 pub use lit::{FloatTy, IntTy, Lit, StrStyle};
+#[cfg(feature = "parsing")]
+pub use lit::{ByteStrLit, FloatLit, IntLit, StrLit};
 
-#[cfg(feature = "full")]
 mod mac;
-#[cfg(feature = "full")]
 pub use mac::{BinOpToken, DelimToken, Delimited, Mac, Token, TokenTree};
 
-mod macro_input;
-pub use macro_input::{Body, MacroInput};
+mod derive;
+pub use derive::{Body, DeriveInput};
+// Deprecated. Use `DeriveInput` instead.
+#[doc(hidden)]
+pub type MacroInput = DeriveInput;
 
 mod op;
 pub use op::{BinOp, UnOp};
-
-#[cfg(feature = "expand")]
-mod registry;
-#[cfg(feature = "expand")]
-pub use registry::{CustomDerive, Expanded, Registry};
-
-#[cfg(feature = "parsing")]
-mod space;
 
 mod ty;
 pub use ty::{Abi, AngleBracketedParameterData, BareFnArg, BareFnTy, FunctionRetTy, MutTy,
@@ -91,20 +78,23 @@ pub use ty::{Abi, AngleBracketedParameterData, BareFnArg, BareFnTy, FunctionRetT
 #[cfg(feature = "visit")]
 pub mod visit;
 
+#[cfg(feature = "fold")]
+pub mod fold;
+
 #[cfg(feature = "parsing")]
 pub use parsing::*;
 
 #[cfg(feature = "parsing")]
 mod parsing {
     use super::*;
-    use {generics, ident, macro_input, space, ty};
-    use nom::IResult;
+    use {derive, generics, ident, mac, ty};
+    use synom::{space, IResult};
 
     #[cfg(feature = "full")]
-    use {expr, item, krate, mac};
+    use {expr, item, krate};
 
-    pub fn parse_macro_input(input: &str) -> Result<MacroInput, String> {
-        unwrap("macro input", macro_input::parsing::macro_input, input)
+    pub fn parse_derive_input(input: &str) -> Result<DeriveInput, String> {
+        unwrap("derive input", derive::parsing::derive_input, input)
     }
 
     #[cfg(feature = "full")]
@@ -139,13 +129,22 @@ mod parsing {
         unwrap("where clause", generics::parsing::where_clause, input)
     }
 
-    #[cfg(feature = "full")]
     pub fn parse_token_trees(input: &str) -> Result<Vec<TokenTree>, String> {
         unwrap("token trees", mac::parsing::token_trees, input)
     }
 
     pub fn parse_ident(input: &str) -> Result<Ident, String> {
         unwrap("identifier", ident::parsing::ident, input)
+    }
+
+    pub fn parse_ty_param_bound(input: &str) -> Result<TyParamBound, String> {
+        unwrap("type parameter bound", generics::parsing::ty_param_bound, input)
+    }
+
+    // Deprecated. Use `parse_derive_input` instead.
+    #[doc(hidden)]
+    pub fn parse_macro_input(input: &str) -> Result<MacroInput, String> {
+        parse_derive_input(input)
     }
 
     fn unwrap<T>(name: &'static str,
@@ -161,10 +160,53 @@ mod parsing {
                     // parsed nothing
                     Err(format!("failed to parse {}: {:?}", name, rest))
                 } else {
-                    Err(format!("failed to parse tokens after {}: {:?}", name, rest))
+                    Err(format!("unparsed tokens after {}: {:?}", name, rest))
                 }
             }
             IResult::Error => Err(format!("failed to parse {}: {:?}", name, input)),
         }
     }
+}
+
+#[cfg(feature = "parsing")]
+pub mod parse {
+    //! This module contains a set of exported nom parsers which can be used to
+    //! parse custom grammars when used alongside the `synom` crate.
+    //!
+    //! Internally, `syn` uses a fork of `nom` called `synom` which resolves a
+    //! persistent pitfall of using `nom` to parse Rust by eliminating the
+    //! `IResult::Incomplete` variant. The `synom` crate should be used instead
+    //! of `nom` when working with the parsers in this module.
+
+    #[cfg(feature = "full")]
+    pub use item::parsing::item;
+
+    #[cfg(feature = "full")]
+    pub use expr::parsing::expr;
+
+    pub use lit::parsing::lit;
+
+    pub use lit::parsing::string;
+
+    pub use lit::parsing::byte_string;
+
+    pub use lit::parsing::byte;
+
+    pub use lit::parsing::character;
+
+    pub use lit::parsing::float;
+
+    pub use lit::parsing::int;
+
+    pub use lit::parsing::boolean;
+
+    pub use ty::parsing::ty;
+
+    pub use ty::parsing::path;
+
+    pub use mac::parsing::token_tree as tt;
+
+    pub use ident::parsing::ident;
+
+    pub use generics::parsing::lifetime;
 }

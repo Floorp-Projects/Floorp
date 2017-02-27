@@ -15,6 +15,7 @@ struct JSContext;
 class JSObject;
 class nsIDocument;
 class nsStyleContext;
+struct ServoComputedValues;
 
 namespace mozilla {
 struct AnimationProperty;
@@ -22,6 +23,7 @@ enum class CSSPseudoElementType : uint8_t;
 class ErrorResult;
 struct Keyframe;
 struct PropertyStyleAnimationValuePair;
+struct ServoComputedStyleValues;
 
 namespace dom {
 class Element;
@@ -83,6 +85,11 @@ public:
                             dom::Element* aElement,
                             nsStyleContext* aStyleContext);
 
+  static nsTArray<ComputedKeyframeValues>
+  GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
+                            dom::Element* aElement,
+                            const ServoComputedStyleValues& aServoValues);
+
   /**
    * Fills in the mComputedOffset member of each keyframe in the given array
    * using the specified spacing mode.
@@ -106,6 +113,14 @@ public:
                            nsCSSPropertyID aProperty,
                            nsTArray<ComputedKeyframeValues>& aComputedValues,
                            nsStyleContext* aStyleContext);
+  static void ApplySpacing(nsTArray<Keyframe>& aKeyframes,
+                           SpacingMode aSpacingMode,
+                           nsCSSPropertyID aProperty,
+                           nsTArray<ComputedKeyframeValues>& aComputedValues,
+                           const ServoComputedStyleValues& aServoValues)
+  {
+    NS_WARNING("stylo: ApplySpacing not implemented yet");
+  }
 
   /**
    * Wrapper for ApplySpacing to simplify using distribute spacing.
@@ -130,15 +145,13 @@ public:
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite
    *   operation, this value will be used.
-   * @param aStyleContext The style context to calculate the style difference.
    * @return The set of animation properties. If an error occurs, the returned
    *   array will be empty.
    */
   static nsTArray<AnimationProperty> GetAnimationPropertiesFromKeyframes(
     const nsTArray<Keyframe>& aKeyframes,
     const nsTArray<ComputedKeyframeValues>& aComputedValues,
-    dom::CompositeOperation aEffectComposite,
-    nsStyleContext* aStyleContext);
+    dom::CompositeOperation aEffectComposite);
 
   /**
    * Check if the property or, for shorthands, one or more of

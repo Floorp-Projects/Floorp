@@ -1,3 +1,6 @@
+// This file spawns content tasks.
+/* global content */
+
 /**
  * Verify that if the page contents change after print preview is initialized,
  * and we re-initialize print preview (e.g. by changing page orientation),

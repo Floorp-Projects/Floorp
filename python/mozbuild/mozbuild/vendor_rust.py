@@ -13,6 +13,7 @@ from mozbuild.base import (
 import mozfile
 import mozpack.path as mozpath
 import os
+import re
 import subprocess
 import sys
 
@@ -34,6 +35,19 @@ class VendorRust(MozbuildObject):
         if not out.startswith('cargo'):
             return False
         return LooseVersion(out.split()[1]) >= b'0.13'
+
+    def check_cargo_vendor_version(self, cargo):
+        '''
+        Ensure that cargo-vendor is new enough. cargo-vendor 0.1.3 and newer
+        strips out .gitattributes files which we want.
+        '''
+        for l in subprocess.check_output([cargo, 'install', '--list']).splitlines():
+            # The line looks like `cargo-vendor v0.1.3:`
+            m = re.match('cargo-vendor v((\d\.)*\d):', l)
+            if m:
+                version = m.group(1)
+                return LooseVersion(version) >= b'0.1.3'
+        return False
 
     def check_modified_files(self):
         '''
@@ -94,12 +108,17 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self.log(logging.DEBUG, 'cargo_version', {}, 'cargo is new enough')
         have_vendor = any(l.strip() == 'vendor' for l in subprocess.check_output([cargo, '--list']).splitlines())
         if not have_vendor:
-            self.log(logging.INFO, 'installing', {}, 'Installing cargo-vendor')
+            self.log(logging.INFO, 'installing', {}, 'Installing cargo-vendor (this may take a few minutes)...')
             env = self.check_openssl()
             self.run_process(args=[cargo, 'install', 'cargo-vendor'],
                              append_env=env)
+        elif not self.check_cargo_vendor_version(cargo):
+            self.log(logging.INFO, 'cargo_vendor', {}, 'cargo-vendor >= 0.1.3 required; force-reinstalling (this may take a few minutes)...')
+            env = self.check_openssl()
+            self.run_process(args=[cargo, 'install', '--force', 'cargo-vendor'],
+                             append_env=env)
         else:
-            self.log(logging.DEBUG, 'cargo_vendor', {}, 'cargo-vendor already intalled')
+            self.log(logging.DEBUG, 'cargo_vendor', {}, 'sufficiently new cargo-vendor is already intalled')
         relative_vendor_dir = 'third_party/rust'
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
         self.log(logging.INFO, 'rm_vendor_dir', {}, 'rm -rf %s' % vendor_dir)

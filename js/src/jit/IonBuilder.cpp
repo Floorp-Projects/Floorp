@@ -2267,6 +2267,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CHECKISOBJ:
         return jsop_checkisobj(GET_UINT8(pc));
 
+      case JSOP_CHECKISCALLABLE:
+        return jsop_checkiscallable(GET_UINT8(pc));
+
       case JSOP_CHECKOBJCOERCIBLE:
         return jsop_checkobjcoercible();
 
@@ -9414,6 +9417,15 @@ IonBuilder::jsop_checkisobj(uint8_t kind)
     }
 
     MCheckIsObj* check = MCheckIsObj::New(alloc(), current->pop(), kind);
+    current->add(check);
+    current->push(check);
+    return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_checkiscallable(uint8_t kind)
+{
+    MCheckIsCallable* check = MCheckIsCallable::New(alloc(), current->pop(), kind);
     current->add(check);
     current->push(check);
     return Ok();

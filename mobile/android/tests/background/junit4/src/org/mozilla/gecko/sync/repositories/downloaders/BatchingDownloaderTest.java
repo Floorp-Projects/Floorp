@@ -4,29 +4,42 @@
 
 package org.mozilla.gecko.sync.repositories.downloaders;
 
+import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoConfiguration;
+import org.mozilla.gecko.sync.SyncDeadlineReachedException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.Repository;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
@@ -37,29 +50,86 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(TestRunner.class)
 public class BatchingDownloaderTest {
-    private MockSever11Repository serverRepository;
-    private Server11RepositorySession repositorySession;
+    private MockSever15Repository serverRepository;
+    private Server15RepositorySession repositorySession;
     private MockSessionFetchRecordsDelegate sessionFetchRecordsDelegate;
     private MockDownloader mockDownloader;
     private String DEFAULT_COLLECTION_NAME = "dummyCollection";
-    private String DEFAULT_COLLECTION_URL = "http://dummy.url/";
+    private static String DEFAULT_COLLECTION_URL = "http://dummy.url/";
     private long DEFAULT_NEWER = 1;
-    private String DEFAULT_SORT = "index";
+    private String DEFAULT_SORT = "oldest";
     private String DEFAULT_IDS = "1";
     private String DEFAULT_LMHEADER = "12345678";
 
-    class MockSessionFetchRecordsDelegate implements RepositorySessionFetchRecordsDelegate {
+    private CountingShadowRepositoryState repositoryStateProvider;
+
+    // Memory-backed state implementation which keeps a shadow of current values, so that they can be
+    // queried by the tests. Classes under test do not have access to the shadow, and follow regular
+    // non-persistent state semantics (value changes visible only after commit).
+    static class CountingShadowRepositoryState extends NonPersistentRepositoryStateProvider {
+        private AtomicInteger commitCount = new AtomicInteger(0);
+        private final Map<String, Object> shadowMap = Collections.synchronizedMap(new HashMap<String, Object>(2));
+
+        @Override
+        public boolean commit() {
+            commitCount.incrementAndGet();
+            return super.commit();
+        }
+
+        int getCommitCount() {
+            return commitCount.get();
+        }
+
+        @Nullable
+        public Long getShadowedLong(String key) {
+            return (Long) shadowMap.get(key);
+        }
+
+        @Nullable
+        public String getShadowedString(String key) {
+            return (String) shadowMap.get(key);
+        }
+
+        @Override
+        public CountingShadowRepositoryState setLong(String key, Long value) {
+            shadowMap.put(key, value);
+            super.setLong(key, value);
+            return this;
+        }
+
+        @Override
+        public CountingShadowRepositoryState setString(String key, String value) {
+            shadowMap.put(key, value);
+            super.setString(key, value);
+            return this;
+        }
+
+        @Override
+        public CountingShadowRepositoryState clear(String key) {
+            shadowMap.remove(key);
+            super.clear(key);
+            return this;
+        }
+
+        @Override
+        public boolean resetAndCommit() {
+            shadowMap.clear();
+            return super.resetAndCommit();
+        }
+    }
+
+    static class MockSessionFetchRecordsDelegate implements RepositorySessionFetchRecordsDelegate {
         public boolean isFailure;
         public boolean isFetched;
         public boolean isSuccess;
+        public int batchesCompleted;
         public Exception ex;
         public Record record;
 
         @Override
-        public void onFetchFailed(Exception ex, Record record) {
+        public void onFetchFailed(Exception ex) {
             this.isFailure = true;
             this.ex = ex;
-            this.record = record;
         }
 
         @Override
@@ -74,14 +144,19 @@ public class BatchingDownloaderTest {
         }
 
         @Override
+        public void onBatchCompleted() {
+            this.batchesCompleted += 1;
+        }
+
+        @Override
         public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
             return null;
         }
     }
 
-    class MockRequest extends SyncStorageCollectionRequest {
+    static class MockRequest extends SyncStorageCollectionRequest {
 
-        public MockRequest(URI uri) {
+        MockRequest(URI uri) {
             super(uri);
         }
 
@@ -91,7 +166,7 @@ public class BatchingDownloaderTest {
         }
     }
 
-    class MockDownloader extends BatchingDownloader {
+    static class MockDownloader extends BatchingDownloader {
         public long newer;
         public long limit;
         public boolean full;
@@ -100,8 +175,9 @@ public class BatchingDownloaderTest {
         public String offset;
         public boolean abort;
 
-        public MockDownloader(Server11Repository repository, Server11RepositorySession repositorySession) {
-            super(repository, repositorySession);
+        MockDownloader(RepositorySession repositorySession, boolean allowMultipleBatches, boolean keepTrackOfHighWaterMark, RepositoryStateProvider repositoryStateProvider) {
+            super(null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                    allowMultipleBatches, keepTrackOfHighWaterMark, repositoryStateProvider, repositorySession);
         }
 
         @Override
@@ -140,23 +216,20 @@ public class BatchingDownloaderTest {
         }
     }
 
-    class MockSever11Repository extends Server11Repository {
-        public MockSever11Repository(@NonNull String collection, @NonNull String storageURL,
+    static class MockSever15Repository extends Server15Repository {
+        MockSever15Repository(@NonNull String collection, @NonNull String storageURL,
                                      AuthHeaderProvider authHeaderProvider, @NonNull InfoCollections infoCollections,
                                      @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
-            super(collection, storageURL, authHeaderProvider, infoCollections, infoConfiguration);
-        }
-
-        @Override
-        public long getDefaultTotalLimit() {
-            return 200;
+            super(collection, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                    storageURL, authHeaderProvider, infoCollections, infoConfiguration,
+                    new NonPersistentRepositoryStateProvider());
         }
     }
 
-    class MockRepositorySession extends Server11RepositorySession {
+    static class MockRepositorySession extends Server15RepositorySession {
         public boolean abort;
 
-        public MockRepositorySession(Repository repository) {
+        MockRepositorySession(Repository repository) {
             super(repository);
         }
 
@@ -170,10 +243,11 @@ public class BatchingDownloaderTest {
     public void setUp() throws Exception {
         sessionFetchRecordsDelegate = new MockSessionFetchRecordsDelegate();
 
-        serverRepository = new MockSever11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL, null,
+        serverRepository = new MockSever15Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL, null,
                 new InfoCollections(), new InfoConfiguration());
-        repositorySession = new Server11RepositorySession(serverRepository);
-        mockDownloader = new MockDownloader(serverRepository, repositorySession);
+        repositorySession = new Server15RepositorySession(serverRepository);
+        repositoryStateProvider = new CountingShadowRepositoryState();
+        mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
     }
 
     @Test
@@ -199,231 +273,126 @@ public class BatchingDownloaderTest {
     }
 
     @Test
-    public void testEncodeParam() throws Exception {
-        String param = "123&123";
-        String encodedParam = mockDownloader.encodeParam(param);
-        assertEquals("123%26123", encodedParam);
-    }
-
-    @Test(expected=IllegalArgumentException.class)
-    public void testOverTotalLimit() throws Exception {
-        // Per-batch limits exceed total.
-        Server11Repository repository = new Server11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL,
-                null, new InfoCollections(), new InfoConfiguration()) {
-            @Override
-            public long getDefaultTotalLimit() {
-                return 100;
-            }
-            @Override
-            public long getDefaultBatchLimit() {
-                return 200;
-            }
-        };
-        MockDownloader mockDownloader = new MockDownloader(repository, repositorySession);
+    public void testBatchingTrivial() throws Exception {
+        MockDownloader mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
 
         assertNull(mockDownloader.getLastModified());
-        mockDownloader.fetchSince(DEFAULT_NEWER, sessionFetchRecordsDelegate);
-    }
+        // Number of records == batch limit.
+        final long BATCH_LIMIT = 100;
+        mockDownloader.fetchSince(sessionFetchRecordsDelegate, DEFAULT_NEWER, BATCH_LIMIT, DEFAULT_SORT, null);
 
-    @Test
-    public void testTotalLimit() throws Exception {
-        // Total and per-batch limits are the same.
-        Server11Repository repository = new Server11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL,
-                null, new InfoCollections(), new InfoConfiguration()) {
-            @Override
-            public long getDefaultTotalLimit() {
-                return 100;
-            }
-            @Override
-            public long getDefaultBatchLimit() {
-                return 100;
-            }
-        };
-        MockDownloader mockDownloader = new MockDownloader(repository, repositorySession);
-
-        assertNull(mockDownloader.getLastModified());
-        mockDownloader.fetchSince(DEFAULT_NEWER, sessionFetchRecordsDelegate);
-
-        SyncStorageResponse response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, "100", "100");
+        SyncStorageResponse response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, null, "100");
         SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL));
-        long limit = repository.getDefaultBatchLimit();
         mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request,
-                DEFAULT_NEWER, limit, true, DEFAULT_SORT, DEFAULT_IDS);
+                DEFAULT_NEWER, BATCH_LIMIT, true, DEFAULT_SORT, DEFAULT_IDS);
 
         assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
         assertTrue(sessionFetchRecordsDelegate.isSuccess);
         assertFalse(sessionFetchRecordsDelegate.isFetched);
         assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(0, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // NB: we set highWaterMark as part of onFetchedRecord, so we don't expect it to be set here.
+        // Expect no offset to be persisted.
+        ensureOffsetContextIsNull(repositoryStateProvider);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
     }
 
     @Test
-    public void testOverHalfOfTotalLimit() throws Exception {
-        // Per-batch limit is just a bit lower than total.
-        Server11Repository repository = new Server11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL,
-                null, new InfoCollections(), new InfoConfiguration()) {
-            @Override
-            public long getDefaultTotalLimit() {
-                return 100;
-            }
-            @Override
-            public long getDefaultBatchLimit() {
-                return 75;
-            }
-        };
-        MockDownloader mockDownloader = new MockDownloader(repository, repositorySession);
+    public void testBatchingSingleBatchMode() throws Exception {
+        MockDownloader mockDownloader = new MockDownloader(repositorySession, false, true, repositoryStateProvider);
 
         assertNull(mockDownloader.getLastModified());
-        mockDownloader.fetchSince(DEFAULT_NEWER, sessionFetchRecordsDelegate);
-
-        String offsetHeader = "75";
-        String recordsHeader = "75";
-        SyncStorageResponse response = makeSyncStorageResponse(200,  DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL));
-        long limit = repository.getDefaultBatchLimit();
-
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        // Verify the same parameters are used in the next fetch.
-        assertSameParameters(mockDownloader, limit);
-        assertEquals(offsetHeader, mockDownloader.offset);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-
-        // The next batch, we still have an offset token but we complete our fetch since we have reached the total limit.
-        offsetHeader = "150";
-        response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        assertTrue(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-    }
-
-    @Test
-    public void testHalfOfTotalLimit() throws Exception {
-        // Per-batch limit is half of total.
-        Server11Repository repository = new Server11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL,
-                null, new InfoCollections(), new InfoConfiguration()) {
-            @Override
-            public long getDefaultTotalLimit() {
-                return 100;
-            }
-            @Override
-            public long getDefaultBatchLimit() {
-                return 50;
-            }
-        };
-        mockDownloader = new MockDownloader(repository, repositorySession);
-
-        assertNull(mockDownloader.getLastModified());
-        mockDownloader.fetchSince(DEFAULT_NEWER, sessionFetchRecordsDelegate);
-
-        String offsetHeader = "50";
-        String recordsHeader = "50";
-        SyncStorageResponse response = makeSyncStorageResponse(200,  DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL));
-        long limit = repository.getDefaultBatchLimit();
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        // Verify the same parameters are used in the next fetch.
-        assertSameParameters(mockDownloader, limit);
-        assertEquals(offsetHeader, mockDownloader.offset);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-
-        // The next batch, we still have an offset token but we complete our fetch since we have reached the total limit.
-        offsetHeader = "100";
-        response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        assertTrue(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-    }
-
-    @Test
-    public void testFractionOfTotalLimit() throws Exception {
-        // Per-batch limit is a small fraction of the total.
-        Server11Repository repository = new Server11Repository(DEFAULT_COLLECTION_NAME, DEFAULT_COLLECTION_URL,
-                null, new InfoCollections(), new InfoConfiguration()) {
-            @Override
-            public long getDefaultTotalLimit() {
-                return 100;
-            }
-            @Override
-            public long getDefaultBatchLimit() {
-                return 25;
-            }
-        };
-        mockDownloader = new MockDownloader(repository, repositorySession);
-
-        assertNull(mockDownloader.getLastModified());
-        mockDownloader.fetchSince(DEFAULT_NEWER, sessionFetchRecordsDelegate);
+        // Number of records > batch limit. But, we're only allowed to make one batch request.
+        final long BATCH_LIMIT = 100;
+        mockDownloader.fetchSince(sessionFetchRecordsDelegate, DEFAULT_NEWER, BATCH_LIMIT, DEFAULT_SORT, null);
 
         String offsetHeader = "25";
-        String recordsHeader = "25";
-        SyncStorageResponse response = makeSyncStorageResponse(200,  DEFAULT_LMHEADER, offsetHeader, recordsHeader);
+        String recordsHeader = "500";
+        SyncStorageResponse response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
         SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL));
-        long limit = repository.getDefaultBatchLimit();
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        // Verify the same parameters are used in the next fetch.
-        assertSameParameters(mockDownloader, limit);
-        assertEquals(offsetHeader, mockDownloader.offset);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-
-        // The next batch, we still have an offset token and has not exceed the total limit.
-        offsetHeader = "50";
-        response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        // Verify the same parameters are used in the next fetch.
-        assertSameParameters(mockDownloader, limit);
-        assertEquals(offsetHeader, mockDownloader.offset);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-
-        // The next batch, we still have an offset token and has not exceed the total limit.
-        offsetHeader = "75";
-        response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
-        // Verify the same parameters are used in the next fetch.
-        assertSameParameters(mockDownloader, limit);
-        assertEquals(offsetHeader, mockDownloader.offset);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertFalse(sessionFetchRecordsDelegate.isFailure);
-
-        // The next batch, we still have an offset token but we complete our fetch since we have reached the total limit.
-        offsetHeader = "100";
-        response = makeSyncStorageResponse(200, DEFAULT_LMHEADER, offsetHeader, recordsHeader);
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                limit, true, DEFAULT_SORT, DEFAULT_IDS);
+        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request,
+                DEFAULT_NEWER, BATCH_LIMIT, true, DEFAULT_SORT, DEFAULT_IDS);
 
         assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
         assertTrue(sessionFetchRecordsDelegate.isSuccess);
         assertFalse(sessionFetchRecordsDelegate.isFetched);
         assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(0, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // We don't care about the offset in a single batch mode.
+        ensureOffsetContextIsNull(repositoryStateProvider);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
+    }
+
+    @Test
+    public void testBatching() throws Exception {
+        final long BATCH_LIMIT = 25;
+        mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
+
+        assertNull(mockDownloader.getLastModified());
+        mockDownloader.fetchSince(sessionFetchRecordsDelegate, DEFAULT_NEWER, BATCH_LIMIT, DEFAULT_SORT, null);
+
+        final String recordsHeader = "25";
+        performOnFetchCompleted("25", recordsHeader, BATCH_LIMIT);
+
+        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
+        // Verify the same parameters are used in the next fetch.
+        assertSameParameters(mockDownloader, BATCH_LIMIT);
+        assertEquals("25", mockDownloader.offset);
+        assertFalse(sessionFetchRecordsDelegate.isSuccess);
+        assertFalse(sessionFetchRecordsDelegate.isFetched);
+        assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(1, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // Offset context set.
+        ensureOffsetContextIs(repositoryStateProvider, "25", "oldest", 1L);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
+
+        // The next batch, we still have an offset token and has not exceed the total limit.
+        performOnFetchCompleted("50", recordsHeader, BATCH_LIMIT);
+
+        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
+        // Verify the same parameters are used in the next fetch.
+        assertSameParameters(mockDownloader, BATCH_LIMIT);
+        assertEquals("50", mockDownloader.offset);
+        assertFalse(sessionFetchRecordsDelegate.isSuccess);
+        assertFalse(sessionFetchRecordsDelegate.isFetched);
+        assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(2, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // Offset context updated.
+        ensureOffsetContextIs(repositoryStateProvider, "50", "oldest", 1L);
+        assertEquals(2, repositoryStateProvider.getCommitCount());
+
+        // The next batch, we still have an offset token and has not exceed the total limit.
+        performOnFetchCompleted("75", recordsHeader, BATCH_LIMIT);
+
+        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
+        // Verify the same parameters are used in the next fetch.
+        assertSameParameters(mockDownloader, BATCH_LIMIT);
+        assertEquals("75", mockDownloader.offset);
+        assertFalse(sessionFetchRecordsDelegate.isSuccess);
+        assertFalse(sessionFetchRecordsDelegate.isFetched);
+        assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(3, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // Offset context updated.
+        ensureOffsetContextIs(repositoryStateProvider, "75", "oldest", 1L);
+        assertEquals(3, repositoryStateProvider.getCommitCount());
+
+        // No more offset token, so we complete batching.
+        performOnFetchCompleted(null, recordsHeader, BATCH_LIMIT);
+
+        assertEquals(DEFAULT_LMHEADER, mockDownloader.getLastModified());
+        assertTrue(sessionFetchRecordsDelegate.isSuccess);
+        assertFalse(sessionFetchRecordsDelegate.isFetched);
+        assertFalse(sessionFetchRecordsDelegate.isFailure);
+        assertEquals(3, sessionFetchRecordsDelegate.batchesCompleted);
+
+        // Offset context cleared since we finished batching, and committed.
+        ensureOffsetContextIsNull(repositoryStateProvider);
+        assertEquals(4, repositoryStateProvider.getCommitCount());
     }
 
     @Test
@@ -450,6 +419,10 @@ public class BatchingDownloaderTest {
         assertFalse(sessionFetchRecordsDelegate.isFetched);
         assertFalse(sessionFetchRecordsDelegate.isFailure);
 
+        // Offset context set.
+        ensureOffsetContextIs(repositoryStateProvider, "100", "oldest", 1L);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
+
         // Last modified header somehow changed.
         lmHeader = "10000000";
         response = makeSyncStorageResponse(200, lmHeader, offsetHeader, null);
@@ -461,37 +434,63 @@ public class BatchingDownloaderTest {
         assertFalse(sessionFetchRecordsDelegate.isSuccess);
         assertFalse(sessionFetchRecordsDelegate.isFetched);
         assertTrue(sessionFetchRecordsDelegate.isFailure);
-    }
 
-    @Test
-    public void testFailureMissingLMMultiBatch() throws Exception {
-        assertNull(mockDownloader.getLastModified());
-
-        String offsetHeader = "100";
-        SyncStorageResponse response = makeSyncStorageResponse(200, null, offsetHeader, null);
-        SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI("http://dummy.url"));
-        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
-                1, true, DEFAULT_SORT, DEFAULT_IDS);
-
-        // Last modified header somehow missing from response.
-        assertNull(null, mockDownloader.getLastModified());
-        assertTrue(mockDownloader.abort);
-        assertFalse(sessionFetchRecordsDelegate.isSuccess);
-        assertFalse(sessionFetchRecordsDelegate.isFetched);
-        assertTrue(sessionFetchRecordsDelegate.isFailure);
+        // Since we failed due to a remotely modified collection, we expect offset context to be reset.
+        ensureOffsetContextIsNull(repositoryStateProvider);
+        assertEquals(2, repositoryStateProvider.getCommitCount());
     }
 
     @Test
     public void testFailureException() throws Exception {
         Exception ex = new IllegalStateException();
         SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI("http://dummy.url"));
-        mockDownloader.onFetchFailed(ex, sessionFetchRecordsDelegate, request);
+        mockDownloader.handleFetchFailed(sessionFetchRecordsDelegate, ex, request);
 
         assertFalse(sessionFetchRecordsDelegate.isSuccess);
         assertFalse(sessionFetchRecordsDelegate.isFetched);
         assertTrue(sessionFetchRecordsDelegate.isFailure);
         assertEquals(ex.getClass(), sessionFetchRecordsDelegate.ex.getClass());
         assertNull(sessionFetchRecordsDelegate.record);
+    }
+
+    @Test
+    public void testOffsetNotResetAfterDeadline() throws Exception {
+        final long BATCH_LIMIT = 25;
+        mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
+        mockDownloader.fetchSince(sessionFetchRecordsDelegate, DEFAULT_NEWER, BATCH_LIMIT, DEFAULT_SORT, null);
+
+        SyncStorageCollectionRequest request = performOnFetchCompleted("25", "25", 25);
+
+        // Offset context set.
+        ensureOffsetContextIs(repositoryStateProvider, "25", "oldest", 1L);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
+
+        Exception ex = new SyncDeadlineReachedException();
+        mockDownloader.handleFetchFailed(sessionFetchRecordsDelegate, ex, request);
+
+        // Offset context not reset.
+        ensureOffsetContextIs(repositoryStateProvider, "25", "oldest", 1L);
+        assertEquals(2, repositoryStateProvider.getCommitCount());
+    }
+
+    @Test
+    public void testOffsetResetAfterConcurrentModification() throws Exception {
+        final long BATCH_LIMIT = 25;
+        mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
+        mockDownloader.fetchSince(sessionFetchRecordsDelegate, DEFAULT_NEWER, BATCH_LIMIT, DEFAULT_SORT, null);
+
+        SyncStorageCollectionRequest request = performOnFetchCompleted("25", "25", 25);
+
+        // Offset context set.
+        ensureOffsetContextIs(repositoryStateProvider, "25", "oldest", 1L);
+        assertEquals(1, repositoryStateProvider.getCommitCount());
+
+        Exception ex = new CollectionConcurrentModificationException();
+        mockDownloader.handleFetchFailed(sessionFetchRecordsDelegate, ex, request);
+
+        // Offset is reset.
+        ensureOffsetContextIsNull(repositoryStateProvider);
+        assertEquals(2, repositoryStateProvider.getCommitCount());
     }
 
     @Test
@@ -506,12 +505,72 @@ public class BatchingDownloaderTest {
     }
 
     @Test
+    public void testHighWaterMarkTracking() {
+        CryptoRecord record = new CryptoRecord();
+
+        // HWM enabled
+        mockDownloader = new MockDownloader(repositorySession, true, true, repositoryStateProvider);
+
+        record.lastModified = 1L;
+        mockDownloader.onFetchedRecord(record, sessionFetchRecordsDelegate);
+        assertEquals(Long.valueOf(1), repositoryStateProvider.getShadowedLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK));
+
+        record.lastModified = 5L;
+        mockDownloader.onFetchedRecord(record, sessionFetchRecordsDelegate);
+        assertEquals(Long.valueOf(5), repositoryStateProvider.getShadowedLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK));
+
+        // NB: Currently nothing is preventing HWM from "going down".
+        record.lastModified = 4L;
+        mockDownloader.onFetchedRecord(record, sessionFetchRecordsDelegate);
+        assertEquals(Long.valueOf(4), repositoryStateProvider.getShadowedLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK));
+
+        // HWM disabled
+        mockDownloader = new MockDownloader(repositorySession, true, false, repositoryStateProvider);
+        assertTrue(repositoryStateProvider.resetAndCommit());
+
+        record.lastModified = 4L;
+        mockDownloader.onFetchedRecord(record, sessionFetchRecordsDelegate);
+        assertNull(repositoryStateProvider.getShadowedLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK));
+
+        record.lastModified = 5L;
+        mockDownloader.onFetchedRecord(record, sessionFetchRecordsDelegate);
+        assertNull(repositoryStateProvider.getShadowedLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK));
+    }
+
+    @Test
     public void testAbortRequests() {
         MockRepositorySession mockRepositorySession = new MockRepositorySession(serverRepository);
-        BatchingDownloader downloader = new BatchingDownloader(serverRepository, mockRepositorySession);
+        BatchingDownloader downloader = new BatchingDownloader(
+                null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                true, true, new NonPersistentRepositoryStateProvider(), mockRepositorySession);
         assertFalse(mockRepositorySession.abort);
         downloader.abortRequests();
         assertTrue(mockRepositorySession.abort);
+    }
+
+    @Test
+    public void testBuildCollectionURI() {
+        try {
+            assertEquals("?full=1&newer=5000.000", BatchingDownloader.buildCollectionURI(Uri.EMPTY, true, 5000000L, -1, null, null, null).toString());
+            assertEquals("?newer=1230.000", BatchingDownloader.buildCollectionURI(Uri.EMPTY, false, 1230000L, -1, null, null, null).toString());
+            assertEquals("?newer=5000.000&limit=10", BatchingDownloader.buildCollectionURI(Uri.EMPTY, false, 5000000L, 10, null, null, null).toString());
+            assertEquals("?full=1&newer=5000.000&sort=index", BatchingDownloader.buildCollectionURI(Uri.EMPTY, true, 5000000L, 0, "index", null, null).toString());
+            assertEquals("?full=1&ids=123%2Cabc", BatchingDownloader.buildCollectionURI(Uri.EMPTY, true, -1L, -1, null, "123,abc", null).toString());
+
+            final Uri baseUri = Uri.parse("https://moztest.org/collection/");
+            assertEquals(baseUri + "?full=1&ids=123%2Cabc&offset=1234", BatchingDownloader.buildCollectionURI(baseUri, true, -1L, -1, null, "123,abc", "1234").toString());
+        } catch (URISyntaxException e) {
+            fail();
+        }
+    }
+
+    private SyncStorageCollectionRequest performOnFetchCompleted(String offsetHeader, String recordsHeader, long batchLimit) throws URISyntaxException {
+        SyncStorageResponse response = makeSyncStorageResponse(200,  DEFAULT_LMHEADER, offsetHeader, recordsHeader);
+        SyncStorageCollectionRequest request = new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL));
+        mockDownloader.onFetchCompleted(response, sessionFetchRecordsDelegate, request, DEFAULT_NEWER,
+                batchLimit, true, DEFAULT_SORT, DEFAULT_IDS);
+
+        return request;
     }
 
     private void assertSameParameters(MockDownloader mockDownloader, long limit) {
@@ -539,5 +598,17 @@ public class BatchingDownloaderTest {
         }
 
         return new SyncStorageResponse(response);
+    }
+
+    private void ensureOffsetContextIsNull(CountingShadowRepositoryState stateProvider) {
+        assertNull(stateProvider.getShadowedString(RepositoryStateProvider.KEY_OFFSET));
+        assertNull(stateProvider.getShadowedString(RepositoryStateProvider.KEY_OFFSET_ORDER));
+        assertNull(stateProvider.getShadowedLong(RepositoryStateProvider.KEY_OFFSET_SINCE));
+    }
+
+    private void ensureOffsetContextIs(CountingShadowRepositoryState stateProvider, String offset, String order, Long since) {
+        assertEquals(offset, stateProvider.getShadowedString(RepositoryStateProvider.KEY_OFFSET));
+        assertEquals(since, stateProvider.getShadowedLong(RepositoryStateProvider.KEY_OFFSET_SINCE));
+        assertEquals(order, stateProvider.getShadowedString(RepositoryStateProvider.KEY_OFFSET_ORDER));
     }
 }

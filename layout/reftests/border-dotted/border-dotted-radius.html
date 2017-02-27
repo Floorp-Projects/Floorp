@@ -29,6 +29,13 @@ td {
   box-sizing: border-box;
 }
 
+/* Bug 1303094 - Disable unreliable 1px and 2px tests. */
+.no-fill {
+  border-style: solid;
+}
+.no-unfill {
+  border-style: none;
+}
 .A {
   border-width: 1px;
 }
@@ -61,7 +68,7 @@ td {
   <body>
     <div class="box">
       <table>
-        <tr><td class="A"></td><td class="B"></td><td class="C"></td></tr>
+        <tr><td class="A no-fill"></td><td class="B no-fill"></td><td class="C"></td></tr>
         <tr><td class="D"></td><td class="E"></td><td class="F"></td></tr>
         <tr><td class="G"></td><td class="H"></td><td class="I"></td></tr>
       </table>
@@ -69,7 +76,7 @@ td {
     </div>
     <div class="box">
       <table>
-        <tr><td class="A"></td><td class="B"></td><td class="C"></td></tr>
+        <tr><td class="A no-unfill"></td><td class="B no-unfill"></td><td class="C"></td></tr>
         <tr><td class="D"></td><td class="E"></td><td class="F"></td></tr>
         <tr><td class="G"></td><td class="H"></td><td class="I"></td></tr>
       </table>

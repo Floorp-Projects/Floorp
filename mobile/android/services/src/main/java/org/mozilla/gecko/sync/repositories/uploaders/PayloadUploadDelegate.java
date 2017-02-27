@@ -184,7 +184,11 @@ class PayloadUploadDelegate implements SyncStorageRequestDelegate {
 
     @Override
     public void handleRequestFailure(final SyncStorageResponse response) {
-        this.handleRequestError(new HTTPFailureException(response));
+        if (response.getStatusCode() == 412) {
+            dispatcher.concurrentModificationDetected();
+        } else {
+            this.handleRequestError(new HTTPFailureException(response));
+        }
     }
 
     @Override

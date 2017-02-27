@@ -596,10 +596,10 @@ struct nsCSSRendering {
                     bool* aOutIsTransformedFixed = nullptr);
 
   struct ImageLayerClipState {
-    nsRect mBGClipArea;  // Affected by mClippedRadii
+    nsRect mBGClipArea;            // Affected by mClippedRadii
     nsRect mAdditionalBGClipArea;  // Not affected by mClippedRadii
-    nsRect mDirtyRect;
-    gfxRect mDirtyRectGfx;
+    nsRect mDirtyRectInAppUnits;
+    gfxRect mDirtyRectInDevPx;
 
     nscoord mRadii[8];
     RectCornerRadii mClippedRadii;
@@ -609,6 +609,16 @@ struct nsCSSRendering {
     // Whether we are being asked to draw with a caller provided background
     // clipping area. If this is true we also disable rounded corners.
     bool mCustomClip;
+
+    ImageLayerClipState()
+     : mHasRoundedCorners(false),
+       mHasAdditionalBGClipArea(false),
+       mCustomClip(false)
+    {
+      memset(mRadii, 0, sizeof(nscoord) * 8);
+    }
+
+    bool IsValid() const;
   };
 
   static void

@@ -61,7 +61,7 @@ struct _PlatformData {
 bool
 pluginSupportsWindowMode()
 {
-  return true;
+  return false;
 }
 
 bool
@@ -141,12 +141,12 @@ pluginDrawSolid(InstanceData* instanceData, GdkDrawable* gdkWindow,
 {
   cairo_t* cairoWindow = gdk_cairo_create(gdkWindow);
 
-  if (!instanceData->hasWidget) {
-    NPRect* clip = &instanceData->window.clipRect;
-    cairo_rectangle(cairoWindow, clip->left, clip->top,
-                    clip->right - clip->left, clip->bottom - clip->top);
-    cairo_clip(cairoWindow);
-  }
+  MOZ_RELEASE_ASSERT(!instanceData->hasWidget);
+
+  NPRect* clip = &instanceData->window.clipRect;
+  cairo_rectangle(cairoWindow, clip->left, clip->top,
+                  clip->right - clip->left, clip->bottom - clip->top);
+  cairo_clip(cairoWindow);
 
   GdkRectangle windowRect = { x, y, width, height };
   gdk_cairo_rectangle(cairoWindow, &windowRect);
@@ -161,13 +161,13 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow,
                  const GdkRectangle& invalidRect)
 {
   NPWindow& window = instanceData->window;
-  // When we have a widget, window.x/y are meaningless since our
-  // widget is always positioned correctly and we just draw into it at 0,0
-  int x = instanceData->hasWidget ? 0 : window.x;
-  int y = instanceData->hasWidget ? 0 : window.y;
+  MOZ_RELEASE_ASSERT(!instanceData->hasWidget);
+
+  int x = window.x;
+  int y = window.y;
   int width = window.width;
   int height = window.height;
-  
+
   notifyDidPaint(instanceData);
 
   if (instanceData->scriptableObject->drawMode == DM_SOLID_COLOR) {
@@ -190,12 +190,10 @@ pluginDrawWindow(InstanceData* instanceData, GdkDrawable* gdkWindow,
   if (!gdkContext)
     return;
 
-  if (!instanceData->hasWidget) {
-    NPRect* clip = &window.clipRect;
-    GdkRectangle gdkClip = { clip->left, clip->top, clip->right - clip->left,
-                             clip->bottom - clip->top };
-    gdk_gc_set_clip_rectangle(gdkContext, &gdkClip);
-  }
+  NPRect* clip = &window.clipRect;
+  GdkRectangle gdkClip = { clip->left, clip->top, clip->right - clip->left,
+                           clip->bottom - clip->top };
+  gdk_gc_set_clip_rectangle(gdkContext, &gdkClip);
 
   // draw a grey background for the plugin frame
   GdkColor grey;
@@ -430,8 +428,10 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
 
 int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
 {
+  MOZ_RELEASE_ASSERT(!instanceData->hasWidget);
   if (!instanceData->hasWidget)
     return NPTEST_INT32_ERROR;
+
   GtkWidget* plug = instanceData->platformData->plug;
   if (!plug)
     return NPTEST_INT32_ERROR;
@@ -508,6 +508,7 @@ static void intersectWithShapeRects(Display* display, Window window,
 
 static GdkRegion* computeClipRegion(InstanceData* instanceData)
 {
+  MOZ_RELEASE_ASSERT(!instanceData->hasWidget);
   if (!instanceData->hasWidget)
     return 0;
 

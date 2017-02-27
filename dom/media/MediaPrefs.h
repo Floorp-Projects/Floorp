@@ -119,9 +119,11 @@ private:
   DECL_MEDIA_PREF("media.ffmpeg.enabled",                     PDMFFmpegEnabled, bool, true);
   DECL_MEDIA_PREF("media.libavcodec.allow-obsolete",          LibavcodecAllowObsolete, bool, false);
 #endif
+#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
+  DECL_MEDIA_PREF("media.ffmpeg.low-latency.enabled",         PDMFFmpegLowLatencyEnabled, bool, false);
+#endif
 #ifdef MOZ_FFVPX
   DECL_MEDIA_PREF("media.ffvpx.enabled",                      PDMFFVPXEnabled, bool, true);
-  DECL_MEDIA_PREF("media.ffvpx.low-latency.enabled",          PDMFFVPXLowLatencyEnabled, bool, false);
 #endif
 #ifdef XP_WIN
   DECL_MEDIA_PREF("media.wmf.enabled",                        PDMWMFEnabled, bool, true);

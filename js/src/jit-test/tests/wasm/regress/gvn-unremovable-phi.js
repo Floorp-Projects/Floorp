@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 wasmEvalText(`(module
   (type $type0 (func (param i32)))
   (func $f (param $p i32)

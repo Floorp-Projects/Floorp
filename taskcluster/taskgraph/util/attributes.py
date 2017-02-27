@@ -2,6 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import re
+
+
 INTEGRATION_PROJECTS = set([
     'mozilla-inbound',
     'autoland',
@@ -36,6 +39,27 @@ def attrmatch(attributes, **kwargs):
         elif kwval != attributes[kwkey]:
             return False
     return True
+
+
+def keymatch(attributes, target):
+    """Determine if any keys in attributes are a match to target, then return
+    a list of matching values. First exact matches will be checked. Failing
+    that, regex matches and finally a default key.
+    """
+    # exact match
+    if target in attributes:
+        return [attributes[target]]
+
+    # regular expression match
+    matches = [v for k, v in attributes.iteritems() if re.match(k + '$', target)]
+    if matches:
+        return matches
+
+    # default
+    if 'default' in attributes:
+        return [attributes['default']]
+
+    return []
 
 
 def match_run_on_projects(project, run_on_projects):

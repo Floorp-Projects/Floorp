@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 setJitCompilerOption('wasm.test-mode', 1);
 
 wasmFullPassI64(`

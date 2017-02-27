@@ -46,14 +46,6 @@
 #include "vm/MutexIDs.h"
 #include "vm/PosixNSPR.h"
 
-#define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)             \
-    JS_BEGIN_MACRO                                                              \
-        if (cx->simulator()->overRecursedWithExtra(extra)) {                    \
-            js::ReportOverRecursed(cx);                                         \
-            onerror;                                                            \
-        }                                                                       \
-    JS_END_MACRO
-
 namespace vixl {
 
 // Assemble the specified IEEE-754 components into the target type and apply

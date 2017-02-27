@@ -78,6 +78,18 @@ struct RCFile {
     bool release();
 };
 
+// Alias the global dstName to namespaceObj.srcName. For example, if dstName is
+// "snarf", namespaceObj represents "os.file", and srcName is "readFile", then
+// this is equivalent to the JS code:
+//
+//   snarf = os.file.readFile;
+//
+// This provides a mechanism for namespacing the various JS shell helper
+// functions without breaking backwards compatibility with things that use the
+// global names.
+bool
+CreateAlias(JSContext* cx, const char* dstName, JS::HandleObject namespaceObj, const char* srcName);
+
 } /* namespace shell */
 } /* namespace js */
 

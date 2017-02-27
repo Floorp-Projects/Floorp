@@ -8,12 +8,6 @@
 Cu.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(function* () {
-  // On e10s, the exception is triggered in child process
-  // and is ignored by test harness
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    expectUncaughtException();
-  }
-
   let generatedStubs = yield generatePageErrorStubs();
 
   let repoStubFilePath = getTestFilePath("../stubs/pageError.js");

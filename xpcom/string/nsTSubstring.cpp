@@ -35,6 +35,20 @@ AsFixedString(const nsTSubstring_CharT* aStr)
 }
 
 
+nsTSubstring_CharT::char_type
+nsTSubstring_CharT::First() const
+{
+  MOZ_RELEASE_ASSERT(mLength > 0, "|First()| called on an empty string");
+  return mData[0];
+}
+
+nsTSubstring_CharT::char_type
+nsTSubstring_CharT::Last() const
+{
+  MOZ_RELEASE_ASSERT(mLength > 0, "|Last()| called on an empty string");
+  return mData[mLength - 1];
+}
+
 /**
  * this function is called to prepare mData for writing.  the given capacity
  * indicates the required minimum storage size for mData, in sizeof(char_type)

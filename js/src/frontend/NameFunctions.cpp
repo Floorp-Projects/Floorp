@@ -835,6 +835,7 @@ class NameResolver
 bool
 frontend::NameFunctions(JSContext* cx, ParseNode* pn)
 {
+    AutoTraceLog traceLog(TraceLoggerForCurrentThread(cx), TraceLogger_BytecodeNameFunctions);
     NameResolver nr(cx);
     return nr.resolve(pn);
 }

@@ -45,7 +45,7 @@ load 371466-1.xhtml
 load 372554-1.html
 load 375399-1.html
 load 377360-1.xhtml
-asserts-if(stylo,3) load 377960-1.html # bug 1324633
+load 377960-1.html
 load 377960-2.html
 load 384663-1.html
 load 386000-1.html
@@ -99,7 +99,7 @@ load 554230-1.xhtml
 load 558973.html
 load 561981-1.html
 load 561981-2.html
-load 564079-1.html 
+load 564079-1.html
 load 564114.html
 load 565125-1.html
 load 575462.svg
@@ -212,3 +212,4 @@ pref(dom.IntersectionObserver.enabled,true) load 1324209.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-1.html
 pref(dom.IntersectionObserver.enabled,true) load 1326194-2.html
 pref(dom.IntersectionObserver.enabled,true) load 1332939.html
+pref(dom.webcomponents.enabled,true) load 1341693.html

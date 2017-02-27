@@ -1,3 +1,6 @@
+// This file expects `tests` to have been declared in the global scope.
+/* global tests */
+
 var RemoteCanvas = function(url, id) {
   this.url = url;
   this.id = id;
