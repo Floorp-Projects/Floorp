@@ -97,7 +97,7 @@ TEST(stagefright_MP4Metadata, EmptyStream)
   EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0).Ref());
   // We can seek anywhere in any MPEG4.
   EXPECT_TRUE(metadata.CanSeek());
-  EXPECT_FALSE(metadata.Crypto().valid);
+  EXPECT_FALSE(metadata.Crypto().Ref()->valid);
 }
 
 TEST(stagefright_MoofParser, EmptyStream)
@@ -357,7 +357,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0).Ref());
       // We can see anywhere in any MPEG4.
       EXPECT_TRUE(metadata.CanSeek());
-      EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().valid);
+      EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().Ref()->valid);
     }
   }
 }
@@ -585,6 +585,6 @@ TEST(stagefright_MP4Metadata, EmptyCTTS)
   EXPECT_TRUE(track.Ref() != nullptr);
   // We can seek anywhere in any MPEG4.
   EXPECT_TRUE(metadata.CanSeek());
-  EXPECT_FALSE(metadata.Crypto().valid);
+  EXPECT_FALSE(metadata.Crypto().Ref()->valid);
 }
 

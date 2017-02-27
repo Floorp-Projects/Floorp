@@ -74,7 +74,8 @@ public:
 
   bool CanSeek() const;
 
-  const CryptoFile& Crypto() const;
+  using ResultAndCryptoFile = ResultAndType<const CryptoFile*>;
+  ResultAndCryptoFile Crypto() const;
 
   mozilla::UniquePtr<IndiceWrapper> GetTrackIndice(mozilla::TrackID aTrackID);
 

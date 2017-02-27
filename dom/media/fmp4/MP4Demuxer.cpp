@@ -258,9 +258,14 @@ MP4Demuxer::Init()
     }
   }
 
-  const mp4_demuxer::CryptoFile& cryptoFile = metadata.Crypto();
-  if (cryptoFile.valid) {
-    const nsTArray<mp4_demuxer::PsshInfo>& psshs = cryptoFile.pssh;
+  mp4_demuxer::MP4Metadata::ResultAndCryptoFile cryptoFile =
+    metadata.Crypto();
+  if (NS_FAILED(cryptoFile.Result()) && result == NS_OK) {
+    result = Move(cryptoFile.Result());
+  }
+  MOZ_ASSERT(cryptoFile.Ref());
+  if (cryptoFile.Ref()->valid) {
+    const nsTArray<mp4_demuxer::PsshInfo>& psshs = cryptoFile.Ref()->pssh;
     for (uint32_t i = 0; i < psshs.Length(); i++) {
       mCryptoInitData.AppendElements(psshs[i].data);
     }

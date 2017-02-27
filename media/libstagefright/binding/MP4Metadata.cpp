@@ -87,7 +87,7 @@ public:
     mozilla::TrackInfo::TrackType aType, size_t aTrackNumber) const;
   bool CanSeek() const;
 
-  const CryptoFile& Crypto() const;
+  MP4Metadata::ResultAndCryptoFile Crypto() const;
 
   bool ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID);
 
@@ -136,7 +136,7 @@ public:
     mozilla::TrackInfo::TrackType aType, size_t aTrackNumber) const;
   bool CanSeek() const;
 
-  const CryptoFile& Crypto() const;
+  MP4Metadata::ResultAndCryptoFile Crypto() const;
 
   bool ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID aTrackID);
 
@@ -522,17 +522,26 @@ MP4Metadata::CanSeek() const
   return mStagefright->CanSeek();
 }
 
-const CryptoFile&
+MP4Metadata::ResultAndCryptoFile
 MP4Metadata::Crypto() const
 {
-  const CryptoFile& crypto = mStagefright->Crypto();
-  const CryptoFile& rustCrypto = mRust->Crypto();
+  MP4Metadata::ResultAndCryptoFile crypto = mStagefright->Crypto();
+  MP4Metadata::ResultAndCryptoFile rustCrypto = mRust->Crypto();
 
 #ifndef RELEASE_OR_BETA
   if (mRustTestMode) {
-    MOZ_DIAGNOSTIC_ASSERT(rustCrypto.pssh == crypto.pssh);
+    MOZ_DIAGNOSTIC_ASSERT(rustCrypto.Ref()->pssh == crypto.Ref()->pssh);
   }
 #endif
+
+  if (rustCrypto.Ref()->pssh != crypto.Ref()->pssh) {
+    return {MediaResult(
+             NS_ERROR_DOM_MEDIA_METADATA_ERR,
+             RESULT_DETAIL("Mismatch between Stagefright (%s) and Rust (%s) crypto file",
+                           crypto.Result().Description().get(),
+                           rustCrypto.Result().Description().get())),
+            mPreferRust ? rustCrypto.Ref() : crypto.Ref()};
+  }
 
   if (mPreferRust) {
     return rustCrypto;
@@ -755,10 +764,10 @@ MP4MetadataStagefright::CanSeek() const
   return mCanSeek;
 }
 
-const CryptoFile&
+MP4Metadata::ResultAndCryptoFile
 MP4MetadataStagefright::Crypto() const
 {
-  return mCrypto;
+  return {NS_OK, &mCrypto};
 }
 
 void
@@ -1084,10 +1093,10 @@ MP4MetadataRust::CanSeek() const
   return false;
 }
 
-const CryptoFile&
+MP4Metadata::ResultAndCryptoFile
 MP4MetadataRust::Crypto() const
 {
-  return mCrypto;
+  return {NS_OK, &mCrypto};
 }
 
 bool
