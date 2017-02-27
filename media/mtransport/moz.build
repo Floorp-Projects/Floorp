@@ -9,5 +9,4 @@ include("/ipc/chromium/chromium-config.mozbuild")
 DIRS += [
     '/media/mtransport/third_party',
     '/media/mtransport/build',
-    '/media/mtransport/testlib',
 ]
