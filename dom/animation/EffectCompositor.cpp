@@ -373,12 +373,11 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashEntry::KeyType key = { aElement, aPseudoType };
 
-  if (!mPresContext || !elementsToRestyle.Contains(key)) {
+  if (!elementsToRestyle.Contains(key)) {
     return;
   }
 
-  ComposeAnimationRule(aElement, aPseudoType, aCascadeLevel,
-                       mPresContext->RefreshDriver()->MostRecentRefresh());
+  ComposeAnimationRule(aElement, aPseudoType, aCascadeLevel);
 
   elementsToRestyle.Remove(key);
 }
@@ -493,8 +492,6 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
   MOZ_ASSERT(effectSet == EffectSet::GetEffectSet(aElement, aPseudoType),
              "EffectSet should not change while composing style");
 
-  effectSet->UpdateAnimationRuleRefreshTime(
-    aCascadeLevel, mPresContext->RefreshDriver()->MostRecentRefresh());
   return animRule.mServo;
 }
 
@@ -596,8 +593,7 @@ EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 
       ComposeAnimationRule(pseudoElem.mElement,
                            pseudoElem.mPseudoType,
-                           cascadeLevel,
-                           mPresContext->RefreshDriver()->MostRecentRefresh());
+                           cascadeLevel);
 
       dom::Element* elementToRestyle =
         GetElementToRestyle(pseudoElem.mElement, pseudoElem.mPseudoType);
@@ -729,8 +725,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 /* static */ void
 EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
                                        CSSPseudoElementType aPseudoType,
-                                       CascadeLevel aCascadeLevel,
-                                       TimeStamp aRefreshTime)
+                                       CascadeLevel aCascadeLevel)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects) {
@@ -764,8 +759,6 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
 
   MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),
              "EffectSet should not change while composing style");
-
-  effects->UpdateAnimationRuleRefreshTime(aCascadeLevel, aRefreshTime);
 }
 
 /* static */ void
