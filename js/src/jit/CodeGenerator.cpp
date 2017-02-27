@@ -222,8 +222,13 @@ CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache* ool)
 
 typedef bool (*IonGetPropertyICFn)(JSContext*, HandleScript, IonGetPropertyIC*, HandleValue, HandleValue,
                                    MutableHandleValue);
-const VMFunction IonGetPropertyICInfo =
+static const VMFunction IonGetPropertyICInfo =
     FunctionInfo<IonGetPropertyICFn>(IonGetPropertyIC::update, "IonGetPropertyIC::update");
+
+typedef bool (*IonSetPropertyICFn)(JSContext*, HandleScript, IonSetPropertyIC*, HandleObject,
+                                   HandleValue, HandleValue);
+static const VMFunction IonSetPropertyICInfo =
+    FunctionInfo<IonSetPropertyICFn>(IonSetPropertyIC::update, "IonSetPropertyIC::update");
 
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
@@ -257,9 +262,26 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
-      case CacheKind::GetName:
       case CacheKind::SetProp:
-      case CacheKind::SetElem:
+      case CacheKind::SetElem: {
+        IonSetPropertyIC* setPropIC = ic->asSetPropertyIC();
+
+        saveLive(lir);
+
+        pushArg(setPropIC->rhs());
+        pushArg(setPropIC->id());
+        pushArg(setPropIC->object());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonSetPropertyICInfo, lir);
+
+        restoreLive(lir);
+
+        masm.jump(ool->rejoin());
+        return;
+      }
+      case CacheKind::GetName:
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
     }
@@ -10278,16 +10300,22 @@ CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
 
 void
 CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                                   Register temp, Register tempUnbox, FloatRegister tempDouble,
+                                   Register temp, FloatRegister tempDouble,
                                    FloatRegister tempF32, const ConstantOrRegister& id,
                                    const ConstantOrRegister& value,
                                    bool strict, bool needsTypeBarrier, bool guardHoles,
                                    jsbytecode* profilerLeavePc)
 {
-    SetPropertyIC cache(liveRegs, objReg, temp, tempUnbox, tempDouble, tempF32, id, value, strict,
-                        needsTypeBarrier, guardHoles);
-    cache.setProfilerLeavePC(profilerLeavePc);
-    addCache(ins, allocateCache(cache));
+    CacheKind kind = CacheKind::SetElem;
+    if (id.constant() && id.value().isString()) {
+        JSString* idString = id.value().toString();
+        uint32_t dummy;
+        if (idString->isAtom() && !idString->asAtom().isIndex(&dummy))
+            kind = CacheKind::SetProp;
+    }
+    IonSetPropertyIC cache(kind, liveRegs, objReg, temp, tempDouble, tempF32,
+                           id, value, strict, needsTypeBarrier, guardHoles);
+    addIC(ins, allocateIC(cache));
 }
 
 ConstantOrRegister
@@ -10427,7 +10455,6 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
     Register temp = ToRegister(ins->temp());
-    Register tempUnbox = ToTempUnboxRegister(ins->tempToUnboxIndex());
     FloatRegister tempDouble = ToTempFloatRegisterOrInvalid(ins->tempDouble());
     FloatRegister tempF32 = ToTempFloatRegisterOrInvalid(ins->tempFloat32());
 
@@ -10436,31 +10463,9 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
     ConstantOrRegister value =
         toConstantOrRegister(ins, LSetPropertyCache::Value, ins->mir()->value()->type());
 
-    addSetPropertyCache(ins, liveRegs, objReg, temp, tempUnbox, tempDouble, tempF32,
+    addSetPropertyCache(ins, liveRegs, objReg, temp, tempDouble, tempF32,
                         id, value, ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
                         ins->mir()->guardHoles(), ins->mir()->profilerLeavePc());
-}
-
-typedef bool (*SetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
-                                HandleValue);
-const VMFunction SetPropertyIC::UpdateInfo =
-    FunctionInfo<SetPropertyICFn>(SetPropertyIC::update, "SetPropertyIC::update");
-
-void
-CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<SetPropertyIC>& ic)
-{
-    LInstruction* lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->value());
-    pushArg(ic->id());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    pushArg(ImmGCPtr(gen->info().script()));
-    callVM(SetPropertyIC::UpdateInfo, lir);
-    restoreLive(lir);
-
-    masm.jump(ool->rejoin());
 }
 
 typedef bool (*ThrowFn)(JSContext*, HandleValue);

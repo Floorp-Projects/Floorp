@@ -421,7 +421,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitSetPropertyCache(LSetPropertyCache* ins);
     void visitGetNameCache(LGetNameCache* ins);
 
-    void visitSetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<SetPropertyIC>& ic);
     void visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic);
     void visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic);
 
@@ -461,7 +460,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
                              TypedOrValueRegister output, Register maybeTemp, bool monitoredResult,
                              bool allowDoubleResult, jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                             Register temp, Register tempUnbox, FloatRegister tempDouble,
+                             Register temp, FloatRegister tempDouble,
                              FloatRegister tempF32, const ConstantOrRegister& id,
                              const ConstantOrRegister& value,
                              bool strict, bool needsTypeBarrier, bool guardHoles,
