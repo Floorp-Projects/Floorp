@@ -352,9 +352,7 @@ action.PointerOrigin.get = function(obj) {
     origin = this.Viewport;
   } else if (typeof obj == "string") {
     let name = capitalize(obj);
-    if (!(name in this)) {
-      throw new InvalidArgumentError(`Unknown pointer-move origin: ${obj}`);
-    }
+    assert.in(name, this, error.pprint`Unknown pointer-move origin: ${obj}`);
     origin = this[name];
   } else if (!element.isWebElementReference(obj)) {
     throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
@@ -385,9 +383,7 @@ action.PointerType = {
  */
 action.PointerType.get = function (str) {
   let name = capitalize(str);
-  if (!(name in this)) {
-    throw new InvalidArgumentError(`Unknown pointerType: ${str}`);
-  }
+  assert.in(name, this, error.pprint`Unknown pointerType: ${str}`);
   return this[name];
 };
 
@@ -448,9 +444,7 @@ class InputState {
    */
   static fromJson(obj) {
     let type = obj.type;
-    if (!(type in ACTIONS)) {
-      throw new InvalidArgumentError(`Unknown action type: ${type}`);
-    }
+    assert.in(type, ACTIONS, error.pprint`Unknown action type: ${type}`);
     let name = type == "none" ? "Null" : capitalize(type);
     if (name == "Pointer") {
       if (!obj.pointerType && (!obj.parameters || !obj.parameters.pointerType)) {
@@ -632,9 +626,7 @@ action.Action = class {
       throw new InvalidArgumentError("Missing id, type or subtype");
     }
     for (let attr of [id, type, subtype]) {
-      if (typeof attr != "string") {
-        throw new InvalidArgumentError(`Expected string, got: ${attr}`);
-      }
+      assert.string(attr, error.pprint`Expected string, got: ${attr}`);
     }
     this.id = id;
     this.type = type;
@@ -684,11 +676,9 @@ action.Action = class {
         // TODO countGraphemes
         // TODO key.value could be a single code point like "\uE012" (see rawKey)
         // or "grapheme cluster"
-        if (typeof key != "string") {
-          throw new InvalidArgumentError(
-              "Expected 'value' to be a string that represents single code point " +
-              "or grapheme cluster, got: " + key);
-        }
+        assert.string(key,
+            error.pprint("Expected 'value' to be a string that represents single code point " +
+                `or grapheme cluster, got: ${key}`));
         item.value = key;
         break;
 
@@ -792,18 +782,18 @@ action.Sequence = class extends Array {
    *     If |actionSequence.actions| is not an Array.
    */
   static fromJson(actionSequence) {
-    // used here only to validate 'type' and InputState type
+    // used here to validate 'type' in addition to InputState type below
     let inputSourceState = InputState.fromJson(actionSequence);
     let id = actionSequence.id;
     assert.defined(id, "Expected 'id' to be defined");
     assert.string(id, error.pprint`Expected 'id' to be a string, got: ${id}`);
     let actionItems = actionSequence.actions;
-    if (!Array.isArray(actionItems)) {
-      throw new InvalidArgumentError(
-          `Expected 'actionSequence.actions' to be an Array, got: ${actionSequence.actions}`);
-    }
-
-    if (action.inputStateMap.has(id) && !action.inputStateMap.get(id).is(inputSourceState)) {
+    assert.array(actionItems,
+        error.pprint("Expected 'actionSequence.actions' to be an Array, " +
+            `got: ${actionSequence.actions}`));
+    if (!action.inputStateMap.has(id)) {
+      action.inputStateMap.set(id, inputSourceState);
+    } else if (!action.inputStateMap.get(id).is(inputSourceState)) {
       throw new InvalidArgumentError(
           `Expected ${id} to be mapped to ${inputSourceState}, ` +
           `got: ${action.inputStateMap.get(id)}`);
@@ -1042,9 +1032,6 @@ action.computePointerDestination = function(a, inputState, center = undefined) {
  */
 function toEvents(tickDuration, seenEls, container) {
   return function (a) {
-    if (!action.inputStateMap.has(a.id)) {
-      action.inputStateMap.set(a.id, InputState.fromJson(a));
-    }
     let inputState = action.inputStateMap.get(a.id);
     switch (a.subtype) {
       case action.KeyUp:
@@ -1341,9 +1328,7 @@ function flushEvents(container) {
 }
 
 function capitalize(str) {
-  if (typeof str != "string") {
-    throw new InvalidArgumentError(`Expected string, got: ${str}`);
-  }
+  assert.string(str);
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
