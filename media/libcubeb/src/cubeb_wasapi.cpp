@@ -871,6 +871,11 @@ wasapi_stream_render_loop(LPVOID stream)
     LOG("Unable to use mmcss to bump the render thread priority: %lx", GetLastError());
   }
 
+  // This has already been nulled out, simply exit.
+  if (!emergency_bailout) {
+    is_playing = false;
+  }
+
   /* WaitForMultipleObjects timeout can trigger in cases where we don't want to
      treat it as a timeout, such as across a system sleep/wake cycle.  Trigger
      the timeout error handling only when the timeout_limit is reached, which is
@@ -1211,12 +1216,16 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
     /* Something weird happened, leak the thread and continue the shutdown
      * process. */
     *(stm->emergency_bailout) = true;
+    // We give the ownership to the rendering thread.
+    stm->emergency_bailout = nullptr;
     LOG("Destroy WaitForSingleObject on thread timed out,"
         " leaking the thread: %lx", GetLastError());
     rv = false;
   }
   if (r == WAIT_FAILED) {
     *(stm->emergency_bailout) = true;
+    // We give the ownership to the rendering thread.
+    stm->emergency_bailout = nullptr;
     LOG("Destroy WaitForSingleObject on thread failed: %lx", GetLastError());
     rv = false;
   }
@@ -1647,8 +1656,15 @@ int setup_wasapi_stream(cubeb_stream * stm)
     // This delays the input side slightly, but allow to not glitch when no input
     // is available when calling into the resampler to call the callback: the input
     // refill event will be set shortly after to compensate for this lack of data.
+    // In debug, four buffers are used, to avoid tripping up assertions down the line.
+#if !defined(NDEBUG)
+    const int silent_buffer_count = 2;
+#else
+    const int silent_buffer_count = 4;
+#endif
     stm->linear_input_buffer.push_silence(stm->input_buffer_frame_count *
-                                          stm->input_stream_params.channels * 2);
+                                          stm->input_stream_params.channels *
+                                          silent_buffer_count);
 
     if (rv != CUBEB_OK) {
       LOG("Failure to open the input side.");
@@ -1869,9 +1885,6 @@ void wasapi_stream_destroy(cubeb_stream * stm)
   if (stop_and_join_render_thread(stm)) {
     delete stm->emergency_bailout.load();
     stm->emergency_bailout = nullptr;
-  } else {
-    // If we're leaking, it must be that this is true.
-    XASSERT(*(stm->emergency_bailout));
   }
 
   unregister_notification_client(stm);
@@ -1933,10 +1946,10 @@ int stream_start_one_side(cubeb_stream * stm, StreamDirection dir)
 
 int wasapi_stream_start(cubeb_stream * stm)
 {
+  auto_lock lock(stm->stream_reset_lock);
+
   XASSERT(stm && !stm->thread && !stm->shutdown_event);
   XASSERT(stm->output_client || stm->input_client);
-
-  auto_lock lock(stm->stream_reset_lock);
 
   stm->emergency_bailout = new std::atomic<bool>(false);
 
@@ -1999,6 +2012,7 @@ int wasapi_stream_stop(cubeb_stream * stm)
   }
 
   if (stop_and_join_render_thread(stm)) {
+    // This is null if we've given the pointer to the other thread
     if (stm->emergency_bailout.load()) {
       delete stm->emergency_bailout.load();
       stm->emergency_bailout = nullptr;
