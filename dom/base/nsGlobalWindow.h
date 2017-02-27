@@ -1824,7 +1824,7 @@ public:
   AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
 
   void DisableIdleCallbackRequests();
-  uint32_t IdleRequestHandle() const { return mIdleRequestCallbackCounter; }
+  uint32_t LastIdleRequestHandle() const { return mIdleRequestCallbackCounter - 1; }
   nsresult RunIdleRequest(mozilla::dom::IdleRequest* aRequest,
                           DOMHighResTimeStamp aDeadline, bool aDidTimeout);
   nsresult ExecuteIdleRequest(TimeStamp aDeadline);
