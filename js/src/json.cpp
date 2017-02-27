@@ -23,6 +23,7 @@
 #include "vm/JSONParser.h"
 #include "vm/StringBuffer.h"
 
+#include "jsarrayinlines.h"
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
 
@@ -496,7 +497,7 @@ JA(JSContext* cx, HandleObject obj, StringifyContext* scx)
                 }
             }
 #endif
-            if (!GetElement(cx, obj, obj, i, &outputValue))
+            if (!GetElement(cx, obj, i, &outputValue))
                 return false;
             if (!PreprocessValue(cx, obj, i, &outputValue, scx))
                 return false;
@@ -644,7 +645,7 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, const V
                     return false;
 
                 /* Step 4b(iii)(5)(a-b). */
-                if (!GetElement(cx, replacer, replacer, k, &item))
+                if (!GetElement(cx, replacer, k, &item))
                     return false;
 
                 RootedId id(cx);

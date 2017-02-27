@@ -73,9 +73,9 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-release-branches': 'project:releng:beetmover:nightly',
-    'all-nightly-branches': 'project:releng:beetmover:nightly',
-    'default': 'project:releng:beetmover:nightly',
+    'all-release-branches': 'project:releng:beetmover:bucket:release',
+    'all-nightly-branches': 'project:releng:beetmover:bucket:nightly',
+    'default': 'project:releng:beetmover:bucket:dep',
 }
 
 """Map the beetmover tasks aliases to the actual action scopes.

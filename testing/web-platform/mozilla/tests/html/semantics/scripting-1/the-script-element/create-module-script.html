@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Insert non-async module script</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  var test = async_test("Create module script")
+  var moduleRan = false;
+  function loadModule() {
+    var script = document.createElement("script");
+    script.onerror = function() {
+      test.step(() => assert_unreached("Should not get an error"));
+      test.done();
+    };
+    script.onload = function() {
+      test.step(() => assert_equals(moduleRan, true));
+      test.done();
+    };
+    script.type = "module";
+    script.src = "support/module.js";
+    script.async = false;
+    document.documentElement.appendChild(script);
+  }
+</script>
+<body onload='loadModule()'></body>
