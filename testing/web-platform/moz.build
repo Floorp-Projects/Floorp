@@ -49,3 +49,185 @@ with Files("tests/mediacapture-record/**"):
 with Files("tests/mediacapture-streams/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
 
+with Files("tests/microdata/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/mixed-content/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/navigation-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/notifications/**"):
+    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+
+with Files("tests/offscreen-canvas/**"):
+    BUG_COMPONENT = ("Core", "Canvas: 2D")
+
+# No tests are run here
+with Files("tests/old-tests/submission/Infraware/Session_History/**"):
+    BUG_COMPONENT = ("Core", "Document Navigation")
+
+with Files("tests/old-tests/submission/Infraware/Forms/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/old-tests/submission/Opera/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+# No tests are run here
+with Files("tests/old-tests/submission/Microsoft/dragdrop/**"):
+    BUG_COMPONENT = ("Core", "Drag & Drop")
+
+# No tests are run here
+with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/old-tests/submission/Microsoft/history/**"):
+    BUG_COMPONENT = ("Core", "Document Navigation")
+
+with Files("tests/old-tests/submission/Microsoft/sandbox/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+# No tests are run here
+with Files("tests/old-tests/submission/Microsoft/selection/**"):
+    BUG_COMPONENT = ("Core", "Selection")
+
+with Files("tests/old-tests/submission/Microsoft/structuredclone/**"):
+    BUG_COMPONENT = ("Core", "Javascript Engine")
+
+# No tests are run here
+with Files("tests/old-tests/submission/Microsoft/xhtml5/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/orientation-event/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/page-visibility/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/payment-request/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/performance-timeline/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/pointerevents/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/pointerlock/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/preload/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & Html")
+
+with Files("tests/presentation-api/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/progress-events/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/proximity/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/quirks-mode/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/referrer-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/resource-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/screen-orientation/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/secure-contexts/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/selection/**"):
+    BUG_COMPONENT = ("Core", "Selection")
+
+with Files("tests/selectors/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/selectors-api/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/service-workers/**"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+with Files("tests/shadow-dom/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/streams/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/subresource-integrity/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/svg/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/svg-aam/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("tests/touch-events/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/typedarrays/**"):
+    BUG_COMPONENT = ("Core", "Javascript: Standard Library")
+
+with Files("tests/uievents/**"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("tests/upgrade-insecure-requests/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/url/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/user-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/vibration/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+# No files in here?
+#with Files("tests/wai-arai/**"):
+#    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/web-animations/**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
+with Files("tests/webaudio/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Audio")
+
+with Files("tests/webauthn/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/webdriver/**"):
+    BUG_COMPONENT = ("https://github.com/w3c/web-platform-tests/", "webdriver")
+
+with Files("tests/webgl/**"):
+    BUG_COMPONENT = ("Core", "Canvas: WebGL")
+
+with Files("tests/webmessaging/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/webrtc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/websockets/**"):
+    BUG_COMPONENT = ("Core", "Networking: WebSockets")
+
+with Files("tests/webstorage/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/webvr/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/webvtt/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/workers/**"):
+    BUG_COMPONENT = ("Core", "DOM: Workers")
