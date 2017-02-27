@@ -11,6 +11,11 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+
+import static org.junit.Assert.fail;
+
 @RunWith(TestRunner.class)
 public class TestIconRequestBuilder {
     private static final String TEST_PAGE_URL_1 = "http://www.mozilla.org";
@@ -176,5 +181,39 @@ public class TestIconRequestBuilder {
                 .deferBuild();
 
         Assert.assertEquals(48, request.getTargetSize());
+    }
+
+    @Test
+    public void testConcurrentAccess() {
+        IconRequestBuilder builder = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL_1)
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL_1))
+                .icon(IconDescriptor.createGenericIcon(TEST_ICON_URL_2));
+
+        // Call build() twice on a builder and verify that the two objects are not the same
+        IconRequest request = builder.build();
+        IconRequest compare = builder.build();
+        Assert.assertNotSame(request, compare);
+        Assert.assertNotSame(request.icons, compare.icons);
+
+        // After building call methods on the builder and verify that the previously build object is not changed
+        int iconCount = request.getIconCount();
+        builder.icon(IconDescriptor.createGenericIcon(TEST_PAGE_URL_2))
+                .deferBuild();
+        int iconCountAfterBuild = request.getIconCount();
+        Assert.assertEquals(iconCount, iconCountAfterBuild);
+
+        // Iterate the TreeSet and call methods on the builder
+        try {
+            final Iterator<IconDescriptor> iterator = request.icons.iterator();
+            while (iterator.hasNext()) {
+                iterator.next();
+                builder.icon(IconDescriptor.createGenericIcon(TEST_PAGE_URL_2))
+                        .deferBuild();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Got exception.");
+        }
     }
 }

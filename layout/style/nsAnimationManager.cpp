@@ -468,14 +468,6 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
     newAnimations[newAnimIdx]->CancelFromStyle();
   }
-
-  // We don't actually dispatch the pending events now.  We'll either
-  // dispatch them the next time we get a refresh driver notification
-  // or the next time somebody calls
-  // nsPresShell::FlushPendingNotifications.
-  if (mEventDispatcher.HasQueuedEvents()) {
-    mPresContext->PresShell()->SetNeedStyleFlush();
-  }
 }
 
 void
