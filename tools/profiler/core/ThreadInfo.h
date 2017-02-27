@@ -74,7 +74,6 @@ public:
     mRespInfo.Update(mIsMainThread, mThread);
   }
 
-protected:
   void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
                                SpliceableJSONWriter& aWriter,
                                double aSinceTime,

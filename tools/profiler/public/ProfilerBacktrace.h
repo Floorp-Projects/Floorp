@@ -8,14 +8,14 @@
 #define __PROFILER_BACKTRACE_H
 
 class ProfileBuffer;
-class SyncProfile;
 class SpliceableJSONWriter;
+class ThreadInfo;
 class UniqueStacks;
 
 class ProfilerBacktrace
 {
 public:
-  explicit ProfilerBacktrace(ProfileBuffer* aBuffer, SyncProfile* aProfile);
+  explicit ProfilerBacktrace(ProfileBuffer* aBuffer, ThreadInfo* aThreadInfo);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -31,7 +31,7 @@ private:
   ProfilerBacktrace& operator=(const ProfilerBacktrace&);
 
   ProfileBuffer* mBuffer;
-  SyncProfile* mProfile;
+  ThreadInfo* mThreadInfo;
 };
 
 #endif // __PROFILER_BACKTRACE_H
