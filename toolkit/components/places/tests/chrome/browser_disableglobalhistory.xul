@@ -15,7 +15,7 @@
   <browser id="remote_disabled" src="about:blank" type="content" disableglobalhistory="true" />
   <browser id="remote_enabled" src="about:blank" type="content" />
 
-  <script type="text/javascript;version=1.7">
+  <script type="text/javascript">
   const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
 
   Cu.import("resource://testing-common/ContentTask.jsm");

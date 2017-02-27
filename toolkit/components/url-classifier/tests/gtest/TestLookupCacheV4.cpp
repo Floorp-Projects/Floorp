@@ -11,19 +11,6 @@
 typedef nsCString _Fragment;
 typedef nsTArray<nsCString> _PrefixArray;
 
-// Generate a hash prefix from string
-static const nsCString
-GeneratePrefix(const _Fragment& aFragment, uint8_t aLength)
-{
-  Completion complete;
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  complete.FromPlaintext(aFragment, cryptoHash);
-
-  nsCString hash;
-  hash.Assign((const char *)complete.buf, aLength);
-  return hash;
-}
-
 static UniquePtr<LookupCacheV4>
 SetupLookupCacheV4(const _PrefixArray& prefixArray)
 {

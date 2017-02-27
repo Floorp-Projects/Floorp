@@ -206,22 +206,42 @@ nsFrameManager::ClearPlaceholderFrameMap()
 
 //----------------------------------------------------------------------
 
+static nsIContent*
+ParentForUndisplayedMap(const nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent);
+
+  nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
+  MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
+
+  return parent;
+}
+
 /* static */ nsStyleContext*
-nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap, nsIContent* aContent)
+nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap,
+                                     const nsIContent* aContent)
+{
+  UndisplayedNode* node = GetUndisplayedNodeInMapFor(aMap, aContent);
+  return node ? node->mStyle.get() : nullptr;
+}
+
+/* static */ UndisplayedNode*
+nsFrameManager::GetUndisplayedNodeInMapFor(UndisplayedMap* aMap,
+                                           const nsIContent* aContent)
 {
   if (!aContent) {
     return nullptr;
   }
-  nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
-  MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
+  nsIContent* parent = ParentForUndisplayedMap(aContent);
   for (UndisplayedNode* node = aMap->GetFirstNode(parent);
          node; node = node->mNext) {
     if (node->mContent == aContent)
-      return node->mStyle;
+      return node;
   }
 
   return nullptr;
 }
+
 
 /* static */ UndisplayedNode*
 nsFrameManager::GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
@@ -252,8 +272,7 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
   NS_ASSERTION(!GetStyleContextInMap(aMap, aContent),
                "Already have an entry for aContent");
 
-  nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
-  MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
+  nsIContent* parent = ParentForUndisplayedMap(aContent);
 #ifdef DEBUG
   nsIPresShell* shell = aStyleContext->PresContext()->PresShell();
   NS_ASSERTION(parent || (shell && shell->GetDocument() &&

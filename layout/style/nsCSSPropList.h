@@ -4105,8 +4105,8 @@ CSS_PROP_TEXT(
     CSS_PROP_DOMPROP_PREFIXED(TextSizeAdjust),
     CSS_PROPERTY_PARSE_VALUE,
     "",
-    VARIANT_AUTO | VARIANT_NONE | VARIANT_INHERIT,
-    nullptr,
+    VARIANT_HK,
+    kTextSizeAdjustKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
 CSS_PROP_SHORTHAND(

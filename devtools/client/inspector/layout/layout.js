@@ -29,6 +29,7 @@ const INSPECTOR_L10N =
   new LocalizationHelper("devtools/client/locales/inspector.properties");
 
 const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
+const SHOW_GRID_OUTLINE_PREF = "devtools.gridinspector.showGridOutline";
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
 // Default grid colors.
@@ -100,14 +101,27 @@ LayoutView.prototype = {
       },
 
       /**
+       * Set the inspector selection.
+       * @param {NodeFront} nodeFront
+       *        The NodeFront corresponding to the new selection.
+       */
+      setSelectedNode: (nodeFront) => {
+        this.inspector.selection.setNodeFront(nodeFront, "layout-panel");
+      },
+
+      /**
        * Shows the box model properties under the box model if true, otherwise, hidden by
        * default.
        */
       showBoxModelProperties: true,
 
+      /**
+       * Shows the grid outline if user preferences are set to true, otherwise, hidden by
+       * default.
+       */
+      showGridOutline: Services.prefs.getBoolPref(SHOW_GRID_OUTLINE_PREF),
+
       onHideBoxModelHighlighter,
-      onShowBoxModelEditor,
-      onShowBoxModelHighlighter,
 
       /**
        * Handler for a change in the grid overlay color picker for a grid container.
@@ -130,6 +144,23 @@ LayoutView.prototype = {
             this.highlighters.showGridHighlighter(node, highlighterSettings);
           }
         }
+      },
+
+      onShowBoxModelEditor,
+      onShowBoxModelHighlighter,
+
+     /**
+       * Shows the box-model highlighter on the element corresponding to the provided
+       * NodeFront.
+       *
+       * @param  {NodeFront} nodeFront
+       *         The node to highlight.
+       * @param  {Object} options
+       *         Options passed to the highlighter actor.
+       */
+      onShowBoxModelHighlighterForNode: (nodeFront, options) => {
+        let toolbox = this.inspector.toolbox;
+        toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
       },
 
       /**

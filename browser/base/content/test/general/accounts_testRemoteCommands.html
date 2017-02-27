@@ -2,10 +2,10 @@
   <head>
     <meta charset="utf-8">
 
-<script type="text/javascript;version=1.8">
+<script type="text/javascript">
 
 function init() {
-  window.addEventListener("message", function process(e) {doTest(e)});
+  window.addEventListener("message", function process(e) { doTest(e) });
   // unless we relinquish the eventloop,
   // tests will run before the chrome event handlers are ready
   setTimeout(doTest, 0);
@@ -29,7 +29,7 @@ let tests = [
     verified: true
   },
   payloadType: "message",
-  validateResponse: function(payload) {
+  validateResponse(payload) {
     return checkStatusValue(payload, "login");
   },
 },
@@ -60,19 +60,19 @@ function doTest(evt) {
 }
 
 function reportResult(info, pass, error) {
-  let data = {type: "testResult", info: info, pass: pass, error: error};
-  let event = new CustomEvent("FirefoxAccountsTestResponse", {detail: {data: data}, bubbles: true});
+  let data = {type: "testResult", info, pass, error};
+  let event = new CustomEvent("FirefoxAccountsTestResponse", {detail: {data}, bubbles: true});
   document.dispatchEvent(event);
 }
 
 function reportFinished(cmd) {
   let data = {type: "testsComplete", count: tests.length};
-  let event = new CustomEvent("FirefoxAccountsTestResponse", {detail: {data: data}, bubbles: true});
+  let event = new CustomEvent("FirefoxAccountsTestResponse", {detail: {data}, bubbles: true});
   document.dispatchEvent(event);
 }
 
 function sendToBrowser(type, data) {
-  let event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type, data: data}, bubbles: true});
+  let event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type, data}, bubbles: true});
   document.dispatchEvent(event);
 }
 

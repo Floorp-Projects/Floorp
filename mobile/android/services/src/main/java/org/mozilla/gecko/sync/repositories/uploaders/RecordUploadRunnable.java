@@ -9,8 +9,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.Server11PreviousPostFailedException;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.Server15PreviousPostFailedException;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 
@@ -136,7 +136,7 @@ public class RecordUploadRunnable implements Runnable {
     public void run() {
         if (!mayUploadProvider.mayUpload()) {
             Logger.info(LOG_TAG, "Told not to proceed by the uploader. Cancelling upload, failing records.");
-            uploadDelegate.handleRequestError(new Server11PreviousPostFailedException());
+            uploadDelegate.handleRequestError(new Server15PreviousPostFailedException());
             return;
         }
 

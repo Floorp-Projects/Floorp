@@ -15,6 +15,8 @@
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
 
+%include ../shared/browser.inc.css
+
 :root {
   --space-above-tabbar: 15px;
 
@@ -1300,34 +1302,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 #urlbar-zoom-button {
   -moz-appearance: none;
-  margin: 0 3px;
-  font-size: .8em;
-  padding: 0 8px;
-  border-radius: 1em;
-  background-color: hsla(0,0%,0%,.05);
   color: inherit;
-  border: 1px solid ThreeDLightShadow;
-}
-
-#urlbar-zoom-button[animate="true"] {
-  animation-name: urlbar-zoom-reset-pulse;
-  animation-duration: 250ms;
-}
-
-#urlbar-zoom-button:hover {
-  background-color: hsla(0,0%,0%,.1);
-}
-
-#urlbar-zoom-button:hover:active {
-  background-color: hsla(0,0%,0%,.15);
-}
-
-#urlbar-zoom-button > .toolbarbutton-text {
-  display: -moz-box;
-}
-
-#urlbar-zoom-button > .toolbarbutton-icon {
-  display: none;
 }
 
 .search-go-container {

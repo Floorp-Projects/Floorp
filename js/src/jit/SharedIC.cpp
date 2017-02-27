@@ -1973,10 +1973,10 @@ ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op, HandlePropert
             res.setObject(*frame->callee());
         }
     } else {
-        if (op == JSOP_GETXPROP) {
-            RootedObject obj(cx, &val.toObject());
+        if (op == JSOP_GETBOUNDNAME) {
+            RootedObject env(cx, &val.toObject());
             RootedId id(cx, NameToId(name));
-            if (!GetPropertyForNameLookup(cx, obj, id, res))
+            if (!GetNameBoundInEnvironment(cx, env, id, res))
                 return false;
         } else {
             MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH);
@@ -2002,7 +2002,10 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
     JSOp op = JSOp(*pc);
     FallbackICSpew(cx, stub, "GetProp(%s)", CodeName[op]);
 
-    MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
+    MOZ_ASSERT(op == JSOP_GETPROP ||
+               op == JSOP_CALLPROP ||
+               op == JSOP_LENGTH ||
+               op == JSOP_GETBOUNDNAME);
 
     // Grab our old shape before it goes away.
     RootedShape oldShape(cx);

@@ -33,4 +33,4 @@ fails == 820496-1.html 820496-1.html
 fails == 960822.html 960822.html
 fails == 966419-1.html 966419-1.html
 fails == 966419-2.html 966419-2.html
-# asserts(3) HTTP(..) fails 1108104.html 1108104-ref.html
+fails HTTP(..) == 1108104.html 1108104-ref.html

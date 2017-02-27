@@ -6,7 +6,7 @@
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script type="application/javascript" src="chrome://devtools/content/shared/theme-switching.js"/>
   <box flex="1" class="devtools-responsive-container theme-body">
     <vbox flex="1" class="devtools-main-content" id="content">test</vbox>
     <splitter class="devtools-side-splitter"/>

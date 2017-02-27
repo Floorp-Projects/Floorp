@@ -4,10 +4,14 @@
 
 package org.mozilla.gecko.sync.repositories.downloaders;
 
+import android.net.Uri;
+import android.os.SystemClock;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionConcurrentModificationException;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.HTTPFailureException;
 import org.mozilla.gecko.sync.InfoCollections;
@@ -15,13 +19,16 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
-import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
+import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -32,8 +39,7 @@ import static org.junit.Assert.*;
 
 @RunWith(TestRunner.class)
 public class BatchingDownloaderDelegateTest {
-    private Server11Repository server11Repository;
-    private Server11RepositorySession repositorySession;
+    private Server15RepositorySession repositorySession;
     private MockDownloader mockDownloader;
     private String DEFAULT_COLLECTION_URL = "http://dummy.url/";
 
@@ -43,8 +49,16 @@ public class BatchingDownloaderDelegateTest {
         public boolean isFailure = false;
         public Exception ex;
 
-        public MockDownloader(Server11Repository repository, Server11RepositorySession repositorySession) {
-            super(repository, repositorySession);
+        public MockDownloader(RepositorySession repositorySession) {
+            super(
+                    null,
+                    Uri.EMPTY,
+                    SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                    true,
+                    true,
+                    new NonPersistentRepositoryStateProvider(),
+                    repositorySession
+            );
         }
 
         @Override
@@ -56,8 +70,8 @@ public class BatchingDownloaderDelegateTest {
         }
 
         @Override
-        public void onFetchFailed(final Exception ex,
-                                  final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+        public void handleFetchFailed(final RepositorySessionFetchRecordsDelegate fetchRecordsDelegate,
+                                  final Exception ex,
                                   final SyncStorageCollectionRequest request) {
             this.isFailure = true;
             this.ex = ex;
@@ -72,7 +86,7 @@ public class BatchingDownloaderDelegateTest {
 
     class SimpleSessionFetchRecordsDelegate implements RepositorySessionFetchRecordsDelegate {
         @Override
-        public void onFetchFailed(Exception ex, Record record) {
+        public void onFetchFailed(Exception ex) {
 
         }
 
@@ -87,6 +101,11 @@ public class BatchingDownloaderDelegateTest {
         }
 
         @Override
+        public void onBatchCompleted() {
+
+        }
+
+        @Override
         public RepositorySessionFetchRecordsDelegate deferredFetchDelegate(ExecutorService executor) {
             return null;
         }
@@ -94,19 +113,29 @@ public class BatchingDownloaderDelegateTest {
 
     @Before
     public void setUp() throws Exception {
-        server11Repository = new Server11Repository(
+        repositorySession = new Server15RepositorySession(new Server15Repository(
                 "dummyCollection",
+                SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                 DEFAULT_COLLECTION_URL,
                 null,
                 new InfoCollections(),
-                new InfoConfiguration());
-        repositorySession = new Server11RepositorySession(server11Repository);
-        mockDownloader = new MockDownloader(server11Repository, repositorySession);
+                new InfoConfiguration(),
+                new NonPersistentRepositoryStateProvider())
+        );
+        mockDownloader = new MockDownloader(repositorySession);
     }
 
     @Test
     public void testIfUnmodifiedSince() throws Exception {
-        BatchingDownloader downloader = new BatchingDownloader(server11Repository, repositorySession);
+        BatchingDownloader downloader = new BatchingDownloader(
+                null,
+                Uri.EMPTY,
+                SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                true,
+                true,
+                new NonPersistentRepositoryStateProvider(),
+                repositorySession
+        );
         RepositorySessionFetchRecordsDelegate delegate = new SimpleSessionFetchRecordsDelegate();
         BatchingDownloaderDelegate downloaderDelegate = new BatchingDownloaderDelegate(downloader, delegate,
                 new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL)), 0, 0, true, null, null);
@@ -147,6 +176,18 @@ public class BatchingDownloaderDelegateTest {
         downloaderDelegate.handleRequestFailure(response);
         assertTrue(mockDownloader.isFailure);
         assertEquals(HTTPFailureException.class, mockDownloader.ex.getClass());
+        assertFalse(mockDownloader.isSuccess);
+        assertFalse(mockDownloader.isFetched);
+    }
+
+    @Test
+    public void testFailure412() throws Exception {
+        BatchingDownloaderDelegate downloaderDelegate = new BatchingDownloaderDelegate(mockDownloader, null,
+                new SyncStorageCollectionRequest(new URI(DEFAULT_COLLECTION_URL)), 0, 0, true, null, null);
+        SyncStorageResponse response = makeSyncStorageResponse(412, null);
+        downloaderDelegate.handleRequestFailure(response);
+        assertTrue(mockDownloader.isFailure);
+        assertEquals(CollectionConcurrentModificationException.class, mockDownloader.ex.getClass());
         assertFalse(mockDownloader.isSuccess);
         assertFalse(mockDownloader.isFetched);
     }

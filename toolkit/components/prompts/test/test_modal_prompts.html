@@ -16,11 +16,11 @@ Prompter tests: modal prompts
 </div>
 
 <pre id="test">
-<script class="testbody" type="text/javascript;version=1.8">
-
+<script class="testbody" type="text/javascript">
+/* import-globals-from prompt_common.js */
 function* runTests() {
-    const { NetUtil } = SpecialPowers.Cu.import('resource://gre/modules/NetUtil.jsm');
-    let state, action;
+    const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
+    let state, action, promptDone;
     ok(true, "Running tests (isTabModal=" + isTabModal + ", usePromptService=" + usePromptService + ")");
 
     let prompter, promptArgs;
@@ -982,7 +982,7 @@ function* runTests() {
     // (promptAuth is only accessible from the prompt service)
     info("Starting test: promptAuth with empty realm");
     state = {
-        msg : 'http://example.com is requesting your username and password.',
+        msg : "http://example.com is requesting your username and password.",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,
@@ -1020,10 +1020,10 @@ function* runTests() {
     // (promptAuth is only accessible from the prompt service)
     info("Starting test: promptAuth with long realm");
     state = {
-        msg : 'http://example.com is requesting your username and password. The site '  +
-              'says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
-              'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
-              'abcdefghi \u2026\u201d',
+        msg : "http://example.com is requesting your username and password. The site " +
+              "says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+              "abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi " +
+              "abcdefghi \u2026\u201d",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,
@@ -1073,8 +1073,8 @@ function* runTests() {
         realm : ""
     }
     state = {
-        msg : 'http://example.com is requesting your username and password. ' +
-              'WARNING: Your password will not be sent to the website you are currently visiting!',
+        msg : "http://example.com is requesting your username and password. " +
+              "WARNING: Your password will not be sent to the website you are currently visiting!",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,
@@ -1116,8 +1116,8 @@ function* runTests() {
         realm : "Something!!!"
     }
     state = {
-        msg : 'http://example.com is requesting your username and password. ' +
-              'WARNING: Your password will not be sent to the website you are currently visiting!',
+        msg : "http://example.com is requesting your username and password. " +
+              "WARNING: Your password will not be sent to the website you are currently visiting!",
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,

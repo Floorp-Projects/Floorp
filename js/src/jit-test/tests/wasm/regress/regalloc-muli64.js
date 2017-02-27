@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1298808.
 assertEq(wasmEvalText(`(module
     (func

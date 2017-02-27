@@ -5,6 +5,10 @@
 #ifndef mozilla_widget_RemotePlugin_h__
 #define mozilla_widget_RemotePlugin_h__
 
+#ifndef XP_WIN
+#error "Plugin widgets are Windows-only."
+#endif
+
 #include "PuppetWidget.h"
 #include "mozilla/dom/TabChild.h"
 
@@ -46,9 +50,7 @@ public:
 
   virtual nsIWidget* GetParent(void) override;
   virtual void* GetNativeData(uint32_t aDataType) override;
-#if defined(XP_WIN)
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
-#endif
   virtual nsTransparencyMode GetTransparencyMode() override
   { return eTransparencyOpaque; }
   virtual void GetWindowClipRegion(nsTArray<LayoutDeviceIntRect>* aRects) override;

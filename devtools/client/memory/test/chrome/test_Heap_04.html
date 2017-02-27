@@ -12,8 +12,8 @@ Test that we show the "hey you're not recording allocation stacks" message at th
 <body>
     <div id="container"></div>
     <pre id="test">
-        <script src="head.js" type="application/javascript;version=1.8"></script>
-        <script type="application/javascript;version=1.8">
+        <script src="head.js" type="application/javascript"></script>
+        <script type="application/javascript">
          window.onload = Task.async(function* () {
            try {
              const container = document.getElementById("container");

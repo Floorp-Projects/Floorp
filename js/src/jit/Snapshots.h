@@ -8,6 +8,7 @@
 #define jit_Snapshot_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Attributes.h"
 
 #include "jsalloc.h"
 #include "jsbytecode.h"
@@ -504,23 +505,43 @@ class SnapshotReader
     }
 };
 
-class RInstructionStorage
+class MOZ_NON_PARAM RInstructionStorage
 {
-    static const size_t Size = 4 * sizeof(uint32_t);
-    mozilla::AlignedStorage<Size> mem;
+    static constexpr size_t Size = 4 * sizeof(uint32_t);
+
+    // This presumes all RInstructionStorage are safely void*-alignable.
+    // RInstruction::readRecoverData asserts that no RInstruction subclass
+    // has stricter alignment requirements than RInstructionStorage.
+    static constexpr size_t Alignment = alignof(void*);
+
+    /*
+     * DO NOT REUSE THIS IMPLEMENTATION TACTIC.
+     *
+     * It is undefined behavior to bytewise-copy the bytes of one T, into a
+     * location that isn't a T -- and because the target |mem| often wasn't
+     * already constructed as a T, it doesn't always count as such -- and then
+     * interpret that second location as T.  (This is *possibly* okay if T is
+     * POD or standard layout or is trivial.  None of those are true here.)
+     * The C++ spec considers this a strict aliasing violation.  We've hit
+     * crashes before when we've done this: for example, bug 1269319.
+     *
+     * This tactic is used here *only* because it was mistakenly added long
+     * ago, before it was recognized to be buggy, and we haven't yet struggled
+     * through the effort to remove it.
+     */
+    alignas(Alignment) unsigned char mem[Size];
 
   public:
-    const void* addr() const { return mem.addr(); }
-    void* addr() { return mem.addr(); }
+    const void* addr() const { return mem; }
+    void* addr() { return mem; }
 
     RInstructionStorage() = default;
 
-    RInstructionStorage(const RInstructionStorage& other) {
-        memcpy(addr(), other.addr(), Size);
-    }
-    void operator=(const RInstructionStorage& other) {
-        memcpy(addr(), other.addr(), Size);
-    }
+    // FIXME (bug 1341951): These are strict aliasing violations: see the
+    // comment above, and see bug 1269319 for an instance of bytewise copying
+    // having caused crashes.
+    RInstructionStorage(const RInstructionStorage& other) = default;
+    RInstructionStorage& operator=(const RInstructionStorage& other) = default;
 };
 
 class RInstruction;

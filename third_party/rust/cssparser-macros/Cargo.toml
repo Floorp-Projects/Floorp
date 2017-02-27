@@ -1,0 +1,18 @@
+[package]
+name = "cssparser-macros"
+version = "0.1.0"
+authors = ["Simon Sapin <simon.sapin@exyr.org>"]
+description = "Procedural macros for cssparser"
+documentation = "https://docs.rs/cssparser-macros/"
+repository = "https://github.com/servo/rust-cssparser"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+proc-macro = true
+
+[dependencies]
+phf_codegen = "0.7"
+quote = "0.3"
+syn = "0.11"
+

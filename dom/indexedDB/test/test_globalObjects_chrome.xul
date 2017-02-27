@@ -11,7 +11,7 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
-  <script type="application/javascript;version=1.7">
+  <script type="application/javascript">
   <![CDATA[
   function* testSteps() {
     const name = window.location.pathname;
@@ -34,7 +34,7 @@
   ]]>
   </script>
 
-  <script type="text/javascript;version=1.7" src="chromeHelpers.js"></script>
+  <script type="text/javascript" src="chromeHelpers.js"></script>
 
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=832883"

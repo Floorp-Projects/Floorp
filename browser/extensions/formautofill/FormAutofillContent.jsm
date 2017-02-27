@@ -315,8 +315,8 @@ var FormAutofillContent = {
     return formDetails.map(record => record.fieldName);
   },
 
-  _identifyAutofillFields(doc) {
-    this.log.debug("_identifyAutofillFields:", "" + doc.location);
+  identifyAutofillFields(doc) {
+    this.log.debug("identifyAutofillFields:", "" + doc.location);
     let forms = [];
 
     // Collects root forms from inputs.

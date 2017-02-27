@@ -1360,13 +1360,13 @@ RestyleManager::GetNextContinuationWithSameStyle(
   return nextContinuation;
 }
 
-nsresult
+void
 RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
   if (aChangeList.IsEmpty())
-    return NS_OK;
+    return;
 
   PROFILER_LABEL("RestyleManager", "ProcessRestyledFrames",
                  js::ProfileEntry::Category::CSS);
@@ -1677,7 +1677,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   aChangeList.Clear();
-  return NS_OK;
 }
 
 RestyleManager::AnimationsWithDestroyedFrame::AnimationsWithDestroyedFrame(

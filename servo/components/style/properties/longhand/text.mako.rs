@@ -60,7 +60,7 @@
     impl Parse for Side {
         fn parse(_context: &ParserContext, input: &mut Parser) -> Result<Side, ()> {
             if let Ok(ident) = input.try(|input| input.expect_ident()) {
-                match_ignore_ascii_case! { ident,
+                match_ignore_ascii_case! { &ident,
                     "clip" => Ok(Side::Clip),
                     "ellipsis" => Ok(Side::Ellipsis),
                     _ => Err(())
@@ -179,7 +179,7 @@ ${helpers.single_keyword("unicode-bidi",
 
         while input.try(|input| {
                 if let Ok(ident) = input.expect_ident() {
-                    match_ignore_ascii_case! { ident,
+                    match_ignore_ascii_case! { &ident,
                         "underline" => if result.contains(UNDERLINE) { return Err(()) }
                                        else { empty = false; result.insert(UNDERLINE) },
                         "overline" => if result.contains(OVERLINE) { return Err(()) }
@@ -204,7 +204,6 @@ ${helpers.single_keyword("unicode-bidi",
         fn cascade_property_custom(_declaration: &PropertyDeclaration,
                                    _inherited_style: &ComputedValues,
                                    context: &mut computed::Context,
-                                   _seen: &mut PropertyBitField,
                                    _cacheable: &mut bool,
                                    _error_reporter: &mut StdBox<ParseErrorReporter + Send>) {
                 longhands::_servo_text_decorations_in_effect::derive_from_text_decoration(context);

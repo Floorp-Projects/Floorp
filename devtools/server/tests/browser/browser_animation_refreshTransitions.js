@@ -21,8 +21,10 @@ add_task(function* () {
 
   info("Play a transition by adding the expand class, wait for mutations");
   let onMutations = expectMutationEvents(animations, 2);
-  let cpow = content.document.querySelector(".all-transitions");
-  cpow.classList.add("expand");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    let el = content.document.querySelector(".all-transitions");
+    el.classList.add("expand");
+  });
   let reportedMutations = yield onMutations;
 
   is(reportedMutations.length, 2, "2 mutation events were received");
@@ -35,7 +37,10 @@ add_task(function* () {
 
   info("Play the transition back by removing the class, wait for mutations");
   onMutations = expectMutationEvents(animations, 4);
-  cpow.classList.remove("expand");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    let el = content.document.querySelector(".all-transitions");
+    el.classList.remove("expand");
+  });
   reportedMutations = yield onMutations;
 
   is(reportedMutations.length, 4, "4 new mutation events were received");

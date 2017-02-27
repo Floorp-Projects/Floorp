@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 // Bug 1337060 causes too much register pressure on x86 by requiring four int64
 // values in registers at the same time.
 

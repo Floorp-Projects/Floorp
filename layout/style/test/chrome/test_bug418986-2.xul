@@ -17,9 +17,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418986
   <p id="pictures"></p>
   </body>
 
-  <script type="text/javascript;version=1.7" src="bug418986-2.js"></script>
+  <script type="text/javascript" src="bug418986-2.js"></script>
   <!-- test code goes here -->
-  <script type="text/javascript;version=1.7">
+  <script type="text/javascript">
     // Run all tests now.
     window.onload = function () {
       add_task(function* () {

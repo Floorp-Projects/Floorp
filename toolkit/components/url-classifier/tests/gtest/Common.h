@@ -24,3 +24,8 @@ void ApplyUpdate(TableUpdate* update);
 void PrefixArrayToPrefixStringMap(const nsTArray<nsCString>& prefixArray,
                                   PrefixStringMap& out);
 
+nsresult PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
+                                       AddPrefixArray& out);
+
+// Generate a hash prefix from string
+nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength);

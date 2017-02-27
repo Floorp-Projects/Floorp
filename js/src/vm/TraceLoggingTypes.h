@@ -29,10 +29,15 @@
     _(IrregexpCompile)                                \
     _(IrregexpExecute)                                \
     _(MinorGC)                                        \
-    _(ParserCompileFunction)                          \
-    _(ParserCompileLazy)                              \
-    _(ParserCompileScript)                            \
-    _(ParserCompileModule)                            \
+    _(Frontend)                                       \
+    _(FrontendNameAnalysis)                           \
+    _(FrontendTDZAnalysis)                            \
+    _(ParsingFull)                                    \
+    _(ParsingSyntax)                                  \
+    _(Tokenizing)                                     \
+    _(BytecodeEmission)                               \
+    _(BytecodeFoldConstants)                          \
+    _(BytecodeNameFunctions)                          \
     _(DecodeScript)                                   \
     _(DecodeFunction)                                 \
     _(EncodeScript)                                   \

@@ -3,6 +3,8 @@
 
 package org.mozilla.gecko.sync.stage.test;
 
+import android.os.SystemClock;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +29,7 @@ import org.simpleframework.http.Response;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -100,7 +103,7 @@ public class TestEnsureCrypto5KeysStage {
         @Override
         public void run() {
           try {
-            session.start();
+            session.start(SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30));
           } catch (AlreadySyncingException e) {
             WaitHelper.getTestWaiter().performNotify(e);
           }

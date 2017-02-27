@@ -349,7 +349,7 @@ var AboutWebRTC = {
     heading.appendChild(elem);
 
     elem = document.createElement("button");
-    elem.textContent = "Clear History";
+    elem.textContent = getString("stats_clear");
     elem.className = "no-print";
     elem.onclick = this._onClearStats;
     heading.appendChild(elem);
@@ -379,7 +379,7 @@ var AboutWebRTC = {
     elem.textContent = getString("log_heading");
     heading.appendChild(elem);
     elem = document.createElement("button");
-    elem.textContent = "Clear Log";
+    elem.textContent = getString("log_clear");
     elem.className = "no-print";
     elem.onclick = this._onClearLog;
     heading.appendChild(elem);

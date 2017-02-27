@@ -223,4 +223,22 @@ describe("PageError component:", () => {
     expect(locationLink3.length).toBe(1);
     expect(locationLink3.text()).toBe("test3.js:9:4");
   });
+
+  it("displays error notes", () => {
+    const message = stubPreparedMessages.get("SyntaxError: redeclaration of let a");
+
+    let wrapper = render(PageError({ message, serviceContainer }));
+
+    const notes = wrapper.find(".error-note");
+    expect(notes.length).toBe(1);
+
+    const note = notes.eq(0);
+    expect(note.find(".message-body").text())
+      .toBe("note: Previously declared at line 2, column 6");
+
+    // There should be the location.
+    const locationLink = note.find(`.message-location`);
+    expect(locationLink.length).toBe(1);
+    expect(locationLink.text()).toBe("test-console-api.html:2:6");
+  });
 });

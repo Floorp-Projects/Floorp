@@ -8,19 +8,7 @@
     <link rel="stylesheet" href="chrome://devtools/content/shared/widgets/widgets.css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/widgets.css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/netmonitor.css"/>
-
     <script src="chrome://devtools/content/shared/theme-switching.js"/>
-    <script>
-      "use strict";
-
-      const { BrowserLoader } = Components.utils.import(
-        "resource://devtools/client/shared/browser-loader.js", {});
-      const { require } = BrowserLoader({
-        baseURI: "resource://devtools/client/netmonitor/",
-        window,
-      });
-      window.windowRequire = require;
-    </script>
   </head>
   <body class="theme-sidebar" role="application">
     <div class="root"></div>

@@ -114,7 +114,9 @@ static bool
 obj_toSource(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_CHECK_RECURSION(cx, return false);
+
+    if (!CheckRecursionLimit(cx))
+        return false;
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -172,7 +174,7 @@ JSString*
 js::ObjectToSource(JSContext* cx, HandleObject obj)
 {
     /* If outermost, we need parentheses to be an expression, not a block. */
-    bool outermost = (cx->cycleDetectorSet().count() == 0);
+    bool outermost = cx->cycleDetectorVector().empty();
 
     AutoCycleDetector detector(cx, obj);
     if (!detector.init())

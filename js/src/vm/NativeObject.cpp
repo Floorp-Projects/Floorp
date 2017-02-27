@@ -2020,7 +2020,8 @@ static inline bool
 GeneralizedGetProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue receiver,
                        IsNameLookup nameLookup, MutableHandleValue vp)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    if (!CheckRecursionLimit(cx))
+        return false;
     if (nameLookup) {
         // When nameLookup is true, GetProperty implements ES6 rev 34 (2015 Feb
         // 20) 8.1.1.2.6 GetBindingValue, with step 3 (the call to HasProperty)
@@ -2045,7 +2046,8 @@ static inline bool
 GeneralizedGetProperty(JSContext* cx, JSObject* obj, jsid id, const Value& receiver,
                        IsNameLookup nameLookup, FakeMutableHandle<Value> vp)
 {
-    JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
+    if (!CheckRecursionLimitDontReport(cx))
+        return false;
     if (nameLookup)
         return false;
     return GetPropertyNoGC(cx, obj, receiver, id, vp.address());
@@ -2125,12 +2127,24 @@ js::NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receive
 }
 
 bool
-js::GetPropertyForNameLookup(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg, HandleId id, MutableHandleValue vp)
 {
-    RootedValue receiver(cx, ObjectValue(*obj));
-    if (obj->getOpsGetProperty())
-        return GeneralizedGetProperty(cx, obj, id, receiver, NameLookup, vp);
-    return NativeGetPropertyInline<CanGC>(cx, obj.as<NativeObject>(), receiver, id, NameLookup, vp);
+    // Manually unwrap 'with' environments to prevent looking up @@unscopables
+    // twice.
+    //
+    // This is unfortunate because internally, the engine does not distinguish
+    // HasProperty from HasBinding: both are implemented as a HasPropertyOp
+    // hook on a WithEnvironmentObject.
+    //
+    // In the case of attempting to get the value of a binding already looked
+    // up via BINDNAME, calling HasProperty on the WithEnvironmentObject is
+    // equivalent to calling HasBinding a second time. This results in the
+    // incorrect behavior of performing the @@unscopables check again.
+    RootedObject env(cx, MaybeUnwrapWithEnvironment(envArg));
+    RootedValue receiver(cx, ObjectValue(*env));
+    if (env->getOpsGetProperty())
+        return GeneralizedGetProperty(cx, env, id, receiver, NameLookup, vp);
+    return NativeGetPropertyInline<CanGC>(cx, env.as<NativeObject>(), receiver, id, NameLookup, vp);
 }
 
 

@@ -58,6 +58,11 @@ public class BrowserContract {
     public static final String PARAM_DATASET_ID = "dataset_id";
     public static final String PARAM_GROUP_BY = "group_by";
 
+    public static final String METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC = "insertHistoryWithVisitsSync";
+    public static final String METHOD_RESULT = "methodResult";
+    public static final String METHOD_PARAM_OBJECT = "object";
+    public static final String METHOD_PARAM_DATA = "data";
+
     static public enum ExpirePriority {
         NORMAL,
         AGGRESSIVE

@@ -23,10 +23,10 @@ load 413274-1.xhtml
 load 416461-1.xul
 load 418007-1.xhtml
 load 431705-1.xul
-skip-if(stylo) load 432561-1.html # bug 1323705
+load 432561-1.html # bug 1323705
 load 437170-1.html
 load 437532-1.html
-skip-if(stylo) load 439184-1.html # bug 1323939
+load 439184-1.html # bug 1323939
 load 444237-1.html
 load 444848-1.html 
 load 447776-1.html
@@ -34,7 +34,7 @@ load 447783-1.html
 load 448161-1.html
 load 448161-2.html
 load 452150-1.xhtml
-skip-if(stylo) load 456196.html # bug 132652
+load 456196.html # bug 132652
 load 460209-1.html
 load 460217-1.html
 load 460323-1.html
@@ -81,7 +81,7 @@ load 652976-1.svg
 load 665209-1.html
 load 671799-1.html
 load 671799-2.html
-skip-if(stylo) load 690990-1.html # bug 1323708
+load 690990-1.html # bug 1323708
 load 696188-1.html
 load 696869-1.html
 asserts-if(stylo,2) load 700116.html # bug 1324635
@@ -115,7 +115,7 @@ load 992333-1.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1017798-1.html # bug 1323689
 load 1028514-1.html
 load 1066089-1.html
-skip-if(stylo) load 1074651-1.html # bug 1323652
+load 1074651-1.html # bug 1323652
 load 1135534.html
 pref(dom.webcomponents.enabled,true) load 1089463-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
@@ -152,8 +152,8 @@ pref(layout.css.background-clip-text.enabled,true) load 1264949.html
 pref(layout.css.background-clip-text.enabled,true) load 1270795.html
 pref(layout.css.background-clip-text.enabled,true) load 1275026.html
 load 1278463-1.html
-skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
-skip-if(stylo) load 1277908-2.html # bug 1323652
+pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
+load 1277908-2.html # bug 1323652
 load 1282076-1.html
 pref(dom.animations-api.core.enabled,true) load 1282076-2.html
 pref(dom.animations-api.core.enabled,true) load 1290994-1.html

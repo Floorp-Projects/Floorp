@@ -174,34 +174,39 @@ GetLengthProperty(const Value& lval, MutableHandleValue vp)
     return false;
 }
 
-template <bool TypeOf> inline bool
-FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName name,
+enum class GetNameMode { Normal, TypeOf };
+
+template <GetNameMode mode>
+inline bool
+FetchName(JSContext* cx, HandleObject receiver, HandleObject holder, HandlePropertyName name,
           Handle<PropertyResult> prop, MutableHandleValue vp)
 {
     if (!prop) {
-        if (TypeOf) {
+        switch (mode) {
+          case GetNameMode::Normal:
+            return ReportIsNotDefined(cx, name);
+          case GetNameMode::TypeOf:
             vp.setUndefined();
             return true;
         }
-        return ReportIsNotDefined(cx, name);
     }
 
     /* Take the slow path if shape was not found in a native object. */
-    if (!obj->isNative() || !obj2->isNative()) {
+    if (!receiver->isNative() || !holder->isNative()) {
         Rooted<jsid> id(cx, NameToId(name));
-        if (!GetProperty(cx, obj, obj, id, vp))
+        if (!GetProperty(cx, receiver, receiver, id, vp))
             return false;
     } else {
         RootedShape shape(cx, prop.shape());
-        RootedObject normalized(cx, obj);
-        if (normalized->is<WithEnvironmentObject>() && !shape->hasDefaultGetter())
-            normalized = &normalized->as<WithEnvironmentObject>().object();
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
             MOZ_ASSERT(shape->hasSlot());
-            vp.set(obj2->as<NativeObject>().getSlot(shape->slot()));
+            vp.set(holder->as<NativeObject>().getSlot(shape->slot()));
         } else {
-            if (!NativeGetExistingProperty(cx, normalized, obj2.as<NativeObject>(), shape, vp))
+            // Unwrap 'with' environments for reasons given in
+            // GetNameBoundInEnvironment.
+            RootedObject normalized(cx, MaybeUnwrapWithEnvironment(receiver));
+            if (!NativeGetExistingProperty(cx, normalized, holder.as<NativeObject>(), shape, vp))
                 return false;
         }
     }
@@ -227,6 +232,29 @@ FetchNameNoGC(JSObject* pobj, PropertyResult prop, MutableHandleValue vp)
 
     vp.set(pobj->as<NativeObject>().getSlot(shape->slot()));
     return !IsUninitializedLexical(vp);
+}
+
+template <js::GetNameMode mode>
+inline bool
+GetEnvironmentName(JSContext* cx, HandleObject envChain, HandlePropertyName name,
+                   MutableHandleValue vp)
+{
+    {
+        PropertyResult prop;
+        JSObject* obj = nullptr;
+        JSObject* pobj = nullptr;
+        if (LookupNameNoGC(cx, name, envChain, &obj, &pobj, &prop)) {
+            if (FetchNameNoGC(pobj, prop, vp))
+                return true;
+        }
+    }
+
+    Rooted<PropertyResult> prop(cx);
+    RootedObject obj(cx), pobj(cx);
+    if (!LookupName(cx, name, envChain, &obj, &pobj, &prop))
+        return false;
+
+    return FetchName<mode>(cx, obj, pobj, name, prop, vp);
 }
 
 inline bool

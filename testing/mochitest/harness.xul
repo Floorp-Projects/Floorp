@@ -25,7 +25,7 @@
           src="chrome://mochikit/content/manifestLibrary.js" />
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
-  <script type="application/javascript;version=1.7"><![CDATA[
+  <script type="application/javascript"><![CDATA[
 
 if (Cc === undefined) {
   var Cc = Components.classes;

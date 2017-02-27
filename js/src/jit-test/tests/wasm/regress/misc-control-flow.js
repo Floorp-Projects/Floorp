@@ -1,5 +1,3 @@
-load(libdir + "wasm.js");
-
 wasmFailValidateText(`(module
    (func (result i32) (param i32)
      (loop (if (i32.const 0) (br 0)) (get_local 0)))

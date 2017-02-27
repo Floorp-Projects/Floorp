@@ -57,8 +57,8 @@ impl<T: ?Sized> PartialEq<T> for Ident
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-    use nom::IResult;
-    use space::skip_whitespace;
+    use synom::IResult;
+    use synom::space::skip_whitespace;
     use unicode_xid::UnicodeXID;
 
     pub fn ident(input: &str) -> IResult<&str, Ident> {
@@ -89,7 +89,7 @@ pub mod parsing {
             _ => return IResult::Error,
         }
 
-        while let Some((i, ch)) = chars.next() {
+        for (i, ch) in chars {
             if !UnicodeXID::is_xid_continue(ch) {
                 return IResult::Done(&input[i..], input[..i].into());
             }

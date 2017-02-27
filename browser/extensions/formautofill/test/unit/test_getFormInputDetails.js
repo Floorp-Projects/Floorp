@@ -77,7 +77,7 @@ TESTCASES.forEach(testcase => {
 
     let doc = MockDocument.createTestDocument(
               "http://localhost:8080/test/", testcase.document);
-    FormAutofillContent._identifyAutofillFields(doc);
+    FormAutofillContent.identifyAutofillFields(doc);
 
     for (let i in testcase.targetInput) {
       let input = doc.getElementById(testcase.targetInput[i]);
