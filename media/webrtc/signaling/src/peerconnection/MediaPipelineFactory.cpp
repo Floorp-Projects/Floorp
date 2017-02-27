@@ -135,6 +135,10 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
   configRaw->mCcmFbTypes = desc.mCcmFbTypes;
   configRaw->mRembFbSet = desc.RtcpFbRembIsSet();
   configRaw->mFECFbSet = desc.mFECEnabled;
+  if (desc.mFECEnabled) {
+    configRaw->mREDPayloadType = desc.mREDPayloadType;
+    configRaw->mULPFECPayloadType = desc.mULPFECPayloadType;
+  }
 
   *aConfig = configRaw;
   return NS_OK;
