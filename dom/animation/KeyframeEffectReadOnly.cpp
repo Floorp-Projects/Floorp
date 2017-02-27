@@ -1374,8 +1374,7 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
                         " on an effect in an effect set");
   MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
                          " on an effect with a parent animation");
-  TimeStamp lastSyncTime =
-    effectSet->LastTransformSyncTime(mAnimation->CascadeLevel());
+  TimeStamp lastSyncTime = effectSet->LastTransformSyncTime();
   // If this animation can cause overflow, we can throttle some of the ticks.
   if (!lastSyncTime.IsNull() &&
       (now - lastSyncTime) < OverflowRegionRefreshInterval()) {

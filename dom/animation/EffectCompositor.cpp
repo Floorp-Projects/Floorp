@@ -494,7 +494,7 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
              "EffectSet should not change while composing style");
 
   effectSet->UpdateLastTransformSyncTime(
-    aCascadeLevel, mPresContext->RefreshDriver()->MostRecentRefresh());
+    mPresContext->RefreshDriver()->MostRecentRefresh());
   return animRule.mServo;
 }
 
@@ -765,7 +765,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
   MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),
              "EffectSet should not change while composing style");
 
-  effects->UpdateLastTransformSyncTime(aCascadeLevel, aRefreshTime);
+  effects->UpdateLastTransformSyncTime(aRefreshTime);
 }
 
 /* static */ void

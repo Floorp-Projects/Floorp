@@ -169,16 +169,13 @@ public:
     return mAnimationRule[aCascadeLevel];
   }
 
-  const TimeStamp& LastTransformSyncTime(EffectCompositor::CascadeLevel
-                                           aCascadeLevel) const
+  const TimeStamp& LastTransformSyncTime() const
   {
-    return mLastTransformSyncTime[aCascadeLevel];
+    return mLastTransformSyncTime;
   }
-  void UpdateLastTransformSyncTime(EffectCompositor::CascadeLevel
-                                     aCascadeLevel,
-                                   const TimeStamp& aRefreshTime)
+  void UpdateLastTransformSyncTime(const TimeStamp& aRefreshTime)
   {
-    mLastTransformSyncTime[aCascadeLevel] = aRefreshTime;
+    mLastTransformSyncTime = aRefreshTime;
   }
 
   bool CascadeNeedsUpdate() const { return mCascadeNeedsUpdate; }
@@ -218,10 +215,7 @@ private:
   // effect set were last updated and sent to the compositor. This is used for
   // transform animations that run on the compositor but need to be updated on
   // the main thread periodically (e.g. so scrollbars can be updated).
-  EnumeratedArray<EffectCompositor::CascadeLevel,
-                  EffectCompositor::CascadeLevel(
-                    EffectCompositor::kCascadeLevelCount),
-                  TimeStamp> mLastTransformSyncTime;
+  TimeStamp mLastTransformSyncTime;
 
   // Dirty flag to represent when the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel on effects in this set might need to be
