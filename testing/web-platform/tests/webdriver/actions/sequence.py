@@ -1,18 +1,4 @@
-from support.refine import get_keys, filter_dict
-
-
-def get_events(session):
-    """Return list of key events recorded in the test_keys_page fixture."""
-    events = session.execute_script("return allEvents.events;") or []
-    # `key` values in `allEvents` may be escaped (see `escapeSurrogateHalf` in
-    # test_keys_wdspec.html), so this converts them back into unicode literals.
-    for e in events:
-        # example: turn "U+d83d" (6 chars) into u"\ud83d" (1 char)
-        if e["key"].startswith(u"U+"):
-            key = e["key"]
-            hex_suffix = key[key.index("+") + 1:]
-            e["key"] = unichr(int(hex_suffix, 16))
-    return events
+from support.refine import get_keys, filter_dict, get_events
 
 
 def test_no_actions_send_no_events(session, key_reporter, key_chain):
