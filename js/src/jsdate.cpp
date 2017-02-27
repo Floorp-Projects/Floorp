@@ -586,23 +586,29 @@ RegionMatches(const char* s1, int s1off, const CharT* s2, int s2off, int count)
     return count == 0;
 }
 
-/* ES6 20.3.3.4. */
+// ES2017 draft rev (TODO: Add git hash when PR 642 is merged.)
+// 20.3.3.4
+// Date.UTC(year [, month [, date [, hours [, minutes [, seconds [, ms]]]]]])
 static bool
 date_UTC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    // Steps 1-2.
+    // Step 1.
     double y;
     if (!ToNumber(cx, args.get(0), &y))
         return false;
 
-    // Steps 3-4.
+    // Step 2.
     double m;
-    if (!ToNumber(cx, args.get(1), &m))
-        return false;
+    if (args.length() >= 2) {
+        if (!ToNumber(cx, args[1], &m))
+            return false;
+    } else {
+        m = 0;
+    }
 
-    // Steps 5-6.
+    // Step 3.
     double dt;
     if (args.length() >= 3) {
         if (!ToNumber(cx, args[2], &dt))
@@ -611,7 +617,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
         dt = 1;
     }
 
-    // Steps 7-8.
+    // Step 4.
     double h;
     if (args.length() >= 4) {
         if (!ToNumber(cx, args[3], &h))
@@ -620,7 +626,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
         h = 0;
     }
 
-    // Steps 9-10.
+    // Step 5.
     double min;
     if (args.length() >= 5) {
         if (!ToNumber(cx, args[4], &min))
@@ -629,7 +635,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
         min = 0;
     }
 
-    // Steps 11-12.
+    // Step 6.
     double s;
     if (args.length() >= 6) {
         if (!ToNumber(cx, args[5], &s))
@@ -638,7 +644,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
         s = 0;
     }
 
-    // Steps 13-14.
+    // Step 7.
     double milli;
     if (args.length() >= 7) {
         if (!ToNumber(cx, args[6], &milli))
@@ -647,7 +653,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
         milli = 0;
     }
 
-    // Step 15.
+    // Step 8.
     double yr = y;
     if (!IsNaN(y)) {
         double yint = ToInteger(y);
@@ -655,7 +661,7 @@ date_UTC(JSContext* cx, unsigned argc, Value* vp)
             yr = 1900 + yint;
     }
 
-    // Step 16.
+    // Step 9.
     ClippedTime time = TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)));
     args.rval().set(TimeValue(time));
     return true;
