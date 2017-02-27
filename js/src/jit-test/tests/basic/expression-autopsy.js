@@ -101,7 +101,7 @@ check("o[(- (o + 1))]");
 check_one("6", (function () { 6() }), " is not a function");
 check_one("4", (function() { (4||eval)(); }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
-check_one("(intermediate value)[Symbol.iterator](...).next(...).value",
+check_one("[...][Symbol.iterator](...).next(...).value",
           function () { ieval("{ let x; var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 check_one("(void 1)", function() { (void 1)(); }, " is not a function");
 check_one("(void o[1])", function() { var o = []; (void o[1])() }, " is not a function");
@@ -174,6 +174,13 @@ check_one("(new foo.x(...))",
           " is not a function");
 check_one("(new foo.x(...))",
           function() { var foo = { x: function() {} }; new foo.x(...[])(); },
+          " is not a function");
+
+check_one("[...].foo",
+          function() { [undefined].foo(); },
+          " is not a function");
+check_one("[...].foo",
+          function() { [undefined, ...[]].foo(); },
           " is not a function");
 
 // Manual testing for this case: the only way to trigger an error is *not* on
