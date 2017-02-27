@@ -8,7 +8,7 @@
 
 "use strict";
 
-const selfHostedRegex = /js\/src\/builtin\/.*?\.js$/;
+const selfHostedRegex = /js\/src\/(?:builtin|shell)\/.*?\.js$/;
 const macroRegex = /\s*\#(if|ifdef|else|elif|endif|include|define|undef).*/;
 
 module.exports = {
