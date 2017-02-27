@@ -100,7 +100,7 @@ assert.b2g = function (msg = "") {
 assert.content = function (context, msg = "") {
   msg = msg || "Only supported in content context";
   assert.that(c => c.toString() == "content", msg, UnsupportedOperationError)(context);
-}
+};
 
 /**
  * Asserts that the current browser is a mobile browser, that is either
@@ -134,6 +134,25 @@ assert.mobile = function (msg = "") {
 assert.defined = function (obj, msg = "") {
   msg = msg || error.pprint`Expected ${obj} to be defined`;
   return assert.that(o => typeof o != "undefined", msg)(obj);
+};
+
+/**
+ * Asserts that |obj| is a finite number.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {number}
+ *     |obj| is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |obj| is not a number.
+ */
+assert.number = function (obj, msg = "") {
+  msg = msg || error.pprint`Expected ${obj} to be finite number`;
+  return assert.that(Number.isFinite, msg)(obj);
 };
 
 /**

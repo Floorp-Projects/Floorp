@@ -925,8 +925,8 @@ fails == 407243-1.html 407243-1.html
 == 407937-1.html 407937-1.html
 == 408493-1.html 408493-1.html
 == 408493-2.html 408493-2.html
-fails == 408656-1a.html 408656-1a.html
-fails == 408656-1b.html 408656-1b.html
+== 408656-1a.html 408656-1a.html
+== 408656-1b.html 408656-1b.html
 == 408656-1c.html 408656-1c.html
 fails == 408782-1a.html 408782-1a.html
 fails == 408782-1b.html 408782-1b.html
