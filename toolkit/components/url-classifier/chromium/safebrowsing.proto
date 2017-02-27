@@ -111,6 +111,9 @@ message FetchThreatListUpdatesRequest {
 
   // The requested threat list updates.
   repeated ListUpdateRequest list_update_requests = 3;
+
+  // Chrome-specific client information.
+  optional ChromeClientInfo chrome_client_info = 4;
 }
 
 // Response type for threat list update requests.
@@ -149,8 +152,8 @@ message FetchThreatListUpdatesResponse {
     // response.
     repeated ThreatEntrySet additions = 5;
 
-    // A set of entries to remove from a local threat type's list. Repeated for
-    // the same reason as above.
+    // A set of entries to remove from a local threat type's list. In practice,
+    // this field is empty or contains exactly one ThreatEntrySet.
     repeated ThreatEntrySet removals = 6;
 
     // The new client state, in encrypted format. Opaque to clients.
@@ -267,6 +270,22 @@ enum ThreatType {
 
   // API abuse threat type.
   API_ABUSE = 6;
+
+  // Malicious binary threat type.
+  MALICIOUS_BINARY = 7;
+
+  // Client side detection whitelist threat type.
+  CSD_WHITELIST = 8;
+
+  // Client side download detection whitelist threat type.
+  CSD_DOWNLOAD_WHITELIST = 9;
+
+  // Client incident threat type.
+  CLIENT_INCIDENT = 10;
+
+  // Patterns to be used for activating the subresource filter. Interstitial
+  // will not be shown for patterns from this list.
+  SUBRESOURCE_FILTER = 13;
 }
 
 // Types of platforms.
@@ -309,6 +328,28 @@ message ClientInfo {
 
   // The version of the client implementation.
   optional string client_version = 2;
+}
+
+// The client metadata associated with Safe Browsing API requests specific to
+// users of Chrome.
+message ChromeClientInfo {
+  // Safe Browsing reporting populations in Chrome.
+  enum SafeBrowsingReportingPopulation {
+    // Unspecified reporting verbosity.
+    UNSPECIFIED = 0;
+
+    // Client is opted out of reporting.
+    OPT_OUT = 1;
+
+    // Legacy extended reporting population.
+    EXTENDED = 2;
+
+    // Scout reporting population.
+    SCOUT = 3;
+  }
+
+  // The reporting population of the user.
+  optional SafeBrowsingReportingPopulation reporting_population = 1;
 }
 
 // The expected state of a client's local database.
@@ -354,6 +395,15 @@ enum ThreatEntryType {
 
   // An IP range.
   IP_RANGE = 3;
+
+  // Chrome extension.
+  CHROME_EXTENSION = 4;
+
+  // Filename.
+  FILENAME = 5;
+
+  // CERT.
+  CERT = 6;
 }
 
 // A set of threats that should be added or removed from a client's local
