@@ -1,8 +1,17 @@
-
 <!doctype html>
 <meta charset=utf-8>
 <head>
     <title>Test Actions</title>
+    <style>
+      div { padding:0px; margin: 0px; }
+      #resultContainer { width: 600px; height: 60px; }
+      #outer { width: 100px; height: 50px; background-color: #ccc; }
+      #trackPointer {
+        width: 5px;
+        height: 5px;
+        border: solid 1px red;
+        position: fixed; }
+    </style>
     <script>
         var allEvents = {events: []};
         function displayMessage(message) {
@@ -33,7 +42,7 @@
           return key;
         }
 
-        function recordEvent(event) {
+        function recordKeyboardEvent(event) {
           var key = escapeSurrogateHalf(event.key);
           allEvents.events.push({
             "code": event.code,
@@ -46,25 +55,77 @@
             "repeat": event.repeat,
             "type": event.type
           });
-          appendMessage(`${event.type}(code:${event.code}, key:${key}, which:${event.which})`);
+          appendMessage(`${event.type}(` +
+              `code: ${event.code}, ` +
+              `key: ${key}, ` +
+              `which: ${event.which})`);
+        }
+
+        function recordPointerEvent(event) {
+          allEvents.events.push({
+            "type": event.type,
+            "button": event.button,
+            "buttons": event.buttons,
+            "pageX": event.pageX,
+            "pageY": event.pageY,
+            "target": event.target.id
+          });
+          appendMessage(`${event.type}(` +
+              `button: ${event.button}, ` +
+              `pageX: ${event.pageX}, ` +
+              `pageY: ${event.pageY}, ` +
+              `button: ${event.button}, ` +
+              `buttons: ${event.buttons}, ` +
+              `target id: ${event.target.id})`);
+        }
+
+        function recordFirstPointerMove(event) {
+          recordPointerEvent(event);
+          window.removeEventListener("mousemove", recordFirstPointerMove);
         }
 
         function resetEvents() {
             allEvents.events.length = 0;
             displayMessage("");
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          var keyReporter = document.getElementById("keys");
+          ["keyup", "keypress", "keydown"].forEach((e) => {
+            keyReporter.addEventListener(e, recordKeyboardEvent);
+          });
+          var outer = document.getElementById("outer");
+          ["click", "dblclick", "mousedown",
+              "mouseup", "contextmenu"].forEach((e) => {
+            outer.addEventListener(e, recordPointerEvent);
+          });
+          window.addEventListener("mousemove", recordFirstPointerMove);
+          //visual cue for mousemove
+          var pointer = document.getElementById("trackPointer");
+          window.addEventListener("mousemove", (e) => {
+            setTimeout(() => {
+              let offset = 15;
+              pointer.style.top = e.pageY + offset + "px";
+              pointer.style.left = e.pageX + offset + "px";
+            }, 30);
+          });
+        });
     </script>
 </head>
 <body>
+  <div id="trackPointer"></div>
   <div>
     <h2>KeyReporter</h2>
-    <input type="text" id="keys" size="80"
-           onkeyup="recordEvent(event)"
-           onkeypress="recordEvent(event)"
-           onkeydown="recordEvent(event)">
+    <input type="text" id="keys" size="80">
   </div>
-  <div id="resultContainer" style="width:300;height:60">
+  <div>
+    <h2>ClickReporter</h2>
+    <div id="outer">
+    </div>
+  </div>
+  <div id="resultContainer">
     <h2>Events</h2>
     <div id="events"></div>
   </div>
 </body>
+</html>
