@@ -50,6 +50,7 @@ using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::ReadLockHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
 using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 
@@ -348,6 +349,11 @@ union ReadLockDescriptor {
   null_t;
 };
 
+struct ReadLockInit {
+  ReadLockDescriptor sharedLock;
+  ReadLockHandle handle;
+};
+
 union MaybeTexture {
   PTexture;
   null_t;
@@ -403,7 +409,7 @@ struct OpRemoveTexture {
 
 struct TimedTexture {
   PTexture texture;
-  ReadLockDescriptor sharedLock;
+  ReadLockHandle sharedLock;
   TimeStamp timeStamp;
   IntRect picture;
   uint32_t frameID;
@@ -427,8 +433,8 @@ struct OpUseTexture {
 struct OpUseComponentAlphaTextures {
   PTexture textureOnBlack;
   PTexture textureOnWhite;
-  ReadLockDescriptor sharedLockBlack;
-  ReadLockDescriptor sharedLockWhite;
+  ReadLockHandle sharedLockBlack;
+  ReadLockHandle sharedLockWhite;
 };
 
 union MaybeRegion {

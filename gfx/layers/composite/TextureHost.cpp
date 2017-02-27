@@ -560,6 +560,18 @@ TextureHost::DeserializeReadLock(const ReadLockDescriptor& aDesc,
 }
 
 void
+TextureHost::SetReadLock(TextureReadLock* aReadLock)
+{
+  if (!aReadLock) {
+    return;
+  }
+  // If mReadLock is not null it means we haven't unlocked it yet and the content
+  // side should not have been able to write into this texture and send a new lock!
+  MOZ_ASSERT(!mReadLock);
+  mReadLock = aReadLock;
+}
+
+void
 TextureHost::ReadUnlock()
 {
   if (mReadLock) {
