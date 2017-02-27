@@ -232,7 +232,7 @@ event.synthesizeMouse = function (
  *     CSS pixels from the left document margin.
  * @param {number} top
  *     CSS pixels from the top document margin.
- * @param {Object.<string, ?>} event
+ * @param {Object.<string, ?>} opts
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "clickCount", "button", and
  *     "type".
@@ -247,15 +247,26 @@ event.synthesizeMouseAtPoint = function (
   let button = opts.button || 0;
   let clickCount = opts.clickCount || 1;
   let modifiers = event.parseModifiers_(opts);
+  let pressure = ("pressure" in opts) ? opts.pressure : 0;
+  let inputSource = ("inputSource" in opts) ? opts.inputSource :
+      Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  let isDOMEventSynthesized =
+      ("isSynthesized" in opts) ? opts.isSynthesized : true;
+  let isWidgetEventSynthesized =
+      ("isWidgetEventSynthesized" in opts) ? opts.isWidgetEventSynthesized : false;
+  let buttons = ("buttons" in opts) ? opts.buttons : domutils.MOUSE_BUTTONS_NOT_SPECIFIED;
 
-  if (("type" in event) && opts.type) {
+  if (("type" in opts) && opts.type) {
     domutils.sendMouseEvent(
-        opts.type, left, top, button, clickCount, modifiers);
+        opts.type, left, top, button, clickCount, modifiers, false, pressure, inputSource,
+        isDOMEventSynthesized, isWidgetEventSynthesized, buttons);
   } else {
     domutils.sendMouseEvent(
-        "mousedown", left, top, button, clickCount, modifiers);
+        "mousedown", left, top, button, clickCount, modifiers, false, pressure, inputSource,
+        isDOMEventSynthesized, isWidgetEventSynthesized, buttons);
     domutils.sendMouseEvent(
-        "mouseup", left, top, button, clickCount, modifiers);
+        "mouseup", left, top, button, clickCount, modifiers, false, pressure, inputSource,
+        isDOMEventSynthesized, isWidgetEventSynthesized, buttons);
   }
 };
 
