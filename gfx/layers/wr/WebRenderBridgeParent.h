@@ -133,6 +133,11 @@ public:
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
 
+  uint32_t GetIdNameSpace()
+  {
+    return mIdNameSpace;
+  }
+
 private:
   virtual ~WebRenderBridgeParent();
 
@@ -178,8 +183,11 @@ private:
 
   std::queue<PendingTransactionId> mPendingTransactionIds;
   uint32_t mWrEpoch;
+  uint32_t mIdNameSpace;
 
   bool mDestroyed;
+
+  static uint32_t sIdNameSpace;
 };
 
 } // namespace layers

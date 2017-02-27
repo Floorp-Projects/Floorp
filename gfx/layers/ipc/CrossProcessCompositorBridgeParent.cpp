@@ -228,7 +228,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   sIndirectLayerTrees[pipelineHandle].mCrossProcessParent = this;
   sIndirectLayerTrees[pipelineHandle].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
-  *aIdNamespace = api->GetNamespace().mHandle;
+  *aIdNamespace = parent->GetIdNameSpace();
+
   return parent;
 }
 
