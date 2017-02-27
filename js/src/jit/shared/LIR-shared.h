@@ -7213,22 +7213,20 @@ class LCallDeleteElement : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 };
 
 // Patchable jump to stubs generated for a SetProperty cache.
-class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 4>
+class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3>
 {
   public:
     LIR_HEADER(SetPropertyCache)
 
     LSetPropertyCache(const LAllocation& object, const LBoxAllocation& id,
                       const LBoxAllocation& value, const LDefinition& temp,
-                      const LDefinition& tempToUnboxIndex, const LDefinition& tempDouble,
-                      const LDefinition& tempFloat32) {
+                      const LDefinition& tempDouble, const LDefinition& tempFloat32) {
         setOperand(0, object);
         setBoxOperand(Id, id);
         setBoxOperand(Value, value);
         setTemp(0, temp);
-        setTemp(1, tempToUnboxIndex);
-        setTemp(2, tempDouble);
-        setTemp(3, tempFloat32);
+        setTemp(1, tempDouble);
+        setTemp(2, tempFloat32);
     }
 
     static const size_t Id = 1;
@@ -7241,16 +7239,13 @@ class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 4>
     const LDefinition* temp() {
         return getTemp(0);
     }
-    const LDefinition* tempToUnboxIndex() {
-        return getTemp(1);
-    }
     const LDefinition* tempDouble() {
-        return getTemp(2);
+        return getTemp(1);
     }
     const LDefinition* tempFloat32() {
         if (hasUnaliasedDouble())
-            return getTemp(3);
-        return getTemp(2);
+            return getTemp(2);
+        return getTemp(1);
     }
 };
 

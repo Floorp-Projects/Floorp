@@ -930,7 +930,7 @@ BaselineCacheIRCompiler::emitStoreUnboxedProperty()
 
     // Note that the storeUnboxedProperty call here is infallible, as the
     // IR emitter is responsible for guarding on |val|'s type.
-    EmitUnboxedPreBarrierForBaseline(masm, fieldAddr, fieldType);
+    EmitICUnboxedPreBarrier(masm, fieldAddr, fieldType);
     masm.storeUnboxedProperty(fieldAddr, fieldType,
                               ConstantOrRegister(TypedOrValueRegister(val)),
                               /* failure = */ nullptr);
@@ -956,7 +956,7 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     Register obj = allocator.useRegister(masm, objId);
     AutoScratchRegister scratch2(allocator, masm);
 
-    // We don't need a type update IC if the property is always a string.scratch
+    // We don't need a type update IC if the property is always a string.
     if (type != ReferenceTypeDescr::TYPE_STRING) {
         LiveGeneralRegisterSet saveRegs;
         saveRegs.add(obj);
@@ -970,35 +970,10 @@ BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
     masm.addPtr(offsetAddr, scratch1);
     Address dest(scratch1, 0);
 
-    switch (type) {
-      case ReferenceTypeDescr::TYPE_ANY:
-        EmitPreBarrier(masm, dest, MIRType::Value);
-        masm.storeValue(val, dest);
-        break;
-
-      case ReferenceTypeDescr::TYPE_OBJECT: {
-        EmitPreBarrier(masm, dest, MIRType::Object);
-        Label isNull, done;
-        masm.branchTestObject(Assembler::NotEqual, val, &isNull);
-        masm.unboxObject(val, scratch2);
-        masm.storePtr(scratch2, dest);
-        masm.jump(&done);
-        masm.bind(&isNull);
-        masm.storePtr(ImmWord(0), dest);
-        masm.bind(&done);
-        break;
-      }
-
-      case ReferenceTypeDescr::TYPE_STRING:
-        EmitPreBarrier(masm, dest, MIRType::String);
-        masm.unboxString(val, scratch2);
-        masm.storePtr(scratch2, dest);
-        break;
-    }
+    emitStoreTypedObjectReferenceProp(val, type, dest, scratch2);
 
     if (type != ReferenceTypeDescr::TYPE_STRING)
         BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch1, LiveGeneralRegisterSet(), cx_);
-
     return true;
 }
 
@@ -1303,7 +1278,7 @@ BaselineCacheIRCompiler::emitStoreUnboxedArrayElement()
     // Note that the storeUnboxedProperty call here is infallible, as the
     // IR emitter is responsible for guarding on |val|'s type.
     BaseIndex element(scratch, index, ScaleFromElemWidth(UnboxedTypeSize(elementType)));
-    EmitUnboxedPreBarrierForBaseline(masm, element, elementType);
+    EmitICUnboxedPreBarrier(masm, element, elementType);
     masm.storeUnboxedProperty(element, elementType,
                               ConstantOrRegister(TypedOrValueRegister(val)),
                               /* failure = */ nullptr);
@@ -1370,13 +1345,13 @@ BaselineCacheIRCompiler::emitStoreUnboxedArrayElementHole()
     masm.add32(Imm32(1), length);
     masm.bind(&skipIncrementLength);
 
-    // Skip EmitUnboxedPreBarrierForBaseline as the memory is uninitialized.
+    // Skip EmitICUnboxedPreBarrier as the memory is uninitialized.
     masm.jump(&doStore);
 
     masm.bind(&inBounds);
 
     BaseIndex element(scratch, index, ScaleFromElemWidth(UnboxedTypeSize(elementType)));
-    EmitUnboxedPreBarrierForBaseline(masm, element, elementType);
+    EmitICUnboxedPreBarrier(masm, element, elementType);
 
     // Note that the storeUnboxedProperty call here is infallible, as the
     // IR emitter is responsible for guarding on |val|'s type.

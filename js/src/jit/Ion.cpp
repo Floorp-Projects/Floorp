@@ -1275,6 +1275,9 @@ void
 IonScript::toggleBarriers(bool enabled, ReprotectCode reprotect)
 {
     method()->togglePreBarriers(enabled, reprotect);
+
+    for (size_t i = 0; i < numICs(); i++)
+        getICFromIndex(i).togglePreBarriers(enabled, reprotect);
 }
 
 void
