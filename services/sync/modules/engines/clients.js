@@ -300,8 +300,10 @@ ClientEngine.prototype = {
       // bug 1287687)
       delete this._incomingClients[this.localID];
       let names = new Set([this.localName]);
-      for (let id in this._incomingClients) {
+      for (let [id, serverLastModified] of Object.entries(this._incomingClients)) {
         let record = this._store._remoteClients[id];
+        // stash the server last-modified time on the record.
+        record.serverLastModified = serverLastModified;
         if (!names.has(record.name)) {
           names.add(record.name);
           continue;
@@ -325,7 +327,14 @@ ClientEngine.prototype = {
         this._modified.set(clientId, 0);
       }
     }
+    let updatedIDs = this._modified.ids();
     SyncEngine.prototype._uploadOutgoing.call(this);
+    // Record the response time as the server time for each item we uploaded.
+    for (let id of updatedIDs) {
+      if (id != this.localID) {
+        this._store._remoteClients[id].serverLastModified = this.lastSync;
+      }
+    }
   },
 
   _onRecordsWritten(succeeded, failed) {
@@ -747,7 +756,8 @@ ClientStore.prototype = {
       // record.device = "";            // Bug 1100723
       // record.formfactor = "";        // Bug 1100722
     } else {
-      record.cleartext = this._remoteClients[id];
+      record.cleartext = Object.assign({}, this._remoteClients[id]);
+      delete record.cleartext.serverLastModified; // serverLastModified is a local only attribute.
 
       // Add the commands we have to send
       if (commandsChanges && commandsChanges.length) {
