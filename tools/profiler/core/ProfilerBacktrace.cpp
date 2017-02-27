@@ -9,8 +9,10 @@
 #include "ProfileJSONWriter.h"
 #include "SyncProfile.h"
 
-ProfilerBacktrace::ProfilerBacktrace(SyncProfile* aProfile)
-  : mProfile(aProfile)
+ProfilerBacktrace::ProfilerBacktrace(ProfileBuffer* aBuffer,
+                                     SyncProfile* aProfile)
+  : mBuffer(aBuffer)
+  , mProfile(aProfile)
 {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
   MOZ_ASSERT(aProfile);
@@ -19,6 +21,7 @@ ProfilerBacktrace::ProfilerBacktrace(SyncProfile* aProfile)
 ProfilerBacktrace::~ProfilerBacktrace()
 {
   MOZ_COUNT_DTOR(ProfilerBacktrace);
+  delete mBuffer;
   delete mProfile;
 }
 
@@ -27,5 +30,5 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                               UniqueStacks& aUniqueStacks)
 {
   mozilla::MutexAutoLock lock(mProfile->GetMutex());
-  mProfile->StreamJSON(aWriter, aUniqueStacks);
+  mProfile->StreamJSON(mBuffer, aWriter, aUniqueStacks);
 }
