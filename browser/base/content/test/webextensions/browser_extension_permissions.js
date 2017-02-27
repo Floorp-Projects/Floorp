@@ -4,9 +4,6 @@
 // get rid of this...
 requestLongerTimeout(2);
 
-const BASE = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content/", "https://example.com/");
-
 const INSTALL_PAGE = `${BASE}/file_install_extensions.html`;
 const PERMS_XPI = "browser_webext_permissions.xpi";
 const NO_PERMS_XPI = "browser_webext_nopermissions.xpi";
@@ -15,37 +12,12 @@ const ID = "permissions@test.mozilla.org";
 Services.perms.add(makeURI("https://example.com/"), "install",
                    Services.perms.ALLOW_ACTION);
 
-registerCleanupFunction(async function() {
-  let addon = await AddonManager.getAddonByID(ID);
-  if (addon) {
-    ok(false, `Addon ${ID} was still installed at the end of the test`);
-    addon.uninstall();
-  }
-});
-
 function isDefaultIcon(icon) {
   // These are basically the same icon, but code within webextensions
   // generates references to the former and generic add-ons manager code
   // generates referces to the latter.
   return (icon == "chrome://browser/content/extension.svg" ||
           icon == "chrome://mozapps/skin/extensions/extensionGeneric.svg");
-}
-
-function promisePopupNotificationShown(name) {
-  return new Promise(resolve => {
-    function popupshown() {
-      let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
-
-      ok(notification, `${name} notification shown`);
-      ok(PopupNotifications.isPanelOpen, "notification panel open");
-
-      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstChild);
-    }
-
-    PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
 }
 
 function checkNotification(panel, filename) {
