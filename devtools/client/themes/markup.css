@@ -277,16 +277,24 @@ ul.children + .tag-line::before {
 }
 
 .editor.text .whitespace::before {
-  content: "";
+  /* black circle (full) character */
+  content: "\25cf";
   display: inline-block;
-  height: 4px;
-  width: 4px;
-  border: 1px solid var(--theme-body-color-inactive);
-  border-radius: 50%;
+  width: 12px;
+  height: 8px;
+  margin: 0 2px;
+  line-height: 7px;
+  font-size: 0.6em;
+  color: var(--theme-body-color-inactive);
+  border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .tag-line[selected] .editor.text .whitespace::before {
-  border-color: white;
+  color: white;
 }
 
 .more-nodes {
