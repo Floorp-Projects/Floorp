@@ -136,14 +136,6 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  // Although the spec doesn't say that writing-mode is not applied to
-  // table-cells, we still override this method here because we want to
-  // make effective writing mode of table structure frames consistent
-  // within a table. The content inside table cells is reflowed by an
-  // anonymous block, hence their writing mode is not affected.
-  virtual mozilla::WritingMode GetWritingMode() const override
-    { return GetTableFrame()->GetWritingMode(); }
-
   void BlockDirAlignChild(mozilla::WritingMode aWM, nscoord aMaxAscent);
 
   /*
