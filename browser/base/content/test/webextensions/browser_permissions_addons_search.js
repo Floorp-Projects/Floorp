@@ -39,4 +39,4 @@ async function installSearch(filename) {
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
 }
 
-add_task(() => testInstallMethod(installSearch));
+add_task(() => testInstallMethod(installSearch, "installAmo"));

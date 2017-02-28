@@ -20,4 +20,4 @@ async function installFile(filename) {
   contentWin.gViewController.doCommand("cmd_installFromFile");
 }
 
-add_task(() => testInstallMethod(installFile));
+add_task(() => testInstallMethod(installFile, "installLocal"));
