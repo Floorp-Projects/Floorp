@@ -129,6 +129,16 @@ public class WebViewProvider {
                     }
                     super.onPageFinished(view, url);
                 }
+
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    if ((!url.startsWith("http://")) && (!url.startsWith("https://") && (!url.startsWith("file://")))) {
+                        callback.handleExternalUrl(url);
+                        return true;
+                    }
+
+                    return super.shouldOverrideUrlLoading(view, url);
+                }
             };
         }
 
