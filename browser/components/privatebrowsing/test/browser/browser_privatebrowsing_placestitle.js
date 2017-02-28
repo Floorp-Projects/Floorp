@@ -25,7 +25,7 @@ add_task(function* test() {
 
   let testNumber = 0;
   let historyObserver = {
-    onTitleChanged: function(aURI, aPageTitle) {
+    onTitleChanged(aURI, aPageTitle) {
       if (aURI.spec != TEST_URL)
         return;
       switch (++testNumber) {
@@ -48,13 +48,13 @@ add_task(function* test() {
       }
     },
 
-    onBeginUpdateBatch: function () {},
-    onEndUpdateBatch: function () {},
-    onVisit: function () {},
-    onDeleteURI: function () {},
-    onClearHistory: function () {},
-    onPageChanged: function () {},
-    onDeleteVisits: function() {},
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit() {},
+    onDeleteURI() {},
+    onClearHistory() {},
+    onPageChanged() {},
+    onDeleteVisits() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
   PlacesUtils.history.addObserver(historyObserver, false);
