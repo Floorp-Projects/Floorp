@@ -13,6 +13,16 @@
      {}
     ]
    ],
+   "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
+    [
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/support/module.js": [
+    [
+     {}
+    ]
+   ],
    "wasm/js/address.wast.js": [
     [
      {}
@@ -332,11 +342,6 @@
     [
      {}
     ]
-   ],
-   "html/semantics/scripting-1/the-script-element/support/module.js": [
-    [
-     {}
-    ]
    ]
   },
   "testharness": {
@@ -349,6 +354,12 @@
    "html/semantics/scripting-1/the-script-element/create-module-script.html": [
     [
      "/_mozilla/html/semantics/scripting-1/the-script-element/create-module-script.html",
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/reload-failed-module-script.html": [
+    [
+     "/_mozilla/html/semantics/scripting-1/the-script-element/reload-failed-module-script.html",
      {}
     ]
    ],
@@ -734,8 +745,16 @@
    "testharness"
   ],
   "html/semantics/scripting-1/the-script-element/create-module-script.html": [
-   "139c1ae0c7dafc27124dbc648925a3911b54292a",
+   "3214bced5d81e8001a321aea4c80675b6603b11d",
    "testharness"
+  ],
+  "html/semantics/scripting-1/the-script-element/reload-failed-module-script.html": [
+   "5b8cf6809bd8d0797f4172bf9a01f9085c0abbaf",
+   "testharness"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
+   "52d9e4b6332f11467c1a7d3d18893fdf8ce6ff72",
+   "support"
   ],
   "html/semantics/scripting-1/the-script-element/support/module.js": [
    "3de5a5a1fb12e698509ac14ba44d7b2b474330f4",
