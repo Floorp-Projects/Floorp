@@ -737,7 +737,7 @@ nsScriptLoader::WaitForModuleFetch(nsModuleLoadRequest *aRequest)
 
   RefPtr<nsModuleScript> ms;
   MOZ_ALWAYS_TRUE(mFetchedModules.Get(aRequest->mURI, getter_AddRefs(ms)));
-  if (!ms) {
+  if (!ms || ms->InstantiationFailed()) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -999,6 +999,7 @@ void
 nsScriptLoader::StartFetchingModuleDependencies(nsModuleLoadRequest* aRequest)
 {
   MOZ_ASSERT(aRequest->mModuleScript);
+  MOZ_ASSERT(!aRequest->mModuleScript->InstantiationFailed());
   MOZ_ASSERT(!aRequest->IsReadyToRun());
   aRequest->mProgress = nsModuleLoadRequest::Progress::FetchingImports;
 
