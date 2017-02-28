@@ -11077,5 +11077,14 @@
     "bug_numbers": [1307689],
     "description": "Records a value each time a tab that is showing the loading throbber is interrupted. Desktop only.",
     "labels": ["stop", "back", "forward", "historyNavigation", "reload", "tabClosed", "newURI"]
+  },
+  "EXTENSION_INSTALL_PROMPT_RESULT": {
+    "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],
+    "bug_numbers": [1338713],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["installAmoAccepted", "installAmoRejected", "installLocalAccepted", "installLocalRejected", "installWebAccepted", "installWebRejected", "sideloadAccepted", "sideloadRejected", "updateAccepted", "updateRejected"],
+    "description": "Results of displaying add-on installation notifications.",
+    "releaseChannelCollection": "opt-out"
   }
 }

@@ -172,6 +172,8 @@ add_task(function* () {
     yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 
+  hookExtensionsTelemetry();
+
   let changePromise = new Promise(resolve => {
     ExtensionsUI.on("change", function listener() {
       ExtensionsUI.off("change", listener);
@@ -326,6 +328,9 @@ add_task(function* () {
 
   addon4 = yield AddonManager.getAddonByID(ID4);
   is(addon4.userDisabled, false, "Addon 4 should be enabled");
+
+  // We should have recorded 1 cancelled followed by 3 accepted sideloads.
+  expectTelemetry(["sideloadRejected", "sideloadAccepted", "sideloadAccepted", "sideloadAccepted"]);
 
   isnot(menuButton.getAttribute("badge-status"), "addon-alert", "Should no longer have addon alert badge");
 
