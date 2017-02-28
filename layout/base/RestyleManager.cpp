@@ -1404,13 +1404,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     {
       MOZ_ASSERT(aChangeList[i].mHint & nsChangeHint_ReconstructFrame);
       MOZ_ASSERT(!aChangeList[i].mFrame);
-      MOZ_ASSERT(!aChangeList[i].mContent->GetPrimaryFrame());
       ++i;
     }
     if (i != lazyRangeStart) {
       nsIContent* start = aChangeList[lazyRangeStart].mContent;
       nsIContent* end = aChangeList[i-1].mContent->GetNextSibling();
-      nsIContent* container = start->GetFlattenedTreeParent();
+      nsIContent* container = start->GetParent();
       MOZ_ASSERT(container);
       if (!end) {
         frameConstructor->ContentAppended(container, start, false);
