@@ -379,6 +379,7 @@ private:
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 
   Maybe<DocshellEntryMonitor> mDocShellEntryMonitor;
+  JS::AutoHideScriptedCaller mCallerOverride;
 };
 
 /*
