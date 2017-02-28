@@ -34,7 +34,7 @@ add_task(function* test() {
 
       PlacesUtils.history.addObserver(historyObserver, false);
     });
-  };
+  }
 
   yield PlacesTestUtils.clearHistory();
 
