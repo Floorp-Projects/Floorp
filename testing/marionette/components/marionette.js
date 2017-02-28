@@ -55,6 +55,7 @@ MarionetteComponent.prototype = {
   ],
   enabled: false,
   finalUiStartup: false,
+  gfxWindow: null,
   server: null,
 };
 
@@ -113,13 +114,15 @@ MarionetteComponent.prototype.handle = function (cmdLine) {
   }
 };
 
-MarionetteComponent.prototype.observe = function (subj, topic, data) {
+MarionetteComponent.prototype.observe = function (subject, topic, data) {
   switch (topic) {
     case "profile-after-change":
-      this.maybeReadPrefsFromEnvironment();
-      // Using final-ui-startup as the xpcom category doesn't seem to work,
+      // Using sessionstore-windows-restored as the xpcom category doesn't seem to work,
       // so we wait for that by adding an observer here.
-      this.observerService.addObserver(this, "final-ui-startup", false);
+      this.observerService.addObserver(this, "sessionstore-windows-restored", false);
+
+      this.maybeReadPrefsFromEnvironment();
+
 #ifdef ENABLE_MARIONETTE
       this.enabled = Preferences.get(ENABLED_PREF, false);
       if (this.enabled) {
@@ -134,16 +137,43 @@ MarionetteComponent.prototype.observe = function (subj, topic, data) {
 #endif
       break;
 
-    case "final-ui-startup":
-      this.finalUiStartup = true;
-      this.observerService.removeObserver(this, topic);
-      this.observerService.addObserver(this, "xpcom-shutdown", false);
-      this.init();
+    case "domwindowclosed":
+      if (this.gfxWindow === null || subject === this.gfxWindow) {
+        this.observerService.removeObserver(this, topic);
+
+        this.observerService.addObserver(this, "xpcom-shutdown", false);
+        this.finalUiStartup = true;
+        this.init();
+      }
       break;
 
     case "domwindowopened":
       this.observerService.removeObserver(this, topic);
       this.suppressSafeModeDialog_(subj);
+      break;
+
+    case "sessionstore-windows-restored":
+      this.observerService.removeObserver(this, topic);
+
+      // When Firefox starts on Windows, an additional GFX sanity test window
+      // may appear off-screen.  Marionette should wait for it to close.
+      let winEn = Services.wm.getEnumerator(null);
+      while (winEn.hasMoreElements()) {
+        let win = winEn.getNext();
+        if (win.document.documentURI == "chrome://gfxsanity/content/sanityparent.html") {
+          this.gfxWindow = win;
+          break;
+        }
+      }
+
+      if (this.gfxWindow) {
+        this.observerService.addObserver(this, "domwindowclosed", false);
+      } else {
+        this.observerService.addObserver(this, "xpcom-shutdown", false);
+        this.finalUiStartup = true;
+        this.init();
+      }
+
       break;
 
     case "xpcom-shutdown":
