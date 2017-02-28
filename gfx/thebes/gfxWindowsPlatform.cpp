@@ -720,6 +720,12 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
             aFontList.AppendElement(kFontUtsaah);
             aFontList.AppendElement(kFontAparajita);
             break;
+        case 0x0a:
+        case 0x0b:
+        case 0x0c:
+        case 0x0d:
+            aFontList.AppendElement(kFontNirmalaUI);
+            break;
         case 0x0e:
             aFontList.AppendElement(kFontLaoUI);
             aFontList.AppendElement(kFontLeelawadeeUI);
