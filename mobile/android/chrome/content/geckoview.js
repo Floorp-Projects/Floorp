@@ -29,19 +29,20 @@ var ModuleManager = {
     this.modules = {};
   },
 
-  add: function(resource, type, ...args) {
-    this.remove(type);
+  add: function(aResource, aType, ...aArgs) {
+    this.remove(aType);
     let scope = {};
-    Cu.import(resource, scope);
-    this.modules[type] = new scope[type](
-      window, this.browser, WindowEventDispatcher, ...args);
+    Cu.import(aResource, scope);
+    this.modules[aType] = new scope[aType](
+      window, this.browser, WindowEventDispatcher, ...aArgs
+    );
   },
 
-  remove: function(type) {
-    if (!(type in this.modules)) {
+  remove: function(aType) {
+    if (!(aType in this.modules)) {
       return;
     }
-    delete this.modules[type];
+    delete this.modules[aType];
   }
 };
 

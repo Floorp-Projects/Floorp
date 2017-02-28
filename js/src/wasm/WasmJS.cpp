@@ -28,6 +28,7 @@
 #include "jit/JitOptions.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
+#include "vm/StringBuffer.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmModule.h"
@@ -554,8 +555,9 @@ struct KindNames
     RootedPropertyName kind;
     RootedPropertyName table;
     RootedPropertyName memory;
+    RootedPropertyName signature;
 
-    explicit KindNames(JSContext* cx) : kind(cx), table(cx), memory(cx) {}
+    explicit KindNames(JSContext* cx) : kind(cx), table(cx), memory(cx), signature(cx) {}
 };
 
 static bool
@@ -576,6 +578,11 @@ InitKindNames(JSContext* cx, KindNames* names)
         return false;
     names->memory = memory->asPropertyName();
 
+    JSAtom* signature = Atomize(cx, "signature", strlen("signature"));
+    if (!signature)
+        return false;
+    names->signature = signature->asPropertyName();
+
     return true;
 }
 
@@ -594,6 +601,40 @@ KindToString(JSContext* cx, const KindNames& names, DefinitionKind kind)
     }
 
     MOZ_CRASH("invalid kind");
+}
+
+static JSString*
+SigToString(JSContext* cx, const Sig& sig)
+{
+    StringBuffer buf(cx);
+    if (!buf.append('('))
+        return nullptr;
+
+    bool first = true;
+    for (ValType arg : sig.args()) {
+        if (!first && !buf.append(", ", strlen(", ")))
+            return nullptr;
+
+        const char* argStr = ToCString(arg);
+        if (!buf.append(argStr, strlen(argStr)))
+            return nullptr;
+
+        first = false;
+    }
+
+    if (!buf.append(") -> (", strlen(") -> (")))
+        return nullptr;
+
+    if (sig.ret() != ExprType::Void) {
+        const char* retStr = ToCString(sig.ret());
+        if (!buf.append(retStr, strlen(retStr)))
+            return nullptr;
+    }
+
+    if (!buf.append(')'))
+        return nullptr;
+
+    return buf.finishString();
 }
 
 static JSString*
@@ -619,6 +660,7 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->imports().length()))
         return false;
 
+    size_t numFuncImport = 0;
     for (const Import& import : module->imports()) {
         Rooted<IdValueVector> props(cx, IdValueVector(cx));
         if (!props.reserve(3))
@@ -638,6 +680,14 @@ WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp)
         if (!kindStr)
             return false;
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
+
+        if (JitOptions.wasmTestMode && import.kind == DefinitionKind::Function) {
+            JSString* sigStr = SigToString(cx, module->metadata().funcImports[numFuncImport++].sig());
+            if (!sigStr)
+                return false;
+            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
+                return false;
+        }
 
         JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(), props.length(), GenericObject);
         if (!obj)
@@ -671,6 +721,7 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
     if (!elems.reserve(module->exports().length()))
         return false;
 
+    size_t numFuncExport = 0;
     for (const Export& exp : module->exports()) {
         Rooted<IdValueVector> props(cx, IdValueVector(cx));
         if (!props.reserve(2))
@@ -685,6 +736,14 @@ WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp)
         if (!kindStr)
             return false;
         props.infallibleAppend(IdValuePair(NameToId(names.kind), StringValue(kindStr)));
+
+        if (JitOptions.wasmTestMode && exp.kind() == DefinitionKind::Function) {
+            JSString* sigStr = SigToString(cx, module->metadata().funcExports[numFuncExport++].sig());
+            if (!sigStr)
+                return false;
+            if (!props.append(IdValuePair(NameToId(names.signature), StringValue(sigStr))))
+                return false;
+        }
 
         JSObject* obj = ObjectGroup::newPlainObject(cx, props.begin(), props.length(), GenericObject);
         if (!obj)

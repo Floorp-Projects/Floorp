@@ -10,10 +10,10 @@ interface IDBMutableFile : EventTarget {
 
   readonly attribute IDBDatabase database;
 
-  [Throws]
+  [Throws, UseCounter]
   IDBFileHandle open(optional FileMode mode = "readonly");
 
-  [Throws]
+  [Throws, UseCounter]
   DOMRequest getFile();
 
   attribute EventHandler onabort;
