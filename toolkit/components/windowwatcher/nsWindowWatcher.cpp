@@ -474,12 +474,6 @@ CheckUserContextCompatibility(nsIDocShell* aDocShell)
   return subjectPrincipal->GetUserContextId() == userContextId;
 }
 
-NS_IMETHODIMP
-nsWindowWatcher::OpenWindowWithoutParent(nsITabParent** aResult)
-{
-  return OpenWindowWithTabParent(nullptr, EmptyCString(), true, 1.0f, aResult);
-}
-
 nsresult
 nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                     nsIWebBrowserChrome* aParentChrome,
