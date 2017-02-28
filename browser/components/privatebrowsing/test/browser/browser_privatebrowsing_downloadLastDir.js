@@ -81,10 +81,10 @@ function test() {
 
   testOnWindow(false, function(win, downloadDir) {
     testDownloadDir(win, downloadDir, file1, tmpDir, dir1, dir1, function() {
-      testOnWindow(true, function(win, downloadDir) {
-        testDownloadDir(win, downloadDir, file2, dir1, dir1, dir2, function() {
-          testOnWindow(false, function(win, downloadDir) {
-            testDownloadDir(win, downloadDir, file3, dir1, dir3, dir3, finish);
+      testOnWindow(true, function(win1, downloadDir1) {
+        testDownloadDir(win1, downloadDir1, file2, dir1, dir1, dir2, function() {
+          testOnWindow(false, function(win2, downloadDir2) {
+            testDownloadDir(win2, downloadDir2, file3, dir1, dir3, dir3, finish);
           });
         });
       });
