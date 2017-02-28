@@ -6,30 +6,16 @@ use std::borrow::Cow;
 use collections::borrow::Cow;
 
 #[cfg(all(feature = "collections", not(feature = "std")))]
-use collections::{
-    BinaryHeap,
-    BTreeMap,
-    BTreeSet,
-    LinkedList,
-    VecDeque,
-    Vec,
-    String,
-};
+use collections::{BinaryHeap, BTreeMap, BTreeSet, LinkedList, VecDeque, Vec, String};
 
 #[cfg(feature = "std")]
-use std::collections::{
-    HashMap,
-    HashSet,
-    BinaryHeap,
-    BTreeMap,
-    BTreeSet,
-    LinkedList,
-    VecDeque,
-};
+use std::collections::{HashMap, HashSet, BinaryHeap, BTreeMap, BTreeSet, LinkedList, VecDeque};
 
 #[cfg(feature = "collections")]
 use collections::borrow::ToOwned;
 
+#[cfg(any(feature = "std", feature = "collections"))]
+use core::cmp;
 use core::fmt;
 #[cfg(feature = "std")]
 use core::hash::{Hash, BuildHasher};
@@ -63,17 +49,8 @@ use core::nonzero::{NonZero, Zeroable};
 #[allow(deprecated)] // required for impl Deserialize for NonZero<T>
 use core::num::Zero;
 
-use de::{
-    Deserialize,
-    Deserializer,
-    EnumVisitor,
-    Error,
-    MapVisitor,
-    SeqVisitor,
-    Unexpected,
-    VariantVisitor,
-    Visitor,
-};
+use de::{Deserialize, Deserializer, EnumVisitor, Error, MapVisitor, SeqVisitor, Unexpected,
+         VariantVisitor, Visitor};
 use de::from_primitive::FromPrimitive;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,13 +66,13 @@ impl Visitor for UnitVisitor {
     }
 
     fn visit_unit<E>(self) -> Result<(), E>
-        where E: Error,
+        where E: Error
     {
         Ok(())
     }
 
     fn visit_seq<V>(self, _: V) -> Result<(), V::Error>
-        where V: SeqVisitor,
+        where V: SeqVisitor
     {
         Ok(())
     }
@@ -103,7 +80,7 @@ impl Visitor for UnitVisitor {
 
 impl Deserialize for () {
     fn deserialize<D>(deserializer: D) -> Result<(), D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_unit(UnitVisitor)
     }
@@ -122,13 +99,13 @@ impl Visitor for BoolVisitor {
     }
 
     fn visit_bool<E>(self, v: bool) -> Result<bool, E>
-        where E: Error,
+        where E: Error
     {
         Ok(v)
     }
 
     fn visit_str<E>(self, s: &str) -> Result<bool, E>
-        where E: Error,
+        where E: Error
     {
         match s.trim_matches(::utils::Pattern_White_Space) {
             "true" => Ok(true),
@@ -140,7 +117,7 @@ impl Visitor for BoolVisitor {
 
 impl Deserialize for bool {
     fn deserialize<D>(deserializer: D) -> Result<bool, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_bool(BoolVisitor)
     }
@@ -231,14 +208,14 @@ impl Visitor for CharVisitor {
 
     #[inline]
     fn visit_char<E>(self, v: char) -> Result<char, E>
-        where E: Error,
+        where E: Error
     {
         Ok(v)
     }
 
     #[inline]
     fn visit_str<E>(self, v: &str) -> Result<char, E>
-        where E: Error,
+        where E: Error
     {
         let mut iter = v.chars();
         match (iter.next(), iter.next()) {
@@ -251,7 +228,7 @@ impl Visitor for CharVisitor {
 impl Deserialize for char {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<char, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_char(CharVisitor)
     }
@@ -271,25 +248,25 @@ impl Visitor for StringVisitor {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<String, E>
-        where E: Error,
+        where E: Error
     {
         Ok(v.to_owned())
     }
 
     fn visit_string<E>(self, v: String) -> Result<String, E>
-        where E: Error,
+        where E: Error
     {
         Ok(v)
     }
 
     fn visit_unit<E>(self) -> Result<String, E>
-        where E: Error,
+        where E: Error
     {
         Ok(String::new())
     }
 
     fn visit_bytes<E>(self, v: &[u8]) -> Result<String, E>
-        where E: Error,
+        where E: Error
     {
         match str::from_utf8(v) {
             Ok(s) => Ok(s.to_owned()),
@@ -298,7 +275,7 @@ impl Visitor for StringVisitor {
     }
 
     fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<String, E>
-        where E: Error,
+        where E: Error
     {
         match String::from_utf8(v) {
             Ok(s) => Ok(s),
@@ -310,7 +287,7 @@ impl Visitor for StringVisitor {
 #[cfg(any(feature = "std", feature = "collections"))]
 impl Deserialize for String {
     fn deserialize<D>(deserializer: D) -> Result<String, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_string(StringVisitor)
     }
@@ -322,9 +299,7 @@ struct OptionVisitor<T> {
     marker: PhantomData<T>,
 }
 
-impl<
-    T: Deserialize,
-> Visitor for OptionVisitor<T> {
+impl<T: Deserialize> Visitor for OptionVisitor<T> {
     type Value = Option<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -333,29 +308,31 @@ impl<
 
     #[inline]
     fn visit_unit<E>(self) -> Result<Option<T>, E>
-        where E: Error,
+        where E: Error
     {
         Ok(None)
     }
 
     #[inline]
     fn visit_none<E>(self) -> Result<Option<T>, E>
-        where E: Error,
+        where E: Error
     {
         Ok(None)
     }
 
     #[inline]
     fn visit_some<D>(self, deserializer: D) -> Result<Option<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         Ok(Some(try!(Deserialize::deserialize(deserializer))))
     }
 }
 
-impl<T> Deserialize for Option<T> where T: Deserialize {
+impl<T> Deserialize for Option<T>
+    where T: Deserialize
+{
     fn deserialize<D>(deserializer: D) -> Result<Option<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_option(OptionVisitor { marker: PhantomData })
     }
@@ -377,7 +354,7 @@ impl<T> Visitor for PhantomDataVisitor<T> {
 
     #[inline]
     fn visit_unit<E>(self) -> Result<PhantomData<T>, E>
-        where E: Error,
+        where E: Error
     {
         Ok(PhantomData)
     }
@@ -385,7 +362,7 @@ impl<T> Visitor for PhantomDataVisitor<T> {
 
 impl<T> Deserialize for PhantomData<T> {
     fn deserialize<D>(deserializer: D) -> Result<PhantomData<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let visitor = PhantomDataVisitor { marker: PhantomData };
         deserializer.deserialize_unit_struct("PhantomData", visitor)
@@ -467,7 +444,7 @@ seq_impl!(
     BinaryHeapVisitor<T: Deserialize + Ord>,
     visitor,
     BinaryHeap::new(),
-    BinaryHeap::with_capacity(visitor.size_hint().0),
+    BinaryHeap::with_capacity(cmp::min(visitor.size_hint().0, 4096)),
     BinaryHeap::push);
 
 #[cfg(any(feature = "std", feature = "collections"))]
@@ -495,7 +472,7 @@ seq_impl!(
                    S: BuildHasher + Default>,
     visitor,
     HashSet::with_hasher(S::default()),
-    HashSet::with_capacity_and_hasher(visitor.size_hint().0, S::default()),
+    HashSet::with_capacity_and_hasher(cmp::min(visitor.size_hint().0, 4096), S::default()),
     HashSet::insert);
 
 #[cfg(any(feature = "std", feature = "collections"))]
@@ -504,7 +481,7 @@ seq_impl!(
     VecVisitor<T: Deserialize>,
     visitor,
     Vec::new(),
-    Vec::with_capacity(visitor.size_hint().0),
+    Vec::with_capacity(cmp::min(visitor.size_hint().0, 4096)),
     Vec::push);
 
 #[cfg(any(feature = "std", feature = "collections"))]
@@ -513,7 +490,7 @@ seq_impl!(
     VecDequeVisitor<T: Deserialize>,
     visitor,
     VecDeque::new(),
-    VecDeque::with_capacity(visitor.size_hint().0),
+    VecDeque::with_capacity(cmp::min(visitor.size_hint().0, 4096)),
     VecDeque::push_back);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -524,13 +501,13 @@ struct ArrayVisitor<A> {
 
 impl<A> ArrayVisitor<A> {
     pub fn new() -> Self {
-        ArrayVisitor {
-            marker: PhantomData,
-        }
+        ArrayVisitor { marker: PhantomData }
     }
 }
 
-impl<T> Visitor for ArrayVisitor<[T; 0]> where T: Deserialize {
+impl<T> Visitor for ArrayVisitor<[T; 0]>
+    where T: Deserialize
+{
     type Value = [T; 0];
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -539,14 +516,14 @@ impl<T> Visitor for ArrayVisitor<[T; 0]> where T: Deserialize {
 
     #[inline]
     fn visit_unit<E>(self) -> Result<[T; 0], E>
-        where E: Error,
+        where E: Error
     {
         Ok([])
     }
 
     #[inline]
     fn visit_seq<V>(self, _: V) -> Result<[T; 0], V::Error>
-        where V: SeqVisitor,
+        where V: SeqVisitor
     {
         Ok([])
     }
@@ -556,7 +533,7 @@ impl<T> Deserialize for [T; 0]
     where T: Deserialize
 {
     fn deserialize<D>(deserializer: D) -> Result<[T; 0], D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_seq_fixed_size(0, ArrayVisitor::<[T; 0]>::new())
     }
@@ -791,14 +768,14 @@ map_impl!(
                    S: BuildHasher + Default>,
     visitor,
     HashMap::with_hasher(S::default()),
-    HashMap::with_capacity_and_hasher(visitor.size_hint().0, S::default()));
+    HashMap::with_capacity_and_hasher(cmp::min(visitor.size_hint().0, 4096), S::default()));
 
 ///////////////////////////////////////////////////////////////////////////////
 
 #[cfg(feature = "std")]
 impl Deserialize for net::IpAddr {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -811,7 +788,7 @@ impl Deserialize for net::IpAddr {
 #[cfg(feature = "std")]
 impl Deserialize for net::Ipv4Addr {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -824,7 +801,7 @@ impl Deserialize for net::Ipv4Addr {
 #[cfg(feature = "std")]
 impl Deserialize for net::Ipv6Addr {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -839,7 +816,7 @@ impl Deserialize for net::Ipv6Addr {
 #[cfg(feature = "std")]
 impl Deserialize for net::SocketAddr {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -852,7 +829,7 @@ impl Deserialize for net::SocketAddr {
 #[cfg(feature = "std")]
 impl Deserialize for net::SocketAddrV4 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -865,7 +842,7 @@ impl Deserialize for net::SocketAddrV4 {
 #[cfg(feature = "std")]
 impl Deserialize for net::SocketAddrV6 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let s = try!(String::deserialize(deserializer));
         match s.parse() {
@@ -889,13 +866,13 @@ impl Visitor for PathBufVisitor {
     }
 
     fn visit_str<E>(self, v: &str) -> Result<path::PathBuf, E>
-        where E: Error,
+        where E: Error
     {
         Ok(From::from(v))
     }
 
     fn visit_string<E>(self, v: String) -> Result<path::PathBuf, E>
-        where E: Error,
+        where E: Error
     {
         Ok(From::from(v))
     }
@@ -904,7 +881,7 @@ impl Visitor for PathBufVisitor {
 #[cfg(feature = "std")]
 impl Deserialize for path::PathBuf {
     fn deserialize<D>(deserializer: D) -> Result<path::PathBuf, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         deserializer.deserialize_string(PathBufVisitor)
     }
@@ -915,7 +892,7 @@ impl Deserialize for path::PathBuf {
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<T: Deserialize> Deserialize for Box<T> {
     fn deserialize<D>(deserializer: D) -> Result<Box<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let val = try!(Deserialize::deserialize(deserializer));
         Ok(Box::new(val))
@@ -925,7 +902,7 @@ impl<T: Deserialize> Deserialize for Box<T> {
 #[cfg(any(feature = "std", feature = "collections"))]
 impl<T: Deserialize> Deserialize for Box<[T]> {
     fn deserialize<D>(deserializer: D) -> Result<Box<[T]>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let v: Vec<T> = try!(Deserialize::deserialize(deserializer));
         Ok(v.into_boxed_slice())
@@ -945,7 +922,7 @@ impl Deserialize for Box<str> {
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<T: Deserialize> Deserialize for Arc<T> {
     fn deserialize<D>(deserializer: D) -> Result<Arc<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let val = try!(Deserialize::deserialize(deserializer));
         Ok(Arc::new(val))
@@ -955,7 +932,7 @@ impl<T: Deserialize> Deserialize for Arc<T> {
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<T: Deserialize> Deserialize for Rc<T> {
     fn deserialize<D>(deserializer: D) -> Result<Rc<T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let val = try!(Deserialize::deserialize(deserializer));
         Ok(Rc::new(val))
@@ -963,10 +940,13 @@ impl<T: Deserialize> Deserialize for Rc<T> {
 }
 
 #[cfg(any(feature = "std", feature = "collections"))]
-impl<'a, T: ?Sized> Deserialize for Cow<'a, T> where T: ToOwned, T::Owned: Deserialize, {
+impl<'a, T: ?Sized> Deserialize for Cow<'a, T>
+    where T: ToOwned,
+          T::Owned: Deserialize
+{
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Cow<'a, T>, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         let val = try!(Deserialize::deserialize(deserializer));
         Ok(Cow::Owned(val))
@@ -986,13 +966,16 @@ impl<'a, T: ?Sized> Deserialize for Cow<'a, T> where T: ToOwned, T::Owned: Deser
 #[cfg(feature = "std")]
 impl Deserialize for Duration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
-        enum Field { Secs, Nanos };
+        enum Field {
+            Secs,
+            Nanos,
+        };
 
         impl Deserialize for Field {
             fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
-                where D: Deserializer,
+                where D: Deserializer
             {
                 struct FieldVisitor;
 
@@ -1004,7 +987,7 @@ impl Deserialize for Duration {
                     }
 
                     fn visit_str<E>(self, value: &str) -> Result<Field, E>
-                        where E: Error,
+                        where E: Error
                     {
                         match value {
                             "secs" => Ok(Field::Secs),
@@ -1014,7 +997,7 @@ impl Deserialize for Duration {
                     }
 
                     fn visit_bytes<E>(self, value: &[u8]) -> Result<Field, E>
-                        where E: Error,
+                        where E: Error
                     {
                         match value {
                             b"secs" => Ok(Field::Secs),
@@ -1041,7 +1024,7 @@ impl Deserialize for Duration {
             }
 
             fn visit_seq<V>(self, mut visitor: V) -> Result<Duration, V::Error>
-                where V: SeqVisitor,
+                where V: SeqVisitor
             {
                 let secs: u64 = match try!(visitor.visit()) {
                     Some(value) => value,
@@ -1059,7 +1042,7 @@ impl Deserialize for Duration {
             }
 
             fn visit_map<V>(self, mut visitor: V) -> Result<Duration, V::Error>
-                where V: MapVisitor,
+                where V: MapVisitor
             {
                 let mut secs: Option<u64> = None;
                 let mut nanos: Option<u32> = None;
@@ -1100,24 +1083,30 @@ impl Deserialize for Duration {
 
 #[cfg(feature = "unstable")]
 #[allow(deprecated)] // num::Zero is deprecated but there is no replacement
-impl<T> Deserialize for NonZero<T> where T: Deserialize + PartialEq + Zeroable + Zero {
-    fn deserialize<D>(deserializer: D) -> Result<NonZero<T>, D::Error> where D: Deserializer {
+impl<T> Deserialize for NonZero<T>
+    where T: Deserialize + PartialEq + Zeroable + Zero
+{
+    fn deserialize<D>(deserializer: D) -> Result<NonZero<T>, D::Error>
+        where D: Deserializer
+    {
         let value = try!(Deserialize::deserialize(deserializer));
         if value == Zero::zero() {
-            return Err(Error::custom("expected a non-zero value"))
+            return Err(Error::custom("expected a non-zero value"));
         }
-        unsafe {
-            Ok(NonZero::new(value))
-        }
+        unsafe { Ok(NonZero::new(value)) }
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
-impl<T, E> Deserialize for Result<T, E> where T: Deserialize, E: Deserialize {
+impl<T, E> Deserialize for Result<T, E>
+    where T: Deserialize,
+          E: Deserialize
+{
     fn deserialize<D>(deserializer: D) -> Result<Result<T, E>, D::Error>
-                      where D: Deserializer {
+        where D: Deserializer
+    {
         enum Field {
             Ok,
             Err,
@@ -1137,15 +1126,21 @@ impl<T, E> Deserialize for Result<T, E> where T: Deserialize, E: Deserialize {
                         formatter.write_str("`Ok` or `Err`")
                     }
 
-                    fn visit_u32<E>(self, value: u32) -> Result<Field, E> where E: Error {
+                    fn visit_u32<E>(self, value: u32) -> Result<Field, E>
+                        where E: Error
+                    {
                         match value {
                             0 => Ok(Field::Ok),
                             1 => Ok(Field::Err),
-                            _ => Err(Error::invalid_value(Unexpected::Unsigned(value as u64), &self)),
+                            _ => {
+                                Err(Error::invalid_value(Unexpected::Unsigned(value as u64), &self))
+                            }
                         }
                     }
 
-                    fn visit_str<E>(self, value: &str) -> Result<Field, E> where E: Error {
+                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                        where E: Error
+                    {
                         match value {
                             "Ok" => Ok(Field::Ok),
                             "Err" => Ok(Field::Err),
@@ -1153,14 +1148,18 @@ impl<T, E> Deserialize for Result<T, E> where T: Deserialize, E: Deserialize {
                         }
                     }
 
-                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Field, E> where E: Error {
+                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Field, E>
+                        where E: Error
+                    {
                         match value {
                             b"Ok" => Ok(Field::Ok),
                             b"Err" => Ok(Field::Err),
                             _ => {
                                 match str::from_utf8(value) {
                                     Ok(value) => Err(Error::unknown_variant(value, VARIANTS)),
-                                    Err(_) => Err(Error::invalid_value(Unexpected::Bytes(value), &self)),
+                                    Err(_) => {
+                                        Err(Error::invalid_value(Unexpected::Bytes(value), &self))
+                                    }
                                 }
                             }
                         }
@@ -1208,7 +1207,7 @@ pub struct IgnoredAny;
 impl Deserialize for IgnoredAny {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<IgnoredAny, D::Error>
-        where D: Deserializer,
+        where D: Deserializer
     {
         struct IgnoredAnyVisitor;
 
@@ -1241,7 +1240,7 @@ impl Deserialize for IgnoredAny {
 
             #[inline]
             fn visit_str<E>(self, _: &str) -> Result<IgnoredAny, E>
-                where E: Error,
+                where E: Error
             {
                 Ok(IgnoredAny)
             }
@@ -1253,14 +1252,14 @@ impl Deserialize for IgnoredAny {
 
             #[inline]
             fn visit_some<D>(self, _: D) -> Result<IgnoredAny, D::Error>
-                where D: Deserializer,
+                where D: Deserializer
             {
                 Ok(IgnoredAny)
             }
 
             #[inline]
             fn visit_newtype_struct<D>(self, _: D) -> Result<IgnoredAny, D::Error>
-                where D: Deserializer,
+                where D: Deserializer
             {
                 Ok(IgnoredAny)
             }
@@ -1272,7 +1271,7 @@ impl Deserialize for IgnoredAny {
 
             #[inline]
             fn visit_seq<V>(self, mut visitor: V) -> Result<IgnoredAny, V::Error>
-                where V: SeqVisitor,
+                where V: SeqVisitor
             {
                 while let Some(_) = try!(visitor.visit::<IgnoredAny>()) {
                     // Gobble
@@ -1282,7 +1281,7 @@ impl Deserialize for IgnoredAny {
 
             #[inline]
             fn visit_map<V>(self, mut visitor: V) -> Result<IgnoredAny, V::Error>
-                where V: MapVisitor,
+                where V: MapVisitor
             {
                 while let Some((_, _)) = try!(visitor.visit::<IgnoredAny, IgnoredAny>()) {
                     // Gobble
@@ -1292,7 +1291,7 @@ impl Deserialize for IgnoredAny {
 
             #[inline]
             fn visit_bytes<E>(self, _: &[u8]) -> Result<IgnoredAny, E>
-                where E: Error,
+                where E: Error
             {
                 Ok(IgnoredAny)
             }

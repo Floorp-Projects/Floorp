@@ -1,3 +1,8 @@
+//! A map of String to serde_json::Value.
+//!
+//! By default the map is backed by a BTreeMap. Enable the `preserve_order`
+//! feature of serde_json to use LinkedHashMap instead.
+
 use serde::{ser, de};
 use std::fmt::{self, Debug};
 use value::Value;
@@ -12,7 +17,7 @@ use std::collections::{BTreeMap, btree_map};
 #[cfg(feature = "preserve_order")]
 use linked_hash_map::{self, LinkedHashMap};
 
-/// Represents a key/value type.
+/// Represents a JSON key/value type.
 pub struct Map<K, V> {
     map: MapImpl<K, V>,
 }
@@ -118,6 +123,26 @@ impl Map<String, Value> {
         self.map.remove(key)
     }
 
+    /// Gets the given key's corresponding entry in the map for in-place
+    /// manipulation.
+    pub fn entry<S>(&mut self, key: S) -> Entry
+        where S: Into<String>
+    {
+        #[cfg(not(feature = "preserve_order"))]
+        use std::collections::btree_map::Entry as EntryImpl;
+        #[cfg(feature = "preserve_order")]
+        use linked_hash_map::Entry as EntryImpl;
+
+        match self.map.entry(key.into()) {
+            EntryImpl::Vacant(vacant) => {
+                Entry::Vacant(VacantEntry { vacant: vacant })
+            }
+            EntryImpl::Occupied(occupied) => {
+                Entry::Occupied(OccupiedEntry { occupied: occupied })
+            }
+        }
+    }
+
     /// Returns the number of elements in the map.
     #[inline]
     pub fn len(&self) -> usize {
@@ -132,32 +157,32 @@ impl Map<String, Value> {
 
     /// Gets an iterator over the entries of the map.
     #[inline]
-    pub fn iter(&self) -> MapIter {
-        MapIter {
+    pub fn iter(&self) -> Iter {
+        Iter {
             iter: self.map.iter(),
         }
     }
 
     /// Gets a mutable iterator over the entries of the map.
     #[inline]
-    pub fn iter_mut(&mut self) -> MapIterMut {
-        MapIterMut {
+    pub fn iter_mut(&mut self) -> IterMut {
+        IterMut {
             iter: self.map.iter_mut(),
         }
     }
 
     /// Gets an iterator over the keys of the map.
     #[inline]
-    pub fn keys(&self) -> MapKeys {
-        MapKeys {
+    pub fn keys(&self) -> Keys {
+        Keys {
             iter: self.map.keys(),
         }
     }
 
     /// Gets an iterator over the values of the map.
     #[inline]
-    pub fn values(&self) -> MapValues {
-        MapValues {
+    pub fn values(&self) -> Values {
+        Values {
             iter: self.map.values(),
         }
     }
@@ -211,6 +236,26 @@ impl<'a, Q: ?Sized> ops::Index<&'a Q> for Map<String, Value>
 
     fn index(&self, index: &Q) -> &Value {
         self.map.index(index)
+    }
+}
+
+/// Mutably access an element of this map. Panics if the given key is not
+/// present in the map.
+///
+/// ```rust
+/// # #[macro_use] extern crate serde_json;
+/// # fn main() {
+/// # let mut map = serde_json::Map::new();
+/// # map.insert("key".to_owned(), serde_json::Value::Null);
+/// map["key"] = json!("value");
+/// # }
+/// ```
+impl<'a, Q: ?Sized> ops::IndexMut<&'a Q> for Map<String, Value>
+    where String: Borrow<Q>,
+          Q: Ord + Eq + Hash
+{
+    fn index_mut(&mut self, index: &Q) -> &mut Value {
+        self.map.get_mut(index).expect("no entry found for key")
     }
 }
 
@@ -321,98 +366,410 @@ macro_rules! delegate_iterator {
 
 //////////////////////////////////////////////////////////////////////////////
 
+/// A view into a single entry in a map, which may either be vacant or occupied.
+/// This enum is constructed from the [`entry`] method on [`Map`].
+///
+/// [`entry`]: struct.Map.html#method.entry
+/// [`BTreeMap`]: struct.Map.html
+pub enum Entry<'a> {
+    /// A vacant Entry.
+    Vacant(VacantEntry<'a>),
+    /// An occupied Entry.
+    Occupied(OccupiedEntry<'a>),
+}
+
+/// A vacant Entry. It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
+pub struct VacantEntry<'a> {
+    vacant: VacantEntryImpl<'a>,
+}
+
+/// An occupied Entry. It is part of the [`Entry`] enum.
+///
+/// [`Entry`]: enum.Entry.html
+pub struct OccupiedEntry<'a> {
+    occupied: OccupiedEntryImpl<'a>,
+}
+
+#[cfg(not(feature = "preserve_order"))]
+type VacantEntryImpl<'a> = btree_map::VacantEntry<'a, String, Value>;
+#[cfg(feature = "preserve_order")]
+type VacantEntryImpl<'a> = linked_hash_map::VacantEntry<'a, String, Value>;
+
+#[cfg(not(feature = "preserve_order"))]
+type OccupiedEntryImpl<'a> = btree_map::OccupiedEntry<'a, String, Value>;
+#[cfg(feature = "preserve_order")]
+type OccupiedEntryImpl<'a> = linked_hash_map::OccupiedEntry<'a, String, Value>;
+
+impl<'a> Entry<'a> {
+    /// Returns a reference to this entry's key.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let mut map = serde_json::Map::new();
+    /// assert_eq!(map.entry("serde").key(), &"serde");
+    /// ```
+    pub fn key(&self) -> &String {
+        match *self {
+            Entry::Vacant(ref e) => e.key(),
+            Entry::Occupied(ref e) => e.key(),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting the default if empty, and
+    /// returns a mutable reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// let mut map = serde_json::Map::new();
+    /// map.entry("serde").or_insert(json!(12));
+    ///
+    /// assert_eq!(map["serde"], 12);
+    /// # }
+    /// ```
+    pub fn or_insert(self, default: Value) -> &'a mut Value {
+        match self {
+            Entry::Vacant(entry) => entry.insert(default.into()),
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting the result of the default
+    /// function if empty, and returns a mutable reference to the value in the
+    /// entry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// let mut map = serde_json::Map::new();
+    /// map.entry("serde").or_insert_with(|| json!("hoho"));
+    ///
+    /// assert_eq!(map["serde"], "hoho".to_owned());
+    /// # }
+    /// ```
+    pub fn or_insert_with<F>(self, default: F) -> &'a mut Value
+        where F: FnOnce() -> Value
+    {
+        match self {
+            Entry::Vacant(entry) => entry.insert(default()),
+            Entry::Occupied(entry) => entry.into_mut(),
+        }
+    }
+}
+
+impl<'a> VacantEntry<'a> {
+    /// Gets a reference to the key that would be used when inserting a value
+    /// through the VacantEntry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Vacant(vacant) => {
+    ///         assert_eq!(vacant.key(), &"serde");
+    ///     }
+    ///     Entry::Occupied(_) => unimplemented!(),
+    /// }
+    /// ```
+    #[inline]
+    pub fn key(&self) -> &String {
+        self.vacant.key()
+    }
+
+    /// Sets the value of the entry with the VacantEntry's key, and returns a
+    /// mutable reference to it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Vacant(vacant) => {
+    ///         vacant.insert(json!("hoho"));
+    ///     }
+    ///     Entry::Occupied(_) => unimplemented!(),
+    /// }
+    /// # }
+    /// ```
+    #[inline]
+    pub fn insert(self, value: Value) -> &'a mut Value {
+        self.vacant.insert(value.into())
+    }
+}
+
+impl<'a> OccupiedEntry<'a> {
+    /// Gets a reference to the key in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!(12));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(occupied) => {
+    ///         assert_eq!(occupied.key(), &"serde");
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    /// # }
+    /// ```
+    #[inline]
+    pub fn key(&self) -> &String {
+        self.occupied.key()
+    }
+
+    /// Gets a reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!(12));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(occupied) => {
+    ///         assert_eq!(occupied.get(), 12);
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    /// # }
+    /// ```
+    #[inline]
+    pub fn get(&self) -> &Value {
+        self.occupied.get()
+    }
+
+    /// Gets a mutable reference to the value in the entry.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!([1, 2, 3]));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(mut occupied) => {
+    ///         occupied.get_mut().as_array_mut().unwrap().push(json!(4));
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    ///
+    /// assert_eq!(map["serde"].as_array().unwrap().len(), 4);
+    /// # }
+    /// ```
+    #[inline]
+    pub fn get_mut(&mut self) -> &mut Value {
+        self.occupied.get_mut()
+    }
+
+    /// Converts the entry into a mutable reference to its value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!([1, 2, 3]));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(mut occupied) => {
+    ///         occupied.into_mut().as_array_mut().unwrap().push(json!(4));
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    ///
+    /// assert_eq!(map["serde"].as_array().unwrap().len(), 4);
+    /// # }
+    /// ```
+    #[inline]
+    pub fn into_mut(self) -> &'a mut Value {
+        self.occupied.into_mut()
+    }
+
+    /// Sets the value of the entry with the `OccupiedEntry`'s key, and returns
+    /// the entry's old value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!(12));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(mut occupied) => {
+    ///         assert_eq!(occupied.insert(json!(13)), 12);
+    ///         assert_eq!(occupied.get(), 13);
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    /// # }
+    /// ```
+    #[inline]
+    pub fn insert(&mut self, value: Value) -> Value {
+        self.occupied.insert(value.into())
+    }
+
+    /// Takes the value of the entry out of the map, and returns it.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # #[macro_use] extern crate serde_json;
+    /// # fn main() {
+    /// use serde_json::map::Entry;
+    ///
+    /// let mut map = serde_json::Map::new();
+    /// map.insert("serde".to_owned(), json!(12));
+    ///
+    /// match map.entry("serde") {
+    ///     Entry::Occupied(occupied) => {
+    ///         assert_eq!(occupied.remove(), 12);
+    ///     }
+    ///     Entry::Vacant(_) => unimplemented!(),
+    /// }
+    /// # }
+    /// ```
+    #[inline]
+    pub fn remove(self) -> Value {
+        self.occupied.remove()
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
 impl<'a> IntoIterator for &'a Map<String, Value> {
     type Item = (&'a String, &'a Value);
-    type IntoIter = MapIter<'a>;
+    type IntoIter = Iter<'a>;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        MapIter {
+        Iter {
             iter: self.map.iter(),
         }
     }
 }
 
-pub struct MapIter<'a> {
-    iter: MapIterImpl<'a>,
+/// An iterator over a serde_json::Map's entries.
+pub struct Iter<'a> {
+    iter: IterImpl<'a>,
 }
 
 #[cfg(not(feature = "preserve_order"))]
-type MapIterImpl<'a> = btree_map::Iter<'a, String, Value>;
+type IterImpl<'a> = btree_map::Iter<'a, String, Value>;
 #[cfg(feature = "preserve_order")]
-type MapIterImpl<'a> = linked_hash_map::Iter<'a, String, Value>;
+type IterImpl<'a> = linked_hash_map::Iter<'a, String, Value>;
 
-delegate_iterator!((MapIter<'a>) => (&'a String, &'a Value));
+delegate_iterator!((Iter<'a>) => (&'a String, &'a Value));
 
 //////////////////////////////////////////////////////////////////////////////
 
 impl<'a> IntoIterator for &'a mut Map<String, Value> {
     type Item = (&'a String, &'a mut Value);
-    type IntoIter = MapIterMut<'a>;
+    type IntoIter = IterMut<'a>;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        MapIterMut {
+        IterMut {
             iter: self.map.iter_mut(),
         }
     }
 }
 
-pub struct MapIterMut<'a> {
-    iter: MapIterMutImpl<'a>,
+/// A mutable iterator over a serde_json::Map's entries.
+pub struct IterMut<'a> {
+    iter: IterMutImpl<'a>,
 }
 
 #[cfg(not(feature = "preserve_order"))]
-type MapIterMutImpl<'a> = btree_map::IterMut<'a, String, Value>;
+type IterMutImpl<'a> = btree_map::IterMut<'a, String, Value>;
 #[cfg(feature = "preserve_order")]
-type MapIterMutImpl<'a> = linked_hash_map::IterMut<'a, String, Value>;
+type IterMutImpl<'a> = linked_hash_map::IterMut<'a, String, Value>;
 
-delegate_iterator!((MapIterMut<'a>) => (&'a String, &'a mut Value));
+delegate_iterator!((IterMut<'a>) => (&'a String, &'a mut Value));
 
 //////////////////////////////////////////////////////////////////////////////
 
 impl IntoIterator for Map<String, Value> {
     type Item = (String, Value);
-    type IntoIter = MapIntoIter;
+    type IntoIter = IntoIter;
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        MapIntoIter {
+        IntoIter {
             iter: self.map.into_iter(),
         }
     }
 }
 
-pub struct MapIntoIter {
-    iter: MapIntoIterImpl,
+/// An owning iterator over a serde_json::Map's entries.
+pub struct IntoIter {
+    iter: IntoIterImpl,
 }
 
 #[cfg(not(feature = "preserve_order"))]
-type MapIntoIterImpl = btree_map::IntoIter<String, Value>;
+type IntoIterImpl = btree_map::IntoIter<String, Value>;
 #[cfg(feature = "preserve_order")]
-type MapIntoIterImpl = linked_hash_map::IntoIter<String, Value>;
+type IntoIterImpl = linked_hash_map::IntoIter<String, Value>;
 
-delegate_iterator!((MapIntoIter) => (String, Value));
+delegate_iterator!((IntoIter) => (String, Value));
 
 //////////////////////////////////////////////////////////////////////////////
 
-pub struct MapKeys<'a> {
-    iter: MapKeysImpl<'a>,
+/// An iterator over a serde_json::Map's keys.
+pub struct Keys<'a> {
+    iter: KeysImpl<'a>,
 }
 
 #[cfg(not(feature = "preserve_order"))]
-type MapKeysImpl<'a> = btree_map::Keys<'a, String, Value>;
+type KeysImpl<'a> = btree_map::Keys<'a, String, Value>;
 #[cfg(feature = "preserve_order")]
-type MapKeysImpl<'a> = linked_hash_map::Keys<'a, String, Value>;
+type KeysImpl<'a> = linked_hash_map::Keys<'a, String, Value>;
 
-delegate_iterator!((MapKeys<'a>) => &'a String);
+delegate_iterator!((Keys<'a>) => &'a String);
 
 //////////////////////////////////////////////////////////////////////////////
 
-pub struct MapValues<'a> {
-    iter: MapValuesImpl<'a>,
+/// An iterator over a serde_json::Map's values.
+pub struct Values<'a> {
+    iter: ValuesImpl<'a>,
 }
 
 #[cfg(not(feature = "preserve_order"))]
-type MapValuesImpl<'a> = btree_map::Values<'a, String, Value>;
+type ValuesImpl<'a> = btree_map::Values<'a, String, Value>;
 #[cfg(feature = "preserve_order")]
-type MapValuesImpl<'a> = linked_hash_map::Values<'a, String, Value>;
+type ValuesImpl<'a> = linked_hash_map::Values<'a, String, Value>;
 
-delegate_iterator!((MapValues<'a>) => &'a Value);
+delegate_iterator!((Values<'a>) => &'a Value);
