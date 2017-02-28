@@ -6,18 +6,18 @@
 fails == min-width-1a.html min-width-1a.html
 == min-width-1b.html min-width-1b.html
 == min-width-1c.html min-width-1c.html
-fails == min-width-2.html min-width-2.html
-fails == column-balancing-overflow-000.html column-balancing-overflow-000.html
-fails == column-balancing-overflow-001.html column-balancing-overflow-001.html
-fails == column-balancing-overflow-002.html column-balancing-overflow-002.html
-fails == column-balancing-overflow-003.html column-balancing-overflow-003.html
+== min-width-2.html min-width-2.html
+== column-balancing-overflow-000.html column-balancing-overflow-000.html
+== column-balancing-overflow-001.html column-balancing-overflow-001.html
+== column-balancing-overflow-002.html column-balancing-overflow-002.html
+== column-balancing-overflow-003.html column-balancing-overflow-003.html
 == column-balancing-overflow-004.html column-balancing-overflow-004.html
 == column-balancing-overflow-005.html column-balancing-overflow-005.html
-fails == column-balancing-000.html column-balancing-000.html
-fails == column-balancing-001.html column-balancing-001.html
-fails == column-balancing-002.html column-balancing-002.html
-fails == column-balancing-003.html column-balancing-003.html
-fails == column-balancing-004.html column-balancing-004.html
+== column-balancing-000.html column-balancing-000.html
+== column-balancing-001.html column-balancing-001.html
+== column-balancing-002.html column-balancing-002.html
+== column-balancing-003.html column-balancing-003.html
+== column-balancing-004.html column-balancing-004.html
 == column-box-alignment-rtl.html column-box-alignment-rtl.html
 fails HTTP(..) == columnfill-balance.html columnfill-balance.html
 fails == columnfill-auto.html columnfill-auto.html
