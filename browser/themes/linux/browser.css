@@ -40,14 +40,6 @@
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDShadow;
-
-  --lwt-header-image: none;
-}
-
-:root {
-  color: var(--lwt-textcolor);
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-header-image);
 }
 
 #menubar-items {
@@ -133,11 +125,6 @@
 #browser-bottombox {
   /* opaque for layers optimization */
   background-color: -moz-Dialog;
-}
-
-#browser-bottombox:-moz-lwtheme {
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-header-image);
 }
 
 /* Places toolbar */
@@ -1535,15 +1522,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     linear-gradient(to bottom, #bcbcbc, #b5b5b5);
   background-attachment: fixed;
-}
-
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
-  background-repeat: no-repeat;
-  background-position: right top;
-  background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
-  background-image: var(--lwt-header-image);
-  background-color: transparent;
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {

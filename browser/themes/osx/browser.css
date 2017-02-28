@@ -51,14 +51,6 @@
   --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
-
-  --lwt-header-image: none;
-}
-
-:root {
-  color: var(--lwt-textcolor);
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-header-image);
 }
 
 #urlbar:-moz-lwtheme:not([focused="true"]),
@@ -3198,14 +3190,12 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   background-attachment: fixed;
 }
 
-#main-window[tabsintitlebar][customization-lwtheme] > #titlebar:-moz-lwtheme,
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
+#main-window[tabsintitlebar][customization-lwtheme] > #titlebar:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: right top;
   background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
   background-image: var(--lwt-header-image);
-  background-color: transparent;
+  background-color: var(--lwt-accentcolor);
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {
@@ -3333,11 +3323,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 
 #TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 0;
-}
-
-#browser-bottombox:-moz-lwtheme {
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-footer-image);
 }
 
 %include ../shared/UITour.inc.css
