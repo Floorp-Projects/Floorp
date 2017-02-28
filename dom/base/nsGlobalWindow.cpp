@@ -1227,6 +1227,11 @@ NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
 
 namespace {
 
+// The maximum number of timer callbacks we will try to run in a single event
+// loop runnable.
+#define DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS 5
+uint32_t gTargetMaxConsecutiveCallbacks;
+
 // The number of queued runnables within the TabGroup ThrottledEventQueue
 // at which to begin applying back pressure to the window.
 #define DEFAULT_THROTTLED_EVENT_QUEUE_BACK_PRESSURE 5000
@@ -1384,6 +1389,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Preferences::AddUintVarCache(&gBackPressureDelayMinimumMS,
                                  "dom.timeout.back_pressure_delay_minimum_ms",
                                  DEFAULT_BACK_PRESSURE_DELAY_MINIMUM_MS);
+
+    Preferences::AddUintVarCache(&gTargetMaxConsecutiveCallbacks,
+                                 "dom.timeout.max_consecutive_callbacks",
+                                 DEFAULT_TARGET_MAX_CONSECUTIVE_CALLBACKS);
 
     sFirstTime = false;
   }
@@ -13181,6 +13190,10 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
     deadline = now;
   }
 
+  uint32_t numTimersToRun = 0;
+  bool targetTimerSeen = false;
+
+
   // The timeout list is kept in deadline order. Discover the latest timeout
   // whose deadline has expired. On some platforms, native timeout events fire
   // "early", but we handled that above by setting deadline to aTimeout->mWhen
@@ -13197,19 +13210,29 @@ nsGlobalWindow::RunTimeout(Timeout* aTimeout)
       timeout->mFiringDepth = firingDepth;
       last_expired_timeout = timeout;
 
-      // Run available timers until we see our target timer.  After
-      // that, however, stop coalescing timers so we can yield the
-      // main thread.  Further timers that are ready will get picked
-      // up by their own nsITimer runnables when they execute.
+      // Note that we have seen our target timer.  This means we can now
+      // stop processing timers once we hit our threshold below.
+      if (timeout == aTimeout) {
+        targetTimerSeen = true;
+      }
+
+      // Run only a limited number of timers based on the configured
+      // maximum.  Note, we must always run our target timer however.
+      // Further timers that are ready will get picked up by their own
+      // nsITimer runnables when they execute.
       //
       // For chrome windows, however, we do coalesce all timers and
       // do not yield the main thread.  This is partly because we
       // trust chrome windows not to misbehave and partly because a
       // number of browser chrome tests have races that depend on this
       // coalescing.
-      if (timeout == aTimeout && !IsChromeWindow()) {
+      if (targetTimerSeen &&
+          numTimersToRun >= gTargetMaxConsecutiveCallbacks &&
+          !IsChromeWindow()) {
         break;
       }
+
+      numTimersToRun += 1;
     }
   }
 
