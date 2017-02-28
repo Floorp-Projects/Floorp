@@ -31,7 +31,7 @@ function test() {
   let file3 = newFileInDirectory(dir3);
 
   // cleanup functions registration
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.download.lastDir");
     [dir1, dir2, dir3].forEach(dir => dir.remove(true));
     MockFilePicker.cleanup();
@@ -58,7 +58,7 @@ function test() {
     MockFilePicker.returnFiles = [aFile];
     MockFilePicker.displayDirectory = null;
 
-    launcher.saveDestinationAvailable = function (file) {
+    launcher.saveDestinationAvailable = function(file) {
       ok(!!file, "promptForSaveToFile correctly returned a file");
 
       // File picker should start with expected display dir.

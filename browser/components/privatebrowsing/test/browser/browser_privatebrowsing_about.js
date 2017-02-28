@@ -49,7 +49,7 @@ add_task(function* test_links() {
   Services.prefs.setCharPref("app.support.baseURL", "https://example.com/");
   Services.prefs.setCharPref("privacy.trackingprotection.introURL",
                              "https://example.com/tour");
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.trackingprotection.introURL");
     Services.prefs.clearUserPref("app.support.baseURL");
   });
@@ -77,7 +77,7 @@ add_task(function* test_toggleTrackingProtection() {
   // Use tour version but disable Tracking Protection.
   Services.prefs.setBoolPref("privacy.trackingprotection.pbmode.enabled",
                              true);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.trackingprotection.pbmode.enabled");
   });
 
@@ -89,7 +89,7 @@ add_task(function* test_toggleTrackingProtection() {
   let waitForPrefChanged = () => new Promise(resolve => {
     let prefObserver = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-      observe: function () {
+      observe() {
         prefBranch.removeObserver("enabled", prefObserver);
         resolve();
       },

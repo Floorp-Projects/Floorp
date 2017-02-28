@@ -26,7 +26,7 @@ function test() {
   let file3 = newFileInDirectory(dir3);
 
   // cleanup function registration
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.download.lastDir");
     [dir1, dir2, dir3].forEach(dir => dir.remove(true));
     MockFilePicker.cleanup();
