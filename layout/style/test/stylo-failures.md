@@ -38,10 +38,10 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
   * test_animations.html [277]
-  * test_animations_async_tests.html [3]
+  * test_animations_async_tests.html [2]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
-  * test_flexbox_flex_grow_and_shrink.html [16]
+  * test_flexbox_flex_grow_and_shrink.html [8]
   * OMTA
     * test_animations_effect_timing_duration.html [1]
     * test_animations_effect_timing_enddelay.html [1]
