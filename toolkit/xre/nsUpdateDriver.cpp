@@ -108,14 +108,24 @@ UpdateDriverSetupMacCommandLine(int& argc, char**& argv, bool restart)
   // monitor to signal us when that happens, and block until then.
   Monitor monitor("nsUpdateDriver SetupMacCommandLine");
 
-  NS_DispatchToMainThread(
+  nsresult rv = NS_DispatchToMainThread(
     NS_NewRunnableFunction([&argc, &argv, restart, &monitor]() -> void
     {
       CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
       MonitorAutoLock(monitor).Notify();
     }));
 
-  MonitorAutoLock(monitor).Wait();
+  if (NS_FAILED(rv)) {
+    LOG(("Update driver error dispatching SetupMacCommandLine to main thread: %d\n", rv));
+    return;
+  }
+
+  // The length of this wait is arbitrary, but should be long enough that having
+  // it expire means something is seriously wrong.
+  rv = MonitorAutoLock(monitor).Wait(PR_SecondsToInterval(60));
+  if (NS_FAILED(rv)) {
+    LOG(("Update driver timed out waiting for SetupMacCommandLine: %d\n", rv));
+  }
 }
 #endif
 

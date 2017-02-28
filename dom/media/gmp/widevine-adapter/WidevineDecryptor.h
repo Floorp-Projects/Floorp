@@ -12,8 +12,6 @@
 #include "mozilla/RefPtr.h"
 #include "WidevineUtils.h"
 #include <map>
-#include <deque>
-#include <queue>
 
 namespace mozilla {
 
@@ -66,8 +64,7 @@ public:
                             uint32_t aServerCertSize) override;
 
   void Decrypt(GMPBuffer* aBuffer,
-               GMPEncryptedBufferMetadata* aMetadata,
-               uint64_t aDurationUsecs) override;
+               GMPEncryptedBufferMetadata* aMetadata) override;
 
   void DecryptingComplete() override;
 
@@ -121,45 +118,6 @@ public:
   GMPDecryptorCallback* Callback() const { return mCallback; }
   RefPtr<CDMWrapper> GetCDMWrapper() const { return mCDM; }
 private:
-
-  struct PendingDecrypt
-  {
-    PendingDecrypt(GMPBuffer* aBuffer,
-      GMPEncryptedBufferMetadata* aMetadata,
-      cdm::Time aSampleDuration)
-      : mBuffer(aBuffer)
-      , mMetadata(aMetadata)
-      , mSampleDuration(aSampleDuration)
-    {
-    }
-    GMPBuffer* mBuffer;
-    GMPEncryptedBufferMetadata* mMetadata;
-    cdm::Time mSampleDuration;
-  };
-
-  // Queue of buffers waiting to be decrypted.
-  std::queue<PendingDecrypt> mPendingDecrypts;
-
-  void DecryptBuffer(const PendingDecrypt& aJob);
-  cdm::Time ThrottleDecrypt(cdm::Time aWallClock, cdm::Time aSampleDuration);
-  void ProcessDecrypts();
-  void ProcessDecryptsFromTimer();
-
-  struct DecryptJob
-  {
-    DecryptJob(cdm::Time aWallTime, cdm::Time aSampleDuration)
-      : mWallTime(aWallTime)
-      , mSampleDuration(aSampleDuration)
-    {}
-    cdm::Time mWallTime;
-    cdm::Time mSampleDuration;
-  };
-
-  // Queue of durations of buffers that have been decrypted, along with the
-  // wall-clock timestamp when they were decrypted. This enables us to
-  // throttle the throughput against the wall-clock.
-  std::deque<DecryptJob> mDecrypts;
-
   ~WidevineDecryptor();
   RefPtr<CDMWrapper> mCDM;
   cdm::ContentDecryptionModule_8* CDM() { return mCDM->GetCDM(); }
@@ -169,7 +127,6 @@ private:
   bool mDistinctiveIdentifierRequired = false;
   bool mPersistentStateRequired = false;
   uint32_t mInstanceId = 0;
-  bool mPendingDecryptTimerSet = false;
 };
 
 } // namespace mozilla

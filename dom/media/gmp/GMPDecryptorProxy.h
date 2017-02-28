@@ -55,8 +55,7 @@ public:
 
   virtual void Decrypt(uint32_t aId,
                        const mozilla::CryptoSample& aCrypto,
-                       const nsTArray<uint8_t>& aBuffer,
-                       uint64_t aDurationUsecs) = 0;
+                       const nsTArray<uint8_t>& aBuffer) = 0;
 
   virtual void Close() = 0;
 };

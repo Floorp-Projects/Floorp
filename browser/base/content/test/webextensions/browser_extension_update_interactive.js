@@ -1,82 +1,7 @@
 const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
-const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
 const ID = "update2@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
-
-registerCleanupFunction(async function() {
-  for (let id of [ID, ID_LEGACY]) {
-    let addon = await AddonManager.getAddonByID(id);
-    if (addon) {
-      ok(false, `Addon ${id} was still installed at the end of the test`);
-      addon.uninstall();
-    }
-  }
-});
-
-function promiseInstallAddon(url) {
-  return AddonManager.getInstallForURL(url, null, "application/x-xpinstall")
-                     .then(install => {
-                       ok(install, "Created install");
-                       return new Promise(resolve => {
-                         install.addListener({
-                           onInstallEnded(_install, addon) {
-                             resolve(addon);
-                           },
-                         });
-                         install.install();
-                       });
-                     });
-}
-
-function promiseViewLoaded(tab, viewid) {
-  let win = tab.linkedBrowser.contentWindow;
-  if (win.gViewController && !win.gViewController.isLoading &&
-      win.gViewController.currentViewId == viewid) {
-     return Promise.resolve();
-  }
-
-  return new Promise(resolve => {
-    function listener() {
-      if (win.gViewController.currentViewId != viewid) {
-        return;
-      }
-      win.document.removeEventListener("ViewChanged", listener);
-      resolve();
-    }
-    win.document.addEventListener("ViewChanged", listener);
-  });
-}
-
-function promisePopupNotificationShown(name) {
-  return new Promise(resolve => {
-    function popupshown() {
-      let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
-
-      ok(notification, `${name} notification shown`);
-      ok(PopupNotifications.isPanelOpen, "notification panel open");
-
-      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstChild);
-    }
-
-    PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
-
-function promiseInstallEvent(addon, event) {
-  return new Promise(resolve => {
-    let listener = {};
-    listener[event] = (install, ...args) => {
-      if (install.addon.id == addon.id) {
-        AddonManager.removeInstallListener(listener);
-        resolve(...args);
-      }
-    };
-    AddonManager.addInstallListener(listener);
-  });
-}
 
 // Set some prefs that apply to all the tests in this file
 add_task(function* setup() {
@@ -99,7 +24,7 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
     ["extensions.update.autoUpdateDefault", autoUpdate],
 
     // Point updates to the local mochitest server
-    ["extensions.update.url", `${URL_BASE}/browser_webext_update.json`],
+    ["extensions.update.url", `${BASE}/browser_webext_update.json`],
   ]});
 
   // Trigger an update check, manually applying the update if we're testing
@@ -133,29 +58,17 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
     }
   }
 
+  // Navigate away from the starting page to force about:addons to load
+  // in a new tab during the tests below.
+  gBrowser.selectedBrowser.loadURI("about:robots");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
   // Install version 1.0 of the test extension
-  let addon = yield promiseInstallAddon(`${URL_BASE}/browser_webext_update1.xpi`);
+  let addon = yield promiseInstallAddon(`${BASE}/browser_webext_update1.xpi`);
   ok(addon, "Addon was installed");
   is(addon.version, "1.0", "Version 1 of the addon is installed");
 
-  // Open add-ons manager and navigate to extensions list
-  let loadPromise = new Promise(resolve => {
-    let listener = (subject, topic) => {
-      if (subject.location.href == "about:addons") {
-        Services.obs.removeObserver(listener, topic);
-        resolve(subject);
-      }
-    };
-    Services.obs.addObserver(listener, "EM-loaded", false);
-  });
-  let tab = gBrowser.addTab("about:addons");
-  gBrowser.selectedTab = tab;
-  let win = yield loadPromise;
-
-  const VIEW = "addons://list/extension";
-  let viewPromise = promiseViewLoaded(tab, VIEW);
-  win.loadView(VIEW);
-  yield viewPromise;
+  let win = yield BrowserOpenAddonsMgr("addons://list/extension");
 
   // Trigger an update check
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
@@ -182,7 +95,7 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
   addon = yield updatePromise;
   is(addon.version, "2.0", "Should have upgraded");
 
-  yield BrowserTestUtils.removeTab(tab);
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   addon.uninstall();
   yield SpecialPowers.popPrefEnv();
 }
@@ -211,7 +124,7 @@ add_task(() => interactiveUpdateTest(false, checkOne));
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [
     // Point updates to the local mochitest server
-    ["extensions.update.url", `${URL_BASE}/browser_webext_update.json`],
+    ["extensions.update.url", `${BASE}/browser_webext_update.json`],
   ]});
 
   // Navigate away to ensure that BrowserOpenAddonMgr() opens a new tab
@@ -219,7 +132,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Install initial version of the test extension
-  let addon = await promiseInstallAddon(`${URL_BASE}/browser_legacy.xpi`);
+  let addon = await promiseInstallAddon(`${BASE}/browser_legacy.xpi`);
   ok(addon, "Addon was installed");
   is(addon.version, "1.1", "Version 1 of the addon is installed");
 
