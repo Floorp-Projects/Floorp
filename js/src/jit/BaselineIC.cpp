@@ -1109,9 +1109,9 @@ EmitICUnboxedPreBarrier(MacroAssembler& masm, const BaseIndex& address, JSValueT
 
 template <typename T>
 void
-BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                          const ValueOperand& value, const T& dest, Register scratch,
-                          Label* failure)
+StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                  const ValueOperand& value, const T& dest, Register scratch,
+                  Label* failure)
 {
     Label done;
 
@@ -1172,14 +1172,14 @@ BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type
 }
 
 template void
-BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                          const ValueOperand& value, const Address& dest, Register scratch,
-                          Label* failure);
+StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                  const ValueOperand& value, const Address& dest, Register scratch,
+                  Label* failure);
 
 template void
-BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                          const ValueOperand& value, const BaseIndex& dest, Register scratch,
-                          Label* failure);
+StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                  const ValueOperand& value, const BaseIndex& dest, Register scratch,
+                  Label* failure);
 
 //
 // In_Fallback
