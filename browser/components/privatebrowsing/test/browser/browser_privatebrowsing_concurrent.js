@@ -22,7 +22,7 @@ add_task(function* test() {
 
   function getElts(browser) {
     return browser.contentTitle.split('|');
-  };
+  }
 
   // Step 1
   let non_private_browser = gBrowser.selectedBrowser;
