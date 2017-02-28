@@ -17,7 +17,7 @@ add_task(function* test() {
       let notification = aWindow.PopupNotifications.getNotification("geolocation");
 
       // Wait until the notification is available.
-      while (!notification){
+      while (!notification) {
         yield new Promise(resolve => { executeSoon(resolve); });
         let notification = aWindow.PopupNotifications.getNotification("geolocation");
       }
@@ -32,7 +32,7 @@ add_task(function* test() {
 
       aWindow.gBrowser.removeCurrentTab();
     });
-  };
+  }
 
   let win = yield BrowserTestUtils.openNewBrowserWindow();
   let browser = win.gBrowser.selectedBrowser;
