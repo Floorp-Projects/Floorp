@@ -1202,6 +1202,11 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // Presume a difference.
     hint |= nsChangeHint_RepaintFrame;
   } else if (thisVis && !NS_IsHintSubset(nsChangeHint_RepaintFrame, hint)) {
+    // We'll handle visited style differently in servo. Assert against being
+    // in the parallel traversal to avoid static analysis hazards when calling
+    // StyleFoo() below.
+    MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+
     // Both style contexts have a style-if-visited.
     bool change = false;
 
