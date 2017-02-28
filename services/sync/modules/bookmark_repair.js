@@ -6,11 +6,14 @@
 
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = ["BookmarkRepairRequestor"];
+this.EXPORTED_SYMBOLS = ["BookmarkRepairRequestor", "BookmarkRepairResponder"];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/collection_repair.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/resource.js");
@@ -529,5 +532,160 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
   _now() {
     // We use the server time, which is SECONDS
     return AsyncResource.serverTime;
+  }
+}
+
+/* An object that responds to repair requests initiated by some other device.
+*/
+class BookmarkRepairResponder extends CollectionRepairResponder {
+  async repair(request, rawCommand) {
+    if (request.request != "upload") {
+      this._abortRepair(request, rawCommand,
+                        `Don't understand request type '${request.request}'`);
+      return;
+    }
+
+    // Note that we don't try and guard against multiple repairs being in
+    // progress as we don't do anything too smart that could cause problems,
+    // but just upload items. If we get any smarter we should re-think this
+    // (but when we do, note that checking this._currentState isn't enough as
+    // this responder is not a singleton)
+
+    let engine = this.service.engineManager.get("bookmarks");
+
+    // Some items have been requested, but we need to be careful about how we
+    // handle them:
+    // * The item exists locally, but isn't in the tree of items we sync (eg, it
+    //   might be a left-pane item or similar.) We write a tombstone for these.
+    // * The item exists locally as a folder - and the children of the folder
+    //   also don't exist on the server - just uploading the folder isn't going
+    //   to help. (Note that we assume the parents *do* exist, otherwise the
+    //   device requesting the item be uploaded wouldn't be aware it exists)
+    // Bug 1343101 covers additional issues we might repair in the future.
+
+    let allIDs = new Set(); // all items we discovered inspecting the requested IDs.
+    let maybeToDelete = new Set(); // items we *may* delete.
+    let toUpload = new Set(); // items we will upload.
+    let results = await PlacesSyncUtils.bookmarks.fetchSyncIdsForRepair(request.ids);
+    for (let { syncId: id, syncable } of results) {
+      allIDs.add(id);
+      if (syncable) {
+        toUpload.add(id);
+      } else {
+        log.debug(`repair request to upload item ${id} but it isn't under a syncable root`);
+        maybeToDelete.add(id);
+      }
+    }
+    if (log.level <= Log.Level.Debug) {
+      let missingItems = request.ids.filter(id =>
+        !toUpload.has(id) && !maybeToDelete.has(id)
+      );
+      if (missingItems.length) {
+        log.debug("repair request to upload items that don't exist locally",
+                  missingItems);
+      }
+    }
+    // So we've now got items we know should potentially be uploaded or deleted.
+    // Query the server to find out what it actually has.
+    let existsRemotely = new Set(); // items we determine already exist on the server
+    let itemSource = engine.itemSource();
+    itemSource.ids = Array.from(allIDs);
+    log.trace(`checking the server for items`, itemSource.ids);
+    for (let remoteID of JSON.parse(itemSource.get())) {
+      log.trace(`the server has "${remoteID}"`);
+      existsRemotely.add(remoteID);
+      // This item exists on the server, so remove it from toUpload if it wasn't
+      // explicitly requested (ie, if it's just a child of a requested item and
+      // it exists then there's no need to upload it, but if it was explicitly
+      // requested, that may be due to the requestor believing it is corrupt.
+      if (request.ids.indexOf(remoteID) == -1) {
+        toUpload.delete(remoteID);
+      }
+    }
+    // We only need to flag as deleted items that actually are on the server.
+    let toDelete = CommonUtils.difference(maybeToDelete, existsRemotely);
+    // whew - now add these items to the tracker "weakly" (ie, they will not
+    // persist in the case of a restart, but that's OK - we'll then end up here
+    // again.)
+    log.debug(`repair request will upload ${toUpload.size} items and delete ${toDelete.size} items`);
+    for (let id of toUpload) {
+      engine._modified.setWeak(id, { tombstone: false });
+    }
+    for (let id of toDelete) {
+      engine._modified.setWeak(id, { tombstone: true });
+    }
+
+    // Add an observer for the engine sync being complete.
+    this._currentState = {
+      request,
+      rawCommand,
+      toUpload,
+      toDelete,
+    }
+    if (toUpload.size || toDelete.size) {
+      // We have arranged for stuff to be uploaded, so wait until that's done.
+      Svc.Obs.add("weave:engine:sync:uploaded", this.onUploaded, this);
+      // and record in telemetry that we got this far - just incase we never
+      // end up doing the upload for some obscure reason.
+      let eventExtra = {
+        flowID: request.flowID,
+        numIDs: (toUpload.size + toDelete.size).toString(),
+      };
+      this.service.recordTelemetryEvent("repairResponse", "uploading", undefined, eventExtra);
+    } else {
+      // We were unable to help with the repair, so report that we are done.
+      this._finishRepair();
+    }
+  }
+
+  onUploaded(subject, data) {
+    if (data != "bookmarks") {
+      return;
+    }
+    Svc.Obs.remove("weave:engine:sync:uploaded", this.onUploaded, this);
+    log.debug(`bookmarks engine has uploaded stuff - creating a repair response`);
+    this._finishRepair();
+  }
+
+  _finishRepair() {
+    let clientsEngine = this.service.clientsEngine;
+    let flowID = this._currentState.request.flowID;
+    let response = {
+      request: this._currentState.request.request,
+      collection: "bookmarks",
+      clientID: clientsEngine.localID,
+      flowID,
+      ids: [],
+    }
+    for (let id of this._currentState.toUpload) {
+      response.ids.push(id);
+    }
+    for (let id of this._currentState.toDelete) {
+      response.ids.push(id);
+    }
+    let clientID = this._currentState.request.requestor;
+    clientsEngine.sendCommand("repairResponse", [response], clientID, { flowID });
+    // and nuke the request from our client.
+    clientsEngine.removeLocalCommand(this._currentState.rawCommand);
+    let eventExtra = {
+      flowID,
+      numIDs: response.ids.length.toString(),
+    }
+    this.service.recordTelemetryEvent("repairResponse", "finished", undefined, eventExtra);
+    this._currentState = null;
+  }
+
+  _abortRepair(request, rawCommand, why) {
+    log.warn(`aborting repair request: ${why}`);
+    this.service.clientsEngine.removeLocalCommand(rawCommand);
+    // record telemetry for this.
+    let eventExtra = {
+      flowID: request.flowID,
+      reason: why,
+    };
+    this.service.recordTelemetryEvent("repairResponse", "aborted", undefined, eventExtra);
+    // We could also consider writing a response here so the requestor can take
+    // some immediate action rather than timing out, but we abort only in cases
+    // that should be rare, so let's wait and see what telemetry tells us.
   }
 }
