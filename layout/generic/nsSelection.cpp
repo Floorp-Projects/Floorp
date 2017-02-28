@@ -4958,6 +4958,22 @@ Selection::AddRange(nsIDOMRange* aDOMRange)
 void
 Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
 {
+  return AddRangeInternal(aRange, GetParentObject(), aRv);
+}
+
+void
+Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
+                            ErrorResult& aRv)
+{
+  nsINode* rangeRoot = aRange.GetRoot();
+  if (aDocument != rangeRoot && (!rangeRoot ||
+                                 aDocument != rangeRoot->GetComposedDoc())) {
+    // http://w3c.github.io/selection-api/#dom-selection-addrange
+    // "...  if the root of the range's boundary points are the document
+    // associated with context object. Otherwise, this method must do nothing."
+    return;
+  }
+
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;

@@ -70,9 +70,10 @@ public:
 
   void Forget()
   {
-    AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
+    RefPtr<DecodedStreamGraphListener> self = this;
+    AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([self] () {
       MOZ_ASSERT(NS_IsMainThread());
-      mFinishPromise.ResolveIfExists(true, __func__);
+      self->mFinishPromise.ResolveIfExists(true, __func__);
     }));
     MutexAutoLock lock(mMutex);
     mStream = nullptr;
