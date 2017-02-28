@@ -23,6 +23,7 @@ import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.ViewUtils;
+import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.web.IWebView;
 
 /**
@@ -110,6 +111,15 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onProgress(int progress) {
                 progressView.setProgress(progress);
+            }
+
+            @Override
+            public void handleExternalUrl(final String url) {
+                    final String fallback = IntentUtils.handleExternalUri(getActivity(), url);
+
+                    if (fallback != null) {
+                        webView.loadUrl(fallback);
+                    }
             }
         });
 

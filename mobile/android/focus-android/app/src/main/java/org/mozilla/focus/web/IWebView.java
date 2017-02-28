@@ -5,11 +5,14 @@
 
 package org.mozilla.focus.web;
 
+import android.net.Uri;
+
 public interface IWebView {
     interface Callback {
         void onPageStarted(String url);
         void onPageFinished(boolean isSecure);
         void onProgress(int progress);
+        void handleExternalUrl(String url);
     }
 
     void setCallback(Callback callback);
