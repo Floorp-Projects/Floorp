@@ -17,8 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewNavigation");
 
-function debug(msg) {
-  // dump(msg);
+function debug(aMsg) {
+  // dump(aMsg);
 }
 
 // Handles navigation requests between Gecko and a GeckoView.
@@ -42,14 +42,15 @@ class GeckoViewNavigation extends GeckoViewModule {
       "GeckoViewNavigation:Inactive",
       "GeckoView:GoBack",
       "GeckoView:GoForward",
+      "GeckoView:Reload",
     ]);
   }
 
   // Bundle event handler.
-  onEvent(event, data, callback) {
-    debug("onEvent: event=" + event + ", data=" + JSON.stringify(data));
+  onEvent(aEvent, aData, aCallback) {
+    debug("onEvent: aEvent=" + aEvent + ", aData=" + JSON.stringify(aData));
 
-    switch (event) {
+    switch (aEvent) {
       case "GeckoViewNavigation:Active":
         this.registerProgressListener();
         break;
@@ -62,19 +63,22 @@ class GeckoViewNavigation extends GeckoViewModule {
       case "GeckoView:GoForward":
         this.browser.goForward();
         break;
+      case "GeckoView:Reload":
+        this.browser.reload();
+        break;
     }
   }
 
   // Message manager event handler.
-  receiveMessage(msg) {
-    debug("receiveMessage " + msg.name);
+  receiveMessage(aMsg) {
+    debug("receiveMessage " + aMsg.name);
   }
 
   // nsIBrowserDOMWindow::openURI implementation.
-  openURI(uri, opener, where, flags) {
-    debug("openURI: uri.spec=" + uri.spec);
+  openURI(aUri, aOpener, aWhere, aFlags) {
+    debug("openURI: aUri.spec=" + aUri.spec);
     // nsIWebNavigation::loadURI(URI, loadFlags, referrer, postData, headers).
-    this.browser.loadURI(uri.spec, null, null, null);
+    this.browser.loadURI(aUri.spec, null, null, null);
   }
 
   // nsIBrowserDOMWindow::canClose implementation.
@@ -103,13 +107,13 @@ class GeckoViewNavigation extends GeckoViewModule {
   }
 
   // WebProgress event handler.
-  onLocationChange(webProgress, request, locationURI, flags) {
+  onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     debug("onLocationChange");
 
-    let fixedURI = locationURI;
+    let fixedURI = aLocationURI;
 
     try {
-      fixedURI = URIFixup.createExposableURI(locationURI);
+      fixedURI = URIFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
 
     let message = {
