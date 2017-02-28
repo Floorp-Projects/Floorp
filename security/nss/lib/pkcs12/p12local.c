@@ -949,6 +949,33 @@ sec_pkcs12_convert_item_to_unicode(PLArenaPool *arena, SECItem *dest,
     return PR_TRUE;
 }
 
+PRBool
+sec_pkcs12_is_pkcs12_pbe_algorithm(SECOidTag algorithm)
+{
+    switch (algorithm) {
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_40_BIT_RC4:
+        case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4:
+        case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC4:
+        /* those are actually PKCS #5 v1.5 PBEs, but we
+         * historically treat them in the same way as PKCS #12
+         * PBEs */
+        case SEC_OID_PKCS5_PBE_WITH_MD2_AND_DES_CBC:
+        case SEC_OID_PKCS5_PBE_WITH_SHA1_AND_DES_CBC:
+        case SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
 /* pkcs 12 templates */
 static const SEC_ASN1TemplateChooserPtr sec_pkcs12_shroud_chooser =
     sec_pkcs12_choose_shroud_type;

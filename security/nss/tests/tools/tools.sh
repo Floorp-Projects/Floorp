@@ -273,12 +273,9 @@ tools_p12_export_list_import_all_pkcs5v2_ciphers()
     CAMELLIA-256-CBC; do
 
 #---------------------------------------------------------------
-# Bug 452464 - pk12util -o fails when -C option specifies AES or
+# Bug 452464 - pk12util -o fails when -C option specifies
 # Camellia ciphers
 # FIXME Restore these to the list
-#    AES-128-CBC, \
-#    AES-192-CBC, \
-#    AES-256-CBC, \
 #    CAMELLIA-128-CBC, \
 #    CAMELLIA-192-CBC, \
 #    CAMELLIA-256-CBC, \
@@ -287,6 +284,9 @@ tools_p12_export_list_import_all_pkcs5v2_ciphers()
     for cert_cipher in \
       RC2-CBC \
       DES-EDE3-CBC \
+      AES-128-CBC \
+      AES-192-CBC \
+      AES-256-CBC \
       null; do
 	  export_list_import ${key_cipher} ${cert_cipher}
 	done

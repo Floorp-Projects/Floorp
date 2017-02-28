@@ -4,6 +4,7 @@
 
 #include "plarena.h"
 
+#include "blapit.h"
 #include "seccomon.h"
 #include "secitem.h"
 #include "secport.h"
@@ -301,17 +302,49 @@ SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen)
     return SEC_OID_UNKNOWN;
 }
 
+static PRBool
+sec_pkcs5_is_algorithm_v2_aes_algorithm(SECOidTag algorithm)
+{
+    switch (algorithm) {
+        case SEC_OID_AES_128_CBC:
+        case SEC_OID_AES_192_CBC:
+        case SEC_OID_AES_256_CBC:
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
+}
+
+static int
+sec_pkcs5v2_aes_key_length(SECOidTag algorithm)
+{
+    switch (algorithm) {
+        /* The key length for the AES-CBC-Pad algorithms are
+         * determined from the undelying cipher algorithm.  */
+        case SEC_OID_AES_128_CBC:
+            return AES_128_KEY_LENGTH;
+        case SEC_OID_AES_192_CBC:
+            return AES_192_KEY_LENGTH;
+        case SEC_OID_AES_256_CBC:
+            return AES_256_KEY_LENGTH;
+        default:
+            break;
+    }
+    return 0;
+}
+
 /*
  * get the key length in bytes from a PKCS5 PBE
  */
-int
-sec_pkcs5v2_key_length(SECAlgorithmID *algid)
+static int
+sec_pkcs5v2_key_length(SECAlgorithmID *algid, SECAlgorithmID *cipherAlgId)
 {
     SECOidTag algorithm;
     PLArenaPool *arena = NULL;
     SEC_PKCS5PBEParameter p5_param;
     SECStatus rv;
     int length = -1;
+    SECOidTag cipherAlg = SEC_OID_UNKNOWN;
 
     algorithm = SECOID_GetAlgorithmTag(algid);
     /* sanity check, they should all be PBKDF2 here */
@@ -330,7 +363,12 @@ sec_pkcs5v2_key_length(SECAlgorithmID *algid)
         goto loser;
     }
 
-    if (p5_param.keyLength.data != NULL) {
+    if (cipherAlgId)
+        cipherAlg = SECOID_GetAlgorithmTag(cipherAlgId);
+
+    if (sec_pkcs5_is_algorithm_v2_aes_algorithm(cipherAlg)) {
+        length = sec_pkcs5v2_aes_key_length(cipherAlg);
+    } else if (p5_param.keyLength.data != NULL) {
         length = DER_GetInteger(&p5_param.keyLength);
     }
 
@@ -375,14 +413,15 @@ SEC_PKCS5GetKeyLength(SECAlgorithmID *algid)
         case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_128_BIT_RC4:
             return 16;
         case SEC_OID_PKCS5_PBKDF2:
-            return sec_pkcs5v2_key_length(algid);
+            return sec_pkcs5v2_key_length(algid, NULL);
         case SEC_OID_PKCS5_PBES2:
         case SEC_OID_PKCS5_PBMAC1: {
             sec_pkcs5V2Parameter *pbeV2_param;
             int length = -1;
             pbeV2_param = sec_pkcs5_v2_get_v2_param(NULL, algid);
             if (pbeV2_param != NULL) {
-                length = sec_pkcs5v2_key_length(&pbeV2_param->pbeAlgId);
+                length = sec_pkcs5v2_key_length(&pbeV2_param->pbeAlgId,
+                                                &pbeV2_param->cipherAlgId);
                 sec_pkcs5_v2_destroy_v2_param(pbeV2_param);
             }
             return length;
@@ -614,6 +653,8 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
             SECOidTag hashAlg = HASH_GetHashOidTagByHMACOidTag(cipherAlgorithm);
             if (hashAlg != SEC_OID_UNKNOWN) {
                 keyLength = HASH_ResultLenByOidTag(hashAlg);
+            } else if (sec_pkcs5_is_algorithm_v2_aes_algorithm(cipherAlgorithm)) {
+                keyLength = sec_pkcs5v2_aes_key_length(cipherAlgorithm);
             } else {
                 CK_MECHANISM_TYPE cryptoMech;
                 cryptoMech = PK11_AlgtagToMechanism(cipherAlgorithm);
