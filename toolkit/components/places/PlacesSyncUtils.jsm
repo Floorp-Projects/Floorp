@@ -127,6 +127,48 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   }),
 
   /**
+   * Returns an array of `{ syncId, syncable }` tuples for all items in
+   * `requestedSyncIds`. If any requested ID is a folder, all its descendants
+   * will be included. Ancestors of non-syncable items are not included; if
+   * any are missing on the server, the requesting client will need to make
+   * another repair request.
+   *
+   * Sync calls this method to respond to incoming bookmark repair requests
+   * and upload items that are missing on the server.
+   */
+  fetchSyncIdsForRepair: Task.async(function* (requestedSyncIds) {
+    let requestedGuids = requestedSyncIds.map(BookmarkSyncUtils.syncIdToGuid);
+    let db = yield PlacesUtils.promiseDBConnection();
+    let rows = yield db.executeCached(`
+      WITH RECURSIVE
+      syncedItems(id) AS (
+        SELECT b.id FROM moz_bookmarks b
+        WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
+                         'mobile______')
+        UNION ALL
+        SELECT b.id FROM moz_bookmarks b
+        JOIN syncedItems s ON b.parent = s.id
+      ),
+      descendants(id) AS (
+        SELECT b.id FROM moz_bookmarks b
+        WHERE b.guid IN (${requestedGuids.map(guid => JSON.stringify(guid)).join(",")})
+        UNION ALL
+        SELECT b.id FROM moz_bookmarks b
+        JOIN descendants d ON d.id = b.parent
+      )
+      SELECT b.guid, s.id NOT NULL AS syncable
+      FROM descendants d
+      JOIN moz_bookmarks b ON b.id = d.id
+      LEFT JOIN syncedItems s ON s.id = d.id
+      `);
+    return rows.map(row => {
+      let syncId = BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid"));
+      let syncable = !!row.getResultByName("syncable");
+      return { syncId, syncable };
+    });
+  }),
+
+  /**
    * Migrates an array of `{ syncId, modified }` tuples from the old JSON-based
    * tracker to the new sync change counter. `modified` is when the change was
    * added to the old tracker, in milliseconds.
