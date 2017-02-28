@@ -19,7 +19,7 @@ add_task(function* test() {
       // Wait until the notification is available.
       while (!notification) {
         yield new Promise(resolve => { executeSoon(resolve); });
-        let notification = aWindow.PopupNotifications.getNotification("geolocation");
+        notification = aWindow.PopupNotifications.getNotification("geolocation");
       }
 
       if (aPrivateMode) {

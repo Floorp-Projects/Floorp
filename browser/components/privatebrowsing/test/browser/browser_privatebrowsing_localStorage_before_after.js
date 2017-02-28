@@ -11,7 +11,6 @@
 //   existing.
 
 add_task(function* test() {
-  let testURI = "about:blank";
   let prefix = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/";
 
   // Step 1.

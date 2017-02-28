@@ -9,7 +9,7 @@
 
   let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
 
-  let tab = win.gBrowser.selectedTab = win.gBrowser.addTab(page1);
+  win.gBrowser.selectedTab = win.gBrowser.addTab(page1);
   let browser = win.gBrowser.selectedBrowser;
   yield BrowserTestUtils.browserLoaded(browser);
 

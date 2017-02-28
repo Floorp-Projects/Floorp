@@ -12,18 +12,18 @@
     }
   }
 
-  if (oGetVars.initial == 'true') {
+  if (oGetVars.initial == "true") {
     localStorage.clear();
   }
 
-  if (oGetVars.action == 'set') {
+  if (oGetVars.action == "set") {
     localStorage.setItem(oGetVars.name, oGetVars.value);
     document.title = localStorage.getItem(oGetVars.name) + "|" + localStorage.length;
-  } else if (oGetVars.action == 'get') {
+  } else if (oGetVars.action == "get") {
     document.title = localStorage.getItem(oGetVars.name) + "|" + localStorage.length;
   }
 
-  if (oGetVars.final == 'true') {
+  if (oGetVars.final == "true") {
     localStorage.clear();
   }
 </script>
