@@ -9,6 +9,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsITelemetry.h"
 #include "nsVariant.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -65,7 +66,7 @@ struct EventExtraEntry {
 };
 
 struct ChildEventData {
-  double timestamp;
+  mozilla::TimeStamp timestamp;
   nsCString category;
   nsCString method;
   nsCString object;
