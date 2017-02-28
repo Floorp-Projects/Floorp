@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import logging
-import mozpack.path as mozpath
 import os
+import tempfile
 
 from concurrent.futures import (
     ThreadPoolExecutor,
@@ -19,6 +19,7 @@ import mozinfo
 from manifestparser import TestManifest
 from manifestparser import filters as mpf
 
+import mozpack.path as mozpath
 from mozbuild.base import (
     MachCommandBase,
 )
@@ -69,13 +70,21 @@ class MachCommands(MachCommandBase):
         metavar='TEST',
         help=('Tests to run. Each test can be a single file or a directory. '
               'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
-    def python_test(self,
-                    tests=[],
-                    test_objects=None,
-                    subsuite=None,
-                    verbose=False,
-                    stop=False,
-                    jobs=1):
+    def python_test(self, *args, **kwargs):
+        try:
+            tempdir = os.environ[b'PYTHON_TEST_TMP'] = str(tempfile.mkdtemp(suffix='-python-test'))
+            return self.run_python_tests(*args, **kwargs)
+        finally:
+            import mozfile
+            mozfile.remove(tempdir)
+
+    def run_python_tests(self,
+                         tests=[],
+                         test_objects=None,
+                         subsuite=None,
+                         verbose=False,
+                         stop=False,
+                         jobs=1):
         self._activate_virtualenv()
 
         def find_tests_by_path():
