@@ -112,6 +112,7 @@
 #include "nsIAlertsService.h"
 #include "nsIClipboard.h"
 #include "nsContentPermissionHelper.h"
+#include "nsIContentProcess.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
@@ -435,6 +436,90 @@ ContentParentsMemoryReporter::CollectReports(
 }
 
 nsClassHashtable<nsStringHashKey, nsTArray<ContentParent*>>* ContentParent::sBrowserContentParents;
+
+namespace {
+
+class ScriptableCPInfo final : public nsIContentProcessInfo
+{
+public:
+  explicit ScriptableCPInfo(ContentParent* aParent)
+    : mContentParent(aParent)
+  {
+    MOZ_ASSERT(mContentParent);
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPROCESSINFO
+
+  void ProcessDied()
+  {
+    mContentParent = nullptr;
+  }
+
+private:
+  ~ScriptableCPInfo()
+  {
+    MOZ_ASSERT(!mContentParent, "must call ProcessDied");
+  }
+
+  ContentParent* mContentParent;
+};
+
+NS_IMPL_ISUPPORTS(ScriptableCPInfo, nsIContentProcessInfo)
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetIsAlive(bool* aIsAlive)
+{
+  *aIsAlive = mContentParent != nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetProcessId(int32_t* aPID)
+{
+  if (!mContentParent) {
+    *aPID = -1;
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aPID = mContentParent->Pid();
+  if (*aPID == -1) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetOpener(nsIContentProcessInfo** aInfo)
+{
+  *aInfo = nullptr;
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (ContentParent* opener = mContentParent->Opener()) {
+    nsCOMPtr<nsIContentProcessInfo> info = opener->ScriptableHelper();
+    info.forget(aInfo);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScriptableCPInfo::GetMessageManager(nsIMessageSender** aMessenger)
+{
+  *aMessenger = nullptr;
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsCOMPtr<nsIMessageSender> manager = mContentParent->GetMessageManager();
+  manager.forget(aMessenger);
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent> > ContentParent::sContentParents;
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
@@ -697,37 +782,64 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
                                           ContentParent* aOpener)
 {
   nsTArray<ContentParent*>& contentParents = GetOrCreatePool(aRemoteType);
-
   uint32_t maxContentParents = GetMaxProcessCount(aRemoteType);
 
-  RefPtr<ContentParent> p;
-  if (contentParents.Length() >= maxContentParents) {
+  if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
     // We never want to re-use Large-Allocation processes.
-    if (aRemoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
+    if (contentParents.Length() >= maxContentParents) {
       return GetNewOrUsedBrowserProcess(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
                                         aPriority,
                                         aOpener);
     }
+  } else {
+    nsTArray<nsIContentProcessInfo*> infos(contentParents.Length());
+    for (auto* cp : contentParents) {
+      infos.AppendElement(cp->mScriptableHelper);
+    }
 
-    if ((p = RandomSelect(contentParents, aOpener, maxContentParents))) {
+    nsCOMPtr<nsIContentProcessProvider> cpp =
+      do_GetService("@mozilla.org/ipc/processselector;1");
+    nsIContentProcessInfo* openerInfo = aOpener ? aOpener->mScriptableHelper.get() : nullptr;
+    int32_t index;
+    if (cpp &&
+        NS_SUCCEEDED(cpp->ProvideProcess(aRemoteType, openerInfo,
+                                         infos.Elements(), infos.Length(),
+                                         &index))) {
+      // If the provider returned an existing ContentParent, use that one.
+      if (0 <= index && static_cast<uint32_t>(index) <= maxContentParents) {
+        RefPtr<ContentParent> retval = contentParents[index];
+        return retval.forget();
+      }
+    } else {
+      // If there was a problem with the JS chooser, fall back to a random
+      // selection.
+      NS_WARNING("nsIContentProcessProvider failed to return a process");
+      RefPtr<ContentParent> random;
+      if (contentParents.Length() >= maxContentParents &&
+          (random = RandomSelect(contentParents, aOpener, maxContentParents))) {
+        return random.forget();
+      }
+    }
+
+    // Try to take the preallocated process only for the default process type.
+    RefPtr<ContentParent> p;
+    if (aRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE) &&
+        (p = PreallocatedProcessManager::Take())) {
+      // For pre-allocated process we have not set the opener yet.
+      p->mOpener = aOpener;
+      contentParents.AppendElement(p);
       return p.forget();
     }
   }
 
-  // Try to take the preallocated process only for the default process type.
-  if (aRemoteType.Equals(NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE)) &&
-      (p = PreallocatedProcessManager::Take())) {
-    // For pre-allocated process we have not set the opener yet.
-    p->mOpener = aOpener;
-  } else {
-    p = new ContentParent(aOpener, aRemoteType);
+  // Create a new process from scratch.
+  RefPtr<ContentParent> p = new ContentParent(aOpener, aRemoteType);
 
-    if (!p->LaunchSubprocess(aPriority)) {
-      return nullptr;
-    }
-
-    p->Init();
+  if (!p->LaunchSubprocess(aPriority)) {
+    return nullptr;
   }
+
+  p->Init();
 
   contentParents.AppendElement(p);
   return p.forget();
@@ -1204,6 +1316,8 @@ ContentParent::Init()
 
   RefPtr<GeckoMediaPluginServiceParent> gmps(GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
+
+  mScriptableHelper = new ScriptableCPInfo(this);
 }
 
 namespace {
@@ -1274,6 +1388,11 @@ ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
 void
 ContentParent::ShutDownProcess(ShutDownMethod aMethod)
 {
+  if (mScriptableHelper) {
+    static_cast<ScriptableCPInfo*>(mScriptableHelper.get())->ProcessDied();
+    mScriptableHelper = nullptr;
+  }
+
   // Shutting down by sending a shutdown message works differently than the
   // other methods. We first call Shutdown() in the child. After the child is
   // ready, it calls FinishShutdown() on us. Then we close the channel.

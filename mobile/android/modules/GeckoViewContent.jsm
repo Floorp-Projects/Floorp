@@ -13,7 +13,9 @@ Cu.import("resource://gre/modules/GeckoViewModule.jsm");
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewContent");
 
-var DEBUG = false;
+function debug(aMsg) {
+  // dump(aMsg);
+}
 
 class GeckoViewContent extends GeckoViewModule {
   init() {
@@ -23,21 +25,20 @@ class GeckoViewContent extends GeckoViewModule {
     this.messageManager.addMessageListener("GeckoView:DOMTitleChanged", this);
   }
 
-  handleEvent(event) {
-    if (DEBUG) {
-      dump("handleEvent: event.type=" + event.type);
-    }
+  handleEvent(aEvent) {
+    debug("handleEvent: aEvent.type=" + aEvent.type);
   }
 
   // Message manager event handler.
-  receiveMessage(msg) {
-    if (DEBUG) {
-      dump("receiveMessage " + msg.name);
-    }
+  receiveMessage(aMsg) {
+    debug("receiveMessage " + aMsg.name);
 
-    switch (msg.name) {
+    switch (aMsg.name) {
       case "GeckoView:DOMTitleChanged":
-        this.eventDispatcher.sendRequest({ type: "GeckoView:DOMTitleChanged", title: msg.data.title });
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:DOMTitleChanged",
+          title: aMsg.data.title
+        });
         break;
     }
   }

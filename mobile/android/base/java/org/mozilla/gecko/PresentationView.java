@@ -17,11 +17,11 @@ import android.util.DisplayMetrics;
 
 public class PresentationView extends GeckoView {
     private static final String LOGTAG = "PresentationView";
-    private static final String presentationViewURI = "chrome://browser/content/PresentationView.xul";
+    private static final String PRESENTATION_VIEW_URI = "chrome://browser/content/PresentationView.xul";
 
     public PresentationView(Context context, String deviceId, int screenId) {
         super(context);
-        this.chromeURI = presentationViewURI + "#" + deviceId;
-        this.screenId = screenId;
+        this.mChromeUri = PRESENTATION_VIEW_URI + "#" + deviceId;
+        this.mScreenId = screenId;
     }
 }

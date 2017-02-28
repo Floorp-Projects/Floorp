@@ -9,7 +9,6 @@
 SyncProfile::SyncProfile(int aThreadId, PseudoStack* aStack)
   : ThreadInfo("SyncProfile", aThreadId, /* isMainThread = */ false, aStack,
                /* stackTop = */ nullptr)
-  , mOwnerState(REFERENCED)
 {
   MOZ_COUNT_CTOR(SyncProfile);
   SetProfile(new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES));
@@ -18,32 +17,6 @@ SyncProfile::SyncProfile(int aThreadId, PseudoStack* aStack)
 SyncProfile::~SyncProfile()
 {
   MOZ_COUNT_DTOR(SyncProfile);
-}
-
-bool
-SyncProfile::ShouldDestroy()
-{
-  mozilla::MutexAutoLock lock(GetMutex());
-  if (mOwnerState == OWNED) {
-    mOwnerState = OWNER_DESTROYING;
-    return true;
-  }
-  mOwnerState = ORPHANED;
-  return false;
-}
-
-void
-SyncProfile::EndUnwind()
-{
-  if (mOwnerState != ORPHANED) {
-    mOwnerState = OWNED;
-  }
-  // Save mOwnerState before we release the mutex
-  OwnerState ownerState = mOwnerState;
-  ThreadInfo::EndUnwind();
-  if (ownerState == ORPHANED) {
-    delete this;
-  }
 }
 
 // SyncProfiles' stacks are deduplicated in the context of the containing

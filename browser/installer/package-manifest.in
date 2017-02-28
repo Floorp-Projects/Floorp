@@ -520,6 +520,9 @@
 @RESPATH@/components/remotebrowserutils.manifest
 @RESPATH@/components/RemoteWebNavigation.js
 
+@RESPATH@/components/ProcessSelector.js
+@RESPATH@/components/ProcessSelector.manifest
+
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
