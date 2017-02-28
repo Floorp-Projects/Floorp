@@ -3332,6 +3332,25 @@ TabParent::LiveResizeStopped()
   SuppressDisplayport(false);
 }
 
+void
+TabParent::DispatchTabChildNotReadyEvent()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
+  if (!target) {
+    NS_WARNING("Could not locate target for tab child not ready event.");
+    return;
+  }
+
+  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
+  event->InitEvent(NS_LITERAL_STRING("MozTabChildNotReady"), true, false);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+  bool dummy;
+  mFrameElement->DispatchEvent(event, &dummy);
+}
+
 NS_IMETHODIMP
 FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
 {
