@@ -110,8 +110,7 @@ BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
   nsDisplayListBuilder::OutOfFlowDisplayData*
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(aFrame);
   if (savedOutOfFlowData) {
-    visible = savedOutOfFlowData->mVisibleRect;
-    dirty = savedOutOfFlowData->mDirtyRect;
+    visible = savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, aFrame, &dirty);
     // This function is called after we've finished building display items for
     // the root scroll frame. That means that the content clip from the root
     // scroll frame is no longer on aBuilder. However, we need to make sure
