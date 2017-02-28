@@ -52,8 +52,6 @@
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDLightShadow;
-
-  --lwt-header-image: none;
 }
 
 @media (-moz-windows-default-theme) {
@@ -82,12 +80,6 @@ toolbar:-moz-lwtheme {
   --toolbarbutton-active-boxshadow: 0 0 2px rgba(0,0,0,.6) inset;
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
-}
-
-:root {
-  color: var(--lwt-textcolor);
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-header-image);
 }
 
 #menubar-items {
@@ -343,11 +335,6 @@ toolbar:-moz-lwtheme {
 
 #print-preview-toolbar:not(:-moz-lwtheme) {
   -moz-appearance: toolbox;
-}
-
-#browser-bottombox:-moz-lwtheme {
-  background-color: var(--lwt-accentcolor);
-  background-image: var(--lwt-footer-image);
 }
 
 #browser-bottombox:not(:-moz-lwtheme) {
@@ -2336,15 +2323,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 #main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
-}
-
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
-  background-repeat: no-repeat;
-  background-position: right top;
-  background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
-  background-image: var(--lwt-header-image);
-  background-color: transparent;
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {

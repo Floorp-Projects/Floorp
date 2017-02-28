@@ -107,9 +107,12 @@ LightweightThemeConsumer.prototype = {
     root.style.removeProperty("--lwt-textcolor");
     root.style.removeProperty("--lwt-accentcolor");
     if (active) {
-      root.style.setProperty("--lwt-textcolor", aData.textcolor || "black");
+      let textcolor = aData.textcolor || "black";
+      root.style.setProperty("--lwt-textcolor", textcolor);
       root.style.setProperty("--lwt-accentcolor", aData.accentcolor || "white");
-      let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(root).color);
+      let dummy = this._doc.createElement("dummy");
+      dummy.style.color = textcolor;
+      let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(dummy).color);
       let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
       root.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
       root.setAttribute("lwtheme", "true");
