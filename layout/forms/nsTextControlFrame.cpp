@@ -305,13 +305,18 @@ nsTextControlFrame::EnsureEditorInitialized()
     // editor.
     mEditorHasBeenInitialized = true;
 
-    nsAutoString val;
-    txtCtrl->GetTextEditorValue(val, true);
-    int32_t length = val.Length();
-
-    // Set the selection to the end of the text field. (bug 1287655)
     if (weakFrame.IsAlive()) {
-      SetSelectionEndPoints(length, length);
+      int32_t position = 0;
+
+      // Set the selection to the end of the text field (bug 1287655),
+      // but only if the contents has changed (bug 1337392).
+      if (txtCtrl->ValueChanged()) {
+        nsAutoString val;
+        txtCtrl->GetTextEditorValue(val, true);
+        position = val.Length();
+      }
+
+      SetSelectionEndPoints(position, position);
     }
   }
   NS_ENSURE_STATE(weakFrame.IsAlive());
