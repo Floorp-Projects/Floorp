@@ -3254,21 +3254,6 @@ nsIDocument::HasFocus(ErrorResult& rv) const
   return false;
 }
 
-TimeStamp
-nsIDocument::LastFocusTime() const
-{
-  return mLastFocusTime;
-}
-
-void
-nsIDocument::SetLastFocusTime(const TimeStamp& aFocusTime)
-{
-  MOZ_DIAGNOSTIC_ASSERT(!aFocusTime.IsNull());
-  MOZ_DIAGNOSTIC_ASSERT(mLastFocusTime.IsNull() ||
-                        aFocusTime >= mLastFocusTime);
-  mLastFocusTime = aFocusTime;
-}
-
 NS_IMETHODIMP
 nsDocument::GetReferrer(nsAString& aReferrer)
 {
@@ -4768,14 +4753,6 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     }
 
     MaybeRescheduleAnimationFrameNotifications();
-
-    // If we are set in a window that is already focused we should remember this
-    // as the time the document gained focus.
-    bool focused = false;
-    Unused << HasFocus(&focused);
-    if (focused) {
-      SetLastFocusTime(TimeStamp::Now());
-    }
   }
 
   // Remember the pointer to our window (or lack there of), to avoid
