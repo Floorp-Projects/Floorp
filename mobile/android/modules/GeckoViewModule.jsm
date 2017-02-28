@@ -11,15 +11,15 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewModule");
 
-function debug(msg) {
-  // dump(msg);
+function debug(aMsg) {
+  // dump(aMsg);
 }
 
 class GeckoViewModule {
-  constructor(window, browser, eventDispatcher) {
-    this.window = window;
-    this.browser = browser;
-    this.eventDispatcher = eventDispatcher;
+  constructor(aWindow, aBrowser, aEventDispatcher) {
+    this.window = aWindow;
+    this.browser = aBrowser;
+    this.eventDispatcher = aEventDispatcher;
 
     this.eventDispatcher.registerListener(
       () => this.onSettingsUpdate(),

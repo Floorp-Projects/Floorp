@@ -16,7 +16,7 @@ public:
   static const char* GetContentPref(size_t aIndex);
 
 private:
-    static const char* gInitPrefs[];
+  static const char* gInitPrefs[];
 };
 
 }

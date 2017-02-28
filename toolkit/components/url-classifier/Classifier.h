@@ -32,7 +32,7 @@ public:
 
   nsresult Open(nsIFile& aCacheDirectory);
   void Close();
-  void Reset();
+  void Reset(); // Not including any intermediary for update.
 
   /**
    * Clear data for specific tables.
@@ -126,7 +126,7 @@ private:
   nsresult RecoverBackups();
   nsresult CleanToDelete();
   nsresult CopyInUseDirForUpdate();
-  void     CopyInUseLookupCacheForUpdate();
+  nsresult CopyInUseLookupCacheForUpdate();
   nsresult RegenActiveTables();
 
 

@@ -160,20 +160,31 @@ const BackgroundPageThumbs = {
 
     this._startedParentWinInit = true;
 
-    // Create an html:iframe, stick it in the parent document, and
-    // use it to host the browser.  about:blank will not have the system
-    // principal, so it can't host, but a document with a chrome URI will.
-    let hostWindow = Services.appShell.hiddenDOMWindow;
-    let iframe = hostWindow.document.createElementNS(HTML_NS, "iframe");
-    iframe.setAttribute("src", "chrome://global/content/mozilla.xhtml");
-    let onLoad = function onLoadFn() {
-      iframe.removeEventListener("load", onLoad, true);
-      this._parentWin = iframe.contentWindow;
-      this._processCaptureQueue();
-    }.bind(this);
-    iframe.addEventListener("load", onLoad, true);
-    hostWindow.document.documentElement.appendChild(iframe);
-    this._hostIframe = iframe;
+    // Create a windowless browser and load our hosting
+    // (privileged) document in it.
+    let wlBrowser = Services.appShell.createWindowlessBrowser(true);
+    wlBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
+    let webProgress = wlBrowser.getInterface(Ci.nsIWebProgress);
+    let listener = {
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
+        Ci.nsISupportsWeakReference]),
+    };
+    listener.onStateChange = (wbp, request, stateFlags, status) => {
+      if (!request) {
+        return;
+      }
+      if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+        webProgress.removeProgressListener(listener);
+        // Get the window reference via the document.
+        this._parentWin = wlBrowser.document.defaultView;
+        this._processCaptureQueue();
+      }
+    };
+    webProgress.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+    wlBrowser.loadURI("chrome://global/content/backgroundPageThumbs.xhtml", 0, null, null, null);
+    this._windowlessContainer = wlBrowser;
 
     return false;
   },
@@ -186,10 +197,10 @@ const BackgroundPageThumbs = {
     if (this._captureQueue)
       this._captureQueue.forEach(cap => cap.destroy());
     this._destroyBrowser();
-    if (this._hostIframe)
-      this._hostIframe.remove();
+    if (this._windowlessContainer)
+      this._windowlessContainer.close();
     delete this._captureQueue;
-    delete this._hostIframe;
+    delete this._windowlessContainer;
     delete this._startedParentWinInit;
     delete this._parentWin;
   },

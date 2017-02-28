@@ -25,9 +25,9 @@ function VisitInfo(aTransitionType,
   this.visitDate = aVisitTime || Date.now() * 1000;
 }
 
-function promiseUpdatePlaces(aPlaces) {
+function promiseUpdatePlaces(aPlaces, aOptions, aBatchFrecencyNotifications) {
   return new Promise((resolve, reject) => {
-    PlacesUtils.asyncHistory.updatePlaces(aPlaces, {
+    PlacesUtils.asyncHistory.updatePlaces(aPlaces, Object.assign({
       _errors: [],
       _results: [],
       handleError(aResultCode, aPlace) {
@@ -36,10 +36,10 @@ function promiseUpdatePlaces(aPlaces) {
       handleResult(aPlace) {
         this._results.push(aPlace);
       },
-      handleCompletion() {
-        resolve({ errors: this._errors, results: this._results });
+      handleCompletion(resultCount) {
+        resolve({ errors: this._errors, results: this._results, resultCount});
       }
-    });
+    }, aOptions), aBatchFrecencyNotifications);
   });
 }
 
@@ -98,14 +98,17 @@ VisitObserver.prototype = {
                     aSessionId,
                     aReferringId,
                     aTransitionType,
-                    aGUID) {
-    do_print("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
-             ", " + aSessionId + ", " + aReferringId + ", " +
-             aTransitionType + ", " + aGUID + ")");
+                    aGUID,
+                    aHidden,
+                    aVisitCount,
+                    aTyped,
+                    aLastKnownTitle) {
+    let args = [...arguments].slice(1);
+    do_print("onVisit(" + aURI.spec + args.join(", ") + ")");
     if (!this.uri.equals(aURI) || this.guid != aGUID) {
       return;
     }
-    this.callback(aTime, aTransitionType);
+    this.callback(aTime, aTransitionType, aLastKnownTitle);
   },
 };
 
@@ -951,37 +954,45 @@ add_task(function* test_title_change_notifies() {
     do_throw("Unexpected error.");
   }
 
-  // The second case to test is that we get the notification when we add
+  // The second case to test is that we don't get the notification when we add
   // it for the first time.  The first case will fail before our callback if it
   // is busted, so we can do this now.
   place.uri = NetUtil.newURI(place.uri.spec + "/new-visit-with-title");
   place.title = "title 1";
-  function promiseTitleChangedObserver(aPlace) {
-    return new Promise((resolve, reject) => {
-      let callbackCount = 0;
-      let observer = new TitleChangedObserver(aPlace.uri, aPlace.title, function() {
-        switch (++callbackCount) {
-          case 1:
-            // The third case to test is to make sure we get a notification when
-            // we change an existing place.
-            observer.expectedTitle = place.title = "title 2";
-            place.visits = [new VisitInfo()];
-            PlacesUtils.asyncHistory.updatePlaces(place);
-            break;
-          case 2:
-            PlacesUtils.history.removeObserver(silentObserver);
-            PlacesUtils.history.removeObserver(observer);
-            resolve();
-            break;
-        }
-      });
-
-      PlacesUtils.history.addObserver(observer, false);
-      PlacesUtils.asyncHistory.updatePlaces(aPlace);
+  let expectedNotification = false;
+  let titleChangeObserver;
+  let titleChangePromise = new Promise((resolve, reject) => {
+    titleChangeObserver = new TitleChangedObserver(place.uri, place.title, function() {
+      Assert.ok(expectedNotification, "Should not get notified for " + place.uri.spec + " with title " + place.title);
+      if (expectedNotification) {
+        PlacesUtils.history.removeObserver(silentObserver);
+        PlacesUtils.history.removeObserver(titleChangeObserver);
+        resolve();
+      }
     });
-  }
+    PlacesUtils.history.addObserver(titleChangeObserver, false);
+  });
 
-  yield promiseTitleChangedObserver(place);
+  let visitPromise = new Promise(resolve => {
+    PlacesUtils.history.addObserver({
+      onVisit(uri) {
+        Assert.equal(uri.spec, place.uri.spec, "Should get notified for visiting the new URI.");
+        PlacesUtils.history.removeObserver(this);
+        resolve();
+      }
+    }, false);
+  });
+  PlacesUtils.asyncHistory.updatePlaces(place);
+  yield visitPromise;
+
+  // The third case to test is to make sure we get a notification when
+  // we change an existing place.
+  expectedNotification = true;
+  titleChangeObserver.expectedTitle = place.title = "title 2";
+  place.visits = [new VisitInfo()];
+  PlacesUtils.asyncHistory.updatePlaces(place);
+
+  yield titleChangePromise;
   yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
@@ -1093,8 +1104,217 @@ add_task(function* test_typed_hidden_not_overwritten() {
                "The page should be marked as typed");
   Assert.equal(rows[0].getResultByName("hidden"), 0,
                "The page should be marked as not hidden");
+  yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
-function run_test() {
-  run_next_test();
-}
+add_task(function* test_omit_frecency_notifications() {
+  yield PlacesTestUtils.clearHistory();
+  let places = [
+    { uri: NetUtil.newURI("http://mozilla.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_TYPED),
+      ]
+    },
+    { uri: NetUtil.newURI("http://example.org/"),
+      title: "test",
+      visits: [
+        new VisitInfo(TRANSITION_TYPED),
+      ]
+    },
+  ];
+  let promiseFrecenciesChanged = new Promise(resolve => {
+    let frecencyObserverCheck = {
+      onFrecencyChanged() {
+        ok(false, "Should not fire frecencyChanged because we explicitly asked not to do so.");
+      },
+      onManyFrecenciesChanged() {
+        ok(true, "Should fire many frecencies changed notification instead.");
+        PlacesUtils.history.removeObserver(frecencyObserverCheck);
+        resolve();
+      },
+    };
+    PlacesUtils.history.addObserver(frecencyObserverCheck, false);
+  });
+  yield promiseUpdatePlaces(places, {}, true);
+  yield promiseFrecenciesChanged;
+});
+
+add_task(function* test_ignore_errors() {
+  yield PlacesTestUtils.clearHistory();
+  // This test ensures that trying to add a visit, with a guid already found in
+  // another visit, fails - but doesn't report if we told it not to.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+
+  do_check_false(yield promiseIsURIVisited(place.uri));
+  let placesResult = yield promiseUpdatePlaces(place);
+  if (placesResult.errors.length > 0) {
+    do_throw("Unexpected error.");
+  }
+  let placeInfo = placesResult.results[0];
+  do_check_true(yield promiseIsURIVisited(placeInfo.uri));
+
+  let badPlace = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: placeInfo.guid,
+  };
+
+  do_check_false(yield promiseIsURIVisited(badPlace.uri));
+  placesResult = yield promiseUpdatePlaces(badPlace, {ignoreErrors: true});
+  if (placesResult.results.length > 0) {
+    do_throw("Unexpected success.");
+  }
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because we disabled reporting.");
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because there were none.");
+  Assert.equal(placesResult.resultCount, 0,
+               "Should know that we updated 0 items from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_ignore_results() {
+  yield PlacesTestUtils.clearHistory();
+  let place = {
+    uri: NetUtil.newURI("http://mozilla.org/"),
+    title: "test",
+    visits: [
+      new VisitInfo()
+    ]
+  };
+  let placesResult = yield promiseUpdatePlaces(place, {ignoreResults: true});
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because we disabled reporting.");
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because there were none.");
+  Assert.equal(placesResult.resultCount, 1,
+               "Should know that we updated 1 item from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_ignore_results_and_errors() {
+  yield PlacesTestUtils.clearHistory();
+  // This test ensures that trying to add a visit, with a guid already found in
+  // another visit, fails - but doesn't report if we told it not to.
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_first"),
+    visits: [
+      new VisitInfo(),
+    ],
+  };
+
+  do_check_false(yield promiseIsURIVisited(place.uri));
+  let placesResult = yield promiseUpdatePlaces(place);
+  if (placesResult.errors.length > 0) {
+    do_throw("Unexpected error.");
+  }
+  let placeInfo = placesResult.results[0];
+  do_check_true(yield promiseIsURIVisited(placeInfo.uri));
+
+  let badPlace = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: placeInfo.guid,
+  };
+  let allPlaces = [
+    {
+      uri: NetUtil.newURI(TEST_DOMAIN + "test_other_successful_item"),
+      visits: [
+        new VisitInfo(),
+      ],
+    },
+    badPlace,
+  ];
+
+  do_check_false(yield promiseIsURIVisited(badPlace.uri));
+  placesResult = yield promiseUpdatePlaces(allPlaces, {ignoreErrors: true, ignoreResults: true});
+  Assert.equal(placesResult.errors.length, 0,
+               "Should have seen 0 errors because we disabled reporting.");
+  Assert.equal(placesResult.results.length, 0,
+               "Should have seen 0 results because we disabled reporting.");
+  Assert.equal(placesResult.resultCount, 1,
+               "Should know that we updated 1 item from the completion callback.");
+  yield PlacesTestUtils.promiseAsyncUpdates();
+});
+
+add_task(function* test_title_on_initial_visit() {
+  let place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    title: "My title",
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "mnopqrstuvwx",
+  };
+  let visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(place.title, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
+
+  // Now check an empty title doesn't get reported as null
+  place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    title: "",
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "fghijklmnopq",
+  };
+  visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(place.title, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
+
+  // and that a missing title correctly gets reported as null.
+  place = {
+    uri: NetUtil.newURI(TEST_DOMAIN + "test_visit_title"),
+    visits: [
+      new VisitInfo(),
+    ],
+    guid: "fghijklmnopq",
+  };
+  visitPromise = new Promise(resolve => {
+    let visitObserver = new VisitObserver(place.uri, place.guid,
+                                          function(aVisitDate,
+                                                   aTransitionType,
+                                                   aLastKnownTitle) {
+      do_check_eq(null, aLastKnownTitle);
+
+      PlacesUtils.history.removeObserver(visitObserver);
+      resolve();
+    });
+    PlacesUtils.history.addObserver(visitObserver, false);
+  });
+  yield promiseUpdatePlaces(place);
+  yield visitPromise;
+});

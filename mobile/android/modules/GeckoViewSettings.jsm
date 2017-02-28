@@ -17,8 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewSettings");
 
-function debug(msg) {
-  // dump(msg);
+function debug(aMsg) {
+  // dump(aMsg);
 }
 
 // Handles GeckoView settings including:
@@ -39,17 +39,17 @@ class GeckoViewSettings extends GeckoViewModule {
     return this._useTrackingProtection;
   }
 
-  set useTrackingProtection(use) {
-    if (use && !this._isSafeBrowsingInit) {
+  set useTrackingProtection(aUse) {
+    if (aUse && !this._isSafeBrowsingInit) {
       SafeBrowsing.init();
       this._isSafeBrowsingInit = true;
     }
-    if (use != this._useTrackingProtection) {
+    if (aUse != this._useTrackingProtection) {
       this.messageManager.loadFrameScript('data:,' +
-        'docShell.useTrackingProtection = ' + use,
+        'docShell.useTrackingProtection = ' + aUse,
         true
       );
-      this._useTrackingProtection = use;
+      this._useTrackingProtection = aUse;
     }
   }
 }

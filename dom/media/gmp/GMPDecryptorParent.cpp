@@ -173,8 +173,7 @@ GMPDecryptorParent::SetServerCertificate(uint32_t aPromiseId,
 void
 GMPDecryptorParent::Decrypt(uint32_t aId,
                             const CryptoSample& aCrypto,
-                            const nsTArray<uint8_t>& aBuffer,
-                            uint64_t aDurationUsecs)
+                            const nsTArray<uint8_t>& aBuffer)
 {
   LOGV(("GMPDecryptorParent[%p]::Decrypt(id=%d)", this, aId));
 
@@ -193,10 +192,10 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
                            aCrypto.mEncryptedSizes,
                            aCrypto.mSessionIds);
 
-    Unused << SendDecrypt(aId, aBuffer, data, aDurationUsecs);
+    Unused << SendDecrypt(aId, aBuffer, data);
   } else {
     GMPDecryptionData data;
-    Unused << SendDecrypt(aId, aBuffer, data, aDurationUsecs);
+    Unused << SendDecrypt(aId, aBuffer, data);
   }
 }
 
