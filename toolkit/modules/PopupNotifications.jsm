@@ -848,6 +848,7 @@ PopupNotifications.prototype = {
         }
       } else {
         popupnotification.setAttribute("checkboxhidden", "true");
+        this._setNotificationUIState(popupnotification);
       }
 
       this.panel.appendChild(popupnotification);
