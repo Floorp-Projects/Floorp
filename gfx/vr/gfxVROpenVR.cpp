@@ -20,10 +20,12 @@
 #endif // XP_WIN
 
 #include "gfxVROpenVR.h"
+#include "VRManager.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 
@@ -37,59 +39,10 @@ using namespace mozilla::gfx::impl;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
-namespace {
-extern "C" {
-typedef uint32_t (VR_CALLTYPE * pfn_VR_InitInternal)(::vr::HmdError *peError, ::vr::EVRApplicationType eApplicationType);
-typedef void (VR_CALLTYPE * pfn_VR_ShutdownInternal)();
-typedef bool (VR_CALLTYPE * pfn_VR_IsHmdPresent)();
-typedef bool (VR_CALLTYPE * pfn_VR_IsRuntimeInstalled)();
-typedef const char * (VR_CALLTYPE * pfn_VR_GetStringForHmdError)(::vr::HmdError error);
-typedef void * (VR_CALLTYPE * pfn_VR_GetGenericInterface)(const char *pchInterfaceVersion, ::vr::HmdError *peError);
-} // extern "C"
-} // namespace
-
-static pfn_VR_InitInternal vr_InitInternal = nullptr;
-static pfn_VR_ShutdownInternal vr_ShutdownInternal = nullptr;
-static pfn_VR_IsHmdPresent vr_IsHmdPresent = nullptr;
-static pfn_VR_IsRuntimeInstalled vr_IsRuntimeInstalled = nullptr;
-static pfn_VR_GetStringForHmdError vr_GetStringForHmdError = nullptr;
-static pfn_VR_GetGenericInterface vr_GetGenericInterface = nullptr;
-
 #define BTN_MASK_FROM_ID(_id) \
   vr::ButtonMaskFromId(vr::EVRButtonId::_id)
 
 static const uint32_t kNumOpenVRHaptcs = 1;
-
-
-bool
-LoadOpenVRRuntime()
-{
-  static PRLibrary *openvrLib = nullptr;
-  std::string openvrPath = gfxPrefs::VROpenVRRuntime();
-
-  if (!openvrPath.c_str())
-    return false;
-
-  openvrLib = PR_LoadLibrary(openvrPath.c_str());
-  if (!openvrLib)
-    return false;
-
-#define REQUIRE_FUNCTION(_x) do {                                       \
-    *(void **)&vr_##_x = (void *) PR_FindSymbol(openvrLib, "VR_" #_x);  \
-    if (!vr_##_x) { printf_stderr("VR_" #_x " symbol missing\n"); return false; } \
-  } while (0)
-
-  REQUIRE_FUNCTION(InitInternal);
-  REQUIRE_FUNCTION(ShutdownInternal);
-  REQUIRE_FUNCTION(IsHmdPresent);
-  REQUIRE_FUNCTION(IsRuntimeInstalled);
-  REQUIRE_FUNCTION(GetStringForHmdError);
-  REQUIRE_FUNCTION(GetGenericInterface);
-
-#undef REQUIRE_FUNCTION
-
-  return true;
-}
 
 VRDisplayOpenVR::VRDisplayOpenVR(::vr::IVRSystem *aVRSystem,
                                  ::vr::IVRChaperone *aVRChaperone,
@@ -152,7 +105,7 @@ void
 VRDisplayOpenVR::Destroy()
 {
   StopPresentation();
-  vr_ShutdownInternal();
+  ::vr::VR_Shutdown();
 }
 
 void
@@ -344,7 +297,7 @@ VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
 
   ::vr::Texture_t tex;
   tex.handle = (void *)aSource->GetD3D11Texture();
-  tex.eType = ::vr::EGraphicsAPIConvention::API_DirectX;
+  tex.eType = ::vr::ETextureType::TextureType_DirectX;
   tex.eColorSpace = ::vr::EColorSpace::ColorSpace_Auto;
 
   ::vr::VRTextureBounds_t bounds;
@@ -383,7 +336,7 @@ void
 VRDisplayOpenVR::NotifyVSync()
 {
   // We update mIsConneced once per frame.
-  mDisplayInfo.mIsConnected = vr_IsHmdPresent();
+  mDisplayInfo.mIsConnected = ::vr::VR_IsHmdPresent();
 
   // Make sure we respond to OpenVR events even when not presenting
   PollEvents();
@@ -554,11 +507,7 @@ VRSystemManagerOpenVR::Create()
     return nullptr;
   }
 
-  if (!LoadOpenVRRuntime()) {
-    return nullptr;
-  }
-
-  if (!vr_IsRuntimeInstalled()) {
+  if (!::vr::VR_IsRuntimeInstalled()) {
     return nullptr;
   }
 
@@ -585,31 +534,31 @@ VRSystemManagerOpenVR::Shutdown()
 void
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
-  if (!vr_IsHmdPresent()) {
+  if (!::vr::VR_IsHmdPresent()) {
     if (mOpenVRHMD) {
       mOpenVRHMD = nullptr;
     }
   } else if (mOpenVRHMD == nullptr) {
     ::vr::HmdError err;
 
-    vr_InitInternal(&err, ::vr::EVRApplicationType::VRApplication_Scene);
+    ::vr::VR_Init(&err, ::vr::EVRApplicationType::VRApplication_Scene);
     if (err) {
       return;
     }
 
-    ::vr::IVRSystem *system = (::vr::IVRSystem *)vr_GetGenericInterface(::vr::IVRSystem_Version, &err);
+    ::vr::IVRSystem *system = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
     if (err || !system) {
-      vr_ShutdownInternal();
+      ::vr::VR_Shutdown();
       return;
     }
-    ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)vr_GetGenericInterface(::vr::IVRChaperone_Version, &err);
+    ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
     if (err || !chaperone) {
-      vr_ShutdownInternal();
+      ::vr::VR_Shutdown();
       return;
     }
-    ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)vr_GetGenericInterface(::vr::IVRCompositor_Version, &err);
+    ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
     if (err || !compositor) {
-      vr_ShutdownInternal();
+      ::vr::VR_Shutdown();
       return;
     }
 
@@ -659,7 +608,7 @@ VRSystemManagerOpenVR::HandleInput()
                mVRSystem->GetTrackedDeviceClass(trackedIndex)
                == vr::TrackedDeviceClass_GenericTracker);
 
-    if (mVRSystem->GetControllerState(trackedIndex, &state)) {
+    if (mVRSystem->GetControllerState(trackedIndex, &state, sizeof(state))) {
       for (uint32_t j = 0; j < vr::k_unControllerStateAxisCount; ++j) {
         const uint32_t axisType = mVRSystem->GetInt32TrackedDeviceProperty(
                                    trackedIndex,
