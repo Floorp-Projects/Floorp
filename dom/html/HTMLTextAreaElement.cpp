@@ -289,7 +289,7 @@ HTMLTextAreaElement::CreateEditor()
   return mState.PrepareEditor();
 }
 
-NS_IMETHODIMP_(nsIContent*)
+NS_IMETHODIMP_(Element*)
 HTMLTextAreaElement::GetRootEditorNode()
 {
   return mState.GetRootNode();
