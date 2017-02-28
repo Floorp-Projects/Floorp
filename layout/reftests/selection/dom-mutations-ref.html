@@ -144,20 +144,10 @@ var tests = [
 
   function(win,doc,sel) {
     doc.body.innerHTML = 'I|z'
-    let a = doc.body.firstChild;
-    let r = doc.createRange();
-    r.setStart(a, 1);
-    r.setEnd(a, 2);
-    sel.addRange(r);
   },
 
   function(win,doc,sel) {
     doc.body.innerHTML = 'Iz|'
-    let a = doc.body.firstChild;
-    let r = doc.createRange();
-    r.setStart(a, 1);
-    r.setEnd(a, 2);
-    sel.addRange(r);
 
     document.body.appendChild(document.createTextNode('I'));
     document.body.appendChild(document.createTextNode(' '));

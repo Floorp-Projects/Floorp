@@ -98,6 +98,7 @@ hardware (via AudioStream).
 #include "ImageContainer.h"
 #include "SeekJob.h"
 #include "SeekTask.h"
+#include "MediaDecoderReaderWrapper.h"
 
 namespace mozilla {
 
@@ -336,6 +337,13 @@ private:
   // and aborting all pending operations on the decode task queue.
   void Reset(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                          TrackInfo::kVideoTrack));
+  // Sets mMediaSeekable to false.
+  void SetMediaNotSeekable();
+
+  void OnAudioCallback(AudioCallbackData aData);
+  void OnVideoCallback(VideoCallbackData aData);
+  void OnAudioWaitCallback(WaitCallbackData aData);
+  void OnVideoWaitCallback(WaitCallbackData aData);
 
 protected:
   virtual ~MediaDecoderStateMachine();
