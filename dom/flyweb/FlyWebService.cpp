@@ -1193,7 +1193,7 @@ FlyWebService::PairWithService(const nsAString& aServiceId,
 
   if (NS_FAILED(rv)) {
     ErrorResult result;
-    result.Throw(rv);
+    result.ThrowWithCustomCleanup(rv);
     const nsAString& reason = NS_LITERAL_STRING("Error pairing.");
     aCallback.PairingFailed(reason, result);
     ENSURE_SUCCESS_VOID(result);
