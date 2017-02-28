@@ -144,9 +144,6 @@ js::Nursery::init(uint32_t maxNurseryBytes, AutoLockGC& lock)
     if (!mallocedBuffers.init())
         return false;
 
-    if (!cellsWithUid_.init())
-        return false;
-
     freeMallocedBuffersTask = js_new<FreeMallocedBuffersTask>(runtime()->defaultFreeOp());
     if (!freeMallocedBuffersTask || !freeMallocedBuffersTask->init())
         return false;
@@ -822,8 +819,8 @@ void
 js::Nursery::sweep()
 {
     /* Sweep unique id's in all in-use chunks. */
-    for (CellsWithUniqueIdSet::Enum e(cellsWithUid_); !e.empty(); e.popFront()) {
-        JSObject* obj = static_cast<JSObject*>(e.front());
+    for (Cell* cell : cellsWithUid_) {
+        JSObject* obj = static_cast<JSObject*>(cell);
         if (!IsForwarded(obj))
             obj->zone()->removeUniqueId(obj);
         else
