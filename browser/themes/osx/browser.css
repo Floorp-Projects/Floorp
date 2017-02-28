@@ -3195,7 +3195,7 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   background-position: right top;
   background-attachment: fixed;
   background-image: var(--lwt-header-image);
-  background-color: var(--lwt-accentcolor);
+  background-color: var(--lwt-accent-color);
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {
