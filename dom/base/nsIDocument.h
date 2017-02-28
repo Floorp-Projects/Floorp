@@ -2656,8 +2656,6 @@ public:
   }
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
-  mozilla::TimeStamp LastFocusTime() const;
-  void SetLastFocusTime(const mozilla::TimeStamp& aFocusTime);
   // Event handlers are all on nsINode already
   bool MozSyntheticDocument() const
   {
@@ -3026,10 +3024,6 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
-
-  // Last time this document or a one of its sub-documents was focused.  If
-  // focus has never occurred then mLastFocusTime.IsNull() will be true.
-  mozilla::TimeStamp mLastFocusTime;
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
