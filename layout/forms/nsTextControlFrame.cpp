@@ -803,15 +803,6 @@ nsTextControlFrame::ScrollSelectionIntoView()
   return NS_ERROR_FAILURE;
 }
 
-mozilla::dom::Element*
-nsTextControlFrame::GetRootNodeAndInitializeEditor()
-{
-  nsCOMPtr<nsIDOMElement> root;
-  GetRootNodeAndInitializeEditor(getter_AddRefs(root));
-  nsCOMPtr<mozilla::dom::Element> rootElem = do_QueryInterface(root);
-  return rootElem;
-}
-
 nsresult
 nsTextControlFrame::GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement)
 {
@@ -1062,7 +1053,7 @@ nsTextControlFrame::GetSelectionRange(int32_t* aSelectionStart,
     return NS_OK;
   }
 
-  mozilla::dom::Element* root = GetRootNodeAndInitializeEditor();
+  mozilla::dom::Element* root = txtCtrl->GetRootEditorNode();
   NS_ENSURE_STATE(root);
   nsContentUtils::GetSelectionInTextControl(sel, root,
                                             *aSelectionStart, *aSelectionEnd);
