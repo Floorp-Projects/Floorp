@@ -476,7 +476,7 @@ exports.defaultThemes = [
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [
   { id: "command-button-splitconsole",
-    description: l10n("toolbox.buttons.splitconsole"),
+    description: l10n("toolbox.buttons.splitconsole", "Esc"),
     isTargetSupported: target => !target.isAddon,
     onClick(event, toolbox) {
       toolbox.toggleSplitConsole();
