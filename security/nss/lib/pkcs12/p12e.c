@@ -10,6 +10,7 @@
 #include "seccomon.h"
 #include "secport.h"
 #include "cert.h"
+#include "secpkcs5.h"
 #include "secpkcs7.h"
 #include "secasn1.h"
 #include "secerr.h"
@@ -378,19 +379,36 @@ SEC_PKCS12CreatePasswordPrivSafe(SEC_PKCS12ExportContext *p12ctxt,
     safeInfo->itemCount = 0;
 
     /* create the encrypted safe */
-    safeInfo->cinfo = SEC_PKCS7CreateEncryptedData(privAlg, 0, p12ctxt->pwfn,
-                                                   p12ctxt->pwfnarg);
+    if (!SEC_PKCS5IsAlgorithmPBEAlgTag(privAlg) &&
+        PK11_AlgtagToMechanism(privAlg) == CKM_AES_CBC) {
+        safeInfo->cinfo = SEC_PKCS7CreateEncryptedDataWithPBEV2(SEC_OID_PKCS5_PBES2,
+                                                                privAlg,
+                                                                SEC_OID_UNKNOWN,
+                                                                0,
+                                                                p12ctxt->pwfn,
+                                                                p12ctxt->pwfnarg);
+    } else {
+        safeInfo->cinfo = SEC_PKCS7CreateEncryptedData(privAlg, 0, p12ctxt->pwfn,
+                                                       p12ctxt->pwfnarg);
+    }
     if (!safeInfo->cinfo) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto loser;
     }
     safeInfo->arena = p12ctxt->arena;
 
-    /* convert the password to unicode */
-    if (!sec_pkcs12_convert_item_to_unicode(NULL, &uniPwitem, pwitem,
-                                            PR_TRUE, PR_TRUE, PR_TRUE)) {
-        PORT_SetError(SEC_ERROR_NO_MEMORY);
-        goto loser;
+    if (sec_pkcs12_is_pkcs12_pbe_algorithm(privAlg)) {
+        /* convert the password to unicode */
+        if (!sec_pkcs12_convert_item_to_unicode(NULL, &uniPwitem, pwitem,
+                                                PR_TRUE, PR_TRUE, PR_TRUE)) {
+            PORT_SetError(SEC_ERROR_NO_MEMORY);
+            goto loser;
+        }
+    } else {
+        if (SECITEM_CopyItem(NULL, &uniPwitem, pwitem) != SECSuccess) {
+            PORT_SetError(SEC_ERROR_NO_MEMORY);
+            goto loser;
+        }
     }
     if (SECITEM_CopyItem(p12ctxt->arena, &safeInfo->pwitem, &uniPwitem) != SECSuccess) {
         PORT_SetError(SEC_ERROR_NO_MEMORY);

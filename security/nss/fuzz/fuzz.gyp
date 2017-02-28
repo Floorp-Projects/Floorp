@@ -113,17 +113,6 @@
       ],
     },
     {
-      'target_name': 'nssfuzz-hash',
-      'type': 'executable',
-      'sources': [
-        'hash_target.cc',
-      ],
-      'dependencies': [
-        '<(DEPTH)/exports.gyp:nss_exports',
-        'fuzz_base',
-      ],
-    },
-    {
       'target_name': 'nssfuzz-certDN',
       'type': 'executable',
       'sources': [
@@ -287,7 +276,6 @@
       'type': 'none',
       'dependencies': [
         'nssfuzz-certDN',
-        'nssfuzz-hash',
         'nssfuzz-pkcs8',
         'nssfuzz-quickder',
         'nssfuzz-tls-client',

@@ -232,8 +232,6 @@ ifeq ($(CPU_ARCH),x86)
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT
     DEFINES += -DMP_IS_LITTLE_ENDIAN
-    # The floating point ECC code doesn't work on Linux x86 (bug 311432).
-    #ECL_USE_FP = 1
 endif
 ifeq ($(CPU_ARCH),arm)
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
@@ -430,7 +428,6 @@ ifeq ($(CPU_ARCH),sparc)
 	ASFILES  = mpv_sparcv8.s montmulfv8.s
 	DEFINES  += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
 	DEFINES  += -DMP_USING_MONT_MULF -DMP_MONT_USE_MP_MUL
-	ECL_USE_FP = 1
     endif
     ifdef USE_ABI64_INT
 	# this builds for Sparc v9a pure 64-bit architecture
@@ -443,7 +440,6 @@ ifeq ($(CPU_ARCH),sparc)
 	ASFILES   = mpv_sparcv9.s montmulfv9.s
 	DEFINES  += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT -DMP_ASSEMBLY_MULTIPLY
 	DEFINES  += -DMP_USING_MONT_MULF -DMP_MONT_USE_MP_MUL
-	ECL_USE_FP = 1
     endif
 
 else
@@ -491,16 +487,7 @@ else
  	endif
     endif
 endif # Solaris for non-sparc family CPUs
-endif # target == SunOS
-
-ifndef NSS_DISABLE_ECC
-    ifdef ECL_USE_FP
-	#enable floating point ECC code	
-	DEFINES  += -DECL_USE_FP
-	ECL_SRCS += ecp_fp160.c ecp_fp192.c ecp_fp224.c ecp_fp.c
-	ECL_HDRS += ecp_fp.h
-    endif
-endif
+endif # target == SunO
 
 # poly1305-donna-x64-sse2-incremental-source.c requires __int128 support
 # in GCC 4.6.0.
