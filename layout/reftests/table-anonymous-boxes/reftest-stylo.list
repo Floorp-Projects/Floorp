@@ -36,7 +36,7 @@ fails == 443616-1a.xhtml 443616-1a.xhtml
 fails == 443616-1b.html 443616-1b.html
 == 448111-1.html 448111-1.html
 fails == 490174-1.html 490174-1.html
-fails == 695538-1.html 695538-1.html
+== 695538-1.html 695538-1.html
 fails == infer-first-row.html infer-first-row.html
 fails == infer-first-row-and-table.html infer-first-row-and-table.html
 fails == infer-second-row.html infer-second-row.html

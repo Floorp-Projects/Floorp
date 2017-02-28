@@ -88,7 +88,7 @@ fails == mask-invalidation-2b.html mask-invalidation-2b.html
 fails == mask-invalidation-2c.html mask-invalidation-2c.html
 fails == mask-invalidation-2d.html mask-invalidation-2d.html
 
-fails == clip-path-invalidation-1a.html clip-path-invalidation-1a.html
-fails == clip-path-invalidation-1b.html clip-path-invalidation-1b.html
+== clip-path-invalidation-1a.html clip-path-invalidation-1a.html
+== clip-path-invalidation-1b.html clip-path-invalidation-1b.html
 == clip-path-invalidation-1c.html clip-path-invalidation-1c.html
 == clip-path-invalidation-1d.html clip-path-invalidation-1d.html

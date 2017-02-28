@@ -103,7 +103,7 @@ fails == variable-font-face-02.html variable-font-face-02.html
 == variable-reference-35.html variable-reference-35.html
 fails == variable-reference-36.html variable-reference-36.html
 == variable-reference-37.html variable-reference-37.html
-fails == variable-reference-38.html variable-reference-38.html
+== variable-reference-38.html variable-reference-38.html
 == variable-reference-39.html variable-reference-39.html
 == variable-reference-40.html variable-reference-40.html
 == variable-supports-01.html variable-supports-01.html
