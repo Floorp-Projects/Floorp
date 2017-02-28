@@ -3611,6 +3611,17 @@ nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow)
     nsCOMPtr<nsIRunnable> runnable = new PointerUnlocker();
     NS_DispatchToCurrentThread(runnable);
   }
+
+  // Update the last focus time on any affected documents
+  if (aWindow && aWindow != mFocusedWindow) {
+    const TimeStamp now(TimeStamp::Now());
+    for (nsIDocument* doc = aWindow->GetExtantDoc();
+         doc;
+         doc = doc->GetParentDocument()) {
+      doc->SetLastFocusTime(now);
+    }
+  }
+
   mFocusedWindow = aWindow;
 }
 
