@@ -6,6 +6,7 @@
 package org.mozilla.focus.activity;
 
 import android.annotation.SuppressLint;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -95,5 +96,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onCreateView(name, context, attrs);
+    }
+
+    @Override
+    public void onBackPressed() {
+        final BrowserFragment browserFragment = (BrowserFragment) getSupportFragmentManager().findFragmentByTag(BrowserFragment.FRAGMENT_TAG);
+        if (browserFragment != null && browserFragment.canGoBack()) {
+            browserFragment.goBack();
+            return;
+        }
+
+        super.onBackPressed();
     }
 }

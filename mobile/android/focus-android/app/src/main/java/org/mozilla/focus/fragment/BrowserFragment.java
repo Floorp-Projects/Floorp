@@ -179,4 +179,12 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
 
         return false;
     }
+
+    public boolean canGoBack() {
+        return webView.canGoBack();
+    }
+
+    public void goBack() {
+        webView.goBack();
+    }
 }
