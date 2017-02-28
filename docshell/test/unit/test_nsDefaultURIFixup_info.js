@@ -200,11 +200,13 @@ var testcases = [ {
     protocolChange: true,
   }, {
     input: "[64:ff9b::8.8.8.8]",
-    fixedURI: "http://[64:ff9b::8.8.8.8]/",
+    fixedURI: "http://[64:ff9b::808:808]/",
+    alternateURI: "http://[64:ff9b::808:808]/",
     protocolChange: true
   }, {
     input: "[64:ff9b::8.8.8.8]/~moz",
-    fixedURI: "http://[64:ff9b::8.8.8.8]/~moz",
+    fixedURI: "http://[64:ff9b::808:808]/~moz",
+    alternateURI: "http://[64:ff9b::808:808]/~moz",
     protocolChange: true
   }, {
     input: "[::1][::1]",
