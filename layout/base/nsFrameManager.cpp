@@ -727,7 +727,7 @@ nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent** aParentContent)
 
   PLHashNumber hashCode = NS_PTR_TO_INT32(parentContent);
   PLHashEntry** entry = PL_HashTableRawLookup(mTable, hashCode, parentContent);
-  if (*entry) {
+  if (*entry && !ServoStyleSet::IsInServoTraversal()) {
     mLastLookup = entry;
   }
   return entry;
