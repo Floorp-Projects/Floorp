@@ -127,6 +127,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .add(R.id.container, UrlInputFragment.create(urlView.getText().toString()))
+                        .addToBackStack("url_entry")
                         .commit();
                 break;
 

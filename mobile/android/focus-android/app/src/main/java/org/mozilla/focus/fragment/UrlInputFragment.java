@@ -131,6 +131,11 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
                 ? UrlUtils.normalize(rawUrl)
                 : UrlUtils.createSearchUrl(rawUrl);
 
+        // Since we've completed URL entry, we no longer want the URL entry fragment in our backstack
+        // (exiting browser activity should return you to the main activity), so we pop that entry (which
+        // essentially removes the fragment which was add()ed elsewhere)
+        getActivity().getSupportFragmentManager().popBackStack();
+
         // Replace all fragments with a fresh browser fragment. This means we either remove the
         // HomeFragment with an UrlInputFragment on top or an old BrowserFragment with an
         // UrlInputFragment.
