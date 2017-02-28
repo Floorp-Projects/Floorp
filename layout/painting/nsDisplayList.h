@@ -861,7 +861,7 @@ public:
    */
   void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                 const nsFrameList& aFrames);
-  void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame, bool aAlreadyAddedFrame = false);
+  void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
   void MarkFrameForDisplayIfVisible(nsIFrame* aFrame, nsIFrame* aStopAtFrame);
 
   void ClearFixedBackgroundDisplayData();
@@ -1454,6 +1454,59 @@ public:
     const ActiveScrolledRoot* mContainingBlockActiveScrolledRoot;
     nsRect mVisibleRect;
     nsRect mDirtyRect;
+
+
+    static nsRect ComputeVisibleRectForFrame(nsDisplayListBuilder* aBuilder,
+                                             nsIFrame* aFrame,
+                                             const nsRect& aVisibleRect,
+                                             const nsRect& aDirtyRect,
+                                             nsRect* aOutDirtyRect) {
+      nsRect visible = aVisibleRect;
+      nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+
+      if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+          aBuilder->IsPaintingToWindow()) {
+        // position: fixed items are reflowed into and only drawn inside the
+        // viewport, or the scroll position clamping scrollport size, if one is
+        // set.
+        nsIPresShell* ps = aFrame->PresShell();
+        if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
+          dirtyRectRelativeToDirtyFrame =
+            nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
+          visible = dirtyRectRelativeToDirtyFrame;
+#ifdef MOZ_WIDGET_ANDROID
+        } else {
+          dirtyRectRelativeToDirtyFrame =
+            nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
+          visible = dirtyRectRelativeToDirtyFrame;
+#endif
+        }
+      }
+      *aOutDirtyRect = dirtyRectRelativeToDirtyFrame - aFrame->GetPosition();
+      visible -= aFrame->GetPosition();
+
+      nsRect overflowRect = aFrame->GetVisualOverflowRect();
+
+      if (aFrame->IsTransformed() &&
+          mozilla::EffectCompositor::HasAnimationsForCompositor(aFrame,
+                                                                eCSSProperty_transform)) {
+       /**
+        * Add a fuzz factor to the overflow rectangle so that elements only just
+        * out of view are pulled into the display list, so they can be
+        * prerendered if necessary.
+        */
+        overflowRect.Inflate(nsPresContext::CSSPixelsToAppUnits(32));
+      }
+
+      visible.IntersectRect(visible, overflowRect);
+      aOutDirtyRect->IntersectRect(*aOutDirtyRect, overflowRect);
+      return visible;
+    }
+
+    nsRect GetVisibleRectForFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                                  nsRect* aDirtyRect) {
+      return ComputeVisibleRectForFrame(aBuilder, aFrame, mVisibleRect, mDirtyRect, aDirtyRect);
+    }
   };
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(OutOfFlowDisplayDataProperty,
@@ -1469,7 +1522,11 @@ public:
 
   static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
   {
-    return aFrame->GetProperty(OutOfFlowDisplayDataProperty());
+    if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
+        !aFrame->GetParent()) {
+      return nullptr;
+    }
+    return aFrame->GetParent()->GetProperty(OutOfFlowDisplayDataProperty());
   }
 
   nsPresContext* CurrentPresContext() {
@@ -1647,7 +1704,7 @@ public:
   }
 
 private:
-  void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
+  bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
 
   /**
    * Returns whether a frame acts as an animated geometry root, optionally
@@ -1695,6 +1752,7 @@ private:
     nsRect        mCaretRect;
     mozilla::Maybe<OutOfFlowDisplayData> mFixedBackgroundDisplayData;
     uint32_t      mFirstFrameMarkedForDisplay;
+    uint32_t      mFirstFrameWithOOFData;
     bool          mIsBackgroundOnly;
     // This is a per-document flag turning off event handling for all content
     // in the document, and is set when we enter a subdocument for a pointer-
@@ -1736,6 +1794,7 @@ private:
   AutoTArray<PresShellState,8> mPresShellStates;
   AutoTArray<nsIFrame*,400>    mFramesMarkedForDisplay;
   AutoTArray<nsIFrame*,40>       mFramesMarkedForDisplayIfVisible;
+  AutoTArray<nsIFrame*,20>     mFramesWithOOFData;
   nsClassHashtable<nsPtrHashKey<nsDisplayItem>, nsTArray<ThemeGeometry>> mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   DisplayListClipState           mClipState;
