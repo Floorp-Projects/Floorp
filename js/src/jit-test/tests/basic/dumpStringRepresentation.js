@@ -68,3 +68,6 @@ dumpStringRepresentation(r1);
 print("\nt, s: Original leaves, representation unchanged:");
 dumpStringRepresentation(t);
 dumpStringRepresentation(s);
+
+for (var str of representativeStringArray())
+    dumpStringRepresentation(str);
