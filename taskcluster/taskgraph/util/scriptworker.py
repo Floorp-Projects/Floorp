@@ -14,7 +14,6 @@ scopes for `push-to-candidates` rather than `push-to-releases`, even if both
 happen on mozilla-beta and mozilla-release.
 """
 from __future__ import absolute_import, print_function, unicode_literals
-from copy import deepcopy
 import functools
 
 
