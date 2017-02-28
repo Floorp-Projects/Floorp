@@ -270,6 +270,12 @@ MaxStrokeExtents(const StrokeOptions& aStrokeOptions,
 
   double dx = styleExpansionFactor * hypot(aTransform._11, aTransform._21);
   double dy = styleExpansionFactor * hypot(aTransform._22, aTransform._12);
+
+  // Even if the stroke only partially covers a pixel, it must still render to
+  // full pixels. Round up to compensate for this.
+  dx = ceil(dx);
+  dy = ceil(dy);
+
   return Margin(dy, dx, dy, dx);
 }
 
