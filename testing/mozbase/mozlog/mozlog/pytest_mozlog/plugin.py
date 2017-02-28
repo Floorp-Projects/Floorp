@@ -103,7 +103,8 @@ class MozLog(object):
                 # For skips, longrepr is a tuple of (file, lineno, reason)
                 message = report.longrepr[-1]
             else:
-                raise ValueError, "Unable to convert longrepr to message:\ntype %s\nfields:" % (longrepr.__class__, dir(longrepr))
+                raise ValueError("Unable to convert longrepr to message:\ntype %s\nfields:" %
+                                 (longrepr.__class__, dir(longrepr)))
         if status != expected or expected != 'PASS':
             self.results[test] = (status, expected, message, stack)
         if report.when == 'teardown':
