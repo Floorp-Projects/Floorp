@@ -189,6 +189,10 @@ const backgroundPageThumbsContent = {
   // reasons: GC the captured page, and ensure it can't possibly load any more
   // resources.
   _loadAboutBlank: function _loadAboutBlank() {
+    // It's possible we've been destroyed by now, if so don't do anything:
+    if (!docShell) {
+      return;
+    }
     this._webNav.loadURI("about:blank",
                          Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
                          null, null, null);

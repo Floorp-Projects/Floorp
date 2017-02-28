@@ -61,7 +61,11 @@ import urlparse
 import zipfile
 
 import pylru
-import taskcluster
+from taskgraph.util.taskcluster import (
+    find_task_id,
+    get_artifact_url,
+    list_artifacts,
+)
 
 from mozbuild.action.test_archive import OBJDIR_TEST_FILES
 from mozbuild.util import (
@@ -79,10 +83,8 @@ from mozpack.mozjar import (
 )
 from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
-from mozregression.download_manager import (
+from dlmanager import (
     DownloadManager,
-)
-from mozregression.persist_limit import (
     PersistLimit,
 )
 
@@ -636,8 +638,6 @@ class TaskCache(CacheManager):
 
     def __init__(self, cache_dir, log=None, skip_cache=False):
         CacheManager.__init__(self, cache_dir, 'artifact_url', MAX_CACHED_TASKS, log=log, skip_cache=skip_cache)
-        self._index = taskcluster.Index()
-        self._queue = taskcluster.Queue()
 
     @cachedmethod(operator.attrgetter('_cache'))
     def artifact_urls(self, tree, job, rev, download_symbols):
@@ -664,14 +664,13 @@ class TaskCache(CacheManager):
                  {'namespace': namespace},
                  'Searching Taskcluster index with namespace: {namespace}')
         try:
-            task = self._index.findTask(namespace)
+            taskId = find_task_id(namespace)
         except Exception:
             # Not all revisions correspond to pushes that produce the job we
             # care about; and even those that do may not have completed yet.
             raise ValueError('Task for {namespace} does not exist (yet)!'.format(namespace=namespace))
-        taskId = task['taskId']
 
-        artifacts = self._queue.listLatestArtifacts(taskId)['artifacts']
+        artifacts = list_artifacts(taskId)
 
         urls = []
         for artifact_name in artifact_job.find_candidate_artifacts(artifacts):
@@ -679,7 +678,7 @@ class TaskCache(CacheManager):
             # extract the build ID; we use the .ini files embedded in the
             # downloaded artifact for this.  We could also use the uploaded
             # public/build/buildprops.json for this purpose.
-            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact_name)
+            url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
             raise ValueError('Task for {namespace} existed, but no artifacts found!'.format(namespace=namespace))

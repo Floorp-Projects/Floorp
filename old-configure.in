@@ -3737,14 +3737,14 @@ if test -n "$gonkdir"; then
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
 fi
 
-case "$OS_TARGET:$NIGHTLY_BUILD" in
-WINNT:*)
+case "$OS_TARGET" in
+WINNT)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
-Darwin:*)
+Darwin)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
-Linux:1)
+Linux)
     case $CPU_ARCH in
         x86_64|x86)
             MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX

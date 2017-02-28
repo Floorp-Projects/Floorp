@@ -696,7 +696,7 @@ GMPCDMProxy::gmp_Decrypt(RefPtr<DecryptJob> aJob)
 
   nsTArray<uint8_t> data;
   data.AppendElements(aJob->mSample->Data(), aJob->mSample->Size());
-  mCDM->Decrypt(aJob->mId, aJob->mSample->mCrypto, data, aJob->mSample->mDuration);
+  mCDM->Decrypt(aJob->mId, aJob->mSample->mCrypto, data);
   mDecryptionJobs.AppendElement(aJob.forget());
 }
 

@@ -42,6 +42,7 @@ SEARCH_PATHS = [
     'python/blessings',
     'python/compare-locales',
     'python/configobj',
+    'python/dlmanager',
     'python/futures',
     'python/jsmin',
     'python/psutil',
@@ -94,6 +95,7 @@ SEARCH_PATHS = [
     'testing/web-platform',
     'testing/web-platform/harness',
     'testing/web-platform/tests/tools/wptserve',
+    'testing/web-platform/tests/tools/six',
     'testing/xpcshell',
     'xpcom/idl-parser',
 ]

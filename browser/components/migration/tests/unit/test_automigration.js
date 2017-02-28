@@ -250,13 +250,10 @@ add_task(function* checkUndoRemoval() {
   let now_uSec = Date.now() * 1000;
   let visitedURI = Services.io.newURI("http://www.example.com/");
   let frecencyUpdatePromise = new Promise(resolve => {
-    let expectedChanges = 2;
     let observer = {
-      onFrecencyChanged() {
-        if (!--expectedChanges) {
-          PlacesUtils.history.removeObserver(observer);
-          resolve();
-        }
+      onManyFrecenciesChanged() {
+        PlacesUtils.history.removeObserver(observer);
+        resolve();
       },
     };
     PlacesUtils.history.addObserver(observer, false);

@@ -117,6 +117,7 @@ DeclarationKindString(DeclarationKind kind)
       case DeclarationKind::Import:
         return "import";
       case DeclarationKind::BodyLevelFunction:
+      case DeclarationKind::ModuleBodyLevelFunction:
       case DeclarationKind::LexicalFunction:
         return "function";
       case DeclarationKind::VarForAnnexBLexicalFunction:
@@ -1377,6 +1378,24 @@ Parser<ParseHandler>::noteDeclaredName(HandlePropertyName name, DeclarationKind 
         }
 
         break;
+      }
+
+      case DeclarationKind::ModuleBodyLevelFunction: {
+          MOZ_ASSERT(pc->atModuleLevel());
+
+          AddDeclaredNamePtr p = pc->varScope().lookupDeclaredNameForAdd(name);
+          if (p) {
+              reportRedeclaration(name, p->value()->kind(), pos, p->value()->pos());
+              return false;
+          }
+
+          if (!pc->varScope().addDeclaredName(pc, p, name, kind, pos.begin))
+              return false;
+
+          // Body-level functions in modules are always closed over.
+          pc->varScope().lookupDeclaredName(name)->value()->setClosedOver();
+
+          break;
       }
 
       case DeclarationKind::FormalParameter: {
@@ -3718,12 +3737,11 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
         if (!noteDeclaredName(name, DeclarationKind::LexicalFunction, pos()))
             return null();
     } else {
-        if (!noteDeclaredName(name, DeclarationKind::BodyLevelFunction, pos()))
+        DeclarationKind kind = pc->atModuleLevel()
+                               ? DeclarationKind::ModuleBodyLevelFunction
+                               : DeclarationKind::BodyLevelFunction;
+        if (!noteDeclaredName(name, kind, pos()))
             return null();
-
-        // Body-level functions in modules are always closed over.
-        if (pc->atModuleLevel())
-            pc->varScope().lookupDeclaredName(name)->value()->setClosedOver();
     }
 
     Node pn = handler.newFunctionStatement();

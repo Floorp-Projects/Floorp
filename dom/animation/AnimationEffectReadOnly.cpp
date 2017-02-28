@@ -234,7 +234,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
       thisIterationReverse = (result.mCurrentIteration & 1) == 0;
       break;
     default:
-      MOZ_ASSERT(true, "Unknown PlaybackDirection type");
+      MOZ_ASSERT_UNREACHABLE("Unknown PlaybackDirection type");
   }
   if (thisIterationReverse) {
     progress = 1.0 - progress;
