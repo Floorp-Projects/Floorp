@@ -14,16 +14,9 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
 
-#include "openvr/openvr.h"
+#include "openvr.h"
 #include "gfxVR.h"
-
-// OpenVR Interfaces
-namespace vr {
-class IVRChaperone;
-class IVRCompositor;
-class IVRSystem;
-struct TrackedDevicePose_t;
-}
+#include "VRDisplayHost.h"
 
 namespace mozilla {
 namespace gfx {
