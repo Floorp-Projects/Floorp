@@ -5,6 +5,8 @@
 <resources>
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_cancel">Cancel</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Ok</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Search or enter address</string>
@@ -103,4 +105,11 @@
     <string name="firstrun_footer">To be clear, sites and service you use can still know where you\'ve been.</string>
 
     <string name="your_rights">Your Rights</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">This link will open in %2$s. Are you sure you want to exit %1$s?</string>
+    <string name="external_app_prompt_no_app_title">No app to handle link</string>
+    <string name="external_app_prompt_no_app">None of the apps on your device are able to open this link. Do you want to exit %1$s and open %2$s to find a suitable app?</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Exit Private Browsing?</string>
 </resources>
