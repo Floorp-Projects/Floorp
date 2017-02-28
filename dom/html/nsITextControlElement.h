@@ -139,7 +139,7 @@ public:
   /**
    * Get the anonymous root node for the text control.
    */
-  NS_IMETHOD_(nsIContent*) GetRootEditorNode() = 0;
+  NS_IMETHOD_(mozilla::dom::Element*) GetRootEditorNode() = 0;
 
   /**
    * Create the placeholder anonymous node for the text control and returns it.
