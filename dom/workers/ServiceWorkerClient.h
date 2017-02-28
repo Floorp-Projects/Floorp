@@ -31,19 +31,15 @@ class ServiceWorkerClientInfo final
   friend class ServiceWorkerWindowClient;
 
 public:
-  explicit ServiceWorkerClientInfo(nsIDocument* aDoc, uint32_t aOrdinal = 0);
+  explicit ServiceWorkerClientInfo(nsIDocument* aDoc);
 
   const nsString& ClientId() const
   {
     return mClientId;
   }
 
-  bool operator<(const ServiceWorkerClientInfo& aRight) const;
-  bool operator==(const ServiceWorkerClientInfo& aRight) const;
-
 private:
   const mozilla::dom::ClientType mType;
-  const uint32_t mOrdinal;
   nsString mClientId;
   uint64_t mWindowId;
   nsString mUrl;
