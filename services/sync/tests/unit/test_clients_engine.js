@@ -819,6 +819,71 @@ add_task(async function test_command_sync() {
   }
 });
 
+add_task(async function test_clients_not_in_fxa_list() {
+  _("Ensure that clients not in the FxA devices list are marked as stale.");
+
+  engine._store.wipe();
+  generateNewKeys(Service.collectionKeys);
+
+  let contents = {
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
+    clients: {},
+    crypto: {}
+  };
+  let server   = serverForUsers({"foo": "password"}, contents);
+  await SyncTestingInfrastructure(server);
+
+  let user     = server.user("foo");
+  let remoteId = Utils.makeGUID();
+  let remoteId2 = Utils.makeGUID();
+
+  _("Create remote client records");
+  server.insertWBO("foo", "clients", new ServerWBO(remoteId, encryptPayload({
+    id: remoteId,
+    name: "Remote client",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    fxaDeviceId: remoteId,
+    protocols: ["1.5"],
+  }), Date.now() / 1000));
+  server.insertWBO("foo", "clients", new ServerWBO(remoteId2, encryptPayload({
+    id: remoteId2,
+    name: "Remote client 2",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    fxaDeviceId: remoteId2,
+    protocols: ["1.5"],
+  }), Date.now() / 1000));
+
+  let fxAccounts = engine.fxAccounts;
+  engine.fxAccounts = {
+    getDeviceId() { return fxAccounts.getDeviceId(); },
+    getDeviceList() { return Promise.resolve([{ id: remoteId }]); }
+  };
+
+  try {
+    _("Syncing.");
+    engine._sync();
+
+    ok(!engine._store._remoteClients[remoteId].stale);
+    ok(engine._store._remoteClients[remoteId2].stale);
+
+  } finally {
+    engine.fxAccounts = fxAccounts;
+    cleanup();
+
+    try {
+      let collection = server.getCollection("foo", "clients");
+      collection.remove(remoteId);
+    } finally {
+      await promiseStopServer(server);
+    }
+  }
+});
+
 add_task(async function test_send_uri_to_client_for_display() {
   _("Ensure sendURIToClientForDisplay() sends command properly.");
 
