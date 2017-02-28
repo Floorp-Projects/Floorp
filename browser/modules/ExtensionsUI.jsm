@@ -341,10 +341,11 @@ this.ExtensionsUI = {
 
   showPermissionsPrompt(browser, strings, icon, histkey) {
     function eventCallback(topic) {
-      if (topic == "showing") {
-        let doc = this.browser.ownerDocument;
-        doc.getElementById("addon-webext-perm-header").innerHTML = strings.header;
-
+      let doc = this.browser.ownerDocument;
+      if (topic == "shown") {
+        doc.getElementById("addon-webext-permissions-notification")
+           .description.innerHTML = strings.header;
+      } else if (topic == "showing") {
         let textEl = doc.getElementById("addon-webext-perm-text");
         textEl.innerHTML = strings.text;
         textEl.hidden = !strings.text;
@@ -397,7 +398,12 @@ this.ExtensionsUI = {
         },
       ];
 
-      win.PopupNotifications.show(browser, "addon-webext-permissions", "",
+      // Get the text value of strings.header to pre-populate the header. This will get
+      // overwritten with the HTML version later.
+      let escapeHeader = browser.ownerDocument.createElement("div");
+      escapeHeader.innerHTML = strings.header;
+      win.PopupNotifications.show(browser, "addon-webext-permissions",
+                                  escapeHeader.textContent,
                                   "addons-notification-icon",
                                   action, secondaryActions, popupOptions);
     });
