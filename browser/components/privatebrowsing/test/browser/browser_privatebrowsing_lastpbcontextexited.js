@@ -11,7 +11,7 @@ function test() {
       let expectedExiting = true;
       let expectedExited = false;
       let observerExiting = {
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           is(aTopic, "last-pb-context-exiting", "Correct topic should be dispatched (exiting)");
           is(expectedExiting, true, "notification not expected yet (exiting)");
           expectedExited = true;
@@ -19,7 +19,7 @@ function test() {
         }
       };
       let observerExited = {
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           is(aTopic, "last-pb-context-exited", "Correct topic should be dispatched (exited)");
           is(expectedExited, true, "notification not expected yet (exited)");
           Services.obs.removeObserver(observerExited, "last-pb-context-exited");
@@ -40,7 +40,7 @@ function test() {
   runTest(function(newWin) {
       // Simulate pressing the window close button
       newWin.document.getElementById("cmd_closeWindow").doCommand();
-    }, function () {
+    }, function() {
       runTest(function(newWin) {
           // Simulate closing the last tab
           newWin.document.getElementById("cmd_close").doCommand();

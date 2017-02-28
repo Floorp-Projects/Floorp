@@ -18,7 +18,7 @@ var prefBranch = Services.prefs.getBranch("privacy.trackingprotection.");
 var prefObserver = {
  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                         Ci.nsISupportsWeakReference]),
- observe: function () {
+ observe() {
    let tpSubHeader = document.getElementById("tpSubHeader");
    let tpToggle = document.getElementById("tpToggle");
    let tpButton = document.getElementById("tpButton");
@@ -42,7 +42,7 @@ function setFavIcon(url) {
  document.getElementById("favicon").setAttribute("href", url);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
  if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
    document.documentElement.classList.remove("private");
    document.documentElement.classList.add("normal");
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
  }
 
  let tpToggle = document.getElementById("tpToggle");
- document.getElementById("tpButton").addEventListener('click', () => {
+ document.getElementById("tpButton").addEventListener("click", () => {
    tpToggle.click();
  });
 
