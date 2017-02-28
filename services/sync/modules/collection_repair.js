@@ -22,6 +22,7 @@ const REQUESTORS = {
 }
 
 const RESPONDERS = {
+  bookmarks: ["bookmark_repair.js", "BookmarkRepairResponder"],
 }
 
 // Should we maybe enforce the requestors being a singleton?
