@@ -33,9 +33,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerClient)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc, uint32_t aOrdinal)
+ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   : mType(ClientType::Window)
-  , mOrdinal(aOrdinal)
   , mWindowId(0)
   , mFrameType(FrameType::None)
 {
@@ -81,36 +80,6 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc, uint32_t aOr
   } else {
     mFrameType = FrameType::Top_level;
   }
-}
-
-bool
-ServiceWorkerClientInfo::operator<(const ServiceWorkerClientInfo& aRight) const
-{
-  // Note: the mLastFocusTime comparisons are reversed because we need to
-  // put most recently focused values first.  The mOrdinal comparison is
-  // normal, though, because otherwise we want normal creation order.
-
-  if (mLastFocusTime == aRight.mLastFocusTime) {
-    return mOrdinal < aRight.mOrdinal;
-  }
-
-  if (mLastFocusTime.IsNull()) {
-    return false;
-  }
-
-  if (aRight.mLastFocusTime.IsNull()) {
-    return true;
-  }
-
-  return mLastFocusTime > aRight.mLastFocusTime;
-}
-
-bool
-ServiceWorkerClientInfo::operator==(const ServiceWorkerClientInfo& aRight) const
-{
-  return mLastFocusTime == aRight.mLastFocusTime &&
-         mOrdinal == aRight.mOrdinal &&
-         mClientId == aRight.mClientId;
 }
 
 JSObject*
