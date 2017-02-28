@@ -70,9 +70,6 @@ public:
   // become invalid, i.e., just before JS shutdown.
   void FlushSamplesAndMarkers();
 
-  void BeginUnwind();
-  virtual void EndUnwind();
-
   void DuplicateLastSample(const mozilla::TimeStamp& aStartTime);
 
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }

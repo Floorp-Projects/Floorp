@@ -19,22 +19,8 @@ public:
   // profile in which the backtrace is as a marker payload.
   void StreamJSON(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks);
 
-  virtual void EndUnwind();
-
 private:
   friend class ProfilerBacktrace;
-
-  enum OwnerState
-  {
-    REFERENCED,       // ProfilerBacktrace has a pointer to this but doesn't own
-    OWNED,            // ProfilerBacktrace is responsible for destroying this
-    OWNER_DESTROYING, // ProfilerBacktrace owns this and is destroying
-    ORPHANED          // No owner, we must destroy ourselves
-  };
-
-  bool ShouldDestroy();
-
-  OwnerState mOwnerState;
 };
 
 #endif // __SYNCPROFILE_H

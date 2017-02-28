@@ -17,9 +17,9 @@ import android.view.ViewGroup;
 public class GeckoViewFragment extends android.support.v4.app.Fragment {
     private static final String LOGTAG = "GeckoViewFragment";
 
-    private static Parcelable state = null;
-    private static GeckoViewFragment lastUsed = null;
-    private GeckoView geckoView = null;
+    private static Parcelable mSavedState = null;
+    private static GeckoViewFragment mLastUsed = null;
+    private GeckoView mGeckoView = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -29,24 +29,24 @@ public class GeckoViewFragment extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        geckoView = new GeckoView(getContext());
-        return geckoView;
+        mGeckoView = new GeckoView(getContext());
+        return mGeckoView;
     }
 
     @Override
     public void onResume() {
-        if (state != null && lastUsed != this) {
+        if (mSavedState != null && mLastUsed != this) {
             // "Restore" the window from the previously used GeckoView to this GeckoView and attach it
-            geckoView.onRestoreInstanceState(state);
-            state = null;
+            mGeckoView.onRestoreInstanceState(mSavedState);
+            mSavedState = null;
         }
         super.onResume();
     }
 
     @Override
     public void onPause() {
-        state = geckoView.onSaveInstanceState();
-        lastUsed = this;
+        mSavedState = mGeckoView.onSaveInstanceState();
+        mLastUsed = this;
         super.onPause();
     }
 }

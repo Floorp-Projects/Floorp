@@ -181,18 +181,17 @@ SigprofHandler(int signal, siginfo_t* info, void* context)
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
-  TickSample sample_obj;
-  TickSample* sample = &sample_obj;
-  sample->context = context;
+  TickSample sample;
+  sample.context = context;
 
   // Extract the current pc and sp.
-  SetSampleContext(sample, context);
-  sample->threadInfo = gCurrentThreadInfo;
-  sample->timestamp = mozilla::TimeStamp::Now();
-  sample->rssMemory = gRssMemory;
-  sample->ussMemory = gUssMemory;
+  SetSampleContext(&sample, context);
+  sample.threadInfo = gCurrentThreadInfo;
+  sample.timestamp = mozilla::TimeStamp::Now();
+  sample.rssMemory = gRssMemory;
+  sample.ussMemory = gUssMemory;
 
-  Tick(sample);
+  Tick(&sample);
 
   sem_post(&gSignalHandlingDone);
   errno = savedErrno;
