@@ -68,6 +68,9 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "full-screen-api.allow-trusted-requests-only",
   "full-screen-api.enabled",
   "full-screen-api.unprefix.enabled",
+#ifdef FUZZING
+  "fuzzing.enabled",
+#endif
   "gfx.font_rendering.opentype_svg.enabled",
   "hangmonitor.timeout",
   "html5.flushtimer.initialdelay",

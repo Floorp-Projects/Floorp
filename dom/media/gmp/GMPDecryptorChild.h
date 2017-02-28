@@ -103,8 +103,7 @@ private:
 
   mozilla::ipc::IPCResult RecvDecrypt(const uint32_t& aId,
                                       InfallibleTArray<uint8_t>&& aBuffer,
-                                      const GMPDecryptionData& aMetadata,
-                                      const uint64_t& aDurationUsecs) override;
+                                      const GMPDecryptionData& aMetadata) override;
 
   // Resolve/reject promise on completion.
   mozilla::ipc::IPCResult RecvSetServerCertificate(const uint32_t& aPromiseId,

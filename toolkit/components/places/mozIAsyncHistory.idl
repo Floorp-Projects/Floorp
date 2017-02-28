@@ -97,9 +97,18 @@ interface mozIVisitInfoCallback : nsISupports
 
   /**
    * Called when all records were processed.
+   * @param aUpdatedItems
+   *        How many items were successfully updated.
    */
-  void handleCompletion();
+  void handleCompletion(in unsigned long aUpdatedItems);
 
+  /**
+   * These two attributes govern whether we attempt to call
+   * handleResult and handleError, respectively, if/once
+   * results/errors occur.
+   */
+  readonly attribute bool ignoreResults;
+  readonly attribute bool ignoreErrors;
 };
 
 [scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]
@@ -160,6 +169,9 @@ interface mozIAsyncHistory : nsISupports
    * @param [optional] aCallback
    *        A mozIVisitInfoCallback object which consists of callbacks to be
    *        notified for successful and/or failed changes.
+   * @param [optional] aGroupNotifications
+   *        If set to true, the implementation will attempt to avoid using
+   *        per-place/visit notifications as much as possible.
    *
    * @throws NS_ERROR_INVALID_ARG
    *         - Passing in NULL for aPlaceInfo.
@@ -173,7 +185,8 @@ interface mozIAsyncHistory : nsISupports
    */
   [implicit_jscontext]
   void updatePlaces(in jsval aPlaceInfo,
-                    [optional] in mozIVisitInfoCallback aCallback);
+                    [optional] in mozIVisitInfoCallback aCallback,
+                    [optional] in bool aGroupNotifications);
 
   /**
    * Checks if a given URI has been visited.
