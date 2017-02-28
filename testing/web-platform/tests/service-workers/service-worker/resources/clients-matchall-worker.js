@@ -19,9 +19,7 @@ self.onmessage = function(e) {
                         frame_type]);
         });
       // Sort by url
-      if (!e.data.disableSort) {
-        message.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
-      }
+      message.sort(function(a, b) { return a[2] > b[2] ? 1 : -1; });
       port.postMessage(message);
     })
   .catch(e => {
