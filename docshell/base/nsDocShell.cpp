@@ -9855,9 +9855,14 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   if (IsFrame() && !isTargetTopLevelDocShell) {
     nsCOMPtr<Element> requestingElement =
       mScriptGlobal->AsOuter()->GetFrameElementInternal();
-    NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
-    contentType = requestingElement->IsHTMLElement(nsGkAtoms::iframe) ?
-      nsIContentPolicy::TYPE_INTERNAL_IFRAME : nsIContentPolicy::TYPE_INTERNAL_FRAME;
+    if (requestingElement) {
+      contentType = requestingElement->IsHTMLElement(nsGkAtoms::iframe) ?
+        nsIContentPolicy::TYPE_INTERNAL_IFRAME : nsIContentPolicy::TYPE_INTERNAL_FRAME;
+    } else {
+      // If we have lost our frame element by now, just assume we're
+      // an iframe since that's more common.
+      contentType = nsIContentPolicy::TYPE_INTERNAL_IFRAME;
+    }
   } else {
     contentType = nsIContentPolicy::TYPE_DOCUMENT;
   }
@@ -9886,13 +9891,15 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       requestingContext = requestingElement;
 
 #ifdef DEBUG
-      // Get the docshell type for requestingElement.
-      nsCOMPtr<nsIDocument> requestingDoc = requestingElement->OwnerDoc();
-      nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
+      if (requestingElement) {
+        // Get the docshell type for requestingElement.
+        nsCOMPtr<nsIDocument> requestingDoc = requestingElement->OwnerDoc();
+        nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
 
-      // requestingElement docshell type = current docshell type.
-      MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
-                "subframes should have the same docshell type as their parent");
+        // requestingElement docshell type = current docshell type.
+        MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
+                  "subframes should have the same docshell type as their parent");
+      }
 #endif
     }
 

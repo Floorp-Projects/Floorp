@@ -211,9 +211,11 @@ Service::getSingleton()
     if (ps) {
       nsAutoString title, message;
       title.AppendLiteral("SQLite Version Error");
-      message.AppendLiteral("The application has been updated, but your version "
-                          "of SQLite is too old and the application cannot "
-                          "run.");
+      message.AppendLiteral("The application has been updated, but the SQLite "
+                            "library wasn't updated properly and the application "
+                            "cannot run. Please try to launch the application again. "
+                            "If that should still fail, please try reinstalling "
+                            "it, or visit https://support.mozilla.org/.");
       (void)ps->Alert(nullptr, title.get(), message.get());
     }
     MOZ_CRASH("SQLite Version Error");
