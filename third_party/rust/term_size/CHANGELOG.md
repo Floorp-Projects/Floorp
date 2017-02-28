@@ -1,3 +1,11 @@
+<a name="v0.2.3"></a>
+### v0.2.3 (2017-02-21)
+
+#### Bug Fixes
+
+* Moves the code into distinct modules and adds dummy functions for unsupported platforms
+
+
 <a name="v0.2.2"></a>
 ### v0.2.2 (2017-01-29)
 

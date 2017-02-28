@@ -132,6 +132,10 @@ impl Tokens {
         &self.0
     }
 
+    pub fn into_string(self) -> String {
+        self.0
+    }
+
     pub fn parse<T: FromStr>(&self) -> Result<T, T::Err> {
         FromStr::from_str(&self.0)
     }
