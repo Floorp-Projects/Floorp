@@ -1,35 +1,9 @@
 const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
-const URL_BASE = "https://example.com/browser/browser/base/content/test/general";
 const ID = "update2@tests.mozilla.org";
 const ID_ICON = "update_icon2@tests.mozilla.org";
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";
-
-registerCleanupFunction(async function() {
-  for (let id of [ID, ID_ICON, ID_PERMS, ID_LEGACY]) {
-    let addon = await AddonManager.getAddonByID(id);
-    if (addon) {
-      ok(false, `Addon ${id} was still installed at the end of the test`);
-      addon.uninstall();
-    }
-  }
-});
-
-function promiseInstallAddon(url) {
-  return AddonManager.getInstallForURL(url, null, "application/x-xpinstall")
-                     .then(install => {
-                       ok(install, "Created install");
-                       return new Promise(resolve => {
-                         install.addListener({
-                           onInstallEnded(_install, addon) {
-                             resolve(addon);
-                           },
-                         });
-                         install.install();
-                       });
-                     });
-}
 
 function promiseViewLoaded(tab, viewid) {
   let win = tab.linkedBrowser.contentWindow;
@@ -50,39 +24,9 @@ function promiseViewLoaded(tab, viewid) {
   });
 }
 
-function promisePopupNotificationShown(name) {
-  return new Promise(resolve => {
-    function popupshown() {
-      let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
-
-      ok(notification, `${name} notification shown`);
-      ok(PopupNotifications.isPanelOpen, "notification panel open");
-
-      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstChild);
-    }
-
-    PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
-
 function getBadgeStatus() {
   let menuButton = document.getElementById("PanelUI-menu-button");
   return menuButton.getAttribute("badge-status");
-}
-
-function promiseInstallEvent(addon, event) {
-  return new Promise(resolve => {
-    let listener = {};
-    listener[event] = (install, ...args) => {
-      if (install.addon.id == addon.id) {
-        AddonManager.removeInstallListener(listener);
-        resolve(...args);
-      }
-    };
-    AddonManager.addInstallListener(listener);
-  });
 }
 
 // Set some prefs that apply to all the tests in this file
@@ -115,7 +59,7 @@ function* backgroundUpdateTest(url, id, checkIconFn) {
     ["extensions.update.enabled", true],
 
     // Point updates to the local mochitest server
-    ["extensions.update.background.url", `${URL_BASE}/browser_webext_update.json`],
+    ["extensions.update.background.url", `${BASE}/browser_webext_update.json`],
   ]});
 
   // Install version 1.0 of the test extension
@@ -228,7 +172,7 @@ function checkDefaultIcon(icon) {
      "Popup has the default extension icon");
 }
 
-add_task(() => backgroundUpdateTest(`${URL_BASE}/browser_webext_update1.xpi`,
+add_task(() => backgroundUpdateTest(`${BASE}/browser_webext_update1.xpi`,
                                     ID, checkDefaultIcon));
 
 function checkNonDefaultIcon(icon) {
@@ -239,7 +183,7 @@ function checkNonDefaultIcon(icon) {
   ok(icon.endsWith("/icon.png"), "Icon is icon.png inside a jar");
 }
 
-add_task(() => backgroundUpdateTest(`${URL_BASE}/browser_webext_update_icon1.xpi`,
+add_task(() => backgroundUpdateTest(`${BASE}/browser_webext_update_icon1.xpi`,
                                     ID_ICON, checkNonDefaultIcon));
 
 // Helper function to test an upgrade that should not show a prompt
@@ -249,7 +193,7 @@ async function testNoPrompt(origUrl, id) {
     ["extensions.update.enabled", true],
 
     // Point updates to the local mochitest server
-    ["extensions.update.background.url", `${URL_BASE}/browser_webext_update.json`],
+    ["extensions.update.background.url", `${BASE}/browser_webext_update.json`],
   ]});
 
   // Install version 1.0 of the test extension
@@ -286,11 +230,11 @@ async function testNoPrompt(origUrl, id) {
 
 // Test that an update that adds new non-promptable permissions is just
 // applied without showing a notification dialog.
-add_task(() => testNoPrompt(`${URL_BASE}/browser_webext_update_perms1.xpi`,
+add_task(() => testNoPrompt(`${BASE}/browser_webext_update_perms1.xpi`,
                             ID_PERMS));
 
 // Test that an update from a legacy extension to a webextension
 // doesn't show a prompt even when the webextension uses
 // promptable required permissions.
-add_task(() => testNoPrompt(`${URL_BASE}/browser_legacy.xpi`, ID_LEGACY));
+add_task(() => testNoPrompt(`${BASE}/browser_legacy.xpi`, ID_LEGACY));
 

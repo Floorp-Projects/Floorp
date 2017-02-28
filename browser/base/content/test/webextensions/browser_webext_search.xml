@@ -21,7 +21,7 @@
       </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
-    <install size="1">https://example.com/browser/browser/base/content/test/general/browser_webext_permissions.xpi</install>
+    <install size="1">https://example.com/browser/browser/base/content/test/webextensions/browser_webext_permissions.xpi</install>
   </addon>
 
   <addon>
@@ -45,7 +45,7 @@
       </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
-    <install size="1">https://example.com/browser/browser/base/content/test/general/browser_webext_nopermissions.xpi</install>
+    <install size="1">https://example.com/browser/browser/base/content/test/webextensions/browser_webext_nopermissions.xpi</install>
   </addon>
 </searchresults>
 

@@ -249,7 +249,11 @@ var doTests = function() {
   frame.contentDocument.close();
 };
 
-doTests();
+// Running a debug build on the Android emulator is slooow and collecting
+// all the session history this test amasses through repeated navigations
+// adds considerably to the running time. Therefore, we restrict the
+// amount of session history we keep around during this test.
+SpecialPowers.pushPrefEnv({"set": [['browser.sessionhistory.max_entries', 4]]}, doTests);
 
 };
 

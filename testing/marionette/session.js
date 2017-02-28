@@ -42,9 +42,9 @@ session.Timeouts = class {
 
   toJSON () {
     return {
-      "implicit": this.implicit,
-      "page load": this.pageLoad,
-      "script": this.script,
+      implicit: this.implicit,
+      pageLoad: this.pageLoad,
+      script: this.script,
     };
   }
 
@@ -64,7 +64,7 @@ session.Timeouts = class {
           t.script = ms;
           break;
 
-        case "page load":
+        case "pageLoad":
           t.pageLoad = ms;
           break;
 

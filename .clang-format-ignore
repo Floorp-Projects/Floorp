@@ -2,6 +2,9 @@
 ^config/gcc-stl-wrapper.template.h
 ^config/msvc-stl-wrapper.template.h
 ^js/src/jsapi-tests/.*
+^widget/android/GeneratedJNINatives.h
+^widget/android/GeneratedJNIWrappers.cpp
+^widget/android/GeneratedJNIWrappers.h
 
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print "^"$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
