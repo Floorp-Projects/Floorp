@@ -247,8 +247,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
     if (journalMode.EqualsLiteral("wal")) {
       return JOURNAL_WAL;
     }
-    // This is an unknown journal.
-    MOZ_ASSERT(true);
+    MOZ_ASSERT(false, "Got an unknown journal mode.");
   }
 
   return JOURNAL_DELETE;
