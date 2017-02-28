@@ -59,16 +59,11 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
   }
   mVisibilityState = aDoc->VisibilityState();
 
-  mLastFocusTime = aDoc->LastFocusTime();
-
   ErrorResult result;
   mFocused = aDoc->HasFocus(result);
   if (result.Failed()) {
     NS_WARNING("Failed to get focus information.");
   }
-
-  MOZ_ASSERT_IF(mLastFocusTime.IsNull(), !mFocused);
-  MOZ_ASSERT_IF(mFocused, !mLastFocusTime.IsNull());
 
   RefPtr<nsGlobalWindow> outerWindow = nsGlobalWindow::Cast(aDoc->GetWindow());
   if (!outerWindow) {
