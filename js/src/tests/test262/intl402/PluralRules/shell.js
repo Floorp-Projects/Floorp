@@ -4,5 +4,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Call the shell helper to add experimental features to the Intl object.
-if (typeof addIntlExtras === "function")
-    addIntlExtras(Intl);
+if (typeof addIntlExtras === "function") {
+    let intlExtras = {};
+    addIntlExtras(intlExtras);
+
+    Object.defineProperty(Intl, "PluralRules", {
+        value: intlExtras.PluralRules,
+        writable: true, enumerable: false, configurable: true
+    });
+}

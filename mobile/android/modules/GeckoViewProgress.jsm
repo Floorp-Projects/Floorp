@@ -17,7 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewNavigation");
 
-var DEBUG = false;
+function debug(aMsg) {
+  // dump(aMsg);
+}
 
 class GeckoViewProgress extends GeckoViewModule {
   init() {
@@ -27,9 +29,7 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   registerProgressListener() {
-    if (DEBUG) {
-      dump("registerProgressListeners()");
-    }
+    debug("registerProgressListeners()");
 
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK | Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.progressFilter =
@@ -40,9 +40,7 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (DEBUG) {
-      dump("onStateChange()");
-    }
+    debug("onStateChange()");
 
     if (!aWebProgress.isTopLevel) {
       return;
@@ -56,7 +54,8 @@ class GeckoViewProgress extends GeckoViewModule {
       };
 
       this.eventDispatcher.sendRequest(message);
-    } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) && !aWebProgress.isLoadingDocument) {
+    } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
+               !aWebProgress.isLoadingDocument) {
       let message = {
         type: "GeckoView:PageStop",
         success: aStatus ? false : true
@@ -67,9 +66,7 @@ class GeckoViewProgress extends GeckoViewModule {
   }
 
   onSecurityChange(aWebProgress, aRequest, aState) {
-    if (DEBUG) {
-      dump("onSecurityChange()");
-    }
+    debug("onSecurityChange()");
 
     let message = {
       type: "GeckoView:SecurityChanged",

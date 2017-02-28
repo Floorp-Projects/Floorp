@@ -7,7 +7,9 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "ViewContent");
 
-var DEBUG = false;
+function debug(aMsg) {
+  // dump(aMsg);
+}
 
 // This is copied from desktop's tab-content.js. See bug 1153485 about sharing this code somehow.
 var DOMTitleChangedListener = {
@@ -15,10 +17,8 @@ var DOMTitleChangedListener = {
     addEventListener("DOMTitleChanged", this, false);
   },
 
-  receiveMessage: function(message) {
-    if (DEBUG) {
-      dump("receiveMessage " + message.name);
-    }
+  receiveMessage: function(aMsg) {
+    debug("receiveMessage " + aMsg.name);
   },
 
   handleEvent: function(aEvent) {
@@ -26,13 +26,12 @@ var DOMTitleChangedListener = {
       return;
     }
 
-    if (DEBUG) {
-      dump("handleEvent " + aEvent.type);
-    }
+    debug("handleEvent " + aEvent.type);
 
     switch (aEvent.type) {
       case "DOMTitleChanged":
-        sendAsyncMessage("GeckoView:DOMTitleChanged", { title: content.document.title });
+        sendAsyncMessage("GeckoView:DOMTitleChanged",
+                         { title: content.document.title });
         break;
     }
   },

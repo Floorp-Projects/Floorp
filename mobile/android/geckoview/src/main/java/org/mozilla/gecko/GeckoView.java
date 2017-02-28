@@ -43,7 +43,7 @@ public class GeckoView extends LayerView
 
     private static final boolean DEBUG = false;
 
-    private final EventDispatcher eventDispatcher = new EventDispatcher();
+    private final EventDispatcher mEventDispatcher = new EventDispatcher();
 
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
@@ -53,9 +53,9 @@ public class GeckoView extends LayerView
 
     private GeckoViewSettings mSettings;
 
-    protected boolean onAttachedToWindowCalled;
-    protected String chromeURI;
-    protected int screenId = 0; // default to the primary screen
+    protected boolean mOnAttachedToWindowCalled;
+    protected String mChromeUri;
+    protected int mScreenId = 0; // default to the primary screen
 
     @WrapForJNI(dispatchTo = "proxy")
     protected static final class Window extends JNIObject {
@@ -64,7 +64,7 @@ public class GeckoView extends LayerView
 
         static native void open(Window instance, GeckoView view,
                                 Object compositor, EventDispatcher dispatcher,
-                                String chromeURI, GeckoBundle settings,
+                                String chromeUri, GeckoBundle settings,
                                 int screenId);
 
         @Override protected native void disposeNative();
@@ -142,7 +142,7 @@ public class GeckoView extends LayerView
             } else if ("GeckoView:LocationChange".equals(event)) {
                 if (mNavigationListener == null) {
                     // We shouldn't be getting this event.
-                    eventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
+                    mEventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
                 } else {
                     mNavigationListener.onLocationChange(GeckoView.this, message.getString("uri"));
                     mNavigationListener.onCanGoBack(GeckoView.this, message.getBoolean("canGoBack"));
@@ -200,16 +200,14 @@ public class GeckoView extends LayerView
     }
 
     @Override
-    protected Parcelable onSaveInstanceState()
-    {
+    protected Parcelable onSaveInstanceState() {
         final Parcelable superState = super.onSaveInstanceState();
         stateSaved = true;
         return new StateBinder(superState, this.window);
     }
 
     @Override
-    protected void onRestoreInstanceState(final Parcelable state)
-    {
+    protected void onRestoreInstanceState(final Parcelable state) {
         final StateBinder stateBinder = (StateBinder) state;
 
         if (stateBinder.window != null) {
@@ -217,7 +215,7 @@ public class GeckoView extends LayerView
         }
         stateSaved = false;
 
-        if (onAttachedToWindowCalled) {
+        if (mOnAttachedToWindowCalled) {
             reattachWindow();
         }
 
@@ -227,39 +225,38 @@ public class GeckoView extends LayerView
     }
 
     protected void openWindow() {
-        if (chromeURI == null) {
-            chromeURI = getGeckoInterface().getDefaultChromeURI();
+        if (mChromeUri == null) {
+            mChromeUri = getGeckoInterface().getDefaultChromeURI();
         }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, getCompositor(), eventDispatcher,
-                        chromeURI, mSettings.asBundle(), screenId);
+            Window.open(window, this, getCompositor(), mEventDispatcher,
+                        mChromeUri, mSettings.asBundle(), mScreenId);
         } else {
             GeckoThread.queueNativeCallUntil(
                 GeckoThread.State.PROFILE_READY,
                 Window.class, "open", window,
                 GeckoView.class, this,
                 Object.class, getCompositor(),
-                EventDispatcher.class, eventDispatcher,
-                String.class, chromeURI,
+                EventDispatcher.class, mEventDispatcher,
+                String.class, mChromeUri,
                 GeckoBundle.class, mSettings.asBundle(),
-                screenId);
+                mScreenId);
         }
     }
 
     protected void reattachWindow() {
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            window.reattach(this, getCompositor(), eventDispatcher);
+            window.reattach(this, getCompositor(), mEventDispatcher);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     window, "reattach", GeckoView.class, this,
-                    Object.class, getCompositor(), EventDispatcher.class, eventDispatcher);
+                    Object.class, getCompositor(), EventDispatcher.class, mEventDispatcher);
         }
     }
 
     @Override
-    public void onAttachedToWindow()
-    {
+    public void onAttachedToWindow() {
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
         if (window == null) {
@@ -272,12 +269,11 @@ public class GeckoView extends LayerView
 
         super.onAttachedToWindow();
 
-        onAttachedToWindowCalled = true;
+        mOnAttachedToWindowCalled = true;
     }
 
     @Override
-    public void onDetachedFromWindow()
-    {
+    public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         super.destroy();
 
@@ -296,7 +292,7 @@ public class GeckoView extends LayerView
                     window, "disposeNative");
         }
 
-        onAttachedToWindowCalled = false;
+        mOnAttachedToWindowCalled = false;
     }
 
     @WrapForJNI public static final int LOAD_DEFAULT = 0;
@@ -320,6 +316,13 @@ public class GeckoView extends LayerView
         }
     }
 
+    /**
+    * Reload the current URI.
+    */
+    public void reload() {
+        mEventDispatcher.dispatch("GeckoView:Reload", null);
+    }
+
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
         mInputConnectionListener = icl;
     }
@@ -328,14 +331,14 @@ public class GeckoView extends LayerView
     * Go back in history.
     */
     public void goBack() {
-        eventDispatcher.dispatch("GeckoView:GoBack", null);
+        mEventDispatcher.dispatch("GeckoView:GoBack", null);
     }
 
     /**
     * Go forward in history.
     */
     public void goForward() {
-        eventDispatcher.dispatch("GeckoView:GoForward", null);
+        mEventDispatcher.dispatch("GeckoView:GoForward", null);
     }
 
     public GeckoViewSettings getSettings() {
@@ -470,9 +473,9 @@ public class GeckoView extends LayerView
             return;
         }
         if (listener == null) {
-            eventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
+            mEventDispatcher.dispatch("GeckoViewNavigation:Inactive", null);
         } else if (mNavigationListener == null) {
-            eventDispatcher.dispatch("GeckoViewNavigation:Active", null);
+            mEventDispatcher.dispatch("GeckoViewNavigation:Active", null);
         }
 
         mNavigationListener = listener;
@@ -504,7 +507,7 @@ public class GeckoView extends LayerView
     }
 
     public EventDispatcher getEventDispatcher() {
-        return eventDispatcher;
+        return mEventDispatcher;
     }
 
     /* Provides a means for the client to indicate whether a JavaScript

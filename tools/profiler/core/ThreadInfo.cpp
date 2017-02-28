@@ -237,18 +237,6 @@ ThreadInfo::FlushSamplesAndMarkers()
   mBuffer->reset();
 }
 
-void
-ThreadInfo::BeginUnwind()
-{
-  mMutex->Lock();
-}
-
-void
-ThreadInfo::EndUnwind()
-{
-  mMutex->Unlock();
-}
-
 mozilla::Mutex&
 ThreadInfo::GetMutex()
 {
