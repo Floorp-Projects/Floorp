@@ -297,6 +297,12 @@ IntRectToSkIRect(const IntRect& aRect)
   return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
+static inline IntRect
+SkIRectToIntRect(const SkIRect& aRect)
+{
+  return IntRect(aRect.x(), aRect.y(), aRect.width(), aRect.height());
+}
+
 static inline Point
 SkPointToPoint(const SkPoint &aPoint)
 {
