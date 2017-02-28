@@ -44,8 +44,8 @@ class GenericPrinter
     }
 
     // Prints a formatted string into the buffer.
-    virtual bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-    virtual bool vprintf(const char* fmt, va_list ap);
+    bool printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
+    bool vprintf(const char* fmt, va_list ap);
 
     // Report that a string operation failed to get the memory it requested. The
     // first call to this function calls JS_ReportOutOfMemory, and sets this
@@ -118,9 +118,6 @@ class Sprinter final : public GenericPrinter
     // OOM).
     MOZ_MUST_USE bool jsprintf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
 
-    // Prints a formatted string into the buffer.
-    virtual bool vprintf(const char* fmt, va_list ap) override;
-
     bool putString(JSString* str);
 
     ptrdiff_t getOffset() const;
@@ -156,10 +153,6 @@ class Fprinter final : public GenericPrinter
     // return true on success, false on failure.
     virtual bool put(const char* s, size_t len) override;
     using GenericPrinter::put; // pick up |inline bool put(const char* s);|
-
-    // Prints a formatted string into the buffer.
-    virtual bool printf(const char* fmt, ...) override MOZ_FORMAT_PRINTF(2, 3);
-    virtual bool vprintf(const char* fmt, va_list ap) override;
 };
 
 // LSprinter, is similar to Sprinter except that instead of using an
@@ -202,10 +195,6 @@ class LSprinter final : public GenericPrinter
     // return true on success, false on failure.
     virtual bool put(const char* s, size_t len) override;
     using GenericPrinter::put; // pick up |inline bool put(const char* s);|
-
-    // Prints a formatted string into the buffer.
-    virtual bool printf(const char* fmt, ...) override MOZ_FORMAT_PRINTF(2, 3);
-    virtual bool vprintf(const char* fmt, va_list ap) override;
 
     // Report that a string operation failed to get the memory it requested. The
     // first call to this function calls JS_ReportOutOfMemory, and sets this
