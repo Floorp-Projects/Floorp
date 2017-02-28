@@ -95,6 +95,13 @@ MediaKeyStatusMap::GetKeyAtIndex(uint32_t aIndex) const
   return TypedArrayCreator<ArrayBuffer>(mStatuses[aIndex].mKeyId);
 }
 
+nsString
+MediaKeyStatusMap::GetKeyIDAsHexString(uint32_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < GetIterableLength());
+  return NS_ConvertUTF8toUTF16(ToHexString(mStatuses[aIndex].mKeyId));
+}
+
 MediaKeyStatus
 MediaKeyStatusMap::GetValueAtIndex(uint32_t aIndex) const
 {
