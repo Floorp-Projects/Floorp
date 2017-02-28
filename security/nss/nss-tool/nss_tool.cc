@@ -33,7 +33,6 @@ int main(int argc, char **argv) {
   std::vector<std::string> arguments(argv + 2, argv + argc);
   DBTool tool;
   if (!tool.Run(arguments)) {
-    tool.Usage();
     exit_code = 1;
   }
 
