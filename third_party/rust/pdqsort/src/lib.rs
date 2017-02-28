@@ -1,16 +1,10 @@
 //! Pattern-defeating quicksort.
 //!
 //! This sort is significantly faster than the standard sort in Rust. In particular, it sorts
-//! random arrays of integers approximately 40% faster. The key drawback is that it is an unstable
+//! random arrays of integers approximately 45% faster. The key drawback is that it is an unstable
 //! sort (i.e. may reorder equal elements). However, in most cases stability doesn't matter anyway.
 //!
-//! The algorithm was designed by Orson Peters and first published at:
-//! https://github.com/orlp/pdqsort
-//!
-//! Quoting it's designer: "Pattern-defeating quicksort (pdqsort) is a novel sorting algorithm
-//! that combines the fast average case of randomized quicksort with the fast worst case of
-//! heapsort, while achieving linear time on inputs with certain patterns. pdqsort is an extension
-//! and improvement of David Musser's introsort."
+//! The algorithm is based on pdqsort by Orson Peters, published at: https://github.com/orlp/pdqsort
 //!
 //! # Properties
 //!
@@ -43,7 +37,7 @@ use core::cmp::{self, Ordering};
 use core::mem;
 use core::ptr;
 
-/// On drop, takes the value out of `Option` and writes it into `dest`.
+/// When dropped, takes the value out of `Option` and writes it into `dest`.
 ///
 /// This allows us to safely read the pivot into a stack-allocated variable for efficiency, and
 /// write it back into the slice after partitioning. This way we ensure that the write happens
@@ -61,55 +55,58 @@ impl<T> Drop for WriteOnDrop<T> {
     }
 }
 
-/// Inserts `v[0]` into pre-sorted sequence `v[1..]` so that whole `v[..]` becomes sorted.
-///
-/// This is the integral subroutine of insertion sort.
-fn insert_head<T, F>(v: &mut [T], is_less: &mut F)
+/// Sorts a slice using insertion sort, which is `O(n^2)` worst-case.
+fn insertion_sort<T, F>(v: &mut [T], is_less: &mut F)
     where F: FnMut(&T, &T) -> bool
 {
-    if v.len() >= 2 && is_less(&v[1], &v[0]) {
+    let len = v.len();
+
+    for i in 1..len {
         unsafe {
-            // There are three ways to implement insertion here:
-            //
-            // 1. Swap adjacent elements until the first one gets to its final destination.
-            //    However, this way we copy data around more than is necessary. If elements are big
-            //    structures (costly to copy), this method will be slow.
-            //
-            // 2. Iterate until the right place for the first element is found. Then shift the
-            //    elements succeeding it to make room for it and finally place it into the
-            //    remaining hole. This is a good method.
-            //
-            // 3. Copy the first element into a temporary variable. Iterate until the right place
-            //    for it is found. As we go along, copy every traversed element into the slot
-            //    preceding it. Finally, copy data from the temporary variable into the remaining
-            //    hole. This method is very good. Benchmarks demonstrated slightly better
-            //    performance than with the 2nd method.
-            //
-            // All methods were benchmarked, and the 3rd showed best results. So we chose that one.
-            let mut tmp = NoDrop { value: Some(ptr::read(&v[0])) };
+            if is_less(v.get_unchecked(i), v.get_unchecked(i - 1)) {
+                // There are three ways to implement insertion here:
+                //
+                // 1. Swap adjacent elements until the first one gets to its final destination.
+                //    However, this way we copy data around more than is necessary. If elements are
+                //    big structures (costly to copy), this method will be slow.
+                //
+                // 2. Iterate until the right place for the first element is found. Then shift the
+                //    elements succeeding it to make room for it and finally place it into the
+                //    remaining hole. This is a good method.
+                //
+                // 3. Copy the first element into a temporary variable. Iterate until the right
+                //    place for it is found. As we go along, copy every traversed element into the
+                //    slot preceding it. Finally, copy data from the temporary variable into the
+                //    remaining hole. This method is very good. Benchmarks demonstrated slightly
+                //    better performance than with the 2nd method.
+                //
+                // All methods were benchmarked, and the 3rd showed best results. So we chose that
+                // one.
+                let mut tmp = NoDrop { value: Some(ptr::read(v.get_unchecked(i))) };
 
-            // Intermediate state of the insertion process is always tracked by `hole`, which
-            // serves two purposes:
-            // 1. Protects integrity of `v` from panics in `is_less`.
-            // 2. Fills the remaining hole in `v` in the end.
-            //
-            // Panic safety:
-            //
-            // If `is_less` panics at any point during the process, `hole` will get dropped and
-            // fill the hole in `v` with `tmp`, thus ensuring that `v` still holds every object it
-            // initially held exactly once.
-            let mut hole = InsertionHole {
-                src: tmp.value.as_mut().unwrap(),
-                dest: &mut v[1],
-            };
-            ptr::copy_nonoverlapping(&v[1], &mut v[0], 1);
+                // Intermediate state of the insertion process is always tracked by `hole`, which
+                // serves two purposes:
+                // 1. Protects integrity of `v` from panics in `is_less`.
+                // 2. Fills the remaining hole in `v` in the end.
+                //
+                // Panic safety:
+                //
+                // If `is_less` panics at any point during the process, `hole` will get dropped and
+                // fill the hole in `v` with `tmp`, thus ensuring that `v` still holds every object
+                // it initially held exactly once.
+                let mut hole = InsertionHole {
+                    src: tmp.value.as_mut().unwrap(),
+                    dest: v.get_unchecked_mut(i - 1),
+                };
+                ptr::copy_nonoverlapping(v.get_unchecked(i - 1), v.get_unchecked_mut(i), 1);
 
-            for i in 2..v.len() {
-                if !is_less(&v[i], &tmp.value.as_ref().unwrap()) {
-                    break;
+                for j in (0..i-1).rev() {
+                    if !is_less(&tmp.value.as_ref().unwrap(), v.get_unchecked(j)) {
+                        break;
+                    }
+                    ptr::copy_nonoverlapping(v.get_unchecked(j), v.get_unchecked_mut(j + 1), 1);
+                    hole.dest = v.get_unchecked_mut(j);
                 }
-                ptr::copy_nonoverlapping(&v[i], &mut v[i - 1], 1);
-                hole.dest = &mut v[i];
             }
             // `hole` gets dropped and thus copies `tmp` into the remaining hole in `v`.
         }
@@ -135,18 +132,6 @@ fn insert_head<T, F>(v: &mut [T], is_less: &mut F)
     impl<T> Drop for InsertionHole<T> {
         fn drop(&mut self) {
             unsafe { ptr::copy_nonoverlapping(self.src, self.dest, 1); }
-        }
-    }
-}
-
-/// Sorts a slice using insertion sort, which is `O(n^2)` worst-case.
-fn insertion_sort<T, F>(v: &mut [T], is_less: &mut F)
-    where F: FnMut(&T, &T) -> bool
-{
-    let len = v.len();
-    if len >= 2 {
-        for i in (0..len-1).rev() {
-            insert_head(&mut v[i..], is_less);
         }
     }
 }
@@ -203,7 +188,7 @@ fn heapsort<T, F>(v: &mut [T], is_less: &mut F)
 fn partition_in_blocks<T, F>(v: &mut [T], pivot: &T, is_less: &mut F) -> usize
     where F: FnMut(&T, &T) -> bool
 {
-    const BLOCK: usize = 64;
+    const BLOCK: usize = 128;
 
     // State on the left side.
     let mut l = v.as_mut_ptr();
@@ -221,6 +206,7 @@ fn partition_in_blocks<T, F>(v: &mut [T], pivot: &T, is_less: &mut F) -> usize
 
     // Returns the number of elements between pointers `l` (inclusive) and `r` (exclusive).
     fn width<T>(l: *mut T, r: *mut T) -> usize {
+        assert!(mem::size_of::<T>() > 0);
         (r as usize - l as usize) / mem::size_of::<T>()
     }
 
@@ -283,7 +269,7 @@ fn partition_in_blocks<T, F>(v: &mut [T], pivot: &T, is_less: &mut F) -> usize
             }
         }
 
-        // Number of displaced elements to swap between the left and right side.
+        // Number of out-of-order elements to swap between the left and right side.
         let count = cmp::min(width(start_l, end_l), width(start_r, end_r));
 
         if count > 0 {
@@ -371,7 +357,7 @@ fn partition<T, F>(v: &mut [T], pivot: usize, is_less: &mut F) -> (usize, bool)
         };
         let pivot = write_on_drop.value.as_ref().unwrap();
 
-        // Find the first pair of displaced elements.
+        // Find the first pair of out-of-order elements.
         let mut l = 0;
         let mut r = v.len();
         unsafe {
@@ -469,7 +455,7 @@ fn choose_pivot<T, F>(v: &mut [T], is_less: &mut F) -> usize
     let mut c = len / 4 * 3;
     let mut swaps = 0;
 
-    if len >= 4 {
+    if len >= 8 {
         let mut sort2 = |a: &mut usize, b: &mut usize| unsafe {
             if is_less(v.get_unchecked(*b), v.get_unchecked(*a)) {
                 ptr::swap(a, b);
@@ -510,7 +496,7 @@ fn choose_pivot<T, F>(v: &mut [T], is_less: &mut F) -> usize
 ///
 /// `limit` is the number of allowed imbalanced partitions before switching to `heapsort`. If zero,
 /// this function will immediately switch to heapsort.
-fn recurse<T, F>(v: &mut [T], is_less: &mut F, pred: Option<&T>, mut limit: usize)
+fn recurse<'a, T, F>(mut v: &'a mut [T], is_less: &mut F, mut pred: Option<&'a T>, mut limit: usize)
     where F: FnMut(&T, &T) -> bool
 {
     // If `v` has length up to `insertion_len`, simply switch to insertion sort because it is going
@@ -521,53 +507,64 @@ fn recurse<T, F>(v: &mut [T], is_less: &mut F, pred: Option<&T>, mut limit: usiz
         16
     };
 
-    let len = v.len();
+    // This is `true` if the last partitioning was balanced.
+    let mut was_balanced = true;
 
-    if len <= max_insertion {
-        insertion_sort(v, is_less);
-        return;
-    }
-
-    if limit == 0 {
-        heapsort(v, is_less);
-        return;
-    }
-
-    let pivot = choose_pivot(v, is_less);
-
-    // If the chosen pivot is equal to the predecessor, then it's the smallest element in the
-    // slice. Partition the slice into elements equal to and elements greater than the pivot.
-    // This case is often hit when the slice contains many duplicate elements.
-    if let Some(p) = pred {
-        if !is_less(p, &v[pivot]) {
-            let mid = partition_equal(v, pivot, is_less);
-            recurse(&mut v[mid..], is_less, pred, limit);
+    loop {
+        let len = v.len();
+        if len <= max_insertion {
+            insertion_sort(v, is_less);
             return;
         }
+
+        if limit == 0 {
+            heapsort(v, is_less);
+            return;
+        }
+
+        // If the last partitioning was imbalanced, try breaking patterns in the slice by shuffling
+        // some elements around. Hopefully we'll choose a better pivot this time.
+        if !was_balanced {
+            break_patterns(v);
+            limit -= 1;
+        }
+
+        let pivot = choose_pivot(v, is_less);
+
+        // If the chosen pivot is equal to the predecessor, then it's the smallest element in the
+        // slice. Partition the slice into elements equal to and elements greater than the pivot.
+        // This case is usually hit when the slice contains many duplicate elements.
+        if let Some(p) = pred {
+            if !is_less(p, &v[pivot]) {
+                let mid = partition_equal(v, pivot, is_less);
+                v = &mut {v}[mid..];
+                continue;
+            }
+        }
+
+        let (mid, was_partitioned) = partition(v, pivot, is_less);
+        was_balanced = cmp::min(mid, len - mid) >= len / 8;
+
+        // If the partitioning is decently balanced and the slice was already partitioned, there
+        // are good chances it is also completely sorted. If so, we're done.
+        if was_balanced && was_partitioned && v.windows(2).all(|w| !is_less(&w[1], &w[0])) {
+            return;
+        }
+
+        let (left, right) = {v}.split_at_mut(mid);
+        let (pivot, right) = right.split_at_mut(1);
+
+        // Recurse into the smaller side only, in order to minimize the total number of recursive
+        // calls and consume less stack space.
+        if left.len() < right.len() {
+            recurse(left, is_less, pred, limit);
+            v = right;
+            pred = Some(&pivot[0]);
+        } else {
+            recurse(right, is_less, Some(&pivot[0]), limit);
+            v = left;
+        }
     }
-
-    let (mid, was_partitioned) = partition(v, pivot, is_less);
-    let is_balanced = cmp::min(mid, len - mid) >= len / 8;
-
-    // If the partitioning is decently balanced and the slice was already partitioned, there are
-    // good chances it is also completely sorted. If so, we're done.
-    if is_balanced && was_partitioned && v.windows(2).all(|w| !is_less(&w[1], &w[0])) {
-        return;
-    }
-
-    let (left, right) = v.split_at_mut(mid);
-    let (pivot, right) = right.split_at_mut(1);
-
-    // If the partitioning is imbalanced, try breaking patterns in the slice by shuffling
-    // potential future pivots around.
-    if !is_balanced {
-        break_patterns(left);
-        break_patterns(right);
-        limit -= 1;
-    }
-
-    recurse(left, is_less, pred, limit);
-    recurse(right, is_less, Some(&pivot[0]), limit);
 }
 
 /// Sorts `v` using quicksort.

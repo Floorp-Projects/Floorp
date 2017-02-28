@@ -178,31 +178,17 @@ pub mod parse {
     //! `IResult::Incomplete` variant. The `synom` crate should be used instead
     //! of `nom` when working with the parsers in this module.
 
+    pub use synom::IResult;
+
     #[cfg(feature = "full")]
     pub use item::parsing::item;
 
     #[cfg(feature = "full")]
-    pub use expr::parsing::expr;
+    pub use expr::parsing::{expr, pat, block, stmt};
 
-    pub use lit::parsing::lit;
+    pub use lit::parsing::{lit, string, byte_string, byte, character, float, int, boolean};
 
-    pub use lit::parsing::string;
-
-    pub use lit::parsing::byte_string;
-
-    pub use lit::parsing::byte;
-
-    pub use lit::parsing::character;
-
-    pub use lit::parsing::float;
-
-    pub use lit::parsing::int;
-
-    pub use lit::parsing::boolean;
-
-    pub use ty::parsing::ty;
-
-    pub use ty::parsing::path;
+    pub use ty::parsing::{ty, path};
 
     pub use mac::parsing::token_tree as tt;
 

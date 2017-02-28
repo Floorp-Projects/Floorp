@@ -1,6 +1,6 @@
 [package]
 name = "cssparser-macros"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 description = "Procedural macros for cssparser"
 documentation = "https://docs.rs/cssparser-macros/"
@@ -12,7 +12,7 @@ path = "lib.rs"
 proc-macro = true
 
 [dependencies]
+procedural-masquerade = {path = "../procedural-masquerade", version = "0.1"}
 phf_codegen = "0.7"
-quote = "0.3"
-syn = "0.11"
-
+quote = "0.3.14"
+syn = {version = "0.11.8", features = ["full"]}

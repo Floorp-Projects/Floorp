@@ -81,6 +81,7 @@ use std::cell::UnsafeCell;
 use std::fmt;
 use std::iter::Chain;
 use std::option::IntoIter as OptionIter;
+use std::panic::UnwindSafe;
 use unreachable::{UncheckedOptionExt, UncheckedResultExt};
 
 /// Thread-local variable wrapper
@@ -382,6 +383,8 @@ impl<T: ?Sized + Send + fmt::Debug> fmt::Debug for ThreadLocal<T> {
     }
 }
 
+impl<T: ?Sized + Send + UnwindSafe> UnwindSafe for ThreadLocal<T> {}
+
 struct RawIter<T: ?Sized + Send> {
     remaining: usize,
     index: usize,
@@ -590,6 +593,8 @@ pub type CachedIterMut<'a, T> = Chain<OptionIter<&'a mut Box<T>>, IterMut<'a, T>
 
 /// An iterator that moves out of a `CachedThreadLocal`.
 pub type CachedIntoIter<T> = Chain<OptionIter<Box<T>>, IntoIter<T>>;
+
+impl<T: ?Sized + Send + UnwindSafe> UnwindSafe for CachedThreadLocal<T> {}
 
 #[cfg(test)]
 mod tests {
