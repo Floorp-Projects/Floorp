@@ -3610,6 +3610,8 @@ nsStyleVisibility::CalcDifference(const nsStyleVisibility& aNewData) const
     // It's important that a change in mWritingMode results in frame
     // reconstruction, because it may affect intrinsic size (see
     // nsSubDocumentFrame::GetIntrinsicISize/BSize).
+    // Also, the used writing-mode value is now a field on nsIFrame and some
+    // classes (e.g. table rows/cells) copy their value from an ancestor.
     hint |= nsChangeHint_ReconstructFrame;
   } else {
     if ((mImageOrientation != aNewData.mImageOrientation)) {
