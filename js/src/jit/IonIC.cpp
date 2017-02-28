@@ -43,7 +43,7 @@ IonIC::scratchRegisterForEntryJump()
       }
       case CacheKind::SetProp:
       case CacheKind::SetElem:
-        return asSetPropertyIC()->temp1();
+        return asSetPropertyIC()->temp();
       case CacheKind::GetName:
       case CacheKind::In:
         MOZ_CRASH("Baseline-specific for now");
