@@ -699,7 +699,6 @@ public:
     PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic && mMagic3 == sMagic && mMagic4 == mMutex.mLock);
     MOZ_ASSERT(aResponseThread);
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(aResponseThread->IsDispatchReliable());
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
     mHaveRequest = true;
     PROMISE_LOG("%s invoking Then() [this=%p, aThenValue=%p, isPending=%d]",
@@ -1259,7 +1258,6 @@ InvokeAsyncImpl(AbstractThread* aTarget, ThisType* aThisVal,
     new MethodCallType(aMethod, aThisVal, Forward<ActualArgTypes>(aArgs)...);
   RefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
   RefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
-  MOZ_ASSERT(aTarget->IsDispatchReliable());
   aTarget->Dispatch(r.forget());
   return p.forget();
 }
@@ -1380,7 +1378,6 @@ InvokeAsync(AbstractThread* aTarget, const char* aCallerName,
     new (typename PromiseType::Private)(aCallerName);
   RefPtr<ProxyRunnableType> r =
     new ProxyRunnableType(p, Forward<Function>(aFunction));
-  MOZ_ASSERT(aTarget->IsDispatchReliable());
   aTarget->Dispatch(r.forget());
   return p.forget();
 }
