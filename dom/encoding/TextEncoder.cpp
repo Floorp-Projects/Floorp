@@ -67,6 +67,7 @@ TextEncoder::Encode(JSContext* aCx,
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
+    return;
   }
   aRetval.set(outView);
 }
