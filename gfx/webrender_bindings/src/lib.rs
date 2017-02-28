@@ -7,15 +7,6 @@ extern crate webrender_traits;
 extern crate euclid;
 extern crate app_units;
 extern crate gleam;
-extern crate fnv;
-
-#[cfg(target_os="macos")]
-extern crate core_foundation;
-
-#[cfg(target_os="windows")]
-extern crate kernel32;
-#[cfg(target_os="windows")]
-extern crate winapi;
 
 #[allow(non_snake_case)]
 pub mod bindings;
