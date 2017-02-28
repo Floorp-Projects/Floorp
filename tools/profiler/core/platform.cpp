@@ -2459,9 +2459,7 @@ profiler_get_backtrace()
   sample.isSamplingCurrentThread = true;
   sample.timestamp = mozilla::TimeStamp::Now();
 
-  profile->BeginUnwind();
   Tick(&sample);
-  profile->EndUnwind();
 
   return UniqueProfilerBacktrace(new ProfilerBacktrace(profile));
 }

@@ -10,7 +10,7 @@ add_task(function* test() {
       __proto__: NavHistoryObserver.prototype,
       onTitleChanged(aURI, aTitle, aGUID) {
         Assert.equal(aURI.spec, uri, "Should notify the proper url");
-        if (++this._count == 2) {
+        if (++this._count == 1) {
           PlacesUtils.history.removeObserver(historyObserver);
           resolve();
         }

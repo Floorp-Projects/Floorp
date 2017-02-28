@@ -1159,7 +1159,13 @@ SortLayersWithBSPTree(nsTArray<Layer*>& aArray)
 
     const gfx::IntRect& bounds =
       layer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
+
     const gfx::Matrix4x4& transform = layer->GetEffectiveTransform();
+
+    if (transform.IsSingular()) {
+      // Transform cannot be inverted.
+      continue;
+    }
 
     gfx::Polygon polygon = gfx::Polygon::FromRect(gfx::Rect(bounds));
 

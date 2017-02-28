@@ -19,7 +19,7 @@ with Files('generate_csd.sh'):
 with Files('nsIApplicationReputation.idl'):
     BUG_COMPONENT = ('Toolkit', 'Safe Browsing')
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIApplicationReputation.idl',

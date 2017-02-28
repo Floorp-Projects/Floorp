@@ -179,7 +179,7 @@ test_description_schema = Schema({
     Required('checkout', default=False): bool,
 
     # Wheter to perform a machine reboot after test is done
-    Optional('reboot', default=False): bool,
+    Optional('reboot', default=True): bool,
 
     # What to run
     Required('mozharness'): optionally_keyed_by(
@@ -227,7 +227,9 @@ test_description_schema = Schema({
 
             # If true, include chunking information in the command even if the number
             # of chunks is 1
-            Required('chunked', default=False): bool,
+            Required('chunked', default=False): optionally_keyed_by(
+                'test-platform',
+                bool),
 
             # The chunking argument format to use
             Required('chunking-args', default='this-chunk'): Any(
@@ -317,7 +319,7 @@ def set_defaults(config, tests):
         test.setdefault('run-on-projects', ['all'])
         test.setdefault('instance-size', 'default')
         test.setdefault('max-run-time', 3600)
-        test.setdefault('reboot', False)
+        test.setdefault('reboot', True)
         test['mozharness'].setdefault('extra-options', [])
         yield test
 
@@ -374,13 +376,15 @@ def set_asan_docker_image(config, tests):
 @transforms.add
 def set_worker_implementation(config, tests):
     """Set the worker implementation based on the test platform."""
+    use_tc_worker = config.config['args'].taskcluster_worker
     for test in tests:
-        if test.get('suite', '') == 'talos':
+        if test['test-platform'].startswith('macosx'):
+            test['worker-implementation'] = \
+                'native-engine' if use_tc_worker else 'buildbot-bridge'
+        elif test.get('suite', '') == 'talos':
             test['worker-implementation'] = 'buildbot-bridge'
         elif test['test-platform'].startswith('win'):
             test['worker-implementation'] = 'generic-worker'
-        elif test['test-platform'].startswith('macosx'):
-            test['worker-implementation'] = 'native-engine'
         else:
             test['worker-implementation'] = 'docker-worker'
         yield test
@@ -406,7 +410,8 @@ def set_tier(config, tests):
                                          'android-4.3-arm7-api-15/debug',
                                          'android-4.2-x86/opt']:
                 test['tier'] = 1
-            elif test['test-platform'].startswith('windows'):
+            elif test['test-platform'].startswith('windows') \
+                    or test['worker-implementation'] == 'native-engine':
                 test['tier'] = 3
             else:
                 test['tier'] = 2
@@ -454,6 +459,7 @@ def handle_keyed_by(config, tests):
         'suite',
         'run-on-projects',
         'os-groups',
+        'mozharness.chunked',
         'mozharness.config',
         'mozharness.extra-options',
     ]
@@ -581,15 +587,6 @@ def remove_linux_pgo_try_talos(config, tests):
         )
     for test in filter(predicate, tests):
         yield test
-
-
-@transforms.add
-def remove_native(config, tests):
-    """Remove native-engine jobs if -w is not given."""
-    for test in tests:
-        if test['worker-implementation'] != 'native-engine' \
-                or config.config['args'].taskcluster_worker:
-            yield test
 
 
 @transforms.add

@@ -38,7 +38,10 @@ ClipHomogeneous(const nsTArray<Point4DTyped<Units>>& aPoints)
     const Point4DTyped<Units>& first = aPoints[i];
     const Point4DTyped<Units>& second = aPoints[(i + 1) % pointCount];
 
-    MOZ_ASSERT(first.w != 0.0f || second.w != 0.0f);
+    if (!first.w || !second.w) {
+      // Skip edges at infinity.
+      continue;
+    }
 
     if (first.w > 0.0f) {
       outPoints.AppendElement(first);
@@ -299,6 +302,8 @@ public:
 
   void TransformToScreenSpace(const Matrix4x4Typed<Units, Units>& aTransform)
   {
+    MOZ_ASSERT(!aTransform.IsSingular());
+
     TransformPoints(aTransform, false);
     mPoints = ClipHomogeneous(mPoints);
 

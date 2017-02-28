@@ -145,15 +145,14 @@ add_task(function* test_Links_onLinkChanged() {
 
   let linkChangedPromise = new Promise(resolve => {
     let handler = (_, link) => { // jshint ignore:line
-      /* There are 3 linkChanged events:
+      /* There are 2 linkChanged events:
        * 1. visit insertion (-1 frecency by default)
        * 2. frecency score update (after transition type calculation etc)
-       * 3. title change
        */
       if (link.url === url) {
         equal(link.url, url, `expected url on linkChanged event`);
         linkChangedMsgCount += 1;
-        if (linkChangedMsgCount === 3) {
+        if (linkChangedMsgCount === 2) {
           ok(true, `all linkChanged events captured`);
           provider.off("linkChanged", this);
           resolve();
