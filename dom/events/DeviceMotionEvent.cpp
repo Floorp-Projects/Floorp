@@ -70,6 +70,11 @@ DeviceMotionEvent::InitDeviceMotionEvent(
   mInterval = aInterval;
   if (!aTimeStamp.IsNull()) {
     mEvent->mTime = aTimeStamp.Value();
+
+    static mozilla::TimeStamp sInitialNow = mozilla::TimeStamp::Now();
+    static uint64_t sInitialEventTime = aTimeStamp.Value();
+    mEvent->mTimeStamp = sInitialNow + mozilla::TimeDuration::FromMicroseconds(
+      aTimeStamp.Value() - sInitialEventTime);
   }
 }
 
