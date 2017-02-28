@@ -722,6 +722,7 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
             break;
         case 0x0e:
             aFontList.AppendElement(kFontLaoUI);
+            aFontList.AppendElement(kFontLeelawadeeUI);
             break;
         case 0x10:
             aFontList.AppendElement(kFontMyanmarText);
@@ -742,6 +743,7 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
             break;
         case 0x17:
             aFontList.AppendElement(kFontKhmerUI);
+            aFontList.AppendElement(kFontLeelawadeeUI);
             break;
         case 0x18:  // Mongolian
             aFontList.AppendElement(kFontMongolianBaiti);
@@ -751,7 +753,7 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
             aFontList.AppendElement(kFontMicrosoftTaiLe);
             aFontList.AppendElement(kFontMicrosoftNewTaiLue);
             aFontList.AppendElement(kFontKhmerUI);
-            break;
+            aFontList.AppendElement(kFontLeelawadeeUI);
             break;
         case 0x1a:
             aFontList.AppendElement(kFontLeelawadeeUI);
@@ -827,6 +829,7 @@ gfxWindowsPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
         case 0xa9:
              aFontList.AppendElement(kFontMalgunGothic);
              aFontList.AppendElement(kFontJavaneseText);
+             aFontList.AppendElement(kFontLeelawadeeUI);
              break;
         case 0xaa:
              aFontList.AppendElement(kFontMyanmarText);
