@@ -12,11 +12,11 @@
 }
 
 :root:-moz-lwtheme {
-  color: var(--lwt-textcolor) !important;
+  color: var(--lwt-text-color) !important;
 }
 
 :root:-moz-lwtheme:not([customization-lwtheme]) {
-  background-color: var(--lwt-accentcolor) !important;
+  background-color: var(--lwt-accent-color) !important;
   background-image: var(--lwt-header-image) !important;
 }
 
@@ -454,7 +454,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
-  background-color: var(--lwt-accentcolor);
+  background-color: var(--lwt-accent-color);
   background-image: var(--lwt-header-image);
 }
 
