@@ -1320,7 +1320,7 @@ DumpJumpOrigins(JSContext* cx, HandleScript script, jsbytecode* pc,
           break;
 
           case BytecodeParser::JumpKind::SwitchDefault:
-          if (!sp->put("swtich-default "))
+          if (!sp->put("switch-default "))
               return false;
           break;
 
