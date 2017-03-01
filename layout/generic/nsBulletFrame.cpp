@@ -465,7 +465,6 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   key.mNamespace = layer->WrBridge()->GetNamespace();
   key.mHandle = layer->WrBridge()->GetNextResourceId();
   aCommands.AppendElement(layers::OpAddExternalImage(
-                            LayerIntRegion(),
                             externalImageId,
                             key));
   aCommands.AppendElement(layers::OpDPPushImage(
