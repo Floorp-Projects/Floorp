@@ -26,9 +26,8 @@
 
 #include "hb-open-type-private.hh"
 
+#include "hb-ot-layout-private.hh"
 #include "hb-ot-math-table.hh"
-
-HB_SHAPER_DATA_ENSURE_DECLARE(ot, face)
 
 static inline const OT::MATH&
 _get_math (hb_face_t *face)

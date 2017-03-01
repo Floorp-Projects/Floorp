@@ -35,13 +35,6 @@
 #endif
 
 
-#define HB_SHAPER_IMPLEMENT(shaper) \
-	HB_SHAPER_DATA_ENSURE_DECLARE(shaper, face) \
-	HB_SHAPER_DATA_ENSURE_DECLARE(shaper, font)
-#include "hb-shaper-list.hh"
-#undef HB_SHAPER_IMPLEMENT
-
-
 static void
 hb_shape_plan_plan (hb_shape_plan_t    *shape_plan,
 		    const hb_feature_t *user_features,
