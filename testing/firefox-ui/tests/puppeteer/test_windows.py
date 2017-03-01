@@ -43,7 +43,6 @@ class TestWindows(BaseWindowTestCase):
     def tearDown(self):
         try:
             self.puppeteer.windows.close_all([self.browser])
-            self.browser.switch_to()
         finally:
             super(TestWindows, self).tearDown()
 
@@ -108,9 +107,8 @@ class TestBaseWindow(BaseWindowTestCase):
     def tearDown(self):
         try:
             self.puppeteer.windows.close_all([self.browser])
-            self.browser.switch_to()
         finally:
-            super(TestBaseWindow, self).tearDown()
+            BaseWindowTestCase.tearDown(self)
 
     def test_basics(self):
         # force BaseWindow instance
@@ -149,8 +147,7 @@ class TestBaseWindow(BaseWindowTestCase):
 
         self.assertTrue(win2.closed)
         self.assertEquals(len(self.marionette.chrome_window_handles), 1)
-        with self.assertRaises(NoSuchWindowException):
-            self.marionette.current_chrome_window_handle
+        self.assertEquals(win2.handle, self.marionette.current_chrome_window_handle)
         Wait(self.marionette).until(lambda _: win1.focused)  # catch the no focused window
 
         win1.focus()
@@ -218,9 +215,8 @@ class TestBrowserWindow(BaseWindowTestCase):
     def tearDown(self):
         try:
             self.puppeteer.windows.close_all([self.browser])
-            self.browser.switch_to()
         finally:
-            super(TestBrowserWindow, self).tearDown()
+            BaseWindowTestCase.tearDown(self)
 
     def test_basic(self):
         self.assertNotEqual(self.browser.dtds, [])
