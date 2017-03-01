@@ -22,7 +22,7 @@ using mozilla::mscom::AgileReference;
 
 namespace {
 
-class MOZ_NONHEAP_CLASS InParamWalker : private ICallFrameWalker
+class MOZ_NON_TEMPORARY_CLASS InParamWalker : private ICallFrameWalker
 {
 public:
   InParamWalker()
