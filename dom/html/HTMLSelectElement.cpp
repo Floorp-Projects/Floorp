@@ -278,7 +278,7 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
     // since if there's no frame for the select yet the select will
     // get into the right state once it's created.
     nsISelectControlFrame* selectFrame = nullptr;
-    nsWeakFrame weakSelectFrame;
+    AutoWeakFrame weakSelectFrame;
     bool didGetFrame = false;
 
     // Actually select the options if the added options warrant it
@@ -931,7 +931,7 @@ HTMLSelectElement::SetOptionsSelectedByIndex(int32_t aStartIndex,
 
   nsISelectControlFrame* selectFrame = nullptr;
   bool didGetFrame = false;
-  nsWeakFrame weakSelectFrame;
+  AutoWeakFrame weakSelectFrame;
 
   if (aOptionsMask & IS_SELECTED) {
     // Setting selectedIndex to an out-of-bounds index means -1. (HTML5)

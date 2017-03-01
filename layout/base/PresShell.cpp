@@ -665,13 +665,13 @@ nsIPresShell::SetVerifyReflowEnable(bool aEnabled)
 }
 
 /* virtual */ void
-nsIPresShell::AddWeakFrameExternal(nsWeakFrame* aWeakFrame)
+nsIPresShell::AddWeakFrameExternal(AutoWeakFrame* aWeakFrame)
 {
   AddWeakFrameInternal(aWeakFrame);
 }
 
 void
-nsIPresShell::AddWeakFrameInternal(nsWeakFrame* aWeakFrame)
+nsIPresShell::AddWeakFrameInternal(AutoWeakFrame* aWeakFrame)
 {
   if (aWeakFrame->GetFrame()) {
     aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
@@ -681,19 +681,19 @@ nsIPresShell::AddWeakFrameInternal(nsWeakFrame* aWeakFrame)
 }
 
 /* virtual */ void
-nsIPresShell::RemoveWeakFrameExternal(nsWeakFrame* aWeakFrame)
+nsIPresShell::RemoveWeakFrameExternal(AutoWeakFrame* aWeakFrame)
 {
   RemoveWeakFrameInternal(aWeakFrame);
 }
 
 void
-nsIPresShell::RemoveWeakFrameInternal(nsWeakFrame* aWeakFrame)
+nsIPresShell::RemoveWeakFrameInternal(AutoWeakFrame* aWeakFrame)
 {
   if (mWeakFrames == aWeakFrame) {
     mWeakFrames = aWeakFrame->GetPreviousWeakFrame();
     return;
   }
-  nsWeakFrame* nextWeak = mWeakFrames;
+  AutoWeakFrame* nextWeak = mWeakFrames;
   while (nextWeak && nextWeak->GetPreviousWeakFrame() != aWeakFrame) {
     nextWeak = nextWeak->GetPreviousWeakFrame();
   }
@@ -2949,9 +2949,9 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   mPresContext->EventStateManager()->ClearFrameRefs(aFrame);
 
-  nsWeakFrame* weakFrame = mWeakFrames;
+  AutoWeakFrame* weakFrame = mWeakFrames;
   while (weakFrame) {
-    nsWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
+    AutoWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
     if (weakFrame->GetFrame() == aFrame) {
       // This removes weakFrame from mWeakFrames.
       weakFrame->Clear(this);
@@ -7133,7 +7133,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   NS_ASSERTION(aFrame, "aFrame should be not null");
 
   if (sPointerEventEnabled) {
-    nsWeakFrame weakFrame(aFrame);
+    AutoWeakFrame weakFrame(aFrame);
     nsCOMPtr<nsIContent> targetContent;
     DispatchPointerFromMouseOrTouch(this, aFrame, aEvent, aDontRetargetEvents,
                                     aEventStatus,
@@ -7295,7 +7295,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         nsIDocument::UnlockPointer();
       }
 
-      nsWeakFrame weakFrame(frame);
+      AutoWeakFrame weakFrame(frame);
       {  // scope for scriptBlocker.
         nsAutoScriptBlocker scriptBlocker;
         FlushThrottledStyles(GetRootPresShell()->GetDocument(), nullptr);
@@ -7516,7 +7516,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
         // Try to keep frame for following check, because
         // frame can be damaged during CheckPointerCaptureState.
-        nsWeakFrame frameKeeper(frame);
+        AutoWeakFrame frameKeeper(frame);
         // Handle pending pointer capture before any pointer events except
         // gotpointercapture / lostpointercapture.
         CheckPointerCaptureState(pointerEvent->pointerId,
@@ -7666,7 +7666,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
     // Before HandlePositionedEvent we should save mPointerEventTarget in some
     // cases
-    nsWeakFrame weakFrame;
+    AutoWeakFrame weakFrame;
     if (sPointerEventEnabled && aTargetContent &&
         ePointerEventClass == aEvent->mClass) {
       weakFrame = frame;
@@ -9527,7 +9527,7 @@ PresShell::Observe(nsISupports* aSubject,
     if (rootFrame) {
       NS_ASSERTION(mViewManager, "View manager must exist");
 
-      nsWeakFrame weakRoot(rootFrame);
+      AutoWeakFrame weakRoot(rootFrame);
       // Have to make sure that the content notifications are flushed before we
       // start messing with the frame model; otherwise we can get content doubling.
       mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);

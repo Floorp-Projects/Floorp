@@ -78,7 +78,7 @@ class nsIDOMNode;
 class nsCSSFrameConstructor;
 class nsISelection;
 template<class E> class nsCOMArray;
-class nsWeakFrame;
+class AutoWeakFrame;
 class nsIScrollableFrame;
 class gfxContext;
 class nsIDOMEvent;
@@ -1192,10 +1192,10 @@ public:
                   mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) = 0;
 
-  void AddWeakFrameInternal(nsWeakFrame* aWeakFrame);
-  virtual void AddWeakFrameExternal(nsWeakFrame* aWeakFrame);
+  void AddWeakFrameInternal(AutoWeakFrame* aWeakFrame);
+  virtual void AddWeakFrameExternal(AutoWeakFrame* aWeakFrame);
 
-  void AddWeakFrame(nsWeakFrame* aWeakFrame)
+  void AddWeakFrame(AutoWeakFrame* aWeakFrame)
   {
 #ifdef MOZILLA_INTERNAL_API
     AddWeakFrameInternal(aWeakFrame);
@@ -1204,10 +1204,10 @@ public:
 #endif
   }
 
-  void RemoveWeakFrameInternal(nsWeakFrame* aWeakFrame);
-  virtual void RemoveWeakFrameExternal(nsWeakFrame* aWeakFrame);
+  void RemoveWeakFrameInternal(AutoWeakFrame* aWeakFrame);
+  virtual void RemoveWeakFrameExternal(AutoWeakFrame* aWeakFrame);
 
-  void RemoveWeakFrame(nsWeakFrame* aWeakFrame)
+  void RemoveWeakFrame(AutoWeakFrame* aWeakFrame)
   {
 #ifdef MOZILLA_INTERNAL_API
     RemoveWeakFrameInternal(aWeakFrame);
@@ -1816,7 +1816,7 @@ protected:
   nsSize                    mScrollPositionClampingScrollPortSize;
 
   // A list of weak frames. This is a pointer to the last item in the list.
-  nsWeakFrame*              mWeakFrames;
+  AutoWeakFrame*              mWeakFrames;
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;

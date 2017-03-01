@@ -374,7 +374,7 @@ ScrollbarActivity::UpdateOpacity(TimeStamp aTime)
   double opacity = 1.0 - std::max(0.0, std::min(1.0, progress));
 
   // 'this' may be getting destroyed during SetOpacityOnElement calls.
-  nsWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));
+  AutoWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));
   SetOpacityOnElement(GetHorizontalScrollbar(), opacity);
   if (!weakFrame.IsAlive()) {
     return false;
@@ -408,7 +408,7 @@ ScrollbarActivity::SetIsFading(bool aNewFading)
   if (!mIsFading) {
     mFadeBeginTime = TimeStamp();
     // 'this' may be getting destroyed during UnsetOpacityOnElement calls.
-    nsWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));
+    AutoWeakFrame weakFrame((do_QueryFrame(mScrollableFrame)));
     UnsetOpacityOnElement(GetHorizontalScrollbar());
     if (!weakFrame.IsAlive()) {
       return false;
