@@ -35,7 +35,6 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
     ID, name, version, platformVersion,
     crashReporter: true,
   });
-  gAppInfo = tmp.getAppInfo();
 }
 
 function initApp() {
