@@ -6646,6 +6646,11 @@ HTMLMediaElement::IsAudible() const
     return AudioChannelService::AudibleState::eMaybeAudible;
   }
 
+  // Media is suspended.
+  if (mAudioChannelSuspended != nsISuspendedTypes::NONE_SUSPENDED) {
+    return AudioChannelService::AudibleState::eNotAudible;
+  }
+
   return AudioChannelService::AudibleState::eAudible;
 }
 

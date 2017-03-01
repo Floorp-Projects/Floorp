@@ -13,7 +13,7 @@ const ERRORS = new Set([
   "InvalidArgumentError",
   "InvalidElementStateError",
   "InvalidSelectorError",
-  "InvalidSessionIdError",
+  "InvalidSessionIDError",
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -81,25 +81,15 @@ error.isWebDriverError = function (obj) {
 };
 
 /**
- * Wraps an Error prototype in a WebDriverError.  If the given error is
- * already a WebDriverError, this is effectively a no-op.
+ * Wraps any error as a WebDriverError.  If the given error is already in
+ * the WebDriverError prototype chain, this function returns it
+ * unmodified.
  */
 error.wrap = function (err) {
   if (error.isWebDriverError(err)) {
     return err;
   }
-  return new WebDriverError(`${err.name}: ${err.message}`, err.stack);
-};
-
-/**
- * Wraps an Error as a WebDriverError type.  If the given error is already
- * in the WebDriverError prototype chain, this function acts as a no-op.
- */
-error.wrap = function (err) {
-  if (error.isWebDriverError(err)) {
-    return err;
-  }
-  return new WebDriverError(err.message, err.stacktrace);
+  return new WebDriverError(err);
 };
 
 /**
@@ -107,7 +97,7 @@ error.wrap = function (err) {
  * and reports error to the Browser Console.
  */
 error.report = function (err) {
-  let msg = `Marionette threw an error: ${error.stringify(err)}`;
+  let msg = "Marionette threw an error: " + error.stringify(err);
   dump(msg + "\n");
   if (Cu.reportError) {
     Cu.reportError(msg);
@@ -156,265 +146,265 @@ error.pprint = function (strings, ...values) {
 };
 
 /**
- * Marshal a WebDriverError prototype to a JSON dictionary.
- *
- * @param {WebDriverError} err
- *     Error to serialise.
- *
- * @return {Object.<string, Object>}
- *     JSON dictionary with the keys "error", "message", and "stacktrace".
- * @throws {TypeError}
- *     If error type is not serialisable.
- */
-error.toJson = function (err) {
-  if (!error.isWebDriverError(err)) {
-    throw new TypeError(`Unserialisable error type: ${err}`);
-  }
-
-  let json = {
-    error: err.status,
-    message: err.message || "",
-    stacktrace: err.stack || "",
-  };
-  return json;
-};
-
-/**
- * Unmarshal a JSON dictionary to a WebDriverError prototype.
- *
- * @param {Object.<string, string>} json
- *     JSON dictionary with the keys "error", "message", and "stacktrace".
- *
- * @return {WebDriverError}
- *     Deserialised error prototype.
- */
-error.fromJson = function (json) {
-  if (!statusLookup.has(json.error)) {
-    throw new TypeError(`Undeserialisable error type: ${json.error}`);
-  }
-
-  let errCls = statusLookup.get(json.error);
-  let err = new errCls(json.message);
-  if ("stacktrace" in json) {
-    err.stack = json.stacktrace;
-  }
-  return err;
-};
-
-/**
  * WebDriverError is the prototypal parent of all WebDriver errors.
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
- *
- * @param {(string|Error)=} err
- *     Optional string describing error situation or Error instance
- *     to propagate.
  */
-this.WebDriverError = function (err) {
-  const proto = Error.call(this, err);
-  this.name = "WebDriverError";
-  this.status = "webdriver error";
+class WebDriverError extends Error {
+  /**
+   * @param {(string|Error)=} x
+   *     Optional string describing error situation or Error instance
+   *     to propagate.
+   */
+  constructor (x) {
+    super(x);
+    this.name = this.constructor.name;
+    this.status = "webdriver error";
 
-  if (error.isError(err)) {
-    this.message = err.message;
-    this.stack = err.stack;
-  } else {
-    this.message = err;
-    this.stack = proto.stack;
+    // Error's ctor does not preserve x' stack
+    if (error.isError(x)) {
+      this.stack = x.stack;
+    }
   }
-};
-WebDriverError.prototype = Object.create(Error.prototype);
 
-this.ElementNotAccessibleError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "ElementNotAccessibleError";
-  this.status = "element not accessible";
-};
-ElementNotAccessibleError.prototype = Object.create(WebDriverError.prototype);
+  toJSON () {
+    return {
+      error: this.status,
+      message: this.message || "",
+      stacktrace: this.stack || "",
+    }
+  }
 
-this.ElementNotVisibleError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "ElementNotVisibleError";
-  this.status = "element not visible";
-};
-ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
+  static fromJSON (json) {
+    if (typeof json.error == "undefined") {
+      let s = JSON.stringify(json);
+      throw new TypeError("Undeserialisable error type: " + s);
+    }
+    if (!STATUSES.has(json.error)) {
+      throw new TypeError("Not of WebDriverError descent: " + json.error);
+    }
 
-this.InsecureCertificateError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InsecureCertificateError";
-  this.status = "insecure certificate";
-};
-InsecureCertificateError.prototype = Object.create(WebDriverError.prototype);
+    let cls = STATUSES.get(json.error);
+    let err = new cls();
+    if ("message" in json) {
+      err.message = json.message;
+    }
+    if ("stacktrace" in json) {
+      err.stack = json.stacktrace;
+    }
+    return err;
+  }
+}
 
-this.InvalidArgumentError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidArgumentError";
-  this.status = "invalid argument";
-};
-InvalidArgumentError.prototype = Object.create(WebDriverError.prototype);
+class ElementNotAccessibleError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "element not accessible";
+  }
+}
 
-this.InvalidElementStateError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidElementStateError";
-  this.status = "invalid element state";
-};
-InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
+class ElementNotVisibleError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "element not visible";
+  }
+}
 
-this.InvalidSelectorError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidSelectorError";
-  this.status = "invalid selector";
-};
-InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
+class InsecureCertificateError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "insecure certificate";
+  }
+}
 
-this.InvalidSessionIdError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidSessionIdError";
-  this.status = "invalid session id";
-};
-InvalidSessionIdError.prototype = Object.create(WebDriverError.prototype);
+class InvalidArgumentError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "invalid argument";
+  }
+}
+
+class InvalidElementStateError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "invalid element state";
+  }
+}
+
+class InvalidSelectorError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "invalid selector";
+  }
+}
+
+class InvalidSessionIDError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "invalid session id";
+  }
+}
 
 /**
- * Creates an error message for a JavaScript error thrown during
- * executeScript or executeAsyncScript.
- *
- * @param {Error} err
- *     An Error object passed to a catch block or a message.
- * @param {string=} fnName
- *     The name of the function to use in the stack trace message
- *     (e.g. execute_script).
- * @param {string=} file
- *     The filename of the test file containing the Marionette
- *     command that caused this error to occur.
- * @param {number=} line
- *     The line number of the above test file.
- * @param {string=} script
- *     The JS script being executed in text form.
+ * Creates a richly annotated error for an error situation that occurred
+ * whilst evaluating injected scripts.
  */
-this.JavaScriptError = function (
-    err, fnName = null, file = null, line = null, script = null) {
-  let msg = String(err);
-  let trace = "";
+class JavaScriptError extends WebDriverError {
+  /**
+   * @param {(string|Error)} x
+   *     An Error object instance or a string describing the error
+   *     situation.
+   * @param {string=} fnName
+   *     Name of the function to use in the stack trace message.
+   * @param {string=} file
+   *     Filename of the test file on the client.
+   * @param {number=} line
+   *     Line number of |file|.
+   * @param {string=} script
+   *     Script being executed, in text form.
+   */
+  constructor (
+      x,
+      fnName = undefined,
+      file = undefined,
+      line = undefined,
+      script = undefined) {
+    let msg = String(x);
+    let trace = "";
 
-  if (fnName) {
-    trace += fnName;
-    if (file) {
-      trace += ` @${file}`;
-      if (line) {
-        trace += `, line ${line}`;
+    if (fnName) {
+      trace += fnName;
+      if (file) {
+        trace += ` @${file}`;
+        if (line) {
+          trace += `, line ${line}`;
+        }
       }
     }
-  }
 
-  if (typeof err == "object" && "name" in err && "stack" in err) {
-    let jsStack = err.stack.split("\n");
-    let match = jsStack[0].match(/:(\d+):\d+$/);
-    let jsLine = match ? parseInt(match[1]) : 0;
-    if (script) {
-      let src = script.split("\n")[jsLine];
-      trace += "\n" +
-        "inline javascript, line " + jsLine + "\n" +
-        "src: \"" + src + "\"";
+    if (error.isError(x)) {
+      let jsStack = x.stack.split("\n");
+      let match = jsStack[0].match(/:(\d+):\d+$/);
+      let jsLine = match ? parseInt(match[1]) : 0;
+      if (script) {
+        let src = script.split("\n")[jsLine];
+        trace += "\n" +
+          `inline javascript, line ${jsLine}\n` +
+          `src: "${src}"`;
+      }
+      trace += "\nStack:\n" + x.stack;
     }
-    trace += "\nStack:\n" + String(err.stack);
+
+    super(msg);
+    this.status = "javascript error";
+    this.stack = trace;
   }
+}
 
-  WebDriverError.call(this, msg);
-  this.name = "JavaScriptError";
-  this.status = "javascript error";
-  this.stack = trace;
-};
-JavaScriptError.prototype = Object.create(WebDriverError.prototype);
+class NoAlertOpenError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "no such alert";
+  }
+}
 
-this.NoAlertOpenError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoAlertOpenError";
-  this.status = "no such alert";
-};
-NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
+class NoSuchElementError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "no such element";
+  }
+}
 
-this.NoSuchElementError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoSuchElementError";
-  this.status = "no such element";
-};
-NoSuchElementError.prototype = Object.create(WebDriverError.prototype);
+class NoSuchFrameError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "no such frame";
+  }
+}
 
-this.NoSuchFrameError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoSuchFrameError";
-  this.status = "no such frame";
-};
-NoSuchFrameError.prototype = Object.create(WebDriverError.prototype);
+class NoSuchWindowError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "no such window";
+  }
+}
 
-this.NoSuchWindowError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoSuchWindowError";
-  this.status = "no such window";
-};
-NoSuchWindowError.prototype = Object.create(WebDriverError.prototype);
+class ScriptTimeoutError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "script timeout";
+  }
+}
 
-this.ScriptTimeoutError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "ScriptTimeoutError";
-  this.status = "script timeout";
-};
-ScriptTimeoutError.prototype = Object.create(WebDriverError.prototype);
+class SessionNotCreatedError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "session not created";
+  }
+}
 
-this.SessionNotCreatedError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "SessionNotCreatedError";
-  this.status = "session not created";
-};
-SessionNotCreatedError.prototype = Object.create(WebDriverError.prototype);
+class StaleElementReferenceError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "stale element reference";
+  }
+}
 
-this.StaleElementReferenceError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "StaleElementReferenceError";
-  this.status = "stale element reference";
-};
-StaleElementReferenceError.prototype = Object.create(WebDriverError.prototype);
+class TimeoutError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "timeout";
+  }
+}
 
-this.TimeoutError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "TimeoutError";
-  this.status = "timeout";
-};
-TimeoutError.prototype = Object.create(WebDriverError.prototype);
+class UnableToSetCookieError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unable to set cookie";
+  }
+}
 
-this.UnableToSetCookieError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnableToSetCookieError";
-  this.status = "unable to set cookie";
-};
-UnableToSetCookieError.prototype = Object.create(WebDriverError.prototype);
+class UnknownCommandError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unknown command";
+  }
+}
 
-this.UnknownCommandError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnknownCommandError";
-  this.status = "unknown command";
-};
-UnknownCommandError.prototype = Object.create(WebDriverError.prototype);
+class UnknownError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unknown error";
+  }
+}
 
-this.UnknownError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnknownError";
-  this.status = "unknown error";
-};
-UnknownError.prototype = Object.create(WebDriverError.prototype);
+class UnsupportedOperationError extends WebDriverError {
+  constructor (message) {
+    super(message);
+    this.status = "unsupported operation";
+  }
+}
 
-this.UnsupportedOperationError = function (msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnsupportedOperationError";
-  this.status = "unsupported operation";
-};
-UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
-
-const nameLookup = new Map();
-const statusLookup = new Map();
-for (let s of ERRORS) {
-  let cls = this[s];
-  let inst = new cls();
-  nameLookup.set(inst.name, cls);
-  statusLookup.set(inst.status, cls);
-};
+const STATUSES = new Map([
+  ["element not accessible", ElementNotAccessibleError],
+  ["element not visible", ElementNotVisibleError],
+  ["insecure certificate", InsecureCertificateError],
+  ["invalid argument", InvalidArgumentError],
+  ["invalid element state", InvalidElementStateError],
+  ["invalid selector", InvalidSelectorError],
+  ["invalid session id", InvalidSessionIDError],
+  ["javascript error", JavaScriptError],
+  ["no alert open", NoAlertOpenError],
+  ["no such element", NoSuchElementError],
+  ["no such frame", NoSuchFrameError],
+  ["no such window", NoSuchWindowError],
+  ["script timeout", ScriptTimeoutError],
+  ["session not created", SessionNotCreatedError],
+  ["stale element reference", StaleElementReferenceError],
+  ["timeout", TimeoutError],
+  ["unable to set cookie", UnableToSetCookieError],
+  ["unknown command", UnknownCommandError],
+  ["unknown error", UnknownError],
+  ["unsupported operation", UnsupportedOperationError],
+  ["webdriver error", WebDriverError],
+]);
