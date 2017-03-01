@@ -803,15 +803,6 @@ nsTextControlFrame::ScrollSelectionIntoView()
   return NS_ERROR_FAILURE;
 }
 
-mozilla::dom::Element*
-nsTextControlFrame::GetRootNodeAndInitializeEditor()
-{
-  nsCOMPtr<nsIDOMElement> root;
-  GetRootNodeAndInitializeEditor(getter_AddRefs(root));
-  nsCOMPtr<mozilla::dom::Element> rootElem = do_QueryInterface(root);
-  return rootElem;
-}
-
 nsresult
 nsTextControlFrame::GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement)
 {
@@ -925,7 +916,9 @@ nsTextControlFrame::SetSelectionStart(int32_t aSelectionStart)
 
   int32_t selStart = 0, selEnd = 0;
 
-  rv = GetSelectionRange(&selStart, &selEnd);
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  MOZ_ASSERT(txtCtrl, "Content not a text control element");
+  rv = txtCtrl->GetSelectionRange(&selStart, &selEnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aSelectionStart > selEnd) {
@@ -946,7 +939,9 @@ nsTextControlFrame::SetSelectionEnd(int32_t aSelectionEnd)
 
   int32_t selStart = 0, selEnd = 0;
 
-  rv = GetSelectionRange(&selStart, &selEnd);
+  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+  MOZ_ASSERT(txtCtrl, "Content not a text control element");
+  rv = txtCtrl->GetSelectionRange(&selStart, &selEnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aSelectionEnd < selStart) {
@@ -1014,58 +1009,6 @@ nsTextControlFrame::OffsetToDOMPoint(int32_t aOffset,
     NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::GetSelectionRange(int32_t* aSelectionStart,
-                                      int32_t* aSelectionEnd,
-                                      SelectionDirection* aDirection)
-{
-  // make sure we have an editor
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aSelectionStart) {
-    *aSelectionStart = 0;
-  }
-  if (aSelectionEnd) {
-    *aSelectionEnd = 0;
-  }
-  if (aDirection) {
-    *aDirection = eNone;
-  }
-
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
-  nsISelectionController* selCon = txtCtrl->GetSelectionController();
-  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
-  nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  dom::Selection* sel = selection->AsSelection();
-  if (aDirection) {
-    nsDirection direction = sel->GetSelectionDirection();
-    if (direction == eDirNext) {
-      *aDirection = eForward;
-    } else if (direction == eDirPrevious) {
-      *aDirection = eBackward;
-    } else {
-      NS_NOTREACHED("Invalid nsDirection enum value");
-    }
-  }
-
-  if (!aSelectionStart || !aSelectionEnd) {
-    return NS_OK;
-  }
-
-  mozilla::dom::Element* root = GetRootNodeAndInitializeEditor();
-  NS_ENSURE_STATE(root);
-  nsContentUtils::GetSelectionInTextControl(sel, root,
-                                            *aSelectionStart, *aSelectionEnd);
 
   return NS_OK;
 }

@@ -670,6 +670,22 @@
   background: var(--theme-toolbar-background);
 }
 
+.headers-summary .status-text {
+    width: auto!important;
+}
+
+.headers-summary .learn-more-link {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+  margin: 0 5px;
+  white-space: nowrap;
+  flex-grow: 1;
+}
+
+.headers-summary .learn-more-link:hover {
+  text-decoration: underline;
+}
+
 /* Response tabpanel */
 
 .response-error-header {

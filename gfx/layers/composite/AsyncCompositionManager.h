@@ -14,6 +14,7 @@
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/layers/AnimationMetricsTracker.h" // for AnimationMetricsTracker
 #include "mozilla/layers/FrameUniformityData.h" // For FrameUniformityData
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
@@ -238,6 +239,7 @@ private:
   LayerTransformRecorder mLayerTransformRecorder;
 
   TimeStamp mPreviousFrameTimeStamp;
+  AnimationMetricsTracker mAnimationMetricsTracker;
 
 #ifdef MOZ_WIDGET_ANDROID
   // The following two fields are only needed on Fennec with C++ APZ, because

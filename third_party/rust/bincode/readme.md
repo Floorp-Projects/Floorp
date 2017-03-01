@@ -16,7 +16,13 @@ perfectly with other stream-based apis such as rust files, network streams,
 and the [flate2-rs](https://github.com/alexcrichton/flate2-rs) compression
 library.
 
-[Api Documentation](http://tyoverby.github.io/bincode/bincode/)
+## [Api Documentation](http://tyoverby.github.io/bincode/bincode/)
+
+## Bincode in the wild
+
+* [google/tarpc](https://github.com/google/tarpc): Bincode is used to serialize and deserialize networked RPC messages.
+* [servo/webrender](https://github.com/servo/webrender): Bincode records webrender API calls for record/replay-style graphics debugging.
+* [servo/icp-channel](https://github.com/servo/ipc-channel): Ipc-Channel uses Bincode to send structs between processes using a channel-like API.
 
 ## Example
 ```rust

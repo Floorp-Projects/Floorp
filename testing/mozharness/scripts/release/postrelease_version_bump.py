@@ -16,7 +16,7 @@ import sys
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.buildbot import BuildbotMixin
-from mozharness.mozilla.repo_manupulation import MercurialRepoManipulationMixin
+from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 
 
 # PostReleaseVersionBump {{{1

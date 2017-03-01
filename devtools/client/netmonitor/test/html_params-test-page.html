@@ -15,41 +15,45 @@
     <p>Request params type test</p>
 
     <script type="text/javascript">
-      function get(aAddress, aQuery) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress + aQuery, true);
+      /* exported performRequests */
+      "use strict";
+
+      function get(address, query) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address + query, true);
         xhr.send();
       }
 
-      function post(aAddress, aQuery, aContentType, aPostBody) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", aAddress + aQuery, true);
-        xhr.setRequestHeader("content-type", aContentType);
-        xhr.send(aPostBody);
+      function post(address, query, contentType, postBody) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", address + query, true);
+        xhr.setRequestHeader("content-type", contentType);
+        xhr.send(postBody);
       }
 
       function performRequests() {
-        var urlencoded = "application/x-www-form-urlencoded";
+        const urlencoded = "application/x-www-form-urlencoded";
 
-        setTimeout(function() {
+        /* eslint-disable max-nested-callbacks */
+        setTimeout(function () {
           post("baz", "?a", urlencoded, '{ "foo": "bar" }');
 
-          setTimeout(function() {
+          setTimeout(function () {
             post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
 
-            setTimeout(function() {
-              post("baz", "?a=b", urlencoded, '?foo=bar');
+            setTimeout(function () {
+              post("baz", "?a=b", urlencoded, "?foo=bar");
 
-              setTimeout(function() {
+              setTimeout(function () {
                 post("baz", "?a", undefined, '{ "foo": "bar" }');
 
-                setTimeout(function() {
+                setTimeout(function () {
                   post("baz", "?a=b", undefined, '{ "foo": "bar" }');
 
-                  setTimeout(function() {
-                    post("baz", "?a=b", undefined, '?foo=bar');
+                  setTimeout(function () {
+                    post("baz", "?a=b", undefined, "?foo=bar");
 
-                    setTimeout(function() {
+                    setTimeout(function () {
                       get("baz", "");
 
                       // Done.
@@ -60,6 +64,7 @@
             }, 10);
           }, 10);
         }, 10);
+        /* eslint-enable max-nested-callbacks */
       }
     </script>
   </body>

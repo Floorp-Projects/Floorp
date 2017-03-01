@@ -634,13 +634,13 @@ ApplyAnimatedValue(Layer* aLayer,
 }
 
 static bool
-SampleAnimations(Layer* aLayer, TimeStamp aPoint)
+SampleAnimations(Layer* aLayer, TimeStamp aPoint, uint64_t* aLayerAreaAnimated)
 {
   bool activeAnimations = false;
 
   ForEachNode<ForwardIterator>(
       aLayer,
-      [&activeAnimations, &aPoint] (Layer* layer)
+      [&activeAnimations, &aPoint, &aLayerAreaAnimated] (Layer* layer)
       {
         bool hasInEffectAnimations = false;
         StyleAnimationValue animationValue = layer->GetBaseAnimationStyle();
@@ -656,6 +656,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
                              animation.property(),
                              animation.data(),
                              animationValue);
+          if (aLayerAreaAnimated) {
+            *aLayerAreaAnimated += (layer->GetVisibleRegion().Area());
+          }
         }
       });
   return activeAnimations;
@@ -1311,9 +1314,13 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   // more in sync with each other.
   // On the initial frame we use aVsyncTimestamp here so the timestamp on the
   // second frame are the same as the initial frame, but it does not matter.
+  uint64_t layerAreaAnimated = 0;
   bool wantNextFrame = SampleAnimations(root,
     !mPreviousFrameTimeStamp.IsNull() ?
-      mPreviousFrameTimeStamp : aCurrentFrame);
+      mPreviousFrameTimeStamp : aCurrentFrame,
+    &layerAreaAnimated);
+  mAnimationMetricsTracker.UpdateAnimationInProgress(
+    wantNextFrame, layerAreaAnimated);
 
   // Reset the previous time stamp if we don't already have any running
   // animations to avoid using the time which is far behind for newly

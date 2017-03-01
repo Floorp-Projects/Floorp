@@ -273,7 +273,7 @@ def test_add_test_module(runner):
         with patch('os.path.abspath', return_value=test) as abspath:
             runner.add_test(test)
         assert abspath.called
-        expected = {'filepath': test, 'expected': 'pass'}
+        expected = {'filepath': test, 'expected': 'pass', 'group': 'default'}
         assert expected in runner.tests
     # add_test doesn't validate module names; 'bad_test.py' gets through
     assert len(runner.tests) == 3

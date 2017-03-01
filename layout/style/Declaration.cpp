@@ -12,6 +12,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoStyleSet.h"
 
 #include "mozilla/css/Rule.h"
 #include "nsPrintfCString.h"
@@ -1702,6 +1703,10 @@ Declaration::AppendVariableAndValueToString(const nsAString& aName,
 void
 Declaration::ToString(nsAString& aString) const
 {
+  // Tell the static analysis not to worry about thread-unsafe things here
+  // because because this function isn't reached during parallel style traversal.
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
+
   nsCSSCompressedDataBlock *systemFontData =
     GetPropertyIsImportantByID(eCSSProperty__x_system_font) ? mImportantData
                                                             : mData;

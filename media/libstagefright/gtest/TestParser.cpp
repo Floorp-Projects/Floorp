@@ -72,7 +72,6 @@ TEST(stagefright_MP4Metadata, EmptyStream)
 {
   RefPtr<Stream> stream = new TestStream(nullptr, 0);
 
-  EXPECT_FALSE(MP4Metadata::HasCompleteMetadata(stream));
   RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
   EXPECT_FALSE(metadataBuffer);
 
@@ -213,7 +212,6 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
     ASSERT_FALSE(buffer.IsEmpty());
     RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
-    EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
     RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
     EXPECT_TRUE(metadataBuffer);
 
@@ -289,7 +287,6 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
         RefPtr<TestStream> stream =
           new TestStream(buffer.Elements() + offset, size);
 
-        MP4Metadata::HasCompleteMetadata(stream);
         RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
         MP4Metadata metadata(stream);
 
@@ -465,7 +462,6 @@ TEST(stagefright_MP4Metadata, EmptyCTTS)
   buffer->AppendElements(media_libstagefright_gtest_video_init_mp4, media_libstagefright_gtest_video_init_mp4_len);
   RefPtr<BufferStream> stream = new BufferStream(buffer);
 
-  EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
   RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
   EXPECT_TRUE(metadataBuffer);
 

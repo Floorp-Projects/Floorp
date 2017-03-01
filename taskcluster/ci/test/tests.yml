@@ -282,6 +282,7 @@ jsreftest:
             windows.*: false
             android.*: false
             linux64-ccov/opt: false
+            macosx.*: true
             default: both
     max-run-time:
         by-test-platform:
@@ -843,7 +844,7 @@ mochitest-webgl:
             default: 3
     e10s:
       by-test-platform:
-        macosx64/opt: false
+        macosx.*: true
         default: both
     loopback-video: true
     max-run-time:
@@ -926,6 +927,7 @@ reftest:
     e10s:
         by-test-platform:
             linux64-ccov/opt: false
+            macosx.*: true
             default: both
     mozharness:
         by-test-platform:
@@ -1242,6 +1244,7 @@ web-platform-tests-reftests:
         by-test-platform:
             # Bug 1304438
             windows.*: false
+            macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true

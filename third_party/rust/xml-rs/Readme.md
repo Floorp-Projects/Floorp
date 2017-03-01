@@ -233,4 +233,4 @@ License
 This library is licensed under MIT license.
 
 ---
-Copyright (C) Vladimir Matveev, 2014-2015
+Copyright (C) Vladimir Matveev, 2014-2017

@@ -92,17 +92,15 @@ sort_bench!(sort_large_big_descending, gen_big_descending, 10000);
 fn sort_large_random_expensive(b: &mut Bencher) {
     let len = 10000;
     b.iter(|| {
+        let mut v = gen_random(len);
         let mut count = 0;
-        let mut cmp = move |a: &u64, b: &u64| {
+        pdqsort::sort_by(&mut v, |a: &u64, b: &u64| {
             count += 1;
             if count % 1_000_000_000 == 0 {
                 panic!("should not happen");
             }
             (*a as f64).cos().partial_cmp(&(*b as f64).cos()).unwrap()
-        };
-
-        let mut v = gen_random(len);
-        pdqsort::sort_by(&mut v, &mut cmp);
+        });
         test::black_box(count);
     });
     b.bytes = len as u64 * mem::size_of::<u64>() as u64;

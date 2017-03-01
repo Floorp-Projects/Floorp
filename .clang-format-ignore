@@ -5,6 +5,9 @@
 ^widget/android/GeneratedJNINatives.h
 ^widget/android/GeneratedJNIWrappers.cpp
 ^widget/android/GeneratedJNIWrappers.h
+^widget/android/fennec/FennecJNINatives.h
+^widget/android/fennec/FennecJNIWrappers.cpp
+^widget/android/fennec/FennecJNIWrappers.h
 
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print "^"$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt

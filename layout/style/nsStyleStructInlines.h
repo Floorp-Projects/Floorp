@@ -151,7 +151,7 @@ nsStyleDisplay::HasFixedPosContainingBlockStyleInternal(
 {
   // NOTE: Any CSS properties that influence the output of this function
   // should have the CSS_PROPERTY_FIXPOS_CB set on them.
-  NS_ASSERTION(aStyleContext->StyleDisplay() == this,
+  NS_ASSERTION(aStyleContext->ThreadsafeStyleDisplay() == this,
                "unexpected aStyleContext");
 
   if (IsContainPaint() || HasPerspectiveStyle()) {

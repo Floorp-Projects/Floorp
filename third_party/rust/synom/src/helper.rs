@@ -271,9 +271,6 @@ macro_rules! tap {
 /// Zero or more values separated by some separator. Does not allow a trailing
 /// seperator.
 ///
-/// The implementation requires that the first parameter is a `punct!` macro,
-/// and the second is a named parser.
-///
 /// - **Syntax:** `separated_list!(punct!("..."), THING)`
 /// - **Output:** `Vec<THING>`
 ///
@@ -301,18 +298,90 @@ macro_rules! tap {
 ///     assert_eq!(parsed.len(), 3);
 /// }
 /// ```
+///
+/// ```rust
+/// extern crate syn;
+/// #[macro_use] extern crate synom;
+///
+/// use syn::Ident;
+/// use syn::parse::ident;
+///
+/// named!(run_on -> Vec<Ident>,
+///     terminated!(
+///         separated_list!(keyword!("and"), preceded!(punct!("$"), ident)),
+///         punct!("...")
+///     )
+/// );
+///
+/// fn main() {
+///     let input = "$expr and $ident and $pat ...";
+///
+///     let parsed = run_on(input).expect("run-on sentence");
+///     assert_eq!(parsed.len(), 3);
+///     assert_eq!(parsed[0], "expr");
+///     assert_eq!(parsed[1], "ident");
+///     assert_eq!(parsed[2], "pat");
+/// }
+/// ```
 #[macro_export]
 macro_rules! separated_list {
-    ($i:expr, punct!($sep:expr), $f:expr) => {
+    // Try to use this branch if possible - makes a difference in compile time.
+    ($i:expr, punct!($sep:expr), $f:ident) => {
         $crate::helper::separated_list($i, $sep, $f, false)
+    };
+
+    ($i:expr, $sepmac:ident!( $($separgs:tt)* ), $fmac:ident!( $($fargs:tt)* )) => {{
+        let mut res = ::std::vec::Vec::new();
+        let mut input = $i;
+
+        // get the first element
+        match $fmac!(input, $($fargs)*) {
+            $crate::IResult::Error => $crate::IResult::Done(input, res),
+            $crate::IResult::Done(i, o) => {
+                if i.len() == input.len() {
+                    $crate::IResult::Error
+                } else {
+                    res.push(o);
+                    input = i;
+
+                    // get the separator first
+                    while let $crate::IResult::Done(i2, _) = $sepmac!(input, $($separgs)*) {
+                        if i2.len() == input.len() {
+                            break;
+                        }
+
+                        // get the element next
+                        if let $crate::IResult::Done(i3, o3) = $fmac!(i2, $($fargs)*) {
+                            if i3.len() == i2.len() {
+                                break;
+                            }
+                            res.push(o3);
+                            input = i3;
+                        } else {
+                            break;
+                        }
+                    }
+                    $crate::IResult::Done(input, res)
+                }
+            }
+        }
+    }};
+
+    ($i:expr, $sepmac:ident!( $($separgs:tt)* ), $f:expr) => {
+        separated_list!($i, $sepmac!($(separgs)*), call!($f))
+    };
+
+    ($i:expr, $sep:expr, $fmac:ident!( $($fargs:tt)* )) => {
+        separated_list!($i, call!($sep), $fmac!($(fargs)*))
+    };
+
+    ($i:expr, $sep:expr, $f:expr) => {
+        separated_list!($i, call!($sep), call!($f))
     };
 }
 
 /// Zero or more values separated by some separator. A trailing separator is
 /// allowed.
-///
-/// The implementation requires that the first parameter is a `punct!` macro,
-/// and the second is a named parser.
 ///
 /// - **Syntax:** `terminated_list!(punct!("..."), THING)`
 /// - **Output:** `Vec<THING>`
@@ -341,10 +410,88 @@ macro_rules! separated_list {
 ///     assert_eq!(parsed.len(), 3);
 /// }
 /// ```
+///
+/// ```rust
+/// extern crate syn;
+/// #[macro_use] extern crate synom;
+///
+/// use syn::Ident;
+/// use syn::parse::ident;
+///
+/// named!(run_on -> Vec<Ident>,
+///     terminated!(
+///         terminated_list!(keyword!("and"), preceded!(punct!("$"), ident)),
+///         punct!("...")
+///     )
+/// );
+///
+/// fn main() {
+///     let input = "$expr and $ident and $pat and ...";
+///
+///     let parsed = run_on(input).expect("run-on sentence");
+///     assert_eq!(parsed.len(), 3);
+///     assert_eq!(parsed[0], "expr");
+///     assert_eq!(parsed[1], "ident");
+///     assert_eq!(parsed[2], "pat");
+/// }
+/// ```
 #[macro_export]
 macro_rules! terminated_list {
-    ($i:expr, punct!($sep:expr), $f:expr) => {
+    // Try to use this branch if possible - makes a difference in compile time.
+    ($i:expr, punct!($sep:expr), $f:ident) => {
         $crate::helper::separated_list($i, $sep, $f, true)
+    };
+
+    ($i:expr, $sepmac:ident!( $($separgs:tt)* ), $fmac:ident!( $($fargs:tt)* )) => {{
+        let mut res = ::std::vec::Vec::new();
+        let mut input = $i;
+
+        // get the first element
+        match $fmac!(input, $($fargs)*) {
+            $crate::IResult::Error => $crate::IResult::Done(input, res),
+            $crate::IResult::Done(i, o) => {
+                if i.len() == input.len() {
+                    $crate::IResult::Error
+                } else {
+                    res.push(o);
+                    input = i;
+
+                    // get the separator first
+                    while let $crate::IResult::Done(i2, _) = $sepmac!(input, $($separgs)*) {
+                        if i2.len() == input.len() {
+                            break;
+                        }
+
+                        // get the element next
+                        if let $crate::IResult::Done(i3, o3) = $fmac!(i2, $($fargs)*) {
+                            if i3.len() == i2.len() {
+                                break;
+                            }
+                            res.push(o3);
+                            input = i3;
+                        } else {
+                            break;
+                        }
+                    }
+                    if let $crate::IResult::Done(after, _) = $sepmac!(input, $($separgs)*) {
+                        input = after;
+                    }
+                    $crate::IResult::Done(input, res)
+                }
+            }
+        }
+    }};
+
+    ($i:expr, $sepmac:ident!( $($separgs:tt)* ), $f:expr) => {
+        terminated_list!($i, $sepmac!($(separgs)*), call!($f))
+    };
+
+    ($i:expr, $sep:expr, $fmac:ident!( $($fargs:tt)* )) => {
+        terminated_list!($i, call!($sep), $fmac!($(fargs)*))
+    };
+
+    ($i:expr, $sep:expr, $f:expr) => {
+        terminated_list!($i, call!($sep), call!($f))
     };
 }
 
@@ -359,7 +506,7 @@ pub fn separated_list<'a, T>(mut input: &'a str,
 
     // get the first element
     match f(input) {
-        IResult::Error => IResult::Done(input, Vec::new()),
+        IResult::Error => IResult::Done(input, res),
         IResult::Done(i, o) => {
             if i.len() == input.len() {
                 IResult::Error

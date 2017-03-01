@@ -51,11 +51,15 @@ public:
                                                         nsStyleContext* aContext);
   virtual ~nsTableRowGroupFrame();
 
-  nsTableFrame* GetTableFrame() const
+  // nsIFrame overrides
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) override
   {
-    nsIFrame* parent = GetParent();
-    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableFrame);
-    return static_cast<nsTableFrame*>(parent);
+    nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+    if (!aPrevInFlow) {
+      mWritingMode = GetTableFrame()->GetWritingMode();
+    }
   }
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
@@ -102,15 +106,19 @@ public:
    */
   virtual nsIAtom* GetType() const override;
 
-  nsTableRowFrame* GetFirstRow();
-  nsTableRowFrame* GetLastRow();
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual mozilla::WritingMode GetWritingMode() const override
-    { return GetTableFrame()->GetWritingMode(); }
+  nsTableRowFrame* GetFirstRow();
+  nsTableRowFrame* GetLastRow();
+
+  nsTableFrame* GetTableFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableFrame);
+    return static_cast<nsTableFrame*>(parent);
+  }
 
   /** return the number of child rows (not necessarily == number of child frames) */
   int32_t GetRowCount();

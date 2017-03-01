@@ -13,6 +13,7 @@ SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR)
 
 from argparse import Namespace
+from collections import defaultdict
 import ctypes
 import glob
 import json
@@ -798,6 +799,7 @@ class MochitestDesktop(object):
         self.wsserver = None
         self.websocketProcessBridge = None
         self.sslTunnel = None
+        self.tests_by_manifest = defaultdict(list)
         self._active_tests = None
         self._locations = None
 
@@ -1305,7 +1307,7 @@ toolbar#nav-bar {
     def logPreamble(self, tests):
         """Logs a suite_start message and test_start/test_end at the beginning of a run.
         """
-        self.log.suite_start([t['path'] for t in tests])
+        self.log.suite_start(self.tests_by_manifest)
         for test in tests:
             if 'disabled' in test:
                 self.log.test_start(test['path'])
@@ -1440,7 +1442,6 @@ toolbar#nav-bar {
         # When running mochitest locally the manifest is based on topsrcdir,
         # but when running in automation it is based on the test root.
         manifest_root = build_obj.topsrcdir if build_obj else self.testRootAbs
-        manifests = set()
         for test in tests:
             if len(tests) == 1 and 'disabled' in test:
                 del test['disabled']
@@ -1455,7 +1456,8 @@ toolbar#nav-bar {
                     (test['name'], test['manifest']))
                 continue
 
-            manifests.add(os.path.relpath(test['manifest'], manifest_root))
+            manifest_relpath = os.path.relpath(test['manifest'], manifest_root)
+            self.tests_by_manifest[manifest_relpath].append(tp)
 
             testob = {'path': tp}
             if 'disabled' in test:
@@ -1491,7 +1493,7 @@ toolbar#nav-bar {
         if 'MOZ_UPLOAD_DIR' in os.environ:
             artifact = os.path.join(os.environ['MOZ_UPLOAD_DIR'], 'manifests.list')
             with open(artifact, 'a') as fh:
-                fh.write('\n'.join(sorted(manifests)))
+                fh.write('\n'.join(sorted(self.tests_by_manifest.keys())))
 
         self._active_tests = paths
         return self._active_tests

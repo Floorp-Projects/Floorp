@@ -89,15 +89,6 @@ interface nsPIWindowWatcher : nsISupports
                                  in nsIDocShellLoadInfo aLoadInfo);
 
   /**
-   * Opens a new window using the most recent non-private browser
-   * window as its parent.
-   *
-   * @return the nsITabParent of the initial browser for the newly opened
-   *         window.
-   */
-  nsITabParent openWindowWithoutParent();
-
-  /**
    * Opens a new window so that the window that aOpeningTab belongs to
    * is set as the parent window. The newly opened window will also
    * inherit load context information from aOpeningTab.

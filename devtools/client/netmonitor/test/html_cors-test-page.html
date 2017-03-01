@@ -15,8 +15,11 @@
     <p>POST with CORS test page</p>
 
     <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
       function post(url, contentType, postData) {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", contentType);
         xhr.send(postData);

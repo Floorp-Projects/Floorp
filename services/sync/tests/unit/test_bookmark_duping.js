@@ -158,7 +158,7 @@ add_task(async function test_dupe_bookmark() {
       parentid: folder1_guid,
     };
 
-    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 10);
+    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 500);
     _("Syncing so new dupe record is processed");
     engine.lastSync = engine.lastSync - 0.01;
     engine.sync();
@@ -215,7 +215,7 @@ add_task(async function test_dupe_reparented_bookmark() {
       parentid: folder2_guid,
     };
 
-    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 10);
+    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe record is processed");
     engine.lastSync = engine.lastSync - 0.01;
@@ -281,7 +281,8 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
       parentid: folder2_guid,
     };
 
-    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + 10);
+    let deltaSeconds = 500;
+    collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + deltaSeconds);
 
     // Make a change to the bookmark that's a dupe, and set the modification
     // time further in the future than the incoming record. This will cause
@@ -290,7 +291,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     await PlacesTestUtils.setBookmarkSyncFields({
       guid: bmk1_guid,
       syncChangeCounter: 1,
-      lastModified: Date.now() + 60000,
+      lastModified: Date.now() + (deltaSeconds + 10) * 1000,
     });
 
     _("Syncing so new dupe record is processed");
@@ -357,7 +358,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
       parentid: folder2_guid,
       children: [newGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     // And also the update to "folder 2" that references the new parent.
     collection.insert(folder2_guid, encryptPayload({
@@ -368,7 +369,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
       parentid: "toolbar",
       children: [newParentGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     // Now create a new incoming record that looks alot like a dupe of the
     // item in folder1_guid, with a record that points to a parent with the
@@ -381,7 +382,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
       parentName: "Folder 1",
       parentid: newParentGUID,
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
 
     _("Syncing so new records are processed.");
@@ -436,7 +437,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
       parentName: "Folder 1",
       parentid: newParentGUID,
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     // Now have the parent appear after (so when the record above is processed
     // this is still unknown.)
@@ -448,7 +449,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
       parentid: folder2_guid,
       children: [newGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
     // And also the update to "folder 2" that references the new parent.
     collection.insert(folder2_guid, encryptPayload({
       id: folder2_guid,
@@ -458,7 +459,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
       parentid: "toolbar",
       children: [newParentGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     _("Syncing so out-of-order records are processed.");
     engine.lastSync = engine.lastSync - 0.01;
@@ -513,7 +514,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       parentName: "Folder 1",
       parentid: newParentGUID,
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe record is processed");
     engine.lastSync = engine.lastSync - 0.01;
@@ -556,7 +557,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       parentid: folder2_guid,
       children: [newGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
     // We also queue an update to "folder 2" that references the new parent.
     collection.insert(folder2_guid, encryptPayload({
       id: folder2_guid,
@@ -566,7 +567,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
       parentid: "toolbar",
       children: [newParentGUID],
       tags: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     _("Syncing so missing parent appears");
     engine.lastSync = engine.lastSync - 0.01;
@@ -622,7 +623,7 @@ add_task(async function test_dupe_empty_folder() {
       parentName: "Bookmarks Toolbar",
       parentid: "toolbar",
       children: [],
-    }), Date.now() / 1000 + 10);
+    }), Date.now() / 1000 + 500);
 
     _("Syncing so new dupe records are processed");
     engine.lastSync = engine.lastSync - 0.01;

@@ -74,7 +74,7 @@ add_task(function* () {
   /*
    * Test that the New Request form was populated correctly
    */
-  function testCustomForm(data) {
+  function* testCustomForm(data) {
     yield waitUntil(() => document.querySelector(".custom-request-panel"));
     is(document.getElementById("custom-method-value").value, data.method,
        "new request form showing correct method");

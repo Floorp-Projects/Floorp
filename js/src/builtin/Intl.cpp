@@ -655,6 +655,7 @@ enum UDateFormatStyle {
     UDAT_MEDIUM,
     UDAT_SHORT,
     UDAT_DEFAULT = UDAT_MEDIUM,
+    UDAT_NONE = -1,
     UDAT_PATTERN = -2,
     UDAT_IGNORE = UDAT_PATTERN
 };
@@ -694,6 +695,13 @@ int32_t
 udat_countAvailable()
 {
     MOZ_CRASH("udat_countAvailable: Intl API disabled");
+}
+
+int32_t
+udat_toPattern(const UDateFormat* fmt, UBool localized, UChar* result,
+               int32_t resultLength, UErrorCode* status)
+{
+    MOZ_CRASH("udat_toPattern: Intl API disabled");
 }
 
 const char*
@@ -821,17 +829,24 @@ IntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initialize
     return true;
 }
 
+enum class DateTimeFormatOptions
+{
+    Standard,
+    EnableMozExtensions,
+};
+
 static bool
 LegacyIntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initializer,
                      HandleValue thisValue, HandleValue locales, HandleValue options,
-                     MutableHandleValue result)
+                     DateTimeFormatOptions dtfOptions, MutableHandleValue result)
 {
-    FixedInvokeArgs<4> args(cx);
+    FixedInvokeArgs<5> args(cx);
 
     args[0].setObject(*obj);
     args[1].set(thisValue);
     args[2].set(locales);
     args[3].set(options);
+    args[4].setBoolean(dtfOptions == DateTimeFormatOptions::EnableMozExtensions);
 
     RootedValue thisv(cx, NullValue());
     if (!js::CallSelfHostedFunction(cx, initializer, thisv, args, result))
@@ -1491,7 +1506,7 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
 
     // Step 3.
     return LegacyIntlInitialize(cx, numberFormat, cx->names().InitializeNumberFormat, thisValue,
-                                locales, options, args.rval());
+                                locales, options, DateTimeFormatOptions::Standard, args.rval());
 }
 
 static bool
@@ -2356,7 +2371,7 @@ static const JSPropertySpec dateTimeFormat_properties[] = {
  * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
-DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
+DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct, DateTimeFormatOptions dtfOptions)
 {
     // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
 
@@ -2386,14 +2401,28 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
 
     // Step 3.
     return LegacyIntlInitialize(cx, dateTimeFormat, cx->names().InitializeDateTimeFormat,
-                                thisValue, locales, options, args.rval());
+                                thisValue, locales, options, dtfOptions, args.rval());
 }
 
 static bool
 DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return DateTimeFormat(cx, args, args.isConstructing());
+    return DateTimeFormat(cx, args, args.isConstructing(), DateTimeFormatOptions::Standard);
+}
+
+static bool
+MozDateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Don't allow to call mozIntl.DateTimeFormat as a function. That way we
+    // don't need to worry how to handle the legacy initialization semantics
+    // when applied on mozIntl.DateTimeFormat.
+    if (!ThrowIfNotConstructing(cx, args, "mozIntl.DateTimeFormat"))
+        return false;
+
+    return DateTimeFormat(cx, args, true, DateTimeFormatOptions::EnableMozExtensions);
 }
 
 bool
@@ -2405,7 +2434,7 @@ js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
     // intl_DateTimeFormat is an intrinsic for self-hosted JavaScript, so it
     // cannot be used with "new", but it still has to be treated as a
     // constructor.
-    return DateTimeFormat(cx, args, true);
+    return DateTimeFormat(cx, args, true, DateTimeFormatOptions::Standard);
 }
 
 void
@@ -2421,10 +2450,12 @@ DateTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 
 static JSObject*
 CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> global,
-                              MutableHandleObject constructor)
+                              MutableHandleObject constructor, DateTimeFormatOptions dtfOptions)
 {
     RootedFunction ctor(cx);
-    ctor = GlobalObject::createConstructor(cx, &DateTimeFormat, cx->names().DateTimeFormat, 0);
+    ctor = dtfOptions == DateTimeFormatOptions::EnableMozExtensions
+           ? GlobalObject::createConstructor(cx, MozDateTimeFormat, cx->names().DateTimeFormat, 0)
+           : GlobalObject::createConstructor(cx, DateTimeFormat, cx->names().DateTimeFormat, 0);
     if (!ctor)
         return nullptr;
 
@@ -2454,6 +2485,17 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
 
     constructor.set(ctor);
     return proto;
+}
+
+bool
+js::AddMozDateTimeFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl)
+{
+    Handle<GlobalObject*> global = cx->global();
+
+    RootedObject mozDateTimeFormat(cx);
+    JSObject* mozDateTimeFormatProto =
+        CreateDateTimeFormatPrototype(cx, intl, global, &mozDateTimeFormat, DateTimeFormatOptions::EnableMozExtensions);
+    return mozDateTimeFormatProto != nullptr;
 }
 
 bool
@@ -2970,6 +3012,79 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     if (!str)
         return false;
 
+    args.rval().setString(str);
+    return true;
+}
+
+bool
+js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+    MOZ_ASSERT(args[0].isString());
+
+    JSAutoByteString locale(cx, args[0].toString());
+    if (!locale)
+        return false;
+
+    UDateFormatStyle dateStyle = UDAT_NONE;
+    UDateFormatStyle timeStyle = UDAT_NONE;
+
+    if (args[1].isString()) {
+        JSLinearString* dateStyleStr = args[1].toString()->ensureLinear(cx);
+        if (!dateStyleStr)
+            return false;
+
+        if (StringEqualsAscii(dateStyleStr, "full"))
+            dateStyle = UDAT_FULL;
+        else if (StringEqualsAscii(dateStyleStr, "long"))
+            dateStyle = UDAT_LONG;
+        else if (StringEqualsAscii(dateStyleStr, "medium"))
+            dateStyle = UDAT_MEDIUM;
+        else if (StringEqualsAscii(dateStyleStr, "short"))
+            dateStyle = UDAT_SHORT;
+        else
+            MOZ_ASSERT_UNREACHABLE("unexpected dateStyle");
+    }
+
+    if (args[2].isString()) {
+        JSLinearString* timeStyleStr = args[2].toString()->ensureLinear(cx);
+        if (!timeStyleStr)
+            return false;
+
+        if (StringEqualsAscii(timeStyleStr, "full"))
+            timeStyle = UDAT_FULL;
+        else if (StringEqualsAscii(timeStyleStr, "long"))
+            timeStyle = UDAT_LONG;
+        else if (StringEqualsAscii(timeStyleStr, "medium"))
+            timeStyle = UDAT_MEDIUM;
+        else if (StringEqualsAscii(timeStyleStr, "short"))
+            timeStyle = UDAT_SHORT;
+        else
+            MOZ_ASSERT_UNREACHABLE("unexpected timeStyle");
+    }
+
+    AutoStableStringChars timeZone(cx);
+    if (!timeZone.initTwoByte(cx, args[3].toString()))
+        return false;
+
+    mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
+
+    UErrorCode status = U_ZERO_ERROR;
+    UDateFormat* df = udat_open(timeStyle, dateStyle, icuLocale(locale.ptr()),
+                                Char16ToUChar(timeZoneChars.begin().get()),
+                                timeZoneChars.length(), nullptr, -1, &status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UDateFormat, udat_close> toClose(df);
+
+    JSString* str = Call(cx, [df](UChar* chars, uint32_t size, UErrorCode* status) {
+        return udat_toPattern(df, false, chars, size, status);
+    });
+    if (!str)
+        return false;
     args.rval().setString(str);
     return true;
 }
@@ -4116,7 +4231,7 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
     if (!collatorProto)
         return false;
     RootedObject dateTimeFormatProto(cx), dateTimeFormat(cx);
-    dateTimeFormatProto = CreateDateTimeFormatPrototype(cx, intl, global, &dateTimeFormat);
+    dateTimeFormatProto = CreateDateTimeFormatPrototype(cx, intl, global, &dateTimeFormat, DateTimeFormatOptions::Standard);
     if (!dateTimeFormatProto)
         return false;
     RootedObject numberFormatProto(cx), numberFormat(cx);

@@ -81,7 +81,6 @@ public:
   explicit MP4MetadataStagefright(Stream* aSource);
   ~MP4MetadataStagefright();
 
-  static bool HasCompleteMetadata(Stream* aSource);
   static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
@@ -131,7 +130,6 @@ public:
   explicit MP4MetadataRust(Stream* aSource);
   ~MP4MetadataRust();
 
-  static bool HasCompleteMetadata(Stream* aSource);
   static already_AddRefed<mozilla::MediaByteBuffer> Metadata(Stream* aSource);
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
@@ -169,12 +167,6 @@ MP4Metadata::MP4Metadata(Stream* aSource)
 
 MP4Metadata::~MP4Metadata()
 {
-}
-
-/*static*/ bool
-MP4Metadata::HasCompleteMetadata(Stream* aSource)
-{
-  return MP4MetadataStagefright::HasCompleteMetadata(aSource);
 }
 
 /*static*/ already_AddRefed<mozilla::MediaByteBuffer>
@@ -613,13 +605,6 @@ MP4MetadataStagefright::GetTrackNumber(mozilla::TrackID aTrackID)
   return -1;
 }
 
-/*static*/ bool
-MP4MetadataStagefright::HasCompleteMetadata(Stream* aSource)
-{
-  auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false);
-  return parser->HasMetadata();
-}
-
 /*static*/ already_AddRefed<mozilla::MediaByteBuffer>
 MP4MetadataStagefright::Metadata(Stream* aSource)
 {
@@ -885,13 +870,6 @@ MP4MetadataRust::ReadTrackIndice(mp4parse_byte_data* aIndices, mozilla::TrackID 
   }
 
   return true;
-}
-
-/*static*/ bool
-MP4MetadataRust::HasCompleteMetadata(Stream* aSource)
-{
-  MOZ_ASSERT(false, "Not yet implemented");
-  return false;
 }
 
 /*static*/ already_AddRefed<mozilla::MediaByteBuffer>

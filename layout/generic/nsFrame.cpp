@@ -434,6 +434,7 @@ nsFrame::nsFrame(nsStyleContext* aContext)
 
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY;
   mStyleContext = aContext;
+  mWritingMode = WritingMode(mStyleContext);
   mStyleContext->AddRef();
 #ifdef DEBUG
   mStyleContext->FrameAddRef();
@@ -559,6 +560,8 @@ nsFrame::Init(nsIContent*       aContent,
   }
 
   if (aPrevInFlow) {
+    mWritingMode = aPrevInFlow->GetWritingMode();
+
     // Make sure the general flags bits are the same
     nsFrameState state = aPrevInFlow->GetStateBits();
 
@@ -3081,19 +3084,6 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
     DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
     NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
   }
-}
-
-WritingMode
-nsFrame::GetWritingModeDeferringToRootElem() const
-{
-  Element* rootElem = PresContext()->Document()->GetRootElement();
-  if (rootElem) {
-    nsIFrame* primaryFrame = rootElem->GetPrimaryFrame();
-    if (primaryFrame) {
-      return primaryFrame->GetWritingMode();
-    }
-  }
-  return nsIFrame::GetWritingMode();
 }
 
 nsresult

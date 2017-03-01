@@ -8,6 +8,24 @@
 
 namespace mozilla {
 
+const char*
+TrackTypeToStr(TrackInfo::TrackType aTrack)
+{
+  MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack
+             || aTrack == TrackInfo::kVideoTrack
+             || aTrack == TrackInfo::kTextTrack);
+  switch (aTrack) {
+  case TrackInfo::kAudioTrack:
+    return "Audio";
+  case TrackInfo::kVideoTrack:
+    return "Video";
+  case TrackInfo::kTextTrack:
+    return "Text";
+  default:
+    return "Unknown";
+  }
+}
+
 typedef AudioConfig::ChannelLayout ChannelLayout;
 
 /**

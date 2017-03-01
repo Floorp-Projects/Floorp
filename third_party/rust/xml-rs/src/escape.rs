@@ -2,77 +2,75 @@
 
 use std::borrow::Cow;
 
-use self::Value::{C, S};
-use self::Process::{B, O};
-
 enum Value {
-    C(char),
-    S(&'static str)
+    Char(char),
+    Str(&'static str)
 }
 
 impl Value {
     fn dispatch_for_attribute(c: char) -> Value {
         match c {
-            '<'  => S("&lt;"),
-            '>'  => S("&gt;"),
-            '"'  => S("&quot;"),
-            '\'' => S("&apos;"),
-            '&'  => S("&amp;"),
-            _    => C(c)
+            '<'  => Value::Str("&lt;"),
+            '>'  => Value::Str("&gt;"),
+            '"'  => Value::Str("&quot;"),
+            '\'' => Value::Str("&apos;"),
+            '&'  => Value::Str("&amp;"),
+            _    => Value::Char(c)
         }
     }
 
     fn dispatch_for_pcdata(c: char) -> Value {
         match c {
-            '<'  => S("&lt;"),
-            '&'  => S("&amp;"),
-            _    => C(c)
+            '<'  => Value::Str("&lt;"),
+            '&'  => Value::Str("&amp;"),
+            _    => Value::Char(c)
         }
     }
 }
 
 enum Process<'a> {
-    B(&'a str),
-    O(String)
+    Borrowed(&'a str),
+    Owned(String)
 }
 
 impl<'a> Process<'a> {
     fn process(&mut self, (i, next): (usize, Value)) {
         match next {
-            S(s) => if let O(ref mut o) = *self {
-                o.push_str(s);
-            } else if let B(b) = *self {
-                let mut r = String::with_capacity(b.len() + s.len());
-                r.push_str(&b[..i]);
-                r.push_str(s);
-                *self = O(r);
+            Value::Str(s) => match *self {
+                Process::Owned(ref mut o) => o.push_str(s),
+                Process::Borrowed(b) => {
+                    let mut r = String::with_capacity(b.len() + s.len());
+                    r.push_str(&b[..i]);
+                    r.push_str(s);
+                    *self = Process::Owned(r);
+                }
             },
-            C(c) => match *self {
-                B(_) => {}
-                O(ref mut o) => o.push(c)
+            Value::Char(c) => match *self {
+                Process::Borrowed(_) => {}
+                Process::Owned(ref mut o) => o.push(c)
             }
         }
     }
 
     fn into_result(self) -> Cow<'a, str> {
         match self {
-            B(b) => Cow::Borrowed(b),
-            O(o) => Cow::Owned(o)
+            Process::Borrowed(b) => Cow::Borrowed(b),
+            Process::Owned(o) => Cow::Owned(o)
         }
     }
 }
 
-impl<'a> Extend<Value> for Process<'a> {
-    fn extend<I: IntoIterator<Item=Value>>(&mut self, it: I) {
-        for v in it.into_iter().enumerate() {
+impl<'a> Extend<(usize, Value)> for Process<'a> {
+    fn extend<I: IntoIterator<Item=(usize, Value)>>(&mut self, it: I) {
+        for v in it.into_iter() {
             self.process(v);
         }
     }
 }
 
 fn escape_str(s: &str, dispatch: fn(char) -> Value) -> Cow<str> {
-    let mut p = B(s);
-    p.extend(s.chars().map(dispatch));
+    let mut p = Process::Borrowed(s);
+    p.extend(s.char_indices().map(|(ind, c)| (ind, dispatch(c))));
     p.into_result()
 }
 
@@ -110,3 +108,17 @@ pub fn escape_str_attribute(s: &str) -> Cow<str> {
 pub fn escape_str_pcdata(s: &str) -> Cow<str> {
     escape_str(s, Value::dispatch_for_pcdata)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{escape_str_pcdata, escape_str_attribute};
+
+    // TODO: add more tests
+
+    #[test]
+    fn test_escape_multibyte_code_points() {
+        assert_eq!(escape_str_attribute("☃<"), "☃&lt;");
+        assert_eq!(escape_str_pcdata("☃<"), "☃&lt;");
+    }
+}
+

@@ -7069,23 +7069,30 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
     return;
   }
 
-  nsCOMPtr<nsINode> anchorNode = aSelection->GetAnchorNode();
+  // All the node pointers here are raw pointers for performance.  We shouldn't
+  // be doing anything in this function that invalidates the node tree.
+  nsINode* anchorNode = aSelection->GetAnchorNode();
   uint32_t anchorOffset = aSelection->AnchorOffset();
-  nsCOMPtr<nsINode> focusNode = aSelection->GetFocusNode();
+  nsINode* focusNode = aSelection->GetFocusNode();
   uint32_t focusOffset = aSelection->FocusOffset();
 
   // We have at most two children, consisting of an optional text node followed
   // by an optional <br>.
   NS_ASSERTION(aRoot->GetChildCount() <= 2, "Unexpected children");
-  nsCOMPtr<nsIContent> firstChild = aRoot->GetFirstChild();
+  nsIContent* firstChild = aRoot->GetFirstChild();
 #ifdef DEBUG
   nsCOMPtr<nsIContent> lastChild = aRoot->GetLastChild();
   NS_ASSERTION(anchorNode == aRoot || anchorNode == firstChild ||
                anchorNode == lastChild, "Unexpected anchorNode");
   NS_ASSERTION(focusNode == aRoot || focusNode == firstChild ||
                focusNode == lastChild, "Unexpected focusNode");
+  // firstChild is either text or a <br> (hence an element).
+  MOZ_ASSERT_IF(firstChild,
+                firstChild->IsNodeOfType(nsINode::eTEXT) || firstChild->IsElement());
 #endif
-  if (!firstChild || !firstChild->IsNodeOfType(nsINode::eTEXT)) {
+  // Testing IsElement() is faster than testing IsNodeOfType(), since it's
+  // non-virtual.
+  if (!firstChild || firstChild->IsElement()) {
     // No text node, so everything is 0
     anchorOffset = focusOffset = 0;
   } else {

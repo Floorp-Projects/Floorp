@@ -42,6 +42,15 @@ I know you are trying to run a %s test. Unfortunately, I can't run those
 tests yet. Sorry!
 '''.strip()
 
+CONFIG_ENVIRONMENT_NOT_FOUND = '''
+No config environment detected. This means we are unable to properly
+detect test files in the specified paths or tags. Please run:
+
+    $ mach configure
+
+and try again.
+'''.lstrip()
+
 MOCHITEST_CHUNK_BY_DIR = 4
 MOCHITEST_TOTAL_CHUNKS = 5
 
@@ -494,7 +503,18 @@ class JsapiTestsCommand(MachCommandBase):
 
 def autotry_parser():
     from autotry import arg_parser
-    return arg_parser()
+    parser = arg_parser()
+    # The --no-artifact flag is only interpreted locally by |mach try|; it's not
+    # like the --artifact flag, which is interpreted remotely by the try server.
+    #
+    # We need a tri-state where set is different than the default value, so we
+    # use a different variable than --artifact.
+    parser.add_argument('--no-artifact',
+                        dest='no_artifact',
+                        action='store_true',
+                        help='Force compiled (non-artifact) builds even when '
+                             '--enable-artifact-builds is set.')
+    return parser
 
 @CommandProvider
 class PushToTry(MachCommandBase):
@@ -652,6 +672,10 @@ class PushToTry(MachCommandBase):
         builds, platforms, tests, talos, paths, tags, extra = self.validate_args(**kwargs)
 
         if paths or tags:
+            if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
+                print(CONFIG_ENVIRONMENT_NOT_FOUND)
+                sys.exit(1)
+
             paths = [os.path.relpath(os.path.normpath(os.path.abspath(item)), self.topsrcdir)
                      for item in paths]
             paths_by_flavor = at.paths_by_flavor(paths=paths, tags=tags)
@@ -666,12 +690,31 @@ class PushToTry(MachCommandBase):
         else:
             paths_by_flavor = {}
 
+        # Add --artifact if --enable-artifact-builds is set ...
+        if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+            extra["artifact"] = True
+        # ... unless --no-artifact is explicitly given.
+        if kwargs["no_artifact"]:
+            if "artifact" in extra:
+                del extra["artifact"]
+
         try:
             msg = at.calc_try_syntax(platforms, tests, talos, builds, paths_by_flavor, tags,
                                      extra, kwargs["intersection"])
         except ValueError as e:
             print(e.message)
             sys.exit(1)
+
+        if kwargs["verbose"]:
+            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+                if kwargs["no_artifact"]:
+                    print('mozconfig has --enable-artifact-builds but '
+                          '--no-artifact specified, not including --artifact '
+                          'flag in try syntax')
+                else:
+                    print('mozconfig has --enable-artifact-builds; including '
+                          '--artifact flag in try syntax (use --no-artifact '
+                          'to override)')
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')

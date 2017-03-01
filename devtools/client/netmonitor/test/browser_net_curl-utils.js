@@ -13,7 +13,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CURL_UTILS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire, gNetwork } = monitor.panelWin;
+  let { gStore, windowRequire, gNetwork } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { getSortedRequests } = windowRequire("devtools/client/netmonitor/selectors/index");
 

@@ -88,6 +88,12 @@ pub mod longhands {
     <%include file="/longhand/xul.mako.rs" />
 }
 
+macro_rules! unwrap_or_initial {
+    ($prop: ident) => (unwrap_or_initial!($prop, $prop));
+    ($prop: ident, $expr: expr) =>
+        ($expr.unwrap_or_else(|| $prop::get_initial_specified_value()));
+}
+
 /// A module with code for all the shorthand css properties, and a few
 /// serialization helpers.
 #[allow(missing_docs)]
@@ -343,13 +349,12 @@ impl PropertyDeclarationIdSet {
                                 % if property in shorthand.sub_properties:
                                     Some(ShorthandId::${shorthand.camel_case}) => {
                                         shorthands::${shorthand.ident}::parse_value(&context, input)
-                                        .map(|result| match result.${property.ident} {
+                                        .map(|result| {
                                             % if property.boxed:
-                                                Some(value) => DeclaredValue::Value(Box::new(value)),
+                                                DeclaredValue::Value(Box::new(result.${property.ident}))
                                             % else:
-                                                Some(value) => DeclaredValue::Value(value),
+                                                DeclaredValue::Value(result.${property.ident})
                                             % endif
-                                            None => DeclaredValue::Initial,
                                         })
                                     }
                                 % endif
@@ -693,17 +698,17 @@ impl PropertyId {
             Shorthand(ShorthandId),
         }
         ascii_case_insensitive_phf_map! {
-            StaticIds: Map<StaticId> = {
+            static_id -> StaticId = {
                 % for (kind, properties) in [("Longhand", data.longhands), ("Shorthand", data.shorthands)]:
                     % for property in properties:
                         % for name in [property.name] + property.alias:
-                            "${name}" => "StaticId::${kind}(${kind}Id::${property.camel_case})",
+                            "${name}" => StaticId::${kind}(${kind}Id::${property.camel_case}),
                         % endfor
                     % endfor
                 % endfor
             }
         }
-        match StaticIds::get(&property_name) {
+        match static_id(&property_name) {
             Some(&StaticId::Longhand(id)) => Ok(PropertyId::Longhand(id)),
             Some(&StaticId::Shorthand(id)) => Ok(PropertyId::Shorthand(id)),
             None => Err(()),

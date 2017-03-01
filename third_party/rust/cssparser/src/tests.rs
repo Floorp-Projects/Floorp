@@ -817,3 +817,29 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
         Token::CloseCurlyBracket => JArray!["error", "}"],
     }
 }
+
+/// A previous version of procedural-masquerade had a bug where it
+/// would normalize consecutive whitespace to a single space,
+/// including in string literals.
+#[test]
+fn procedural_masquerade_whitespace() {
+    ascii_case_insensitive_phf_map! {
+        map -> () = {
+            "  \t\n" => ()
+        }
+    }
+    assert_eq!(map("  \t\n"), Some(&()));
+    assert_eq!(map(" "), None);
+
+    match_ignore_ascii_case! { "  \t\n",
+        " " => panic!("1"),
+        "  \t\n" => {},
+        _ => panic!("2"),
+    }
+
+    match_ignore_ascii_case! { " ",
+        "  \t\n" => panic!("3"),
+        " " => {},
+        _ => panic!("4"),
+    }
+}
