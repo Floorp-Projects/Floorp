@@ -300,9 +300,9 @@ class SyntaxParseHandler
     MOZ_MUST_USE bool addShorthand(Node literal, Node name, Node expr) { return true; }
     MOZ_MUST_USE bool addObjectMethodDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
     MOZ_MUST_USE bool addClassMethodDefinition(Node literal, Node name, Node fn, JSOp op, bool isStatic) { return true; }
-    Node newYieldExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
-    Node newYieldStarExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
-    Node newAwaitExpression(uint32_t begin, Node value, Node gen) { return NodeGeneric; }
+    Node newYieldExpression(uint32_t begin, Node value) { return NodeGeneric; }
+    Node newYieldStarExpression(uint32_t begin, Node value) { return NodeGeneric; }
+    Node newAwaitExpression(uint32_t begin, Node value) { return NodeGeneric; }
 
     // Statements
 
