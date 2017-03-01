@@ -635,19 +635,10 @@ const kTests = [
  */
 function setAndObserveCompositionPref(aValue, aCallback) {
   let pref = "dom.keyboardevent.dispatch_during_composition";
-  let branch = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].
-               getService(SpecialPowers.Ci.nsIPrefService).
-               getBranch(pref);
-  let obs = SpecialPowers.wrapCallback(function () {
-    branch.removeObserver("", obs);
-    // Make sure the code under test sees the change first, so executeSoon().
-    SimpleTest.executeSoon(aCallback);
-  });
-  branch.addObserver("", obs, false);
   if (aValue === null) {
-    SpecialPowers.clearUserPref(pref);
+    SpecialPowers.pushPrefEnv({"clear": [[pref]]}, aCallback);
   } else {
-    SpecialPowers.setBoolPref(pref, aValue);
+    SpecialPowers.pushPrefEnv({"set": [[pref, aValue]]}, aCallback);
   }
 }
 
