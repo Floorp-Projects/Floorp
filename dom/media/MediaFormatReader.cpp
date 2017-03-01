@@ -43,6 +43,8 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
 #define LOG(arg, ...) MOZ_LOG(sFormatDecoderLog, mozilla::LogLevel::Debug, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 #define LOGV(arg, ...) MOZ_LOG(sFormatDecoderLog, mozilla::LogLevel::Verbose, ("MediaFormatReader(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
+#define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
+
 namespace mozilla {
 
 /**
@@ -116,11 +118,13 @@ GlobalAllocPolicy::GlobalAllocPolicy()
   : mMonitor("DecoderAllocPolicy::mMonitor")
   , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
 {
-  // Non DocGroup-version AbstractThread::MainThread is fine for
-  // ClearOnShutdown().
-  AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
-    ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
-  }));
+  SystemGroup::Dispatch(
+    "GlobalAllocPolicy::ClearOnShutdown",
+    TaskCategory::Other,
+    NS_NewRunnableFunction([this] () {
+      ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
+    })
+  );
 }
 
 GlobalAllocPolicy::~GlobalAllocPolicy()
@@ -1336,9 +1340,10 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   if (mDecoder && crypto && crypto->IsEncrypted()) {
     // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
     for (uint32_t i = 0; i < crypto->mInitDatas.Length(); i++) {
-      NS_DispatchToMainThread(
+      nsCOMPtr<nsIRunnable> r =
         new DispatchKeyNeededEvent(mDecoder, crypto->mInitDatas[i].mInitData,
-                                   crypto->mInitDatas[i].mType));
+                                   crypto->mInitDatas[i].mType);
+      mDecoder->AbstractMainThread()->Dispatch(r.forget());
     }
     mInfo.mCrypto = *crypto;
   }
@@ -3049,3 +3054,5 @@ MediaFormatReader::OnFirstDemuxFailed(TrackInfo::TrackType aType,
 }
 
 } // namespace mozilla
+
+#undef NS_DispatchToMainThread
