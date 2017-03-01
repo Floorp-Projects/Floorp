@@ -141,6 +141,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "layout.css.text-align-unsafe-value.enabled",
   "layout.css.text-combine-upright-digits.enabled",
   "layout.css.text-combine-upright.enabled",
+  "layout.css.text-justify.enabled",
   "layout.css.touch_action.enabled",
   "layout.css.unprefixing-service.enabled",
   "layout.css.unprefixing-service.globally-whitelisted",
