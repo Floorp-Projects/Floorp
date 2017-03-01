@@ -97,6 +97,10 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #endif
     activeContext_(nullptr),
     activeContextChangeProhibited_(0),
+    singleThreadedExecutionRequired_(0),
+    startingSingleThreadedExecution_(false),
+    beginSingleThreadedExecutionCallback(nullptr),
+    endSingleThreadedExecutionCallback(nullptr),
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
     telemetryCallback(nullptr),
@@ -308,6 +312,7 @@ JSRuntime::destroyRuntime()
 
     MOZ_ASSERT(ionLazyLinkListSize_ == 0);
     MOZ_ASSERT(ionLazyLinkList().isEmpty());
+    MOZ_ASSERT(!singleThreadedExecutionRequired_);
 
     MOZ_ASSERT(!hasHelperThreadZones());
     AutoLockForExclusiveAccess lock(this);
@@ -334,12 +339,23 @@ JSRuntime::destroyRuntime()
     MOZ_ASSERT(oldCount > 0);
 }
 
+static void
+CheckCanChangeActiveContext(JSRuntime* rt)
+{
+    MOZ_RELEASE_ASSERT(!rt->activeContextChangeProhibited());
+    MOZ_RELEASE_ASSERT(!rt->activeContext() || rt->gc.canChangeActiveContext(rt->activeContext()));
+
+    if (rt->singleThreadedExecutionRequired()) {
+        for (ZoneGroupsIter group(rt); !group.done(); group.next())
+            MOZ_RELEASE_ASSERT(group->ownerContext().context() == nullptr);
+    }
+}
+
 void
 JSRuntime::setActiveContext(JSContext* cx)
 {
+    CheckCanChangeActiveContext(this);
     MOZ_ASSERT_IF(cx, cx->isCooperativelyScheduled());
-    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
-    MOZ_RELEASE_ASSERT(!activeContext() || gc.canChangeActiveContext(activeContext()));
 
     activeContext_ = cx;
 }
@@ -347,9 +363,7 @@ JSRuntime::setActiveContext(JSContext* cx)
 void
 JSRuntime::setNewbornActiveContext(JSContext* cx)
 {
-    MOZ_ASSERT_IF(cx, cx->isCooperativelyScheduled());
-    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
-    MOZ_RELEASE_ASSERT(!activeContext());
+    CheckCanChangeActiveContext(this);
 
     activeContext_ = cx;
 
@@ -361,12 +375,44 @@ JSRuntime::setNewbornActiveContext(JSContext* cx)
 void
 JSRuntime::deleteActiveContext(JSContext* cx)
 {
+    CheckCanChangeActiveContext(this);
     MOZ_ASSERT(cx == activeContext());
-    MOZ_RELEASE_ASSERT(!activeContextChangeProhibited());
-    MOZ_RELEASE_ASSERT(gc.canChangeActiveContext(cx));
 
     js_delete_poison(cx);
     activeContext_ = nullptr;
+}
+
+bool
+JSRuntime::beginSingleThreadedExecution(JSContext* cx)
+{
+    if (singleThreadedExecutionRequired_ == 0) {
+        if (startingSingleThreadedExecution_)
+            return false;
+        startingSingleThreadedExecution_ = true;
+        if (beginSingleThreadedExecutionCallback)
+            beginSingleThreadedExecutionCallback(cx);
+        MOZ_ASSERT(startingSingleThreadedExecution_);
+        startingSingleThreadedExecution_ = false;
+    }
+
+    singleThreadedExecutionRequired_++;
+
+    for (ZoneGroupsIter group(this); !group.done(); group.next()) {
+        MOZ_RELEASE_ASSERT(group->ownedByCurrentThread() ||
+                           group->ownerContext().context() == nullptr);
+    }
+
+    return true;
+}
+
+void
+JSRuntime::endSingleThreadedExecution(JSContext* cx)
+{
+    MOZ_ASSERT(singleThreadedExecutionRequired_);
+    if (--singleThreadedExecutionRequired_ == 0) {
+        if (endSingleThreadedExecutionCallback)
+            endSingleThreadedExecutionCallback(cx);
+    }
 }
 
 void
