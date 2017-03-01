@@ -831,7 +831,7 @@ pub mod parsing {
 
     named!(pub within_block -> Vec<Stmt>, do_parse!(
         many0!(punct!(";")) >>
-        mut standalone: many0!(terminated!(standalone_stmt, many0!(punct!(";")))) >>
+        mut standalone: many0!(terminated!(stmt, many0!(punct!(";")))) >>
         last: option!(expr) >>
         (match last {
             None => standalone,
@@ -842,7 +842,7 @@ pub mod parsing {
         })
     ));
 
-    named!(standalone_stmt -> Stmt, alt!(
+    named!(pub stmt -> Stmt, alt!(
         stmt_mac
         |
         stmt_local

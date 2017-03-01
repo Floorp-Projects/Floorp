@@ -12,7 +12,7 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let RequestListContextMenu = windowRequire(
     "devtools/client/netmonitor/request-list-context-menu");

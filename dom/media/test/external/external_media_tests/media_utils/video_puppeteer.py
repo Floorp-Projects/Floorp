@@ -60,7 +60,7 @@ class VideoPuppeteer(object):
 
     _video_var_script = (
         'var video = arguments[0];'
-        'var baseURI = arguments[0].baseURI;'
+        'var baseURI = video.baseURI;'
         'var currentTime = video.wrappedJSObject.currentTime;'
         'var duration = video.wrappedJSObject.duration;'
         'var buffered = video.wrappedJSObject.buffered;'
@@ -205,7 +205,7 @@ class VideoPuppeteer(object):
         if (self.stall_wait_time and
                 self._last_seen_video_state.lag > self.stall_wait_time):
             raise VideoException('Video {} stalled.\n{}'
-                                 .format(self._last_seen_video_state.video_uri,
+                                 .format(self._last_seen_video_state.base_uri,
                                          self))
 
         # We are cruising, so we are not done.

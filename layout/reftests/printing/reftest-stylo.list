@@ -30,7 +30,7 @@ fails == 820496-1.html 820496-1.html
 
 # NOTE: These tests don't yet rigorously test what they're
 # trying to test (shrink-to-fit behavior), due to bug 967311.
-fails == 960822.html 960822.html
-fails == 966419-1.html 966419-1.html
-fails == 966419-2.html 966419-2.html
+== 960822.html 960822.html
+== 966419-1.html 966419-1.html
+== 966419-2.html 966419-2.html
 fails HTTP(..) == 1108104.html 1108104-ref.html

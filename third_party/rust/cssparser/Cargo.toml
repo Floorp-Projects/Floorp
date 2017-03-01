@@ -1,7 +1,7 @@
 [package]
 
 name = "cssparser"
-version = "0.11.0"
+version = "0.12.0"
 authors = [ "Simon Sapin <simon.sapin@exyr.org>" ]
 
 description = "Rust implementation of CSS Syntax Level 3"
@@ -20,10 +20,11 @@ tempdir = "0.3"
 encoding_rs = "0.5"
 
 [dependencies]
-cssparser-macros = {path = "./macros", version = "0.1"}
+cssparser-macros = {path = "./macros", version = "0.2"}
 heapsize = {version = "0.3", optional = true}
 matches = "0.1"
 phf = "0.7"
+procedural-masquerade = {path = "./procedural-masquerade", version = "0.1"}
 serde = {version = "0.9", optional = true}
 
 [build-dependencies]
@@ -35,4 +36,4 @@ bench = []
 dummy_match_byte = []
 
 [workspace]
-members = [".", "./macros"]
+members = [".", "./macros", "./procedural-masquerade"]

@@ -1509,7 +1509,9 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (unlikely (status)) {
-	    status = _cairo_scaled_font_set_error (scaled_font, status);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
+		status = _cairo_scaled_font_set_error (scaled_font, status);
+	    }
 	    goto UNLOCK;
 	}
 

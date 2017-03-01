@@ -234,6 +234,7 @@ pub mod parsing {
     use {TyParamBound, TraitBoundModifier};
     #[cfg(feature = "full")]
     use ConstExpr;
+    #[cfg(feature = "full")]
     use constant::parsing::const_expr;
     #[cfg(feature = "full")]
     use expr::parsing::expr;
@@ -278,28 +279,27 @@ pub mod parsing {
         (Ty::Slice(Box::new(elem)))
     ));
 
-    #[cfg(not(feature = "full"))]
     named!(ty_array -> Ty, do_parse!(
         punct!("[") >>
         elem: ty >>
         punct!(";") >>
-        len: const_expr >>
+        len: array_len >>
         punct!("]") >>
         (Ty::Array(Box::new(elem), len))
     ));
 
+    #[cfg(not(feature = "full"))]
+    use constant::parsing::const_expr as array_len;
+
     #[cfg(feature = "full")]
-    named!(ty_array -> Ty, do_parse!(
-        punct!("[") >>
-        elem: ty >>
-        punct!(";") >>
-        len: alt!(
-            terminated!(const_expr, punct!("]"))
-            |
-            terminated!(expr, punct!("]")) => { ConstExpr::Other }
-        ) >>
-        (Ty::Array(Box::new(elem), len))
+    named!(array_len -> ConstExpr, alt!(
+        terminated!(const_expr, after_array_len)
+        |
+        terminated!(expr, after_array_len) => { ConstExpr::Other }
     ));
+
+    #[cfg(feature = "full")]
+    named!(after_array_len -> &str, peek!(punct!("]")));
 
     named!(ty_ptr -> Ty, do_parse!(
         punct!("*") >>

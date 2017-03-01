@@ -16,22 +16,25 @@
     <p>HAR POST data test</p>
 
     <script type="text/javascript">
-      function post(aAddress, aData) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", aAddress, true);
+      /* exported executeTest, executeTest2 */
+      "use strict";
+
+      function post(address, data) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(aData);
+        xhr.send(data);
       }
 
       function executeTest() {
-        var url = "html_har_post-data-test-page.html";
-        var data = "{'first': 'John', 'last': 'Doe'}";
+        const url = "html_har_post-data-test-page.html";
+        const data = "{'first': 'John', 'last': 'Doe'}";
         post(url, data);
       }
 
       function executeTest2(size) {
-        var url = "html_har_post-data-test-page.html";
-        var data = "x".repeat(size);
+        const url = "html_har_post-data-test-page.html";
+        const data = "x".repeat(size);
         post(url, data);
       }
     </script>

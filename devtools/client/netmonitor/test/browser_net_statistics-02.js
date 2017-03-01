@@ -35,7 +35,8 @@ add_task(function* () {
     "The main panel is switched to the statistics panel.");
 
   yield waitUntil(
-    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])").length == 2);
+    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])")
+                  .length == 2);
   ok(true, "Two real pie charts appear to be rendered correctly.");
 
   EventUtils.sendMouseEvent({ type: "click" },

@@ -121,7 +121,8 @@ class MachFormatter(base.BaseFormatter):
                                "unexpected": defaultdict(int),
                                "skipped": 0}
         self.summary_unexpected = []
-        return "%i" % len(data["tests"])
+        num_tests = reduce(lambda x, y: x + len(y), data['tests'].itervalues(), 0)
+        return "%i" % num_tests
 
     def suite_end(self, data):
         term = self.terminal if self.terminal is not None else NullTerminal()
