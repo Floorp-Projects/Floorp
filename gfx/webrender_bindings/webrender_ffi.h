@@ -299,12 +299,12 @@ struct WrImageMask
   }
 };
 
-struct WrExternalImageIdId
+struct WrExternalImageId
 {
   WrImageIdType id;
 };
 
-struct WrExternalImageId
+struct WrExternalImage
 {
   WrExternalImageIdType type;
 
@@ -321,13 +321,13 @@ struct WrExternalImageId
   //// size_t size;
 };
 
-typedef WrExternalImageId (*LockExternalImageCallback)(void*, WrExternalImageIdId);
-typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageIdId);
-typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageIdId);
+typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
+typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
+typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageId);
 
-struct WrExternalImageIdHandler
+struct WrExternalImageHandler
 {
-  void* ExternalImageObj;
+  void* renderer_obj;
   LockExternalImageCallback lock_func;
   UnlockExternalImageCallback unlock_func;
   ReleaseExternalImageCallback release_func;
@@ -404,7 +404,7 @@ WR_INLINE bool
 wr_window_new(WrWindowId window_id,
               void* aGLContext,
               bool enable_profiler,
-              WrExternalImageIdHandler* handler,
+              WrExternalImageHandler* handler,
               WrAPI** out_api,
               WrRenderer** out_renderer)
 WR_FUNC;
