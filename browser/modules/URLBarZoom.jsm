@@ -10,20 +10,39 @@ this.EXPORTED_SYMBOLS = [ "URLBarZoom" ];
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 var URLBarZoom = {
-
   init(aWindow) {
-    // Register ourselves with the service so we know when the zoom prefs change.
-    Services.obs.addObserver(updateZoomButton, "browser-fullZoom:zoomChange", false);
-    Services.obs.addObserver(updateZoomButton, "browser-fullZoom:zoomReset", false);
-    Services.obs.addObserver(updateZoomButton, "browser-fullZoom:location-change", false);
+    aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
+    aWindow.addEventListener("unload", () => {
+      aWindow.removeEventListener("EndSwapDocShells", onEndSwapDocShells, true);
+    }, {once: true});
   },
 }
 
-function updateZoomButton(aSubject, aTopic) {
-  let win = aSubject.ownerGlobal;
+function fullZoomObserver(aSubject, aTopic) {
+  // If the tab was the last one in its window and has been dragged to another
+  // window, the original browser's window will be unavailable here. Since that
+  // window is closing, we can just ignore this notification.
+  if (!aSubject.ownerGlobal) {
+    return;
+  }
+
+  // Only allow pulse animation for zoom changes, not tab switching.
+  let animate = (aTopic != "browser-fullZoom:location-change");
+  updateZoomButton(aSubject, animate);
+}
+
+function onEndSwapDocShells(event) {
+  updateZoomButton(event.originalTarget);
+}
+
+function updateZoomButton(aBrowser, aAnimate = false) {
+  let win = aBrowser.ownerGlobal;
+  if (aBrowser != win.gBrowser.selectedBrowser) {
+    return;
+  }
+
   let customizableZoomControls = win.document.getElementById("zoom-controls");
   let zoomResetButton = win.document.getElementById("urlbar-zoom-button");
-  let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
 
   // Ensure that zoom controls haven't already been added to browser in Customize Mode
   if (customizableZoomControls &&
@@ -31,21 +50,26 @@ function updateZoomButton(aSubject, aTopic) {
     zoomResetButton.hidden = true;
     return;
   }
+
+  let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
   if (zoomFactor != 100) {
     // Check if zoom button is visible and update label if it is
     if (zoomResetButton.hidden) {
       zoomResetButton.hidden = false;
     }
-    // Only allow pulse animation for zoom changes, not tab switching
-    if (aTopic != "browser-fullZoom:location-change") {
+    if (aAnimate) {
       zoomResetButton.setAttribute("animate", "true");
     } else {
       zoomResetButton.removeAttribute("animate");
     }
     zoomResetButton.setAttribute("label",
         win.gNavigatorBundle.getFormattedString("urlbar-zoom-button.label", [zoomFactor]));
-  // Hide button if zoom is at 100%
   } else {
-      zoomResetButton.hidden = true;
+    // Hide button if zoom is at 100%
+    zoomResetButton.hidden = true;
   }
 }
+
+Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomChange", false);
+Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomReset", false);
+Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:location-change", false);
