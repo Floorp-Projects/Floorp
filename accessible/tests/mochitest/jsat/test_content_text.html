@@ -68,16 +68,16 @@
            new ExpectedEditState({
             editing: true,
             multiline: true,
-            atStart: false,
-            atEnd: true
+            atStart: true,
+            atEnd: false
            }),
            new ExpectedCursorChange(
             ['Please refrain from Mayoneggs during this salmonella scare.',
              {string: 'textarea'}]),
-           new ExpectedTextSelectionChanged(59, 59)
+           new ExpectedTextSelectionChanged(0, 0)
           ],
           [ContentMessages.activateCurrent(10),
-           new ExpectedTextCaretChanged(10, 59),
+           new ExpectedTextCaretChanged(0, 10),
            new ExpectedEditState({ editing: true,
              multiline: true,
              atStart: false,

@@ -30,6 +30,7 @@ SimpleTest.waitForFocus(() => {
     getService(SpecialPowers.Ci.nsIFocusManager);
 
   let element = document.getElementById("textarea");
+  element.setSelectionRange(element.value.length, element.value.length);
   element.focus();
   is(SpecialPowers.unwrap(fm.focusedElement), element, "failed to move focus");
 
