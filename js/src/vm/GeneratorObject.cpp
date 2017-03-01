@@ -19,7 +19,8 @@ using namespace js;
 JSObject*
 GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT(frame.script()->isGenerator());
+    MOZ_ASSERT(frame.script()->isStarGenerator() || frame.script()->isLegacyGenerator() ||
+               frame.script()->isAsync());
     MOZ_ASSERT(frame.script()->nfixed() == 0);
 
     Rooted<GlobalObject*> global(cx, cx->global());

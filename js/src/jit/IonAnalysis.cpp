@@ -4406,8 +4406,14 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     // direct eval is present.
     //
     // FIXME: Don't build arguments for ES6 generator expressions.
-    if (scriptArg->isDebuggee() || script->isGenerator() || script->bindingsAccessedDynamically())
+    if (scriptArg->isDebuggee() ||
+        script->isStarGenerator() ||
+        script->isLegacyGenerator() ||
+        script->isAsync() ||
+        script->bindingsAccessedDynamically())
+    {
         return true;
+    }
 
     if (!jit::IsIonEnabled(cx))
         return true;
