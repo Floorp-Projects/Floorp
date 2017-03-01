@@ -9,6 +9,10 @@
 // except according to those terms.
 
 //! Numeric traits for generic mathematics
+#![doc(html_logo_url = "https://rust-num.github.io/num/rust-logo-128x128-blk-v2.png",
+       html_favicon_url = "https://rust-num.github.io/num/favicon.ico",
+       html_root_url = "https://rust-num.github.io/num/",
+       html_playground_url = "http://play.integer32.com/")]
 
 use std::ops::{Add, Sub, Mul, Div, Rem};
 
@@ -16,6 +20,7 @@ pub use bounds::Bounded;
 pub use float::{Float, FloatConst};
 pub use identities::{Zero, One, zero, one};
 pub use ops::checked::*;
+pub use ops::wrapping::*;
 pub use ops::saturating::Saturating;
 pub use sign::{Signed, Unsigned, abs, abs_sub, signum};
 pub use cast::*;
@@ -39,6 +44,18 @@ pub trait Num: PartialEq + Zero + One
     type FromStrRadixErr;
 
     /// Convert from a string and radix <= 36.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use num_traits::Num;
+    ///
+    /// let result = <i32 as Num>::from_str_radix("27", 10);
+    /// assert_eq!(result, Ok(27));
+    ///
+    /// let result = <i32 as Num>::from_str_radix("foo", 10);
+    /// assert!(result.is_err());
+    /// ```
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr>;
 }
 
@@ -223,6 +240,36 @@ macro_rules! float_trait_impl {
     )*)
 }
 float_trait_impl!(Num for f32 f64);
+
+/// A value bounded by a minimum and a maximum
+///
+///  If input is less than min then this returns min. 
+///  If input is greater than max then this returns max.  
+///  Otherwise this returns input. 
+#[inline]
+pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
+    debug_assert!(min <= max, "min must be less than or equal to max");
+    if input < min {
+        min
+    } else if input > max {
+        max
+    } else {
+        input
+    }
+}
+
+#[test]
+fn clamp_test() {
+    // Int test
+    assert_eq!(1, clamp(1, -1, 2));
+    assert_eq!(-1, clamp(-2, -1, 2));
+    assert_eq!(2, clamp(3, -1, 2));
+
+    // Float test
+    assert_eq!(1.0, clamp(1.0, -1.0, 2.0));
+    assert_eq!(-1.0, clamp(-2.0, -1.0, 2.0));
+    assert_eq!(2.0, clamp(3.0, -1.0, 2.0));
+}
 
 #[test]
 fn from_str_radix_unwrap() {

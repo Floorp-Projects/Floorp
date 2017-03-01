@@ -12,10 +12,6 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { document, gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
-  let {
-    getDisplayedRequests,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
   gStore.dispatch(Actions.batchEnable(false));
 
@@ -25,13 +21,13 @@ add_task(function* () {
   });
   yield wait;
 
-  is(gStore.getState().requests.requests.size, 2, "There were two requests due to redirect.");
+  is(gStore.getState().requests.requests.size, 2,
+     "There were two requests due to redirect.");
 
-  let initial = getSortedRequests(gStore.getState()).get(0);
-  let redirect = getSortedRequests(gStore.getState()).get(1);
-
-  let initialSecurityIcon = document.querySelectorAll(".requests-security-state-icon")[0];
-  let redirectSecurityIcon = document.querySelectorAll(".requests-security-state-icon")[1];
+  let [
+    initialSecurityIcon,
+    redirectSecurityIcon,
+  ] = document.querySelectorAll(".requests-security-state-icon");
 
   ok(initialSecurityIcon.classList.contains("security-state-insecure"),
      "Initial request was marked insecure.");

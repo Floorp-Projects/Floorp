@@ -590,6 +590,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer-addons > toolbarbutton {
   background-color: #FFEFBF;
+  /* Force border to override `#PanelUI-footer-addons > toolbarbutton` selector below */
+  border-top: 1px solid hsl(45, 100%, 77%) !important;
   display: flex;
   flex: 1 1 0%;
   width: calc(@menuPanelWidth@ + 30px);

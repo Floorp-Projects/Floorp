@@ -4,9 +4,9 @@
 /* eslint-env commonjs */
 
 // Skip a few lines
-// 5
-// 6
 // 7
 // 8
 // 9
+// 10
+// 11
 throw new Error("Let's see if this error is obtained with the right origin");

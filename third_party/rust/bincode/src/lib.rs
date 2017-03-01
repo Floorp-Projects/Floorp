@@ -43,7 +43,63 @@ extern crate serde as serde_crate;
 pub mod refbox;
 mod serde;
 
-pub use serde::*;
+pub mod endian_choice {
+    pub use super::serde::{serialize, serialize_into, deserialize, deserialize_from};
+}
+
+use std::io::{Read, Write};
+
+pub use serde::{Deserializer, Serializer, ErrorKind, Error, Result, serialized_size, serialized_size_bounded};
+
+/// Deserializes a slice of bytes into an object.
+///
+/// This method does not have a size-limit because if you already have the bytes
+/// in memory, then you don't gain anything by having a limiter.
+pub fn deserialize<T>(bytes: &[u8]) -> serde::Result<T>
+    where T: serde_crate::Deserialize,
+{
+    serde::deserialize::<_, byteorder::LittleEndian>(bytes)
+}
+
+/// Deserializes an object directly from a `Buffer`ed Reader.
+///
+/// If the provided `SizeLimit` is reached, the deserialization will bail immediately.
+/// A SizeLimit can help prevent an attacker from flooding your server with
+/// a neverending stream of values that runs your server out of memory.
+///
+/// If this returns an `Error`, assume that the buffer that you passed
+/// in is in an invalid state, as the error could be returned during any point
+/// in the reading.
+pub fn deserialize_from<R: ?Sized, T>(reader: &mut R, size_limit: SizeLimit) -> serde::Result<T>
+    where R: Read,
+          T: serde_crate::Deserialize,
+{
+    serde::deserialize_from::<_, _, byteorder::LittleEndian>(reader, size_limit)
+}
+
+/// Serializes an object directly into a `Writer`.
+///
+/// If the serialization would take more bytes than allowed by `size_limit`, an error
+/// is returned and *no bytes* will be written into the `Writer`.
+///
+/// If this returns an `Error` (other than SizeLimit), assume that the
+/// writer is in an invalid state, as writing could bail out in the middle of
+/// serializing.
+pub fn serialize_into<W: ?Sized, T: ?Sized>(writer: &mut W, value: &T, size_limit: SizeLimit) -> serde::Result<()>
+    where W: Write, T: serde_crate::Serialize
+{
+    serde::serialize_into::<_, _, byteorder::LittleEndian>(writer, value, size_limit)
+}
+
+/// Serializes a serializable object into a `Vec` of bytes.
+///
+/// If the serialization would take more bytes than allowed by `size_limit`,
+/// an error is returned.
+pub fn serialize<T: ?Sized>(value: &T, size_limit: SizeLimit) -> serde::Result<Vec<u8>>
+    where T: serde_crate::Serialize
+{
+    serde::serialize::<_, byteorder::LittleEndian>(value, size_limit)
+}
 
 /// A limit on the amount of bytes that can be read or written.
 ///

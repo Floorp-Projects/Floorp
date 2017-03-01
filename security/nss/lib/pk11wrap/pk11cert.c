@@ -690,8 +690,7 @@ PK11_FindCertsFromEmailAddress(const char *email, void *wincx)
     }
 
     /* empty list? */
-    if (CERT_LIST_HEAD(cbparam.certList) == NULL ||
-        CERT_LIST_END(CERT_LIST_HEAD(cbparam.certList), cbparam.certList)) {
+    if (CERT_LIST_EMPTY(cbparam.certList)) {
         CERT_DestroyCertList(cbparam.certList);
         cbparam.certList = NULL;
     }
@@ -823,10 +822,6 @@ PK11_FindCertsFromNickname(const char *nickname, void *wincx)
             } else {
                 nssCertificate_Destroy(c);
             }
-        }
-        if (certList && CERT_LIST_HEAD(certList) == NULL) {
-            CERT_DestroyCertList(certList);
-            certList = NULL;
         }
         /* all the certs have been adopted or freed, free the  raw array */
         nss_ZFreeIf(foundCerts);

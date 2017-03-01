@@ -152,9 +152,9 @@ fails HTTP == background-referrer.html background-referrer.html
 
 == attachment-scroll-positioning-1.html attachment-scroll-positioning-1.html
 == attachment-local-positioning-1.html attachment-local-positioning-1.html
-fails == attachment-local-positioning-2.html attachment-local-positioning-2.html
-fails == attachment-local-positioning-3.html attachment-local-positioning-3.html
-fails == attachment-local-positioning-4.html attachment-local-positioning-4.html
+== attachment-local-positioning-2.html attachment-local-positioning-2.html
+== attachment-local-positioning-3.html attachment-local-positioning-3.html
+== attachment-local-positioning-4.html attachment-local-positioning-4.html
 == attachment-local-positioning-5.html attachment-local-positioning-5.html
 
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1.html

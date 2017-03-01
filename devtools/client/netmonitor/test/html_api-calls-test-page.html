@@ -15,30 +15,35 @@
     <p>API calls request test</p>
 
     <script type="text/javascript">
-      function get(aAddress, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress, true);
+      /* exported performRequests */
+      "use strict";
 
-        xhr.onreadystatechange = function() {
+      function get(address, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send();
       }
 
       function performRequests() {
-        get("/api/fileName.xml", function() {
-          get("/api/file%E2%98%A2.xml", function() {
-            get("/api/ascii/get/", function() {
-              get("/api/unicode/%E2%98%A2/", function() {
-                get("/api/search/?q=search%E2%98%A2", function() {
+        /* eslint-disable max-nested-callbacks */
+        get("/api/fileName.xml", function () {
+          get("/api/file%E2%98%A2.xml", function () {
+            get("/api/ascii/get/", function () {
+              get("/api/unicode/%E2%98%A2/", function () {
+                get("/api/search/?q=search%E2%98%A2", function () {
                   // Done.
                 });
               });
             });
           });
         });
+        /* eslint-enable max-nested-callbacks */
       }
     </script>
   </body>

@@ -22,6 +22,8 @@ FeatureStatusToString(FeatureStatus aStatus)
       return "blocked";
     case FeatureStatus::Blacklisted:
       return "blacklisted";
+    case FeatureStatus::OptIn:
+      return "opt-in";
     case FeatureStatus::Failed:
       return "failed";
     case FeatureStatus::Disabled:

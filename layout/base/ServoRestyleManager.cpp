@@ -9,6 +9,7 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
@@ -117,16 +118,22 @@ ServoRestyleManager::ClearServoDataFromSubtree(Element* aElement)
   aElement->UnsetHasDirtyDescendantsForServo();
 }
 
-/* static */ void
-ServoRestyleManager::ClearDirtyDescendantsFromSubtree(Element* aElement)
+
+// Clears HasDirtyDescendants and RestyleData from all elements in the
+// subtree rooted at aElement.
+static void
+ClearRestyleStateFromSubtree(Element* aElement)
 {
-  StyleChildrenIterator it(aElement);
-  for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
-    if (n->IsElement()) {
-      ClearDirtyDescendantsFromSubtree(n->AsElement());
+  if (aElement->HasDirtyDescendantsForServo()) {
+    StyleChildrenIterator it(aElement);
+    for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
+      if (n->IsElement()) {
+        ClearRestyleStateFromSubtree(n->AsElement());
+      }
     }
   }
 
+  Unused << Servo_TakeChangeHint(aElement);
   aElement->UnsetHasDirtyDescendantsForServo();
 }
 
@@ -183,7 +190,7 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   // XXXbholley: We should teach the frame constructor how to clear the dirty
   // descendants bit to avoid the traversal here.
   if (changeHint & nsChangeHint_ReconstructFrame) {
-    ClearDirtyDescendantsFromSubtree(aElement);
+    ClearRestyleStateFromSubtree(aElement);
     return;
   }
 

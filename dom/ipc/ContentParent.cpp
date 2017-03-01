@@ -4538,12 +4538,29 @@ ContentParent::CommonCreateWindow(PBrowserParent* aThisTab,
     return IPC_OK();
   }
 
-  if (aSetOpener && thisTabParent) {
-    aResult = pwwatch->OpenWindowWithTabParent(thisTabParent, aFeatures,
-                                               aCalledFromJS, aFullZoom,
-                                               getter_AddRefs(aNewTabParent));
-  } else {
-    aResult = pwwatch->OpenWindowWithoutParent(getter_AddRefs(aNewTabParent));
+  aResult = pwwatch->OpenWindowWithTabParent(aSetOpener ? thisTabParent : nullptr,
+                                             aFeatures, aCalledFromJS, aFullZoom,
+                                             getter_AddRefs(aNewTabParent));
+  if (NS_WARN_IF(NS_FAILED(aResult))) {
+    return IPC_OK();
+  }
+
+  if (aURIToLoad) {
+    nsCOMPtr<mozIDOMWindowProxy> openerWindow;
+    if (aSetOpener && thisTabParent) {
+      openerWindow = thisTabParent->GetParentWindowOuter();
+    }
+    nsCOMPtr<nsIBrowserDOMWindow> newBrowserDOMWin =
+      TabParent::GetFrom(aNewTabParent)->GetBrowserDOMWindow();
+    if (NS_WARN_IF(!newBrowserDOMWin)) {
+      aResult = NS_ERROR_ABORT;
+      return IPC_OK();
+    }
+    nsCOMPtr<mozIDOMWindowProxy> win;
+    aResult = newBrowserDOMWin->OpenURI(aURIToLoad, openerWindow,
+                                        nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
+                                        nsIBrowserDOMWindow::OPEN_NEW,
+                                        getter_AddRefs(win));
   }
 
   return IPC_OK();

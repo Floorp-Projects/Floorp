@@ -86,8 +86,8 @@ fuzzy-if(stylo,1,7400) fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1c
 fuzzy-if(stylo,1,7400) fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1d.html border-collapse-bevels-1d.html
 fuzzy-if(stylo,1,7400) fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1e.html border-collapse-bevels-1e.html
 
-fails == vertical-rl-row-progression-1a.html vertical-rl-row-progression-1a.html
-fails == vertical-rl-row-progression-1b.html vertical-rl-row-progression-1b.html
+== vertical-rl-row-progression-1a.html vertical-rl-row-progression-1a.html
+== vertical-rl-row-progression-1b.html vertical-rl-row-progression-1b.html
 fails == sideways-lr-row-progression-1a.html sideways-lr-row-progression-1a.html
 fails == sideways-lr-row-progression-1b.html sideways-lr-row-progression-1b.html
 fails == sideways-rl-row-progression-1a.html sideways-rl-row-progression-1a.html
