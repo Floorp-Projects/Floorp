@@ -3957,7 +3957,9 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
     if (script->needsArgsObj())
         return true;
 
-    MOZ_ASSERT(!script->isGenerator());
+    MOZ_ASSERT(!script->isStarGenerator());
+    MOZ_ASSERT(!script->isLegacyGenerator());
+    MOZ_ASSERT(!script->isAsync());
 
     script->needsArgsObj_ = true;
 

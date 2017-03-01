@@ -131,7 +131,11 @@ IsFunctionInStrictMode(JSFunction* fun)
 
 static bool
 IsNewerTypeFunction(JSFunction* fun) {
-    return fun->isArrow() || fun->isGenerator() || fun->isAsync() || fun->isMethod();
+    return fun->isArrow() ||
+           fun->isStarGenerator() ||
+           fun->isLegacyGenerator() ||
+           fun->isAsync() ||
+           fun->isMethod();
 }
 
 // Beware: this function can be invoked on *any* function! That includes
@@ -480,8 +484,12 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
          * - Arrow functions
          * - Function.prototype
          */
-        if (fun->isBuiltin() || (!fun->isConstructor() && !fun->isGenerator()))
+        if (fun->isBuiltin())
             return true;
+        if (!fun->isConstructor()) {
+            if (!fun->isStarGenerator() && !fun->isLegacyGenerator() && !fun->isAsync())
+                return true;
+        }
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun, id))
             return false;
@@ -1569,7 +1577,7 @@ fun_isGenerator(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    args.rval().setBoolean(fun->isGenerator());
+    args.rval().setBoolean(fun->isStarGenerator() || fun->isLegacyGenerator());
     return true;
 }
 
