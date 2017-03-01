@@ -51,19 +51,6 @@
   height: 100%;
 }
 
-.tabs .all-tabs-menu  {
-  position: absolute;
-  top: 0;
-  offset-inline-end: 0;
-  width: 15px;
-  height: 100%;
-  border-inline-start: 1px solid var(--theme-splitter-color);
-  background: var(--theme-tab-toolbar-background);
-  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
 .tabs .tabs-navigation,
 .tabs .tabs-navigation {
   position: relative;
