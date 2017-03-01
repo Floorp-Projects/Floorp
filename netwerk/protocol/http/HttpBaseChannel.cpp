@@ -162,6 +162,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mWasOpened(false)
   , mRequestObserversCalled(false)
   , mResponseHeadersModified(false)
+  , mAllowPipelining(true)
   , mAllowSTS(true)
   , mThirdPartyFlags(0)
   , mUploadStreamHasHeaders(false)
@@ -1953,7 +1954,7 @@ NS_IMETHODIMP
 HttpBaseChannel::GetAllowPipelining(bool *value)
 {
   NS_ENSURE_ARG_POINTER(value);
-  *value = false;
+  *value = mAllowPipelining;
   return NS_OK;
 }
 
@@ -1961,7 +1962,8 @@ NS_IMETHODIMP
 HttpBaseChannel::SetAllowPipelining(bool value)
 {
   ENSURE_CALLED_BEFORE_CONNECT();
-  // nop
+
+  mAllowPipelining = value;
   return NS_OK;
 }
 
@@ -3230,7 +3232,8 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   // convey the referrer if one was used for this channel to the next one
   if (mReferrer)
     httpChannel->SetReferrerWithPolicy(mReferrer, mReferrerPolicy);
-  // convey the mAllowSTS flags
+  // convey the mAllowPipelining and mAllowSTS flags
+  httpChannel->SetAllowPipelining(mAllowPipelining);
   httpChannel->SetAllowSTS(mAllowSTS);
   // convey the new redirection limit
   // make sure we don't underflow

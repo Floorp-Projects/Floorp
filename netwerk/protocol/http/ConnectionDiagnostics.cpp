@@ -65,8 +65,14 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
                           ent->mCoalescingKeys.Length());
     mLogData.AppendPrintf("   Spdy using = %d, preferred = %d\n",
                           ent->mUsingSpdy, ent->mInPreferredHash);
+    mLogData.AppendPrintf("   pipelinestate = %d penalty = %d\n",
+                          ent->mPipelineState, ent->mPipeliningPenalty);
 
     uint32_t i;
+    for (i = 0; i < nsAHttpTransaction::CLASS_MAX; ++i) {
+      mLogData.AppendPrintf("   pipeline per class penalty 0x%x %d\n",
+                            i, ent->mPipeliningClassPenalty[i]);
+    }
     for (i = 0; i < ent->mActiveConns.Length(); ++i) {
       mLogData.AppendPrintf("   :: Active Connection #%u\n", i);
       ent->mActiveConns[i]->PrintDiagnostics(mLogData);
@@ -146,6 +152,9 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("    idlemonitoring = %d transactionCount=%d\n",
                    mIdleMonitoring, mHttp1xTransactionCount);
 
+  log.AppendPrintf("    supports pipeline = %d classification = 0x%x\n",
+                   mSupportsPipelining, mClassification);
+
   if (mSpdySession)
     mSpdySession->PrintDiagnostics(log);
 }
@@ -198,6 +207,7 @@ nsHttpTransaction::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("     caps = 0x%x\n", mCaps);
   log.AppendPrintf("     priority = %d\n", mPriority);
   log.AppendPrintf("     restart count = %u\n", mRestartCount);
+  log.AppendPrintf("     classification = 0x%x\n", mClassification);
 }
 
 } // namespace net
