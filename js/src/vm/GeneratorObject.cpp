@@ -376,3 +376,34 @@ js::CheckStarGeneratorResumptionValue(JSContext* cx, HandleValue v)
 
     return true;
 }
+
+bool
+GeneratorObject::isAfterYield()
+{
+    return isAfterYieldOrAwait(JSOP_YIELD);
+}
+
+bool
+GeneratorObject::isAfterAwait()
+{
+    return isAfterYieldOrAwait(JSOP_AWAIT);
+}
+
+bool
+GeneratorObject::isAfterYieldOrAwait(JSOp op)
+{
+    if (isClosed() || isClosing() || isRunning())
+        return false;
+
+    JSScript* script = callee().nonLazyScript();
+    jsbytecode* code = script->code();
+    uint32_t nextOffset = script->yieldAndAwaitOffsets()[yieldAndAwaitIndex()];
+    if (code[nextOffset] != JSOP_DEBUGAFTERYIELD)
+        return false;
+
+    uint32_t offset = nextOffset - JSOP_YIELD_LENGTH;
+    MOZ_ASSERT(code[offset] == JSOP_INITIALYIELD || code[offset] == JSOP_YIELD ||
+               code[offset] == JSOP_AWAIT);
+
+    return code[offset] == op;
+}

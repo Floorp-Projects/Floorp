@@ -179,6 +179,13 @@ class GeneratorObject : public NativeObject
         setFixedSlot(NEWTARGET_SLOT, NullValue());
     }
 
+    bool isAfterYield();
+    bool isAfterAwait();
+
+private:
+    bool isAfterYieldOrAwait(JSOp op);
+
+public:
     static size_t offsetOfCalleeSlot() {
         return getFixedSlotOffset(CALLEE_SLOT);
     }
