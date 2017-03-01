@@ -54,7 +54,11 @@ public:
 
   static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom);
 
-  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIDocShell* aDocShell);
+  // Create NullPrincipal with origin attributes from docshell.
+  // If aIsFirstParty is true, and the pref 'privacy.firstparty.isolate' is also
+  // enabled, the mFirstPartyDomain value of the origin attributes will be set
+  // to NULL_PRINCIPAL_FIRST_PARTY_DOMAIN.
+  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIDocShell* aDocShell, bool aIsFirstParty = false);
 
   static already_AddRefed<nsNullPrincipal>
   Create(const mozilla::OriginAttributes& aOriginAttributes = mozilla::OriginAttributes(),

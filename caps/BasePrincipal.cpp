@@ -56,20 +56,44 @@ OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 {
   bool isFirstPartyEnabled = IsFirstPartyEnabled();
 
-  // When the pref is on, we also compute the firstPartyDomain attribute
-  // if this is for top-level document.
-  if (isFirstPartyEnabled && aIsTopLevelDocument) {
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    MOZ_ASSERT(tldService);
-    if (!tldService) {
-      return;
-    }
-
-    nsAutoCString baseDomain;
-    tldService->GetBaseDomain(aURI, 0, baseDomain);
-    mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+  // If the pref is off or this is not a top level load, bail out.
+  if (!isFirstPartyEnabled || !aIsTopLevelDocument) {
+    return;
   }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  MOZ_ASSERT(tldService);
+  if (!tldService) {
+    return;
+  }
+
+  nsAutoCString baseDomain;
+  nsresult rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
+  if (NS_FAILED(rv)) {
+    nsAutoCString scheme;
+    rv = aURI->GetScheme(scheme);
+    NS_ENSURE_SUCCESS_VOID(rv);
+    if (scheme.EqualsLiteral("about")) {
+      baseDomain.AssignLiteral(ABOUT_URI_FIRST_PARTY_DOMAIN);
+    }
+  }
+
+  mFirstPartyDomain = NS_ConvertUTF8toUTF16(baseDomain);
+}
+
+void
+OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
+                                      const nsACString& aDomain)
+{
+  bool isFirstPartyEnabled = IsFirstPartyEnabled();
+
+  // If the pref is off or this is not a top level load, bail out.
+  if (!isFirstPartyEnabled || !aIsTopLevelDocument) {
+    return;
+  }
+
+  mFirstPartyDomain = NS_ConvertUTF8toUTF16(aDomain);
 }
 
 void
