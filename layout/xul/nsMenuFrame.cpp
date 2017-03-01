@@ -138,7 +138,7 @@ public:
     return NS_OK;
   }
 protected:
-  AutoWeakFrame       mFrame;
+  WeakFrame         mFrame;
   nsCOMPtr<nsIAtom> mAttr;
 };
 
