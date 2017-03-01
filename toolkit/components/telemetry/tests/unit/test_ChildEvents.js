@@ -75,7 +75,6 @@ add_task(function*() {
 
   // Run test in child, don't wait for it to finish: just wait for the
   // MESSAGE_CHILD_TEST_DONE.
-  const timestampBeforeChildEvents = Telemetry.msSinceProcessStart();
   run_test_in_child("test_ChildEvents.js");
   yield do_await_remote_message(MESSAGE_CHILD_TEST_DONE);
 
@@ -83,7 +82,6 @@ add_task(function*() {
   // sent to the parent process. Wait for the Telemetry IPC Timer to trigger
   // and batch send the data back to the parent process.
   yield waitForContentEvents();
-  const timestampAfterChildEvents = Telemetry.msSinceProcessStart();
 
   // Also record some events in the parent.
   RECORDED_PARENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
@@ -93,36 +91,24 @@ add_task(function*() {
   // event measurements are only supported in subsession pings.
   const payload = TelemetrySession.getPayload("environment-change");
 
-  // Validate the event data is present in the payload.
+  // Validate the event data.
   Assert.ok("processes" in payload, "Should have processes section");
   Assert.ok("parent" in payload.processes, "Should have main process section");
   Assert.ok("events" in payload.processes.parent, "Main process section should have events.");
   Assert.ok("content" in payload.processes, "Should have child process section");
   Assert.ok("events" in payload.processes.content, "Child process section should have events.");
 
-  // Check that the expected events are present from the content process.
   let contentEvents = payload.processes.content.events.map(e => e.slice(1));
   Assert.equal(contentEvents.length, RECORDED_CONTENT_EVENTS.length, "Should match expected event count.");
   for (let i = 0; i < RECORDED_CONTENT_EVENTS.length; ++i) {
     Assert.deepEqual(contentEvents[i], RECORDED_CONTENT_EVENTS[i], "Should have recorded expected event.");
   }
 
-  // Check that the expected events are present from the parent process.
   let parentEvents = payload.processes.parent.events.map(e => e.slice(1));
   Assert.equal(parentEvents.length, RECORDED_PARENT_EVENTS.length, "Should match expected event count.");
   for (let i = 0; i < RECORDED_PARENT_EVENTS.length; ++i) {
     Assert.deepEqual(parentEvents[i], RECORDED_PARENT_EVENTS[i], "Should have recorded expected event.");
   }
-
-  // Check that the event timestamps are in the expected ranges.
-  let contentTimestamps = payload.processes.content.events.map(e => e[0]);
-  let parentTimestamps = payload.processes.parent.events.map(e => e[0]);
-
-  Assert.ok(contentTimestamps.every(ts => (ts > Math.floor(timestampBeforeChildEvents)) &&
-                                          (ts < timestampAfterChildEvents)),
-            "All content event timestamps should be in the expected time range.");
-  Assert.ok(parentTimestamps.every(ts => (ts >= Math.floor(timestampAfterChildEvents))),
-            "All parent event timestamps should be in the expected time range.");
 
   // Make sure all events are cleared from storage properly.
   let snapshot =
