@@ -8246,7 +8246,8 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     if (!updateSourceCoordNotes(pn->pn_pos.begin))
         return false;
 
-    if (sc->isFunctionBox() && sc->asFunctionBox()->isStarGenerator()) {
+    bool needsIteratorResult = sc->isFunctionBox() && sc->asFunctionBox()->needsIteratorResult();
+    if (needsIteratorResult) {
         if (!emitPrepareIteratorResult())
             return false;
     }
@@ -8261,7 +8262,7 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
             return false;
     }
 
-    if (sc->isFunctionBox() && sc->asFunctionBox()->isStarGenerator()) {
+    if (needsIteratorResult) {
         if (!emitFinishIteratorResult(true))
             return false;
     }
@@ -8333,7 +8334,8 @@ BytecodeEmitter::emitYield(ParseNode* pn)
     MOZ_ASSERT(sc->isFunctionBox());
 
     if (pn->getOp() == JSOP_YIELD) {
-        if (sc->asFunctionBox()->isStarGenerator()) {
+        bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
+        if (needsIteratorResult) {
             if (!emitPrepareIteratorResult())
                 return false;
         }
@@ -8344,7 +8346,7 @@ BytecodeEmitter::emitYield(ParseNode* pn)
             if (!emit1(JSOP_UNDEFINED))
                 return false;
         }
-        if (sc->asFunctionBox()->isStarGenerator()) {
+        if (needsIteratorResult) {
             if (!emitFinishIteratorResult(false))
                 return false;
         }
@@ -10097,14 +10099,19 @@ BytecodeEmitter::emitFunctionBody(ParseNode* funBody)
 
     if (funbox->needsFinalYield()) {
         // If we fall off the end of a generator, do a final yield.
-        if (funbox->isStarGenerator() && !emitPrepareIteratorResult())
-            return false;
+        bool needsIteratorResult = funbox->needsIteratorResult();
+        if (needsIteratorResult) {
+            if (!emitPrepareIteratorResult())
+                return false;
+        }
 
         if (!emit1(JSOP_UNDEFINED))
             return false;
 
-        if (funbox->isStarGenerator() && !emitFinishIteratorResult(true))
-            return false;
+        if (needsIteratorResult) {
+            if (!emitFinishIteratorResult(true))
+                return false;
+        }
 
         if (!emit1(JSOP_SETRVAL))
             return false;

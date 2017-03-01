@@ -548,6 +548,9 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool needsDotGeneratorName() const {
         return isStarGenerator() || isLegacyGenerator() || isAsync();
     }
+    bool needsIteratorResult() const {
+        return isStarGenerator() || isAsync();
+    }
 
     bool isAsync() const { return asyncKind() == AsyncFunction; }
     bool isArrow() const { return function()->isArrow(); }
