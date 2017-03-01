@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
-const AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS = 250;
+const AUTOCOMPLETE_AFTER_CONTEXTMENU_THRESHOLD_MS = 400;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
