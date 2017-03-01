@@ -6,7 +6,7 @@
 // debugger.
 
 add_task(function* () {
-  const url = `${EXAMPLE_URL }doc-script-switching.html`;
+  const url = EXAMPLE_URL + "doc-script-switching.html";
   const toolbox = yield openNewTabAndToolbox(url, "webconsole");
 
   // Type "debugger" into console
