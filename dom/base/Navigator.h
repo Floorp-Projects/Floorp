@@ -79,6 +79,7 @@ class DeviceStorageAreaListener;
 class Presentation;
 class LegacyMozTCPSocket;
 class VRDisplay;
+class VRServiceTest;
 class StorageManager;
 
 namespace time {
@@ -217,6 +218,7 @@ public:
   GamepadServiceTest* RequestGamepadServiceTest();
   already_AddRefed<Promise> GetVRDisplays(ErrorResult& aRv);
   void GetActiveVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays) const;
+  VRServiceTest* RequestVRServiceTest();
 #ifdef MOZ_TIME_MANAGER
   time::TimeManager* GetMozTime(ErrorResult& aRv);
 #endif // MOZ_TIME_MANAGER
@@ -329,6 +331,7 @@ private:
   RefPtr<Presentation> mPresentation;
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
   nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
+  RefPtr<VRServiceTest> mVRServiceTest;
   nsTArray<uint32_t> mRequestedVibrationPattern;
   RefPtr<StorageManager> mStorageManager;
 };
