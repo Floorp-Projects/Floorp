@@ -57,12 +57,16 @@ interface nsIPrefBranch : nsISupports
    * Called to get the state of an individual boolean preference.
    *
    * @param aPrefName The boolean preference to get the state of.
+   * @param aDefaultValue The value to return if the preference is not set.
    *
    * @return boolean  The value of the requested boolean preference.
    *
    * @see setBoolPref
    */
-  boolean getBoolPref(in string aPrefName);
+  [optional_argc,binaryname(GetBoolPrefWithDefault)]
+  boolean getBoolPref(in string aPrefName, [optional] in boolean aDefaultValue);
+  [noscript,binaryname(GetBoolPref)]
+  boolean getBoolPrefXPCOM(in string aPrefName);
 
   /**
    * Called to set the state of an individual boolean preference.
@@ -83,23 +87,31 @@ interface nsIPrefBranch : nsISupports
    * are converted to floating point numbers.
    *
    * @param aPrefName The floating point preference to get the state of.
+   * @param aDefaultValue The value to return if the preference is not set.
    *
    * @return float  The value of the requested floating point preference.
    *
    * @see setCharPref
    */
-  float getFloatPref(in string aPrefName);
+  [optional_argc,binaryname(GetFloatPrefWithDefault)]
+  float getFloatPref(in string aPrefName, [optional] in float aDefaultValue);
+  [noscript,binaryname(GetFloatPref)]
+  float getFloatPrefXPCOM(in string aPrefName);
 
   /**
    * Called to get the state of an individual string preference.
    *
    * @param aPrefName The string preference to retrieve.
+   * @param aDefaultValue The string to return if the preference is not set.
    *
    * @return string   The value of the requested string preference.
    *
    * @see setCharPref
    */
-  string getCharPref(in string aPrefName);
+  [optional_argc,binaryname(GetCharPrefWithDefault)]
+  string getCharPref(in string aPrefName, [optional] in string aDefaultValue);
+  [noscript,binaryname(GetCharPref)]
+  string getCharPrefXPCOM(in string aPrefName);
 
   /**
    * Called to set the state of an individual string preference.
@@ -118,12 +130,16 @@ interface nsIPrefBranch : nsISupports
    * Called to get the state of an individual integer preference.
    *
    * @param aPrefName The integer preference to get the value of.
+   * @param aDefaultValue The value to return if the preference is not set.
    *
    * @return long     The value of the requested integer preference.
    *
    * @see setIntPref
    */
-  long getIntPref(in string aPrefName);
+  [optional_argc,binaryname(GetIntPrefWithDefault)]
+  long getIntPref(in string aPrefName, [optional] in long aDefaultValue);
+  [noscript,binaryname(GetIntPref)]
+  long getIntPrefXPCOM(in string aPrefName);
 
   /**
    * Called to set the state of an individual integer preference.
