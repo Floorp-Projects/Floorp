@@ -63,11 +63,15 @@ emitted:
   Emitted when the testsuite starts running.
 
   ``tests``
-    A list of test ids. Test ids can either be strings or lists of
-    strings (an example of the latter is reftests where the id has the
-    form [test_url, ref_type, ref_url]) and are assumed to be unique
-    within a given testsuite. In cases where the test list is not
-    known upfront an empty list may be passed (list).
+    A dict of test ids keyed by group. Groups are any logical grouping
+    of tests, for example a manifest, directory or tag. For convenience,
+    a list of test ids can be used instead. In this case all tests will
+    automatically be placed in the 'default' group name. Test ids can
+    either be strings or lists of strings (an example of the latter is
+    reftests where the id has the form [test_url, ref_type, ref_url]).
+    Test ids are assumed to be unique within a given testsuite. In cases
+    where the test list is not known upfront an empty dict or list may
+    be passed (dict).
 
   ``run_info``
     An optional dictionary describing the properties of the

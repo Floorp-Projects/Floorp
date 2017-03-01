@@ -241,6 +241,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
 
     this.markup.destroy();
+
+    // Clear the pattern cache to avoid dead object exceptions (Bug 1342051).
+    this._clearCache();
     AutoRefreshHighlighter.prototype.destroy.call(this);
   },
 

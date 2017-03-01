@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::fmt;
 use std::result;
 use std::borrow::Cow;
+use std::error::Error;
 
 use common;
 use name::{Name, OwnedName};
@@ -42,18 +43,31 @@ impl From<io::Error> for EmitterError {
 
 impl fmt::Display for EmitterError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+
         try!(write!(f, "emitter error: "));
         match *self {
             EmitterError::Io(ref e) =>
                 write!(f, "I/O error: {}", e),
+            ref other =>
+                write!(f, "{}", other.description()),
+        }
+    }
+}
+
+impl Error for EmitterError {
+    fn description(&self) -> &str {
+        match *self {
+            EmitterError::Io(_) =>
+                "I/O error",
             EmitterError::DocumentStartAlreadyEmitted =>
-                write!(f, "document start event has already been emitted"),
+                "document start event has already been emitted",
             EmitterError::LastElementNameNotAvailable =>
-                write!(f, "last element name is not available"),
+                "last element name is not available",
             EmitterError::EndElementNameIsNotEqualToLastStartElementName =>
-                write!(f, "end element name is not equal to last start element name"),
+                "end element name is not equal to last start element name",
             EmitterError::EndElementNameIsNotSpecified =>
-                write!(f, "end element name is not specified and can't be inferred")
+                "end element name is not specified and can't be inferred",
         }
     }
 }

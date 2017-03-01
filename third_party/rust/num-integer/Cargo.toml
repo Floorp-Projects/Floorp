@@ -7,7 +7,7 @@ keywords = ["mathematics", "numerics"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-num/num"
 name = "num-integer"
-version = "0.1.32"
+version = "0.1.33"
 
 [dependencies.num-traits]
 path = "../traits"

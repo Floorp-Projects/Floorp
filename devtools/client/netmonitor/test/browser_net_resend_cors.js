@@ -12,10 +12,9 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CORS_URL);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { gStore, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let {
-    getDisplayedRequests,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");
 
@@ -44,7 +43,7 @@ add_task(function* () {
   let onRequests = waitForNetworkEvents(monitor, 1, 0);
   ITEMS.forEach((item) => {
     info(`Selecting the ${item.method} request`);
-    gStore.dispatch(Actions.selectRequest(item.id))
+    gStore.dispatch(Actions.selectRequest(item.id));
 
     info("Cloning the selected request into a custom clone");
     gStore.dispatch(Actions.cloneSelectedRequest());

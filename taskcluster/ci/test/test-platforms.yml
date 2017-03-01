@@ -67,7 +67,6 @@ linux64-stylo/opt:
     build-platform: linux64-stylo/opt
     test-sets:
         - stylo-tests
-        - talos
 
 # QR builds just run a subset right now. Note that the tests in this
 # test set are further restricted in tests.yml to run on certain projects

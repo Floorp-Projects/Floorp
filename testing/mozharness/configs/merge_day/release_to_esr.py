@@ -1,9 +1,10 @@
 import os
 
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
-NEW_ESR_REPO = "ssh://hg.mozilla.org/releases/mozilla-esr52"
-OLD_ESR_REPO = "https://hg.mozilla.org/releases/mozilla-esr45"
-OLD_ESR_CHANGESET = "d2d75f526882"
+NEW_ESR_REPO = "ssh://hg.mozilla.org/releases/mozilla-esr59"
+# ESR-specific branding (logo) lives in the old repo:
+OLD_ESR_REPO = "https://hg.mozilla.org/releases/mozilla-esr52"
+OLD_ESR_CHANGESET = "df0931ac8b02"
 
 config = {
     "log_name": "relese_to_esr",
@@ -41,14 +42,12 @@ config = {
     "to_repo_url": NEW_ESR_REPO,
 
     "base_tag": "FIREFOX_ESR_%(major_version)s_BASE",
-    "end_tag": "FIREFOX_ESR_%(major_version)s_END",
-
     "migration_behavior": "release_to_esr",
     "require_remove_locales": False,
-    "transplant_patches": [
+    "graft_patches": [
         {"repo": OLD_ESR_REPO,
          "changeset": OLD_ESR_CHANGESET},
     ],
     "requires_head_merge": False,
-    "pull_all_branches": True,
+    "pull_all_branches": False,
 }

@@ -15,9 +15,11 @@
     <p>Statistics test</p>
 
     <script type="text/javascript">
-      function get(aAddress) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress, true);
+      "use strict";
+
+      function get(address) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
         xhr.send(null);
       }
 

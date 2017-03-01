@@ -53,6 +53,11 @@ pub mod parsing {
             expr_path
             |
             expr_paren
+            // Cannot handle ConstExpr::Other here because for example
+            // `[u32; n!()]` would end up successfully parsing `n` as
+            // ConstExpr::Path and then fail to parse `!()`. Instead, callers
+            // are required to handle Other. See ty::parsing::array_len and
+            // data::parsing::discriminant.
         ) >>
         many0!(alt!(
             tap!(args: and_call => {

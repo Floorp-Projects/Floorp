@@ -74,6 +74,11 @@ public:
   // reference to the decoder to prevent further calls into the decoder.
   virtual void DecodeError(const MediaResult& aError) = 0;
 
+  // Called by the decoder object, on the main thread, when the
+  // resource has a decode issue during metadata loading or decoding, but can
+  // continue decoding.
+  virtual void DecodeWarning(const MediaResult& aError) = 0;
+
   // Return true if media element error attribute is not null.
   virtual bool HasError() const = 0;
 

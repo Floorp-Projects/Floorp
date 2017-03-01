@@ -13,13 +13,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
   info("Starting test... ");
 
-  let { document, gStore, windowRequire } = monitor.panelWin;
+  let { document, gStore, windowRequire, NetMonitorView } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { EVENTS } = windowRequire("devtools/client/netmonitor/constants");
   let {
-    getDisplayedRequests,
+    getSelectedRequest,
     getSortedRequests,
   } = windowRequire("devtools/client/netmonitor/selectors/index");
+  let Editor = require("devtools/client/sourceeditor/editor");
 
   gStore.dispatch(Actions.batchEnable(false));
 

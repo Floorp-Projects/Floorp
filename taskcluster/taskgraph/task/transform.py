@@ -102,8 +102,12 @@ class TransformTask(base.Task):
                              self.label)
                 return True, None
 
+        # no need to call SETA for build jobs
+        if self.task.get('extra', {}).get('treeherder', {}).get('jobKind', '') == 'build':
+            return False, None
+
         # for bbb tasks we need to send in the buildbot buildername
-        if self.task.get('provisionerId') == 'buildbot-bridge':
+        if self.task.get('provisionerId', '') == 'buildbot-bridge':
             self.label = self.task.get('payload').get('buildername')
             bbb_task = True
 

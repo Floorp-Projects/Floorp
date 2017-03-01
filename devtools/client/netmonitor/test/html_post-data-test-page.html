@@ -27,46 +27,49 @@
     </form>
 
     <script type="text/javascript">
-      function post(aAddress, aMessage, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", aAddress, true);
+      /* exported performRequests */
+      "use strict";
+
+      function post(address, message, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", address, true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        var data = "";
-        for (var i in aMessage) {
-          data += "&" + i + "=" + aMessage[i];
+        let data = "";
+        for (let i in message) {
+          data += "&" + i + "=" + message[i];
         }
 
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send(data);
       }
 
-      function form(aAddress, aForm, aCallback) {
-        var formData = new FormData(document.forms.namedItem(aForm));
+      function form(address, formName, callback) {
+        let formData = new FormData(document.forms.namedItem(formName));
         formData.append("Custom field", "Extra data");
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", aAddress, true);
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send(formData);
       }
 
       function performRequests() {
-        var url = "sjs_simple-test-server.sjs";
-        var url1 = url + "?foo=bar&baz=42&type=urlencoded";
-        var url2 = url + "?foo=bar&baz=42&type=multipart";
+        const url = "sjs_simple-test-server.sjs";
+        const url1 = url + "?foo=bar&baz=42&type=urlencoded";
+        const url2 = url + "?foo=bar&baz=42&type=multipart";
 
-        post(url1, { foo: "bar", baz: 123 }, function() {
-          form(url2, "form-name", function() {
+        post(url1, { foo: "bar", baz: 123 }, function () {
+          form(url2, "form-name", function () {
             // Done.
           });
         });

@@ -124,14 +124,6 @@ MP4Demuxer::Init()
 {
   AutoPinned<mp4_demuxer::ResourceStream> stream(mStream);
 
-  // Check that we have enough data to read the metadata.
-  if (!mp4_demuxer::MP4Metadata::HasCompleteMetadata(stream)) {
-    return InitPromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                  RESULT_DETAIL("Incomplete MP4 metadata")),
-      __func__);
-  }
-
   RefPtr<MediaByteBuffer> initData = mp4_demuxer::MP4Metadata::Metadata(stream);
   if (!initData) {
     return InitPromise::CreateAndReject(

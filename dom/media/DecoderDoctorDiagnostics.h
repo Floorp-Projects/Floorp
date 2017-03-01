@@ -7,6 +7,7 @@
 #ifndef DecoderDoctorDiagnostics_h_
 #define DecoderDoctorDiagnostics_h_
 
+#include "MediaResult.h"
 #include "nsString.h"
 
 class nsIDocument;
@@ -57,11 +58,24 @@ public:
                   const DecoderDoctorEvent& aEvent,
                   const char* aCallSite);
 
-  enum DiagnosticsType {
+  void StoreDecodeError(nsIDocument* aDocument,
+                        const MediaResult& aError,
+                        const nsString& aMediaSrc,
+                        const char* aCallSite);
+
+  void StoreDecodeWarning(nsIDocument* aDocument,
+                          const MediaResult& aWarning,
+                          const nsString& aMediaSrc,
+                          const char* aCallSite);
+
+  enum DiagnosticsType
+  {
     eUnsaved,
     eFormatSupportCheck,
     eMediaKeySystemAccessRequest,
-    eEvent
+    eEvent,
+    eDecodeError,
+    eDecodeWarning
   };
   DiagnosticsType Type() const { return mDiagnosticsType; }
 
@@ -108,6 +122,12 @@ public:
     return mEvent;
   }
 
+  const MediaResult& DecodeIssue() const { return mDecodeIssue; }
+  const nsString& DecodeIssueMediaSrc() const
+  {
+    return mDecodeIssueMediaSrc;
+  }
+
 private:
   // Currently-known type of diagnostics. Set from one of the 'Store...' methods.
   // This helps ensure diagnostics are only stored once,
@@ -130,6 +150,9 @@ private:
   KeySystemIssue mKeySystemIssue = eUnset;
 
   DecoderDoctorEvent mEvent;
+
+  MediaResult mDecodeIssue = NS_OK;
+  nsString mDecodeIssueMediaSrc;
 };
 
 } // namespace mozilla

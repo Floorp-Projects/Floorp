@@ -105,7 +105,7 @@ private:
   CRITICAL_SECTION          mCSForQI;
 };
 
-class WeakRef : public IWeakReference
+class WeakRef final : public IWeakReference
 {
 public:
   // IUnknown
@@ -119,6 +119,8 @@ public:
   explicit WeakRef(RefPtr<detail::SharedRef>& aSharedRef);
 
 private:
+  ~WeakRef() = default;
+
   Atomic<ULONG>             mRefCnt;
   RefPtr<detail::SharedRef> mSharedRef;
 };

@@ -3,7 +3,7 @@
 #![allow(unused_variables)]
 #![forbid(non_camel_case_types)]
 
-//! This crate currently provides almost XML 1.0/1.1-compliant pull parser.
+//! This crate currently provides an almost XML 1.0/1.1-compliant pull parser.
 
 #[macro_use]
 extern crate bitflags;

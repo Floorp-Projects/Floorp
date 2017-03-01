@@ -1,6 +1,6 @@
 [package]
 name = "parking_lot"
-version = "0.3.7"
+version = "0.3.8"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "More compact and efficient implementations of the standard synchronization primitives."
 documentation = "https://amanieu.github.io/parking_lot/parking_lot/index.html"

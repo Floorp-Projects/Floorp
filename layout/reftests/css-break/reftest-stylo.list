@@ -10,4 +10,4 @@ fails == box-decoration-break-border-image.html box-decoration-break-border-imag
 fails == box-decoration-break-first-letter.html box-decoration-break-first-letter.html
 == box-decoration-break-with-bidi.html box-decoration-break-with-bidi.html
 == box-decoration-break-bug-1235152.html box-decoration-break-bug-1235152.html
-fails == box-decoration-break-bug-1249913.html box-decoration-break-bug-1249913.html
+== box-decoration-break-bug-1249913.html box-decoration-break-bug-1249913.html
