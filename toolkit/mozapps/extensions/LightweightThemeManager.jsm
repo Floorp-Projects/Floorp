@@ -662,8 +662,9 @@ function _getInternalID(id) {
 function _setCurrentTheme(aData, aLocal) {
   aData = _sanitizeTheme(aData, null, aLocal);
 
-  let needsRestart = (ADDON_TYPE == "theme") &&
-                     Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN);
+  let needsRestart = (aData.type == "theme") &&
+                     Services.prefs.prefHasUserValue(PREF_GENERAL_SKINS_SELECTEDSKIN) &&
+                     !Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED);
 
   let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
   cancel.data = false;
