@@ -16,6 +16,7 @@ config = {
         "MOZ_MAKE_COMPLETE_MAR": "1",
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
+        'EN_US_PACKAGE_NAME': 'target.tar.bz2',
     },
     "ssh_key_dir": "/home/mock_mozilla/.ssh",
     "log_name": "single_locale",
