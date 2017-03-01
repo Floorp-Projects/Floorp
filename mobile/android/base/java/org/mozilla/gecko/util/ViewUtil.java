@@ -170,7 +170,7 @@ public class ViewUtil {
      * @param textDirection
      */
     public static void setTextDirection(TextView textView, int textDirection) {
-        if(AppConstants.Versions.feature17Plus) {
+        if (AppConstants.Versions.feature17Plus) {
             textView.setTextDirection(textDirection);
         }
     }
