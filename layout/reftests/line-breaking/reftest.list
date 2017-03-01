@@ -34,10 +34,10 @@ skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1-ref.html
 == smileys-2.html smileys-2-ref.html
 == space-cluster-1.html space-cluster-1-ref.html
 == space-cluster-2.html space-cluster-2-ref.html
-fails == surrogates-1.html surrogates-1-ref.html
-fails == surrogates-2.html surrogates-2-ref.html
-fails == surrogates-3.html surrogates-3-ref.html
-fails == surrogates-4.html surrogates-4-ref.html
+== surrogates-1.html surrogates-1-ref.html
+== surrogates-2.html surrogates-2-ref.html
+== surrogates-3.html surrogates-3-ref.html
+== surrogates-4.html surrogates-4-ref.html
 == url-1.html url-1-ref.html
 == url-2.html url-2-ref.html
 == url-3.html url-3-ref.html
