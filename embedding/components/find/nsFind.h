@@ -34,8 +34,6 @@ public:
 
   nsFind();
 
-  static already_AddRefed<nsIDOMRange> CreateRange(nsINode* aNode);
-
 protected:
   virtual ~nsFind();
 
