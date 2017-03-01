@@ -38,7 +38,13 @@ namespace wr {
 /// on the render thread instead of the compositor thread.
 class RendererOGL
 {
+  friend WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId);
+  friend void UnlockExternalImage(void* aObj, WrExternalImageId aId);
+  friend void ReleaseExternalImage(void* aObj, WrExternalImageId aId);
+
 public:
+  WrExternalImageHandler GetExternalImageHandler();
+
   /// This can be called on the render thread only.
   void Update();
 

@@ -238,6 +238,13 @@ static inline WrPoint ToWrPoint(const gfx::Point& point)
   return p;
 }
 
+static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
+{
+  WrExternalImageId id;
+  id.id = aID;
+  return id;
+}
+
 struct ByteBuffer
 {
   ByteBuffer(size_t aLength, uint8_t* aData)
