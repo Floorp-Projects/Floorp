@@ -1,5 +1,6 @@
 /**
- * @fileoverview Import globals from browser.js.
+ * @fileoverview Defines the environment when in the browser.xul window.
+ *               Imports many globals from various files.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +13,6 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
-var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
@@ -56,35 +56,29 @@ const SCRIPTS = [
   "toolkit/content/editMenuOverlay.js"
 ];
 
-module.exports = function(context) {
-  return {
-    Program: function(node) {
-      let filepath = helpers.getAbsoluteFilePath(context);
-      let root = helpers.getRootDir(filepath);
-      let relativepath = path.relative(root, filepath);
-
-      if ((helpers.getTestType(context) != "browser" &&
-          !helpers.getIsHeadFile(context)) &&
-          !relativepath.includes("content")) {
-        return;
-      }
-
-      for (let script of SCRIPTS) {
-        let fileName = path.join(root, script);
-        try {
-          let newGlobals = globals.getGlobalsForFile(fileName);
-          helpers.addGlobals(newGlobals, context.getScope());
-        } catch (e) {
-          context.report(
-            node,
-            "Could not load globals from file {{filePath}}: {{error}}",
-            {
-              filePath: path.relative(root, fileName),
-              error: e
-            }
-          );
-        }
-      }
+function getScriptGlobals() {
+  let fileGlobals = [];
+  let root = helpers.getRootDir(module.filename);
+  for (let script of SCRIPTS) {
+    let fileName = path.join(root, script);
+    try {
+      fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
+    } catch (e) {
+      throw new Error(`Could not load globals from file ${fileName}: ${e}`)
     }
-  };
+  }
+
+  return fileGlobals;
+}
+
+function mapGlobals(fileGlobals) {
+  var globalObjects = {};
+  for (let global of fileGlobals) {
+    globalObjects[global.name] = global.writable;
+  }
+  return globalObjects;
+}
+
+module.exports = {
+  globals: mapGlobals(getScriptGlobals())
 };
