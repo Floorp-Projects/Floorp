@@ -331,6 +331,15 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
 {
   NS_ENSURE_ARG_POINTER(aPO);
 
+  // This is sometimes incorrectly called before the pres shell has been created
+  // (bug 1141756). MOZ_DIAGNOSTIC_ASSERT so we'll still see the crash in
+  // Nightly/Aurora in case the other patch fixes this.
+  if (!aPO->mPresShell) {
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "GetSeqFrameAndCountPages needs a non-null pres shell");
+    return NS_ERROR_FAILURE;
+  }
+
   // Finds the SimplePageSequencer frame
   nsIPageSequenceFrame* seqFrame = aPO->mPresShell->GetPageSequenceFrame();
   aSeqFrame = do_QueryFrame(seqFrame);
