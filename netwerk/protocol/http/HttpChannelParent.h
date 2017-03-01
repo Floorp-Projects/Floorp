@@ -122,6 +122,7 @@ protected:
                    const int16_t&             priority,
                    const uint32_t&            classOfService,
                    const uint8_t&             redirectionLimit,
+                   const bool&                allowPipelining,
                    const bool&                allowSTS,
                    const uint32_t&            thirdPartyFlags,
                    const bool&                doResumeAt,
