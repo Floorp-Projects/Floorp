@@ -229,9 +229,11 @@ def target_tasks_candidates_fennec(full_task_graph, parameters):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filtered_for_project = target_tasks_nightly(full_task_graph, parameters)
+
     def filter(task):
         if task.kind not in ['balrog']:
             return task.attributes.get('nightly', False)
+
     return [l for l in filtered_for_project if filter(full_task_graph[l])]
 
 
