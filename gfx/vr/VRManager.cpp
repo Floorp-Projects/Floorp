@@ -22,6 +22,7 @@
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
 #include "gfxVROSVR.h"
 #endif
+#include "gfxVRPuppet.h"
 #include "ipc/VRLayerParent.h"
 
 using namespace mozilla;
@@ -88,6 +89,10 @@ VRManager::VRManager()
       mManagers.AppendElement(mgr);
   }
 #endif
+  mgr = VRSystemManagerPuppet::Create();
+  if (mgr) {
+    mManagers.AppendElement(mgr);
+  }
   // Enable gamepad extensions while VR is enabled.
   // Preference only can be set at the Parent process.
   if (XRE_IsParentProcess() && gfxPrefs::VREnabled()) {
