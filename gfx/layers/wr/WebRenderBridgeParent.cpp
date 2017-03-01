@@ -340,35 +340,15 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
           break;
         }
 
-        nsIntRegion validBufferRegion = op.validBufferRegion().ToUnknownRegion();
-        IntRect validRect = IntRect(IntPoint(0,0), dSurf->GetSize());
-        if (!validBufferRegion.IsEmpty()) {
-          IntPoint offset = validBufferRegion.GetBounds().TopLeft();
-          validBufferRegion.MoveBy(-offset);
-          validBufferRegion.AndWith(IntRect(IntPoint(0,0), dSurf->GetSize()));
-          validRect = validBufferRegion.GetBounds().ToUnknownRect();
-
-          // XXX Remove it when we can put subimage in WebRender.
-          RefPtr<DrawTarget> target =
-           gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, validRect.Size(), SurfaceFormat::B8G8R8A8);
-          for (auto iter = validBufferRegion.RectIter(); !iter.Done(); iter.Next()) {
-            IntRect regionRect = iter.Get();
-            Rect srcRect(regionRect.x + offset.x, regionRect.y + offset.y, regionRect.width, regionRect.height);
-            Rect dstRect(regionRect.x, regionRect.y, regionRect.width, regionRect.height);
-            target->DrawSurface(dSurf, dstRect, srcRect);
-          }
-          RefPtr<SourceSurface> surf = target->Snapshot();
-          dSurf = surf->GetDataSurface();
-        }
-
         DataSourceSurface::MappedSurface map;
         if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
           break;
         }
 
-        wr::ImageDescriptor descriptor(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8);
+        IntSize size = dSurf->GetSize();
+        wr::ImageDescriptor descriptor(size, map.mStride, SurfaceFormat::B8G8R8A8);
         wr::ImageKey key = op.key();
-        auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
+        auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
         mApi->AddImage(key, descriptor, slice);
 
         keysToDelete.push_back(key);

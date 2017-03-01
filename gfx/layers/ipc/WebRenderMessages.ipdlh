@@ -98,17 +98,7 @@ struct OpDPPushImage {
   ImageKey key;
 };
 
-struct OpDPPushExternalImageId {
-  LayerIntRegion validBufferRegion;
-  WrRect bounds;
-  WrRect clip;
-  MaybeImageMask mask;
-  ImageRendering filter;
-  uint64_t externalImageId;
-};
-
 struct OpAddExternalImage {
-  LayerIntRegion validBufferRegion;
   uint64_t externalImageId;
   ImageKey key;
 };
