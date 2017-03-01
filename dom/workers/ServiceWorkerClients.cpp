@@ -193,14 +193,17 @@ class MatchAllRunnable final : public Runnable
   };
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  nsCString mScope;
-  bool mIncludeUncontrolled;
+  const nsCString mScope;
+  const uint64_t mServiceWorkerID;
+  const bool mIncludeUncontrolled;
 public:
   MatchAllRunnable(PromiseWorkerProxy* aPromiseProxy,
                    const nsCString& aScope,
+                   uint64_t aServiceWorkerID,
                    bool aIncludeUncontrolled)
     : mPromiseProxy(aPromiseProxy),
       mScope(aScope),
+      mServiceWorkerID(aServiceWorkerID),
       mIncludeUncontrolled(aIncludeUncontrolled)
   {
     MOZ_ASSERT(mPromiseProxy);
@@ -220,7 +223,8 @@ public:
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(),
-                         mScope, mIncludeUncontrolled, result);
+                         mScope, mServiceWorkerID, mIncludeUncontrolled,
+                         result);
     }
     RefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
@@ -831,6 +835,7 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
   RefPtr<MatchAllRunnable> r =
     new MatchAllRunnable(promiseProxy,
                          NS_ConvertUTF16toUTF8(scope),
+                         workerPrivate->ServiceWorkerID(),
                          aOptions.mIncludeUncontrolled);
   MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThread(r.forget()));
   return promise.forget();

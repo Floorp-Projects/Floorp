@@ -2949,6 +2949,7 @@ ServiceWorkerManager::GetClient(nsIPrincipal* aPrincipal,
 void
 ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
                                     const nsCString& aScope,
+                                    uint64_t aServiceWorkerID,
                                     bool aIncludeUncontrolled,
                                     nsTArray<ServiceWorkerClientInfo>& aDocuments)
 {
@@ -3004,10 +3005,13 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
     }
 
     // If we are only returning controlled Clients then skip any documents
-    // that are for different registrations.
+    // that are for different registrations.  We also skip service workers
+    // that don't match the ID of our calling service worker.  We should
+    // only return Clients controlled by that precise service worker.
     if (!aIncludeUncontrolled) {
       ServiceWorkerRegistrationInfo* reg = mControlledDocuments.GetWeak(doc);
-      if (!reg || reg->mScope != registration->mScope) {
+      if (!reg || reg->mScope != aScope || !reg->GetActive() ||
+          reg->GetActive()->ID() != aServiceWorkerID) {
         continue;
       }
     }
