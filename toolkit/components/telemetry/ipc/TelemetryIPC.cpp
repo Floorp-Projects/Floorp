@@ -7,7 +7,6 @@
 #include "TelemetryIPC.h"
 #include "../TelemetryScalar.h"
 #include "../TelemetryHistogram.h"
-#include "../TelemetryEvent.h"
 
 namespace mozilla {
 
@@ -37,12 +36,6 @@ TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType aProcessType,
                                       const nsTArray<Telemetry::KeyedScalarAction>& aScalarActions)
 {
   TelemetryScalar::UpdateChildKeyedData(aProcessType, aScalarActions);
-}
-
-void
-TelemetryIPC::RecordChildEvents(GeckoProcessType aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents)
-{
-  TelemetryEvent::RecordChildEvents(aProcessType, aEvents);
 }
 
 }

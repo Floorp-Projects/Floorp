@@ -38,7 +38,6 @@ struct Accumulation;
 struct KeyedAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
-struct ChildEventData;
 
 enum TimerResolution {
   Millisecond,

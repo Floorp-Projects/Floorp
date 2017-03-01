@@ -1028,17 +1028,15 @@ var Impl = {
       return [];
     }
 
-    let snapshot = Telemetry.snapshotBuiltinEvents(this.getDatasetType(),
-                                                   clearSubsession);
+    let events = Telemetry.snapshotBuiltinEvents(this.getDatasetType(),
+                                                 clearSubsession);
 
     // Don't return the test events outside of test environments.
     if (!this._testing) {
-      for (let proc of Object.keys(snapshot)) {
-        snapshot[proc] = snapshot[proc].filter(e => !e[1].startsWith("telemetry.test"));
-      }
+      events = events.filter(e => !e[1].startsWith("telemetry.test"));
     }
 
-    return snapshot;
+    return events;
   },
 
   getThreadHangStats: function getThreadHangStats(stats) {
@@ -1298,7 +1296,6 @@ var Impl = {
     let keyedHistograms = protect(() => this.getKeyedHistograms(isSubsession, clearSubsession), {});
     let scalars = protect(() => this.getScalars(isSubsession, clearSubsession), {});
     let keyedScalars = protect(() => this.getScalars(isSubsession, clearSubsession, true), {});
-    let events = protect(() => this.getEvents(isSubsession, clearSubsession))
 
     payloadObj.histograms = histograms[HISTOGRAM_SUFFIXES.PARENT] || {};
     payloadObj.keyedHistograms = keyedHistograms[HISTOGRAM_SUFFIXES.PARENT] || {};
@@ -1306,14 +1303,13 @@ var Impl = {
       parent: {
         scalars: scalars[INTERNAL_PROCESSES_NAMES.PARENT] || {},
         keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.PARENT] || {},
-        events: events[INTERNAL_PROCESSES_NAMES.PARENT] || [],
+        events: protect(() => this.getEvents(isSubsession, clearSubsession)),
       },
       content: {
         scalars: scalars[INTERNAL_PROCESSES_NAMES.CONTENT],
         keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.CONTENT],
         histograms: histograms[HISTOGRAM_SUFFIXES.CONTENT],
         keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.CONTENT],
-        events: events[INTERNAL_PROCESSES_NAMES.CONTENT] || [],
       },
     };
 
@@ -1327,7 +1323,6 @@ var Impl = {
         keyedScalars: keyedScalars[INTERNAL_PROCESSES_NAMES.GPU],
         histograms: histograms[HISTOGRAM_SUFFIXES.GPU],
         keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.GPU],
-        events: events[INTERNAL_PROCESSES_NAMES.GPU] || [],
       };
     }
 
