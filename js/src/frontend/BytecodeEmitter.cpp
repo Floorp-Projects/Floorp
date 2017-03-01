@@ -3163,10 +3163,11 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
+      case PNK_INITIALYIELD:
       case PNK_YIELD_STAR:
       case PNK_YIELD:
       case PNK_AWAIT:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
         *answer = true;
         return true;
 
@@ -8329,45 +8330,61 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitYield(ParseNode* pn)
+BytecodeEmitter::emitGetDotGenerator()
 {
-    MOZ_ASSERT(sc->isFunctionBox());
+    NameLocation loc = *locationOfNameBoundInFunctionScope(cx->names().dotGenerator);
+    return emitGetNameAtLocation(cx->names().dotGenerator, loc);
+}
 
-    if (pn->getOp() == JSOP_YIELD || pn->getOp() == JSOP_AWAIT) {
-        bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
-        if (needsIteratorResult) {
-            if (!emitPrepareIteratorResult())
-                return false;
-        }
-        if (pn->pn_left) {
-            if (!emitTree(pn->pn_left))
-                return false;
-        } else {
-            if (!emit1(JSOP_UNDEFINED))
-                return false;
-        }
-        if (needsIteratorResult) {
-            if (!emitFinishIteratorResult(false))
-                return false;
-        }
-    } else {
-        MOZ_ASSERT(pn->getOp() == JSOP_INITIALYIELD);
-    }
-
-    if (!emitTree(pn->pn_right))
+bool
+BytecodeEmitter::emitInitialYield(ParseNode* pn)
+{
+    if (!emitTree(pn->pn_kid))
         return false;
 
-    if (!emitYieldOp(pn->getOp()))
+    if (!emitYieldOp(JSOP_INITIALYIELD))
         return false;
 
-    if (pn->getOp() == JSOP_INITIALYIELD && !emit1(JSOP_POP))
+    if (!emit1(JSOP_POP))
         return false;
 
     return true;
 }
 
 bool
-BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
+BytecodeEmitter::emitYield(ParseNode* pn)
+{
+    MOZ_ASSERT(sc->isFunctionBox());
+    MOZ_ASSERT(pn->getOp() == JSOP_YIELD || pn->getOp() == JSOP_AWAIT);
+
+    bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
+    if (needsIteratorResult) {
+        if (!emitPrepareIteratorResult())
+            return false;
+    }
+    if (pn->pn_kid) {
+        if (!emitTree(pn->pn_kid))
+            return false;
+    } else {
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+    }
+    if (needsIteratorResult) {
+        if (!emitFinishIteratorResult(false))
+            return false;
+    }
+
+    if (!emitGetDotGenerator())
+        return false;
+
+    if (!emitYieldOp(pn->getOp()))
+        return false;
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitYieldStar(ParseNode* iter)
 {
     MOZ_ASSERT(sc->isFunctionBox());
     MOZ_ASSERT(sc->asFunctionBox()->isStarGenerator());
@@ -8397,7 +8414,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
     MOZ_ASSERT(this->stackDepth == startDepth);
 
     // Load the generator object.
-    if (!emitTree(gen))                                   // ITER RESULT GENOBJ
+    if (!emitGetDotGenerator())                           // ITER RESULT GENOBJ
         return false;
 
     // Yield RESULT as-is, without re-boxing.
@@ -10116,8 +10133,7 @@ BytecodeEmitter::emitFunctionBody(ParseNode* funBody)
         if (!emit1(JSOP_SETRVAL))
             return false;
 
-        NameLocation loc = *locationOfNameBoundInFunctionScope(cx->names().dotGenerator);
-        if (!emitGetNameAtLocation(cx->names().dotGenerator, loc))
+        if (!emitGetDotGenerator())
             return false;
 
         // No need to check for finally blocks, etc as in EmitReturn.
@@ -10370,12 +10386,17 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_YIELD_STAR:
-        if (!emitYieldStar(pn->pn_left, pn->pn_right))
+        if (!emitYieldStar(pn->pn_kid))
             return false;
         break;
 
       case PNK_GENERATOR:
         if (!emit1(JSOP_GENERATOR))
+            return false;
+        break;
+
+      case PNK_INITIALYIELD:
+        if (!emitInitialYield(pn))
             return false;
         break;
 
