@@ -276,7 +276,9 @@ InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc)
     UnwindAllEnvironmentsInFrame(cx, ei);
 
     if (isFunctionFrame()) {
-        if (!callee().isGenerator() &&
+        if (!callee().isStarGenerator() &&
+            !callee().isLegacyGenerator() &&
+            !callee().isAsync() &&
             isConstructing() &&
             thisArgument().isObject() &&
             returnValue().isPrimitive())

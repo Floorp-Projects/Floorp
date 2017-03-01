@@ -3416,10 +3416,10 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
     RootedFunction func(cx, pn->pn_funbox->function());
 
     GeneratorStyle generatorStyle =
-        pn->pn_funbox->isGenerator()
-        ? (pn->pn_funbox->isLegacyGenerator()
-           ? GeneratorStyle::Legacy
-           : GeneratorStyle::ES6)
+        pn->pn_funbox->isStarGenerator()
+        ? GeneratorStyle::ES6
+        : pn->pn_funbox->isLegacyGenerator()
+        ? GeneratorStyle::Legacy
         : GeneratorStyle::None;
 
     bool isAsync = pn->pn_funbox->isAsync();
