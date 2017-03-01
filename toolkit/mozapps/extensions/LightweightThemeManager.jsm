@@ -19,6 +19,7 @@ const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_DSS_ENABLED    = "extensions.dss.enabled";
 const ADDON_TYPE             = "theme";
+const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 
@@ -354,7 +355,7 @@ this.LightweightThemeManager = {
    *         restart
    */
   addonChanged(aId, aType, aPendingRestart) {
-    if (aType != ADDON_TYPE)
+    if (aType != ADDON_TYPE && aType != ADDON_TYPE_WEBEXT)
       return;
 
     let id = _getInternalID(aId);
