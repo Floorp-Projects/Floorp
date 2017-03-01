@@ -2974,61 +2974,64 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
     return;
   }
 
-  auto ProcessDocument = [&aDocuments](nsIPrincipal* aPrincipal, nsIDocument* aDoc) {
-    if (!aDoc || !aDoc->GetWindow()) {
-      return;
+  // Get a list of Client documents out of the observer service
+  AutoTArray<nsCOMPtr<nsIDocument>, 32> docList;
+  bool loop = true;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&loop)) && loop) {
+    nsCOMPtr<nsISupports> ptr;
+    rv = enumerator->GetNext(getter_AddRefs(ptr));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
+    if (!doc || !doc->GetWindow()) {
+      continue;
     }
 
     bool equals = false;
-    aPrincipal->Equals(aDoc->NodePrincipal(), &equals);
+    Unused << aPrincipal->Equals(doc->NodePrincipal(), &equals);
     if (!equals) {
-      return;
+      continue;
     }
 
     // Treat http windows with devtools opened as secure if the correct devtools
     // setting is enabled.
-    if (!aDoc->GetWindow()->GetServiceWorkersTestingEnabled() &&
+    if (!doc->GetWindow()->GetServiceWorkersTestingEnabled() &&
         !Preferences::GetBool("dom.serviceWorkers.testing.enabled") &&
-        !IsFromAuthenticatedOrigin(aDoc)) {
-      return;
+        !IsFromAuthenticatedOrigin(doc)) {
+      continue;
     }
 
-    ServiceWorkerClientInfo clientInfo(aDoc);
-    aDocuments.AppendElement(aDoc);
-  };
-
-  // Since it's not simple to check whether a document is in
-  // mControlledDocuments, we take different code paths depending on whether we
-  // need to look at all documents.  The common parts of the two loops are
-  // factored out into the ProcessDocument lambda.
-  if (aIncludeUncontrolled) {
-    bool loop = true;
-    while (NS_SUCCEEDED(enumerator->HasMoreElements(&loop)) && loop) {
-      nsCOMPtr<nsISupports> ptr;
-      rv = enumerator->GetNext(getter_AddRefs(ptr));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If we are only returning controlled Clients then skip any documents
+    // that are for different registrations.
+    if (!aIncludeUncontrolled) {
+      ServiceWorkerRegistrationInfo* reg = mControlledDocuments.GetWeak(doc);
+      if (!reg || reg->mScope != registration->mScope) {
         continue;
       }
-
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
-      ProcessDocument(aPrincipal, doc);
     }
-  } else {
-    for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
-      ServiceWorkerRegistrationInfo* thisRegistration = iter.UserData();
-      MOZ_ASSERT(thisRegistration);
-      if (!registration->mScope.Equals(thisRegistration->mScope)) {
-        continue;
-      }
 
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
-
-      // All controlled documents must have an outer window.
-      MOZ_ASSERT(doc->GetWindow());
-
-      ProcessDocument(aPrincipal, doc);
+    if (!aIncludeUncontrolled && !mControlledDocuments.Contains(doc)) {
+      continue;
     }
+
+    docList.AppendElement(doc.forget());
   }
+
+  // The observer service gives us the list in reverse creation order.
+  // We need to maintain creation order, so reverse the list before
+  // processing.
+  docList.Reverse();
+
+  // Finally convert to the list of ServiceWorkerClientInfo objects.
+  uint32_t ordinal = 0;
+  for (uint32_t i = 0; i < docList.Length(); ++i) {
+    aDocuments.AppendElement(ServiceWorkerClientInfo(docList[i], ordinal));
+    ordinal += 1;
+  }
+
+  aDocuments.Sort();
 }
 
 void
