@@ -440,7 +440,7 @@ class FullParseHandler
 
     ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value, ParseNode* gen) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
-        return new_<BinaryNode>(PNK_AWAIT, JSOP_YIELD, pos, value, gen);
+        return new_<BinaryNode>(PNK_AWAIT, JSOP_AWAIT, pos, value, gen);
     }
 
     // Statements
