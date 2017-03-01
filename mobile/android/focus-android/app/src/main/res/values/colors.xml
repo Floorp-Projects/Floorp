@@ -10,9 +10,13 @@
     <color name="colorGradientCenter">#FF83377B</color>
     <color name="colorGradientEnd">#FF29528C</color>
 
-    <color name="colorUrlBarGradientStart">#FF9B3A4D</color>
-    <color name="colorUrlBarGradientCenter">#FF843779</color>
-    <color name="colorUrlBarGradientEnd">#FF3E4B89</color>
+    <color name="colorActiveGradientStart">#FF9B3A4D</color>
+    <color name="colorActiveGradientCenter">#FF82377D</color>
+    <color name="colorActiveGradientEnd">#FF3E4C8A</color>
+
+    <color name="coloInactiveGradientStart">#FF503B44</color>
+    <color name="colorInactiveGradientCenter">#FF493A50</color>
+    <color name="colorInactiveGradientEnd">#FF383F53</color>
 
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 
@@ -20,6 +24,5 @@
 
     <color name="colorTitleBar">#FF363B40</color>
 
-    <color name="colorUrlInput">#4d415d</color>
     <color name="colorUrlInputBackground">#B2000000</color>
 </resources>

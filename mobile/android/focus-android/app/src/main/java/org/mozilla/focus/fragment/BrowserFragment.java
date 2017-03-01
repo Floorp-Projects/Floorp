@@ -6,6 +6,7 @@
 package org.mozilla.focus.fragment;
 
 import android.content.Intent;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -30,6 +31,8 @@ import org.mozilla.focus.web.IWebView;
 public class BrowserFragment extends Fragment implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
     public static final String FRAGMENT_TAG = "browser";
 
+    private static final int ANIMATION_DURATION = 300;
+
     private static final String ARGUMENT_URL = "url";
 
     public static BrowserFragment create(String url) {
@@ -42,7 +45,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
         return fragment;
     }
 
-    private View urlBarView;
+
+    private TransitionDrawable backgroundTransition;
     private TextView urlView;
     private IWebView webView;
     private ProgressBar progressView;
@@ -63,7 +67,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
         urlView.setText(url);
         urlView.setOnClickListener(this);
 
-        urlBarView = view.findViewById(R.id.urlbar);
+        backgroundTransition = (TransitionDrawable) view.findViewById(R.id.urlbar).getBackground();
+
         lockView = view.findViewById(R.id.lock);
 
         progressView = (ProgressBar) view.findViewById(R.id.progress);
@@ -82,15 +87,14 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
 
                 urlView.setText(url);
 
-                urlBarView.setBackgroundColor(
-                        ContextCompat.getColor(urlBarView.getContext(), R.color.colorTitleBar));
+                backgroundTransition.resetTransition();
 
                 progressView.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onPageFinished(boolean isSecure) {
-                urlBarView.setBackgroundResource(R.drawable.urlbar_gradient);
+                backgroundTransition.startTransition(ANIMATION_DURATION);
 
                 progressView.setVisibility(View.INVISIBLE);
 

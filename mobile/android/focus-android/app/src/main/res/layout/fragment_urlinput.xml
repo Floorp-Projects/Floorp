@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="81dp"
         android:paddingTop="25dp"
-        android:background="@color/colorUrlInput"
+        android:background="@drawable/background_inactive"
         android:orientation="horizontal"
         android:elevation="4dp">
 

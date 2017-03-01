@@ -22,7 +22,7 @@
             android:id="@+id/urlbar"
             android:layout_width="match_parent"
             android:layout_height="81dp"
-            android:background="@color/colorUrlInput"
+            android:background="@drawable/animated_background"
             android:paddingTop="25dp"
             app:layout_scrollFlags="scroll|enterAlways|snap">
 
