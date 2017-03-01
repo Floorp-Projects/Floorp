@@ -514,21 +514,6 @@ class MOZ_NON_PARAM RInstructionStorage
     // has stricter alignment requirements than RInstructionStorage.
     static constexpr size_t Alignment = alignof(void*);
 
-    /*
-     * DO NOT REUSE THIS IMPLEMENTATION TACTIC.
-     *
-     * It is undefined behavior to bytewise-copy the bytes of one T, into a
-     * location that isn't a T -- and because the target |mem| often wasn't
-     * already constructed as a T, it doesn't always count as such -- and then
-     * interpret that second location as T.  (This is *possibly* okay if T is
-     * POD or standard layout or is trivial.  None of those are true here.)
-     * The C++ spec considers this a strict aliasing violation.  We've hit
-     * crashes before when we've done this: for example, bug 1269319.
-     *
-     * This tactic is used here *only* because it was mistakenly added long
-     * ago, before it was recognized to be buggy, and we haven't yet struggled
-     * through the effort to remove it.
-     */
     alignas(Alignment) unsigned char mem[Size];
 
   public:
@@ -537,11 +522,11 @@ class MOZ_NON_PARAM RInstructionStorage
 
     RInstructionStorage() = default;
 
-    // FIXME (bug 1341951): These are strict aliasing violations: see the
-    // comment above, and see bug 1269319 for an instance of bytewise copying
-    // having caused crashes.
-    RInstructionStorage(const RInstructionStorage& other) = default;
-    RInstructionStorage& operator=(const RInstructionStorage& other) = default;
+    // Making a copy of raw bytes holding a RInstruction instance would be a
+    // strict aliasing violation: see bug 1269319 for an instance of bytewise
+    // copying having caused crashes.
+    RInstructionStorage(const RInstructionStorage&) = delete;
+    RInstructionStorage& operator=(const RInstructionStorage& other) = delete;
 };
 
 class RInstruction;
@@ -570,6 +555,8 @@ class RecoverReader
 
   public:
     RecoverReader(SnapshotReader& snapshot, const uint8_t* recovers, uint32_t size);
+    explicit RecoverReader(const RecoverReader& rr);
+    RecoverReader& operator=(const RecoverReader& rr);
 
     uint32_t numInstructions() const {
         return numInstructions_;
