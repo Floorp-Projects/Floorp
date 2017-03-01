@@ -32,12 +32,12 @@ this.assert = {};
  * @return {string}
  *     Session ID.
  *
- * @throws {InvalidSessionIdError}
+ * @throws {InvalidSessionIDError}
  *     If |driver| does not have a session ID.
  */
 assert.session = function (driver, msg = "") {
   assert.that(sessionID => sessionID,
-      msg, InvalidSessionIdError)(driver.sessionId);
+      msg, InvalidSessionIDError)(driver.sessionId);
   return driver.sessionId;
 };
 

@@ -143,7 +143,7 @@ add_test(function test_Response_send() {
 add_test(function test_Response_sendError() {
   let err = new WebDriverError();
   let resp = new Response(42, r => {
-    equal(error.toJson(err).error, r.error.error);
+    equal(err.toJSON().error, r.error.error);
     equal(null, r.body);
     equal(false, r.sent);
   });
