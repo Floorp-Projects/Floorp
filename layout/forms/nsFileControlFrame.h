@@ -111,7 +111,7 @@ protected:
     }
 
   private:
-    AutoWeakFrame mFrame;
+    WeakFrame mFrame;
   };
 
   class DnDListener: public MouseListener {

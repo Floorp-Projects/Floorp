@@ -1263,12 +1263,11 @@ void
 nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames)
 {
   // Create a weak frame list. This is done in a separate array with the
-  // right capacity predetermined, otherwise the array would get resized and
-  // move the weak frame pointers around.
-  nsTArray<AutoWeakFrame> weakPopups(aFrames.Length());
+  // right capacity predetermined to avoid multiple allocations.
+  nsTArray<WeakFrame> weakPopups(aFrames.Length());
   uint32_t f;
   for (f = 0; f < aFrames.Length(); f++) {
-    AutoWeakFrame* wframe = weakPopups.AppendElement();
+    WeakFrame* wframe = weakPopups.AppendElement();
     if (wframe)
       *wframe = aFrames[f];
   }

@@ -665,41 +665,70 @@ nsIPresShell::SetVerifyReflowEnable(bool aEnabled)
 }
 
 /* virtual */ void
-nsIPresShell::AddWeakFrameExternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::AddAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
+{
+  AddAutoWeakFrameInternal(aWeakFrame);
+}
+
+void
+nsIPresShell::AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
+{
+  if (aWeakFrame->GetFrame()) {
+    aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
+  }
+  aWeakFrame->SetPreviousWeakFrame(mAutoWeakFrames);
+  mAutoWeakFrames = aWeakFrame;
+}
+
+/* virtual */ void
+nsIPresShell::AddWeakFrameExternal(WeakFrame* aWeakFrame)
 {
   AddWeakFrameInternal(aWeakFrame);
 }
 
 void
-nsIPresShell::AddWeakFrameInternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::AddWeakFrameInternal(WeakFrame* aWeakFrame)
 {
   if (aWeakFrame->GetFrame()) {
     aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
   }
-  aWeakFrame->SetPreviousWeakFrame(mWeakFrames);
-  mWeakFrames = aWeakFrame;
+  MOZ_ASSERT(!mWeakFrames.GetEntry(aWeakFrame));
+  mWeakFrames.PutEntry(aWeakFrame);
 }
 
 /* virtual */ void
-nsIPresShell::RemoveWeakFrameExternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::RemoveAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
 {
-  RemoveWeakFrameInternal(aWeakFrame);
+  RemoveAutoWeakFrameInternal(aWeakFrame);
 }
 
 void
-nsIPresShell::RemoveWeakFrameInternal(AutoWeakFrame* aWeakFrame)
+nsIPresShell::RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
 {
-  if (mWeakFrames == aWeakFrame) {
-    mWeakFrames = aWeakFrame->GetPreviousWeakFrame();
+  if (mAutoWeakFrames == aWeakFrame) {
+    mAutoWeakFrames = aWeakFrame->GetPreviousWeakFrame();
     return;
   }
-  AutoWeakFrame* nextWeak = mWeakFrames;
+  AutoWeakFrame* nextWeak = mAutoWeakFrames;
   while (nextWeak && nextWeak->GetPreviousWeakFrame() != aWeakFrame) {
     nextWeak = nextWeak->GetPreviousWeakFrame();
   }
   if (nextWeak) {
     nextWeak->SetPreviousWeakFrame(aWeakFrame->GetPreviousWeakFrame());
   }
+}
+
+/* virtual */ void
+nsIPresShell::RemoveWeakFrameExternal(WeakFrame* aWeakFrame)
+{
+  RemoveWeakFrameInternal(aWeakFrame);
+}
+
+void
+nsIPresShell::RemoveWeakFrameInternal(WeakFrame* aWeakFrame)
+{
+  MOZ_ASSERT(mWeakFrames.GetEntry(aWeakFrame));
+  mWeakFrames.RemoveEntry(aWeakFrame);
 }
 
 already_AddRefed<nsFrameSelection>
@@ -751,7 +780,7 @@ nsIPresShell::nsIPresShell()
     , mDrawEventTargetFrame(nullptr)
 #endif
     , mPaintCount(0)
-    , mWeakFrames(nullptr)
+    , mAutoWeakFrames(nullptr)
     , mCanvasBackgroundColor(NS_RGBA(0,0,0,0))
     , mSelectionFlags(0)
     , mRenderFlags(0)
@@ -1366,10 +1395,17 @@ PresShell::Destroy()
   }
 
 
-  NS_WARNING_ASSERTION(!mWeakFrames,
+  NS_WARNING_ASSERTION(!mAutoWeakFrames && mWeakFrames.IsEmpty(),
                        "Weak frames alive after destroying FrameManager");
-  while (mWeakFrames) {
-    mWeakFrames->Clear(this);
+  while (mAutoWeakFrames) {
+    mAutoWeakFrames->Clear(this);
+  }
+  nsTArray<WeakFrame*> toRemove(mWeakFrames.Count());
+  for (auto iter = mWeakFrames.Iter(); !iter.Done(); iter.Next()) {
+    toRemove.AppendElement(iter.Get()->GetKey());
+  }
+  for (WeakFrame* weakFrame : toRemove) {
+    weakFrame->Clear(this);
   }
 
   // Let the style set do its cleanup.
@@ -2949,14 +2985,25 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   mPresContext->EventStateManager()->ClearFrameRefs(aFrame);
 
-  AutoWeakFrame* weakFrame = mWeakFrames;
+  AutoWeakFrame* weakFrame = mAutoWeakFrames;
   while (weakFrame) {
     AutoWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
     if (weakFrame->GetFrame() == aFrame) {
-      // This removes weakFrame from mWeakFrames.
+      // This removes weakFrame from mAutoWeakFrames.
       weakFrame->Clear(this);
     }
     weakFrame = prev;
+  }
+
+  AutoTArray<WeakFrame*, 4> toRemove;
+  for (auto iter = mWeakFrames.Iter(); !iter.Done(); iter.Next()) {
+    WeakFrame* weakFrame = iter.Get()->GetKey();
+    if (weakFrame->GetFrame() == aFrame) {
+      toRemove.AppendElement(weakFrame);
+    }
+  }
+  for (WeakFrame* weakFrame : toRemove) {
+    weakFrame->Clear(this);
   }
 }
 
