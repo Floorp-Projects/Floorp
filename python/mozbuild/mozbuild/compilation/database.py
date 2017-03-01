@@ -58,7 +58,6 @@ class CompileDBBackend(CommonBackend):
                 'build/unix/elfhack/inject',
                 'build/clang-plugin',
                 'build/clang-plugin/tests',
-                'security/sandbox/win/wow_helper',
                 'toolkit/crashreporter/google-breakpad/src/common'):
             return True
 
