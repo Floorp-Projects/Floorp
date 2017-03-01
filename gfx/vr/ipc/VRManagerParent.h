@@ -22,6 +22,11 @@ namespace gfx {
 
 class VRManager;
 
+namespace impl {
+class VRDisplayPuppet;
+class VRControllerPuppet;
+} // namespace impl
+
 class VRManagerParent final : public PVRManagerParent
                             , public HostIPCAllocator
                             , public ShmemAllocator
@@ -89,6 +94,17 @@ protected:
   virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
   virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
   virtual mozilla::ipc::IPCResult RecvGetControllers(nsTArray<VRControllerInfo> *aControllers) override;
+  virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID) override;
+  virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestController(const nsCString& aID, const uint32_t& aPromiseID) override;
+  virtual mozilla::ipc::IPCResult RecvSetDisplayInfoToMockDisplay(const uint32_t& aDeviceID,
+                                                                  const VRDisplayInfo& aDisplayInfo) override;
+  virtual mozilla::ipc::IPCResult RecvSetSensorStateToMockDisplay(const uint32_t& aDeviceID,
+                                                                  const VRHMDSensorState& aSensorState) override;
+  virtual mozilla::ipc::IPCResult RecvNewButtonEventToMockController(const uint32_t& aDeviceID, const long& aButton,
+                                                                     const bool& aPressed) override;
+  virtual mozilla::ipc::IPCResult RecvNewAxisMoveEventToMockController(const uint32_t& aDeviceID, const long& aAxis,
+                                                                       const double& aValue) override;
+  virtual mozilla::ipc::IPCResult RecvNewPoseMoveToMockController(const uint32_t& aDeviceID, const GamepadPoseState& pose) override;
 
 private:
   void RegisterWithManager();
@@ -109,6 +125,10 @@ private:
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
+  nsRefPtrHashtable<nsUint32HashKey, impl::VRDisplayPuppet> mVRDisplayTests;
+  nsRefPtrHashtable<nsUint32HashKey, impl::VRControllerPuppet> mVRControllerTests;
+  uint32_t mDisplayTestID;
+  uint32_t mControllerTestID;
   bool mHaveEventListener;
   bool mHaveControllerListener;
   bool mIsContentChild;
