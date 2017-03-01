@@ -293,6 +293,23 @@ struct ByteBuffer
   bool mOwned;
 };
 
+struct VecU8 {
+  WrVecU8 inner;
+  VecU8() {
+    inner.data = nullptr;
+  }
+  VecU8(VecU8&) = delete;
+  VecU8(VecU8&& src) {
+    inner = src.inner;
+    src.inner.data = nullptr;
+  }
+
+  ~VecU8() {
+    if (inner.data)
+      wr_vec_u8_free(inner);
+  }
+};
+
 } // namespace wr
 } // namespace mozilla
 

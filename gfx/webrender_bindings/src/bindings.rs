@@ -11,6 +11,8 @@ use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
+use webrender_traits::{BuiltDisplayListDescriptor, AuxiliaryListsDescriptor};
+use webrender_traits::{BuiltDisplayList, AuxiliaryLists};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -75,6 +77,29 @@ impl WrImageDescriptor {
             offset: 0,
         }
     }
+}
+
+#[repr(C)]
+pub struct WrVecU8 {
+    ptr: *mut u8,
+    length: usize,
+    capacity: usize
+}
+
+impl WrVecU8 {
+    fn to_vec(self) -> Vec<u8> {
+        unsafe { Vec::from_raw_parts(self.ptr, self.length, self.capacity) }
+    }
+    fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
+        let w = WrVecU8{ptr: v.as_mut_ptr(), length: v.len(), capacity: v.capacity()};
+        mem::forget(v);
+        w
+    }
+}
+
+#[no_mangle]
+pub extern fn wr_vec_u8_free(v: WrVecU8) {
+    v.to_vec();
 }
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
@@ -179,23 +204,60 @@ pub unsafe extern fn wr_api_delete(api: *mut RenderApi) {
 }
 
 #[no_mangle]
-pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
-                                                  state: &mut WrState,
-                                                  epoch: Epoch,
-                                                  viewport_width: f32,
-                                                  viewport_height: f32) {
-    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+pub unsafe extern fn wr_api_finalize_builder(state: &mut WrState,
+                                             dl_descriptor: &mut BuiltDisplayListDescriptor,
+                                             dl_data: &mut WrVecU8,
+                                             aux_descriptor: &mut AuxiliaryListsDescriptor,
+                                             aux_data: &mut WrVecU8)
+{
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id));
+    let (pipeline_id, dl, aux) = frame_builder.dl_builder.finalize();
+    //XXX: get rid of the copies here
+    *dl_data = WrVecU8::from_vec(dl.data().to_owned());
+    *dl_descriptor = dl.descriptor().clone();
+    *aux_data = WrVecU8::from_vec(aux.data().to_owned());
+    *aux_descriptor = aux.descriptor().clone();
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
+                                                  epoch: Epoch,
+                                                  viewport_width: f32,
+                                                  viewport_height: f32,
+                                                  pipeline_id: PipelineId,
+                                                  dl_descriptor: BuiltDisplayListDescriptor,
+                                                  dl_data: *mut u8,
+                                                  dl_size: usize,
+                                                  aux_descriptor: AuxiliaryListsDescriptor,
+                                                  aux_data: *mut u8,
+                                                  aux_size: usize) {
+    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     // See the documentation of set_root_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
     let preserve_frame_state = true;
-    //let (dl_builder, aux_builder) = fb.dl_builder.finalize();
+
+    let dl_slice = unsafe {
+        slice::from_raw_parts(dl_data, dl_size)
+    };
+    let mut dl_vec = Vec::new();
+    // XXX: see if we can get rid of the copy here
+    dl_vec.extend_from_slice(dl_slice);
+    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
+
+    let aux_slice = unsafe {
+        slice::from_raw_parts(aux_data, aux_size)
+    };
+    let mut aux_vec = Vec::new();
+    // XXX: see if we can get rid of the copy here
+    aux_vec.extend_from_slice(aux_slice);
+    let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
+
     api.set_root_display_list(Some(root_background_color),
                               epoch,
                               LayoutSize::new(viewport_width, viewport_height),
-                              frame_builder.dl_builder.finalize(),
+                              (pipeline_id, dl, aux),
                               preserve_frame_state);
 }
 
