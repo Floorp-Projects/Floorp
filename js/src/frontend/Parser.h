@@ -1088,8 +1088,6 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     inline Node newName(PropertyName* name);
     inline Node newName(PropertyName* name, TokenPos pos);
-    inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
-    inline Node newAwaitExpression(uint32_t begin, Node expr);
 
     inline bool abortIfSyntaxParser();
 
