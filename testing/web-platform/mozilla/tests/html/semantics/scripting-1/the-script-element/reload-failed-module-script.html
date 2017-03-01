@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Insert non-async module script</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  setup({allow_uncaught_exception: true});
+  var test = async_test("Reload failed module script")
+  function reloadModule() {
+    var script = document.createElement("script");
+    script.onerror = function() {
+      // An error is expected
+      test.done();
+    };
+    script.onload = function() {
+      test.step(() => assert_unreached("Should not load"));
+      test.done();
+    };
+    script.type = "module";
+    script.src = "support/missing_import.js";
+    script.async = false;
+    document.documentElement.appendChild(script);
+  }
+</script>
+<script type="module" src="support/missing_import.js" onerror="reloadModule()"></script>

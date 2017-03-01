@@ -368,7 +368,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
         aApzResponse == nsEventStatus_eConsumeDoDefault &&
         gfxPrefs::PointerEventsEnabled()) {
     WidgetTouchEvent cancelEvent(aEvent);
-    cancelEvent.mMessage = eTouchCancel;
+    cancelEvent.mMessage = eTouchPointerCancel;
     cancelEvent.mFlags.mCancelable = false; // mMessage != eTouchCancel;
     for (uint32_t i = 0; i < cancelEvent.mTouches.Length(); ++i) {
       if (mozilla::dom::Touch* touch = cancelEvent.mTouches[i]) {

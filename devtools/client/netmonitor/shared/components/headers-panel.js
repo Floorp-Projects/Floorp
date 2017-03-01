@@ -12,7 +12,10 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../../utils/l10n");
 const { writeHeaderText } = require("../../utils/request-utils");
-const { getHeadersURL } = require("../../utils/mdn-utils");
+const {
+  getHeadersURL,
+  getHTTPStatusCodeURL,
+} = require("../../utils/mdn-utils");
 const { getFormattedSize } = require("../../utils/format-utils");
 const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const Rep = createFactory(REPS.Rep);
@@ -172,6 +175,9 @@ const HeadersPanel = createClass({
         code = status;
       }
 
+      let statusCodeDocURL = getHTTPStatusCodeURL(code);
+      let inputWidth = status.length + statusText.length + 1;
+
       summaryStatus = (
         div({ className: "tabpanel-summary-container headers-summary" },
           div({
@@ -182,10 +188,15 @@ const HeadersPanel = createClass({
             "data-code": code,
           }),
           input({
-            className: "tabpanel-summary-value textbox-input devtools-monospace",
+            className: "tabpanel-summary-value textbox-input devtools-monospace"
+              + " status-text",
             readOnly: true,
             value: `${status} ${statusText}`,
+            size: `${inputWidth}`,
           }),
+          statusCodeDocURL ? MDNLink({
+            url: statusCodeDocURL,
+          }) : null,
           window.NetMonitorController.supportsCustomRequest && button({
             className: "devtools-button",
             onClick: cloneSelectedRequest,

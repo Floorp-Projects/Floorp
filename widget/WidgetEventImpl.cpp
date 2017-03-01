@@ -439,7 +439,8 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       return wheelEvent->mDeltaX != 0.0 || wheelEvent->mDeltaY != 0.0 ||
              wheelEvent->mDeltaZ != 0.0;
     }
-
+    case eTouchEventClass:
+      return mMessage != eTouchPointerCancel;
     // Following events are handled in EventStateManager, so, we don't need to
     // dispatch DOM event for them into the DOM tree.
     case eQueryContentEventClass:
