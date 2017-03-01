@@ -119,4 +119,15 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <!--
+        Themes for CustomTabsActivity. Since CustomTabsActivity usually be used by 3-rd party apps,
+        to create separated themes to keep look and feel be consistent with ordinary Android app.
+        And ensure changes to CustomTabsActivity won't effect GeckoApp.
+    -->
+    <style name="GeckoCustomTabs" parent="Theme.AppCompat.NoActionBar">
+    </style>
+
+    <style name="GeckoCustomTabs.Light" parent="Theme.AppCompat.Light.NoActionBar">
+    </style>
+
 </resources>
