@@ -51,7 +51,7 @@ public:
     *mUseANGLE = gl->IsANGLE();
 
     WrRenderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, nullptr, mWrApi, &wrRenderer)) {
+    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, mWrApi, &wrRenderer)) {
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -63,6 +63,10 @@ public:
                                             aWindowId,
                                             wrRenderer,
                                             mBridge);
+    if (wrRenderer && renderer) {
+      WrExternalImageHandler handler = renderer->GetExternalImageHandler();
+      wr_renderer_set_external_image_handler(wrRenderer, &handler);
+    }
 
     aRenderThread.AddRenderer(aWindowId, Move(renderer));
   }
