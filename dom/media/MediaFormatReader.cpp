@@ -652,10 +652,9 @@ class MediaFormatReader::DemuxerProxy
   class Wrapper;
 
 public:
-  explicit DemuxerProxy(MediaDataDemuxer* aDemuxer, AbstractThread* aMainThread)
+  explicit DemuxerProxy(MediaDataDemuxer* aDemuxer)
     : mTaskQueue(new AutoTaskQueue(
-                   GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                   aMainThread))
+                   GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER)))
     , mData(new Data(aDemuxer))
   {
     MOZ_COUNT_CTOR(DemuxerProxy);
@@ -992,9 +991,7 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
            Preferences::GetUint("media.audio-max-decode-error", 3))
   , mVideo(this, MediaData::VIDEO_DATA,
            Preferences::GetUint("media.video-max-decode-error", 2))
-  , mDemuxer(new DemuxerProxy(aDemuxer, aDecoder
-                                        ? aDecoder->AbstractMainThread()
-                                        : AbstractThread::MainThread()))
+  , mDemuxer(new DemuxerProxy(aDemuxer))
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mPreviousDecodedKeyframeTime_us(sNoPreviousDecodedKeyframe)
