@@ -681,7 +681,7 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
 
   // Don't allow the custom type to be assigned.
   if (aFormat.EqualsLiteral(kCustomTypesMime)) {
-    return NS_ERROR_TYPE_ERR;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   if (!PrincipalMaySetData(aFormat, aData, aSubjectPrincipal)) {

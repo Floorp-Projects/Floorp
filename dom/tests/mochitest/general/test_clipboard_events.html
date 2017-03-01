@@ -54,7 +54,8 @@ var testFunctions = [
   test_input_paste_abort_dataTransfer,
   test_input_copypaste_dataTransfer_multiple,
   test_input_copy_button_dataTransfer,
-  test_eventspref_disabled
+  test_eventspref_disabled,
+  test_input_cut_disallowed_types_dataTransfer,
   ];
 
 function doTests()
@@ -674,6 +675,37 @@ function checkCachedDataTransfer(cd, eventtype)
   ok(eventtype == "paste" ? exh : !exh, "exception occured clearing " + testprefix);
 
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
+}
+
+function test_input_cut_disallowed_types_dataTransfer() {
+  selectContentInput();
+  let oncutExecuted = false;
+  contentInput.oncut = function(event) {
+    // Setting an arbitrary type should be OK
+    try {
+      event.clipboardData.setData("apple/cider", "Anything your heart desires");
+      ok(true, "We should have successfully executed the setData call");
+    } catch(e) {
+      ok(false, "We should not have gotten an exception for trying to set that data");
+    }
+
+    // Unless that type happens to be application/x-moz-custom-clipdata
+    try {
+      event.clipboardData.setData("application/x-moz-custom-clipdata", "Anything your heart desires");
+      ok(false, "We should not have successfully executed the setData call");
+    } catch(e) {
+      is(e.name, "NotSupportedError",
+         "We should have gotten an NotSupportedError exception for trying to set that data");
+    }
+    oncutExecuted = true;
+  };
+
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncutExecuted, "The oncut handler should have been executed");
+  } finally {
+    contentInput.oncut = null;
+  }
 }
 
 SimpleTest.waitForFocus(doTests);
