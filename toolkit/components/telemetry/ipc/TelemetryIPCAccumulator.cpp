@@ -179,7 +179,7 @@ TelemetryIPCAccumulator::RecordChildKeyedScalarAction(mozilla::Telemetry::Scalar
 }
 
 void
-TelemetryIPCAccumulator::RecordChildEvent(const mozilla::TimeStamp& timestamp,
+TelemetryIPCAccumulator::RecordChildEvent(double timestamp,
                                           const nsACString& category,
                                           const nsACString& method,
                                           const nsACString& object,
