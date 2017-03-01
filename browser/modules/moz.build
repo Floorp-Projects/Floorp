@@ -4,10 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/social/xpcshell.ini',
-    'test/xpcshell/xpcshell.ini',
+    'test/unit/xpcshell.ini',
 ]
 
 EXTRA_JS_MODULES += [
