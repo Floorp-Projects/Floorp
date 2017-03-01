@@ -439,5 +439,4 @@ def test_e10s_option_clash_raises(mock_runner):
 
 if __name__ == '__main__':
     import sys
-    sys.exit(pytest.main(
-        ['-p', 'no:terminalreporter', '--log-tbpl=-', __file__]))
+    sys.exit(pytest.main(['--verbose', __file__]))

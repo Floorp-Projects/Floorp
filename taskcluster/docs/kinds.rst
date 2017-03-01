@@ -90,6 +90,11 @@ spidermonkey
 Spidermonkey tasks check out the full gecko source tree, then compile only the
 spidermonkey portion.  Each task runs specific tests after the build.
 
+marionette-harness
+------------------
+
+TBD (Maja)
+
 Tests
 -----
 
