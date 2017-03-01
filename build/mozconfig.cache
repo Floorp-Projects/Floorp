@@ -108,10 +108,6 @@ if test -z "$bucket"; then
         ac_add_options --with-ccache
     esac
 else
-    if ! test -e $topsrcdir/sccache2/sccache${suffix}; then
-        echo "sccache2 missing in the tooltool manifest" >&2
-        exit 1
-    fi
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     case "$master" in
     *us[ew][12].mozilla.com*|*euc1.mozilla.com*)
