@@ -12,6 +12,8 @@
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 
+using namespace mozilla::unicode;
+
 /* 
 
    Simplification of Pair Table in JIS X 4051
@@ -628,29 +630,50 @@ public:
 //   1. at near the start of word
 //   2. at near the end of word
 //   3. at near the latest broken point
-// CONSERVATIVE_BREAK_RANGE define the 'near' in characters.
-#define CONSERVATIVE_BREAK_RANGE 6
+// CONSERVATIVE_RANGE_{LETTER,OTHER} define the 'near' in characters,
+// which varies depending whether we are looking at a letter or a non-letter
+// character: for non-letters, we use an extended "conservative" range.
+
+#define CONSERVATIVE_RANGE_LETTER 2
+#define CONSERVATIVE_RANGE_OTHER  6
 
   bool UseConservativeBreaking(uint32_t aOffset = 0) {
     if (mHasCJKChar)
       return false;
     uint32_t index = mIndex + aOffset;
-    bool result = (index < CONSERVATIVE_BREAK_RANGE ||
-                     mLength - index < CONSERVATIVE_BREAK_RANGE ||
-                     index - mLastBreakIndex < CONSERVATIVE_BREAK_RANGE);
+
+    // If the character at index is a letter (rather than various punctuation
+    // characters, etc) then we want a shorter "conservative" range
+    uint32_t conservativeRangeStart, conservativeRangeEnd;
+    if (index < mLength &&
+        GetGenCategory(GetCharAt(index)) == nsIUGenCategory::kLetter) {
+      // Primarily for hyphenated word prefixes/suffixes; we add 1 to Start
+      // to get more balanced behavior (if we break off a 2-letter prefix,
+      // that means the break will actually be three letters from start of
+      // word, to include the hyphen; whereas a 2-letter suffix will be
+      // broken only two letters from end of word).
+      conservativeRangeEnd = CONSERVATIVE_RANGE_LETTER;
+      conservativeRangeStart = CONSERVATIVE_RANGE_LETTER + 1;
+    } else {
+      conservativeRangeEnd = conservativeRangeStart = CONSERVATIVE_RANGE_OTHER;
+    }
+
+    bool result = (index < conservativeRangeStart ||
+                     mLength - index < conservativeRangeEnd ||
+                     index - mLastBreakIndex < conservativeRangeStart);
     if (result || !mHasNonbreakableSpace)
       return result;
 
     // This text has no-breakable space, we need to check whether the index
     // is near it.
 
-    // Note that index is always larger than CONSERVATIVE_BREAK_RANGE here.
-    for (uint32_t i = index; index - CONSERVATIVE_BREAK_RANGE < i; --i) {
+    // Note that index is always larger than conservativeRange here.
+    for (uint32_t i = index; index - conservativeRangeStart < i; --i) {
       if (IS_NONBREAKABLE_SPACE(GetCharAt(i - 1)))
         return true;
     }
-    // Note that index is always less than mLength - CONSERVATIVE_BREAK_RANGE.
-    for (uint32_t i = index + 1; i < index + CONSERVATIVE_BREAK_RANGE; ++i) {
+    // Note that index is always less than mLength - conservativeRange.
+    for (uint32_t i = index + 1; i < index + conservativeRangeEnd; ++i) {
       if (IS_NONBREAKABLE_SPACE(GetCharAt(i)))
         return true;
     }

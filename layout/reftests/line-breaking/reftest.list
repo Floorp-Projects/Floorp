@@ -1,6 +1,6 @@
 == between-whitespaces.html between-whitespaces-ref.html
 == chemical-1.html chemical-1-ref.html
-fails == conservative-range-1.html conservative-range-1-ref.html
+== conservative-range-1.html conservative-range-1-ref.html
 == conservative-range-2.html conservative-range-2-ref.html
 == currency-1.html currency-1-ref.html
 == currency-2.html currency-2-ref.html
