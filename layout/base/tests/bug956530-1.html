@@ -11,8 +11,9 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script>
     function test() {
-      focus();
       var i = document.querySelector("input");
+      i.setSelectionRange(i.value.length,i.value.length);
+      focus();
       synthesizeMouseAtCenter(i, {});
       setTimeout(function() {
         synthesizeMouseAtCenter(document.body, {});
