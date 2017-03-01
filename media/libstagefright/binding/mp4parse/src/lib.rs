@@ -1624,9 +1624,9 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
 }
 
 /// Parse an video description inside an stsd box.
-fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
+fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, SampleEntry)> {
     let name = src.get_header().name;
-    track.codec_type = match name {
+    let codec_type = match name {
         BoxType::AVCSampleEntry | BoxType::AVC3SampleEntry => CodecType::H264,
         BoxType::VP8SampleEntry => CodecType::VP8,
         BoxType::VP9SampleEntry => CodecType::VP9,
@@ -1699,13 +1699,13 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
     }
 
     codec_specific
-        .map(|codec_specific| SampleEntry::Video(VideoSampleEntry {
+        .map(|codec_specific| (codec_type, SampleEntry::Video(VideoSampleEntry {
             data_reference_index: data_reference_index,
             width: width,
             height: height,
             codec_specific: codec_specific,
             protection_info: protection_info,
-        }))
+        })))
         .ok_or_else(|| Error::InvalidData("malformed video sample entry"))
 }
 
@@ -1726,7 +1726,7 @@ fn read_qt_wave_atom<T: Read>(src: &mut BMFFBox<T>) -> Result<ES_Descriptor> {
 }
 
 /// Parse an audio description inside an stsd box.
-fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleEntry> {
+fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, SampleEntry)> {
     let name = src.get_header().name;
 
     // Skip uninteresting fields.
@@ -1762,8 +1762,10 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
     }
 
     // Skip chan/etc. for now.
+    let mut codec_type = CodecType::Unknown;
     let mut codec_specific = None;
     if name == BoxType::MP3AudioSampleEntry {
+        codec_type = CodecType::MP3;
         codec_specific = Some(AudioCodecSpecific::MP3);
     }
     let mut protection_info = Vec::new();
@@ -1778,7 +1780,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                 }
 
                 let esds = read_esds(&mut b)?;
-                track.codec_type = esds.audio_codec;
+                codec_type = esds.audio_codec;
                 codec_specific = Some(AudioCodecSpecific::ES_Descriptor(esds));
             }
             BoxType::FLACSpecificBox => {
@@ -1787,7 +1789,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }
                 let dfla = read_dfla(&mut b)?;
-                track.codec_type = CodecType::FLAC;
+                codec_type = CodecType::FLAC;
                 codec_specific = Some(AudioCodecSpecific::FLACSpecificBox(dfla));
             }
             BoxType::OpusSpecificBox => {
@@ -1796,12 +1798,12 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                     return Err(Error::InvalidData("malformed audio sample entry"));
                 }
                 let dops = read_dops(&mut b)?;
-                track.codec_type = CodecType::Opus;
+                codec_type = CodecType::Opus;
                 codec_specific = Some(AudioCodecSpecific::OpusSpecificBox(dops));
             }
             BoxType::QTWaveAtom => {
                 let qt_esds = read_qt_wave_atom(&mut b)?;
-                track.codec_type = qt_esds.audio_codec;
+                codec_type = qt_esds.audio_codec;
                 codec_specific = Some(AudioCodecSpecific::ES_Descriptor(qt_esds));
             }
             BoxType::ProtectionSchemeInformationBox => {
@@ -1810,7 +1812,7 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
                 }
                 let sinf = read_sinf(&mut b)?;
                 log!("{:?} (sinf)", sinf);
-                track.codec_type = CodecType::EncryptedAudio;
+                codec_type = CodecType::EncryptedAudio;
                 protection_info.push(sinf);
             }
             _ => skip_box_content(&mut b)?,
@@ -1819,14 +1821,14 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> 
     }
 
     codec_specific
-        .map(|codec_specific| SampleEntry::Audio(AudioSampleEntry {
+        .map(|codec_specific| (codec_type, SampleEntry::Audio(AudioSampleEntry {
             data_reference_index: data_reference_index,
             channelcount: channelcount,
             samplesize: samplesize,
             samplerate: samplerate,
             codec_specific: codec_specific,
             protection_info: protection_info,
-        }))
+        })))
         .ok_or_else(|| Error::InvalidData("malformed audio sample entry"))
 }
 
@@ -1842,12 +1844,15 @@ fn read_stsd<T: Read>(src: &mut BMFFBox<T>, track: &mut Track) -> Result<SampleD
         let mut iter = src.box_iter();
         while let Some(mut b) = iter.next_box()? {
             let description = match track.track_type {
-                TrackType::Video => read_video_sample_entry(&mut b, track),
-                TrackType::Audio => read_audio_sample_entry(&mut b, track),
+                TrackType::Video => read_video_sample_entry(&mut b),
+                TrackType::Audio => read_audio_sample_entry(&mut b),
                 TrackType::Unknown => Err(Error::Unsupported("unknown track type")),
             };
             let description = match description {
-                Ok(desc) => desc,
+                Ok((codec_type, desc)) => {
+                    track.codec_type = codec_type;
+                    desc
+                }
                 Err(Error::Unsupported(_)) => {
                     // read_{audio,video}_desc may have returned Unsupported
                     // after partially reading the box content, so we can't
