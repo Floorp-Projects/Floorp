@@ -145,6 +145,20 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, int32_t *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPrefBranch::GetBoolPrefWithDefault(const char *aPrefName,
+                                                   bool aDefaultValue,
+                                                   uint8_t _argc, bool *_retval)
+{
+  nsresult rv = GetBoolPref(aPrefName, _retval);
+
+  if (NS_FAILED(rv) && _argc == 1) {
+    *_retval = aDefaultValue;
+    return NS_OK;
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, bool *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
@@ -160,6 +174,20 @@ NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, bool aValue)
   return PREF_SetBoolPref(pref, aValue, mIsDefault);
 }
 
+NS_IMETHODIMP nsPrefBranch::GetFloatPrefWithDefault(const char *aPrefName,
+                                                    float aDefaultValue,
+                                                    uint8_t _argc, float *_retval)
+{
+  nsresult rv = GetFloatPref(aPrefName, _retval);
+
+  if (NS_FAILED(rv) && _argc == 1) {
+    *_retval = aDefaultValue;
+    return NS_OK;
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsPrefBranch::GetFloatPref(const char *aPrefName, float *_retval)
 {
   NS_ENSURE_ARG(aPrefName);
@@ -168,6 +196,21 @@ NS_IMETHODIMP nsPrefBranch::GetFloatPref(const char *aPrefName, float *_retval)
   nsresult rv = GetCharPref(pref, getter_Copies(stringVal));
   if (NS_SUCCEEDED(rv)) {
     *_retval = stringVal.ToFloat(&rv);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPrefBranch::GetCharPrefWithDefault(const char *aPrefName,
+                                                   const char *aDefaultValue,
+                                                   uint8_t _argc, char **_retval)
+{
+  nsresult rv = GetCharPref(aPrefName, _retval);
+
+  if (NS_FAILED(rv) && _argc == 1) {
+    NS_ENSURE_ARG(aDefaultValue);
+    *_retval = NS_strdup(aDefaultValue);
+    return NS_OK;
   }
 
   return rv;
@@ -197,6 +240,20 @@ nsresult nsPrefBranch::SetCharPrefInternal(const char *aPrefName, const char *aV
   NS_ENSURE_ARG(aValue);
   const char *pref = getPrefName(aPrefName);
   return PREF_SetCharPref(pref, aValue, mIsDefault);
+}
+
+NS_IMETHODIMP nsPrefBranch::GetIntPrefWithDefault(const char *aPrefName,
+                                                  int32_t aDefaultValue,
+                                                  uint8_t _argc, int32_t *_retval)
+{
+  nsresult rv = GetIntPref(aPrefName, _retval);
+
+  if (NS_FAILED(rv) && _argc == 1) {
+    *_retval = aDefaultValue;
+    return NS_OK;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, int32_t *_retval)
