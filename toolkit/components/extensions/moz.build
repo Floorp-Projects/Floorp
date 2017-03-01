@@ -37,6 +37,10 @@ DIRS += ['schemas']
 
 JAR_MANIFESTS += ['jar.mn']
 
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser/browser.ini',
+]
+
 MOCHITEST_MANIFESTS += [
     'test/mochitest/mochitest-remote.ini',
     'test/mochitest/mochitest.ini'
