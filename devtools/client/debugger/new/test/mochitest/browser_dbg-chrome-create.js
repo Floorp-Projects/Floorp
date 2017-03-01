@@ -26,9 +26,9 @@ function onClose() {
   is(gProcess._dbgProcess.exitValue, (Services.appinfo.OS == "WINNT" ? 0 : 256),
     "The remote debugger process didn't die cleanly.");
 
-  info(`process exit value: ${ gProcess._dbgProcess.exitValue}`);
+  info("process exit value: " + gProcess._dbgProcess.exitValue);
 
-  info(`profile path: ${ gProcess._dbgProfilePath}`);
+  info("profile path: " + gProcess._dbgProfilePath);
 
   finish();
 }
@@ -52,10 +52,10 @@ add_task(function* () {
   is(typeof gProcess._dbgProcess.pid, "number",
     "The remote debugger process doesn't have a pid (?!)");
 
-  info(`process location: ${ gProcess._dbgProcess.location}`);
-  info(`process pid: ${ gProcess._dbgProcess.pid}`);
-  info(`process name: ${ gProcess._dbgProcess.processName}`);
-  info(`process sig: ${ gProcess._dbgProcess.processSignature}`);
+  info("process location: " + gProcess._dbgProcess.location);
+  info("process pid: " + gProcess._dbgProcess.pid);
+  info("process name: " + gProcess._dbgProcess.processName);
+  info("process sig: " + gProcess._dbgProcess.processSignature);
 
   ok(gProcess._dbgProfilePath,
     "The remote debugger profile wasn't created properly!");
@@ -66,7 +66,7 @@ add_task(function* () {
      "The remote debugger profile isn't where we expect it!"
    );
 
-  info(`profile path: ${ gProcess._dbgProfilePath}`);
+  info("profile path: " + gProcess._dbgProfilePath);
 
   gProcess.close();
 });

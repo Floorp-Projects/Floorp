@@ -19,6 +19,6 @@ function recurseB(i) {
 }
 
 
-function startRecursion() {
+window.startRecursion = function() {
   return recurseA(0);
 }
