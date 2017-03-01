@@ -28,6 +28,7 @@ class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsIThrottlingService;
+class nsITimer;
 class nsIUUIDGenerator;
 
 
@@ -101,6 +102,7 @@ public:
     uint8_t        GetQoSBits()              { return mQoSBits; }
     uint16_t       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     bool           FastFallbackToIPv4()      { return mFastFallbackToIPv4; }
+    bool           ProxyPipelining()         { return mProxyPipelining; }
     uint32_t       MaxSocketCount();
     bool           EnforceAssocReq()         { return mEnforceAssocReq; }
 
@@ -317,6 +319,28 @@ public:
     static nsresult GenerateHostPort(const nsCString& host, int32_t port,
                                      nsACString& hostLine);
 
+    bool GetPipelineAggressive()     { return mPipelineAggressive; }
+    void GetMaxPipelineObjectSize(int64_t *outVal)
+    {
+        *outVal = mMaxPipelineObjectSize;
+    }
+
+    bool GetPipelineEnabled()
+    {
+        return mCapabilities & NS_HTTP_ALLOW_PIPELINING;
+    }
+
+    bool GetPipelineRescheduleOnTimeout()
+    {
+        return mPipelineRescheduleOnTimeout;
+    }
+
+    PRIntervalTime GetPipelineRescheduleTimeout()
+    {
+        return mPipelineRescheduleTimeout;
+    }
+
+    PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
     SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
     bool IsH2MandatorySuiteEnabled() { return mH2MandatorySuiteEnabled; }
@@ -377,6 +401,7 @@ private:
 
     void     NotifyObservers(nsIHttpChannel *chan, const char *event);
 
+    static void TimerCallback(nsITimer * aTimer, void * aClosure);
 private:
 
     // cached services
@@ -408,6 +433,7 @@ private:
     uint8_t  mReferrerXOriginPolicy;
 
     bool mFastFallbackToIPv4;
+    bool mProxyPipelining;
     PRIntervalTime mIdleTimeout;
     PRIntervalTime mSpdyTimeout;
     PRIntervalTime mResponseTimeout;
@@ -418,9 +444,18 @@ private:
     uint16_t mIdleSynTimeout;
 
     bool     mH2MandatorySuiteEnabled;
+    bool     mPipeliningEnabled;
     uint16_t mMaxConnections;
     uint8_t  mMaxPersistentConnectionsPerServer;
     uint8_t  mMaxPersistentConnectionsPerProxy;
+    uint16_t mMaxPipelinedRequests;
+    uint16_t mMaxOptimisticPipelinedRequests;
+    bool     mPipelineAggressive;
+    int64_t  mMaxPipelineObjectSize;
+    bool     mPipelineRescheduleOnTimeout;
+    PRIntervalTime mPipelineRescheduleTimeout;
+    PRIntervalTime mPipelineReadTimeout;
+    nsCOMPtr<nsITimer> mPipelineTestTimer;
 
     uint8_t  mRedirectionLimit;
 
@@ -432,6 +467,7 @@ private:
 
     uint8_t  mQoSBits;
 
+    bool mPipeliningOverSSL;
     bool mEnforceAssocReq;
 
     nsCString mAccept;

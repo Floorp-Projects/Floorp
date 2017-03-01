@@ -179,8 +179,8 @@ public:
   NS_IMETHOD GetOriginalResponseHeader(const nsACString &aHeader,
                                        nsIHttpHeaderVisitor *aVisitor) override;
   NS_IMETHOD VisitOriginalResponseHeaders(nsIHttpHeaderVisitor *aVisitor) override;
-  NS_IMETHOD GetAllowPipelining(bool *value) override; // deprecated
-  NS_IMETHOD SetAllowPipelining(bool value) override;  // deprecated
+  NS_IMETHOD GetAllowPipelining(bool *value) override;
+  NS_IMETHOD SetAllowPipelining(bool value) override;
   NS_IMETHOD GetAllowSTS(bool *value) override;
   NS_IMETHOD SetAllowSTS(bool value) override;
   NS_IMETHOD GetRedirectionLimit(uint32_t *value) override;
@@ -487,6 +487,7 @@ protected:
   // if 1 all "http-on-{opening|modify|etc}-request" observers have been called
   uint32_t                          mRequestObserversCalled     : 1;
   uint32_t                          mResponseHeadersModified    : 1;
+  uint32_t                          mAllowPipelining            : 1;
   uint32_t                          mAllowSTS                   : 1;
   uint32_t                          mThirdPartyFlags            : 3;
   uint32_t                          mUploadStreamHasHeaders     : 1;

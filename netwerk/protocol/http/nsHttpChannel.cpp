@@ -798,6 +798,24 @@ nsHttpChannel::SetupTransactionRequestContext()
     mTransaction->SetRequestContext(rc);
 }
 
+static bool
+SafeForPipelining(nsHttpRequestHead::ParsedMethodType method,
+                  const nsCString &methodString)
+{
+    if (method == nsHttpRequestHead::kMethod_Get ||
+        method == nsHttpRequestHead::kMethod_Head ||
+        method == nsHttpRequestHead::kMethod_Options) {
+        return true;
+    }
+
+    if (method != nsHttpRequestHead::kMethod_Custom) {
+        return false;
+    }
+
+    return (!strcmp(methodString.get(), "PROPFIND") ||
+            !strcmp(methodString.get(), "PROPPATCH"));
+}
+
 nsresult
 nsHttpChannel::SetupTransaction()
 {
@@ -808,6 +826,24 @@ nsHttpChannel::SetupTransaction()
     nsresult rv;
 
     mUsedNetwork = 1;
+    if (mCaps & NS_HTTP_ALLOW_PIPELINING) {
+        //
+        // disable pipelining if:
+        //   (1) pipelining has been disabled by config
+        //   (2) pipelining has been disabled by connection mgr info
+        //   (3) request corresponds to a top-level document load (link click)
+        //   (4) request method is non-idempotent
+        //   (5) request is marked slow (e.g XHR)
+        //
+        nsAutoCString method;
+        mRequestHead.Method(method);
+        if (!mAllowPipelining ||
+           (mLoadFlags & (LOAD_INITIAL_DOCUMENT_URI | INHIBIT_PIPELINE)) ||
+            !SafeForPipelining(mRequestHead.ParsedMethod(), method)) {
+            LOG(("  pipelining disallowed\n"));
+            mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+        }
+    }
 
     if (!mAllowSpdy) {
         mCaps |= NS_HTTP_DISALLOW_SPDY;
@@ -955,6 +991,7 @@ nsHttpChannel::SetupTransaction()
                                    nsHttp::Upgrade.get(),
                                    true);
         mCaps |=  NS_HTTP_STICKY_CONNECTION;
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
     }
 
@@ -1366,6 +1403,10 @@ nsHttpChannel::CallOnStartRequest()
         mCompressListener = listener;
       }
     }
+
+    rv = EnsureAssocReq();
+    if (NS_FAILED(rv))
+        return rv;
 
     // if this channel is for a download, close off access to the cache.
     if (mCacheEntry && mChannelIsForDownload) {
@@ -2877,6 +2918,120 @@ nsHttpChannel::HandleAsyncAbort()
 }
 
 
+nsresult
+nsHttpChannel::EnsureAssocReq()
+{
+    // Confirm Assoc-Req response header on pipelined transactions
+    // per draft-nottingham-http-pipeline-01.txt
+    // of the form: GET http://blah.com/foo/bar?qv
+    // return NS_OK as long as we don't find a violation
+    // (i.e. no header is ok, as are malformed headers, as are
+    // transactions that have not been pipelined (unless those have been
+    // opted in via pragma))
+
+    if (!mResponseHead)
+        return NS_OK;
+
+    nsAutoCString assoc_val;
+    if (NS_FAILED(mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_val))) {
+        return NS_OK;
+    }
+
+    if (!mTransaction || !mURI)
+        return NS_OK;
+
+    if (!mTransaction->PipelinePosition()) {
+        // "Pragma: X-Verify-Assoc-Req" can be used to verify even non pipelined
+        // transactions. It is used by test harness.
+
+        nsAutoCString pragma_val;
+        mResponseHead->GetHeader(nsHttp::Pragma, pragma_val);
+        if (pragma_val.IsEmpty() ||
+            !nsHttp::FindToken(pragma_val.get(), "X-Verify-Assoc-Req",
+                               HTTP_HEADER_VALUE_SEPS))
+            return NS_OK;
+    }
+
+    char *method = net_FindCharNotInSet(assoc_val.get(), HTTP_LWS);
+    if (!method)
+        return NS_OK;
+
+    bool equals;
+    char *endofmethod;
+
+    char * assoc_valChar = nullptr;
+    endofmethod = net_FindCharInSet(method, HTTP_LWS);
+    if (endofmethod)
+        assoc_valChar = net_FindCharNotInSet(endofmethod, HTTP_LWS);
+    if (!assoc_valChar)
+        return NS_OK;
+
+    // check the method
+    nsAutoCString methodHead;
+    mRequestHead.Method(methodHead);
+    if ((((int32_t)methodHead.Length()) != (endofmethod - method)) ||
+        PL_strncmp(method,
+                   methodHead.get(),
+                   endofmethod - method)) {
+        LOG(("  Assoc-Req failure Method %s", method));
+        if (mConnectionInfo)
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nullptr, 0);
+
+        nsCOMPtr<nsIConsoleService> consoleService =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (consoleService) {
+            nsAutoString message
+                (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
+            nsAutoCString assoc_req;
+            mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_req);
+            AppendASCIItoUTF16(assoc_req, message);
+            message += NS_LITERAL_STRING(" expected method ");
+            AppendASCIItoUTF16(methodHead, message);
+            consoleService->LogStringMessage(message.get());
+        }
+
+        if (gHttpHandler->EnforceAssocReq())
+            return NS_ERROR_CORRUPTED_CONTENT;
+        return NS_OK;
+    }
+
+    // check the URL
+    nsCOMPtr<nsIURI> assoc_url;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(assoc_url), assoc_valChar)) ||
+        !assoc_url)
+        return NS_OK;
+
+    mURI->Equals(assoc_url, &equals);
+    if (!equals) {
+        LOG(("  Assoc-Req failure URL %s", assoc_valChar));
+        if (mConnectionInfo)
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nullptr, 0);
+
+        nsCOMPtr<nsIConsoleService> consoleService =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (consoleService) {
+            nsAutoString message
+                (NS_LITERAL_STRING("Failed Assoc-Req. Received "));
+            nsAutoCString assoc_req;
+            mResponseHead->GetHeader(nsHttp::Assoc_Req, assoc_req);
+            AppendASCIItoUTF16(assoc_req, message);
+            message += NS_LITERAL_STRING(" expected URL ");
+            AppendASCIItoUTF16(mSpec.get(), message);
+            consoleService->LogStringMessage(message.get());
+        }
+
+        if (gHttpHandler->EnforceAssocReq())
+            return NS_ERROR_CORRUPTED_CONTENT;
+    }
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <byte-range>
 //-----------------------------------------------------------------------------
@@ -3156,7 +3311,7 @@ nsHttpChannel::ProcessNotModified()
     // case of bug 716840, a sign of the server having previously corrupted
     // our cache with a bad response. Take the minor step here of just dooming
     // that cache entry so there is a fighting chance of getting things on the
-    // right track.
+    // right track as well as disabling pipelining for that host.
 
     nsAutoCString lastModifiedCached;
     nsAutoCString lastModified304;
@@ -3174,6 +3329,11 @@ nsHttpChannel::ProcessNotModified()
              lastModifiedCached.get(), lastModified304.get()));
 
         mCacheEntry->AsyncDoom(nullptr);
+        if (mConnectionInfo)
+            gHttpHandler->ConnMgr()->
+                PipelineFeedbackInfo(mConnectionInfo,
+                                     nsHttpConnectionMgr::RedCorruptedContent,
+                                     nullptr, 0);
         Telemetry::Accumulate(Telemetry::CACHE_LM_INCONSISTENT, true);
     }
 
@@ -5982,6 +6142,13 @@ nsHttpChannel::BeginConnect()
     if (!mTimingEnabled)
         mAsyncOpenTime = TimeStamp();
 
+    // when proxying only use the pipeline bit if ProxyPipelining() allows it.
+    if (!mConnectionInfo->UsingConnect() && mConnectionInfo->UsingHttpProxy()) {
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+        if (gHttpHandler->ProxyPipelining())
+            mCaps |= NS_HTTP_ALLOW_PIPELINING;
+    }
+
     // if this somehow fails we can go on without it
     gHttpHandler->AddConnectionHeader(&mRequestHead, mCaps);
 
@@ -6013,7 +6180,7 @@ nsHttpChannel::BeginConnect()
     //  - If "Connection: close" is set as a request header, then do not bother
     //    trying to establish a keep-alive connection.
     if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
-        mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE);
+        mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
 
     if (gHttpHandler->CriticalRequestPrioritization()) {
         if (mClassOfService & nsIClassOfService::Leader) {
@@ -6031,6 +6198,7 @@ nsHttpChannel::BeginConnect()
             gHttpHandler->ConnMgr()->ClearAltServiceMappings();
             gHttpHandler->ConnMgr()->DoShiftReloadConnectionCleanup(mConnectionInfo);
         }
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
 
     // We may have been cancelled already, either by on-modify-request
@@ -6700,6 +6868,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             // for details.
             if (conn && !conn->IsPersistent()) {
                 LOG(("  connection is not persistent, not reusing it"));
+                conn = nullptr;
+            }
+            // We do not use a sticky connection in case of a nsHttpPipeline as
+            // well (see bug 1337826). This is a quick fix, because
+            // nsHttpPipeline is turned off by default.
+            RefPtr<nsAHttpTransaction> tranConn = do_QueryObject(conn);
+            if (tranConn && tranConn->QueryPipeline()) {
+                LOG(("Do not use this connection, it is a nsHttpPipeline."));
                 conn = nullptr;
             }
         }
@@ -7499,8 +7675,9 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
             seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     }
 
-    // set sticky connection flag
+    // set sticky connection flag and disable pipelining.
     mCaps |=  NS_HTTP_STICKY_CONNECTION;
+    mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
 
     // and create a new one...
     rv = SetupTransaction();

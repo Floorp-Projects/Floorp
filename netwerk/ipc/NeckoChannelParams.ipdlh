@@ -108,6 +108,7 @@ struct HttpChannelOpenArgs
   int16_t                     priority;
   uint32_t                    classOfService;
   uint8_t                     redirectionLimit;
+  bool                        allowPipelining;
   bool                        allowSTS;
   uint32_t                    thirdPartyFlags;
   bool                        resumeAt;

@@ -468,6 +468,30 @@ Http2PushTransactionBuffer::Close(nsresult reason)
 }
 
 nsresult
+Http2PushTransactionBuffer::AddTransaction(nsAHttpTransaction *trans)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+uint32_t
+Http2PushTransactionBuffer::PipelineDepth()
+{
+  return 0;
+}
+
+nsresult
+Http2PushTransactionBuffer::SetPipelinePosition(int32_t position)
+{
+  return NS_OK;
+}
+
+int32_t
+Http2PushTransactionBuffer::PipelinePosition()
+{
+  return 1;
+}
+
+nsresult
 Http2PushTransactionBuffer::GetBufferedData(char *buf,
                                             uint32_t count,
                                             uint32_t *countWritten)

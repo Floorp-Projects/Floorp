@@ -82,6 +82,7 @@ public:
     //-------------------------------------------------------------------------
     // XXX document when these are ok to call
 
+    bool SupportsPipelining();
     bool IsKeepAlive()
     {
         return mUsingSpdyVersion || (mKeepAliveMask && mKeepAlive);
@@ -176,6 +177,12 @@ public:
     // should move from short-lived (fast-detect) to long-lived.
     static void UpdateTCPKeepalive(nsITimer *aTimer, void *aClosure);
 
+    nsAHttpTransaction::Classifier Classification() { return mClassification; }
+    void Classify(nsAHttpTransaction::Classifier newclass)
+    {
+        mClassification = newclass;
+    }
+
     // When the connection is active this is called every second
     void  ReadTimeoutTick();
 
@@ -231,6 +238,7 @@ private:
 
     PRIntervalTime IdleTime();
     bool     IsAlive();
+    bool     SupportsPipelining(nsHttpResponseHead *);
 
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
@@ -300,6 +308,7 @@ private:
     bool                            mKeepAlive;
     bool                            mKeepAliveMask;
     bool                            mDontReuse;
+    bool                            mSupportsPipelining;
     bool                            mIsReused;
     bool                            mCompletedProxyConnect;
     bool                            mLastTransactionExpectedNoContent;
@@ -321,6 +330,8 @@ private:
     // transactions (including the current one) that the server expects to allow
     // on this persistent connection.
     uint32_t                        mRemainingConnectionUses;
+
+    nsAHttpTransaction::Classifier  mClassification;
 
     // SPDY related
     bool                            mNPNComplete;

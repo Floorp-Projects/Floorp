@@ -206,7 +206,16 @@ interface nsIHttpChannel : nsIChannel
     void visitNonDefaultRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
-     * This attribute no longer has any effect, it remains for backwards compat
+     * This attribute is a hint to the channel to indicate whether or not
+     * the underlying HTTP transaction should be allowed to be pipelined
+     * with other transactions.  This should be set to FALSE, for example,
+     * if the application knows that the corresponding document is likely
+     * to be very large.
+     *
+     * This attribute is true by default, though other factors may prevent
+     * pipelining.
+     *
+     * This attribute may only be set before the channel is opened.
      *
      * @throws NS_ERROR_FAILURE if set after the channel has been opened.
      */
