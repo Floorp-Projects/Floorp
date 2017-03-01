@@ -3131,6 +3131,23 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
       return true;
     }
 
+    // When found message's wParam is 0 and its scancode is 0xFF, we may remove
+    // usual char message actually.  In such case, we should use the removed
+    // char message.
+    if (IsCharMessage(removedMsg) && !nextKeyMsg.wParam &&
+        WinUtils::GetScanCode(nextKeyMsg.lParam) == 0xFF) {
+      aCharMsg = removedMsg;
+      MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+        ("%p   NativeKey::GetFollowingCharMessage(), WARNING, succeeded to "
+         "remove a char message, but the removed message was changed from "
+         "the found message but the found message was odd, so, ignoring the "
+         "odd found message and respecting the removed message, aCharMsg=%s, "
+         "nextKeyMsg=%s, kFoundCharMsg=%s",
+         this, ToString(aCharMsg).get(), ToString(nextKeyMsg).get(),
+         ToString(kFoundCharMsg).get()));
+      return true;
+    }
+
     // NOTE: Although, we don't know when this case occurs, the scan code value
     //       in lParam may be changed from 0 to something.  The changed value
     //       is different from the scan code of handling keydown message.
