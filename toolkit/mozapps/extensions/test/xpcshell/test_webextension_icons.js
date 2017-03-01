@@ -24,24 +24,8 @@ function promiseAddonStartup() {
   });
 }
 
-// Test simple icon set parsing
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      16: "icon16.png",
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png"
-    }
-  }, profileDir);
+function* testSimpleIconsetParsing(manifest) {
+  yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
   yield promiseRestartManager();
   yield promiseAddonStartup();
@@ -86,27 +70,10 @@ add_task(function*() {
   addon.uninstall();
 
   yield promiseRestartManager();
-});
+}
 
-// Test AddonManager.getPreferredIconURL for retina screen sizes
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png",
-      128: "icon128.png",
-      256: "icon256.png"
-    }
-  }, profileDir);
+function* testRetinaIconsetParsing(manifest) {
+  yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
   yield promiseRestartManager();
   yield promiseAddonStartup();
@@ -132,20 +99,10 @@ add_task(function*() {
   addon.uninstall();
 
   yield promiseRestartManager();
-});
+}
 
-// Handles no icons gracefully
-add_task(function*() {
-  yield promiseWriteWebManifestForExtension({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    }
-  }, profileDir);
+function* testNoIconsParsing(manifest) {
+  yield promiseWriteWebManifestForExtension(manifest, profileDir);
 
   yield promiseRestartManager();
   yield promiseAddonStartup();
@@ -163,4 +120,109 @@ add_task(function*() {
   addon.uninstall();
 
   yield promiseRestartManager();
+}
+
+// Test simple icon set parsing
+add_task(function*() {
+  yield* testSimpleIconsetParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      16: "icon16.png",
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png"
+    }
+  });
+
+  // Now for theme-type extensions too.
+  yield* testSimpleIconsetParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      16: "icon16.png",
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png"
+    },
+    theme: { images: { headerURL: "https://example.com/example.png" } }
+  });
+});
+
+// Test AddonManager.getPreferredIconURL for retina screen sizes
+add_task(function*() {
+  yield* testRetinaIconsetParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png",
+      128: "icon128.png",
+      256: "icon256.png"
+    }
+  });
+
+  yield* testRetinaIconsetParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png",
+      128: "icon128.png",
+      256: "icon256.png"
+    },
+    theme: { images: { headerURL: "https://example.com/example.png" } }
+  });
+});
+
+// Handles no icons gracefully
+add_task(function*() {
+  yield* testNoIconsParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    }
+  });
+
+  yield* testNoIconsParsing({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    theme: { images: { headerURL: "https://example.com/example.png" } }
+  });
 });
