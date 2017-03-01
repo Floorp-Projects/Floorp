@@ -6855,6 +6855,10 @@ var gIdentityHandler = {
     delete this._permissionReloadHint;
     return this._permissionReloadHint = document.getElementById("identity-popup-permission-reload-hint");
   },
+  get _popupExpander() {
+    delete this._popupExpander;
+    return this._popupExpander = document.getElementById("identity-popup-security-expander");
+  },
   get _permissionAnchors() {
     delete this._permissionAnchors;
     let permissionAnchors = {};
@@ -6876,10 +6880,18 @@ var gIdentityHandler = {
 
   toggleSubView(name, anchor) {
     let view = this._identityPopupMultiView;
+    let id = `identity-popup-${name}View`;
+    let subView = document.getElementById(id);
+
+    // Listen for the subview showing or hiding to change
+    // the tooltip on the expander button.
+    subView.addEventListener("ViewShowing", this);
+    subView.addEventListener("ViewHiding", this);
+
     if (view.showingSubView) {
       view.showMainView();
     } else {
-      view.showSubView(`identity-popup-${name}View`, anchor);
+      view.showSubView(id, anchor);
     }
 
     // If an element is focused that's not the anchor, clear the focus.
@@ -7188,6 +7200,9 @@ var gIdentityHandler = {
     this._identityPopupInsecureLoginFormsLearnMore
         .setAttribute("href", baseURL + "insecure-password");
 
+    // The expander switches its tooltip when toggled, change it to the default.
+    this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.showDetails.tooltip");
+
     // Determine connection security information.
     let connection = "not-secure";
     if (this._isSecureInternalUI) {
@@ -7397,6 +7412,16 @@ var gIdentityHandler = {
   },
 
   handleEvent(event) {
+    // If the subview is shown or hidden, change the tooltip on the expander button.
+    if (event.type == "ViewShowing") {
+      this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.hideDetails.tooltip");
+      return;
+    }
+    if (event.type == "ViewHiding") {
+      this._popupExpander.tooltipText = gNavigatorBundle.getString("identity.showDetails.tooltip");
+      return;
+    }
+
     let elem = document.activeElement;
     let position = elem.compareDocumentPosition(this._identityPopup);
 
