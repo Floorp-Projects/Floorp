@@ -119,7 +119,7 @@ public:
    * of the document this object represents.
    */
   DocAccessibleParent* ParentDoc() const;
-  static const int32_t kNoParentDoc = UINT64_MAX;
+  static const uint64_t kNoParentDoc = UINT64_MAX;
 
   /*
    * Called when a document in a content process notifies the main process of a
@@ -218,8 +218,8 @@ private:
   MOZ_MUST_USE bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
-  nsTArray<int32_t> mChildDocs;
-  int32_t mParentDoc;
+  nsTArray<uint64_t> mChildDocs;
+  uint64_t mParentDoc;
 
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
