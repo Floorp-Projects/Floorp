@@ -10,19 +10,22 @@ toolkit.jar:
     content/extensions/ext-contextualIdentities.js
     content/extensions/ext-cookies.js
     content/extensions/ext-downloads.js
+    content/extensions/ext-extension.js
     content/extensions/ext-geolocation.js
-    content/extensions/ext-management.js
-    content/extensions/ext-notifications.js
     content/extensions/ext-i18n.js
     content/extensions/ext-idle.js
-    content/extensions/ext-webRequest.js
-    content/extensions/ext-webNavigation.js
+    content/extensions/ext-management.js
+    content/extensions/ext-notifications.js
+    content/extensions/ext-privacy.js
     content/extensions/ext-protocolHandlers.js
     content/extensions/ext-runtime.js
-    content/extensions/ext-extension.js
     content/extensions/ext-storage.js
+    content/extensions/ext-theme.js
     content/extensions/ext-topSites.js
-    content/extensions/ext-privacy.js
+    content/extensions/ext-webRequest.js
+    content/extensions/ext-webNavigation.js
+    # Below is a separate group using the naming convention ext-c-*.js that run
+    # in the child process.
     content/extensions/ext-c-backgroundPage.js
     content/extensions/ext-c-extension.js
 #ifndef ANDROID
