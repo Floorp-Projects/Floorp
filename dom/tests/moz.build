@@ -4,6 +4,150 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("browser/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("browser/*onsole*"):
+    BUG_COMPONENT = ("Firefox", "Developer Tools")
+
+with Files("browser/*autofocus*"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("browser/*unload*"):
+    BUG_COMPONENT = ("Core", "DOM: Events")
+
+with Files("browser/*1238427*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("browser/*Geolocation*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("browser/*geo_*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("browser/browser_cancel_keydown_keypress_event.js"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("browser/*local*"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("browser/*prerender*"):
+    BUG_COMPONENT = ("Core", "Document Navigation")
+
+with Files("browser/browser_test_focus_after_modal_state.js"):
+    BUG_COMPONENT = ("Core", "Event Handling")
+
+with Files("mochitest/ajax/**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")
+
+with Files("mochitest/ajax/offline/**"):
+    BUG_COMPONENT = ("Core", "Networking: Cache")
+
+with Files("mochitest/beacon/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+# big mix of components here
+with Files("mochitest/bugs/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+# TODO: big mix of components here
+with Files("mochitest/chrome/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/crypto/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("mochitest/dom-level0/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/dom-level1-core/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/dom-level2-core/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/dom-level2-html/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/gamepad/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+# TODO: big mix of components here
+with Files("mochitest/general/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/geolocation/**"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("mochitest/localstorage/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/notification/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/orientation/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("mochitest/orientation/*507902*"):
+    BUG_COMPONENT = ("Core", "Layout: Images")
+
+with Files("mochitest/pointerlock/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/sessionstorage/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("mochitest/storageevent/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/webcomponents/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("mochitest/whatwg/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("reftest/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("reftest/*456008*"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("reftest/*439965*"):
+    BUG_COMPONENT = ("Core", "Editor")
+
+with Files("reftest/*427779*"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("reftest/*559996*"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("reftest/*591981*"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("reftest/*592366*"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("reftest/*798068*"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("reftest/xml-stylesheet/**"):
+    BUG_COMPONENT = ("Core", "XSLT")
+
+with Files("unit/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("unit/*geolocation*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("unit/test_bug465752.js"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("unit/test_PromiseDebugging.js"):
+    BUG_COMPONENT = ("Core", "XPConnect")
+
 MOCHITEST_MANIFESTS += [
     'mochitest/ajax/jquery/mochitest.ini',
     'mochitest/ajax/mochikit/mochitest.ini',

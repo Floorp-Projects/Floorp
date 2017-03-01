@@ -4,6 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# interfaces/*/ are annotated per directory, this is for new files
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("plugins/**"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
 JAR_MANIFESTS += ['jar.mn']
 
 interfaces = [
