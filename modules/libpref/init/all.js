@@ -5500,6 +5500,7 @@ pref("dom.mozBrowserFramesEnabled", false);
 pref("layout.css.color-adjust.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", false);
+pref("dom.audiochannel.audioCompeting.allAgents", false);
 
 // Disable Node.rootNode in release builds.
 #ifdef RELEASE_OR_BETA
