@@ -175,6 +175,11 @@ public:
   // resource has a decode error during metadata loading or decoding.
   virtual void DecodeError(const MediaResult& aError) final override;
 
+  // Called by the decoder object, on the main thread, when the
+  // resource has a decode issue during metadata loading or decoding, but can
+  // continue decoding.
+  virtual void DecodeWarning(const MediaResult& aError) final override;
+
   // Return true if error attribute is not null.
   virtual bool HasError() const final override;
 

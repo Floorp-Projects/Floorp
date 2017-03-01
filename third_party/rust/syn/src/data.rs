@@ -54,8 +54,13 @@ pub enum Visibility {
 pub mod parsing {
     use super::*;
     use WhereClause;
+    #[cfg(feature = "full")]
+    use ConstExpr;
     use attr::parsing::outer_attr;
+    #[cfg(feature = "full")]
     use constant::parsing::const_expr;
+    #[cfg(feature = "full")]
+    use expr::parsing::expr;
     use generics::parsing::where_clause;
     use ident::parsing::ident;
     use ty::parsing::{path, ty};
@@ -99,7 +104,7 @@ pub mod parsing {
             |
             epsilon!() => { |_| VariantData::Unit }
         ) >>
-        disr: option!(preceded!(punct!("="), const_expr)) >>
+        disr: option!(preceded!(punct!("="), discriminant)) >>
         (Variant {
             ident: id,
             attrs: attrs,
@@ -107,6 +112,19 @@ pub mod parsing {
             discriminant: disr,
         })
     ));
+
+    #[cfg(not(feature = "full"))]
+    use constant::parsing::const_expr as discriminant;
+
+    #[cfg(feature = "full")]
+    named!(discriminant -> ConstExpr, alt!(
+        terminated!(const_expr, after_discriminant)
+        |
+        terminated!(expr, after_discriminant) => { ConstExpr::Other }
+    ));
+
+    #[cfg(feature = "full")]
+    named!(after_discriminant -> &str, peek!(alt!(punct!(",") | punct!("}"))));
 
     named!(pub struct_like_body -> Vec<Field>, do_parse!(
         punct!("{") >>

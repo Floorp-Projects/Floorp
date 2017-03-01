@@ -16,18 +16,18 @@ mod codegen {
 }
 
 #[cfg(not(feature = "dummy_match_byte"))]
-#[path = "src/macros/mod.rs"]
-mod macros;
+#[path = "build/match_byte.rs"]
+mod match_byte;
 
 #[cfg(not(feature = "dummy_match_byte"))]
 mod codegen {
-    use macros;
+    use match_byte;
     use std::env;
     use std::path::Path;
 
     pub fn main(tokenizer_rs: &Path) {
-        macros::match_byte::expand(tokenizer_rs,
-                                   &Path::new(&env::var("OUT_DIR").unwrap()).join("tokenizer.rs"));
+        match_byte::expand(tokenizer_rs,
+                           &Path::new(&env::var("OUT_DIR").unwrap()).join("tokenizer.rs"));
 
     }
 }

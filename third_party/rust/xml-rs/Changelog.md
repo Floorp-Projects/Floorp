@@ -1,7 +1,12 @@
+## Version 0.3.6
+
+* Added an `Error` implementation for `EmitterError`.
+* Fixed escaping of strings with multi-byte code points.
+
 ## Version 0.3.5
 
-* Added `Debug` implementation for `XmlVersion`
-* Fixed some failing tests
+* Added `Debug` implementation for `XmlVersion`.
+* Fixed some failing tests.
 
 ## Version 0.3.3
 

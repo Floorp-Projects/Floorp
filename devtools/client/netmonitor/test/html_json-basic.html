@@ -16,13 +16,16 @@
     <p>Pass the JSON name (as supported by sjs_json-test-server.sjs) as a query parameter</p>
 
     <script type="text/javascript">
-      function get(aAddress, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress, true);
+      /* exported performRequests */
+      "use strict";
 
-        xhr.onreadystatechange = function() {
+      function get(address, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send(null);
@@ -30,7 +33,7 @@
 
       function performRequests() {
         // Forward the query parameter for this page to sjs_json-test-server
-        get("sjs_json-test-server.sjs" + window.location.search, function() {
+        get("sjs_json-test-server.sjs" + window.location.search, function () {
           // Done.
         });
       }

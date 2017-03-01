@@ -6,10 +6,10 @@
 [![Documentation](https://docs.rs/pdqsort/badge.svg)](https://docs.rs/pdqsort)
 
 This sort is significantly faster than the standard sort in Rust. In particular, it sorts
-random arrays of integers approximately 40% faster. The key drawback is that it is an unstable
+random arrays of integers approximately 45% faster. The key drawback is that it is an unstable
 sort (i.e. may reorder equal elements). However, in most cases stability doesn't matter anyway.
 
-The algorithm was designed by Orson Peters and first published at: https://github.com/orlp/pdqsort
+The algorithm is based on pdqsort by Orson Peters, published at: https://github.com/orlp/pdqsort
 
 #### Properties
 
@@ -42,7 +42,7 @@ Sorting 10 million random numbers of type `u64`:
 
 | Sort              | Time       |
 |-------------------|-----------:|
-| pdqsort           | **396 ms** |
+| pdqsort           | **370 ms** |
 | slice::sort       |     668 ms |
 | [quickersort][qs] |     777 ms |
 | [dmsort][ds]      |     728 ms |
@@ -50,9 +50,11 @@ Sorting 10 million random numbers of type `u64`:
 
 #### Extensive benchmarks
 
-The benchmarks that follow are [used in Rust][bench] for testing the performance of slice::sort.
+The following benchmarks are [used in Rust][bench] for testing the performance of slice::sort.
 
-| Benchmark               | pdqsort       | slice::sort   | [quickersort][qs] | [dmsort][ds] | [rdxsort][rs] |
+*Note: The numbers for dmsort are outdated.*
+
+| Benchmark               | pdqsort       | slice::sort   | [quickersort][qs] | ~~[dmsort][ds]~~ | [rdxsort][rs] |
 |-------------------------|--------------:|--------------:|------------------:|-------------:|--------------:|
 | large_ascending         |         11 us |      **9 us** |             12 us |        22 us |        358 us |
 | large_descending        |     **14 us** |     **14 us** |             46 us |       144 us |        347 us |

@@ -15,8 +15,11 @@
     <p>tooltip test</p>
 
     <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
       function performRequests() {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("GET", "test-image.png?v=" + Math.random(), true);
         xhr.send(null);
       }

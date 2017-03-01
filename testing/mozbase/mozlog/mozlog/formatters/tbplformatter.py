@@ -117,7 +117,8 @@ class TbplFormatter(BaseFormatter):
 
     def suite_start(self, data):
         self.suite_start_time = data["time"]
-        return "SUITE-START | Running %i tests\n" % len(data["tests"])
+        num_tests = reduce(lambda x, y: x + len(y), data['tests'].itervalues(), 0)
+        return "SUITE-START | Running %i tests\n" % num_tests
 
     def test_start(self, data):
         self.test_start_times[self.test_id(data["test"])] = data["time"]

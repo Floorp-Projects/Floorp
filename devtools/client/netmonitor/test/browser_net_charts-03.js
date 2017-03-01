@@ -67,7 +67,6 @@ add_task(function* () {
   is(rows[0].querySelectorAll("span")[1].textContent, "label2header",
     "The second column of the header displays the correct text.");
 
-
   ok(rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
     "A colored blob exists for the firt row.");
   is(rows[1].querySelectorAll("span")[0].getAttribute("name"), "label1",

@@ -15,20 +15,23 @@
     <p>JSON malformed test</p>
 
     <script type="text/javascript">
-      function get(aAddress, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", aAddress, true);
+      /* exported performRequests */
+      "use strict";
 
-        xhr.onreadystatechange = function() {
+      function get(address, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", address, true);
+
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
         xhr.send(null);
       }
 
       function performRequests() {
-        get("sjs_content-type-test-server.sjs?fmt=json-malformed", function() {
+        get("sjs_content-type-test-server.sjs?fmt=json-malformed", function () {
           // Done.
         });
       }

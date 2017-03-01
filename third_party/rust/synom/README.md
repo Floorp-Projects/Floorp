@@ -3,7 +3,7 @@ Nom parser for Rust source code
 
 [![Build Status](https://api.travis-ci.org/dtolnay/syn.svg?branch=master)](https://travis-ci.org/dtolnay/syn)
 [![Latest Version](https://img.shields.io/crates/v/syn.svg)](https://crates.io/crates/syn)
-[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://docs.rs/syn/)
+[![Rust Documentation](https://img.shields.io/badge/api-rustdoc-blue.svg)](https://dtolnay.github.io/syn/syn/)
 
 Parse Rust source code without a Syntex dependency, intended for use with
 [Macros 1.1](https://github.com/rust-lang/rfcs/blob/master/text/1681-macros-1.1.md).

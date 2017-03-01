@@ -220,23 +220,7 @@ this.ExtensionsUI = {
 
     let perms = info.permissions || {hosts: [], permissions: []};
 
-    result.msgs = [];
-    for (let permission of perms.permissions) {
-      let key = `webextPerms.description.${permission}`;
-      if (permission == "nativeMessaging") {
-        let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
-        let appName = brandBundle.GetStringFromName("brandShortName");
-        result.msgs.push(bundle.formatStringFromName(key, [appName], 1));
-      } else {
-        try {
-          result.msgs.push(bundle.GetStringFromName(key));
-        } catch (err) {
-          // We deliberately do not include all permissions in the prompt.
-          // So if we don't find one then just skip it.
-        }
-      }
-    }
-
+    // First classify our host permissions
     let allUrls = false, wildcards = [], sites = [];
     for (let permission of perms.hosts) {
       if (permission == "<all_urls>") {
@@ -256,6 +240,10 @@ this.ExtensionsUI = {
       }
     }
 
+    // Format the host permissions.  If we have a wildcard for all urls,
+    // a single string will suffice.  Otherwise, show domain wildcards
+    // first, then individual host permissions.
+    result.msgs = [];
     if (allUrls) {
       result.msgs.push(bundle.GetStringFromName("webextPerms.hostDescription.allUrls"));
     } else {
@@ -281,6 +269,30 @@ this.ExtensionsUI = {
              "webextPerms.hostDescription.tooManyWildcards");
       format(sites, "webextPerms.hostDescription.oneSite",
              "webextPerms.hostDescription.tooManySites");
+    }
+
+    let permissionKey = perm => `webextPerms.description.${perm}`;
+
+    // Next, show the native messaging permission if it is present.
+    const NATIVE_MSG_PERM = "nativeMessaging";
+    if (perms.permissions.includes(NATIVE_MSG_PERM)) {
+      let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
+      let appName = brandBundle.GetStringFromName("brandShortName");
+      result.msgs.push(bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [appName], 1));
+    }
+
+    // Finally, show remaining permissions, in any order.
+    for (let permission of perms.permissions) {
+      // Handled above
+      if (permission == "nativeMessaging") {
+        continue;
+      }
+      try {
+        result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
+      } catch (err) {
+        // We deliberately do not include all permissions in the prompt.
+        // So if we don't find one then just skip it.
+      }
     }
 
     return result;

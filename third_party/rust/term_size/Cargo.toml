@@ -1,6 +1,6 @@
 [package]
 name = "term_size"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Kevin K. <kbknapp@gmail.com>", "Benjamin Sago <ogham@bsago.me>"]
 exclude = []
 description = "functions for determining terminal sizes and dimensions"

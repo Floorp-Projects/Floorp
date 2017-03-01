@@ -92,7 +92,7 @@ fails == 82711-2-ref.html 82711-2-ref.html
 fails == 84400-1.html 84400-1.html
 fails == 84400-2.html 84400-2.html
 == 97777-1.html 97777-1.html
-fails == 97777-2.html 97777-2.html
+== 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
 == 98223-2.html 98223-2.html
 skip-if(stylo) == 99850-1a.html 99850-1a.html # bug 1337695
@@ -691,12 +691,12 @@ fails == 379178-html.html 379178-html.html
 == 379316-1.html 379316-1.html
 == 379316-2.html 379316-2.html
 == 379328-1.html 379328-1.html
-fails == 379349-1a.xhtml 379349-1a.xhtml
+== 379349-1a.xhtml 379349-1a.xhtml
 # fuzzy because of different border rendering approach in bug 1185636
-fails == 379349-1b.xhtml 379349-1b.xhtml
-fails == 379349-1c.xhtml 379349-1c.xhtml
-fails == 379349-2a.xhtml 379349-2a.xhtml
-fails == 379349-2b.xhtml 379349-2b.xhtml
+== 379349-1b.xhtml 379349-1b.xhtml
+== 379349-1c.xhtml 379349-1c.xhtml
+== 379349-2a.xhtml 379349-2a.xhtml
+== 379349-2b.xhtml 379349-2b.xhtml
 fails == 379349-3a.xhtml 379349-3a.xhtml
 fails == 379349-3b.xhtml 379349-3b.xhtml
 fails == 379361-1.html 379361-1.html
@@ -719,12 +719,12 @@ fails == 382916-1.html 382916-1.html
 == 383035-2.html 383035-2.html
 == 383488-1.html 383488-1.html
 == 383551-1.html 383551-1.html
-fails == 383883-1.html 383883-1.html
-fails == 383883-2.html 383883-2.html
-fails == 383883-3.html 383883-3.html
-fails == 383883-4.html 383883-4.html
-fails == 383884-1.html 383884-1.html
-fails == 383885-1.html 383885-1.html
+== 383883-1.html 383883-1.html
+== 383883-2.html 383883-2.html
+== 383883-3.html 383883-3.html
+== 383883-4.html 383883-4.html
+== 383884-1.html 383884-1.html
+== 383885-1.html 383885-1.html
 fails == 384322-1.html 384322-1.html
 == 384576-1.html 384576-1.html
 == 384762-1.html 384762-1.html
@@ -821,7 +821,7 @@ fails == 395390-1.html 395390-1.html
 == 396286-1.html 396286-1.html
 fails == 397428-1.html 397428-1.html
 == 397844-1.xhtml 397844-1.xhtml
-fails == 398092-1.html 398092-1.html
+== 398092-1.html 398092-1.html
 fails == 398101-1.html 398101-1.html
 == 398144-1.html 398144-1.html
 == 398682-1.html 398682-1.html
@@ -987,7 +987,7 @@ fails == 416106-1.xhtml 416106-1.xhtml
 == 416752-1.html 416752-1.html
 == 417178-1.html 417178-1.html
 == 417246-1.html 417246-1.html
-fails == 417676.html 417676.html
+== 417676.html 417676.html
 fails asserts(1) == 418574-1.html 418574-1.html
 fails asserts(1) == 418574-2.html 418574-2.html
 == 418766-1a.html 418766-1a.html

@@ -16,8 +16,10 @@
     <p>Request frame test</p>
     <img src="img_request" />
     <script type="text/javascript">
+      "use strict";
+
       function performXhrRequest() {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("GET", "xhr_request", true);
         xhr.send();
       }

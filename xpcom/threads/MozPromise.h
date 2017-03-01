@@ -293,7 +293,6 @@ public:
   {
   public:
     virtual void Disconnect() = 0;
-    virtual void AssertIsDead() = 0;
 
   protected:
     Request() : mComplete(false), mDisconnected(false) {}
@@ -364,7 +363,7 @@ protected:
     }
 #endif
 
-    void AssertIsDead() override
+    void AssertIsDead()
     {
       PROMISE_ASSERT(mMagic1 == sMagic && mMagic2 == sMagic);
       // We want to assert that this ThenValues is dead - that is to say, that
