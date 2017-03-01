@@ -347,8 +347,8 @@ Cu.import('resource://gre/modules/Services.jsm');
       var element = window.document.createElement(tagName);
       element.localName = tagName;
       var name = TAG_ANNOTATION[type];
-      if (name && annotation) {
-        element[name] = annotation.trim();
+      if (name) {
+        element[name] = annotation ? annotation.trim() : "";
       }
       return element;
     }
