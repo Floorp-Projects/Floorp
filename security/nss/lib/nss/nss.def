@@ -1099,6 +1099,7 @@ PK11_VerifyWithMechanism;
 ;+};
 ;+NSS_3.30 { 	# NSS 3.30 release
 ;+    global:
+CERT_CompareAVA;
 PK11_HasAttributeSet;
 ;+    local:
 ;+       *;

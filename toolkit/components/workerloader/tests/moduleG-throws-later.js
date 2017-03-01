@@ -4,11 +4,11 @@
 /* eslint-env commonjs */
 
 // Skip a few lines
-// 5
-// 6
 // 7
 // 8
 // 9
+// 10
+// 11
 exports.doThrow = function doThrow() {
   Array.prototype.sort.apply("foo"); // This will raise a native TypeError
 };

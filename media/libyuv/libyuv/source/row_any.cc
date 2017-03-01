@@ -707,8 +707,8 @@ ANY11P(ARGBShuffleRow_Any_MSA, ARGBShuffleRow_MSA, const uint8*, 4, 4, 7)
 #define ANY11P16(NAMEANY, ANY_SIMD, T, SBPP, BPP, MASK)            \
   void NAMEANY(const uint16* src_ptr, uint16* dst_ptr, T shuffler, \
                int width) {                                        \
-    SIMD_ALIGNED(uint16 temp[32 * 2]);                             \
-    memset(temp, 0, 64); /* for msan */                            \
+    SIMD_ALIGNED(uint16 temp[64 * 2]);                             \
+    memset(temp, 0, 64*sizeof(uint16)); /* for msan */             \
     int r = width & MASK;                                          \
     int n = width & ~MASK;                                         \
     if (n > 0) {                                                   \

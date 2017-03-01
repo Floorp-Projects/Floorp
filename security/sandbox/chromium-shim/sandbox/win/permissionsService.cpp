@@ -15,6 +15,8 @@ namespace sandboxing {
 
 static const std::wstring ZONE_IDENTIFIER_STR(L":ZONE.IDENTIFIER");
 static const std::wstring ZONE_ID_DATA_STR(L":ZONE.IDENTIFIER:$DATA");
+// Generic name we use for all Flash temp files.
+static const std::wstring FLASH_TEMP_FILENAME(L"FLASHTMP0.TMP");
 
 bool
 StringEndsWith(const std::wstring& str, const std::wstring& strEnding)
@@ -25,10 +27,42 @@ StringEndsWith(const std::wstring& str, const std::wstring& strEnding)
   return std::equal(strEnding.rbegin(), strEnding.rend(), str.rbegin());
 }
 
+// Returns true if aFilename describes a Flash temp file.  If aFolder is
+// non-null then it is filled with the name of the folder containing
+// the file (with trailing slash).
+bool
+IsFlashTempFile(std::wstring aFilename, std::wstring* aFolder=nullptr)
+{
+  // Assume its a flash file if the base name begins with "FlashTmp",
+  // ends with ".tmp" and has an int in-between them.
+  int slashIdx = aFilename.find_last_of(L'\\');
+  if (slashIdx != std::wstring::npos) {
+    if (aFolder) {
+      *aFolder = aFilename.substr(0, slashIdx + 1);
+    }
+    aFilename = aFilename.substr(slashIdx + 1);
+  } else {
+    *aFolder = L"\\";
+  }
+
+  if (aFilename.compare(0, 8, L"FLASHTMP") != 0) {
+    return false;
+  }
+
+  int idx = 8;
+  int len = aFilename.length();
+  while (idx < len && isdigit(aFilename[idx])) {
+    ++idx;
+  }
+
+  return (len-idx == 4) && aFilename.compare(idx, 4, L".TMP") == 0;
+}
+
 // Converts NT device internal filenames to normal user-space by stripping
-// the prefixes and suffixes from the file name.
+// the prefixes and suffixes from the file name.  Returns containing
+// folder (with trailing slash) in aFolder if non-null.
 std::wstring
-GetPlainFileName(const wchar_t* aNTFileName)
+GetPlainFileName(const wchar_t* aNTFileName, std::wstring* aFolder=nullptr)
 {
   while (*aNTFileName == L'\\' || *aNTFileName == L'.' ||
          *aNTFileName == L'?' || *aNTFileName == L':' ) {
@@ -41,6 +75,11 @@ GetPlainFileName(const wchar_t* aNTFileName)
   } else if (StringEndsWith(nameCopy, ZONE_IDENTIFIER_STR)) {
     nameCopy = nameCopy.substr(0, nameCopy.size() - ZONE_IDENTIFIER_STR.size());
   }
+
+  if (IsFlashTempFile(nameCopy, aFolder) && aFolder) {
+    return *aFolder + FLASH_TEMP_FILENAME;
+  }
+
   return nameCopy;
 }
 
@@ -62,8 +101,13 @@ PermissionsService::GrantFileAccess(uint32_t aProcessId,
                                     bool aPermitWrite)
 {
   FilePermissionMap& permissions = mProcessFilePermissions[aProcessId];
-  std::wstring filename = GetPlainFileName(aFilename);
+  std::wstring containingFolder;
+  std::wstring filename = GetPlainFileName(aFilename, &containingFolder);
   permissions[filename] |= aPermitWrite;
+  if (aPermitWrite) {
+    // Also grant write permission to FLASH_TEMP_FILENAME in the same folder.
+    permissions[containingFolder + FLASH_TEMP_FILENAME] = true;
+  }
 }
 
 void
@@ -110,6 +154,7 @@ PermissionsService::UserGrantedFileAccess(uint32_t aProcessId,
   }
 
   std::wstring filename = GetPlainFileName(aFilename);
+
   auto itPermission = permissions->second.find(filename);
   if (itPermission == permissions->second.end()) {
     ReportBlockedFile(needsWrite);

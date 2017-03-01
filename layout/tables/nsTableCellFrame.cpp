@@ -92,6 +92,13 @@ nsTableCellFrame::Init(nsIContent*       aContent,
     int32_t           colIndex;
     cellFrame->GetColIndex(colIndex);
     SetColIndex(colIndex);
+  } else {
+    // Although the spec doesn't say that writing-mode is not applied to
+    // table-cells, we still override style value here because we want to
+    // make effective writing mode of table structure frames consistent
+    // within a table. The content inside table cells is reflowed by an
+    // anonymous block, hence their writing mode is not affected.
+    mWritingMode = GetTableFrame()->GetWritingMode();
   }
 }
 

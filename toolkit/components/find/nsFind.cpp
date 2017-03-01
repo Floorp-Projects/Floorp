@@ -117,6 +117,13 @@ protected:
   virtual ~nsFindContentIterator() {}
 
 private:
+  static already_AddRefed<nsIDOMRange> CreateRange(nsINode* aNode)
+  {
+    RefPtr<nsRange> range = new nsRange(aNode);
+    range->SetMaySpanAnonymousSubtrees(true);
+    return range.forget();
+  }
+
   nsCOMPtr<nsIContentIterator> mOuterIterator;
   nsCOMPtr<nsIContentIterator> mInnerIterator;
   // Can't use a range here, since we want to represent part of the flattened
@@ -281,7 +288,7 @@ nsFindContentIterator::Reset()
   nsCOMPtr<nsINode> node = do_QueryInterface(mStartNode);
   NS_ENSURE_TRUE_VOID(node);
 
-  nsCOMPtr<nsIDOMRange> range = nsFind::CreateRange(node);
+  nsCOMPtr<nsIDOMRange> range = CreateRange(node);
   range->SetStart(mStartNode, mStartOffset);
   range->SetEnd(mEndNode, mEndOffset);
   mOuterIterator->Init(range);
@@ -382,8 +389,8 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   nsCOMPtr<nsIDOMElement> rootElement;
   editor->GetRootElement(getter_AddRefs(rootElement));
 
-  nsCOMPtr<nsIDOMRange> innerRange = nsFind::CreateRange(aContent);
-  nsCOMPtr<nsIDOMRange> outerRange = nsFind::CreateRange(aContent);
+  nsCOMPtr<nsIDOMRange> innerRange = CreateRange(aContent);
+  nsCOMPtr<nsIDOMRange> outerRange = CreateRange(aContent);
   if (!innerRange || !outerRange) {
     return;
   }
@@ -1270,7 +1277,7 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
           }
         }
 
-        nsCOMPtr<nsIDOMRange> range = CreateRange(tc);
+        nsCOMPtr<nsIDOMRange> range = new nsRange(tc);
         if (range) {
           int32_t matchStartOffset, matchEndOffset;
           // convert char index to range point:
@@ -1373,13 +1380,4 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
   // Out of nodes, and didn't match.
   ResetAll();
   return NS_OK;
-}
-
-/* static */
-already_AddRefed<nsIDOMRange>
-nsFind::CreateRange(nsINode* aNode)
-{
-  RefPtr<nsRange> range = new nsRange(aNode);
-  range->SetMaySpanAnonymousSubtrees(true);
-  return range.forget();
 }

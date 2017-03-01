@@ -390,7 +390,7 @@ IonCacheIRCompiler::init()
       case CacheKind::SetElem: {
         IonSetPropertyIC* ic = ic_->asSetPropertyIC();
 
-        available.add(ic->temp1());
+        available.add(ic->temp());
 
         liveRegs_.emplace(ic->liveRegs());
 
@@ -1240,7 +1240,7 @@ IonCacheIRCompiler::emitStoreTypedObjectScalarProperty()
     LoadTypedThingData(masm, layout, obj, scratch1);
     Address dest(scratch1, offset);
 
-    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
+    StoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
     return true;
 }
 

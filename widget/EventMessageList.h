@@ -398,6 +398,7 @@ NS_EVENT_MESSAGE(eTouchStart)
 NS_EVENT_MESSAGE(eTouchMove)
 NS_EVENT_MESSAGE(eTouchEnd)
 NS_EVENT_MESSAGE(eTouchCancel)
+NS_EVENT_MESSAGE(eTouchPointerCancel)
 
 // Pointerlock DOM API
 NS_EVENT_MESSAGE(ePointerLockChange)

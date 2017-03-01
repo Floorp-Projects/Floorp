@@ -262,6 +262,12 @@ public:
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
 
+  // Get the selection range start and end points in our text.
+  nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
+
+  // Get the selection direction
+  nsresult GetSelectionDirection(nsITextControlFrame::SelectionDirection* aDirection);
+
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
       mRootNode->UpdateEditableState(aNotify);

@@ -5,6 +5,7 @@
 #include "dbtool.h"
 #include "argparse.h"
 #include "scoped_ptrs.h"
+#include "util.h"
 
 #include <dirent.h>
 #include <fstream>
@@ -17,7 +18,16 @@
 #include <cert.h>
 #include <certdb.h>
 #include <nss.h>
+#include <prerror.h>
 #include <prio.h>
+
+const std::vector<std::string> kCommandArgs({"--create", "--list-certs",
+                                             "--import-cert", "--list-keys"});
+
+static bool HasSingleCommandArgument(const ArgParser &parser) {
+  auto pred = [&](const std::string &cmd) { return parser.Has(cmd); };
+  return std::count_if(kCommandArgs.begin(), kCommandArgs.end(), pred) == 1;
+}
 
 static std::string PrintFlags(unsigned int flags) {
   std::stringstream ss;
@@ -63,19 +73,23 @@ static std::vector<char> ReadFromIstream(std::istream &is) {
   return certData;
 }
 
+static const char *const keyTypeName[] = {"null", "rsa", "dsa", "fortezza",
+                                          "dh",   "kea", "ec"};
+
 void DBTool::Usage() {
   std::cerr << "Usage: nss db [--path <directory>]" << std::endl;
   std::cerr << "  --create" << std::endl;
   std::cerr << "  --list-certs" << std::endl;
   std::cerr << "  --import-cert [<path>] --name <name> [--trusts <trusts>]"
             << std::endl;
+  std::cerr << "  --list-keys" << std::endl;
 }
 
 bool DBTool::Run(const std::vector<std::string> &arguments) {
   ArgParser parser(arguments);
 
-  if (!parser.Has("--create") && !parser.Has("--list-certs") &&
-      !parser.Has("--import-cert")) {
+  if (!HasSingleCommandArgument(parser)) {
+    Usage();
     return false;
   }
 
@@ -129,7 +143,12 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
   } else if (parser.Has("--import-cert")) {
     ret = ImportCertificate(parser);
   } else if (parser.Has("--create")) {
-    std::cout << "DB files created successfully." << std::endl;
+    ret = InitSlotPassword();
+    if (ret) {
+      std::cout << "DB files created successfully." << std::endl;
+    }
+  } else if (parser.Has("--list-keys")) {
+    ret = ListKeys();
   }
 
   // shutdown nss
@@ -233,7 +252,7 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
 
   ScopedPK11SlotInfo slot = ScopedPK11SlotInfo(PK11_GetInternalKeySlot());
   if (slot.get() == nullptr) {
-    std::cerr << "Error: Init PK11SlotInfo failed!\n";
+    std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
     return false;
   }
 
@@ -277,5 +296,74 @@ bool DBTool::ImportCertificate(const ArgParser &parser) {
 
   std::cout << "Certificate import was successful!" << std::endl;
   // TODO show information about imported certificate
+  return true;
+}
+
+bool DBTool::ListKeys() {
+  ScopedPK11SlotInfo slot = ScopedPK11SlotInfo(PK11_GetInternalKeySlot());
+  if (slot.get() == nullptr) {
+    std::cerr << "Error: Init PK11SlotInfo failed!" << std::endl;
+    return false;
+  }
+
+  if (!DBLoginIfNeeded(slot)) {
+    return false;
+  }
+
+  ScopedSECKEYPrivateKeyList list(PK11_ListPrivateKeysInSlot(slot.get()));
+  if (list.get() == nullptr) {
+    std::cerr << "Listing private keys failed with error "
+              << PR_ErrorToName(PR_GetError()) << std::endl;
+    return false;
+  }
+
+  SECKEYPrivateKeyListNode *node;
+  int count = 0;
+  for (node = PRIVKEY_LIST_HEAD(list.get());
+       !PRIVKEY_LIST_END(node, list.get()); node = PRIVKEY_LIST_NEXT(node)) {
+    char *keyNameRaw = PK11_GetPrivateKeyNickname(node->key);
+    std::string keyName(keyNameRaw ? "" : keyNameRaw);
+
+    if (keyName.empty()) {
+      ScopedCERTCertificate cert(PK11_GetCertFromPrivateKey(node->key));
+      if (cert.get()) {
+        if (cert->nickname && strlen(cert->nickname) > 0) {
+          keyName = cert->nickname;
+        } else if (cert->emailAddr && strlen(cert->emailAddr) > 0) {
+          keyName = cert->emailAddr;
+        }
+      }
+      if (keyName.empty()) {
+        keyName = "(none)";  // default value
+      }
+    }
+
+    SECKEYPrivateKey *key = node->key;
+    ScopedSECItem keyIDItem(PK11_GetLowLevelKeyIDForPrivateKey(key));
+    if (keyIDItem.get() == nullptr) {
+      std::cerr << "Error: PK11_GetLowLevelKeyIDForPrivateKey failed!"
+                << std::endl;
+      continue;
+    }
+
+    std::string keyID = StringToHex(keyIDItem);
+
+    if (count++ == 0) {
+      // print header
+      std::cout << std::left << std::setw(20) << "<key#, key name>"
+                << std::setw(20) << "key type"
+                << "key id" << std::endl;
+    }
+
+    std::stringstream leftElem;
+    leftElem << "<" << count << ", " << keyName << ">";
+    std::cout << std::left << std::setw(20) << leftElem.str() << std::setw(20)
+              << keyTypeName[key->keyType] << keyID << std::endl;
+  }
+
+  if (count == 0) {
+    std::cout << "No keys found." << std::endl;
+  }
+
   return true;
 }

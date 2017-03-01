@@ -223,9 +223,7 @@ class Nursery
     MOZ_MUST_USE bool addedUniqueIdToCell(gc::Cell* cell) {
         MOZ_ASSERT(IsInsideNursery(cell));
         MOZ_ASSERT(isEnabled());
-        MOZ_ASSERT(cellsWithUid_.initialized());
-        MOZ_ASSERT(!cellsWithUid_.has(cell));
-        return cellsWithUid_.put(cell);
+        return cellsWithUid_.append(cell);
     }
 
     using SweepThunk = void (*)(void *data);
@@ -388,8 +386,8 @@ class Nursery
      *       sweep. This is because this structure is used to help implement
      *       stable object hashing and we have to break the cycle somehow.
      */
-    using CellsWithUniqueIdSet = HashSet<gc::Cell*, PointerHasher<gc::Cell*, 3>, SystemAllocPolicy>;
-    CellsWithUniqueIdSet cellsWithUid_;
+    using CellsWithUniqueIdVector = Vector<gc::Cell*, 8, SystemAllocPolicy>;
+    CellsWithUniqueIdVector cellsWithUid_;
 
     struct SweepAction;
     SweepAction* sweepActions_;
