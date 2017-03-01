@@ -164,11 +164,24 @@ void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
-                                 DisplayListBuilder& aBuilder)
+				 WrPipelineId pipeline_id,
+				 WrBuiltDisplayListDescriptor dl_descriptor,
+				 uint8_t *dl_data,
+				 size_t dl_size,
+				 WrAuxiliaryListsDescriptor aux_descriptor,
+				 uint8_t *aux_data,
+				 size_t aux_size)
 {
-  wr_api_set_root_display_list(mWrApi, aBuilder.mWrState,
-                               aEpoch,
-                               aViewportSize.width, aViewportSize.height);
+    wr_api_set_root_display_list(mWrApi,
+				 aEpoch,
+				 aViewportSize.width, aViewportSize.height,
+                                 pipeline_id,
+                                 dl_descriptor,
+                                 dl_data,
+                                 dl_size,
+                                 aux_descriptor,
+                                 aux_data,
+                                 aux_size);
 }
 
 void
@@ -336,6 +349,19 @@ void
 DisplayListBuilder::End()
 {
   wr_dp_end(mWrState);
+}
+
+void
+DisplayListBuilder::Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
+                             wr::VecU8& dl_data,
+                             WrAuxiliaryListsDescriptor& aux_descriptor,
+                             wr::VecU8& aux_data)
+{
+    wr_api_finalize_builder(mWrState,
+                            dl_descriptor,
+                            dl_data.inner,
+                            aux_descriptor,
+                            aux_data.inner);
 }
 
 void
