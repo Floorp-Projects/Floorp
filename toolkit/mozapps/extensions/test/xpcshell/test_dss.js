@@ -359,17 +359,17 @@ function run_test_4() {
   });
 }
 
-// Switching to a custom theme should disable the lightweight theme and require
-// a restart. Cancelling that should also be possible.
+// Switching to a custom theme should disable the lightweight theme and not
+// require a restart.
 function run_test_5() {
   prepare_test({
     "2@personas.mozilla.org": [
       ["onDisabling", false],
-      "onDisabled"
+      ["onDisabled", false]
     ],
     "theme2@tests.mozilla.org": [
       ["onEnabling", false],
-      "onEnabled"
+      ["onEnabled", false]
     ]
   });
 
@@ -381,11 +381,12 @@ function run_test_5() {
 
     prepare_test({
       "2@personas.mozilla.org": [
-        "onEnabling"
+        ["onEnabling", false],
+        ["onEnabled", false]
       ],
       "theme2@tests.mozilla.org": [
         ["onDisabling", false],
-        "onDisabled"
+        ["onDisabled", false]
       ]
     });
 
@@ -395,11 +396,12 @@ function run_test_5() {
 
     prepare_test({
       "2@personas.mozilla.org": [
-        ["onOperationCancelled", true]
+        ["onDisabling", false],
+        ["onDisabled", false]
       ],
       "theme2@tests.mozilla.org": [
         ["onEnabling", false],
-        "onEnabled"
+        ["onEnabled", false]
       ]
     });
 
@@ -439,15 +441,16 @@ function check_test_5() {
   });
 }
 
-// Switching from a custom theme to a lightweight theme should require a restart
+// Switching from a custom theme to a lightweight theme shouldn't require a restart
 function run_test_6() {
   prepare_test({
     "2@personas.mozilla.org": [
-      "onEnabling",
+      ["onEnabling", false],
+      ["onEnabled", false]
     ],
     "theme2@tests.mozilla.org": [
       ["onDisabling", false],
-      "onDisabled"
+      ["onDisabled", false]
     ]
   });
 
@@ -459,11 +462,12 @@ function run_test_6() {
 
     prepare_test({
       "2@personas.mozilla.org": [
-        "onOperationCancelled",
+        ["onDisabling", false],
+        ["onDisabled", false]
       ],
       "theme2@tests.mozilla.org": [
         ["onEnabling", false],
-        "onEnabled"
+        ["onEnabled", false]
       ]
     });
 
@@ -473,11 +477,12 @@ function run_test_6() {
 
     prepare_test({
       "2@personas.mozilla.org": [
-        "onEnabling",
+        ["onEnabling", false],
+        ["onEnabled", false]
       ],
       "theme2@tests.mozilla.org": [
         ["onDisabling", false],
-        "onDisabled"
+        ["onDisabled", false]
       ]
     });
 
@@ -485,13 +490,13 @@ function run_test_6() {
 
     ensure_test_completed();
 
-    do_check_false(p2.isActive);
+    do_check_true(p2.isActive);
     do_check_false(p2.userDisabled);
-    do_check_true(hasFlag(AddonManager.PENDING_ENABLE, p2.pendingOperations));
+    do_check_eq(p2.pendingOperations, AddonManager.PENDING_NONE);
     do_check_false(t2.isActive);
     do_check_true(t2.userDisabled);
-    do_check_false(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
-    do_check_false(gLWThemeChanged);
+    do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+    do_check_true(gLWThemeChanged);
 
     do_execute_soon(check_test_6);
   });

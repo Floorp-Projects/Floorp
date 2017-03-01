@@ -14,37 +14,14 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
-const { GlobalManager, Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
-function promiseAddonStartup() {
-  return new Promise(resolve => {
-    let listener = (evt, extension) => {
-      Management.off("ready", listener);
-      resolve(extension);
-    };
-
-    Management.on("ready", listener);
-  });
-}
-
-function promiseInstallWebExtension(aData) {
-  let addonFile = createTempWebExtensionFile(aData);
-
-  return promiseInstallAllFiles([addonFile]).then(installs => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
-    // Since themes are disabled by default, it won't start up.
-    if ("theme" in aData.manifest)
-      return installs[0].addon;
-    return promiseAddonStartup();
-  });
-}
+const { GlobalManager } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
 add_task(function*() {
   equal(GlobalManager.extensionMap.size, 0);
 
   yield Promise.all([
     promiseInstallAllFiles([do_get_addon("webextension_1")], true),
-    promiseAddonStartup()
+    promiseWebExtensionStartup()
   ]);
 
   equal(GlobalManager.extensionMap.size, 1);
@@ -82,7 +59,7 @@ add_task(function*() {
   equal(GlobalManager.extensionMap.size, 0);
 
   startupManager();
-  yield promiseAddonStartup();
+  yield promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -111,7 +88,7 @@ add_task(function*() {
   equal(GlobalManager.extensionMap.size, 0);
 
   addon.userDisabled = false;
-  yield promiseAddonStartup();
+  yield promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -138,7 +115,7 @@ add_task(function*() {
   }, profileDir);
 
   startupManager();
-  yield promiseAddonStartup();
+  yield promiseWebExtensionStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -163,7 +140,7 @@ add_task(function* test_manifest_localization() {
   const extensionId = "webextension3@tests.mozilla.org";
 
   yield promiseInstallAllFiles([do_get_addon("webextension_3")], true);
-  yield promiseAddonStartup();
+  yield promiseWebExtensionStartup();
 
   let addon = yield promiseAddonByID(extensionId);
   addon.userDisabled = true;
