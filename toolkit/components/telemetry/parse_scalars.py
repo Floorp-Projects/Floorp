@@ -4,7 +4,7 @@
 
 import re
 import yaml
-import shared_telemetry_utils as utils
+from shared_telemetry_utils import add_expiration_postfix
 
 # The map of containing the allowed scalar types and their mapping to
 # nsITelemetry::SCALAR_* type constants.
@@ -12,6 +12,16 @@ SCALAR_TYPES_MAP = {
     'uint': 'nsITelemetry::SCALAR_COUNT',
     'string': 'nsITelemetry::SCALAR_STRING',
     'boolean': 'nsITelemetry::SCALAR_BOOLEAN'
+}
+
+# This is a list of flags that determine which process the scalar is allowed
+# to record from.
+KNOWN_PROCESS_FLAGS = {
+    'all': 'RecordedProcessType::All',
+    'all_childs': 'RecordedProcessType::AllChilds',
+    'main': 'RecordedProcessType::Main',
+    'content': 'RecordedProcessType::Content',
+    'gpu': 'RecordedProcessType::Gpu',
 }
 
 class ScalarType:
@@ -30,7 +40,7 @@ class ScalarType:
 
         # Everything is ok, set the rest of the data.
         self._definition = definition
-        definition['expires'] = utils.add_expiration_postfix(definition['expires'])
+        definition['expires'] = add_expiration_postfix(definition['expires'])
 
     def validate_names(self, group_name, probe_name):
         """Validate the group and probe name:
@@ -158,7 +168,7 @@ class ScalarType:
         # Validate record_in_processes.
         record_in_processes = definition.get('record_in_processes', [])
         for proc in record_in_processes:
-            if not utils.is_valid_process_name(proc):
+            if proc not in KNOWN_PROCESS_FLAGS.keys():
                 raise ValueError(self._name + ' - unknown value in record_in_processes: ' + proc)
 
     @property
@@ -224,7 +234,7 @@ class ScalarType:
     @property
     def record_in_processes_enum(self):
         """Get the non-empty list of flags representing the processes to record data in"""
-        return [utils.process_name_to_enum(p) for p in self.record_in_processes]
+        return [KNOWN_PROCESS_FLAGS.get(p) for p in self.record_in_processes]
 
     @property
     def dataset(self):
