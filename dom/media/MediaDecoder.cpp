@@ -1796,7 +1796,8 @@ nsCString
 MediaDecoder::GetDebugInfo()
 {
   return nsPrintfCString(
-    "channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mdsm=%p",
+    "MediaDecoder State: channels=%u rate=%u hasAudio=%d hasVideo=%d "
+    "mPlayState=%s mdsm=%p",
     mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
     mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
     PlayStateStr(), GetStateMachine());
