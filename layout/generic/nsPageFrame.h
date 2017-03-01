@@ -32,11 +32,6 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  mozilla::WritingMode GetWritingMode() const override
-  {
-    return nsFrame::GetWritingModeDeferringToRootElem();
-  }
-
   /**
    * Get the "type" of the frame
    *

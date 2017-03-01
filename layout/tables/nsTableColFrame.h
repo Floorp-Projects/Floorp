@@ -33,26 +33,19 @@ public:
   friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                               nsStyleContext*  aContext);
 
-  nsTableColGroupFrame* GetTableColGroupFrame() const
+  // nsIFrame overrides
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) override
   {
-    nsIFrame* parent = GetParent();
-    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableColGroupFrame);
-    return static_cast<nsTableColGroupFrame*>(parent);
-  }
-
-  nsTableFrame* GetTableFrame() const
-  {
-    return GetTableColGroupFrame()->GetTableFrame();
+    nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
+    if (!aPrevInFlow) {
+      mWritingMode = GetTableFrame()->GetWritingMode();
+    }
   }
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
-
-  int32_t GetColIndex() const;
-
-  void SetColIndex (int32_t aColIndex);
-
-  nsTableColFrame* GetNextCol() const;
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       ReflowOutput&     aDesiredSize,
@@ -79,8 +72,23 @@ public:
 
   virtual nsSplittableType GetSplittableType() const override;
 
-  virtual mozilla::WritingMode GetWritingMode() const override
-    { return GetTableFrame()->GetWritingMode(); }
+  nsTableColGroupFrame* GetTableColGroupFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableColGroupFrame);
+    return static_cast<nsTableColGroupFrame*>(parent);
+  }
+
+  nsTableFrame* GetTableFrame() const
+  {
+    return GetTableColGroupFrame()->GetTableFrame();
+  }
+
+  int32_t GetColIndex() const;
+
+  void SetColIndex (int32_t aColIndex);
+
+  nsTableColFrame* GetNextCol() const;
 
   /** return the number of the columns the col represents.  always >= 1 */
   int32_t GetSpan();

@@ -60,11 +60,6 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  mozilla::WritingMode GetWritingMode() const override
-  {
-    return nsFrame::GetWritingModeDeferringToRootElem();
-  }
-
   // nsIFrame
   void Reflow(nsPresContext* aPresContext,
               ReflowOutput& aDesiredSize,

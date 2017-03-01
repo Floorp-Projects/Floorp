@@ -61,10 +61,6 @@ public:
 
   virtual bool IsCurrentThreadIn() = 0;
 
-  // Returns true if dispatch is generally reliable. This is used to guard
-  // against FlushableTaskQueues, which should go away.
-  virtual bool IsDispatchReliable() { return true; }
-
   // Returns a TaskDispatcher that will dispatch its tasks when the currently-
   // running tasks pops off the stack.
   //

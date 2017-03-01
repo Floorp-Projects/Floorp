@@ -37,6 +37,12 @@ def apply_patches():
     os.system("patch -p3 < allow_disabling_asm_avx2.patch")
     # Patch to add H444ToARGB() variant
     os.system("patch -p3 < add_H444ToARGB.patch")
+    # Patch for bug 1342730
+    os.system("patch -p3 < cpu_id.patch")
+    # Patch for bug 1342730
+    os.system("patch -p3 < cpu_id.patch")
+    # Patch for bug 1342732
+    os.system("patch -p3 < row_any.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

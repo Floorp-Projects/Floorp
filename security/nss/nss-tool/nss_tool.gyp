@@ -13,6 +13,7 @@
       'sources' : [
         'nss_tool.cc',
         'common/argparse.cc',
+        'common/util.cc',
         'db/dbtool.cc',
       ],
       'include_dirs': [

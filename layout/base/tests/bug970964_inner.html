@@ -114,44 +114,58 @@ function runTests() {
   var touchCancelTriggered = 0;
   var pointerCancelTriggered = 0;
 
-  d0.onmousedown = function(e) {
-    mouseDownTriggered = 1;
-    is(pointerDownTriggered , 1, "Mouse event must be triggered after pointer event!");
-  };
-  d0.ontouchstart = function(e) {
-    touchDownTriggered = 1;
-    is(touchDownTriggered , 1, "Touch event must be triggered after pointer event!");
-  }
-  d0.ontouchcancel = function(e) {
-    touchCancelTriggered = 1;
-    is(pointerCancelTriggered, 1, "Touch cancel event must be triggered after pointer event!");
-  }
-  d0.onpointerdown = function(e) {
-    pointerDownTriggered = 1;
-    is(mouseDownTriggered, 0, "Pointer event must be triggered before mouse event!");
-    is(touchDownTriggered, 0, "Pointer event must be triggered before touch event!");
-  };
-  d0.addEventListener("pointercancel", function(ev) {
-    is(ev.pointerId, 0, "Correct default pointerId");
-    is(ev.bubbles, true, "bubbles should be true");
-    is(ev.cancelable, false, "pointercancel cancelable should be false ");
-    pointerCancelTriggered = 1;
-    is(touchCancelTriggered, 0, "Pointer event must be triggered before touch event!");
+  // Test pointer event generated from mouse event
+  d0.addEventListener("mousedown", (e) => {
+    ++mouseDownTriggered;
+    is(pointerDownTriggered , mouseDownTriggered, "Mouse event must be triggered after pointer event!");
   }, {once: true});
 
-  // Test pointer event generated from mouse event
+  d0.addEventListener("pointerdown", (e) => {
+    ++pointerDownTriggered;
+    is(pointerDownTriggered, mouseDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+  }, {once: true});
+
   synthesizeMouse(d1, 3, 3, { type: "mousemove"});
   synthesizeMouse(d1, 3, 3, { type: "mousedown"});
   synthesizeMouse(d1, 3, 3, { type: "mouseup"});
 
   // Test pointer event generated from touch event
-  pointerDownTriggered = 0;
   mouseDownTriggered = 0;
+  pointerDownTriggered = 0;
+
+  d0.addEventListener("touchstart", (e) => {
+    ++touchDownTriggered;
+    is(pointerDownTriggered, touchDownTriggered,  "Touch event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("mousedown", (e) => {
+    ++mouseDownTriggered;
+    is(pointerDownTriggered , mouseDownTriggered, "Mouse event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("pointerdown", (e) => {
+    ++pointerDownTriggered;
+    is(pointerDownTriggered, touchDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+    is(pointerDownTriggered, mouseDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+  }, {once: true});
+
+  d0.addEventListener("touchcancel", (e) => {
+    ++touchCancelTriggered;
+    is(pointerCancelTriggered, touchCancelTriggered, "Touch cancel event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("pointercancel", function(ev) {
+    is(ev.pointerId, 0, "Correct default pointerId");
+    is(ev.bubbles, true, "bubbles should be true");
+    is(ev.cancelable, false, "pointercancel cancelable should be false ");
+    ++pointerCancelTriggered;
+    is(pointerCancelTriggered, touchCancelTriggered + 1, "Pointer event must be triggered before touch event!");
+  }, {once: true});
 
   var cwu = SpecialPowers.getDOMWindowUtils(window);
   var event1 = getTouchEventForTarget(d1, cwu, 0);
-  sendTouchEvent(cwu, "touchmove", event1, 0);
   sendTouchEvent(cwu, "touchstart", event1, 0);
+  sendTouchEvent(cwu, "touchmove", event1, 0);
   // Test Touch to Pointer Cancel
   sendTouchEvent(cwu, "touchcancel", event1, 0);
 
@@ -228,6 +242,7 @@ function runTests() {
   };
 
   synthesizeMouse(d1, 3, 3, { type: "mousemove"});
+  sendTouchEvent(cwu, "touchstart", getTouchEventForTarget(d3, cwu, 3), 0);
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d3, cwu, 3), 0);
   is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
   is(mousePointerEnterLeaveCount, 2, "Wrong mouse enterLeave count for!");
@@ -291,8 +306,8 @@ function runTests() {
       is(e.pointerType, "mouse", "Wrong Pointer type, should be mouse type");
     }
     pointerOutTriggeredForCancelEvent = 1;
- };
- d1.onpointerleave = function(e) {
+  };
+  d1.onpointerleave = function(e) {
     is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out must be dispatched bedore Pointer leave");
     if (pointerLeaveTriggeredForCancelEvent == 0) {
       is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");

@@ -14,7 +14,6 @@ scopes for `push-to-candidates` rather than `push-to-releases`, even if both
 happen on mozilla-beta and mozilla-release.
 """
 from __future__ import absolute_import, print_function, unicode_literals
-from copy import deepcopy
 import functools
 
 
@@ -49,10 +48,19 @@ SIGNING_CERT_SCOPES = {
 }
 
 """Map beetmover scope aliases to sets of projects.
-
-Currently this mirrors the signing scope alias behavior.
 """
-BEETMOVER_SCOPE_ALIAS_TO_PROJECT = deepcopy(SIGNING_SCOPE_ALIAS_TO_PROJECT)
+BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
+    'all-nightly-branches', set([
+        'mozilla-central',
+        'mozilla-aurora',
+        'jamun',
+        'mozilla-beta',
+        'mozilla-release',
+    ])
+], [
+    'all-release-branches', set([
+    ])
+]]
 
 """Map beetmover tasks aliases to sets of target task methods.
 
@@ -62,11 +70,11 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
     'all-nightly-tasks', set([
         'nightly_fennec',
         'nightly_linux',
+        'mozilla_beta_tasks',
+        'mozilla_release_tasks',
     ])
 ], [
     'all-release-tasks', set([
-        'mozilla_beta_tasks',
-        'mozilla_release_tasks',
     ])
 ]]
 

@@ -19,6 +19,7 @@ class DBTool {
   bool PathHasDBFiles(std::string path);
   void ListCertificates();
   bool ImportCertificate(const ArgParser& parser);
+  bool ListKeys();
 };
 
 #endif  // dbtool_h__

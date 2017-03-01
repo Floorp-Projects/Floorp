@@ -6632,12 +6632,14 @@ IonBuilder::maybeMarkEmpty(MDefinition* ins)
     // as having no possible types too. This is to avoid degrading
     // subsequent analysis.
     for (size_t i = 0; i < ins->numOperands(); i++) {
-        if (!ins->emptyResultTypeSet())
+        if (!ins->getOperand(i)->emptyResultTypeSet())
             continue;
 
         TemporaryTypeSet* types = alloc().lifoAlloc()->new_<TemporaryTypeSet>();
-        if (types)
+        if (types) {
             ins->setResultTypeSet(types);
+            return;
+        }
     }
 }
 

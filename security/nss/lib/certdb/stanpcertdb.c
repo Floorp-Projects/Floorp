@@ -515,28 +515,25 @@ CERT_FindCertByKeyID(CERTCertDBHandle *handle, SECItem *name, SECItem *keyID)
 {
     CERTCertList *list;
     CERTCertificate *cert = NULL;
-    CERTCertListNode *node, *head;
+    CERTCertListNode *node;
 
     list = CERT_CreateSubjectCertList(NULL, handle, name, 0, PR_FALSE);
     if (list == NULL)
         return NULL;
 
-    node = head = CERT_LIST_HEAD(list);
-    if (head) {
-        do {
-            if (node->cert &&
-                SECITEM_ItemsAreEqual(&node->cert->subjectKeyID, keyID)) {
-                cert = CERT_DupCertificate(node->cert);
-                goto done;
-            }
-            node = CERT_LIST_NEXT(node);
-        } while (node && head != node);
+    node = CERT_LIST_HEAD(list);
+    while (!CERT_LIST_END(node, list)) {
+        if (node->cert &&
+            SECITEM_ItemsAreEqual(&node->cert->subjectKeyID, keyID)) {
+            cert = CERT_DupCertificate(node->cert);
+            goto done;
+        }
+        node = CERT_LIST_NEXT(node);
     }
     PORT_SetError(SEC_ERROR_UNKNOWN_ISSUER);
+
 done:
-    if (list) {
-        CERT_DestroyCertList(list);
-    }
+    CERT_DestroyCertList(list);
     return cert;
 }
 
@@ -635,8 +632,7 @@ common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle,
         if (certlist) {
             SECStatus rv =
                 CERT_FilterCertListByUsage(certlist, lookingForUsage, PR_FALSE);
-            if (SECSuccess == rv &&
-                !CERT_LIST_END(CERT_LIST_HEAD(certlist), certlist)) {
+            if (SECSuccess == rv && !CERT_LIST_EMPTY(certlist)) {
                 cert = CERT_DupCertificate(CERT_LIST_HEAD(certlist)->cert);
             }
             CERT_DestroyCertList(certlist);
