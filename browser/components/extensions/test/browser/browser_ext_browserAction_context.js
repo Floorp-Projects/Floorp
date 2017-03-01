@@ -175,7 +175,7 @@ add_task(function* testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests(tabs, expectDefaults) {
+    getTests: function(tabs, expectDefaults) {
       const DEFAULT_BADGE_COLOR = [0xd9, 0, 0, 255];
 
       let details = [
@@ -331,7 +331,7 @@ add_task(function* testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests(tabs, expectDefaults) {
+    getTests: function(tabs, expectDefaults) {
       const DEFAULT_BADGE_COLOR = [0xd9, 0, 0, 255];
 
       let details = [
