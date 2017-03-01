@@ -924,10 +924,16 @@ MacroAssemblerX86::convertInt64ToFloat32(Register64 input, FloatRegister output)
 void
 MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
-    MOZ_ASSERT(temp == Register::Invalid());
-
     // Zero the dest register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
+
+    // Set the FPU precision to 80 bits.
+    asMasm().reserveStack(2 * sizeof(intptr_t));
+    fnstcw(Operand(esp, 0));
+    load32(Operand(esp, 0), temp);
+    orl(Imm32(0x300), temp);
+    store32(temp, Operand(esp, sizeof(intptr_t)));
+    fldcw(Operand(esp, sizeof(intptr_t)));
 
     asMasm().Push(input.high);
     asMasm().Push(input.low);
@@ -945,6 +951,10 @@ MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output
 
     fstp32(Operand(esp, 0));
     vmovss(Address(esp, 0), output);
+    asMasm().freeStack(2 * sizeof(intptr_t));
+
+    // Restore FPU precision to the initial value.
+    fldcw(Operand(esp, 0));
     asMasm().freeStack(2 * sizeof(intptr_t));
 }
 

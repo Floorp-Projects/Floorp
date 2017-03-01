@@ -3232,7 +3232,9 @@ class BaseCompiler
 #ifndef I64_TO_FLOAT_CALLOUT
     bool convertI64ToFloatNeedsTemp(ValType to, bool isUnsigned) const {
 # if defined(JS_CODEGEN_X86)
-        return to == ValType::F64 && isUnsigned && AssemblerX86Shared::HasSSE3();
+        return isUnsigned &&
+               ((to == ValType::F64 && AssemblerX86Shared::HasSSE3()) ||
+               to == ValType::F32);
 # else
         return isUnsigned;
 # endif
