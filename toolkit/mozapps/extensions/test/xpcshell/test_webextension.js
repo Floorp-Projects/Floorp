@@ -30,11 +30,8 @@ function promiseAddonStartup() {
 function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
-  return promiseInstallAllFiles([addonFile]).then(installs => {
+  return promiseInstallAllFiles([addonFile]).then(() => {
     Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
-    // Since themes are disabled by default, it won't start up.
-    if ("theme" in aData.manifest)
-      return installs[0].addon;
     return promiseAddonStartup();
   });
 }
@@ -420,49 +417,4 @@ add_task(function* authorNotString() {
     equal(addon.creator, null);
     addon.uninstall();
   }
-});
-
-add_task(function* testThemeExtension() {
-  let addon = yield promiseInstallWebExtension({
-    manifest: {
-      "author": "Some author",
-      manifest_version: 2,
-      name: "Web Extension Name",
-      version: "1.0",
-      theme: { images: { headerURL: "https://example.com/example.png" } },
-    }
-  });
-
-  addon = yield promiseAddonByID(addon.id);
-  do_check_neq(addon, null);
-  do_check_eq(addon.creator, "Some author");
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_true(addon.userDisabled);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "theme");
-  do_check_true(addon.isWebExtension);
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
-
-  addon.uninstall();
-
-  // Also test one without a proper 'theme' section.
-  addon = yield promiseInstallWebExtension({
-    manifest: {
-      "author": "Some author",
-      manifest_version: 2,
-      name: "Web Extension Name",
-      version: "1.0",
-      theme: null,
-    }
-  });
-
-  addon = yield promiseAddonByID(addon.id);
-  do_check_eq(addon.type, "extension");
-  do_check_true(addon.isWebExtension);
-
-  addon.uninstall();
 });
