@@ -2419,10 +2419,8 @@ Parser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /* = false 
 }
 
 static YieldHandling
-GetYieldHandling(GeneratorKind generatorKind, FunctionAsyncKind asyncKind)
+GetYieldHandling(GeneratorKind generatorKind)
 {
-    if (asyncKind == AsyncFunction)
-        return YieldIsName;
     if (generatorKind == NotGenerator)
         return YieldIsName;
     return YieldIsKeyword;
@@ -2460,7 +2458,7 @@ Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
         return null();
     funpc.setIsStandaloneFunctionBody();
 
-    YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    YieldHandling yieldHandling = GetYieldHandling(generatorKind);
     AutoAwaitIsKeyword<FullParseHandler> awaitIsKeyword(this, asyncKind == AsyncFunction);
     if (!functionFormalParametersAndBody(InAllowed, yieldHandling, fn, Statement,
                                          parameterListEnd, /* isStandaloneFunction = */ true))
@@ -2619,7 +2617,7 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
 
     switch (pc->generatorKind()) {
       case NotGenerator:
-        MOZ_ASSERT(pc->lastYieldOffset == startYieldOffset);
+        MOZ_ASSERT_IF(!pc->isAsync(), pc->lastYieldOffset == startYieldOffset);
         break;
 
       case LegacyGenerator:
@@ -2635,8 +2633,8 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
         break;
 
       case StarGenerator:
-        MOZ_ASSERT_IF(!pc->isAsync(), kind != Arrow);
-        MOZ_ASSERT_IF(!pc->isAsync(), type == StatementListBody);
+        MOZ_ASSERT(kind != Arrow);
+        MOZ_ASSERT(type == StatementListBody);
         break;
     }
 
@@ -2681,9 +2679,9 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
 #endif
     switch (kind) {
       case Expression:
-        flags = (generatorKind == NotGenerator
+        flags = (generatorKind == NotGenerator && asyncKind == SyncFunction
                  ? JSFunction::INTERPRETED_LAMBDA
-                 : JSFunction::INTERPRETED_LAMBDA_GENERATOR);
+                 : JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC);
         break;
       case Arrow:
         flags = JSFunction::INTERPRETED_LAMBDA_ARROW;
@@ -2691,9 +2689,9 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
         break;
       case Method:
         MOZ_ASSERT(generatorKind == NotGenerator || generatorKind == StarGenerator);
-        flags = (generatorKind == NotGenerator
+        flags = (generatorKind == NotGenerator && asyncKind == SyncFunction
                  ? JSFunction::INTERPRETED_METHOD
-                 : JSFunction::INTERPRETED_METHOD_GENERATOR);
+                 : JSFunction::INTERPRETED_METHOD_GENERATOR_OR_ASYNC);
         allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         break;
       case ClassConstructor:
@@ -2719,9 +2717,9 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
             allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         }
 #endif
-        flags = (generatorKind == NotGenerator
+        flags = (generatorKind == NotGenerator && asyncKind == SyncFunction
                  ? JSFunction::INTERPRETED_NORMAL
-                 : JSFunction::INTERPRETED_GENERATOR);
+                 : JSFunction::INTERPRETED_GENERATOR_OR_ASYNC);
     }
 
     // We store the async wrapper in a slot for later access.
@@ -3244,7 +3242,6 @@ Parser<ParseHandler>::functionDefinition(Node pn, InHandling inHandling,
                                          bool tryAnnexB /* = false */)
 {
     MOZ_ASSERT_IF(kind == Statement, funName);
-    MOZ_ASSERT_IF(asyncKind == AsyncFunction, generatorKind == StarGenerator);
 
     // When fully parsing a LazyScript, we do not fully reparse its inner
     // functions, which are also lazy. Instead, their free variables and
@@ -3256,7 +3253,7 @@ Parser<ParseHandler>::functionDefinition(Node pn, InHandling inHandling,
     }
 
     RootedObject proto(context);
-    if (generatorKind == StarGenerator) {
+    if (generatorKind == StarGenerator || asyncKind == AsyncFunction) {
         // If we are off thread, the generator meta-objects have
         // already been created by js::StartOffThreadParseTask, so cx will not
         // be necessary.
@@ -3326,7 +3323,7 @@ Parser<FullParseHandler>::trySyntaxParseInnerFunction(ParseNode* pn, HandleFunct
         // parse to avoid the overhead of a lazy syntax-only parse. Although
         // the prediction may be incorrect, IIFEs are common enough that it
         // pays off for lots of code.
-        if (pn->isLikelyIIFE() && generatorKind == NotGenerator)
+        if (pn->isLikelyIIFE() && generatorKind == NotGenerator && asyncKind == SyncFunction)
             break;
 
         Parser<SyntaxParseHandler>* parser = handler.syntaxParser;
@@ -3498,7 +3495,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
     if (!tokenStream.peekTokenPos(&pn->pn_pos, modifier))
         return null();
 
-    YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    YieldHandling yieldHandling = GetYieldHandling(generatorKind);
     FunctionSyntaxKind syntaxKind = Statement;
     if (fun->isClassConstructor())
         syntaxKind = ClassConstructor;
@@ -3573,7 +3570,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     if (tt != TOK_LC) {
-        if ((funbox->isStarGenerator() && !funbox->isAsync()) || kind == Method ||
+        if (funbox->isStarGenerator() || kind == Method ||
             kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
             IsConstructorKind(kind)) {
             error(JSMSG_CURLY_BEFORE_BODY);
@@ -3601,7 +3598,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     // |yield| in the parameters is either a name or keyword, depending on
     // whether the arrow function is enclosed in a generator function or not.
     // Whereas the |yield| in the function body is always parsed as a name.
-    YieldHandling bodyYieldHandling = GetYieldHandling(pc->generatorKind(), pc->asyncKind());
+    YieldHandling bodyYieldHandling = GetYieldHandling(pc->generatorKind());
     Node body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
     if (!body)
         return false;
@@ -3693,7 +3690,7 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
     if (!tokenStream.getToken(&tt))
         return null();
 
-    GeneratorKind generatorKind = asyncKind == AsyncFunction ? StarGenerator : NotGenerator;
+    GeneratorKind generatorKind = NotGenerator;
     if (tt == TOK_MUL) {
         if (asyncKind != SyncFunction) {
             error(JSMSG_ASYNC_GENERATOR);
@@ -3724,7 +3721,7 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
         MOZ_ASSERT(declaredInStmt->kind() != StatementKind::Label);
         MOZ_ASSERT(StatementKindIsBraced(declaredInStmt->kind()));
 
-        if (!pc->sc()->strict() && generatorKind == NotGenerator) {
+        if (!pc->sc()->strict() && generatorKind == NotGenerator && asyncKind == SyncFunction) {
             // Under sloppy mode, try Annex B.3.3 semantics. If making an
             // additional 'var' binding of the same name does not throw an
             // early error, do so. This 'var' binding would be assigned
@@ -3748,7 +3745,7 @@ Parser<ParseHandler>::functionStmt(YieldHandling yieldHandling, DefaultHandling 
     if (!pn)
         return null();
 
-    YieldHandling newYieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    YieldHandling newYieldHandling = GetYieldHandling(generatorKind);
     return functionDefinition(pn, InAllowed, newYieldHandling, name, Statement, generatorKind,
                               asyncKind, tryAnnexB);
 }
@@ -3760,7 +3757,7 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked, FunctionAsyncKind 
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_FUNCTION));
 
     AutoAwaitIsKeyword<ParseHandler> awaitIsKeyword(this, asyncKind == AsyncFunction);
-    GeneratorKind generatorKind = asyncKind == AsyncFunction ? StarGenerator : NotGenerator;
+    GeneratorKind generatorKind = NotGenerator;
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
@@ -3775,7 +3772,7 @@ Parser<ParseHandler>::functionExpr(InvokedPrediction invoked, FunctionAsyncKind 
             return null();
     }
 
-    YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
     RootedPropertyName name(context);
     if (TokenKindIsPossibleIdentifier(tt)) {
@@ -8001,7 +7998,6 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
         if (!tokenStream.peekToken(&next, TokenStream::Operand))
             return null();
 
-        GeneratorKind generatorKind = NotGenerator;
         FunctionAsyncKind asyncKind = SyncFunction;
 
         if (next == TOK_ASYNC) {
@@ -8014,7 +8010,6 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             if (nextSameLine == TOK_ARROW) {
                 tokenStream.ungetToken();
             } else {
-                generatorKind = StarGenerator;
                 asyncKind = AsyncFunction;
             }
         }
@@ -8024,7 +8019,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             return null();
 
         Node arrowFunc = functionDefinition(pn, inHandling, yieldHandling, nullptr,
-                                            Arrow, generatorKind, asyncKind);
+                                            Arrow, NotGenerator, asyncKind);
         if (!arrowFunc)
             return null();
 
@@ -9631,8 +9626,7 @@ Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName
         MOZ_CRASH("unexpected property type");
     }
 
-    GeneratorKind generatorKind = (propType == PropertyType::GeneratorMethod ||
-                                   propType == PropertyType::AsyncMethod)
+    GeneratorKind generatorKind = propType == PropertyType::GeneratorMethod
                                   ? StarGenerator
                                   : NotGenerator;
 
@@ -9640,7 +9634,7 @@ Parser<ParseHandler>::methodDefinition(PropertyType propType, HandleAtom funName
                                   ? AsyncFunction
                                   : SyncFunction;
 
-    YieldHandling yieldHandling = GetYieldHandling(generatorKind, asyncKind);
+    YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
     Node pn = handler.newFunctionExpression();
     if (!pn)

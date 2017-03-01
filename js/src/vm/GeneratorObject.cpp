@@ -25,7 +25,7 @@ GeneratorObject::create(JSContext* cx, AbstractFramePtr frame)
 
     Rooted<GlobalObject*> global(cx, cx->global());
     RootedNativeObject obj(cx);
-    if (frame.script()->isStarGenerator()) {
+    if (frame.script()->isStarGenerator() || frame.script()->isAsync()) {
         RootedValue pval(cx);
         RootedObject fun(cx, frame.callee());
         // FIXME: This would be faster if we could avoid doing a lookup to get
