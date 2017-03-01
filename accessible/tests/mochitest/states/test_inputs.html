@@ -107,6 +107,7 @@
     // (per spec, min/maxlength validity is affected by interactive edits)
     var mininp = document.getElementById("minlength");
     mininp.focus();
+    mininp.setSelectionRange(mininp.value.length, mininp.value.length);
     synthesizeKey("VK_BACK_SPACE", {});
     ok(!mininp.validity.valid,
        "input should be invalid after interactive edits");
