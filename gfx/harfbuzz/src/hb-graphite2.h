@@ -39,8 +39,12 @@ HB_BEGIN_DECLS
 HB_EXTERN gr_face *
 hb_graphite2_face_get_gr_face (hb_face_t *face);
 
+#ifndef HB_DISABLE_DEPRECATED
+
 HB_EXTERN gr_font *
 hb_graphite2_font_get_gr_font (hb_font_t *font);
+
+#endif
 
 
 HB_END_DECLS

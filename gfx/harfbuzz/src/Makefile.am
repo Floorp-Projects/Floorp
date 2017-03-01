@@ -218,7 +218,7 @@ harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
 	(cat $^ || echo 'hb_ERROR ()' ) | \
 	$(EGREP) '^hb_.* \(' | \
 	sed -e 's/ (.*//' | \
-	LANG=C sort; \
+	LC_ALL=C sort; \
 	echo LIBRARY libharfbuzz-0.dll; \
 	) >"$@"
 	@ ! grep -q hb_ERROR "$@" \
