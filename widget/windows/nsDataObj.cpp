@@ -445,7 +445,7 @@ namespace {
 class RemoveTempFileHelper : public nsIObserver
 {
 public:
-  RemoveTempFileHelper(nsIFile* aTempFile)
+  explicit RemoveTempFileHelper(nsIFile* aTempFile)
     : mTempFile(aTempFile)
   {
     MOZ_ASSERT(mTempFile);
