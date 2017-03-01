@@ -277,7 +277,7 @@ Request::Constructor(const GlobalObject& aGlobal,
                      const RequestOrUSVString& aInput,
                      const RequestInit& aInit, ErrorResult& aRv)
 {
-  bool hasCopiedBody = false;
+  nsCOMPtr<nsIInputStream> temporaryBody;
   RefPtr<InternalRequest> request;
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -290,10 +290,8 @@ Request::Constructor(const GlobalObject& aGlobal,
       aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
       return nullptr;
     }
-
-    // The body will be copied when GetRequestConstructorCopy() is executed.
     if (body) {
-      hasCopiedBody = true;
+      temporaryBody = body;
     }
 
     request = inputReq->GetInternalRequest();
@@ -531,7 +529,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if ((aInit.mBody.WasPassed() && !aInit.mBody.Value().IsNull()) ||
-      hasCopiedBody) {
+      temporaryBody) {
     // HEAD and GET are not allowed to have a body.
     nsAutoCString method;
     request->GetMethod(method);
@@ -557,7 +555,7 @@ Request::Constructor(const GlobalObject& aGlobal,
         return nullptr;
       }
 
-      nsCOMPtr<nsIInputStream> temporaryBody = stream;
+      temporaryBody = stream;
 
       if (!contentTypeWithCharset.IsVoid() &&
           !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
@@ -570,11 +568,6 @@ Request::Constructor(const GlobalObject& aGlobal,
       }
 
       request->ClearCreatedByFetchEvent();
-
-      if (hasCopiedBody) {
-        request->SetBody(nullptr);
-      }
-
       request->SetBody(temporaryBody);
     }
   }
