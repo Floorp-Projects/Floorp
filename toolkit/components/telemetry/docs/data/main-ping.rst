@@ -123,7 +123,6 @@ Structure:
         keyedScalars: {...},
         histograms: {...},
         keyedHistograms: {...},
-        events: {...},
       },
       "gpu": {
         // ...
