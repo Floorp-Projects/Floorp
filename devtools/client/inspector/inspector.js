@@ -926,8 +926,16 @@ Inspector.prototype = {
       this.ruleview.destroy();
     }
 
+    if (this.boxmodel) {
+      this.boxmodel.destroy();
+    }
+
     if (this.computedview) {
       this.computedview.destroy();
+    }
+
+    if (this.gridInspector) {
+      this.gridInspector.destroy();
     }
 
     if (this.layoutview) {
