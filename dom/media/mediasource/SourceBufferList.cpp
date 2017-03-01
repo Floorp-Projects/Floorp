@@ -163,12 +163,13 @@ SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
   MSE_DEBUG("Queue event '%s'", aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
-  NS_DispatchToMainThread(event);
+  mAbstractMainThread->Dispatch(event.forget());
 }
 
 SourceBufferList::SourceBufferList(MediaSource* aMediaSource)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
+  , mAbstractMainThread(mMediaSource->AbstractMainThread())
 {
   MOZ_ASSERT(aMediaSource);
 }
