@@ -338,7 +338,8 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (mode == RequestMode::Navigate ||
       (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate)) {
-    mode = RequestMode::Same_origin;
+    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(NS_LITERAL_STRING("navigate"));
+    return nullptr;
   }
 
   if (aInit.IsAnyMemberPresent()) {
@@ -373,7 +374,11 @@ Request::Constructor(const GlobalObject& aGlobal,
             nsresult rv = principal->CheckMayLoad(uri, /* report */ false,
                                                   /* allowIfInheritsPrincipal */ false);
             if (NS_FAILED(rv)) {
-              referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);
+              nsAutoCString globalOrigin;
+              principal->GetOrigin(globalOrigin);
+              aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
+                                                                NS_ConvertUTF8toUTF16(globalOrigin));
+              return nullptr;
             }
           }
         }
@@ -398,10 +403,11 @@ Request::Constructor(const GlobalObject& aGlobal,
           // this work in a single sync loop.
           RefPtr<ReferrerSameOriginChecker> checker =
             new ReferrerSameOriginChecker(worker, referrerURL, rv);
-          IgnoredErrorResult error;
-          checker->Dispatch(Terminating, error);
-          if (error.Failed() || NS_FAILED(rv)) {
-            referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);
+          checker->Dispatch(Terminating, aRv);
+          if (aRv.Failed() || NS_FAILED(rv)) {
+            aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
+                                                              worker->GetLocationInfo().mOrigin);
+            return nullptr;
           }
         }
       }
