@@ -85,7 +85,11 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
+        'ENABLE_E10S': str(bool(test.get('e10s'))).lower(),
     }
+
+    if mozharness.get('mochitest-flavor'):
+        env['MOCHITEST_FLAVOR'] = mozharness['mochitest-flavor']
 
     if mozharness['set-moz-node-path']:
         env['MOZ_NODE_PATH'] = '/usr/local/bin/node'
