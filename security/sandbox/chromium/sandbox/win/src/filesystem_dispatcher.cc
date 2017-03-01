@@ -226,6 +226,15 @@ bool FilesystemDispatcher::NtQueryAttributesFile(IPCInfo* ipc,
   EvalResult result = policy_base_->EvalPolicy(IPC_NTQUERYATTRIBUTESFILE_TAG,
                                                params.GetBase());
 
+  // If the policies forbid access (any result other than ASK_BROKER),
+  // then check for user-granted access to file.
+  if (ASK_BROKER != result &&
+      mozilla::sandboxing::PermissionsService::GetInstance()->
+        UserGrantedFileAccess(ipc->client_info->process_id, filename,
+                              0, 0)) {
+    result = ASK_BROKER;
+  }
+
   FILE_BASIC_INFORMATION* information =
         reinterpret_cast<FILE_BASIC_INFORMATION*>(info->Buffer());
   NTSTATUS nt_status;
@@ -265,6 +274,15 @@ bool FilesystemDispatcher::NtQueryFullAttributesFile(IPCInfo* ipc,
   // knows what to do.
   EvalResult result = policy_base_->EvalPolicy(
                           IPC_NTQUERYFULLATTRIBUTESFILE_TAG, params.GetBase());
+
+  // If the policies forbid access (any result other than ASK_BROKER),
+  // then check for user-granted access to file.
+  if (ASK_BROKER != result &&
+      mozilla::sandboxing::PermissionsService::GetInstance()->
+        UserGrantedFileAccess(ipc->client_info->process_id, filename,
+                              0, 0)) {
+    result = ASK_BROKER;
+  }
 
   FILE_NETWORK_OPEN_INFORMATION* information =
         reinterpret_cast<FILE_NETWORK_OPEN_INFORMATION*>(info->Buffer());
@@ -320,6 +338,16 @@ bool FilesystemDispatcher::NtSetInformationFile(IPCInfo* ipc,
   // knows what to do.
   EvalResult result = policy_base_->EvalPolicy(IPC_NTSETINFO_RENAME_TAG,
                                                params.GetBase());
+
+  // If the policies forbid access (any result other than ASK_BROKER),
+  // then check for user-granted write access to file.  We only permit
+  // the FileRenameInformation action.
+  if (ASK_BROKER != result && info_class == FileRenameInformation &&
+      mozilla::sandboxing::PermissionsService::GetInstance()->
+        UserGrantedFileAccess(ipc->client_info->process_id, filename,
+                              FILE_WRITE_ATTRIBUTES, 0)) {
+    result = ASK_BROKER;
+  }
 
   IO_STATUS_BLOCK* io_status =
         reinterpret_cast<IO_STATUS_BLOCK*>(status->Buffer());

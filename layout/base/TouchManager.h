@@ -40,7 +40,8 @@ public:
   static already_AddRefed<nsIContent> GetAnyCapturedTouchTarget();
   static bool HasCapturedTouch(int32_t aId);
   static already_AddRefed<dom::Touch> GetCapturedTouch(int32_t aId);
-
+  static bool ShouldConvertTouchToPointer(const dom::Touch* aTouch,
+                                          const WidgetTouchEvent* aEvent);
 private:
   void EvictTouches();
   static void EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
@@ -54,6 +55,7 @@ private:
   {
     RefPtr<mozilla::dom::Touch> mTouch;
     nsCOMPtr<nsIContent> mNonAnonymousTarget;
+    bool mConvertToPointer;
   };
   static nsDataHashtable<nsUint32HashKey, TouchInfo>* sCaptureTouchList;
 };

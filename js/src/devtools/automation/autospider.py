@@ -46,9 +46,13 @@ parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
 parser.add_argument('--objdir', type=str, metavar='DIR',
                     default=env.get('OBJDIR', 'obj-spider'),
                     help='object directory')
-parser.add_argument('--optimize', type=bool, metavar='OPT',
-                    default=None,
-                    help='whether to generate an optimized build. Overrides variant setting.')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--optimize', action='store_true',
+                   help='generate an optimized build. Overrides variant setting.')
+group.add_argument('--no-optimize', action='store_false',
+                   dest='optimize',
+                   help='generate a non-optimized build. Overrides variant setting.')
+group.set_defaults(optimize=None)
 parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     default='',
                     help="comma-separated set of test suites to add to the variant's default set")

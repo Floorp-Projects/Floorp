@@ -28,6 +28,9 @@ struct ScopedDelete {
   void operator()(SECItem* item) { SECITEM_FreeItem(item, true); }
   void operator()(SECKEYPublicKey* key) { SECKEY_DestroyPublicKey(key); }
   void operator()(SECKEYPrivateKey* key) { SECKEY_DestroyPrivateKey(key); }
+  void operator()(SECKEYPrivateKeyList* list) {
+    SECKEY_DestroyPrivateKeyList(list);
+  }
 };
 
 template <class T>
@@ -53,6 +56,7 @@ SCOPED(SECAlgorithmID);
 SCOPED(SECItem);
 SCOPED(SECKEYPublicKey);
 SCOPED(SECKEYPrivateKey);
+SCOPED(SECKEYPrivateKeyList);
 
 #undef SCOPED
 
