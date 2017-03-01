@@ -107,8 +107,7 @@ add_task(function* test_plainQuery() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  Assert.ok("default" in events, "We should have recorded events in the parent process.");
-  events = events.default.filter(e => e[1] == "navigation" && e[2] == "search");
+  events = events.filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "enter", {engine: "other-MozSearch"}]]);
 
   yield BrowserTestUtils.removeTab(tab);
@@ -142,8 +141,7 @@ add_task(function* test_oneOff() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  Assert.ok("default" in events, "We should have recorded events in the parent process.");
-  events = events.default.filter(e => e[1] == "navigation" && e[2] == "search");
+  events = events.filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "oneoff", {engine: "other-MozSearch2"}]]);
 
   yield BrowserTestUtils.removeTab(tab);
@@ -189,8 +187,7 @@ add_task(function* test_suggestion() {
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  Assert.ok("default" in events, "We should have recorded events in the parent process.");
-  events = events.default.filter(e => e[1] == "navigation" && e[2] == "search");
+  events = events.filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "searchbar", "suggestion", {engine: searchEngineId}]]);
 
   Services.search.currentEngine = previousEngine;
