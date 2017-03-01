@@ -13,7 +13,7 @@
         <item name="popupMenuStyle">@style/PopupMenu</item>
     </style>
 
-    <style name="SettingsTheme" parent="AppTheme">
+    <style name="SettingsTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorAccent">#FF00A4DC</item>
         <item name="colorPrimaryDark">#ff363b40</item>

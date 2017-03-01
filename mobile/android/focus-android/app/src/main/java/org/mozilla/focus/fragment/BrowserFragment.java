@@ -11,11 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.PopupMenu;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -23,12 +19,13 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
+import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.web.IWebView;
 
 /**
  * Fragment for displaying the browser UI.
  */
-public class BrowserFragment extends Fragment implements View.OnClickListener, PopupMenu.OnMenuItemClickListener {
+public class BrowserFragment extends Fragment implements View.OnClickListener {
     public static final String FRAGMENT_TAG = "browser";
 
     private static final int ANIMATION_DURATION = 300;
@@ -122,13 +119,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.menu:
-                final PopupMenu popupMenu = new PopupMenu(getActivity(), menuView);
-                popupMenu.getMenuInflater().inflate(R.menu.menu_browser, popupMenu.getMenu());
-                popupMenu.getMenu().findItem(R.id.forward).setEnabled(webView.canGoForward());
-                popupMenu.getMenu().findItem(R.id.back).setEnabled(webView.canGoBack());
-                popupMenu.setOnMenuItemClickListener(this);
-                popupMenu.setGravity(Gravity.TOP);
-                popupMenu.show();
+                BrowserMenu menu = new BrowserMenu(getActivity(), this);
+                menu.show(menuView);
                 break;
 
             case R.id.url:
@@ -150,42 +142,35 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
                 Snackbar.make(getActivity().findViewById(android.R.id.content), R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
 
                 break;
-        }
-    }
 
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
             case R.id.forward:
                 webView.goForward();
-                return true;
-
-            case R.id.back:
-                webView.goBack();
-                return true;
+                break;
 
             case R.id.refresh:
                 webView.reload();
-                return true;
+                break;
 
             case R.id.share:
                 final Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_TEXT, webView.getUrl());
                 startActivity(shareIntent);
-                return true;
-
-            case R.id.open:
-                // TODO: Switch to full featured browser (Issue #26)
-                return true;
+                break;
 
             case R.id.settings:
                 final Intent settingsIntent = new Intent(getActivity(), SettingsActivity.class);
                 startActivity(settingsIntent);
-                return true;
-        }
+                break;
 
-        return false;
+            case R.id.open:
+                // TODO: Switch to full featured browser (Issue #26)
+                break;
+        }
+    }
+
+    public boolean canGoForward() {
+        return webView.canGoForward();
     }
 
     public boolean canGoBack() {

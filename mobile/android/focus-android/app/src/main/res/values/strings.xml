@@ -17,14 +17,8 @@
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">Search for %1$s</string>
 
-    <!-- Menu item: Navigate back (in browser) -->
-    <string name="menu_back">Back</string>
-    <!-- Menu item: Navigate forward (in browser) -->
-    <string name="menu_forward">Forward</string>
-    <!-- Menu item: Refresh / Reload the currently visible page -->
-    <string name="menu_refresh">Refresh</string>
     <!-- Menu item: Share the currently visible page -->
-    <string name="menu_share">Share</string>
+    <string name="menu_share">Share…</string>
     <!-- Menu item: Open the currently visible page in another browser -->
     <string name="menu_open_with">Open with</string>
     <string name="menu_settings">Settings</string>
@@ -72,4 +66,10 @@
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">More options</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Navigate forward</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Reload website</string>
 </resources>
