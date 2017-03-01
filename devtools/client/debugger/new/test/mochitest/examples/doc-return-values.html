@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Return Values</title>
+  </head>
+
+  <body>
+    <script>
+    function return_something(x) {
+      debugger;
+      return x;
+    }
+
+    function callee(x) {
+      throw x;
+    }
+
+    function throw_something(x) {
+      try {
+        callee(x);
+      } catch (e) {
+        // Ignore.
+      }
+    }
+    </script>
+  </body>
+
+</html>
