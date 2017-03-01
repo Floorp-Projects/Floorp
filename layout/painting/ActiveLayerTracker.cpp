@@ -105,7 +105,7 @@ public:
 
   // The scroll frame during for which we most recently received a call to
   // NotifyAnimatedFromScrollHandler.
-  AutoWeakFrame mAnimatingScrollHandlerFrame;
+  WeakFrame mAnimatingScrollHandlerFrame;
   // The set of activities that were triggered during
   // mAnimatingScrollHandlerFrame's scroll event handler.
   EnumSet<ActivityIndex> mScrollHandlerInducedActivity;
@@ -132,7 +132,7 @@ public:
   virtual void NotifyExpired(LayerActivity* aObject);
 
 public:
-  AutoWeakFrame mCurrentScrollHandlerFrame;
+  WeakFrame mCurrentScrollHandlerFrame;
 
 private:
   bool mDestroying;

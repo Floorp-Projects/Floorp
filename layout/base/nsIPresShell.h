@@ -79,6 +79,7 @@ class nsCSSFrameConstructor;
 class nsISelection;
 template<class E> class nsCOMArray;
 class AutoWeakFrame;
+class WeakFrame;
 class nsIScrollableFrame;
 class gfxContext;
 class nsIDOMEvent;
@@ -1192,10 +1193,20 @@ public:
                   mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) = 0;
 
-  void AddWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  virtual void AddWeakFrameExternal(AutoWeakFrame* aWeakFrame);
+  void AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
+  virtual void AddAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame);
+  void AddWeakFrameInternal(WeakFrame* aWeakFrame);
+  virtual void AddWeakFrameExternal(WeakFrame* aWeakFrame);
 
-  void AddWeakFrame(AutoWeakFrame* aWeakFrame)
+  void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame)
+  {
+#ifdef MOZILLA_INTERNAL_API
+    AddAutoWeakFrameInternal(aWeakFrame);
+#else
+    AddAutoWeakFrameExternal(aWeakFrame);
+#endif
+  }
+  void AddWeakFrame(WeakFrame* aWeakFrame)
   {
 #ifdef MOZILLA_INTERNAL_API
     AddWeakFrameInternal(aWeakFrame);
@@ -1204,10 +1215,20 @@ public:
 #endif
   }
 
-  void RemoveWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  virtual void RemoveWeakFrameExternal(AutoWeakFrame* aWeakFrame);
+  void RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
+  virtual void RemoveAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame);
+  void RemoveWeakFrameInternal(WeakFrame* aWeakFrame);
+  virtual void RemoveWeakFrameExternal(WeakFrame* aWeakFrame);
 
-  void RemoveWeakFrame(AutoWeakFrame* aWeakFrame)
+  void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame)
+  {
+#ifdef MOZILLA_INTERNAL_API
+    RemoveAutoWeakFrameInternal(aWeakFrame);
+#else
+    RemoveAutoWeakFrameExternal(aWeakFrame);
+#endif
+  }
+  void RemoveWeakFrame(WeakFrame* aWeakFrame)
   {
 #ifdef MOZILLA_INTERNAL_API
     RemoveWeakFrameInternal(aWeakFrame);
@@ -1815,8 +1836,11 @@ protected:
 
   nsSize                    mScrollPositionClampingScrollPortSize;
 
-  // A list of weak frames. This is a pointer to the last item in the list.
-  AutoWeakFrame*              mWeakFrames;
+  // A list of stack weak frames. This is a pointer to the last item in the list.
+  AutoWeakFrame*            mAutoWeakFrames;
+
+  // A hash table of heap allocated weak frames.
+  nsTHashtable<nsPtrHashKey<WeakFrame>> mWeakFrames;
 
   // Most recent canvas background color.
   nscolor                   mCanvasBackgroundColor;

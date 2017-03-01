@@ -54,7 +54,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
 
-  AutoWeakFrame mLastOverFrame;
+  WeakFrame mLastOverFrame;
 
   nsCOMPtr<nsIContent> mLastOverElement;
 
@@ -930,7 +930,7 @@ private:
   // to content.
   static LayoutDeviceIntPoint sSynthCenteringPoint;
 
-  AutoWeakFrame mCurrentTarget;
+  WeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
   static AutoWeakFrame sLastDragOverFrame;
 

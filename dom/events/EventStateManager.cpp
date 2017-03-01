@@ -4450,8 +4450,9 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
           }
         }
 
+        AutoWeakFrame currentTraget = mCurrentTarget;
         FireDragEnterOrExit(aPresContext, aDragEvent, eDragEnter,
-                            lastContent, targetContent, mCurrentTarget);
+                            lastContent, targetContent, currentTraget);
 
         if (sLastDragOverFrame) {
           FireDragEnterOrExit(sLastDragOverFrame->PresContext(),
