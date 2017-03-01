@@ -1054,6 +1054,30 @@ const EXTENSIONS_DB = "extensions.json";
 var gExtensionsJSON = gProfD.clone();
 gExtensionsJSON.append(EXTENSIONS_DB);
 
+function promiseWebExtensionStartup() {
+  const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+
+  return new Promise(resolve => {
+    let listener = (evt, extension) => {
+      Management.off("ready", listener);
+      resolve(extension);
+    };
+
+    Management.on("ready", listener);
+  });
+}
+
+function promiseInstallWebExtension(aData) {
+  let addonFile = createTempWebExtensionFile(aData);
+
+  return promiseInstallAllFiles([addonFile]).then(installs => {
+    Services.obs.notifyObservers(addonFile, "flush-cache-entry", null);
+    // Since themes are disabled by default, it won't start up.
+    if ("theme" in aData.manifest)
+      return installs[0].addon;
+    return promiseWebExtensionStartup();
+  });
+}
 
 // By default use strict compatibility
 Services.prefs.setBoolPref("extensions.strictCompatibility", true);
