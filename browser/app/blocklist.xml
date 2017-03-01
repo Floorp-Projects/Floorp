@@ -865,14 +865,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i656" id="hdv@vovcacik.addons.mozilla.org">
-      <prefs/>
-      <versionRange minVersion="102.0" maxVersion="102.0" severity="3"/>
-    </emItem>
-    <emItem blockID="i722" id="{9802047e-5a84-4da3-b103-c55995d147d1}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i228" id="crossriderapp5060@crossrider.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -1720,6 +1712,14 @@
       </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="d33f6d48-a555-49dd-96ff-8d75473403a8" id="mozilla_cc2@internetdownloadmanager.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="6.26.11" severity="1">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="53.0a1"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
     <emItem blockID="i493" id="12x3q@3244516.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -2035,6 +2035,14 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.6.7" severity="3"/>
     </emItem>
+    <emItem blockID="i656" id="hdv@vovcacik.addons.mozilla.org">
+      <prefs/>
+      <versionRange minVersion="102.0" maxVersion="102.0" severity="3"/>
+    </emItem>
+    <emItem blockID="i722" id="{9802047e-5a84-4da3-b103-c55995d147d1}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p416">
@@ -2276,12 +2284,12 @@
     <pluginItem blockID="3f136e56-4c93-4619-8c0d-d86258c1065d">
       <match exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/reader/</infoURL>
-      <versionRange maxVersion="15.006.30244" minVersion="15.006" severity="1" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="15.006.30244" minVersion="15.006" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="43b45ad8-a373-42c1-89c6-64e2746885e5">
       <match exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/reader/</infoURL>
-      <versionRange maxVersion="15.020.20042" minVersion="15.020" severity="1" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="15.020.20042" minVersion="15.020" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p366">
       <match exp="Scorch\.plugin" name="filename"/>
@@ -2366,7 +2374,7 @@
     <pluginItem blockID="59c31ade-88d6-4b22-8601-5316f82e3977">
       <match exp="(nppdf32\.dll)|(AdobePDFViewerNPAPI\.plugin)" name="filename"/>
       <infoURL>https://get.adobe.com/reader/</infoURL>
-      <versionRange maxVersion="11.0.18" minVersion="11.0" severity="1" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="11.0.18" minVersion="11.0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p1004">
       <match exp="Unity Web Player\.plugin" name="filename"/>
@@ -3016,6 +3024,11 @@
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="16.0.0.287" minVersion="15.0.0.243" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
+    <pluginItem blockID="e939e3f9-cb55-494d-b95a-c5ac82bd8d3d" os="Linux">
+      <match exp="libflashplayer\.so" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="24.0.0.194" minVersion="24.0.0.186" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
     <pluginItem blockID="p113">
       <match exp="npuplaypc\.dll" name="filename"/>
       <versionRange maxVersion="1.0.0.0" minVersion="0" severity="1"/>
@@ -3090,6 +3103,11 @@
       <match exp="libflashplayer\.so" name="filename"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="11.2.202.577" minVersion="11.2.202.569" severity="0" vulnerabilitystatus="1"/>
+    </pluginItem>
+    <pluginItem blockID="f77960ca-28f3-4664-994d-2b713d2a1434">
+      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+      <versionRange maxVersion="24.0.0.194" minVersion="24.0.0.186" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p1138" os="Linux">
       <match exp="libflashplayer\.so" name="filename"/>
