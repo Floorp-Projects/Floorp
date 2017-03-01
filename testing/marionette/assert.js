@@ -118,25 +118,6 @@ assert.mobile = function (msg = "") {
 };
 
 /**
- * Asserts that |win| is open.
- *
- * @param {ChromeWindow} win
- *     Chrome window to test.
- * @param {string=} msg
- *     Custom error message.
- *
- * @return {ChromeWindow}
- *     |win| is returned unaltered.
- *
- * @throws {NoSuchWindowError}
- *     If |win| has been closed.
- */
-assert.window = function (win, msg = "") {
-  msg = msg || "Unable to locate window";
-  return assert.that(w => w && w.document.defaultView, msg, NoSuchWindowError)(win);
-}
-
-/**
  * Asserts that |obj| is defined.
  *
  * @param {?} obj
