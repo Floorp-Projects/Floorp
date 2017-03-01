@@ -718,6 +718,8 @@ class ArtifactCache(CacheManager):
             dl = self._download_manager.download(url, fname)
 
             def download_progress(dl, bytes_so_far, total_size):
+                if not total_size:
+                    return
                 percent = (float(bytes_so_far) / total_size) * 100
                 now = int(percent / 5)
                 if now == self._last_dl_update:
