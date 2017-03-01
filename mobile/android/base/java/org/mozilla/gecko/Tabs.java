@@ -136,6 +136,11 @@ public class Tabs implements BundleEventListener {
             "Tab:SetParentId",
             null);
 
+        EventDispatcher.getInstance().registerBackgroundThreadListener(this,
+            // BrowserApp already wants this on the background thread.
+            "Sanitize:ClearHistory",
+            null);
+
         mPrivateClearColor = Color.RED;
     }
 
@@ -483,6 +488,21 @@ public class Tabs implements BundleEventListener {
     @Override // BundleEventListener
     public synchronized void handleMessage(final String event, final GeckoBundle message,
                                            final EventCallback callback) {
+        if ("Sanitize:ClearHistory".equals(event)) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Tab session history will be cleared as well,
+                    // so we need to reset the navigation buttons.
+                    for (final Tab tab : mOrder) {
+                        tab.handleButtonStateChange(false, false);
+                        notifyListeners(tab, TabEvents.LOCATION_CHANGE, tab.getURL());
+                    }
+                }
+            });
+            return;
+        }
+
         // All other events handled below should contain a tabID property
         final int id = message.getInt("tabID", -1);
         Tab tab = getTab(id);
