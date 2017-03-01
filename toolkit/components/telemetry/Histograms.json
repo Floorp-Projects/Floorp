@@ -6966,8 +6966,7 @@
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1220885],
-    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment."
   },
   "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
@@ -6975,24 +6974,21 @@
     "kind": "enumerated",
     "n_values": 32,
     "bug_numbers": [1238420],
-    "description": "The error code reported when an MP4 parse attempt has failed.0 = OK, 1 = bad argument, 2 = invalid data, 3 = unsupported, 4 = unexpected end of file, 5 = read error.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "The error code reported when an MP4 parse attempt has failed.0 = OK, 1 = bad argument, 2 = invalid data, 3 = unsupported, 4 = unexpected end of file, 5 = read error."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1231169],
-    "description": "Whether rust and stagefight mp4 parser audio track results match.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "Whether rust and stagefight mp4 parser audio track results match."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1231169],
-    "description": "Whether rust and stagefight mp4 parser video track results match.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "Whether rust and stagefight mp4 parser video track results match."
   },
   "MEDIA_WMF_DECODE_ERROR": {
     "expires_in_version": "55",
