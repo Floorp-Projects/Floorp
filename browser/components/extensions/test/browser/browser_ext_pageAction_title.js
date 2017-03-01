@@ -53,7 +53,7 @@ add_task(function* testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests(tabs) {
+    getTests: function(tabs) {
       let details = [
         {"icon": browser.runtime.getURL("default.png"),
          "popup": browser.runtime.getURL("default.html"),
@@ -190,7 +190,7 @@ add_task(function* testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests(tabs) {
+    getTests: function(tabs) {
       let details = [
         {"title": "Foo Extension",
          "popup": "",
