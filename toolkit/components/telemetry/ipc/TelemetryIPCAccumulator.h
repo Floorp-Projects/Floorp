@@ -16,9 +16,6 @@ class nsAString;
 class nsCString;
 
 namespace mozilla {
-
-class TimeStamp;
-
 namespace TelemetryIPCAccumulator {
 
 // Histogram accumulation functions.
@@ -35,7 +32,7 @@ void RecordChildKeyedScalarAction(mozilla::Telemetry::ScalarID aId, const nsAStr
                                   mozilla::Telemetry::ScalarActionType aAction,
                                   const mozilla::Telemetry::ScalarVariant& aValue);
 
-void RecordChildEvent(const mozilla::TimeStamp& timestamp,
+void RecordChildEvent(double timestamp,
                       const nsACString& category,
                       const nsACString& method,
                       const nsACString& object,
