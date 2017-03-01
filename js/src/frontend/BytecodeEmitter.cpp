@@ -2169,7 +2169,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     scopeList(cx),
     tryNoteList(cx),
     scopeNoteList(cx),
-    yieldOffsetList(cx),
+    yieldAndAwaitOffsetList(cx),
     typesetCount(0),
     hasSingletons(false),
     hasTryFinally(false),
@@ -4806,21 +4806,21 @@ BytecodeEmitter::emitYieldOp(JSOp op)
     if (op == JSOP_FINALYIELDRVAL)
         return emit1(JSOP_FINALYIELDRVAL);
 
-    MOZ_ASSERT(op == JSOP_INITIALYIELD || op == JSOP_YIELD);
+    MOZ_ASSERT(op == JSOP_INITIALYIELD || op == JSOP_YIELD || op == JSOP_AWAIT);
 
     ptrdiff_t off;
     if (!emitN(op, 3, &off))
         return false;
 
-    uint32_t yieldIndex = yieldOffsetList.length();
-    if (yieldIndex >= JS_BIT(24)) {
+    uint32_t yieldAndAwaitIndex = yieldAndAwaitOffsetList.length();
+    if (yieldAndAwaitIndex >= JS_BIT(24)) {
         reportError(nullptr, JSMSG_TOO_MANY_YIELDS);
         return false;
     }
 
-    SET_UINT24(code(off), yieldIndex);
+    SET_UINT24(code(off), yieldAndAwaitIndex);
 
-    if (!yieldOffsetList.append(offset()))
+    if (!yieldAndAwaitOffsetList.append(offset()))
         return false;
 
     return emit1(JSOP_DEBUGAFTERYIELD);
@@ -8333,7 +8333,7 @@ BytecodeEmitter::emitYield(ParseNode* pn)
 {
     MOZ_ASSERT(sc->isFunctionBox());
 
-    if (pn->getOp() == JSOP_YIELD) {
+    if (pn->getOp() == JSOP_YIELD || pn->getOp() == JSOP_AWAIT) {
         bool needsIteratorResult = sc->asFunctionBox()->needsIteratorResult();
         if (needsIteratorResult) {
             if (!emitPrepareIteratorResult())
@@ -11057,7 +11057,7 @@ CGScopeNoteList::finish(ScopeNoteArray* array, uint32_t prologueLength)
 }
 
 void
-CGYieldOffsetList::finish(YieldOffsetArray& array, uint32_t prologueLength)
+CGYieldAndAwaitOffsetList::finish(YieldAndAwaitOffsetArray& array, uint32_t prologueLength)
 {
     MOZ_ASSERT(length() == array.length());
 

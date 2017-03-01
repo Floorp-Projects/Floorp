@@ -98,13 +98,13 @@ struct CGScopeNoteList {
     void finish(ScopeNoteArray* array, uint32_t prologueLength);
 };
 
-struct CGYieldOffsetList {
+struct CGYieldAndAwaitOffsetList {
     Vector<uint32_t> list;
-    explicit CGYieldOffsetList(JSContext* cx) : list(cx) {}
+    explicit CGYieldAndAwaitOffsetList(JSContext* cx) : list(cx) {}
 
     MOZ_MUST_USE bool append(uint32_t offset) { return list.append(offset); }
     size_t length() const { return list.length(); }
-    void finish(YieldOffsetArray& array, uint32_t prologueLength);
+    void finish(YieldAndAwaitOffsetArray& array, uint32_t prologueLength);
 };
 
 // Use zero inline elements because these go on the stack and affect how many
@@ -228,10 +228,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     CGScopeNoteList  scopeNoteList;  /* list of emitted block scope notes */
 
     /*
-     * For each yield op, map the yield index (stored as bytecode operand) to
-     * the offset of the next op.
+     * For each yield or await op, map the yield and await index (stored as
+     * bytecode operand) to the offset of the next op.
      */
-    CGYieldOffsetList yieldOffsetList;
+    CGYieldAndAwaitOffsetList yieldAndAwaitOffsetList;
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 

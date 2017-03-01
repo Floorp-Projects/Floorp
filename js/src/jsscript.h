@@ -155,7 +155,7 @@ struct ScopeNoteArray {
     uint32_t   length;          // Count of indexed try notes.
 };
 
-class YieldOffsetArray {
+class YieldAndAwaitOffsetArray {
     friend bool
     detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                        MutableHandle<GCVector<Scope*>> scopes);
@@ -1706,7 +1706,9 @@ class JSScript : public js::gc::TenuredCell
     bool hasObjects() const      { return hasArray(OBJECTS); }
     bool hasTrynotes() const     { return hasArray(TRYNOTES); }
     bool hasScopeNotes() const   { return hasArray(SCOPENOTES); }
-    bool hasYieldOffsets() const { return isStarGenerator() || isLegacyGenerator() || isAsync(); }
+    bool hasYieldAndAwaitOffsets() const {
+        return isStarGenerator() || isLegacyGenerator() || isAsync();
+    }
 
 #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
 
@@ -1715,7 +1717,9 @@ class JSScript : public js::gc::TenuredCell
     size_t objectsOffset() const      { return OFF(constsOffset,     hasConsts,     js::ConstArray); }
     size_t trynotesOffset() const     { return OFF(objectsOffset,    hasObjects,    js::ObjectArray); }
     size_t scopeNotesOffset() const   { return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray); }
-    size_t yieldOffsetsOffset() const { return OFF(scopeNotesOffset, hasScopeNotes, js::ScopeNoteArray); }
+    size_t yieldAndAwaitOffsetsOffset() const {
+        return OFF(scopeNotesOffset, hasScopeNotes, js::ScopeNoteArray);
+    }
 
 #undef OFF
 
@@ -1745,9 +1749,10 @@ class JSScript : public js::gc::TenuredCell
         return reinterpret_cast<js::ScopeNoteArray*>(data + scopeNotesOffset());
     }
 
-    js::YieldOffsetArray& yieldOffsets() {
-        MOZ_ASSERT(hasYieldOffsets());
-        return *reinterpret_cast<js::YieldOffsetArray*>(data + yieldOffsetsOffset());
+    js::YieldAndAwaitOffsetArray& yieldAndAwaitOffsets() {
+        MOZ_ASSERT(hasYieldAndAwaitOffsets());
+        return *reinterpret_cast<js::YieldAndAwaitOffsetArray*>(data +
+                                                                yieldAndAwaitOffsetsOffset());
     }
 
     bool hasLoops();

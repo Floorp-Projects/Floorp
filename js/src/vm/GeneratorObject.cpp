@@ -64,10 +64,14 @@ bool
 GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc,
                          Value* vp, unsigned nvalues)
 {
-    MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD);
+    MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD || *pc == JSOP_AWAIT);
 
     Rooted<GeneratorObject*> genObj(cx, &obj->as<GeneratorObject>());
     MOZ_ASSERT(!genObj->hasExpressionStack());
+    MOZ_ASSERT_IF(*pc == JSOP_AWAIT, genObj->callee().isAsync());
+    MOZ_ASSERT_IF(*pc == JSOP_YIELD,
+                  genObj->callee().isStarGenerator() ||
+                  genObj->callee().isLegacyGenerator());
 
     if (*pc == JSOP_YIELD && genObj->isClosing() && genObj->is<LegacyGeneratorObject>()) {
         RootedValue val(cx, ObjectValue(*frame.callee()));
@@ -75,8 +79,8 @@ GeneratorObject::suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame
         return false;
     }
 
-    uint32_t yieldIndex = GET_UINT24(pc);
-    genObj->setYieldIndex(yieldIndex);
+    uint32_t yieldAndAwaitIndex = GET_UINT24(pc);
+    genObj->setYieldAndAwaitIndex(yieldAndAwaitIndex);
     genObj->setEnvironmentChain(*frame.environmentChain());
 
     if (nvalues) {
@@ -173,7 +177,7 @@ GeneratorObject::resume(JSContext* cx, InterpreterActivation& activation,
     }
 
     JSScript* script = callee->nonLazyScript();
-    uint32_t offset = script->yieldOffsets()[genObj->yieldIndex()];
+    uint32_t offset = script->yieldAndAwaitOffsets()[genObj->yieldAndAwaitIndex()];
     activation.regs().pc = script->offsetToPC(offset);
 
     // Always push on a value, even if we are raising an exception. In the
