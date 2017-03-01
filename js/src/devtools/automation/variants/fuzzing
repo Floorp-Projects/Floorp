@@ -1,0 +1,10 @@
+{
+    "configure-args": "--enable-fuzzing --disable-debug --enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-address-sanitizer",
+    "optimize": true,
+    "compiler": "clang",
+    "env": {
+        "JITTEST_EXTRA_ARGS": "--jitflags=none",
+        "JSTESTS_EXTRA_ARGS": "--jitflags=none"
+        "LLVM_SYMBOLIZER": "{TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer"
+    }
+}
