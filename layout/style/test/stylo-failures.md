@@ -459,8 +459,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `box-shadow` [44]
   * outline shorthand generates "initial" as part servo/servo#15206
     * test_value_storage.html `'outline:` [4]
-  * border shorthand serializes when not Serializes servo/servo#15395
-    * test_shorthand_property_getters.html `should not be able to serialize border` [7]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * background-position invalid 3-value form **issue to be filed**
