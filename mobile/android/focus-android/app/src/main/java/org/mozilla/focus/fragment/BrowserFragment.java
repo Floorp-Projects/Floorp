@@ -139,7 +139,7 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
                         .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                         .commit();
 
-                Snackbar.make(urlBarView, R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
+                Snackbar.make(getActivity().findViewById(android.R.id.content), R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
 
                 break;
         }
