@@ -146,6 +146,87 @@ private:
   mozilla::UniquePtr<mp4parse_parser, FreeMP4Parser> mRustParser;
 };
 
+class IndiceWrapperStagefright : public IndiceWrapper {
+public:
+  size_t Length() const override;
+
+  bool GetIndice(size_t aIndex, Index::Indice& aIndice) const override;
+
+  explicit IndiceWrapperStagefright(FallibleTArray<Index::Indice>& aIndice);
+
+protected:
+  FallibleTArray<Index::Indice> mIndice;
+};
+
+IndiceWrapperStagefright::IndiceWrapperStagefright(FallibleTArray<Index::Indice>& aIndice)
+{
+  mIndice.SwapElements(aIndice);
+}
+
+size_t
+IndiceWrapperStagefright::Length() const
+{
+  return mIndice.Length();
+}
+
+bool
+IndiceWrapperStagefright::GetIndice(size_t aIndex, Index::Indice& aIndice) const
+{
+  if (aIndex >= mIndice.Length()) {
+    MOZ_LOG(sLog, LogLevel::Error, ("Index overflow in indice"));
+    return false;
+  }
+
+  aIndice = mIndice[aIndex];
+  return true;
+}
+
+// the owner of mIndice is rust mp4 paser, so lifetime of this class
+// SHOULD NOT longer than rust parser.
+class IndiceWrapperRust : public IndiceWrapper
+{
+public:
+  size_t Length() const override;
+
+  bool GetIndice(size_t aIndex, Index::Indice& aIndice) const override;
+
+  explicit IndiceWrapperRust(mp4parse_byte_data& aRustIndice);
+
+protected:
+  UniquePtr<mp4parse_byte_data> mIndice;
+};
+
+IndiceWrapperRust::IndiceWrapperRust(mp4parse_byte_data& aRustIndice)
+  : mIndice(mozilla::MakeUnique<mp4parse_byte_data>())
+{
+  mIndice->length = aRustIndice.length;
+  mIndice->indices = aRustIndice.indices;
+}
+
+size_t
+IndiceWrapperRust::Length() const
+{
+  return mIndice->length;
+}
+
+bool
+IndiceWrapperRust::GetIndice(size_t aIndex, Index::Indice& aIndice) const
+{
+  if (aIndex >= mIndice->length) {
+    MOZ_LOG(sLog, LogLevel::Error, ("Index overflow in indice"));
+   return false;
+  }
+
+  const mp4parse_indice* indice = &mIndice->indices[aIndex];
+  aIndice.start_offset = indice->start_offset;
+  aIndice.end_offset = indice->end_offset;
+  aIndice.start_composition = indice->start_composition;
+  aIndice.end_composition = indice->end_composition;
+  aIndice.start_decode = indice->start_decode;
+  aIndice.sync = indice->sync;
+  return true;
+}
+
 MP4Metadata::MP4Metadata(Stream* aSource)
  : mStagefright(MakeUnique<MP4MetadataStagefright>(aSource))
  , mRust(MakeUnique<MP4MetadataRust>(aSource))
@@ -334,29 +415,42 @@ MP4Metadata::Crypto() const
   return crypto;
 }
 
-bool
-MP4Metadata::ReadTrackIndex(FallibleTArray<Index::Indice>& aDest, mozilla::TrackID aTrackID)
+mozilla::UniquePtr<IndiceWrapper>
+MP4Metadata::GetTrackIndice(mozilla::TrackID aTrackID)
 {
-  bool ret = mStagefright->ReadTrackIndex(aDest, aTrackID);
+  FallibleTArray<Index::Indice> indiceSF;
+  if(!mStagefright->ReadTrackIndex(indiceSF, aTrackID)) {
+    return nullptr;
+  }
+
+  mp4parse_byte_data indiceRust = {};
+  if ((mPreferRust || mRustTestMode) &&
+      !mRust->ReadTrackIndice(&indiceRust, aTrackID)) {
+    return nullptr;
+  }
 
 #ifndef RELEASE_OR_BETA
-  if (mRustTestMode && ret && mRust) {
-    mp4parse_byte_data data = {};
-    bool rustRet = mRust->ReadTrackIndice(&data, aTrackID);
-    MOZ_DIAGNOSTIC_ASSERT(rustRet);
-    MOZ_DIAGNOSTIC_ASSERT(data.length == aDest.Length());
-    for (uint32_t i = 0; i < data.length; i++) {
-      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].start_offset == aDest[i].start_offset);
-      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].end_offset == aDest[i].end_offset);
-      MOZ_DIAGNOSTIC_ASSERT(llabs(data.indices[i].start_composition - int64_t(aDest[i].start_composition)) <= 1);
-      MOZ_DIAGNOSTIC_ASSERT(llabs(data.indices[i].end_composition - int64_t(aDest[i].end_composition)) <= 1);
-      MOZ_DIAGNOSTIC_ASSERT(llabs(data.indices[i].start_decode - int64_t(aDest[i].start_decode)) <= 1);
-      MOZ_DIAGNOSTIC_ASSERT(data.indices[i].sync == aDest[i].sync);
+  if (mRustTestMode) {
+    MOZ_DIAGNOSTIC_ASSERT(indiceRust.length == indiceSF.Length());
+    for (uint32_t i = 0; i < indiceRust.length; i++) {
+      MOZ_DIAGNOSTIC_ASSERT(indiceRust.indices[i].start_offset == indiceSF[i].start_offset);
+      MOZ_DIAGNOSTIC_ASSERT(indiceRust.indices[i].end_offset == indiceSF[i].end_offset);
+      MOZ_DIAGNOSTIC_ASSERT(llabs(indiceRust.indices[i].start_composition - int64_t(indiceSF[i].start_composition)) <= 1);
+      MOZ_DIAGNOSTIC_ASSERT(llabs(indiceRust.indices[i].end_composition - int64_t(indiceSF[i].end_composition)) <= 1);
+      MOZ_DIAGNOSTIC_ASSERT(llabs(indiceRust.indices[i].start_decode - int64_t(indiceSF[i].start_decode)) <= 1);
+      MOZ_DIAGNOSTIC_ASSERT(indiceRust.indices[i].sync == indiceSF[i].sync);
     }
   }
 #endif
 
-  return ret;
+  UniquePtr<IndiceWrapper> indice;
+  if (mPreferRust) {
+    indice = mozilla::MakeUnique<IndiceWrapperRust>(indiceRust);
+  } else {
+    indice = mozilla::MakeUnique<IndiceWrapperStagefright>(indiceSF);
+  }
+
+  return indice;
 }
 
 static inline bool

@@ -37,7 +37,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer
 public:
   MP4TrackDemuxer(MP4Demuxer* aParent,
                   UniquePtr<TrackInfo>&& aInfo,
-                  const nsTArray<mp4_demuxer::Index::Indice>& indices);
+                  const mp4_demuxer::IndiceWrapper& aIndices);
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
@@ -152,9 +152,10 @@ MP4Demuxer::Init()
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kAudioTrack, i);
       if (info) {
-        FallibleTArray<mp4_demuxer::Index::Indice> indices;
-        if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
-          mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+        UniquePtr<mp4_demuxer::IndiceWrapper> indices =
+          metadata.GetTrackIndice(info->mTrackId);
+        if (indices) {
+          mAudioDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
         }
       }
     }
@@ -166,9 +167,10 @@ MP4Demuxer::Init()
       UniquePtr<TrackInfo> info =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, i);
       if (info) {
-        FallibleTArray<mp4_demuxer::Index::Indice> indices;
-        if (metadata.ReadTrackIndex(indices, info->mTrackId)) {
-          mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), indices);
+        UniquePtr<mp4_demuxer::IndiceWrapper> indices =
+          metadata.GetTrackIndice(info->mTrackId);
+        if (indices) {
+          mVideoDemuxers[i] = new MP4TrackDemuxer(this, Move(info), *indices.get());
         }
       }
     }
@@ -263,11 +265,11 @@ MP4Demuxer::GetCrypto()
 
 MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
                                  UniquePtr<TrackInfo>&& aInfo,
-                                 const nsTArray<mp4_demuxer::Index::Indice>& indices)
+                                 const mp4_demuxer::IndiceWrapper& aIndices)
   : mParent(aParent)
   , mStream(new mp4_demuxer::ResourceStream(mParent->mResource))
   , mInfo(Move(aInfo))
-  , mIndex(new mp4_demuxer::Index(indices,
+  , mIndex(new mp4_demuxer::Index(aIndices,
                                   mStream,
                                   mInfo->mTrackId,
                                   mInfo->IsAudio()))
