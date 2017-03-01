@@ -3043,7 +3043,7 @@ nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
     bool hasContentEncoding =
         mCachedResponseHead->HasHeader(nsHttp::Content_Encoding);
 
-    nsAutoCString etag; 
+    nsAutoCString etag;
     mCachedResponseHead->GetHeader(nsHttp::ETag, etag);
     bool hasWeakEtag = !etag.IsEmpty() &&
                        StringBeginsWith(etag, NS_LITERAL_CSTRING("W/"));
@@ -6117,6 +6117,11 @@ nsHttpChannel::BeginConnect()
             // both phishing and malware, it is not necessary for correctness,
             // since no network events will be received while the
             // nsChannelClassifier is in progress. See bug 1122691.
+
+            // We cannot check the entity whitelist here (IsTrackerWhitelisted())
+            // because that method is asynchronous and we need to run
+            // synchronously here.
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1100024#c2.
             nsCOMPtr<nsIURI> uri;
             rv = GetURI(getter_AddRefs(uri));
             if (NS_SUCCEEDED(rv) && uri) {
