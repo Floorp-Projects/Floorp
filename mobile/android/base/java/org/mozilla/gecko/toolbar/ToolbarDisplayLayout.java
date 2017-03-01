@@ -26,6 +26,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
@@ -244,6 +245,14 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
     void setTitle(CharSequence title) {
         mTitle.setText(title);
+
+        if (TextUtils.isEmpty(title)) {
+            //  Reset TextDirection to Locale in order to reveal text hint in correct direction
+            ViewUtil.setTextDirection(mTitle, TEXT_DIRECTION_LOCALE);
+        } else {
+            //  Otherwise, fall back to default first strong strategy
+            ViewUtil.setTextDirection(mTitle, TEXT_DIRECTION_FIRST_STRONG);
+        }
 
         if (mTitleChangeListener != null) {
             mTitleChangeListener.onTitleChange(title);
