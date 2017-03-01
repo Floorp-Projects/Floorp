@@ -11,6 +11,7 @@
     <script>
       function runTest() {
         var textarea = document.getElementById('textarea');
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length)
         textarea.focus();
         synthesizeKey('o', {});
         textarea.blur(); // to hide the caret
@@ -22,4 +23,3 @@
     <textarea id="textarea" minlength="4">fo</textarea>
   </body>
 </html>
-
