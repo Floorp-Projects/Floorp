@@ -19,7 +19,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   SingletonEventManager,
-  ignoreEvent,
 } = ExtensionUtils;
 
 // This function is pretty tightly tied to Extension.jsm.
@@ -214,7 +213,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         };
       }).api(),
 
-      onReplaced: ignoreEvent(context, "tabs.onReplaced"),
+      onReplaced: new SingletonEventManager(context, "tabs.onReplaced", fire => {
+        return () => {};
+      }).api(),
 
       onMoved: new SingletonEventManager(context, "tabs.onMoved", fire => {
         // There are certain circumstances where we need to ignore a move event.

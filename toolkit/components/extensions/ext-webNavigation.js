@@ -169,7 +169,9 @@ extensions.registerSchemaAPI("webNavigation", "addon_parent", context => {
 
   return {
     webNavigation: {
-      onTabReplaced: ignoreEvent(context, "webNavigation.onTabReplaced"),
+      onTabReplaced: new SingletonEventManager(context, "webNavigation.onTabReplaced", fire => {
+        return () => {};
+      }).api(),
       onBeforeNavigate: new WebNavigationEventManager(context, "onBeforeNavigate").api(),
       onCommitted: new WebNavigationEventManager(context, "onCommitted").api(),
       onDOMContentLoaded: new WebNavigationEventManager(context, "onDOMContentLoaded").api(),
