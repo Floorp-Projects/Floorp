@@ -562,4 +562,5 @@ public final class GeckoLoader {
     private static native void loadSQLiteLibsNative(String apkName);
     private static native void loadNSSLibsNative(String apkName);
     private static native void extractGeckoLibsNative(String apkName);
+    public static native boolean neonCompatible();
 }
