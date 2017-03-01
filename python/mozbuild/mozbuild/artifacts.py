@@ -67,7 +67,6 @@ from taskgraph.util.taskcluster import (
     list_artifacts,
 )
 
-from mozbuild.action.test_archive import OBJDIR_TEST_FILES
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -185,6 +184,7 @@ class ArtifactJob(object):
         raise NotImplementedError("Subclasses must specialize process_package_artifact!")
 
     def process_tests_artifact(self, filename, processed_filename):
+        from mozbuild.action.test_archive import OBJDIR_TEST_FILES
         added_entry = False
 
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
