@@ -85,6 +85,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
             public void onPageStarted(final String url) {
                 lockView.setVisibility(View.GONE);
 
+                progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading));
+
                 urlView.setText(url);
 
                 backgroundTransition.resetTransition();
@@ -95,6 +97,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener, P
             @Override
             public void onPageFinished(boolean isSecure) {
                 backgroundTransition.startTransition(ANIMATION_DURATION);
+
+                progressView.announceForAccessibility(getString(R.string.accessibility_announcement_loading_finished));
 
                 progressView.setVisibility(View.INVISIBLE);
 

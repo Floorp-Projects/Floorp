@@ -17,6 +17,7 @@
         android:layout_gravity="end"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="4dp"
+        android:contentDescription="@string/content_description_menu"
         android:background="?android:attr/selectableItemBackgroundBorderless" />
 
     <LinearLayout
@@ -30,7 +31,8 @@
             android:layout_height="wrap_content"
             android:src="@drawable/wordmark"
             android:paddingBottom="30dp"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/app_name" />
 
         <TextView
             android:id="@+id/url"

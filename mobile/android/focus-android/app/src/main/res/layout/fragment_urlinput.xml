@@ -61,7 +61,8 @@
             android:padding="8dp"
             android:layout_gravity="end"
             android:visibility="gone"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_clear_input" />
 
         </LinearLayout>
 
@@ -96,6 +97,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="?android:attr/selectableItemBackgroundBorderless" />
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/content_description_dismiss_input" />
 
 </LinearLayout>

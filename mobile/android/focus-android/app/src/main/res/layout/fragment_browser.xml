@@ -42,7 +42,8 @@
                     android:layout_marginTop="8dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_lock"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    android:contentDescription="@string/content_description_lock" />
 
                 <TextView
                     android:id="@+id/url"
@@ -68,6 +69,7 @@
                     android:layout_marginTop="8dp"
                     android:background="?android:attr/selectableItemBackground"
                     android:padding="4dp"
+                    android:contentDescription="@string/content_description_menu"
                     android:src="@drawable/ic_menu" />
 
             </LinearLayout>
@@ -77,7 +79,8 @@
                 style="@android:style/Widget.Material.ProgressBar.Horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="2dp"
-                android:layout_gravity="bottom" />
+                android:layout_gravity="bottom"
+                android:importantForAccessibility="yes" />
 
         </FrameLayout>
 
@@ -94,6 +97,7 @@
         android:src="@drawable/ic_delete"
         app:backgroundTint="@color/colorFloatingActionButtonTint"
         app:rippleColor="#50FFFFFF"
-        app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior" />
+        app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
+        android:contentDescription="@string/content_description_erase" />
 
 </android.support.design.widget.CoordinatorLayout>
