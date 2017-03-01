@@ -307,39 +307,7 @@ add_task(function*() {
     do_check_false(addon.appDisabled);
     do_check_true(addon.isActive);
     do_check_eq(addon.type, "extension");
-    do_check_true(addon.isWebExtension);
     do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_SIGNED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
-
-    // test reloading a webextension with the same name, but a different type.
-    webext.remove(false);
-    webext = createTempWebExtensionFile({
-      manifest: {
-        version: "6.0",
-        name: "Test WebExtension 1 (temporary)",
-        applications: {
-          gecko: {
-            id: ID
-          }
-        },
-        theme: { images: { headerURL: "https://example.com/example.png" } }
-      }
-    });
-
-    yield Promise.all([
-      AddonManager.installTemporaryAddon(webext),
-      promiseAddonStartup(),
-    ]);
-    addon = yield promiseAddonByID(ID);
-
-    do_check_neq(addon, null);
-    do_check_eq(addon.version, "6.0");
-    do_check_eq(addon.name, "Test WebExtension 1 (temporary)");
-    do_check_true(addon.isCompatible);
-    do_check_false(addon.appDisabled);
-    do_check_true(addon.isActive);
-    // This is what we're really interested in:
-    do_check_eq(addon.type, "theme");
-    do_check_true(addon.isWebExtension);
 
     restartManager();
 
