@@ -16,8 +16,10 @@ Cu.importGlobalProperties(["fetch"]);
 let yahoooURI = NetUtil.newURI("https://yahooo.com/");
 let gooogleURI = NetUtil.newURI("https://gooogle.com/");
 
-autocompleteObject.addPrefillSite(yahoooURI.spec, "Yahooo");
-autocompleteObject.addPrefillSite(gooogleURI.spec, "Gooogle");
+autocompleteObject.populatePrefillSiteStorage([
+  [yahoooURI.spec, "Yahooo"],
+  [gooogleURI.spec, "Gooogle"],
+]);
 
 function *assert_feature_works(condition) {
   do_print("List Results do appear " + condition);
@@ -116,6 +118,182 @@ add_task(function* test_sorting_against_history() {
   yield cleanup();
 });
 
+add_task(function* test_scheme_and_www() {
+  // Order is important to check sorting
+  let sites = [
+    ["https://www.ooops-https-www.com/", "Ooops"],
+    ["https://ooops-https.com/",         "Ooops"],
+    ["HTTP://ooops-HTTP.com/",           "Ooops"],
+    ["HTTP://www.ooops-HTTP-www.com/",   "Ooops"],
+    ["https://foo.com/",     "Title with www"],
+    ["https://www.bar.com/", "Tile"],
+  ];
+
+  let titlesMap = new Map(sites)
+
+  autocompleteObject.populatePrefillSiteStorage(sites);
+
+  let tests =
+  [
+    // User typed,
+    // Inline autofill,
+    // Substitute after enter is pressed,
+    //   [List matches, with sorting]
+    //   not tested if omitted
+    //   !!! first one is always an autofill entry !!!
+
+    [// Protocol by itself doesn't match anything
+    "https://",
+    "https://",
+    "https://",
+      []
+    ],
+
+    [// "www." by itself doesn't match anything
+    "www.",
+    "www.",
+    "www.",
+      []
+    ],
+
+    [// Protocol with "www." by itself doesn't match anything
+    "http://www.",
+    "http://www.",
+    "http://www.",
+      []
+    ],
+
+    [// ftp: - ignore
+    "ftp://ooops",
+    "ftp://ooops",
+    "ftp://ooops",
+      []
+    ],
+
+    [// Edge case: no "www." in search string, autofill and list entries with "www."
+    "ww",
+    "www.ooops-https-www.com/",
+    "https://www.ooops-https-www.com/", // 2nd in list, but has priority as strict
+      [
+      ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
+      "HTTP://www.ooops-HTTP-www.com/",
+      ["https://foo.com/", "Title with www", ["prefill-site"]],
+      "https://www.bar.com/",
+      ]
+    ],
+
+    [// Strict match, no "www."
+    "ooops",
+    "ooops-https.com/",
+    "https://ooops-https.com/", // 2nd in list, but has priority as strict
+      [// List entries are not sorted (initial sorting preserved)
+       // except autofill entry is on top as always
+      ["https://ooops-https.com/", "https://ooops-https.com"],
+      "https://www.ooops-https-www.com/",
+      "HTTP://ooops-HTTP.com/",
+      "HTTP://www.ooops-HTTP-www.com/",
+      ]
+    ],
+
+    [// Strict match with "www."
+    "www.ooops",
+    "www.ooops-https-www.com/",
+    "https://www.ooops-https-www.com/",
+      [// Matches with "www." sorted on top
+      ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
+      "HTTP://www.ooops-HTTP-www.com/",
+      "https://ooops-https.com/",
+      "HTTP://ooops-HTTP.com/",
+      ]
+    ],
+
+    [// Loose match: search no "www.", result with "www."
+    "ooops-https-www",
+    "ooops-https-www.com/",
+    "https://www.ooops-https-www.com/",
+      [
+      ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
+      ]
+    ],
+
+    [// Loose match: search "www.", no-www site gets "www."
+    "www.ooops-https.",
+    "www.ooops-https.com/",
+    "https://www.ooops-https.com/",
+      [// Only autofill entry gets "www."
+      ["https://www.ooops-https.com/", "https://www.ooops-https.com"],
+      "https://ooops-https.com/", // List entry with prefilled URl for match site
+      ]
+    ],
+
+    [// Explicit protocol, no "www."
+    "https://ooops",
+    "https://ooops-https.com/",
+    "https://ooops-https.com/",
+      [
+      ["https://ooops-https.com/", "https://ooops-https.com"],
+      "https://www.ooops-https-www.com/",
+      ]
+    ],
+
+    [// Explicit protocol, with "www."
+    "https://www.ooops",
+    "https://www.ooops-https-www.com/",
+    "https://www.ooops-https-www.com/",
+      [
+      ["https://www.ooops-https-www.com/", "https://www.ooops-https-www.com"],
+      "https://ooops-https.com/",
+      ]
+    ],
+
+    [// Explicit HTTP protocol, no-www site gets "www."
+    "http://www.ooops-http.",
+    "http://www.ooops-http.com/",
+    "http://www.ooops-http.com/",
+      [
+      ["HTTP://www.ooops-HTTP.com/", "www.ooops-http.com"],
+      "HTTP://ooops-HTTP.com/",
+      ]
+    ],
+
+    [// Wrong protocol
+    "http://ooops-https",
+    "http://ooops-https",
+    "http://ooops-https",
+      []
+    ],
+  ];
+
+  function toMatch(entry, index) {
+    if (Array.isArray(entry)) {
+      return {
+        uri: NetUtil.newURI(entry[0]),
+        title: entry[1],
+        style: entry[2] || ["autofill", "heuristic"],
+      };
+    }
+    return {
+      uri: NetUtil.newURI(entry),
+      title: titlesMap.get(entry),
+      style: ["prefill-site"],
+    };
+  }
+
+  for (let test of tests) {
+    let matches = test[3] ? test[3].map(toMatch) : null;
+    do_print("User types: " + test[0]);
+    yield check_autocomplete({
+      checkSorting: true,
+      search: test[0],
+      autofilled: test[1].toLowerCase(),
+      completed: test[2].toLowerCase(),
+      matches,
+    });
+  }
+
+  yield cleanup();
+});
+
 add_task(function* test_data_file() {
   let response = yield fetch("chrome://global/content/unifiedcomplete-top-urls.json");
 
@@ -134,7 +312,7 @@ add_task(function* test_data_file() {
   do_print("Storage is populated from JSON correctly");
   yield check_autocomplete({
     search: uri.host,
-    autofilled: stripPrefix(uri.spec),
+    autofilled: uri.host + "/",
     completed: uri.spec,
   });
 
