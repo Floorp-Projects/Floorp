@@ -263,7 +263,7 @@ void GetBoxQuads(nsINode* aNode,
     // No boxes to return
     return;
   }
-  nsWeakFrame weakFrame(frame);
+  AutoWeakFrame weakFrame(frame);
   nsIDocument* ownerDoc = aNode->OwnerDoc();
   nsIFrame* relativeToFrame =
     GetFirstNonAnonymousFrameForGeometryNode(aOptions.mRelativeTo, ownerDoc);
@@ -301,7 +301,7 @@ TransformPoints(nsINode* aTo, const GeometryNode& aFrom,
                 CallerType aCallerType, ErrorResult& aRv)
 {
   nsIFrame* fromFrame = GetFirstNonAnonymousFrameForGeometryNode(aFrom);
-  nsWeakFrame weakFrame(fromFrame);
+  AutoWeakFrame weakFrame(fromFrame);
   nsIFrame* toFrame = GetFirstNonAnonymousFrameForNode(aTo);
   // The first frame might be destroyed now if the above call lead to an
   // EnsureFrameForTextNode call.  We need to get the first frame again

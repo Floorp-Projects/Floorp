@@ -263,7 +263,7 @@ protected:
   
   mozilla::UniquePtr<nsPrintData> mPrt;
   nsPagePrintTimer*       mPagePrintTimer;
-  nsWeakFrame             mPageSeqFrame;
+  AutoWeakFrame             mPageSeqFrame;
 
   // Print Preview
   mozilla::UniquePtr<nsPrintData> mPrtPreview;

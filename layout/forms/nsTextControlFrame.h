@@ -240,7 +240,7 @@ protected:
 
     NS_IMETHOD Run() override;
 
-    // avoids use of nsWeakFrame
+    // avoids use of AutoWeakFrame
     void Revoke() {
       mFrame = nullptr;
     }

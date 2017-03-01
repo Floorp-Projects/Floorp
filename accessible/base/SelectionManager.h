@@ -121,7 +121,7 @@ protected:
 
 private:
   // Currently focused control.
-  nsWeakFrame mCurrCtrlFrame;
+  AutoWeakFrame mCurrCtrlFrame;
   int32_t mCaretOffset;
   HyperTextAccessible* mAccWithCaret;
 };

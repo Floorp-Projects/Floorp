@@ -858,7 +858,7 @@ Element::ScrollByNoFlush(int32_t aDx, int32_t aDy)
     return false;
   }
 
-  nsWeakFrame weakRef(sf->GetScrolledFrame());
+  AutoWeakFrame weakRef(sf->GetScrolledFrame());
 
   CSSIntPoint before = sf->GetScrollPositionCSSPixels();
   sf->ScrollToCSSPixelsApproximate(CSSIntPoint(before.x + aDx, before.y + aDy));
