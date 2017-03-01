@@ -63,8 +63,8 @@ module.exports = function(context) {
       let root = helpers.getRootDir(filepath);
       let relativepath = path.relative(root, filepath);
 
-      if ((helpers.getTestType(this) != "browser" &&
-          !helpers.getIsHeadFile(this)) &&
+      if ((helpers.getTestType(context) != "browser" &&
+          !helpers.getIsHeadFile(context)) &&
           !relativepath.includes("content")) {
         return;
       }
