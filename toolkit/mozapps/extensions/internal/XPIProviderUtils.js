@@ -1133,24 +1133,22 @@ this.XPIDatabase = {
   },
 
   /**
-   * Synchronously gets all add-ons of a particular type(s).
+   * Synchronously gets all add-ons of a particular type.
    *
-   * @param  aType, aType2, ...
-   *         The type(s) of add-on to retrieve
+   * @param  aType
+   *         The type of add-on to retrieve
    * @return an array of DBAddonInternals
    */
-  getAddonsByType(...aTypes) {
+  getAddonsByType(aType) {
     if (!this.addonDB) {
       // jank-tastic! Must synchronously load DB if the theme switches from
       // an XPI theme to a lightweight theme before the DB has loaded,
       // because we're called from sync XPIProvider.addonChanged
-      logger.warn("Synchronous load of XPI database due to getAddonsByType([" +
-        aTypes.join(", ") + "])");
+      logger.warn("Synchronous load of XPI database due to getAddonsByType(" + aType + ")");
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
-
-    return _filterDB(this.addonDB, aAddon => aTypes.includes(aAddon.type));
+    return _filterDB(this.addonDB, aAddon => (aAddon.type == aType));
   },
 
   /**
