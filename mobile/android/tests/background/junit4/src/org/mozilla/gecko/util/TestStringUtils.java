@@ -58,6 +58,21 @@ public class TestStringUtils {
     }
 
     @Test
+    public void testStripScheme() {
+        assertEquals("mozilla.org", StringUtils.stripScheme("http://mozilla.org"));
+        assertEquals("mozilla.org", StringUtils.stripScheme("http://mozilla.org/"));
+        assertEquals("https://mozilla.org", StringUtils.stripScheme("https://mozilla.org"));
+        assertEquals("https://mozilla.org", StringUtils.stripScheme("https://mozilla.org/"));
+        assertEquals("mozilla.org", StringUtils.stripScheme("https://mozilla.org/", StringUtils.UrlFlags.STRIP_HTTPS));
+        assertEquals("mozilla.org", StringUtils.stripScheme("https://mozilla.org", StringUtils.UrlFlags.STRIP_HTTPS));
+        assertEquals("", StringUtils.stripScheme("http://"));
+        assertEquals("", StringUtils.stripScheme("https://", StringUtils.UrlFlags.STRIP_HTTPS));
+        // This edge case is not handled properly yet
+//        assertEquals(StringUtils.stripScheme("https://"), "");
+        assertEquals(null, StringUtils.stripScheme(null));
+    }
+
+    @Test
     public void testIsRTL() {
         assertFalse(StringUtils.isRTL("mozilla.org"));
         assertFalse(StringUtils.isRTL("something.عربي"));
