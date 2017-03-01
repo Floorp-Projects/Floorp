@@ -64,5 +64,4 @@ def test_where_is():
 
 if __name__ == "__main__":
     import sys
-    sys.exit(pytest.main(
-        ['-s', '-p', 'no:terminalreporter', '--log-tbpl=-', __file__]))
+    sys.exit(pytest.main(["-s", "--verbose", __file__]))
