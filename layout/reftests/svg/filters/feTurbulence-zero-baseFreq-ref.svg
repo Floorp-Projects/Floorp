@@ -1,0 +1,13 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This is the reference image for feTurbulence-zero-baseFreq.svg.
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="400" height="100" fill="blue"/>
+  <rect x="0" y="100" width="400" height="100" fill="lime"/>
+  <!-- nothing in place of the type="turbulence" filter -->
+  <rect x="200" y="50" width="100" height="100" fill="rgba(128, 128, 128, 0.5)"/>
+</svg>
