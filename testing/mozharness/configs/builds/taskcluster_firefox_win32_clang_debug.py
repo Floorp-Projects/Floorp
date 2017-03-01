@@ -75,7 +75,7 @@ config = {
         'MOZ_OBJDIR': 'obj-firefox',
         'PDBSTR_PATH': '/c/Program Files (x86)/Windows Kits/10/Debuggers/x86/srcsrv/pdbstr.exe',
         'TINDERBOX_OUTPUT': '1',
-        'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
+        'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'MSYSTEM': 'MINGW32',
