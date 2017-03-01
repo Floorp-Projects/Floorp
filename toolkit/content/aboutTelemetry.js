@@ -314,8 +314,6 @@ var PingPicker = {
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("keyed-histograms-processes")
             .addEventListener("change", () => displayPingData(gPingData));
-    document.getElementById("events-processes")
-            .addEventListener("change", () => displayPingData(gPingData));
   },
 
   onPingSourceChanged() {
@@ -1736,16 +1734,7 @@ var Events = {
       return;
     }
 
-    let processesSelect = document.getElementById("events-processes");
-    let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
-
-    if (!aPayload.processes ||
-        !selectedProcess ||
-        !(selectedProcess in aPayload.processes)) {
-      return;
-    }
-
-    let events = aPayload.processes[selectedProcess].events;
+    const events = aPayload.processes.parent.events;
     const hasData = events && Object.keys(events).length > 0;
     setHasData("events-section", hasData);
     if (!hasData) {
@@ -2093,7 +2082,6 @@ function displayPingData(ping, updatePayloadList = false) {
     renderProcessList(ping, document.getElementById("keyed-scalars-processes"));
     renderProcessList(ping, document.getElementById("histograms-processes"));
     renderProcessList(ping, document.getElementById("keyed-histograms-processes"));
-    renderProcessList(ping, document.getElementById("events-processes"));
   }
 
   // Show general data.
