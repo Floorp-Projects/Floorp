@@ -408,8 +408,7 @@ class ImportHook(object):
         # python modules under our source directory (either because it
         # doesn't happen or because it doesn't matter).
         if not os.path.exists(module.__file__[:-1]):
-            if os.path.exists(module.__file__):
-                os.remove(module.__file__)
+            os.remove(module.__file__)
             del sys.modules[module.__name__]
             module = self(name, globals, locals, fromlist, level)
 
