@@ -24,12 +24,27 @@ function promiseAddonStartup() {
   });
 }
 
-function* testSimpleIconsetParsing(manifest) {
-  yield promiseWriteWebManifestForExtension(manifest, profileDir);
+// Test simple icon set parsing
+add_task(function*() {
+  yield promiseWriteWebManifestForExtension({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      16: "icon16.png",
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png"
+    }
+  }, profileDir);
 
   yield promiseRestartManager();
-  if (!manifest.theme)
-    yield promiseAddonStartup();
+  yield promiseAddonStartup();
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
@@ -61,8 +76,7 @@ function* testSimpleIconsetParsing(manifest) {
 
   // check if icons are persisted through a restart
   yield promiseRestartManager();
-  if (!manifest.theme)
-    yield promiseAddonStartup();
+  yield promiseAddonStartup();
 
   addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -72,14 +86,30 @@ function* testSimpleIconsetParsing(manifest) {
   addon.uninstall();
 
   yield promiseRestartManager();
-}
+});
 
-function* testRetinaIconsetParsing(manifest) {
-  yield promiseWriteWebManifestForExtension(manifest, profileDir);
+// Test AddonManager.getPreferredIconURL for retina screen sizes
+add_task(function*() {
+  yield promiseWriteWebManifestForExtension({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    },
+    icons: {
+      32: "icon32.png",
+      48: "icon48.png",
+      64: "icon64.png",
+      128: "icon128.png",
+      256: "icon256.png"
+    }
+  }, profileDir);
 
   yield promiseRestartManager();
-  if (!manifest.theme)
-    yield promiseAddonStartup();
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -102,14 +132,23 @@ function* testRetinaIconsetParsing(manifest) {
   addon.uninstall();
 
   yield promiseRestartManager();
-}
+});
 
-function* testNoIconsParsing(manifest) {
-  yield promiseWriteWebManifestForExtension(manifest, profileDir);
+// Handles no icons gracefully
+add_task(function*() {
+  yield promiseWriteWebManifestForExtension({
+    name: "Web Extension Name",
+    version: "1.0",
+    manifest_version: 2,
+    applications: {
+      gecko: {
+        id: ID
+      }
+    }
+  }, profileDir);
 
   yield promiseRestartManager();
-  if (!manifest.theme)
-    yield promiseAddonStartup();
+  yield promiseAddonStartup();
 
   let addon = yield promiseAddonByID(ID);
   do_check_neq(addon, null);
@@ -124,109 +163,4 @@ function* testNoIconsParsing(manifest) {
   addon.uninstall();
 
   yield promiseRestartManager();
-}
-
-// Test simple icon set parsing
-add_task(function*() {
-  yield* testSimpleIconsetParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      16: "icon16.png",
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png"
-    }
-  });
-
-  // Now for theme-type extensions too.
-  yield* testSimpleIconsetParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      16: "icon16.png",
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png"
-    },
-    theme: { images: { headerURL: "https://example.com/example.png" } }
-  });
-});
-
-// Test AddonManager.getPreferredIconURL for retina screen sizes
-add_task(function*() {
-  yield* testRetinaIconsetParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png",
-      128: "icon128.png",
-      256: "icon256.png"
-    }
-  });
-
-  yield* testRetinaIconsetParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    icons: {
-      32: "icon32.png",
-      48: "icon48.png",
-      64: "icon64.png",
-      128: "icon128.png",
-      256: "icon256.png"
-    },
-    theme: { images: { headerURL: "https://example.com/example.png" } }
-  });
-});
-
-// Handles no icons gracefully
-add_task(function*() {
-  yield* testNoIconsParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    }
-  });
-
-  yield* testNoIconsParsing({
-    name: "Web Extension Name",
-    version: "1.0",
-    manifest_version: 2,
-    applications: {
-      gecko: {
-        id: ID
-      }
-    },
-    theme: { images: { headerURL: "https://example.com/example.png" } }
-  });
 });
