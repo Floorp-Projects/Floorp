@@ -29,21 +29,21 @@ add_test(function test_Timeouts_toString() {
 
 add_test(function test_Timeouts_toJSON() {
   let ts = new session.Timeouts();
-  deepEqual(ts.toJSON(), {"implicit": 0, "pageLoad": 300000, "script": 30000});
+  deepEqual(ts.toJSON(), {"implicit": 0, "page load": 300000, "script": 30000});
 
   run_next_test();
 });
 
 add_test(function test_Timeouts_fromJSON() {
   let json = {
-    implicit: 10,
-    pageLoad: 20,
-    script: 30,
+    "implicit": 10,
+    "page load": 20,
+    "script": 30,
   };
   let ts = session.Timeouts.fromJSON(json);
-  equal(ts.implicit, json.implicit);
-  equal(ts.pageLoad, json.pageLoad);
-  equal(ts.script, json.script);
+  equal(ts.implicit, json["implicit"]);
+  equal(ts.pageLoad, json["page load"]);
+  equal(ts.script, json["script"]);
 
   run_next_test();
 });

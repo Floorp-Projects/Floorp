@@ -35,7 +35,7 @@ class TestCapabilities(MarionetteTestCase):
         self.assertFalse(self.caps["acceptInsecureCerts"])
         self.assertDictEqual(self.caps["timeouts"],
                              {"implicit": 0,
-                              "pageLoad": 300000,
+                              "page load": 300000,
                               "script": 30000})
 
     def test_supported_features(self):
@@ -245,7 +245,7 @@ class TestCapabilityMatching(MarionetteTestCase):
         self.assertEqual(self.marionette.get_pref("network.proxy.type"), 1)
 
     def test_timeouts(self):
-        timeouts = {u"implicit": 123, u"pageLoad": 456, u"script": 789}
+        timeouts = {u"implicit": 123, u"page load": 456, u"script": 789}
         caps = {"desiredCapabilities": {"timeouts": timeouts}}
         self.marionette.start_session(caps)
         self.assertIn("timeouts", self.marionette.session_capabilities)
