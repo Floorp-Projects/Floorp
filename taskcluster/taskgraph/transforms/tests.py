@@ -192,6 +192,9 @@ test_description_schema = Schema({
                 'test-platform',
                 [basestring]),
 
+            # mochitest flavor for mochitest runs
+            Optional('mochitest-flavor'): basestring,
+
             # any additional actions to pass to the mozharness command
             Optional('actions'): [basestring],
 
