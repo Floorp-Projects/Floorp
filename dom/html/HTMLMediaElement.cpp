@@ -5266,6 +5266,9 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   const char16_t* params[] = { src.get() };
   ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
 
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);
+
   AudioTracks()->EmptyTracks();
   VideoTracks()->EmptyTracks();
   if (mIsLoadingFromSourceChildren) {
@@ -5281,6 +5284,14 @@ void HTMLMediaElement::DecodeError(const MediaResult& aError)
   } else {
     Error(MEDIA_ERR_DECODE, aError.Description());
   }
+}
+
+void HTMLMediaElement::DecodeWarning(const MediaResult& aError)
+{
+  nsAutoString src;
+  GetCurrentSrc(src);
+  DecoderDoctorDiagnostics diagnostics;
+  diagnostics.StoreDecodeError(OwnerDoc(), aError, src, __func__);
 }
 
 bool HTMLMediaElement::HasError() const

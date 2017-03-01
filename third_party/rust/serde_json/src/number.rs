@@ -24,7 +24,7 @@ enum N {
 }
 
 impl Number {
-    /// Returns true if the number can be represented by i64.
+    /// Returns `true` if the number can be represented as `i64`.
     #[inline]
     pub fn is_i64(&self) -> bool {
         match self.n {
@@ -34,7 +34,7 @@ impl Number {
         }
     }
 
-    /// Returns true if the number can be represented as u64.
+    /// Returns `true` if the number can be represented as `u64`.
     #[inline]
     pub fn is_u64(&self) -> bool {
         match self.n {
@@ -43,7 +43,7 @@ impl Number {
         }
     }
 
-    /// Returns true if the number can be represented as f64.
+    /// Returns `true` if the number can be represented as `f64`.
     #[inline]
     pub fn is_f64(&self) -> bool {
         match self.n {
@@ -52,7 +52,7 @@ impl Number {
         }
     }
 
-    /// Returns the number represented as i64 if possible, or else None.
+    /// Returns the number represented as `i64` if possible, or else `None`.
     #[inline]
     pub fn as_i64(&self) -> Option<i64> {
         match self.n {
@@ -62,7 +62,7 @@ impl Number {
         }
     }
 
-    /// Returns the number represented as u64 if possible, or else None.
+    /// Returns the number represented as `u64` if possible, or else `None`.
     #[inline]
     pub fn as_u64(&self) -> Option<u64> {
         match self.n {
@@ -72,7 +72,7 @@ impl Number {
         }
     }
 
-    /// Returns the number represented as f64 if possible, or else None.
+    /// Returns the number represented as `f64` if possible, or else `None`.
     #[inline]
     pub fn as_f64(&self) -> Option<f64> {
         match self.n {
@@ -82,7 +82,7 @@ impl Number {
         }
     }
 
-    /// Converts a finite f64 to a Number. Infinite or NaN values are not JSON
+    /// Converts a finite `f64` to a `Number`. Infinite or NaN values are not JSON
     /// numbers.
     #[inline]
     pub fn from_f64(f: f64) -> Option<Number> {
@@ -160,6 +160,27 @@ impl Deserialize for Number {
 }
 
 impl Deserializer for Number {
+    type Error = Error;
+
+    #[inline]
+    fn deserialize<V>(self, visitor: V) -> Result<V::Value, Error>
+        where V: Visitor
+    {
+        match self.n {
+            N::PosInt(i) => visitor.visit_u64(i),
+            N::NegInt(i) => visitor.visit_i64(i),
+            N::Float(f) => visitor.visit_f64(f),
+        }
+    }
+
+    forward_to_deserialize! {
+        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string unit option
+        seq seq_fixed_size bytes byte_buf map unit_struct newtype_struct
+        tuple_struct struct struct_field tuple enum ignored_any
+    }
+}
+
+impl<'a> Deserializer for &'a Number {
     type Error = Error;
 
     #[inline]

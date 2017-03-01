@@ -157,7 +157,7 @@ nsHTMLScrollFrame::SetInitialChildList(ChildListID  aListID,
                                        nsFrameList& aChildList)
 {
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
-  mHelper.ReloadChildFrames();
+  ReloadChildFrames();
 }
 
 
@@ -167,7 +167,7 @@ nsHTMLScrollFrame::AppendFrames(ChildListID  aListID,
 {
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
   mFrames.AppendFrames(nullptr, aFrameList);
-  mHelper.ReloadChildFrames();
+  ReloadChildFrames();
 }
 
 void
@@ -179,7 +179,7 @@ nsHTMLScrollFrame::InsertFrames(ChildListID aListID,
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
   mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
-  mHelper.ReloadChildFrames();
+  ReloadChildFrames();
 }
 
 void
@@ -188,7 +188,7 @@ nsHTMLScrollFrame::RemoveFrame(ChildListID aListID,
 {
   NS_ASSERTION(aListID == kPrincipalList, "Only main list supported");
   mFrames.DestroyFrame(aOldFrame);
-  mHelper.ReloadChildFrames();
+  ReloadChildFrames();
 }
 
 nsSplittableType

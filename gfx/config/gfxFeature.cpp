@@ -190,6 +190,9 @@ FeatureState::DisableByDefault(FeatureStatus aStatus, const char* aMessage,
   MOZ_ASSERT(!mEnvironment.IsInitialized());
   MOZ_ASSERT(!mRuntime.IsInitialized());
 
+  // Make sure that when disabling we actually use a failure status.
+  MOZ_ASSERT(IsFeatureStatusFailure(aStatus));
+
   mDefault.Set(aStatus, aMessage);
   SetFailureId(aFailureId);
 }

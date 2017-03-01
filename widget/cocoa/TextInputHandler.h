@@ -277,8 +277,11 @@ public:
    * ComputeGeckoCodeNameIndex() returns Gecko code name index for the key.
    *
    * @param aNativeKeyCode        A native keycode.
+   * @param aKbType               A native Keyboard Type value.  Typically,
+   *                              this is a result of ::LMGetKbdType().
    */
-  static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode);
+  static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode,
+                                                 UInt32 aKbType);
 
 protected:
   /**

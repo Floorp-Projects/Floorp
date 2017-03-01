@@ -119,6 +119,37 @@ function is_visible(element) {
 }
 
 /**
+ * Check the contents of an individual permission string.
+ * This function is fairly specific to the use here and probably not
+ * suitable for re-use elsewhere...
+ *
+ * @param {string} string
+ *        The string value to check (i.e., pulled from the DOM)
+ * @param {string} key
+ *        The key in browser.properties for the localized string to
+ *        compare with.
+ * @param {string|null} param
+ *        Optional string to substitute for %S in the localized string.
+ * @param {string} msg
+ *        The message to be emitted as part of the actual test.
+ */
+function checkPermissionString(string, key, param, msg) {
+  let localizedString = param ?
+                        gBrowserBundle.formatStringFromName(key, [param], 1) :
+                        gBrowserBundle.GetStringFromName(key);
+
+  // If this is a parameterized string and the parameter isn't given,
+  // just do a simple comparison of the text before and after the %S
+  if (localizedString.includes("%S")) {
+    let i = localizedString.indexOf("%S");
+    ok(string.startsWith(localizedString.slice(0, i)), msg);
+    ok(string.endsWith(localizedString.slice(i + 2)), msg);
+  } else {
+    is(string, localizedString, msg);
+  }
+}
+
+/**
  * Test that install-time permission prompts work for a given
  * installation method.
  *
@@ -196,7 +227,24 @@ async function testInstallMethod(installFn) {
 
       is(header.getAttribute("hidden"), "", "Permission list header is visible");
       is(ul.childElementCount, 5, "Permissions list has 5 entries");
-      // Real checking of the contents here is deferred until bug 1316996 lands
+
+      checkPermissionString(ul.children[0].textContent,
+                            "webextPerms.hostDescription.wildcard",
+                            "wildcard.domain",
+                            "First permission is domain permission");
+      checkPermissionString(ul.children[1].textContent,
+                            "webextPerms.hostDescription.oneSite",
+                            "singlehost.domain",
+                            "Second permission is single host permission");
+      checkPermissionString(ul.children[2].textContent,
+                            "webextPerms.description.nativeMessaging", null,
+                            "Third permission is nativeMessaging");
+      checkPermissionString(ul.children[3].textContent,
+                            "webextPerms.description.tabs", null,
+                            "Fourth permission is tabs");
+      checkPermissionString(ul.children[4].textContent,
+                            "webextPerms.description.history", null,
+                            "Fifth permission is history");
     } else if (filename == NO_PERMS_XPI) {
       // This extension has no icon, it should have the default
       ok(isDefaultIcon(icon), "Icon is the default extension icon");

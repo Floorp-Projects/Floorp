@@ -13,6 +13,7 @@ import traceback
 import unittest
 
 from argparse import ArgumentParser
+from collections import defaultdict
 from copy import deepcopy
 
 import mozinfo
@@ -844,7 +845,11 @@ class BaseMarionetteTestRunner(object):
             self.cleanup()
             raise AssertionError(message_e10s)
 
-        self.logger.suite_start(self.tests,
+        tests_by_group = defaultdict(list)
+        for test in self.tests:
+            tests_by_group[test['group']].append(test['filepath'])
+
+        self.logger.suite_start(tests_by_group,
                                 version_info=self.version_info,
                                 device_info=device_info)
 
@@ -918,7 +923,7 @@ class BaseMarionetteTestRunner(object):
         else:
             return serve.start(root)
 
-    def add_test(self, test, expected='pass'):
+    def add_test(self, test, expected='pass', group='default'):
         filepath = os.path.abspath(test)
 
         if os.path.isdir(filepath):
@@ -937,6 +942,8 @@ class BaseMarionetteTestRunner(object):
         file_ext = os.path.splitext(os.path.split(filepath)[-1])[1]
 
         if file_ext == '.ini':
+            group = filepath
+
             manifest = TestManifest()
             manifest.read(filepath)
 
@@ -975,12 +982,10 @@ class BaseMarionetteTestRunner(object):
                 if not os.path.exists(i["path"]):
                     raise IOError("test file: {} does not exist".format(i["path"]))
 
-                file_ext = os.path.splitext(os.path.split(i['path'])[-1])[-1]
-
-                self.add_test(i["path"], i["expected"])
+                self.add_test(i["path"], i["expected"], group=group)
             return
 
-        self.tests.append({'filepath': filepath, 'expected': expected})
+        self.tests.append({'filepath': filepath, 'expected': expected, 'group': group})
 
     def run_test(self, filepath, expected):
         testloader = unittest.TestLoader()

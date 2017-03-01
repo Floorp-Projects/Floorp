@@ -378,6 +378,22 @@ impl<T: ?Sized> RwLock<T> {
     pub unsafe fn raw_unlock_write_fair(&self) {
         self.raw.unlock_exclusive(true);
     }
+
+    /// Atomically downgrades a write lock into a read lock without allowing any
+    /// writers to take exclusive access of the lock in the meantime.
+    ///
+    /// See `RwLockWriteGuard::downgrade`.
+    ///
+    /// # Safety
+    ///
+    /// This function must only be called if the rwlock was locked using
+    /// `raw_write` or `raw_try_write`, or if an `RwLockWriteGuard` from this
+    /// rwlock was leaked (e.g. with `mem::forget`). The rwlock must be locked
+    /// with exclusive write access.
+    #[inline]
+    pub unsafe fn raw_downgrade(&self) {
+        self.raw.downgrade();
+    }
 }
 
 impl RwLock<()> {

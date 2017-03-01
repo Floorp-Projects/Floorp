@@ -11,7 +11,8 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   let { getRequestFilterTypes } = monitor.panelWin
     .windowRequire("devtools/client/netmonitor/selectors/index");
-  let Actions = monitor.panelWin.windowRequire("devtools/client/netmonitor/actions/index");
+  let Actions = monitor.panelWin
+    .windowRequire("devtools/client/netmonitor/actions/index");
   info("Starting test... ");
 
   // This test reopens the network monitor a bunch of times, for different
@@ -22,7 +23,8 @@ add_task(function* () {
   // since the tool is reopened a bunch of times during this test
   // and the instances will differ.
   let getDoc = () => monitor.panelWin.document;
-  let getPrefs = () => monitor.panelWin.windowRequire("devtools/client/netmonitor/utils/prefs").Prefs;
+  let getPrefs = () => monitor.panelWin
+    .windowRequire("devtools/client/netmonitor/utils/prefs").Prefs;
   let getStore = () => monitor.panelWin.gStore;
   let getState = () => getStore().getState();
 
@@ -44,15 +46,19 @@ add_task(function* () {
       newValue: ~~(Math.random() * 200 + 100),
       validateValue: () =>
         getDoc().querySelector(".monitor-panel .split-box .controlled").clientWidth,
-      modifyFrontend: (value) =>
-        getDoc().querySelector(".monitor-panel .split-box .controlled").style.width = `${value}px`,
+      modifyFrontend: function (value) {
+        getDoc().querySelector(".monitor-panel .split-box .controlled")
+                .style.width = `${value}px`;
+      }
     },
     networkDetailsHeight: {
       newValue: ~~(Math.random() * 300 + 100),
       validateValue: () =>
         getDoc().querySelector(".monitor-panel .split-box .controlled").clientHeight,
-      modifyFrontend: (value) =>
-        getDoc().querySelector(".monitor-panel .split-box .controlled").style.height = `${value}px`
+      modifyFrontend: function (value) {
+        getDoc().querySelector(".monitor-panel .split-box .controlled")
+                .style.height = `${value}px`;
+      }
     }
     /* add more prefs here... */
   };
@@ -80,7 +86,7 @@ add_task(function* () {
     for (let name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
-        continue
+        continue;
       }
 
       let currentValue = getPrefs()[name];
@@ -100,7 +106,7 @@ add_task(function* () {
     for (let name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
-        continue
+        continue;
       }
 
       let currentValue = getPrefs()[name];
@@ -127,7 +133,7 @@ add_task(function* () {
     for (let name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
-        continue
+        continue;
       }
 
       let currentValue = getPrefs()[name];
@@ -150,7 +156,7 @@ add_task(function* () {
     for (let name in prefsToCheck) {
       if ((isVerticalSplitter && name === "networkDetailsHeight") ||
           (!isVerticalSplitter && name === "networkDetailsWidth")) {
-        continue
+        continue;
       }
 
       let currentValue = getPrefs()[name];

@@ -83,22 +83,28 @@ class MozLog(object):
         if report.skipped:
             status = 'SKIP' if not hasattr(report, 'wasxfail') else 'FAIL'
         if report.longrepr is not None:
-            if isinstance(report.longrepr, basestring):
+            longrepr = report.longrepr
+            if isinstance(longrepr, basestring):
                 # When using pytest-xdist, longrepr is serialised as a str
-                message = stack = report.longrepr
-                if report.longrepr.startswith('[XPASS(strict)]'):
+                message = stack = longrepr
+                if longrepr.startswith('[XPASS(strict)]'):
                     # Strict expected failures have an outcome of failed when
                     # they unexpectedly pass.
                     expected, status = ('FAIL', 'PASS')
+            elif hasattr(longrepr, "reprcrash"):
+                # For failures, longrepr is a ReprExceptionInfo
+                crash = longrepr.reprcrash
+                message = "{0} (line {1})".format(crash.message, crash.lineno)
+                stack = longrepr.reprtraceback
+            elif hasattr(longrepr, "errorstring"):
+                message = longrepr.errorstring
+                stack = longrepr.errorstring
+            elif hasattr(longrepr, "__getitem__") and len(longrepr) == 3:
+                # For skips, longrepr is a tuple of (file, lineno, reason)
+                message = report.longrepr[-1]
             else:
-                try:
-                    # For failures, longrepr is a ReprExceptionInfo
-                    crash = report.longrepr.reprcrash
-                    message = "{0} (line {1})".format(crash.message, crash.lineno)
-                    stack = report.longrepr.reprtraceback
-                except AttributeError:
-                    # For skips, longrepr is a tuple of (file, lineno, reason)
-                    message = report.longrepr[-1]
+                raise ValueError("Unable to convert longrepr to message:\ntype %s\nfields:" %
+                                 (longrepr.__class__, dir(longrepr)))
         if status != expected or expected != 'PASS':
             self.results[test] = (status, expected, message, stack)
         if report.when == 'teardown':

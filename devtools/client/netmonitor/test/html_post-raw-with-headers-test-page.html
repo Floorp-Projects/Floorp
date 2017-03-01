@@ -15,27 +15,30 @@
     <p>POST raw with headers test</p>
 
     <script type="text/javascript">
-      function post(aAddress, aMessage, aCallback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", aAddress, true);
+      /* exported performRequests */
+      "use strict";
 
-        xhr.onreadystatechange = function() {
+      function post(address, message, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", address, true);
+
+        xhr.onreadystatechange = function () {
           if (this.readyState == this.DONE) {
-            aCallback();
+            callback();
           }
         };
-        xhr.send(aMessage);
+        xhr.send(message);
       }
 
       function performRequests() {
-        var rawData = [
+        let rawData = [
           "content-type: application/x-www-form-urlencoded\r",
           "custom-header: hello world!\r",
           "\r",
           "\r",
           "foo=bar&baz=123"
         ];
-        post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {
+        post("sjs_simple-test-server.sjs", rawData.join("\n"), function () {
           // Done.
         });
       }

@@ -19,67 +19,75 @@ extern crate kernel32;
 #[cfg(target_os = "windows")]
 extern crate winapi;
 
-#[cfg(target_os = "windows")]
-use kernel32::{GetConsoleScreenBufferInfo, GetStdHandle};
-#[cfg(target_os = "windows")]
-use winapi::{CONSOLE_SCREEN_BUFFER_INFO, COORD, SMALL_RECT, STD_OUTPUT_HANDLE};
+pub use platform::dimensions;
 
-#[cfg(not(target_os = "windows"))]
-use std::mem::zeroed;
-#[cfg(not(target_os = "windows"))]
-use libc::{STDOUT_FILENO, c_int, c_ulong, winsize};
-
-// Unfortunately the actual command is not standardised...
-#[cfg(any(target_os = "linux", target_os = "android"))]
-static TIOCGWINSZ: c_ulong = 0x5413;
-
-#[cfg(any(target_os = "macos",
+#[cfg(any(target_os = "linux",
+          target_os = "android",
+          target_os = "macos",
           target_os = "ios",
           target_os = "bitrig",
           target_os = "dragonfly",
           target_os = "freebsd",
           target_os = "netbsd",
-          target_os = "openbsd"))]
-static TIOCGWINSZ: c_ulong = 0x40087468;
+          target_os = "openbsd",
+          target_os = "solaris"))]
+mod platform {
+    use std::mem::zeroed;
+    use libc::{STDOUT_FILENO, c_int, c_ulong, winsize};
 
-#[cfg(target_os = "solaris")]
-static TIOCGWINSZ: c_ulong = 0x5468;
+    // Unfortunately the actual command is not standardised...
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    static TIOCGWINSZ: c_ulong = 0x5413;
 
-extern "C" {
-#[cfg(not(target_os = "windows"))]
-    fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
-}
+    #[cfg(any(target_os = "macos",
+              target_os = "ios",
+              target_os = "bitrig",
+              target_os = "dragonfly",
+              target_os = "freebsd",
+              target_os = "netbsd",
+              target_os = "openbsd"))]
+    static TIOCGWINSZ: c_ulong = 0x40087468;
 
-/// Runs the ioctl command. Returns (0, 0) if output is not to a terminal, or
-/// there is an error. (0, 0) is an invalid size to have anyway, which is why
-/// it can be used as a nil value.
-#[cfg(not(target_os = "windows"))]
-unsafe fn get_dimensions() -> winsize {
-    let mut window: winsize = zeroed();
-    let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut window);
+    #[cfg(target_os = "solaris")]
+    static TIOCGWINSZ: c_ulong = 0x5468;
 
-    if result == -1 {
-        zeroed()
-    } else {
-        window
+    extern "C" {
+        fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
     }
-}
 
-/// Query the current processes's output, returning its width and height as a
-/// number of characters. Returns `None` if the output isn't to a terminal.
-#[cfg(not(target_os = "windows"))]
-pub fn dimensions() -> Option<(usize, usize)> {
-    let w = unsafe { get_dimensions() };
+    /// Runs the ioctl command. Returns (0, 0) if output is not to a terminal, or
+    /// there is an error. (0, 0) is an invalid size to have anyway, which is why
+    /// it can be used as a nil value.
+    unsafe fn get_dimensions() -> winsize {
+        let mut window: winsize = zeroed();
+        let result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut window);
 
-    if w.ws_col == 0 || w.ws_row == 0 {
-        None
-    } else {
-        Some((w.ws_col as usize, w.ws_row as usize))
+        if result == -1 {
+            zeroed()
+        } else {
+            window
+        }
+    }
+
+    /// Query the current processes's output, returning its width and height as a
+    /// number of characters. Returns `None` if the output isn't to a terminal.
+    pub fn dimensions() -> Option<(usize, usize)> {
+        let w = unsafe { get_dimensions() };
+
+        if w.ws_col == 0 || w.ws_row == 0 {
+            None
+        } else {
+            Some((w.ws_col as usize, w.ws_row as usize))
+        }
     }
 }
 
 #[cfg(target_os = "windows")]
-pub fn dimensions() -> Option<(usize, usize)> {
+mod platform {
+    use kernel32::{GetConsoleScreenBufferInfo, GetStdHandle};
+    use winapi::{CONSOLE_SCREEN_BUFFER_INFO, COORD, SMALL_RECT, STD_OUTPUT_HANDLE};
+
+    pub fn dimensions() -> Option<(usize, usize)> {
         let null_coord = COORD{
             X: 0,
             Y: 0,
@@ -105,4 +113,23 @@ pub fn dimensions() -> Option<(usize, usize)> {
         } else {
             None
         }
+    }
+}
+
+// makes project compilable on unsupported platforms
+#[cfg(not(any(target_os = "linux",
+              target_os = "android",
+              target_os = "macos",
+              target_os = "ios",
+              target_os = "bitrig",
+              target_os = "dragonfly",
+              target_os = "freebsd",
+              target_os = "netbsd",
+              target_os = "openbsd",
+              target_os = "solaris",
+              target_os = "windows")))]
+mod platform {
+    pub fn dimensions() -> Option<(usize, usize)> {
+        None
+    }
 }

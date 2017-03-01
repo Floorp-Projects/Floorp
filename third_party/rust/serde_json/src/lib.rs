@@ -283,9 +283,9 @@ mod macros;
 
 pub mod de;
 pub mod error;
+pub mod map;
 pub mod ser;
 pub mod value;
 
-mod map;
 mod number;
 mod read;

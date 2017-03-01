@@ -2559,9 +2559,9 @@ CERT_AddCertToListHeadWithData(CERTCertList *certs, CERTCertificate *cert,
     CERTCertListNode *head;
 
     head = CERT_LIST_HEAD(certs);
-
-    if (head == NULL)
-        return CERT_AddCertToListTail(certs, cert);
+    if (head == NULL) {
+        goto loser;
+    }
 
     node = (CERTCertListNode *)PORT_ArenaZAlloc(certs->arena,
                                                 sizeof(CERTCertListNode));

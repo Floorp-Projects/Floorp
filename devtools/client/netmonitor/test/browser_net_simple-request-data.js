@@ -223,12 +223,15 @@ function test() {
 
       ok(requestItem.responseContent,
         "There should be a responseContent data available.");
+      // eslint-disable-next-line mozilla/no-cpows-in-tests
       is(requestItem.responseContent.content.mimeType,
         "text/plain; charset=utf-8",
         "The responseContent data has an incorrect |content.mimeType| property.");
+      // eslint-disable-next-line mozilla/no-cpows-in-tests
       is(requestItem.responseContent.content.text,
         "Hello world!",
         "The responseContent data has an incorrect |content.text| property.");
+      // eslint-disable-next-line mozilla/no-cpows-in-tests
       is(requestItem.responseContent.content.size,
         12,
         "The responseContent data has an incorrect |content.size| property.");

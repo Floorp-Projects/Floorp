@@ -44,8 +44,9 @@ add_task(function* () {
       fullMimeType: "text/plain; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
       time: true
-    });
-   verifyRequestItemTarget(
+    }
+  );
+  verifyRequestItemTarget(
     document,
     getDisplayedRequests(gStore.getState()),
     getSortedRequests(gStore.getState()).get(1),
@@ -58,7 +59,8 @@ add_task(function* () {
       fullMimeType: "text/plain; charset=utf-8",
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 12),
       time: true
-    });
+    }
+  );
 
   // Wait for all tree sections updated by react
   wait = waitForDOM(document, "#params-panel .tree-section", 2);
@@ -107,15 +109,18 @@ add_task(function* () {
       L10N.getStr(type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"),
       "The post section doesn't have the correct title.");
 
-    let labels = tabpanel.querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
-    let values = tabpanel.querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+    let labels = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+    let values = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
     is(labels[0].textContent, "foo", "The first query param name was incorrect.");
     is(values[0].textContent, "\"bar\"", "The first query param value was incorrect.");
     is(labels[1].textContent, "baz", "The second query param name was incorrect.");
     is(values[1].textContent, "\"42\"", "The second query param value was incorrect.");
     is(labels[2].textContent, "type", "The third query param name was incorrect.");
-    is(values[2].textContent, "\"" + type + "\"", "The third query param value was incorrect.");
+    is(values[2].textContent, "\"" + type + "\"",
+      "The third query param value was incorrect.");
 
     if (type == "urlencoded") {
       checkVisibility("params");
@@ -129,7 +134,8 @@ add_task(function* () {
 
       is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
 
-      let text = editorFrames[0].contentDocument.querySelector(".CodeMirror-code").textContent;
+      let text = editorFrames[0].contentDocument.querySelector(".CodeMirror-code")
+                                                .textContent;
 
       ok(text.includes("Content-Disposition: form-data; name=\"text\""),
         "The text shown in the source editor is incorrect (1.1).");

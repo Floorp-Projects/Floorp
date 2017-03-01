@@ -962,6 +962,9 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
     if (!js::AddPluralRulesConstructor(cx, intl))
         return false;
 
+    if (!js::AddMozDateTimeFormatConstructor(cx, intl))
+        return false;
+
     args.rval().setUndefined();
     return true;
 }

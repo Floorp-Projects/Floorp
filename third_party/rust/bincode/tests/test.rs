@@ -3,6 +3,7 @@ extern crate serde_derive;
 
 extern crate bincode;
 extern crate serde;
+extern crate byteorder;
 
 use std::fmt::Debug;
 use std::collections::HashMap;
@@ -10,29 +11,13 @@ use std::ops::Deref;
 
 use bincode::refbox::{RefBox, StrBox, SliceBox};
 
-use bincode::SizeLimit::{self, Infinite, Bounded};
-use bincode::{serialize, serialized_size, deserialize, deserialize_from, ErrorKind, Result};
+use bincode::SizeLimit::{Infinite, Bounded};
+use bincode::{serialized_size, ErrorKind, Result};
+use bincode::endian_choice::{serialize, deserialize};
 
-fn proxy_encode<V>(element: &V, size_limit: SizeLimit) -> Vec<u8>
-    where V: serde::Serialize + serde::Deserialize + PartialEq + Debug + 'static
-{
-    let v2 = serialize(element, size_limit).unwrap();
-    v2
-}
-
-fn proxy_decode<V>(slice: &[u8]) -> V
-    where V: serde::Serialize + serde::Deserialize + PartialEq + Debug + 'static
-{
-    let e2 = deserialize(slice).unwrap();
-    e2
-}
-
-fn proxy_encoded_size<V>(element: &V) -> u64
-    where V: serde::Serialize + PartialEq + Debug + 'static
-{
-    let serde_size = serialized_size(element);
-    serde_size
-}
+use bincode::serialize as serialize_little;
+use bincode::deserialize as deserialize_little;
+use bincode::deserialize_from as deserialize_from_little;
 
 fn the_same<V>(element: V)
     where V: serde::Serialize+serde::Deserialize+PartialEq+Debug+'static
@@ -42,20 +27,35 @@ fn the_same<V>(element: V)
         where V: serde::Serialize + serde::Deserialize + PartialEq + Debug + 'static
     {
         let rf = RefBox::new(v);
-        let encoded = serialize(&rf, Infinite).unwrap();
-        let decoded: RefBox<'static, V> = deserialize(&encoded[..]).unwrap();
+        let encoded = serialize_little(&rf, Infinite).unwrap();
+        let decoded: RefBox<'static, V> = deserialize_little(&encoded[..]).unwrap();
 
         decoded.take().deref() == v
     }
 
-    let size = proxy_encoded_size(&element);
+    let size = serialized_size(&element);
 
-    let encoded = proxy_encode(&element, Infinite);
-    let decoded = proxy_decode(&encoded[..]);
+    {
+        let encoded = serialize_little(&element, Infinite);
+        let encoded = encoded.unwrap();
+        let decoded = deserialize_little(&encoded[..]);
+        let decoded = decoded.unwrap();
 
-    assert_eq!(element, decoded);
-    assert_eq!(size, encoded.len() as u64);
-    assert!(ref_box_correct(&element));
+        assert_eq!(element, decoded);
+        assert_eq!(size, encoded.len() as u64);
+        assert!(ref_box_correct(&element));
+    }
+
+    {
+        let encoded = serialize::<_, byteorder::BigEndian>(&element, Infinite);
+        let encoded = encoded.unwrap();
+        let decoded = deserialize::<_, byteorder::BigEndian>(&encoded[..]);
+        let decoded = decoded.unwrap();
+
+        assert_eq!(element, decoded);
+        assert_eq!(size, encoded.len() as u64);
+        assert!(ref_box_correct(&element));
+    }
 }
 
 #[test]
@@ -220,26 +220,26 @@ fn deserializing_errors() {
         }
     }
 
-    isize_invalid_deserialize(deserialize::<bool>(&vec![0xA][..]));
-    isize_invalid_deserialize(deserialize::<String>(&vec![0, 0, 0, 0, 0, 0, 0, 1, 0xFF][..]));
+    isize_invalid_deserialize(deserialize_little::<bool>(&vec![0xA][..]));
+    isize_invalid_deserialize(deserialize_little::<String>(&vec![1, 0, 0, 0, 0, 0, 0, 0, 0xFF][..]));
     // Out-of-bounds variant
     #[derive(Serialize, Deserialize, Debug)]
     enum Test {
         One,
         Two,
     };
-    isize_invalid_deserialize(deserialize::<Test>(&vec![0, 0, 0, 5][..]));
-    isize_invalid_deserialize(deserialize::<Option<u8>>(&vec![5, 0][..]));
+    isize_invalid_deserialize(deserialize_little::<Test>(&vec![0, 0, 0, 5][..]));
+    isize_invalid_deserialize(deserialize_little::<Option<u8>>(&vec![5, 0][..]));
 }
 
 #[test]
 fn too_big_deserialize() {
     let serialized = vec![0,0,0,3];
-    let deserialized: Result<u32> = deserialize_from(&mut &serialized[..], Bounded(3));
+    let deserialized: Result<u32> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(3));
     assert!(deserialized.is_err());
 
     let serialized = vec![0,0,0,3];
-    let deserialized: Result<u32> = deserialize_from(&mut &serialized[..], Bounded(4));
+    let deserialized: Result<u32> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(4));
     assert!(deserialized.is_ok());
 }
 
@@ -247,8 +247,8 @@ fn too_big_deserialize() {
 fn char_serialization() {
     let chars = "Aa\0☺♪";
     for c in chars.chars() {
-        let encoded = serialize(&c, Bounded(4)).expect("serializing char failed");
-        let decoded: char = deserialize(&encoded).expect("deserializing failed");
+        let encoded = serialize_little(&c, Bounded(4)).expect("serializing char failed");
+        let decoded: char = deserialize_little(&encoded).expect("deserializing failed");
         assert_eq!(decoded, c);
     }
 }
@@ -256,47 +256,47 @@ fn char_serialization() {
 #[test]
 fn too_big_char_deserialize() {
     let serialized = vec![0x41];
-    let deserialized: Result<char> = deserialize_from(&mut &serialized[..], Bounded(1));
+    let deserialized: Result<char> = deserialize_from_little::<_, _>(&mut &serialized[..], Bounded(1));
     assert!(deserialized.is_ok());
     assert_eq!(deserialized.unwrap(), 'A');
 }
 
 #[test]
 fn too_big_serialize() {
-    assert!(serialize(&0u32, Bounded(3)).is_err());
-    assert!(serialize(&0u32, Bounded(4)).is_ok());
+    assert!(serialize_little(&0u32, Bounded(3)).is_err());
+    assert!(serialize_little(&0u32, Bounded(4)).is_ok());
 
-    assert!(serialize(&"abcde", Bounded(8 + 4)).is_err());
-    assert!(serialize(&"abcde", Bounded(8 + 5)).is_ok());
+    assert!(serialize_little(&"abcde", Bounded(8 + 4)).is_err());
+    assert!(serialize_little(&"abcde", Bounded(8 + 5)).is_ok());
 }
 
 #[test]
 fn test_proxy_encoded_size() {
-    assert!(proxy_encoded_size(&0u8) == 1);
-    assert!(proxy_encoded_size(&0u16) == 2);
-    assert!(proxy_encoded_size(&0u32) == 4);
-    assert!(proxy_encoded_size(&0u64) == 8);
+    assert!(serialized_size(&0u8) == 1);
+    assert!(serialized_size(&0u16) == 2);
+    assert!(serialized_size(&0u32) == 4);
+    assert!(serialized_size(&0u64) == 8);
 
     // length isize stored as u64
-    assert!(proxy_encoded_size(&"") == 8);
-    assert!(proxy_encoded_size(&"a") == 8 + 1);
+    assert!(serialized_size(&"") == 8);
+    assert!(serialized_size(&"a") == 8 + 1);
 
-    assert!(proxy_encoded_size(&vec![0u32, 1u32, 2u32]) == 8 + 3 * (4))
+    assert!(serialized_size(&vec![0u32, 1u32, 2u32]) == 8 + 3 * (4))
 
 }
 
 #[test]
 fn test_serialized_size() {
-    assert!(proxy_encoded_size(&0u8) == 1);
-    assert!(proxy_encoded_size(&0u16) == 2);
-    assert!(proxy_encoded_size(&0u32) == 4);
-    assert!(proxy_encoded_size(&0u64) == 8);
+    assert!(serialized_size(&0u8) == 1);
+    assert!(serialized_size(&0u16) == 2);
+    assert!(serialized_size(&0u32) == 4);
+    assert!(serialized_size(&0u64) == 8);
 
     // length isize stored as u64
-    assert!(proxy_encoded_size(&"") == 8);
-    assert!(proxy_encoded_size(&"a") == 8 + 1);
+    assert!(serialized_size(&"") == 8);
+    assert!(serialized_size(&"a") == 8 + 1);
 
-    assert!(proxy_encoded_size(&vec![0u32, 1u32, 2u32]) == 8 + 3 * (4))
+    assert!(serialized_size(&vec![0u32, 1u32, 2u32]) == 8 + 3 * (4))
 }
 
 #[test]
@@ -319,8 +319,8 @@ fn test_refbox_serialize() {
 
     // Test 1
     {
-        let serialized = serialize(&Message::M1(RefBox::new(&large_object)), Infinite).unwrap();
-        let deserialized: Message<'static> = deserialize_from(&mut &serialized[..], Infinite).unwrap();
+        let serialized = serialize_little(&Message::M1(RefBox::new(&large_object)), Infinite).unwrap();
+        let deserialized: Message<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
 
         match deserialized {
             Message::M1(b) => assert!(b.take().deref() == &large_object),
@@ -330,8 +330,8 @@ fn test_refbox_serialize() {
 
     // Test 2
     {
-        let serialized = serialize(&Message::M2(RefBox::new(&large_map)), Infinite).unwrap();
-        let deserialized: Message<'static> = deserialize_from(&mut &serialized[..], Infinite).unwrap();
+        let serialized = serialize_little(&Message::M2(RefBox::new(&large_map)), Infinite).unwrap();
+        let deserialized: Message<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
 
         match deserialized {
             Message::M2(b) => assert!(b.take().deref() == &large_map),
@@ -343,8 +343,8 @@ fn test_refbox_serialize() {
 #[test]
 fn test_strbox_serialize() {
     let strx: &'static str = "hello world";
-    let serialized = serialize(&StrBox::new(strx), Infinite).unwrap();
-    let deserialized: StrBox<'static> = deserialize_from(&mut &serialized[..], Infinite).unwrap();
+    let serialized = serialize_little(&StrBox::new(strx), Infinite).unwrap();
+    let deserialized: StrBox<'static> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
     let stringx: String = deserialized.take();
     assert!(strx == &stringx[..]);
 }
@@ -352,8 +352,8 @@ fn test_strbox_serialize() {
 #[test]
 fn test_slicebox_serialize() {
     let slice = [1u32, 2, 3 ,4, 5];
-    let serialized = serialize(&SliceBox::new(&slice), Infinite).unwrap();
-    let deserialized: SliceBox<'static, u32> = deserialize_from(&mut &serialized[..], Infinite).unwrap();
+    let serialized = serialize_little(&SliceBox::new(&slice), Infinite).unwrap();
+    let deserialized: SliceBox<'static, u32> = deserialize_from_little(&mut &serialized[..], Infinite).unwrap();
     {
         let sb: &[u32] = &deserialized;
         assert!(slice == sb);
@@ -364,7 +364,7 @@ fn test_slicebox_serialize() {
 
 #[test]
 fn test_multi_strings_serialize() {
-    assert!(serialize(&("foo", "bar", "baz"), Infinite).is_ok());
+    assert!(serialize_little(&("foo", "bar", "baz"), Infinite).is_ok());
 }
 
 /*
@@ -384,8 +384,8 @@ fn test_oom_protection() {
 fn path_buf() {
     use std::path::{Path, PathBuf};
     let path = Path::new("foo").to_path_buf();
-    let serde_encoded = serialize(&path, Infinite).unwrap();
-    let decoded: PathBuf = deserialize(&serde_encoded).unwrap();
+    let serde_encoded = serialize_little(&path, Infinite).unwrap();
+    let decoded: PathBuf = deserialize_little(&serde_encoded).unwrap();
     assert!(path.to_str() == decoded.to_str());
 }
 
@@ -394,8 +394,16 @@ fn bytes() {
     use serde::bytes::Bytes;
 
     let data = b"abc\0123";
-    let s = serialize(&data, Infinite).unwrap();
-    let s2 = serialize(&Bytes::new(data), Infinite).unwrap();
+    let s = serialize_little(&data, Infinite).unwrap();
+    let s2 = serialize_little(&Bytes::new(data), Infinite).unwrap();
     assert_eq!(s[..], s2[8..]);
 }
 
+
+#[test]
+fn endian_difference() {
+    let x = 10u64;
+    let little = serialize_little(&x, Infinite).unwrap();
+    let big = serialize::<_, byteorder::BigEndian>(&x, Infinite).unwrap();
+    assert_ne!(little, big);
+}

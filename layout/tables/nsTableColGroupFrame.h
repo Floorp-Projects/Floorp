@@ -16,15 +16,11 @@ class nsTableColFrame;
 /**
  * nsTableColGroupFrame
  * data structure to maintain information about a single table cell's frame
- *
- * @author  sclark
  */
 class nsTableColGroupFrame final : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
-
-  // default constructor supplied by the compiler
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -33,6 +29,17 @@ public:
     */
   friend nsTableColGroupFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell,
                                                         nsStyleContext* aContext);
+
+  // nsIFrame overrides
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) override
+  {
+    nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+    if (!aPrevInFlow) {
+      mWritingMode = GetTableFrame()->GetWritingMode();
+    }
+  }
 
   nsTableFrame* GetTableFrame() const
   {
@@ -115,9 +122,6 @@ public:
    * @see nsGkAtoms::tableColGroupFrame
    */
   virtual nsIAtom* GetType() const override;
-
-  virtual mozilla::WritingMode GetWritingMode() const override
-    { return GetTableFrame()->GetWritingMode(); }
 
   /** Add column frames to the table storages: colframe cache and cellmap
     * this doesn't change the mFrames of the colgroup frame.

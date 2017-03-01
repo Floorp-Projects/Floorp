@@ -139,7 +139,7 @@ public:
   /**
    * Get the anonymous root node for the text control.
    */
-  NS_IMETHOD_(nsIContent*) GetRootEditorNode() = 0;
+  NS_IMETHOD_(mozilla::dom::Element*) GetRootEditorNode() = 0;
 
   /**
    * Create the placeholder anonymous node for the text control and returns it.
@@ -196,6 +196,12 @@ public:
 
   static already_AddRefed<nsITextControlElement>
   GetTextControlElementFromEditingHost(nsIContent* aHost);
+
+  /**
+   * Get the selection range start and end points.
+   */
+  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
+                               int32_t* aSelectionEnd) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

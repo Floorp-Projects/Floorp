@@ -98,6 +98,13 @@
         ]
       }
     },
+    "be": {
+      "default": {
+        "visibleDefaultEngines": [
+          "yandex-by", "google", "ddg", "wikipedia-be", "wikipedia-be-tarask"
+        ]
+      }
+    },
     "bg": {
       "default": {
         "visibleDefaultEngines": [
