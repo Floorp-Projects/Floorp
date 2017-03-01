@@ -951,7 +951,7 @@ Object.defineProperty(this, "isAddonPartOfE10SRollout", {
       return true;
     }
 
-    if (policy.webextensions && aAddon.type == "webextension") {
+    if (policy.webextensions && (aAddon.type == "webextension" || aAddon.type == "webextension-theme")) {
       return true;
     }
 
