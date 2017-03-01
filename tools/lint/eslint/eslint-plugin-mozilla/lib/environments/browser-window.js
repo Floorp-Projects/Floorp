@@ -13,42 +13,21 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
+var fs = require("fs");
 var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
 
-const SCRIPTS = [
+const rootDir = helpers.getRootDir(module.filename);
+
+// These are scripts not included in global-scripts.inc, but which are loaded
+// via overlays.
+const EXTRA_SCRIPTS = [
   //"browser/base/content/nsContextMenu.js",
   "toolkit/content/contentAreaUtils.js",
   "browser/components/places/content/editBookmarkOverlay.js",
-  "toolkit/components/printing/content/printUtils.js",
-  "toolkit/content/viewZoomOverlay.js",
-  "browser/components/places/content/browserPlacesViews.js",
-  "browser/base/content/browser.js",
   "browser/components/downloads/content/downloads.js",
   "browser/components/downloads/content/indicator.js",
-  "browser/components/customizableui/content/panelUI.js",
-  "toolkit/components/viewsource/content/viewSourceUtils.js",
-  "browser/base/content/browser-addons.js",
-  "browser/base/content/browser-ctrlTab.js",
-  "browser/base/content/browser-customization.js",
-  "browser/base/content/browser-feeds.js",
-  "browser/base/content/browser-fullScreenAndPointerLock.js",
-  "browser/base/content/browser-fullZoom.js",
-  "browser/base/content/browser-gestureSupport.js",
-  "browser/base/content/browser-media.js",
-  "browser/base/content/browser-places.js",
-  "browser/base/content/browser-plugins.js",
-  "browser/base/content/browser-refreshblocker.js",
-  "browser/base/content/browser-safebrowsing.js",
-  "browser/base/content/browser-sidebar.js",
-  "browser/base/content/browser-social.js",
-  "browser/base/content/browser-syncui.js",
-  "browser/base/content/browser-tabsintitlebar.js",
-  "browser/base/content/browser-thumbnails.js",
-  "browser/base/content/browser-trackingprotection.js",
-  "browser/base/content/browser-data-submission-info-bar.js",
-  "browser/base/content/browser-fxaccounts.js",
   // This gets loaded into the same scopes as browser.js via browser.xul and
   // placesOverlay.xul.
   "toolkit/content/globalOverlay.js",
@@ -56,14 +35,54 @@ const SCRIPTS = [
   "toolkit/content/editMenuOverlay.js"
 ];
 
+// Some files in global-scripts.inc need mapping to specific locations.
+const MAPPINGS = {
+  "printUtils.js": "toolkit/components/printing/content/printUtils.js",
+  "browserPlacesViews.js": "browser/components/places/content/browserPlacesViews.js",
+  "panelUI.js": "browser/components/customizableui/content/panelUI.js",
+  "viewSourceUtils.js": "toolkit/components/viewsource/content/viewSourceUtils.js",
+};
+
+const globalScriptsRegExp = /<script type=\"application\/javascript\" src=\"(.*)\"\/>/;
+
+function getGlobalScriptsIncludes() {
+  let globalScriptsPath = path.join(rootDir, "browser", "base", "content",
+                                    "global-scripts.inc");
+  let fileData = fs.readFileSync(globalScriptsPath, {encoding: "utf8"});
+
+  fileData = fileData.split("\n");
+
+  let result = [];
+
+  for (let line of fileData) {
+    let match = line.match(globalScriptsRegExp);
+    if (match) {
+      let sourceFile = match[1].replace("chrome://browser/content/", "browser/base/content/")
+                               .replace("chrome://global/content/", "toolkit/content/");
+
+      for (let mapping of Object.getOwnPropertyNames(MAPPINGS)) {
+        if (sourceFile.includes(mapping)) {
+          sourceFile = MAPPINGS[mapping];
+        }
+      }
+
+      result.push(sourceFile);
+    }
+  }
+
+  return result;
+}
+
 function getScriptGlobals() {
   let fileGlobals = [];
-  let root = helpers.getRootDir(module.filename);
-  for (let script of SCRIPTS) {
-    let fileName = path.join(root, script);
+  var scripts = EXTRA_SCRIPTS.concat(getGlobalScriptsIncludes());
+  for (let script of scripts) {
+    let fileName = path.join(rootDir, script);
     try {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
+      console.error(`Could not load globals from file ${fileName}: ${e}`);
+      console.error(`You may need to update the mappings in ${module.filename}`);
       throw new Error(`Could not load globals from file ${fileName}: ${e}`)
     }
   }
