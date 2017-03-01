@@ -14,7 +14,7 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "FennecJNIWrappers.h"
+#include "GeneratedJNIWrappers.h"
 
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 

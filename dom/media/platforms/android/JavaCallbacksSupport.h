@@ -5,7 +5,7 @@
 #ifndef JavaCallbacksSupport_h_
 #define JavaCallbacksSupport_h_
 
-#include "FennecJNINatives.h"
+#include "GeneratedJNINatives.h"
 #include "MediaResult.h"
 #include "MediaCodec.h"
 
