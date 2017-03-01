@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.StyleRes;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
@@ -101,16 +102,16 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     private void setThemeFromToolbarColor() {
-        if (toolbarColor == NO_COLOR) {
-            return;
+        // default theme, regardless AndroidManifest.
+        @StyleRes int styleRes = R.style.GeckoCustomTabs;
+
+        if (toolbarColor != NO_COLOR) {
+            styleRes = (ColorUtil.getReadableTextColor(toolbarColor) == Color.BLACK)
+                    ? R.style.GeckoCustomTabs_Light
+                    : R.style.GeckoCustomTabs;
         }
 
-        if (ColorUtil.getReadableTextColor(toolbarColor) == Color.BLACK) {
-            setTheme(R.style.Theme_AppCompat_Light_NoActionBar);
-        } else {
-            setTheme(R.style.Theme_AppCompat_NoActionBar);
-        }
-
+        setTheme(styleRes);
     }
 
     // Bug 1329145: 3rd party app could specify customized exit-animation to this activity.
