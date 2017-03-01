@@ -3829,7 +3829,7 @@ public:
  * @note The usage of this class should be kept to a minimum.
  */
 class WeakFrame;
-class AutoWeakFrame
+class MOZ_NONHEAP_CLASS AutoWeakFrame
 {
 public:
   explicit AutoWeakFrame()
@@ -3905,7 +3905,7 @@ private:
 /**
  * @see AutoWeakFrame
  */
-class WeakFrame
+class MOZ_HEAP_CLASS WeakFrame
 {
 public:
   WeakFrame() : mFrame(nullptr) {}
