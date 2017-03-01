@@ -661,6 +661,11 @@ public class Tab {
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
 
+    void handleButtonStateChange(boolean canGoBack, boolean canGoForward) {
+        mCanDoBack = canGoBack;
+        mCanDoForward = canGoForward;
+    }
+
     private static boolean shouldShowProgress(final String url) {
         return !AboutPages.isAboutPage(url);
     }
