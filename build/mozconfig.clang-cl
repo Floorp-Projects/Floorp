@@ -1,7 +1,9 @@
-CLANG_DIR=`cd "$topsrcdir/clang/bin" ; pwd`
-export PATH="${CLANG_DIR}:${PATH}"
+if test -d "$topsrcdir/clang/bin"; then
+    CLANG_DIR=`cd "$topsrcdir/clang/bin" ; pwd`
+    export PATH="${CLANG_DIR}:${PATH}"
 
-mk_export_correct_style PATH
+    mk_export_correct_style PATH
+fi
 
 export CC=clang-cl
 export CXX=clang-cl
