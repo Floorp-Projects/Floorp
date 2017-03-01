@@ -11,11 +11,11 @@
 #include "mozilla/TimeStamp.h"
 
 #include "jscntxt.h"
+#include "jsexn.h"
 
 #include "gc/Heap.h"
 #include "js/Debug.h"
 #include "vm/AsyncFunction.h"
-#include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
 
@@ -770,9 +770,7 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
             // interpreter frame active right now. If a thenable job with a
             // throwing `then` function got us here, that'll not be the case,
             // so we add one by throwing the error from self-hosted code.
-            FixedInvokeArgs<1> getErrorArgs(cx);
-            getErrorArgs[0].set(Int32Value(JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON));
-            if (!CallSelfHostedFunction(cx, "GetInternalError", reason, getErrorArgs, &reason))
+            if (!GetInternalError(cx, JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON, &reason))
                 return false;
         }
     }
