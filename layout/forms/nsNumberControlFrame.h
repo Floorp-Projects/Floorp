@@ -192,7 +192,7 @@ private:
     }
 
   private:
-    nsWeakFrame mFrame;
+    AutoWeakFrame mFrame;
   };
 
   /**

@@ -3816,11 +3816,11 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * nsWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
- * Whenever an nsIFrame object is deleted, the nsWeakFrames pointing
+ * AutoWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
+ * Whenever an nsIFrame object is deleted, the AutoWeakFrames pointing
  * to it will be cleared.
  *
- * Create nsWeakFrame object when it is sure that nsIFrame object
+ * Create AutoWeakFrame object when it is sure that nsIFrame object
  * is alive and after some operations which may destroy the nsIFrame
  * (for example any DOM modifications) use IsAlive() or GetFrame() methods to
  * check whether it is safe to continue to use the nsIFrame object.
@@ -3828,26 +3828,26 @@ public:
  * @note The usage of this class should be kept to a minimum.
  */
 
-class nsWeakFrame {
+class AutoWeakFrame {
 public:
-  nsWeakFrame() : mPrev(nullptr), mFrame(nullptr) { }
+  AutoWeakFrame() : mPrev(nullptr), mFrame(nullptr) { }
 
-  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nullptr), mFrame(nullptr)
+  AutoWeakFrame(const AutoWeakFrame& aOther) : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aOther.GetFrame());
   }
 
-  MOZ_IMPLICIT nsWeakFrame(nsIFrame* aFrame) : mPrev(nullptr), mFrame(nullptr)
+  MOZ_IMPLICIT AutoWeakFrame(nsIFrame* aFrame) : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aFrame);
   }
 
-  nsWeakFrame& operator=(nsWeakFrame& aOther) {
+  AutoWeakFrame& operator=(AutoWeakFrame& aOther) {
     Init(aOther.GetFrame());
     return *this;
   }
 
-  nsWeakFrame& operator=(nsIFrame* aFrame) {
+  AutoWeakFrame& operator=(nsIFrame* aFrame) {
     Init(aFrame);
     return *this;
   }
@@ -3874,18 +3874,18 @@ public:
 
   nsIFrame* GetFrame() const { return mFrame; }
 
-  nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
+  AutoWeakFrame* GetPreviousWeakFrame() { return mPrev; }
 
-  void SetPreviousWeakFrame(nsWeakFrame* aPrev) { mPrev = aPrev; }
+  void SetPreviousWeakFrame(AutoWeakFrame* aPrev) { mPrev = aPrev; }
 
-  ~nsWeakFrame()
+  ~AutoWeakFrame()
   {
     Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   }
 private:
   void Init(nsIFrame* aFrame);
 
-  nsWeakFrame*  mPrev;
+  AutoWeakFrame*  mPrev;
   nsIFrame*     mFrame;
 };
 

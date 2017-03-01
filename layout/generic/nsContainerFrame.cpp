@@ -686,7 +686,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   }
 
   RefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
-  nsWeakFrame weak(rootFrame);
+  AutoWeakFrame weak(rootFrame);
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame, rootFrame);
   int32_t shadow = rootFrame->StyleUIReset()->mWindowShadow;

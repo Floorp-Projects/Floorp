@@ -281,7 +281,7 @@ public:
     }
 
     if (mOldMenu) {
-      nsWeakFrame weakMenuBar(menubar);
+      AutoWeakFrame weakMenuBar(menubar);
       pm->HidePopup(mOldMenu, false, false, false, false);
       // clear the flag again
       if (mNewMenu && weakMenuBar.IsAlive())

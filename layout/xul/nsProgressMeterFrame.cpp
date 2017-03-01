@@ -31,7 +31,7 @@ public:
 
   NS_DECL_NSIRUNNABLE
 
-  nsWeakFrame mWeakFrame;
+  AutoWeakFrame mWeakFrame;
   nsIPresShell::IntrinsicDirty mIntrinsicDirty;
   nsFrameState mBitToAdd;
 };
@@ -100,7 +100,7 @@ public:
     delete this;
   }
 
-  nsWeakFrame mWeakFrame;
+  AutoWeakFrame mWeakFrame;
 };
 
 NS_IMETHODIMP

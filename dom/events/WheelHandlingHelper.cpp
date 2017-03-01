@@ -83,7 +83,7 @@ WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
 /* mozilla::WheelTransaction                                      */
 /******************************************************************/
 
-nsWeakFrame WheelTransaction::sTargetFrame(nullptr);
+AutoWeakFrame WheelTransaction::sTargetFrame(nullptr);
 uint32_t WheelTransaction::sTime = 0;
 uint32_t WheelTransaction::sMouseMoved = 0;
 nsITimer* WheelTransaction::sTimer = nullptr;
@@ -179,7 +179,7 @@ WheelTransaction::EndTransaction()
 
 /* static */ bool
 WheelTransaction::WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
-                                          nsWeakFrame& aTargetWeakFrame)
+                                          AutoWeakFrame& aTargetWeakFrame)
 {
   nsIFrame* lastTargetFrame = GetTargetFrame();
   if (!lastTargetFrame) {
@@ -427,8 +427,8 @@ const DeltaValues ScrollbarsForWheel::directions[kNumberOfTargets] = {
   DeltaValues(-1, 0), DeltaValues(+1, 0), DeltaValues(0, -1), DeltaValues(0, +1)
 };
 
-nsWeakFrame ScrollbarsForWheel::sActiveOwner = nullptr;
-nsWeakFrame ScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
+AutoWeakFrame ScrollbarsForWheel::sActiveOwner = nullptr;
+AutoWeakFrame ScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
   nullptr, nullptr, nullptr, nullptr
 };
 
@@ -520,7 +520,7 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
 {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     const DeltaValues *dir = &directions[i];
-    nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
+    AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
     nsIScrollableFrame* target = do_QueryFrame(
       aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
@@ -538,7 +538,7 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
 ScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
 {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
-    nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
+    AutoWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     if (*scrollTarget) {
       nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(*scrollTarget);
       if (scrollbarMediator) {
