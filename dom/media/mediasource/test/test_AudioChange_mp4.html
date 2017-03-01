@@ -53,11 +53,8 @@ runWithMSE(function(ms, el) {
     })
     .then(fetchAndLoad.bind(null, audiosb, 'aac51-48000-128000-', ['2'], '.m4s'))
     .then(function() {
-      var promises = [];
       ms.endOfStream();
-      promises.push(once(el, 'ended'));
-      promises.push(once(audiosb, 'updateend'));
-      return Promise.all(promises);
+      return once(el, 'ended');
     })
     .then(function() {
       ok(el.currentTime >= 6, "played to the end");
