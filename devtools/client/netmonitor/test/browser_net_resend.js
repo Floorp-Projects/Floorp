@@ -106,6 +106,7 @@ add_task(function* () {
     let queryFocus = once(query, "focus", false);
     // Bug 1195825: Due to some unexplained dark-matter with promise,
     // focus only works if delayed by one tick.
+    query.setSelectionRange(query.value.length, query.value.length);
     executeSoon(() => query.focus());
     yield queryFocus;
 
@@ -115,6 +116,7 @@ add_task(function* () {
 
     let headers = document.getElementById("custom-headers-value");
     let headersFocus = once(headers, "focus", false);
+    headers.setSelectionRange(headers.value.length, headers.value.length);
     headers.focus();
     yield headersFocus;
 
@@ -129,6 +131,7 @@ add_task(function* () {
 
     let postData = document.getElementById("custom-postdata-value");
     let postFocus = once(postData, "focus", false);
+    postData.setSelectionRange(postData.value.length, postData.value.length);
     postData.focus();
     yield postFocus;
 

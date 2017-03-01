@@ -27,6 +27,7 @@ function testInteractivityOfMaxLength(elem) {
   is(elem.value, "Test", "Element has incorrect starting value.");
   is(elem.validity.tooLong, false, "Element should not be tooLong.");
 
+  elem.setSelectionRange(elem.value.length, elem.value.length)
   elem.focus();
 
   synthesizeKey("VK_BACK_SPACE", {});
@@ -47,6 +48,7 @@ function testInteractivityOfMinLength(elem) {
   is(elem.value, "Test", "Element has incorrect starting value.");
   is(elem.validity.tooLong, false, "Element should not be tooShort.");
 
+  elem.setSelectionRange(elem.value.length, elem.value.length)
   elem.focus();
 
   synthesizeKey("e", {});
