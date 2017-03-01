@@ -10,7 +10,8 @@
     "ar": {
         "platforms": [
             "android", 
-            "android-api-15"
+            "android-api-15", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
@@ -206,7 +207,8 @@
     "fa": {
         "platforms": [
             "android", 
-            "android-api-15"
+            "android-api-15", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
@@ -285,7 +287,8 @@
     "he": {
         "platforms": [
             "android", 
-            "android-api-15"
+            "android-api-15", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
@@ -638,6 +641,13 @@
         ], 
         "revision": "default"
     }, 
+    "trs": {
+        "platforms": [
+            "android", 
+            "android-api-15"
+        ], 
+        "revision": "default"
+    }, 
     "tsz": {
         "platforms": [
             "android", 
@@ -656,7 +666,8 @@
     "ur": {
         "platforms": [
             "android", 
-            "android-api-15"
+            "android-api-15", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
