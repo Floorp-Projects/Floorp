@@ -289,6 +289,7 @@ protected:
 
     bool LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BOOL aAddorUpdate);
     bool CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMATETC aFormat, BOOL aSetData);
+    static void RemoveTempFile(nsITimer* aTimer, void* aClosure);
 };
 
 
