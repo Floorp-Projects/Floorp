@@ -558,7 +558,7 @@ var PrintUtils = {
     }
 
     let onEntered = (message) => {
-      mm.removeMessageListener("Printing:PrintPreview:Entered", onEntered);
+      mm.removeMessageListener("Printing:Preview:Entered", onEntered);
 
       if (message.data.failed) {
         // Something went wrong while putting the document into print preview
