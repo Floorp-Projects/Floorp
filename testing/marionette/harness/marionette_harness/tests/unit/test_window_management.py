@@ -14,7 +14,7 @@ class TestNoSuchWindowContent(WindowManagerMixin, MarionetteTestCase):
         super(TestNoSuchWindowContent, self).setUp()
 
     def tearDown(self):
-        self.close_all_tabs()
+        self.close_all_windows()
         super(TestNoSuchWindowContent, self).tearDown()
 
     @skip_if_mobile("Fennec doesn't support other chrome windows")
