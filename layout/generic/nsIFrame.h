@@ -787,10 +787,15 @@ public:
 
   /**
    * The frame's writing-mode, used for logical layout computations.
+   * It's usually the 'writing-mode' computed value, but there are exceptions:
+   *   * inner table frames copy the value from the table frame
+   *     (@see nsTableRowGroupFrame::Init, nsTableRowFrame::Init etc)
+   *   * the root element frame propagates its value to its ancestors
+   *     (@see nsCanvasFrame::MaybePropagateRootElementWritingMode)
+   *   * a scrolled frame propagates its value to its ancestor scroll frame
+   *     (@see nsHTMLScrollFrame::ReloadChildFrames)
    */
-  virtual mozilla::WritingMode GetWritingMode() const {
-    return mozilla::WritingMode(StyleContext());
-  }
+  mozilla::WritingMode GetWritingMode() const { return mWritingMode; }
 
   /**
    * Construct a writing mode for line layout in this frame.  This is
@@ -3589,6 +3594,11 @@ private:
   }
 
 protected:
+  /**
+   * Copies aRootElemWM to mWritingMode on 'this' and all its ancestors.
+   */
+  inline void PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM);
+
   void MarkInReflow() {
 #ifdef DEBUG_dbaron_off
     // bug 81268
@@ -3627,6 +3637,9 @@ protected:
     uint32_t     mType;
     VisualDeltas mVisualDeltas;
   } mOverflow;
+
+  /** @see GetWritingMode() */
+  mozilla::WritingMode mWritingMode;
 
   // Helpers
   /**

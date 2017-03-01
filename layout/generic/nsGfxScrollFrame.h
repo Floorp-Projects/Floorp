@@ -676,14 +676,6 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual mozilla::WritingMode GetWritingMode() const override
-  {
-    if (mHelper.mScrolledFrame) {
-      return mHelper.mScrolledFrame->GetWritingMode();
-    }
-    return nsIFrame::GetWritingMode();
-  }
-
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override {
@@ -1075,6 +1067,14 @@ protected:
    * nsListControlFrame uses this.
    */
   virtual bool ShouldPropagateComputedBSizeToScrolledContent() const { return true; }
+
+  void ReloadChildFrames()
+  {
+    mHelper.ReloadChildFrames();
+    if (mHelper.mScrolledFrame) {
+      mWritingMode = mHelper.mScrolledFrame->GetWritingMode();
+    }
+  }
 
 private:
   friend class mozilla::ScrollFrameHelper;

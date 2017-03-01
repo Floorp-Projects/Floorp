@@ -289,7 +289,7 @@ CERT_FindUserCertByUsage(CERTCertDBHandle *handle,
         goto loser;
     }
 
-    if (!CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+    if (!CERT_LIST_EMPTY(certList)) {
         cert = CERT_DupCertificate(CERT_LIST_HEAD(certList)->cert);
     }
 

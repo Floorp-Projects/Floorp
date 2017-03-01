@@ -985,7 +985,7 @@ function TypedArraySlice(start, end) {
         return callFunction(CallTypedArrayMethodIfWrapped, O, start, end, "TypedArraySlice");
     }
 
-    GetAttachedArrayBuffer(O);
+    var buffer = GetAttachedArrayBuffer(O);
 
     // Step 3.
     var len = TypedArrayLength(O);
@@ -1012,16 +1012,31 @@ function TypedArraySlice(start, end) {
     // Step 9.
     var A = TypedArraySpeciesCreateWithLength(O, count);
 
-    // Step 14.a.
-    var n = 0;
+    // Steps 10-13 (Not implemented, bug 1140152).
 
-    // Step 14.b.
-    while (k < final) {
-        // Steps 14.b.i-v.
-        A[n++] = O[k++];
+    // Steps 14-15.
+    if (count > 0) {
+        // Step 14.a.
+        var n = 0;
+
+        // Steps 14.b.ii, 15.b.
+        if (buffer === null) {
+            // A typed array previously using inline storage may acquire a
+            // buffer, so we must check with the source.
+            buffer = ViewedArrayBufferIfReified(O);
+        }
+
+        if (IsDetachedBuffer(buffer))
+            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+        // Step 14.b.
+        while (k < final) {
+            // Steps 14.b.i-v.
+            A[n++] = O[k++];
+        }
+
+        // FIXME: Implement step 15 (bug 1140152).
     }
-
-    // FIXME: Implement step 15 (bug 1140152).
 
     // Step 16.
     return A;
