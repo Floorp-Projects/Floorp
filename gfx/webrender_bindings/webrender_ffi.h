@@ -369,6 +369,11 @@ struct WrState;
 struct WrAPI;
 
 WR_INLINE void
+wr_renderer_set_external_image_handler(WrRenderer* renderer,
+                                       WrExternalImageHandler* handler)
+WR_FUNC;
+
+WR_INLINE void
 wr_renderer_update(WrRenderer* renderer)
 WR_FUNC;
 
@@ -404,7 +409,6 @@ WR_INLINE bool
 wr_window_new(WrWindowId window_id,
               void* aGLContext,
               bool enable_profiler,
-              WrExternalImageHandler* handler,
               WrAPI** out_api,
               WrRenderer** out_renderer)
 WR_FUNC;
