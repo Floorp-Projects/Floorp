@@ -404,7 +404,15 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
     }
   }
   builder.End();
-  mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height), builder);
+  WrBuiltDisplayListDescriptor dlDesc;
+  wr::VecU8 dlData;
+  WrAuxiliaryListsDescriptor auxDesc;
+  wr::VecU8 auxData;
+  builder.Finalize(dlDesc, dlData, auxDesc, auxData);
+  mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height),
+                           mPipelineId,
+                           dlDesc, dlData.inner.data, dlData.inner.length,
+                           auxDesc, auxData.inner.data, auxData.inner.length);
 
   ScheduleComposition();
   DeleteOldImages();

@@ -29,6 +29,8 @@ class DisplayListBuilder;
 class RendererOGL;
 class RendererEvent;
 
+
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
@@ -44,9 +46,15 @@ public:
   void GenerateFrame();
 
   void SetRootDisplayList(gfx::Color aBgColor,
-                          wr::Epoch aEpoch,
+                          Epoch aEpoch,
                           LayerSize aViewportSize,
-                          DisplayListBuilder& aBuilder);
+                          WrPipelineId pipeline_id,
+                          WrBuiltDisplayListDescriptor dl_descriptor,
+                          uint8_t *dl_data,
+                          size_t dl_size,
+                          WrAuxiliaryListsDescriptor aux_descriptor,
+                          uint8_t *aux_data,
+                          size_t aux_size);
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
@@ -108,6 +116,10 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
+  void Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
+                wr::VecU8& dl_data,
+                WrAuxiliaryListsDescriptor& aux_descriptor,
+                wr::VecU8& aux_data);
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,

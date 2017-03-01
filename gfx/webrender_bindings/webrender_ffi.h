@@ -341,6 +341,23 @@ struct WrImageDescriptor {
     bool is_opaque;
 };
 
+struct WrBuiltDisplayListDescriptor {
+    size_t display_list_items_size;
+};
+
+struct WrAuxiliaryListsDescriptor {
+    size_t gradient_stops_size;
+    size_t complex_clip_regions_size;
+    size_t filters_size;
+    size_t glyph_instances_size;
+};
+
+struct WrVecU8 {
+    uint8_t *data;
+    size_t length;
+    size_t capacity;
+};
+
 // -----
 // Functions exposed by the webrender API
 // -----
@@ -447,7 +464,14 @@ wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_api_set_root_display_list(WrAPI* api, WrState* state, WrEpoch epoch, float w, float h)
+wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
+                             WrPipelineId pipeline_id,
+                             WrBuiltDisplayListDescriptor dl_descriptor,
+                             uint8_t *dl_data,
+                             size_t dl_size,
+                             WrAuxiliaryListsDescriptor aux_descriptor,
+                             uint8_t *aux_data,
+                             size_t aux_size)
 WR_FUNC;
 
 WR_INLINE void
@@ -557,6 +581,18 @@ WR_FUNC;
 
 WR_INLINE WrIdNamespace
 wr_api_get_namespace(WrAPI* api)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_finalize_builder(WrState* wrState,
+                        WrBuiltDisplayListDescriptor& dl_descriptor,
+                        WrVecU8& dl_data,
+                        WrAuxiliaryListsDescriptor& aux_descriptor,
+                        WrVecU8& aux_data)
+WR_FUNC;
+
+WR_INLINE void
+wr_vec_u8_free(WrVecU8 dl_data)
 WR_FUNC;
 
 #undef WR_FUNC
