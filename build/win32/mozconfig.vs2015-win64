@@ -3,17 +3,19 @@ if [ -z "${VSPATH}" ]; then
     VSPATH="$(cd ${TOOLTOOL_DIR} && pwd)/vs2015u3"
 fi
 
-VSWINPATH="$(cd ${VSPATH} && pwd -W)"
+if [ -d "${VSPATH}" ]; then
+    VSWINPATH="$(cd ${VSPATH} && pwd -W)"
 
-export WINDOWSSDKDIR="${VSWINPATH}/SDK"
-export WIN32_REDIST_DIR="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT"
-export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x86"
+    export WINDOWSSDKDIR="${VSWINPATH}/SDK"
+    export WIN32_REDIST_DIR="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT"
+    export WIN_UCRT_REDIST_DIR="${VSPATH}/SDK/Redist/ucrt/DLLs/x86"
 
-export PATH="${VSPATH}/VC/bin/amd64_x86:${VSPATH}/VC/bin/amd64:${VSPATH}/VC/bin:${VSPATH}/SDK/bin/x86:${VSPATH}/SDK/bin/x64:${VSPATH}/DIA SDK/bin:${PATH}"
-export PATH="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSPATH}/VC/redist/x64/Microsoft.VC140.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x86:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${PATH}"
+    export PATH="${VSPATH}/VC/bin/amd64_x86:${VSPATH}/VC/bin/amd64:${VSPATH}/VC/bin:${VSPATH}/SDK/bin/x86:${VSPATH}/SDK/bin/x64:${VSPATH}/DIA SDK/bin:${PATH}"
+    export PATH="${VSPATH}/VC/redist/x86/Microsoft.VC140.CRT:${VSPATH}/VC/redist/x64/Microsoft.VC140.CRT:${VSPATH}/SDK/Redist/ucrt/DLLs/x86:${VSPATH}/SDK/Redist/ucrt/DLLs/x64:${PATH}"
 
-export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/10.0.14393.0/ucrt:${VSPATH}/SDK/Include/10.0.14393.0/shared:${VSPATH}/SDK/Include/10.0.14393.0/um:${VSPATH}/SDK/Include/10.0.14393.0/winrt:${VSPATH}/DIA SDK/include"
-export LIB="${VSPATH}/VC/lib:${VSPATH}/VC/atlmfc/lib:${VSPATH}/SDK/lib/10.0.14393.0/ucrt/x86:${VSPATH}/SDK/lib/10.0.14393.0/um/x86:${VSPATH}/DIA SDK/lib"
+    export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/10.0.14393.0/ucrt:${VSPATH}/SDK/Include/10.0.14393.0/shared:${VSPATH}/SDK/Include/10.0.14393.0/um:${VSPATH}/SDK/Include/10.0.14393.0/winrt:${VSPATH}/DIA SDK/include"
+    export LIB="${VSPATH}/VC/lib:${VSPATH}/VC/atlmfc/lib:${VSPATH}/SDK/lib/10.0.14393.0/ucrt/x86:${VSPATH}/SDK/lib/10.0.14393.0/um/x86:${VSPATH}/DIA SDK/lib"
+fi
 
 . $topsrcdir/build/mozconfig.vs-common
 
