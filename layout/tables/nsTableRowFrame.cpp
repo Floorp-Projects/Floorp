@@ -169,6 +169,8 @@ nsTableRowFrame::Init(nsIContent*       aContent,
     nsTableRowFrame* rowFrame = (nsTableRowFrame*)aPrevInFlow;
 
     SetRowIndex(rowFrame->GetRowIndex());
+  } else {
+    mWritingMode = GetTableFrame()->GetWritingMode();
   }
 }
 

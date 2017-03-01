@@ -266,15 +266,18 @@ CanReify(HandleObject obj)
 
 struct AutoCloseIterator
 {
-    AutoCloseIterator(JSContext* cx, JSObject* obj) : cx(cx), obj(cx, obj) {}
+    AutoCloseIterator(JSContext* cx, PropertyIteratorObject* obj) : cx(cx), obj(cx, obj) {}
 
-    ~AutoCloseIterator() { if (obj) CloseIterator(cx, obj); }
+    ~AutoCloseIterator() {
+        if (obj)
+            MOZ_ALWAYS_TRUE(CloseIterator(cx, obj));
+    }
 
     void clear() { obj = nullptr; }
 
   private:
     JSContext* cx;
-    RootedObject obj;
+    Rooted<PropertyIteratorObject*> obj;
 };
 
 static bool
@@ -310,8 +313,7 @@ Reify(JSContext* cx, JSCompartment* origin, MutableHandleObject objp)
     }
 
     close.clear();
-    if (!CloseIterator(cx, iterObj))
-        return false;
+    MOZ_ALWAYS_TRUE(CloseIterator(cx, iterObj));
 
     return EnumeratedIdVectorToIterator(cx, obj, ni->flags, keys, objp);
 }

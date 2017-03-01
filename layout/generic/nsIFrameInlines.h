@@ -160,4 +160,13 @@ nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
   return SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
 }
 
+void
+nsIFrame::PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM)
+{
+  MOZ_ASSERT(GetType() == nsGkAtoms::canvasFrame);
+  for (auto f = this; f; f = f->GetParent()) {
+    f->mWritingMode = aRootElemWM;
+  }
+}
+
 #endif

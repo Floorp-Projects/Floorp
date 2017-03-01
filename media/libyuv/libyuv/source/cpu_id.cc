@@ -177,6 +177,7 @@ LIBYUV_API SAFEBUFFERS int MipsCpuCaps(const char* cpuinfo_name,
     if (strcmp(ase, " dspr2") == 0) {
       return kCpuHasDSPR2;
     }
+    return 0;
   }
   while (fgets(cpuinfo_line, sizeof(cpuinfo_line) - 1, f)) {
     if (memcmp(cpuinfo_line, "ASEs implemented", 16) == 0) {
@@ -189,6 +190,7 @@ LIBYUV_API SAFEBUFFERS int MipsCpuCaps(const char* cpuinfo_name,
         if (strcmp(ase, " dspr2") == 0) {
           return kCpuHasDSPR2;
         }
+        return 0;
       }
     }
   }

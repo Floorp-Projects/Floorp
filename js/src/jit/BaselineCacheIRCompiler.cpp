@@ -997,7 +997,7 @@ BaselineCacheIRCompiler::emitStoreTypedObjectScalarProperty()
     masm.addPtr(offsetAddr, scratch1);
     Address dest(scratch1, 0);
 
-    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
+    StoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
     return true;
 }
 
@@ -1224,7 +1224,7 @@ BaselineCacheIRCompiler::emitStoreTypedElement()
     masm.push(scratch2);
 
     Label fail;
-    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2, &fail);
+    StoreToTypedArray(cx_, masm, type, val, dest, scratch2, &fail);
     masm.pop(scratch2);
     masm.jump(&done);
 

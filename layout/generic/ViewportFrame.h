@@ -38,15 +38,6 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-  virtual mozilla::WritingMode GetWritingMode() const override
-  {
-    nsIFrame* firstChild = mFrames.FirstChild();
-    if (firstChild) {
-      return firstChild->GetWritingMode();
-    }
-    return nsIFrame::GetWritingMode();
-  }
-
 #ifdef DEBUG
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) override;
