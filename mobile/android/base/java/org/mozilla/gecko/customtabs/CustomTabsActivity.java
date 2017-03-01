@@ -7,6 +7,8 @@ package org.mozilla.gecko.customtabs;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -22,10 +24,13 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.mozilla.gecko.AppConstants;
@@ -33,7 +38,10 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.menu.GeckoMenu;
+import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.util.ColorUtil;
+import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.lang.reflect.Field;
 
@@ -46,6 +54,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private static final int NO_COLOR = -1;
 
     private ActionBar actionBar;
+    private GeckoPopupMenu popupMenu;
     private int tabId = -1;
     private boolean useDomainTitle = true;
 
@@ -185,6 +194,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             }
             actionBar.setTitle(toolbarTitle);
         }
+
+        updateMenuItemForward();
     }
 
     @Override
@@ -214,9 +225,31 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     @Override
     public boolean onCreatePanelMenu(final int id, final Menu menu) {
         insertActionButton(menu, getIntent());
+
+        popupMenu = createCustomPopupMenu();
+
+        // Create a ImageButton manually, and use it as an anchor for PopupMenu.
+        final ImageButton btn = new ImageButton(getContext(),
+                null, 0, R.style.Widget_MenuButtonCustomTabs);
+        btn.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View anchor) {
+                popupMenu.setAnchor(anchor);
+                popupMenu.show();
+            }
+        });
+
+        // Insert the anchor-button to Menu
+        final MenuItem item = menu.add(Menu.NONE, R.id.menu, Menu.NONE, "Menu Button");
+        item.setActionView(btn);
+        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS);
+
+        updateMenuItemForward();
         return true;
     }
 
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
@@ -224,6 +257,15 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
                 return true;
             case R.id.action_button:
                 onActionButtonClicked();
+                return true;
+            case R.id.custom_tabs_menu_forward:
+                onForwardClicked();
+                return true;
+            case R.id.custom_tabs_menu_reload:
+                onReloadClicked();
+                return true;
+            case R.id.custom_tabs_menu_open_in:
+                onOpenInClicked();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -285,6 +327,90 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             pendingIntent.send(this, 0, additional);
         } catch (PendingIntent.CanceledException e) {
             Log.w(LOGTAG, "Performing a canceled pending intent", e);
+        }
+    }
+
+    /**
+     * To generate a popup menu which looks like an ordinary option menu, but have extra elements
+     * such as footer.
+     *
+     * @return a GeckoPopupMenu which can be placed on any view.
+     */
+    private GeckoPopupMenu createCustomPopupMenu() {
+        final GeckoPopupMenu popupMenu = new GeckoPopupMenu(this);
+        final GeckoMenu geckoMenu = popupMenu.getMenu();
+
+        // pass to to Activity.onMenuItemClick for consistency.
+        popupMenu.setOnMenuItemClickListener(new GeckoPopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                return CustomTabsActivity.this.onMenuItemClick(item);
+            }
+        });
+
+        // to add Fennec default menu
+        final MenuInflater inflater = new GeckoMenuInflater(this);
+        inflater.inflate(R.menu.customtabs_menu, geckoMenu);
+
+        // insert default browser name to title of menu-item-Open-In
+        final MenuItem openItem = geckoMenu.findItem(R.id.custom_tabs_menu_open_in);
+        if (openItem != null) {
+            final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://"));
+            final ResolveInfo info = getPackageManager()
+                    .resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY);
+            final String name = info.loadLabel(getPackageManager()).toString();
+            openItem.setTitle(getString(R.string.custom_tabs_menu_item_open_in, name));
+        }
+
+        geckoMenu.addFooterView(
+                getLayoutInflater().inflate(R.layout.customtabs_options_menu_footer, geckoMenu, false),
+                null,
+                false);
+
+        return popupMenu;
+    }
+
+    /**
+     * Update state of Forward button in Popup Menu. It is clickable only if current tab can do forward.
+     */
+    private void updateMenuItemForward() {
+        if ((popupMenu == null)
+                || (popupMenu.getMenu() == null)
+                || (popupMenu.getMenu().findItem(R.id.custom_tabs_menu_forward) == null)) {
+            return;
+        }
+
+        final MenuItem forwardMenuItem = popupMenu.getMenu().findItem(R.id.custom_tabs_menu_forward);
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        final boolean enabled = (tab != null && tab.canDoForward());
+        forwardMenuItem.setEnabled(enabled);
+    }
+
+    private void onReloadClicked() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            tab.doReload(true);
+        }
+    }
+
+    private void onForwardClicked() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if ((tab != null) && tab.canDoForward()) {
+            tab.doForward();
+        }
+    }
+
+    /**
+     * Callback for Open-in menu item.
+     */
+    private void onOpenInClicked() {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            // To launch default browser with url of current tab.
+            final Intent intent = new Intent();
+            intent.setData(Uri.parse(tab.getURL()));
+            intent.setAction(Intent.ACTION_VIEW);
+            startActivity(intent);
         }
     }
 
