@@ -21,6 +21,9 @@ onactivate = function(e) {
         matched[0].postMessage(result);
       } else {
         dump("ERROR: claim_worker_2 failed to capture clients.\n");
+        for (let i = 0; i < matched.length; ++i) {
+          dump('### ### matched[' + i + ']: ' + matched[i].url + '\n');
+        }
       }
     }));
   });
