@@ -763,18 +763,11 @@ Code::createText(JSContext* cx)
             return nullptr;
 
 #if DEBUG
-        // Checking source map invariant: expression and function locations must be sorted
-        // by line number.
+        // Check that expression locations are sorted by line number.
         uint32_t lastLineno = 0;
         for (const ExprLoc& loc : maybeSourceMap_->exprlocs()) {
             MOZ_ASSERT(lastLineno <= loc.lineno);
             lastLineno = loc.lineno;
-        }
-        lastLineno = 0;
-        for (const FunctionLoc& loc : maybeSourceMap_->functionlocs()) {
-            MOZ_ASSERT(lastLineno <= loc.startLineno);
-            MOZ_ASSERT(loc.startLineno <= loc.endLineno);
-            lastLineno = loc.endLineno + 1;
         }
 #endif
     } else {
