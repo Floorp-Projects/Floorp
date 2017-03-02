@@ -23,6 +23,7 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/browserid_identity.js',
     'modules/collection_repair.js',
     'modules/collection_validator.js',
+    'modules/doctor.js',
     'modules/engines.js',
     'modules/keys.js',
     'modules/main.js',
@@ -69,6 +70,6 @@ TESTING_JS_MODULES.services.sync += [
     'modules-testing/utils.js',
 ]
 
-JS_PREFERENCE_FILES += [
+JS_PREFERENCE_PP_FILES += [
     'services-sync.js',
 ]
