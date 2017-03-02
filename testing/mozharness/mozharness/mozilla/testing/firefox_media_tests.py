@@ -16,6 +16,9 @@ from mozharness.mozilla.testing.testbase import (TestingMixin,
                                                  testing_config_options)
 from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
 from mozharness.mozilla.vcstools import VCSToolsScript
+from mozharness.mozilla.buildbot import (
+    TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
+)
 
 BUSTED = 'busted'
 TESTFAILED = 'testfailed'
@@ -310,4 +313,15 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             env=env
         )
         self.job_result_parser.return_code = return_code
+        # Handle our setting our return code via buildbot_status. We aren't
+        # guaranteed to be running with buildbot, but for the sake of
+        # consistency we use the same return codes. Note the overrides
+        # of this function may also alter self.return code as appropriate.
+        if self.job_result_parser.status == SUCCESS:
+            tbpl_status = TBPL_SUCCESS
+        elif self.job_result_parser.status == TESTFAILED:
+            tbpl_status = TBPL_WARNING
+        else:
+            tbpl_status = TBPL_FAILURE
+        self.buildbot_status(tbpl_status)
         return self.job_result_parser.status

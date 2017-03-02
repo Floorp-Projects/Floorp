@@ -366,6 +366,62 @@ add_task(async function test_client_name_change() {
   cleanup();
 });
 
+add_task(async function test_last_modified() {
+  _("Ensure that remote records have a sane serverLastModified attribute.");
+
+  let now = Date.now() / 1000;
+  let contents = {
+    meta: {global: {engines: {clients: {version: engine.version,
+                                        syncID: engine.syncID}}}},
+    clients: {},
+    crypto: {}
+  };
+  let server = serverForUsers({"foo": "password"}, contents);
+  let user   = server.user("foo");
+
+  await SyncTestingInfrastructure(server);
+  generateNewKeys(Service.collectionKeys);
+
+  let activeID = Utils.makeGUID();
+  server.insertWBO("foo", "clients", new ServerWBO(activeID, encryptPayload({
+    id: activeID,
+    name: "Active client",
+    type: "desktop",
+    commands: [],
+    version: "48",
+    protocols: ["1.5"],
+  }), now - 10));
+
+  try {
+    let collection = user.collection("clients");
+
+    _("Sync to download the record");
+    engine._sync();
+
+    equal(engine._store._remoteClients[activeID].serverLastModified, now - 10,
+          "last modified in the local record is correctly the server last-modified");
+
+    _("Modify the record and re-upload it");
+    // set a new name to make sure we really did upload.
+    engine._store._remoteClients[activeID].name = "New name";
+    engine._modified.set(activeID, 0);
+    engine._uploadOutgoing();
+
+    _("Local record should have updated timestamp");
+    ok(engine._store._remoteClients[activeID].serverLastModified >= now);
+
+    _("Record on the server should have new name but not serverLastModified");
+    let payload = JSON.parse(JSON.parse(collection.payload(activeID)).ciphertext);
+    equal(payload.name, "New name");
+    equal(payload.serverLastModified, undefined);
+
+  } finally {
+    cleanup();
+    server.deleteCollections("foo");
+    await promiseStopServer(server);
+  }
+});
+
 add_task(async function test_send_command() {
   _("Verifies _sendCommandToClient puts commands in the outbound queue.");
 

@@ -447,7 +447,7 @@ CustomizeMode.prototype = {
       yield this.depopulatePalette();
 
       yield this._doTransition(false);
-      this.removeLWTStyling();
+      this.updateLWTStyling({});
 
       Services.obs.removeObserver(this, "lightweight-theme-window-updated");
 
@@ -611,68 +611,16 @@ CustomizeMode.prototype = {
     }
     let headerURL = aData && aData.headerURL;
     if (!headerURL) {
-      this.removeLWTStyling();
+      docElement.removeAttribute("customization-lwtheme");
       return;
     }
-
-    let deck = this.document.getElementById("tab-view-deck");
-    let headerImageRef = this._getHeaderImageRef(aData);
     docElement.setAttribute("customization-lwtheme", "true");
 
+    let deck = this.document.getElementById("tab-view-deck");
     let toolboxRect = this.window.gNavToolbox.getBoundingClientRect();
     let height = toolboxRect.bottom;
-
-    if (AppConstants.platform == "macosx") {
-      let drawingInTitlebar = !docElement.hasAttribute("drawtitle");
-      let titlebar = this.document.getElementById("titlebar");
-      if (drawingInTitlebar) {
-        titlebar.style.backgroundImage = headerImageRef;
-      } else {
-        titlebar.style.removeProperty("background-image");
-      }
-    }
-
-    let limitedBG = "-moz-image-rect(" + headerImageRef + ", 0, 100%, " +
-                    height + ", 0)";
-
-    let ridgeStart = height - 1;
-    let ridgeCenter = (ridgeStart + 1) + "px";
-    let ridgeEnd = (ridgeStart + 2) + "px";
-    ridgeStart = ridgeStart + "px";
-
-    let ridge = "linear-gradient(to bottom, " +
-                                 "transparent " + ridgeStart +
-                                 ", rgba(0,0,0,0.25) " + ridgeStart +
-                                 ", rgba(0,0,0,0.25) " + ridgeCenter +
-                                 ", rgba(255,255,255,0.5) " + ridgeCenter +
-                                 ", rgba(255,255,255,0.5) " + ridgeEnd + ", " +
-                                 "transparent " + ridgeEnd + ")";
-    deck.style.backgroundImage = ridge + ", " + limitedBG;
-
-    /* Remove the background styles from the <window> so we can style it instead. */
-    docElement.style.removeProperty("background-image");
-    docElement.style.removeProperty("background-color");
-  },
-
-  removeLWTStyling() {
-    let affectedNodes = AppConstants.platform == "macosx" ?
-                          ["tab-view-deck", "titlebar"] :
-                          ["tab-view-deck"];
-    for (let id of affectedNodes) {
-      let node = this.document.getElementById(id);
-      node.style.removeProperty("background-image");
-    }
-    let docElement = this.document.documentElement;
-    docElement.removeAttribute("customization-lwtheme");
-    let data = docElement._lightweightTheme.getData();
-    if (data && data.headerURL) {
-      docElement.style.backgroundImage = this._getHeaderImageRef(data);
-      docElement.style.backgroundColor = data.accentcolor || "white";
-    }
-  },
-
-  _getHeaderImageRef(aData) {
-    return "url(\"" + aData.headerURL.replace(/"/g, '\\"') + "\")";
+    deck.style.setProperty("--toolbox-rect-height", `${height}`);
+    deck.style.setProperty("--toolbox-rect-height-with-unit", `${height}px`);
   },
 
   maybeShowTip(aAnchor) {
@@ -1544,11 +1492,7 @@ CustomizeMode.prototype = {
       case "lightweight-theme-window-updated":
         if (aSubject == this.window) {
           aData = JSON.parse(aData);
-          if (!aData) {
-            this.removeLWTStyling();
-          } else {
-            this.updateLWTStyling(aData);
-          }
+          this.updateLWTStyling(aData);
         }
         break;
     }

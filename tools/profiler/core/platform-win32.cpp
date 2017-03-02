@@ -168,12 +168,12 @@ class SamplerThread
           ThreadInfo* info = (*gRegisteredThreads)[i];
 
           // This will be null if we're not interested in profiling this thread.
-          if (!info->hasProfile() || info->IsPendingDelete()) {
+          if (!info->HasProfile() || info->IsPendingDelete()) {
             continue;
           }
 
           if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-            info->DuplicateLastSample(gStartTime);
+            info->DuplicateLastSample(gBuffer, gStartTime);
             continue;
           }
 
@@ -249,7 +249,7 @@ class SamplerThread
 
     sample.context = &context;
 
-    Tick(&sample);
+    Tick(gBuffer, &sample);
 
     ResumeThread(profiled_thread);
   }

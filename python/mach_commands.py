@@ -57,11 +57,6 @@ class MachCommands(MachCommandBase):
         default=False,
         action='store_true',
         help='Stop running tests after the first error or failure.')
-    @CommandArgument('--path-only',
-        default=False,
-        action='store_true',
-        help=('Collect all tests under given path instead of default '
-              'test resolution. Supports pytest-style tests.'))
     @CommandArgument('-j', '--jobs',
         default=1,
         type=int,
@@ -79,7 +74,6 @@ class MachCommands(MachCommandBase):
                     test_objects=None,
                     subsuite=None,
                     verbose=False,
-                    path_only=False,
                     stop=False,
                     jobs=1):
         self._activate_virtualenv()
@@ -109,30 +103,19 @@ class MachCommands(MachCommandBase):
         # which produces output in the format Mozilla infrastructure expects.
         # Some tests are run via pytest.
         if test_objects is None:
-            # If we're not being called from `mach test`, do our own
-            # test resolution.
-            if path_only:
-                if tests:
-                    test_objects = [{'path': p} for p in find_tests_by_path()]
-                else:
-                    self.log(logging.WARN, 'python-test', {},
-                             'TEST-UNEXPECTED-FAIL | No tests specified')
-                    test_objects = []
+            from mozbuild.testing import TestResolver
+            resolver = self._spawn(TestResolver)
+            if tests:
+                # If we were given test paths, try to find tests matching them.
+                test_objects = resolver.resolve_tests(paths=tests,
+                                                      flavor='python')
             else:
-                from mozbuild.testing import TestResolver
-                resolver = self._spawn(TestResolver)
-                if tests:
-                    # If we were given test paths, try to find tests matching them.
-                    test_objects = resolver.resolve_tests(paths=tests,
-                                                          flavor='python')
-                else:
-                    # Otherwise just run everything in PYTHON_UNITTEST_MANIFESTS
-                    test_objects = resolver.resolve_tests(flavor='python')
+                # Otherwise just run everything in PYTHON_UNITTEST_MANIFESTS
+                test_objects = resolver.resolve_tests(flavor='python')
 
         if not test_objects:
-            message = 'TEST-UNEXPECTED-FAIL | No tests collected'
-            if not path_only:
-                message += ' (Not in PYTHON_UNITTEST_MANIFESTS? Try --path-only?)'
+            message = 'TEST-UNEXPECTED-FAIL | No tests collected ' + \
+                      '(Not in PYTHON_UNITTEST_MANIFESTS?)'
             self.log(logging.WARN, 'python-test', {}, message)
             return 1
 

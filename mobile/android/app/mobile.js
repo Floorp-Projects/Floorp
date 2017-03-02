@@ -420,8 +420,10 @@ pref("browser.ui.zoom.force-user-scalable", false);
 // in GeckoPreferences and BrowserApp (see bug 1245930).
 #ifdef NIGHTLY_BUILD
 pref("ui.zoomedview.enabled", true);
+pref("ui.bookmark.mobilefolder.enabled", true);
 #else
 pref("ui.zoomedview.enabled", false);
+pref("ui.bookmark.mobilefolder.enabled", false);
 #endif
 pref("ui.zoomedview.keepLimitSize", 16); // value in layer pixels, used to not keep the large elements in the cluster list (Bug 1191041)
 pref("ui.zoomedview.limitReadableSize", 8); // value in layer pixels
@@ -920,3 +922,5 @@ pref("dom.audiochannel.mediaControl", true);
 pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");
 
 pref("media.openUnsupportedTypeWithExternalApp", true);
+
+pref("dom.keyboardevent.dispatch_during_composition", true);

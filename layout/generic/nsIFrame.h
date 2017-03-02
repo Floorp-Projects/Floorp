@@ -202,66 +202,71 @@ class nsReflowStatus final {
 public:
   nsReflowStatus()
     : mBreakType(StyleClear::None)
-    , mIncomplete(false)
-    , mOverflowIncomplete(false)
+    , mInlineBreak(InlineBreak::None)
+    , mCompletion(Completion::FullyComplete)
     , mNextInFlowNeedsReflow(false)
     , mTruncated(false)
-    , mInlineBreak(false)
-    , mInlineBreakAfter(false)
     , mFirstLetterComplete(false)
   {}
 
-  // Reset all the bit-fields.
+  // Reset all the member variables.
   void Reset() {
     mBreakType = StyleClear::None;
-    mIncomplete = false;
-    mOverflowIncomplete = false;
+    mInlineBreak = InlineBreak::None;
+    mCompletion = Completion::FullyComplete;
     mNextInFlowNeedsReflow = false;
     mTruncated = false;
-    mInlineBreak = false;
-    mInlineBreakAfter = false;
     mFirstLetterComplete = false;
   }
 
-  // Return true if all flags are cleared.
+  // Return true if all member variables have their default values.
   bool IsEmpty() const {
-    return (!mIncomplete &&
-            !mOverflowIncomplete &&
+    return (IsFullyComplete() &&
+            !IsInlineBreak() &&
             !mNextInFlowNeedsReflow &&
             !mTruncated &&
-            !mInlineBreak &&
-            !mInlineBreakAfter &&
             !mFirstLetterComplete);
   }
 
-  // mIncomplete bit flag means the frame does not map all its content, and
-  // that the parent frame should create a continuing frame. If this bit
-  // isn't set, it means the frame does map all its content. This bit is
-  // mutually exclusive with mOverflowIncomplete.
+  // There are three possible completion statuses, represented by
+  // mCompletion.
   //
-  // mOverflowIncomplete bit flag means that the frame has overflow that is
-  // not complete, but its own box is complete. (This happens when content
+  // Incomplete means the frame does *not* map all its content, and the
+  // parent frame should create a continuing frame.
+  //
+  // OverflowIncomplete means that the frame has an overflow that is not
+  // complete, but its own box is complete. (This happens when the content
   // overflows a fixed-height box.) The reflower should place and size the
-  // frame and continue its reflow, but needs to create an overflow
-  // container as a continuation for this frame. See nsContainerFrame.h for
-  // more information. This bit is mutually exclusive with mIncomplete.
+  // frame and continue its reflow, but it needs to create an overflow
+  // container as a continuation for this frame. See "Overflow containers"
+  // documentation in nsContainerFrame.h for more information.
   //
-  // If both mIncomplete and mOverflowIncomplete are not set, the frame is
-  // fully complete.
-  bool IsComplete() const { return !mIncomplete; }
-  bool IsIncomplete() const { return mIncomplete; }
-  bool IsOverflowIncomplete() const { return mOverflowIncomplete; }
-  bool IsFullyComplete() const {
-    return !IsIncomplete() && !IsOverflowIncomplete();
+  // FullyComplete means the frame is neither Incomplete nor
+  // OverflowIncomplete. This is the default state for a nsReflowStatus.
+  //
+  enum class Completion : uint8_t {
+    // The order of the enum values is important, which represents the
+    // precedence when merging.
+    FullyComplete,
+    OverflowIncomplete,
+    Incomplete,
+  };
+
+  bool IsIncomplete() const { return mCompletion == Completion::Incomplete; }
+  bool IsOverflowIncomplete() const {
+    return mCompletion == Completion::OverflowIncomplete;
   }
+  bool IsFullyComplete() const {
+    return mCompletion == Completion::FullyComplete;
+  }
+  // Just for convenience; not a distinct state.
+  bool IsComplete() const { return !IsIncomplete(); }
 
   void SetIncomplete() {
-    mIncomplete = true;
-    mOverflowIncomplete = false;
+    mCompletion = Completion::Incomplete;
   }
   void SetOverflowIncomplete() {
-    mIncomplete = false;
-    mOverflowIncomplete = true;
+    mCompletion = Completion::OverflowIncomplete;
   }
 
   // mNextInFlowNeedsReflow bit flag means that the next-in-flow is dirty,
@@ -283,23 +288,42 @@ public:
   // Merge the frame completion status bits from aStatus into this.
   void MergeCompletionStatusFrom(const nsReflowStatus& aStatus)
   {
-    mIncomplete |= aStatus.mIncomplete;
-    mOverflowIncomplete |= aStatus.mOverflowIncomplete;
+    if (mCompletion < aStatus.mCompletion) {
+      mCompletion = aStatus.mCompletion;
+    }
+
+    // These asserts ensure that the mCompletion merging works as we expect.
+    // (Incomplete beats OverflowIncomplete, which beats FullyComplete.)
+    static_assert(Completion::Incomplete > Completion::OverflowIncomplete &&
+                  Completion::OverflowIncomplete > Completion::FullyComplete,
+                  "mCompletion merging won't work without this!");
+
     mNextInFlowNeedsReflow |= aStatus.mNextInFlowNeedsReflow;
     mTruncated |= aStatus.mTruncated;
-    if (mIncomplete) {
-      mOverflowIncomplete = false;
-    }
   }
 
-  // mInlineBreak bit flag means a break is requested.
-  bool IsInlineBreak() const { return mInlineBreak; }
+  // There are three possible inline-break statuses, represented by
+  // mInlineBreak.
+  //
+  // "None" means no break is requested.
+  // "Before" means the break should occur before the frame.
+  // "After" means the break should occur after the frame.
+  // (Here, "the frame" is the frame whose reflow results are being reported by
+  // this nsReflowStatus.)
+  //
+  enum class InlineBreak : uint8_t {
+    None,
+    Before,
+    After,
+  };
 
-  // Suppose a break is requested. When mInlineBreakAfter is set, the break
-  // should occur after the frame just reflowed; when mInlineBreakAfter is
-  // clear, the break should occur before the frame just reflowed.
-  bool IsInlineBreakBefore() const { return mInlineBreak && !mInlineBreakAfter; }
-  bool IsInlineBreakAfter() const { return mInlineBreak && mInlineBreakAfter; }
+  bool IsInlineBreak() const { return mInlineBreak != InlineBreak::None; }
+  bool IsInlineBreakBefore() const {
+    return mInlineBreak == InlineBreak::Before;
+  }
+  bool IsInlineBreakAfter() const {
+    return mInlineBreak == InlineBreak::After;
+  }
   StyleClear BreakType() const { return mBreakType; }
 
   // Set the inline line-break-before status, and reset other bit flags. The
@@ -308,16 +332,16 @@ public:
   void SetInlineLineBreakBeforeAndReset() {
     Reset();
     mBreakType = StyleClear::Line;
-    mInlineBreak = true;
-    mInlineBreakAfter = false;
+    mInlineBreak = InlineBreak::Before;
   }
 
   // Set the inline line-break-after status. The break type can be changed
   // via the optional aBreakType param.
   void SetInlineLineBreakAfter(StyleClear aBreakType = StyleClear::Line) {
+    MOZ_ASSERT(aBreakType != StyleClear::None,
+               "Break-after with StyleClear::None is meaningless!");
     mBreakType = aBreakType;
-    mInlineBreak = true;
-    mInlineBreakAfter = true;
+    mInlineBreak = InlineBreak::After;
   }
 
   // mFirstLetterComplete bit flag means the break was induced by
@@ -327,16 +351,10 @@ public:
 
 private:
   StyleClear mBreakType;
-
-  // Frame completion status bit flags.
-  bool mIncomplete : 1;
-  bool mOverflowIncomplete : 1;
+  InlineBreak mInlineBreak;
+  Completion mCompletion;
   bool mNextInFlowNeedsReflow : 1;
   bool mTruncated : 1;
-
-  // Inline break status bit flags.
-  bool mInlineBreak : 1;
-  bool mInlineBreakAfter : 1;
   bool mFirstLetterComplete : 1;
 };
 
@@ -612,7 +630,7 @@ public:
    * removal and destruction.
    */
   void Destroy() { DestroyFrom(this); }
- 
+
   /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return values.
     */
   enum FrameSearchResult {
@@ -692,7 +710,7 @@ public:
    */
   nsStyleContext* StyleContext() const { return mStyleContext; }
   void SetStyleContext(nsStyleContext* aContext)
-  { 
+  {
     if (aContext != mStyleContext) {
       nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
@@ -762,10 +780,10 @@ public:
    * These methods are to access any additional style contexts that
    * the frame may be holding. These are contexts that are children
    * of the frame's primary context and are NOT used as style contexts
-   * for any child frames. These contexts also MUST NOT have any child 
+   * for any child frames. These contexts also MUST NOT have any child
    * contexts whatsoever. If you need to insert style contexts into the
    * style tree, then you should create pseudo element frames to own them
-   * The indicies must be consecutive and implementations MUST return an 
+   * The indicies must be consecutive and implementations MUST return an
    * NS_ERROR_INVALID_ARG if asked for an index that is out of range.
    */
   virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const = 0;
@@ -1004,7 +1022,7 @@ public:
 
   virtual nsPoint GetPositionOfChildIgnoringScrolling(nsIFrame* aChild)
   { return aChild->GetPosition(); }
-  
+
   nsPoint GetPositionIgnoringScrolling();
 
   typedef AutoTArray<nsIContent*, 2> ContentArray;
@@ -1498,13 +1516,13 @@ public:
    * Builds the display lists for the content represented by this frame
    * and its descendants. The background+borders of this element must
    * be added first, before any other content.
-   * 
+   *
    * This should only be called by methods in nsFrame. Instead of calling this
    * directly, call either BuildDisplayListForStackingContext or
    * BuildDisplayListForChild.
-   * 
+   *
    * See nsDisplayList.h for more information about display lists.
-   * 
+   *
    * @param aDirtyRect content outside this rectangle can be ignored; the
    * rectangle is in frame coordinates
    */
@@ -1528,7 +1546,7 @@ public:
    */
   virtual nscolor GetCaretColorAt(int32_t aOffset);
 
- 
+
   bool IsThemed(nsITheme::Transparency* aTransparencyState = nullptr) const {
     return IsThemed(StyleDisplay(), aTransparencyState);
   }
@@ -1548,7 +1566,7 @@ public:
     }
     return true;
   }
-  
+
   /**
    * Builds a display list for the content represented by this frame,
    * treating this frame as the root of a stacking context.
@@ -1706,7 +1724,7 @@ public:
   // cursor calculated from a point; the secondary offset, when it is different,
   // indicates that the point is in the boundaries of some selectable object.
   // Note that the primary offset can be after the secondary offset; for places
-  // that need the beginning and end of the object, the StartOffset and 
+  // that need the beginning and end of the object, the StartOffset and
   // EndOffset helpers can be used.
   struct MOZ_STACK_CLASS ContentOffsets
   {
@@ -1785,13 +1803,13 @@ public:
   virtual nsresult  GetCharacterRectsInRange(int32_t aInOffset,
                                              int32_t aLength,
                                              nsTArray<nsRect>& aRects) = 0;
-  
+
   /**
    * Get the child frame of this frame which contains the given
    * content offset. outChildFrame may be this frame, or nullptr on return.
    * outContentOffset returns the content offset relative to the start
    * of the returned node. You can also pass a hint which tells the method
-   * to stick to the end of the first found frame or the beginning of the 
+   * to stick to the end of the first found frame or the beginning of the
    * next in case the offset falls on a boundary.
    */
   virtual nsresult GetChildFrameContainingOffset(int32_t    inContentOffset,
@@ -1801,12 +1819,12 @@ public:
 
  /**
    * Get the current frame-state value for this frame. aResult is
-   * filled in with the state bits. 
+   * filled in with the state bits.
    */
   nsFrameState GetStateBits() const { return mState; }
 
   /**
-   * Update the current frame-state value for this frame. 
+   * Update the current frame-state value for this frame.
    */
   void AddStateBits(nsFrameState aBits) { mState |= aBits; }
   void RemoveStateBits(nsFrameState aBits) { mState &= ~aBits; }
@@ -1818,7 +1836,7 @@ public:
   {
     return (mState & aBits) == aBits;
   }
-  
+
   /**
    * Checks if the current frame-state includes any of the listed bits
    */
@@ -1835,7 +1853,7 @@ public:
 
   /**
    * This call is invoked when the value of a content objects's attribute
-   * is changed. 
+   * is changed.
    * The first frame that maps that content is asked to deal
    * with the change by doing whatever is appropriate.
    *
@@ -1894,7 +1912,7 @@ public:
   virtual void SetNextInFlow(nsIFrame*) = 0;
 
   /**
-   * Return the first frame in our current flow. 
+   * Return the first frame in our current flow.
    */
   virtual nsIFrame* FirstInFlow() const {
     return const_cast<nsIFrame*>(this);
@@ -2328,7 +2346,7 @@ public:
    * frame state will be cleared.
    *
    * XXX This doesn't make sense. If the frame is reflowed but not complete, then
-   * the status should have mIncomplete bit set.
+   * the status should have IsIncomplete() equal to true.
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
@@ -2363,7 +2381,7 @@ public:
    * Helper method used by block reflow to identify runs of text so
    * that proper word-breaking can be done.
    *
-   * @return 
+   * @return
    *    true if we can continue a "text run" through the frame. A
    *    text run is text that should be treated contiguously for line
    *    and word breaking.
@@ -2444,7 +2462,7 @@ public:
    * will transform the point to the coordinate system of aOther.
    *
    * aOther must be non-null.
-   * 
+   *
    * This function is fastest when aOther is an ancestor of |this|.
    *
    * This function _DOES NOT_ work across document boundaries.
@@ -2464,7 +2482,7 @@ public:
    * ratio of |this|.
    *
    * aOther must be non-null.
-   * 
+   *
    * This function is fastest when aOther is an ancestor of |this|.
    *
    * This function works across document boundaries.
@@ -2569,7 +2587,7 @@ public:
     eTablePart =                        1 << 13,
     // If this bit is set, the frame doesn't allow ignorable whitespace as
     // children. For example, the whitespace between <table>\n<tr>\n<td>
-    // will be excluded during the construction of children. 
+    // will be excluded during the construction of children.
     eExcludesIgnorableWhitespace =      1 << 14,
     eSupportsCSSTransforms =            1 << 15,
 
@@ -2652,7 +2670,7 @@ public:
    * container types.
    *
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
@@ -2664,20 +2682,20 @@ public:
    * @param aRect The rect to invalidate, relative to the TopLeft of the
    * frame's border box.
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
-  
+
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
    * this one).
-   * 
+   *
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
    *
    * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the 
+   * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
    */
   void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
@@ -2693,7 +2711,7 @@ public:
    * entire overflow area of this frame has been rendered in its
    * layer(s).
    */
-  static void* LayerIsPrerenderedDataKey() { 
+  static void* LayerIsPrerenderedDataKey() {
     return &sLayerIsPrerenderedDataKey;
   }
   static uint8_t sLayerIsPrerenderedDataKey;
@@ -2718,9 +2736,9 @@ public:
    * If false, aRect is left unchanged.
    */
   bool IsInvalid(nsRect& aRect);
- 
+
   /**
-   * Check if any frame within the frame subtree (including this frame) 
+   * Check if any frame within the frame subtree (including this frame)
    * returns true for IsInvalid().
    */
   bool HasInvalidFrameInSubtree()
@@ -2735,16 +2753,16 @@ public:
   void ClearInvalidationStateBits();
 
   /**
-   * Ensures that the refresh driver is running, and schedules a view 
+   * Ensures that the refresh driver is running, and schedules a view
    * manager flush on the next tick.
    *
-   * The view manager flush will update the layer tree, repaint any 
+   * The view manager flush will update the layer tree, repaint any
    * invalid areas in the layer tree and schedule a layer tree
    * composite operation to display the layer tree.
    *
    * In general it is not necessary for frames to call this when they change.
    * For example, changes that result in a reflow will have this called for
-   * them by PresContext::DoReflow when the reflow begins. Style changes that 
+   * them by PresContext::DoReflow when the reflow begins. Style changes that
    * do not trigger a reflow should have this called for them by
    * DoApplyRenderingChangeToTree.
    *
@@ -2762,7 +2780,7 @@ public:
   void SchedulePaint(PaintType aType = PAINT_DEFAULT);
 
   /**
-   * Checks if the layer tree includes a dedicated layer for this 
+   * Checks if the layer tree includes a dedicated layer for this
    * frame/display item key pair, and invalidates at least aDamageRect
    * area within that layer.
    *
@@ -2957,7 +2975,7 @@ public:
    */
   bool IsSelectable(mozilla::StyleUserSelect* aSelectStyle) const;
 
-  /** 
+  /**
    *  Called to retrieve the SelectionController associated with the frame.
    *  @param aSelCon will contain the selection controller associated with
    *  the frame.
@@ -2976,9 +2994,9 @@ public:
   const nsFrameSelection* GetConstFrameSelection() const;
 
   /**
-   *  called to find the previous/next character, word, or line  returns the actual 
+   *  called to find the previous/next character, word, or line  returns the actual
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
-   *  uses frame's begin selection state to start. if no selection on this frame will 
+   *  uses frame's begin selection state to start. if no selection on this frame will
    *  return NS_ERROR_FAILURE
    *  @param aPOS is defined in nsFrameSelection
    */
@@ -3074,7 +3092,7 @@ public:
   /**
    * Overridable function to determine whether this frame should be considered
    * "in" the given non-null aSelection for visibility purposes.
-   */  
+   */
   virtual bool IsVisibleInSelection(nsISelection* aSelection);
 
   /**
@@ -3125,7 +3143,7 @@ public:
    *
    * @param aParentContent the content node corresponding to the parent frame
    * @return whether the frame is a pseudo frame
-   */   
+   */
   bool IsPseudoFrame(const nsIContent* aParentContent) {
     return mContent == aParentContent;
   }
@@ -3158,12 +3176,12 @@ public:
   /**
    * Check if this frame is focusable and in the current tab order.
    * Tabbable is indicated by a nonnegative tabindex & is a subset of focusable.
-   * For example, only the selected radio button in a group is in the 
+   * For example, only the selected radio button in a group is in the
    * tab order, unless the radio group has no selection in which case
-   * all of the visible, non-disabled radio buttons in the group are 
-   * in the tab order. On the other hand, all of the visible, non-disabled 
+   * all of the visible, non-disabled radio buttons in the group are
+   * in the tab order. On the other hand, all of the visible, non-disabled
    * radio buttons are always focusable via clicking or script.
-   * Also, depending on the pref accessibility.tabfocus some widgets may be 
+   * Also, depending on the pref accessibility.tabfocus some widgets may be
    * focusable but removed from the tab order. This is the default on
    * Mac OS X, where fewer items are focusable.
    * @param  [in, optional] aTabIndex the computed tab index
@@ -3214,7 +3232,7 @@ public:
    * This calculates the maximum size for a box based on its state
    * @param[in] aBoxLayoutState The desired state to calculate for
    * @return The maximum size
-   */    
+   */
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) = 0;
 
   /**
@@ -3320,23 +3338,23 @@ public:
   /**
    * Clear the list of child PresShells generated during the last paint
    * so that we can begin generating a new one.
-   */  
-  void ClearPresShellsFromLastPaint() { 
-    PaintedPresShellList()->Clear(); 
+   */
+  void ClearPresShellsFromLastPaint() {
+    PaintedPresShellList()->Clear();
   }
-  
+
   /**
    * Flag a child PresShell as painted so that it will get its paint count
    * incremented during empty transactions.
-   */  
-  void AddPaintedPresShell(nsIPresShell* shell) { 
+   */
+  void AddPaintedPresShell(nsIPresShell* shell) {
     PaintedPresShellList()->AppendElement(do_GetWeakReference(shell));
   }
-  
+
   /**
    * Increment the paint count of all child PresShells that were painted during
    * the last repaint.
-   */  
+   */
   void UpdatePaintCountForPaintedPresShells() {
     for (nsWeakPtr& item : *PaintedPresShellList()) {
       nsCOMPtr<nsIPresShell> shell = do_QueryReferent(item);
@@ -3344,7 +3362,7 @@ public:
         shell->IncrementPaintCount();
       }
     }
-  }  
+  }
 
   /**
    * @return true if we painted @aShell during the last repaint.
@@ -3581,15 +3599,15 @@ private:
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(PaintedPresShellsProperty,
                                       nsTArray<nsWeakPtr>,
                                       DestroyPaintedPresShellList)
-  
+
   nsTArray<nsWeakPtr>* PaintedPresShellList() {
     nsTArray<nsWeakPtr>* list = Properties().Get(PaintedPresShellsProperty());
-    
+
     if (!list) {
       list = new nsTArray<nsWeakPtr>();
       Properties().Set(PaintedPresShellsProperty(), list);
     }
-    
+
     return list;
   }
 
@@ -3653,7 +3671,7 @@ protected:
    *         see enum FrameSearchResult for more details.
    */
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) = 0;
-  
+
   /**
    * Search the frame for the next character
    * @param  aForward [in] Are we moving forward (or backward) in content order.
@@ -3669,7 +3687,7 @@ protected:
    */
   virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) = 0;
-  
+
   /**
    * Search the frame for the next word boundary
    * @param  aForward [in] Are we moving forward (or backward) in content order.
@@ -3727,7 +3745,7 @@ protected:
   /**
    * Search for the first paragraph boundary before or after the given position
    * @param  aPos See description in nsFrameSelection.h. The following fields are
-   *              used by this method: 
+   *              used by this method:
    *              Input: mDirection
    *              Output: mResultContent, mContentOffset
    */
@@ -3816,38 +3834,45 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * nsWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
- * Whenever an nsIFrame object is deleted, the nsWeakFrames pointing
- * to it will be cleared.
+ * AutoWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
+ * Whenever an nsIFrame object is deleted, the AutoWeakFrames pointing
+ * to it will be cleared.  AutoWeakFrame is for variables on the stack or
+ * in static storage only, there is also a WeakFrame below for heap uses.
  *
- * Create nsWeakFrame object when it is sure that nsIFrame object
+ * Create AutoWeakFrame object when it is sure that nsIFrame object
  * is alive and after some operations which may destroy the nsIFrame
  * (for example any DOM modifications) use IsAlive() or GetFrame() methods to
  * check whether it is safe to continue to use the nsIFrame object.
  *
  * @note The usage of this class should be kept to a minimum.
  */
-
-class nsWeakFrame {
+class WeakFrame;
+class MOZ_NONHEAP_CLASS AutoWeakFrame
+{
 public:
-  nsWeakFrame() : mPrev(nullptr), mFrame(nullptr) { }
+  explicit AutoWeakFrame()
+    : mPrev(nullptr), mFrame(nullptr) {}
 
-  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nullptr), mFrame(nullptr)
+  AutoWeakFrame(const AutoWeakFrame& aOther)
+    : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aOther.GetFrame());
   }
 
-  MOZ_IMPLICIT nsWeakFrame(nsIFrame* aFrame) : mPrev(nullptr), mFrame(nullptr)
+  MOZ_IMPLICIT AutoWeakFrame(const WeakFrame& aOther);
+
+  MOZ_IMPLICIT AutoWeakFrame(nsIFrame* aFrame)
+    : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aFrame);
   }
 
-  nsWeakFrame& operator=(nsWeakFrame& aOther) {
+  AutoWeakFrame& operator=(AutoWeakFrame& aOther) {
     Init(aOther.GetFrame());
     return *this;
   }
 
-  nsWeakFrame& operator=(nsIFrame* aFrame) {
+  AutoWeakFrame& operator=(nsIFrame* aFrame) {
     Init(aFrame);
     return *this;
   }
@@ -3864,7 +3889,7 @@ public:
 
   void Clear(nsIPresShell* aShell) {
     if (aShell) {
-      aShell->RemoveWeakFrame(this);
+      aShell->RemoveAutoWeakFrame(this);
     }
     mFrame = nullptr;
     mPrev = nullptr;
@@ -3874,19 +3899,82 @@ public:
 
   nsIFrame* GetFrame() const { return mFrame; }
 
-  nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
+  AutoWeakFrame* GetPreviousWeakFrame() { return mPrev; }
 
-  void SetPreviousWeakFrame(nsWeakFrame* aPrev) { mPrev = aPrev; }
+  void SetPreviousWeakFrame(AutoWeakFrame* aPrev) { mPrev = aPrev; }
 
-  ~nsWeakFrame()
+  ~AutoWeakFrame()
   {
     Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   }
 private:
+  // Not available for the heap!
+  void* operator new(size_t) = delete;
+  void* operator new[](size_t) = delete;
+  void operator delete(void*) = delete;
+  void operator delete[](void*) = delete;
+
   void Init(nsIFrame* aFrame);
 
-  nsWeakFrame*  mPrev;
-  nsIFrame*     mFrame;
+  AutoWeakFrame*  mPrev;
+  nsIFrame*       mFrame;
+};
+
+/**
+ * @see AutoWeakFrame
+ */
+class MOZ_HEAP_CLASS WeakFrame
+{
+public:
+  WeakFrame() : mFrame(nullptr) {}
+
+  WeakFrame(const WeakFrame& aOther) : mFrame(nullptr)
+  {
+    Init(aOther.GetFrame());
+  }
+
+  MOZ_IMPLICIT WeakFrame(const AutoWeakFrame& aOther) : mFrame(nullptr)
+  {
+    Init(aOther.GetFrame());
+  }
+
+  MOZ_IMPLICIT WeakFrame(nsIFrame* aFrame) : mFrame(nullptr)
+  {
+    Init(aFrame);
+  }
+
+  ~WeakFrame()
+  {
+    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
+  }
+
+  WeakFrame& operator=(WeakFrame& aOther) {
+    Init(aOther.GetFrame());
+    return *this;
+  }
+
+  WeakFrame& operator=(nsIFrame* aFrame) {
+    Init(aFrame);
+    return *this;
+  }
+
+  nsIFrame* operator->() { return mFrame; }
+  operator nsIFrame*() { return mFrame; }
+
+  void Clear(nsIPresShell* aShell) {
+    if (aShell) {
+      aShell->RemoveWeakFrame(this);
+    }
+    mFrame = nullptr;
+  }
+
+  bool IsAlive() { return !!mFrame; }
+  nsIFrame* GetFrame() const { return mFrame; }
+
+private:
+  void Init(nsIFrame* aFrame);
+
+  nsIFrame* mFrame;
 };
 
 inline bool

@@ -15,7 +15,12 @@ happen on mozilla-beta and mozilla-release.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 import functools
+import os
 
+
+# constants {{{1
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
+VERSION_PATH = os.path.join(GECKO, "browser", "config", "version_display.txt")
 
 """Map signing scope aliases to sets of projects.
 
@@ -53,14 +58,23 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
     'all-nightly-branches', set([
         'mozilla-central',
         'mozilla-aurora',
-        'jamun',
         'mozilla-beta',
         'mozilla-release',
     ])
 ], [
     'all-release-branches', set([
+        'mozilla-beta',
+        'mozilla-release',
     ])
 ]]
+
+"""The set of all beetmover release target tasks.
+
+Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_number`
+"""
+BEETMOVER_RELEASE_TARGET_TASKS = set([
+    'candidates_fennec',
+])
 
 """Map beetmover tasks aliases to sets of target task methods.
 
@@ -74,15 +88,18 @@ BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK = [[
         'mozilla_release_tasks',
     ])
 ], [
-    'all-release-tasks', set([
-    ])
+    'all-release-tasks', BEETMOVER_RELEASE_TARGET_TASKS
 ]]
 
 """Map the beetmover scope aliases to the actual scopes.
 """
 BEETMOVER_BUCKET_SCOPES = {
-    'all-release-branches': 'project:releng:beetmover:bucket:release',
-    'all-nightly-branches': 'project:releng:beetmover:bucket:nightly',
+    'all-release-tasks': {
+        'all-release-branches': 'project:releng:beetmover:bucket:release',
+    },
+    'all-nightly-tasks': {
+        'all-nightly-branches': 'project:releng:beetmover:bucket:nightly',
+    },
     'default': 'project:releng:beetmover:bucket:dep',
 }
 
@@ -127,12 +144,13 @@ BALROG_SERVER_SCOPES = {
 }
 
 
+# scope functions {{{1
 def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
     """Determine the restricted scope from `config.params['project']`.
 
     Args:
         alias_to_project_map (list of lists): each list pair contains the
-            alias alias and the set of projects that match.  This is ordered.
+            alias and the set of projects that match.  This is ordered.
         alias_to_scope_map (dict): the alias alias to scope
         config (dict): the task config that defines the project.
 
@@ -150,7 +168,7 @@ def get_scope_from_target_method(alias_to_tasks_map, alias_to_scope_map, config)
 
     Args:
         alias_to_tasks_map (list of lists): each list pair contains the
-            alias alias and the set of target methods that match. This is ordered.
+            alias and the set of target methods that match. This is ordered.
         alias_to_scope_map (dict): the alias alias to scope
         config (dict): the task config that defines the target task method.
 
@@ -163,6 +181,36 @@ def get_scope_from_target_method(alias_to_tasks_map, alias_to_scope_map, config)
     return alias_to_scope_map['default']
 
 
+def get_scope_from_target_method_and_project(alias_to_tasks_map, alias_to_project_map,
+                                             aliases_to_scope_map, config):
+    """Determine the restricted scope from both `target_tasks_method` and `project`.
+
+    On certain branches, we'll need differing restricted scopes based on
+    `target_tasks_method`.  However, we can't key solely on that, since that
+    `target_tasks_method` might be run on an unprivileged branch.  This method
+    checks both.
+
+    Args:
+        alias_to_tasks_map (list of lists): each list pair contains the
+            alias and the set of target methods that match. This is ordered.
+        alias_to_project_map (list of lists): each list pair contains the
+            alias and the set of projects that match.  This is ordered.
+        aliases_to_scope_map (dict of dicts): the task alias to project alias to scope
+        config (dict): the task config that defines the target task method and project.
+
+    Returns:
+        string: the scope to use.
+    """
+    project = config.params['project']
+    target = config.params['target_tasks_method']
+    for alias1, tasks in alias_to_tasks_map:
+        for alias2, projects in alias_to_project_map:
+            if target in tasks and project in projects and \
+                    aliases_to_scope_map.get(alias1, {}).get(alias2):
+                return aliases_to_scope_map[alias1][alias2]
+    return aliases_to_scope_map['default']
+
+
 get_signing_cert_scope = functools.partial(
     get_scope_from_project,
     SIGNING_SCOPE_ALIAS_TO_PROJECT,
@@ -170,7 +218,8 @@ get_signing_cert_scope = functools.partial(
 )
 
 get_beetmover_bucket_scope = functools.partial(
-    get_scope_from_project,
+    get_scope_from_target_method_and_project,
+    BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
     BEETMOVER_SCOPE_ALIAS_TO_PROJECT,
     BEETMOVER_BUCKET_SCOPES
 )
@@ -186,3 +235,32 @@ get_balrog_server_scope = functools.partial(
     BALROG_SCOPE_ALIAS_TO_PROJECT,
     BALROG_SERVER_SCOPES
 )
+
+
+# release_config {{{1
+def get_release_config(config):
+    """Get the build number and version for a release task.
+
+    Currently only applies to beetmover tasks.
+
+    Args:
+        config (dict): the task config that defines the target task method.
+
+    Raises:
+        ValueError: if a release graph doesn't define a valid
+            `os.environ['BUILD_NUMBER']`
+
+    Returns:
+        dict: containing both `build_number` and `version`.  This can be used to
+            update `task.payload`.
+    """
+    release_config = {}
+    if config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
+        build_number = str(os.environ.get("BUILD_NUMBER", ""))
+        if not build_number.isdigit():
+            raise ValueError("Release graphs must specify `BUILD_NUMBER` in the environment!")
+        release_config['build_number'] = int(build_number)
+        with open(VERSION_PATH, "r") as fh:
+            version = fh.readline().rstrip()
+        release_config['version'] = version
+    return release_config

@@ -422,6 +422,13 @@ hb_indic_get_categories (hb_codepoint_t u)
       if (hb_in_range (u, 0xAA60u, 0xAA7Fu)) return indic_table[u - 0xAA60u + indic_offset_0xaa60u];
       break;
 
+    case 0x11u:
+      // According to ScriptExtensions.txt, these Grantha marks may also be used in Tamil,
+      // so the Indic shaper needs to know their categories.
+      if (unlikely (u == 0x11303)) return _(Vs,R);
+      if (unlikely (u == 0x1133c)) return _(N,B);
+      break;
+
     default:
       break;
   }

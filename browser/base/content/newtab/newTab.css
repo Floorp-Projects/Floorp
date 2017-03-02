@@ -572,12 +572,12 @@ body.compact #newtab-search-container {
   background-color: #F9F9F9;
 }
 
-.newtab-customize-panel-item[selected]:-moz-locale-dir(rtl) {
+.newtab-customize-panel-item[selected]:dir(rtl){
   background-position: right 15px center;
 }
 
-.newtab-customize-complex-option:hover > .selectable:not([selected]):-moz-locale-dir(rtl),
-.selectable:not([selected]):hover:-moz-locale-dir(rtl) {
+.newtab-customize-complex-option:hover > .selectable:not([selected]):dir(rtl),
+.selectable:not([selected]):hover:dir(rtl) {
   background-position: right 15px center;
 }
 

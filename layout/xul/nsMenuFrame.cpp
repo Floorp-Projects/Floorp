@@ -138,7 +138,7 @@ public:
     return NS_OK;
   }
 protected:
-  nsWeakFrame       mFrame;
+  WeakFrame         mFrame;
   nsCOMPtr<nsIAtom> mAttr;
 };
 
@@ -379,7 +379,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   if (*aEventStatus == nsEventStatus_eIgnore)
     *aEventStatus = nsEventStatus_eConsumeDoDefault;
 
@@ -546,7 +546,7 @@ nsMenuFrame::PopupOpened()
 {
   gMenuJustOpenedOrClosed = true;
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::open,
                     NS_LITERAL_STRING("true"), true);
   if (!weakFrame.IsAlive())
@@ -564,7 +564,7 @@ nsMenuFrame::PopupOpened()
 void
 nsMenuFrame::PopupClosed(bool aDeselectMenu)
 {
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   nsContentUtils::AddScriptRunner(
     new nsUnsetAttrRunnable(mContent, nsGkAtoms::open));
   if (!weakFrame.IsAlive())
@@ -897,7 +897,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
       case 1:
         {
           // Turn the highlight back on and wait for a while before closing the menu.
-          nsWeakFrame weakFrame(this);
+          AutoWeakFrame weakFrame(this);
           mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
                             NS_LITERAL_STRING("true"), true);
           if (weakFrame.IsAlive()) {
@@ -942,7 +942,7 @@ nsMenuFrame::UpdateMenuType()
 
     default:
       if (mType != eMenuType_Normal) {
-        nsWeakFrame weakFrame(this);
+        AutoWeakFrame weakFrame(this);
         mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                             true);
         ENSURE_TRUE(weakFrame.IsAlive());
@@ -1036,7 +1036,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
   AddStateBits(NS_STATE_ACCELTEXT_IS_DERIVED);
 
   // If anything below fails, just leave the accelerator text blank.
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, aNotify);
   ENSURE_TRUE(weakFrame.IsAlive());
 
@@ -1220,7 +1220,7 @@ nsMenuFrame::StartBlinking(WidgetGUIEvent* aEvent, bool aFlipChecked)
   }
 
   // Blink off.
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, true);
   if (!weakFrame.IsAlive())
     return;

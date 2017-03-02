@@ -36,10 +36,10 @@ index aeeebc65..5c0836a 100644
 -[badges]
 -travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 +build = false
-
+ 
  [dependencies]
  byteorder = "1.0.0"
- "mp4parse" = {version = "0.6.0", path = "../mp4parse"}
+ mp4parse = {version = "0.7.0", path = "../mp4parse"}
  
 -[build-dependencies]
 -rusty-cheddar = "0.3.2"

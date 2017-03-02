@@ -11,6 +11,15 @@
   --panelui-subview-transition-duration: 150ms;
 }
 
+:root:-moz-lwtheme {
+  color: var(--lwt-text-color) !important;
+}
+
+:root:-moz-lwtheme:not([customization-lwtheme]) {
+  background-color: var(--lwt-accent-color) !important;
+  background-image: var(--lwt-header-image) !important;
+}
+
 #main-window:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
   min-width: 335px;
@@ -445,6 +454,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 #browser-bottombox[lwthemefooter="true"] {
   background-repeat: no-repeat;
   background-position: bottom left;
+  background-color: var(--lwt-accent-color);
+  background-image: var(--lwt-header-image);
 }
 
 .menuitem-iconic-tooltip {
@@ -975,10 +986,14 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   display: none;
 }
 
-#downloads-button:-moz-any([progress], [counter], [paused]) #downloads-indicator-icon,
-#downloads-button:not(:-moz-any([progress], [counter], [paused]))
-                                                   #downloads-indicator-progress-area
-{
+#downloads-button.withProgressBar:-moz-any([progress], [counter], [paused]) #downloads-indicator-icon,
+#downloads-button:not(:-moz-any([progress], [counter], [paused])) #downloads-indicator-progress-area {
+  visibility: hidden;
+}
+
+/* Hide elements for another type of progressmeter if it's not in use. */
+#downloads-button.withProgressBar #downloads-indicator-progress-icon,
+#downloads-button:not(.withProgressBar) #downloads-indicator-progress-area {
   visibility: hidden;
 }
 

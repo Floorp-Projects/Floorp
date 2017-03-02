@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
           ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
           RemotePrompt:false, SelfSupportBackend:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
-          Task:false, UITour:false, URLBarZoom:false, WebChannel:false,
+          Task:false, UITour:false, WebChannel:false,
           WindowsRegistry:false, webrtcUI:false */
 
 /**
@@ -86,7 +86,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["TabCrashHandler", "resource:///modules/ContentCrashHandlers.jsm"],
   ["Task", "resource://gre/modules/Task.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
-  ["URLBarZoom", "resource:///modules/URLBarZoom.jsm"],
   ["WebChannel", "resource://gre/modules/WebChannel.jsm"],
   ["WindowsRegistry", "resource://gre/modules/WindowsRegistry.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm"],
@@ -631,7 +630,6 @@ BrowserGlue.prototype = {
 
     LoginManagerParent.init();
     ReaderParent.init();
-    URLBarZoom.init();
 
     SelfSupportBackend.init();
 

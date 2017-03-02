@@ -30,8 +30,8 @@ function assertWindowIsPrivate(win) {
             "The parent window should be using private browsing");
 
   return ContentTask.spawn(win.gBrowser.selectedBrowser, null, function*() {
-    let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
-    Assert.ok(loadContext.usePrivateBrowsing,
+    let contentLoadContext = docShell.QueryInterface(Ci.nsILoadContext);
+    Assert.ok(contentLoadContext.usePrivateBrowsing,
               "Content docShell should be using private browsing");
   });
 }

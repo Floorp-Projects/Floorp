@@ -34,6 +34,7 @@ enum class VRDeviceType : uint16_t {
   Oculus,
   OpenVR,
   OSVR,
+  Puppet,
   NumVRDeviceTypes
 };
 

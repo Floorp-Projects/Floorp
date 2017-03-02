@@ -147,6 +147,13 @@ this.DownloadsCommon = {
   ATTENTION_SEVERE: "severe",
 
   /**
+   * This can be used by add-on experiments as a killswitch for the new style
+   * progress indication. This will be removed in bug 1329109 after the new
+   * indicator is released.
+   **/
+  arrowStyledIndicator: true,
+
+  /**
    * Returns an object whose keys are the string names from the downloads string
    * bundle, and whose values are either the translated strings or functions
    * returning formatted strings.

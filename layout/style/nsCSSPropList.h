@@ -4052,6 +4052,17 @@ CSS_PROP_TEXT(
     nullptr,
     offsetof(nsStyleText, mTextIndent),
     eStyleAnimType_Coord)
+CSS_PROP_TEXT(
+    text-justify,
+    text_justify,
+    TextJustify,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    "layout.css.text-justify.enabled",
+    VARIANT_HK,
+    kTextJustifyKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
 CSS_PROP_VISIBILITY(
     text-orientation,
     text_orientation,

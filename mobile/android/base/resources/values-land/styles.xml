@@ -5,11 +5,6 @@
 
 <resources>
 
-    <style name="TabsLayout" parent="TabsLayoutBase">
-         <item name="android:orientation">horizontal</item>
-         <item name="android:scrollbars">horizontal</item>
-    </style>
-
     <style name="TabsItem">
          <item name="android:nextFocusDown">@+id/close</item>
     </style>

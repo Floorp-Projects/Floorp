@@ -511,9 +511,10 @@ HasLiveStackValueAtDepth(JSScript* script, jsbytecode* pc, uint32_t stackDepth)
             break;
 
           case JSTRY_FOR_OF:
-            // For-of loops have both the iterator and the result object on
-            // stack. The iterator is below the result object.
-            if (stackDepth == tn->stackDepth - 1)
+            // For-of loops have the iterator, the result object, and the value
+            // of the result object on stack. The iterator is below the result
+            // object and the value.
+            if (stackDepth == tn->stackDepth - 2)
                 return true;
             break;
 

@@ -37,7 +37,6 @@ BUILD_KINDS = set([
 JOB_KINDS = set([
     'source-test',
     'toolchain',
-    'marionette-harness',
     'android-stuff',
 ])
 

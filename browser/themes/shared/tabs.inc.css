@@ -383,17 +383,18 @@
 }
 
 /* Selected tab lightweight theme styles.
-   See browser-lightweightTheme.css for information about run-time changes to LWT styles. */
+   See the "Lightweight theme on tabs" section of this file
+   for information about run-time changes to LWT styles. */
 .tab-background-middle[selected=true]:-moz-lwtheme {
   background-color: transparent;
   background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
-                    @fgTabTextureLWT@;/*,
-                    lwtHeader;*/
+                    @fgTabTextureLWT@;
   /* Don't stretch the LWT header images */
   background-size: var(--tab-stroke-background-size), auto 100%, auto auto;
 }
 
-/* These LWT styles are normally overridden by browser-lightweightTheme.css */
+/* These LWT styles are normally overridden by the "Lightweight theme on tabs"
+   section of this file. */
 .tab-background-start[selected=true]:-moz-lwtheme::before,
 .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-image: @fgTabTextureLWT@;
@@ -403,6 +404,31 @@
 .tab-background-end[selected=true]:-moz-lwtheme::before,
 .tab-background-middle[selected=true]:-moz-lwtheme {
   background-color: transparent;
+}
+
+/*
+ * LightweightThemeListener will set the current lightweight theme's header
+ * image to the lwt-header-image variable, used in each of the following rulesets.
+ */
+
+/* Lightweight theme on tabs */
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start[selected=true]:-moz-lwtheme::before,
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
+  background-attachment: scroll, fixed;
+  background-color: transparent;
+  background-image: @fgTabTextureLWT@, var(--lwt-header-image);
+  background-position: 0 0, right top;
+  background-repeat: repeat-x, no-repeat;
+}
+
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
+  background-attachment: scroll, scroll, fixed;
+  background-color: transparent;
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTextureLWT@,
+                    var(--lwt-header-image);
+  background-position: 0 0, 0 0, right top;
+  background-repeat: repeat-x, repeat-x, no-repeat;
 }
 
 /* End selected tab */
@@ -528,6 +554,12 @@
   .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
   .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
     background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
+  }
+
+  #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
+                      @fgTabTextureLWT@,
+                      var(--lwt-header-image);
   }
 
   .tab-throbber[busy] {

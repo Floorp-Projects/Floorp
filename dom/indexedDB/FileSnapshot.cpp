@@ -32,7 +32,7 @@ class StreamWrapper final
 public:
   StreamWrapper(nsIInputStream* aInputStream,
                 IDBFileHandle* aFileHandle)
-    : mOwningThread(NS_GetCurrentThread())
+    : mOwningThread(aFileHandle->GetMutableFile()->Database()->EventTarget())
     , mInputStream(aInputStream)
     , mFileHandle(aFileHandle)
     , mFinished(false)
@@ -86,8 +86,10 @@ private:
       return;
     }
 
-    nsCOMPtr<nsIRunnable> destroyRunnable =
-      NewNonOwningRunnableMethod(this, &StreamWrapper::Destroy);
+    RefPtr<Runnable> destroyRunnable =
+      NewNonOwningRunnableMethod("StreamWrapper::Destroy",
+                                 this,
+                                 &StreamWrapper::Destroy);
 
     MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(destroyRunnable,
                                                 NS_DISPATCH_NORMAL));
@@ -111,7 +113,8 @@ public:
 private:
   explicit
   CloseRunnable(StreamWrapper* aStreamWrapper)
-    : mStreamWrapper(aStreamWrapper)
+    : Runnable("StreamWrapper::CloseRunnable")
+    , mStreamWrapper(aStreamWrapper)
   { }
 
   ~CloseRunnable()

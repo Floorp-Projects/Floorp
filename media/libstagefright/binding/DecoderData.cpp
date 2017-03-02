@@ -13,11 +13,9 @@
 #include "mozilla/ArrayUtils.h"
 #include "include/ESDS.h"
 
-#ifdef MOZ_RUST_MP4PARSE
 // OpusDecoder header is really needed only by MP4 in rust
 #include "OpusDecoder.h"
 #include "mp4parse.h"
-#endif
 
 using namespace stagefright;
 
@@ -189,7 +187,6 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
 
 }
 
-#ifdef MOZ_RUST_MP4PARSE
 static void
 UpdateTrackProtectedInfo(mozilla::TrackInfo& aConfig,
                          const mp4parse_sinf_info& aSinf)
@@ -269,7 +266,6 @@ MP4VideoInfo::Update(const mp4parse_track_info* track,
     mExtraData->AppendElements(video->extra_data.data, video->extra_data.length);
   }
 }
-#endif
 
 bool
 MP4VideoInfo::IsValid() const

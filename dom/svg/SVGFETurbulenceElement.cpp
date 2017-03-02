@@ -133,7 +133,14 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   uint16_t stitch = mEnumAttributes[STITCHTILES].GetAnimValue();
 
   if (fX == 0 || fY == 0) {
-    return FilterPrimitiveDescription(PrimitiveType::Empty);
+    // A base frequency of zero results in transparent black for
+    // type="turbulence" and in 50% alpha 50% gray for type="fractalNoise".
+    if (type == SVG_TURBULENCE_TYPE_TURBULENCE) {
+      return FilterPrimitiveDescription(PrimitiveType::Empty);
+    }
+    FilterPrimitiveDescription descr(PrimitiveType::Flood);
+    descr.Attributes().Set(eFloodColor, Color(0.5, 0.5, 0.5, 0.5));
+    return descr;
   }
 
   // We interpret the base frequency as relative to user space units. In other

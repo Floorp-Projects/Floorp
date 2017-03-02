@@ -191,6 +191,9 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     case HB_SCRIPT_MANICHAEAN:
     case HB_SCRIPT_PSALTER_PAHLAVI:
 
+    /* Unicode-9.0 additions */
+    case HB_SCRIPT_ADLAM:
+
       /* For Arabic script, use the Arabic shaper even if no OT script tag was found.
        * This is because we do fallback shaping for Arabic script (and not others).
        * But note that Arabic shaping is applicable only to horizontal layout; for

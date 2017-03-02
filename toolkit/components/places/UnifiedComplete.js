@@ -556,6 +556,9 @@ function PrefillSite(url, title) {
   this.uri = NetUtil.newURI(url);
   this.title = title;
   this._matchTitle = title.toLowerCase();
+  this._hasWWW = this.uri.host.startsWith("www.");
+  this._hostWithoutWWW = this._hasWWW ? this.uri.host.slice(4)
+                                      : this.uri.host;
 }
 
 /**
@@ -796,6 +799,14 @@ function Search(searchString, searchParam, autocompleteListener,
   this._remoteMatchesCount = 0;
   // Counts the number of inserted extension matches.
   this._extensionMatchesCount = 0;
+
+  this._searchStringHasWWW = this._strippedPrefix.endsWith("www.");
+  this._searchStringWWW = this._searchStringHasWWW ? "www." : "";
+  this._searchStringFromWWW = this._searchStringWWW + this._searchString;
+
+  this._searchStringSchemeFound = this._strippedPrefix.match(/^(\w+):/i);
+  this._searchStringScheme = this._searchStringSchemeFound ?
+                             this._searchStringSchemeFound[1].toLowerCase() : "";
 }
 
 Search.prototype = {
@@ -1049,41 +1060,105 @@ Search.prototype = {
       Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
   },
 
-  // TODO: manage protocol and "www." like _matchSearchEngineUrl() does
   _matchPrefillSites() {
     if (!Prefs.prefillSitesEnabled)
       return;
+
+    // In case user typed just "https://" or "www." or "https://www."
+    // - we do not put out the whole lot of sites
+    if (!this._searchString)
+      return;
+
+    if (!(this._searchStringScheme === "" ||
+          this._searchStringScheme === "https" ||
+          this._searchStringScheme === "http"))
+      return;
+
+    let strictMatches = [];
+    let looseMatches = [];
+
     for (let site of PrefillSiteStorage.sites) {
-      if (site.uri.host.includes(this._searchString) ||
-          site._matchTitle.includes(this._searchString)) {
-        let match = {
-          value: site.uri.spec,
-          comment: site.title,
-          style: "prefill-site",
-          finalCompleteValue: site.uri.spec,
-          frecency: FRECENCY_DEFAULT - 1,
-        };
-        this._addMatch(match);
+      if (this._searchStringScheme && this._searchStringScheme !== site.uri.scheme)
+        continue;
+      let match = {
+        value: site.uri.spec,
+        comment: site.title,
+        style: "prefill-site",
+        frecency: FRECENCY_DEFAULT - 1,
+      };
+      if (site.uri.host.includes(this._searchStringFromWWW) ||
+          site._matchTitle.includes(this._searchStringFromWWW)) {
+        strictMatches.push(match);
+      } else if (site.uri.host.includes(this._searchString) ||
+                 site._matchTitle.includes(this._searchString)) {
+        looseMatches.push(match);
       }
     }
+    [...strictMatches, ...looseMatches].forEach(this._addMatch, this);
   },
 
   _matchPrefillSiteForAutofill() {
     if (!Prefs.prefillSitesEnabled)
       return false;
-    for (let site of PrefillSiteStorage.sites) {
-      if (site.uri.host.startsWith(this._searchString)) {
-        let match = {
-          value: stripPrefix(site.uri.spec),
-          style: "autofill",
-          finalCompleteValue: site.uri.spec,
-          frecency: FRECENCY_DEFAULT,
-        };
-        this._result.setDefaultIndex(0);
-        this._addMatch(match);
-        return true;
-      }
+
+    if (!(this._searchStringScheme === "" ||
+          this._searchStringScheme === "https" ||
+          this._searchStringScheme === "http"))
+      return false;
+
+    let searchStringSchemePrefix = this._searchStringScheme
+                                   ? (this._searchStringScheme + "://")
+                                   : "";
+
+    // If search string has scheme - we'll match it strictly
+    function matchScheme(site, search) {
+      return !search._searchStringScheme ||
+             search._searchStringScheme === site.uri.scheme;
     }
+
+    // First we try to strict-match
+    // If search string has "www."- we try to strict-match it along with "www."
+    function matchStrict(site) {
+      return site.uri.host.startsWith(this._searchStringFromWWW)
+             && matchScheme(site, this);
+    }
+    let site = PrefillSiteStorage.sites.find(matchStrict, this)
+    if (site) {
+      let match = {
+        // We keep showing prefix that user typed, then what we match on
+        value: searchStringSchemePrefix + site.uri.host + "/",
+        style: "autofill",
+        finalCompleteValue: site.uri.spec,
+        frecency: FRECENCY_DEFAULT,
+      };
+      this._result.setDefaultIndex(0);
+      this._addMatch(match);
+      return true;
+    }
+
+    // If no strict result found - we try loose match
+    // regardless of "www." in prefill-sites or search string
+    function matchLoose(site) {
+      return site._hostWithoutWWW.startsWith(this._searchString)
+             && matchScheme(site, this);
+    }
+    site = PrefillSiteStorage.sites.find(matchLoose, this);
+    if (site) {
+      let match = {
+        // We keep showing prefix that user typed, then what we match on
+        value: searchStringSchemePrefix + this._searchStringWWW +
+               site._hostWithoutWWW + "/",
+        style: "autofill",
+        // On loose match, result should always have "www."
+        finalCompleteValue: site.uri.scheme + "://www." +
+                            site._hostWithoutWWW + "/",
+        frecency: FRECENCY_DEFAULT,
+      };
+      this._result.setDefaultIndex(0);
+      this._addMatch(match);
+      return true;
+    }
+
     return false;
   },
 
@@ -2141,10 +2216,6 @@ UnifiedComplete.prototype = {
 
   unregisterOpenPage(uri, userContextId) {
     SwitchToTabStorage.delete(uri, userContextId);
-  },
-
-  addPrefillSite(url, title) {
-    PrefillSiteStorage.add(url, title);
   },
 
   populatePrefillSiteStorage(json) {

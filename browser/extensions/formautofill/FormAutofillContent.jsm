@@ -233,20 +233,9 @@ let ProfileAutocomplete = {
     }
 
     let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
+    let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    // TODO: FormAutofillHandler.autofillFormFields will be used for filling
-    // fields logic eventually.
-    for (let inputInfo of formDetails) {
-      // Skip filling the value of focused input which is filled in
-      // FormFillController.
-      if (inputInfo.element === focusedInput) {
-        continue;
-      }
-      let value = profile[inputInfo.fieldName];
-      if (value) {
-        inputInfo.element.setUserInput(value);
-      }
-    }
+    formHandler.autofillFormFields(profile, focusedInput);
   },
 };
 
@@ -296,18 +285,31 @@ var FormAutofillContent = {
   },
 
   /**
+   * Get the form's handler from cache which is created after page identified.
+   *
+   * @param {HTMLInputElement} element Focused input which triggered profile searching
+   * @returns {Array<Object>|null}
+   *          Return target form's handler from content cache
+   *          (or return null if the information is not found in the cache).
+   *
+   */
+  getFormHandler(element) {
+    let rootElement = FormLikeFactory.findRootForField(element);
+    return this._formsDetails.get(rootElement);
+  },
+
+  /**
    * Get the form's information from cache which is created after page identified.
    *
    * @param {HTMLInputElement} element Focused input which triggered profile searching
    * @returns {Array<Object>|null}
-   *          Return target form's information that cloned from content cache
+   *          Return target form's information from content cache
    *          (or return null if the information is not found in the cache).
    *
    */
   getFormDetails(element) {
-    let rootElement = FormLikeFactory.findRootForField(element);
-    let formDetails = this._formsDetails.get(rootElement);
-    return formDetails ? formDetails.fieldDetails : null;
+    let formHandler = this.getFormHandler(element);
+    return formHandler ? formHandler.fieldDetails : null;
   },
 
   getAllFieldNames(element) {

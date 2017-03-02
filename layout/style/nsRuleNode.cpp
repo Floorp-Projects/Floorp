@@ -1449,6 +1449,7 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleFloat, None, InlineEnd)
   DEFINE_ENUM_CLASS_SETTER(StyleFloatEdge, ContentBox, MarginBox)
   DEFINE_ENUM_CLASS_SETTER(StyleHyphens, None, Auto)
+  DEFINE_ENUM_CLASS_SETTER(StyleTextJustify, None, InterCharacter)
   DEFINE_ENUM_CLASS_SETTER(StyleUserFocus, None, SelectMenu)
   DEFINE_ENUM_CLASS_SETTER(StyleUserSelect, None, MozText)
   DEFINE_ENUM_CLASS_SETTER(StyleUserInput, None, Auto)
@@ -4875,6 +4876,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            SETCOORD_LPH | SETCOORD_INITIAL_ZERO | SETCOORD_STORE_CALC |
              SETCOORD_UNSET_INHERIT,
            aContext, mPresContext, conditions);
+
+  // text-justify: enum, inherit, initial
+  SetValue(*aRuleData->ValueForTextJustify(), text->mTextJustify, conditions,
+           SETVAL_ENUMERATED | SETVAL_UNSET_INHERIT,
+           parentText->mTextJustify,
+           StyleTextJustify::Auto);
 
   // text-transform: enum, inherit, initial
   SetValue(*aRuleData->ValueForTextTransform(), text->mTextTransform, conditions,

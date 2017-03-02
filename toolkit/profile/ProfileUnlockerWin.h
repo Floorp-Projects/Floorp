@@ -11,7 +11,7 @@
 #include <restartmanager.h>
 
 #include "nsIProfileUnlocker.h"
-#include "nsProfileStringTypes.h"
+#include "nsString.h"
 #include "nsWindowsHelpers.h"
 
 namespace mozilla {

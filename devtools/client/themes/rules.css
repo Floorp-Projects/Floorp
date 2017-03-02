@@ -416,7 +416,6 @@
 
 .ruleview-grid {
   background: url("chrome://devtools/skin/images/grid.svg");
-  background-size: 1em;
   border-radius: 0;
 }
 
