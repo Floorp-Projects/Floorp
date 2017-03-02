@@ -53,15 +53,10 @@ FormAutofillHandler.prototype = {
   fieldDetails: null,
 
   /**
-   * Returns information from the form about fields that can be autofilled, and
-   * populates the fieldDetails array on this object accordingly.
-   *
-   * @returns {Array<Object>} Serializable data structure that can be sent to the user
-   *          interface, or null if the operation failed because the constraints
-   *          on the allowed fields were not honored.
+   * Set fieldDetails from the form about fields that can be autofilled.
    */
   collectFormFields() {
-    let autofillData = [];
+    this.fieldDetails = [];
 
     for (let element of this.form.elements) {
       // Exclude elements to which no autocomplete field has been assigned.
@@ -77,28 +72,21 @@ FormAutofillHandler.prototype = {
                                       f.fieldName == info.fieldName)) {
         // A field with the same identifier already exists.
         log.debug("Not collecting a field matching another with the same info:", info);
-        return null;
+        continue;
       }
 
-      let inputFormat = {
+      let formatWithElement = {
         section: info.section,
         addressType: info.addressType,
         contactType: info.contactType,
         fieldName: info.fieldName,
+        element, // TODO: Apply Cu.getWeakReference and use get API for strong ref.
       };
-      // Clone the inputFormat for caching the fields and elements together
-      let formatWithElement = Object.assign({}, inputFormat);
 
-      inputFormat.index = autofillData.length;
-      autofillData.push(inputFormat);
-
-      formatWithElement.element = element;
       this.fieldDetails.push(formatWithElement);
     }
 
-    log.debug("Collected details on", autofillData.length, "fields");
-
-    return autofillData;
+    log.debug("Collected details on", this.fieldDetails.length, "fields");
   },
 
   /**
