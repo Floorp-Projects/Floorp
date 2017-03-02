@@ -2024,6 +2024,13 @@ var AddonManagerInternal = {
   startInstall(browser, url, install) {
     this.installNotifyObservers("addon-install-started", browser, url, install);
 
+    // Local installs may already be in a failed state in which case
+    // we won't get any further events, detect those cases now.
+    if (install.state == AddonManager.STATE_DOWNLOADED && install.addon.appDisabled) {
+          this.installNotifyObservers("addon-install-failed", browser, url, install);
+          return;
+    }
+
     let self = this;
     let listener = {
       onDownloadCancelled() {
