@@ -332,6 +332,8 @@ var ViewSourceContent = {
                     .createInstance(Ci.nsISHEntry);
     shEntry.setURI(BrowserUtils.makeURI(viewSrcURL, null, null));
     shEntry.setTitle(viewSrcURL);
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    shEntry.triggeringPrincipal = systemPrincipal;
     shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
     shEntry.cacheKey = shEntrySource.cacheKey;
     docShell.QueryInterface(Ci.nsIWebNavigation)

@@ -101,7 +101,7 @@ WrapperFactory::WaiveXray(JSContext* cx, JSObject* objArg)
     if (!waiver) {
         waiver = CreateXrayWaiver(cx, obj);
     }
-    MOZ_ASSERT(!ObjectIsMarkedGray(waiver));
+    MOZ_ASSERT(JS::ObjectIsNotGray(waiver));
     return waiver;
 }
 
@@ -322,7 +322,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
 
     obj.set(&v.toObject());
     MOZ_ASSERT(IS_WN_REFLECTOR(obj), "bad object");
-    MOZ_ASSERT(!ObjectIsMarkedGray(obj), "Should never return gray reflectors");
+    MOZ_ASSERT(JS::ObjectIsNotGray(obj), "Should never return gray reflectors");
 
     // Because the underlying native didn't have a PreCreate hook, we had
     // to a new (or possibly pre-existing) XPCWN in our compartment.

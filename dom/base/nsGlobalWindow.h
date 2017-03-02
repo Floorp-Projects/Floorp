@@ -394,13 +394,13 @@ public:
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports *aState) override;
 
-  virtual void Suspend();
-  virtual void Resume();
+  void Suspend();
+  void Resume();
   virtual bool IsSuspended() const override;
-  virtual void Freeze();
-  virtual void Thaw();
+  void Freeze();
+  void Thaw();
   virtual bool IsFrozen() const override;
-  virtual void SyncStateFromParentWindow();
+  void SyncStateFromParentWindow();
 
   virtual nsresult FireDelayedDOMEvents() override;
 

@@ -323,18 +323,30 @@ ObjectIsMarkedGray(const JS::Heap<JSObject*>& obj)
     return ObjectIsMarkedGray(obj.unbarrieredGet());
 }
 
-static MOZ_ALWAYS_INLINE bool
-ScriptIsMarkedGray(JSScript* script)
+// The following *IsNotGray functions are for use in assertions and take account
+// of the eventual gray marking state at the end of any ongoing incremental GC.
+#ifdef DEBUG
+inline bool
+CellIsNotGray(js::gc::Cell* maybeCell)
 {
-    auto cell = reinterpret_cast<js::gc::Cell*>(script);
-    return js::gc::detail::CellIsMarkedGrayIfKnown(cell);
+    if (!maybeCell)
+        return true;
+
+    return js::gc::detail::CellIsNotGray(maybeCell);
 }
 
-static MOZ_ALWAYS_INLINE bool
-ScriptIsMarkedGray(const Heap<JSScript*>& script)
+inline bool
+ObjectIsNotGray(JSObject* maybeObj)
 {
-    return ScriptIsMarkedGray(script.unbarrieredGet());
+    return CellIsNotGray(reinterpret_cast<js::gc::Cell*>(maybeObj));
 }
+
+inline bool
+ObjectIsNotGray(const JS::Heap<JSObject*>& obj)
+{
+    return ObjectIsNotGray(obj.unbarrieredGet());
+}
+#endif
 
 /**
  * The TenuredHeap<T> class is similar to the Heap<T> class above in that it

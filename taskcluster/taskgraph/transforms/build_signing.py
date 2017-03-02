@@ -47,8 +47,7 @@ def make_signing_description(config, jobs):
         else:
             job_specs = [
                 {
-                    'artifacts': ['public/build/target.tar.bz2',
-                                  'public/build/target.checksums'],
+                    'artifacts': ['public/build/target.tar.bz2'],
                     'format': 'gpg',
                 }, {
                     'artifacts': ['public/build/update/target.complete.mar'],

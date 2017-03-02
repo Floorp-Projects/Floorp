@@ -62,8 +62,8 @@ public:
     // After a connection has had ResumeSend() called by a transaction,
     // and it is ready to write to the network it may need to know the
     // transaction that has data to write. This is only an issue for
-    // multiplexed protocols like SPDY - plain HTTP or pipelined HTTP
-    // implicitly have this information in a 1:1 relationship with the
+    // multiplexed protocols like SPDY - h1
+    // implicitly has this information in a 1:1 relationship with the
     // transaction(s) they manage.
     virtual void TransactionHasDataToWrite(nsAHttpTransaction *)
     {
@@ -112,7 +112,7 @@ public:
     virtual void DontReuse() = 0;
 
     // called by a transaction when the transaction reads more from the socket
-    // than it should have (eg. containing part of the next pipelined response).
+    // than it should have (eg. containing part of the next response).
     virtual nsresult PushBack(const char *data, uint32_t length) = 0;
 
     // Used to determine if the connection wants read events even though
@@ -132,14 +132,6 @@ public:
     // Get the nsISocketTransport used by the connection without changing
     //  references or ownership.
     virtual nsISocketTransport *Transport() = 0;
-
-    // Cancel and reschedule transactions deeper than the current response.
-    // Returns the number of canceled transactions.
-    virtual uint32_t CancelPipeline(nsresult originalReason) = 0;
-
-    // Read and write class of transaction that is carried on this connection
-    virtual nsAHttpTransaction::Classifier Classification() = 0;
-    virtual void Classify(nsAHttpTransaction::Classifier newclass) = 0;
 
     // The number of transaction bytes written out on this HTTP Connection, does
     // not count CONNECT tunnel setup
@@ -166,8 +158,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     void DontReuse() override;                            \
     nsresult PushBack(const char *, uint32_t) override;   \
     already_AddRefed<nsHttpConnection> TakeHttpConnection() override; \
-    uint32_t CancelPipeline(nsresult originalReason) override; \
-    nsAHttpTransaction::Classifier Classification() override; \
     /*                                                    \
        Thes methods below have automatic definitions that just forward the \
        function to a lower level connection object        \
@@ -241,12 +231,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     {                                                       \
       if (fwdObject)                                        \
         (fwdObject)->SetLastTransactionExpectedNoContent(val); \
-    }                                                       \
-    void Classify(nsAHttpTransaction::Classifier newclass)  \
-      override                                              \
-    {                                                       \
-    if (fwdObject)                                          \
-        (fwdObject)->Classify(newclass);                    \
     }                                                       \
     int64_t BytesWritten() override                         \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \

@@ -4411,14 +4411,23 @@ LIRGenerator::visitWasmCall(MWasmCall* ins)
     for (unsigned i = 0; i < ins->numArgs(); i++)
         args[i] = useFixedAtStart(ins->getOperand(i), ins->registerForArg(i));
 
-    if (ins->callee().isTable())
-        args[ins->numArgs()] = useFixedAtStart(ins->getOperand(ins->numArgs()), WasmTableCallIndexReg);
+    bool needsBoundsCheck = true;
+    if (ins->callee().isTable()) {
+        MDefinition* index = ins->getOperand(ins->numArgs());
+
+        if (ins->callee().which() == wasm::CalleeDesc::WasmTable && index->isConstant()) {
+            if (uint32_t(index->toConstant()->toInt32()) < ins->callee().wasmTableMinLength())
+                needsBoundsCheck = false;
+        }
+
+        args[ins->numArgs()] = useFixedAtStart(index, WasmTableCallIndexReg);
+    }
 
     LInstruction* lir;
     if (ins->type() == MIRType::Int64)
-        lir = new(alloc()) LWasmCallI64(args, ins->numOperands());
+        lir = new(alloc()) LWasmCallI64(args, ins->numOperands(), needsBoundsCheck);
     else
-        lir = new(alloc()) LWasmCall(args, ins->numOperands());
+        lir = new(alloc()) LWasmCall(args, ins->numOperands(), needsBoundsCheck);
 
     if (ins->type() == MIRType::None)
         add(lir, ins);
