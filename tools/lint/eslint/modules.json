@@ -57,6 +57,7 @@
   "dispatcher.js": ["Dispatcher"],
   "distribution.js": ["DistributionCustomizer"],
   "DNSTypes.jsm": ["DNS_QUERY_RESPONSE_CODES", "DNS_AUTHORITATIVE_ANSWER_CODES", "DNS_CLASS_CODES", "DNS_RECORD_TYPES"],
+  "doctor.js": ["Doctor"],
   "dom.js": ["getAttributes"],
   "DOMRequestHelper.jsm": ["DOMRequestIpcHelper"],
   "DownloadCore.jsm": ["Download", "DownloadSource", "DownloadTarget", "DownloadError", "DownloadSaver", "DownloadCopySaver", "DownloadLegacySaver", "DownloadPDFSaver"],
