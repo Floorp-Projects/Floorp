@@ -62,9 +62,15 @@ public:
                 const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
 
-  wr::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
-                                      gfx::SurfaceFormat aFormat,
-                                      uint64_t aHandle);
+  void AddExternalImageHandle(ImageKey key,
+                              gfx::IntSize aSize,
+                              gfx::SurfaceFormat aFormat,
+                              uint64_t aHandle);
+
+  void AddExternalImageBuffer(ImageKey key,
+                              gfx::IntSize aSize,
+                              gfx::SurfaceFormat aFormat,
+                              uint64_t aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,

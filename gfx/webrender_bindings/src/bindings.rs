@@ -682,10 +682,23 @@ pub extern fn wr_api_add_image(api: &mut RenderApi, image_key: ImageKey, descrip
 }
 
 #[no_mangle]
-pub extern fn wr_api_add_external_image_texture(api: &mut RenderApi, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
+pub extern fn wr_api_add_external_image_handle(api: &mut RenderApi, image_key: ImageKey, width: u32, height: u32, format: ImageFormat, external_image_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
-    unimplemented!(); // TODO
-    //api.add_image(ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false}, ImageData::External(ExternalImageId(external_image_id)))
+    api.add_image(image_key,
+                  ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false, offset: 0},
+                  ImageData::ExternalHandle(ExternalImageId(external_image_id)),
+                  None
+    );
+}
+
+#[no_mangle]
+pub extern fn wr_api_add_external_image_buffer(api: &mut RenderApi, image_key: ImageKey, width: u32, height: u32, format: ImageFormat, external_image_id: u64) {
+    assert!( unsafe { is_in_compositor_thread() });
+    api.add_image(image_key,
+                  ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false, offset: 0},
+                  ImageData::ExternalBuffer(ExternalImageId(external_image_id)),
+                  None
+    );
 }
 
 #[no_mangle]
