@@ -121,6 +121,7 @@ typedef bool InvertBranch;
 typedef bool IsKnownNotZero;
 typedef bool IsSigned;
 typedef bool IsUnsigned;
+typedef bool NeedsBoundsCheck;
 typedef bool PopStack;
 typedef bool ZeroOnOverflow;
 
@@ -2653,7 +2654,7 @@ class BaseCompiler
 
         CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
         CalleeDesc callee = CalleeDesc::wasmTable(table, sig.id);
-        masm.wasmCallIndirect(desc, callee);
+        masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
     }
 
     // Precondition: sync()

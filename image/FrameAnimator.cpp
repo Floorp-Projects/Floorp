@@ -11,6 +11,7 @@
 #include "LookupResult.h"
 #include "MainThreadUtils.h"
 #include "RasterImage.h"
+#include "gfxPrefs.h"
 
 #include "pixman.h"
 
@@ -25,9 +26,9 @@ namespace image {
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-AnimationState::SetDoneDecoding(bool aDone)
+AnimationState::NotifyDecodeComplete()
 {
-  mDoneDecoding = aDone;
+  mHasBeenDecoded = true;
 }
 
 void
@@ -52,7 +53,7 @@ AnimationState::UpdateKnownFrameCount(uint32_t aFrameCount)
     return;
   }
 
-  MOZ_ASSERT(!mDoneDecoding, "Adding new frames after decoding is finished?");
+  MOZ_ASSERT(!mHasBeenDecoded, "Adding new frames after decoding is finished?");
   MOZ_ASSERT(aFrameCount <= mFrameCount + 1, "Skipped a frame?");
 
   mFrameCount = aFrameCount;
@@ -61,7 +62,7 @@ AnimationState::UpdateKnownFrameCount(uint32_t aFrameCount)
 Maybe<uint32_t>
 AnimationState::FrameCount() const
 {
-  return mDoneDecoding ? Some(mFrameCount) : Nothing();
+  return mHasBeenDecoded ? Some(mFrameCount) : Nothing();
 }
 
 void
@@ -98,7 +99,7 @@ AnimationState::LoopLength() const
     return FrameTimeout::Forever();
   }
 
-  MOZ_ASSERT(mDoneDecoding, "We know the loop length but decoding isn't done?");
+  MOZ_ASSERT(mHasBeenDecoded, "We know the loop length but decoding isn't done?");
 
   // If we're not looping, a single loop time has no meaning.
   if (mAnimationMode != imgIContainer::kNormalAnimMode) {

@@ -312,7 +312,7 @@ JSRuntime::destroyRuntime()
 
     MOZ_ASSERT(ionLazyLinkListSize_ == 0);
     MOZ_ASSERT(ionLazyLinkList().isEmpty());
-    MOZ_ASSERT(!singleThreadedExecutionRequired_);
+    MOZ_ASSERT_IF(!geckoProfiler().enabled(), !singleThreadedExecutionRequired_);
 
     MOZ_ASSERT(!hasHelperThreadZones());
     AutoLockForExclusiveAccess lock(this);

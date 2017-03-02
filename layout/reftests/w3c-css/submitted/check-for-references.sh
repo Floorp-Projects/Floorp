@@ -15,7 +15,7 @@ do
         else
             echo "Unexpected type $TYPE for $DIRNAME/$TEST"
         fi
-        if grep "rel=\"$REFTYPE\"" "$DIRNAME/$TEST" | head -1 | grep -q "href=\"$REF\""
+        if grep "rel=\(\"$REFTYPE\"\|'$REFTYPE'\)" "$DIRNAME/$TEST" | head -1 | grep -q "href=\(\"$REF\"\|'$REF'\)"
         then
             #echo "Good link for $DIRNAME/$TEST"
             echo -n
