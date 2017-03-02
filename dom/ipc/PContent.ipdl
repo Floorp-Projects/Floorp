@@ -591,6 +591,8 @@ child:
 
     async PParentToChildStream();
 
+    async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -782,9 +784,6 @@ parent:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                       uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
                       nsCString category);
-
-    // nsIPermissionManager messages
-    sync ReadPermissions() returns (Permission[] permissions);
 
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCDataTransfer aDataTransfer,
