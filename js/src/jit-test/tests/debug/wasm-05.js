@@ -58,7 +58,7 @@ var instance = new WebAssembly.Instance(module, imports);
 `);
     var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
     assertEq(wasmScript.startLine, 1);
-    assertEq(wasmScript.lineCount > 0, true);
+    assertEq(wasmScript.lineCount >= 0, true);
     var lines = wasmScript.source.text.split('\n');
     var offsetsFound = 0;
     lines.forEach(function (l, n) {
