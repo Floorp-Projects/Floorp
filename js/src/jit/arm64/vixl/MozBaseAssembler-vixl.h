@@ -104,10 +104,11 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Propagate OOM errors.
   BufferOffset allocEntry(size_t numInst, unsigned numPoolEntries,
                           uint8_t* inst, uint8_t* data,
-                          ARMBuffer::PoolEntry* pe = nullptr)
+                          ARMBuffer::PoolEntry* pe = nullptr,
+                          bool markAsBranch = false)
   {
     BufferOffset offset = armbuffer_.allocEntry(numInst, numPoolEntries, inst,
-                                                data, pe);
+                                                data, pe, markAsBranch);
     propagateOOM(offset.assigned());
     return offset;
   }
@@ -115,9 +116,7 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Emit the instruction, returning its offset.
   BufferOffset Emit(Instr instruction, bool isBranch = false) {
     JS_STATIC_ASSERT(sizeof(instruction) == kInstructionSize);
-    // TODO: isBranch is obsolete and should be removed.
-    (void)isBranch;
-    return armbuffer_.putInt(*(uint32_t*)(&instruction));
+    return armbuffer_.putInt(*(uint32_t*)(&instruction), isBranch);
   }
 
   BufferOffset EmitBranch(Instr instruction) {
