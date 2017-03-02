@@ -20,3 +20,46 @@ function createElement(test, tagName, doc) {
   });
   return element;
 }
+
+// Convert px unit value to a Number
+function pxToNum(str) {
+  return Number(String(str).match(/^(-?[\d.]+)px$/)[1]);
+}
+
+// Cubic bezier with control points (0, 0), (x1, y1), (x2, y2), and (1, 1).
+function cubicBezier(x1, y1, x2, y2) {
+  function xForT(t) {
+    var omt = 1-t;
+    return 3 * omt * omt * t * x1 + 3 * omt * t * t * x2 + t * t * t;
+  }
+
+  function yForT(t) {
+    var omt = 1-t;
+    return 3 * omt * omt * t * y1 + 3 * omt * t * t * y2 + t * t * t;
+  }
+
+  function tForX(x) {
+    // Binary subdivision.
+    var mint = 0, maxt = 1;
+    for (var i = 0; i < 30; ++i) {
+      var guesst = (mint + maxt) / 2;
+      var guessx = xForT(guesst);
+      if (x < guessx) {
+        maxt = guesst;
+      } else {
+        mint = guesst;
+      }
+    }
+    return (mint + maxt) / 2;
+  }
+
+  return function bezierClosure(x) {
+    if (x == 0) {
+      return 0;
+    }
+    if (x == 1) {
+      return 1;
+    }
+    return yForT(tForX(x));
+  }
+}

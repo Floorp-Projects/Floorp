@@ -90,11 +90,6 @@ function createPseudo(test, type) {
   return anim.effect.target;
 }
 
-// Convert px unit value to a Number
-function pxToNum(str) {
-  return Number(String(str).match(/^(-?[\d.]+)px$/)[1]);
-}
-
 // Cubic bezier with control points (0, 0), (x1, y1), (x2, y2), and (1, 1).
 function cubicBezier(x1, y1, x2, y2) {
   function xForT(t) {
