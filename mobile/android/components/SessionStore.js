@@ -233,6 +233,22 @@ SessionStore.prototype = {
         // Clear all data about closed tabs
         this._forgetClosedTabs();
 
+        // Clear all cached session history data.
+        if (aTopic == "browser:purge-session-history") {
+          this._forEachBrowserWindow((window) => {
+            let tabs = window.BrowserApp.tabs;
+            for (let i = 0; i < tabs.length; i++) {
+              let data = tabs[i].browser.__SS_data;
+              let sHistory = data.entries;
+              // Copy the current history entry to the end...
+              sHistory.push(sHistory[data.index - 1]);
+              // ... and then remove everything else.
+              sHistory.splice(0, sHistory.length - 1);
+              data.index = 1;
+            }
+          });
+        }
+
         if (this._loadState == STATE_RUNNING) {
           // Save the purged state immediately
           this.saveState();
