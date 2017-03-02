@@ -43,6 +43,6 @@ captures/
 l10n-repo/
 
 # Compiled python code
-.pyc
+*.pyc
 
 
