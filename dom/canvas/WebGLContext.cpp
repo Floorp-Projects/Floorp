@@ -710,22 +710,6 @@ bool
 WebGLContext::CreateAndInitGL(bool forceEnabled,
                               std::vector<FailureReason>* const out_failReasons)
 {
-    // WebGL2 is separately blocked:
-    if (IsWebGL2()) {
-        const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-        const auto feature = nsIGfxInfo::FEATURE_WEBGL2;
-
-        FailureReason reason;
-        if (IsFeatureInBlacklist(gfxInfo, feature, &reason.key)) {
-            reason.info = "Refused to create WebGL2 context because of blacklist"
-                          " entry: ";
-            reason.info.Append(reason.key);
-            out_failReasons->push_back(reason);
-            GenerateWarning("%s", reason.info.BeginReading());
-            return false;
-        }
-    }
-
     const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
     gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
     bool tryNativeGL = true;
