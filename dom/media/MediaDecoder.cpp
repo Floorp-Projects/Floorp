@@ -468,7 +468,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                       &MediaDecoder::NotifyAudibleStateChanged);
 
   MediaShutdownManager::InitStatics();
-  MediaShutdownManager::Instance().Register(this);
 }
 
 #undef INIT_MIRROR
@@ -636,7 +635,12 @@ MediaDecoder::Load(nsIStreamListener** aStreamListener)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mResource, "Can't load without a MediaResource");
 
-  nsresult rv = OpenResource(aStreamListener);
+  nsresult rv = MediaShutdownManager::Instance().Register(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = OpenResource(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachine(CreateStateMachine());
