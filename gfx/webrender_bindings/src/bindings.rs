@@ -446,17 +446,16 @@ pub struct WrState {
     frame_builder: WebRenderFrameBuilder,
 }
 
-#[repr(C)]
-enum WrExternalImageType {
-    TEXTURE_HANDLE,
-
-    // TODO(Jerry): handle shmem or cpu raw buffers.
-    //// MEM_OR_SHMEM,
-}
+// TODO(Jerry): handle shmem or cpu raw buffers.
+//#[repr(C)]
+//enum WrExternalImageType {
+//    TextureHandle,
+//    MemOrShmem,
+//}
 
 #[repr(C)]
 struct WrExternalImageStruct {
-    image_type: WrExternalImageType,
+    //image_type: WrExternalImageType,
 
     // Texture coordinate
     u0: f32,
@@ -488,16 +487,17 @@ impl ExternalImageHandler for WrExternalImageHandler {
     fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id);
 
-        match image.image_type {
-            WrExternalImageType::TEXTURE_HANDLE =>
+        // TODO(Jerry): handle shmem or cpu raw buffers.
+        //match image.image_type {
+        //    WrExternalImageType::TextureHandle =>
                 ExternalImage {
                     u0: image.u0,
                     v0: image.v0,
                     u1: image.u1,
                     v1: image.v1,
                     source: ExternalImageSource::NativeTexture(image.handle)
-                },
-        }
+                }
+        //}
     }
 
     fn unlock(&mut self, id: ExternalImageId) {

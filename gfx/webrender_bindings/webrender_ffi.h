@@ -115,12 +115,14 @@ enum class WrImageRendering: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
-enum class WrExternalImageIdType
-{
-  TEXTURE_HANDLE, // Currently, we only support gl texture handle.
-  // TODO(Jerry): handle shmem or cpu raw buffers.
-  //// MEM_OR_SHMEM,
-};
+// TODO(Jerry): handle shmem or cpu raw buffers.
+//enum class WrExternalImageIdType: uint32_t
+//{
+//  TextureHandle = 0,
+//  MemOrShmem    = 1,
+//
+//  Sentinel /* this must be last, for IPC serialization purposes */
+//};
 
 enum class WrMixBlendMode: uint32_t
 {
@@ -307,7 +309,7 @@ struct WrExternalImageId
 
 struct WrExternalImage
 {
-  WrExternalImageIdType type;
+  //WrExternalImageIdType type;
 
   // Texture coordinate
   float u0, v0;
