@@ -888,6 +888,29 @@ public:
     return mFramesReflowed;
   }
 
+  /*
+   * Helper functions for a telemetry scroll probe
+   * for more information see bug 1340904
+   */
+  void SetTelemetryScrollY(nscoord aScrollY)
+  {
+    nscoord delta = abs(aScrollY - mTelemetryScrollLastY);
+    mTelemetryScrollLastY = aScrollY;
+
+    mTelemetryScrollTotalY += delta;
+    if (aScrollY > mTelemetryScrollMaxY) {
+      mTelemetryScrollMaxY = aScrollY;
+    }
+  }
+  nscoord TelemetryScrollMaxY() const
+  {
+    return mTelemetryScrollMaxY;
+  }
+  nscoord TelemetryScrollTotalY() const
+  {
+    return mTelemetryScrollTotalY;
+  }
+
   static nscoord GetBorderWidthForKeyword(unsigned int aBorderWidthKeyword)
   {
     // This table maps border-width enums 'thin', 'medium', 'thick'
@@ -1358,6 +1381,10 @@ protected:
 
   // last time we did a full style flush
   mozilla::TimeStamp    mLastStyleUpdateForAllAnimations;
+
+  nscoord mTelemetryScrollLastY;
+  nscoord mTelemetryScrollMaxY;
+  nscoord mTelemetryScrollTotalY;
 
   unsigned              mHasPendingInterrupt : 1;
   unsigned              mPendingInterruptFromTest : 1;

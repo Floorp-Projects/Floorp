@@ -36,6 +36,7 @@ EXPORTS.mozilla.dom += [
     'TabContext.h',
     'TabMessageUtils.h',
     'TabParent.h',
+    'TelemetryScrollProbe.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
 ]
@@ -69,6 +70,7 @@ UNIFIED_SOURCES += [
     'TabContext.cpp',
     'TabMessageUtils.cpp',
     'TabParent.cpp',
+    'TelemetryScrollProbe.cpp',
     'URLClassifierChild.cpp',
     'URLClassifierParent.cpp',
 ]
