@@ -41,6 +41,27 @@ jobs:
             tooltool-downloads: internal
             keep-artifacts: false
 
+    linux64-st-an/debug:
+        description: "Linux64 Debug Static Analysis"
+        index:
+            job-name: linux64-st-an-debug
+        treeherder:
+            platform: linux64/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
+        run:
+            using: mozharness
+            actions: [build generate-build-stats]
+            config:
+                - builds/releng_sub_linux_configs/64_stat_and_debug.py
+                - balrog/production.py
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: public
+            keep-artifacts: false
+
     linux64-st-an/opt:
         description: "Linux64 Opt Static Analysis"
         index:
