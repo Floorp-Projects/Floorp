@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 if (AppConstants.MOZ_SERVICES_CLOUDSYNC) {
   XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
@@ -40,8 +41,6 @@ var gSyncUI = {
   _syncAnimationTimer: 0,
 
   init() {
-    Cu.import("resource://services-common/stringbundle.js");
-
     // Proceed to set up the UI if Sync has already started up.
     // Otherwise we'll do it when Sync is firing up.
     if (this.weaveService.ready) {
@@ -224,8 +223,9 @@ var gSyncUI = {
   },
 
   _getAppName() {
-    let brand = new StringBundle("chrome://branding/locale/brand.properties");
-    return brand.get("brandShortName");
+    let brand = Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties");
+    return brand.GetStringFromName("brandShortName");
   },
 
   // Commands
@@ -475,9 +475,8 @@ var gSyncUI = {
 XPCOMUtils.defineLazyGetter(gSyncUI, "_stringBundle", function() {
   // XXXzpao these strings should probably be moved from /services to /browser... (bug 583381)
   //        but for now just make it work
-  return Cc["@mozilla.org/intl/stringbundle;1"].
-         getService(Ci.nsIStringBundleService).
-         createBundle("chrome://weave/locale/services/sync.properties");
+  return Services.strings.createBundle(
+    "chrome://weave/locale/services/sync.properties");
 });
 
 XPCOMUtils.defineLazyGetter(gSyncUI, "log", function() {
