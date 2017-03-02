@@ -125,6 +125,7 @@ fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 extern  {
     fn is_in_compositor_thread() -> bool;
     fn is_in_render_thread() -> bool;
+    fn is_in_main_thread() -> bool;
 }
 
 #[no_mangle]
@@ -314,7 +315,7 @@ pub extern fn wr_window_new(window_id: WrWindowId,
 
 #[no_mangle]
 pub extern fn wr_state_new(pipeline_id: PipelineId) -> *mut WrState {
-    assert!(unsafe { is_in_compositor_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     let state = Box::new(WrState {
         pipeline_id: pipeline_id,
@@ -327,7 +328,7 @@ pub extern fn wr_state_new(pipeline_id: PipelineId) -> *mut WrState {
 
 #[no_mangle]
 pub extern fn wr_state_delete(state:*mut WrState) {
-    assert!(unsafe { is_in_compositor_thread() });
+    assert!(unsafe { is_in_main_thread() });
 
     unsafe {
         Box::from_raw(state);
@@ -336,7 +337,7 @@ pub extern fn wr_state_delete(state:*mut WrState) {
 
 #[no_mangle]
 pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.list.clear();
     state.z_index = 0;
 
@@ -356,7 +357,7 @@ pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
 
 #[no_mangle]
 pub extern fn wr_dp_end(state: &mut WrState) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
 }
 
@@ -601,7 +602,7 @@ impl WrGradientExtendMode
 #[no_mangle]
 pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
 {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
@@ -634,7 +635,7 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
 #[no_mangle]
 pub extern fn wr_dp_pop_stacking_context(state: &mut WrState)
 {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_scroll_layer();
     state.frame_builder.dl_builder.pop_stacking_context();
     //println!("pop_stacking {:?}", state.pipeline_id);
@@ -653,7 +654,7 @@ pub extern fn wr_dp_push_scroll_layer(state: &mut WrState, bounds: WrRect, overf
 #[no_mangle]
 pub extern fn wr_dp_pop_scroll_layer(state: &mut WrState)
 {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_scroll_layer();
 }
 
@@ -728,7 +729,7 @@ pub extern fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, color: WrColor) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_rect(
@@ -742,7 +743,7 @@ pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrR
                                     box_bounds: WrRect, offset: WrPoint, color: WrColor,
                                     blur_radius: f32, spread_radius: f32, border_radius: f32,
                                     clip_mode: WrBoxShadowClipMode) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
     state.frame_builder.dl_builder.push_box_shadow(rect.to_rect(),
                                                    clip_region,
@@ -759,7 +760,7 @@ pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrR
 pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
                                 radius: WrBorderRadius) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
     let border_widths = BorderWidths {
         left: left.width,
@@ -786,7 +787,7 @@ pub extern fn wr_dp_push_linear_gradient(state: &mut WrState, rect: WrRect, clip
                                          start_point: WrPoint, end_point: WrPoint,
                                          stops: * const WrGradientStop, stops_count: usize,
                                          extend_mode: WrGradientExtendMode) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
 
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
@@ -807,7 +808,7 @@ pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip
                                          start_radius: f32, end_radius: f32,
                                          stops: * const WrGradientStop, stops_count: usize,
                                          extend_mode: WrGradientExtendMode) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
 
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
@@ -826,7 +827,7 @@ pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip
 
 #[no_mangle]
 pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, pipeline_id: PipelineId) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
                                                                      Vec::new(),
@@ -976,7 +977,7 @@ impl WrImageMask
 
 #[no_mangle]
 pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, filter: ImageRendering, key: ImageKey) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
 
     let bounds = bounds.to_rect();
     let clip = clip.to_rect();
@@ -1030,7 +1031,7 @@ pub extern fn wr_dp_push_text(state: &mut WrState,
                               glyph_count: u32,
                               glyph_size: f32)
 {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!( unsafe { is_in_main_thread() });
 
     let glyph_slice = unsafe {
         slice::from_raw_parts(glyphs, glyph_count as usize)

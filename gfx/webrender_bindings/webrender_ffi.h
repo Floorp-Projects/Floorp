@@ -64,6 +64,7 @@ WR_DECL_FFI_2(WrFontKey, uint32_t, uint32_t)
 // ----
 
 bool is_in_compositor_thread();
+bool is_in_main_thread();
 bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
