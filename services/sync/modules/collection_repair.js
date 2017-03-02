@@ -8,6 +8,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/main.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkRepairRequestor",
+  "resource://services-sync/bookmark_repair.js");
+
 this.EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
                          "CollectionRepairRequestor",
                          "getRepairResponder",
@@ -15,6 +18,7 @@ this.EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
 
 // The individual requestors/responders, lazily loaded.
 const REQUESTORS = {
+  bookmarks: ["bookmark_repair.js", "BookmarkRepairRequestor"],
 }
 
 const RESPONDERS = {
