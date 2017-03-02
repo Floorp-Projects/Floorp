@@ -11,6 +11,7 @@
 #include "LookupResult.h"
 #include "MainThreadUtils.h"
 #include "RasterImage.h"
+#include "gfxPrefs.h"
 
 #include "pixman.h"
 
