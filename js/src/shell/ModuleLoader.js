@@ -14,19 +14,49 @@ const MapPrototypeSet = Map.prototype.set;
 const ObjectDefineProperty = Object.defineProperty;
 const ReflectApply = Reflect.apply;
 const StringPrototypeIndexOf = String.prototype.indexOf;
+const StringPrototypeLastIndexOf = String.prototype.lastIndexOf;
+const StringPrototypeStartsWith = String.prototype.startsWith;
 const StringPrototypeSubstring = String.prototype.substring;
 
 const ReflectLoader = new class {
     constructor() {
         this.registry = new Map();
+        this.modulePaths = new Map();
         this.loadPath = getModuleLoadPath();
     }
 
-    resolve(name) {
+    resolve(name, module) {
         if (os.path.isAbsolute(name))
             return name;
 
-        return os.path.join(this.loadPath, name);
+        let loadPath = this.loadPath;
+        if (module) {
+            // Treat |name| as a relative path if it starts with either "./"
+            // or "../".
+            let isRelative = ReflectApply(StringPrototypeStartsWith, name, ["./"])
+                          || ReflectApply(StringPrototypeStartsWith, name, ["../"])
+#ifdef XP_WIN
+                          || ReflectApply(StringPrototypeStartsWith, name, [".\\"])
+                          || ReflectApply(StringPrototypeStartsWith, name, ["..\\"])
+#endif
+                             ;
+
+            // If |name| is a relative path and |module|'s path is available,
+            // load |name| relative to the referring module.
+            if (isRelative && ReflectApply(MapPrototypeHas, this.modulePaths, [module])) {
+                let modulePath = ReflectApply(MapPrototypeGet, this.modulePaths, [module]);
+                let sepIndex = ReflectApply(StringPrototypeLastIndexOf, modulePath, ["/"]);
+#ifdef XP_WIN
+                let otherSepIndex = ReflectApply(StringPrototypeLastIndexOf, modulePath, ["\\"]);
+                if (otherSepIndex > sepIndex)
+                    sepIndex = otherSepIndex;
+#endif
+                if (sepIndex >= 0)
+                    loadPath = ReflectApply(StringPrototypeSubstring, modulePath, [0, sepIndex]);
+            }
+        }
+
+        return os.path.join(loadPath, name);
     }
 
     normalize(path) {
@@ -124,6 +154,7 @@ const ReflectLoader = new class {
         let source = this.fetch(path);
         let module = parseModule(source, path);
         ReflectApply(MapPrototypeSet, this.registry, [normalized, module]);
+        ReflectApply(MapPrototypeSet, this.modulePaths, [module, path]);
         return module;
     }
 
@@ -138,13 +169,13 @@ const ReflectLoader = new class {
     }
 
     ["import"](name, referrer) {
-        let path = this.resolve(name);
+        let path = this.resolve(name, null);
         return this.loadAndExecute(path);
     }
 };
 
 setModuleResolveHook((module, requestName) => {
-    let path = ReflectLoader.resolve(requestName);
+    let path = ReflectLoader.resolve(requestName, module);
     return ReflectLoader.loadAndParse(path)
 });
 
