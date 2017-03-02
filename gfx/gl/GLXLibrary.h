@@ -62,8 +62,7 @@ public:
     , mHasRobustness(false), mHasCreateContextAttribs(false)
     , mHasVideoSync(false)
     , mIsATI(false), mIsNVIDIA(false)
-    , mClientIsMesa(false), mGLXMajorVersion(0)
-    , mGLXMinorVersion(0)
+    , mClientIsMesa(false)
     , mOGLLibrary(nullptr)
     {}
 
@@ -144,7 +143,6 @@ public:
     bool SupportsSwapControl() const { return bool(xSwapIntervalInternal); }
     bool IsATI() { return mIsATI; }
     bool IsMesa() { return mClientIsMesa; }
-    bool GLXVersionCheck(int aMajor, int aMinor);
 
 private:
 
@@ -260,8 +258,6 @@ private:
     bool mIsATI;
     bool mIsNVIDIA;
     bool mClientIsMesa;
-    int mGLXMajorVersion;
-    int mGLXMinorVersion;
     PRLibrary* mOGLLibrary;
 };
 
