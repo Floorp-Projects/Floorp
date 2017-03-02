@@ -2254,7 +2254,7 @@ MarkStackIter::done() const
     return position() == 0;
 }
 
-inline const MarkStack::TaggedPtr&
+inline MarkStack::TaggedPtr
 MarkStackIter::peekPtr() const
 {
     MOZ_ASSERT(!done());
@@ -2284,6 +2284,15 @@ MarkStackIter::nextPtr()
     MOZ_ASSERT(!done());
     MOZ_ASSERT(!TagIsArrayTag(peekTag()));
     pos_--;
+}
+
+inline void
+MarkStackIter::next()
+{
+    if (TagIsArrayTag(peekTag()))
+        nextArray();
+    else
+        nextPtr();
 }
 
 inline void
@@ -2558,6 +2567,29 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
         size += zone->gcGrayRoots().sizeOfExcludingThis(mallocSizeOf);
     return size;
 }
+
+#ifdef DEBUG
+Zone*
+GCMarker::stackContainsCrossZonePointerTo(const TenuredCell* target) const
+{
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+
+    for (MarkStackIter iter(stack); !iter.done(); iter.next()) {
+        if (iter.peekTag() != MarkStack::ObjectTag)
+            continue;
+
+        auto source = iter.peekPtr().as<JSObject>();
+        if (source->is<ProxyObject>() &&
+            source->as<ProxyObject>().target() == static_cast<const Cell*>(target) &&
+            source->zone() != target->zone())
+        {
+            return source->zone();
+        }
+    }
+
+    return nullptr;
+}
+#endif // DEBUG
 
 
 /*** Tenuring Tracer *****************************************************************************/

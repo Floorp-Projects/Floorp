@@ -895,6 +895,10 @@ pref("dom.push.maxRecentMessageIDsPerSubscription", 0);
 pref("dom.push.enabled", true);
 #endif
 
+// Maximum number of setTimeout()/setInterval() callbacks to run in a single
+// event loop runnable. Minimum value of 1.
+pref("dom.timeout.max_consecutive_callbacks", 3);
+
 // The remote content URL where FxAccountsWebChannel messages originate.  Must use HTTPS.
 pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com");
 
