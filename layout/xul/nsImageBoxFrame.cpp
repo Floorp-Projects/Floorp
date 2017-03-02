@@ -52,7 +52,6 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Maybe.h"
 #include "SVGImageContext.h"
-#include "Units.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
@@ -405,19 +404,13 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
                                                 anchorPoint.ptr());
   }
 
-  Maybe<SVGImageContext> svgContext;
-  if (imgCon->GetType() == imgIContainer::TYPE_VECTOR) {
-    // We avoid this overhead for raster images.
-    svgContext.emplace();
-    svgContext->MaybeStoreContextPaint(this);
-  }
 
   return nsLayoutUtils::DrawSingleImage(
            *aRenderingContext.ThebesContext(),
            PresContext(), imgCon,
            nsLayoutUtils::GetSamplingFilterForFrame(this),
            dest, dirty,
-           svgContext, aFlags,
+           /* no SVGImageContext */ Nothing(), aFlags,
            anchorPoint.ptrOr(nullptr),
            hasSubRect ? &mSubRect : nullptr);
 }
