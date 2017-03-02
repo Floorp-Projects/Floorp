@@ -6337,7 +6337,7 @@ nsGlobalWindow::GetScrollMaxY(ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(GetScrollBoundaryOuter, (eSideBottom), aError, 0);
 }
 
-CSSIntPoint
+CSSPoint
 nsGlobalWindow::GetScrollXY(bool aDoFlush)
 {
   MOZ_ASSERT(IsOuterWindow());
@@ -6361,30 +6361,30 @@ nsGlobalWindow::GetScrollXY(bool aDoFlush)
     return GetScrollXY(true);
   }
 
-  return sf->GetScrollPositionCSSPixels();
+  return CSSPoint::FromAppUnits(scrollPos);
 }
 
-int32_t
+double
 nsGlobalWindow::GetScrollXOuter()
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetScrollXY(false).x;
 }
 
-int32_t
+double
 nsGlobalWindow::GetScrollX(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetScrollXOuter, (), aError, 0);
 }
 
-int32_t
+double
 nsGlobalWindow::GetScrollYOuter()
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
   return GetScrollXY(false).y;
 }
 
-int32_t
+double
 nsGlobalWindow::GetScrollY(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetScrollYOuter, (), aError, 0);
