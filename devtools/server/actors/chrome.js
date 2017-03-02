@@ -50,7 +50,18 @@ function ChromeActor(connection) {
   if (!window) {
     window = Services.wm.getMostRecentWindow(null);
   }
-  // On xpcshell, there is no window/docshell
+
+  // We really want _some_ window at least, so fallback to the hidden window if
+  // there's nothing else (such as during early startup).
+  if (!window) {
+    try {
+      window = Services.appShell.hiddenDOMWindow;
+    } catch (e) {
+      // On XPCShell, the above line will throw.
+    }
+  }
+
+  // On XPCShell, there is no window/docshell
   let docShell = window ? window.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDocShell)
                         : null;
