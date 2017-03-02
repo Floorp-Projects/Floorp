@@ -50,14 +50,6 @@ using namespace mozilla::widget;
 
 GLXLibrary sGLXLibrary;
 
-// Check that we have at least version aMajor.aMinor .
-bool
-GLXLibrary::GLXVersionCheck(int aMajor, int aMinor)
-{
-    return aMajor < mGLXMajorVersion ||
-           (aMajor == mGLXMajorVersion && aMinor <= mGLXMinorVersion);
-}
-
 static inline bool
 HasExtension(const char* aExtensions, const char* aRequiredExtension)
 {
@@ -120,10 +112,6 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xQueryExtensionsStringInternal, { "glXQueryExtensionsString", nullptr } },
         { (PRFuncPtr*) &xGetClientStringInternal, { "glXGetClientString", nullptr } },
         { (PRFuncPtr*) &xQueryServerStringInternal, { "glXQueryServerString", nullptr } },
-        { nullptr, { nullptr } }
-    };
-
-    GLLibraryLoader::SymLoadStruct symbols13[] = {
         /* functions introduced in GLX 1.3 */
         { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfig", nullptr } },
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttrib", nullptr } },
@@ -133,32 +121,8 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xCreatePixmapInternal, { "glXCreatePixmap", nullptr } },
         { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyPixmap", nullptr } },
         { (PRFuncPtr*) &xCreateNewContextInternal, { "glXCreateNewContext", nullptr } },
-        { nullptr, { nullptr } }
-    };
-
-    GLLibraryLoader::SymLoadStruct symbols13_ext[] = {
-        /* extension equivalents for functions introduced in GLX 1.3 */
-        // GLX_SGIX_fbconfig extension
-        { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfigSGIX", nullptr } },
-        { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttribSGIX", nullptr } },
-        // WARNING: no xGetFBConfigs equivalent in extensions
-        // WARNING: different from symbols13:
-        { (PRFuncPtr*) &xCreateGLXPixmapWithConfigInternal, { "glXCreateGLXPixmapWithConfigSGIX", nullptr } },
-        { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyGLXPixmap", nullptr } }, // not from ext
-        { (PRFuncPtr*) &xCreateNewContextInternal, { "glXCreateContextWithConfigSGIX", nullptr } },
-        { nullptr, { nullptr } }
-    };
-
-    GLLibraryLoader::SymLoadStruct symbols14[] = {
         /* functions introduced in GLX 1.4 */
         { (PRFuncPtr*) &xGetProcAddressInternal, { "glXGetProcAddress", nullptr } },
-        { nullptr, { nullptr } }
-    };
-
-    GLLibraryLoader::SymLoadStruct symbols14_ext[] = {
-        /* extension equivalents for functions introduced in GLX 1.4 */
-        // GLX_ARB_get_proc_address extension
-        { (PRFuncPtr*) &xGetProcAddressInternal, { "glXGetProcAddressARB", nullptr } },
         { nullptr, { nullptr } }
     };
 
@@ -192,51 +156,19 @@ GLXLibrary::EnsureInitialized()
     Display* display = DefaultXDisplay();
     int screen = DefaultScreen(display);
 
-    if (!xQueryVersion(display, &mGLXMajorVersion, &mGLXMinorVersion)) {
-        mGLXMajorVersion = 0;
-        mGLXMinorVersion = 0;
-        return false;
+    {
+        int major, minor;
+        if (!xQueryVersion(display, &major, &minor) ||
+            major != 1 || minor < 4)
+        {
+            NS_ERROR("GLX version older than 1.4. (released in 2005)");
+            return false;
+        }
     }
-
-    if (!GLXVersionCheck(1, 1))
-        // Not possible to query for extensions.
-        return false;
 
     const char* clientVendor = xGetClientString(display, LOCAL_GLX_VENDOR);
     const char* serverVendor = xQueryServerString(display, screen, LOCAL_GLX_VENDOR);
     const char* extensionsStr = xQueryExtensionsString(display, screen);
-
-    GLLibraryLoader::SymLoadStruct* sym13;
-    if (!GLXVersionCheck(1, 3)) {
-        // Even if we don't have 1.3, we might have equivalent extensions
-        // (as on the Intel X server).
-        if (!HasExtension(extensionsStr, "GLX_SGIX_fbconfig")) {
-            return false;
-        }
-        sym13 = symbols13_ext;
-    } else {
-        sym13 = symbols13;
-    }
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, sym13)) {
-        NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return false;
-    }
-
-    GLLibraryLoader::SymLoadStruct* sym14;
-    if (!GLXVersionCheck(1, 4)) {
-        // Even if we don't have 1.4, we might have equivalent extensions
-        // (as on the Intel X server).
-        if (!HasExtension(extensionsStr, "GLX_ARB_get_proc_address")) {
-            return false;
-        }
-        sym14 = symbols14_ext;
-    } else {
-        sym14 = symbols14;
-    }
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, sym14)) {
-        NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return false;
-    }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
         GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap,
@@ -1262,46 +1194,21 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 {
     ScopedXFree<GLXFBConfig>& cfgs = *out_scopedConfigArr;
     int numConfigs;
-    if (sGLXLibrary.IsATI() ||
-        !sGLXLibrary.GLXVersionCheck(1, 3)) {
-        const int attribs[] = {
-            LOCAL_GLX_DOUBLEBUFFER, False,
-            0
-        };
-        const int webrenderAttribs[] = {
-            LOCAL_GLX_DOUBLEBUFFER, False,
-            LOCAL_GLX_DEPTH_SIZE, 24,
-            0
-        };
+    const int webrenderAttribs[] = {
+        LOCAL_GLX_DEPTH_SIZE, 24,
+        LOCAL_GLX_DOUBLEBUFFER, True,
+        0
+    };
 
-        if (aWebRender) {
-          cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                             screen,
-                                             webrenderAttribs,
-                                             &numConfigs);
-        } else {
-          cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                             screen,
-                                             attribs,
-                                             &numConfigs);
-        }
+    if (aWebRender) {
+      cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                         screen,
+                                         webrenderAttribs,
+                                         &numConfigs);
     } else {
-        const int webrenderAttribs[] = {
-            LOCAL_GLX_DEPTH_SIZE, 24,
-            LOCAL_GLX_DOUBLEBUFFER, True,
-            0
-        };
-
-        if (aWebRender) {
-          cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                             screen,
-                                             webrenderAttribs,
-                                             &numConfigs);
-        } else {
-          cfgs = sGLXLibrary.xGetFBConfigs(display,
-                                           screen,
-                                           &numConfigs);
-        }
+      cfgs = sGLXLibrary.xGetFBConfigs(display,
+                                       screen,
+                                       &numConfigs);
     }
 
     if (!cfgs) {
@@ -1399,9 +1306,6 @@ CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
     OffMainThreadScopedXErrorHandler xErrorHandler;
     bool error = false;
 
-    Drawable drawable;
-    GLXPixmap pixmap = 0;
-
     gfx::IntSize dummySize(16, 16);
     RefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
                                                             visual,
@@ -1414,13 +1318,8 @@ CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
     // Handle slightly different signature between glXCreatePixmap and
     // its pre-GLX-1.3 extension equivalent (though given the ABI, we
     // might not need to).
-    drawable = surface->XDrawable();
-    if (glx->GLXVersionCheck(1, 3)) {
-        pixmap = glx->xCreatePixmap(display, config, drawable, nullptr);
-    } else {
-        pixmap = glx->xCreateGLXPixmapWithConfig(display, config, drawable);
-    }
-
+    const auto drawable = surface->XDrawable();
+    const auto pixmap = glx->xCreatePixmap(display, config, drawable, nullptr);
     if (pixmap == 0) {
         error = true;
     }
