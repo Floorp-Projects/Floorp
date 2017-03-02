@@ -79,7 +79,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * @support
     * test_supports_rules.html [1]
 * test_box_size_keywords.html: moz-prefixed intrinsic size keyword value [64]
-* test_bug160403.html: servo/servo#15004 [2]
 * test_bug229915.html: sibling selector with dynamic change bug 1330885 [5]
 * test_bug357614.html: case-insensitivity for old attrs in attr selector servo/servo#15006 [2]
 * mapped attribute not supported
@@ -454,7 +453,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `for 'mask-position` [18]
     * ... `for '-webkit-mask-position` [36]
     * ... `for '-webkit-mask` [3]
-    * test_shorthand_property_getters.html `background-position` [3]
+    * test_shorthand_property_getters.html `background-position` [1]
   * box-shadow wrong order of &lt;length&gt; values servo/servo#15203
     * test_value_storage.html `box-shadow` [44]
   * outline shorthand generates "initial" as part servo/servo#15206
@@ -465,6 +464,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * ... `got "--`: CSS-wide keywords in custom properties servo/servo#15401 [3]
+  * test_priority_preservation.html `text-decoration`: not serialize style if it has the initial value servo/servo#15790 [6]
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
@@ -480,7 +480,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_initial_storage.html `for property 'font-` [1]
   * test_value_storage.html `'font'` [171]
   * test_shorthand_property_getters.html `font shorthand` [2]
-  * test_system_font_serialization.html [11]
+  * test_system_font_serialization.html [10]
 * test_value_storage.html `font-size: calc(`: clamp negative value servo/servo#15296 [3]
 * rounding issue
   * test_value_storage.html `33.5833px` [2]
