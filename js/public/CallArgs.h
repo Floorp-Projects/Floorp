@@ -289,6 +289,8 @@ class MOZ_STACK_CLASS CallArgs : public detail::CallArgsBase<detail::IncludeUsed
         args.argc_ = argc;
         args.constructing_ = constructing;
 #ifdef DEBUG
+        MOZ_ASSERT(ValueIsNotGray(args.thisv()));
+        MOZ_ASSERT(ValueIsNotGray(args.calleev()));
         for (unsigned i = 0; i < argc; ++i)
             MOZ_ASSERT(ValueIsNotGray(argv[i]));
 #endif
