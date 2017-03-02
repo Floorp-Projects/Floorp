@@ -101,12 +101,6 @@ public:
 protected:
   virtual void UpdateEstimatedMediaDuration(int64_t aDuration) { };
 public:
-  void DispatchUpdateEstimatedMediaDuration(int64_t aDuration)
-  {
-    NS_DispatchToMainThread(NewRunnableMethod<int64_t>(
-      this, &AbstractMediaDecoder::UpdateEstimatedMediaDuration, aDuration));
-  }
-
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 

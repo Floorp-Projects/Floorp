@@ -53,6 +53,7 @@ public:
 
   uint32_t GetIterableLength() const;
   TypedArrayCreator<ArrayBuffer> GetKeyAtIndex(uint32_t aIndex) const;
+  nsString GetKeyIDAsHexString(uint32_t aIndex) const;
   MediaKeyStatus GetValueAtIndex(uint32_t aIndex) const;
 
   void Update(const nsTArray<CDMCaps::KeyStatus>& keys);

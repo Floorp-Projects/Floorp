@@ -1404,6 +1404,11 @@ TelemetryScalar::Add(const nsACString& aName, const nsAString& aKey, JS::HandleV
 void
 TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
@@ -1438,6 +1443,11 @@ void
 TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                      uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
@@ -1542,6 +1552,11 @@ TelemetryScalar::Set(const nsACString& aName, const nsAString& aKey, JS::HandleV
 void
 TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
@@ -1574,6 +1589,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 void
 TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
@@ -1606,6 +1626,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
 void
 TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
@@ -1640,6 +1665,11 @@ void
 TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                      uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
@@ -1674,6 +1704,11 @@ void
 TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                      bool aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
@@ -1778,6 +1813,11 @@ TelemetryScalar::SetMaximum(const nsACString& aName, const nsAString& aKey, JS::
 void
 TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
@@ -1812,6 +1852,11 @@ void
 TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
                             uint32_t aValue)
 {
+  if (NS_WARN_IF(!IsValidEnumId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
   if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
@@ -2120,6 +2165,11 @@ TelemetryScalar::UpdateChildData(GeckoProcessType aProcessType,
   }
 
   for (auto& upd : aScalarActions) {
+    if (NS_WARN_IF(!IsValidEnumId(upd.mId))) {
+      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+      continue;
+    }
+
     if (internal_IsKeyedScalar(upd.mId)) {
       continue;
     }
@@ -2206,6 +2256,11 @@ TelemetryScalar::UpdateChildKeyedData(GeckoProcessType aProcessType,
   }
 
   for (auto& upd : aScalarActions) {
+    if (NS_WARN_IF(!IsValidEnumId(upd.mId))) {
+      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+      continue;
+    }
+
     if (!internal_IsKeyedScalar(upd.mId)) {
       continue;
     }

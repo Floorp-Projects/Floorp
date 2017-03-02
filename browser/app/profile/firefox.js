@@ -1529,7 +1529,11 @@ pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
 
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.migrate.automigrate.enabled", true);
+#else
 pref("browser.migrate.automigrate.enabled", false);
+#endif
 // 4 here means the suggestion notification will be automatically
 // hidden the 4th day, so it will actually be shown on 3 different days.
 pref("browser.migrate.automigrate.daysToOfferUndo", 4);

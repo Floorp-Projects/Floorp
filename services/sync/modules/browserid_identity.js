@@ -254,18 +254,37 @@ this.BrowserIDManager.prototype = {
   observe(subject, topic, data) {
     this._log.debug("observed " + topic);
     switch (topic) {
-    case fxAccountsCommon.ONLOGIN_NOTIFICATION:
+    case fxAccountsCommon.ONLOGIN_NOTIFICATION: {
       // This should only happen if we've been initialized without a current
       // user - otherwise we'd have seen the LOGOUT notification and been
       // thrown away.
       // The exception is when we've initialized with a user that needs to
       // reauth with the server - in that case we will also get here, but
-      // should have the same identity.
+      // should have the same identity, and so we pass `false` into
+      // initializeWithCurrentIdentity so that we won't do a full sync for our
+      // first sync if we can avoid it.
       // initializeWithCurrentIdentity will throw and log if these constraints
       // aren't met (indirectly, via _updateSignedInUser()), so just go ahead
       // and do the init.
-      this.initializeWithCurrentIdentity(true);
-      break;
+      let firstLogin = !this.username;
+      this.initializeWithCurrentIdentity(firstLogin);
+
+      if (!firstLogin) {
+        // We still want to trigger these even if it isn't our first login.
+        // Note that the promise returned by `initializeWithCurrentIdentity`
+        // is resolved at the start of authentication, but we don't want to fire
+        // this event or start the next sync until after authentication is done
+        // (which is signaled by `this.whenReadyToAuthenticate.promise` resolving).
+        this.whenReadyToAuthenticate.promise.then(() => {
+          Services.obs.notifyObservers(null, "weave:service:setup-complete", null);
+          return new Promise(resolve => { Weave.Utils.nextTick(resolve, null); })
+        }).then(() => {
+          Weave.Service.sync();
+        }).catch(e => {
+          this._log.warn("Failed to trigger setup complete notification", e);
+        });
+      }
+    } break;
 
     case fxAccountsCommon.ONLOGOUT_NOTIFICATION:
       Weave.Service.startOver();

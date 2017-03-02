@@ -2964,22 +2964,40 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
   return offsets;
 }
 
-static bool IsJustifiableCharacter(const nsTextFragment* aFrag, int32_t aPos,
+static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
+                                   const nsTextFragment* aFrag, int32_t aPos,
                                    bool aLangIsCJ)
 {
   NS_ASSERTION(aPos >= 0, "negative position?!");
+
+  StyleTextJustify justifyStyle = aTextStyle->mTextJustify;
+  if (justifyStyle == StyleTextJustify::None) {
+    return false;
+  }
+
   char16_t ch = aFrag->CharAt(aPos);
-  if (ch == '\n' || ch == '\t' || ch == '\r')
+  if (ch == '\n' || ch == '\t' || ch == '\r') {
     return true;
+  }
   if (ch == ' ' || ch == CH_NBSP) {
     // Don't justify spaces that are combined with diacriticals
-    if (!aFrag->Is2b())
+    if (!aFrag->Is2b()) {
       return true;
+    }
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(
-        aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
+      aFrag->Get2b() + aPos + 1, aFrag->GetLength() - (aPos + 1));
   }
-  if (ch < 0x2150u)
+
+  if (justifyStyle == StyleTextJustify::InterCharacter) {
+    return true;
+  } else if (justifyStyle == StyleTextJustify::InterWord) {
     return false;
+  }
+
+  // text-justify: auto
+  if (ch < 0x2150u) {
+    return false;
+  }
   if (aLangIsCJ) {
     if ((0x2150u <= ch && ch <= 0x22ffu) || // Number Forms, Arrows, Mathematical Operators
         (0x2460u <= ch && ch <= 0x24ffu) || // Enclosed Alphanumerics
@@ -3307,7 +3325,7 @@ PropertyProvider::ComputeJustification(
     gfxSkipCharsIterator iter = run.GetPos();
     for (uint32_t i = 0; i < length; ++i) {
       uint32_t offset = originalOffset + i;
-      if (!IsJustifiableCharacter(mFrag, offset, isCJ)) {
+      if (!IsJustifiableCharacter(mTextStyle, mFrag, offset, isCJ)) {
         continue;
       }
 

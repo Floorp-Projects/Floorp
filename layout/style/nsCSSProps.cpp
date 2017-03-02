@@ -2000,6 +2000,17 @@ KTableEntry nsCSSProps::kTextAlignLastKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kTextJustifyKTable[] = {
+  { eCSSKeyword_none, StyleTextJustify::None },
+  { eCSSKeyword_auto, StyleTextJustify::Auto },
+  { eCSSKeyword_inter_word, StyleTextJustify::InterWord },
+  { eCSSKeyword_inter_character, StyleTextJustify::InterCharacter },
+  // For legacy reasons, UAs must also support the keyword "distribute" with
+  // the exact same meaning and behavior as "inter-character".
+  { eCSSKeyword_distribute, StyleTextJustify::InterCharacter },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 const KTableEntry nsCSSProps::kTextCombineUprightKTable[] = {
   { eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE },
   { eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL },

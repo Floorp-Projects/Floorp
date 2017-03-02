@@ -172,6 +172,7 @@ public class GeckoPreferences
     public static final String PREFS_CATEGORY_EXPERIMENTAL_FEATURES = NON_PREF_PREFIX + "category_experimental";
     public static final String PREFS_COMPACT_TABS = NON_PREF_PREFIX + "compact_tabs";
     public static final String PREFS_SHOW_QUIT_MENU = NON_PREF_PREFIX + "distribution.show_quit_menu";
+    public static final String PREFS_SEARCH_SUGGESTIONS_ENABLED = "browser.search.suggest.enabled";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = "STUMBLER_PREF";
 
@@ -1248,6 +1249,10 @@ public class GeckoPreferences
         } else if (HANDLERS.containsKey(prefName)) {
             PrefHandler handler = HANDLERS.get(prefName);
             handler.onChange(this, preference, newValue);
+        } else if (PREFS_SEARCH_SUGGESTIONS_ENABLED.equals(prefName)) {
+            // Tell Gecko to transmit the current search engine data again, so
+            // BrowserSearch is notified immediately about the new enabled state.
+            EventDispatcher.getInstance().dispatch("SearchEngines:GetVisible", null);
         }
 
         // Send Gecko-side pref changes to Gecko

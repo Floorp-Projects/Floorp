@@ -264,13 +264,24 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual void
-  EnableFec() {
+  EnableFec(std::string redPayloadType, std::string ulpfecPayloadType) {
     // Enabling FEC for video works a little differently than enabling
     // REMB or TMMBR.  Support for FEC is indicated by the presence of
     // particular codes (red and ulpfec) instead of using rtcpfb
     // attributes on a given codec.  There is no rtcpfb to push for FEC
     // as can be seen above when REMB or TMMBR are enabled.
+
+    // Ensure we have valid payload types. This returns zero on failure, which
+    // is a valid payload type.
+    uint16_t redPt, ulpfecPt;
+    if (!SdpHelper::GetPtAsInt(redPayloadType, &redPt) ||
+        !SdpHelper::GetPtAsInt(ulpfecPayloadType, &ulpfecPt)) {
+      return;
+    }
+
     mFECEnabled = true;
+    mREDPayloadType = redPt;
+    mULPFECPayloadType = ulpfecPt;
   }
 
   void
@@ -710,10 +721,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       if (codec->mType == SdpMediaSection::kVideo &&
           codec->mEnabled &&
           codec->mName != "red") {
-        uint8_t pt = (uint8_t)strtoul(codec->mDefaultPt.c_str(), nullptr, 10);
-        // returns 0 if failed to convert, and since zero could
-        // be valid, check the defaultPt for 0
-        if (pt == 0 && codec->mDefaultPt != "0") {
+        uint16_t pt;
+        if (!SdpHelper::GetPtAsInt(codec->mDefaultPt, &pt)) {
           continue;
         }
         mRedundantEncodings.push_back(pt);
@@ -730,6 +739,8 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   bool mTmmbrEnabled;
   bool mRembEnabled;
   bool mFECEnabled;
+  uint8_t mREDPayloadType;
+  uint8_t mULPFECPayloadType;
   std::vector<uint8_t> mRedundantEncodings;
 
   // H264-specific stuff

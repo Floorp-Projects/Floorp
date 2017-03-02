@@ -11,6 +11,8 @@
 #include "nsTArray.h"
 #include "unicode/uloc.h"
 
+#include "mozIOSPreferences.h"
+
 namespace mozilla {
 namespace intl {
 
@@ -38,11 +40,40 @@ namespace intl {
  * notify apps about changes, new OS-level settings may not be reflected
  * in the app until it is relaunched.
  */
-class OSPreferences
+class OSPreferences: public mozIOSPreferences
 {
 
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZIOSPREFERENCES
+
+  enum class DateTimeFormatStyle {
+    Invalid = -1,
+    None,
+    Short,   // e.g. time: HH:mm, date: Y/m/d
+    Medium,  // likely same as Short
+    Long,    // e.g. time: including seconds, date: including weekday
+    Full     // e.g. time: with timezone, date: with long weekday, month
+  };
+
+  /**
+   * Create (if necessary) and return a raw pointer to the singleton instance.
+   * Use this accessor in C++ code that just wants to call a method on the
+   * instance, but does not need to hold a reference, as in
+   *    nsAutoCString str;
+   *    OSPreferences::GetInstance()->GetSystemLocale(str);
+   */
   static OSPreferences* GetInstance();
+
+  /**
+   * Return an addRef'd pointer to the singleton instance. This is used by the
+   * XPCOM constructor that exists to support usage from JS.
+   */
+  static already_AddRefed<OSPreferences> GetInstanceAddRefed()
+  {
+    return RefPtr<OSPreferences>(GetInstance()).forget();
+  }
+
 
   /**
    * Returns a list of locales used by the host environment.
@@ -63,6 +94,8 @@ public:
    * Usage:
    *   nsTArray<nsCString> systemLocales;
    *   OSPreferences::GetInstance()->GetSystemLocales(systemLocales);
+   *
+   * (See mozIOSPreferences.idl for a JS-callable version of this.)
    */
   bool GetSystemLocales(nsTArray<nsCString>& aRetVal);
 
@@ -70,9 +103,32 @@ protected:
   nsTArray<nsCString> mSystemLocales;
 
 private:
-  static StaticAutoPtr<OSPreferences> sInstance;
+  virtual ~OSPreferences() {};
+
+  static StaticRefPtr<OSPreferences> sInstance;
 
   static bool CanonicalizeLanguageTag(nsCString& aLoc);
+
+  /**
+   * Helper methods to get formats from ICU; these will return false
+   * in case of error, in which case the caller cannot rely on aRetVal.
+   */
+  bool GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
+                                  DateTimeFormatStyle aTimeStyle,
+                                  const nsACString& aLocale,
+                                  nsAString& aRetVal);
+
+  bool GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
+                                   DateTimeFormatStyle aTimeStyle,
+                                   const nsACString& aLocale,
+                                   nsAString& aRetVal);
+
+  bool GetPatternForSkeleton(const nsAString& aSkeleton,
+                             const nsACString& aLocale,
+                             nsAString& aRetVal);
+
+  bool GetDateTimeConnectorPattern(const nsACString& aLocale,
+                                   nsAString& aRetVal);
 
   /**
    * This is a host environment specific method that will be implemented
@@ -84,6 +140,37 @@ private:
    * resolved at least one locale.
    */
   bool ReadSystemLocales(nsTArray<nsCString>& aRetVal);
+
+  /**
+   * This is a host environment specific method that will be implemented
+   * separately for each platform.
+   *
+   * It is `best-effort` kind of API that attempts to construct the best
+   * possible date/time pattern for the given styles and locales.
+   *
+   * In case we fail to, or don't know how to retrieve the pattern in a
+   * given environment this function will return false.
+   * Callers should always be prepared to handle that scenario.
+   *
+   * The heuristic may depend on the OS API and HIG guidelines.
+   */
+  bool ReadDateTimePattern(DateTimeFormatStyle aDateFormatStyle,
+                           DateTimeFormatStyle aTimeFormatStyle,
+                           const nsACString& aLocale,
+                           nsAString& aRetVal);
+
+  /**
+   * Triggers a refresh of retrieving data from host environment.
+   *
+   * If the result differs from the previous list, it will additionally
+   * trigger global events for changed values:
+   *
+   *  * SystemLocales: "intl:system-locales-changed"
+   *
+   * This method should not be called from anywhere except of per-platform
+   * hooks into OS events.
+   */
+  void Refresh();
 };
 
 } // intl

@@ -14,7 +14,7 @@ const categoryManager = Cc["@mozilla.org/categorymanager;1"]
   .getService(Ci.nsICategoryManager);
 
 // Constants
-const JSON_TYPE = "application/json";
+const JSON_TYPES = ["application/json", "application/manifest+json"];
 const CONTRACT_ID = "@mozilla.org/devtools/jsonview-sniffer;1";
 const CLASS_ID = components.ID("{4148c488-dca1-49fc-a621-2a0097a62422}");
 const CLASS_DESCRIPTION = "JSONView content sniffer";
@@ -62,9 +62,10 @@ Sniffer.prototype = {
         // Channel doesn't support content dispositions
       }
 
-      // Check the response content type and if it's application/json
+      // Check the response content type and if it's a valid type
+      // such as application/json or application/manifest+json
       // change it to new internal type consumed by JSON View.
-      if (request.contentType == JSON_TYPE) {
+      if (JSON_TYPES.includes(request.contentType)) {
         return JSON_VIEW_MIME_TYPE;
       }
     }

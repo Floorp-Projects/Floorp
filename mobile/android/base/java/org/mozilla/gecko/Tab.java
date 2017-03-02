@@ -654,6 +654,11 @@ public class Tab {
         mCanDoForward = message.getBoolean("canGoForward");
     }
 
+    void handleButtonStateChange(boolean canGoBack, boolean canGoForward) {
+        mCanDoBack = canGoBack;
+        mCanDoForward = canGoForward;
+    }
+
     private static boolean shouldShowProgress(final String url) {
         return !AboutPages.isAboutPage(url);
     }

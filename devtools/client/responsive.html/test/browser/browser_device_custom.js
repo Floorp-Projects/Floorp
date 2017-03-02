@@ -53,12 +53,12 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   Simulate.click(adderSave);
   yield saved;
 
-  info("Enable device in modal");
+  info("Verify device defaults to enabled in modal");
   let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
     return cb.value == device.name;
   });
   ok(deviceCb, "Custom device checkbox added to modal");
-  deviceCb.click();
+  ok(deviceCb.checked, "Custom device enabled");
   Simulate.click(submitButton);
 
   info("Look for custom device in device selector");

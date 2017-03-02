@@ -39,26 +39,18 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  if (mInStyleRefresh && aRestyleHint == eRestyle_CSSAnimations) {
-    // FIXME: This is the initial restyle for CSS animations when the animation
-    // is created. We have to process this restyle if necessary. Currently we
-    // skip it here and will do this restyle in the next tick.
-    return;
-  }
+  // We allow posting restyles from within change hint handling, but not from
+  // within the restyle algorithm itself.
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 
   if (aRestyleHint == 0 && !aMinChangeHint) {
     return; // Nothing to do.
   }
 
-  // We allow posting change hints during restyling, but not restyle hints
-  // themselves, since those would require us to re-traverse the tree.
-  MOZ_ASSERT_IF(mInStyleRefresh, aRestyleHint == 0);
-
-  // Processing change hints sometimes causes new change hints to be generated.
-  // Doing this after the gecko post-traversal is problematic, so instead we just
-  // queue them up for special handling.
-  if (mReentrantChanges) {
-    MOZ_ASSERT(aRestyleHint == 0);
+  // Processing change hints sometimes causes new change hints to be generated,
+  // and very occasionally, additional restyle hints. We collect the change
+  // hints manually to avoid re-traversing the DOM to find them.
+  if (mReentrantChanges && !aRestyleHint) {
     mReentrantChanges->AppendElement(ReentrantChange { aElement, aMinChangeHint });
     return;
   }
@@ -392,10 +384,12 @@ ServoRestyleManager::ProcessPendingRestyles()
   // mActiveTimer and mMostRecentRefresh time.
   PresContext()->RefreshDriver()->MostRecentRefresh();
 
-  mInStyleRefresh = true;
 
-  // Perform the Servo traversal, and the post-traversal if required.
-  if (styleSet->StyleDocument()) {
+  // Perform the Servo traversal, and the post-traversal if required. We do this
+  // in a loop because certain rare paths in the frame constructor (like
+  // uninstalling XBL bindings) can trigger additional style validations.
+  mInStyleRefresh = true;
+  while (styleSet->StyleDocument()) {
 
     PresContext()->EffectCompositor()->ClearElementsToRestyle();
 
@@ -434,12 +428,11 @@ ServoRestyleManager::ProcessPendingRestyles()
     }
     mReentrantChanges = nullptr;
 
-    styleSet->AssertTreeIsClean();
-
     IncrementRestyleGeneration();
   }
 
   mInStyleRefresh = false;
+  styleSet->AssertTreeIsClean();
 
   // Note: We are in the scope of |animationsWithDestroyedFrame|, so
   //       |mAnimationsWithDestroyedFrame| is still valid.

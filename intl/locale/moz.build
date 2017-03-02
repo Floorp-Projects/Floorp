@@ -20,9 +20,12 @@ elif toolkit == 'cocoa':
     DIRS += ['mac']
 else:
     DIRS += ['unix']
+    if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
+        DIRS += ['gtk']
 
 XPIDL_SOURCES += [
     'mozILocaleService.idl',
+    'mozIOSPreferences.idl',
     'nsICollation.idl',
     'nsILocale.idl',
     'nsILocaleService.idl',

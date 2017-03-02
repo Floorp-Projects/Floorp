@@ -54,6 +54,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -1671,6 +1672,80 @@ nsUrlClassifierDBService::ClassifyLocal(nsIURI *aURI,
     aTableResults.Append(result);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
+                                                       const nsACString& aTables,
+                                                       nsIURIClassifierCallback* aCallback)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "AsyncClassifyLocalWithTables must be called "
+                                "on main thread");
+
+  if (XRE_IsContentProcess()) {
+    // TODO: e10s support. Bug 1343425.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (gShuttingDownThread) {
+    return NS_ERROR_ABORT;
+  }
+
+  using namespace mozilla::Telemetry;
+  auto startTime = TimeStamp::Now(); // For telemetry.
+
+  nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+  nsAutoCString key;
+  // Canonicalize the url
+  nsCOMPtr<nsIUrlClassifierUtils> utilsService =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+  nsresult rv = utilsService->GetKeyForURI(uri, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  auto worker = mWorker;
+  nsCString tables(aTables);
+
+  // Since aCallback will be passed around threads...
+  nsMainThreadPtrHandle<nsIURIClassifierCallback> callback(
+    new nsMainThreadPtrHolder<nsIURIClassifierCallback>(aCallback));
+
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableFunction([worker, key, tables, callback, startTime] () -> void {
+
+    nsCString matchedLists;
+    nsAutoPtr<LookupResultArray> results(new LookupResultArray());
+    if (results) {
+      nsresult rv = worker->DoLocalLookup(key, tables, results);
+      if (NS_SUCCEEDED(rv)) {
+        for (uint32_t i = 0; i < results->Length(); i++) {
+          if (i > 0) {
+            matchedLists.AppendLiteral(",");
+          }
+          matchedLists.Append(results->ElementAt(i).mTableName);
+        }
+      }
+    }
+
+    nsCOMPtr<nsIRunnable> cbRunnable =
+      NS_NewRunnableFunction([callback, matchedLists, startTime] () -> void {
+        // Measure the time diff between calling and callback.
+        AccumulateDelta_impl<Millisecond>::compute(
+          Telemetry::URLCLASSIFIER_ASYNC_CLASSIFYLOCAL_TIME, startTime);
+
+        // |callback| is captured as const value so ...
+        auto cb = const_cast<nsIURIClassifierCallback*>(callback.get());
+        cb->OnClassifyComplete(NS_OK,           // Not used.
+                               matchedLists,
+                               EmptyCString(),  // provider. (Not used)
+                               EmptyCString()); // prefix. (Not used)
+      });
+
+    NS_DispatchToMainThread(cbRunnable);
+  });
+
+  return gDbBackgroundThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP

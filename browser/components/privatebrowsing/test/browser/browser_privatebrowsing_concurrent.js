@@ -18,39 +18,39 @@ add_task(function* setup() {
 });
 
 add_task(function* test() {
-  let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_concurrent_page.html';
+  let prefix = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_concurrent_page.html";
 
   function getElts(browser) {
-    return browser.contentTitle.split('|');
-  };
+    return browser.contentTitle.split("|");
+  }
 
   // Step 1
   let non_private_browser = gBrowser.selectedBrowser;
-  non_private_browser.loadURI(prefix + '?action=set&name=test&value=value&initial=true');
+  non_private_browser.loadURI(prefix + "?action=set&name=test&value=value&initial=true");
   yield BrowserTestUtils.browserLoaded(non_private_browser);
 
 
   // Step 2
   let private_window = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
   let private_browser = private_window.getBrowser().selectedBrowser;
-  private_browser.loadURI(prefix + '?action=set&name=test2&value=value2');
+  private_browser.loadURI(prefix + "?action=set&name=test2&value=value2");
   yield BrowserTestUtils.browserLoaded(private_browser);
 
 
   // Step 3
-  non_private_browser.loadURI(prefix + '?action=get&name=test2');
+  non_private_browser.loadURI(prefix + "?action=get&name=test2");
   yield BrowserTestUtils.browserLoaded(non_private_browser);
   let elts = yield getElts(non_private_browser);
-  isnot(elts[0], 'value2', "public window shouldn't see private storage");
-  is(elts[1], '1', "public window should only see public items");
+  isnot(elts[0], "value2", "public window shouldn't see private storage");
+  is(elts[1], "1", "public window should only see public items");
 
 
   // Step 4
-  private_browser.loadURI(prefix + '?action=get&name=test');
+  private_browser.loadURI(prefix + "?action=get&name=test");
   yield BrowserTestUtils.browserLoaded(private_browser);
   elts = yield getElts(private_browser);
-  isnot(elts[0], 'value', "private window shouldn't see public storage");
-  is(elts[1], '1', "private window should only see private items");
+  isnot(elts[0], "value", "private window shouldn't see public storage");
+  is(elts[1], "1", "private window should only see private items");
 
 
   // Reopen the private window again, without privateBrowsing, which should clear the
@@ -61,11 +61,11 @@ add_task(function* test() {
   yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
-  private_browser.loadURI(prefix + '?action=get&name=test2');
+  private_browser.loadURI(prefix + "?action=get&name=test2");
   yield BrowserTestUtils.browserLoaded(private_browser);
   elts = yield getElts(private_browser);
-  isnot(elts[0], 'value2', "public window shouldn't see cleared private storage");
-  is(elts[1], '1', "public window should only see public items");
+  isnot(elts[0], "value2", "public window shouldn't see cleared private storage");
+  is(elts[1], "1", "public window should only see public items");
 
 
   // Making it private again should clear the storage and it shouldn't
@@ -76,13 +76,13 @@ add_task(function* test() {
   yield new Promise(resolve => Cu.schedulePreciseGC(resolve));
   private_browser = private_window.getBrowser().selectedBrowser;
 
-  private_browser.loadURI(prefix + '?action=set&name=test3&value=value3');
+  private_browser.loadURI(prefix + "?action=set&name=test3&value=value3");
   yield BrowserTestUtils.browserLoaded(private_browser);
   elts = yield getElts(private_browser);
-  is(elts[1], '1', "private window should only see new private items");
+  is(elts[1], "1", "private window should only see new private items");
 
   // Cleanup.
-  non_private_browser.loadURI(prefix + '?final=true');
+  non_private_browser.loadURI(prefix + "?final=true");
   yield BrowserTestUtils.browserLoaded(non_private_browser);
   private_window.close();
 });

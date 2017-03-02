@@ -26,7 +26,6 @@
   --forwardbutton-width: 25px;
 
   --toolbarbutton-vertical-inner-padding: 2px;
-  --toolbarbutton-vertical-outer-padding: 8px;
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
@@ -640,7 +639,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1:not([type=menu-button]),
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding: var(--toolbarbutton-vertical-outer-padding) 2px;
+  padding: 0 2px;
   -moz-box-pack: center;
 }
 
@@ -1189,7 +1188,6 @@ toolbar[brighttext] #close-button {
   :root {
     /* let toolbar buttons match the location and search bar's minimum height */
     --toolbarbutton-vertical-inner-padding: 4px;
-    --toolbarbutton-vertical-outer-padding: 5px;
   }
 }
 
@@ -2325,15 +2323,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton {
 #main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
-}
-
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
-  background-repeat: no-repeat;
-  background-position: right top;
-  background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
-  background-image: none;
-  background-color: transparent;
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {
