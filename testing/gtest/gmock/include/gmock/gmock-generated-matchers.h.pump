@@ -40,6 +40,7 @@ $$ }} This line fixes auto-indentation of the following code in Emacs.
 #ifndef GMOCK_INCLUDE_GMOCK_GMOCK_GENERATED_MATCHERS_H_
 #define GMOCK_INCLUDE_GMOCK_GMOCK_GENERATED_MATCHERS_H_
 
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -52,7 +53,7 @@ $range i 0..n-1
 
 // The type of the i-th (0-based) field of Tuple.
 #define GMOCK_FIELD_TYPE_(Tuple, i) \
-    typename ::std::tr1::tuple_element<i, Tuple>::type
+    typename ::testing::tuple_element<i, Tuple>::type
 
 // TupleFields<Tuple, k0, ..., kn> is for selecting fields from a
 // tuple of type Tuple.  It has two members:
@@ -72,9 +73,8 @@ class TupleFields;
 template <class Tuple$for i [[, int k$i]]>
 class TupleFields {
  public:
-  typedef ::std::tr1::tuple<$for i, [[GMOCK_FIELD_TYPE_(Tuple, k$i)]]> type;
+  typedef ::testing::tuple<$for i, [[GMOCK_FIELD_TYPE_(Tuple, k$i)]]> type;
   static type GetSelectedFields(const Tuple& t) {
-    using ::std::tr1::get;
     return type($for i, [[get<k$i>(t)]]);
   }
 };
@@ -89,9 +89,8 @@ $range k 0..n-1
 template <class Tuple$for j [[, int k$j]]>
 class TupleFields<Tuple, $for k, [[$if k < i [[k$k]] $else [[-1]]]]> {
  public:
-  typedef ::std::tr1::tuple<$for j, [[GMOCK_FIELD_TYPE_(Tuple, k$j)]]> type;
+  typedef ::testing::tuple<$for j, [[GMOCK_FIELD_TYPE_(Tuple, k$j)]]> type;
   static type GetSelectedFields(const Tuple& $if i==0 [[/* t */]] $else [[t]]) {
-    using ::std::tr1::get;
     return type($for j, [[get<k$j>(t)]]);
   }
 };
@@ -186,62 +185,66 @@ class ArgsMatcher {
   GTEST_DISALLOW_ASSIGN_(ArgsMatcher);
 };
 
-// Implements ElementsAre() of 1-$n arguments.
+// A set of metafunctions for computing the result type of AllOf.
+// AllOf(m1, ..., mN) returns
+// AllOfResultN<decltype(m1), ..., decltype(mN)>::type.
 
-
-$range i 1..n
-$for i [[
-$range j 1..i
-template <$for j, [[typename T$j]]>
-class ElementsAreMatcher$i {
- public:
-  $if i==1 [[explicit ]]ElementsAreMatcher$i($for j, [[const T$j& e$j]])$if i > 0 [[ : ]]
-      $for j, [[e$j[[]]_(e$j)]] {}
-
-  template <typename Container>
-  operator Matcher<Container>() const {
-    typedef GTEST_REMOVE_REFERENCE_AND_CONST_(Container) RawContainer;
-    typedef typename internal::StlContainerView<RawContainer>::type::value_type
-        Element;
-
-$if i==1 [[
-
-    // Nokia's Symbian Compiler has a nasty bug where the object put
-    // in a one-element local array is not destructed when the array
-    // goes out of scope.  This leads to obvious badness as we've
-    // added the linked_ptr in it to our other linked_ptrs list.
-    // Hence we implement ElementsAreMatcher1 specially to avoid using
-    // a local array.
-    const Matcher<const Element&> matcher =
-        MatcherCast<const Element&>(e1_);
-    return MakeMatcher(new ElementsAreMatcherImpl<Container>(&matcher, 1));
-]] $else [[
-
-    const Matcher<const Element&> matchers[] = {
-
-$for j [[
-      MatcherCast<const Element&>(e$j[[]]_),
-
-]]
-    };
-
-    return MakeMatcher(new ElementsAreMatcherImpl<Container>(matchers, $i));
-]]
-
-  }
-
- private:
-
-$for j [[
-  const T$j& e$j[[]]_;
-
-]]
-
-  GTEST_DISALLOW_ASSIGN_(ElementsAreMatcher$i);
+// Although AllOf isn't defined for one argument, AllOfResult1 is defined
+// to simplify the implementation.
+template <typename M1>
+struct AllOfResult1 {
+  typedef M1 type;
 };
 
+$range i 1..n
+
+$range i 2..n
+$for i [[
+$range j 2..i
+$var m = i/2
+$range k 1..m
+$range t m+1..i
+
+template <typename M1$for j [[, typename M$j]]>
+struct AllOfResult$i {
+  typedef BothOfMatcher<
+      typename AllOfResult$m<$for k, [[M$k]]>::type,
+      typename AllOfResult$(i-m)<$for t, [[M$t]]>::type
+  > type;
+};
 
 ]]
+
+// A set of metafunctions for computing the result type of AnyOf.
+// AnyOf(m1, ..., mN) returns
+// AnyOfResultN<decltype(m1), ..., decltype(mN)>::type.
+
+// Although AnyOf isn't defined for one argument, AnyOfResult1 is defined
+// to simplify the implementation.
+template <typename M1>
+struct AnyOfResult1 {
+  typedef M1 type;
+};
+
+$range i 1..n
+
+$range i 2..n
+$for i [[
+$range j 2..i
+$var m = i/2
+$range k 1..m
+$range t m+1..i
+
+template <typename M1$for j [[, typename M$j]]>
+struct AnyOfResult$i {
+  typedef EitherOfMatcher<
+      typename AnyOfResult$m<$for k, [[M$k]]>::type,
+      typename AnyOfResult$(i-m)<$for t, [[M$t]]>::type
+  > type;
+};
+
+]]
+
 }  // namespace internal
 
 // Args<N1, N2, ..., Nk>(a_matcher) matches a tuple if the selected
@@ -259,48 +262,72 @@ Args(const InnerMatcher& matcher) {
 
 
 ]]
-// ElementsAre(e0, e1, ..., e_n) matches an STL-style container with
-// (n + 1) elements, where the i-th element in the container must
+// ElementsAre(e_1, e_2, ... e_n) matches an STL-style container with
+// n elements, where the i-th element in the container must
 // match the i-th argument in the list.  Each argument of
 // ElementsAre() can be either a value or a matcher.  We support up to
 // $n arguments.
+//
+// The use of DecayArray in the implementation allows ElementsAre()
+// to accept string literals, whose type is const char[N], but we
+// want to treat them as const char*.
 //
 // NOTE: Since ElementsAre() cares about the order of the elements, it
 // must not be used with containers whose elements's order is
 // undefined (e.g. hash_map).
 
-inline internal::ElementsAreMatcher0 ElementsAre() {
-  return internal::ElementsAreMatcher0();
-}
-
-$range i 1..n
+$range i 0..n
 $for i [[
+
 $range j 1..i
 
+$if i>0 [[
+
 template <$for j, [[typename T$j]]>
-inline internal::ElementsAreMatcher$i<$for j, [[T$j]]> ElementsAre($for j, [[const T$j& e$j]]) {
-  return internal::ElementsAreMatcher$i<$for j, [[T$j]]>($for j, [[e$j]]);
+]]
+
+inline internal::ElementsAreMatcher<
+    ::testing::tuple<
+$for j, [[
+
+        typename internal::DecayArray<T$j[[]]>::type]]> >
+ElementsAre($for j, [[const T$j& e$j]]) {
+  typedef ::testing::tuple<
+$for j, [[
+
+      typename internal::DecayArray<T$j[[]]>::type]]> Args;
+  return internal::ElementsAreMatcher<Args>(Args($for j, [[e$j]]));
 }
 
 ]]
 
-// ElementsAreArray(array) and ElementAreArray(array, count) are like
-// ElementsAre(), except that they take an array of values or
-// matchers.  The former form infers the size of 'array', which must
-// be a static C-style array.  In the latter form, 'array' can either
-// be a static array or a pointer to a dynamically created array.
+// UnorderedElementsAre(e_1, e_2, ..., e_n) is an ElementsAre extension
+// that matches n elements in any order.  We support up to n=$n arguments.
 
-template <typename T>
-inline internal::ElementsAreArrayMatcher<T> ElementsAreArray(
-    const T* first, size_t count) {
-  return internal::ElementsAreArrayMatcher<T>(first, count);
+$range i 0..n
+$for i [[
+
+$range j 1..i
+
+$if i>0 [[
+
+template <$for j, [[typename T$j]]>
+]]
+
+inline internal::UnorderedElementsAreMatcher<
+    ::testing::tuple<
+$for j, [[
+
+        typename internal::DecayArray<T$j[[]]>::type]]> >
+UnorderedElementsAre($for j, [[const T$j& e$j]]) {
+  typedef ::testing::tuple<
+$for j, [[
+
+      typename internal::DecayArray<T$j[[]]>::type]]> Args;
+  return internal::UnorderedElementsAreMatcher<Args>(Args($for j, [[e$j]]));
 }
 
-template <typename T, size_t N>
-inline internal::ElementsAreArrayMatcher<T>
-ElementsAreArray(const T (&array)[N]) {
-  return internal::ElementsAreArrayMatcher<T>(array, N);
-}
+]]
 
 // AllOf(m1, m2, ..., mk) matches any value that matches all of the given
 // sub-matchers.  AllOf is called fully qualified to prevent ADL from firing.
@@ -308,19 +335,16 @@ ElementsAreArray(const T (&array)[N]) {
 $range i 2..n
 $for i [[
 $range j 1..i
-$range k 1..i-1
+$var m = i/2
+$range k 1..m
+$range t m+1..i
 
-template <$for j, [[typename Matcher$j]]>
-inline $for k[[internal::BothOfMatcher<Matcher$k, ]]Matcher$i[[]]$for k [[> ]]
-
-AllOf($for j, [[Matcher$j m$j]]) {
-
-$if i == 2 [[
-  return internal::BothOfMatcher<Matcher1, Matcher2>(m1, m2);
-]] $else [[
-  return ::testing::AllOf(m1, ::testing::AllOf($for k, [[m$(k + 1)]]));
-]]
-
+template <$for j, [[typename M$j]]>
+inline typename internal::AllOfResult$i<$for j, [[M$j]]>::type
+AllOf($for j, [[M$j m$j]]) {
+  return typename internal::AllOfResult$i<$for j, [[M$j]]>::type(
+      $if m == 1 [[m1]] $else [[::testing::AllOf($for k, [[m$k]])]],
+      $if m+1 == i [[m$i]] $else [[::testing::AllOf($for t, [[m$t]])]]);
 }
 
 ]]
@@ -331,19 +355,16 @@ $if i == 2 [[
 $range i 2..n
 $for i [[
 $range j 1..i
-$range k 1..i-1
+$var m = i/2
+$range k 1..m
+$range t m+1..i
 
-template <$for j, [[typename Matcher$j]]>
-inline $for k[[internal::EitherOfMatcher<Matcher$k, ]]Matcher$i[[]]$for k [[> ]]
-
-AnyOf($for j, [[Matcher$j m$j]]) {
-
-$if i == 2 [[
-  return internal::EitherOfMatcher<Matcher1, Matcher2>(m1, m2);
-]] $else [[
-  return ::testing::AnyOf(m1, ::testing::AnyOf($for k, [[m$(k + 1)]]));
-]]
-
+template <$for j, [[typename M$j]]>
+inline typename internal::AnyOfResult$i<$for j, [[M$j]]>::type
+AnyOf($for j, [[M$j m$j]]) {
+  return typename internal::AnyOfResult$i<$for j, [[M$j]]>::type(
+      $if m == 1 [[m1]] $else [[::testing::AnyOf($for k, [[m$k]])]],
+      $if m+1 == i [[m$i]] $else [[::testing::AnyOf($for t, [[m$t]])]]);
 }
 
 ]]
@@ -621,9 +642,9 @@ $var param_field_decls2 = [[$for j
         if (!gmock_description.empty())\
           return gmock_description;\
         return ::testing::internal::FormatMatcherDescription(\
-            negation, #name,\
+            negation, #name, \
             ::testing::internal::UniversalTersePrintTupleFieldsToStrings(\
-                ::std::tr1::tuple<$for j, [[p$j##_type]]>($for j, [[p$j]])));\
+                ::testing::tuple<$for j, [[p$j##_type]]>($for j, [[p$j]])));\
       }\
       GTEST_DISALLOW_ASSIGN_(gmock_Impl);\
     };\
@@ -632,7 +653,7 @@ $var param_field_decls2 = [[$for j
       return ::testing::Matcher<arg_type>(\
           new gmock_Impl<arg_type>($params));\
     }\
-    $class_name($ctor_param_list)$inits {\
+    [[$if i==1 [[explicit ]]]]$class_name($ctor_param_list)$inits {\
     }\$param_field_decls2
    private:\
     GTEST_DISALLOW_ASSIGN_($class_name);\
@@ -642,7 +663,7 @@ $var param_field_decls2 = [[$for j
   }\$template
   template <typename arg_type>\
   bool $class_name$param_types::gmock_Impl<arg_type>::MatchAndExplain(\
-      arg_type arg,\
+      arg_type arg, \
       ::testing::MatchResultListener* result_listener GTEST_ATTRIBUTE_UNUSED_)\
           const
 ]]
