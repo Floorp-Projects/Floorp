@@ -594,6 +594,7 @@ Section "-InstallEndCleanup"
   SetDetailsPrint none
 
   ${Unless} ${Silent}
+    ClearErrors
     ${MUI_INSTALLOPTIONS_READ} $0 "summary.ini" "Field 4" "State"
     ${If} "$0" == "1"
       ; NB: this code is duplicated in stub.nsi. Please keep in sync.
@@ -632,7 +633,7 @@ Section "-InstallEndCleanup"
         GetFunctionAddress $0 SetAsDefaultAppUserHKCU
         UAC::ExecCodeSegment $0
       ${EndIf}
-    ${Else}
+    ${ElseIfNot} ${Errors}
       ${LogHeader} "Writing default-browser opt-out"
       ClearErrors
       WriteRegStr HKCU "Software\Mozilla\Firefox" "DefaultBrowserOptOut" "True"
