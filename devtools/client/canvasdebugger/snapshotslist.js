@@ -357,40 +357,38 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("snapshotsList.saveDialogAllFilter"), "*.*");
 
-    fp.open(rv => {
-      if (rv != Ci.nsIFilePicker.returnOK) {
+    if (fp.show() != Ci.nsIFilePicker.returnOK) {
+      return;
+    }
+
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(fp.file), loadUsingSystemPrincipal: true});
+    channel.contentType = "text/plain";
+
+    NetUtil.asyncFetch(channel, (inputStream, status) => {
+      if (!Components.isSuccessCode(status)) {
+        console.error("Could not import recorded animation frame snapshot file.");
+        return;
+      }
+      try {
+        let string = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+        var data = JSON.parse(string);
+      } catch (e) {
+        console.error("Could not read animation frame snapshot file.");
+        return;
+      }
+      if (data.fileType != CALLS_LIST_SERIALIZER_IDENTIFIER) {
+        console.error("Unrecognized animation frame snapshot file.");
         return;
       }
 
-      let channel = NetUtil.newChannel({
-        uri: NetUtil.newURI(fp.file), loadUsingSystemPrincipal: true});
-      channel.contentType = "text/plain";
+      // Add a `isLoadedFromDisk` flag on everything to avoid sending invalid
+      // requests to the backend, since we're not dealing with actors anymore.
+      let snapshotItem = this.addSnapshot();
+      snapshotItem.isLoadedFromDisk = true;
+      data.calls.forEach(e => e.isLoadedFromDisk = true);
 
-      NetUtil.asyncFetch(channel, (inputStream, status) => {
-        if (!Components.isSuccessCode(status)) {
-          console.error("Could not import recorded animation frame snapshot file.");
-          return;
-        }
-        try {
-          let string = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-          var data = JSON.parse(string);
-        } catch (e) {
-          console.error("Could not read animation frame snapshot file.");
-          return;
-        }
-        if (data.fileType != CALLS_LIST_SERIALIZER_IDENTIFIER) {
-          console.error("Unrecognized animation frame snapshot file.");
-          return;
-        }
-
-        // Add a `isLoadedFromDisk` flag on everything to avoid sending invalid
-        // requests to the backend, since we're not dealing with actors anymore.
-        let snapshotItem = this.addSnapshot();
-        snapshotItem.isLoadedFromDisk = true;
-        data.calls.forEach(e => e.isLoadedFromDisk = true);
-
-        this.customizeSnapshot(snapshotItem, data.calls, data);
-      });
+      this.customizeSnapshot(snapshotItem, data.calls, data);
     });
   },
 

@@ -34,7 +34,7 @@ add_task(function* () {
   MockFilePicker.showCallback = function(fp) {
     fileName = fp.defaultString;
     destFile.append(fileName);
-    MockFilePicker.setFiles([destFile]);
+    MockFilePicker.returnFiles = [destFile];
     MockFilePicker.filterIndex = 1; // kSaveAsType_URL
   };
 

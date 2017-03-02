@@ -63,8 +63,7 @@ function* do_test(test) {
     MockFilePicker.init(window);
     MockFilePicker.returnValue = MockFilePicker.returnOK;
     MockFilePicker.displayDirectory = FileUtils.getDir("TmpD", [], false);
-    MockFilePicker.setFiles([tempFile]);
-    MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
+    MockFilePicker.returnFiles = [tempFile];
 
     try {
       // Open the File Picker dialog (MockFilePicker) to select
@@ -77,7 +76,9 @@ function* do_test(test) {
           "The input should have at least one file selected");
         info(`The input has ${input.files.length} file(s) selected.`);
       });
-    } catch (e) {}
+    } finally {
+      MockFilePicker.cleanup();
+    }
   } else {
     info("No real file selection required.");
   }

@@ -85,7 +85,7 @@ add_task(function*() {
   MockFilePicker.displayDirectory = destDir;
   MockFilePicker.showCallback = function(fp) {
     destFile.append(fp.defaultString);
-    MockFilePicker.setFiles([destFile]);
+    MockFilePicker.returnFiles = [destFile];
     MockFilePicker.filterIndex = 1; // kSaveAsType_URL
   };
 

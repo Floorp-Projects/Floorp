@@ -91,7 +91,7 @@ add_task(function* test_install_from_file() {
                    get_addon_file_url("browser_bug567127_1.xpi"),
                    get_addon_file_url("browser_bug567127_2.xpi")
                   ];
-  MockFilePicker.setFiles(filePaths.map(aPath => aPath.file));
+  MockFilePicker.returnFiles = filePaths.map(aPath => aPath.file);
 
   // Set handler that executes the core test after the window opens,
   // and resolves the promise when the window closes
