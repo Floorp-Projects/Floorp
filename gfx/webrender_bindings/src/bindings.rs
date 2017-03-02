@@ -6,7 +6,7 @@ use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius, BorderWidths, BorderDetails, NormalBorder};
 use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
-use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
+use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
@@ -213,7 +213,7 @@ pub unsafe extern fn wr_api_finalize_builder(state: &mut WrState,
 {
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id));
-    let (pipeline_id, dl, aux) = frame_builder.dl_builder.finalize();
+    let (_, dl, aux) = frame_builder.dl_builder.finalize();
     //XXX: get rid of the copies here
     *dl_data = WrVecU8::from_vec(dl.data().to_owned());
     *dl_descriptor = dl.descriptor().clone();
@@ -239,17 +239,13 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
     // but I suppose it is a good default.
     let preserve_frame_state = true;
 
-    let dl_slice = unsafe {
-        slice::from_raw_parts(dl_data, dl_size)
-    };
+    let dl_slice = slice::from_raw_parts(dl_data, dl_size);
     let mut dl_vec = Vec::new();
     // XXX: see if we can get rid of the copy here
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    let aux_slice = unsafe {
-        slice::from_raw_parts(aux_data, aux_size)
-    };
+    let aux_slice = slice::from_raw_parts(aux_data, aux_size);
     let mut aux_vec = Vec::new();
     // XXX: see if we can get rid of the copy here
     aux_vec.extend_from_slice(aux_slice);
@@ -298,7 +294,7 @@ pub extern fn wr_window_new(window_id: WrWindowId,
         .. Default::default()
     };
 
-    let (mut renderer, sender) = match Renderer::new(opts) {
+    let (renderer, sender) = match Renderer::new(opts) {
         Ok((renderer, sender)) => { (renderer, sender) }
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -607,7 +603,7 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
-    let mut overflow = overflow.to_rect();
+    let overflow = overflow.to_rect();
     let mix_blend_mode = mix_blend_mode.to_mix_blend_mode();
     //println!("stacking context: {:?} {:?} {:?} {:?} {:?}", state.pipeline_id, bounds, overflow, mask, transform);
     // convert from the C type to the Rust type
