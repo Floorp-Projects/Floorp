@@ -68,6 +68,9 @@ private:
 
   uint64_t GetNextExternalImageId();
 
+  wr::BuiltDisplayList ProcessWebrenderCommands(const gfx::IntSize &aSize,
+                                                InfallibleTArray<WebRenderCommand>& aCommands);
+
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
                ImageContainer* aImageContainer = nullptr) override;
@@ -111,6 +114,7 @@ private:
   bool mIsInTransaction;
   uint32_t mIdNamespace;
   uint32_t mResourceId;
+  wr::PipelineId mPipelineId;
 
   bool mIPCOpen;
   bool mDestroyed;
