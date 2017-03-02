@@ -16,7 +16,7 @@ namespace wr {
 
 WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
 {
-  return WrExternalImage { WrExternalImageIdType::TEXTURE_HANDLE, 0.0f, 0.0f, 0.0f, 0.0f, 0 };
+  return WrExternalImage { /*WrExternalImageIdType::TextureHandle, */0.0f, 0.0f, 0.0f, 0.0f, 0 };
 }
 
 void UnlockExternalImage(void* aObj, WrExternalImageId aId)
