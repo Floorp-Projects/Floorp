@@ -291,7 +291,8 @@ pub extern fn wr_window_new(window_id: WrWindowId,
     println!("WebRender - OpenGL version new {}", version);
 
     let opts = RendererOptions {
-        enable_aa: false,
+        enable_aa: true,
+        enable_subpixel_aa: true,
         enable_profiler: enable_profiler,
         recorder: recorder,
         .. Default::default()
