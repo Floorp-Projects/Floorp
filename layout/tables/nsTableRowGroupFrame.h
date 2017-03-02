@@ -135,6 +135,19 @@ public:
   void AdjustRowIndices(int32_t   aRowIndex,
                         int32_t   anAdjustment);
 
+  // See nsTableFrame.h
+  int32_t GetAdjustmentForStoredIndex(int32_t aStoredIndex);
+
+  /* mark rows starting from aStartRowFrame to the next 'aNumRowsToRemove-1'
+   * number of rows as deleted
+   */
+  void MarkRowsAsDeleted(nsTableRowFrame& aStartRowFrame,
+                         int32_t          aNumRowsToDelete);
+
+  // See nsTableFrame.h
+  void AddDeletedRowIndex(int32_t aDeletedRowStoredIndex);
+
+
   /**
    * Used for header and footer row group frames that are repeated when
    * splitting a table frame.
