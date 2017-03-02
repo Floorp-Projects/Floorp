@@ -1,19 +1,5 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_multipleAudio.html";
 
-function* wait_for_tab_playing_event(tab, expectPlaying) {
-  if (tab.soundPlaying == expectPlaying) {
-    ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-  } else {
-    yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("soundplaying") >= 0) {
-        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-        return true;
-      }
-      return false;
-    });
-  }
-}
-
 function play_audio_from_invisible_tab() {
   return new Promise(resolve => {
     var autoPlay = content.document.getElementById("autoplay");
@@ -73,13 +59,13 @@ add_task(function* cross_tabs_audio_competing() {
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                          "about:blank");
   tab1.linkedBrowser.loadURI(PAGE);
-  yield wait_for_tab_playing_event(tab1, true);
+  yield waitForTabPlayingEvent(tab1, true);
 
   info("- open tab 2 in foreground -");
   let tab2 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   tab2.linkedBrowser.loadURI(PAGE);
-  yield wait_for_tab_playing_event(tab1, false);
+  yield waitForTabPlayingEvent(tab1, false);
 
   info("- open tab 3 in foreground -");
   let tab3 = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
@@ -102,7 +88,7 @@ add_task(function* within_one_tab_audio_competing() {
   let tab = yield BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
   tab.linkedBrowser.loadURI(PAGE);
-  yield wait_for_tab_playing_event(tab, true);
+  yield waitForTabPlayingEvent(tab, true);
 
   info("- play audio2 in the same tab -");
   yield ContentTask.spawn(tab.linkedBrowser, null,
