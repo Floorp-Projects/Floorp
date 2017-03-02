@@ -1112,7 +1112,6 @@ private:
                           const nsString& aType, const nsString& aName,
                           const bool& aLastModifiedPassed,
                           const int64_t& aLastModified,
-                          const bool& aExistenceCheck,
                           const bool& aIsFromNsIFile) override;
 
   virtual mozilla::ipc::IPCResult RecvAccumulateChildHistograms(

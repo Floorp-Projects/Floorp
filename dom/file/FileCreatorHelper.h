@@ -51,7 +51,6 @@ public:
                        const nsAString& aName,
                        bool aLastModifiedPassed,
                        int64_t aLastModified,
-                       bool aExistenceCheck,
                        bool aIsFromNsIFile,
                        BlobImpl** aBlobImpl);
 
@@ -69,7 +68,6 @@ private:
                  const nsAString& aName,
                  bool aLastModifiedPassed,
                  int64_t aLastModified,
-                 bool aExistenceCheck,
                  bool aIsFromNsIFile,
                  BlobImpl** aBlobImpl);
 

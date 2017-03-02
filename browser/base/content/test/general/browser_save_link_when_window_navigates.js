@@ -45,7 +45,7 @@ function triggerSave(aWindow, aCallback) {
     fileName = fp.defaultString;
     info("fileName: " + fileName);
     destFile.append(fileName);
-    MockFilePicker.setFiles([destFile]);
+    MockFilePicker.returnFiles = [destFile];
     MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     info("done showCallback");
   };

@@ -167,12 +167,10 @@ function openFile()
         .createInstance(nsIFilePicker);
   fp.init(window, "Select a File", nsIFilePicker.modeOpen);
   fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
-  fp.open(rv => {
-    if (rv == nsIFilePicker.returnOK && fp.fileURL.spec &&
-        fp.fileURL.spec.length > 0) {
-      gBrowser.loadURI(fp.fileURL.spec);
-    }
-  });
+  if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec &&
+                fp.fileURL.spec.length > 0) {
+    gBrowser.loadURI(fp.fileURL.spec);
+  }
 }
 const LDB_RDFNS = "http://mozilla.org/newlayout/LDB-rdf#";
 const NC_RDFNS = "http://home.netscape.com/NC-rdf#";
@@ -266,19 +264,17 @@ RTestIndexList.prototype = {
       fp.init(window, "New Regression Test List", nsIFilePicker.modeOpen);
       fp.appendFilters(nsIFilePicker.filterAll);
       fp.defaultString = "rtest.lst";
-      fp.open(rv => {
-        if (rv != nsIFilePicker.returnOK) {
-          return;
-        }
+      if (fp.show() != nsIFilePicker.returnOK)
+        return;
 
-        var file = fp.file.persistentDescriptor;
-        var resource = this.mRDFService.GetResource(file);
-        var literal = this.mRDFService.GetLiteral(file);
-        this.mDataSource.Assert(this.mLDB_Root, this.mNC_Child, resource, true);
-        this.mDataSource.Assert(resource, this.mNC_Name, literal, true);
+      var file = fp.file.persistentDescriptor;
+      var resource = this.mRDFService.GetResource(file);
+      var literal = this.mRDFService.GetLiteral(file);
+      this.mDataSource.Assert(this.mLDB_Root, this.mNC_Child, resource, true);
+      this.mDataSource.Assert(resource, this.mNC_Name, literal, true);
 
-        this.save();
-      });
+      this.save();
+
     },
 
   remove : function(file)
