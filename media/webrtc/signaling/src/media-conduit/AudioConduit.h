@@ -57,7 +57,7 @@ public:
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VoiceEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len) override;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len, uint32_t ssrc) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
@@ -163,6 +163,7 @@ public:
                         size_t len) override;
 
   virtual uint64_t CodecPluginID() override { return 0; }
+  virtual void SetPCHandle(const std::string& aPCHandle) {}
 
   explicit WebrtcAudioConduit():
                       mVoiceEngine(nullptr),
