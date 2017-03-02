@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.util.SparseArrayCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +45,7 @@ import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
 
@@ -52,15 +54,13 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
     private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
     private static final int NO_COLOR = -1;
-
+    private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private ActionBar actionBar;
     private GeckoPopupMenu popupMenu;
     private int tabId = -1;
     private boolean useDomainTitle = true;
-
     private int toolbarColor;
     private String toolbarTitle;
-
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
 
@@ -268,6 +268,13 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
                 onOpenInClicked();
                 return true;
         }
+
+        final PendingIntent intent = menuItemsIntent.get(item.getItemId());
+        if (intent != null) {
+            performPendingIntent(intent);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -349,6 +356,18 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         });
 
         // to add Fennec default menu
+        final Intent intent = getIntent();
+
+        // to add custom menu items
+        final List<String> titles = IntentUtil.getMenuItemsTitle(intent);
+        final List<PendingIntent> intents = IntentUtil.getMenuItemsPendingIntent(intent);
+        menuItemsIntent.clear();
+        for (int i = 0; i < titles.size(); i++) {
+            final int menuId = Menu.FIRST + i;
+            geckoMenu.add(Menu.NONE, menuId, Menu.NONE, titles.get(i));
+            menuItemsIntent.put(menuId, intents.get(i));
+        }
+
         final MenuInflater inflater = new GeckoMenuInflater(this);
         inflater.inflate(R.menu.customtabs_menu, geckoMenu);
 
