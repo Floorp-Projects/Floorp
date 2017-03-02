@@ -1164,9 +1164,8 @@ JSCompartment::updateDebuggerObservesCoverage()
 
     if (debuggerObservesCoverage()) {
         // Interrupt any running interpreter frame. The scriptCounts are
-        // allocated on demand when a script resume its execution.
+        // allocated on demand when a script resumes its execution.
         JSContext* cx = TlsContext.get();
-        MOZ_ASSERT(zone()->group()->ownedByCurrentThread());
         for (ActivationIterator iter(cx); !iter.done(); ++iter) {
             if (iter->isInterpreter())
                 iter->asInterpreter()->enableInterruptsUnconditionally();

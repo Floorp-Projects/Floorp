@@ -59,7 +59,7 @@ DoCachedResize()
     sChild->SendResumeAndResize(cache.first, cache.second.mSurfaceWidth, cache.second.mSurfaceHeight);
   }
 
-  sResizeCache.empty();
+  sResizeCache.clear();
 }
 
 } // namespace

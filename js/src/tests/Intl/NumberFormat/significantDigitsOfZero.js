@@ -25,7 +25,9 @@ for (var i = 0; i < testData.length; i++) {
     var max = testData[i].maximumSignificantDigits;
     var options = {minimumSignificantDigits: min, maximumSignificantDigits: max};
     var format = new Intl.NumberFormat("en-US", options);
-    assertEq(format.format(0), testData[i].expected,
+    var actual = format.format(0);
+    var expected = testData[i].expected;
+    assertEq(actual, expected,
              "Wrong formatted string for 0 with " +
              "minimumSignificantDigits " + min +
              ", maximumSignificantDigits " + max +

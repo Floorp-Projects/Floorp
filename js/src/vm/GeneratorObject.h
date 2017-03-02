@@ -21,15 +21,15 @@ class GeneratorObject : public NativeObject
   public:
     // Magic values stored in the yield index slot when the generator is
     // running or closing. See the yield index comment below.
-    static const int32_t YIELD_INDEX_RUNNING = INT32_MAX;
-    static const int32_t YIELD_INDEX_CLOSING = INT32_MAX - 1;
+    static const int32_t YIELD_AND_AWAIT_INDEX_RUNNING = INT32_MAX;
+    static const int32_t YIELD_AND_AWAIT_INDEX_CLOSING = INT32_MAX - 1;
 
     enum {
         CALLEE_SLOT = 0,
         ENV_CHAIN_SLOT,
         ARGS_OBJ_SLOT,
         EXPRESSION_STACK_SLOT,
-        YIELD_INDEX_SLOT,
+        YIELD_AND_AWAIT_INDEX_SLOT,
         NEWTARGET_SLOT,
         RESERVED_SLOTS
     };
@@ -124,47 +124,48 @@ class GeneratorObject : public NativeObject
     // The yield index slot is abused for a few purposes.  It's undefined if
     // it hasn't been set yet (before the initial yield), and null if the
     // generator is closed. If the generator is running, the yield index is
-    // YIELD_INDEX_RUNNING. If the generator is in that bizarre "closing"
-    // state, the yield index is YIELD_INDEX_CLOSING.
+    // YIELD_AND_AWAIT_INDEX_RUNNING. If the generator is in that bizarre
+    // "closing" state, the yield index is YIELD_AND_AWAIT_INDEX_CLOSING.
     //
     // If the generator is suspended, it's the yield index (stored as
-    // JSOP_INITIALYIELD/JSOP_YIELD operand) of the yield instruction that
-    // suspended the generator. The yield index can be mapped to the bytecode
-    // offset (interpreter) or to the native code offset (JIT).
+    // JSOP_INITIALYIELD/JSOP_YIELD/JSOP_AWAIT operand) of the yield
+    // instruction that suspended the generator. The yield index can be mapped
+    // to the bytecode offset (interpreter) or to the native code offset (JIT).
 
     bool isRunning() const {
         MOZ_ASSERT(!isClosed());
-        return getFixedSlot(YIELD_INDEX_SLOT).toInt32() == YIELD_INDEX_RUNNING;
+        return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32() == YIELD_AND_AWAIT_INDEX_RUNNING;
     }
     bool isClosing() const {
-        return getFixedSlot(YIELD_INDEX_SLOT).toInt32() == YIELD_INDEX_CLOSING;
+        return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32() == YIELD_AND_AWAIT_INDEX_CLOSING;
     }
     bool isSuspended() const {
         // Note: also update Baseline's IsSuspendedStarGenerator code if this
         // changes.
         MOZ_ASSERT(!isClosed());
-        static_assert(YIELD_INDEX_CLOSING < YIELD_INDEX_RUNNING,
-                      "test below should return false for YIELD_INDEX_RUNNING");
-        return getFixedSlot(YIELD_INDEX_SLOT).toInt32() < YIELD_INDEX_CLOSING;
+        static_assert(YIELD_AND_AWAIT_INDEX_CLOSING < YIELD_AND_AWAIT_INDEX_RUNNING,
+                      "test below should return false for YIELD_AND_AWAIT_INDEX_RUNNING");
+        return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32() < YIELD_AND_AWAIT_INDEX_CLOSING;
     }
     void setRunning() {
         MOZ_ASSERT(isSuspended());
-        setFixedSlot(YIELD_INDEX_SLOT, Int32Value(YIELD_INDEX_RUNNING));
+        setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(YIELD_AND_AWAIT_INDEX_RUNNING));
     }
     void setClosing() {
         MOZ_ASSERT(isSuspended());
-        setFixedSlot(YIELD_INDEX_SLOT, Int32Value(YIELD_INDEX_CLOSING));
+        setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(YIELD_AND_AWAIT_INDEX_CLOSING));
     }
-    void setYieldIndex(uint32_t yieldIndex) {
-        MOZ_ASSERT_IF(yieldIndex == 0, getFixedSlot(YIELD_INDEX_SLOT).isUndefined());
-        MOZ_ASSERT_IF(yieldIndex != 0, isRunning() || isClosing());
-        MOZ_ASSERT(yieldIndex < uint32_t(YIELD_INDEX_CLOSING));
-        setFixedSlot(YIELD_INDEX_SLOT, Int32Value(yieldIndex));
+    void setYieldAndAwaitIndex(uint32_t yieldAndAwaitIndex) {
+        MOZ_ASSERT_IF(yieldAndAwaitIndex == 0,
+                      getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).isUndefined());
+        MOZ_ASSERT_IF(yieldAndAwaitIndex != 0, isRunning() || isClosing());
+        MOZ_ASSERT(yieldAndAwaitIndex < uint32_t(YIELD_AND_AWAIT_INDEX_CLOSING));
+        setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, Int32Value(yieldAndAwaitIndex));
         MOZ_ASSERT(isSuspended());
     }
-    uint32_t yieldIndex() const {
+    uint32_t yieldAndAwaitIndex() const {
         MOZ_ASSERT(isSuspended());
-        return getFixedSlot(YIELD_INDEX_SLOT).toInt32();
+        return getFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT).toInt32();
     }
     bool isClosed() const {
         return getFixedSlot(CALLEE_SLOT).isNull();
@@ -174,10 +175,17 @@ class GeneratorObject : public NativeObject
         setFixedSlot(ENV_CHAIN_SLOT, NullValue());
         setFixedSlot(ARGS_OBJ_SLOT, NullValue());
         setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
-        setFixedSlot(YIELD_INDEX_SLOT, NullValue());
+        setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, NullValue());
         setFixedSlot(NEWTARGET_SLOT, NullValue());
     }
 
+    bool isAfterYield();
+    bool isAfterAwait();
+
+private:
+    bool isAfterYieldOrAwait(JSOp op);
+
+public:
     static size_t offsetOfCalleeSlot() {
         return getFixedSlotOffset(CALLEE_SLOT);
     }
@@ -187,8 +195,8 @@ class GeneratorObject : public NativeObject
     static size_t offsetOfArgsObjSlot() {
         return getFixedSlotOffset(ARGS_OBJ_SLOT);
     }
-    static size_t offsetOfYieldIndexSlot() {
-        return getFixedSlotOffset(YIELD_INDEX_SLOT);
+    static size_t offsetOfYieldAndAwaitIndexSlot() {
+        return getFixedSlotOffset(YIELD_AND_AWAIT_INDEX_SLOT);
     }
     static size_t offsetOfExpressionStackSlot() {
         return getFixedSlotOffset(EXPRESSION_STACK_SLOT);

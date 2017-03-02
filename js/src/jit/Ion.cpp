@@ -2359,7 +2359,9 @@ IonCompile(JSContext* cx, JSScript* script,
 static bool
 CheckFrame(JSContext* cx, BaselineFrame* frame)
 {
-    MOZ_ASSERT(!frame->script()->isGenerator());
+    MOZ_ASSERT(!frame->script()->isStarGenerator());
+    MOZ_ASSERT(!frame->script()->isLegacyGenerator());
+    MOZ_ASSERT(!frame->script()->isAsync());
     MOZ_ASSERT(!frame->isDebuggerEvalFrame());
     MOZ_ASSERT(!frame->isEvalFrame());
 
@@ -2390,8 +2392,12 @@ CheckScript(JSContext* cx, JSScript* script, bool osr)
         return false;
     }
 
-    if (script->isGenerator()) {
+    if (script->isStarGenerator() || script->isLegacyGenerator()) {
         TrackAndSpewIonAbort(cx, script, "generator script");
+        return false;
+    }
+    if (script->isAsync()) {
+        TrackAndSpewIonAbort(cx, script, "async script");
         return false;
     }
 

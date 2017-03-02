@@ -14,11 +14,11 @@
 #ifndef nsStringGlue_h__
 #define nsStringGlue_h__
 
-#ifdef MOZILLA_INTERNAL_API
+#ifndef MOZILLA_INTERNAL_API
+#error "Using XPCOM strings is limited to code linked into libxul."
+#endif
+
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#else
-#include "nsStringAPI.h"
-#endif
 
 #endif // nsStringGlue_h__

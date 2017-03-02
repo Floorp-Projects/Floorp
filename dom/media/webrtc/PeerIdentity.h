@@ -7,11 +7,7 @@
 #ifndef PeerIdentity_h
 #define PeerIdentity_h
 
-#ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
-#else
-#include "nsStringAPI.h"
-#endif
 
 template <class T> class nsCOMPtr;
 class nsIIDNService;

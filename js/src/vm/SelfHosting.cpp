@@ -3208,7 +3208,8 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
         return false;
     // JSFunction::generatorKind can't handle lazy self-hosted functions, so we make sure there
     // aren't any.
-    MOZ_ASSERT(!sourceFun->isGenerator());
+    MOZ_ASSERT(!sourceFun->isStarGenerator() && !sourceFun->isLegacyGenerator() &&
+               !sourceFun->isAsync());
     MOZ_ASSERT(targetFun->isExtended());
     MOZ_ASSERT(targetFun->isInterpretedLazy());
     MOZ_ASSERT(targetFun->isSelfHostedBuiltin());

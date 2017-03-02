@@ -19,6 +19,10 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+#endif
+
 namespace mozilla {
 
 class BinaryPath
@@ -168,6 +172,7 @@ public:
     return result;
   }
 
+#ifdef MOZILLA_INTERNAL_API
   static nsresult GetFile(const char* aArgv0, nsIFile** aResult)
   {
     nsCOMPtr<nsIFile> lf;
@@ -194,6 +199,7 @@ public:
     NS_ADDREF(*aResult = lf);
     return NS_OK;
   }
+#endif
 };
 
 } // namespace mozilla

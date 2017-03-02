@@ -994,6 +994,11 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
 
     BackgroundUtilsChild* actor = new BackgroundUtilsChild(this);
 
+    // We don't set event target for BackgroundUtilsChild because:
+    // 1. BackgroundUtilsChild is a singleton.
+    // 2. SendGetFileReferences is a sync operation to be returned asap if unlabeled.
+    // 3. The rest operations like DeleteMe/__delete__ only happens at shutdown.
+    // Hence, we should keep it unlabeled.
     mBackgroundActor =
       static_cast<BackgroundUtilsChild*>(
         bgActor->SendPBackgroundIndexedDBUtilsConstructor(actor));

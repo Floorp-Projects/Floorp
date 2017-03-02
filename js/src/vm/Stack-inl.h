@@ -337,7 +337,7 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
                                            HandleFunction callee, HandleValue newTarget,
                                            HandleObject envChain)
 {
-    MOZ_ASSERT(callee->isGenerator());
+    MOZ_ASSERT(callee->isStarGenerator() || callee->isLegacyGenerator() || callee->isAsync());
     RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
     InterpreterFrame* prev = regs.fp();
     jsbytecode* prevpc = regs.pc;
