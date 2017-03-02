@@ -41,11 +41,6 @@ Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
 Services.prefs.clearUserPref("devtools.debugger.tabs")
 Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
 
-this.gBrowser = gBrowser;
-this.Services = Services;
-this.EXAMPLE_URL = EXAMPLE_URL;
-this.EventUtils = EventUtils;
-
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
   delete window.resumeTest;
@@ -293,7 +288,6 @@ function createDebuggerContext(toolbox) {
     getState: store.getState,
     store: store,
     client: win.Debugger.client,
-    threadClient: toolbox.threadClient,
     toolbox: toolbox,
     win: win
   };
@@ -312,8 +306,7 @@ function initDebugger(url, ...sources) {
   return Task.spawn(function* () {
     Services.prefs.clearUserPref("devtools.debugger.tabs")
     Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
-    url = url.startsWith("data:") ? url : EXAMPLE_URL + url;
-    const toolbox = yield openNewTabAndToolbox(url, "jsdebugger");
+    const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
     return createDebuggerContext(toolbox);
   });
 }
@@ -446,7 +439,7 @@ function resume(dbg) {
  * @static
  */
 function reload(dbg, ...sources) {
-  return dbg.client.reload().then(() => waitForSources(dbg, ...sources));
+  return dbg.client.reload().then(() => waitForSources(...sources));
 }
 
 /**
@@ -531,7 +524,6 @@ function togglePauseOnExceptions(dbg,
  * @return {Promise}
  * @static
  */
-
 function invokeInTab(fnc) {
   info(`Invoking function ${fnc} in tab`);
   return ContentTask.spawn(gBrowser.selectedBrowser, fnc, function* (fnc) {
