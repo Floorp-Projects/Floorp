@@ -922,3 +922,5 @@ pref("dom.audiochannel.mediaControl", true);
 pref("webchannel.allowObject.urlWhitelist", "https://accounts.firefox.com https://content.cdn.mozilla.net https://input.mozilla.org https://support.mozilla.org https://install.mozilla.org");
 
 pref("media.openUnsupportedTypeWithExternalApp", true);
+
+pref("dom.keyboardevent.dispatch_during_composition", true);

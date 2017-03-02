@@ -268,7 +268,7 @@ nsComboboxControlFrame::AccessibleType()
 void
 nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
     sFocused = this;
@@ -352,7 +352,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
     }
   }
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   ShowPopup(aShowList);  // might destroy us
   if (!weakFrame.IsAlive()) {
     return false;
@@ -413,7 +413,7 @@ public:
     return NS_OK;
   }
 
-  nsWeakFrame mFrame;
+  WeakFrame mFrame;
 };
 
 void
@@ -527,7 +527,7 @@ public:
     }
     return NS_OK;
   }
-  nsWeakFrame mFrame;
+  WeakFrame mFrame;
 };
 
 class nsAsyncResize : public Runnable
@@ -556,7 +556,7 @@ public:
     }
     return NS_OK;
   }
-  nsWeakFrame mFrame;
+  WeakFrame mFrame;
 };
 
 void
@@ -1025,7 +1025,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   // ActuallyDisplayText, since that flushes out the content sink by
   // calling SetText on a DOM node with aNotify set to true.  See bug
   // 289730.
-  nsWeakFrame weakThis(this);
+  AutoWeakFrame weakThis(this);
   PresContext()->Document()->
     FlushPendingNotifications(FlushType::ContentAndNotify);
   if (!weakThis.IsAlive())
@@ -1094,7 +1094,7 @@ nsComboboxControlFrame::AddOption(int32_t aIndex)
 NS_IMETHODIMP
 nsComboboxControlFrame::RemoveOption(int32_t aIndex)
 {
-  nsWeakFrame weakThis(this);
+  AutoWeakFrame weakThis(this);
   if (mListControlFrame->GetNumberOfOptions() > 0) {
     if (aIndex < mDisplayedIndex) {
       --mDisplayedIndex;
@@ -1460,7 +1460,7 @@ nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
   }
 
   bool consume = !!COMBOBOX_ROLLUP_CONSUME_EVENT;
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   mListControlFrame->AboutToRollup(); // might destroy us
   if (!weakFrame.IsAlive()) {
     return consume;
@@ -1625,7 +1625,7 @@ nsComboboxControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected)
       nsAutoScriptBlocker blocker;
       RedisplayText(aIndex);
     } else {
-      nsWeakFrame weakFrame(this);
+      AutoWeakFrame weakFrame(this);
       RedisplaySelectedText();
       if (weakFrame.IsAlive()) {
         FireValueChangeEvent(); // Fire after old option is unselected

@@ -49,6 +49,7 @@ _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N = [
 _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "en-US/target.common.tests.zip",
     "en-US/target.cppunittest.tests.zip",
+    "en-US/target.crashreporter-symbols.zip",
     "en-US/target.json",
     "en-US/target.mochitest.tests.zip",
     "en-US/target.mozinfo.json",

@@ -329,7 +329,7 @@ private:
 
   // Stores the root frame of the subdocument while the subdocument is being
   // reframed. Used to restore the presentation after reframing.
-  nsWeakFrame mDetachedSubdocFrame;
+  WeakFrame mDetachedSubdocFrame;
   // Stores the containing document of the frame corresponding to this
   // frame loader. This is reference is kept valid while the subframe's
   // presentation is detached and stored in mDetachedSubdocFrame. This

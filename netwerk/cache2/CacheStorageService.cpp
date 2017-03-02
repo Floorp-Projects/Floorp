@@ -445,7 +445,7 @@ private:
           return NS_DispatchToMainThread(this);
         }
 
-        mSize = size << 10;
+        mSize = static_cast<uint64_t>(size) << 10;
 
         // Invoke onCacheStorageInfo with valid information.
         NS_DispatchToMainThread(this);
