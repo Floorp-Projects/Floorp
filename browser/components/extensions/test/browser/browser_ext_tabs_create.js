@@ -167,6 +167,12 @@ add_task(function* test_create_options() {
 add_task(function* test_urlbar_focus() {
   const extension = ExtensionTestUtils.loadExtension({
     background() {
+      browser.tabs.onUpdated.addListener(function onUpdated(_, info) {
+        if (info.status === "complete") {
+          browser.test.sendMessage("complete");
+          browser.tabs.onUpdated.removeListener(onUpdated);
+        }
+      });
       browser.test.onMessage.addListener(async (cmd, ...args) => {
         const result = await browser.tabs[cmd](...args);
         browser.test.sendMessage("result", result);
@@ -178,7 +184,10 @@ add_task(function* test_urlbar_focus() {
 
   // Test content is focused after opening a regular url
   extension.sendMessage("create", {url: "https://example.com"});
-  const tab1 = yield extension.awaitMessage("result");
+  const [tab1] = yield Promise.all([
+    extension.awaitMessage("result"),
+    extension.awaitMessage("complete"),
+  ]);
 
   is(document.activeElement.tagName, "browser", "Content focused after opening a web page");
 
