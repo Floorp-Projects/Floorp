@@ -454,6 +454,7 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     if (NS_FAILED(rv)) {
       return rv;
     }
+    conduit->SetPCHandle(mPC->GetHandle());
   } else {
     // We've created the TransportFlow, nothing else to do here.
     return NS_OK;
@@ -838,11 +839,9 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     // NOTE(pkerr) - this is new behavior. Needed because the CreateVideoReceiveStream
     // method of the Call API will assert (in debug) and fail if a value is not provided
     // for the remote_ssrc that will be used by the far-end sender.
-    if (ssrcs->empty()) {
-      MOZ_MTLOG(ML_ERROR, "No SSRC set for receive track");
-      return NS_ERROR_FAILURE;
+    if (!ssrcs->empty()) {
+      conduit->SetRemoteSSRC(ssrcs->front());
     }
-    conduit->SetRemoteSSRC(ssrcs->front());
 
     auto error = conduit->ConfigureRecvMediaCodecs(configs.values);
     if (error) {
