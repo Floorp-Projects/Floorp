@@ -30,8 +30,11 @@
 // Author: vadimb@google.com (Vadim Berman)
 //
 // Low-level types and utilities for porting Google Mock to various
-// platforms.  They are subject to change without notice.  DO NOT USE
-// THEM IN USER CODE.
+// platforms.  All macros ending with _ and symbols defined in an
+// internal namespace are subject to change without notice.  Code
+// outside Google Mock MUST NOT USE THEM DIRECTLY.  Macros that don't
+// end with _ are part of Google Mock's public API and can be used by
+// code outside Google Mock.
 
 #ifndef GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
 #define GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_
@@ -40,10 +43,16 @@
 #include <stdlib.h>
 #include <iostream>
 
-// Most of the types needed for porting Google Mock are also required
-// for Google Test and are defined in gtest-port.h.
+// Most of the utilities needed for porting Google Mock are also
+// required for Google Test and are defined in gtest-port.h.
+//
+// Note to maintainers: to reduce code duplication, prefer adding
+// portability utilities to Google Test's gtest-port.h instead of
+// here, as Google Mock depends on Google Test.  Only add a utility
+// here if it's truly specific to Google Mock.
 #include "gtest/internal/gtest-linked_ptr.h"
 #include "gtest/internal/gtest-port.h"
+#include "gmock/internal/custom/gmock-port.h"
 
 // To avoid conditional compilation everywhere, we make it
 // gmock-port.h's responsibility to #include the header implementing
@@ -60,19 +69,23 @@
 // use this syntax to reference Google Mock flags.
 #define GMOCK_FLAG(name) FLAGS_gmock_##name
 
+#if !defined(GMOCK_DECLARE_bool_)
+
 // Macros for declaring flags.
-#define GMOCK_DECLARE_bool_(name) extern bool GMOCK_FLAG(name)
+#define GMOCK_DECLARE_bool_(name) extern GTEST_API_ bool GMOCK_FLAG(name)
 #define GMOCK_DECLARE_int32_(name) \
-    extern ::testing::internal::Int32 GMOCK_FLAG(name)
+    extern GTEST_API_ ::testing::internal::Int32 GMOCK_FLAG(name)
 #define GMOCK_DECLARE_string_(name) \
-    extern ::testing::internal::String GMOCK_FLAG(name)
+    extern GTEST_API_ ::std::string GMOCK_FLAG(name)
 
 // Macros for defining flags.
 #define GMOCK_DEFINE_bool_(name, default_val, doc) \
-    bool GMOCK_FLAG(name) = (default_val)
+    GTEST_API_ bool GMOCK_FLAG(name) = (default_val)
 #define GMOCK_DEFINE_int32_(name, default_val, doc) \
-    ::testing::internal::Int32 GMOCK_FLAG(name) = (default_val)
+    GTEST_API_ ::testing::internal::Int32 GMOCK_FLAG(name) = (default_val)
 #define GMOCK_DEFINE_string_(name, default_val, doc) \
-    ::testing::internal::String GMOCK_FLAG(name) = (default_val)
+    GTEST_API_ ::std::string GMOCK_FLAG(name) = (default_val)
+
+#endif  // !defined(GMOCK_DECLARE_bool_)
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_PORT_H_

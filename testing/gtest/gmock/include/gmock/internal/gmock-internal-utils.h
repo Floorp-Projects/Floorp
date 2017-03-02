@@ -53,7 +53,7 @@ namespace internal {
 // words.  Each maximum substring of the form [A-Za-z][a-z]*|\d+ is
 // treated as one word.  For example, both "FooBar123" and
 // "foo_bar_123" are converted to "foo bar 123".
-string ConvertIdentifierNameToWords(const char* id_name);
+GTEST_API_ string ConvertIdentifierNameToWords(const char* id_name);
 
 // PointeeOf<Pointer>::type is the type of a value pointed to by a
 // Pointer, which can be either a smart pointer or a raw pointer.  The
@@ -73,7 +73,7 @@ struct PointeeOf<T*> { typedef T type; };  // NOLINT
 // smart pointer, or returns p itself when p is already a raw pointer.
 // The following default implementation is for the smart pointer case.
 template <typename Pointer>
-inline typename Pointer::element_type* GetRawPointer(const Pointer& p) {
+inline const typename Pointer::element_type* GetRawPointer(const Pointer& p) {
   return p.get();
 }
 // This overloaded version is for the raw pointer case.
@@ -260,7 +260,7 @@ class FailureReporterInterface {
  public:
   // The type of a failure (either non-fatal or fatal).
   enum FailureType {
-    NONFATAL, FATAL
+    kNonfatal, kFatal
   };
 
   virtual ~FailureReporterInterface() {}
@@ -271,7 +271,7 @@ class FailureReporterInterface {
 };
 
 // Returns the failure reporter used by Google Mock.
-FailureReporterInterface* GetFailureReporter();
+GTEST_API_ FailureReporterInterface* GetFailureReporter();
 
 // Asserts that condition is true; aborts the process with the given
 // message if condition is false.  We cannot use LOG(FATAL) or CHECK()
@@ -281,7 +281,7 @@ FailureReporterInterface* GetFailureReporter();
 inline void Assert(bool condition, const char* file, int line,
                    const string& msg) {
   if (!condition) {
-    GetFailureReporter()->ReportFailure(FailureReporterInterface::FATAL,
+    GetFailureReporter()->ReportFailure(FailureReporterInterface::kFatal,
                                         file, line, msg);
   }
 }
@@ -294,7 +294,7 @@ inline void Assert(bool condition, const char* file, int line) {
 inline void Expect(bool condition, const char* file, int line,
                    const string& msg) {
   if (!condition) {
-    GetFailureReporter()->ReportFailure(FailureReporterInterface::NONFATAL,
+    GetFailureReporter()->ReportFailure(FailureReporterInterface::kNonfatal,
                                         file, line, msg);
   }
 }
@@ -304,8 +304,8 @@ inline void Expect(bool condition, const char* file, int line) {
 
 // Severity level of a log.
 enum LogSeverity {
-  INFO = 0,
-  WARNING = 1
+  kInfo = 0,
+  kWarning = 1
 };
 
 // Valid values for the --gmock_verbose flag.
@@ -319,7 +319,7 @@ const char kErrorVerbosity[] = "error";
 
 // Returns true iff a log with the given severity is visible according
 // to the --gmock_verbose flag.
-bool LogIsVisible(LogSeverity severity);
+GTEST_API_ bool LogIsVisible(LogSeverity severity);
 
 // Prints the given message to stdout iff 'severity' >= the level
 // specified by the --gmock_verbose flag.  If stack_frames_to_skip >=
@@ -328,7 +328,9 @@ bool LogIsVisible(LogSeverity severity);
 // stack_frames_to_skip is treated as 0, since we don't know which
 // function calls will be inlined by the compiler and need to be
 // conservative.
-void Log(LogSeverity severity, const string& message, int stack_frames_to_skip);
+GTEST_API_ void Log(LogSeverity severity,
+                    const string& message,
+                    int stack_frames_to_skip);
 
 // TODO(wan@google.com): group all type utilities together.
 
@@ -346,16 +348,43 @@ template <typename T> struct type_equals<T, T> : public true_type {};
 template <typename T> struct remove_reference { typedef T type; };  // NOLINT
 template <typename T> struct remove_reference<T&> { typedef T type; }; // NOLINT
 
-// Invalid<T>() returns an invalid value of type T.  This is useful
+// DecayArray<T>::type turns an array type U[N] to const U* and preserves
+// other types.  Useful for saving a copy of a function argument.
+template <typename T> struct DecayArray { typedef T type; };  // NOLINT
+template <typename T, size_t N> struct DecayArray<T[N]> {
+  typedef const T* type;
+};
+// Sometimes people use arrays whose size is not available at the use site
+// (e.g. extern const char kNamePrefix[]).  This specialization covers that
+// case.
+template <typename T> struct DecayArray<T[]> {
+  typedef const T* type;
+};
+
+// Disable MSVC warnings for infinite recursion, since in this case the
+// the recursion is unreachable.
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable:4717)
+#endif
+
+// Invalid<T>() is usable as an expression of type T, but will terminate
+// the program with an assertion failure if actually run.  This is useful
 // when a value of type T is needed for compilation, but the statement
 // will not really be executed (or we don't care if the statement
 // crashes).
 template <typename T>
 inline T Invalid() {
-  return *static_cast<typename remove_reference<T>::type*>(NULL);
+  Assert(false, "", -1, "Internal error: attempt to return invalid value");
+  // This statement is unreachable, and would never terminate even if it
+  // could be reached. It is provided only to placate compiler warnings
+  // about missing return statements.
+  return Invalid<T>();
 }
-template <>
-inline void Invalid<void>() {}
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
 
 // Given a raw type (i.e. having no top-level reference or const
 // modifier) RawContainer that's either an STL-style container or a
@@ -418,16 +447,17 @@ class StlContainerView<Element[N]> {
     //     ConstReference(const char * (&)[4])')
     // (and though the N parameter type is mismatched in the above explicit
     // conversion of it doesn't help - only the conversion of the array).
-    return type(const_cast<Element*>(&array[0]), N, kReference);
+    return type(const_cast<Element*>(&array[0]), N,
+                RelationToSourceReference());
 #else
-    return type(array, N, kReference);
+    return type(array, N, RelationToSourceReference());
 #endif  // GTEST_OS_SYMBIAN
   }
   static type Copy(const Element (&array)[N]) {
 #if GTEST_OS_SYMBIAN
-    return type(const_cast<Element*>(&array[0]), N, kCopy);
+    return type(const_cast<Element*>(&array[0]), N, RelationToSourceCopy());
 #else
-    return type(array, N, kCopy);
+    return type(array, N, RelationToSourceCopy());
 #endif  // GTEST_OS_SYMBIAN
   }
 };
@@ -435,7 +465,7 @@ class StlContainerView<Element[N]> {
 // This specialization is used when RawContainer is a native array
 // represented as a (pointer, size) tuple.
 template <typename ElementPointer, typename Size>
-class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
+class StlContainerView< ::testing::tuple<ElementPointer, Size> > {
  public:
   typedef GTEST_REMOVE_CONST_(
       typename internal::PointeeOf<ElementPointer>::type) RawElement;
@@ -443,13 +473,11 @@ class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
   typedef const type const_reference;
 
   static const_reference ConstReference(
-      const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kReference);
+      const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceReference());
   }
-  static type Copy(const ::std::tr1::tuple<ElementPointer, Size>& array) {
-    using ::std::tr1::get;
-    return type(get<0>(array), get<1>(array), kCopy);
+  static type Copy(const ::testing::tuple<ElementPointer, Size>& array) {
+    return type(get<0>(array), get<1>(array), RelationToSourceCopy());
   }
 };
 
@@ -457,7 +485,27 @@ class StlContainerView< ::std::tr1::tuple<ElementPointer, Size> > {
 // StlContainer with a reference type.
 template <typename T> class StlContainerView<T&>;
 
+// A type transform to remove constness from the first part of a pair.
+// Pairs like that are used as the value_type of associative containers,
+// and this transform produces a similar but assignable pair.
+template <typename T>
+struct RemoveConstFromKey {
+  typedef T type;
+};
+
+// Partially specialized to remove constness from std::pair<const K, V>.
+template <typename K, typename V>
+struct RemoveConstFromKey<std::pair<const K, V> > {
+  typedef std::pair<K, V> type;
+};
+
+// Mapping from booleans to types. Similar to boost::bool_<kValue> and
+// std::integral_constant<bool, kValue>.
+template <bool kValue>
+struct BooleanConstant {};
+
 }  // namespace internal
 }  // namespace testing
 
 #endif  // GMOCK_INCLUDE_GMOCK_INTERNAL_GMOCK_INTERNAL_UTILS_H_
+
