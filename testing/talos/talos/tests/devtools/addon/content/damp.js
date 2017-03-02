@@ -1,12 +1,13 @@
 Components.utils.import("resource://devtools/client/framework/gDevTools.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const {devtools} =
+const { devtools } =
   Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const { getActiveTab } = devtools.require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
 const ThreadSafeChromeUtils = devtools.require("ThreadSafeChromeUtils");
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const { EVENTS } = devtools.require("devtools/client/netmonitor/constants");
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
@@ -115,9 +116,8 @@ Damp.prototype = {
   },
 
   waitForNetworkRequests: Task.async(function*(label, toolbox) {
-    const { NetMonitorController } = toolbox.getCurrentPanel().panelWin;
     const start = performance.now();
-    yield NetMonitorController.waitForAllRequestsFinished();
+    yield this.waitForAllRequestsFinished();
     const end = performance.now();
     this._results.push({
       name: label + ".requestsFinished.DAMP",
@@ -442,6 +442,58 @@ Damp.prototype = {
     if (this._onTestComplete) {
       this._onTestComplete(JSON.parse(JSON.stringify(this._results))); // Clone results
     }
+  },
+
+  /**
+   * Start monitoring all incoming update events about network requests and wait until
+   * a complete info about all requests is received. (We wait for the timings info
+   * explicitly, because that's always the last piece of information that is received.)
+   *
+   * This method is designed to wait for network requests that are issued during a page
+   * load, when retrieving page resources (scripts, styles, images). It has certain
+   * assumptions that can make it unsuitable for other types of network communication:
+   * - it waits for at least one network request to start and finish before returning
+   * - it waits only for request that were issued after it was called. Requests that are
+   *   already in mid-flight will be ignored.
+   * - the request start and end times are overlapping. If a new request starts a moment
+   *   after the previous one was finished, the wait will be ended in the "interim"
+   *   period.
+   * @returns a promise that resolves when the wait is done.
+   */
+  waitForAllRequestsFinished() {
+    let tab = getActiveTab(getMostRecentBrowserWindow());
+    let target = devtools.TargetFactory.forTab(tab);
+    let toolbox = gDevTools.getToolbox(target);
+    let window = toolbox.getCurrentPanel().panelWin;
+
+    return new Promise(resolve => {
+      // Key is the request id, value is a boolean - is request finished or not?
+      let requests = new Map();
+
+      function onRequest(_, id) {
+        requests.set(id, false);
+      }
+
+      function onTimings(_, id) {
+        requests.set(id, true);
+        maybeResolve();
+      }
+
+      function maybeResolve() {
+        // Have all the requests in the map finished yet?
+        if (![...requests.values()].every(finished => finished)) {
+          return;
+        }
+
+        // All requests are done - unsubscribe from events and resolve!
+        window.off(EVENTS.NETWORK_EVENT, onRequest);
+        window.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+        resolve();
+      }
+
+      window.on(EVENTS.NETWORK_EVENT, onRequest);
+      window.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimings);
+    });
   },
 
   startTest: function(doneCallback, config) {
