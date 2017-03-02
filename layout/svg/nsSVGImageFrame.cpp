@@ -399,7 +399,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // of the SVG image's internal document that is visible, in combination
       // with preserveAspectRatio and viewBox.
       const Maybe<const SVGImageContext> context(
-        Some(SVGImageContext(Some(CSSIntSize::Truncate(width, height)),
+        Some(SVGImageContext(CSSIntSize::Truncate(width, height),
                              Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
                              1.0, /* aIsPaintingSVGImageElement */ true)));
 
