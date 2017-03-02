@@ -13,8 +13,7 @@ TEST(ThreadProfile, Initialization) {
   PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  RefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
-  info.SetProfile(pb);
+  info.SetHasProfile();
 }
 
 // Make sure we can record one tag and read it
@@ -22,7 +21,7 @@ TEST(ThreadProfile, InsertOneTag) {
   PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  RefPtr<ProfileBuffer> pb = new ProfileBuffer(10);
+  ProfileBuffer* pb = new ProfileBuffer(10);
   pb->addTag(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->mEntries != nullptr);
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].kind() ==
@@ -35,7 +34,7 @@ TEST(ThreadProfile, InsertTagsNoWrap) {
   PseudoStack* stack = new PseudoStack();
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  RefPtr<ProfileBuffer> pb = new ProfileBuffer(100);
+  ProfileBuffer* pb = new ProfileBuffer(100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
     pb->addTag(ProfileBufferEntry::Time(i));
@@ -58,7 +57,7 @@ TEST(ThreadProfile, InsertTagsWrap) {
   int tags = 24;
   int buffer_size = tags + 1;
   ThreadInfo info("testThread", tid, true, stack, nullptr);
-  RefPtr<ProfileBuffer> pb = new ProfileBuffer(buffer_size);
+  ProfileBuffer* pb = new ProfileBuffer(buffer_size);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {
     pb->addTag(ProfileBufferEntry::Time(i));

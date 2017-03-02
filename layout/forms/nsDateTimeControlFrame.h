@@ -103,7 +103,7 @@ private:
     }
 
   private:
-    nsWeakFrame mFrame;
+    WeakFrame mFrame;
   };
 
   /**

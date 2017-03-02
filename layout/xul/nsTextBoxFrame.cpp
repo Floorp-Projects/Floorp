@@ -187,11 +187,11 @@ public:
         delete this;
     }
 
-    nsWeakFrame mWeakFrame;
+    WeakFrame mWeakFrame;
 };
 
 bool
-nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
+nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis)
 {
     nsAutoString accesskey;
     nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);

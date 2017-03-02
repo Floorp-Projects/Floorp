@@ -715,7 +715,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool                        mPreferFallback : 1;
     bool                        mPreferFallbackKnown : 1;
 
-    nsWeakFrame                 mPrintFrame;
+    WeakFrame                   mPrintFrame;
 
     RefPtr<nsPluginInstanceOwner> mInstanceOwner;
     nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;

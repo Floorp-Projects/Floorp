@@ -357,7 +357,7 @@ nsTreeBodyFrame::EnsureView()
     }
     nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mTreeBoxObject);
     if (box) {
-      nsWeakFrame weakFrame(this);
+      AutoWeakFrame weakFrame(this);
       nsCOMPtr<nsITreeView> treeView;
       mTreeBoxObject->GetView(getter_AddRefs(treeView));
       if (treeView && weakFrame.IsAlive()) {
@@ -417,7 +417,7 @@ bool
 nsTreeBodyFrame::ReflowFinished()
 {
   if (!mView) {
-    nsWeakFrame weakFrame(this);
+    AutoWeakFrame weakFrame(this);
     EnsureView();
     NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   }
@@ -469,7 +469,7 @@ nsresult
 nsTreeBodyFrame::GetView(nsITreeView * *aView)
 {
   *aView = nullptr;
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   EnsureView();
   NS_ENSURE_STATE(weakFrame.IsAlive());
   NS_IF_ADDREF(*aView = mView);
@@ -522,7 +522,7 @@ nsTreeBodyFrame::SetView(nsITreeView * aView)
     }
 
     // View, meet the tree.
-    nsWeakFrame weakFrame(this);
+    AutoWeakFrame weakFrame(this);
     mView->SetTree(mTreeBoxObject);
     NS_ENSURE_STATE(weakFrame.IsAlive());
     mView->GetRowCount(&mRowCount);
@@ -852,7 +852,7 @@ nsTreeBodyFrame::UpdateScrollbars(const ScrollParts& aParts)
 {
   nscoord rowHeightAsPixels = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
 
   if (aParts.mVScrollbar) {
     nsAutoString curPos;
@@ -907,7 +907,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     }
   }
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
 
   RefPtr<nsPresContext> presContext = PresContext();
   nsCOMPtr<nsIPresShell> presShell = presContext->GetPresShell();
@@ -947,11 +947,11 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
 }
 
 void
-nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts, nsWeakFrame& aWeakColumnsFrame)
+nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts, AutoWeakFrame& aWeakColumnsFrame)
 {
   if (mUpdateBatchNest || !mView)
     return;
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
 
   if (aParts.mVScrollbar) {
     // Do Vertical Scrollbar 
@@ -4365,7 +4365,7 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, int32_t aPosition
   Invalidate();
 
   // Update the column scroll view
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),
                                        nsIScrollableFrame::INSTANT);
   if (!weakFrame.IsAlive()) {
@@ -4417,7 +4417,7 @@ nsTreeBodyFrame::RepeatButtonScroll(nsScrollbarFrame* aScrollbar)
   }
   bool isHorizontal = aScrollbar->IsXULHorizontal();
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   if (isHorizontal) {
     int32_t curpos = aScrollbar->MoveToNewPosition();
     if (weakFrame.IsAlive()) {
@@ -4445,7 +4445,7 @@ nsTreeBodyFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,
   if (aOldPos == aNewPos)
     return;
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
 
   // Vertical Scrollbar 
   if (parts.mVScrollbar == aScrollbar) {
@@ -4906,15 +4906,15 @@ public:
     return NS_OK;
   }
 private:
-  nsWeakFrame mFrame;
+  WeakFrame mFrame;
 };
 
 bool
 nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation)
 {
   ScrollParts parts = GetScrollParts();
-  nsWeakFrame weakFrame(this);
-  nsWeakFrame weakColumnsFrame(parts.mColumnsFrame);
+  AutoWeakFrame weakFrame(this);
+  AutoWeakFrame weakColumnsFrame(parts.mColumnsFrame);
   UpdateScrollbars(parts);
   NS_ENSURE_TRUE(weakFrame.IsAlive(), false);
   if (aNeedsFullInvalidation) {

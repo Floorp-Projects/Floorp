@@ -33,6 +33,7 @@
 #include "ElfLoader.h"
 #include "application.ini.h"
 
+#include "mozilla/arm.h"
 #include "mozilla/Bootstrap.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -473,3 +474,8 @@ ChildProcessInit(int argc, char* argv[])
   return NS_FAILED(gBootstrap->XRE_InitChildProcess(argc, argv, &childData));
 }
 
+extern "C" APKOPEN_EXPORT jboolean MOZ_JNICALL
+Java_org_mozilla_gecko_mozglue_GeckoLoader_neonCompatible(JNIEnv *jenv, jclass jc)
+{
+  return mozilla::supports_neon();
+}

@@ -3708,9 +3708,11 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         if (!mCacheOpenDelay) {
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         } else {
-            mCacheOpenRunnable = NS_NewRunnableFunction([openURI, extension, cacheEntryOpenFlags, cacheStorage, this] () -> void {
-                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
-            });
+            // We pass `this` explicitly as a parameter due to the raw pointer
+            // to refcounted object in lambda analysis.
+            mCacheOpenFunc = [openURI, extension, cacheEntryOpenFlags, cacheStorage] (nsHttpChannel* self) -> void {
+                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+            };
 
             mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
             // calls nsHttpChannel::Notify after `mCacheOpenDelay` milliseconds
@@ -8674,7 +8676,7 @@ nsHttpChannel::Test_triggerDelayedOpenCacheEntry()
         // No delay was set.
         return NS_ERROR_NOT_AVAILABLE;
     }
-    if (!mCacheOpenRunnable) {
+    if (!mCacheOpenFunc) {
         // There should be a runnable.
         return NS_ERROR_FAILURE;
     }
@@ -8685,10 +8687,11 @@ nsHttpChannel::Test_triggerDelayedOpenCacheEntry()
         }
         mCacheOpenTimer = nullptr;
     }
-    nsCOMPtr<nsIRunnable> runnable;
-    mCacheOpenRunnable.swap(runnable);
     mCacheOpenDelay = 0;
-    runnable->Run();
+    // Avoid re-entrancy issues by nulling our mCacheOpenFunc before calling it.
+    std::function<void(nsHttpChannel*)> cacheOpenFunc = nullptr;
+    std::swap(cacheOpenFunc, mCacheOpenFunc);
+    cacheOpenFunc(this);
 
     return NS_OK;
 }

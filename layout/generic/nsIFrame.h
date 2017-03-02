@@ -3834,38 +3834,45 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * nsWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
- * Whenever an nsIFrame object is deleted, the nsWeakFrames pointing
- * to it will be cleared.
+ * AutoWeakFrame can be used to keep a reference to a nsIFrame in a safe way.
+ * Whenever an nsIFrame object is deleted, the AutoWeakFrames pointing
+ * to it will be cleared.  AutoWeakFrame is for variables on the stack or
+ * in static storage only, there is also a WeakFrame below for heap uses.
  *
- * Create nsWeakFrame object when it is sure that nsIFrame object
+ * Create AutoWeakFrame object when it is sure that nsIFrame object
  * is alive and after some operations which may destroy the nsIFrame
  * (for example any DOM modifications) use IsAlive() or GetFrame() methods to
  * check whether it is safe to continue to use the nsIFrame object.
  *
  * @note The usage of this class should be kept to a minimum.
  */
-
-class nsWeakFrame {
+class WeakFrame;
+class MOZ_NONHEAP_CLASS AutoWeakFrame
+{
 public:
-  nsWeakFrame() : mPrev(nullptr), mFrame(nullptr) { }
+  explicit AutoWeakFrame()
+    : mPrev(nullptr), mFrame(nullptr) {}
 
-  nsWeakFrame(const nsWeakFrame& aOther) : mPrev(nullptr), mFrame(nullptr)
+  AutoWeakFrame(const AutoWeakFrame& aOther)
+    : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aOther.GetFrame());
   }
 
-  MOZ_IMPLICIT nsWeakFrame(nsIFrame* aFrame) : mPrev(nullptr), mFrame(nullptr)
+  MOZ_IMPLICIT AutoWeakFrame(const WeakFrame& aOther);
+
+  MOZ_IMPLICIT AutoWeakFrame(nsIFrame* aFrame)
+    : mPrev(nullptr), mFrame(nullptr)
   {
     Init(aFrame);
   }
 
-  nsWeakFrame& operator=(nsWeakFrame& aOther) {
+  AutoWeakFrame& operator=(AutoWeakFrame& aOther) {
     Init(aOther.GetFrame());
     return *this;
   }
 
-  nsWeakFrame& operator=(nsIFrame* aFrame) {
+  AutoWeakFrame& operator=(nsIFrame* aFrame) {
     Init(aFrame);
     return *this;
   }
@@ -3882,7 +3889,7 @@ public:
 
   void Clear(nsIPresShell* aShell) {
     if (aShell) {
-      aShell->RemoveWeakFrame(this);
+      aShell->RemoveAutoWeakFrame(this);
     }
     mFrame = nullptr;
     mPrev = nullptr;
@@ -3892,19 +3899,82 @@ public:
 
   nsIFrame* GetFrame() const { return mFrame; }
 
-  nsWeakFrame* GetPreviousWeakFrame() { return mPrev; }
+  AutoWeakFrame* GetPreviousWeakFrame() { return mPrev; }
 
-  void SetPreviousWeakFrame(nsWeakFrame* aPrev) { mPrev = aPrev; }
+  void SetPreviousWeakFrame(AutoWeakFrame* aPrev) { mPrev = aPrev; }
 
-  ~nsWeakFrame()
+  ~AutoWeakFrame()
   {
     Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   }
 private:
+  // Not available for the heap!
+  void* operator new(size_t) = delete;
+  void* operator new[](size_t) = delete;
+  void operator delete(void*) = delete;
+  void operator delete[](void*) = delete;
+
   void Init(nsIFrame* aFrame);
 
-  nsWeakFrame*  mPrev;
-  nsIFrame*     mFrame;
+  AutoWeakFrame*  mPrev;
+  nsIFrame*       mFrame;
+};
+
+/**
+ * @see AutoWeakFrame
+ */
+class MOZ_HEAP_CLASS WeakFrame
+{
+public:
+  WeakFrame() : mFrame(nullptr) {}
+
+  WeakFrame(const WeakFrame& aOther) : mFrame(nullptr)
+  {
+    Init(aOther.GetFrame());
+  }
+
+  MOZ_IMPLICIT WeakFrame(const AutoWeakFrame& aOther) : mFrame(nullptr)
+  {
+    Init(aOther.GetFrame());
+  }
+
+  MOZ_IMPLICIT WeakFrame(nsIFrame* aFrame) : mFrame(nullptr)
+  {
+    Init(aFrame);
+  }
+
+  ~WeakFrame()
+  {
+    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
+  }
+
+  WeakFrame& operator=(WeakFrame& aOther) {
+    Init(aOther.GetFrame());
+    return *this;
+  }
+
+  WeakFrame& operator=(nsIFrame* aFrame) {
+    Init(aFrame);
+    return *this;
+  }
+
+  nsIFrame* operator->() { return mFrame; }
+  operator nsIFrame*() { return mFrame; }
+
+  void Clear(nsIPresShell* aShell) {
+    if (aShell) {
+      aShell->RemoveWeakFrame(this);
+    }
+    mFrame = nullptr;
+  }
+
+  bool IsAlive() { return !!mFrame; }
+  nsIFrame* GetFrame() const { return mFrame; }
+
+private:
+  void Init(nsIFrame* aFrame);
+
+  nsIFrame* mFrame;
 };
 
 inline bool

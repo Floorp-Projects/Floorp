@@ -33,10 +33,16 @@ public:
 #if defined(XP_WIN)
                                       , mEmulatedWindowHandle(nullptr)
 #endif // defined(XP_WIN)
-  { MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible); }
+  {
+    MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
+    sMaxDocID++;
+    mActorID = sMaxDocID;
+    MOZ_ASSERT(!LiveDocs().Get(mActorID));
+    LiveDocs().Put(mActorID, this);
+  }
   ~DocAccessibleParent()
   {
-    LiveDocs().Remove(IProtocol::Id());
+    LiveDocs().Remove(mActorID);
     MOZ_COUNT_DTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
     MOZ_ASSERT(mChildDocs.Length() == 0);
     MOZ_ASSERT(!ParentDoc());
@@ -58,11 +64,6 @@ public:
     MOZ_ASSERT(mAccessibles.Count() == 0);
     mShutdown = true;
   }
-
-  /**
-   * Add this document to the set of tracked documents.
-   */
-  void AddToMap() { LiveDocs().Put(IProtocol::Id(), this); }
 
   /*
    * Called when a message from a document in a child process notifies the main
@@ -118,7 +119,7 @@ public:
    * of the document this object represents.
    */
   DocAccessibleParent* ParentDoc() const;
-  static const int32_t kNoParentDoc = INT32_MIN;
+  static const uint64_t kNoParentDoc = UINT64_MAX;
 
   /*
    * Called when a document in a content process notifies the main process of a
@@ -138,7 +139,7 @@ public:
     if (parent) {
       aChildDoc->Parent()->ClearChildDoc(aChildDoc);
     }
-    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->IProtocol::Id());
+    DebugOnly<bool> result = mChildDocs.RemoveElement(aChildDoc->mActorID);
     aChildDoc->mParentDoc = kNoParentDoc;
     MOZ_ASSERT(result);
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);
@@ -217,8 +218,8 @@ private:
   MOZ_MUST_USE bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
-  nsTArray<int32_t> mChildDocs;
-  int32_t mParentDoc;
+  nsTArray<uint64_t> mChildDocs;
+  uint64_t mParentDoc;
 
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
@@ -230,9 +231,11 @@ private:
    * proxy object so we can't use a real map.
    */
   nsTHashtable<ProxyEntry> mAccessibles;
+  uint64_t mActorID;
   bool mTopLevel;
   bool mShutdown;
 
+  static uint64_t sMaxDocID;
   static nsDataHashtable<nsUint64HashKey, DocAccessibleParent*>&
     LiveDocs()
     {
