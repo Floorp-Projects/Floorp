@@ -229,6 +229,7 @@ public:
   void
   CreateWebRenderCommands(nsDisplayItem* aItem,
                           nsTArray<layers::WebRenderCommand>& aCommands,
+                          nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                           layers::WebRenderDisplayItemLayer* aLayer);
 
   DrawResult
@@ -275,6 +276,7 @@ private:
   void
   CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                   nsTArray<layers::WebRenderCommand>& aCommands,
+                                  nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                   layers::WebRenderDisplayItemLayer* aLayer);
 
   void
@@ -316,10 +318,11 @@ private:
 void
 BulletRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                         nsTArray<layers::WebRenderCommand>& aCommands,
+                                        nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                         layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (IsImageType()) {
-    CreateWebRenderCommandsForImage(aItem, aCommands, aLayer);
+    CreateWebRenderCommandsForImage(aItem, aCommands, aParentCommands, aLayer);
   } else if (IsPathType()) {
     CreateWebRenderCommandsForPath(aItem, aCommands, aLayer);
   } else {
@@ -433,6 +436,7 @@ BulletRenderer::IsImageContainerAvailable(layers::LayerManager* aManager, uint32
 void
 BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                                 nsTArray<layers::WebRenderCommand>& aCommands,
+                                                nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                                 layers::WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(IsImageType());
@@ -464,9 +468,9 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   WrImageKey key;
   key.mNamespace = layer->WrBridge()->GetNamespace();
   key.mHandle = layer->WrBridge()->GetNextResourceId();
-  aCommands.AppendElement(layers::OpAddExternalImage(
-                            externalImageId,
-                            key));
+  aParentCommands.AppendElement(layers::OpAddExternalImage(
+                                externalImageId,
+                                key));
   aCommands.AppendElement(layers::OpDPPushImage(
                             wr::ToWrRect(dest),
                             wr::ToWrRect(dest),
@@ -538,6 +542,7 @@ public:
                                              const ContainerLayerParameters& aParameters) override;
 
   virtual void CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                       nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                        layers::WebRenderDisplayItemLayer* aLayer) override;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -651,12 +656,13 @@ nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBullet::CreateWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+                                         nsTArray<layers::WebRenderParentCommand>& aParentCommands,
                                          layers::WebRenderDisplayItemLayer* aLayer)
 {
   if (!mBulletRenderer)
     return;
 
-  mBulletRenderer->CreateWebRenderCommands(this, aCommands, aLayer);
+  mBulletRenderer->CreateWebRenderCommands(this, aCommands, aParentCommands, aLayer);
 }
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,

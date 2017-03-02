@@ -59,6 +59,20 @@ WebRenderBridgeChild::AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCo
   mCommands.AppendElements(aCommands);
 }
 
+void
+WebRenderBridgeChild::AddWebRenderParentCommand(const WebRenderParentCommand& aCmd)
+{
+  MOZ_ASSERT(mIsInTransaction);
+  mParentCommands.AppendElement(aCmd);
+}
+
+void
+WebRenderBridgeChild::AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands)
+{
+  MOZ_ASSERT(mIsInTransaction);
+  mParentCommands.AppendElements(aCommands);
+}
+
 bool
 WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
@@ -133,17 +147,9 @@ WebRenderBridgeChild::ProcessWebrenderCommands(const gfx::IntSize &aSize,
                           op.mask().ptrOr(nullptr), op.filter(), wr::ImageKey(op.key()));
         break;
       }
-      case WebRenderCommand::TOpAddExternalImage: {
-        // done on the parent
-        break;
-      }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
         builder.PushIFrame(op.bounds(), op.clip(), op.pipelineId());
-        break;
-      }
-      case WebRenderCommand::TCompositableOperation: {
-        // done on the parent
         break;
       }
       case WebRenderCommand::TOpDPPushText: {
@@ -196,14 +202,15 @@ WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aT
   ByteBuffer auxData(Move(dl.aux));
 
   if (aIsSync) {
-    this->SendDPSyncEnd(aSize, mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
+    this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
                         dlData, dl.dl_desc, auxData, dl.aux_desc);
   } else {
-    this->SendDPEnd(aSize, mCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
+    this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
                     dlData, dl.dl_desc, auxData, dl.aux_desc);
   }
 
   mCommands.Clear();
+  mParentCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;
 }
@@ -346,7 +353,7 @@ WebRenderBridgeChild::RemoveTextureFromCompositable(CompositableClient* aComposi
     return;
   }
 
-  AddWebRenderCommand(
+  AddWebRenderParentCommand(
     CompositableOperation(
       aCompositable->GetIPCHandle(),
       OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
@@ -376,7 +383,7 @@ WebRenderBridgeChild::UseTextures(CompositableClient* aCompositable,
                                         t.mFrameID, t.mProducerID));
     GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
-  AddWebRenderCommand(CompositableOperation(aCompositable->GetIPCHandle(),
+  AddWebRenderParentCommand(CompositableOperation(aCompositable->GetIPCHandle(),
                                             OpUseTexture(textures)));
 }
 

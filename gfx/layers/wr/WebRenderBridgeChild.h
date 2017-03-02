@@ -32,6 +32,8 @@ public:
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
   void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
+  void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
+  void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
   void DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
@@ -109,6 +111,7 @@ private:
   bool AddOpDestroy(const OpDestroy& aOp);
 
   nsTArray<WebRenderCommand> mCommands;
+  nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
   bool mIsInTransaction;
