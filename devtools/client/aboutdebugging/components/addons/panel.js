@@ -117,8 +117,12 @@ module.exports = createClass({
   render() {
     let { client, id } = this.props;
     let { debugDisabled, extensions: targets } = this.state;
-    let name = Strings.GetStringFromName("extensions");
+    let installedName = Strings.GetStringFromName("extensions");
+    let temporaryName = Strings.GetStringFromName("temporaryExtensions");
     let targetClass = AddonTarget;
+
+    const installedTargets = targets.filter((target) => !target.temporarilyInstalled);
+    const temporaryTargets = targets.filter((target) => target.temporarilyInstalled);
 
     return dom.div({
       id: id + "-panel",
@@ -131,11 +135,21 @@ module.exports = createClass({
       name: Strings.GetStringFromName("addons")
     }),
     AddonsControls({ debugDisabled }),
+    dom.div({ id: "temporary-addons" },
+      TargetList({
+        id: "temporary-extensions",
+        name: temporaryName,
+        targets: temporaryTargets,
+        client,
+        debugDisabled,
+        targetClass,
+        sort: true
+      })),
     dom.div({ id: "addons" },
       TargetList({
         id: "extensions",
-        name,
-        targets,
+        name: installedName,
+        targets: installedTargets,
         client,
         debugDisabled,
         targetClass,

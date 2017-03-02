@@ -33,7 +33,7 @@ add_task(function* () {
   });
 
   // Retrieve the DEBUG button for the addon
-  let names = [...document.querySelectorAll("#addons .target-name")];
+  let names = getInstalledAddonNames(document);
   let name = names.filter(element => element.textContent === ADDON_NAME)[0];
   ok(name, "Found the addon in the list");
   let targetElement = name.parentNode.parentNode;
