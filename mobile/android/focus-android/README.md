@@ -33,17 +33,15 @@ Build instructions
 Updating translations
 ---------------------
 
-Focus for Android is getting localized on [Pontoon](https://pontoon.mozilla.org/projects/focus-for-android/).
+Firefox Focus for Android is getting localized on [Pontoon](https://pontoon.mozilla.org/projects/focus-for-android/).
+
+For converting between Android XML files and Gettext PO files (to be consumed by Pontoon) we use a local, slightly modified version of [android2po](https://github.com/miracle2k/android2po) (See `tools/l10n/android2po`).
 
 ### Setup
 
-1. For converting between Android XML files and Gettext PO files (to be consumed by Pontoon) we use [android2po](https://github.com/miracle2k/android2po). To install the current release:
+1. Python, Pip and Git need to be installed.
 
-  ```shell
-  easy_install android2po
-  ```
-
-1. Run the `stringsSetup` gradle tasks to create a local checkout of the L10N repository (in folder l10n-repo):
+1. Run the `stringsSetup` gradle tasks to create a local checkout of the L10N repository (in folder `l10n-repo`) and to install the python dependencies to run the l10n scripts:
 
   ```shell
   ./gradlew stringsSetup
