@@ -767,12 +767,12 @@ BaselineScript::icEntryFromReturnAddress(uint8_t* returnAddr)
 }
 
 void
-BaselineScript::copyYieldEntries(JSScript* script, Vector<uint32_t>& yieldOffsets)
+BaselineScript::copyYieldAndAwaitEntries(JSScript* script, Vector<uint32_t>& yieldAndAwaitOffsets)
 {
     uint8_t** entries = yieldEntryList();
 
-    for (size_t i = 0; i < yieldOffsets.length(); i++) {
-        uint32_t offset = yieldOffsets[i];
+    for (size_t i = 0; i < yieldAndAwaitOffsets.length(); i++) {
+        uint32_t offset = yieldAndAwaitOffsets[i];
         entries[i] = nativeCodeForPC(script, script->offsetToPC(offset));
     }
 }

@@ -11,11 +11,11 @@
 #include "mozilla/TimeStamp.h"
 
 #include "jscntxt.h"
+#include "jsexn.h"
 
 #include "gc/Heap.h"
 #include "js/Debug.h"
 #include "vm/AsyncFunction.h"
-#include "vm/SelfHosting.h"
 
 #include "jsobjinlines.h"
 
@@ -34,8 +34,8 @@ MillisecondsSinceStartup()
 enum PromiseHandler {
     PromiseHandlerIdentity = 0,
     PromiseHandlerThrower,
-    PromiseHandlerAwaitFulfilled,
-    PromiseHandlerAwaitRejected,
+    PromiseHandlerAsyncFunctionAwaitFulfilled,
+    PromiseHandlerAsyncFunctionAwaitRejected,
 };
 
 enum ResolutionMode {
@@ -174,7 +174,7 @@ enum ReactionRecordSlots {
 #define REACTION_FLAG_RESOLVED                  0x1
 #define REACTION_FLAG_FULFILLED                 0x2
 #define REACTION_FLAG_IGNORE_DEFAULT_RESOLUTION 0x4
-#define REACTION_FLAG_AWAIT                     0x8
+#define REACTION_FLAG_ASYNC_FUNCTION_AWAIT      0x8
 
 // ES2016, 25.4.1.2.
 class PromiseReactionRecord : public NativeObject
@@ -201,14 +201,14 @@ class PromiseReactionRecord : public NativeObject
             flags |= REACTION_FLAG_FULFILLED;
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
     }
-    void setIsAwait() {
+    void setIsAsyncFunctionAwait() {
         int32_t flags = this->flags();
-        flags |= REACTION_FLAG_AWAIT;
+        flags |= REACTION_FLAG_ASYNC_FUNCTION_AWAIT;
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
     }
-    bool isAwait() {
+    bool isAsyncFunctionAwait() {
         int32_t flags = this->flags();
-        return flags & REACTION_FLAG_AWAIT;
+        return flags & REACTION_FLAG_ASYNC_FUNCTION_AWAIT;
     }
     Value handler() {
         MOZ_ASSERT(targetState() != JS::PromiseState::Pending);
@@ -770,9 +770,7 @@ RejectMaybeWrappedPromise(JSContext *cx, HandleObject promiseObj, HandleValue re
             // interpreter frame active right now. If a thenable job with a
             // throwing `then` function got us here, that'll not be the case,
             // so we add one by throwing the error from self-hosted code.
-            FixedInvokeArgs<1> getErrorArgs(cx);
-            getErrorArgs[0].set(Int32Value(JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON));
-            if (!CallSelfHostedFunction(cx, "GetInternalError", reason, getErrorArgs, &reason))
+            if (!GetInternalError(cx, JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON, &reason))
                 return false;
         }
     }
@@ -807,10 +805,10 @@ TriggerPromiseReactions(JSContext* cx, HandleValue reactionsVal, JS::PromiseStat
 }
 
 static MOZ_MUST_USE bool
-AwaitPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*> reaction,
-                        MutableHandleValue rval)
+AsyncFunctionAwaitPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*> reaction,
+                                     MutableHandleValue rval)
 {
-    MOZ_ASSERT(reaction->isAwait());
+    MOZ_ASSERT(reaction->isAsyncFunctionAwait());
 
     RootedValue handlerVal(cx, reaction->handler());
     RootedValue argument(cx, reaction->handlerArg());
@@ -818,12 +816,12 @@ AwaitPromiseReactionJob(JSContext* cx, Handle<PromiseReactionRecord*> reaction,
     RootedValue generatorVal(cx, resultPromise->getFixedSlot(PromiseSlot_AwaitGenerator));
 
     int32_t handlerNum = int32_t(handlerVal.toNumber());
-    MOZ_ASSERT(handlerNum == PromiseHandlerAwaitFulfilled
-               || handlerNum == PromiseHandlerAwaitRejected);
+    MOZ_ASSERT(handlerNum == PromiseHandlerAsyncFunctionAwaitFulfilled ||
+               handlerNum == PromiseHandlerAsyncFunctionAwaitRejected);
 
     // Await's handlers don't return a value, nor throw exception.
     // They fail only on OOM.
-    if (handlerNum == PromiseHandlerAwaitFulfilled) {
+    if (handlerNum == PromiseHandlerAsyncFunctionAwaitFulfilled) {
         if (!AsyncFunctionAwaitedFulfilled(cx, resultPromise, generatorVal, argument))
             return false;
     } else {
@@ -871,8 +869,8 @@ PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 1-2.
     Rooted<PromiseReactionRecord*> reaction(cx, &reactionObj->as<PromiseReactionRecord>());
-    if (reaction->isAwait())
-        return AwaitPromiseReactionJob(cx, reaction, args.rval());
+    if (reaction->isAsyncFunctionAwait())
+        return AsyncFunctionAwaitPromiseReactionJob(cx, reaction, args.rval());
 
     // Step 3.
     RootedValue handlerVal(cx, reaction->handler());
@@ -2169,8 +2167,8 @@ js::AsyncFunctionAwait(JSContext* cx, Handle<PromiseObject*> resultPromise, Hand
         return false;
 
     // Steps 4-5.
-    RootedValue onFulfilled(cx, Int32Value(PromiseHandlerAwaitFulfilled));
-    RootedValue onRejected(cx, Int32Value(PromiseHandlerAwaitRejected));
+    RootedValue onFulfilled(cx, Int32Value(PromiseHandlerAsyncFunctionAwaitFulfilled));
+    RootedValue onRejected(cx, Int32Value(PromiseHandlerAsyncFunctionAwaitRejected));
 
     RootedObject incumbentGlobal(cx);
     if (!GetObjectFromIncumbentGlobal(cx, &incumbentGlobal))
@@ -2184,7 +2182,7 @@ js::AsyncFunctionAwait(JSContext* cx, Handle<PromiseObject*> resultPromise, Hand
     if (!reaction)
         return false;
 
-    reaction->setIsAwait();
+    reaction->setIsAsyncFunctionAwait();
 
     // Step 8.
     return PerformPromiseThenWithReaction(cx, promise, reaction);

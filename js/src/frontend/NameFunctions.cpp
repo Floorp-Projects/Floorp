@@ -501,24 +501,25 @@ class NameResolver
                 return false;
             break;
 
+          case PNK_INITIALYIELD:
+            MOZ_ASSERT(cur->pn_kid->isKind(PNK_ASSIGN) &&
+                       cur->pn_kid->pn_left->isKind(PNK_NAME) &&
+                       cur->pn_kid->pn_right->isKind(PNK_GENERATOR));
+            break;
+
           case PNK_YIELD_STAR:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            MOZ_ASSERT(cur->pn_right->isKind(PNK_NAME));
-            if (!resolve(cur->pn_left, prefix))
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            if (!resolve(cur->pn_kid, prefix))
                 return false;
             break;
 
           case PNK_YIELD:
           case PNK_AWAIT:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (cur->pn_left) {
-                if (!resolve(cur->pn_left, prefix))
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            if (cur->pn_kid) {
+                if (!resolve(cur->pn_kid, prefix))
                     return false;
             }
-            MOZ_ASSERT(cur->pn_right->isKind(PNK_NAME) ||
-                       (cur->pn_right->isKind(PNK_ASSIGN) &&
-                        cur->pn_right->pn_left->isKind(PNK_NAME) &&
-                        cur->pn_right->pn_right->isKind(PNK_GENERATOR)));
             break;
 
           case PNK_RETURN:

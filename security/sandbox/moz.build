@@ -23,10 +23,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/sandboxtarget',
     ]
 
-    if (CONFIG['CPU_ARCH'] == 'x86' and CONFIG['_MSC_VER'] and not
-            CONFIG['CLANG_CL']):
-        DIRS += ['win/wow_helper']
-
     EXPORTS.mozilla.sandboxing += [
         'chromium-shim/sandbox/win/loggingCallbacks.h',
         'chromium-shim/sandbox/win/loggingTypes.h',

@@ -33,6 +33,9 @@ ResolvePath(JSContext* cx, JS::HandleString filenameStr, PathResolutionMode reso
 JSObject*
 FileAsTypedArray(JSContext* cx, JS::HandleString pathnameStr);
 
+JS::UniqueChars
+GetCWD();
+
 } // namespace shell
 } // namespace js
 

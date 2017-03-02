@@ -794,11 +794,6 @@ var gFailureExpected = false;
 
 var gTestcases = new Array();
 var gTc = gTestcases.length;
-var summary = '';
-var description = '';
-var expected = '';
-var actual = '';
-var msg = '';
 
 /*
  * constant strings

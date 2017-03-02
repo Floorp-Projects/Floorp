@@ -40,7 +40,6 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'hb-buffer.cc',
     'hb-face.cc',
-    'hb-fallback-shape.cc',
     'hb-font.cc',
     'hb-ot-layout.cc',
     'hb-ot-map.cc',
