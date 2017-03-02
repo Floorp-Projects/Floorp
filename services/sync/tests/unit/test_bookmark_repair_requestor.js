@@ -110,7 +110,7 @@ add_task(async function test_requestor_no_clients() {
     { object: "repair",
       method: "finished",
       value: undefined,
-      extra: { flowID, numIDs: 3 },
+      extra: { flowID, numIDs: 3, reason: undefined },
     }
   ]);
 });
@@ -171,7 +171,7 @@ add_task(async function test_requestor_one_client_no_response() {
     { object: "repair",
       method: "finished",
       value: undefined,
-      extra: { flowID, numIDs: 3 },
+      extra: { flowID, numIDs: 3, reason: undefined },
     }
   ]);
 });
@@ -223,7 +223,7 @@ add_task(async function test_requestor_one_client_no_sync() {
     { object: "repair",
       method: "finished",
       value: undefined,
-      extra: { flowID, numIDs: 3 },
+      extra: { flowID, numIDs: 3, reason: undefined },
     }
   ]);
 });
@@ -323,7 +323,7 @@ add_task(async function test_requestor_client_vanishes() {
     { object: "repair",
       method: "finished",
       value: undefined,
-      extra: { flowID, numIDs: 0 },
+      extra: { flowID, numIDs: 0, reason: undefined },
     }
   ]);
 });
@@ -406,7 +406,7 @@ add_task(async function test_requestor_success_responses() {
     { object: "repair",
       method: "finished",
       value: undefined,
-      extra: { flowID, numIDs: 0 },
+      extra: { flowID, numIDs: 0, reason: undefined },
     }
   ]);
 });
