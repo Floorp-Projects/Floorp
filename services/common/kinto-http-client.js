@@ -16,12 +16,13 @@
 /*
  * This file is generated from kinto-http.js - do not modify directly.
  */
+
 const global = this;
 
 this.EXPORTED_SYMBOLS = ["KintoHttpClient"];
 
 /*
- * Version 2.7.0 - dae7787
+ * Version 4.0.0 - d750ae1
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -77,81 +78,29 @@ if (typeof module === "object") {
   module.exports = KintoHttpClient;
 }
 
-},{"../src/base":4}],2:[function(require,module,exports){
+},{"../src/base":7}],2:[function(require,module,exports){
+var v1 = require('./v1');
+var v4 = require('./v4');
 
-var rng;
+var uuid = v4;
+uuid.v1 = v1;
+uuid.v4 = v4;
 
-var crypto = global.crypto || global.msCrypto; // for IE 11
-if (crypto && crypto.getRandomValues) {
-  // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
-  // Moderately fast, high quality
-  var _rnds8 = new Uint8Array(16);
-  rng = function whatwgRNG() {
-    crypto.getRandomValues(_rnds8);
-    return _rnds8;
-  };
+module.exports = uuid;
+
+},{"./v1":5,"./v4":6}],3:[function(require,module,exports){
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+var byteToHex = [];
+for (var i = 0; i < 256; ++i) {
+  byteToHex[i] = (i + 0x100).toString(16).substr(1);
 }
 
-if (!rng) {
-  // Math.random()-based (RNG)
-  //
-  // If all else fails, use Math.random().  It's fast, but is of unspecified
-  // quality.
-  var  _rnds = new Array(16);
-  rng = function() {
-    for (var i = 0, r; i < 16; i++) {
-      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-      _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-    }
-
-    return _rnds;
-  };
-}
-
-module.exports = rng;
-
-
-},{}],3:[function(require,module,exports){
-//     uuid.js
-//
-//     Copyright (c) 2010-2012 Robert Kieffer
-//     MIT License - http://opensource.org/licenses/mit-license.php
-
-// Unique ID creation requires a high quality random # generator.  We feature
-// detect to determine the best RNG source, normalizing to a function that
-// returns 128-bits of randomness, since that's what's usually required
-var _rng = require('./rng');
-
-// Maps for number <-> hex string conversion
-var _byteToHex = [];
-var _hexToByte = {};
-for (var i = 0; i < 256; i++) {
-  _byteToHex[i] = (i + 0x100).toString(16).substr(1);
-  _hexToByte[_byteToHex[i]] = i;
-}
-
-// **`parse()` - Parse a UUID into it's component bytes**
-function parse(s, buf, offset) {
-  var i = (buf && offset) || 0, ii = 0;
-
-  buf = buf || [];
-  s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
-    if (ii < 16) { // Don't overflow!
-      buf[i + ii++] = _hexToByte[oct];
-    }
-  });
-
-  // Zero out remaining bytes if string was short
-  while (ii < 16) {
-    buf[i + ii++] = 0;
-  }
-
-  return buf;
-}
-
-// **`unparse()` - Convert UUID byte array (ala parse()) into a string**
-function unparse(buf, offset) {
-  var i = offset || 0, bth = _byteToHex;
+function bytesToUuid(buf, offset) {
+  var i = offset || 0;
+  var bth = byteToHex;
   return  bth[buf[i++]] + bth[buf[i++]] +
           bth[buf[i++]] + bth[buf[i++]] + '-' +
           bth[buf[i++]] + bth[buf[i++]] + '-' +
@@ -162,13 +111,57 @@ function unparse(buf, offset) {
           bth[buf[i++]] + bth[buf[i++]];
 }
 
+module.exports = bytesToUuid;
+
+},{}],4:[function(require,module,exports){
+// Unique ID creation requires a high quality random # generator.  In the
+// browser this is a little complicated due to unknown quality of Math.random()
+// and inconsistent support for the `crypto` API.  We do the best we can via
+// feature-detection
+var rng;
+
+var crypto = global.crypto || global.msCrypto; // for IE 11
+if (crypto && crypto.getRandomValues) {
+  // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
+  var rnds8 = new Uint8Array(16);
+  rng = function whatwgRNG() {
+    crypto.getRandomValues(rnds8);
+    return rnds8;
+  };
+}
+
+if (!rng) {
+  // Math.random()-based (RNG)
+  //
+  // If all else fails, use Math.random().  It's fast, but is of unspecified
+  // quality.
+  var  rnds = new Array(16);
+  rng = function() {
+    for (var i = 0, r; i < 16; i++) {
+      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+      rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+    }
+
+    return rnds;
+  };
+}
+
+module.exports = rng;
+
+},{}],5:[function(require,module,exports){
+// Unique ID creation requires a high quality random # generator.  We feature
+// detect to determine the best RNG source, normalizing to a function that
+// returns 128-bits of randomness, since that's what's usually required
+var rng = require('./lib/rng');
+var bytesToUuid = require('./lib/bytesToUuid');
+
 // **`v1()` - Generate time-based UUID**
 //
 // Inspired by https://github.com/LiosK/UUID.js
 // and http://docs.python.org/library/uuid.html
 
 // random #'s we need to init node and clockseq
-var _seedBytes = _rng();
+var _seedBytes = rng();
 
 // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
 var _nodeId = [
@@ -251,18 +244,20 @@ function v1(options, buf, offset) {
 
   // `node`
   var node = options.node || _nodeId;
-  for (var n = 0; n < 6; n++) {
+  for (var n = 0; n < 6; ++n) {
     b[i + n] = node[n];
   }
 
-  return buf ? buf : unparse(b);
+  return buf ? buf : bytesToUuid(b);
 }
 
-// **`v4()` - Generate random UUID**
+module.exports = v1;
 
-// See https://github.com/broofa/node-uuid for API details
+},{"./lib/bytesToUuid":3,"./lib/rng":4}],6:[function(require,module,exports){
+var rng = require('./lib/rng');
+var bytesToUuid = require('./lib/bytesToUuid');
+
 function v4(options, buf, offset) {
-  // Deprecated - 'format' argument, as supported in v1.2
   var i = buf && offset || 0;
 
   if (typeof(options) == 'string') {
@@ -271,7 +266,7 @@ function v4(options, buf, offset) {
   }
   options = options || {};
 
-  var rnds = options.random || (options.rng || _rng)();
+  var rnds = options.random || (options.rng || rng)();
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
   rnds[6] = (rnds[6] & 0x0f) | 0x40;
@@ -279,24 +274,17 @@ function v4(options, buf, offset) {
 
   // Copy bytes to buffer, if provided
   if (buf) {
-    for (var ii = 0; ii < 16; ii++) {
+    for (var ii = 0; ii < 16; ++ii) {
       buf[i + ii] = rnds[ii];
     }
   }
 
-  return buf || unparse(rnds);
+  return buf || bytesToUuid(rnds);
 }
 
-// Export public API
-var uuid = v4;
-uuid.v1 = v1;
-uuid.v4 = v4;
-uuid.parse = parse;
-uuid.unparse = unparse;
+module.exports = v4;
 
-module.exports = uuid;
-
-},{"./rng":2}],4:[function(require,module,exports){
+},{"./lib/bytesToUuid":3,"./lib/rng":4}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -390,7 +378,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
    * @param  {Object}       [options.retry=0]             Number of retries when request fails (default: 0)
    * @param  {String}       [options.bucket="default"]    The default bucket to use.
    * @param  {String}       [options.requestMode="cors"]  The HTTP request mode (from ES6 fetch spec).
-   * @param  {Number}       [options.timeout=5000]        The requests timeout in ms.
+   * @param  {Number}       [options.timeout=null]        The request timeout in ms, if any.
    */
   constructor(remote, options = {}) {
     if (typeof remote !== "string" || !remote.length) {
@@ -467,7 +455,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       throw new Error("The remote URL must contain the version: " + url);
     }
     if (version !== SUPPORTED_PROTOCOL_VERSION) {
-      throw new Error(`Unsupported protocol version: ${ version }`);
+      throw new Error(`Unsupported protocol version: ${version}`);
     }
     this._remote = url;
     this._version = version;
@@ -717,7 +705,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
     }, params);
     // Safety/Consistency check on ETag value.
     if (since && typeof since !== "string") {
-      throw new Error(`Invalid value for since (${ since }), should be ETag value.`);
+      throw new Error(`Invalid value for since (${since}), should be ETag value.`);
     }
 
     const querystring = (0, _utils.qsify)(_extends({}, filters, {
@@ -770,7 +758,6 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
       // Follow next page
       return processNextPage(nextPage);
     };
-
     return this.execute(_extends({
       path: path + "?" + querystring
     }, options), { raw: true }).then(handleResponse);
@@ -868,7 +855,7 @@ let KintoClientBase = (_dec = (0, _utils.nobatch)("This operation is not support
 }, (_applyDecoratedDescriptor(_class.prototype, "fetchServerSettings", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerSettings"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchServerCapabilities", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "fetchServerCapabilities"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchUser", [_dec3], Object.getOwnPropertyDescriptor(_class.prototype, "fetchUser"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "fetchHTTPApiVersion", [_dec4], Object.getOwnPropertyDescriptor(_class.prototype, "fetchHTTPApiVersion"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "batch", [_dec5], Object.getOwnPropertyDescriptor(_class.prototype, "batch"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "listPermissions", [_dec6], Object.getOwnPropertyDescriptor(_class.prototype, "listPermissions"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "deleteBuckets", [_dec7], Object.getOwnPropertyDescriptor(_class.prototype, "deleteBuckets"), _class.prototype)), _class));
 exports.default = KintoClientBase;
 
-},{"./batch":5,"./bucket":6,"./endpoint":8,"./http":10,"./requests":11,"./utils":12}],5:[function(require,module,exports){
+},{"./batch":8,"./bucket":9,"./endpoint":11,"./http":13,"./requests":14,"./utils":15}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -925,7 +912,7 @@ function aggregate(responses = [], requests = []) {
   }, results);
 }
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1310,7 +1297,7 @@ let Bucket = (_dec = (0, _utils.capable)(["history"]), (_class = class Bucket {
 }, (_applyDecoratedDescriptor(_class.prototype, "listHistory", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "listHistory"), _class.prototype)), _class));
 exports.default = Bucket;
 
-},{"./collection":7,"./endpoint":8,"./requests":11,"./utils":12}],7:[function(require,module,exports){
+},{"./collection":10,"./endpoint":11,"./requests":14,"./utils":15}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1662,6 +1649,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
    * @param  {Object}   [options.headers]               The headers object option.
    * @param  {Object}   [options.filters=[]]            The filters object.
    * @param  {String}   [options.sort="-last_modified"] The sort field.
+   * @param  {String}   [options.at]                    The timestamp to get a snapshot at.
    * @param  {String}   [options.limit=null]            The limit field.
    * @param  {String}   [options.pages=1]               The number of result pages to aggregate.
    * @param  {Number}   [options.since=null]            Only retrieve records modified since the provided timestamp.
@@ -1670,7 +1658,54 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
   listRecords(options = {}) {
     const path = (0, _endpoint2.default)("record", this.bucket.name, this.name);
     const reqOptions = this._collOptions(options);
-    return this.client.paginatedList(path, options, reqOptions);
+    if (options.hasOwnProperty("at")) {
+      return this._getSnapshot(options.at);
+    } else {
+      return this.client.paginatedList(path, options, reqOptions);
+    }
+  }
+
+  /**
+   * @private
+   */
+  _getSnapshot(at) {
+    if (!Number.isInteger(at) || at <= 0) {
+      throw new Error("Invalid argument, expected a positive integer.");
+    }
+    // TODO: we process history changes forward, while it would probably be more
+    // efficient and accurate to process them backward.
+    return this.bucket.listHistory({
+      pages: Infinity, // all pages up to target timestamp are required
+      sort: "-target.data.last_modified",
+      filters: {
+        resource_name: "record",
+        collection_id: this.name,
+        "max_target.data.last_modified": String(at)
+      }
+    }).then(({ data: changes }) => {
+      const seenIds = new Set();
+      let snapshot = [];
+      for (const _ref of changes) {
+        const { target: { data: record } } = _ref;
+
+        if (record.deleted) {
+          seenIds.add(record.id); // ensure not reprocessing deleted entries
+          snapshot = snapshot.filter(r => r.id !== record.id);
+        } else if (!seenIds.has(record.id)) {
+          seenIds.add(record.id);
+          snapshot.push(record);
+        }
+      }
+      return {
+        last_modified: String(at),
+        data: snapshot.sort((a, b) => b.last_modified - a.last_modified),
+        next: () => {
+          throw new Error("Snapshots don't support pagination");
+        },
+        hasNextPage: false,
+        totalRecords: snapshot.length
+      };
+    });
   }
 
   /**
@@ -1693,7 +1728,7 @@ let Collection = (_dec = (0, _utils.capable)(["attachments"]), _dec2 = (0, _util
 }, (_applyDecoratedDescriptor(_class.prototype, "addAttachment", [_dec], Object.getOwnPropertyDescriptor(_class.prototype, "addAttachment"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "removeAttachment", [_dec2], Object.getOwnPropertyDescriptor(_class.prototype, "removeAttachment"), _class.prototype)), _class));
 exports.default = Collection;
 
-},{"./endpoint":8,"./requests":11,"./utils":12,"uuid":3}],8:[function(require,module,exports){
+},{"./endpoint":11,"./requests":14,"./utils":15,"uuid":2}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1708,12 +1743,12 @@ const ENDPOINTS = {
   root: () => "/",
   batch: () => "/batch",
   permissions: () => "/permissions",
-  bucket: bucket => "/buckets" + (bucket ? `/${ bucket }` : ""),
-  history: bucket => `${ ENDPOINTS.bucket(bucket) }/history`,
-  collection: (bucket, coll) => `${ ENDPOINTS.bucket(bucket) }/collections` + (coll ? `/${ coll }` : ""),
-  group: (bucket, group) => `${ ENDPOINTS.bucket(bucket) }/groups` + (group ? `/${ group }` : ""),
-  record: (bucket, coll, id) => `${ ENDPOINTS.collection(bucket, coll) }/records` + (id ? `/${ id }` : ""),
-  attachment: (bucket, coll, id) => `${ ENDPOINTS.record(bucket, coll, id) }/attachment`
+  bucket: bucket => "/buckets" + (bucket ? `/${bucket}` : ""),
+  history: bucket => `${ENDPOINTS.bucket(bucket)}/history`,
+  collection: (bucket, coll) => `${ENDPOINTS.bucket(bucket)}/collections` + (coll ? `/${coll}` : ""),
+  group: (bucket, group) => `${ENDPOINTS.bucket(bucket)}/groups` + (group ? `/${group}` : ""),
+  record: (bucket, coll, id) => `${ENDPOINTS.collection(bucket, coll)}/records` + (id ? `/${id}` : ""),
+  attachment: (bucket, coll, id) => `${ENDPOINTS.record(bucket, coll, id)}/attachment`
 };
 
 /**
@@ -1728,7 +1763,7 @@ function endpoint(name, ...args) {
   return ENDPOINTS[name](...args);
 }
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1760,7 +1795,7 @@ exports.default = {
   999: "Internal Server Error"
 };
 
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1799,7 +1834,7 @@ let HTTP = class HTTP {
    * @type {Object}
    */
   static get defaultOptions() {
-    return { timeout: 5000, requestMode: "cors" };
+    return { timeout: null, requestMode: "cors" };
   }
 
   /**
@@ -1807,7 +1842,7 @@ let HTTP = class HTTP {
    *
    * @param {EventEmitter} events                       The event handler.
    * @param {Object}       [options={}}                 The options object.
-   * @param {Number}       [options.timeout=5000]       The request timeout in ms (default: `5000`).
+   * @param {Number}       [options.timeout=null]       The request timeout in ms, if any (default: `null`).
    * @param {String}       [options.requestMode="cors"] The HTTP request mode (default: `"cors"`).
    */
   constructor(events, options = {}) {
@@ -1861,19 +1896,25 @@ let HTTP = class HTTP {
     options.mode = this.requestMode;
     return new Promise((resolve, reject) => {
       // Detect if a request has timed out.
-      const _timeoutId = setTimeout(() => {
-        hasTimedout = true;
-        reject(new Error("Request timeout."));
-      }, this.timeout);
-
+      let _timeoutId;
+      if (this.timeout) {
+        _timeoutId = setTimeout(() => {
+          hasTimedout = true;
+          reject(new Error("Request timeout."));
+        }, this.timeout);
+      }
       fetch(url, options).then(res => {
         if (!hasTimedout) {
-          clearTimeout(_timeoutId);
+          if (_timeoutId) {
+            clearTimeout(_timeoutId);
+          }
           resolve(res);
         }
       }).catch(err => {
         if (!hasTimedout) {
-          clearTimeout(_timeoutId);
+          if (_timeoutId) {
+            clearTimeout(_timeoutId);
+          }
           reject(err);
         }
       });
@@ -1905,18 +1946,18 @@ let HTTP = class HTTP {
         // Note: we can't consume the response body twice.
         return JSON.parse(text);
       }).catch(err => {
-        const error = new Error(`HTTP ${ status || 0 }; ${ err }`);
+        const error = new Error(`HTTP ${status || 0}; ${err}`);
         error.response = response;
         error.stack = err.stack;
         throw error;
       }).then(json => {
         if (json && status >= 400) {
-          let message = `HTTP ${ status } ${ json.error || "" }: `;
+          let message = `HTTP ${status} ${json.error || ""}: `;
           if (json.errno && json.errno in _errors2.default) {
             const errnoMsg = _errors2.default[json.errno];
             message += errnoMsg;
             if (json.message && json.message !== errnoMsg) {
-              message += ` (${ json.message })`;
+              message += ` (${json.message})`;
             }
           } else {
             message += statusText || "";
@@ -1971,7 +2012,7 @@ let HTTP = class HTTP {
 };
 exports.default = HTTP;
 
-},{"./errors":9}],11:[function(require,module,exports){
+},{"./errors":12}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2004,7 +2045,7 @@ function safeHeader(safe, last_modified) {
     return {};
   }
   if (last_modified) {
-    return { "If-Match": `"${ last_modified }"` };
+    return { "If-Match": `"${last_modified}"` };
   }
   return { "If-None-Match": "*" };
 }
@@ -2091,7 +2132,7 @@ function addAttachmentRequest(path, dataURI, { data, permissions } = {}, options
   };
 }
 
-},{"./utils":12}],12:[function(require,module,exports){
+},{"./utils":15}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2224,7 +2265,7 @@ function checkVersion(version, minVersion, maxVersion) {
   const [maxMajor, maxMinor] = extract(maxVersion);
   const checks = [verMajor < minMajor, verMajor === minMajor && verMinor < minMinor, verMajor > maxMajor, verMajor === maxMajor && verMinor >= maxMinor];
   if (checks.some(x => x)) {
-    throw new Error(`Version ${ version } doesn't satisfy ` + `${ minVersion } <= x < ${ maxVersion }`);
+    throw new Error(`Version ${version} doesn't satisfy ` + `${minVersion} <= x < ${maxVersion}`);
   }
 }
 
@@ -2277,7 +2318,7 @@ function capable(capabilities) {
           return client.fetchServerCapabilities().then(available => {
             const missing = capabilities.filter(c => !available.hasOwnProperty(c));
             if (missing.length > 0) {
-              throw new Error(`Required capabilities ${ missing.join(", ") } ` + "not present on server");
+              throw new Error(`Required capabilities ${missing.join(", ")} ` + "not present on server");
             }
           }).then(() => fn.apply(this, args));
         };
@@ -2341,7 +2382,7 @@ function parseDataURL(dataURL) {
   const regex = /^data:(.*);base64,(.*)/;
   const match = dataURL.match(regex);
   if (!match) {
-    throw new Error(`Invalid data-url: ${ String(dataURL).substr(0, 32) }...`);
+    throw new Error(`Invalid data-url: ${String(dataURL).substr(0, 32)}...`);
   }
   const props = match[1];
   const base64 = match[2];
