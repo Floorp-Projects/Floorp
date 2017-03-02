@@ -74,7 +74,7 @@ const uint32_t WebrtcVideoConduit::kDefaultMaxBitrate_bps = KBPS(2000);
 
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
-static const int kViEMinCodecBitrate = 30;
+static const int kViEMinCodecBitrate_bps = KBPS(30);
 
 template<typename T>
 T MinIgnoreZero(const T& a, const T& b)
@@ -499,7 +499,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
                                           mSendingHeight);
 
   // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
-  mNegotiatedMaxBitrate = codecConfig->mTias / 1000;
+  mNegotiatedMaxBitrate = codecConfig->mTias;
 
   // width/height will be overridden on the first frame; they must be 'sane' for
   // SetSendCodec()
@@ -562,7 +562,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     // Calculate these first
     video_stream.max_bitrate_bps = MinIgnoreZero(simulcastEncoding.constraints.maxBr,
                                                  kDefaultMaxBitrate_bps);
-    video_stream.max_bitrate_bps = MinIgnoreZero((int) mPrefMaxBitrate*1000,
+    video_stream.max_bitrate_bps = MinIgnoreZero((int) mPrefMaxBitrate,
                                                  video_stream.max_bitrate_bps);
     video_stream.min_bitrate_bps = (mMinBitrate ? mMinBitrate : kDefaultMinBitrate_bps);
     if (video_stream.min_bitrate_bps > video_stream.max_bitrate_bps) {
@@ -862,25 +862,25 @@ WebrtcVideoConduit::InitMain()
             "media.peerconnection.video.min_bitrate", &temp))))
       {
          if (temp >= 0) {
-            mMinBitrate = temp;
+           mMinBitrate = KBPS(temp);
          }
       }
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.start_bitrate", &temp))))
       {
          if (temp >= 0) {
-         mStartBitrate = temp;
+           mStartBitrate = KBPS(temp);
          }
       }
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.max_bitrate", &temp))))
       {
         if (temp >= 0) {
-          mPrefMaxBitrate = temp;
+          mPrefMaxBitrate = KBPS(temp);
         }
       }
-      if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate) {
-        mMinBitrate = kViEMinCodecBitrate;
+      if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate_bps) {
+        mMinBitrate = kViEMinCodecBitrate_bps;
       }
       if (mStartBitrate < mMinBitrate) {
         mStartBitrate = mMinBitrate;
@@ -888,11 +888,13 @@ WebrtcVideoConduit::InitMain()
       if (mPrefMaxBitrate && mStartBitrate > mPrefMaxBitrate) {
         mStartBitrate = mPrefMaxBitrate;
       }
+      // XXX We'd love if this was a live param for testing adaptation/etc
+      // in automation
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.min_bitrate_estimate", &temp))))
       {
         if (temp >= 0) {
-          mMinBitrateEstimate = temp;
+          mMinBitrateEstimate = temp; // bps!
         }
       }
       bool use_loadmanager = false;
@@ -1345,7 +1347,7 @@ WebrtcVideoConduit::SelectBitrates(
     out_min = mMinBitrate;
   }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  out_min = std::max(kViEMinCodecBitrate, out_min);
+  out_min = std::max(kViEMinCodecBitrate_bps, out_min);
   if (mStartBitrate && mStartBitrate > out_start) {
     out_start = mStartBitrate;
   }
