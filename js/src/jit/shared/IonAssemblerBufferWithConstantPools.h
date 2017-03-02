@@ -829,9 +829,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         return this->nextOffset();
     }
 
+    MOZ_NEVER_INLINE
     BufferOffset allocEntry(size_t numInst, unsigned numPoolEntries,
-                            uint8_t* inst, uint8_t* data, PoolEntry* pe = nullptr,
-                            bool markAsBranch = false)
+                            uint8_t* inst, uint8_t* data, PoolEntry* pe = nullptr)
     {
         // The allocation of pool entries is not supported in a no-pool region,
         // check.
@@ -877,8 +877,34 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         return this->putBytes(numInst * InstSize, inst);
     }
 
-    BufferOffset putInt(uint32_t value, bool markAsBranch = false) {
-        return allocEntry(1, 0, (uint8_t*)&value, nullptr, nullptr, markAsBranch);
+
+    // putInt is the workhorse for the assembler and higher-level buffer
+    // abstractions: it places one instruction into the instruction stream.
+    // Under normal circumstances putInt should just check that the constant
+    // pool does not need to be flushed, that there is space for the single word
+    // of the instruction, and write that word and update the buffer pointer.
+    //
+    // To do better here we need a status variable that handles both nopFill_
+    // and capacity, so that we can quickly know whether to go the slow path.
+    // That could be a variable that has the remaining number of simple
+    // instructions that can be inserted before a more expensive check,
+    // which is set to zero when nopFill_ is set.
+    //
+    // We assume that we don't have to check this->oom() if there is space to
+    // insert a plain instruction; there will always come a later time when it will be
+    // checked anyway.
+
+    MOZ_ALWAYS_INLINE
+    BufferOffset putInt(uint32_t value) {
+        if (nopFill_ || !hasSpaceForInsts(/* numInsts= */ 1, /* numPoolEntries= */ 0))
+            return allocEntry(1, 0, (uint8_t*)&value, nullptr, nullptr);
+
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+    defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        return this->putU32Aligned(value);
+#else
+        return this->AssemblerBuffer<SliceSize, Inst>::putInt(value);
+#endif
     }
 
     // Register a short-range branch deadline.

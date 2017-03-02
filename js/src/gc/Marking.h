@@ -193,7 +193,9 @@ class MarkStackIter
 
     bool done() const;
     MarkStack::Tag peekTag() const;
+    MarkStack::TaggedPtr peekPtr() const;
     MarkStack::ValueArray peekValueArray() const;
+    void next();
     void nextPtr();
     void nextArray();
 
@@ -202,7 +204,6 @@ class MarkStackIter
 
   private:
     size_t position() const;
-    const MarkStack::TaggedPtr& peekPtr() const;
 };
 
 struct WeakKeyTableHashPolicy {
@@ -300,7 +301,11 @@ class GCMarker : public JSTracer
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 #ifdef DEBUG
+
     bool shouldCheckCompartments() { return strictCompartmentChecking; }
+
+    Zone* stackContainsCrossZonePointerTo(const gc::TenuredCell* cell) const;
+
 #endif
 
     void markEphemeronValues(gc::Cell* markedCell, gc::WeakEntryVector& entry);

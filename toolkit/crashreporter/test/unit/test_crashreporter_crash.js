@@ -45,6 +45,10 @@ function run_test() {
              do_check_eq(extra.TestKey, "TestValue");
              do_check_eq(extra["\u2665"], "\u{1F4A9}");
              do_check_eq(extra.Notes, "JunkMoreJunk");
-             do_check_true("TelemetrySessionId" in extra);
+             const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+             Assert.ok("TelemetrySessionId" in extra,
+                       "The TelemetrySessionId field is present in the extra file");
+             Assert.ok(UUID_REGEX.test(extra.TelemetrySessionId),
+                       "The TelemetrySessionId is a UUID");
            });
 }

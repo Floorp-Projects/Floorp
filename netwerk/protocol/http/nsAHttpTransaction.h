@@ -19,7 +19,6 @@ class nsAHttpConnection;
 class nsAHttpSegmentReader;
 class nsAHttpSegmentWriter;
 class nsHttpTransaction;
-class nsHttpPipeline;
 class nsHttpRequestHead;
 class nsHttpConnectionInfo;
 class NullHttpTransaction;
@@ -100,12 +99,12 @@ public:
     virtual nsHttpRequestHead *RequestHead() = 0;
 
     // determine the number of real http/1.x transactions on this
-    // abstract object. Pipelines may have multiple, SPDY has 0,
+    // abstract object. Pipelines had multiple, SPDY has 0,
     // normal http transactions have 1.
     virtual uint32_t Http1xTransactionCount() = 0;
 
     // called to remove the unused sub transactions from an object that can
-    // handle multiple transactions simultaneously (i.e. pipelines or spdy).
+    // handle multiple transactions simultaneously (i.e. h2).
     //
     // Returns NS_ERROR_NOT_IMPLEMENTED if the object does not implement
     // sub-transactions.
@@ -116,31 +115,11 @@ public:
     virtual nsresult TakeSubTransactions(
         nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions) = 0;
 
-    // called to add a sub-transaction in the case of pipelined transactions
-    // classes that do not implement sub transactions
-    // return NS_ERROR_NOT_IMPLEMENTED
-    virtual nsresult AddTransaction(nsAHttpTransaction *transaction) = 0;
-
-    // The total length of the outstanding pipeline comprised of transacations
-    // and sub-transactions.
-    virtual uint32_t PipelineDepth() = 0;
-
-    // Used to inform the connection that it is being used in a pipelined
-    // context. That may influence the handling of some errors.
-    // The value is the pipeline position (> 1).
-    virtual nsresult SetPipelinePosition(int32_t) = 0;
-    virtual int32_t  PipelinePosition() = 0;
-
     // Occasionally the abstract interface has to give way to base implementations
-    // to respect differences between spdy, pipelines, etc..
+    // to respect differences between spdy, h2, etc..
     // These Query* (and IsNullTransaction()) functions provide a way to do
     // that without using xpcom or rtti. Any calling code that can't deal with
     // a null response from one of them probably shouldn't be using nsAHttpTransaction
-
-    // If we used rtti this would be the result of doing
-    // dynamic_cast<nsHttpPipeline *>(this).. i.e. it can be nullptr for
-    // non pipeline implementations of nsAHttpTransaction
-    virtual nsHttpPipeline *QueryPipeline() { return nullptr; }
 
     // equivalent to !!dynamic_cast<NullHttpTransaction *>(this)
     // A null transaction is expected to return BASE_STREAM_CLOSED on all of
@@ -167,29 +146,6 @@ public:
     // The base definition of these is done in nsHttpTransaction.cpp
     virtual bool ResponseTimeoutEnabled() const;
     virtual PRIntervalTime ResponseTimeout();
-
-    // Every transaction is classified into one of the types below. When using
-    // HTTP pipelines, only transactions with the same type appear on the same
-    // pipeline.
-    enum Classifier  {
-        // Transactions that expect a short 304 (no-content) response
-        CLASS_REVALIDATION,
-
-        // Transactions for content expected to be CSS or JS
-        CLASS_SCRIPT,
-
-        // Transactions for content expected to be an image
-        CLASS_IMAGE,
-
-        // Transactions that cannot involve a pipeline
-        CLASS_SOLO,
-
-        // Transactions that do not fit any of the other categories. HTML
-        // is normally GENERAL.
-        CLASS_GENERAL,
-
-        CLASS_MAX
-    };
 
     // conceptually the security info is part of the connection, but sometimes
     // in the case of TLS tunneled within TLS the transaction might present
@@ -245,11 +201,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
     void     SetProxyConnectFailed() override;                                   \
     virtual nsHttpRequestHead *RequestHead() override;                                   \
     uint32_t Http1xTransactionCount() override;                                  \
-    nsresult TakeSubTransactions(nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions) override; \
-    nsresult AddTransaction(nsAHttpTransaction *) override;                      \
-    uint32_t PipelineDepth() override;                                           \
-    nsresult SetPipelinePosition(int32_t) override;                              \
-    int32_t  PipelinePosition() override;
+    nsresult TakeSubTransactions(nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions) override;
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader

@@ -285,7 +285,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void load16ZeroExtend(T, Register) { MOZ_CRASH(); }
     template <typename T> void load64(T, Register64 ) { MOZ_CRASH(); }
 
-    template <typename T, typename S> void storePtr(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storePtr(const T&, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store32_NoSecondScratch(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeFloat32(T, S) { MOZ_CRASH(); }

@@ -304,30 +304,6 @@ NullHttpTransaction::ConnectionInfo()
   return mConnectionInfo;
 }
 
-nsresult
-NullHttpTransaction::AddTransaction(nsAHttpTransaction *trans)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-uint32_t
-NullHttpTransaction::PipelineDepth()
-{
-  return 0;
-}
-
-nsresult
-NullHttpTransaction::SetPipelinePosition(int32_t position)
-{
-    return NS_OK;
-}
-
-int32_t
-NullHttpTransaction::PipelinePosition()
-{
-  return 1;
-}
-
 } // namespace net
 } // namespace mozilla
 
