@@ -764,6 +764,9 @@ function isUsableAddon(aAddon) {
 
   if (mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
     logger.warn(`Add-on ${aAddon.id} is not correctly signed.`);
+    if (Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
+      logger.warn(`Preference ${PREF_XPI_SIGNATURES_DEV_ROOT} is set.`);
+    }
     return false;
   }
 
