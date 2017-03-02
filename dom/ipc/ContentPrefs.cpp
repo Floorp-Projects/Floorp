@@ -121,7 +121,6 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "layout.css.initial-letter.enabled",
   "layout.css.isolation.enabled",
   "layout.css.mix-blend-mode.enabled",
-  "layout.css.object-fit-and-position.enabled",
   "layout.css.osx-font-smoothing.enabled",
   "layout.css.overflow-clip-box.enabled",
   "layout.css.prefixes.animations",
