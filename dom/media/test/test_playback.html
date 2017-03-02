@@ -10,12 +10,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-// longer timeout for slow platforms
-if (isSlowPlatform()) {
-  SimpleTest.requestLongerTimeout(3);
-  SimpleTest.requestCompleteLog();
-}
-
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
