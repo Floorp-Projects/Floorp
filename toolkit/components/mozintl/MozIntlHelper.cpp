@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MozIntl.h"
+#include "MozIntlHelper.h"
 #include "jswrapper.h"
 #include "mozilla/ModuleUtils.h"
 
-#define MOZ_MOZINTL_CID \
-  { 0x83f8f991, 0x6b81, 0x4dd8, { 0xa0, 0x93, 0x72, 0x0b, 0xfb, 0x67, 0x4d, 0x38 } }
+#define MOZ_MOZINTLHELPER_CID \
+  { 0xb43c96be, 0x2b3a, 0x4dc4, { 0x90, 0xe9, 0xb0, 0x6d, 0x34, 0x21, 0x9b, 0x68 } }
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS(MozIntl, mozIMozIntl)
+NS_IMPL_ISUPPORTS(MozIntlHelper, mozIMozIntlHelper)
 
-MozIntl::MozIntl() = default;
+MozIntlHelper::MozIntlHelper() = default;
 
-MozIntl::~MozIntl() = default;
+MozIntlHelper::~MozIntlHelper() = default;
 
 static nsresult
 AddFunctions(JSContext* cx, JS::Handle<JS::Value> val, const JSFunctionSpec* funcs)
@@ -40,7 +40,7 @@ AddFunctions(JSContext* cx, JS::Handle<JS::Value> val, const JSFunctionSpec* fun
 }
 
 NS_IMETHODIMP
-MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
+MozIntlHelper::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
 {
   static const JSFunctionSpec funcs[] = {
     JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
@@ -51,7 +51,7 @@ MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
 }
 
 NS_IMETHODIMP
-MozIntl::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx)
+MozIntlHelper::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx)
 {
   static const JSFunctionSpec funcs[] = {
     JS_SELF_HOSTED_FN("getDisplayNames", "Intl_getDisplayNames", 2, 0),
@@ -62,7 +62,7 @@ MozIntl::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx)
 }
 
 NS_IMETHODIMP
-MozIntl::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* cx)
+MozIntlHelper::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* cx)
 {
   if (!val.isObject()) {
     return NS_ERROR_INVALID_ARG;
@@ -83,7 +83,7 @@ MozIntl::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* cx)
 }
 
 NS_IMETHODIMP
-MozIntl::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx)
+MozIntlHelper::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx)
 {
   static const JSFunctionSpec funcs[] = {
     JS_SELF_HOSTED_FN("getLocaleInfo", "Intl_getLocaleInfo", 1, 0),
@@ -93,27 +93,27 @@ MozIntl::AddGetLocaleInfo(JS::Handle<JS::Value> val, JSContext* cx)
   return AddFunctions(cx, val, funcs);
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(MozIntl)
-NS_DEFINE_NAMED_CID(MOZ_MOZINTL_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(MozIntlHelper)
+NS_DEFINE_NAMED_CID(MOZ_MOZINTLHELPER_CID);
 
-static const Module::CIDEntry kMozIntlCIDs[] = {
-  { &kMOZ_MOZINTL_CID, false, nullptr, MozIntlConstructor },
+static const Module::CIDEntry kMozIntlHelperCIDs[] = {
+  { &kMOZ_MOZINTLHELPER_CID, false, nullptr, MozIntlHelperConstructor },
   { nullptr }
 };
 
-static const mozilla::Module::ContractIDEntry kMozIntlContracts[] = {
-  { "@mozilla.org/mozintl;1", &kMOZ_MOZINTL_CID },
+static const mozilla::Module::ContractIDEntry kMozIntlHelperContracts[] = {
+  { "@mozilla.org/mozintlhelper;1", &kMOZ_MOZINTLHELPER_CID },
   { nullptr }
 };
 
-static const mozilla::Module kMozIntlModule = {
+static const mozilla::Module kMozIntlHelperModule = {
   mozilla::Module::kVersion,
-  kMozIntlCIDs,
-  kMozIntlContracts,
+  kMozIntlHelperCIDs,
+  kMozIntlHelperContracts,
   nullptr,
   nullptr,
   nullptr,
   nullptr
 };
 
-NSMODULE_DEFN(mozMozIntlModule) = &kMozIntlModule;
+NSMODULE_DEFN(mozMozIntlHelperModule) = &kMozIntlHelperModule;
