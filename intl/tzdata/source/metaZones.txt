@@ -212,7 +212,6 @@ metaZones:table(nofallback){
         }
         Chile{
             001{"America/Santiago"}
-            AQ{"Antarctica/Palmer"}
         }
         China{
             001{"Asia/Shanghai"}
@@ -2245,6 +2244,13 @@ metaZones:table(nofallback){
                 "Atlantic",
             }
         }
+        "America:Punta_Arenas"{
+            {
+                "Chile",
+                "1970-01-01 00:00",
+                "2016-12-03 23:00",
+            }
+        }
         "America:Rainy_River"{
             {
                 "America_Central",
@@ -2576,7 +2582,7 @@ metaZones:table(nofallback){
             {
                 "Chile",
                 "1982-05-01 03:00",
-                "9999-12-31 23:59",
+                "2016-12-03 23:00",
             }
         }
         "Antarctica:Rothera"{
@@ -3452,6 +3458,11 @@ metaZones:table(nofallback){
         "EST5EDT"{
             {
                 "America_Eastern",
+            }
+        }
+        "Etc:GMT"{
+            {
+                "GMT",
             }
         }
         "Europe:Amsterdam"{
