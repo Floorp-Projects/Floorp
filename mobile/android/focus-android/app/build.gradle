@@ -103,3 +103,85 @@ tasks.whenTaskAdded { task ->
         task.dependsOn buildBlocklists
     }
 }
+
+
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Initialize Strings
+// -------------------------------------------------------------------------------------------------
+
+task stringsSetup(type:Exec) {
+    group = 'Localization'
+    description = 'Setup L10N repository for importing and exporting strings.'
+
+    workingDir '..'
+
+    commandLine 'git', 'clone', 'https://github.com/mozilla-l10n/focus-android-l10n.git', 'l10n-repo'
+}
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Export Strings
+// -------------------------------------------------------------------------------------------------
+
+task stringsExport(type:Exec) {
+    group = 'Localization'
+    description = 'Export strings to L10N repository.'
+
+    workingDir '..'
+
+    commandLine 'a2po', 'export'
+}
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Import Strings
+// -------------------------------------------------------------------------------------------------
+
+task stringsImport {
+    group = 'Localization'
+    description = 'Import strings from L10N repository.'
+
+    doLast {
+        exec {
+            workingDir '..'
+            commandLine 'a2po', 'import'
+        }
+        exec {
+            workingDir '../tools/l10n/'
+            commandLine 'sh', 'fix_locale_folders.sh'
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Create commits
+// -------------------------------------------------------------------------------------------------
+
+task stringsCommit(type:Exec) {
+    group = 'Localization'
+    description = 'Create commits for exported strings.'
+
+    workingDir '../tools/l10n/'
+
+    commandLine 'sh', 'create_commits.sh'
+}
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Clean and update
+// -------------------------------------------------------------------------------------------------
+
+task stringsCleanUpdate()  {
+    group = 'Localization'
+    description = 'Fetch L10N changes and remove all local modifications.'
+
+    doLast {
+        exec {
+            workingDir '../l10n-repo/'
+            commandLine 'git', 'fetch', 'origin'
+
+        }
+        exec {
+            workingDir '../l10n-repo/'
+            commandLine 'git', 'reset', '--hard', 'origin/master'
+        }
+    }
+}

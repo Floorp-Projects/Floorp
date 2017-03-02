@@ -43,39 +43,49 @@ Focus for Android is getting localized on [Pontoon](https://pontoon.mozilla.org/
   easy_install android2po
   ```
 
-1. Create a local checkout of the l10n repository into a folder called l10n:
+1. Run the `stringsSetup` gradle tasks to create a local checkout of the L10N repository (in folder l10n-repo):
 
   ```shell
-  git clone https://github.com/mozilla-l10n/focus-android-l10n.git l10n
+  ./gradlew stringsSetup
   ```
+
 
 ### Export strings for translation
 
-1. Run the export command of android2po to generate a new template:
+1. Fetch the latest changes from the L10N repository and remove all local modifications with the `stringsCleanUpdate` gradle task:
 
   ```shell
-  a2po export
+  ./gradlew stringsCleanUpdate
+  ```
+
+1. Run the `stringsExport` gradle task to update the template and existing translations:
+
+  ```shell
+  ./gradlew stringsExport
   ```
   
-1. Go to the l10n folder, commit and push the updated template to the l10n repository.
+1. Create separate commits for every locale using the `stringsCommit` gradle task:
 
+  ```shell
+  ./gradlew stringsCommit
+  ```
+
+1. Go to the l10n-repo folder, verify the changes and push them to the L10N repository.
 
 ### Import translated strings
 
-1. Go to the l10n folder and pull the latest changes:
+1. Fetch the latest changes from the L10N repository and remove all local modifications with the `stringsCleanUpdate` gradle task:
 
   ```shell
-  cd l10n
-  git pull -r
+  ./gradlew stringsCleanUpdate
   ```
   
-1. Go back to the root folder and run the import command of android2po
+1. Run the `stringsImport` gradle task to generate the Android XML files.
 
   ```shell
-  cd ..
-  a2po import
+  ./gradlew stringsImport
   ```
-  
-1. Commit and push the updated XML files to the app repository.
+
+1. Verify the changes and then commit and push the updated XML files to the app repository.
   
 

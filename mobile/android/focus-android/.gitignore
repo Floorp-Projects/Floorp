@@ -40,5 +40,5 @@ captures/
 *.jks
 
 # Local checkout of localization files
-l10n/
+l10n-repo/
 
