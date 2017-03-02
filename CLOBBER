@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Touching clobber for Bug 1322703 - Use -Fd to specify unique PDB filename per-compile for MSVC
+Bug 1343432 - jemalloc update needs a clobber
