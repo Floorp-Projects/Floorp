@@ -711,7 +711,8 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     nsBlockFrame::FrameLines* overflowLines = block->GetOverflowLines();
     if (overflowLines) {
       nsBlockInFlowLineIterator it(block, overflowLines->mLines.begin(), true);
-      TraverseFrames(&it, block->PrincipalChildList().FirstChild(), &bpd);
+      bpd.mPrevFrame = nullptr;
+      TraverseFrames(&it, overflowLines->mFrames.FirstChild(), &bpd);
     }
   }
 
