@@ -7,21 +7,6 @@ var SuspendedType = {
   SUSPENDED_PAUSE_DISPOSABLE : 3
 };
 
-function* wait_for_tab_playing_event(tab, expectPlaying) {
-  if (tab.soundPlaying == expectPlaying) {
-    ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-  } else {
-    info("Playing state doens't match, wait for attributes changes.");
-    yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-      if (event.detail.changed.indexOf("soundplaying") >= 0) {
-        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-        return true;
-      }
-      return false;
-    });
-  }
-}
-
 function disable_non_test_mouse(disable) {
   let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindowUtils);
@@ -97,7 +82,7 @@ add_task(function* unblock_icon_should_disapear_after_resume_tab() {
   yield waitForTabBlockEvent(tab, false);
 
   info("- should not display sound indicator icon -");
-  yield wait_for_tab_playing_event(tab, false);
+  yield waitForTabPlayingEvent(tab, false);
 
   info("- remove tab -");
   yield BrowserTestUtils.removeTab(tab);
@@ -127,7 +112,7 @@ add_task(function* should_not_show_sound_indicator_after_resume_tab() {
   yield waitForTabBlockEvent(tab, false);
 
   info("- should not display sound indicator icon -");
-  yield wait_for_tab_playing_event(tab, false);
+  yield waitForTabPlayingEvent(tab, false);
 
   info("- remove tab -");
   yield BrowserTestUtils.removeTab(tab);

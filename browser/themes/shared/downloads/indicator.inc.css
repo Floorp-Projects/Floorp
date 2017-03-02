@@ -13,9 +13,40 @@
   bottom: 0;
   width: 100%;
   height: 0;
-  transition: height 0.5s;
+  /* From javascript side we use animation delay from 0s to -100s to show
+   * corresponding frames needed for progress.
+   * animation-delay is set to a positive value to make nothing shown.
+   */
+  animation-play-state: paused;
+  animation-delay: 1s;
+  animation-duration: 100s;
+  animation-timing-function: linear;
+  animation-name: indicatorArrowProgress;
 }
 
 toolbar[brighttext] #downloads-indicator-progress-icon {
   background-image: var(--downloads-indicator-image-attention-inverted);
+  animation-name: indicatorArrowProgressDark;
+}
+
+@keyframes indicatorArrowProgress {
+  0% {
+    height: 35%;
+    filter: brightness(1.2);
+  }
+  100% {
+    height: 87%;
+    filter: brightness(1);
+  }
+}
+
+@keyframes indicatorArrowProgressDark {
+  0% {
+    height: 35%;
+    filter: brightness(0.7);
+  }
+  100% {
+    height: 87%;
+    filter: brightness(1);
+  }
 }

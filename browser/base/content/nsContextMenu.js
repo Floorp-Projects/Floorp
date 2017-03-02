@@ -951,11 +951,17 @@ nsContextMenu.prototype = {
                    originPrincipal: this.principal,
                    referrerURI: gContextMenuContentData.documentURIObject,
                    referrerPolicy: gContextMenuContentData.referrerPolicy,
+                   frameOuterWindowID: gContextMenuContentData.frameOuterWindowID,
                    noReferrer: this.linkHasNoReferrer };
     for (let p in extra) {
       params[p] = extra[p];
     }
 
+    if (!this.isRemote) {
+      params.frameOuterWindowID = this.target.ownerGlobal
+                                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+    }
     // If we want to change userContextId, we must be sure that we don't
     // propagate the referrer.
     if ("userContextId" in params &&

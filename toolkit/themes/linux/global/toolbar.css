@@ -47,7 +47,6 @@ toolbaritem > menubar {
 toolbarseparator {
   -moz-appearance: separator;
   margin : 0;
-  border: 0;
   min-width: 2px;
 }
 

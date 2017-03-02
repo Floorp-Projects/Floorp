@@ -384,8 +384,7 @@ function run_test_5() {
         "onEnabling"
       ],
       "theme2@tests.mozilla.org": [
-        ["onDisabling", false],
-        "onDisabled"
+        "onDisabling"
       ]
     });
 
@@ -395,11 +394,10 @@ function run_test_5() {
 
     prepare_test({
       "2@personas.mozilla.org": [
-        ["onOperationCancelled", true]
+        "onOperationCancelled"
       ],
       "theme2@tests.mozilla.org": [
-        ["onEnabling", false],
-        "onEnabled"
+        "onOperationCancelled"
       ]
     });
 
@@ -446,8 +444,7 @@ function run_test_6() {
       "onEnabling",
     ],
     "theme2@tests.mozilla.org": [
-      ["onDisabling", false],
-      "onDisabled"
+      "onDisabling"
     ]
   });
 
@@ -462,8 +459,7 @@ function run_test_6() {
         "onOperationCancelled",
       ],
       "theme2@tests.mozilla.org": [
-        ["onEnabling", false],
-        "onEnabled"
+        "onOperationCancelled"
       ]
     });
 
@@ -476,8 +472,7 @@ function run_test_6() {
         "onEnabling",
       ],
       "theme2@tests.mozilla.org": [
-        ["onDisabling", false],
-        "onDisabled"
+        "onDisabling"
       ]
     });
 
@@ -488,9 +483,9 @@ function run_test_6() {
     do_check_false(p2.isActive);
     do_check_false(p2.userDisabled);
     do_check_true(hasFlag(AddonManager.PENDING_ENABLE, p2.pendingOperations));
-    do_check_false(t2.isActive);
+    do_check_true(t2.isActive);
     do_check_true(t2.userDisabled);
-    do_check_false(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
+    do_check_true(hasFlag(AddonManager.PENDING_DISABLE, t2.pendingOperations));
     do_check_false(gLWThemeChanged);
 
     do_execute_soon(check_test_6);

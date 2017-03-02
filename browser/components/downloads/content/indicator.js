@@ -430,14 +430,6 @@ const DownloadsIndicatorView = {
    *   progress is not visible if the current progress is unknown.
    */
   set percentComplete(aValue) {
-    // For arrow type only:
-    // We show portion of the success icon in propotional with the download
-    // progress as an indicator. the PROGRESS_ICON_EMPTY_HEIGHT_PERCENT and
-    // PROGRESS_ICON_FULL_HEIGHT_PERCENT correspond to how much portion of the
-    // icon should be displayed in 0% and 100%.
-    const PROGRESS_ICON_EMPTY_HEIGHT_PERCENT = 35;
-    const PROGRESS_ICON_FULL_HEIGHT_PERCENT = 87;
-
     if (!this._operational) {
       return this._percentComplete;
     }
@@ -448,13 +440,13 @@ const DownloadsIndicatorView = {
 
       if (this._percentComplete >= 0) {
         this.indicator.setAttribute("progress", "true");
-        this._progressIcon.style.height = (this._percentComplete *
-          (PROGRESS_ICON_FULL_HEIGHT_PERCENT -
-           PROGRESS_ICON_EMPTY_HEIGHT_PERCENT) / 100 +
-           PROGRESS_ICON_EMPTY_HEIGHT_PERCENT) + "%";
+        // For arrow type only:
+        // We set animationDelay to a minus value (0s ~ -100s) to show the
+        // corresponding frame needed for progress.
+        this._progressIcon.style.animationDelay = (-this._percentComplete) + "s";
       } else {
         this.indicator.removeAttribute("progress");
-        this._progressIcon.style.height = "0";
+        this._progressIcon.style.animationDelay = "1s";
       }
       // We have to set the attribute instead of using the property because the
       // XBL binding isn't applied if the element is invisible for any reason.

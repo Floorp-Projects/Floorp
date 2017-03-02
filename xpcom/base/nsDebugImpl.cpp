@@ -265,7 +265,7 @@ GetAssertBehavior()
   return gAssertBehavior;
 }
 
-struct FixedBuffer : public mozilla::PrintfTarget
+struct FixedBuffer final : public mozilla::PrintfTarget
 {
   FixedBuffer() : curlen(0)
   {
@@ -283,11 +283,6 @@ FixedBuffer::append(const char* aBuf, size_t aLen)
 {
   if (!aLen) {
     return true;
-  }
-
-  // strip the trailing null, we add it again later
-  if (aBuf[aLen - 1] == '\0') {
-    --aLen;
   }
 
   if (curlen + aLen >= sizeof(buffer)) {
