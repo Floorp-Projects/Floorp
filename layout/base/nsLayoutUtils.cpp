@@ -3972,11 +3972,11 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
   }
 };
 
-struct BoxToRectAndText : public BoxToRect {
-  mozilla::dom::DOMStringList* mTextList;
+struct MOZ_RAII BoxToRectAndText : public BoxToRect {
+  Sequence<nsString>* mTextList;
 
   BoxToRectAndText(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
-                   mozilla::dom::DOMStringList* aTextList, uint32_t aFlags)
+                   Sequence<nsString>* aTextList, uint32_t aFlags)
     : BoxToRect(aRelativeTo, aCallback, aFlags), mTextList(aTextList) {}
 
   static void AccumulateText(nsIFrame* aFrame, nsAString& aResult) {
@@ -4009,9 +4009,10 @@ struct BoxToRectAndText : public BoxToRect {
   virtual void AddBox(nsIFrame* aFrame) override {
     BoxToRect::AddBox(aFrame);
     if (mTextList) {
-      nsAutoString textForFrame;
-      AccumulateText(aFrame, textForFrame);
-      mTextList->Add(textForFrame);
+      nsString* textForFrame = mTextList->AppendElement(fallible);
+      if (textForFrame) {
+        AccumulateText(aFrame, *textForFrame);
+      }
     }
   }
 };
@@ -4027,7 +4028,7 @@ nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
 void
 nsLayoutUtils::GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                          RectCallback* aCallback,
-                                         mozilla::dom::DOMStringList* aTextList,
+                                         Sequence<nsString>* aTextList,
                                          uint32_t aFlags)
 {
   BoxToRectAndText converter(aRelativeTo, aCallback, aTextList, aFlags);
