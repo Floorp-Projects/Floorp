@@ -4216,9 +4216,10 @@ var SessionStoreInternal = {
   _shouldSaveTab: function ssi_shouldSaveTab(aTabState) {
     // If the tab has one of the following transient about: history entry,
     // then we don't actually want to write this tab's data to disk.
-    return aTabState.entries.length &&
-           !(aTabState.entries[0].url == "about:printpreview" ||
-             aTabState.entries[0].url == "about:privatebrowsing");
+    return aTabState.userTypedValue ||
+           (aTabState.entries.length &&
+            !(aTabState.entries[0].url == "about:printpreview" ||
+              aTabState.entries[0].url == "about:privatebrowsing"));
   },
 
   /**
