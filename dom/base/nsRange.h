@@ -272,7 +272,7 @@ public:
    * @param aTextList optional where nullptr = don't retrieve text
    */
   static void CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
-                                        mozilla::dom::DOMStringList* aTextList,
+                                        mozilla::dom::Sequence<nsString>* aTextList,
                                         nsRange* aRange,
                                         nsINode* aStartParent, int32_t aStartOffset,
                                         nsINode* aEndParent, int32_t aEndOffset,
