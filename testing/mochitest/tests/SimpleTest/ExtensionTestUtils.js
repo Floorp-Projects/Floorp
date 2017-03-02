@@ -1,7 +1,5 @@
 var ExtensionTestUtils = {};
 
-const {ExtensionTestCommon} = SpecialPowers.Cu.import("resource://testing-common/ExtensionTestCommon.jsm", {});
-
 ExtensionTestUtils.loadExtension = function(ext)
 {
   // Cleanup functions need to be registered differently depending on
@@ -92,11 +90,14 @@ ExtensionTestUtils.loadExtension = function(ext)
   if (ext.files) {
     ext.files = Object.assign({}, ext.files);
     for (let filename of Object.keys(ext.files)) {
-      ext.files[filename] = ExtensionTestCommon.serializeScript(ext.files[filename]);
+      let file = ext.files[filename];
+      if (typeof file == "function") {
+        ext.files[filename] = `(${file})();`
+      }
     }
   }
-  if ("background" in ext) {
-    ext.background = ExtensionTestCommon.serializeScript(ext.background);
+  if (typeof ext.background == "function") {
+    ext.background = `(${ext.background})();`
   }
 
   var extension = SpecialPowers.loadExtension(ext, handler);
