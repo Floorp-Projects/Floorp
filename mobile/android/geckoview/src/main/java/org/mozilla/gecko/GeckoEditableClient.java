@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
+
 import android.os.Handler;
 import android.text.Editable;
 import android.view.KeyEvent;
@@ -23,10 +25,13 @@ interface GeckoEditableClient {
     // The following value is used by requestCursorUpdates
 
     // ONE_SHOT calls updateCompositionRects() after getting current composing character rects.
+    @WrapForJNI
     public static final int ONE_SHOT = 1;
     // START_MONITOR start the monitor for composing character rects.  If is is updaed,  call updateCompositionRects()
+    @WrapForJNI
     public static final int START_MONITOR = 2;
     // ENDT_MONITOR stops the monitor for composing character rects.
+    @WrapForJNI
     public static final int END_MONITOR = 3;
 
     void requestCursorUpdates(int requestMode);
