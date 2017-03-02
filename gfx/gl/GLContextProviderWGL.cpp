@@ -220,16 +220,14 @@ WGLLibrary::EnsureInitialized()
 
         ////
 
-        mHasDXInterop = HasExtension(extString, "WGL_NV_DX_interop");
-        mHasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
-
+        bool hasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
         if (gfxVars::DXInterop2Blocked() &&
             !gfxPrefs::IgnoreDXInterop2Blacklist())
         {
-            mHasDXInterop2 = false;
+            hasDXInterop2 = false;
         }
 
-        if (mHasDXInterop || mHasDXInterop2) {
+        if (hasDXInterop2) {
             if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &dxInteropSymbols[0],
                                               lookupFunc))
             {
@@ -242,9 +240,6 @@ WGLLibrary::EnsureInitialized()
                 fDXObjectAccess = nullptr;
                 fDXLockObjects = nullptr;
                 fDXUnlockObjects = nullptr;
-
-                mHasDXInterop = false;
-                mHasDXInterop2 = false;
             }
         }
     }
