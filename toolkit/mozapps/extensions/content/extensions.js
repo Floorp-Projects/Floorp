@@ -1422,7 +1422,7 @@ var gViewController = {
           while (files.hasMoreElements()) {
             let file = files.getNext();
             AddonManager.getInstallForFile(file, install => {
-              AddonManager.installAddonFromAOM(browser, document.documentURI, install);
+              AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
             });
           }
         });
@@ -3985,7 +3985,7 @@ var gDragDrop = {
 
       if (url) {
         AddonManager.getInstallForURL(url, install => {
-          AddonManager.installAddonFromAOM(browser, document.documentURI, install);
+          AddonManager.installAddonFromAOM(browser, document.documentURIObject, install);
         }, "application/x-xpinstall");
       }
     }
