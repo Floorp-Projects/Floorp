@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This test makes sure that the Clear Recent History menu item and command 
+// This test makes sure that the Clear Recent History menu item and command
 // is disabled inside the private browsing mode.
 
 add_task(function* test() {
@@ -14,7 +14,7 @@ add_task(function* test() {
       "PrivateBrowsingUtils should report the correct per-window private browsing status");
     is(crhCommand.hasAttribute("disabled"), aPrivateMode,
       "Clear Recent History command should be disabled according to the private browsing mode");
-  };
+  }
 
   let testURI = "http://mochi.test:8888/";
 

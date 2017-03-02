@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for animate with xlink:href attribute.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    div#target {
+      width: 300px;
+      height: 100px;
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+<p id="display"></p>
+<div id="target"></div>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     id="svg">
+  <animate xlink:href="#target"
+           attributeName="width" from="0" to="200" dur="10s" fill="freeze"/>
+</svg>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var svg = document.getElementById("svg");
+  var target = document.getElementById("target");
+
+  svg.pauseAnimations();
+  svg.setCurrentTime(5);
+
+  var cs = getComputedStyle(target);
+  is(cs.width, "100px", "SMIL should affect outer element.");
+
+  SimpleTest.finish();
+  return;
+}
+
+window.addEventListener("load", runTest);
+
+]]>
+</script>
+</pre>
+</body>
+</html>

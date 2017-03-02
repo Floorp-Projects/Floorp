@@ -78,10 +78,10 @@ struct DeltaSetIndexMap
   { return (format & 0xF) + 1; }
 
   protected:
-  USHORT format;		/* A packed field that describes the compressed
+  USHORT	format;		/* A packed field that describes the compressed
 				 * representation of delta-set indices. */
-  USHORT mapCount;		/* The number of mapping entries. */
-  BYTE mapData[VAR];		/* The delta-set index mapping data. */
+  USHORT	mapCount;	/* The number of mapping entries. */
+  BYTE		mapData[VAR];	/* The delta-set index mapping data. */
 
   public:
   DEFINE_SIZE_ARRAY (4, mapData);

@@ -361,14 +361,20 @@ public:
 
     char* buffToWrite = buff;
 
-    // For backwards compat we need to use the NSPR format string versions
-    // of sprintf and friends and then hand off to printf.
     va_list argsCopy;
     va_copy(argsCopy, aArgs);
-    size_t charsWritten = VsprintfLiteral(buff, aFmt, argsCopy);
+    int charsWritten = VsprintfLiteral(buff, aFmt, argsCopy);
     va_end(argsCopy);
 
-    if (charsWritten == kBuffSize - 1) {
+    if (charsWritten < 0) {
+      // Print out at least something.  We must copy to the local buff,
+      // can't just assign aFmt to buffToWrite, since when
+      // buffToWrite != buff, we try to release it.
+      MOZ_ASSERT(false, "Probably incorrect format string in LOG?");
+      strncpy(buff, aFmt, kBuffSize - 1);
+      buff[kBuffSize - 1] = '\0';
+      charsWritten = strlen(buff);
+    } else if (static_cast<size_t>(charsWritten) >= kBuffSize - 1) {
       // We may have maxed out, allocate a buffer instead.
       buffToWrite = mozilla::Vsmprintf(aFmt, aArgs);
       charsWritten = strlen(buffToWrite);

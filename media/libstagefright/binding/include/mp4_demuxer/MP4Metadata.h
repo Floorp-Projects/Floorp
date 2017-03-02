@@ -36,7 +36,6 @@ public:
 
 private:
   UniquePtr<MP4MetadataStagefright> mStagefright;
-#ifdef MOZ_RUST_MP4PARSE
   UniquePtr<MP4MetadataRust> mRust;
   mutable bool mPreferRust;
   mutable bool mReportedAudioTrackTelemetry;
@@ -45,7 +44,6 @@ private:
   mutable bool mRustTestMode;
 #endif
   bool ShouldPreferRust() const;
-#endif
 };
 
 } // namespace mp4_demuxer

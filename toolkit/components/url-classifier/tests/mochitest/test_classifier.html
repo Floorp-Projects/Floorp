@@ -143,7 +143,22 @@ function testService() {
       let result = service.classify(prin, test.trackingProtection, function(errorCode) {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
-        runNextTest();
+
+        try {
+          // Same as classifyLocal except for the 'async' call.
+          service.asyncClassifyLocalWithTables(uri, tables, function(errorCode, tables) {
+            is(tables, test.table,
+               `Successful asynchronous local classification of ${test.url} with TP=${test.trackingProtection}`);
+            runNextTest();
+          });
+        } catch (e) {
+          // TODO: asyncClassifyLocalWithTables e10s support. See Bug 1343425.
+          let processType = Cc["@mozilla.org/xre/app-info;1"]
+                              .getService(Ci.nsIXULRuntime).processType;
+          isnot(processType, Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT,
+                "Local asynchronous classification is not supported in content process");
+          runNextTest();
+        }
       });
     }
     runNextTest(resolve);

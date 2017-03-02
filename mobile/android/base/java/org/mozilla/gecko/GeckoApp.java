@@ -163,6 +163,10 @@ public abstract class GeckoApp
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
     public static final String PREFS_CLEANUP_TEMP_FILES    = "cleanupTempFiles";
 
+    // Originally, this was only used for the telemetry core ping logic. To avoid
+    // having to write custom migration logic, we just keep the original pref key.
+    public static final String PREFS_IS_FIRST_RUN = "telemetry-isFirstRun";
+
     public static final String SAVED_STATE_IN_BACKGROUND   = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
 
@@ -375,6 +379,10 @@ public abstract class GeckoApp
         return GeckoSharedPrefs.forApp(this);
     }
 
+    public SharedPreferences getSharedPreferencesForProfile() {
+        return GeckoSharedPrefs.forProfile(this);
+    }
+
     @Override
     public Activity getActivity() {
         return this;
@@ -563,7 +571,7 @@ public abstract class GeckoApp
             // Make sure the Guest Browsing notification goes away when we quit.
             GuestSession.hideNotification(this);
 
-            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
+            final SharedPreferences prefs = getSharedPreferencesForProfile();
             final Set<String> clearSet =
                     PrefUtils.getStringSet(prefs, ClearOnShutdownPref.PREF, new HashSet<String>());
 
@@ -1377,6 +1385,14 @@ public abstract class GeckoApp
                                     // Restoring the backup failed, too, so do a normal startup.
                                     Log.e(LOGTAG, "An error occurred during restore", ex);
                                     mShouldRestore = false;
+
+                                    if (!getSharedPreferencesForProfile().
+                                            getBoolean(PREFS_IS_FIRST_RUN, true)) {
+                                        // Except when starting with a fresh profile, we should normally
+                                        // always have a session file available, even if it might only
+                                        // contain an empty window.
+                                        Telemetry.addToHistogram("FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED", 1);
+                                    }
                                 }
                             }
                         }
@@ -1458,7 +1474,7 @@ public abstract class GeckoApp
 
                 // We use per-profile prefs here, because we're tracking against
                 // a Gecko pref. The same applies to the locale switcher!
-                BrowserLocaleManager.storeAndNotifyOSLocale(GeckoSharedPrefs.forProfile(GeckoApp.this), osLocale);
+                BrowserLocaleManager.storeAndNotifyOSLocale(getSharedPreferencesForProfile(), osLocale);
             }
         });
 
@@ -1482,6 +1498,18 @@ public abstract class GeckoApp
         // forget to add the abort if we override this method later.
         if (mIsAbortingAppLaunch) {
             return;
+        }
+    }
+
+
+    /**
+     * Derived classes may call this if they require something to be done *after* they've
+     * done their onStop() handling.
+     */
+    protected void onAfterStop() {
+        final SharedPreferences sharedPrefs = getSharedPreferencesForProfile();
+        if (sharedPrefs.getBoolean(PREFS_IS_FIRST_RUN, true)) {
+            sharedPrefs.edit().putBoolean(PREFS_IS_FIRST_RUN, false).apply();
         }
     }
 

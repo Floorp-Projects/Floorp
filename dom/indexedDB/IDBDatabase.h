@@ -19,6 +19,7 @@
 #include "nsTHashtable.h"
 
 class nsIDocument;
+class nsIEventTarget;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
@@ -106,6 +107,9 @@ public:
   AssertIsOnOwningThread() const
   { }
 #endif
+
+  nsIEventTarget*
+  EventTarget() const;
 
   const nsString&
   Name() const;

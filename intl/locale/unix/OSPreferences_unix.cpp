@@ -21,3 +21,11 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   }
   return false;
 }
+
+bool
+OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
+                                   DateTimeFormatStyle aTimeStyle,
+                                   const nsACString& aLocale, nsAString& aRetVal)
+{
+  return false;
+}

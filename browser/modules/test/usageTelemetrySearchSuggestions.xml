@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>browser_UsageTelemetry usageTelemetrySearchSuggestions.xml</ShortName>
-<Url type="application/x-suggestions+json" method="GET" template="http://mochi.test:8888/browser/browser/modules/test/usageTelemetrySearchSuggestions.sjs?{searchTerms}"/>
-<Url type="text/html" method="GET" template="http://example.com" rel="searchform"/>
-</SearchPlugin>

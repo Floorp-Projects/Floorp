@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
+class nsIEventTarget;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 struct PRThread;
@@ -73,6 +74,11 @@ class IDBFactory final
 
   indexedDB::BackgroundFactoryChild* mBackgroundActor;
 
+  // A DocGroup-specific EventTarget if created by CreateForWindow().
+  // Otherwise, it must either be set to SystemGroup on main thread or
+  // NS_GetCurrentThread() off main thread.
+  nsCOMPtr<nsIEventTarget> mEventTarget;
+
 #ifdef DEBUG
   PRThread* mOwningThread;
 #endif
@@ -117,6 +123,14 @@ public:
   AssertIsOnOwningThread() const
   { }
 #endif
+
+  nsIEventTarget*
+  EventTarget() const
+  {
+    AssertIsOnOwningThread();
+    MOZ_RELEASE_ASSERT(mEventTarget);
+    return mEventTarget;
+  }
 
   void
   ClearBackgroundActor()

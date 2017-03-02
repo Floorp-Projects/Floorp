@@ -19,6 +19,7 @@
 #ifndef asmjs_wasm_baseline_compile_h
 #define asmjs_wasm_baseline_compile_h
 
+#include "wasm/WasmGenerator.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {
@@ -35,6 +36,41 @@ BaselineCanCompile();
 // Generate adequate code quickly.
 bool
 BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* error);
+
+class BaseLocalIter
+{
+  private:
+    using ConstValTypeRange = mozilla::Range<const ValType>;
+
+    const ValTypeVector&               locals_;
+    size_t                             argsLength_;
+    ConstValTypeRange                  argsRange_; // range struct cache for ABIArgIter
+    jit::ABIArgIter<ConstValTypeRange> argsIter_;
+    size_t                             index_;
+    int32_t                            localSize_;
+    int32_t                            reservedSize_;
+    int32_t                            frameOffset_;
+    jit::MIRType                       mirType_;
+    bool                               done_;
+
+    void settle();
+    int32_t pushLocal(size_t nbytes);
+
+  public:
+    BaseLocalIter(const ValTypeVector& locals, size_t argsLength, bool debugEnabled);
+    void operator++(int);
+    bool done() const { return done_; }
+
+    jit::MIRType mirType() const { MOZ_ASSERT(!done_); return mirType_; }
+    int32_t frameOffset() const { MOZ_ASSERT(!done_); return frameOffset_; }
+    size_t index() const { MOZ_ASSERT(!done_); return index_; }
+    int32_t currentLocalSize() const { return localSize_; }
+    int32_t reservedSize() const { return reservedSize_; }
+
+#ifdef DEBUG
+    bool isArg() const { MOZ_ASSERT(!done_); return !argsIter_.done(); }
+#endif
+};
 
 } // namespace wasm
 } // namespace js

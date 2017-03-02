@@ -318,6 +318,10 @@ jsreftest:
                             - remove_executables.py
                 extra-options:
                     - --reftest-suite=jsreftest
+    when:
+        files-changed:
+            - js/src/**
+            - js/public/**
 
 marionette:
     description: "Marionette unittest run"
@@ -994,8 +998,8 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central' ]
-            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central' ]
+            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ]
+            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
     e10s:
         by-test-platform:
             linux64-stylo/opt:

@@ -936,7 +936,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   }
 
   // use a weak frame as the popup will set an open attribute if it is a menu
-  nsWeakFrame weakFrame(aPopupFrame);
+  AutoWeakFrame weakFrame(aPopupFrame);
   aPopupFrame->ShowPopup(aIsContextMenu);
   ENSURE_TRUE(weakFrame.IsAlive());
 
@@ -1187,7 +1187,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
   delete item;
 
-  nsWeakFrame weakFrame(aPopupFrame);
+  AutoWeakFrame weakFrame(aPopupFrame);
   aPopupFrame->HidePopup(aDeselectMenu, ePopupClosed);
   ENSURE_TRUE(weakFrame.IsAlive());
 
@@ -1263,12 +1263,11 @@ void
 nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames)
 {
   // Create a weak frame list. This is done in a separate array with the
-  // right capacity predetermined, otherwise the array would get resized and
-  // move the weak frame pointers around.
-  nsTArray<nsWeakFrame> weakPopups(aFrames.Length());
+  // right capacity predetermined to avoid multiple allocations.
+  nsTArray<WeakFrame> weakPopups(aFrames.Length());
   uint32_t f;
   for (f = 0; f < aFrames.Length(); f++) {
-    nsWeakFrame* wframe = weakPopups.AppendElement();
+    WeakFrame* wframe = weakPopups.AppendElement();
     if (wframe)
       *wframe = aFrames[f];
   }
@@ -2902,7 +2901,7 @@ nsXULMenuCommandEvent::Run()
 
   nsCOMPtr<nsIContent> popup;
   nsMenuFrame* menuFrame = do_QueryFrame(mMenu->GetPrimaryFrame());
-  nsWeakFrame weakFrame(menuFrame);
+  AutoWeakFrame weakFrame(menuFrame);
   if (menuFrame && mFlipChecked) {
     if (menuFrame->IsChecked()) {
       mMenu->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);

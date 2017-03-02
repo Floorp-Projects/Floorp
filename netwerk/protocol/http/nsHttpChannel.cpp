@@ -3043,7 +3043,7 @@ nsHttpChannel::IsResumable(int64_t partialLen, int64_t contentLength,
     bool hasContentEncoding =
         mCachedResponseHead->HasHeader(nsHttp::Content_Encoding);
 
-    nsAutoCString etag; 
+    nsAutoCString etag;
     mCachedResponseHead->GetHeader(nsHttp::ETag, etag);
     bool hasWeakEtag = !etag.IsEmpty() &&
                        StringBeginsWith(etag, NS_LITERAL_CSTRING("W/"));
@@ -3708,9 +3708,11 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         if (!mCacheOpenDelay) {
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         } else {
-            mCacheOpenRunnable = NS_NewRunnableFunction([openURI, extension, cacheEntryOpenFlags, cacheStorage, this] () -> void {
-                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
-            });
+            // We pass `this` explicitly as a parameter due to the raw pointer
+            // to refcounted object in lambda analysis.
+            mCacheOpenFunc = [openURI, extension, cacheEntryOpenFlags, cacheStorage] (nsHttpChannel* self) -> void {
+                cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, self);
+            };
 
             mCacheOpenTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
             // calls nsHttpChannel::Notify after `mCacheOpenDelay` milliseconds
@@ -6117,6 +6119,11 @@ nsHttpChannel::BeginConnect()
             // both phishing and malware, it is not necessary for correctness,
             // since no network events will be received while the
             // nsChannelClassifier is in progress. See bug 1122691.
+
+            // We cannot check the entity whitelist here (IsTrackerWhitelisted())
+            // because that method is asynchronous and we need to run
+            // synchronously here.
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1100024#c2.
             nsCOMPtr<nsIURI> uri;
             rv = GetURI(getter_AddRefs(uri));
             if (NS_SUCCEEDED(rv) && uri) {
@@ -8669,7 +8676,7 @@ nsHttpChannel::Test_triggerDelayedOpenCacheEntry()
         // No delay was set.
         return NS_ERROR_NOT_AVAILABLE;
     }
-    if (!mCacheOpenRunnable) {
+    if (!mCacheOpenFunc) {
         // There should be a runnable.
         return NS_ERROR_FAILURE;
     }
@@ -8680,10 +8687,11 @@ nsHttpChannel::Test_triggerDelayedOpenCacheEntry()
         }
         mCacheOpenTimer = nullptr;
     }
-    nsCOMPtr<nsIRunnable> runnable;
-    mCacheOpenRunnable.swap(runnable);
     mCacheOpenDelay = 0;
-    runnable->Run();
+    // Avoid re-entrancy issues by nulling our mCacheOpenFunc before calling it.
+    std::function<void(nsHttpChannel*)> cacheOpenFunc = nullptr;
+    std::swap(cacheOpenFunc, mCacheOpenFunc);
+    cacheOpenFunc(this);
 
     return NS_OK;
 }

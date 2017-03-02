@@ -5,7 +5,9 @@
 
 const {DOM, createClass, createFactory, PropTypes} = require("devtools/client/shared/vendor/react");
 const {div, button} = DOM;
+
 const ToolboxTab = createFactory(require("devtools/client/framework/components/toolbox-tab"));
+const ToolboxTabs = createFactory(require("devtools/client/framework/components/toolbox-tabs"));
 
 /**
  * This is the overall component for the toolbox toolbar. It is designed to not know how
@@ -39,6 +41,8 @@ module.exports = createClass({
     canRender: PropTypes.bool,
     // Localization interface.
     L10N: PropTypes.object,
+    // The devtools toolbox
+    toolbox: PropTypes.object,
   },
 
   /**
@@ -52,7 +56,7 @@ module.exports = createClass({
         div(
           containerProps,
           renderToolboxButtonsStart(this.props),
-          renderTabs(this.props),
+          ToolboxTabs(this.props),
           renderToolboxButtonsEnd(this.props),
           renderOptions(this.props),
           renderSeparator(),
@@ -62,34 +66,6 @@ module.exports = createClass({
       : div(containerProps);
   }
 });
-
-/**
- * Render all of the tabs, this takes in the panel definitions and builds out
- * the buttons for each of them.
- *
- * @param {Array}    panelDefinitions - Array of objects that define panels.
- * @param {String}   currentToolId - The currently selected tool's id; e.g. "inspector".
- * @param {String}   highlightedTool - If a tool is highlighted, this is it's id.
- * @param {Function} selectTool - Function to select a tool in the toolbox.
- * @param {String}   focusedButton - The id of the focused button.
- * @param {Function} focusButton - Keep a record of the currently focused button.
- */
-function renderTabs({panelDefinitions, currentToolId, highlightedTool, selectTool,
-                     focusedButton, focusButton}) {
-  // A wrapper is needed to get flex sizing correct in XUL.
-  return div({className: "toolbox-tabs-wrapper"},
-    div({className: "toolbox-tabs"},
-      ...panelDefinitions.map(panelDefinition => ToolboxTab({
-        panelDefinition,
-        currentToolId,
-        highlightedTool,
-        selectTool,
-        focusedButton,
-        focusButton,
-      }))
-    )
-  );
-}
 
 /**
  * A little helper function to call renderToolboxButtons for buttons at the start
@@ -150,7 +126,7 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
 }
 
 /**
- * The options button is a ToolboxTab just like in the renderTabs() function. However
+ * The options button is a ToolboxTab just like in the ToolboxTabs component. However
  * it is separate from the normal tabs, so deal with it separately here.
  *
  * @param {Object}   optionsPanel - A single panel definition for the options panel.

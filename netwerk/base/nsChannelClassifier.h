@@ -33,6 +33,13 @@ public:
     // Whether or not tracking protection should be enabled on this channel.
     nsresult ShouldEnableTrackingProtection(bool *result);
 
+    // Called once we actually classified an URI. (An additional whitelist
+    // check will be done if the classifier reports the URI is a tracker.)
+    nsresult OnClassifyCompleteInternal(nsresult aErrorCode,
+                                        const nsACString& aList,
+                                        const nsACString& aProvider,
+                                        const nsACString& aPrefix);
+
 private:
     // True if the channel is on the allow list.
     bool mIsAllowListed;
@@ -50,7 +57,9 @@ private:
     // from the classifier service.
     nsresult StartInternal();
     // Helper function to check a tracking URI against the whitelist
-    nsresult IsTrackerWhitelisted();
+    nsresult IsTrackerWhitelisted(const nsACString& aList,
+                                  const nsACString& aProvider,
+                                  const nsACString& aPrefix);
     // Helper function to check a URI against the hostname whitelist
     bool IsHostnameWhitelisted(nsIURI *aUri, const nsACString &aWhitelisted);
     // Checks that the channel was loaded by the URI currently loaded in aDoc

@@ -8,5 +8,6 @@
 DevToolsModules(
   'toolbox-controller.js',
   'toolbox-tab.js',
+  'toolbox-tabs.js',
   'toolbox-toolbar.js',
 )

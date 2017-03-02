@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# moved from embedding/components/webbrowserpersist Jan 13, 2017
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
 XPIDL_SOURCES += [
     'nsCWebBrowserPersist.idl',
     'nsIWebBrowserPersist.idl',

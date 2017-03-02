@@ -78,6 +78,17 @@ interface nsIURIClassifier : nsISupports
    */
   [noscript] StringArrayRef classifyLocalWithTables(in nsIURI aURI, in ACString aTables);
   /**
+   * Asynchronously classify a URI with a comma-separated string
+   * containing the given tables. This does not make network requests.
+   * The callback does NOT totally follow nsIURIClassifierCallback's
+   * semantics described above. Only |aList| will be meaningful, which
+   * is a comma separated list of table names. (same as what classifyLocal
+   * returns.)
+   */
+  void asyncClassifyLocalWithTables(in nsIURI aURI,
+                                    in ACString aTables,
+                                    in nsIURIClassifierCallback aCallback);
+  /**
    * Same as above, but returns a comma separated list of table names.
    * This is an internal interface used only for testing purposes.
    */

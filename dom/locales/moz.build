@@ -4,4 +4,58 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("en-US/chrome/accessibility/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("en-US/chrome/dom/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("en-US/chrome/layout/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("en-US/chrome/layout/css.properties"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
+
+with Files("en-US/chrome/layout/htmlparser.properties"):
+    BUG_COMPONENT = ("Core", "HTML: Parser")
+
+with Files("en-US/chrome/layout/layout_errors.properties"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
+with Files("en-US/chrome/layout/MediaDocument.properties"):
+    BUG_COMPONENT = ("Core", "Layout: Images")
+
+with Files("en-US/chrome/layout/printing.properties"):
+    BUG_COMPONENT = ("Core", "Printing: Output")
+
+with Files("en-US/chrome/layout/xbl.properties"):
+    BUG_COMPONENT = ("Core", "XBL")
+
+with Files("en-US/chrome/layout/xmlparser.properties"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("en-US/chrome/layout/xul.properties"):
+    BUG_COMPONENT = ("Core", "XUL")
+
+with Files("en-US/chrome/mathml/**"):
+    BUG_COMPONENT = ("Core", "MathML")
+
+with Files("en-US/chrome/security/**"):
+    BUG_COMPONENT = ("Core", "Security")
+
+with Files("en-US/chrome/svg/**"):
+    BUG_COMPONENT = ("Core", "SVG")
+
+with Files("en-US/chrome/xml/**"):
+    BUG_COMPONENT = ("Core", "XML")
+
+with Files("en-US/chrome/xslt/**"):
+    BUG_COMPONENT = ("Core", "XSLT")
+
+with Files("en-US/chrome/plugins.properties"):
+    BUG_COMPONENT = ("Core", "Plug-ins")
+
 JAR_MANIFESTS += ['jar.mn']

@@ -316,6 +316,19 @@ protected:
   uint32_t TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
 
   /**
+   * TranslateToChar() checks if aKeyCode with aModifiers is a dead key.
+   *
+   * @param aKeyCode              A native keyCode.
+   * @param aModifiers            Combination of native modifier flags.
+   * @param aKbType               A native Keyboard Type value.  Typically,
+   *                              this is a result of ::LMGetKbdType().
+   * @return                      Returns true if the key with specified
+   *                              modifier state isa dead key.  Otherwise,
+   *                              false.
+   */
+  bool IsDeadKey(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType);
+
+  /**
    * ComputeInsertString() computes string to be inserted with the key event.
    *
    * @param aNativeKeyEvent     The native key event which causes our keyboard

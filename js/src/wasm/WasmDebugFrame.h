@@ -91,6 +91,8 @@ class DebugFrame
 
     inline void* resultsPtr() { return &resultI32_; }
 
+    bool getLocal(uint32_t localIndex, MutableHandleValue vp);
+
     static constexpr size_t offsetOfResults() { return offsetof(DebugFrame, resultI32_); }
     static constexpr size_t offsetOfFlagsWord() { return offsetof(DebugFrame, reserved1_); }
     static constexpr size_t offsetOfFuncIndex() { return offsetof(DebugFrame, funcIndex_); }

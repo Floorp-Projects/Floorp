@@ -218,6 +218,7 @@ def find_and_update_from_json(*dirs):
     # First, see if we're in an objdir
     try:
         from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
+        from mozbuild.mozconfig import MozconfigFindException
         build = MozbuildObject.from_environment()
         json_path = _os.path.join(build.topobjdir, "mozinfo.json")
         if _os.path.isfile(json_path):
@@ -225,7 +226,7 @@ def find_and_update_from_json(*dirs):
             return json_path
     except ImportError:
         pass
-    except BuildEnvironmentNotFoundException:
+    except (BuildEnvironmentNotFoundException, MozconfigFindException):
         pass
 
     for d in dirs:

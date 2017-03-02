@@ -1004,6 +1004,7 @@ Toolbox.prototype = {
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
       toggleMinimizeMode: this._toggleMinimizeMode,
+      toolbox: this
     });
 
     this.component = this.ReactDOM.render(element, this._componentMount);

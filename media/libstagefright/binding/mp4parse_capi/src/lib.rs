@@ -674,13 +674,13 @@ pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, tra
     let offset_time =
         match (&track.empty_duration, &track.media_time, &context.timescale) {
             (&Some(empty_duration), &Some(media_time), &Some(scale)) => {
-                (empty_duration.0 - media_time.0) as i64 * scale.0 as i64
+                (empty_duration.0 as i64 - media_time.0 as i64) * scale.0 as i64
             },
             (&Some(empty_duration), _, &Some(scale)) => {
                 empty_duration.0 as i64 * scale.0 as i64
             },
             (_, &Some(media_time), &Some(scale)) => {
-                (0 - media_time.0) as i64 * scale.0 as i64
+                (0 - media_time.0 as i64) * scale.0 as i64
             },
             _ => 0,
         };
