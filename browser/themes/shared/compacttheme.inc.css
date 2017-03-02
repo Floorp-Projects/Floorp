@@ -212,6 +212,15 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   margin-inline-start: 0;
 }
 
+window:not([chromehidden~="toolbar"]) #urlbar-wrapper:-moz-locale-dir(rtl),
+window:not([chromehidden~="toolbar"]) #urlbar-wrapper > #urlbar:-moz-locale-dir(rtl) {
+  /* Resolves text blurring issue when hovering, see bug 1340206 */
+  transform: none;
+  /* For some reason, this property must be specified here, even though the same
+     value is set in the previous rule set. o_O */
+  margin-inline-start: 0;
+}
+
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }

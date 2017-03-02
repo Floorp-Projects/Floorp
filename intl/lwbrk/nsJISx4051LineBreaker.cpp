@@ -12,6 +12,8 @@
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 
+using namespace mozilla::unicode;
+
 /* 
 
    Simplification of Pair Table in JIS X 4051
@@ -379,12 +381,13 @@ IS_HALFWIDTH_IN_JISx4051_CLASS3(char16_t u)
 }
 
 static inline int
-IS_CJK_CHAR(char16_t u)
+IS_CJK_CHAR(char32_t u)
 {
   return ((0x1100 <= (u) && (u) <= 0x11ff) ||
           (0x2e80 <= (u) && (u) <= 0xd7ff) ||
           (0xf900 <= (u) && (u) <= 0xfaff) ||
-          (0xff00 <= (u) && (u) <= 0xffef) );
+          (0xff00 <= (u) && (u) <= 0xffef) ||
+          (0x20000 <= (u) && (u) <= 0x2fffd));
 }
 
 static inline bool
@@ -593,26 +596,44 @@ NS_IMPL_ISUPPORTS(nsJISx4051LineBreaker, nsILineBreaker)
 
 class ContextState {
 public:
-  ContextState(const char16_t* aText, uint32_t aLength) {
-    mUniText = aText;
-    mText = nullptr;
-    mLength = aLength;
+  ContextState(const char16_t* aText, uint32_t aLength)
+    : mUniText(aText)
+    , mText(nullptr)
+    , mLength(aLength)
+  {
     Init();
   }
 
-  ContextState(const uint8_t* aText, uint32_t aLength) {
-    mUniText = nullptr;
-    mText = aText;
-    mLength = aLength;
+  ContextState(const uint8_t* aText, uint32_t aLength)
+    : mUniText(nullptr)
+    , mText(aText)
+    , mLength(aLength)
+  {
     Init();
   }
 
-  uint32_t Length() { return mLength; }
-  uint32_t Index() { return mIndex; }
+  uint32_t Length() const { return mLength; }
+  uint32_t Index() const { return mIndex; }
 
-  char16_t GetCharAt(uint32_t aIndex) {
-    NS_ASSERTION(aIndex < mLength, "Out of range!");
+  // This gets a single code unit of the text, without checking for surrogates
+  // (in the case of a 16-bit text buffer). That's OK if we're only checking for
+  // specific characters that are known to be BMP values.
+  char16_t GetCodeUnitAt(uint32_t aIndex) const {
+    MOZ_ASSERT(aIndex < mLength, "Out of range!");
     return mUniText ? mUniText[aIndex] : char16_t(mText[aIndex]);
+  }
+
+  // This gets a 32-bit Unicode character (codepoint), handling surrogate pairs
+  // as necessary. It must ONLY be called for 16-bit text, not 8-bit.
+  char32_t GetUnicodeCharAt(uint32_t aIndex) const {
+    MOZ_ASSERT(mUniText, "Only for 16-bit text!");
+    MOZ_ASSERT(aIndex < mLength, "Out of range!");
+    char32_t c = mUniText[aIndex];
+    if (NS_IS_HIGH_SURROGATE(c) && aIndex + 1 < mLength &&
+        NS_IS_LOW_SURROGATE(mUniText[aIndex + 1])) {
+      c = SURROGATE_TO_UCS4(c, mUniText[aIndex + 1]);
+    }
+    return c;
   }
 
   void AdvanceIndex() {
@@ -628,30 +649,53 @@ public:
 //   1. at near the start of word
 //   2. at near the end of word
 //   3. at near the latest broken point
-// CONSERVATIVE_BREAK_RANGE define the 'near' in characters.
-#define CONSERVATIVE_BREAK_RANGE 6
+// CONSERVATIVE_RANGE_{LETTER,OTHER} define the 'near' in characters,
+// which varies depending whether we are looking at a letter or a non-letter
+// character: for non-letters, we use an extended "conservative" range.
 
-  bool UseConservativeBreaking(uint32_t aOffset = 0) {
+#define CONSERVATIVE_RANGE_LETTER 2
+#define CONSERVATIVE_RANGE_OTHER  6
+
+  bool UseConservativeBreaking(uint32_t aOffset = 0) const {
     if (mHasCJKChar)
       return false;
     uint32_t index = mIndex + aOffset;
-    bool result = (index < CONSERVATIVE_BREAK_RANGE ||
-                     mLength - index < CONSERVATIVE_BREAK_RANGE ||
-                     index - mLastBreakIndex < CONSERVATIVE_BREAK_RANGE);
+
+    // If the character at index is a letter (rather than various punctuation
+    // characters, etc) then we want a shorter "conservative" range
+    uint32_t conservativeRangeStart, conservativeRangeEnd;
+    if (index < mLength &&
+        nsIUGenCategory::kLetter ==
+          (mText ? GetGenCategory(mText[index])
+                 : GetGenCategory(GetUnicodeCharAt(index)))) {
+      // Primarily for hyphenated word prefixes/suffixes; we add 1 to Start
+      // to get more balanced behavior (if we break off a 2-letter prefix,
+      // that means the break will actually be three letters from start of
+      // word, to include the hyphen; whereas a 2-letter suffix will be
+      // broken only two letters from end of word).
+      conservativeRangeEnd = CONSERVATIVE_RANGE_LETTER;
+      conservativeRangeStart = CONSERVATIVE_RANGE_LETTER + 1;
+    } else {
+      conservativeRangeEnd = conservativeRangeStart = CONSERVATIVE_RANGE_OTHER;
+    }
+
+    bool result = (index < conservativeRangeStart ||
+                     mLength - index < conservativeRangeEnd ||
+                     index - mLastBreakIndex < conservativeRangeStart);
     if (result || !mHasNonbreakableSpace)
       return result;
 
     // This text has no-breakable space, we need to check whether the index
     // is near it.
 
-    // Note that index is always larger than CONSERVATIVE_BREAK_RANGE here.
-    for (uint32_t i = index; index - CONSERVATIVE_BREAK_RANGE < i; --i) {
-      if (IS_NONBREAKABLE_SPACE(GetCharAt(i - 1)))
+    // Note that index is always larger than conservativeRange here.
+    for (uint32_t i = index; index - conservativeRangeStart < i; --i) {
+      if (IS_NONBREAKABLE_SPACE(GetCodeUnitAt(i - 1)))
         return true;
     }
-    // Note that index is always less than mLength - CONSERVATIVE_BREAK_RANGE.
-    for (uint32_t i = index + 1; i < index + CONSERVATIVE_BREAK_RANGE; ++i) {
-      if (IS_NONBREAKABLE_SPACE(GetCharAt(i)))
+    // Note that index is always less than mLength - conservativeRange.
+    for (uint32_t i = index + 1; i < index + conservativeRangeEnd; ++i) {
+      if (IS_NONBREAKABLE_SPACE(GetCodeUnitAt(i)))
         return true;
     }
     return false;
@@ -690,28 +734,49 @@ private:
     mIndex = 0;
     mLastBreakIndex = 0;
     mPreviousNonHyphenCharacter = U_NULL;
-    mHasCJKChar = 0;
-    mHasNonbreakableSpace = 0;
+    mHasCJKChar = false;
+    mHasNonbreakableSpace = false;
     mHasPreviousEqualsSign = false;
     mHasPreviousSlash = false;
     mHasPreviousBackslash = false;
 
-    for (uint32_t i = 0; i < mLength; ++i) {
-      char16_t u = GetCharAt(i);
-      if (!mHasNonbreakableSpace && IS_NONBREAKABLE_SPACE(u))
-        mHasNonbreakableSpace = 1;
-      else if (mUniText && !mHasCJKChar && IS_CJK_CHAR(u))
-        mHasCJKChar = 1;
+    if (mText) {
+      // 8-bit text: we only need to check for &nbsp;
+      for (uint32_t i = 0; i < mLength; ++i) {
+        if (IS_NONBREAKABLE_SPACE(mText[i])) {
+          mHasNonbreakableSpace = true;
+          break;
+        }
+      }
+    } else {
+      // 16-bit text: handle surrogates and check for CJK as well as &nbsp;
+      for (uint32_t i = 0; i < mLength; ++i) {
+        char32_t u = GetUnicodeCharAt(i);
+        if (!mHasNonbreakableSpace && IS_NONBREAKABLE_SPACE(u)) {
+          mHasNonbreakableSpace = true;
+          if (mHasCJKChar) {
+            break;
+          }
+        } else if (!mHasCJKChar && IS_CJK_CHAR(u)) {
+          mHasCJKChar = 1;
+          if (mHasNonbreakableSpace) {
+            break;
+          }
+        }
+        if (u > 0xFFFFu) {
+          ++i; // step over trailing low surrogate
+        }
+      }
     }
   }
 
-  const char16_t* mUniText;
-  const uint8_t* mText;
+  const char16_t* const mUniText;
+  const uint8_t* const mText;
 
   uint32_t mIndex;
-  uint32_t mLength;         // length of text
+  const uint32_t mLength;         // length of text
   uint32_t mLastBreakIndex;
-  uint32_t mPreviousNonHyphenCharacter; // The last character we have seen
+  char32_t mPreviousNonHyphenCharacter; // The last character we have seen
                                          // which is not U_HYPHEN
   bool mHasCJKChar; // if the text has CJK character, this is true.
   bool mHasNonbreakableSpace; // if the text has no-breakable space,
@@ -722,7 +787,7 @@ private:
 };
 
 static int8_t
-ContextualAnalysis(char16_t prev, char16_t cur, char16_t next,
+ContextualAnalysis(char32_t prev, char32_t cur, char32_t next,
                    ContextState &aState)
 {
   // Don't return CLASS_OPEN/CLASS_CLOSE if aState.UseJISX4051 is FALSE.
@@ -740,7 +805,7 @@ ContextualAnalysis(char16_t prev, char16_t cur, char16_t next,
     // If one side is numeric and the other is a character, or if both sides are
     // characters, the hyphen should be breakable.
     if (!aState.UseConservativeBreaking(1)) {
-      char16_t prevOfHyphen = aState.GetPreviousNonHyphenCharacter();
+      char32_t prevOfHyphen = aState.GetPreviousNonHyphenCharacter();
       if (prevOfHyphen && next) {
         int8_t prevClass = GetClass(prevOfHyphen);
         int8_t nextClass = GetClass(next);
@@ -787,10 +852,10 @@ ContextualAnalysis(char16_t prev, char16_t cur, char16_t next,
       // If this is a part of the param of URL, we should break before.
       if (!aState.UseConservativeBreaking()) {
         if (aState.Index() >= 3 &&
-            aState.GetCharAt(aState.Index() - 3) == U_PERCENT)
+            aState.GetCodeUnitAt(aState.Index() - 3) == U_PERCENT)
           return CLASS_OPEN;
         if (aState.Index() + 3 < aState.Length() &&
-            aState.GetCharAt(aState.Index() + 3) == U_PERCENT)
+            aState.GetCodeUnitAt(aState.Index() + 3) == U_PERCENT)
           return CLASS_OPEN;
       }
     } else if (cur == U_AMPERSAND || cur == U_SEMICOLON) {
@@ -889,19 +954,29 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
   ContextState state(aChars, aLength);
 
   for (cur = 0; cur < aLength; ++cur, state.AdvanceIndex()) {
-    uint32_t ch = aChars[cur];
-    if (NS_IS_HIGH_SURROGATE(ch)) {
-      if (cur + 1 < aLength && NS_IS_LOW_SURROGATE(aChars[cur + 1])) {
-        ch = SURROGATE_TO_UCS4(ch, aChars[cur + 1]);
-      }
-    }
+    char32_t ch = state.GetUnicodeCharAt(cur);
+    uint32_t chLen = ch > 0xFFFFu ? 2 : 1;
     int8_t cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {
-      cl = ContextualAnalysis(cur > 0 ? aChars[cur - 1] : U_NULL,
-                              ch,
-                              cur + 1 < aLength ? aChars[cur + 1] : U_NULL,
-                              state);
+      char32_t prev, next;
+      if (cur > 0) {
+        // not using state.GetUnicodeCharAt() here because we're looking back
+        // rather than forward for possible surrogates
+        prev = aChars[cur - 1];
+        if (NS_IS_LOW_SURROGATE(prev) && cur > 1 &&
+            NS_IS_HIGH_SURROGATE(aChars[cur - 2])) {
+          prev = SURROGATE_TO_UCS4(aChars[cur - 2], prev);
+        }
+      } else {
+        prev = 0;
+      }
+      if (cur + chLen < aLength) {
+        next = state.GetUnicodeCharAt(cur + chLen);
+      } else {
+        next = 0;
+      }
+      cl = ContextualAnalysis(prev, ch, next, state);
     } else {
       if (ch == U_EQUAL)
         state.NotifySeenEqualsSign();
@@ -925,10 +1000,17 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
       state.NotifyBreakBefore();
     lastClass = cl;
     if (CLASS_COMPLEX == cl) {
-      uint32_t end = cur + 1;
+      uint32_t end = cur + chLen;
 
-      while (end < aLength && CLASS_COMPLEX == GetClass(aChars[end])) {
+      while (end < aLength) {
+        char32_t c = state.GetUnicodeCharAt(end);
+        if (CLASS_COMPLEX != GetClass(c)) {
+          break;
+        }
         ++end;
+        if (c > 0xFFFFU) { // it was a surrogate pair
+          ++end;
+        }
       }
 
       NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
@@ -947,7 +1029,7 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
       cur = end - 1;
     }
 
-    if (ch > 0xffff) {
+    if (chLen == 2) {
       // Supplementary-plane character: mark that we cannot break before the
       // trailing low surrogate, and advance past it.
       ++cur;
@@ -967,7 +1049,7 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength
   ContextState state(aChars, aLength);
 
   for (cur = 0; cur < aLength; ++cur, state.AdvanceIndex()) {
-    char16_t ch = aChars[cur];
+    char32_t ch = aChars[cur];
     int8_t cl;
 
     if (NEED_CONTEXTUAL_ANALYSIS(ch)) {

@@ -24,7 +24,7 @@ class ThreadInfo {
   bool IsMainThread() const { return mIsMainThread; }
   PseudoStack* Stack() const { return mPseudoStack; }
 
-  void SetProfile(ProfileBuffer* aBuffer) { mBuffer = aBuffer; }
+  void SetHasProfile() { mHasProfile = true; }
 
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
@@ -51,26 +51,22 @@ class ThreadInfo {
 
   //
   // The following code is only used for threads that are being profiled, i.e.
-  // for which SetProfile() has been called.
+  // for which SetHasProfile() has been called.
   //
 
 public:
-  bool hasProfile() { return !!mBuffer; }
+  bool HasProfile() { return mHasProfile; }
 
-  void addTag(const ProfileBufferEntry& aTag);
-
-  // Track a marker which has been inserted into the thread profile.
-  // This marker can safely be deleted once the generation has
-  // expired.
-  void addStoredMarker(ProfilerMarker* aStoredMarker);
   mozilla::Mutex& GetMutex();
-  void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime = 0);
+  void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
+                  double aSinceTime = 0);
 
   // Call this method when the JS entries inside the buffer are about to
   // become invalid, i.e., just before JS shutdown.
-  void FlushSamplesAndMarkers();
+  void FlushSamplesAndMarkers(ProfileBuffer* aBuffer);
 
-  void DuplicateLastSample(const mozilla::TimeStamp& aStartTime);
+  void DuplicateLastSample(ProfileBuffer* aBuffer,
+                           const mozilla::TimeStamp& aStartTime);
 
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 
@@ -78,10 +74,9 @@ public:
     mRespInfo.Update(mIsMainThread, mThread);
   }
 
-  uint32_t bufferGeneration() const { return mBuffer->mGeneration; }
-
-protected:
-  void StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, double aSinceTime,
+  void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
+                               SpliceableJSONWriter& aWriter,
+                               double aSinceTime,
                                UniqueStacks& aUniqueStacks);
 
 private:
@@ -91,7 +86,7 @@ private:
   FRIEND_TEST(ThreadProfile, InsertTagsWrap);
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
 
-  RefPtr<ProfileBuffer> mBuffer;
+  bool mHasProfile;
 
   // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
   // stringifying JIT frames). In the case of JSRuntime destruction,

@@ -7,25 +7,29 @@
 #include "ProfilerBacktrace.h"
 
 #include "ProfileJSONWriter.h"
-#include "SyncProfile.h"
+#include "ThreadInfo.h"
 
-ProfilerBacktrace::ProfilerBacktrace(SyncProfile* aProfile)
-  : mProfile(aProfile)
+ProfilerBacktrace::ProfilerBacktrace(ProfileBuffer* aBuffer,
+                                     ThreadInfo* aThreadInfo)
+  : mBuffer(aBuffer)
+  , mThreadInfo(aThreadInfo)
 {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
-  MOZ_ASSERT(aProfile);
+  MOZ_ASSERT(aThreadInfo && aThreadInfo->HasProfile());
 }
 
 ProfilerBacktrace::~ProfilerBacktrace()
 {
   MOZ_COUNT_DTOR(ProfilerBacktrace);
-  delete mProfile;
+  delete mBuffer;
+  delete mThreadInfo;
 }
 
 void
 ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                               UniqueStacks& aUniqueStacks)
 {
-  mozilla::MutexAutoLock lock(mProfile->GetMutex());
-  mProfile->StreamJSON(aWriter, aUniqueStacks);
+  mozilla::MutexAutoLock lock(mThreadInfo->GetMutex());
+  mThreadInfo->StreamSamplesAndMarkers(mBuffer, aWriter, /* aSinceTime */ 0,
+                                       aUniqueStacks);
 }

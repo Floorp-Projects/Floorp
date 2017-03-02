@@ -16,7 +16,7 @@ import time
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema
-from taskgraph.util.scriptworker import get_release_build_number
+from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Schema, Any, Required, Optional, Extra
 
 from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
@@ -570,7 +570,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
 @payload_builder('beetmover')
 def build_beetmover_payload(config, task, task_def):
     worker = task['worker']
-    build_number = get_release_build_number(config)
+    release_config = get_release_config(config)
 
     task_def['payload'] = {
         'maxRunTime': worker['max-run-time'],
@@ -579,8 +579,8 @@ def build_beetmover_payload(config, task, task_def):
     }
     if worker.get('locale'):
         task_def['payload']['locale'] = worker['locale']
-    if build_number:
-        task_def['payload']['build_number'] = build_number
+    if release_config:
+        task_def['payload'].update(release_config)
 
 
 @payload_builder('balrog')
