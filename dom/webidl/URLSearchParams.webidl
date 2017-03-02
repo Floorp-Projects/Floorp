@@ -13,7 +13,7 @@
  * http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
  */
 
-[Constructor(optional (sequence<sequence<USVString>> or USVString) init = ""),
+[Constructor(optional (sequence<sequence<USVString>> or record<USVString, USVString> or USVString) init = ""),
  Exposed=(Window,Worker,WorkerDebugger,System)]
 interface URLSearchParams {
   void append(USVString name, USVString value);
