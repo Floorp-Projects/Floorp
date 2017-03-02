@@ -880,10 +880,6 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
         }
     }
 
-    // Stuff trailing NUL
-    if (!emit("\0", 1))
-        return false;
-
     return true;
 }
 

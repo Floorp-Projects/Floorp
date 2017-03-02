@@ -289,13 +289,12 @@ var SimulatorEditor = {
       case "version":
         switch (input.value) {
           case "pick":
-            utils.getCustomBinary(window).then(file => {
-              if (file) {
-                this.version = file.path;
-              }
-              // Whatever happens, don't stay on the "pick" option.
-              this.updateVersionSelector();
-            });
+            let file = utils.getCustomBinary(window);
+            if (file) {
+              this.version = file.path;
+            }
+            // Whatever happens, don't stay on the "pick" option.
+            this.updateVersionSelector();
             break;
           case "custom":
             this.version = input[input.selectedIndex].textContent;
@@ -307,13 +306,12 @@ var SimulatorEditor = {
       case "profile":
         switch (input.value) {
           case "pick":
-            utils.getCustomProfile(window).then(directory => {
-              if (directory) {
-                this.profile = directory.path;
-              }
-              // Whatever happens, don't stay on the "pick" option.
-              this.updateProfileSelector();
-            });
+            let directory = utils.getCustomProfile(window);
+            if (directory) {
+              this.profile = directory.path;
+            }
+            // Whatever happens, don't stay on the "pick" option.
+            this.updateProfileSelector();
             break;
           case "custom":
             this.profile = input[input.selectedIndex].textContent;

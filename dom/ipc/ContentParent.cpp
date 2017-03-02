@@ -5145,15 +5145,13 @@ ContentParent::RecvFileCreationRequest(const nsID& aID,
                                        const nsString& aName,
                                        const bool& aLastModifiedPassed,
                                        const int64_t& aLastModified,
-                                       const bool& aExistenceCheck,
                                        const bool& aIsFromNsIFile)
 {
   RefPtr<BlobImpl> blobImpl;
   nsresult rv =
     FileCreatorHelper::CreateBlobImplForIPC(aFullPath, aType, aName,
                                             aLastModifiedPassed,
-                                            aLastModified, aExistenceCheck,
-                                            aIsFromNsIFile,
+                                            aLastModified, aIsFromNsIFile,
                                             getter_AddRefs(blobImpl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (!SendFileCreationResponse(aID, FileCreationErrorResult(rv))) {

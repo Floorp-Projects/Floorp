@@ -753,7 +753,6 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         case FOURCC('m', 'o', 'o', 'f'):
         case FOURCC('t', 'r', 'a', 'f'):
         case FOURCC('m', 'f', 'r', 'a'):
-        case FOURCC('u', 'd', 't', 'a'):
         case FOURCC('i', 'l', 's', 't'):
         case FOURCC('s', 'i', 'n', 'f'):
         case FOURCC('s', 'c', 'h', 'i'):

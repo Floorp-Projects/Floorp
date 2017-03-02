@@ -1411,19 +1411,17 @@ var gViewController = {
           fp.appendFilters(nsIFilePicker.filterAll);
         } catch (e) { }
 
-        fp.open(result => {
-          if (result != nsIFilePicker.returnOK)
-            return;
+        if (fp.show() != nsIFilePicker.returnOK)
+          return;
 
-          let browser = getBrowserElement();
-          let files = fp.files;
-          while (files.hasMoreElements()) {
-            let file = files.getNext();
-            AddonManager.getInstallForFile(file, install => {
-              AddonManager.installAddonFromAOM(browser, document.documentURI, install);
-            });
-          }
-        });
+        let browser = getBrowserElement();
+        let files = fp.files;
+        while (files.hasMoreElements()) {
+          let file = files.getNext();
+          AddonManager.getInstallForFile(file, install => {
+            AddonManager.installAddonFromAOM(browser, document.documentURI, install);
+          });
+        }
       }
     },
 

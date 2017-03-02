@@ -229,13 +229,15 @@ FilePicker.prototype = {
       }
 
       if (this._domWin) {
-        return this._domWin.File.createFromNsIFile(this.file, { existenceCheck: false });
+        let utils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        this._domFile = utils.wrapDOMFile(this.file);
+        return;
       }
 
-      return File.createFromNsIFile(this.file, { existenceCheck: false });
-    }).then(domFile => {
-      this._domFile = domFile;
-    }, () => {
+      return File.createFromNsIFile(this.file).then(domFile => {
+        this._domFile = domFile;
+      });
+    }).catch(() => {
     }).then(() => {
       if (this._callback) {
         this._callback.done(this._filePath ?

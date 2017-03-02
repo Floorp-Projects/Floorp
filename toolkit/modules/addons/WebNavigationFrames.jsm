@@ -20,6 +20,17 @@ function getParentWindowId(window) {
   return getWindowId(window.parent);
 }
 
+function getDocShellWindowId(docShell) {
+  if (!docShell) {
+    return undefined;
+  }
+
+  return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindow)
+                 .getInterface(Ci.nsIDOMWindowUtils)
+                 .outerWindowID;
+}
+
 /**
  * Retrieve the DOMWindow associated to the docShell passed as parameter.
  *
@@ -118,8 +129,14 @@ function findDocShell(frameId, rootDocShell) {
   return null;
 }
 
+function isDescendantDocShell(targetDocShell, rootDocShell) {
+  return (rootDocShell === targetDocShell.sameTypeRootTreeItem
+                                         .QueryInterface(Ci.nsIDocShell));
+}
+
 var WebNavigationFrames = {
   iterateDocShellTree,
+  isDescendantDocShell,
 
   findDocShell,
 
@@ -139,4 +156,5 @@ var WebNavigationFrames = {
 
   getWindowId,
   getParentWindowId,
+  getDocShellWindowId,
 };

@@ -64,13 +64,14 @@ add_task(function* block_autoplay_media() {
   info("- the tab1 should not be blocked -");
   yield waitForTabBlockEvent(tab1, false);
 
-  info("- select tab2 as foreground tab, and tab2's media should be playing -");
+  info("- select tab2 as foreground tab, and the tab2 should not be blocked -");
   yield BrowserTestUtils.switchTab(window.gBrowser, tab2);
+  yield waitForTabBlockEvent(tab2, false);
+
+  info("- tab2's media should be playing -");
+  yield waitForTabPlayingEvent(tab2, true);
   yield ContentTask.spawn(tab2.linkedBrowser, false,
                           check_audio_pause_state);
-
-  info("- the tab2 should not be blocked -");
-  yield waitForTabBlockEvent(tab2, false);
 
   info("- check tab2's media suspend type -");
   yield ContentTask.spawn(tab2.linkedBrowser, SuspendedType.NONE_SUSPENDED,
