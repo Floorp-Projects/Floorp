@@ -135,7 +135,6 @@ menuitem[_moz-menuactive="true"] {
   background-color: Highlight;
 }
 
-menupopup[customoptionstyling="true"],
 menuitem[customoptionstyling="true"] {
   -moz-appearance: none;
   padding-top: 0;
