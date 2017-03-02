@@ -67,7 +67,7 @@ HistoryEngine.prototype = {
   pullNewChanges() {
     let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
     if (!modifiedGUIDs.length) {
-      return {};
+      return new Changeset();
     }
 
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
@@ -105,7 +105,7 @@ HistoryEngine.prototype = {
       }
     }
 
-    return this._tracker.changedIDs;
+    return new Changeset(this._tracker.changedIDs);
   },
 };
 

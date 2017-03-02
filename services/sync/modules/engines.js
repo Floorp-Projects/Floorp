@@ -656,7 +656,6 @@ this.Engine = function Engine(name, service) {
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log.Level[level];
 
-  this._modified = this.emptyChangeset();
   this._tracker; // initialize tracker to load previously changed IDs
   this._log.debug("Engine initialized");
 }
@@ -664,11 +663,6 @@ Engine.prototype = {
   // _storeObj, and _trackerObj should to be overridden in subclasses
   _storeObj: Store,
   _trackerObj: Tracker,
-
-  // Override this method to return a new changeset type.
-  emptyChangeset() {
-    return new Changeset();
-  },
 
   // Local 'constant'.
   // Signal to the engine that processing further records is pointless.
@@ -923,21 +917,12 @@ SyncEngine.prototype = {
     return this._tracker.changedIDs;
   },
 
-  // Create a new record using the store and add in metadata.
+  // Create a new record using the store and add in crypto fields.
   _createRecord(id) {
     let record = this._store.createRecord(id, this.name);
     record.id = id;
     record.collection = this.name;
     return record;
-  },
-
-  // Creates a tombstone Sync record with additional metadata.
-  _createTombstone(id) {
-    let tombstone = new this._recordObj(this.name, id);
-    tombstone.id = id;
-    tombstone.collection = this.name;
-    tombstone.deleted = true;
-    return tombstone;
   },
 
   // Any setup that needs to happen at the beginning of each sync.
@@ -991,14 +976,12 @@ SyncEngine.prototype = {
     // the end of a sync, or after an error, we add all objects remaining in
     // this._modified to the tracker.
     this.lastSyncLocal = Date.now();
-    let initialChanges;
     if (this.lastSync) {
-      initialChanges = this.pullNewChanges();
+      this._modified = this.pullNewChanges();
     } else {
       this._log.debug("First sync, uploading all items");
-      initialChanges = this.pullAllChanges();
+      this._modified = this.pullAllChanges();
     }
-    this._modified.replace(initialChanges);
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
     this._tracker.clearChangedIDs();
@@ -1463,7 +1446,7 @@ SyncEngine.prototype = {
           localAge = this._tracker._now() - this._modified.getModifiedTimestamp(localDupeGUID);
           remoteIsNewer = remoteAge < localAge;
 
-          this._modified.changeID(localDupeGUID, item.id);
+          this._modified.swap(localDupeGUID, item.id);
         } else {
           locallyModified = false;
           localAge = null;
@@ -1786,11 +1769,11 @@ SyncEngine.prototype = {
    * @return A `Changeset` object.
    */
   pullAllChanges() {
-    let changes = {};
+    let changeset = new Changeset();
     for (let id in this._store.getAllIDs()) {
-      changes[id] = 0;
+      changeset.set(id, 0);
     }
-    return changes;
+    return changeset;
   },
 
   /*
@@ -1801,7 +1784,7 @@ SyncEngine.prototype = {
    * @return A `Changeset` object.
    */
   pullNewChanges() {
-    return this.getChangedIDs();
+    return new Changeset(this.getChangedIDs());
   },
 
   /**
@@ -1823,9 +1806,9 @@ SyncEngine.prototype = {
  * data for each entry.
  */
 class Changeset {
-  // Creates an empty changeset.
-  constructor() {
-    this.changes = {};
+  // Creates a changeset with an initial set of tracked entries.
+  constructor(changes = {}) {
+    this.changes = changes;
   }
 
   // Returns the last modified time, in seconds, for an entry in the changeset.
@@ -1839,14 +1822,9 @@ class Changeset {
     this.changes[id] = change;
   }
 
-  // Adds multiple entries to the changeset, preserving existing entries.
+  // Adds multiple entries to the changeset.
   insert(changes) {
     Object.assign(this.changes, changes);
-  }
-
-  // Overwrites the existing set of tracked changes with new entries.
-  replace(changes) {
-    this.changes = changes;
   }
 
   // Indicates whether an entry is in the changeset.
@@ -1860,9 +1838,9 @@ class Changeset {
     delete this.changes[id];
   }
 
-  // Changes the ID of an entry in the changeset. Used when reconciling
-  // duplicates that have local changes.
-  changeID(oldID, newID) {
+  // Swaps two entries in the changeset. Used when reconciling duplicates that
+  // have local changes.
+  swap(oldID, newID) {
     this.changes[newID] = this.changes[oldID];
     delete this.changes[oldID];
   }

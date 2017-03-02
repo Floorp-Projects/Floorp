@@ -277,10 +277,6 @@ BookmarksEngine.prototype = {
   syncPriority: 4,
   allowSkippedRecord: false,
 
-  emptyChangeset() {
-    return new BookmarksChangeset();
-  },
-
 
   _guidMapFailed: false,
   _buildGUIDMap: function _buildGUIDMap() {
@@ -523,11 +519,6 @@ BookmarksEngine.prototype = {
   },
 
   _createRecord: function _createRecord(id) {
-    if (this._modified.isTombstone(id)) {
-      // If we already know a changed item is a tombstone, just create the
-      // record without dipping into Places.
-      return this._createTombstone(id);
-    }
     // Create the record as usual, but mark it as having dupes if necessary.
     let record = SyncEngine.prototype._createRecord.call(this, id);
     let entry = this._mapDupe(record);
@@ -535,9 +526,8 @@ BookmarksEngine.prototype = {
       record.hasDupe = true;
     }
     if (record.deleted) {
-      // Make sure deleted items are marked as tombstones. We do this here
-      // in addition to the `isTombstone` call above because it's possible
-      // a changed bookmark might be deleted during a sync (bug 1313967).
+      // Make sure deleted items are marked as tombstones. This handles the
+      // case where a changed item is deleted during a sync.
       this._modified.setTombstone(record.id);
     }
     return record;
@@ -564,7 +554,8 @@ BookmarksEngine.prototype = {
   },
 
   pullNewChanges() {
-    return Async.promiseSpinningly(this._tracker.promiseChangedIDs());
+    let changes = Async.promiseSpinningly(this._tracker.promiseChangedIDs());
+    return new BookmarksChangeset(changes);
   },
 
   trackRemainingChanges() {
@@ -1075,50 +1066,24 @@ BookmarksTracker.prototype = {
 };
 
 class BookmarksChangeset extends Changeset {
-  constructor() {
-    super();
-    // Weak changes are part of the changeset, but don't bump the change
-    // counter, and aren't persisted anywhere.
-    this.weakChanges = {};
-  }
-
   getModifiedTimestamp(id) {
     let change = this.changes[id];
-    if (change) {
+    if (!change || change.synced) {
       // Pretend the change doesn't exist if we've already synced or
       // reconciled it.
-      return change.synced ? Number.NaN : change.modified;
+      return Number.NaN;
     }
-    if (this.weakChanges[id]) {
-      // For weak changes, we use a timestamp from long ago to ensure we always
-      // prefer the remote version in case of conflicts.
-      return 0;
-    }
-    return Number.NaN;
-  }
-
-  setWeak(id, { tombstone = false } = {}) {
-    this.weakChanges[id] = { tombstone };
+    return change.modified;
   }
 
   has(id) {
-    let change = this.changes[id];
-    if (change) {
-      return !change.synced;
-    }
-    return !!this.weakChanges[id];
+    return id in this.changes && !this.changes[id].synced;
   }
 
   setTombstone(id) {
     let change = this.changes[id];
     if (change) {
       change.tombstone = true;
-    }
-    let weakChange = this.weakChanges[id];
-    if (weakChange) {
-      // Not strictly necessary, since we never persist weak changes, but may
-      // be useful for bookkeeping.
-      weakChange.tombstone = true;
     }
   }
 
@@ -1129,40 +1094,5 @@ class BookmarksChangeset extends Changeset {
       // so that we can update Places in `trackRemainingChanges`.
       change.synced = true;
     }
-    delete this.weakChanges[id];
-  }
-
-  changeID(oldID, newID) {
-    super.changeID(oldID, newID);
-    this.weakChanges[newID] = this.weakChanges[oldID];
-    delete this.weakChanges[oldID];
-  }
-
-  ids() {
-    let results = new Set();
-    for (let id in this.changes) {
-      results.add(id);
-    }
-    for (let id in this.weakChanges) {
-      results.add(id);
-    }
-    return [...results];
-  }
-
-  clear() {
-    super.clear();
-    this.weakChanges = {};
-  }
-
-  isTombstone(id) {
-    let change = this.changes[id];
-    if (change) {
-      return change.tombstone;
-    }
-    let weakChange = this.weakChanges[id];
-    if (weakChange) {
-      return weakChange.tombstone;
-    }
-    return false;
   }
 }
