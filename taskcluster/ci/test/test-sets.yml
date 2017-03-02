@@ -46,6 +46,9 @@ web-platform-tests:
 external-media-tests:
     - external-media-tests-base
     - external-media-tests-youtube
+
+external-media-tests-slow:
+    # twitch tests are too slow and stall under debug, give them their own special set
     - external-media-tests-twitch
 
 opt-only-tests:
