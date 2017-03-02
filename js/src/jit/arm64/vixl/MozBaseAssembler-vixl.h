@@ -104,10 +104,11 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   // Propagate OOM errors.
   BufferOffset allocEntry(size_t numInst, unsigned numPoolEntries,
                           uint8_t* inst, uint8_t* data,
-                          ARMBuffer::PoolEntry* pe = nullptr)
+                          ARMBuffer::PoolEntry* pe = nullptr,
+                          bool markAsBranch = false)
   {
     BufferOffset offset = armbuffer_.allocEntry(numInst, numPoolEntries, inst,
-                                                data, pe);
+                                                data, pe, markAsBranch);
     propagateOOM(offset.assigned());
     return offset;
   }
