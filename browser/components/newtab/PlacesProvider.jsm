@@ -115,7 +115,7 @@ Links.prototype = {
             aGuid, aHidden, aVisitCount, aTyped, aLastKnownTitle) {
       // For new visits, if we're not batch processing, notify for a title update
       if (!this._batchProcessingDepth && aVisitCount == 1 && aLastKnownTitle) {
-        this.onTitleChanged(aURI, aTitle, aGuid);
+        this.onTitleChanged(aURI, aLastKnownTitle, aGuid);
       }
     },
 
