@@ -327,9 +327,9 @@ public:
    * adding it directly or by putting it in its own excess overflow containers
    * list (to be drained by the next-in-flow when it calls
    * ReflowOverflowContainerChildren). The parent continues reflow as if
-   * the frame was complete once it ran out of computed height, but returns
-   * with either the mIncomplete or mOverflowIncomplete bit set in reflow
-   * status to request a next-in-flow. The parent's next-in-flow is then
+   * the frame was complete once it ran out of computed height, but returns a
+   * reflow status with either IsIncomplete() or IsOverflowIncomplete() equal
+   * to true to request a next-in-flow. The parent's next-in-flow is then
    * responsible for calling ReflowOverflowContainerChildren to (drain and)
    * reflow these overflow continuations. Overflow containers do not affect
    * other frames' size or position during reflow (but do affect their

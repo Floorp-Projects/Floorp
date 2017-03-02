@@ -4021,7 +4021,7 @@ js::PutEscapedStringImpl(char* buffer, size_t bufferSize, GenericPrinter* out, c
                 buffer = nullptr;
             }
         } else if (out) {
-            if (out->put(&c, 1) < 0)
+            if (!out->put(&c, 1))
                 return size_t(-1);
         }
         n++;

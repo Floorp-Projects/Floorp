@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
 const kTransitionalProcessing = false;
 
 // Four characters map differently under non-transitional processing:
@@ -13,9 +19,9 @@ const labels = [
 
   // But CONTEXTJ rules prohibit ZWJ and ZWNJ in non-Arabic or Indic scripts
   // U+200C ZERO WIDTH NON-JOINER in Latin script
-  "m\200cn",
+  "m\u200cn",
   // U+200D ZERO WIDTH JOINER in Latin script
-  "p\200dq",
+  "p\u200dq",
 ];
 
 const transitionalExpected = [

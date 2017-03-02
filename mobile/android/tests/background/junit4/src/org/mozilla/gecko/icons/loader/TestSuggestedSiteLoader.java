@@ -10,27 +10,21 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Bundle;
-import android.os.UserManager;
-
-import com.squareup.picasso.RequestCreator;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
+import org.mozilla.gecko.helpers.MockUserManager;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconRequestBuilder;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
-import org.mozilla.gecko.restrictions.Restrictions;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.IOException;
@@ -56,19 +50,7 @@ public class TestSuggestedSiteLoader {
     @Before
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void setUp() throws IOException {
-        // This seems to be done automatically in newer versions of RoboElectric, we need our own
-        // version for now:
-        if (!AppConstants.Versions.preJBMR2) {
-            context = spy(RuntimeEnvironment.application);
-
-            UserManager userManager = spy((UserManager) context.getSystemService(Context.USER_SERVICE));
-            doReturn(new Bundle()).when(userManager).getApplicationRestrictions(anyString());
-            doReturn(new Bundle()).when(userManager).getUserRestrictions();
-
-            doReturn(userManager).when(context).getSystemService(Context.USER_SERVICE);
-        } else {
-            context = RuntimeEnvironment.application;
-        }
+        context = MockUserManager.getContextWithMockedUserManager();
 
         final SuggestedSites sites = new SuggestedSites(context);
         BrowserDB.from(context).setSuggestedSites(sites);
@@ -128,6 +110,16 @@ public class TestSuggestedSiteLoader {
             Assert.assertEquals(expectedSize, out.getWidth());
         }
     }
+
+    @Test
+    public void testLoadingOtherIconFailsCleanly() throws IOException {
+        // Ensure that we return null (instead of crashing or providing wrong data) for a fake
+        // topsite.
+        final IconResponse response = loadIconForSite("http://www.arbitrary-not-bunled-site.notreal", false);
+
+        Assert.assertNull(response);
+    }
+
 
     @Test
     public void testRespectsSkipDisk() throws IOException {

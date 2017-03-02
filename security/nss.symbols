@@ -181,7 +181,6 @@ HASH_HashBuf
 HASH_ResultLenByOidTag
 HASH_Update
 NSSBase64_DecodeBuffer
-NSSBase64_EncodeItem
 NSSBase64_EncodeItem_Util
 NSS_CMSContentInfo_GetContent
 NSS_CMSContentInfo_SetContent_Data

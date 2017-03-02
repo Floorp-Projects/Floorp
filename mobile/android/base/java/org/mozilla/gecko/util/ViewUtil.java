@@ -165,7 +165,18 @@ public class ViewUtil {
     }
 
     /**
-     * RTL compatibility wrapper to force set TextDirection for JB mr1 and above
+     * RTL compatibility wrapper to set TextDirection
+     * @param textView
+     * @param textDirection
+     */
+    public static void setTextDirection(TextView textView, int textDirection) {
+        if (AppConstants.Versions.feature17Plus) {
+            textView.setTextDirection(textDirection);
+        }
+    }
+
+    /**
+     * RTL compatibility wrapper to force set TextDirection as RTL for JB mr1 and above
      *
      * @param textView
      * @param isRtl

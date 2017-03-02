@@ -13,6 +13,8 @@
 #include "gc/Allocator.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/Runtime.h"
+#include "vm/StringBuffer.h"
+#include "wasm/WasmInstance.h"
 
 #include "vm/Shape-inl.h"
 
@@ -1188,6 +1190,18 @@ ModuleScope::script() const
 static const uint32_t WasmFunctionEnvShapeFlags =
     BaseShape::NOT_EXTENSIBLE | BaseShape::DELEGATE;
 
+static JSAtom*
+GenerateWasmVariableName(JSContext* cx, uint32_t index)
+{
+    StringBuffer sb(cx);
+    if (!sb.append("var"))
+        return nullptr;
+    if (!NumberValueToStringBuffer(cx, Int32Value(index), sb))
+        return nullptr;
+
+    return sb.finishAtom();
+}
+
 /* static */ WasmFunctionScope*
 WasmFunctionScope::create(JSContext* cx, WasmInstanceObject* instance, uint32_t funcIndex)
 {
@@ -1197,8 +1211,13 @@ WasmFunctionScope::create(JSContext* cx, WasmInstanceObject* instance, uint32_t 
 
     {
         // TODO pull the local variable names from the wasm function definition.
+        wasm::ValTypeVector locals;
+        size_t argsLength;
+        if (!instance->instance().code().debugGetLocalTypes(funcIndex, &locals, &argsLength))
+            return nullptr;
+        uint32_t namesCount = locals.length();
 
-        Rooted<UniquePtr<Data>> data(cx, NewEmptyScopeData<WasmFunctionScope>(cx));
+        Rooted<UniquePtr<Data>> data(cx, NewEmptyScopeData<WasmFunctionScope>(cx, namesCount));
         if (!data)
             return nullptr;
 
@@ -1206,6 +1225,13 @@ WasmFunctionScope::create(JSContext* cx, WasmInstanceObject* instance, uint32_t 
 
         data->instance.init(instance);
         data->funcIndex = funcIndex;
+        data->length = namesCount;
+        for (size_t i = 0; i < namesCount; i++) {
+            RootedAtom name(cx, GenerateWasmVariableName(cx, i));
+            if (!name)
+                return nullptr;
+            data->names[i] = BindingName(name, false);
+        }
 
         Scope* scope = Scope::create(cx, ScopeKind::WasmFunction, enclosingScope, /* envShape = */ nullptr);
         if (!scope)
@@ -1416,10 +1442,10 @@ BindingIter::init(WasmFunctionScope::Data& data)
     // positional formals - [0, 0)
     //      other formals - [0, 0)
     //    top-level funcs - [0, 0)
-    //               vars - [0, 0)
-    //               lets - [0, 0)
-    //             consts - [0, 0)
-    init(0, 0, 0, 0, 0, 0,
+    //               vars - [0, data.length)
+    //               lets - [data.length, data.length)
+    //             consts - [data.length, data.length)
+    init(0, 0, 0, 0, data.length, data.length,
          CanHaveFrameSlots | CanHaveEnvironmentSlots,
          UINT32_MAX, UINT32_MAX,
          data.names, data.length);

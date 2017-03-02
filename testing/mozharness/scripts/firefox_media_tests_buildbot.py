@@ -21,11 +21,8 @@ from mozharness.mozilla.blob_upload import (
     BlobUploadMixin,
     blobupload_config_options
 )
-from mozharness.mozilla.buildbot import (
-    TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
-)
 from mozharness.mozilla.testing.firefox_media_tests import (
-    FirefoxMediaTestsBase, TESTFAILED, SUCCESS
+    FirefoxMediaTestsBase
 )
 
 
@@ -43,16 +40,6 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
                          'run-media-tests',
                          ],
         )
-
-    def run_media_tests(self):
-        status = super(FirefoxMediaTestsBuildbot, self).run_media_tests()
-        if status == SUCCESS:
-            tbpl_status = TBPL_SUCCESS
-        else:
-            tbpl_status = TBPL_FAILURE
-        if status == TESTFAILED:
-            tbpl_status = TBPL_WARNING
-        self.buildbot_status(tbpl_status)
 
     def query_abs_dirs(self):
         if self.abs_dirs:

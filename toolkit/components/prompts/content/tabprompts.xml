@@ -5,7 +5,7 @@
 
 <!-- This file is imported into the browser window, and expects various variables,
      e.g. Ci, Services, to be available. -->
-<!-- eslint mozilla/import-browserjs-globals:"warn" -->
+<!-- eslint-env mozilla/browser-window -->
 
 <!DOCTYPE bindings [
 <!ENTITY % commonDialogDTD  SYSTEM "chrome://global/locale/commonDialog.dtd">

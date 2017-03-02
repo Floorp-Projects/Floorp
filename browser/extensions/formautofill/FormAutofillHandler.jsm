@@ -103,45 +103,30 @@ FormAutofillHandler.prototype = {
 
   /**
    * Processes form fields that can be autofilled, and populates them with the
-   * data provided by backend.
+   * profile provided by backend.
    *
-   * @param {Array<Object>} autofillResult
-   *        Data returned by the user interface.
-   *        [{
-   *          section: Value originally provided to the user interface.
-   *          addressType: Value originally provided to the user interface.
-   *          contactType: Value originally provided to the user interface.
-   *          fieldName: Value originally provided to the user interface.
-   *          value: String with which the field should be updated.
-   *          index: Index to match the input in fieldDetails
-   *        }],
-   *        }
+   * @param {Object} profile
+   *        A profile to be filled in.
+   * @param {Object} focusedInput
+   *        A focused input element which is skipped for filling.
    */
-  autofillFormFields(autofillResult) {
-    log.debug("autofillFormFields:", autofillResult);
-    for (let field of autofillResult) {
-      // TODO: Skip filling the value of focused input which is filled in
-      // FormFillController.
+  autofillFormFields(profile, focusedInput) {
+    log.debug("profile in autofillFormFields:", profile);
+    for (let fieldDetail of this.fieldDetails) {
+      // Avoid filling field value in the following cases:
+      // 1. the focused input which is filled in FormFillController.
+      // 2. a non-empty input field
+      // 3. the invalid value set
 
-      // Get the field details, if it was processed by the user interface.
-      let fieldDetail = this.fieldDetails[field.index];
-
-      // Avoid the invalid value set
-      if (!fieldDetail || !field.value) {
+      if (fieldDetail.element === focusedInput ||
+          fieldDetail.element.value) {
         continue;
       }
 
-      let info = FormAutofillHeuristics.getInfo(fieldDetail.element);
-      if (!info ||
-          field.section != info.section ||
-          field.addressType != info.addressType ||
-          field.contactType != info.contactType ||
-          field.fieldName != info.fieldName) {
-        Cu.reportError("Autocomplete tokens mismatched");
-        continue;
+      let value = profile[fieldDetail.fieldName];
+      if (value) {
+        fieldDetail.element.setUserInput(value);
       }
-
-      fieldDetail.element.setUserInput(field.value);
     }
   },
 };

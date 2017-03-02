@@ -56,7 +56,6 @@ ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central
 MAR_CHANNEL_ID=firefox-mozilla-central
 MOZ_PROFILE_MIGRATOR=1
 MOZ_JSDOWNLOADS=1
-MOZ_RUST_MP4PARSE=1
 
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1

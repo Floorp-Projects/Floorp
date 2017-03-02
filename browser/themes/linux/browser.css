@@ -1524,15 +1524,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   background-attachment: fixed;
 }
 
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
-  background-repeat: no-repeat;
-  background-position: right top;
-  background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
-  background-image: none;
-  background-color: transparent;
-}
-
 #main-window[customization-lwtheme]:-moz-lwtheme {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),

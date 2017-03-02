@@ -20,7 +20,7 @@ function test() {
     windowCache.push(w);
     return w;
   }
-  function closeCachedWindows () {
+  function closeCachedWindows() {
     windowCache.forEach(w => w.close());
   }
 
@@ -32,7 +32,7 @@ function test() {
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
-      is(sidebarBox.hidden, true, 'Opening a private window from reg window does not open the sidebar');
+      is(sidebarBox.hidden, true, "Opening a private window from reg window does not open the sidebar");
     }).
     // Part 2: NON PRIVATE WINDOW -> NON PRIVATE WINDOW
     then(() => openWindow(window)).
@@ -42,7 +42,7 @@ function test() {
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
-      is(sidebarBox.hidden, false, 'Opening a reg window from reg window does open the sidebar');
+      is(sidebarBox.hidden, false, "Opening a reg window from reg window does open the sidebar");
     }).
     // Part 3: PRIVATE WINDOW -> NON PRIVATE WINDOW
     then(() => openWindow(window, { private: true })).
@@ -52,7 +52,7 @@ function test() {
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
-      is(sidebarBox.hidden, true, 'Opening a reg window from a private window does not open the sidebar');
+      is(sidebarBox.hidden, true, "Opening a reg window from a private window does not open the sidebar");
     }).
     // Part 4: PRIVATE WINDOW -> PRIVATE WINDOW
     then(() => openWindow(window, { private: true })).
@@ -62,7 +62,7 @@ function test() {
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
-      is(sidebarBox.hidden, false, 'Opening a private window from private window does open the sidebar');
+      is(sidebarBox.hidden, false, "Opening a private window from private window does open the sidebar");
     }).
     then(closeCachedWindows).
     then(finish);

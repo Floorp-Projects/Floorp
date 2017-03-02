@@ -287,6 +287,8 @@ public:
   // called to notify that the principal of the decoder's media resource has changed.
   void NotifyDecoderPrincipalChanged() final override;
 
+  void GetEMEInfo(nsString& aEMEInfo);
+
   // An interface for observing principal changes on the media elements
   // MediaDecoder. This will also be notified if the active CORSMode changes.
   class DecoderPrincipalChangeObserver

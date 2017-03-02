@@ -1,7 +1,11 @@
 "use strict";
 
 module.exports = {
-  "rules": {
-    "mozilla/import-browserjs-globals": "warn",
-  }
+  "env": {
+    "mozilla/browser-window": true,
+  },
+
+  "plugins": [
+    "mozilla"
+  ],
 };

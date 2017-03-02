@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%include ../../shared/downloads/indicator.inc.css
+
 /*** Status and progress indicator ***/
 
 #downloads-animation-container {
@@ -21,31 +23,31 @@
 
 @media not all and (min-resolution: 1.1dppx) {
   #downloads-button {
-    --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 0, 198, 18, 180);
-    --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
-    --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
-    --downloads-indicator-icon-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
+    --downloads-indicator-image: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 0, 198, 18, 180);
+    --downloads-indicator-image-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"), 18, 198, 36, 180);
+    --downloads-indicator-image-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
+    --downloads-indicator-image-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 18, 198, 36, 180);
   }
 }
 
 @media (min-resolution: 1.1dppx) {
   #downloads-button {
-    --downloads-indicator-icon: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
-    --downloads-indicator-icon-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 36, 396, 72, 360);
-    --downloads-indicator-icon-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);
-    --downloads-indicator-icon-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 36, 396, 72, 360);
+    --downloads-indicator-image: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-image-attention: -moz-image-rect(url("chrome://browser/skin/Toolbar@2x.png"), 36, 396, 72, 360);
+    --downloads-indicator-image-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 0, 396, 36, 360);
+    --downloads-indicator-image-attention-inverted: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted@2x.png"), 36, 396, 72, 360);
   }
 }
 
 #downloads-indicator-icon {
-  background: var(--downloads-indicator-icon) center no-repeat;
+  background: var(--downloads-indicator-image) center no-repeat;
   width: 18px;
   height: 18px;
   background-size: 18px;
 }
 
 toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: var(--downloads-indicator-icon-inverted);
+  background-image: var(--downloads-indicator-image-inverted);
 }
 
 #downloads-button[attention="warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
@@ -79,11 +81,11 @@ toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-in
 }
 
 #downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: var(--downloads-indicator-icon-attention);
+  background-image: var(--downloads-indicator-image-attention);
 }
 
 toolbar[brighttext] #downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: var(--downloads-indicator-icon-attention-inverted);
+  background-image: var(--downloads-indicator-image-attention-inverted);
 }
 
 #downloads-button[cui-areatype="menu-panel"][attention="success"] {
@@ -95,20 +97,20 @@ toolbar[brighttext] #downloads-button[attention="success"] > #downloads-indicato
    equivalent to -moz-any([progress], [paused]). */
 
 #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background: var(--downloads-indicator-icon) center no-repeat;
+  background: var(--downloads-indicator-image) center no-repeat;
   background-size: 12px;
 }
 
 toolbar[brighttext] #downloads-button:not([counter]):not([attention="success"]) > #downloads-indicator-anchor > #downloads-button-progress-area > #downloads-indicator-counter {
-  background-image: var(--downloads-indicator-icon-inverted);
+  background-image: var(--downloads-indicator-image-inverted);
 }
 
 #downloads-button:not([counter])[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: var(--downloads-indicator-icon-attention);
+  background-image: var(--downloads-indicator-image-attention);
 }
 
 toolbar[brighttext] #downloads-button:not([counter])[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-  background-image: var(--downloads-indicator-icon-attention-inverted);
+  background-image: var(--downloads-indicator-image-attention-inverted);
 }
 
 /*** Download notifications ***/

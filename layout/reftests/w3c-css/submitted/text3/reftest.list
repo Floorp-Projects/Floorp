@@ -5,6 +5,11 @@
 == text-align-match-parent-root-ltr.html text-align-match-parent-root-ltr-ref.html
 == text-align-match-parent-root-rtl.html text-align-match-parent-root-rtl-ref.html
 
+pref(layout.css.text-justify.enabled,true) == text-justify-none-001.html text-justify-none-001-ref.html
+pref(layout.css.text-justify.enabled,true) == text-justify-inter-word-001.html text-justify-inter-word-001-ref.html
+pref(layout.css.text-justify.enabled,true) == text-justify-inter-character-001.html text-justify-inter-character-001-ref.html
+pref(layout.css.text-justify.enabled,true) == text-justify-distribute-001.html text-justify-inter-character-001-ref.html
+
 == text-word-spacing-001.html text-word-spacing-ref.html
 
 == segment-break-transformation-removable-1.html segment-break-transformation-removable-ref.html

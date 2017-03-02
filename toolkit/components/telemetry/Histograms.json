@@ -4081,6 +4081,15 @@
     "n_buckets": 30,
     "description": "Time spent inside ClassifyLocalWithTables (ms)"
   },
+  "URLCLASSIFIER_ASYNC_CLASSIFYLOCAL_TIME": {
+    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
+    "bug_numbers": [1341506],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 30,
+    "description": "Time spent per AsyncClassifyLocalWithTables (ms)"
+  },
   "URLCLASSIFIER_PS_FILELOAD_TIME": {
     "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
     "expires_in_version": "never",
@@ -6957,8 +6966,7 @@
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1220885],
-    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment."
   },
   "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
@@ -6966,24 +6974,21 @@
     "kind": "enumerated",
     "n_values": 32,
     "bug_numbers": [1238420],
-    "description": "The error code reported when an MP4 parse attempt has failed.0 = OK, 1 = bad argument, 2 = invalid data, 3 = unsupported, 4 = unexpected end of file, 5 = read error.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "The error code reported when an MP4 parse attempt has failed.0 = OK, 1 = bad argument, 2 = invalid data, 3 = unsupported, 4 = unexpected end of file, 5 = read error."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1231169],
-    "description": "Whether rust and stagefight mp4 parser audio track results match.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "Whether rust and stagefight mp4 parser audio track results match."
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
     "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1231169],
-    "description": "Whether rust and stagefight mp4 parser video track results match.",
-    "cpp_guard": "MOZ_RUST_MP4PARSE"
+    "description": "Whether rust and stagefight mp4 parser video track results match."
   },
   "MEDIA_WMF_DECODE_ERROR": {
     "expires_in_version": "55",
@@ -10821,10 +10826,26 @@
   },
   "FENNEC_SESSIONSTORE_DAMAGED_SESSION_FILE": {
     "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "56",
+    "expires_in_version": "61",
     "kind": "flag",
     "bug_numbers": [1284017],
     "description": "When restoring tabs on startup, reading from sessionstore.js failed, even though the file exists and is not containing an explicitly empty window.",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
+    "alert_emails": ["jh+bugzilla@buttercookie.de"],
+    "expires_in_version": "61",
+    "kind": "flag",
+    "bug_numbers": [1190627],
+    "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_SESSIONSTORE_ALL_FILES_DAMAGED": {
+    "alert_emails": ["jh+bugzilla@buttercookie.de"],
+    "expires_in_version": "61",
+    "kind": "flag",
+    "bug_numbers": [1337115],
+    "description": "Both the main session file and its backup could not be read and and the first run pref is false.",
     "cpp_guard": "ANDROID"
   },
   "SHARED_WORKER_COUNT": {
@@ -10833,14 +10854,6 @@
     "kind": "count",
     "bug_numbers": [1295980],
     "description": "Number of the use of SharedWorkers."
-  },
-  "FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP": {
-    "alert_emails": ["jh+bugzilla@buttercookie.de"],
-    "expires_in_version": "56",
-    "kind": "flag",
-    "bug_numbers": [1190627],
-    "description": "When restoring tabs on startup, reading from sessionstore.js failed, but sessionstore.bak was read successfully.",
-    "cpp_guard": "ANDROID"
   },
   "NUMBER_OF_PROFILES": {
     "alert_emails": ["amarchesini@mozilla.com"],

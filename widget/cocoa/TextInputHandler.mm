@@ -400,6 +400,48 @@ TISInputSourceWrapper::TranslateToChar(UInt32 aKeyCode, UInt32 aModifiers,
   return static_cast<uint32_t>(str.CharAt(0));
 }
 
+bool
+TISInputSourceWrapper::IsDeadKey(UInt32 aKeyCode,
+                                 UInt32 aModifiers,
+                                 UInt32 aKbType)
+{
+  const UCKeyboardLayout* UCKey = GetUCKeyboardLayout();
+
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p TISInputSourceWrapper::IsDeadKey, aKeyCode=0x%X, "
+     "aModifiers=0x%X, aKbType=0x%X UCKey=%p\n    "
+     "Shift: %s, Ctrl: %s, Opt: %s, Cmd: %s, CapsLock: %s, NumLock: %s",
+     this, static_cast<unsigned int>(aKeyCode), static_cast<unsigned int>(aModifiers),
+     static_cast<unsigned int>(aKbType), UCKey,
+     OnOrOff(aModifiers & shiftKey), OnOrOff(aModifiers & controlKey),
+     OnOrOff(aModifiers & optionKey), OnOrOff(aModifiers & cmdKey),
+     OnOrOff(aModifiers & alphaLock),
+     OnOrOff(aModifiers & kEventKeyModifierNumLockMask)));
+
+  if (NS_WARN_IF(!UCKey)) {
+    return false;
+  }
+
+  UInt32 deadKeyState = 0;
+  UniCharCount len;
+  UniChar chars[5];
+  OSStatus err = ::UCKeyTranslate(UCKey, aKeyCode,
+                                  kUCKeyActionDown, aModifiers >> 8,
+                                  aKbType, 0,
+                                  &deadKeyState, 5, &len, chars);
+
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p TISInputSourceWrapper::IsDeadKey, err=0x%X, "
+     "len=%" PRIuSIZE ", deadKeyState=%u",
+     this, static_cast<int>(err), len, deadKeyState));
+
+  if (NS_WARN_IF(err != noErr)) {
+    return false;
+  }
+
+  return deadKeyState != 0;
+}
+
 void
 TISInputSourceWrapper::InitByInputSourceID(const char* aID)
 {
@@ -977,15 +1019,18 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     // [aNativeKeyEvent characters].  Otherwise, translate input character of
     // the key without control key.
     else if (aKeyEvent.IsControl()) {
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                         aKeyEvent.mKeyValue);
-      if (aKeyEvent.mKeyValue.IsEmpty() ||
-          IsControlChar(aKeyEvent.mKeyValue[0])) {
-        NSUInteger cocoaState =
-          [aNativeKeyEvent modifierFlags] & ~NSControlKeyMask;
-        UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
-        aKeyEvent.mKeyValue =
-          TranslateToChar(nativeKeyCode, carbonState, kbType);
+      NSUInteger cocoaState =
+        [aNativeKeyEvent modifierFlags] & ~NSControlKeyMask;
+      UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
+      if (IsDeadKey(nativeKeyCode, carbonState, kbType)) {
+        aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_Dead;
+      } else {
+        aKeyEvent.mKeyValue = TranslateToChar(nativeKeyCode, carbonState, kbType);
+        if (!aKeyEvent.mKeyValue.IsEmpty() &&
+            IsControlChar(aKeyEvent.mKeyValue[0])) {
+          // Don't expose control character to the web.
+          aKeyEvent.mKeyValue.Truncate();
+        }
       }
     }
     // Otherwise, KeyboardEvent.key expose
