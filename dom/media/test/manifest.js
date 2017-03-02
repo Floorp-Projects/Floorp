@@ -1615,6 +1615,8 @@ function MediaTestManager() {
   // Instead MediaTestManager will manage timeout of each test.
   SimpleTest.requestLongerTimeout(1000);
 
+  this.hasTimeout = false;
+
   // Return how many seconds elapsed since |begin|.
   function elapsedTime(begin) {
     var end = new Date();
@@ -1667,6 +1669,7 @@ function MediaTestManager() {
     this.handlers[token] = handler;
 
     var onTimeout = function() {
+      this.hasTimeout = true;
       ok(false, `${token} timed out!`);
       this.finished(token);
     }.bind(this);
@@ -1732,6 +1735,9 @@ function MediaTestManager() {
       if (this.onFinished) {
         this.onFinished();
       }
+      if (this.hasTimeout) {
+        dumpDebugInfo();
+      }
       var onCleanup = function() {
         var end = new Date();
         SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
@@ -1766,18 +1772,20 @@ function isSlowPlatform() {
   return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
 }
 
+function dumpDebugInfo() {
+  for (var v of document.getElementsByTagName("video")) {
+    v.mozDumpDebugInfo();
+  }
+  for (var a of document.getElementsByTagName("audio")) {
+    a.mozDumpDebugInfo();
+  }
+}
+
 // Could be undefined in a page opened by the parent test page
 // like file_access_controls.html.
 if ("SimpleTest" in window) {
   SimpleTest.requestFlakyTimeout("untriaged");
 
   // Register timeout function to dump debugging logs.
-  SimpleTest.registerTimeoutFunction(function() {
-    for (var v of document.getElementsByTagName("video")) {
-      v.mozDumpDebugInfo();
-    }
-    for (var a of document.getElementsByTagName("audio")) {
-      a.mozDumpDebugInfo();
-    }
-  });
+  SimpleTest.registerTimeoutFunction(dumpDebugInfo);
 }
