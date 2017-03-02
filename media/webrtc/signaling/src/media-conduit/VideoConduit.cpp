@@ -176,6 +176,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mCapId(-1)
   , mCodecMutex("VideoConduit codec db")
   , mInReconfig(false)
+  , mRecvStream(nullptr)
+  , mSendStream(nullptr)
   , mLastWidth(0)
   , mLastHeight(0) // initializing as 0 forces a check for reconfig at start
   , mSendingWidth(0)
@@ -194,9 +196,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mMinBitrateEstimate(0)
   , mCodecMode(webrtc::kRealtimeVideo)
   , mCall(aCall) // refcounted store of the call object
-  , mSendStream(nullptr)
   , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-  , mRecvStream(nullptr)
   , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
   , mRecvSSRCSet(false)
   , mRecvSSRCSetInProgress(false)
@@ -272,6 +272,7 @@ bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
   }
 
   if (wasTransmitting) {
+    MutexAutoLock lock(mCodecMutex);
     DeleteSendStream();
     if (StartTransmitting() != kMediaConduitNoError) {
       return false;
@@ -323,6 +324,7 @@ PayloadNameToEncoderType(const std::string& name)
 void
 WebrtcVideoConduit::DeleteSendStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
   if (mSendStream) {
 
     if (mLoadManager && mSendStream->LoadStateObserver()) {
@@ -338,6 +340,8 @@ WebrtcVideoConduit::DeleteSendStream()
 MediaConduitErrorCode
 WebrtcVideoConduit::CreateSendStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
+
   webrtc::VideoEncoder::EncoderType encoder_type =
     PayloadNameToEncoderType(mSendStreamConfig.encoder_settings.payload_name);
   if (encoder_type == webrtc::VideoEncoder::EncoderType::kUnsupportedCodec) {
@@ -391,6 +395,7 @@ PayloadNameToDecoderType(const std::string& name)
 void
 WebrtcVideoConduit::DeleteRecvStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mCall->Call()->DestroyVideoReceiveStream(mRecvStream);
     mRecvStream = nullptr;
@@ -401,6 +406,8 @@ WebrtcVideoConduit::DeleteRecvStream()
 MediaConduitErrorCode
 WebrtcVideoConduit::CreateRecvStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
+
   webrtc::VideoReceiveStream::Decoder decoder_desc;
   std::unique_ptr<webrtc::VideoDecoder> decoder;
   webrtc::VideoDecoder::DecoderType decoder_type;
@@ -651,6 +658,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     }
 
     // This will cause a new encoder to be created by StartTransmitting()
+    MutexAutoLock lock(mCodecMutex);
     DeleteSendStream();
   }
 
@@ -699,13 +707,19 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
     return false;
   }
 
-  DeleteRecvStream();
-  MediaConduitErrorCode rval = CreateRecvStream();
-  if (rval != kMediaConduitNoError) {
-    CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
-    return false;
+  // This will destroy mRecvStream and create a new one (argh, why can't we change
+  // it without a full destroy?)
+  // We're going to modify mRecvStream, we must lock.  Only modified on MainThread.
+  // All non-MainThread users must lock before reading/using
+  {
+    MutexAutoLock lock(mCodecMutex);
+    DeleteRecvStream();
+    MediaConduitErrorCode rval = CreateRecvStream();
+    if (rval != kMediaConduitNoError) {
+      CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+      return false;
+    }
   }
-
   return (StartReceiving() == kMediaConduitNoError);
 }
 
@@ -947,6 +961,7 @@ WebrtcVideoConduit::Destroy()
   // We can't delete the VideoEngine until all these are released!
   // And we can't use a Scoped ptr, since the order is arbitrary
 
+  MutexAutoLock lock(mCodecMutex);
   DeleteSendStream();
   DeleteRecvStream();
 }
@@ -1175,14 +1190,17 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     mRecvCodecList.SwapElements(recv_codecs);
     recv_codecs.Clear();
     mRecvStreamConfig.rtp.rtx.clear();
-    DeleteRecvStream();
-    // Rebuilds mRecvStream from mRecvStreamConfig
-    MediaConduitErrorCode rval = CreateRecvStream();
-    if (rval != kMediaConduitNoError) {
-      CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
-      return rval;
-    }
 
+    {
+      MutexAutoLock lock(mCodecMutex);
+      DeleteRecvStream();
+      // Rebuilds mRecvStream from mRecvStreamConfig
+      MediaConduitErrorCode rval = CreateRecvStream();
+      if (rval != kMediaConduitNoError) {
+        CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+        return rval;
+      }
+    }
     return StartReceiving();
   }
   return kMediaConduitNoError;
