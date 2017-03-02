@@ -1531,9 +1531,6 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
 {
     const AstSig* sig = sigs[func.sig().index()];
 
-    size_t startExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
-    uint32_t startLineno = c.buffer.lineno();
-
     uint32_t argsNum = sig->args().length();
     uint32_t localsNum = func.vars().length();
     if (localsNum > 0) {
@@ -1566,17 +1563,9 @@ RenderFunctionBody(WasmRenderContext& c, AstFunc& func, const AstModule::SigVect
             return false;
     }
 
-    size_t endExprIndex = c.maybeSourceMap ? c.maybeSourceMap->exprlocs().length() : 0;
-    uint32_t endLineno = c.buffer.lineno();
-
     if (c.maybeSourceMap) {
-        if (!c.maybeSourceMap->exprlocs().emplaceBack(endLineno, c.buffer.column(), func.endOffset()))
+        if (!c.maybeSourceMap->exprlocs().emplaceBack(c.buffer.lineno(), c.buffer.column(), func.endOffset()))
             return false;
-        if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex,
-                                                          startLineno, endLineno))
-        {
-            return false;
-        }
     }
 
     return true;
