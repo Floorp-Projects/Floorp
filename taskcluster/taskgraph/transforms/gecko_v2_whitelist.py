@@ -50,6 +50,7 @@ JOB_NAME_WHITELIST = set([
     'macosx64-opt',
     'macosx64-qr-debug',
     'macosx64-qr-opt',
+    'macosx64-st-an-debug',
     'macosx64-st-an-opt',
     'shell-haz-debug',
     'sm-arm-sim-debug',

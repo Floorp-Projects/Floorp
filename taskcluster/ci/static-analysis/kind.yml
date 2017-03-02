@@ -18,8 +18,31 @@ job-defaults:
         tier: 1
 
 jobs:
+    macosx64-st-an/debug:
+        description: "MacOS X x64 Debug Cross-compile Static Analysis"
+        index:
+            job-name: macosx64-st-an-debug
+        treeherder:
+            platform: osx-10-7/debug
+        worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
+        run:
+            using: mozharness
+            actions: [build generate-build-stats update]
+            config:
+                - builds/releng_base_mac_64_cross_builds.py
+                - balrog/production.py
+            # enables static analysis.
+            custom-build-variant-cfg: cross-debug-st-an
+            script: "mozharness/scripts/fx_desktop_build.py"
+            tooltool-downloads: internal
+            keep-artifacts: false
+
     macosx64-st-an/opt:
-        description: "MacOS X x64 Cross-compile Static Analysis"
+        description: "MacOS X x64 Opt Cross-compile Static Analysis"
         index:
             job-name: macosx64-st-an-opt
         treeherder:
