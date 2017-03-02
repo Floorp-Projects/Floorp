@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozIMozIntl.h"
+#include "mozIMozIntlHelper.h"
 
 namespace mozilla {
 
-class MozIntl final : public mozIMozIntl
+class MozIntlHelper final : public mozIMozIntlHelper
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZIMOZINTL
+  NS_DECL_MOZIMOZINTLHELPER
 
-  MozIntl();
+  MozIntlHelper();
 
 private:
-  ~MozIntl();
+  ~MozIntlHelper();
 };
 
 } // namespace mozilla
