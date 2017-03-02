@@ -18,8 +18,6 @@ public:
       : mInitialized(false)
       , mOGLLibrary(nullptr)
       , mHasRobustness(false)
-      , mHasDXInterop(false)
-      , mHasDXInterop2(false)
       , mWindow (0)
       , mWindowDC(0)
       , mWindowGLContext(0)
@@ -101,8 +99,7 @@ public:
     HWND CreateDummyWindow(HDC* aWindowDC = nullptr);
 
     bool HasRobustness() const { return mHasRobustness; }
-    bool HasDXInterop() const { return mHasDXInterop; }
-    bool HasDXInterop2() const { return mHasDXInterop2; }
+    bool HasDXInterop2() const { return bool(fDXOpenDevice); }
     bool IsInitialized() const { return mInitialized; }
     HWND GetWindow() const { return mWindow; }
     HDC GetWindowDC() const {return mWindowDC; }
@@ -114,8 +111,6 @@ private:
     bool mInitialized;
     PRLibrary* mOGLLibrary;
     bool mHasRobustness;
-    bool mHasDXInterop;
-    bool mHasDXInterop2;
 
     HWND mWindow;
     HDC mWindowDC;
