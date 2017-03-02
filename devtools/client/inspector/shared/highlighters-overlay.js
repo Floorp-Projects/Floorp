@@ -31,11 +31,18 @@ function HighlightersOverlay(inspector) {
   this.hoveredHighlighterShown = null;
   // Name of the selector highlighter shown.
   this.selectorHighlighterShown = null;
+  // Saved state to be restore on page navigation.
+  this.state = {
+    // Only the grid highlighter state is saved at the moment.
+    grid: {}
+  };
 
   this.onClick = this.onClick.bind(this);
   this.onMouseMove = this.onMouseMove.bind(this);
   this.onMouseOut = this.onMouseOut.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
+  this.onNavigate = this.onNavigate.bind(this);
+  this._handleRejection = this._handleRejection.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -64,6 +71,7 @@ HighlightersOverlay.prototype = {
     el.addEventListener("mouseout", this.onMouseOut);
     el.ownerDocument.defaultView.addEventListener("mouseout", this.onMouseOut);
 
+    this.inspector.target.on("navigate", this.onNavigate);
     this.inspector.target.on("will-navigate", this.onWillNavigate);
   },
 
@@ -85,6 +93,7 @@ HighlightersOverlay.prototype = {
     el.removeEventListener("mousemove", this.onMouseMove);
     el.removeEventListener("mouseout", this.onMouseOut);
 
+    this.inspector.target.off("navigate", this.onNavigate);
     this.inspector.target.off("will-navigate", this.onWillNavigate);
   },
 
@@ -126,10 +135,14 @@ HighlightersOverlay.prototype = {
 
     this._toggleRuleViewGridIcon(node, true);
 
-    // Emit the NodeFront of the grid container element that the grid highlighter was
-    // shown for.
-    this.emit("grid-highlighter-shown", node);
-    this.gridHighlighterShown = node;
+    node.getUniqueSelector().then(selector => {
+      // Save grid highlighter state.
+      this.state.grid = { selector, options };
+      this.gridHighlighterShown = node;
+      // Emit the NodeFront of the grid container element that the grid highlighter was
+      // shown for.
+      this.emit("grid-highlighter-shown", node);
+    }).catch(this._handleRejection);
   }),
 
   /**
@@ -151,6 +164,34 @@ HighlightersOverlay.prototype = {
     // hidden for.
     this.emit("grid-highlighter-hidden", this.gridHighlighterShown);
     this.gridHighlighterShown = null;
+
+    // Erase grid highlighter state.
+    this.state.grid = {};
+  }),
+
+  /**
+   * Restore the saved highlighter states.
+   *
+   * @return {Promise} that resolves when the highlighter state was restored, and the
+   *          expected highlighters are displayed.
+   */
+  restoreState: Task.async(function* () {
+    let { selector, options } = this.state.grid;
+
+    if (!selector) {
+      return;
+    }
+
+    // Wait for the new root to be ready in the inspector.
+    yield this.onInspectorNewRoot;
+
+    let walker = this.inspector.walker;
+    let rootNode = yield walker.getRootNode();
+    let nodeFront = yield walker.querySelector(rootNode, selector);
+
+    if (nodeFront) {
+      yield this.showGridHighlighter(nodeFront, options);
+    }
   }),
 
   /**
@@ -171,6 +212,12 @@ HighlightersOverlay.prototype = {
       this.highlighters[type] = highlighter;
       return highlighter;
     });
+  },
+
+  _handleRejection: function (error) {
+    if (!this.destroyed) {
+      console.error(error);
+    }
   },
 
   /**
@@ -316,12 +363,22 @@ HighlightersOverlay.prototype = {
   },
 
   /**
+   * Restore saved highlighter state after navigate.
+   */
+  onNavigate: function () {
+    this.restoreState().catch(this._handleRejection);
+  },
+
+  /**
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate: function () {
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
+
+    // The inspector panel should emit the new-root event when it is ready after navigate.
+    this.onInspectorNewRoot = this.inspector.once("new-root");
   },
 
   /**
@@ -345,6 +402,7 @@ HighlightersOverlay.prototype = {
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
+    this.destroyed = true;
   }
 };
 
