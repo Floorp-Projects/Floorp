@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "SurfaceCache.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace image {
