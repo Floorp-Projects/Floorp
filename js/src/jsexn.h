@@ -132,6 +132,11 @@ class AutoAssertNoPendingException
 extern const char*
 ValueToSourceForError(JSContext* cx, HandleValue val, JSAutoByteString& bytes);
 
+bool
+GetInternalError(JSContext* cx, unsigned errorNumber, MutableHandleValue error);
+bool
+GetTypeError(JSContext* cx, unsigned errorNumber, MutableHandleValue error);
+
 } // namespace js
 
 #endif /* jsexn_h */

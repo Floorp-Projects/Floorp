@@ -990,7 +990,8 @@ public:
                             BackgroundFactoryRequestChild* aActor,
                             IDBFactory* aFactory,
                             const PrincipalInfo& aPrincipalInfo)
-    : mWorkerPrivate(aWorkerPrivate)
+    : Runnable("indexedDB::WorkerPermissionChallenge")
+    , mWorkerPrivate(aWorkerPrivate)
     , mActor(aActor)
     , mFactory(aFactory)
     , mPrincipalInfo(aPrincipalInfo)
@@ -1009,7 +1010,7 @@ public:
       return false;
     }
 
-    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
+    if (NS_WARN_IF(NS_FAILED(mWorkerPrivate->DispatchToMainThread(this)))) {
       mWorkerPrivate->ModifyBusyCountFromWorker(false);
       return false;
     }
@@ -1106,6 +1107,8 @@ private:
     IPC::Principal ipcPrincipal(principal);
 
     auto* actor = new WorkerPermissionRequestChildProcessActor(this);
+    tabChild->SetEventTargetForActor(actor, wp->MainThreadEventTarget());
+    MOZ_ASSERT(actor->GetActorEventTarget());
     tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
     return false;
   }
@@ -1164,7 +1167,8 @@ class BackgroundRequestChild::PreprocessHelper final
 
 public:
   PreprocessHelper(uint32_t aModuleSetIndex, BackgroundRequestChild* aActor)
-    : mOwningThread(NS_GetCurrentThread())
+    : CancelableRunnable("indexedDB::BackgroundRequestChild::PreprocessHelper")
+    , mOwningThread(aActor->GetActorEventTarget())
     , mActor(aActor)
     , mModuleSetIndex(aModuleSetIndex)
     , mResultCode(NS_OK)
@@ -1400,6 +1404,20 @@ BackgroundFactoryChild::DeallocPBackgroundIDBDatabaseChild(
   return true;
 }
 
+mozilla::ipc::IPCResult
+BackgroundFactoryChild::RecvPBackgroundIDBDatabaseConstructor(
+                                    PBackgroundIDBDatabaseChild* aActor,
+                                    const DatabaseSpec& aSpec,
+                                    PBackgroundIDBFactoryRequestChild* aRequest)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aActor->GetActorEventTarget(),
+    "The event target shall be inherited from its manager actor.");
+
+  return IPC_OK();
+}
+
 /*******************************************************************************
  * BackgroundFactoryRequestChild
  ******************************************************************************/
@@ -1630,6 +1648,8 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
 
   auto* actor = new PermissionRequestChildProcessActor(this, mFactory);
 
+  tabChild->SetEventTargetForActor(actor, this->GetActorEventTarget());
+  MOZ_ASSERT(actor->GetActorEventTarget());
   tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
 
   return IPC_OK();
@@ -1853,6 +1873,8 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aActor->GetActorEventTarget(),
+    "The event target shall be inherited from its manager actor.");
   MOZ_ASSERT(mOpenRequestActor);
 
   MaybeCollectGarbageOnIPCMessage();
@@ -3127,7 +3149,8 @@ class BackgroundCursorChild::DelayedActionRunnable final
 public:
   explicit
   DelayedActionRunnable(BackgroundCursorChild* aActor, ActionFunc aActionFunc)
-    : mActor(aActor)
+    : CancelableRunnable("indexedDB::BackgroundCursorChild::DelayedActionRunnable")
+    , mActor(aActor)
     , mRequest(aActor->mRequest)
     , mActionFunc(aActionFunc)
   {
@@ -3280,7 +3303,8 @@ BackgroundCursorChild::HandleResponse(const void_t& aResponse)
   if (!mCursor) {
     nsCOMPtr<nsIRunnable> deleteRunnable = new DelayedActionRunnable(
       this, &BackgroundCursorChild::SendDeleteMeInternal);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(deleteRunnable));
+      MOZ_ALWAYS_SUCCEEDS(this->GetActorEventTarget()->
+        Dispatch(deleteRunnable.forget(), NS_DISPATCH_NORMAL));
   }
 }
 

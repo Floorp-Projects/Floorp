@@ -112,7 +112,7 @@ WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
 JSObject*
 js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleObject proto)
 {
-    MOZ_ASSERT(unwrapped->isStarGenerator());
+    MOZ_ASSERT(unwrapped->isAsync());
     MOZ_ASSERT(proto, "We need an explicit prototype to avoid the default"
                       "%FunctionPrototype% fallback in NewFunctionWithProto().");
 

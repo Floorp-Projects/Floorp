@@ -396,8 +396,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             ntrynotes = script->trynotes()->length;
         if (script->hasScopeNotes())
             nscopenotes = script->scopeNotes()->length;
-        if (script->hasYieldOffsets())
-            nyieldoffsets = script->yieldOffsets().length();
+        if (script->hasYieldAndAwaitOffsets())
+            nyieldoffsets = script->yieldAndAwaitOffsets().length();
 
         nTypeSets = script->nTypeSets();
         funLength = script->funLength();
@@ -904,7 +904,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
 
     for (i = 0; i < nyieldoffsets; ++i) {
-        uint32_t* offset = &script->yieldOffsets()[i];
+        uint32_t* offset = &script->yieldAndAwaitOffsets()[i];
         if (!xdr->codeUint32(offset))
             return false;
     }
@@ -2497,7 +2497,7 @@ ScriptDataSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
     if (nscopenotes != 0)
         size += sizeof(ScopeNoteArray) + nscopenotes * sizeof(ScopeNote);
     if (nyieldoffsets != 0)
-        size += sizeof(YieldOffsetArray) + nyieldoffsets * sizeof(uint32_t);
+        size += sizeof(YieldAndAwaitOffsetArray) + nyieldoffsets * sizeof(uint32_t);
 
      return size;
 }
@@ -2594,10 +2594,10 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
         cursor += sizeof(ScopeNoteArray);
     }
 
-    YieldOffsetArray* yieldOffsets = nullptr;
+    YieldAndAwaitOffsetArray* yieldAndAwaitOffsets = nullptr;
     if (nyieldoffsets != 0) {
-        yieldOffsets = reinterpret_cast<YieldOffsetArray*>(cursor);
-        cursor += sizeof(YieldOffsetArray);
+        yieldAndAwaitOffsets = reinterpret_cast<YieldAndAwaitOffsetArray*>(cursor);
+        cursor += sizeof(YieldAndAwaitOffsetArray);
     }
 
     if (nconsts != 0) {
@@ -2638,8 +2638,8 @@ JSScript::partiallyInit(JSContext* cx, HandleScript script, uint32_t nscopes,
     }
 
     if (nyieldoffsets != 0) {
-        yieldOffsets->init(reinterpret_cast<uint32_t*>(cursor), nyieldoffsets);
-        size_t vectorSize = nyieldoffsets * sizeof(script->yieldOffsets()[0]);
+        yieldAndAwaitOffsets->init(reinterpret_cast<uint32_t*>(cursor), nyieldoffsets);
+        size_t vectorSize = nyieldoffsets * sizeof(script->yieldAndAwaitOffsets()[0]);
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
@@ -2659,10 +2659,10 @@ JSScript::initFunctionPrototype(JSContext* cx, Handle<JSScript*> script,
     uint32_t numObjects = 0;
     uint32_t numTryNotes = 0;
     uint32_t numScopeNotes = 0;
-    uint32_t numYieldOffsets = 0;
+    uint32_t numYieldAndAwaitOffsets = 0;
     uint32_t numTypeSets = 0;
     if (!partiallyInit(cx, script, numScopes, numConsts, numObjects, numTryNotes,
-                       numScopeNotes, numYieldOffsets, numTypeSets))
+                       numScopeNotes, numYieldAndAwaitOffsets, numTypeSets))
     {
         return false;
     }
@@ -2775,7 +2775,7 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
     if (!partiallyInit(cx, script,
                        bce->scopeList.length(), bce->constList.length(), bce->objectList.length,
                        bce->tryNoteList.length(), bce->scopeNoteList.length(),
-                       bce->yieldOffsetList.length(), bce->typesetCount))
+                       bce->yieldAndAwaitOffsetList.length(), bce->typesetCount))
     {
         return false;
     }
@@ -2830,8 +2830,8 @@ JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script, BytecodeEmitt
 
     // Copy yield offsets last, as the generator kind is set in
     // initFromFunctionBox.
-    if (bce->yieldOffsetList.length() != 0)
-        bce->yieldOffsetList.finish(script->yieldOffsets(), prologueLength);
+    if (bce->yieldAndAwaitOffsetList.length() != 0)
+        bce->yieldAndAwaitOffsetList.finish(script->yieldAndAwaitOffsets(), prologueLength);
 
 #ifdef DEBUG
     script->assertValidJumpTargets();
@@ -3224,7 +3224,7 @@ CloneInnerInterpretedFunction(JSContext* cx, HandleScope enclosingScope, HandleF
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
-    if (srcFun->isStarGenerator()) {
+    if (srcFun->isStarGenerator() || srcFun->isAsync()) {
         cloneProto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, cx->global());
         if (!cloneProto)
             return nullptr;
@@ -3278,7 +3278,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     uint32_t nscopes   = src->scopes()->length;
     uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes()->length : 0;
     uint32_t nscopenotes = src->hasScopeNotes() ? src->scopeNotes()->length : 0;
-    uint32_t nyieldoffsets = src->hasYieldOffsets() ? src->yieldOffsets().length() : 0;
+    uint32_t nyieldoffsets = src->hasYieldAndAwaitOffsets() ? src->yieldAndAwaitOffsets().length() : 0;
 
     /* Script data */
 
@@ -3421,8 +3421,10 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
         dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
     if (nscopenotes != 0)
         dst->scopeNotes()->vector = Rebase<ScopeNote>(dst, src, src->scopeNotes()->vector);
-    if (nyieldoffsets != 0)
-        dst->yieldOffsets().vector_ = Rebase<uint32_t>(dst, src, src->yieldOffsets().vector_);
+    if (nyieldoffsets != 0) {
+        dst->yieldAndAwaitOffsets().vector_ =
+            Rebase<uint32_t>(dst, src, src->yieldAndAwaitOffsets().vector_);
+    }
 
     /*
      * Function delazification assumes that their script does not have a
@@ -3957,7 +3959,9 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
     if (script->needsArgsObj())
         return true;
 
-    MOZ_ASSERT(!script->isGenerator());
+    MOZ_ASSERT(!script->isStarGenerator());
+    MOZ_ASSERT(!script->isLegacyGenerator());
+    MOZ_ASSERT(!script->isAsync());
 
     script->needsArgsObj_ = true;
 
