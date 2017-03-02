@@ -77,7 +77,7 @@ CommandList.prototype = {
     for (let [name, command] of Object.entries(manifest.commands)) {
       let suggested_key = command.suggested_key || {};
       let shortcut = suggested_key[os] || suggested_key.default;
-      shortcut = shortcut ? shortcut.replace(/\s+/g, "") : null,
+      shortcut = shortcut ? shortcut.replace(/\s+/g, "") : null;
       commands.set(name, {
         description: command.description,
         shortcut,
