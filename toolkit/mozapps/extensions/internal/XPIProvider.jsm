@@ -242,8 +242,9 @@ if (!AppConstants.RELEASE_OR_BETA)
 // Some add-on types that we track internally are presented as other types
 // externally
 const TYPE_ALIASES = {
-  "webextension": "extension",
   "apiextension": "extension",
+  "webextension": "extension",
+  "webextension-theme": "theme",
 };
 
 const CHROME_TYPES = new Set([
@@ -253,18 +254,20 @@ const CHROME_TYPES = new Set([
 ]);
 
 const RESTARTLESS_TYPES = new Set([
-  "webextension",
+  "apiextension",
   "dictionary",
   "experiment",
   "locale",
-  "apiextension",
+  "webextension",
+  "webextension-theme",
 ]);
 
 const SIGNED_TYPES = new Set([
-  "webextension",
+  "apiextension",
   "extension",
   "experiment",
-  "apiextension",
+  "webextension",
+  "webextension-theme",
 ]);
 
 // This is a random number array that can be used as "salt" when generating
@@ -398,6 +401,17 @@ function findMatchingStaticBlocklistItem(aAddon) {
  */
 function addonMap(addons) {
   return new Map(addons.map(a => [a.id, a]));
+}
+
+/**
+ * Helper function that determines whether an addon of a certain type is a
+ * WebExtension.
+ *
+ * @param  {String} type
+ * @return {Boolean}
+ */
+function isWebExtension(type) {
+  return type == "webextension" || type == "webextension-theme";
 }
 
 /**
@@ -933,6 +947,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   let extension = new ExtensionData(uri);
 
   let manifest = yield extension.readManifest();
+  let theme = !!manifest.theme;
 
   // Read the list of available locales, and pre-load messages for
   // all locales.
@@ -956,7 +971,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
-  addon.type = "webextension";
+  addon.type = "webextension" + (theme ? "-theme" : "");
   addon.unpack = false;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
@@ -4440,8 +4455,9 @@ this.XPIProvider = {
    */
   isBlockingE10s(aAddon) {
     if (aAddon.type != "extension" &&
+        aAddon.type != "theme" &&
         aAddon.type != "webextension" &&
-        aAddon.type != "theme")
+        aAddon.type != "webextension-theme")
       return false;
 
     // The hotfix is exempt
@@ -4728,7 +4744,7 @@ this.XPIProvider = {
     let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
     if (aType == "dictionary")
       uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
-    else if (aType == "webextension")
+    else if (isWebExtension(aType))
       uri = "resource://gre/modules/addons/WebExtensionBootstrap.js"
     else if (aType == "apiextension")
       uri = "resource://gre/modules/addons/APIExtensionBootstrap.js"
@@ -5528,7 +5544,7 @@ class AddonInstall {
                                  `Refusing to upgrade addon ${this.existingAddon.id} to different ID ${this.addon.id}`]);
         }
 
-        if (this.existingAddon.type == "webextension" && this.addon.type != "webextension") {
+        if (isWebExtension(this.existingAddon.type) && !isWebExtension(this.addon.type)) {
           zipreader.close();
           return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
                                  "WebExtensions may not be upated to other extension types"]);
@@ -7211,7 +7227,7 @@ AddonWrapper.prototype = {
   },
 
   get isWebExtension() {
-    return addonFor(this).type == "webextension";
+    return isWebExtension(addonFor(this).type);
   },
 
   get temporarilyInstalled() {
