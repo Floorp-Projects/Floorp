@@ -26,6 +26,7 @@ linux32/opt:
         -  linux32-tests
         -  linux32-opt-tests
         - external-media-tests
+        - external-media-tests-slow
 
 linux64/debug:
     build-platform: linux64/debug
@@ -38,6 +39,7 @@ linux64/opt:
     test-sets:
         - common-tests
         - external-media-tests
+        - external-media-tests-slow
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
@@ -49,6 +51,7 @@ linux64-pgo/opt:
     test-sets:
         - common-tests
         - external-media-tests
+        - external-media-tests-slow
         - web-platform-tests
         - talos
 
@@ -103,6 +106,7 @@ windows7-32-vm/opt:
     test-sets:
         - windows-vm-tests
         - external-media-tests
+        - external-media-tests-slow
 
 # win32 gpu
 #windows7-32/debug:
@@ -125,6 +129,7 @@ windows10-64-vm/opt:
     test-sets:
         - windows-vm-tests
         - external-media-tests
+        - external-media-tests-slow
 
 # win64 gpu
 #windows10-64/debug:
