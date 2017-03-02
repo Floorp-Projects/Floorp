@@ -780,10 +780,10 @@ public:
   nsTableCellMap* GetCellMap() const;
 
   /** Iterate over the row groups and adjust the row indices of all rows
-    * whose index is >= aRowIndex.
-    * @param aRowIndex   - start adjusting with this index
-    * @param aAdjustment - shift the row index by this amount
-    */
+   * whose index is >= aRowIndex.
+   * @param aRowIndex   - start adjusting with this index
+   * @param aAdjustment - shift the row index by this amount
+   */
   void AdjustRowIndices(int32_t aRowIndex,
                         int32_t aAdjustment);
 
@@ -844,6 +844,43 @@ public: /* ----- Cell Map public methods ----- */
 
 public:
 
+  /* ---------- Row index management methods ------------ */
+
+  /** Add the given index to the existing ranges of
+   *  deleted row indices and merge ranges if, with the addition of the new
+   *  index, they become consecutive.
+   *  @param aDeletedRowStoredIndex - index of the row that was deleted
+   *  Note - 'stored' index here refers to the index that was assigned to
+   *  the row before any remove row operations were performed i.e. the
+   *  value of mRowIndex and not the value returned by GetRowIndex()
+   */
+  void AddDeletedRowIndex(int32_t aDeletedRowStoredIndex);
+
+  /** Calculate the change that aStoredIndex must be increased/decreased by
+   *  to get new index.
+   *  Note that aStoredIndex is always the index of an undeleted row (since
+   *  rows that have already been deleted can never call this method).
+   *  @param aStoredIndex - The stored index value that must be adjusted
+   *  Note - 'stored' index here refers to the index that was assigned to
+   *  the row before any remove row operations were performed i.e. the
+   *  value of mRowIndex and not the value returned by GetRowIndex()
+   */
+  int32_t GetAdjustmentForStoredIndex(int32_t aStoredIndex);
+
+  /** Recalculate the row indices of all rows (if needed) and overwrite
+   *  the value of the stored index with this newly calculated index.
+   *  Returns whether recalculation was performed.
+   */
+  bool RecalculateRowIndices();
+
+  /** Returns whether mDeletedRowIndexRanges is empty
+   */
+  bool IsDeletedRowIndexRangesEmpty() const {
+    return mDeletedRowIndexRanges.empty();
+  }
+
+public:
+
 #ifdef DEBUG
   void Dump(bool            aDumpRows,
             bool            aDumpCols,
@@ -874,6 +911,8 @@ protected:
     uint32_t mResizedColumns:1;        // have we resized columns since last reflow?
   } mBits;
 
+  std::map<int32_t, int32_t> mDeletedRowIndexRanges; // maintains ranges of row
+                                                     // indices of deleted rows
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
   nsITableLayoutStrategy* mTableLayoutStrategy;// the layout strategy for this frame
   nsFrameList             mColGroups;          // the list of colgroup frames
