@@ -1503,6 +1503,9 @@ static inline bool
 SetFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
                   Handle<TypedArrayObject*> source, uint32_t offset)
 {
+    // WARNING: |source| may be an unwrapped typed array from a different
+    // compartment. Proceed with caution!
+
     if (target->isSharedMemory() || source->isSharedMemory())
         return ElementSpecific<T, SharedOps>::setFromTypedArray(cx, target, source, offset);
     return ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
@@ -1552,12 +1555,32 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
         return false;
     }
 
-    if (args.get(0).isObject() && args[0].toObject().is<TypedArrayObject>()) {
+    // 22.2.3.23.1, step 15. (22.2.3.23.2 only applies if args[0] is a typed
+    // array, so it doesn't make a difference there to apply ToObject here.)
+    RootedObject src(cx, ToObject(cx, args.get(0)));
+    if (!src)
+        return false;
+
+    Rooted<TypedArrayObject*> srcTypedArray(cx);
+    {
+        JSObject* obj = CheckedUnwrap(src);
+        if (!obj) {
+            ReportAccessDenied(cx);
+            return false;
+        }
+
+        if (obj->is<TypedArrayObject>())
+            srcTypedArray = &obj->as<TypedArrayObject>();
+    }
+
+    if (srcTypedArray) {
         // Remaining steps of 22.2.3.23.2.
-        Rooted<TypedArrayObject*> source(cx, &args[0].toObject().as<TypedArrayObject>());
+
+        // WARNING: |srcTypedArray| may be an unwrapped typed array from a
+        // different compartment. Proceed with caution!
 
         // Steps 11-12.
-        if (source->hasDetachedBuffer()) {
+        if (srcTypedArray->hasDetachedBuffer()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
             return false;
         }
@@ -1573,7 +1596,7 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
 
         // Step 22 (Cont'd).
         uint32_t offset = uint32_t(targetOffset);
-        if (source->length() > targetLength - offset) {
+        if (srcTypedArray->length() > targetLength - offset) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
@@ -1582,7 +1605,7 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
         switch (target->type()) {
 #define SET_FROM_TYPED_ARRAY(T, N) \
           case Scalar::N: \
-            if (!SetFromTypedArray<T>(cx, target, source, offset)) \
+            if (!SetFromTypedArray<T>(cx, target, srcTypedArray, offset)) \
                 return false; \
             break;
 JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
@@ -1597,11 +1620,6 @@ JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
         // We can't reorder this step because side-effects in step 16 can
         // detach the underlying array buffer from the typed array.
         uint32_t targetLength = target->length();
-
-        // Step 15.
-        RootedObject src(cx, ToObject(cx, args.get(0)));
-        if (!src)
-            return false;
 
         // Step 16.
         uint32_t srcLength;

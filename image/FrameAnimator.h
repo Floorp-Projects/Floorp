@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "SurfaceCache.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace image {
@@ -31,14 +32,18 @@ public:
     , mLoopCount(-1)
     , mFirstFrameTimeout(FrameTimeout::FromRawMilliseconds(0))
     , mAnimationMode(aAnimationMode)
-    , mDoneDecoding(false)
+    , mHasBeenDecoded(false)
   { }
 
   /**
-   * Call when this image is finished decoding so we know that there aren't any
-   * more frames coming.
+   * Call when a decode of this image has been completed.
    */
-  void SetDoneDecoding(bool aDone);
+  void NotifyDecodeComplete();
+
+  /**
+   * Returns true if this image has been fully decoded before.
+   */
+  bool GetHasBeenDecoded() { return mHasBeenDecoded; }
 
   /**
    * Call when you need to re-start animating. Ensures we start from the first
@@ -140,8 +145,8 @@ private:
   //! The animation mode of this image. Constants defined in imgIContainer.
   uint16_t mAnimationMode;
 
-  //! Whether this image is done being decoded.
-  bool mDoneDecoding;
+  //! Whether this image has been decoded at least once.
+  bool mHasBeenDecoded;
 };
 
 /**

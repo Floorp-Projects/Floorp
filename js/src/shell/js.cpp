@@ -5381,12 +5381,13 @@ EnableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 
     // Disable before re-enabling; see the assertion in |GeckoProfiler::setProfilingStack|.
     if (cx->runtime()->geckoProfiler().installed())
-        cx->runtime()->geckoProfiler().enable(false);
+        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
 
     SetContextProfilingStack(cx, sc->geckoProfilingStack, &sc->geckoProfilingStackSize,
                              ShellContext::GeckoProfilingMaxStackSize);
     cx->runtime()->geckoProfiler().enableSlowAssertions(false);
-    cx->runtime()->geckoProfiler().enable(true);
+    if (!cx->runtime()->geckoProfiler().enable(true))
+        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in profiler");
 
     args.rval().setUndefined();
     return true;
@@ -5408,17 +5409,18 @@ EnableGeckoProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
 
         // Slow assertions are off.  Disable profiling before re-enabling
         // with slow assertions on.
-        cx->runtime()->geckoProfiler().enable(false);
+        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
     }
 
     // Disable before re-enabling; see the assertion in |GeckoProfiler::setProfilingStack|.
     if (cx->runtime()->geckoProfiler().installed())
-        cx->runtime()->geckoProfiler().enable(false);
+        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
 
     SetContextProfilingStack(cx, sc->geckoProfilingStack, &sc->geckoProfilingStackSize,
                              ShellContext::GeckoProfilingMaxStackSize);
     cx->runtime()->geckoProfiler().enableSlowAssertions(true);
-    cx->runtime()->geckoProfiler().enable(true);
+    if (!cx->runtime()->geckoProfiler().enable(true))
+        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in profiler");
 
     return true;
 }
@@ -5428,7 +5430,7 @@ DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (cx->runtime()->geckoProfiler().installed())
-        cx->runtime()->geckoProfiler().enable(false);
+        MOZ_ALWAYS_TRUE(cx->runtime()->geckoProfiler().enable(false));
     args.rval().setUndefined();
     return true;
 }
