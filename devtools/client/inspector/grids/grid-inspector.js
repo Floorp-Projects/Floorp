@@ -51,6 +51,7 @@ function GridInspector(inspector, window) {
   this.onShowBoxModelHighlighterForNode =
     this.onShowBoxModelHighlighterForNode.bind(this);
   this.onShowGridAreaHighlight = this.onShowGridAreaHighlight.bind(this);
+  this.onShowGridCellHighlight = this.onShowGridCellHighlight.bind(this);
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onToggleGridHighlighter = this.onToggleGridHighlighter.bind(this);
   this.onToggleShowGridLineNumbers = this.onToggleShowGridLineNumbers.bind(this);
@@ -118,6 +119,7 @@ GridInspector.prototype = {
       onSetGridOverlayColor: this.onSetGridOverlayColor,
       onShowBoxModelHighlighterForNode: this.onShowBoxModelHighlighterForNode,
       onShowGridAreaHighlight: this.onShowGridAreaHighlight,
+      onShowGridCellHighlight: this.onShowGridCellHighlight,
       onToggleGridHighlighter: this.onToggleGridHighlighter,
       onToggleShowGridLineNumbers: this.onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines: this.onToggleShowInfiniteLines,
@@ -320,6 +322,29 @@ GridInspector.prototype = {
 
     highlighterSettings.showGridArea = gridAreaName;
     highlighterSettings.color = color;
+
+    this.highlighters.showGridHighlighter(node, highlighterSettings);
+  },
+
+  /**
+   * Highlights the grid cell in the CSS Grid Highlighter for the given grid.
+   *
+   * @param  {NodeFront} node
+   *         The NodeFront of the grid container element for which the grid
+   *         highlighter is highlighted for.
+   * @param  {Number|null} gridFragmentIndex
+   *         The index of the grid fragment for which the grid highlighter
+   *         is highlighted for.
+   * @param  {Number|null} rowNumber
+   *         The row number of the grid cell for which the grid highlighter
+   *         is highlighted for.
+   * @param  {Number|null} columnNumber
+   *         The column number of the grid cell for which the grid highlighter
+   *         is highlighted for.
+   */
+  onShowGridCellHighlight(node, gridFragmentIndex, rowNumber, columnNumber) {
+    let { highlighterSettings } = this.store.getState();
+    highlighterSettings.showGridCell = { gridFragmentIndex, rowNumber, columnNumber };
 
     this.highlighters.showGridHighlighter(node, highlighterSettings);
   },
