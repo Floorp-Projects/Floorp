@@ -146,6 +146,13 @@ function stepStart(nsteps) {
   }
 }
 
+function framesTiming(nframes) {
+  return function framesClosure(x) {
+    var result = Math.floor(x * nframes) / (nframes - 1);
+    return (result > 1.0 && x <= 1.0) ? 1.0 : result;
+  }
+}
+
 function waitForAnimationFrames(frameCount) {
   return new Promise(function(resolve, reject) {
     function handleFrame() {
