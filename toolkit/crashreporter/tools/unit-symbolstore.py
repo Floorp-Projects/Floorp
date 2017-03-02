@@ -17,6 +17,7 @@ import unittest
 
 from mock import patch
 from mozpack.manifests import InstallManifest
+import mozpack.path as mozpath
 
 import symbolstore
 
@@ -572,7 +573,10 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.assertTrue(len(file_lines) >= 1,
                          'should have nsBrowserApp.cpp FILE line')
         filename = file_lines[0].split(None, 2)[2]
-        self.assertEqual('hg:', filename[:3])
+
+        # Skip this check for local git repositories.
+        if os.path.isdir(mozpath.join(self.topsrcdir, '.hg')):
+            self.assertEqual('hg:', filename[:3])
 
 
 if __name__ == '__main__':
