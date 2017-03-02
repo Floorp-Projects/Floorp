@@ -222,8 +222,10 @@ function background(events) {
       // If we have already completed a GET request for this url,
       // and it was found, we expect for the response to come fromCache.
       // expected.cached may be undefined, force boolean.
-      let expectCached = !!expected.cached && details.method === "GET" && details.statusCode != 404;
-      browser.test.assertEq(expectCached, details.fromCache, "fromCache is correct");
+      if (typeof expected.cached === "boolean") {
+        let expectCached = expected.cached && details.method === "GET" && details.statusCode != 404;
+        browser.test.assertEq(expectCached, details.fromCache, "fromCache is correct");
+      }
       // We can only tell IPs for non-cached HTTP requests.
       if (!details.fromCache && /^https?:/.test(details.url)) {
         browser.test.assertTrue(IP_PATTERN.test(details.ip), `IP for ${details.url} looks IP-ish: ${details.ip}`);
