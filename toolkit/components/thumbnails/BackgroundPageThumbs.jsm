@@ -165,24 +165,25 @@ const BackgroundPageThumbs = {
     let wlBrowser = Services.appShell.createWindowlessBrowser(true);
     wlBrowser.QueryInterface(Ci.nsIInterfaceRequestor);
     let webProgress = wlBrowser.getInterface(Ci.nsIWebProgress);
-    let listener = {
+    this._listener = {
       QueryInterface: XPCOMUtils.generateQI([
         Ci.nsIWebProgressListener, Ci.nsIWebProgressListener2,
         Ci.nsISupportsWeakReference]),
     };
-    listener.onStateChange = (wbp, request, stateFlags, status) => {
+    this._listener.onStateChange = (wbp, request, stateFlags, status) => {
       if (!request) {
         return;
       }
       if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
           stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-        webProgress.removeProgressListener(listener);
+        webProgress.removeProgressListener(this._listener);
+        delete this._listener;
         // Get the window reference via the document.
         this._parentWin = wlBrowser.document.defaultView;
         this._processCaptureQueue();
       }
     };
-    webProgress.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+    webProgress.addProgressListener(this._listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
     wlBrowser.loadURI("chrome://global/content/backgroundPageThumbs.xhtml", 0, null, null, null);
     this._windowlessContainer = wlBrowser;
 
@@ -203,6 +204,7 @@ const BackgroundPageThumbs = {
     delete this._windowlessContainer;
     delete this._startedParentWinInit;
     delete this._parentWin;
+    delete this._listener;
   },
 
   /**
