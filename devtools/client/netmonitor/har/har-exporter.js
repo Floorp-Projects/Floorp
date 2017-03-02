@@ -70,22 +70,22 @@ const HarExporter = {
 
     // Get target file for exported data. Bail out, if the user
     // presses cancel.
-    let file = HarUtils.getTargetFile(options.defaultFileName,
-      options.jsonp, options.compress);
+    return HarUtils.getTargetFile(options.defaultFileName, options.jsonp,
+      options.compress).then(file => {
+        if (!file) {
+          return null;
+        }
 
-    if (!file) {
-      return Promise.resolve();
-    }
+        trace.log("HarExporter.save; " + options.defaultFileName, options);
 
-    trace.log("HarExporter.save; " + options.defaultFileName, options);
-
-    return this.fetchHarData(options).then(jsonString => {
-      if (!HarUtils.saveToFile(file, jsonString, options.compress)) {
-        let msg = "Failed to save HAR file at: " + options.defaultFileName;
-        console.error(msg);
-      }
-      return jsonString;
-    });
+        return this.fetchHarData(options).then(jsonString => {
+          if (!HarUtils.saveToFile(file, jsonString, options.compress)) {
+            let msg = "Failed to save HAR file at: " + options.defaultFileName;
+            console.error(msg);
+          }
+          return jsonString;
+        });
+      });
   },
 
   /**
