@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Chwilio neu gyfeiriad</string>
+  <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Ailadrodd.</string>
+  <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
+  <string name="search_hint">Chwilio am %1$s</string>
+  <string name="menu_back">Nôl</string>
+  <string name="menu_forward">Ymlaen</string>
+  <string name="menu_refresh">Adnewyddu</string>
+  <string name="menu_share">Rhannu</string>
+  <string name="menu_open_with">Agor gyda</string>
+  <string name="menu_settings">Gosodiadau</string>
+  <string name="menu_about">Ynghylch</string>
+  <string name="menu_help">Cymorth</string>
+  <string name="menu_rights">Eich Hawliau</string>
+  <string name="preference_category_privacy">Preifatrwydd</string>
+  <string name="preference_privacy_block_ads">Rhwystro tracwyr hysbysebion</string>
+  <string name="preference_privacy_block_analytics">Rhwystro tracwyr dadansoddi</string>
+  <string name="preference_privacy_block_social">Rhwystro tracwyr cymdeithasol</string>
+  <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
+  <string name="preference_privacy_block_content_summary">Gall dorri rhai fideos a thudalennau Gwe</string>
+  <string name="preference_category_performance">Perfformiad</string>
+  <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anfon defnydd data dienw</string>
+  <string name="preference_mozilla_telemetry_summary">Dysgu rhagor</string>
+</resources>

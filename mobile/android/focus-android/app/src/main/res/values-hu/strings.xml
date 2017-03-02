@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Keressen, vagy adjon meg címet</string>
+  <string name="teaser">Automatikus privát böngészés.\nBöngészés. Törlés. Ismétlés.</string>
+  <string name="feedback_erase">A böngészési előzmények törölve.</string>
+  <string name="search_hint">Keresés erre: %1$s</string>
+  <string name="menu_back">Vissza</string>
+  <string name="menu_forward">Előre</string>
+  <string name="menu_refresh">Frissítés</string>
+  <string name="menu_share">Megosztás</string>
+  <string name="menu_open_with">Megnyitás mással</string>
+  <string name="menu_settings">Beállítások</string>
+  <string name="menu_about">Névjegy</string>
+  <string name="menu_help">Súgó</string>
+  <string name="menu_rights">Az Ön jogai</string>
+  <string name="preference_category_privacy">Adatvédelem</string>
+  <string name="preference_privacy_block_ads">Reklámkövetők blokkolása</string>
+  <string name="preference_privacy_block_analytics">Elemző követők blokkolása</string>
+  <string name="preference_privacy_block_social">Közösségi oldalak követőinek blokkolása</string>
+  <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
+  <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
+  <string name="preference_category_performance">Teljesítmény</string>
+  <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Névtelen használati adatok küldése</string>
+  <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
+</resources>

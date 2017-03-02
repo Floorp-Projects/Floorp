@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Ünvanı daxil et və ya axtar</string>
+  <string name="teaser">Avtomatik məxfi səyahət.\nGəz. Poz. Təkrarla.</string>
+  <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
+  <string name="search_hint">%1$s üçün axtar</string>
+  <string name="menu_back">Geri</string>
+  <string name="menu_forward">İrəli</string>
+  <string name="menu_refresh">Yenilə</string>
+  <string name="menu_share">Paylaş</string>
+  <string name="menu_open_with">Bununla aç</string>
+  <string name="menu_settings">Tənzimləmələr</string>
+  <string name="menu_about">Haqqında</string>
+  <string name="menu_help">Kömək</string>
+  <string name="menu_rights">Hüquqlarınız</string>
+  <string name="preference_category_privacy">Məxfilik</string>
+  <string name="preference_privacy_block_ads">Reklam izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_analytics">Analiz izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
+  <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
+  <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
+  <string name="preference_category_performance">Məhsuldarlıq</string>
+  <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anonim istifadə məlumatlarını göndər</string>
+  <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
+</resources>

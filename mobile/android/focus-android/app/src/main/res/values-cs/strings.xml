@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Zadejte hledání nebo adresu</string>
+  <string name="teaser">Automatické anonymní prohlížení.\nProhlížejte. Vymažte. Opakujte.</string>
+  <string name="feedback_erase">Vaše historie procházení byla vymazána.</string>
+  <string name="search_hint">Hledat %1$s</string>
+  <string name="menu_back">Zpět</string>
+  <string name="menu_forward">Vpřed</string>
+  <string name="menu_refresh">Obnovit</string>
+  <string name="menu_share">Sdílet</string>
+  <string name="menu_open_with">Otevřít pomocí</string>
+  <string name="menu_settings">Nastavení</string>
+  <string name="menu_about">O nás</string>
+  <string name="menu_help">Nápověda</string>
+  <string name="menu_rights">Vaše práva</string>
+  <string name="preference_category_privacy">Soukromí</string>
+  <string name="preference_privacy_block_ads">Blokovat sledující reklamy</string>
+  <string name="preference_privacy_block_analytics">Blokovat analytické prvky</string>
+  <string name="preference_privacy_block_social">Blokovat sledující prvky sociálních sítí</string>
+  <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
+  <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
+  <string name="preference_category_performance">Výkon</string>
+  <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Odesílat anonymní data o používání</string>
+  <string name="preference_mozilla_telemetry_summary">Zjistit více</string>
+</resources>

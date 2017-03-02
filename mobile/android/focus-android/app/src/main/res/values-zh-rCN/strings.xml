@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">搜索或输入网址</string>
+  <string name="teaser">自动化隐私浏览。\n无痕浏览，无需劳心。</string>
+  <string name="feedback_erase">您的浏览记录已清除。</string>
+  <string name="search_hint">搜索 %1$s</string>
+  <string name="menu_back">后退</string>
+  <string name="menu_forward">前进</string>
+  <string name="menu_refresh">刷新</string>
+  <string name="menu_share">分享</string>
+  <string name="menu_open_with">打开方式</string>
+  <string name="menu_settings">设置</string>
+  <string name="menu_about">关于</string>
+  <string name="menu_help">帮助</string>
+  <string name="menu_rights">您的权利</string>
+  <string name="preference_category_privacy">隐私</string>
+  <string name="preference_privacy_block_ads">屏蔽广告跟踪器</string>
+  <string name="preference_privacy_block_analytics">屏蔽分析跟踪器</string>
+  <string name="preference_privacy_block_social">屏蔽社交跟踪器</string>
+  <string name="preference_privacy_block_content">屏蔽其他内容跟踪器</string>
+  <string name="preference_privacy_block_content_summary">可能影响某些视频和网页</string>
+  <string name="preference_category_performance">性能</string>
+  <string name="preference_performance_block_webfonts">屏蔽网络字体</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">发送匿名使用统计</string>
+  <string name="preference_mozilla_telemetry_summary">详细了解</string>
+</resources>

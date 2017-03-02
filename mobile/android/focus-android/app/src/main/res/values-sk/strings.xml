@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Zadajte hľadanie alebo adresu</string>
+  <string name="teaser">Automatické súkromné prehliadanie.\nPrehliadajte. Vymažte históriu. Opakujte.</string>
+  <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
+  <string name="search_hint">Vyhľadať %1$s</string>
+  <string name="menu_back">Naspäť</string>
+  <string name="menu_forward">Dopredu</string>
+  <string name="menu_refresh">Obnoviť</string>
+  <string name="menu_share">Zdieľať</string>
+  <string name="menu_open_with">Otvoriť pomocou</string>
+  <string name="menu_settings">Nastavenia</string>
+  <string name="menu_about">O aplikácii</string>
+  <string name="menu_help">Pomocník</string>
+  <string name="menu_rights">Vaše práva</string>
+  <string name="preference_category_privacy">Súkromie</string>
+  <string name="preference_privacy_block_ads">Blokovať reklamné sledovacie prvky</string>
+  <string name="preference_privacy_block_analytics">Blokovať analytické sledovacie prvky</string>
+  <string name="preference_privacy_block_social">Blokovať sledovacie prvky sociálnych sietí</string>
+  <string name="preference_privacy_block_content">Blokovať ostatné sledovacie prvky</string>
+  <string name="preference_privacy_block_content_summary">Toto môže rozbiť niektoré videá a webové stránky</string>
+  <string name="preference_category_performance">Výkon</string>
+  <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
+  <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
+</resources>

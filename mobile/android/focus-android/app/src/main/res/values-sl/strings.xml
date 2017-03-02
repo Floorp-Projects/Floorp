@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Iskanje ali naslov strani</string>
+  <string name="teaser">Samodejno zasebno brskanje.\nBrskajte. Izbrišite. Ponovite.</string>
+  <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
+  <string name="search_hint">Išči %1$s</string>
+  <string name="menu_back">Nazaj</string>
+  <string name="menu_forward">Naprej</string>
+  <string name="menu_refresh">Osveži</string>
+  <string name="menu_share">Deli</string>
+  <string name="menu_open_with">Odpri s programom</string>
+  <string name="menu_settings">Nastavitve</string>
+  <string name="menu_about">Predstavitev</string>
+  <string name="menu_help">Pomoč</string>
+  <string name="menu_rights">Vaše pravice</string>
+  <string name="preference_category_privacy">Zasebnost</string>
+  <string name="preference_privacy_block_ads">Zavračaj sledilce oglasov</string>
+  <string name="preference_privacy_block_analytics">Zavračaj sledilce analitike</string>
+  <string name="preference_privacy_block_social">Zavračaj sledilce družbenih omrežij</string>
+  <string name="preference_privacy_block_content">Zavračaj druge vsebinske sledilce</string>
+  <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
+  <string name="preference_category_performance">Učinkovitost</string>
+  <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Pošiljaj anonimne podatke o uporabi</string>
+  <string name="preference_mozilla_telemetry_summary">Več o tem</string>
+</resources>

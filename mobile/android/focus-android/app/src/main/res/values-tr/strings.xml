@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Arama yapın veya adres yazın</string>
+  <string name="teaser">Otomatik gizli gezinti.\nGez ve sil. Hepsi bu kadar.</string>
+  <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
+  <string name="search_hint">%1$s terimini ara</string>
+  <string name="menu_back">Geri</string>
+  <string name="menu_forward">İleri</string>
+  <string name="menu_refresh">Yenile</string>
+  <string name="menu_share">Paylaş</string>
+  <string name="menu_open_with">Birlikte aç</string>
+  <string name="menu_settings">Ayarlar</string>
+  <string name="menu_about">Hakkında</string>
+  <string name="menu_help">Yardım</string>
+  <string name="menu_rights">Haklarınız</string>
+  <string name="preference_category_privacy">Gizlilik</string>
+  <string name="preference_privacy_block_ads">Reklam takipçilerini engelle</string>
+  <string name="preference_privacy_block_analytics">Analitik takipçilerini engelle</string>
+  <string name="preference_privacy_block_social">Sosyal takipçileri engelle</string>
+  <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
+  <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
+  <string name="preference_category_performance">Performans</string>
+  <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anonim kullanım verilerini gönder</string>
+  <string name="preference_mozilla_telemetry_summary">Daha fazla bilgi al</string>
+</resources>

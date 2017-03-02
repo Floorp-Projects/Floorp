@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Cari atau masukkan alamat</string>
+  <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
+  <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
+  <string name="search_hint">Cari %1$s</string>
+  <string name="menu_back">Kembali</string>
+  <string name="menu_forward">Maju</string>
+  <string name="menu_refresh">Segarkan</string>
+  <string name="menu_share">Bagikan</string>
+  <string name="menu_open_with">Buka dengan</string>
+  <string name="menu_settings">Setelan</string>
+  <string name="menu_about">Tentang</string>
+  <string name="menu_help">Bantuan</string>
+  <string name="menu_rights">Hak Anda</string>
+  <string name="preference_category_privacy">Privasi</string>
+  <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
+  <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
+  <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
+  <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
+  <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
+  <string name="preference_category_performance">Kinerja</string>
+  <string name="preference_performance_block_webfonts">Blokir font Web</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Kirim data penggunaan anonim</string>
+  <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
+</resources>

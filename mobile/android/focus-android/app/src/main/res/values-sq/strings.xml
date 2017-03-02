@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Kërkoni ose jepni adresë</string>
+  <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
+  <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
+  <string name="search_hint">Kërko për %1$s</string>
+  <string name="menu_back">Mbrapsht</string>
+  <string name="menu_forward">Përpara</string>
+  <string name="menu_refresh">Rifreskoje</string>
+  <string name="menu_share">Ndajeni me të tjerët</string>
+  <string name="menu_open_with">Hape me</string>
+  <string name="menu_settings">Rregullime</string>
+  <string name="menu_about">Rreth</string>
+  <string name="menu_help">Ndihmë</string>
+  <string name="menu_rights">Të drejtat Tuaja</string>
+  <string name="preference_category_privacy">Privatësi</string>
+  <string name="preference_privacy_block_ads">Blloko gjurmues reklamash</string>
+  <string name="preference_privacy_block_analytics">Blloko gjurmues analizash</string>
+  <string name="preference_privacy_block_social">Blloko gjurmues platformash shoqërore</string>
+  <string name="preference_privacy_block_content">Blloko të tjerë gjurmues lënde</string>
+  <string name="preference_privacy_block_content_summary">Mund të pengojë funksionimin e disa videove dhe faqeve Web</string>
+  <string name="preference_category_performance">Punim</string>
+  <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Dërgo të dhëna anonime përdorimi</string>
+  <string name="preference_mozilla_telemetry_summary">Mësoni më tepër</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Pesquisar ou navegar</string>
+  <string name="teaser">Navegação privativa automatica.\nNavegar. Apagar. Repetir.</string>
+  <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
+  <string name="search_hint">Pesquisar por %1$s</string>
+  <string name="menu_back">Voltar</string>
+  <string name="menu_forward">Avançar</string>
+  <string name="menu_refresh">Atualizar</string>
+  <string name="menu_share">Compartilhar</string>
+  <string name="menu_open_with">Abrir com</string>
+  <string name="menu_settings">Configurações</string>
+  <string name="menu_about">Sobre</string>
+  <string name="menu_help">Ajuda</string>
+  <string name="menu_rights">Seus direitos</string>
+  <string name="preference_category_privacy">Privacidade</string>
+  <string name="preference_privacy_block_ads">Bloquear rastreadores de anúncio</string>
+  <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
+  <string name="preference_privacy_block_social">Bloquear rastreadores de mídias sociais</string>
+  <string name="preference_privacy_block_content">Bloquear outros rastreadores de conteúdo</string>
+  <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
+  <string name="preference_category_performance">Desempenho</string>
+  <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Enviar dados de uso anonimamente</string>
+  <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
+</resources>

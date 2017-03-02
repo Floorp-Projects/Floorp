@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Sök eller ange adress</string>
+  <string name="teaser">Automatisk privat surfning.\nSurfa. Radera. Upprepa.</string>
+  <string name="feedback_erase">Din webbhistorik har raderats.</string>
+  <string name="search_hint">Sök efter %1$s</string>
+  <string name="menu_back">Tillbaka</string>
+  <string name="menu_forward">Framåt</string>
+  <string name="menu_refresh">Uppdatera</string>
+  <string name="menu_share">Dela</string>
+  <string name="menu_open_with">Öppna med</string>
+  <string name="menu_settings">Inställningar</string>
+  <string name="menu_about">Om</string>
+  <string name="menu_help">Hjälp</string>
+  <string name="menu_rights">Dina rättigheter</string>
+  <string name="preference_category_privacy">Sekretess</string>
+  <string name="preference_privacy_block_ads">Blockera annons trackers</string>
+  <string name="preference_privacy_block_analytics">Blockera analys trackers</string>
+  <string name="preference_privacy_block_social">Blockera sociala trackers</string>
+  <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
+  <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
+  <string name="preference_category_performance">Prestanda</string>
+  <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Skicka anonym användardata</string>
+  <string name="preference_mozilla_telemetry_summary">Läs mer</string>
+</resources>

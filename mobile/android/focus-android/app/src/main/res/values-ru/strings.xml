@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Введите запрос или адрес</string>
+  <string name="teaser">Автоматический режим приватного просмотра.\nПросмотреть. Стереть. Повторить.</string>
+  <string name="feedback_erase">Ваша история посещения сайтов была стёрта.</string>
+  <string name="search_hint">Поиск %1$s</string>
+  <string name="menu_back">Назад</string>
+  <string name="menu_forward">Вперёд</string>
+  <string name="menu_refresh">Обновить</string>
+  <string name="menu_share">Поделиться</string>
+  <string name="menu_open_with">Открыть в</string>
+  <string name="menu_settings">Параметры</string>
+  <string name="menu_about">О программе</string>
+  <string name="menu_help">Справка</string>
+  <string name="menu_rights">Ваши права</string>
+  <string name="preference_category_privacy">Приватность</string>
+  <string name="preference_privacy_block_ads">Блокировать трекеры рекламы</string>
+  <string name="preference_privacy_block_analytics">Блокировать трекеры аналитики</string>
+  <string name="preference_privacy_block_social">Блокировать социальные трекеры</string>
+  <string name="preference_privacy_block_content">Блокировать другие трекеры содержимого</string>
+  <string name="preference_privacy_block_content_summary">Может нарушить работу некоторых видео и веб-страниц</string>
+  <string name="preference_category_performance">Производительность</string>
+  <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Отправлять анонимные данные об использовании</string>
+  <string name="preference_mozilla_telemetry_summary">Подробнее</string>
+</resources>

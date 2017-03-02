@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">検索語またはアドレスを入力</string>
+  <string name="teaser">プライベートブラウジングを自動的に。\nブラウズ、消去の繰り返し。</string>
+  <string name="feedback_erase">ページの表示履歴が消去されました。</string>
+  <string name="search_hint">%1$s を検索</string>
+  <string name="menu_back">戻る</string>
+  <string name="menu_forward">進む</string>
+  <string name="menu_refresh">再読み込み</string>
+  <string name="menu_share">共有</string>
+  <string name="menu_open_with">開く:</string>
+  <string name="menu_settings">設定</string>
+  <string name="menu_about">製品情報</string>
+  <string name="menu_help">ヘルプ</string>
+  <string name="menu_rights">あなたの権利</string>
+  <string name="preference_category_privacy">プライバシー</string>
+  <string name="preference_privacy_block_ads">追跡広告をブロック</string>
+  <string name="preference_privacy_block_analytics">アクセス解析をブロック</string>
+  <string name="preference_privacy_block_social">ソーシャル追跡をブロック</string>
+  <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
+  <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
+  <string name="preference_category_performance">パフォーマンス</string>
+  <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">利用データを匿名で送信する</string>
+  <string name="preference_mozilla_telemetry_summary">詳細情報</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Nadi neɣ sekcem tansa</string>
+  <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
+  <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
+  <string name="search_hint">Nadi %1$s</string>
+  <string name="menu_back">Ɣer deffir</string>
+  <string name="menu_forward">Ɣer zdat</string>
+  <string name="menu_refresh">Smiren</string>
+  <string name="menu_share">Bḍu</string>
+  <string name="menu_open_with">Ldi s</string>
+  <string name="menu_settings">Iɣewwaṛen</string>
+  <string name="menu_about">Ɣef</string>
+  <string name="menu_help">Tallalt</string>
+  <string name="menu_rights">Izerfan-inek</string>
+  <string name="preference_category_privacy">Tabaḍnit</string>
+  <string name="preference_privacy_block_ads">Sewḥel ineḍfaṛen</string>
+  <string name="preference_privacy_block_analytics">Sewḥel ineḍfaṛen usliḍen</string>
+  <string name="preference_privacy_block_social">Sewḥel ineḍfaṛen n tmetti</string>
+  <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
+  <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
+  <string name="preference_category_performance">Tamellit</string>
+  <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Azen isefka n useqdec udrigen</string>
+  <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">ابحث أو أدخل عنوانا</string>
+  <string name="teaser">تصفح خاص تلقائي.\nتصفح. امسح. كرر.</string>
+  <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
+  <string name="search_hint">ابحث عن %1$s</string>
+  <string name="menu_back">السابق</string>
+  <string name="menu_forward">التالي</string>
+  <string name="menu_refresh">أنعِش</string>
+  <string name="menu_share">شارك</string>
+  <string name="menu_open_with">افتح باستخدام</string>
+  <string name="menu_settings">الإعدادات</string>
+  <string name="menu_about">عن</string>
+  <string name="menu_help">مساعدة</string>
+  <string name="menu_rights">حقوقك</string>
+  <string name="preference_category_privacy">الخصوصية</string>
+  <string name="preference_privacy_block_ads">احظر متعقبات الإعلانات</string>
+  <string name="preference_privacy_block_analytics">احظر متعقبات التحليلات</string>
+  <string name="preference_privacy_block_social">احظر المتعقبات الاجتماعية</string>
+  <string name="preference_privacy_block_content">احظر متعقبات المحتوى الأخرى</string>
+  <string name="preference_privacy_block_content_summary">قد يعطل بعض الڤديو و صفحات الوب</string>
+  <string name="preference_category_performance">الأداء</string>
+  <string name="preference_performance_block_webfonts">احظر خطوط الوب</string>
+  <string name="preference_category_mozilla">موزيلا</string>
+  <string name="preference_mozilla_telemetry">أرسل بيانات استخدام مجهّلة</string>
+  <string name="preference_mozilla_telemetry_summary">اطّلع على المزيد</string>
+</resources>

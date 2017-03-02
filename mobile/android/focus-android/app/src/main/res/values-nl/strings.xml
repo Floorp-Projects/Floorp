@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Voer zoekterm of adres in</string>
+  <string name="teaser">Automatische privénavigatie.\nSurfen. Wissen. Herhalen.</string>
+  <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
+  <string name="search_hint">Zoeken naar %1$s</string>
+  <string name="menu_back">Terug</string>
+  <string name="menu_forward">Vooruit</string>
+  <string name="menu_refresh">Vernieuwen</string>
+  <string name="menu_share">Delen</string>
+  <string name="menu_open_with">Openen met</string>
+  <string name="menu_settings">Instellingen</string>
+  <string name="menu_about">Over</string>
+  <string name="menu_help">Help</string>
+  <string name="menu_rights">Uw rechten</string>
+  <string name="preference_category_privacy">Privacy</string>
+  <string name="preference_privacy_block_ads">Advertentietrackers blokkeren</string>
+  <string name="preference_privacy_block_analytics">Analysetrackers blokkeren</string>
+  <string name="preference_privacy_block_social">Sociale trackers blokkeren</string>
+  <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
+  <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
+  <string name="preference_category_performance">Prestaties</string>
+  <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Anonieme gebruiksgegevens verzenden</string>
+  <string name="preference_mozilla_telemetry_summary">Meer info</string>
+</resources>

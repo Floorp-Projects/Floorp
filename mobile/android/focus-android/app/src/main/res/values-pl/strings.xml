@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Wpisz adres lub szukaj</string>
+  <string name="teaser">Automatyczne przeglądanie prywatne.\nPrzeglądaj. Usuwaj. Powtórz.</string>
+  <string name="feedback_erase">Usunięto historię przeglądania.</string>
+  <string name="search_hint">Wyszukaj „%1$s”</string>
+  <string name="menu_back">Wstecz</string>
+  <string name="menu_forward">Dalej</string>
+  <string name="menu_refresh">Odśwież</string>
+  <string name="menu_share">Udostępnij</string>
+  <string name="menu_open_with">Otwórz za pomocą</string>
+  <string name="menu_settings">Ustawienia</string>
+  <string name="menu_about">O programie</string>
+  <string name="menu_help">Pomoc</string>
+  <string name="menu_rights">O prawach użytkownika</string>
+  <string name="preference_category_privacy">Prywatność</string>
+  <string name="preference_privacy_block_ads">Blokowanie śledzących reklam</string>
+  <string name="preference_privacy_block_analytics">Blokowanie śledzących statystyk</string>
+  <string name="preference_privacy_block_social">Blokowanie śledzących społecznościowych</string>
+  <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
+  <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron WWW</string>
+  <string name="preference_category_performance">Wydajność</string>
+  <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Przesyłanie anonimowych danych o użyciu</string>
+  <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
+</resources>

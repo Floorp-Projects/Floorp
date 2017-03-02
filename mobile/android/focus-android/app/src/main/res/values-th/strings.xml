@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">ค้นหาหรือป้อนที่อยู่</string>
+  <string name="teaser">การท่องเว็บแบบส่วนตัวอัตโนมัติ\nท่องเว็บ ล้าง ทำซ้ำ</string>
+  <string name="feedback_erase">ล้างประวัติการท่องเว็บของคุณแล้ว</string>
+  <string name="search_hint">ค้นหาสำหรับ %1$s</string>
+  <string name="menu_back">ย้อนกลับ</string>
+  <string name="menu_forward">เดินหน้า</string>
+  <string name="menu_refresh">เรียกใหม่</string>
+  <string name="menu_share">แบ่งปัน</string>
+  <string name="menu_open_with">เปิดด้วย</string>
+  <string name="menu_settings">การตั้งค่า</string>
+  <string name="menu_about">เกี่ยวกับ</string>
+  <string name="menu_help">ช่วยเหลือ</string>
+  <string name="menu_rights">สิทธิของคุณ</string>
+  <string name="preference_category_privacy">ความเป็นส่วนตัว</string>
+  <string name="preference_privacy_block_ads">ปิดกั้นตัวติดตามของโฆษณา</string>
+  <string name="preference_privacy_block_analytics">ปิดกั้นตัวติดตามของการวิเคราะห์</string>
+  <string name="preference_privacy_block_social">ปิดกั้นตัวติดตามทางสังคม</string>
+  <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
+  <string name="preference_privacy_block_content_summary">อาจทำให้บางวิดีโอและหน้าเว็บไม่สมบูรณ์</string>
+  <string name="preference_category_performance">ประสิทธิภาพ</string>
+  <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">ส่งข้อมูลการใช้งานแบบไม่ระบุตัวตน</string>
+  <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
+</resources>
