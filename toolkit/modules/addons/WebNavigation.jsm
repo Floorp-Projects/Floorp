@@ -21,9 +21,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
 // e.g. nsNavHistory::CheckIsRecentEvent, but with a lower threshold value).
 const RECENT_DATA_THRESHOLD = 5 * 1000000;
 
-// TODO:
-// onCreatedNavigationTarget
-
 var Manager = {
   // Map[string -> Map[listener -> URLFilter]]
   listeners: new Map(),
@@ -32,13 +29,22 @@ var Manager = {
     // Collect recent tab transition data in a WeakMap:
     //   browser -> tabTransitionData
     this.recentTabTransitionData = new WeakMap();
+
+    // Collect the pending created navigation target events that still have to
+    // pair the message received from the source tab to the one received from
+    // the new tab.
+    this.createdNavigationTargetByOuterWindowId = new Map();
+
     Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
+
+    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget", false);
 
     Services.mm.addMessageListener("Content:Click", this);
     Services.mm.addMessageListener("Extension:DOMContentLoaded", this);
     Services.mm.addMessageListener("Extension:StateChange", this);
     Services.mm.addMessageListener("Extension:DocumentChange", this);
     Services.mm.addMessageListener("Extension:HistoryChange", this);
+    Services.mm.addMessageListener("Extension:CreatedNavigationTarget", this);
 
     Services.mm.loadFrameScript("resource://gre/modules/WebNavigationContent.js", true);
   },
@@ -46,16 +52,20 @@ var Manager = {
   uninit() {
     // Stop collecting recent tab transition data and reset the WeakMap.
     Services.obs.removeObserver(this, "autocomplete-did-enter-text");
-    this.recentTabTransitionData = new WeakMap();
+    Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
     Services.mm.removeMessageListener("Content:Click", this);
     Services.mm.removeMessageListener("Extension:StateChange", this);
     Services.mm.removeMessageListener("Extension:DocumentChange", this);
     Services.mm.removeMessageListener("Extension:HistoryChange", this);
     Services.mm.removeMessageListener("Extension:DOMContentLoaded", this);
+    Services.mm.removeMessageListener("Extension:CreatedNavigationTarget", this);
 
     Services.mm.removeDelayedFrameScript("resource://gre/modules/WebNavigationContent.js");
     Services.mm.broadcastAsyncMessage("Extension:DisableWebNavigation");
+
+    this.recentTabTransitionData = new WeakMap();
+    this.createdNavigationTargetByOuterWindowId.clear();
   },
 
   addListener(type, listener, filters) {
@@ -92,16 +102,33 @@ var Manager = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   /**
-   * Observe autocomplete-did-enter-text topic to track the user interaction with
-   * the awesome bar.
+   * Observe autocomplete-did-enter-text (to track the user interaction with the awesomebar)
+   * and webNavigation-createdNavigationTarget (to fire the onCreatedNavigationTarget
+   * related to windows or tabs opened from the main process) topics.
    *
-   * @param {nsIAutoCompleteInput} subject
+   * @param {nsIAutoCompleteInput|Object} subject
    * @param {string} topic
-   * @param {string} data
+   * @param {string|undefined} data
    */
   observe: function(subject, topic, data) {
     if (topic == "autocomplete-did-enter-text") {
       this.onURLBarAutoCompletion(subject);
+    } else if (topic == "webNavigation-createdNavigationTarget") {
+      // The observed notification is coming from privileged JavaScript components running
+      // in the main process (e.g. when a new tab or window is opened using the context menu
+      // or Ctrl/Shift + click on a link).
+      const {
+        createdTabBrowser,
+        url,
+        sourceFrameOuterWindowID,
+        sourceTabBrowser,
+      } = subject.wrappedJSObject;
+
+      this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
+        sourceTabBrowser,
+        sourceWindowId: sourceFrameOuterWindowID,
+        url,
+      });
     }
   },
 
@@ -260,6 +287,10 @@ var Manager = {
       case "Content:Click":
         this.onContentClick(target, data);
         break;
+
+      case "Extension:CreatedNavigationTarget":
+        this.onCreatedNavigationTarget(target, data);
+        break;
     }
   },
 
@@ -272,6 +303,37 @@ var Manager = {
         this.setRecentTabTransitionData({link: true});
       }
     }
+  },
+
+  onCreatedNavigationTarget(browser, data) {
+    const {isSourceTab, createdWindowId, sourceWindowId, url} = data;
+
+    // We are going to potentially received two message manager messages for a single
+    // onCreatedNavigationTarget event that is happening in the child process,
+    // we are going to use the generate uuid to pair them together.
+    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(createdWindowId);
+
+    if (!pairedMessage) {
+      this.createdNavigationTargetByOuterWindowId.set(createdWindowId, {browser, data});
+      return;
+    }
+
+    this.createdNavigationTargetByOuterWindowId.delete(createdWindowId);
+
+    let sourceTabBrowser;
+    let createdTabBrowser;
+
+    if (isSourceTab) {
+      sourceTabBrowser = browser;
+      createdTabBrowser = pairedMessage.browser;
+    } else {
+      sourceTabBrowser = pairedMessage.browser;
+      createdTabBrowser = browser;
+    }
+
+    this.fire("onCreatedNavigationTarget", createdTabBrowser, {}, {
+      sourceTabBrowser, sourceWindowId, url,
+    });
   },
 
   onStateChange(browser, data) {
@@ -357,7 +419,7 @@ const EVENTS = [
   "onErrorOccurred",
   "onReferenceFragmentUpdated",
   "onHistoryStateUpdated",
-  // "onCreatedNavigationTarget",
+  "onCreatedNavigationTarget",
 ];
 
 var WebNavigation = {};

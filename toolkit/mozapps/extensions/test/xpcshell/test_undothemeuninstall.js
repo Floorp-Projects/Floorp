@@ -351,6 +351,73 @@ add_task(function* canUndoUninstallDisabled() {
   yield promiseRestartManager();
 });
 
+add_task(function* uninstallWebExtensionOffersUndo() {
+  let { id: addonId } = yield promiseInstallWebExtension({
+    manifest: {
+      "author": "Some author",
+      manifest_version: 2,
+      name: "Web Extension Name",
+      version: "1.0",
+      theme: { images: { headerURL: "https://example.com/example.png" } },
+    }
+  });
+
+  let [ t1, d ] = yield promiseAddonsByIDs([addonId, "default@tests.mozilla.org"]);
+
+  Assert.ok(t1, "Addon should be there");
+  Assert.ok(!t1.isActive);
+  Assert.ok(t1.userDisabled);
+  Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
+
+  Assert.ok(d, "Addon should be there");
+  Assert.ok(d.isActive);
+  Assert.ok(!d.userDisabled);
+  Assert.equal(d.pendingOperations, AddonManager.PENDING_NONE);
+
+  Assert.equal(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+
+  prepare_test({ [addonId]: [ "onUninstalling" ] });
+  t1.uninstall(true);
+  ensure_test_completed();
+
+  Assert.ok(!t1.isActive);
+  Assert.ok(t1.userDisabled);
+  Assert.ok(hasFlag(t1.pendingOperations, AddonManager.PENDING_UNINSTALL));
+
+  Assert.equal(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+
+  prepare_test({
+    [addonId]: [
+      "onOperationCancelled"
+    ]
+  });
+  t1.cancelUninstall();
+  ensure_test_completed();
+
+  Assert.ok(!t1.isActive);
+  Assert.ok(t1.userDisabled);
+  Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
+
+  yield promiseRestartManager();
+
+  [ t1, d ] = yield promiseAddonsByIDs([addonId, "default@tests.mozilla.org"]);
+
+  Assert.ok(d);
+  Assert.ok(d.isActive);
+  Assert.ok(!d.userDisabled);
+  Assert.equal(d.pendingOperations, AddonManager.PENDING_NONE);
+
+  Assert.ok(t1);
+  Assert.ok(!t1.isActive);
+  Assert.ok(t1.userDisabled);
+  Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
+
+  Assert.equal(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
+
+  t1.uninstall();
+  yield promiseRestartManager();
+});
+
 // Tests that uninstalling an enabled lightweight theme offers the option to undo
 add_task(function* uninstallLWTOffersUndo() {
   // skipped since lightweight themes don't support undoable uninstall yet

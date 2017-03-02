@@ -501,10 +501,14 @@ var ClickEventHandler = {
       }
     }
 
+    let frameOuterWindowID = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIDOMWindowUtils)
+                                     .outerWindowID;
+
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 bookmark: false, referrerPolicy,
+                 bookmark: false, frameOuterWindowID, referrerPolicy,
                  triggeringPrincipal: principal,
                  originAttributes: principal ? principal.originAttributes : {},
                  isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
