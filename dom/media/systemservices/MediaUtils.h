@@ -173,7 +173,7 @@ private:
  *     RefPtr<Bar> bar = new Bar();
  *     NS_DispatchToMainThread(media::NewRunnableFrom([bar]() mutable {
  *       // use bar
- *     });
+ *     }));
  *   }
  *
  * Capture is by-copy by default, so the nsRefPtr 'bar' is safely copied for

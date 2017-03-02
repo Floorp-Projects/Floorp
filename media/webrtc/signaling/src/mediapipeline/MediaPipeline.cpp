@@ -1071,13 +1071,12 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
     MOZ_MTLOG(ML_NOTICE, "Error unprotecting RTP in " << description_
               << "len= " << len << "[" << tmp << "...]");
-
     return;
   }
   MOZ_MTLOG(ML_DEBUG, description_ << " received RTP packet.");
   increment_rtp_packets_received(out_len);
 
-  (void)conduit_->ReceivedRTPPacket(inner_data.get(), out_len);  // Ignore error codes
+  (void)conduit_->ReceivedRTPPacket(inner_data.get(), out_len, header.ssrc);  // Ignore error codes
 }
 
 void MediaPipeline::RtcpPacketReceived(TransportLayer *layer,
