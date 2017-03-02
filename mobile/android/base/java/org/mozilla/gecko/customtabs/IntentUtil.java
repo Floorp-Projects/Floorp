@@ -46,6 +46,16 @@ class IntentUtil {
     }
 
     /**
+     * To determine whether the intent requires to add share action to menu item.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return true, if intent requires to add share action to menu item.
+     */
+    static boolean hasShareItem(@NonNull Intent intent) {
+        return intent.getBooleanExtra(CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM, false);
+    }
+
+    /**
      * To extract bitmap icon from intent for Action-Button.
      *
      * @param intent which to launch a Custom-Tabs-Activity
