@@ -1698,11 +1698,18 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
 
+  Maybe<SVGImageContext> svgContext;
+  if (aImage->GetType() == imgIContainer::TYPE_VECTOR) {
+    // We avoid this overhead for raster images.
+    svgContext.emplace();
+    svgContext->MaybeStoreContextPaint(this);
+  }
+
   DrawResult result =
     nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
       PresContext(), aImage,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
-      /* no SVGImageContext */ Nothing(), flags, &anchorPoint);
+      svgContext, flags, &anchorPoint);
 
   nsImageMap* map = GetImageMap();
   if (map) {
