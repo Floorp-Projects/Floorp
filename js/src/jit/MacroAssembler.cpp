@@ -1039,7 +1039,7 @@ AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, int32_t count
 
     // Negative numbers or zero will bail out to the slow path, which in turn will raise
     // an invalid argument exception or create a correct object with zero elements.
-    if (count <= 0) {
+    if (count <= 0 || uint32_t(count) >= INT32_MAX / obj->bytesPerElement()) {
         obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
         return;
     }
@@ -1050,8 +1050,7 @@ AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, int32_t count
     switch (obj->type()) {
 #define CREATE_TYPED_ARRAY(T, N) \
       case Scalar::N: \
-        if (!js::CalculateAllocSize<T>(count, &nbytes)) \
-            return; \
+        MOZ_ALWAYS_TRUE(js::CalculateAllocSize<T>(count, &nbytes)); \
         break;
 JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
 #undef CREATE_TYPED_ARRAY
@@ -1059,8 +1058,7 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
         MOZ_CRASH("Unsupported TypedArray type");
     }
 
-    if (!(CheckedUint32(nbytes) + sizeof(Value)).isValid())
-        return;
+    MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid());
 
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
     void* buf = cx->nursery().allocateBuffer(obj, nbytes);
