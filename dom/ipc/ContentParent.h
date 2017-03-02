@@ -640,6 +640,8 @@ public:
   // Use the PHangMonitor channel to ask the child to repaint a tab.
   void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
 
+  nsresult TransmitPermissionsFor(nsIChannel* aChannel);
+
 protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -779,6 +781,13 @@ private:
 
   // Start the force-kill timer on shutdown.
   void StartForceKillTimer();
+
+  // Ensure that the permissions for the giben Permission key are set in the
+  // content process.
+  //
+  // See nsIPermissionManager::GetPermissionsForKey for more information on
+  // these keys.
+  void EnsurePermissionsByKey(const nsCString& aKey);
 
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -1222,6 +1231,8 @@ private:
   // This hashtable is used to run GetFilesHelper objects in the parent process.
   // GetFilesHelper can be aborted by receiving RecvDeleteGetFilesRequest.
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
+
+  nsTHashtable<nsCStringHashKey> mActivePermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
 #ifdef MOZ_CRASHREPORTER
