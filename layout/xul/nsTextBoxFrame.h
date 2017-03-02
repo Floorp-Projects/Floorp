@@ -71,7 +71,7 @@ protected:
   friend class nsDisplayXULTextBox;
   // Should be called only by nsAsyncAccesskeyUpdate.
   // Returns true if accesskey was updated.
-  bool UpdateAccesskey(nsWeakFrame& aWeakThis);
+  bool UpdateAccesskey(WeakFrame& aWeakThis);
   void UpdateAccessTitle();
   void UpdateAccessIndex();
 

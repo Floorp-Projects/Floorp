@@ -588,7 +588,7 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
   }
 
   // Find the frame under point.
-  nsWeakFrame ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint,
+  AutoWeakFrame ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame.IsAlive()) {
     return NS_ERROR_FAILURE;
@@ -1260,7 +1260,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
 
   nsIFrame* scrollable =
     nsLayoutUtils::GetClosestFrameOfType(anchorFrame, nsGkAtoms::scrollFrame);
-  nsWeakFrame weakScrollable = scrollable;
+  AutoWeakFrame weakScrollable = scrollable;
   fs->HandleClick(offsets.content, offsets.StartOffset(), offsets.EndOffset(),
                   GetCaretMode() == CaretMode::Selection, false,
                   offsets.associate);

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<title>Bug 809020</title>
+<style>
+p { 
+  font-family: monospace;
+  margin: 1em 0;
+  width:0;
+}
+</style>
+</head>
+<body>
+
+Line breaks should always occur before a '/' character,
+and no fragment should be less than 6 chars long.
+
+<p>/a/a</p>
+<p>/a/a/a</p>
+<p>/a/a/a/a</p>
+<p>/a/a/a/a/a</p>
+<p>/a/a/a/a/a/a</p>
+
+<p>/aa/aa/aa/aa/aa/aa/aa</p>
+<p>/aaa/aaa/aaa/aaa/aaa</p>
+<p>/aaaa/aaaa/aaaa/aaaa</p>
+<p>/aaaaa/aaaaa/aaaaa</p>
+<p>/aaaaaa/aaaaaa/aaaaaa</p>
+
+<p>/a/ab/abc/abcd/abcde/abcdef/abcdefg</p>
+<p>/abcdefg/abcdef/abcde/abcd/abc/ab/a</p>
+
+</body>
+</html>

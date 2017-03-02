@@ -96,8 +96,8 @@ public:
 protected:
   static const size_t kNumberOfTargets = 4;
   static const DeltaValues directions[kNumberOfTargets];
-  static nsWeakFrame sActiveOwner;
-  static nsWeakFrame sActivatedScrollTargets[kNumberOfTargets];
+  static AutoWeakFrame sActiveOwner;
+  static AutoWeakFrame sActivatedScrollTargets[kNumberOfTargets];
   static bool sHadWheelStart;
   static bool sOwnWheelTransaction;
 
@@ -134,11 +134,11 @@ public:
    *            action.  Otherwise, true.
    */ 
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
-                                      nsWeakFrame& aTargetWeakFrame);
+                                      AutoWeakFrame& aTargetWeakFrame);
   static bool WillHandleDefaultAction(WidgetWheelEvent* aWheelEvent,
                                       nsIFrame* aTargetFrame)
   {
-    nsWeakFrame targetWeakFrame(aTargetFrame);
+    AutoWeakFrame targetWeakFrame(aTargetFrame);
     return WillHandleDefaultAction(aWheelEvent, targetWeakFrame);
   }
   static void OnEvent(WidgetEvent* aEvent);
@@ -169,7 +169,7 @@ protected:
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
-  static nsWeakFrame sTargetFrame;
+  static AutoWeakFrame sTargetFrame;
   static uint32_t sTime; // in milliseconds
   static uint32_t sMouseMoved; // in milliseconds
   static nsITimer* sTimer;

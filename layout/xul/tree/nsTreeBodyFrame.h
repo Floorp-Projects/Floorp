@@ -374,7 +374,7 @@ protected:
   void UpdateScrollbars(const ScrollParts& aParts);
 
   // Update the maxpos of the scrollbar.
-  void InvalidateScrollbars(const ScrollParts& aParts, nsWeakFrame& aWeakColumnsFrame);
+  void InvalidateScrollbars(const ScrollParts& aParts, AutoWeakFrame& aWeakColumnsFrame);
 
   // Check overflow and generate events.
   void CheckOverflow(const ScrollParts& aParts);
