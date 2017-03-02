@@ -10,14 +10,14 @@ async function installFile(filename) {
 
   let MockFilePicker = SpecialPowers.MockFilePicker;
   MockFilePicker.init(window);
-  MockFilePicker.setFiles([file]);
-  MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
+  MockFilePicker.returnFiles = [file];
 
   await BrowserOpenAddonsMgr("addons://list/extension");
   let contentWin = gBrowser.selectedTab.linkedBrowser.contentWindow;
 
   // Do the install...
   contentWin.gViewController.doCommand("cmd_installFromFile");
+  MockFilePicker.cleanup();
 }
 
 add_task(() => testInstallMethod(installFile));

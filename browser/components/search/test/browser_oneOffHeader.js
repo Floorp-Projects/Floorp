@@ -122,10 +122,19 @@ add_task(function* test_text() {
   is(getHeaderText(), "Search for foo with:",
      "Header has the correct text when search terms have been entered and the Change Search Settings button is selected.");
 
-  promise = promiseEvent(searchPopup, "popuphidden");
-  info("Closing search panel");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-  yield promise;
+  // Click the "Foo Search" header at the top of the popup and make sure it
+  // loads the search results.
+  let searchbarEngine =
+    document.getAnonymousElementByAttribute(searchPopup, "anonid",
+                                            "searchbar-engine");
+
+  yield synthesizeNativeMouseMove(searchbarEngine);
+  SimpleTest.executeSoon(() => {
+    EventUtils.synthesizeMouseAtCenter(searchbarEngine, {});
+  });
+
+  let url = Services.search.currentEngine.getSubmission(textbox.value).uri.spec;
+  yield promiseTabLoadEvent(gBrowser.selectedTab, url);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
   yield synthesizeNativeMouseMove(searchbar);
