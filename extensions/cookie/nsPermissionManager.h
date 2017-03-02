@@ -209,6 +209,20 @@ public:
   nsresult
   RemovePermissionsWithAttributes(mozilla::OriginAttributesPattern& aAttrs);
 
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * permission keys.
+   *
+   * Get the permission key corresponding to the given Principal. This method is
+   * intentionally infallible, as we want to provide an permission key to every
+   * principal. Principals which don't have meaningful URIs with http://,
+   * https://, or ftp:// schemes are given the default "" Permission Key.
+   *
+   * @param aPrincipal  The Principal which the key is to be extracted from.
+   * @param aPermissionKey  A string which will be filled with the permission key.
+   */
+  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aPermissionKey);
+
 private:
   virtual ~nsPermissionManager();
 
