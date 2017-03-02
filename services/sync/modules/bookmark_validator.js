@@ -807,6 +807,8 @@ class BookmarkValidator {
   }
 
   _getServerState(engine) {
+// XXXXX - todo - we need to capture last-modified of the server here and
+// ensure the repairer only applys with if-unmodified-since that date.
     let collection = engine.itemSource();
     let collectionKey = engine.service.collectionKeys.keyForCollection(engine.name);
     collection.full = true;
