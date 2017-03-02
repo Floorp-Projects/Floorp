@@ -604,7 +604,9 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
         } else if (status == NS_NET_STATUS_CONNECTING_TO) {
             SetConnectStart(TimeStamp::Now());
         } else if (status == NS_NET_STATUS_CONNECTED_TO) {
-            SetConnectEnd(TimeStamp::Now());
+            SetConnectEnd(TimeStamp::Now(), true);
+        } else if (status == NS_NET_STATUS_TLS_HANDSHAKE_ENDED) {
+            SetConnectEnd(TimeStamp::Now(), false);
         }
     }
 
