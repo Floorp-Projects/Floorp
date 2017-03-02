@@ -456,9 +456,15 @@ private:
   //Local database of currently applied receive codecs
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  Mutex mCodecMutex; // protects mCurrSendCodecConfig, mVideoSend/RecvStreamStats
+  // protects mCurrSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams
+  Mutex mCodecMutex;
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
   bool mInReconfig;
+  SendStreamStatistics mSendStreamStats;
+  ReceiveStreamStatistics mRecvStreamStats;
+  // Must call webrtc::Call::DestroyVideoReceive/SendStream to delete these:
+  webrtc::VideoReceiveStream* mRecvStream;
+  webrtc::VideoSendStream* mSendStream;
 
   unsigned short mLastWidth;
   unsigned short mLastHeight;
@@ -494,14 +500,10 @@ private:
   // WEBRTC.ORG Call API
   RefPtr<WebRtcCallWrapper> mCall;
 
-  webrtc::VideoSendStream* mSendStream;
-  // Must call webrtc::Call::DestroyVideoSendStream to delete
   webrtc::VideoSendStream::Config mSendStreamConfig;
   VideoEncoderConfigBuilder mEncoderConfig;
   webrtc::VideoCodecH264 mEncoderSpecificH264;
 
-  webrtc::VideoReceiveStream* mRecvStream;
-  // Must call webrtc::Call::DestroyVideoReceiveStream to delete
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
   // We can't create mRecvStream without knowing the remote SSRC
   // Atomic since we key off this on packet insertion, which happens
@@ -524,8 +526,6 @@ private:
   WebrtcVideoDecoder* mRecvCodecPlugin;
 
   nsCOMPtr<nsITimer> mVideoStatsTimer;
-  SendStreamStatistics mSendStreamStats;
-  ReceiveStreamStatistics mRecvStreamStats;
 
   std::string mPCHandle;
 };
