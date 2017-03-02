@@ -102,7 +102,7 @@ public:
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VideoEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len) override;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len, uint32_t ssrc) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
@@ -260,6 +260,10 @@ public:
   }
 
   virtual uint64_t CodecPluginID() override;
+
+  virtual void SetPCHandle(const std::string& aPCHandle) override {
+    mPCHandle = aPCHandle;
+  }
 
   unsigned short SendingWidth() override {
     return mSendingWidth;
@@ -468,6 +472,7 @@ private:
   unsigned short mNumReceivingStreams;
   bool mVideoLatencyTestEnable;
   uint64_t mVideoLatencyAvg;
+  // all in bps!
   int mMinBitrate;
   int mStartBitrate;
   int mPrefMaxBitrate;
@@ -498,6 +503,17 @@ private:
   webrtc::VideoReceiveStream* mRecvStream;
   // Must call webrtc::Call::DestroyVideoReceiveStream to delete
   webrtc::VideoReceiveStream::Config mRecvStreamConfig;
+  // We can't create mRecvStream without knowing the remote SSRC
+  // Atomic since we key off this on packet insertion, which happens
+  // on a different thread.
+  Atomic<bool> mRecvSSRCSet;
+  // The runnable to set the SSRC is in-flight; queue packets until it's done.
+  bool mRecvSSRCSetInProgress;
+  struct QueuedPacket {
+    int mLen;
+    uint8_t mData[1];
+  };
+  nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
 
   // The lifetime of these codecs are maintained by the VideoConduit instance.
   // They are passed to the webrtc::VideoSendStream or VideoReceiveStream,
@@ -510,6 +526,8 @@ private:
   nsCOMPtr<nsITimer> mVideoStatsTimer;
   SendStreamStatistics mSendStreamStats;
   ReceiveStreamStatistics mRecvStreamStats;
+
+  std::string mPCHandle;
 };
 } // end namespace
 
