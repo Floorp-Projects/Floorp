@@ -29,9 +29,8 @@
 #include "hb-ot-layout-private.hh"
 #include "hb-ot-var-avar-table.hh"
 #include "hb-ot-var-fvar-table.hh"
+#include "hb-ot-var-mvar-table.hh"
 #include "hb-ot-var.h"
-
-HB_SHAPER_DATA_ENSURE_DECLARE(ot, face)
 
 /*
  * fvar/avar

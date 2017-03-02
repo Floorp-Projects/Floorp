@@ -81,7 +81,7 @@ function test() {
       ok(!privateWindow.gLastOpenDirectory.path,
          "No original path should exist inside the private browsing mode");
       privateWindow.gLastOpenDirectory.path = dir1;
-      is(privateWindow.gLastOpenDirectory.path.path, dir1.path, 
+      is(privateWindow.gLastOpenDirectory.path.path, dir1.path,
          "The path should be successfully set inside the private browsing mode");
       // test the non-private window
       ok(!nonPrivateWindow.gLastOpenDirectory.path,

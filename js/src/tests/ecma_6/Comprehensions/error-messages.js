@@ -130,6 +130,8 @@ function inFun(str) { return '(function(){' + str + '})' }
 function inGen(str) { return '(function*(){' + str + '})' }
 function inGenExp(str) { return '(for (y of ' + str + ') y)' }
 
+var summary = '';
+
 function test()
 {
   enterFunc ('test');

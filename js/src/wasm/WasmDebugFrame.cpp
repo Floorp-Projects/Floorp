@@ -19,6 +19,7 @@
 #include "wasm/WasmDebugFrame.h"
 
 #include "vm/EnvironmentObject.h"
+#include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 
 #include "jsobjinlines.h"
@@ -63,3 +64,39 @@ DebugFrame::leaveFrame(JSContext* cx)
    instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
    observing_ = false;
 }
+
+bool
+DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
+{
+    ValTypeVector locals;
+    size_t argsLength;
+    if (!instance()->code().debugGetLocalTypes(funcIndex(), &locals, &argsLength))
+        return false;
+
+    BaseLocalIter iter(locals, argsLength, /* debugEnabled = */ true);
+    while (!iter.done() && iter.index() < localIndex)
+        iter++;
+    MOZ_ALWAYS_TRUE(!iter.done());
+
+    uint8_t* frame = static_cast<uint8_t*>((void*)this) + offsetOfFrame();
+    void* dataPtr = frame - iter.frameOffset();
+    switch (iter.mirType()) {
+      case jit::MIRType::Int32:
+          vp.set(Int32Value(*static_cast<int32_t*>(dataPtr)));
+          break;
+      case jit::MIRType::Int64:
+          // Just display as a Number; it's ok if we lose some precision
+          vp.set(NumberValue((double)*static_cast<int64_t*>(dataPtr)));
+          break;
+      case jit::MIRType::Float32:
+          vp.set(NumberValue(*static_cast<float*>(dataPtr)));
+          break;
+      case jit::MIRType::Double:
+          vp.set(NumberValue(*static_cast<double*>(dataPtr)));
+          break;
+      default:
+          MOZ_CRASH("local type");
+    }
+    return true;
+}
+

@@ -162,7 +162,7 @@ function waitOnFaviconLoaded(aFaviconURL) {
   });
 }
 
-function* assignCookies(aBrowser, aURL, aCookieValue){
+function* assignCookies(aBrowser, aURL, aCookieValue) {
   let tabInfo = yield openTab(aBrowser, aURL);
 
   yield ContentTask.spawn(tabInfo.browser, aCookieValue, function* (value) {

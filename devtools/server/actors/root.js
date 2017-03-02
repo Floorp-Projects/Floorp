@@ -390,6 +390,9 @@ RootActor.prototype = {
                message: "This root actor has no browser addons." };
     }
 
+    // Reattach the onListChanged listener now that a client requested the list.
+    addonList.onListChanged = this._onAddonListChanged;
+
     return addonList.getList().then((addonActors) => {
       let addonActorPool = new ActorPool(this.conn);
       for (let addonActor of addonActors) {
@@ -401,8 +404,6 @@ RootActor.prototype = {
       }
       this._addonActorPool = addonActorPool;
       this.conn.addActorPool(this._addonActorPool);
-
-      addonList.onListChanged = this._onAddonListChanged;
 
       return {
         "from": this.actorID,
@@ -423,6 +424,9 @@ RootActor.prototype = {
                message: "This root actor has no workers." };
     }
 
+    // Reattach the onListChanged listener now that a client requested the list.
+    workerList.onListChanged = this._onWorkerListChanged;
+
     return workerList.getList().then(actors => {
       let pool = new ActorPool(this.conn);
       for (let actor of actors) {
@@ -432,8 +436,6 @@ RootActor.prototype = {
       this.conn.removeActorPool(this._workerActorPool);
       this._workerActorPool = pool;
       this.conn.addActorPool(this._workerActorPool);
-
-      workerList.onListChanged = this._onWorkerListChanged;
 
       return {
         "from": this.actorID,
@@ -454,6 +456,9 @@ RootActor.prototype = {
                message: "This root actor has no service worker registrations." };
     }
 
+    // Reattach the onListChanged listener now that a client requested the list.
+    registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
+
     return registrationList.getList().then(actors => {
       let pool = new ActorPool(this.conn);
       for (let actor of actors) {
@@ -463,8 +468,6 @@ RootActor.prototype = {
       this.conn.removeActorPool(this._serviceWorkerRegistrationActorPool);
       this._serviceWorkerRegistrationActorPool = pool;
       this.conn.addActorPool(this._serviceWorkerRegistrationActorPool);
-
-      registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
 
       return {
         "from": this.actorID,

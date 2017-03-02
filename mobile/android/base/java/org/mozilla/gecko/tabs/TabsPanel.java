@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.tabs;
 
-import android.support.v4.content.ContextCompat;
-
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
@@ -31,8 +29,10 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.support.annotation.UiThread;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -111,7 +111,6 @@ public class TabsPanel extends LinearLayout
     private IconTabWidget mTabWidget;
     private View mMenuButton;
     private ImageButton mAddTab;
-    private ImageButton mNavBackButton;
 
     private Panel mCurrentPanel;
     private boolean mVisible;
@@ -178,8 +177,8 @@ public class TabsPanel extends LinearLayout
             }
         });
 
-        mNavBackButton = (ImageButton) findViewById(R.id.nav_back);
-        mNavBackButton.setOnClickListener(new Button.OnClickListener() {
+        final ImageButton navBackButton = (ImageButton) findViewById(R.id.nav_back);
+        navBackButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mActivity.onBackPressed();
@@ -257,15 +256,6 @@ public class TabsPanel extends LinearLayout
         }
 
         return mActivity.onOptionsItemSelected(item);
-    }
-
-    private static int getTabContainerHeight(FrameLayout tabsContainer) {
-        final Resources resources = tabsContainer.getContext().getResources();
-
-        final int screenHeight = resources.getDisplayMetrics().heightPixels;
-        final int actionBarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
-
-        return screenHeight - actionBarHeight;
     }
 
     @Override
@@ -357,8 +347,8 @@ public class TabsPanel extends LinearLayout
 
     public void show(Panel panelToShow) {
         prepareToShow(panelToShow);
-        int height = getVerticalPanelHeight();
-        dispatchLayoutChange(getWidth(), height);
+        final DisplayMetrics metrics = mContext.getResources().getDisplayMetrics();
+        dispatchLayoutChange(metrics.widthPixels, metrics.heightPixels);
         mHeaderVisible = true;
     }
 
@@ -403,12 +393,6 @@ public class TabsPanel extends LinearLayout
                 mPopupMenu.setAnchor(mMenuButton);
             }
         });
-    }
-
-    public int getVerticalPanelHeight() {
-        final int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-        final int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
-        return height;
     }
 
     public void hide() {

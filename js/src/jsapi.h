@@ -1033,6 +1033,31 @@ JS_EndRequest(JSContext* cx);
 extern JS_PUBLIC_API(void)
 JS_SetFutexCanWait(JSContext* cx);
 
+namespace JS {
+
+// Single threaded execution callbacks are used to notify API clients that a
+// feature is in use on a context's runtime that is not yet compatible with
+// cooperatively multithreaded execution.
+//
+// Between a call to BeginSingleThreadedExecutionCallback and a corresponding
+// call to EndSingleThreadedExecutionCallback, only one thread at a time may
+// enter compartments in the runtime. The begin callback may yield as necessary
+// to permit other threads to finish up what they're doing, while the end
+// callback may not yield or otherwise operate on the runtime (it may be called
+// during GC).
+//
+// These callbacks may be left unspecified for runtimes which only ever have a
+// single context.
+typedef void (*BeginSingleThreadedExecutionCallback)(JSContext* cx);
+typedef void (*EndSingleThreadedExecutionCallback)(JSContext* cx);
+
+extern JS_PUBLIC_API(void)
+SetSingleThreadedExecutionCallbacks(JSContext* cx,
+                                    BeginSingleThreadedExecutionCallback begin,
+                                    EndSingleThreadedExecutionCallback end);
+
+} // namespace JS
+
 namespace js {
 
 void

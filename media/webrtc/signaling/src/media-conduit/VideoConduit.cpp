@@ -62,8 +62,6 @@ namespace mozilla {
 
 static const char* logTag = "WebrtcVideoSessionConduit";
 
-static const int kUlpFecPayloadType = 123;
-static const int kRedPayloadType = 122;
 static const int kNullPayloadType = -1;
 static const char* kUlpFecPayloadName = "ulpfec";
 static const char* kRedPayloadName = "red";
@@ -663,9 +661,9 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // See Bug 1297058, enabling FEC when basic NACK is to be enabled in H.264 is problematic
   if (codecConfig->RtcpFbFECIsSet() &&
       !(codecConfig->mName == "H264" && codecConfig->RtcpFbNackIsSet(""))) {
-    mSendStreamConfig.rtp.fec.ulpfec_payload_type = kUlpFecPayloadType;
-    mSendStreamConfig.rtp.fec.red_payload_type = kRedPayloadType;
-    mSendStreamConfig.rtp.fec.red_rtx_payload_type = kNullPayloadType;
+    mSendStreamConfig.rtp.fec.ulpfec_payload_type = codecConfig->mULPFECPayloadType;
+    mSendStreamConfig.rtp.fec.red_payload_type = codecConfig->mREDPayloadType;
+    mSendStreamConfig.rtp.fec.red_rtx_payload_type = codecConfig->mREDRTXPayloadType;
   }
 
   mSendStreamConfig.rtp.nack.rtp_history_ms =

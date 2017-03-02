@@ -501,6 +501,7 @@ class CCacheStats(object):
         ('unsupported_lang', 'unsupported source language'),
         ('compiler_check_failed', 'compiler check failed'),
         ('autoconf', 'autoconf compile/link'),
+        ('unsupported_code_directive', 'unsupported code directive'),
         ('unsupported_compiler_option', 'unsupported compiler option'),
         ('out_stdout', 'output to stdout'),
         ('out_device', 'output to a non-regular file'),

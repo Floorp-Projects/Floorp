@@ -99,7 +99,7 @@ GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
   GMPDecryptorChild* child = static_cast<GMPDecryptorChild*>(aActor);
 
   void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, nullptr, &ptr, aActor->Id());
+  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, nullptr, &ptr, child->DecryptorId());
   if (err != GMPNoErr || !ptr) {
     NS_WARNING("GMPGetAPI call failed trying to construct decryptor.");
     return IPC_FAIL_NO_REASON(this);

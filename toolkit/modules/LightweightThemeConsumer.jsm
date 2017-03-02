@@ -104,12 +104,15 @@ LightweightThemeConsumer.prototype = {
     // We need to clear these either way: either because the theme is being removed,
     // or because we are applying a new theme and the data might be bogus CSS,
     // so if we don't reset first, it'll keep the old value.
-    root.style.removeProperty("color");
-    root.style.removeProperty("background-color");
+    root.style.removeProperty("--lwt-text-color");
+    root.style.removeProperty("--lwt-accent-color");
     if (active) {
-      root.style.color = aData.textcolor || "black";
-      root.style.backgroundColor = aData.accentcolor || "white";
-      let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(root).color);
+      let textcolor = aData.textcolor || "black";
+      root.style.setProperty("--lwt-text-color", textcolor);
+      root.style.setProperty("--lwt-accent-color", aData.accentcolor || "white");
+      let dummy = this._doc.createElement("dummy");
+      dummy.style.color = textcolor;
+      let [r, g, b] = _parseRGB(this._doc.defaultView.getComputedStyle(dummy).color);
       let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
       root.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
       root.setAttribute("lwtheme", "true");
@@ -120,11 +123,10 @@ LightweightThemeConsumer.prototype = {
 
     this._active = active;
 
-    _setImage(root, active, aData.headerURL);
+    _setImage(root, active, aData.headerURL, "--lwt-header-image");
     if (this._footerId) {
       let footer = this._doc.getElementById(this._footerId);
-      footer.style.backgroundColor = active ? aData.accentcolor || "white" : "";
-      _setImage(footer, active, aData.footerURL);
+      _setImage(footer, active, aData.footerURL, "--lwt-footer-image");
       if (active && aData.footerURL)
         footer.setAttribute("lwthemefooter", "true");
       else
@@ -157,9 +159,12 @@ LightweightThemeConsumer.prototype = {
   }
 }
 
-function _setImage(aElement, aActive, aURL) {
-  aElement.style.backgroundImage =
-    (aActive && aURL) ? 'url("' + aURL.replace(/"/g, '\\"') + '")' : "";
+function _setImage(aElement, aActive, aURL, aVariableName) {
+  if (aActive && aURL) {
+    aElement.style.setProperty(aVariableName, `url("${aURL.replace(/"/g, '\\"')}")`);
+  } else {
+    aElement.style.removeProperty(aVariableName);
+  }
 }
 
 function _parseRGB(aColorString) {

@@ -39,8 +39,6 @@
 #include "hb-ot-map-private.hh"
 
 
-HB_SHAPER_DATA_ENSURE_DECLARE(ot, face)
-
 hb_ot_layout_t *
 _hb_ot_layout_create (hb_face_t *face)
 {
@@ -135,6 +133,9 @@ _hb_ot_layout_create (hb_face_t *face)
       || (1330 == gdef_len && 57938 == gpos_len && 109904 == gsub_len)
       /* 91fcc10cf15e012d27571e075b3b4dfe31754a8a padauk-3.0/Padauk-bookbold.ttf */
       || (1330 == gdef_len && 58972 == gpos_len && 109904 == gsub_len)
+      /* sha1sum: c26e41d567ed821bed997e937bc0c41435689e85  Padauk.ttf
+       *  "Padauk Regular" "Version 2.5", see https://crbug.com/681813 */
+      || (1004 == gdef_len && 14836 == gpos_len && 59092 == gsub_len)
     )
     {
       /* Many versions of Tahoma have bad GDEF tables that incorrectly classify some spacing marks

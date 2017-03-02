@@ -13,7 +13,7 @@ const TESTCASES = [
                <input id="street-addr"><input id="city"><input id="country">
                <input id='email'><input id="tel"></form>`,
     fieldDetails: [],
-    profileData: [],
+    profileData: {},
     expectedResult: {
       "street-addr": "",
       "city": "",
@@ -40,15 +40,13 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "email", "element": {}},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel", "element": {}},
     ],
-    profileData: [
-      {"section": "", "addressType": "", "fieldName": "given-name", "contactType": "", "index": 0, "value": "foo"},
-      {"section": "", "addressType": "", "fieldName": "family-name", "contactType": "", "index": 1, "value": "bar"},
-      {"section": "", "addressType": "", "fieldName": "street-address", "contactType": "", "index": 2, "value": "2 Harrison St"},
-      {"section": "", "addressType": "", "fieldName": "address-level2", "contactType": "", "index": 3, "value": "San Francisco"},
-      {"section": "", "addressType": "", "fieldName": "country", "contactType": "", "index": 4, "value": "US"},
-      {"section": "", "addressType": "", "fieldName": "email", "contactType": "", "index": 5, "value": "foo@mozilla.com"},
-      {"section": "", "addressType": "", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
-    ],
+    profileData: {
+      "street-address": "2 Harrison St",
+      "address-level2": "San Francisco",
+      "country": "US",
+      "email": "foo@mozilla.com",
+      "tel": "1234567",
+    },
     expectedResult: {
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
@@ -75,15 +73,13 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
-    profileData: [
-      {"section": "", "addressType": "shipping", "fieldName": "given-name", "contactType": "", "index": 0, "value": "foo"},
-      {"section": "", "addressType": "shipping", "fieldName": "family-name", "contactType": "", "index": 1, "value": "bar"},
-      {"section": "", "addressType": "shipping", "fieldName": "street-address", "contactType": "", "index": 2, "value": "2 Harrison St"},
-      {"section": "", "addressType": "shipping", "fieldName": "address-level2", "contactType": "", "index": 3, "value": "San Francisco"},
-      {"section": "", "addressType": "shipping", "fieldName": "country", "contactType": "", "index": 4, "value": "US"},
-      {"section": "", "addressType": "shipping", "fieldName": "email", "contactType": "", "index": 5, "value": "foo@mozilla.com"},
-      {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
-    ],
+    profileData: {
+      "street-address": "2 Harrison St",
+      "address-level2": "San Francisco",
+      "country": "US",
+      "email": "foo@mozilla.com",
+      "tel": "1234567",
+    },
     expectedResult: {
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
@@ -110,15 +106,13 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
-    profileData: [
-      {"section": "", "addressType": "shipping", "fieldName": "given-name", "contactType": "", "index": 0, "value": "foo"},
-      {"section": "", "addressType": "shipping", "fieldName": "family-name", "contactType": "", "index": 1, "value": "bar"},
-      {"section": "", "addressType": "shipping", "fieldName": "street-address", "contactType": "", "index": 2, "value": "2 Harrison St"},
-      {"section": "", "addressType": "shipping", "fieldName": "address-level2", "contactType": "", "index": 3, "value": "San Francisco"},
-      {"section": "", "addressType": "shipping", "fieldName": "country", "contactType": "", "index": 4, "value": "US"},
-      {"section": "", "addressType": "shipping", "fieldName": "email", "contactType": "", "index": 5},
-      {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6},
-    ],
+    profileData: {
+      "street-address": "2 Harrison St",
+      "address-level2": "San Francisco",
+      "country": "US",
+      "email": "",
+      "tel": "",
+    },
     expectedResult: {
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
@@ -145,15 +139,13 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
     ],
-    profileData: [
-      {"section": "", "addressType": "shipping", "fieldName": "given-name", "contactType": "", "index": 0, "value": "foo"},
-      {"section": "", "addressType": "shipping", "fieldName": "family-name", "contactType": "", "index": 1, "value": "bar"},
-      {"section": "", "addressType": "shipping", "fieldName": "street-address", "contactType": "", "index": 2, "value": "2 Harrison St"},
-      {"section": "", "addressType": "shipping", "fieldName": "address-level2", "contactType": "", "index": 3, "value": "San Francisco"},
-      {"section": "", "addressType": "shipping", "fieldName": "country", "contactType": "", "index": 4, "value": "US"},
-      {"section": "", "addressType": "shipping", "fieldName": "email", "contactType": "", "index": 5, "value": "foo@mozilla.com"},
-      {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
-    ],
+    profileData: {
+      "street-address": "",
+      "address-level2": "",
+      "country": "",
+      "email": "foo@mozilla.com",
+      "tel": "1234567",
+    },
     expectedResult: {
       "street-addr": "",
       "city": "",
@@ -174,17 +166,29 @@ for (let tc of TESTCASES) {
                                                 testcase.document);
       let form = doc.querySelector("form");
       let handler = new FormAutofillHandler(form);
+      let onChangePromises = [];
 
       handler.fieldDetails = testcase.fieldDetails;
       handler.fieldDetails.forEach((field, index) => {
-        field.element = doc.querySelectorAll("input")[index];
+        let element = doc.querySelectorAll("input")[index];
+        field.element = element;
+        if (!testcase.profileData[field.fieldName]) {
+          // Avoid waiting for `change` event of a input with a blank value to
+          // be filled.
+          return;
+        }
+        onChangePromises.push(new Promise(resolve => {
+          element.addEventListener("change", () => {
+            let id = element.id;
+            Assert.equal(element.value, testcase.expectedResult[id],
+                        "Check the " + id + " fields were filled with correct data");
+            resolve();
+          }, {once: true});
+        }));
       });
 
       handler.autofillFormFields(testcase.profileData);
-      for (let id in testcase.expectedResult) {
-        Assert.equal(doc.getElementById(id).value, testcase.expectedResult[id],
-                    "Check the " + id + " fields were filled with correct data");
-      }
+      yield Promise.all(onChangePromises);
     });
   })();
 }

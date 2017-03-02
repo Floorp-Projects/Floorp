@@ -118,9 +118,10 @@ ContainsHoistedDeclaration(JSContext* cx, ParseNode* node, bool* result)
 
       // These two aren't statements in the spec, but we sometimes insert them
       // in statement lists anyway.
+      case PNK_INITIALYIELD:
       case PNK_YIELD_STAR:
       case PNK_YIELD:
-        MOZ_ASSERT(node->isArity(PN_BINARY));
+        MOZ_ASSERT(node->isArity(PN_UNARY));
         *result = false;
         return true;
 
@@ -1784,21 +1785,23 @@ Fold(JSContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bool inGe
       case PNK_GENEXP:
         return FoldList(cx, pn, parser, inGenexpLambda);
 
+      case PNK_INITIALYIELD:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        MOZ_ASSERT(pn->pn_kid->isKind(PNK_ASSIGN) &&
+                   pn->pn_kid->pn_left->isKind(PNK_NAME) &&
+                   pn->pn_kid->pn_right->isKind(PNK_GENERATOR));
+        return true;
+
       case PNK_YIELD_STAR:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
-        return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        return Fold(cx, &pn->pn_kid, parser, inGenexpLambda);
 
       case PNK_YIELD:
       case PNK_AWAIT:
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||
-                   (pn->pn_right->isKind(PNK_ASSIGN) &&
-                    pn->pn_right->pn_left->isKind(PNK_NAME) &&
-                    pn->pn_right->pn_right->isKind(PNK_GENERATOR)));
-        if (!pn->pn_left)
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        if (!pn->pn_kid)
             return true;
-        return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
+        return Fold(cx, &pn->pn_kid, parser, inGenexpLambda);
 
       case PNK_RETURN:
         return FoldReturn(cx, pn, parser, inGenexpLambda);

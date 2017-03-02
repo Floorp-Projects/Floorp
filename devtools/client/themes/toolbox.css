@@ -55,12 +55,19 @@
 .toolbox-tabs {
   margin: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .toolbox-tabs-wrapper {
   position: relative;
   display: flex;
   flex: 1;
+}
+
+.toolbox-tabs-wrapper .all-tools-menu {
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  border-top-width: 0;
+  border-bottom-width: 0;
 }
 
 .toolbox-tabs {

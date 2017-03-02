@@ -50,7 +50,7 @@ struct ScopedCloseFDTraits
 };
 typedef Scoped<ScopedCloseFDTraits> ScopedClose;
 
-#if !defined(XPCOM_GLUE)
+#if defined(MOZILLA_INTERNAL_API)
 
 /**
  * AutoFDClose is a RAII wrapper for PRFileDesc.
@@ -119,7 +119,7 @@ void ReadAheadFile(nsIFile* aFile, const size_t aOffset = 0,
                    const size_t aCount = SIZE_MAX,
                    filedesc_t* aOutFd = nullptr);
 
-#endif // !defined(XPCOM_GLUE)
+#endif // MOZILLA_INTERNAL_API
 
 /**
  * Use readahead to preload shared libraries into the file cache before loading.
