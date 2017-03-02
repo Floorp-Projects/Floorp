@@ -193,17 +193,15 @@ AppPicker.prototype =
       fp.displayDirectory =
         fileLoc.get(startLocation, Components.interfaces.nsILocalFile);
 
-      fp.open(rv => {
-          if (rv == nsIFilePicker.returnOK && fp.file) {
-              var localHandlerApp =
-                Components.classes["@mozilla.org/uriloader/local-handler-app;1"].
-                createInstance(Components.interfaces.nsILocalHandlerApp);
-              localHandlerApp.executable = fp.file;
+      if (fp.show() == nsIFilePicker.returnOK && fp.file) {
+          var localHandlerApp =
+            Components.classes["@mozilla.org/uriloader/local-handler-app;1"].
+            createInstance(Components.interfaces.nsILocalHandlerApp);
+          localHandlerApp.executable = fp.file;
 
-              this._incomingParams.handlerApp = localHandlerApp;
-              window.close();
-          }
-      });
+          this._incomingParams.handlerApp = localHandlerApp;
+          window.close();
+      }
       return true;
     }
 }

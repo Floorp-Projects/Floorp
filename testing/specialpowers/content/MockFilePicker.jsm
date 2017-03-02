@@ -53,7 +53,6 @@ this.MockFilePicker = {
   filterVideo: Ci.nsIFilePicker.filterVideo,
 
   window: null,
-  pendingPromises: [],
 
   init: function(window) {
     this.window = window;
@@ -74,10 +73,9 @@ this.MockFilePicker = {
     this.displayDirectory = null;
     this.filterIndex = 0;
     this.mode = null;
-    this.returnData = [];
+    this.returnFiles = [];
     this.returnValue = null;
     this.showCallback = null;
-    this.afterOpenCallback = null;
     this.shown = false;
     this.showing = false;
   },
@@ -92,67 +90,32 @@ this.MockFilePicker = {
     }
   },
 
-  internalFileData(obj) {
-    return {
-      nsIFile: "nsIFile" in obj ? obj.nsIFile : null,
-      domFile: "domFile" in obj ? obj.domFile : null,
-      domDirectory: "domDirectory" in obj ? obj.domDirectory : null,
-    };
-  },
-
   useAnyFile: function() {
     var file = FileUtils.getDir("TmpD", [], false);
     file.append("testfile");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
-    let promise = this.window.File.createFromNsIFile(file)
-                  .then(domFile => domFile, () => null)
-                  // domFile can be null.
-                  .then(domFile => {
-                    this.returnData = [this.internalFileData({ nsIFile: file, domFile: domFile })];
-                  }).then(() => file);
-
-    this.pendingPromises = [promise];
-
-    // We return a promise in order to support some existing mochitests.
-    return promise;
+    this.returnFiles = [file];
   },
 
   useBlobFile: function() {
     var blob = new this.window.Blob([]);
     var file = new this.window.File([blob], 'helloworld.txt', { type: 'plain/text' });
-    this.returnData = [this.internalFileData({ domFile: file })];
-    this.pendingPromises = [];
+    this.returnFiles = [file];
   },
 
   useDirectory: function(aPath) {
     var directory = new this.window.Directory(aPath);
-    this.returnData = [this.internalFileData({ domDirectory: directory })];
-    this.pendingPromises = [];
+    this.returnFiles = [directory];
   },
 
-  setFiles(files) {
-    this.returnData = [];
-    this.pendingPromises = [];
+  isNsIFile: function(aFile) {
+    let ret = false;
+    try {
+      if (aFile.QueryInterface(Ci.nsIFile))
+        ret = true;
+    } catch(e) {}
 
-    for (let file of files) {
-      if (file instanceof this.window.File) {
-        this.returnData.push(this.internalFileData({ domFile: file }));
-      } else {
-        let promise = this.window.File.createFromNsIFile(file, { existenceCheck: false });
-
-        promise.then(domFile => {
-          this.returnData.push(this.internalFileData({ nsIFile: file, domFile: domFile }));
-        });
-        this.pendingPromises.push(promise);
-      }
-    }
-  },
-
-  getNsIFile() {
-    if (this.returnData.length >= 1) {
-      return this.returnData[0].nsIFile;
-    }
-    return null;
+    return ret;
   }
 };
 
@@ -180,8 +143,10 @@ MockFilePickerInstance.prototype = {
   filterIndex: 0,
   displayDirectory: null,
   get file() {
-    if (MockFilePicker.returnData.length >= 1) {
-      return MockFilePicker.returnData[0].nsIFile;
+    if (MockFilePicker.returnFiles.length >= 1 &&
+        // window.File does not implement nsIFile
+        MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
+      return MockFilePicker.returnFiles[0];
     }
 
     return null;
@@ -189,24 +154,23 @@ MockFilePickerInstance.prototype = {
 
   // We don't support directories here.
   get domFileOrDirectory()  {
-    if (MockFilePicker.returnData.length < 1) {
-      return null;
-    }
+    if (MockFilePicker.returnFiles.length >= 1) {
+      // window.File does not implement nsIFile
+      if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
+        return MockFilePicker.returnFiles[0];
+      }
 
-    if (MockFilePicker.returnData[0].domFile) {
-      return MockFilePicker.returnData[0].domFile;
+      let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIDOMWindowUtils);
+      return utils.wrapDOMFile(MockFilePicker.returnFiles[0]);
     }
-
-    if (MockFilePicker.returnData[0].domDirectory) {
-      return MockFilePicker.returnData[0].domDirectory;
-    }
-
     return null;
   },
   get fileURL() {
-    if (MockFilePicker.returnData.length >= 1 &&
-        MockFilePicker.returnData[0].nsIFile) {
-      return Services.io.newFileURI(MockFilePicker.returnData[0].nsIFile);
+    if (MockFilePicker.returnFiles.length >= 1 &&
+        // window.File does not implement nsIFile
+        MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
+      return Services.io.newFileURI(MockFilePicker.returnFiles[0]);
     }
 
     return null;
@@ -216,13 +180,14 @@ MockFilePickerInstance.prototype = {
       index: 0,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
       hasMoreElements: function() {
-        return this.index < MockFilePicker.returnData.length;
+        return this.index < MockFilePicker.returnFiles.length;
       },
       getNext: function() {
-        if (!MockFilePicker.returnData[this.index].nsIFile) {
+        // window.File does not implement nsIFile
+        if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[this.index])) {
           return null;
         }
-        return MockFilePicker.returnData[this.index++].nsIFile;
+        return MockFilePicker.returnFiles[this.index++];
       }
     };
   },
@@ -233,76 +198,38 @@ MockFilePickerInstance.prototype = {
       index: 0,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
       hasMoreElements: function() {
-        return this.index < MockFilePicker.returnData.length;
+        return this.index < MockFilePicker.returnFiles.length;
       },
       getNext: function() {
         // window.File does not implement nsIFile
-        if (MockFilePicker.returnData[this.index].domFile) {
-          return MockFilePicker.returnData[this.index++].domFile;
+        if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[this.index])) {
+          return MockFilePicker.returnFiles[this.index++];
         }
-
-        if (MockFilePicker.returnData[this.index].domDirectory) {
-          return MockFilePicker.returnData[this.index++].domDirectory;
-        }
-
-        return null;
+        return utils.wrapDOMFile(MockFilePicker.returnFiles[this.index++]);
       }
     };
   },
   show: function() {
-    throw "This is not implemented";
+    MockFilePicker.displayDirectory = this.displayDirectory;
+    MockFilePicker.shown = true;
+    if (typeof MockFilePicker.showCallback == "function") {
+      var returnValue = MockFilePicker.showCallback(this);
+      if (typeof returnValue != "undefined")
+        return returnValue;
+    }
+    return MockFilePicker.returnValue;
   },
   open: function(aFilePickerShownCallback) {
     MockFilePicker.showing = true;
-    this.window.setTimeout(() => {
-      // Maybe all the pending promises are already resolved, but we want to be sure.
-      Promise.all(MockFilePicker.pendingPromises).then(() => {
-        return Ci.nsIFilePicker.returnOK;
-      }, () => {
-        return Ci.nsIFilePicker.returnCancel;
-      }).then(result => {
-        // Nothing else has to be done.
-        MockFilePicker.pendingPromises = [];
-
-        if (result == Ci.nsIFilePicker.returnCancel) {
-          return result;
-        }
-
-        MockFilePicker.displayDirectory = this.displayDirectory;
-        MockFilePicker.shown = true;
-        if (typeof MockFilePicker.showCallback == "function") {
-          try {
-            var returnValue = MockFilePicker.showCallback(this);
-            if (typeof returnValue != "undefined") {
-              return returnValue;
-            }
-          } catch(ex) {
-            return Ci.nsIFilePicker.returnCancel;
-          }
-        }
-
-        return MockFilePicker.returnValue;
-      }).then(result => {
-        // Some additional result file can be set by the callback. Let's
-        // resolve the pending promises again.
-        return Promise.all(MockFilePicker.pendingPromises).then(() => {
-          return result;
-        }, () => {
-          return Ci.nsIFilePicker.returnCancel;
-        });
-      }).then(result => {
-        MockFilePicker.pendingPromises = [];
-
-        if (aFilePickerShownCallback) {
-          aFilePickerShownCallback.done(result);
-        }
-
-        if (typeof MockFilePicker.afterOpenCallback == "function") {
-          this.window.setTimeout(() => {
-            MockFilePicker.afterOpenCallback(this);
-          }, 0);
-        }
-      });
-    });
+    this.window.setTimeout(function() {
+      let result = Components.interfaces.nsIFilePicker.returnCancel;
+      try {
+        result = this.show();
+      } catch(ex) {
+      }
+      if (aFilePickerShownCallback) {
+        aFilePickerShownCallback.done(result);
+      }
+    }.bind(this), 0);
   }
 };
