@@ -1531,7 +1531,7 @@ struct WrapNativeHelper
     JSObject* obj;
     if ((obj = cache->GetWrapper())) {
       // GetWrapper always unmarks gray.
-      MOZ_ASSERT(!JS::ObjectIsMarkedGray(obj));
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
       return obj;
     }
 
@@ -1539,11 +1539,11 @@ struct WrapNativeHelper
     if (!CouldBeDOMBinding(parent)) {
       // WrapNativeFallback never returns a gray thing.
       obj = WrapNativeFallback<T>::Wrap(cx, parent, cache);
-      MOZ_ASSERT_IF(obj, !JS::ObjectIsMarkedGray(obj));
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
     } else {
       // WrapObject never returns a gray thing.
       obj = parent->WrapObject(cx, nullptr);
-      MOZ_ASSERT_IF(obj, !JS::ObjectIsMarkedGray(obj));
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
     }
 
     return obj;
@@ -1565,12 +1565,12 @@ struct WrapNativeHelper<T, false>
                    "Unexpected object in nsWrapperCache");
       obj = rootedObj;
 #endif
-      MOZ_ASSERT(!JS::ObjectIsMarkedGray(obj));
+      MOZ_ASSERT(JS::ObjectIsNotGray(obj));
       return obj;
     }
 
     obj = WrapNativeISupports(cx, parent, cache);
-    MOZ_ASSERT_IF(obj, !JS::ObjectIsMarkedGray(obj));
+    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
     return obj;
   }
 };
@@ -1589,7 +1589,7 @@ FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
   if (!obj) {
     return nullptr;
   }
-  MOZ_ASSERT(!JS::ObjectIsMarkedGray(obj));
+  MOZ_ASSERT(JS::ObjectIsNotGray(obj));
 
   obj = js::GetGlobalForObjectCrossCompartment(obj);
 
@@ -1606,7 +1606,7 @@ FindAssociatedGlobal(JSContext* cx, T* p, nsWrapperCache* cache,
   JS::Rooted<JSObject*> rootedObj(cx, obj);
   JSObject* xblScope = xpc::GetXBLScope(cx, rootedObj);
   MOZ_ASSERT_IF(xblScope, JS_IsGlobalObject(xblScope));
-  MOZ_ASSERT_IF(xblScope, !JS::ObjectIsMarkedGray(xblScope));
+  MOZ_ASSERT(JS::ObjectIsNotGray(xblScope));
   return xblScope;
 }
 

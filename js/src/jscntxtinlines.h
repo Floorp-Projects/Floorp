@@ -459,7 +459,7 @@ template <typename T>
 inline void
 JSContext::enterCompartmentOf(const T& target)
 {
-    MOZ_ASSERT(!js::gc::detail::CellIsMarkedGrayIfKnown(target));
+    MOZ_ASSERT(JS::CellIsNotGray(target));
     enterCompartment(target->compartment(), nullptr);
 }
 
