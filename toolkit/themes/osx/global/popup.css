@@ -139,3 +139,9 @@ menulist > menupopup > .popup-internal-box {
 menulist:not([editable="true"]) > menupopup {
   padding: 4px 0;
 }
+
+menupopup[customoptionstyling="true"] {
+  -moz-appearance: none;
+  padding-top: 0;
+  padding-bottom: 0;
+}
