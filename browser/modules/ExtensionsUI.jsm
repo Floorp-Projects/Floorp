@@ -144,12 +144,16 @@ this.ExtensionsUI = {
         progressNotification.remove();
       }
 
+      info.unsigned = info.addon.signedState <= AddonManager.SIGNEDSTATE_MISSING;
       let strings = this._buildStrings(info);
+
       // If this is an update with no promptable permissions, just apply it
       if (info.type == "update" && strings.msgs.length == 0) {
         info.resolve();
         return;
       }
+
+      let icon = info.unsigned ? "chrome://browser/skin/warning.svg" : info.icon;
 
       let histkey;
       if (info.type == "sideload") {
@@ -164,7 +168,7 @@ this.ExtensionsUI = {
         histkey = "installWeb";
       }
 
-      this.showPermissionsPrompt(target, strings, info.icon, histkey)
+      this.showPermissionsPrompt(target, strings, icon, histkey)
           .then(answer => {
             if (answer) {
               info.resolve();
@@ -298,7 +302,8 @@ this.ExtensionsUI = {
     let addonName = `<span class="addon-webext-name">${name}</span>`;
 
     result.header = bundle.formatStringFromName("webextPerms.header", [addonName], 1);
-    result.text = "";
+    result.text = info.unsigned ?
+                  bundle.GetStringFromName("webextPerms.unsignedWarning") : "";
     result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
 
     result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
