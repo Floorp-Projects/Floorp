@@ -35,6 +35,7 @@
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
+    <string name="preference_performance_block_images">Block Images</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry">Send anonymous usage data</string>

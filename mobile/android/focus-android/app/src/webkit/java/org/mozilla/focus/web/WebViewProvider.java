@@ -7,7 +7,9 @@ package org.mozilla.focus.web;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -17,6 +19,7 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewDatabase;
 
+import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.webkit.NestedWebView;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
 
@@ -37,7 +40,7 @@ public class WebViewProvider {
         final WebkitView webkitView = new WebkitView(context, attrs);
 
         setupView(webkitView);
-        configureSettings(webkitView.getSettings());
+        configureSettings(context, webkitView.getSettings());
 
         return webkitView;
     }
@@ -48,7 +51,9 @@ public class WebViewProvider {
     }
 
     @SuppressLint("SetJavaScriptEnabled") // We explicitly want to enable JavaScript
-    private static void configureSettings(WebSettings settings) {
+    private static void configureSettings(Context context, WebSettings settings) {
+        final Settings appSettings = new Settings(context);
+
         settings.setJavaScriptEnabled(true);
 
         // Enabling built in zooming shows the controls by default
@@ -60,6 +65,8 @@ public class WebViewProvider {
         // Disable access to arbitrary local files by webpages - assets can still be loaded
         // via file:///android_asset/res, so at least error page images won't be blocked.
         settings.setAllowFileAccess(false);
+
+        settings.setBlockNetworkImage(appSettings.shouldBlockImages());
     }
 
     private static class WebkitView extends NestedWebView implements IWebView {
