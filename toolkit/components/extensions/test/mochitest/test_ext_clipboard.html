@@ -40,7 +40,7 @@ add_task(function* test_background_clipboard_permissions() {
     browser.test.sendMessage("ready");
   }
   let extensionData = {
-    background: `(${shared})();(${backgroundScript})();`,
+    background: [shared, backgroundScript],
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
@@ -194,7 +194,7 @@ add_task(function* test_background_clipboard_paste() {
     manifest: {
       permissions: ["clipboardRead"],
     },
-    background: `(${shared})();(${background})();`,
+    background: [shared, background],
   });
 
   const STRANGE = "Stranger Things";
