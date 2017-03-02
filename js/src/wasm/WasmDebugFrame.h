@@ -40,6 +40,8 @@ class DebugFrame
         double  resultF64_;
     };
 
+    js::Value   cachedReturnJSValue_;
+
     // The fields below are initialized by the baseline compiler.
     uint32_t    funcIndex_;
     uint32_t    reserved0_;
@@ -52,6 +54,7 @@ class DebugFrame
             bool    isDebuggee_ : 1;
             bool    prevUpToDate_ : 1;
             bool    hasCachedSavedFrame_ : 1;
+            bool    hasCachedReturnJSValue_ : 1;
         };
         void*   reserved1_;
     };
@@ -90,6 +93,13 @@ class DebugFrame
     inline void setHasCachedSavedFrame() { hasCachedSavedFrame_ = true; }
 
     inline void* resultsPtr() { return &resultI32_; }
+
+    inline HandleValue returnValue() const {
+        MOZ_ASSERT(hasCachedReturnJSValue_);
+        return HandleValue::fromMarkedLocation(&cachedReturnJSValue_);
+    }
+    void updateReturnJSValue();
+    void clearReturnJSValue();
 
     bool getLocal(uint32_t localIndex, MutableHandleValue vp);
 
