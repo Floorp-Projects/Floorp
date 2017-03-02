@@ -202,6 +202,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
   , mRecvStream(nullptr)
   , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
+  , mRecvSSRCSet(false)
+  , mRecvSSRCSetInProgress(false)
   , mSendCodecPlugin(nullptr)
   , mRecvCodecPlugin(nullptr)
   , mVideoStatsTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
@@ -687,11 +689,12 @@ bool
 WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
 {
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
-  unsigned int current_ssrc;
 
+  unsigned int current_ssrc;
   if (!GetRemoteSSRC(&current_ssrc)) {
     return false;
   }
+  mRecvSSRCSet = true;
 
   if (current_ssrc == ssrc || !mEngineReceiving) {
     return true;
@@ -1144,6 +1147,20 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.fec.red_rtx_payload_type = -1;
     }
 
+    if (!mRecvSSRCSet) {
+      // Handle un-signalled SSRCs by creating a random one and then when it actually gets set,
+      // we'll destroy and recreate.  Simpler than trying to unwind all the logic that assumes
+      // the receive stream is created and started when we ConfigureRecvMediaCodecs()
+      unsigned int ssrc;
+      do {
+        SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
+        if (rv != SECSuccess) {
+          return kMediaConduitUnknownError;
+        }
+      } while (ssrc == 0); // webrtc.org code has fits if you select an SSRC of 0
+
+      mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+    }
     // FIXME(jesup) - Bug 1325447 -- SSRCs configured here are a problem.
     // 0 isn't allowed.  Would be best to ask for a random SSRC from the RTP code.
     // Would need to call rtp_sender.cc -- GenerateSSRC(), which isn't exposed.  It's called on
@@ -1156,7 +1173,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       if (rv != SECSuccess) {
         return kMediaConduitUnknownError;
       }
-    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc);
+    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc || ssrc == 0);
+    // webrtc.org code has fits if you select an SSRC of 0
 
     mRecvStreamConfig.rtp.local_ssrc = ssrc;
 
@@ -1164,8 +1182,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     mRecvCodecList.SwapElements(recv_codecs);
     recv_codecs.Clear();
     mRecvStreamConfig.rtp.rtx.clear();
-    // Rebuilds mRecvStream from mRecvStreamConfig
     DeleteRecvStream();
+    // Rebuilds mRecvStream from mRecvStreamConfig
     MediaConduitErrorCode rval = CreateRecvStream();
     if (rval != kMediaConduitNoError) {
       CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
@@ -1745,8 +1763,63 @@ WebrtcVideoConduit::DeliverPacket(const void* data, int len)
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len)
+WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
 {
+  bool queue = mRecvSSRCSetInProgress;
+  if (!mRecvSSRCSet && !mRecvSSRCSetInProgress) {
+    mRecvSSRCSetInProgress = true;
+    queue = true;
+    // Handle the ssrc-not-signaled case; lock onto first ssrc
+    // We can't just do this here; it has to happen on MainThread :-(
+    // We also don't want to drop the packet, nor stall this thread, so we hold
+    // the packet (and any following) for inserting once the SSRC is set.
+
+    // Ensure lamba captures refs
+    RefPtr<WebrtcVideoConduit> self = this;
+    nsCOMPtr<nsIThread> thread;
+    if (NS_WARN_IF(NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread))))) {
+      return kMediaConduitRTPProcessingFailed;
+    }
+    NS_DispatchToMainThread(media::NewRunnableFrom([self, thread, ssrc]() mutable {
+          // Normally this is done in CreateOrUpdateMediaPipeline() for
+          // initial creation and renegotiation, but here we're rebuilding the
+          // Receive channel at a lower level.  This is needed whenever we're
+          // creating a GMPVideoCodec (in particular, H264) so it can communicate
+          // errors to the PC.
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+          WebrtcGmpPCHandleSetter setter(self->mPCHandle);
+#endif
+          self->SetRemoteSSRC(ssrc); // this will likely re-create the VideoReceiveStream
+          // We want to unblock the queued packets on the original thread
+          thread->Dispatch(media::NewRunnableFrom([self]() mutable {
+                self->mRecvSSRCSetInProgress = false;
+                // SSRC is set; insert queued packets
+                for (auto& packet : self->mQueuedPackets) {
+                  CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
+                              (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
+
+                  if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
+                    CSFLogError(logTag, "%s RTP Processing Failed", __FUNCTION__);
+                    // Keep delivering and then clear the queue
+                  }
+                }
+                self->mQueuedPackets.Clear();
+
+                return NS_OK;
+              }), NS_DISPATCH_NORMAL);
+          return NS_OK;
+        }));
+    // we'll return after queuing
+  }
+  if (queue) {
+    // capture packet for insertion after ssrc is set
+    UniquePtr<QueuedPacket> packet((QueuedPacket*) malloc(sizeof(QueuedPacket) + len-1));
+    packet->mLen = len;
+    memcpy(packet->mData, data, len);
+    mQueuedPackets.AppendElement(Move(packet));
+    return kMediaConduitNoError;
+  }
+
   CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
               (uint16_t)ntohs(((uint16_t*) data)[1]), len);
 
