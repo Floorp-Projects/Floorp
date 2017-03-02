@@ -9,26 +9,13 @@
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HangMonitor.h"
+#include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"
-#include "nsServiceManagerUtils.h"
-#include "nsSystemInfo.h"
 #include "private/prpriv.h" // For PR_GetThreadID
 #include "WinUtils.h"
-
-// This gives us compiler intrinsics for the x86 PAUSE instruction
-#if defined(_MSC_VER)
-#include <intrin.h>
-#pragma intrinsic(_mm_pause)
-#define CPU_PAUSE() _mm_pause()
-#elif defined(__GNUC__) || defined(__clang__)
-#define CPU_PAUSE() __builtin_ia32_pause()
-#endif
-
-static bool sIsMulticore;
 
 namespace {
 
@@ -43,56 +30,28 @@ class MOZ_RAII SyncRunnable
 {
 public:
   explicit SyncRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
-    : mDoneEvent(sIsMulticore ? nullptr :
-                 ::CreateEventW(nullptr, FALSE, FALSE, nullptr))
-    , mDone(false)
-    , mRunnable(aRunnable)
+    : mRunnable(aRunnable)
   {
-    MOZ_ASSERT(sIsMulticore || mDoneEvent);
     MOZ_ASSERT(mRunnable);
   }
 
-  ~SyncRunnable()
-  {
-    if (mDoneEvent) {
-      ::CloseHandle(mDoneEvent);
-    }
-  }
+  ~SyncRunnable() = default;
 
   void Run()
   {
     mRunnable->Run();
 
-    if (mDoneEvent) {
-      ::SetEvent(mDoneEvent);
-    } else {
-      mDone = true;
-    }
+    mEvent.Signal();
   }
 
   bool WaitUntilComplete()
   {
-    if (mDoneEvent) {
-      HANDLE handles[] = {mDoneEvent,
-                          mozilla::mscom::MainThreadInvoker::GetTargetThread()};
-      DWORD waitResult = ::WaitForMultipleObjects(mozilla::ArrayLength(handles),
-                                                  handles, FALSE, INFINITE);
-      return waitResult == WAIT_OBJECT_0;
-    }
-
-    while (!mDone) {
-      // The PAUSE instruction is a hint to the CPU that we're doing a spin
-      // loop. It is a no-op on older processors that don't support it, so
-      // it is safe to use here without any CPUID checks.
-      CPU_PAUSE();
-    }
-    return true;
+    return mEvent.Wait(mozilla::mscom::MainThreadInvoker::GetTargetThread());
   }
 
 private:
-  HANDLE                mDoneEvent;
-  mozilla::Atomic<bool> mDone;
-  nsCOMPtr<nsIRunnable> mRunnable;
+  nsCOMPtr<nsIRunnable>     mRunnable;
+  mozilla::mscom::SpinEvent mEvent;
 };
 
 } // anonymous namespace
@@ -119,14 +78,6 @@ MainThreadInvoker::InitStatics()
 
   PRUint32 tid = ::PR_GetThreadID(mainPrThread);
   sMainThread = ::OpenThread(SYNCHRONIZE | THREAD_SET_CONTEXT, FALSE, tid);
-
-  nsCOMPtr<nsIPropertyBag2> infoService = do_GetService(NS_SYSTEMINFO_CONTRACTID);
-  if (infoService) {
-    uint32_t cpuCount;
-    nsresult rv = infoService->GetPropertyAsUint32(NS_LITERAL_STRING("cpucount"),
-                                                   &cpuCount);
-    sIsMulticore = NS_SUCCEEDED(rv) && cpuCount > 1;
-  }
 
   return !!sMainThread;
 }

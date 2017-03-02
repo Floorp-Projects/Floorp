@@ -319,3 +319,44 @@ TEST_F(TelemetryTestFixture, NonMainThreadAdd) {
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
   CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(), scalarsSnapshot, 37);
 }
+
+TEST_F(TelemetryTestFixture, ScalarUnknownID) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  const uint32_t kTestFakeIds[] = {
+    static_cast<uint32_t>(Telemetry::ScalarID::ScalarCount),
+    static_cast<uint32_t>(Telemetry::ScalarID::ScalarCount) + 378537,
+    std::numeric_limits<uint32_t>::max()
+  };
+
+  for (auto id : kTestFakeIds) {
+    Telemetry::ScalarID scalarId = static_cast<Telemetry::ScalarID>(id);
+    Telemetry::ScalarSet(scalarId, static_cast<uint32_t>(1));
+    Telemetry::ScalarSet(scalarId, true);
+    Telemetry::ScalarSet(scalarId, NS_LITERAL_STRING("test"));
+    Telemetry::ScalarAdd(scalarId, 1);
+    Telemetry::ScalarSetMaximum(scalarId, 1);
+
+    // Make sure that nothing was recorded in the plain scalars.
+    JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+    GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+    ASSERT_TRUE(scalarsSnapshot.isUndefined()) << "No scalar must be recorded";
+
+    // Same for the keyed scalars.
+    Telemetry::ScalarSet(scalarId, NS_LITERAL_STRING("key1"), static_cast<uint32_t>(1));
+    Telemetry::ScalarSet(scalarId, NS_LITERAL_STRING("key1"), true);
+    Telemetry::ScalarAdd(scalarId, NS_LITERAL_STRING("key1"), 1);
+    Telemetry::ScalarSetMaximum(scalarId, NS_LITERAL_STRING("key1"), 1);
+
+    // Make sure that nothing was recorded in the keyed scalars.
+    JS::RootedValue keyedSnapshot(cx.GetJSContext());
+    GetScalarsSnapshot(true, cx.GetJSContext(), &keyedSnapshot);
+    ASSERT_TRUE(keyedSnapshot.isUndefined()) << "No keyed scalar must be recorded";
+  }
+#endif
+}

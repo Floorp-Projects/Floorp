@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Move.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Utils.h"
-
-#include "mozilla/Move.h"
+#include "nsExceptionHandler.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -44,6 +44,8 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
     return;
   }
 
+  HRESULT unmarshalResult = S_OK;
+
   // We need to convert to an interface here otherwise we mess up const
   // correctness with IPDL. We'll request an IUnknown and then QI the
   // actual interface later.
@@ -53,10 +55,10 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
     IUnknown* rawUnmarshaledProxy = nullptr;
     // OK to forget mStream when calling into this function because the stream
     // gets released even if the unmarshaling part fails.
-    DebugOnly<HRESULT> hr =
+    unmarshalResult =
       ::CoGetInterfaceAndReleaseStream(mStream.forget().take(), IID_IUnknown,
                                        (void**)&rawUnmarshaledProxy);
-    MOZ_ASSERT(SUCCEEDED(hr));
+    MOZ_ASSERT(SUCCEEDED(unmarshalResult));
     mUnmarshaledProxy.reset(rawUnmarshaledProxy);
   };
 
@@ -67,6 +69,12 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
   } else {
     // When marshaling in child processes, we want to force the MTA.
     EnsureMTA mta(marshalFn);
+  }
+
+  if (FAILED(unmarshalResult)) {
+    nsPrintfCString hrAsStr("0x%08X", unmarshalResult);
+    CrashReporter::AnnotateCrashReport(
+        NS_LITERAL_CSTRING("CoGetInterfaceAndReleaseStreamFailure"), hrAsStr);
   }
 }
 
@@ -156,6 +164,8 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject)
   RefPtr<IStream> stream;
   HGLOBAL hglobal = NULL;
 
+  HRESULT marshalResult = S_OK;
+
   auto marshalFn = [&]() -> void
   {
     HRESULT hr = ::CreateStreamOnHGlobal(nullptr, TRUE, getter_AddRefs(stream));
@@ -166,6 +176,7 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject)
     hr = ::CoMarshalInterface(stream, aIID, aObject, MSHCTX_LOCAL, nullptr,
                               MSHLFLAGS_NORMAL);
     if (FAILED(hr)) {
+      marshalResult = hr;
       return;
     }
 
@@ -180,6 +191,12 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject)
   } else {
     // When marshaling in child processes, we want to force the MTA.
     EnsureMTA mta(marshalFn);
+  }
+
+  if (FAILED(marshalResult)) {
+    nsPrintfCString hrAsStr("0x%08X", marshalResult);
+    CrashReporter::AnnotateCrashReport(
+        NS_LITERAL_CSTRING("CoMarshalInterfaceFailure"), hrAsStr);
   }
 
   mStream = mozilla::Move(stream);

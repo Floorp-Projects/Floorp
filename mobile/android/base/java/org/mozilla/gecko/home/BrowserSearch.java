@@ -667,16 +667,22 @@ public class BrowserSearch extends HomeFragment
         }
 
         // Suggestions from search engine
-        if (mSearchEngineSuggestionLoaderCallbacks == null) {
-            mSearchEngineSuggestionLoaderCallbacks = new SearchEngineSuggestionLoaderCallbacks();
+        if (mSuggestionsEnabled) {
+            if (mSearchEngineSuggestionLoaderCallbacks == null) {
+                mSearchEngineSuggestionLoaderCallbacks = new SearchEngineSuggestionLoaderCallbacks();
+            }
+            getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, null, mSearchEngineSuggestionLoaderCallbacks);
         }
-        getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, null, mSearchEngineSuggestionLoaderCallbacks);
 
         // Saved suggestions
-        if (mSearchHistorySuggestionLoaderCallback == null) {
-            mSearchHistorySuggestionLoaderCallback = new SearchHistorySuggestionLoaderCallbacks();
+        if (mSavedSearchesEnabled) {
+            if (mSearchHistorySuggestionLoaderCallback == null) {
+                mSearchHistorySuggestionLoaderCallback = new SearchHistorySuggestionLoaderCallbacks();
+            }
+            getLoaderManager().restartLoader(LOADER_ID_SAVED_SUGGESTION, null, mSearchHistorySuggestionLoaderCallback);
+        } else {
+            mSearchHistorySuggestions.clear();
         }
-        getLoaderManager().restartLoader(LOADER_ID_SAVED_SUGGESTION, null, mSearchHistorySuggestionLoaderCallback);
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {
@@ -873,14 +879,14 @@ public class BrowserSearch extends HomeFragment
             @Override
             public void run() {
                 SuggestClient client = mSuggestClient;
-                if (client != null) {
+                if (client != null && enabled) {
                     client.query(mSearchTerm);
                 }
             }
         });
 
         PrefsHelper.setPref("browser.search.suggest.prompted", true);
-        PrefsHelper.setPref("browser.search.suggest.enabled", enabled);
+        PrefsHelper.setPref(GeckoPreferences.PREFS_SEARCH_SUGGESTIONS_ENABLED, enabled);
 
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, (enabled ? "suggestions_optin_yes" : "suggestions_optin_no"));
 

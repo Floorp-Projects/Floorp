@@ -10,7 +10,7 @@ add_task(function* test_downloads_last_dir_toggle() {
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir1 = newDirectory();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.download.lastDir");
     dir1.remove(true);
   });

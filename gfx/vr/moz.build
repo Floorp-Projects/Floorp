@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     'gfxVR.cpp',
     'gfxVROpenVR.cpp',
     'gfxVROSVR.cpp',
+    'gfxVRPuppet.cpp',
     'ipc/VRLayerChild.cpp',
     'ipc/VRLayerParent.cpp',
     'ipc/VRManagerChild.cpp',

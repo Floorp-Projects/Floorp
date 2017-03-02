@@ -390,7 +390,7 @@ JsepTrack::NegotiateCodecs(
       if (codec->mName != "red" && codec->mName != "ulpfec") {
         JsepVideoCodecDescription* videoCodec =
             static_cast<JsepVideoCodecDescription*>(codec);
-        videoCodec->EnableFec();
+        videoCodec->EnableFec(red->mDefaultPt, ulpfec->mDefaultPt);
       }
     }
   }

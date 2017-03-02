@@ -434,6 +434,7 @@ private:
   already_AddRefed<CSSValue> DoGetTextEmphasisPosition();
   already_AddRefed<CSSValue> DoGetTextEmphasisStyle();
   already_AddRefed<CSSValue> DoGetTextIndent();
+  already_AddRefed<CSSValue> DoGetTextJustify();
   already_AddRefed<CSSValue> DoGetTextOrientation();
   already_AddRefed<CSSValue> DoGetTextOverflow();
   already_AddRefed<CSSValue> DoGetTextShadow();

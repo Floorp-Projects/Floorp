@@ -36,7 +36,9 @@
     function startTest() {
       Task.spawn(function* () {
         gFindBar = document.getElementById("FindToolbar");
-        for (let browserId of ["content", "content-remote"]) {
+        // Testing on a remote browser has been disabled due to frequent
+        // intermittent failures.
+        for (let browserId of ["content"/*, "content-remote"*/]) {
           yield startTestWithBrowser(browserId);
         }
       }).then(() => {

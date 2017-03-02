@@ -38,20 +38,34 @@ module.exports = createClass({
 
   componentWillReceiveProps(nextProps) {
     let {
+      devices: oldDevices,
+    } = this.props;
+    let {
       devices,
     } = nextProps;
 
-    for (let type of devices.types) {
-      for (let device of devices[type]) {
-        this.setState({
-          [device.name]: device.displayed,
-        });
+    // Refresh component state only when model transitions from closed to open
+    if (!oldDevices.isModalOpen && devices.isModalOpen) {
+      for (let type of devices.types) {
+        for (let device of devices[type]) {
+          this.setState({
+            [device.name]: device.displayed,
+          });
+        }
       }
     }
   },
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.onKeyDown, true);
+  },
+
+  onAddCustomDevice(device) {
+    this.props.onAddCustomDevice(device);
+    // Default custom devices to enabled
+    this.setState({
+      [device.name]: true,
+    });
   },
 
   onDeviceCheckboxChange({ nativeEvent: { button }, target }) {
@@ -113,10 +127,13 @@ module.exports = createClass({
     let {
       deviceAdderViewportTemplate,
       devices,
-      onAddCustomDevice,
       onRemoveCustomDevice,
       onUpdateDeviceModal,
     } = this.props;
+
+    let {
+      onAddCustomDevice,
+    } = this;
 
     const sortedDevices = {};
     for (let type of devices.types) {

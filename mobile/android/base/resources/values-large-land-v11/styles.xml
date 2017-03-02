@@ -5,10 +5,6 @@
 
 <resources>
 
-    <style name="TabsLayout" parent="TabsLayoutBase">
-         <item name="android:scrollbars">vertical</item>
-    </style>
-
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>

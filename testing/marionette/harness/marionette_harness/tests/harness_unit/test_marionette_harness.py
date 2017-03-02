@@ -105,4 +105,5 @@ def test_harness_sets_up_default_test_handlers(mach_parsed_kwargs):
 
 if __name__ == '__main__':
     import sys
-    sys.exit(pytest.main(['--verbose', __file__]))
+    sys.exit(pytest.main(
+        ['-p', 'no:terminalreporter', '--log-tbpl=-', __file__]))

@@ -349,7 +349,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsHeadFile(this)
+   *         e.g. helpers.getIsHeadFile(context)
    *
    * @return {Boolean}
    *         True or false
@@ -365,7 +365,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsHeadFile(this)
+   *         e.g. helpers.getIsHeadFile(context)
    *
    * @return {String[]}
    *         Paths to head files to load for the test
@@ -426,7 +426,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsHeadFile(this)
+   *         e.g. helpers.getIsHeadFile(context)
    *
    * @return {String}
    *         The path to the test manifest file
@@ -451,7 +451,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsTest(this)
+   *         e.g. helpers.getIsTest(context)
    *
    * @return {Boolean}
    *         True or false
@@ -471,7 +471,7 @@ module.exports = {
    *
    * @param  {RuleContext} scope
    *         You should pass this from within a rule
-   *         e.g. helpers.getIsHeadFile(this)
+   *         e.g. helpers.getIsHeadFile(context)
    *
    * @return {String or null}
    *         Test type: xpcshell, browser, chrome, mochitest

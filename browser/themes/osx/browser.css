@@ -3190,14 +3190,12 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   background-attachment: fixed;
 }
 
-#main-window[tabsintitlebar][customization-lwtheme] > #titlebar:-moz-lwtheme,
-#main-window[customization-lwtheme] > #tab-view-deck:-moz-lwtheme {
+#main-window[tabsintitlebar][customization-lwtheme] > #titlebar:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: right top;
   background-attachment: fixed;
-  /* The image will get set from CustomizeMode.jsm */
-  background-image: none;
-  background-color: transparent;
+  background-image: var(--lwt-header-image);
+  background-color: var(--lwt-accent-color);
 }
 
 #main-window[customization-lwtheme]:-moz-lwtheme {

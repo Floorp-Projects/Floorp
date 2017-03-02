@@ -38,3 +38,81 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 
   return false;
 }
+
+static CFDateFormatterStyle
+ToCFDateFormatterStyle(OSPreferences::DateTimeFormatStyle aFormatStyle)
+{
+  switch (aFormatStyle) {
+    case OSPreferences::DateTimeFormatStyle::None:
+      return kCFDateFormatterNoStyle;
+    case OSPreferences::DateTimeFormatStyle::Short:
+      return kCFDateFormatterShortStyle;
+    case OSPreferences::DateTimeFormatStyle::Medium:
+      return kCFDateFormatterMediumStyle;
+    case OSPreferences::DateTimeFormatStyle::Long:
+      return kCFDateFormatterLongStyle;
+    case OSPreferences::DateTimeFormatStyle::Full:
+      return kCFDateFormatterFullStyle;
+    case OSPreferences::DateTimeFormatStyle::Invalid:
+      MOZ_ASSERT_UNREACHABLE("invalid time format");
+      return kCFDateFormatterNoStyle;
+  }
+}
+
+// Given an 8-bit Gecko string, create a corresponding CFLocale;
+// if aLocale is empty, returns a copy of the system's current locale.
+// May return null on failure.
+// Follows Core Foundation's Create rule, so the caller is responsible to
+// release the returned reference.
+static CFLocaleRef
+CreateCFLocaleFor(const nsACString& aLocale)
+{
+  if (aLocale.IsEmpty()) {
+    return CFLocaleCopyCurrent();
+  }
+  CFStringRef identifier =
+    CFStringCreateWithBytesNoCopy(kCFAllocatorDefault,
+                                  (const uint8_t*)aLocale.BeginReading(),
+                                  aLocale.Length(), kCFStringEncodingASCII,
+                                  false, kCFAllocatorNull);
+  if (!identifier) {
+    return nullptr;
+  }
+  CFLocaleRef locale = CFLocaleCreate(kCFAllocatorDefault, identifier);
+  CFRelease(identifier);
+  return locale;
+}
+
+/**
+ * Cocoa API maps nicely to our four styles of date/time.
+ *
+ * The only caveat is that Cocoa takes regional preferences modifications
+ * into account only when we pass an empty string as a locale.
+ *
+ * In all other cases it will return the default pattern for a given locale.
+ */
+bool
+OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
+                                   DateTimeFormatStyle aTimeStyle,
+                                   const nsACString& aLocale, nsAString& aRetVal)
+{
+  CFLocaleRef locale = CreateCFLocaleFor(aLocale);
+  if (!locale) {
+    return false;
+  }
+
+  CFDateFormatterRef formatter =
+    CFDateFormatterCreate(kCFAllocatorDefault, locale,
+                          ToCFDateFormatterStyle(aDateStyle),
+                          ToCFDateFormatterStyle(aTimeStyle));
+  CFStringRef format = CFDateFormatterGetFormat(formatter);
+  CFRelease(locale);
+
+  CFRange range = CFRangeMake(0, CFStringGetLength(format));
+  aRetVal.SetLength(range.length);
+  CFStringGetCharacters(format, range,
+                        reinterpret_cast<UniChar*>(aRetVal.BeginWriting()));
+  CFRelease(formatter);
+
+  return true;
+}

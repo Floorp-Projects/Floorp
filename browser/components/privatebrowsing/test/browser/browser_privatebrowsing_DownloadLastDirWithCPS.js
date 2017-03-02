@@ -57,7 +57,7 @@ async function runTest() {
   let uri4 = Services.io.newURI("http://test4.com/");
 
   // cleanup functions registration
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
     Services.prefs.clearUserPref("browser.download.lastDir");
     [dir1, dir2, dir3].forEach(dir => dir.remove(true));
@@ -173,8 +173,6 @@ async function runTest() {
 
   // check clearHistory removes all data
   is(downloadLastDir.file, null, "clearHistory removes all data");
-  //is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir", null),
-  //   false, "LastDir preference should be absent");
   is((await getFile(downloadLastDir, uri1)), null, "uri1 should point to null");
   is((await getFile(downloadLastDir, uri2)), null, "uri2 should point to null");
   is((await getFile(downloadLastDir, uri3)), null, "uri3 should point to null");

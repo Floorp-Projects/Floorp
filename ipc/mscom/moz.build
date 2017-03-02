@@ -26,14 +26,20 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['ACCESSIBILITY']:
+    DIRS += [
+        'oop',
+    ]
+
     EXPORTS.mozilla.mscom += [
         'ActivationContext.h',
         'DispatchForwarder.h',
+        'IHandlerPayload.h',
         'Interceptor.h',
         'InterceptorLog.h',
         'MainThreadHandoff.h',
         'MainThreadInvoker.h',
         'Registration.h',
+        'SpinEvent.h',
         'StructStream.h',
         'WeakRef.h',
     ]
@@ -41,6 +47,7 @@ if CONFIG['ACCESSIBILITY']:
     SOURCES += [
         'Interceptor.cpp',
         'Registration.cpp',
+        'SpinEvent.cpp',
         'WeakRef.cpp',
     ]
 

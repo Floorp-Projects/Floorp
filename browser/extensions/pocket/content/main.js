@@ -42,7 +42,7 @@
 // TODO : [nice to have] - Immediately save, buffer the actions in a local queue and send (so it works offline, works like our native extensions)
 
 /* eslint-disable no-shadow */
-/* eslint "mozilla/import-browserjs-globals": "error" */
+/* eslint-env mozilla/browser-window */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",

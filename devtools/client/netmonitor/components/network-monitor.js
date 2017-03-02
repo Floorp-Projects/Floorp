@@ -12,7 +12,7 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 // Components
-const MonitoPanel = createFactory(require("./monitor-panel"));
+const MonitorPanel = createFactory(require("./monitor-panel"));
 const StatisticsPanel = createFactory(require("./statistics-panel"));
 
 const { div } = DOM;
@@ -23,7 +23,7 @@ const { div } = DOM;
 function NetworkMonitor({ statisticsOpen }) {
   return (
     div({ className: "network-monitor" },
-      !statisticsOpen ? MonitoPanel() : StatisticsPanel()
+      !statisticsOpen ? MonitorPanel() : StatisticsPanel()
     )
   );
 }
