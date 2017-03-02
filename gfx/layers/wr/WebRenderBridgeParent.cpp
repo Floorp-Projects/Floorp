@@ -216,7 +216,7 @@ WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
 
 void
 WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
-                                 InfallibleTArray<WebRenderCommand>&& aCommands,
+                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId,
@@ -245,7 +245,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
-                                 InfallibleTArray<WebRenderCommand>&& aCommands,
+                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
                                  const uint64_t& aTransactionId,
@@ -261,7 +261,7 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
-                                     InfallibleTArray<WebRenderCommand>&& aCommands,
+                                     InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                      InfallibleTArray<OpDestroy>&& aToDestroy,
                                      const uint64_t& aFwdTransactionId,
                                      const uint64_t& aTransactionId,
@@ -277,7 +277,7 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
 
 void
 WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch,
+                                                InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
                                                 const ByteBuffer& dl,
                                                 const WrBuiltDisplayListDescriptor& dlDesc,
                                                 const ByteBuffer& aux,
@@ -286,11 +286,11 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
   // XXX remove it when external image key is used.
   std::vector<wr::ImageKey> keysToDelete;
 
-  for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
-    const WebRenderCommand& cmd = aCommands[i];
+  for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
+    const WebRenderParentCommand& cmd = aCommands[i];
 
     switch (cmd.type()) {
-      case WebRenderCommand::TOpAddExternalImage: {
+      case WebRenderParentCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
 
@@ -322,7 +322,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
         }
         break;
       }
-      case WebRenderCommand::TCompositableOperation: {
+      case WebRenderParentCommand::TCompositableOperation: {
         if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation())) {
           NS_ERROR("ReceiveCompositableUpdate failed");
         }

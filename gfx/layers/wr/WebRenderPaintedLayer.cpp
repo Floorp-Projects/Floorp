@@ -236,7 +236,7 @@ WebRenderPaintedLayer::RenderLayer()
   WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
-  WrBridge()->AddWebRenderCommand(OpAddExternalImage(mExternalImageId, key));
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
   WrBridge()->AddWebRenderCommand(OpDPPushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), wr::ImageRendering::Auto, key));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }

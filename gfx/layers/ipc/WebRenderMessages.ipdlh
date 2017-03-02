@@ -139,10 +139,13 @@ union WebRenderCommand {
   OpDPPushLinearGradient;
   OpDPPushRadialGradient;
   OpDPPushImage;
-  OpAddExternalImage;
   OpDPPushIframe;
   OpDPPushText;
   OpDPPushBoxShadow;
+};
+
+union WebRenderParentCommand {
+  OpAddExternalImage;
   CompositableOperation;
 };
 
