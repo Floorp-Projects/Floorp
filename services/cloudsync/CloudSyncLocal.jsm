@@ -11,14 +11,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/stringbundle.js");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 function lazyStrings(name) {
-  let bundle = "chrome://weave/locale/services/" + name + ".properties";
-  return () => new StringBundle(bundle);
+  return () => Services.strings.createBundle(
+    `chrome://weave/locale/services//${name}.properties`);
 }
 
 this.Str = {};
@@ -58,12 +58,13 @@ Local.prototype = {
                 .getService(Ci.nsIEnvironment);
     let user = env.get("USER") || env.get("USERNAME");
     let appName;
-    let brand = new StringBundle("chrome://branding/locale/brand.properties");
-    let brandName = brand.get("brandShortName");
+    let brand = Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties");
+    let brandName = brand.GetStringFromName("brandShortName");
 
     try {
-      let syncStrings = new StringBundle("chrome://browser/locale/sync.properties");
-      appName = syncStrings.getFormattedString("sync.defaultAccountApplication", [brandName]);
+      let syncStrings = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+      appName = syncStrings.formatStringFromName("sync.defaultAccountApplication", [brandName], 1);
     } catch (ex) {
     }
 
@@ -77,7 +78,7 @@ Local.prototype = {
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return this.name = Str.sync.get("client.name2", [user, appName, system]);
+    return this.name = Str.sync.formatStringFromName("client.name2", [user, appName, system], 3);
   },
 
   set name(value) {

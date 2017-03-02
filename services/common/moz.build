@@ -23,7 +23,6 @@ EXTRA_JS_MODULES['services-common'] += [
     'logmanager.js',
     'observers.js',
     'rest.js',
-    'stringbundle.js',
     'utils.js',
 ]
 
