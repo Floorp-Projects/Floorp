@@ -9424,14 +9424,6 @@ exports.PREFERENCES = [
     "layout.css.mix-blend-mode.enabled"
   ],
   [
-    "object-fit",
-    "layout.css.object-fit-and-position.enabled"
-  ],
-  [
-    "object-position",
-    "layout.css.object-fit-and-position.enabled"
-  ],
-  [
     "-moz-osx-font-smoothing",
     "layout.css.osx-font-smoothing.enabled"
   ],
