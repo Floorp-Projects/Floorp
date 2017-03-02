@@ -26,6 +26,7 @@ toolkit.jar:
     content/extensions/schemas/runtime.json
     content/extensions/schemas/storage.json
     content/extensions/schemas/test.json
+    content/extensions/schemas/theme.json
     content/extensions/schemas/top_sites.json
     content/extensions/schemas/types.json
     content/extensions/schemas/web_navigation.json
