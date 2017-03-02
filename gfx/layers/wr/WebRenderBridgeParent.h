@@ -76,7 +76,7 @@ public:
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
   mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
-                                    InfallibleTArray<WebRenderCommand>&& aCommands,
+                                    InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
                                     const uint64_t& aTransactionId,
@@ -85,7 +85,7 @@ public:
                                     const ByteBuffer& aux,
                                     const WrAuxiliaryListsDescriptor& auxDesc) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
-                                        InfallibleTArray<WebRenderCommand>&& aCommands,
+                                        InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
                                         const uint64_t& aTransactionId,
@@ -150,7 +150,7 @@ private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebrenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderCommand>& commands, const wr::Epoch& aEpoch,
+  void ProcessWebrenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
                                     const ByteBuffer& dl,
                                     const WrBuiltDisplayListDescriptor& dlDesc,
                                     const ByteBuffer& aux,
@@ -160,7 +160,7 @@ private:
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
   void HandleDPEnd(const gfx::IntSize& aSize,
-                   InfallibleTArray<WebRenderCommand>&& aCommands,
+                   InfallibleTArray<WebRenderParentCommand>&& aCommands,
                    InfallibleTArray<OpDestroy>&& aToDestroy,
                    const uint64_t& aFwdTransactionId,
                    const uint64_t& aTransactionId,
