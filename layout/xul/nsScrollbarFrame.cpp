@@ -268,7 +268,7 @@ nsScrollbarFrame::MoveToNewPosition()
   nsAutoString curposStr;
   curposStr.AppendInt(curpos);
 
-  nsWeakFrame weakFrame(this);
+  AutoWeakFrame weakFrame(this);
   if (mSmoothScroll) {
     content->SetAttr(kNameSpaceID_None, nsGkAtoms::smooth, NS_LITERAL_STRING("true"), false);
   }

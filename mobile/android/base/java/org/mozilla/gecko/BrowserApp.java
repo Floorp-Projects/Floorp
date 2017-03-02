@@ -62,6 +62,7 @@ import org.mozilla.gecko.javaaddons.JavaAddonManager;
 import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
+import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
@@ -1746,6 +1747,10 @@ public class BrowserApp extends GeckoApp
                               final EventCallback callback) {
         switch (event) {
             case "Gecko:Ready":
+                if (!GeckoLoader.neonCompatible()) {
+                    conditionallyNotifyEOL();
+                }
+
                 EventDispatcher.getInstance().registerUiThreadListener(this, "Gecko:DelayedStartup");
 
                 // Handle this message in GeckoApp, but also enable the Settings

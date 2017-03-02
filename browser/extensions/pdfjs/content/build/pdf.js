@@ -88,7 +88,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__w_pdfjs_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 13);
+/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 14);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -97,6 +97,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
+var compatibility = __w_pdfjs_require__(13);
 var globalScope = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : this;
 var FONT_IDENTITY_MATRIX = [
  0.001,
@@ -1185,54 +1186,6 @@ function createPromiseCapability() {
  });
  return capability;
 }
-(function PromiseClosure() {
- if (globalScope.Promise) {
-  if (typeof globalScope.Promise.all !== 'function') {
-   globalScope.Promise.all = function (iterable) {
-    var count = 0, results = [], resolve, reject;
-    var promise = new globalScope.Promise(function (resolve_, reject_) {
-     resolve = resolve_;
-     reject = reject_;
-    });
-    iterable.forEach(function (p, i) {
-     count++;
-     p.then(function (result) {
-      results[i] = result;
-      count--;
-      if (count === 0) {
-       resolve(results);
-      }
-     }, reject);
-    });
-    if (count === 0) {
-     resolve(results);
-    }
-    return promise;
-   };
-  }
-  if (typeof globalScope.Promise.resolve !== 'function') {
-   globalScope.Promise.resolve = function (value) {
-    return new globalScope.Promise(function (resolve) {
-     resolve(value);
-    });
-   };
-  }
-  if (typeof globalScope.Promise.reject !== 'function') {
-   globalScope.Promise.reject = function (reason) {
-    return new globalScope.Promise(function (resolve, reject) {
-     reject(reason);
-    });
-   };
-  }
-  if (typeof globalScope.Promise.prototype.catch !== 'function') {
-   globalScope.Promise.prototype.catch = function (onReject) {
-    return globalScope.Promise.prototype.then(undefined, onReject);
-   };
-  }
-  return;
- }
- throw new Error('DOM Promise is not present');
-}());
 var StatTimer = function StatTimerClosure() {
  function rpad(str, pad, length) {
   while (str.length < length) {
@@ -1691,6 +1644,8 @@ function getDefaultSetting(id) {
   return globalSettings ? globalSettings.cMapPacked : false;
  case 'postMessageTransfers':
   return globalSettings ? globalSettings.postMessageTransfers : true;
+ case 'workerPort':
+  return globalSettings ? globalSettings.workerPort : null;
  case 'workerSrc':
   return globalSettings ? globalSettings.workerSrc : null;
  case 'disableWorker':
@@ -2492,7 +2447,8 @@ function getDocument(src, pdfDataRangeTransport, passwordCallback, progressCallb
  params.disableNativeImageDecoder = params.disableNativeImageDecoder === true;
  var CMapReaderFactory = params.CMapReaderFactory || DOMCMapReaderFactory;
  if (!worker) {
-  worker = new PDFWorker();
+  var workerPort = getDefaultSetting('workerPort');
+  worker = workerPort ? new PDFWorker(null, workerPort) : new PDFWorker();
   task._worker = worker;
  }
  var docId = task.docId;
@@ -3002,13 +2958,17 @@ var PDFWorker = function PDFWorkerClosure() {
   var wrapper = 'importScripts(\'' + url + '\');';
   return URL.createObjectURL(new Blob([wrapper]));
  }
- function PDFWorker(name) {
+ function PDFWorker(name, port) {
   this.name = name;
   this.destroyed = false;
   this._readyCapability = createPromiseCapability();
   this._port = null;
   this._webWorker = null;
   this._messageHandler = null;
+  if (port) {
+   this._initializeFromPort(port);
+   return;
+  }
   this._initialize();
  }
  PDFWorker.prototype = {
@@ -3020,6 +2980,13 @@ var PDFWorker = function PDFWorkerClosure() {
   },
   get messageHandler() {
    return this._messageHandler;
+  },
+  _initializeFromPort: function PDFWorker_initializeFromPort(port) {
+   this._port = port;
+   this._messageHandler = new MessageHandler('main', 'worker', port);
+   this._messageHandler.on('ready', function () {
+   });
+   this._readyCapability.resolve();
   },
   _initialize: function PDFWorker_initialize() {
    if (!isWorkerDisabled && !getDefaultSetting('disableWorker') && typeof Worker !== 'undefined') {
@@ -3700,8 +3667,8 @@ var _UnsupportedManager = function UnsupportedManagerClosure() {
   }
  };
 }();
-exports.version = '1.7.312';
-exports.build = 'cada411a';
+exports.version = '1.7.337';
+exports.build = '9163a6fb';
 exports.getDocument = getDocument;
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
 exports.PDFWorker = PDFWorker;
@@ -4718,8 +4685,8 @@ if (!globalScope.PDFJS) {
  globalScope.PDFJS = {};
 }
 var PDFJS = globalScope.PDFJS;
-PDFJS.version = '1.7.312';
-PDFJS.build = 'cada411a';
+PDFJS.version = '1.7.337';
+PDFJS.build = '9163a6fb';
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
  sharedUtil.setVerbosityLevel(PDFJS.verbosity);
@@ -4768,6 +4735,7 @@ PDFJS.disableFontFace = PDFJS.disableFontFace === undefined ? false : PDFJS.disa
 PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ? '' : PDFJS.imageResourcesPath;
 PDFJS.disableWorker = PDFJS.disableWorker === undefined ? false : PDFJS.disableWorker;
 PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
+PDFJS.workerPort = PDFJS.workerPort === undefined ? null : PDFJS.workerPort;
 PDFJS.disableRange = PDFJS.disableRange === undefined ? false : PDFJS.disableRange;
 PDFJS.disableStream = PDFJS.disableStream === undefined ? false : PDFJS.disableStream;
 PDFJS.disableAutoFetch = PDFJS.disableAutoFetch === undefined ? false : PDFJS.disableAutoFetch;
@@ -7211,8 +7179,15 @@ exports.TilingPattern = TilingPattern;
 
 "use strict";
 
-var pdfjsVersion = '1.7.312';
-var pdfjsBuild = 'cada411a';
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+var pdfjsVersion = '1.7.337';
+var pdfjsBuild = '9163a6fb';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(8);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);

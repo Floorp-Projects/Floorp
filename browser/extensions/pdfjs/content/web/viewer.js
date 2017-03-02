@@ -502,7 +502,15 @@ exports.localized = localized;
 "use strict";
 
 {
- module.exports = window['pdfjs-dist/build/pdf'];
+ var pdfjsLib;
+ if (typeof __pdfjsdev_webpack__ === 'undefined') {
+  if (typeof require === 'function') {
+   pdfjsLib = require('../build/pdf.js');
+  } else {
+   pdfjsLib = window['pdfjs-dist/build/pdf'];
+  }
+ }
+ module.exports = pdfjsLib;
 }
 
 /***/ }),
