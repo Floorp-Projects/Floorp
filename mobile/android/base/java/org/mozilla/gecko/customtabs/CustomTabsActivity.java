@@ -258,6 +258,9 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             case R.id.action_button:
                 onActionButtonClicked();
                 return true;
+            case R.id.share:
+                onShareClicked();
+                return true;
             case R.id.custom_tabs_menu_forward:
                 onForwardClicked();
                 return true;
@@ -368,6 +371,11 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             menuItemsIntent.put(menuId, intents.get(i));
         }
 
+        // to add share menu item, if necessary
+        if (IntentUtil.hasShareItem(intent) && !TextUtils.isEmpty(intent.getDataString())) {
+            geckoMenu.add(Menu.NONE, R.id.share, Menu.NONE, getString(R.string.share));
+        }
+
         final MenuInflater inflater = new GeckoMenuInflater(this);
         inflater.inflate(R.menu.customtabs_menu, geckoMenu);
 
@@ -436,5 +444,22 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private void onActionButtonClicked() {
         PendingIntent pendingIntent = IntentUtil.getActionButtonPendingIntent(getIntent());
         performPendingIntent(pendingIntent);
+    }
+
+    /**
+     * Callback for Share menu item.
+     */
+    private void onShareClicked() {
+        final String url = Tabs.getInstance().getSelectedTab().getURL();
+
+        if (!TextUtils.isEmpty(url)) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+
+            Intent chooserIntent = Intent.createChooser(shareIntent, getString(R.string.share_title));
+            chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(chooserIntent);
+        }
     }
 }

@@ -127,6 +127,16 @@ public class TestIntentUtil {
         Assert.assertTrue(Objects.equals(intent2, intents.get(2)));
     }
 
+    @Test
+    public void testMenuShareItem() {
+        final CustomTabsIntent.Builder builderNoShareItem = new CustomTabsIntent.Builder();
+        Assert.assertFalse(IntentUtil.hasShareItem(builderNoShareItem.build().intent));
+
+        final CustomTabsIntent.Builder builderHasShareItem = new CustomTabsIntent.Builder();
+        builderHasShareItem.addDefaultShareMenuItem();
+        Assert.assertTrue(IntentUtil.hasShareItem(builderHasShareItem.build().intent));
+    }
+
     private PendingIntent createPendingIntent(int reqCode, @Nullable String uri) {
         final Intent actionIntent = new Intent(Intent.ACTION_VIEW);
         if (!TextUtils.isEmpty(uri)) {
