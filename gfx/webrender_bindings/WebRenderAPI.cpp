@@ -247,15 +247,30 @@ WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescritptor,
                    &aBytes[0], aBytes.length());
 }
 
-ImageKey
-WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
+void
+WebRenderAPI::AddExternalImageHandle(ImageKey key,
+                                     gfx::IntSize aSize,
                                      gfx::SurfaceFormat aFormat,
                                      uint64_t aHandle)
 {
   auto format = SurfaceFormatToWrImageFormat(aFormat).value();
-  return ImageKey(wr_api_add_external_image_texture(mWrApi,
-                                                    aSize.width, aSize.height, format,
-                                                    aHandle));
+  wr_api_add_external_image_handle(mWrApi,
+                                   key,
+                                   aSize.width, aSize.height, format,
+                                   aHandle);
+}
+
+void
+WebRenderAPI::AddExternalImageBuffer(ImageKey key,
+                                     gfx::IntSize aSize,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint64_t aHandle)
+{
+  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
+  wr_api_add_external_image_buffer(mWrApi,
+                                   key,
+                                   aSize.width, aSize.height, format,
+                                   aHandle);
 }
 
 void
