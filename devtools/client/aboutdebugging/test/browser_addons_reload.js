@@ -31,7 +31,7 @@ function* tearDownAddon(addon) {
 }
 
 function getReloadButton(document, addonName) {
-  const names = [...document.querySelectorAll("#addons .target-name")];
+  const names = getInstalledAddonNames(document);
   const name = names.filter(element => element.textContent === addonName)[0];
   ok(name, `Found ${addonName} add-on in the list`);
   const targetElement = name.parentNode.parentNode;
@@ -157,7 +157,7 @@ add_task(function* reloadButtonRefreshesMetadata() {
   const tempExt = new TempWebExt(ADDON_ID);
   tempExt.writeManifest(manifestBase);
 
-  const onAddonListUpdated = waitForMutation(getAddonList(document),
+  const onAddonListUpdated = waitForMutation(getTemporaryAddonList(document),
                                              { childList: true });
   const onInstalled = promiseAddonEvent("onInstalled");
   yield AddonManager.installTemporaryAddon(tempExt.sourceDir);
@@ -170,7 +170,7 @@ add_task(function* reloadButtonRefreshesMetadata() {
 
   // Wait for the add-on list to be updated with the reloaded name.
   const onReInstall = promiseAddonEvent("onInstalled");
-  const onAddonReloaded = waitForContentMutation(getAddonList(document));
+  const onAddonReloaded = waitForContentMutation(getTemporaryAddonList(document));
 
   const reloadButton = getReloadButton(document, manifestBase.name);
   reloadButton.click();
@@ -178,7 +178,7 @@ add_task(function* reloadButtonRefreshesMetadata() {
   yield onAddonReloaded;
   const [reloadedAddon] = yield onReInstall;
   // Make sure the name was updated correctly.
-  const allAddons = [...document.querySelectorAll("#addons .target-name")]
+  const allAddons = getInstalledAddonNames(document)
     .map(element => element.textContent);
   const nameWasUpdated = allAddons.some(name => name === newName);
   ok(nameWasUpdated, `New name appeared in reloaded add-ons: ${allAddons}`);
