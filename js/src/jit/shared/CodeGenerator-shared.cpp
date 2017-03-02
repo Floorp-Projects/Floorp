@@ -1515,7 +1515,7 @@ CodeGeneratorShared::emitWasmCallBase(LWasmCallBase* ins)
         break;
       case wasm::CalleeDesc::WasmTable:
       case wasm::CalleeDesc::AsmJSTable:
-        masm.wasmCallIndirect(desc, callee);
+        masm.wasmCallIndirect(desc, callee, ins->needsBoundsCheck());
         break;
       case wasm::CalleeDesc::Builtin:
         masm.call(callee.builtin());

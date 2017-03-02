@@ -3252,7 +3252,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
              */
 
             const JS::Heap<JSObject*>& entrySlot = protoAndIfaceCache.EntrySlotMustExist(${id});
-            MOZ_ASSERT_IF(entrySlot, !JS::ObjectIsMarkedGray(entrySlot));
+            MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
             return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
             """,
             id=self.id)
@@ -3769,7 +3769,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
               return false;
             }
             MOZ_ASSERT(JS_IsGlobalObject(global));
-            MOZ_ASSERT(!JS::ObjectIsMarkedGray(global));
+            MOZ_ASSERT(JS::ObjectIsNotGray(global));
 
             // That might have ended up wrapping us already, due to the wonders
             // of XBL.  Check for that, and bail out as needed.

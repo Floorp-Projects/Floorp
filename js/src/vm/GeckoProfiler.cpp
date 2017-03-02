@@ -63,13 +63,24 @@ GeckoProfiler::setEventMarker(void (*fn)(const char*))
     eventMarker_ = fn;
 }
 
-void
+bool
 GeckoProfiler::enable(bool enabled)
 {
     MOZ_ASSERT(installed());
 
     if (enabled_ == enabled)
-        return;
+        return true;
+
+    // Execution in the runtime must be single threaded if the Gecko profiler
+    // is enabled. There is only a single profiler stack in the runtime, from
+    // which entries must be added/removed in a LIFO fashion.
+    JSContext* cx = rt->activeContextFromOwnThread();
+    if (enabled) {
+        if (!rt->beginSingleThreadedExecution(cx))
+            return false;
+    } else {
+        rt->endSingleThreadedExecution(cx);
+    }
 
     /*
      * Ensure all future generated code will be instrumented, or that all
@@ -129,6 +140,8 @@ GeckoProfiler::enable(bool enabled)
             }
         }
     }
+
+    return true;
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
@@ -540,7 +553,8 @@ js::SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size,
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
-    cx->runtime()->geckoProfiler().enable(enabled);
+    if (!cx->runtime()->geckoProfiler().enable(enabled))
+        MOZ_CRASH("Execution in this runtime should already be single threaded");
 }
 
 JS_FRIEND_API(void)
