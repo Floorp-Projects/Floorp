@@ -462,7 +462,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandleObject obj)
 
     // Anything we're wrapping has already escaped into script, so must have
     // been unmarked-gray at some point in the past.
-    MOZ_ASSERT(!ObjectIsMarkedGray(obj));
+    MOZ_ASSERT(JS::ObjectIsNotGray(obj));
 
     // The passed object may already be wrapped, or may fit a number of special
     // cases that we need to check for and manually correct.
