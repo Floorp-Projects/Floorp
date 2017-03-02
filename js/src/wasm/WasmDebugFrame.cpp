@@ -65,6 +65,40 @@ DebugFrame::leaveFrame(JSContext* cx)
    observing_ = false;
 }
 
+void
+DebugFrame::clearReturnJSValue()
+{
+    hasCachedReturnJSValue_ = true;
+    cachedReturnJSValue_.setUndefined();
+}
+
+void
+DebugFrame::updateReturnJSValue()
+{
+    hasCachedReturnJSValue_ = true;
+    ExprType returnType = instance()->code().debugGetResultType(funcIndex());
+    switch (returnType) {
+      case ExprType::Void:
+          cachedReturnJSValue_.setUndefined();
+          break;
+      case ExprType::I32:
+          cachedReturnJSValue_.setInt32(resultI32_);
+          break;
+      case ExprType::I64:
+          // Just display as a Number; it's ok if we lose some precision
+          cachedReturnJSValue_.setDouble((double)resultI64_);
+          break;
+      case ExprType::F32:
+          cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF32_));
+          break;
+      case ExprType::F64:
+          cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
+          break;
+      default:
+          MOZ_CRASH("result type");
+    }
+}
+
 bool
 DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
 {
@@ -89,10 +123,10 @@ DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
           vp.set(NumberValue((double)*static_cast<int64_t*>(dataPtr)));
           break;
       case jit::MIRType::Float32:
-          vp.set(NumberValue(*static_cast<float*>(dataPtr)));
+          vp.set(NumberValue(JS::CanonicalizeNaN(*static_cast<float*>(dataPtr))));
           break;
       case jit::MIRType::Double:
-          vp.set(NumberValue(*static_cast<double*>(dataPtr)));
+          vp.set(NumberValue(JS::CanonicalizeNaN(*static_cast<double*>(dataPtr))));
           break;
       default:
           MOZ_CRASH("local type");
