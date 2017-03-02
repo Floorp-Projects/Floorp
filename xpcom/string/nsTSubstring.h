@@ -11,7 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #ifndef MOZILLA_INTERNAL_API
-#error Cannot use internal string classes without MOZILLA_INTERNAL_API defined. Use the frozen header nsStringAPI.h instead.
+#error "Using XPCOM strings is limited to code linked into libxul."
 #endif
 
 /**
