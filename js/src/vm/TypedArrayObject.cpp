@@ -670,11 +670,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static TypedArrayObject*
     makeTypedArrayWithTemplate(JSContext* cx, TypedArrayObject* templateObj, int32_t len)
     {
-        size_t nbytes;
-        if (len < 0 || !js::CalculateAllocSize<NativeType>(len, &nbytes)) {
+        if (len < 0 || uint32_t(len) >= INT32_MAX / sizeof(NativeType)) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return nullptr;
         }
+
+        size_t nbytes;
+        MOZ_ALWAYS_TRUE(js::CalculateAllocSize<NativeType>(len, &nbytes));
 
         bool fitsInline = nbytes <= INLINE_BUFFER_LIMIT;
 
