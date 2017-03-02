@@ -1,0 +1,66 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for the en-US locale"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  {{ locale }}:
+  {% if platform == "win32" %}
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    {% if "esr" not in version %}
+    stub_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup Stub {{ version }}.exe
+    {% endif %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+  {% endif %}
+
+  {% if platform == "win64" %}
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+  {% endif %}
+
+  {% if platform == "linux-i686" %}
+    package:
+      artifact: {{ artifact_base_url }}/target.tar.bz2
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+    complete_mar:
+      artifact: {{ artifact_base_url }}/update/target.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+  {% endif %}
+
+  {% if platform == "linux-x86_64" %}
+    package:
+      artifact: {{ artifact_base_url }}/target.tar.bz2
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+    complete_mar:
+      artifact: {{ artifact_base_url }}/update/target.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+  {% endif %}
+
+  {% if platform == "mac" %}
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
+      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.dmg
+      s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox {{ version }}.dmg
+  {% endif %}
+
+{% endfor %}
