@@ -37,6 +37,11 @@
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
     <string name="preference_performance_block_images">Block Images</string>
 
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser -->
+    <string name="preference_default_browser">Make default browser</string>
+
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry">Send anonymous usage data</string>
     <string name="preference_mozilla_telemetry_summary">Learn more</string>
