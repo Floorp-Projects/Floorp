@@ -186,6 +186,7 @@ private:
     // Object that implements native GeckoEditable calls.
     // Strong referenced by the Java instance.
     NativePtr<mozilla::widget::GeckoEditableSupport> mEditableSupport;
+    mozilla::java::GeckoEditable::GlobalRef mEditable;
 
     class GeckoViewSupport;
     // Object that implements native GeckoView calls and associated states.
