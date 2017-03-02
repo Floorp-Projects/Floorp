@@ -5631,6 +5631,10 @@ pref("dom.IntersectionObserver.enabled", false);
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", false);
 
+// Maximum number of setTimeout()/setInterval() callbacks to run in a single
+// event loop runnable. Minimum value of 1.
+pref("dom.timeout.max_consecutive_callbacks", 5);
+
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
 #endif
