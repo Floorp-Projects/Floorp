@@ -245,6 +245,26 @@ static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
   return id;
 }
 
+struct VecU8 {
+  WrVecU8 inner;
+  VecU8() {
+    inner.data = nullptr;
+    inner.capacity = 0;
+  }
+  VecU8(VecU8&) = delete;
+  VecU8(VecU8&& src) {
+    inner = src.inner;
+    src.inner.data = nullptr;
+    src.inner.capacity = 0;
+  }
+
+  ~VecU8() {
+    if (inner.data) {
+      wr_vec_u8_free(inner);
+    }
+  }
+};
+
 struct ByteBuffer
 {
   ByteBuffer(size_t aLength, uint8_t* aData)
@@ -252,6 +272,23 @@ struct ByteBuffer
     , mData(aData)
     , mOwned(false)
   {}
+
+  // XXX: this is a bit of hack that assumes
+  // the allocators are the same
+  explicit ByteBuffer(VecU8&& vec)
+  {
+    if (vec.inner.capacity) {
+      mLength = vec.inner.length;
+      mData = vec.inner.data;
+      vec.inner.data = nullptr;
+      vec.inner.capacity = 0;
+      mOwned = true;
+    } else {
+      mOwned = false;
+      mData = nullptr;
+      mLength = 0;
+    }
+  }
 
   ByteBuffer()
     : mLength(0)
@@ -293,21 +330,11 @@ struct ByteBuffer
   bool mOwned;
 };
 
-struct VecU8 {
-  WrVecU8 inner;
-  VecU8() {
-    inner.data = nullptr;
-  }
-  VecU8(VecU8&) = delete;
-  VecU8(VecU8&& src) {
-    inner = src.inner;
-    src.inner.data = nullptr;
-  }
-
-  ~VecU8() {
-    if (inner.data)
-      wr_vec_u8_free(inner);
-  }
+struct BuiltDisplayList {
+  VecU8 dl;
+  WrBuiltDisplayListDescriptor dl_desc;
+  VecU8 aux;
+  WrAuxiliaryListsDescriptor aux_desc;
 };
 
 } // namespace wr

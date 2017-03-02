@@ -21,6 +21,11 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+bool is_in_main_thread()
+{
+  return NS_IsMainThread();
+}
+
 bool is_in_compositor_thread()
 {
   return mozilla::layers::CompositorThreadHolder::IsInCompositorThread();
@@ -86,7 +91,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
-  , mBuilder(Nothing())
   , mApi(aApi)
   , mCompositableHolder(aHolder)
   , mCompositorScheduler(aScheduler)
@@ -111,11 +115,7 @@ WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
     return IPC_OK();
   }
 
-  if (mBuilder.isSome()) {
-    return IPC_OK();
-  }
   MOZ_ASSERT(mApi);
-  mBuilder.emplace(mPipelineId);
 
   return IPC_OK();
 }
@@ -139,7 +139,6 @@ WebRenderBridgeParent::Destroy()
   if (mDestroyed) {
     return;
   }
-  MOZ_ASSERT(mBuilder.isSome());
   mDestroyed = true;
   ClearResources();
 }
@@ -212,8 +211,6 @@ WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mBuilder.isSome());
-  mBuilder.ref().Begin(LayerIntSize(aSize.width, aSize.height));
   return IPC_OK();
 }
 
@@ -222,7 +219,11 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
-                                 const uint64_t& aTransactionId)
+                                 const uint64_t& aTransactionId,
+                                 const ByteBuffer& dl,
+                                 const WrBuiltDisplayListDescriptor& dlDesc,
+                                 const ByteBuffer& aux,
+                                 const WrAuxiliaryListsDescriptor& auxDesc)
 {
   UpdateFwdTransactionId(aFwdTransactionId);
 
@@ -237,7 +238,8 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
   ++mWrEpoch; // Update webrender epoch
-  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch));
+  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
+                           dl, dlDesc, aux, auxDesc);
   HoldPendingTransactionId(mWrEpoch, aTransactionId);
 }
 
@@ -246,9 +248,14 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  InfallibleTArray<WebRenderCommand>&& aCommands,
                                  InfallibleTArray<OpDestroy>&& aToDestroy,
                                  const uint64_t& aFwdTransactionId,
-                                 const uint64_t& aTransactionId)
+                                 const uint64_t& aTransactionId,
+                                 const ByteBuffer& dl,
+                                 const WrBuiltDisplayListDescriptor& dlDesc,
+                                 const ByteBuffer& aux,
+                                 const WrAuxiliaryListsDescriptor& auxDesc)
 {
-  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
+              dl, dlDesc, aux, auxDesc);
   return IPC_OK();
 }
 
@@ -257,18 +264,25 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      InfallibleTArray<WebRenderCommand>&& aCommands,
                                      InfallibleTArray<OpDestroy>&& aToDestroy,
                                      const uint64_t& aFwdTransactionId,
-                                     const uint64_t& aTransactionId)
+                                     const uint64_t& aTransactionId,
+                                     const ByteBuffer& dl,
+                                     const WrBuiltDisplayListDescriptor& dlDesc,
+                                     const ByteBuffer& aux,
+                                     const WrAuxiliaryListsDescriptor& auxDesc)
 {
-  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId);
+  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
+              dl, dlDesc, aux, auxDesc);
   return IPC_OK();
 }
 
 void
 WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch)
+                                                InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch,
+                                                const ByteBuffer& dl,
+                                                const WrBuiltDisplayListDescriptor& dlDesc,
+                                                const ByteBuffer& aux,
+                                                const WrAuxiliaryListsDescriptor& auxDesc)
 {
-  MOZ_ASSERT(mBuilder.isSome());
-  wr::DisplayListBuilder& builder = mBuilder.ref();
   // XXX remove it when external image key is used.
   std::vector<wr::ImageKey> keysToDelete;
 
@@ -276,57 +290,6 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
     const WebRenderCommand& cmd = aCommands[i];
 
     switch (cmd.type()) {
-      case WebRenderCommand::TOpDPPushStackingContext: {
-        const OpDPPushStackingContext& op = cmd.get_OpDPPushStackingContext();
-        builder.PushStackingContext(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr), op.opacity(), op.matrix(), op.mixBlendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPopStackingContext: {
-        builder.PopStackingContext();
-        break;
-      }
-      case WebRenderCommand::TOpDPPushScrollLayer: {
-        const OpDPPushScrollLayer& op = cmd.get_OpDPPushScrollLayer();
-        builder.PushScrollLayer(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr));
-        break;
-      }
-      case WebRenderCommand::TOpDPPopScrollLayer: {
-        builder.PopScrollLayer();
-        break;
-      }
-      case WebRenderCommand::TOpDPPushRect: {
-        const OpDPPushRect& op = cmd.get_OpDPPushRect();
-        builder.PushRect(op.bounds(), op.clip(), op.color());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushBorder: {
-        const OpDPPushBorder& op = cmd.get_OpDPPushBorder();
-        builder.PushBorder(op.bounds(), op.clip(),
-                           op.top(), op.right(), op.bottom(), op.left(),
-                           op.radius());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushLinearGradient: {
-        const OpDPPushLinearGradient& op = cmd.get_OpDPPushLinearGradient();
-        builder.PushLinearGradient(op.bounds(), op.clip(),
-                                   op.startPoint(), op.endPoint(),
-                                   op.stops(), op.extendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushRadialGradient: {
-        const OpDPPushRadialGradient& op = cmd.get_OpDPPushRadialGradient();
-        builder.PushRadialGradient(op.bounds(), op.clip(),
-                                   op.startCenter(), op.endCenter(),
-                                   op.startRadius(), op.endRadius(),
-                                   op.stops(), op.extendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushImage: {
-        const OpDPPushImage& op = cmd.get_OpDPPushImage();
-        builder.PushImage(op.bounds(), op.clip(),
-                          op.mask().ptrOr(nullptr), op.filter(), wr::ImageKey(op.key()));
-        break;
-      }
       case WebRenderCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
@@ -359,60 +322,22 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
         }
         break;
       }
-      case WebRenderCommand::TOpDPPushIframe: {
-        const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        builder.PushIFrame(op.bounds(), op.clip(), op.pipelineId());
-        break;
-      }
       case WebRenderCommand::TCompositableOperation: {
         if (!ReceiveCompositableUpdate(cmd.get_CompositableOperation())) {
           NS_ERROR("ReceiveCompositableUpdate failed");
         }
         break;
       }
-      case WebRenderCommand::TOpDPPushText: {
-        const OpDPPushText& op = cmd.get_OpDPPushText();
-        const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
-
-        for (size_t i = 0; i < glyph_array.Length(); i++) {
-          const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
-          builder.PushText(op.bounds(),
-                           op.clip(),
-                           glyph_array[i].color,
-                           op.key(),
-                           Range<const WrGlyphInstance>(glyphs.Elements(), glyphs.Length()),
-                           op.glyph_size());
-        }
-
+      default: {
+        // other commands are handle on the child
         break;
       }
-      case WebRenderCommand::TOpDPPushBoxShadow: {
-        const OpDPPushBoxShadow& op = cmd.get_OpDPPushBoxShadow();
-        builder.PushBoxShadow(op.rect(),
-                              op.clip(),
-                              op.box_bounds(),
-                              op.offset(),
-                              op.color(),
-                              op.blur_radius(),
-                              op.spread_radius(),
-                              op.border_radius(),
-                              op.clip_mode());
-        break;
-      }
-      default:
-        NS_RUNTIMEABORT("not reached");
     }
   }
-  builder.End();
-  WrBuiltDisplayListDescriptor dlDesc;
-  wr::VecU8 dlData;
-  WrAuxiliaryListsDescriptor auxDesc;
-  wr::VecU8 auxData;
-  builder.Finalize(dlDesc, dlData, auxDesc, auxData);
   mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height),
                            mPipelineId,
-                           dlDesc, dlData.inner.data, dlData.inner.length,
-                           auxDesc, auxData.inner.data, auxData.inner.length);
+                           dlDesc, dl.mData, dl.mLength,
+                           auxDesc, aux.mData, aux.mLength);
 
   ScheduleComposition();
   DeleteOldImages();
@@ -470,7 +395,6 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
     mCompositorScheduler->ForceComposeToTarget(nullptr, nullptr);
   }
 
-  MOZ_ASSERT(mBuilder.isSome());
   mApi->Readback(size, buffer, buffer_size);
 
   return IPC_OK();
@@ -655,9 +579,6 @@ WebRenderBridgeParent::ClearResources()
   }
   mExternalImageIds.Clear();
 
-  if (mBuilder.isSome()) {
-    mBuilder.reset();
-  }
   if (mWidget && mCompositorScheduler) {
     mCompositorScheduler->Destroy();
   }
