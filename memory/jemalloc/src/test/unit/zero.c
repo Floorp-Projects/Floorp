@@ -1,5 +1,10 @@
 #include "test/jemalloc_test.h"
 
+#ifdef JEMALLOC_FILL
+const char *malloc_conf =
+    "abort:false,junk:false,zero:true,redzone:false,quarantine:0";
+#endif
+
 static void
 test_zero(size_t sz_min, size_t sz_max)
 {

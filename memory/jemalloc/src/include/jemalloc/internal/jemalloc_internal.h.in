@@ -99,13 +99,6 @@ static const bool config_tcache =
     false
 #endif
     ;
-static const bool config_thp =
-#ifdef JEMALLOC_THP
-    true
-#else
-    false
-#endif
-    ;
 static const bool config_tls =
 #ifdef JEMALLOC_TLS
     true
