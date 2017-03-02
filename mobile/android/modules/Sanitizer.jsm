@@ -38,10 +38,10 @@ Sanitizer.prototype = {
     if (typeof canClear == "function") {
       canClear(function clearCallback(aCanClear) {
         if (aCanClear)
-          item.clear();
+          return item.clear();
       });
     } else if (canClear) {
-      item.clear();
+      return item.clear();
     }
   },
 
