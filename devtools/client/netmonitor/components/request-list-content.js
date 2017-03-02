@@ -55,10 +55,7 @@ const RequestListContent = createClass({
       cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
       openStatistics: (open) => dispatch(Actions.openStatistics(open)),
     });
-    this.tooltip = new HTMLTooltip(
-      window.NetMonitorController._toolbox.doc,
-      { type: "arrow" }
-     );
+    this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
   },
 
   componentDidMount() {

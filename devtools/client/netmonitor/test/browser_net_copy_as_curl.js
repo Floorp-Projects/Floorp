@@ -55,9 +55,7 @@ add_task(function* () {
     document.querySelectorAll(".request-list-item")[0]);
 
   yield waitForClipboardPromise(function setup() {
-    // Context menu is appending in XUL document, we must select it from
-    // toolbox.doc
-    monitor.toolbox.doc
+    monitor.panelWin.parent.document
       .querySelector("#request-list-context-copy-as-curl").click();
   }, function validate(result) {
     if (typeof result !== "string") {

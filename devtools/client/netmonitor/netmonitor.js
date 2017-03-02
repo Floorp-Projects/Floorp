@@ -20,6 +20,12 @@ var Netmonitor = {
     const { createFactory } = require("devtools/client/shared/vendor/react");
     const { render } = require("devtools/client/shared/vendor/react-dom");
     const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+    const { configureStore } = require("./store");
+    const store = window.gStore = configureStore();
+    const { NetMonitorController } = require("./netmonitor-controller");
+    NetMonitorController.toolbox = toolbox;
+    NetMonitorController._target = toolbox.target;
+    this.NetMonitorController = NetMonitorController;
 
     // Components
     const NetworkMonitor = createFactory(require("./components/network-monitor"));
@@ -27,18 +33,11 @@ var Netmonitor = {
     // Inject EventEmitter into netmonitor window.
     EventEmitter.decorate(window);
 
-    window.NetMonitorController = require("./netmonitor-controller").NetMonitorController;
-    window.NetMonitorController._toolbox = toolbox;
-    window.NetMonitorController._target = tabTarget;
-
     this.root = document.querySelector(".root");
 
-    render(Provider(
-      { store: window.gStore },
-      NetworkMonitor(),
-    ), this.root);
+    render(Provider({ store }, NetworkMonitor()), this.root);
 
-    return window.NetMonitorController.startupNetMonitor();
+    return NetMonitorController.startupNetMonitor();
   },
 
   destroy: () => {
@@ -47,6 +46,6 @@ var Netmonitor = {
 
     unmountComponentAtNode(this.root);
 
-    return window.NetMonitorController.shutdownNetMonitor();
+    return this.NetMonitorController.shutdownNetMonitor();
   }
 };
