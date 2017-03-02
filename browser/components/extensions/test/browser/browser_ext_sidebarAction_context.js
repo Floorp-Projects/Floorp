@@ -171,7 +171,7 @@ add_task(function* testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests: function(tabs, expectDefaults) {
+    getTests(tabs, expectDefaults) {
       let details = [
         {"icon": browser.runtime.getURL("default.png"),
          "panel": browser.runtime.getURL("default.html"),
@@ -324,7 +324,7 @@ add_task(function* testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function(tabs, expectDefaults) {
+    getTests(tabs, expectDefaults) {
       let details = [
         {"title": "Foo Extension",
          "panel": browser.runtime.getURL("sidebar.html"),
