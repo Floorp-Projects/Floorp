@@ -482,7 +482,11 @@ class ExportCommand(InitCommand):
                 # header inside the file at all, and indeed deletes it.
                 # TODO: It deletes all headers it doesn't know, and
                 # overrides others. That sucks.
-                lang_catalog = read_catalog(target_po, locale=language.code)
+
+                # Pontoon creates folders like zh-tw, but babel expects zh_tw
+                locale = language.code.replace('-', '_')
+
+                lang_catalog = read_catalog(target_po, locale=locale)
                 catalog, _ = self.make_or_get_template(kind, action)
                 if catalog is None:
                     # Something went wrong parsing the catalog

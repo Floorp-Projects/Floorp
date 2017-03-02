@@ -56,7 +56,7 @@ class Language(object):
     def __init__(self, code, env=None):
         self.code = code
         self.env = env
-        self.locale = Locale.parse(code) if code else None
+        self.locale = Locale.parse(code, sep='-') if code else None
 
     def __unicode__(self):  # pragma: no cover
         return str(self.code)
