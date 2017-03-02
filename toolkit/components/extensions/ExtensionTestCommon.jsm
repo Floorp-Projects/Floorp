@@ -140,7 +140,7 @@ class MockExtension {
   }
 }
 
-class ExtensionTestCommon {
+this.ExtensionTestCommon = class ExtensionTestCommon {
   /**
    * This code is designed to make it easy to test a WebExtension
    * without creating a bunch of files. Everything is contained in a
@@ -283,7 +283,7 @@ class ExtensionTestCommon {
     for (let filename in files) {
       let script = files[filename];
       if (typeof(script) == "function") {
-        script = "(" + script.toString() + ")()";
+        script = this.serializeScript(script);
       } else if (instanceOf(script, "Object") || instanceOf(script, "Array")) {
         script = JSON.stringify(script);
       }
@@ -302,6 +302,30 @@ class ExtensionTestCommon {
     zipW.close();
 
     return file;
+  }
+
+  /**
+   * Properly serialize a script into eval-able code string.
+   *
+   * @param {string|function|Array} script
+   * @returns {string}
+   */
+  static serializeScript(script) {
+    if (Array.isArray(script)) {
+      return script.map(this.serializeScript).join(";");
+    }
+    if (typeof script !== "function") {
+      return script;
+    }
+    // Serialization of object methods doesn't include `function` anymore.
+    const method = /^(async )?(\w+)\(/;
+
+    let code = script.toString();
+    let match = code.match(method);
+    if (match && match[2] !== "function") {
+      code = code.replace(method, "$1function $2(");
+    }
+    return `(${code})();`;
   }
 
   /**
@@ -343,4 +367,4 @@ class ExtensionTestCommon {
       cleanupFile: file,
     });
   }
-}
+};
