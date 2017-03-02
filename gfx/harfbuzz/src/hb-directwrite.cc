@@ -34,8 +34,8 @@
 #define HB_DEBUG_DIRECTWRITE (HB_DEBUG+0)
 #endif
 
-HB_SHAPER_DATA_ENSURE_DECLARE(directwrite, face)
-HB_SHAPER_DATA_ENSURE_DECLARE(directwrite, font)
+HB_SHAPER_DATA_ENSURE_DEFINE(directwrite, face)
+HB_SHAPER_DATA_ENSURE_DEFINE(directwrite, font)
 
 
 /*

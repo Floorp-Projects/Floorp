@@ -67,9 +67,12 @@
 }
 
 .grid-outline-cell {
-  fill: none;
   pointer-events: all;
   stroke-dasharray: 0.5, 2;
+}
+
+.grid-outline-cell:hover {
+  opacity: 0.45;
 }
 
 /**

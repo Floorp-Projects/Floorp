@@ -27,6 +27,7 @@ module.exports = createClass({
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onSetGridOverlayColor: PropTypes.func.isRequired,
     onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+    onShowGridAreaHighlight: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
     onToggleShowGridLineNumbers: PropTypes.func.isRequired,
     onToggleShowInfiniteLines: PropTypes.func.isRequired,
@@ -47,6 +48,7 @@ module.exports = createClass({
       onToggleGridHighlighter,
       onToggleShowGridLineNumbers,
       onToggleShowInfiniteLines,
+      onShowGridAreaHighlight,
     } = this.props;
 
     return grids.length ?
@@ -57,6 +59,7 @@ module.exports = createClass({
         showGridOutline ?
           GridOutline({
             grids,
+            onShowGridAreaHighlight,
           })
           :
           null,

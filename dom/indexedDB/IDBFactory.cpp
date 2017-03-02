@@ -11,6 +11,7 @@
 #include "IndexedDatabaseManager.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/TabChild.h"
@@ -168,6 +169,8 @@ IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   factory->mPrincipalInfo = Move(principalInfo);
   factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
+  factory->mEventTarget =
+    nsGlobalWindow::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
   factory->mInnerWindowID = aWindow->WindowID();
   factory->mPrivateBrowsingMode =
     loadContext && loadContext->UsePrivateBrowsing();
@@ -299,6 +302,8 @@ IDBFactory::CreateForJSInternal(JSContext* aCx,
   factory->mPrincipalInfo = aPrincipalInfo.forget();
   factory->mOwningObject = aOwningObject;
   mozilla::HoldJSObjects(factory.get());
+  factory->mEventTarget = NS_IsMainThread() ?
+    SystemGroup::EventTargetFor(TaskCategory::Other) : NS_GetCurrentThread();
   factory->mInnerWindowID = aInnerWindowID;
 
   factory.forget(aFactory);
@@ -789,6 +794,10 @@ IDBFactory::BackgroundActorCreated(PBackgroundChild* aBackgroundActor,
   {
     BackgroundFactoryChild* actor = new BackgroundFactoryChild(this);
 
+    // Set EventTarget for the top-level actor.
+    // All child actors created later inherit the same event target.
+    aBackgroundActor->SetEventTargetForActor(actor, EventTarget());
+    MOZ_ASSERT(actor->GetActorEventTarget());
     mBackgroundActor =
       static_cast<BackgroundFactoryChild*>(
         aBackgroundActor->SendPBackgroundIDBFactoryConstructor(actor,
@@ -884,6 +893,9 @@ IDBFactory::InitiateRequest(IDBOpenDBRequest* aRequest,
     aRequest->DispatchNonTransactionError(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
+
+  MOZ_ASSERT(actor->GetActorEventTarget(),
+    "The event target shall be inherited from its manager actor.");
 
   return NS_OK;
 }

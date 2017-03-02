@@ -1021,8 +1021,6 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
      * twice.
      */
     nsIFrame* nextSibling = childFrame->GetNextSibling();
-    bool isLastFrame = !childFrame->GetNextContinuation();
-    bool isFirstFrame = !childFrame->GetPrevContinuation();
 
     // If the real frame for a placeholder is a first letter frame, we need to
     // drill down into it and include its contents in Bidi resolution.
@@ -1035,6 +1033,20 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
         frame = realFrame;
       }
     }
+
+    auto DifferentBidiValues = [](nsIFrame* aFrame1, nsIFrame* aFrame2) {
+      nsStyleContext* sc1 = aFrame1->StyleContext();
+      nsStyleContext* sc2 = aFrame2->StyleContext();
+      return GetBidiControl(sc1) != GetBidiControl(sc2) ||
+             GetBidiOverride(sc1) != GetBidiOverride(sc2);
+    };
+
+    nsIFrame* nextContinuation = frame->GetNextContinuation();
+    nsIFrame* prevContinuation = frame->GetPrevContinuation();
+    bool isLastFrame = !nextContinuation ||
+                       DifferentBidiValues(frame, nextContinuation);
+    bool isFirstFrame = !prevContinuation ||
+                        DifferentBidiValues(frame, prevContinuation);
 
     char16_t controlChar = 0;
     char16_t overrideChar = 0;

@@ -713,6 +713,9 @@ Debugger::~Debugger()
      * background finalized.
      */
     JS_REMOVE_LINK(&onNewGlobalObjectWatchersLink);
+
+    JSContext* cx = TlsContext.get();
+    cx->runtime()->endSingleThreadedExecution(cx);
 }
 
 bool
@@ -1608,7 +1611,7 @@ CheckResumptionValue(JSContext* cx, AbstractFramePtr frame, const Maybe<HandleVa
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_AWAIT);
                 return false;
             }
-        } else if (callee->isStarGenerator()) {
+        } else if (callee->isStarGenerator() || callee->isAsync()) {
             if (!CheckStarGeneratorResumptionValue(cx, vp)) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_YIELD);
                 return false;
@@ -2404,12 +2407,7 @@ class MOZ_RAII ExecutionObservableCompartments : public Debugger::ExecutionObser
     }
 
     bool init() { return compartments_.init() && zones_.init(); }
-    bool add(JSCompartment* comp) {
-        // The current cx should have exclusive access to observed content,
-        // since debuggees must be in the same zone group as ther debugger.
-        MOZ_ASSERT(comp->zone()->group() == TlsContext.get()->zone()->group());
-        return compartments_.put(comp) && zones_.put(comp->zone());
-    }
+    bool add(JSCompartment* comp) { return compartments_.put(comp) && zones_.put(comp->zone()); }
 
     typedef HashSet<JSCompartment*>::Range CompartmentRange;
     const HashSet<JSCompartment*>* compartments() const { return &compartments_; }
@@ -2503,9 +2501,6 @@ class MOZ_RAII ExecutionObservableScript : public Debugger::ExecutionObservableS
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : script_(cx, script)
     {
-        // The current cx should have exclusive access to observed content,
-        // since debuggees must be in the same zone group as ther debugger.
-        MOZ_ASSERT(singleZone()->group() == cx->zone()->group());
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -3936,11 +3931,24 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
     obj->setReservedSlot(JSSLOT_DEBUG_MEMORY_INSTANCE, NullValue());
 
+    // Debuggers currently require single threaded execution. A debugger may be
+    // used to debug content in other zone groups, and may be used to observe
+    // all activity in the runtime via hooks like OnNewGlobalObject.
+    if (!cx->runtime()->beginSingleThreadedExecution(cx)) {
+        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in Debugger");
+        return false;
+    }
+
     Debugger* debugger;
     {
         /* Construct the underlying C++ object. */
         auto dbg = cx->make_unique<Debugger>(cx, obj.get());
-        if (!dbg || !dbg->init(cx))
+        if (!dbg) {
+            JS::AutoSuppressGCAnalysis nogc; // Suppress warning about |dbg|.
+            cx->runtime()->endSingleThreadedExecution(cx);
+            return false;
+        }
+        if (!dbg->init(cx))
             return false;
 
         debugger = dbg.release();
@@ -3962,13 +3970,6 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
 {
-    // Debuggers are required to be in the same zone group as their debuggees.
-    // The debugger must be able to observe all activity in the debuggee
-    // compartment, which requires that its thread have exclusive access to
-    // that compartment's contents.
-    MOZ_ASSERT(cx->zone() == object->zone());
-    MOZ_RELEASE_ASSERT(global->zone()->group() == cx->zone()->group());
-
     if (debuggees.has(global))
         return true;
 
@@ -7791,7 +7792,9 @@ DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
 DebuggerFrame::getIsGenerator(HandleDebuggerFrame frame)
 {
     AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
-    return referent.hasScript() && referent.script()->isGenerator();
+    return referent.hasScript() &&
+           (referent.script()->isStarGenerator() ||
+            referent.script()->isLegacyGenerator());
 }
 
 /* static */ bool

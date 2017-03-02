@@ -91,7 +91,7 @@ compose_unicode (const hb_ot_shape_normalize_context_t *c,
 static inline void
 set_glyph (hb_glyph_info_t &info, hb_font_t *font)
 {
-  font->get_nominal_glyph (info.codepoint, &info.glyph_index());
+  (void) font->get_nominal_glyph (info.codepoint, &info.glyph_index());
 }
 
 static inline void

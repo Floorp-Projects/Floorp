@@ -8,9 +8,4 @@ DevToolsModules(
     'Accordion.css',
     'Accordion.js',
     'App.js',
-    'Grid.js',
-    'GridDisplaySettings.js',
-    'GridItem.js',
-    'GridList.js',
-    'GridOutline.js',
 )

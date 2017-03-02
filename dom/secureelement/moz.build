@@ -5,6 +5,10 @@
 #
 # Copyright © 2014 Deutsche Telekom, Inc.
 
+# All of this seems to be FirefoxOS::NFC
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 if CONFIG['MOZ_SECUREELEMENT']:
     EXTRA_COMPONENTS += [
         'DOMSecureElement.js',

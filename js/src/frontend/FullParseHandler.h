@@ -427,20 +427,24 @@ class FullParseHandler
         return true;
     }
 
-    ParseNode* newYieldExpression(uint32_t begin, ParseNode* value, ParseNode* gen,
-                                  JSOp op = JSOP_YIELD) {
-        TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
-        return new_<BinaryNode>(PNK_YIELD, op, pos, value, gen);
+    ParseNode* newInitialYieldExpression(uint32_t begin, ParseNode* gen) {
+        TokenPos pos(begin, begin + 1);
+        return new_<UnaryNode>(PNK_INITIALYIELD, JSOP_INITIALYIELD, pos, gen);
     }
 
-    ParseNode* newYieldStarExpression(uint32_t begin, ParseNode* value, ParseNode* gen) {
+    ParseNode* newYieldExpression(uint32_t begin, ParseNode* value) {
+        TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
+        return new_<UnaryNode>(PNK_YIELD, JSOP_YIELD, pos, value);
+    }
+
+    ParseNode* newYieldStarExpression(uint32_t begin, ParseNode* value) {
         TokenPos pos(begin, value->pn_pos.end);
-        return new_<BinaryNode>(PNK_YIELD_STAR, JSOP_NOP, pos, value, gen);
+        return new_<UnaryNode>(PNK_YIELD_STAR, JSOP_NOP, pos, value);
     }
 
-    ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value, ParseNode* gen) {
+    ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value) {
         TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
-        return new_<BinaryNode>(PNK_AWAIT, JSOP_YIELD, pos, value, gen);
+        return new_<UnaryNode>(PNK_AWAIT, JSOP_AWAIT, pos, value);
     }
 
     // Statements
@@ -493,8 +497,7 @@ class FullParseHandler
         if (!genInit)
             return false;
 
-        ParseNode* initialYield = newYieldExpression(yieldPos.begin, nullptr, genInit,
-                                                     JSOP_INITIALYIELD);
+        ParseNode* initialYield = newInitialYieldExpression(yieldPos.begin, genInit);
         if (!initialYield)
             return false;
 

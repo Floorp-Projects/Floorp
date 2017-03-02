@@ -4,12 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file builds the unicharutil_external_s library which should be used
-# by frozen (dependent) linkage components. Internal-linkage code should use
-# unicharutil_s which is built in the internal/ subdirectory.
-
-DIRS += ['internal']
-
 EXPORTS += [
     'GreekCasing.h',
     'ICUUtils.h',
@@ -21,23 +15,18 @@ EXPORTS += [
     'nsUnicodeScriptCodes.h',
 ]
 
-include('objs.mozbuild')
-
-UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
-
-Library('unicharutil_external_s')
-
-FORCE_STATIC_LIB = True
-
-USE_STATIC_LIBS = True
-
-if CONFIG['_MSC_VER']:
-    DEFINES['_USE_ANSI_CPP'] = True
-    # Don't include directives about which CRT to use
-    CFLAGS += ['-Zl']
-    CXXFLAGS += ['-Zl']
+UNIFIED_SOURCES += [
+    'GreekCasing.cpp',
+    'IrishCasing.cpp',
+    'nsBidiUtils.cpp',
+    'nsSpecialCasingData.cpp',
+    'nsUnicharUtils.cpp',
+    'nsUnicodeProperties.cpp',
+]
 
 if CONFIG['ENABLE_INTL_API']:
-    USE_LIBS += ['icu']
+    UNIFIED_SOURCES += [
+        'ICUUtils.cpp',
+    ]
 
-DIST_INSTALL = True
+FINAL_LIBRARY = 'xul'

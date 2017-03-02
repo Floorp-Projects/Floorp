@@ -25,6 +25,7 @@ const MenuItem = require("devtools/client/framework/menu-item");
 const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
 const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
 const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
+const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
 const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
@@ -577,6 +578,8 @@ Inspector.prototype = {
     this.computedview = new ComputedViewTool(this, this.panelWin);
 
     if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
+      this.gridInspector = new GridInspector(this, this.panelWin);
+
       const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
       this.layoutview = new LayoutView(this, this.panelWin);
     }
