@@ -626,7 +626,6 @@ cfgoutputs_in
 cfghdrs_out
 cfghdrs_in
 enable_zone_allocator
-enable_thp
 enable_tls
 enable_lazy_lock
 jemalloc_version_gid
@@ -693,8 +692,6 @@ EGREP
 GREP
 CPP
 EXTRA_CFLAGS
-SPECIFIED_CFLAGS
-CONFIGURE_CFLAGS
 OBJEXT
 EXEEXT
 ac_ct_CC
@@ -793,7 +790,6 @@ with_version
 enable_syscall
 enable_lazy_lock
 enable_tls
-enable_thp
 enable_zone_allocator
 '
       ac_precious_vars='build_alias
@@ -1450,7 +1446,6 @@ Optional Features:
   --disable-syscall       Disable use of syscall(2)
   --enable-lazy-lock      Enable lazy locking (only lock when multi-threaded)
   --disable-tls           Disable thread-local storage (__thread keyword)
-  --disable-thp           Disable transparent huge page supprot
   --disable-zone-allocator
                           Disable zone allocator for Darwin
 
@@ -2547,15 +2542,6 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 
-CONFIGURE_CFLAGS=
-SPECIFIED_CFLAGS="${CFLAGS}"
-
-
-
-
-
-
-
 
 CONFIG=`echo ${ac_configure_args} | sed -e 's#'"'"'\([^ ]*\)'"'"'#\1#g'`
 
@@ -3564,25 +3550,18 @@ fi
 $as_echo "$je_cv_cray_84" >&6; }
 fi
 
-if test "x$GCC" = "xyes" ; then
+if test "x$CFLAGS" = "x" ; then
+  no_CFLAGS="yes"
+  if test "x$GCC" = "xyes" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -std=gnu11" >&5
 $as_echo_n "checking whether compiler supports -std=gnu11... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-std=gnu11
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-std=gnu11"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -std=gnu11"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3598,106 +3577,33 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-std=gnu11
+  je_cv_cflags_appended=-std=gnu11
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-  if test "x$je_cv_cflags_added" = "x-std=gnu11" ; then
-    cat >>confdefs.h <<_ACEOF
-#define JEMALLOC_HAS_RESTRICT 1
-_ACEOF
-
-  else
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -std=gnu99" >&5
-$as_echo_n "checking whether compiler supports -std=gnu99... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-std=gnu99
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
-else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
-fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-
-    return 0;
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-std=gnu99
-              { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-  je_cv_cflags_added=
-              { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
-
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
-    if test "x$je_cv_cflags_added" = "x-std=gnu99" ; then
+    if test "x$je_cv_cflags_appended" = "x-std=gnu11" ; then
       cat >>confdefs.h <<_ACEOF
 #define JEMALLOC_HAS_RESTRICT 1
 _ACEOF
 
-    fi
-  fi
+    else
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Wall" >&5
-$as_echo_n "checking whether compiler supports -Wall... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Wall
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -std=gnu99" >&5
+$as_echo_n "checking whether compiler supports -std=gnu99... " >&6; }
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-std=gnu99"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -std=gnu99"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3713,42 +3619,70 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Wall
+  je_cv_cflags_appended=-std=gnu99
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
+      if test "x$je_cv_cflags_appended" = "x-std=gnu99" ; then
+        cat >>confdefs.h <<_ACEOF
+#define JEMALLOC_HAS_RESTRICT 1
+_ACEOF
+
+      fi
+    fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Wall" >&5
+$as_echo_n "checking whether compiler supports -Wall... " >&6; }
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Wall"
+else
+  CFLAGS="${CFLAGS} -Wall"
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+
+    return 0;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  je_cv_cflags_appended=-Wall
+              { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  je_cv_cflags_appended=
+              { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+              CFLAGS="${TCFLAGS}"
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror=declaration-after-statement" >&5
 $as_echo_n "checking whether compiler supports -Werror=declaration-after-statement... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror=declaration-after-statement
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror=declaration-after-statement"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror=declaration-after-statement"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3764,42 +3698,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror=declaration-after-statement
+  je_cv_cflags_appended=-Werror=declaration-after-statement
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Wshorten-64-to-32" >&5
 $as_echo_n "checking whether compiler supports -Wshorten-64-to-32... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Wshorten-64-to-32
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Wshorten-64-to-32"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Wshorten-64-to-32"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3815,42 +3734,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Wshorten-64-to-32
+  je_cv_cflags_appended=-Wshorten-64-to-32
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Wsign-compare" >&5
 $as_echo_n "checking whether compiler supports -Wsign-compare... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Wsign-compare
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Wsign-compare"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Wsign-compare"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3866,42 +3770,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Wsign-compare
+  je_cv_cflags_appended=-Wsign-compare
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -pipe" >&5
 $as_echo_n "checking whether compiler supports -pipe... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-pipe
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-pipe"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -pipe"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3917,42 +3806,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-pipe
+  je_cv_cflags_appended=-pipe
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -g3" >&5
 $as_echo_n "checking whether compiler supports -g3... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-g3
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-g3"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -g3"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -3968,44 +3842,29 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-g3
+  je_cv_cflags_appended=-g3
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-elif test "x$je_cv_msvc" = "xyes" ; then
-  CC="$CC -nologo"
+  elif test "x$je_cv_msvc" = "xyes" ; then
+    CC="$CC -nologo"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Zi" >&5
 $as_echo_n "checking whether compiler supports -Zi... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Zi
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Zi"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Zi"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4021,42 +3880,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Zi
+  je_cv_cflags_appended=-Zi
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -MT" >&5
 $as_echo_n "checking whether compiler supports -MT... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-MT
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-MT"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -MT"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4072,42 +3916,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-MT
+  je_cv_cflags_appended=-MT
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -W3" >&5
 $as_echo_n "checking whether compiler supports -W3... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-W3
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-W3"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -W3"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4123,42 +3952,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-W3
+  je_cv_cflags_appended=-W3
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -FS" >&5
 $as_echo_n "checking whether compiler supports -FS... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-FS
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-FS"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -FS"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4174,53 +3988,31 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-FS
+  je_cv_cflags_appended=-FS
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-  T_APPEND_V=-I${srcdir}/include/msvc_compat
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
-fi
-if test "x$je_cv_cray" = "xyes" ; then
-    if test "x$je_cv_cray_84" = "xyes" ; then
+    CPPFLAGS="$CPPFLAGS -I${srcdir}/include/msvc_compat"
+  fi
+  if test "x$je_cv_cray" = "xyes" ; then
+        if test "x$je_cv_cray_84" = "xyes" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -hipa2" >&5
 $as_echo_n "checking whether compiler supports -hipa2... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-hipa2
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-hipa2"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -hipa2"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4236,42 +4028,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-hipa2
+  je_cv_cflags_appended=-hipa2
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -hnognu" >&5
 $as_echo_n "checking whether compiler supports -hnognu... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-hnognu
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-hnognu"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -hnognu"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4287,44 +4064,29 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-hnognu
+  je_cv_cflags_appended=-hnognu
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-  fi
-  if test "x$enable_cc_silence" != "xno" ; then
+    fi
+    if test "x$enable_cc_silence" != "xno" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -hnomessage=128" >&5
 $as_echo_n "checking whether compiler supports -hnomessage=128... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-hnomessage=128
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-hnomessage=128"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -hnomessage=128"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4340,42 +4102,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-hnomessage=128
+  je_cv_cflags_appended=-hnomessage=128
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -hnomessage=1357" >&5
 $as_echo_n "checking whether compiler supports -hnomessage=1357... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-hnomessage=1357
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-hnomessage=1357"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -hnomessage=1357"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4391,28 +4138,21 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-hnomessage=1357
+  je_cv_cflags_appended=-hnomessage=1357
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
+    fi
   fi
 fi
-
-
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -5043,14 +4783,7 @@ _ACEOF
 fi
 
 if test "x${je_cv_msvc}" = "xyes" -a "x${ac_cv_header_inttypes_h}" = "xno"; then
-  T_APPEND_V=-I${srcdir}/include/msvc_compat/C99
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
+  CPPFLAGS="$CPPFLAGS -I${srcdir}/include/msvc_compat/C99"
 fi
 
 if test "x${je_cv_msvc}" = "xyes" ; then
@@ -5574,6 +5307,7 @@ else
 fi
 
 
+CFLAGS="$CFLAGS"
 default_munmap="1"
 maps_coalesce="1"
 case "${host}" in
@@ -5605,14 +5339,7 @@ case "${host}" in
 	abi="elf"
 	;;
   *-*-linux-android)
-		T_APPEND_V=-D_GNU_SOURCE
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
+		CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 	abi="elf"
 	$as_echo "#define JEMALLOC_HAS_ALLOCA_H 1" >>confdefs.h
 
@@ -5626,14 +5353,7 @@ fi
 	default_munmap="0"
 	;;
   *-*-linux* | *-*-kfreebsd*)
-		T_APPEND_V=-D_GNU_SOURCE
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
+		CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 	abi="elf"
 	$as_echo "#define JEMALLOC_HAS_ALLOCA_H 1" >>confdefs.h
 
@@ -5676,22 +5396,8 @@ $as_echo "$abi" >&6; }
   *-*-solaris2*)
 	abi="elf"
 	RPATH='-Wl,-R,$(1)'
-		T_APPEND_V=-D_POSIX_PTHREAD_SEMANTICS
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
-	T_APPEND_V=-lposix4 -lsocket -lnsl
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+		CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
+	LIBS="$LIBS -lposix4 -lsocket -lnsl"
 	;;
   *-ibm-aix*)
 	if "$LG_SIZEOF_PTR" = "8"; then
@@ -5903,21 +5609,12 @@ if test "x${je_cv_attribute}" = "xyes" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fvisibility=hidden" >&5
 $as_echo_n "checking whether compiler supports -fvisibility=hidden... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-fvisibility=hidden
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-fvisibility=hidden"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -fvisibility=hidden"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -5933,46 +5630,30 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-fvisibility=hidden
+  je_cv_cflags_appended=-fvisibility=hidden
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
   fi
 fi
-SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -5988,42 +5669,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror
+  je_cv_cflags_appended=-Werror
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -herror_on_warning" >&5
 $as_echo_n "checking whether compiler supports -herror_on_warning... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-herror_on_warning
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-herror_on_warning"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -herror_on_warning"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6039,23 +5705,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-herror_on_warning
+  je_cv_cflags_appended=-herror_on_warning
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether tls_model attribute is compilable" >&5
@@ -6087,14 +5747,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_tls_model" >&5
 $as_echo "$je_cv_tls_model" >&6; }
 
-CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+CFLAGS="${SAVED_CFLAGS}"
 if test "x${je_cv_tls_model}" = "xyes" ; then
   $as_echo "#define JEMALLOC_TLS_MODEL __attribute__((tls_model(\"initial-exec\")))" >>confdefs.h
 
@@ -6102,26 +5755,16 @@ else
   $as_echo "#define JEMALLOC_TLS_MODEL  " >>confdefs.h
 
 fi
-SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6137,42 +5780,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror
+  je_cv_cflags_appended=-Werror
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -herror_on_warning" >&5
 $as_echo_n "checking whether compiler supports -herror_on_warning... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-herror_on_warning
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-herror_on_warning"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -herror_on_warning"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6188,23 +5816,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-herror_on_warning
+  je_cv_cflags_appended=-herror_on_warning
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether alloc_size attribute is compilable" >&5
@@ -6234,38 +5856,21 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_alloc_size" >&5
 $as_echo "$je_cv_alloc_size" >&6; }
 
-CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+CFLAGS="${SAVED_CFLAGS}"
 if test "x${je_cv_alloc_size}" = "xyes" ; then
   $as_echo "#define JEMALLOC_HAVE_ATTR_ALLOC_SIZE  " >>confdefs.h
 
 fi
-SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6281,42 +5886,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror
+  je_cv_cflags_appended=-Werror
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -herror_on_warning" >&5
 $as_echo_n "checking whether compiler supports -herror_on_warning... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-herror_on_warning
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-herror_on_warning"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -herror_on_warning"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6332,23 +5922,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-herror_on_warning
+  je_cv_cflags_appended=-herror_on_warning
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether format(gnu_printf, ...) attribute is compilable" >&5
@@ -6378,38 +5962,21 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_format_gnu_printf" >&5
 $as_echo "$je_cv_format_gnu_printf" >&6; }
 
-CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+CFLAGS="${SAVED_CFLAGS}"
 if test "x${je_cv_format_gnu_printf}" = "xyes" ; then
   $as_echo "#define JEMALLOC_HAVE_ATTR_FORMAT_GNU_PRINTF  " >>confdefs.h
 
 fi
-SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6425,42 +5992,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror
+  je_cv_cflags_appended=-Werror
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -herror_on_warning" >&5
 $as_echo_n "checking whether compiler supports -herror_on_warning... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-herror_on_warning
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-herror_on_warning"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -herror_on_warning"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6476,23 +6028,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-herror_on_warning
+  je_cv_cflags_appended=-herror_on_warning
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether format(printf, ...) attribute is compilable" >&5
@@ -6522,14 +6068,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_format_printf" >&5
 $as_echo "$je_cv_format_printf" >&6; }
 
-CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+CFLAGS="${SAVED_CFLAGS}"
 if test "x${je_cv_format_printf}" = "xyes" ; then
   $as_echo "#define JEMALLOC_HAVE_ATTR_FORMAT_PRINTF  " >>confdefs.h
 
@@ -6871,21 +6410,12 @@ if test "x$enable_code_coverage" = "x1" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -O0" >&5
 $as_echo_n "checking whether compiler supports -O0... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-O0
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-O0"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -O0"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6901,43 +6431,28 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-O0
+  je_cv_cflags_appended=-O0
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
   fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fprofile-arcs -ftest-coverage" >&5
 $as_echo_n "checking whether compiler supports -fprofile-arcs -ftest-coverage... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-fprofile-arcs -ftest-coverage
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-fprofile-arcs -ftest-coverage"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -fprofile-arcs -ftest-coverage"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -6953,23 +6468,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-fprofile-arcs -ftest-coverage
+  je_cv_cflags_appended=-fprofile-arcs -ftest-coverage
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
   EXTRA_LDFLAGS="$EXTRA_LDFLAGS -fprofile-arcs -ftest-coverage"
   $as_echo "#define JEMALLOC_CODE_COVERAGE  " >>confdefs.h
@@ -7197,26 +6706,20 @@ if test "x$enable_ivsalloc" = "x1" ; then
 
 fi
 
-if test "x$enable_debug" = "x0" ; then
-  if test "x$GCC" = "xyes" ; then
+if test "x$enable_debug" = "x0" -a "x$no_CFLAGS" = "xyes" ; then
+    optimize="no"
+  echo "$CFLAGS $EXTRA_CFLAGS" | grep '\-O' >/dev/null || optimize="yes"
+  if test "x${optimize}" = "xyes" ; then
+    if test "x$GCC" = "xyes" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -O3" >&5
 $as_echo_n "checking whether compiler supports -O3... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-O3
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-O3"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -O3"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7232,42 +6735,27 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-O3
+  je_cv_cflags_appended=-O3
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -funroll-loops" >&5
 $as_echo_n "checking whether compiler supports -funroll-loops... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-funroll-loops
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-funroll-loops"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -funroll-loops"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7283,43 +6771,28 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-funroll-loops
+  je_cv_cflags_appended=-funroll-loops
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-  elif test "x$je_cv_msvc" = "xyes" ; then
+    elif test "x$je_cv_msvc" = "xyes" ; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -O2" >&5
 $as_echo_n "checking whether compiler supports -O2... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-O2
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-O2"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -O2"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7335,43 +6808,28 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-O2
+  je_cv_cflags_appended=-O2
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
-  else
+    else
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -O" >&5
 $as_echo_n "checking whether compiler supports -O... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-O
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-O"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -O"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7387,24 +6845,19 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-O
+  je_cv_cflags_appended=-O
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
 
-
+    fi
   fi
 fi
 
@@ -7528,27 +6981,13 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_unwind_unw_backtrace" >&5
 $as_echo "$ac_cv_lib_unwind_unw_backtrace" >&6; }
 if test "x$ac_cv_lib_unwind_unw_backtrace" = xyes; then :
-  T_APPEND_V=$LUNWIND
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+  LIBS="$LIBS $LUNWIND"
 else
   enable_prof_libunwind="0"
 fi
 
   else
-    T_APPEND_V=$LUNWIND
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+    LIBS="$LIBS $LUNWIND"
   fi
   if test "x${enable_prof_libunwind}" = "x1" ; then
     backtrace_method="libunwind"
@@ -7623,14 +7062,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gcc__Unwind_Backtrace" >&5
 $as_echo "$ac_cv_lib_gcc__Unwind_Backtrace" >&6; }
 if test "x$ac_cv_lib_gcc__Unwind_Backtrace" = xyes; then :
-  T_APPEND_V=-lgcc
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+  LIBS="$LIBS -lgcc"
 else
   enable_prof_libgcc="0"
 fi
@@ -7662,21 +7094,12 @@ if test "x$backtrace_method" = "x" -a "x$enable_prof_gcc" = "x1" \
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -fno-omit-frame-pointer" >&5
 $as_echo_n "checking whether compiler supports -fno-omit-frame-pointer... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-fno-omit-frame-pointer
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-fno-omit-frame-pointer"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -fno-omit-frame-pointer"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -7692,23 +7115,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-fno-omit-frame-pointer
+  je_cv_cflags_appended=-fno-omit-frame-pointer
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
   backtrace_method="gcc intrinsics"
   $as_echo "#define JEMALLOC_PROF_GCC  " >>confdefs.h
@@ -7726,14 +7143,9 @@ $as_echo_n "checking configured backtracing method... " >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $backtrace_method" >&5
 $as_echo "$backtrace_method" >&6; }
 if test "x$enable_prof" = "x1" ; then
-    T_APPEND_V=$LM
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+    if test "x$LM" != "x" ; then
+    LIBS="$LIBS $LM"
+  fi
 
   $as_echo "#define JEMALLOC_PROF  " >>confdefs.h
 
@@ -8357,14 +7769,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_pthread_create" >&5
 $as_echo "$ac_cv_lib_pthread_pthread_create" >&6; }
 if test "x$ac_cv_lib_pthread_pthread_create" = xyes; then :
-  T_APPEND_V=-lpthread
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+  LIBS="$LIBS -lpthread"
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_create" >&5
 $as_echo_n "checking for library containing pthread_create... " >&6; }
@@ -8464,14 +7869,7 @@ $as_echo "$je_cv_pthread_atfork" >&6; }
   fi
 fi
 
-T_APPEND_V=-D_REENTRANT
-  if test "x${CPPFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CPPFLAGS="${CPPFLAGS}${T_APPEND_V}"
-else
-  CPPFLAGS="${CPPFLAGS} ${T_APPEND_V}"
-fi
-
-
+CPPFLAGS="$CPPFLAGS -D_REENTRANT"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing clock_gettime" >&5
 $as_echo_n "checking for library containing clock_gettime... " >&6; }
@@ -8532,28 +7930,18 @@ fi
 
 if test "x$je_cv_cray_prgenv_wrapper" = "xyes" ; then
   if test "$ac_cv_search_clock_gettime" != "-lrt"; then
-    SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+    SAVED_CFLAGS="${CFLAGS}"
 
     unset ac_cv_search_clock_gettime
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -dynamic" >&5
 $as_echo_n "checking whether compiler supports -dynamic... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-dynamic
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-dynamic"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -dynamic"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -8569,23 +7957,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-dynamic
+  je_cv_cflags_appended=-dynamic
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing clock_gettime" >&5
 $as_echo_n "checking for library containing clock_gettime... " >&6; }
@@ -8644,14 +8026,7 @@ if test "$ac_res" != no; then :
 fi
 
 
-    CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+    CFLAGS="${SAVED_CFLAGS}"
   fi
 fi
 
@@ -8788,26 +8163,16 @@ else
 fi
 
 if test "x$enable_syscall" = "x1" ; then
-      SAVED_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-
+      SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
-T_CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}"
-T_APPEND_V=-Werror
-  if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS}${T_APPEND_V}"
+TCFLAGS="${CFLAGS}"
+if test "x${CFLAGS}" = "x" ; then
+  CFLAGS="-Werror"
 else
-  CONFIGURE_CFLAGS="${CONFIGURE_CFLAGS} ${T_APPEND_V}"
+  CFLAGS="${CFLAGS} -Werror"
 fi
-
-
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -8823,23 +8188,17 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  je_cv_cflags_added=-Werror
+  je_cv_cflags_appended=-Werror
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 else
-  je_cv_cflags_added=
+  je_cv_cflags_appended=
               { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-              CONFIGURE_CFLAGS="${T_CONFIGURE_CFLAGS}"
+              CFLAGS="${TCFLAGS}"
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
 
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether syscall(2) is compilable" >&5
@@ -8874,14 +8233,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_syscall" >&5
 $as_echo "$je_cv_syscall" >&6; }
 
-  CONFIGURE_CFLAGS="${SAVED_CONFIGURE_CFLAGS}"
-if test "x${CONFIGURE_CFLAGS}" = "x" -o "x${SPECIFIED_CFLAGS}" = "x" ; then
-  CFLAGS="${CONFIGURE_CFLAGS}${SPECIFIED_CFLAGS}"
-else
-  CFLAGS="${CONFIGURE_CFLAGS} ${SPECIFIED_CFLAGS}"
-fi
-
-
+  CFLAGS="${SAVED_CFLAGS}"
   if test "x$je_cv_syscall" = "xyes" ; then
     $as_echo "#define JEMALLOC_USE_SYSCALL  " >>confdefs.h
 
@@ -9025,14 +8377,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_dlsym" >&5
 $as_echo "$ac_cv_lib_dl_dlsym" >&6; }
 if test "x$ac_cv_lib_dl_dlsym" = xyes; then :
-  T_APPEND_V=-ldl
-  if test "x${LIBS}" = "x" -o "x${T_APPEND_V}" = "x" ; then
-  LIBS="${LIBS}${T_APPEND_V}"
-else
-  LIBS="${LIBS} ${T_APPEND_V}"
-fi
-
-
+  LIBS="$LIBS -ldl"
 else
   as_fn_error $? "libdl is missing" "$LINENO" 5
 fi
@@ -9408,33 +8753,10 @@ fi
 $as_echo "$je_cv_thp" >&6; }
 
   if test "x${je_cv_thp}" = "xyes" ; then
-    $as_echo "#define JEMALLOC_HAVE_MADVISE_HUGE  " >>confdefs.h
+    $as_echo "#define JEMALLOC_THP  " >>confdefs.h
 
   fi
 fi
-
-# Check whether --enable-thp was given.
-if test "${enable_thp+set}" = set; then :
-  enableval=$enable_thp; if test "x$enable_thp" = "xno" -o "x${je_cv_thp}" != "xyes" ; then
-  enable_thp="0"
-else
-  enable_thp="1"
-fi
-
-else
-  if test "x${je_cv_thp}" = "xyes" ; then
-  enable_thp="1"
-else
-  enable_thp="0"
-fi
-
-fi
-
-if test "x$enable_thp" = "x1" ; then
-  $as_echo "#define JEMALLOC_THP  " >>confdefs.h
-
-fi
-
 
 
 
@@ -11371,10 +10693,8 @@ $as_echo "" >&6; }
 $as_echo "CONFIG             : ${CONFIG}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CC                 : ${CC}" >&5
 $as_echo "CC                 : ${CC}" >&6; }
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CONFIGURE_CFLAGS   : ${CONFIGURE_CFLAGS}" >&5
-$as_echo "CONFIGURE_CFLAGS   : ${CONFIGURE_CFLAGS}" >&6; }
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: SPECIFIED_CFLAGS   : ${SPECIFIED_CFLAGS}" >&5
-$as_echo "SPECIFIED_CFLAGS   : ${SPECIFIED_CFLAGS}" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: CFLAGS             : ${CFLAGS}" >&5
+$as_echo "CFLAGS             : ${CFLAGS}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: EXTRA_CFLAGS       : ${EXTRA_CFLAGS}" >&5
 $as_echo "EXTRA_CFLAGS       : ${EXTRA_CFLAGS}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: CPPFLAGS           : ${CPPFLAGS}" >&5
@@ -11449,8 +10769,6 @@ $as_echo "prof-libgcc        : ${enable_prof_libgcc}" >&6; }
 $as_echo "prof-gcc           : ${enable_prof_gcc}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: tcache             : ${enable_tcache}" >&5
 $as_echo "tcache             : ${enable_tcache}" >&6; }
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: thp                : ${enable_thp}" >&5
-$as_echo "thp                : ${enable_thp}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: fill               : ${enable_fill}" >&5
 $as_echo "fill               : ${enable_fill}" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: utrace             : ${enable_utrace}" >&5
