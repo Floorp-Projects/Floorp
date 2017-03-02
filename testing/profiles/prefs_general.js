@@ -176,9 +176,6 @@ user_pref("layout.css.contain.enabled", true);
 // Enable CSS initial-letter for testing
 user_pref("layout.css.initial-letter.enabled", true);
 
-// Enable CSS object-fit & object-position for testing
-user_pref("layout.css.object-fit-and-position.enabled", true);
-
 // Enable webkit prefixed CSS features for testing
 user_pref("layout.css.prefixes.webkit", true);
 

@@ -44,9 +44,8 @@ tagCloseTokenArr=( ""      ""    "</object>" "</video>" )
 tagSrcAttrArr=(        "src"   "src" "data"      "poster" )
 numTags=${#tagNameArr[@]}
 
-# FIRST: Add 'default-preferences' line to the top of our reftest manifest:
-echo "default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
-# Tests for 'object-fit' / 'object-position' with a PNG image" \
+# FIRST: Add title to the top of our reftest manifest:
+echo "# Tests for 'object-fit' / 'object-position' with a PNG image" \
  >> $REFTEST_LIST_FILE
 
 for ((i = 0; i < $numObjectFitVals; i++)); do

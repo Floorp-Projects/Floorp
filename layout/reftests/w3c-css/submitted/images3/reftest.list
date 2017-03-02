@@ -1,4 +1,3 @@
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
 # Tests for 'object-fit' / 'object-position' with a PNG image
 == object-fit-fill-png-001c.html object-fit-fill-png-001-ref.html
 == object-fit-fill-png-001e.html object-fit-fill-png-001-ref.html
