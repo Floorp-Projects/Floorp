@@ -40,8 +40,7 @@ echo "
 # These tests should be very similar to tests in our w3c-css/submitted/images3
 # reftest directory. They live here because they use WebM video (VP9), and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on any
-# particular (non-spec-mandated) video codec.
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)"\
+# particular (non-spec-mandated) video codec."\
   >> $reftestListFileName
 
 # Loop across all <video poster> tests:

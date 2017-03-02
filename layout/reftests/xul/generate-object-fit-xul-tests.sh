@@ -32,8 +32,7 @@ echo "
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3
 # reftest directory. They live here because they use XUL, and it
-# wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL.
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)"\
+# wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL."\
   >> $reftestListFileName
 
 # Loop across all object-fit tests that use <img> ("i" suffix):
