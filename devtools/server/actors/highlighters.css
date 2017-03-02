@@ -230,13 +230,15 @@
   opacity: 0.6;
 }
 
-:-moz-native-anonymous .css-grid-areas {
+:-moz-native-anonymous .css-grid-areas,
+:-moz-native-anonymous .css-grid-cells {
   fill: #CEC0ED;
   stroke: none;
 }
 
-:-moz-native-anonymous .css-grid-infobar-areaname {
-  color: hsl(285,100%, 75%);
+:-moz-native-anonymous .css-grid-area-infobar-name,
+:-moz-native-anonymous .css-grid-cell-infobar-position {
+  color: hsl(285, 100%, 75%);
 }
 
 /* CSS Transform Highlighter */

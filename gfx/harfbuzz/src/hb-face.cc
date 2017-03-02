@@ -51,6 +51,8 @@ const hb_face_t _hb_face_nil = {
   1000, /* upem */
   0,    /* num_glyphs */
 
+  hb_face_t::NOTHING, /* dirty */
+
   {
 #define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_INVALID,
 #include "hb-shaper-list.hh"
@@ -171,7 +173,7 @@ hb_face_create (hb_blob_t    *blob,
 				    closure,
 				    (hb_destroy_func_t) _hb_face_for_data_closure_destroy);
 
-  hb_face_set_index (face, index);
+  face->index = index;
 
   return face;
 }
@@ -365,6 +367,11 @@ hb_face_set_index (hb_face_t    *face,
   if (face->immutable)
     return;
 
+  if (face->index == index)
+    return;
+
+  face->dirty |= face->INDEX;
+
   face->index = index;
 }
 
@@ -399,6 +406,11 @@ hb_face_set_upem (hb_face_t    *face,
 {
   if (face->immutable)
     return;
+
+  if (face->upem == upem)
+    return;
+
+  face->dirty |= face->UPEM;
 
   face->upem = upem;
 }
@@ -443,6 +455,11 @@ hb_face_set_glyph_count (hb_face_t    *face,
 {
   if (face->immutable)
     return;
+
+  if (face->num_glyphs == glyph_count)
+    return;
+
+  face->dirty |= face->NUM_GLYPHS;
 
   face->num_glyphs = glyph_count;
 }

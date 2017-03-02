@@ -342,6 +342,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Count of AutoProhibitActiveContextChange instances on the active context.
     mozilla::Atomic<size_t> activeContextChangeProhibited_;
 
+    // Count of beginSingleThreadedExecution() calls that have occurred with no
+    // matching endSingleThreadedExecution().
+    mozilla::Atomic<size_t> singleThreadedExecutionRequired_;
+
+    // Whether some thread has called beginSingleThreadedExecution() and we are
+    // in the associated callback (which may execute JS on other threads).
+    js::ActiveThreadData<bool> startingSingleThreadedExecution_;
+
   public:
     JSContext* activeContext() const { return activeContext_; }
     const void* addressOfActiveContext() { return &activeContext_; }
@@ -374,6 +382,17 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     };
 
     bool activeContextChangeProhibited() { return activeContextChangeProhibited_; }
+    bool singleThreadedExecutionRequired() { return singleThreadedExecutionRequired_; }
+
+    js::ActiveThreadData<JS::BeginSingleThreadedExecutionCallback> beginSingleThreadedExecutionCallback;
+    js::ActiveThreadData<JS::EndSingleThreadedExecutionCallback> endSingleThreadedExecutionCallback;
+
+    // Ensure there is only a single thread interacting with this runtime.
+    // beginSingleThreadedExecution() returns false if some context has already
+    // started forcing this runtime to be single threaded. Calls to these
+    // functions must be balanced.
+    bool beginSingleThreadedExecution(JSContext* cx);
+    void endSingleThreadedExecution(JSContext* cx);
 
     /*
      * The profiler sampler generation after the latest sample.

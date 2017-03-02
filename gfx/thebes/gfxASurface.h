@@ -14,11 +14,7 @@
 #include "nsSize.h"
 #include "mozilla/gfx/Rect.h"
 
-#ifdef MOZILLA_INTERNAL_API
 #include "nsStringFwd.h"
-#else
-#include "nsStringAPI.h"
-#endif
 
 class gfxImageSurface;
 struct gfxRect;

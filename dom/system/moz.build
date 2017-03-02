@@ -4,6 +4,41 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This picks up *hapticfeedback* which is graveyard
+# This picks up gonk/* which is also not supported?
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("*OSFile*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("*ocationProvider*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("windows/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("mac/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("linux/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("android/*LocationProvider*"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("tests/chrome.ini"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("tests/*constants*"):
+    BUG_COMPONENT = ("Toolkit", "OS.File")
+
+with Files("tests/mochitest.ini"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/*1197901*"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit == 'windows':

@@ -139,6 +139,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     finally:
         # this also handle KeyboardInterrupt
         # ensure early the process is really terminated
+        return_code = None
         try:
             return_code = context.kill_process()
             if return_code is None:

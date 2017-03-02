@@ -277,7 +277,7 @@ Request::Constructor(const GlobalObject& aGlobal,
                      const RequestOrUSVString& aInput,
                      const RequestInit& aInit, ErrorResult& aRv)
 {
-  nsCOMPtr<nsIInputStream> temporaryBody;
+  bool hasCopiedBody = false;
   RefPtr<InternalRequest> request;
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -290,8 +290,10 @@ Request::Constructor(const GlobalObject& aGlobal,
       aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
       return nullptr;
     }
+
+    // The body will be copied when GetRequestConstructorCopy() is executed.
     if (body) {
-      temporaryBody = body;
+      hasCopiedBody = true;
     }
 
     request = inputReq->GetInternalRequest();
@@ -338,8 +340,7 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (mode == RequestMode::Navigate ||
       (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate)) {
-    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(NS_LITERAL_STRING("navigate"));
-    return nullptr;
+    mode = RequestMode::Same_origin;
   }
 
   if (aInit.IsAnyMemberPresent()) {
@@ -374,11 +375,7 @@ Request::Constructor(const GlobalObject& aGlobal,
             nsresult rv = principal->CheckMayLoad(uri, /* report */ false,
                                                   /* allowIfInheritsPrincipal */ false);
             if (NS_FAILED(rv)) {
-              nsAutoCString globalOrigin;
-              principal->GetOrigin(globalOrigin);
-              aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
-                                                                NS_ConvertUTF8toUTF16(globalOrigin));
-              return nullptr;
+              referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);
             }
           }
         }
@@ -403,11 +400,10 @@ Request::Constructor(const GlobalObject& aGlobal,
           // this work in a single sync loop.
           RefPtr<ReferrerSameOriginChecker> checker =
             new ReferrerSameOriginChecker(worker, referrerURL, rv);
-          checker->Dispatch(Terminating, aRv);
-          if (aRv.Failed() || NS_FAILED(rv)) {
-            aRv.ThrowTypeError<MSG_CROSS_ORIGIN_REFERRER_URL>(referrer,
-                                                              worker->GetLocationInfo().mOrigin);
-            return nullptr;
+          IgnoredErrorResult error;
+          checker->Dispatch(Terminating, error);
+          if (error.Failed() || NS_FAILED(rv)) {
+            referrerURL.AssignLiteral(kFETCH_CLIENT_REFERRER_STR);
           }
         }
       }
@@ -535,7 +531,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if ((aInit.mBody.WasPassed() && !aInit.mBody.Value().IsNull()) ||
-      temporaryBody) {
+      hasCopiedBody) {
     // HEAD and GET are not allowed to have a body.
     nsAutoCString method;
     request->GetMethod(method);
@@ -561,7 +557,7 @@ Request::Constructor(const GlobalObject& aGlobal,
         return nullptr;
       }
 
-      temporaryBody = stream;
+      nsCOMPtr<nsIInputStream> temporaryBody = stream;
 
       if (!contentTypeWithCharset.IsVoid() &&
           !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
@@ -574,6 +570,11 @@ Request::Constructor(const GlobalObject& aGlobal,
       }
 
       request->ClearCreatedByFetchEvent();
+
+      if (hasCopiedBody) {
+        request->SetBody(nullptr);
+      }
+
       request->SetBody(temporaryBody);
     }
   }

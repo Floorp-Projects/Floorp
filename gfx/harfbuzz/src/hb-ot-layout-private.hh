@@ -623,5 +623,4 @@ _hb_buffer_assert_gsubgpos_vars (hb_buffer_t *buffer)
 #undef lig_props
 #undef glyph_props
 
-
 #endif /* HB_OT_LAYOUT_PRIVATE_HH */

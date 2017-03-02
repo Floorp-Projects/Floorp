@@ -565,6 +565,15 @@ JS_GetParentRuntime(JSContext* cx)
     return cx->runtime()->parentRuntime ? cx->runtime()->parentRuntime : cx->runtime();
 }
 
+JS_PUBLIC_API(void)
+JS::SetSingleThreadedExecutionCallbacks(JSContext* cx,
+                                        BeginSingleThreadedExecutionCallback begin,
+                                        EndSingleThreadedExecutionCallback end)
+{
+    cx->runtime()->beginSingleThreadedExecutionCallback = begin;
+    cx->runtime()->endSingleThreadedExecutionCallback = end;
+}
+
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext* cx)
 {

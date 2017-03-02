@@ -152,12 +152,9 @@ function testHeaderGuard() {
 }
 
 function testMode() {
-  try {
-    var req = new Request("http://example.com", {mode: "navigate"});
-    ok(false, "Creating a Request with navigate RequestMode should throw a TypeError");
-  } catch(e) {
-    is(e.name, "TypeError", "Creating a Request with navigate RequestMode should throw a TypeError");
-  }
+  var req = new Request("http://example.com", {mode: "navigate"});
+  ok(true, "Creating a Request with navigate RequestMode should not throw.");
+  is(req.mode, "same-origin", "Request mode becomes same-origin");
 }
 
 function testMethod() {

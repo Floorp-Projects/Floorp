@@ -83,6 +83,7 @@ class ObjectBox;
     F(THROW) \
     F(DEBUGGER) \
     F(GENERATOR) \
+    F(INITIALYIELD) \
     F(YIELD) \
     F(YIELD_STAR) \
     F(GENEXP) \
@@ -417,8 +418,9 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_LEXICALSCOPE scope   pn_u.scope.bindings: scope bindings
  *                          pn_u.scope.body: scope body
  * PNK_GENERATOR    nullary
- * PNK_YIELD,       binary  pn_left: expr or null
- * PNK_YIELD_STAR,          pn_right: generator object
+ * PNK_INITIALYIELD unary   pn_kid: generator object
+ * PNK_YIELD,       unary   pn_kid: expr or null
+ * PNK_YIELD_STAR,
  * PNK_AWAIT
  * PNK_ARRAYCOMP    list    pn_count: 1
  *                          pn_head: list of 1 element, which is block

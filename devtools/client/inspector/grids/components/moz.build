@@ -4,8 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../objs.mozbuild')
-
-SOURCES += rdf_util_src_cppsrcs
-
-FINAL_LIBRARY = 'xul'
+DevToolsModules(
+    'Grid.js',
+    'GridDisplaySettings.js',
+    'GridItem.js',
+    'GridList.js',
+    'GridOutline.js',
+)

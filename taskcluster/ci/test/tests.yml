@@ -318,6 +318,10 @@ jsreftest:
                             - remove_executables.py
                 extra-options:
                     - --reftest-suite=jsreftest
+    when:
+        files-changed:
+            - js/src/**
+            - js/public/**
 
 marionette:
     description: "Marionette unittest run"
