@@ -18,6 +18,10 @@ import functools
 import os
 
 
+# constants {{{1
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
+VERSION_PATH = os.path.join(GECKO, "browser", "config", "version_display.txt")
+
 """Map signing scope aliases to sets of projects.
 
 Currently m-c and m-a use nightly signing; m-b and m-r use release signing.
@@ -233,9 +237,9 @@ get_balrog_server_scope = functools.partial(
 )
 
 
-# build_number {{{1
-def get_release_build_number(config):
-    """Get the build number for a release task.
+# release_config {{{1
+def get_release_config(config):
+    """Get the build number and version for a release task.
 
     Currently only applies to beetmover tasks.
 
@@ -247,10 +251,16 @@ def get_release_build_number(config):
             `os.environ['BUILD_NUMBER']`
 
     Returns:
-        int: the build number, if applicable.
+        dict: containing both `build_number` and `version`.  This can be used to
+            update `task.payload`.
     """
+    release_config = {}
     if config.params['target_tasks_method'] in BEETMOVER_RELEASE_TARGET_TASKS:
         build_number = str(os.environ.get("BUILD_NUMBER", ""))
         if not build_number.isdigit():
             raise ValueError("Release graphs must specify `BUILD_NUMBER` in the environment!")
-        return int(build_number)
+        release_config['build_number'] = int(build_number)
+        with open(VERSION_PATH, "r") as fh:
+            version = fh.readline().rstrip()
+        release_config['version'] = version
+    return release_config
