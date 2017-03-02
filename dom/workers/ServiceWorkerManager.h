@@ -272,6 +272,7 @@ public:
   void
   GetAllClients(nsIPrincipal* aPrincipal,
                 const nsCString& aScope,
+                uint64_t aServiceWorkerID,
                 bool aIncludeUncontrolled,
                 nsTArray<ServiceWorkerClientInfo>& aDocuments);
 

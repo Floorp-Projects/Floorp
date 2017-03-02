@@ -215,6 +215,13 @@ private:
   DeallocPBackgroundIDBDatabaseChild(PBackgroundIDBDatabaseChild* aActor)
                                      override;
 
+  mozilla::ipc::IPCResult
+  RecvPBackgroundIDBDatabaseConstructor(
+                                    PBackgroundIDBDatabaseChild* aActor,
+                                    const DatabaseSpec& aSpec,
+                                    PBackgroundIDBFactoryRequestChild* aRequest)
+                                    override;
+
   bool
   SendDeleteMe() = delete;
 };

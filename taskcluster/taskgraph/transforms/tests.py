@@ -272,6 +272,11 @@ test_description_schema = Schema({
     # the product name, defaults to firefox
     Optional('product'): basestring,
 
+    # conditional files to determine when these tests should be run
+    Optional('when'): Any({
+        Optional('files-changed'): [basestring],
+    }),
+
 }, required=True)
 
 
@@ -633,6 +638,7 @@ def make_job_description(config, tests):
         jobdesc['name'] = name
         jobdesc['label'] = label
         jobdesc['description'] = test['description']
+        jobdesc['when'] = test.get('when', {})
         jobdesc['attributes'] = attributes
         jobdesc['dependencies'] = {'build': build_label}
         jobdesc['expires-after'] = test['expires-after']

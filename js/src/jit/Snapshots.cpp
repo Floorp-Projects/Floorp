@@ -590,13 +590,36 @@ SnapshotWriter::init()
 RecoverReader::RecoverReader(SnapshotReader& snapshot, const uint8_t* recovers, uint32_t size)
   : reader_(nullptr, nullptr),
     numInstructions_(0),
-    numInstructionsRead_(0)
+    numInstructionsRead_(0),
+    resumeAfter_(false)
 {
     if (!recovers)
         return;
     reader_ = CompactBufferReader(recovers + snapshot.recoverOffset(), recovers + size);
     readRecoverHeader();
     readInstruction();
+}
+
+RecoverReader::RecoverReader(const RecoverReader& rr)
+  : reader_(rr.reader_),
+    numInstructions_(rr.numInstructions_),
+    numInstructionsRead_(rr.numInstructionsRead_),
+    resumeAfter_(rr.resumeAfter_)
+{
+    if (reader_.currentPosition())
+        rr.instruction()->cloneInto(&rawData_);
+}
+
+RecoverReader&
+RecoverReader::operator=(const RecoverReader& rr)
+{
+    reader_ = rr.reader_;
+    numInstructions_ = rr.numInstructions_;
+    numInstructionsRead_ = rr.numInstructionsRead_;
+    resumeAfter_ = rr.resumeAfter_;
+    if (reader_.currentPosition())
+        rr.instruction()->cloneInto(&rawData_);
+    return *this;
 }
 
 void

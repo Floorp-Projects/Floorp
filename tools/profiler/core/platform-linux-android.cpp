@@ -62,6 +62,7 @@
 
 #include "prenv.h"
 #include "mozilla/LinuxSignal.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/DebugOnly.h"
 
 // Memory profile
@@ -143,20 +144,9 @@ static void* setup_atfork() {
 
 static int gIntervalMicro;
 
-// Global variables through which data is sent from SigprofSender() to
-// SigprofHandler(). gSignalHandlingDone provides inter-thread synchronization.
-static ThreadInfo* gCurrentThreadInfo;
-static int64_t gRssMemory;
-static int64_t gUssMemory;
-
-// Semaphore used to coordinate SigprofSender() and SigprofHandler().
-static sem_t gSignalHandlingDone;
-
-static void SetSampleContext(TickSample* sample, void* context)
+static void SetSampleContext(TickSample* sample, mcontext_t& mcontext)
 {
   // Extracting the sample from the context is extremely machine dependent.
-  ucontext_t* ucontext = reinterpret_cast<ucontext_t*>(context);
-  mcontext_t& mcontext = ucontext->uc_mcontext;
 #if defined(GP_ARCH_x86)
   sample->pc = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
   sample->sp = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
@@ -175,25 +165,118 @@ static void SetSampleContext(TickSample* sample, void* context)
 #endif
 }
 
+// The only way to reliably interrupt a Linux thread and inspect its register
+// and stack state is by sending a signal to it, and doing the work inside the
+// signal handler.  But we don't want to run much code inside the signal
+// handler, since POSIX severely restricts what we can do in signal handlers.
+// So we use a system of semaphores to suspend the thread and allow the
+// sampler thread to do all the work of unwinding and copying out whatever
+// data it wants.
+
+// A four-message protocol is used to reliably suspend and later resume the
+// thread to be sampled (the samplee):
+//
+// Sampler (signal sender) thread              Samplee (thread to be sampled)
+//
+// Prepare the SigHandlerCoordinator
+// and point gSigHandlerCoordinator at it
+//
+// send SIGPROF to samplee ------- MSG 1 ----> (enter signal handler)
+// wait(mMessage2)                             Copy register state
+//                                               into gSigHandlerCoordinator
+//                         <------ MSG 2 ----- post(mMessage2)
+// Samplee is now suspended.                   wait(mMessage3)
+//   Examine its stack/register
+//   state at leisure
+//
+// Release samplee:
+//   post(mMessage3)       ------- MSG 3 ----->
+// wait(mMessage4)                              Samplee now resumes.  Tell
+//                                                the sampler that we are done.
+//                         <------ MSG 4 ------ post(mMessage4)
+// Now we know the samplee's signal             (leave signal handler)
+//   handler has finished using
+//   gSigHandlerCoordinator.  We can
+//   safely reuse it for some other thread.
+
+// A type used to coordinate between the sampler (signal sending) thread and
+// the thread currently being sampled (the samplee, which receives the
+// signals).
+//
+// The first message is sent using a SIGPROF signal delivery.  The subsequent
+// three are sent using sem_wait/sem_post pairs.  They are named accordingly
+// in the following struct.
+
+struct SigHandlerCoordinator
+{
+  SigHandlerCoordinator()
+  {
+    PodZero(&mUContext);
+    int r =  sem_init(&mMessage2, /* pshared */0, 0);
+    r     |= sem_init(&mMessage3, /* pshared */0, 0);
+    r     |= sem_init(&mMessage4, /* pshared */0, 0);
+    MOZ_ASSERT(r == 0);
+  }
+
+  ~SigHandlerCoordinator()
+  {
+    int r =  sem_destroy(&mMessage2);
+    r     |= sem_destroy(&mMessage3);
+    r     |= sem_destroy(&mMessage4);
+    MOZ_ASSERT(r == 0);
+  }
+
+  sem_t mMessage2; // to sampler: "context is in gSigHandlerCoordinator"
+  sem_t mMessage3; // to samplee: "resume"
+  sem_t mMessage4; // to sampler: "finished with gSigHandlerCoordinator"
+  ucontext_t mUContext; // Context at signal
+};
+
+// This is the one-and-only global variable used to communicate between
+// the sampler thread and the samplee thread's signal handler.
+static SigHandlerCoordinator* gSigHandlerCoordinator = nullptr;
+
 static void
-SigprofHandler(int signal, siginfo_t* info, void* context)
+SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext)
 {
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
-  TickSample sample;
-  sample.context = context;
+  MOZ_ASSERT(aSignal == SIGPROF);
+  MOZ_ASSERT(gSigHandlerCoordinator);
 
-  // Extract the current pc and sp.
-  SetSampleContext(&sample, context);
-  sample.threadInfo = gCurrentThreadInfo;
-  sample.timestamp = mozilla::TimeStamp::Now();
-  sample.rssMemory = gRssMemory;
-  sample.ussMemory = gUssMemory;
+  // By sending us this signal, the sampler thread has sent us message 1 in
+  // the comment above, with the meaning "|gSigHandlerCoordinator| is ready
+  // for use, please copy your register context into it."
+  gSigHandlerCoordinator->mUContext = *static_cast<ucontext_t*>(aContext);
 
-  Tick(&sample);
+  // Send message 2: tell the sampler thread that the context has been copied
+  // into |gSigHandlerCoordinator->mUContext|.  sem_post can never fail by
+  // being interrupted by a signal, so there's no loop around this call.
+  int r = sem_post(&gSigHandlerCoordinator->mMessage2);
+  MOZ_ASSERT(r == 0);
 
-  sem_post(&gSignalHandlingDone);
+  // At this point, the sampler thread assumes we are suspended, so we must
+  // not touch any global state here.
+
+  // Wait for message 3: the sampler thread tells us to resume.
+  while (true) {
+    r = sem_wait(&gSigHandlerCoordinator->mMessage3);
+    if (r == -1 && errno == EINTR) {
+      // Interrupted by a signal.  Now what?
+      continue; // try again
+    }
+    // We don't expect any other kind of failure
+    MOZ_ASSERT(r == 0);
+   break;
+  }
+
+  // Send message 4: tell the sampler thread that we are finished accessing
+  // |gSigHandlerCoordinator|.  After this point it is not safe to touch
+  // |gSigHandlerCoordinator|.
+  r = sem_post(&gSigHandlerCoordinator->mMessage4);
+  MOZ_ASSERT(r == 0);
+
   errno = savedErrno;
 }
 
@@ -290,42 +373,74 @@ SigprofSender(void* aArg)
 
         info->UpdateThreadResponsiveness();
 
-        // We use gCurrentThreadInfo to pass the ThreadInfo for the
-        // thread we're profiling to the signal handler.
-        gCurrentThreadInfo = info;
-
         int threadId = info->ThreadId();
         MOZ_ASSERT(threadId != my_tid);
 
-        // Profile from the signal sender for information which is not signal
-        // safe, and will have low variation between the emission of the signal
-        // and the signal handler catch.
+        int64_t rssMemory = 0;
+        int64_t ussMemory = 0;
         if (isFirstProfiledThread && gProfileMemory) {
-          gRssMemory = nsMemoryReporterManager::ResidentFast();
-          gUssMemory = nsMemoryReporterManager::ResidentUnique();
-        } else {
-          gRssMemory = 0;
-          gUssMemory = 0;
+          rssMemory = nsMemoryReporterManager::ResidentFast();
+          ussMemory = nsMemoryReporterManager::ResidentUnique();
         }
 
-        // Profile from the signal handler for information which is signal safe
-        // and needs to be precise too, such as the stack of the interrupted
-        // thread.
-        if (tgkill(vm_tgid_, threadId, SIGPROF) != 0) {
-          printf_stderr("profiler failed to signal tid=%d\n", threadId);
-#ifdef DEBUG
-          abort();
-#else
-          continue;
-#endif
+        // Suspend the samplee thread and get its context.
+        SigHandlerCoordinator coord;   // on sampler thread's stack
+        gSigHandlerCoordinator = &coord;
+
+        // Send message 1 to the samplee (the thread to be sampled), by
+        // signalling at it.
+        int r = tgkill(vm_tgid_, threadId, SIGPROF);
+        MOZ_ASSERT(r == 0);
+
+        // Wait for message 2 from the samplee, indicating that the context is
+        // available and that the thread is suspended.
+        while (true) {
+          r = sem_wait(&gSigHandlerCoordinator->mMessage2);
+          if (r == -1 && errno == EINTR) {
+            // Interrupted by a signal.  Try again.
+            continue;
+          }
+          // We don't expect any other kind of failure.
+          MOZ_ASSERT(r == 0);
+          break;
         }
 
-        // Wait for the signal handler to run before moving on to the next one.
-        sem_wait(&gSignalHandlingDone);
+        // The samplee thread is now frozen and
+        // gSigHandlerCoordinator->mUContext is valid.  We can poke around in
+        // it and unwind its stack as we like.
 
-        gCurrentThreadInfo = nullptr;
-        gRssMemory = 0;
-        gUssMemory = 0;
+        TickSample sample;
+        sample.context = &gSigHandlerCoordinator->mUContext;
+
+        // Extract the current pc and sp.
+        SetSampleContext(&sample,
+                         gSigHandlerCoordinator->mUContext.uc_mcontext);
+        sample.threadInfo = info;
+        sample.timestamp = mozilla::TimeStamp::Now();
+        sample.rssMemory = rssMemory;
+        sample.ussMemory = ussMemory;
+
+        Tick(&sample);
+
+        // Send message 3 to the samplee, which tells it to resume.
+        r = sem_post(&gSigHandlerCoordinator->mMessage3);
+        MOZ_ASSERT(r == 0);
+
+        // Wait for message 4 from the samplee, which tells us that it has
+        // finished with |gSigHandlerCoordinator|.
+        while (true) {
+          r = sem_wait(&gSigHandlerCoordinator->mMessage4);
+          if (r == -1 && errno == EINTR) {
+            continue;
+          }
+          MOZ_ASSERT(r == 0);
+          break;
+        }
+
+        // This isn't strictly necessary, but doing so does help pick up
+        // anomalies in which the signal handler is running even though this
+        // loop thinks it shouldn't be.
+        gSigHandlerCoordinator = nullptr;
 
         isFirstProfiledThread = false;
       }
@@ -372,12 +487,7 @@ PlatformStart(double aInterval)
   }
 
   // Initialize signal handler communication
-  gCurrentThreadInfo = nullptr;
-  gRssMemory = 0;
-  gUssMemory = 0;
-  if (sem_init(&gSignalHandlingDone, /* pshared: */ 0, /* value: */ 0) != 0) {
-    MOZ_CRASH("Error initializing semaphore");
-  }
+  gSigHandlerCoordinator = nullptr;
 
   // Request profiling signals.
   LOG("Request signal");
@@ -556,7 +666,8 @@ void TickSample::PopulateContext(void* aContext)
   ucontext_t* pContext = reinterpret_cast<ucontext_t*>(aContext);
   if (!getcontext(pContext)) {
     context = pContext;
-    SetSampleContext(this, aContext);
+    SetSampleContext(this,
+                     reinterpret_cast<ucontext_t*>(aContext)->uc_mcontext);
   }
 }
 

@@ -5,6 +5,8 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 414553;
+var summary = '';
+
 printBugNumber(BUGNUMBER);
 printStatus(summary);
 

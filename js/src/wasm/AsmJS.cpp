@@ -8591,8 +8591,11 @@ EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
         break;
     }
 
-    if (parser.pc->isGenerator())
+    if (parser.pc->isStarGenerator() || parser.pc->isLegacyGenerator())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by generator context");
+
+    if (parser.pc->isAsync())
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by async context");
 
     if (parser.pc->isArrowFunction())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");

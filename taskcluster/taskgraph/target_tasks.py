@@ -223,6 +223,20 @@ def target_tasks_mozilla_release(full_task_graph, parameters):
     return target_tasks_mozilla_beta(full_task_graph, parameters)
 
 
+@_target_task('candidates_fennec')
+def target_tasks_candidates_fennec(full_task_graph, parameters):
+    """Select the set of tasks required for a candidates build of fennec. The
+    nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    filtered_for_project = target_tasks_nightly(full_task_graph, parameters)
+
+    def filter(task):
+        if task.kind not in ['balrog']:
+            return task.attributes.get('nightly', False)
+
+    return [l for l in filtered_for_project if filter(full_task_graph[l])]
+
+
 @_target_task('pine_tasks')
 def target_tasks_pine(full_task_graph, parameters):
     """Bug 1339179 - no mobile automation needed on pine"""

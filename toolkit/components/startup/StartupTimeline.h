@@ -30,7 +30,10 @@ mozilla_StartupTimeline_Event(PROFILE_BEFORE_CHANGE, "profileBeforeChange")
 
 #include "mozilla/TimeStamp.h"
 #include "nscore.h"
+
+#ifdef MOZILLA_INTERNAL_API
 #include "GeckoProfiler.h"
+#endif
 
 #ifdef MOZ_LINKER
 extern "C" {
@@ -66,6 +69,7 @@ public:
     return sStartupTimelineDesc[ev];
   }
 
+#ifdef MOZILLA_INTERNAL_API
   static void Record(Event ev) {
     PROFILER_MARKER(Describe(ev));
     Record(ev, TimeStamp::Now());
@@ -83,6 +87,7 @@ public:
     if (!HasRecord(ev))
       Record(ev);
   }
+#endif
 
   static bool HasRecord(Event ev) {
     return !sStartupTimeline[ev].IsNull();

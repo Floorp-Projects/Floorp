@@ -7,6 +7,7 @@
 #include "ScriptErrorHelper.h"
 
 #include "MainThreadUtils.h"
+#include "mozilla/SystemGroup.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIConsoleService.h"
@@ -210,7 +211,10 @@ ScriptErrorHelper::Dump(const nsAString& aMessage,
                               aSeverityFlag,
                               aIsChrome,
                               aInnerWindowID);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+    MOZ_ALWAYS_SUCCEEDS(
+      SystemGroup::Dispatch("indexedDB::ScriptErrorHelper::Dump",
+                            TaskCategory::Other,
+                            runnable.forget()));
   }
 }
 
@@ -240,7 +244,10 @@ ScriptErrorHelper::DumpLocalizedMessage(const nsACString& aMessageName,
                               aSeverityFlag,
                               aIsChrome,
                               aInnerWindowID);
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+    MOZ_ALWAYS_SUCCEEDS(
+      SystemGroup::Dispatch("indexedDB::ScriptErrorHelper::DumpLocalizedMessage",
+                            TaskCategory::Other,
+                            runnable.forget()));
   }
 }
 

@@ -4,6 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("html/webgl/**"):
+    BUG_COMPONENT = ("Core", "Canvas 2D")
+
+with Files("html/typedarrays/**"):
+    BUG_COMPONENT = ("Core", "Javascript: Standard Library")
+
+with Files("html/js/**"):
+    BUG_COMPONENT = ("Core", "Javascript: Standard Library")
+
+with Files("html/html/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 MOCHITEST_MANIFESTS += [
     'html/mochitest.ini',
     'webapps/mochitest.ini',
