@@ -107,9 +107,8 @@ static mozilla::StaticMutex gRegisteredThreadsMutex;
 // All accesses to gGatherer are on the main thread, so no locking is needed.
 static StaticRefPtr<mozilla::ProfileGatherer> gGatherer;
 
-// XXX: gBuffer is used on multiple threads -- including via copies in
-// ThreadInfo::mBuffer -- without any apparent synchronization(!)
-static StaticRefPtr<ProfileBuffer> gBuffer;
+// Always used in conjunction with gRegisteredThreads.
+static ProfileBuffer* gBuffer;
 
 // gThreadNameFilters is accessed from multiple threads. All accesses to it
 // must be guarded by gThreadNameFiltersMutex.
@@ -230,9 +229,9 @@ public:
 };
 
 static void
-AddDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
+AddDynamicCodeLocationTag(ProfileBuffer* aBuffer, const char* aStr)
 {
-  aInfo.addTag(ProfileBufferEntry::CodeLocation(""));
+  aBuffer->addTag(ProfileBufferEntry::CodeLocation(""));
 
   size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
   for (size_t j = 0; j < strLen; ) {
@@ -246,12 +245,12 @@ AddDynamicCodeLocationTag(ThreadInfo& aInfo, const char* aStr)
     j += sizeof(void*) / sizeof(char);
 
     // Cast to *((void**) to pass the text data to a void*.
-    aInfo.addTag(ProfileBufferEntry::EmbeddedString(*((void**)(&text[0]))));
+    aBuffer->addTag(ProfileBufferEntry::EmbeddedString(*((void**)(&text[0]))));
   }
 }
 
 static void
-AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
+AddPseudoEntry(ProfileBuffer* aBuffer, volatile js::ProfileEntry& entry,
                PseudoStack* stack, void* lastpc)
 {
   // Pseudo-frames with the BEGIN_PSEUDO_JS flag are just annotations and
@@ -269,7 +268,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
   if (entry.isCopyLabel()) {
     // Store the string using 1 or more EmbeddedString tags.
     // That will happen to the preceding tag.
-    AddDynamicCodeLocationTag(aInfo, sampleLabel);
+    AddDynamicCodeLocationTag(aBuffer, sampleLabel);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -293,7 +292,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
       lineno = entry.line();
     }
   } else {
-    aInfo.addTag(ProfileBufferEntry::CodeLocation(sampleLabel));
+    aBuffer->addTag(ProfileBufferEntry::CodeLocation(sampleLabel));
 
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
     // js entries as well.
@@ -303,7 +302,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
   }
 
   if (lineno != -1) {
-    aInfo.addTag(ProfileBufferEntry::LineNumber(lineno));
+    aBuffer->addTag(ProfileBufferEntry::LineNumber(lineno));
   }
 
   uint32_t category = entry.category();
@@ -311,7 +310,7 @@ AddPseudoEntry(volatile js::ProfileEntry& entry, ThreadInfo& aInfo,
   MOZ_ASSERT(!(category & js::ProfileEntry::FRAME_LABEL_COPY));
 
   if (category) {
-    aInfo.addTag(ProfileBufferEntry::Category((int)category));
+    aBuffer->addTag(ProfileBufferEntry::Category((int)category));
   }
 }
 
@@ -341,10 +340,10 @@ struct AutoWalkJSStack
 };
 
 static void
-MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
+MergeStacksIntoProfile(ProfileBuffer* aBuffer, TickSample* aSample,
                        NativeStack& aNativeStack)
 {
-  PseudoStack* pseudoStack = aInfo.Stack();
+  PseudoStack* pseudoStack = aSample->threadInfo->Stack();
   volatile js::ProfileEntry* pseudoFrames = pseudoStack->mStack;
   uint32_t pseudoCount = pseudoStack->stackSize();
 
@@ -359,7 +358,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   uint32_t startBufferGen;
   startBufferGen = aSample->isSamplingCurrentThread
                  ? UINT32_MAX
-                 : aInfo.bufferGeneration();
+                 : aBuffer->mGeneration;
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
 
@@ -399,7 +398,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   }
 
   // Start the sample with a root entry.
-  aInfo.addTag(ProfileBufferEntry::Sample("(root)"));
+  aBuffer->addTag(ProfileBufferEntry::Sample("(root)"));
 
   // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
@@ -472,7 +471,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       volatile js::ProfileEntry& pseudoFrame = pseudoFrames[pseudoIndex];
-      AddPseudoEntry(pseudoFrame, aInfo, pseudoStack, nullptr);
+      AddPseudoEntry(aBuffer, pseudoFrame, pseudoStack, nullptr);
       pseudoIndex++;
       continue;
     }
@@ -497,11 +496,11 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
       // with stale JIT code return addresses.
       if (aSample->isSamplingCurrentThread ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        AddDynamicCodeLocationTag(aInfo, jsFrame.label);
+        AddDynamicCodeLocationTag(aBuffer, jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aInfo.addTag(
+        aBuffer->addTag(
           ProfileBufferEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
       }
 
@@ -514,7 +513,7 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
       void* addr = (void*)aNativeStack.pc_array[nativeIndex];
-      aInfo.addTag(ProfileBufferEntry::NativeLeafAddr(addr));
+      aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
       nativeIndex--;
@@ -526,10 +525,10 @@ MergeStacksIntoProfile(ThreadInfo& aInfo, TickSample* aSample,
   // Do not do this for synchronous sampling, which create their own
   // ProfileBuffers.
   if (!aSample->isSamplingCurrentThread && pseudoStack->mContext) {
-    MOZ_ASSERT(aInfo.bufferGeneration() >= startBufferGen);
-    uint32_t lapCount = aInfo.bufferGeneration() - startBufferGen;
+    MOZ_ASSERT(aBuffer->mGeneration >= startBufferGen);
+    uint32_t lapCount = aBuffer->mGeneration - startBufferGen;
     JS::UpdateJSContextProfilerSampleBufferGen(pseudoStack->mContext,
-                                               aInfo.bufferGeneration(),
+                                               aBuffer->mGeneration,
                                                lapCount);
   }
 }
@@ -550,7 +549,7 @@ StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 }
 
 static void
-DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
+DoNativeBacktrace(ProfileBuffer* aBuffer, TickSample* aSample)
 {
   void* pc_array[1000];
   void* sp_array[1000];
@@ -585,13 +584,13 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
                thread, /* platformData */ nullptr);
 #endif
 
-  MergeStacksIntoProfile(aInfo, aSample, nativeStack);
+  MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
 }
 #endif
 
 #ifdef USE_EHABI_STACKWALK
 static void
-DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
+DoNativeBacktrace(Profile* aBuffer, TickSample* aSample)
 {
   void* pc_array[1000];
   void* sp_array[1000];
@@ -662,7 +661,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 
 #ifdef USE_LUL_STACKWALK
 static void
-DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
+DoNativeBacktrace(ProfileBuffer* aBuffer, TickSample* aSample)
 {
   const mcontext_t* mc =
     &reinterpret_cast<ucontext_t*>(aSample->context)->uc_mcontext;
@@ -709,8 +708,8 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 #else
 #   error "Unknown plat"
 #endif
-    uintptr_t end   = reinterpret_cast<uintptr_t>(aInfo.StackTop());
-    uintptr_t ws    = sizeof(void*);
+    uintptr_t end = reinterpret_cast<uintptr_t>(aSample->threadInfo->StackTop());
+    uintptr_t ws  = sizeof(void*);
     start &= ~(ws-1);
     end   &= ~(ws-1);
     uintptr_t nToCopy = 0;
@@ -754,7 +753,7 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 
   nativeStack.count = framesUsed;
 
-  MergeStacksIntoProfile(aInfo, aSample, nativeStack);
+  MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
 
   // Update stats in the LUL stats object.  Unfortunately this requires
   // three global memory operations.
@@ -765,41 +764,40 @@ DoNativeBacktrace(ThreadInfo& aInfo, TickSample* aSample)
 #endif
 
 static void
-DoSampleStackTrace(ThreadInfo& aInfo, TickSample* aSample,
+DoSampleStackTrace(ProfileBuffer* aBuffer, TickSample* aSample,
                    bool aAddLeafAddresses)
 {
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
-  MergeStacksIntoProfile(aInfo, aSample, nativeStack);
+  MergeStacksIntoProfile(aBuffer, aSample, nativeStack);
 
   if (aSample && aAddLeafAddresses) {
-    aInfo.addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample->pc));
+    aBuffer->addTag(ProfileBufferEntry::NativeLeafAddr((void*)aSample->pc));
   }
 }
 
 // This function is called for each sampling period with the current program
 // counter. It is called within a signal and so must be re-entrant.
 static void
-Tick(TickSample* aSample)
+Tick(ProfileBuffer* aBuffer, TickSample* aSample)
 {
-  ThreadInfo& currThreadInfo = *aSample->threadInfo;
+  ThreadInfo& threadInfo = *aSample->threadInfo;
 
-  currThreadInfo.addTag(
-    ProfileBufferEntry::ThreadId(currThreadInfo.ThreadId()));
+  aBuffer->addTag(ProfileBufferEntry::ThreadId(threadInfo.ThreadId()));
 
   mozilla::TimeDuration delta = aSample->timestamp - gStartTime;
-  currThreadInfo.addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+  aBuffer->addTag(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
-  PseudoStack* stack = currThreadInfo.Stack();
+  PseudoStack* stack = threadInfo.Stack();
 
 #if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK) || \
     defined(USE_LUL_STACKWALK)
   if (gUseStackWalk) {
-    DoNativeBacktrace(currThreadInfo, aSample);
+    DoNativeBacktrace(aBuffer, aSample);
   } else {
-    DoSampleStackTrace(currThreadInfo, aSample, gAddLeafAddresses);
+    DoSampleStackTrace(aBuffer, aSample, gAddLeafAddresses);
   }
 #else
-  DoSampleStackTrace(currThreadInfo, aSample, gAddLeafAddresses);
+  DoSampleStackTrace(aBuffer, aSample, gAddLeafAddresses);
 #endif
 
   // Don't process the PeudoStack's markers if we're synchronously sampling the
@@ -808,33 +806,32 @@ Tick(TickSample* aSample)
     ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
     while (pendingMarkersList && pendingMarkersList->peek()) {
       ProfilerMarker* marker = pendingMarkersList->popHead();
-      currThreadInfo.addStoredMarker(marker);
-      currThreadInfo.addTag(ProfileBufferEntry::Marker(marker));
+      aBuffer->addStoredMarker(marker);
+      aBuffer->addTag(ProfileBufferEntry::Marker(marker));
     }
   }
 
-  if (currThreadInfo.GetThreadResponsiveness()->HasData()) {
+  if (threadInfo.GetThreadResponsiveness()->HasData()) {
     mozilla::TimeDuration delta =
-      currThreadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(
+      threadInfo.GetThreadResponsiveness()->GetUnresponsiveDuration(
         aSample->timestamp);
-    currThreadInfo.addTag(
-      ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
+    aBuffer->addTag(ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   // rssMemory is equal to 0 when we are not recording.
   if (aSample->rssMemory != 0) {
-    currThreadInfo.addTag(ProfileBufferEntry::ResidentMemory(
+    aBuffer->addTag(ProfileBufferEntry::ResidentMemory(
       static_cast<double>(aSample->rssMemory)));
   }
 
   // ussMemory is equal to 0 when we are not recording.
   if (aSample->ussMemory != 0) {
-    currThreadInfo.addTag(ProfileBufferEntry::UnsharedMemory(
+    aBuffer->addTag(ProfileBufferEntry::UnsharedMemory(
       static_cast<double>(aSample->ussMemory)));
   }
 
   if (gLastFrameNumber != gFrameNumber) {
-    currThreadInfo.addTag(ProfileBufferEntry::FrameNumber(gFrameNumber));
+    aBuffer->addTag(ProfileBufferEntry::FrameNumber(gFrameNumber));
     gLastFrameNumber = gFrameNumber;
   }
 }
@@ -1128,7 +1125,7 @@ StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         for (size_t i = 0; i < gRegisteredThreads->size(); i++) {
           // Thread not being profiled, skip it
           ThreadInfo* info = gRegisteredThreads->at(i);
-          if (!info->hasProfile()) {
+          if (!info->HasProfile()) {
             continue;
           }
 
@@ -1137,7 +1134,7 @@ StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 
           MutexAutoLock lock(info->GetMutex());
 
-          info->StreamJSON(aWriter, aSinceTime);
+          info->StreamJSON(gBuffer, aWriter, aSinceTime);
         }
       }
 
@@ -1489,7 +1486,7 @@ MaybeSetProfile(ThreadInfo* aInfo)
 {
   if ((aInfo->IsMainThread() || gProfileThreads) &&
       ThreadSelected(aInfo->Name())) {
-    aInfo->SetProfile(gBuffer);
+    aInfo->SetHasProfile();
   }
 }
 
@@ -1993,7 +1990,7 @@ profiler_start(int aEntries, double aInterval,
 
     for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
       ThreadInfo* info = (*gRegisteredThreads)[i];
-      if (info->IsPendingDelete() || !info->hasProfile()) {
+      if (info->IsPendingDelete() || !info->HasProfile()) {
         continue;
       }
       info->Stack()->reinitializeOnResume();
@@ -2119,7 +2116,10 @@ profiler_stop()
 
   delete gSampler;
   gSampler = nullptr;
+
+  delete gBuffer;
   gBuffer = nullptr;
+
   gEntries = 0;
   gInterval = 0;
 
@@ -2440,10 +2440,14 @@ profiler_get_backtrace()
   }
   Thread::tid_t tid = Thread::GetCurrentId();
 
-  SyncProfile* profile = new SyncProfile(tid, stack);
+  ProfileBuffer* buffer = new ProfileBuffer(GET_BACKTRACE_DEFAULT_ENTRIES);
+  ThreadInfo* threadInfo =
+    new ThreadInfo("SyncProfile", tid, NS_IsMainThread(), stack,
+                   /* stackTop */ nullptr);
+  threadInfo->SetHasProfile();
 
   TickSample sample;
-  sample.threadInfo = profile;
+  sample.threadInfo = threadInfo;
 
 #if defined(HAVE_NATIVE_UNWIND)
 #if defined(GP_OS_windows) || defined(GP_OS_linux) || defined(GP_OS_android)
@@ -2459,9 +2463,9 @@ profiler_get_backtrace()
   sample.isSamplingCurrentThread = true;
   sample.timestamp = mozilla::TimeStamp::Now();
 
-  Tick(&sample);
+  Tick(buffer, &sample);
 
-  return UniqueProfilerBacktrace(new ProfilerBacktrace(profile));
+  return UniqueProfilerBacktrace(new ProfilerBacktrace(buffer, threadInfo));
 }
 
 void
@@ -2584,7 +2588,7 @@ void PseudoStack::flushSamplerOnJSShutdown()
     for (size_t i = 0; i < gRegisteredThreads->size(); i++) {
       // Thread not being profiled, skip it.
       ThreadInfo* info = gRegisteredThreads->at(i);
-      if (!info->hasProfile() || info->IsPendingDelete()) {
+      if (!info->HasProfile() || info->IsPendingDelete()) {
         continue;
       }
 
@@ -2594,7 +2598,7 @@ void PseudoStack::flushSamplerOnJSShutdown()
       }
 
       MutexAutoLock lock(info->GetMutex());
-      info->FlushSamplesAndMarkers();
+      info->FlushSamplesAndMarkers(gBuffer);
     }
   }
 

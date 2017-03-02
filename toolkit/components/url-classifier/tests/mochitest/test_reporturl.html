@@ -94,6 +94,7 @@ function testOnWindow(aTestData, aCallback, aTestCreater) {
         is(button, undefined, "Report button should not be showed");
         win.close();
         resolve();
+        return;
       }
 
       button.click();
@@ -158,11 +159,13 @@ var testDatas = [
     expectedReportUri: "http://itisaphishingsite.org/phishing.html"
   },
 
-  // Non-google provider, no report button is showed
+  // Non-google provider, no report button is showed.
+  // Test provider needs a valid update URL (mozilla for example) otherwise
+  // the updates inserting the test data will fail.
   { topUrl: "http://fakeitisaphishingsite.org/phishing.html",
     testUrl: "fakeitisaphishingsite.org/phishing.html",
     list: "fake-phish-simple",
-    provider: "fake",
+    provider: "mozilla",
     blockCreater : createBlockedPage
   },
 

@@ -450,7 +450,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
   if (mIsOpenChanged && !IsMenuList()) {
     nsIScrollableFrame *scrollframe = do_QueryFrame(nsBox::GetChildXULBox(this));
     if (scrollframe) {
-      nsWeakFrame weakFrame(this);
+      AutoWeakFrame weakFrame(this);
       scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
       if (!weakFrame.IsAlive()) {
         return;
@@ -892,7 +892,7 @@ nsMenuPopupFrame::ShowPopup(bool aIsContextMenu)
 
     nsMenuFrame* menuFrame = do_QueryFrame(GetParent());
     if (menuFrame) {
-      nsWeakFrame weakFrame(this);
+      AutoWeakFrame weakFrame(this);
       menuFrame->PopupOpened();
       if (!weakFrame.IsAlive())
         return;

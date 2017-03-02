@@ -1068,14 +1068,6 @@ protected:
    */
   virtual bool ShouldPropagateComputedBSizeToScrolledContent() const { return true; }
 
-  void ReloadChildFrames()
-  {
-    mHelper.ReloadChildFrames();
-    if (mHelper.mScrolledFrame) {
-      mWritingMode = mHelper.mScrolledFrame->GetWritingMode();
-    }
-  }
-
 private:
   friend class mozilla::ScrollFrameHelper;
   ScrollFrameHelper mHelper;
