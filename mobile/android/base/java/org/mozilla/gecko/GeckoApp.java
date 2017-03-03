@@ -1891,7 +1891,9 @@ public abstract class GeckoApp
         boolean shouldRestore = false;
 
         final int versionCode = getVersionCode();
-        if (mLastSessionCrashed) {
+        if (getSessionRestoreResumeOnce(prefs)) {
+            shouldRestore = true;
+        } else if (mLastSessionCrashed) {
             if (incrementCrashCount(prefs) <= getSessionStoreMaxCrashResumes(prefs) &&
                     getSessionRestoreAfterCrashPreference(prefs)) {
                 shouldRestore = true;
@@ -1912,6 +1914,14 @@ public abstract class GeckoApp
         }
 
         return shouldRestore;
+    }
+
+    private boolean getSessionRestoreResumeOnce(SharedPreferences prefs) {
+        boolean resumeOnce = prefs.getBoolean(GeckoPreferences.PREFS_RESTORE_SESSION_ONCE, false);
+        if (resumeOnce) {
+            prefs.edit().putBoolean(GeckoPreferences.PREFS_RESTORE_SESSION_ONCE, false).apply();
+        }
+        return resumeOnce;
     }
 
     private int incrementCrashCount(SharedPreferences prefs) {
