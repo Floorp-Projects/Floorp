@@ -8,7 +8,10 @@ All notable changes to this program is documented in this file.
 - Added routing and parsing for the [Get Timeouts](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-get-timeouts) command
 
 ### Changed
+- All HTTP responses are now wrapped in `{value: …}` objects per the WebDriver specification; this may likely require you to update your client library
+- Pointer move action’s `element` key changed to `origin`, which lets pointer actions originate within the context of the viewport, the pointer’s current position, or from an element
 - Now uses about:blank as the new tab document; this was previously disabled due to [bug 1333736](https://bugzilla.mozilla.org/show_bug.cgi?id=1333736) in Marionette
+- WebDriver libary updated to 0.23.0
 
 ### Fixed
 - Aligned the data structure accepted by the [Set Timeouts](https://w3c.github.io/webdriver/webdriver-spec.html#set-timeouts) command with the WebDriver specification
