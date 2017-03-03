@@ -2899,7 +2899,7 @@ GetTextFrameForContent(nsIContent* aContent, bool aFlushLayout)
 }
 
 static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
-                                   mozilla::dom::DOMStringList* aTextList,
+                                   Sequence<nsString>* aTextList,
                                    nsIContent* aContent, int32_t aStartOffset,
                                    int32_t aEndOffset, bool aClampToEdge,
                                    bool aFlushLayout)
@@ -2947,7 +2947,7 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
           Substring(textContent,
                     textContentStart,
                     (textContentEnd - textContentStart));
-        aTextList->Add(textSubstring);
+        aTextList->AppendElement(textSubstring, fallible);
       }
     }
   }
@@ -2956,7 +2956,7 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
 
 /* static */ void
 nsRange::CollectClientRectsAndText(nsLayoutUtils::RectCallback* aCollector,
-                                   mozilla::dom::DOMStringList* aTextList,
+                                   Sequence<nsString>* aTextList,
                                    nsRange* aRange,
                                    nsINode* aStartParent, int32_t aStartOffset,
                                    nsINode* aEndParent, int32_t aEndOffset,
@@ -3097,11 +3097,10 @@ nsRange::GetClientRectsAndTexts(
   }
 
   aResult.mRectList = new DOMRectList(static_cast<nsIDOMRange*>(this));
-  aResult.mTextList = new DOMStringList();
 
   nsLayoutUtils::RectListBuilder builder(aResult.mRectList);
 
-  CollectClientRectsAndText(&builder, aResult.mTextList, this,
+  CollectClientRectsAndText(&builder, &aResult.mTextList, this,
     mStartParent, mStartOffset, mEndParent, mEndOffset, true, true);
 }
 

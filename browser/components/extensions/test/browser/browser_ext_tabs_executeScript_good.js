@@ -86,7 +86,7 @@ add_task(function* testGoodPermissions() {
         },
       },
     },
-    contentSetup() {
+    contentSetup: function() {
       browser.commands.onCommand.addListener(function(command) {
         if (command == "test-tabs-executeScript") {
           browser.test.sendMessage("tabs-command-key-pressed");
@@ -106,7 +106,7 @@ add_task(function* testGoodPermissions() {
       "permissions": ["activeTab"],
       "browser_action": {},
     },
-    contentSetup() {
+    contentSetup: function() {
       browser.browserAction.onClicked.addListener(() => {
         browser.test.log("Clicked.");
       });
@@ -162,7 +162,7 @@ add_task(function* testGoodPermissions() {
     manifest: {
       "permissions": ["activeTab", "contextMenus"],
     },
-    contentSetup() {
+    contentSetup: function() {
       browser.contextMenus.create({title: "activeTab", contexts: ["all"]});
       return Promise.resolve();
     },

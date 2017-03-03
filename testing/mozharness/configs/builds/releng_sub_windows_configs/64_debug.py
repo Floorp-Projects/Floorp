@@ -31,7 +31,7 @@ config = {
         'PROPERTIES_FILE': os.path.join(os.getcwd(), 'buildprops.json'),
         'TINDERBOX_OUTPUT': '1',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
-        'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
+        'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
     },
     'src_mozconfig': 'browser/config/mozconfigs/win64/debug',

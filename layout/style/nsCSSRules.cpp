@@ -431,25 +431,22 @@ GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
 {
 }
 
-static bool
-SetParentRuleReference(Rule* aRule, void* aParentRule)
-{
-  GroupRule* parentRule = static_cast<GroupRule*>(aParentRule);
-  aRule->SetParentRule(parentRule);
-  return true;
-}
-
 GroupRule::GroupRule(const GroupRule& aCopy)
   : Rule(aCopy)
 {
-  const_cast<GroupRule&>(aCopy).mRules.EnumerateForwards(GroupRule::CloneRuleInto, &mRules);
-  mRules.EnumerateForwards(SetParentRuleReference, this);
+  for (const Rule* rule : aCopy.mRules) {
+    RefPtr<Rule> clone = rule->Clone();
+    mRules.AppendObject(clone);
+    clone->SetParentRule(this);
+  }
 }
 
 GroupRule::~GroupRule()
 {
   MOZ_ASSERT(!mSheet, "SetStyleSheet should have been called");
-  mRules.EnumerateForwards(SetParentRuleReference, nullptr);
+  for (Rule* rule : mRules) {
+    rule->SetParentRule(nullptr);
+  }
   if (mRuleCollection) {
     mRuleCollection->DropReference();
   }
@@ -468,17 +465,12 @@ GroupRule::IsCCLeaf() const
   return false;
 }
 
-static bool
-SetStyleSheetReference(Rule* aRule, void* aSheet)
-{
-  aRule->SetStyleSheet(reinterpret_cast<StyleSheet*>(aSheet));
-  return true;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(GroupRule, Rule)
-  tmp->mRules.EnumerateForwards(SetParentRuleReference, nullptr);
+  for (Rule* rule : tmp->mRules) {
+    rule->SetParentRule(nullptr);
+  }
   // If tmp does not have a stylesheet, neither do its descendants.  In that
   // case, don't try to null out their stylesheet, to avoid O(N^2) behavior in
   // depth of group rule nesting.  But if tmp _does_ have a stylesheet (which
@@ -486,7 +478,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(GroupRule, Rule)
   // need to null out the stylesheet pointer on descendants now, before we clear
   // tmp->mRules.
   if (tmp->GetStyleSheet()) {
-    tmp->mRules.EnumerateForwards(SetStyleSheetReference, nullptr);
+    for (Rule* rule : tmp->mRules) {
+      rule->SetStyleSheet(nullptr);
+    }
   }
   tmp->mRules.Clear();
   if (tmp->mRuleCollection) {
@@ -514,7 +508,9 @@ GroupRule::SetStyleSheet(StyleSheet* aSheet)
   // depth when seting the sheet to null during unlink, if we happen to unlin in
   // order from most nested rule up to least nested rule.
   if (aSheet != GetStyleSheet()) {
-    mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
+    for (Rule* rule : mRules) {
+      rule->SetStyleSheet(aSheet);
+    }
     Rule::SetStyleSheet(aSheet);
   }
 }
@@ -550,8 +546,12 @@ GroupRule::GetStyleRuleAt(int32_t aIndex) const
 bool
 GroupRule::EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const
 {
-  return
-    const_cast<GroupRule*>(this)->mRules.EnumerateForwards(aFunc, aData);
+  for (const Rule* rule : mRules) {
+    if (!aFunc(const_cast<Rule*>(rule), aData)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /*

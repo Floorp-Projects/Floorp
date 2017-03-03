@@ -29,7 +29,7 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
 
   // Trigger an update check, manually applying the update if we're testing
   // without auto-update.
-  function* triggerUpdate(win, addon) {
+  async function triggerUpdate(win, addon) {
     let manualUpdatePromise;
     if (!autoUpdate) {
       manualUpdatePromise = new Promise(resolve => {
@@ -43,10 +43,10 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
       });
     }
 
-    checkFn(win, addon);
+    let promise = checkFn(win, addon);
 
     if (manualUpdatePromise) {
-      yield manualUpdatePromise;
+      await manualUpdatePromise;
 
       let list = win.document.getElementById("addon-list");
 
@@ -56,6 +56,8 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
       let item = list.children.find(_item => _item.value == ID);
       EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
     }
+
+    return {promise};
   }
 
   // Navigate away from the starting page to force about:addons to load
@@ -72,7 +74,7 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
 
   // Trigger an update check
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  yield triggerUpdate(win, addon);
+  let {promise: checkPromise} = yield triggerUpdate(win, addon);
   let panel = yield popupPromise;
 
   // Click the cancel button, wait to see the cancel event
@@ -83,9 +85,12 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
   addon = yield AddonManager.getAddonByID(ID);
   is(addon.version, "1.0", "Should still be running the old version");
 
+  // Make sure the update check is completely finished.
+  yield checkPromise;
+
   // Trigger a new update check
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  yield triggerUpdate(win, addon);
+  checkPromise = (yield triggerUpdate(win, addon)).promise;
 
   // This time, accept the upgrade
   let updatePromise = promiseInstallEvent(addon, "onInstallEnded");
@@ -95,6 +100,8 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
   addon = yield updatePromise;
   is(addon.version, "2.0", "Should have upgraded");
 
+  yield checkPromise;
+
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   addon.uninstall();
   yield SpecialPowers.popPrefEnv();
@@ -103,6 +110,15 @@ function* interactiveUpdateTest(autoUpdate, checkFn) {
 // Invoke the "Check for Updates" menu item
 function checkAll(win) {
   win.gViewController.doCommand("cmd_findAllUpdates");
+  return new Promise(resolve => {
+    let observer = {
+      observe(subject, topic, data) {
+        Services.obs.removeObserver(observer, "EM-update-check-finished");
+        resolve();
+      },
+    };
+    Services.obs.addObserver(observer, "EM-update-check-finished", false);
+  });
 }
 
 // Test "Check for Updates" with both auto-update settings
