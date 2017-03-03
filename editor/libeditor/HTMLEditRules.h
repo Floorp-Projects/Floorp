@@ -101,7 +101,7 @@ public:
   nsresult GetIndentState(bool* aCanIndent, bool* aCanOutdent);
   nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
-  nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode* aNode);
+  nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode);
 
   // nsIEditActionListener methods
 
@@ -403,9 +403,9 @@ protected:
   nsresult InsertMozBRIfNeeded(nsINode& aNode);
   bool IsEmptyInline(nsINode& aNode);
   bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
-  nsresult RemoveAlignment(nsIDOMNode* aNode, const nsAString& aAlignType,
+  nsresult RemoveAlignment(nsINode& aNode, const nsAString& aAlignType,
                            bool aChildrenOnly);
-  nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode* aNode, bool aStarts);
+  nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode, bool aStarts);
   enum class ContentsOnly { no, yes };
   nsresult AlignBlock(Element& aElement,
                       const nsAString& aAlignType, ContentsOnly aContentsOnly);

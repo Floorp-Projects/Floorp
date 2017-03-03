@@ -140,6 +140,8 @@ protected:
   PrincipalHandle mPendingPrincipalHandle;
   // The FrameID for which mPendingPrincipal is first valid.
   ImageContainer::FrameID mFrameIDForPendingPrincipalHandle;
+
+  const RefPtr<AbstractThread> mMainThread;
 };
 
 } // namespace mozilla
