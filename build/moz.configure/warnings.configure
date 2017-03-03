@@ -106,6 +106,9 @@ check_and_add_gcc_warning('-Wformat')
 check_and_add_gcc_warning('-Wno-format',
                           when=depends(target)(lambda t: t.kernel == 'WINNT'))
 
+# We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
+check_and_add_gcc_warning('-Wno-gnu-zero-variadic-macro-arguments')
+
 # Please keep these last in this file
 add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_cflags)
 add_old_configure_assignment('_WARNINGS_CXXFLAGS', warnings_cxxflags)

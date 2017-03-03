@@ -31,10 +31,16 @@ if CONFIG['ENABLE_TESTS']:
         'gtest/include/gtest/internal/gtest-linked_ptr.h',
         'gtest/include/gtest/internal/gtest-param-util-generated.h',
         'gtest/include/gtest/internal/gtest-param-util.h',
+        'gtest/include/gtest/internal/gtest-port-arch.h',
         'gtest/include/gtest/internal/gtest-port.h',
         'gtest/include/gtest/internal/gtest-string.h',
         'gtest/include/gtest/internal/gtest-tuple.h',
         'gtest/include/gtest/internal/gtest-type-util.h',
+    ]
+
+    EXPORTS.gtest.internal.custom += [
+        'gtest/include/gtest/internal/custom/gtest-port.h',
+        'gtest/include/gtest/internal/custom/gtest-printers.h',
     ]
 
     EXPORTS.gmock += [
@@ -46,6 +52,7 @@ if CONFIG['ENABLE_TESTS']:
         'gmock/include/gmock/gmock-generated-nice-strict.h',
         'gmock/include/gmock/gmock-matchers.h',
         'gmock/include/gmock/gmock-more-actions.h',
+        'gmock/include/gmock/gmock-more-matchers.h',
         'gmock/include/gmock/gmock-spec-builders.h',
         'gmock/include/gmock/gmock.h',
     ]
@@ -57,18 +64,18 @@ if CONFIG['ENABLE_TESTS']:
         'gmock/include/gmock/internal/gmock-port.h',
     ]
 
+    EXPORTS.gmock.internal.custom += [
+        'gmock/include/gmock/internal/custom/gmock-generated-actions.h',
+        'gmock/include/gmock/internal/custom/gmock-matchers.h',
+        'gmock/include/gmock/internal/custom/gmock-port.h',
+    ]
+
     SOURCES += [
         'gmock/src/gmock-all.cc',
         'gtest/src/gtest-all.cc',
-        'mozilla/GTestRunner.cpp',
-        'mozilla/MozGTestBench.cpp',
     ]
 
     Library('gtest')
-
-    SOURCES += [
-        'mozilla/SanityTest.cpp',
-    ]
 
     LOCAL_INCLUDES += [
         'gmock',
@@ -80,6 +87,8 @@ if CONFIG['ENABLE_TESTS']:
     if CONFIG['OS_ARCH'] == 'WINNT':
         LOCAL_INCLUDES += [
             '/security/sandbox/chromium',
-        ]    
-    
+        ]
+
+    DIRS += ['mozilla']
+
     FINAL_LIBRARY = 'xul-gtest'
