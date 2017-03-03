@@ -14,8 +14,8 @@ Test text-node rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript"></script>
-<script type="application/javascript">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
 "use strict";
 
 window.onload = Task.async(function* () {
@@ -172,8 +172,11 @@ window.onload = Task.async(function* () {
     const attachedActorIds = getStubAttachedActorIds(grips);
 
     let inspectIconClickedValue = null;
-    let onInspectIconClick = (object) => {
+    let inspectIconClickedEvent = null;
+
+    let onInspectIconClick = (object, event) => {
       inspectIconClickedValue = object;
+      inspectIconClickedEvent = event;
     };
 
     const renderedComponentWithoutInspectIcon = renderComponent(TextNode.rep, {
@@ -196,6 +199,8 @@ window.onload = Task.async(function* () {
 
     is(inspectIconClickedValue, grips[0],
       "onInspectIconClick is called with expected value when inspect icon is clicked");
+    ok(inspectIconClickedEvent !== null && inspectIconClickedEvent.type === "click",
+      "onInspectIconClick forwarded the original event to the callback");
   }
 });
 </script>
