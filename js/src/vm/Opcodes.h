@@ -2136,12 +2136,12 @@
      */ \
     macro(JSOP_DEBUGAFTERYIELD,  208, "debugafteryield",  NULL,  1,  0,  0,  JOF_BYTE) \
     /*
-     * Pops the generator and the return value 'result', stops interpretation
-     * and returns 'result'. Pushes resolved value onto the stack.
+     * Pops the generator and the return value 'promise', stops interpretation
+     * and returns 'promise'. Pushes resolved value onto the stack.
      *   Category: Statements
      *   Type: Generator
      *   Operands: uint24_t yieldAndAwaitIndex
-     *   Stack: result, gen => resolved
+     *   Stack: promise, gen => resolved
      */ \
     macro(JSOP_AWAIT,         209, "await",        NULL,  4,  2,  1,  JOF_UINT24) \
     macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
