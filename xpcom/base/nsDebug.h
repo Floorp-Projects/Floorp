@@ -291,18 +291,16 @@ inline void MOZ_PretendNoReturn()
 #if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
 #define NS_ENSURE_SUCCESS_BODY(res, ret)                                  \
-    char *msg = mozilla::Smprintf("NS_ENSURE_SUCCESS(%s, %s) failed with "       \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf("NS_ENSURE_SUCCESS(%s, %s) failed with " \
                            "result 0x%" PRIX32, #res, #ret,               \
                            static_cast<uint32_t>(__rv));                  \
-    NS_WARNING(msg);                                                      \
-    mozilla::SmprintfFree(msg);
+    NS_WARNING(msg.get());
 
 #define NS_ENSURE_SUCCESS_BODY_VOID(res)                                  \
-    char *msg = mozilla::Smprintf("NS_ENSURE_SUCCESS_VOID(%s) failed with "      \
+    mozilla::SmprintfPointer msg = mozilla::Smprintf("NS_ENSURE_SUCCESS_VOID(%s) failed with " \
                            "result 0x%" PRIX32, #res,                     \
                            static_cast<uint32_t>(__rv));                  \
-    NS_WARNING(msg);                                                      \
-    mozilla::SmprintfFree(msg);
+    NS_WARNING(msg.get());
 
 #else
 

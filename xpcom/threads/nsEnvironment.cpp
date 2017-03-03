@@ -145,18 +145,18 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char* newData = mozilla::Smprintf("%s=%s",
-                             nativeName.get(),
-                             nativeVal.get());
+  SmprintfPointer newData = mozilla::Smprintf("%s=%s",
+                                              nativeName.get(),
+                                              nativeVal.get());
   if (!newData) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PR_SetEnv(newData);
+  PR_SetEnv(newData.get());
   if (entry->mData) {
     mozilla::SmprintfFree(entry->mData);
   }
-  entry->mData = newData;
+  entry->mData = newData.release();
   return NS_OK;
 }
 

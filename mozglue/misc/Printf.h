@@ -55,6 +55,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Types.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -103,6 +104,26 @@ private:
     bool cvt_s(const char* s, int width, int prec, int flags);
 };
 
+namespace detail {
+
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+struct AllocPolicyBasedFreePolicy
+{
+  void operator()(const void* ptr) {
+    AllocPolicy policy;
+    policy.free_(const_cast<void*>(ptr));
+  }
+};
+
+}
+
+// The type returned by Smprintf and friends.
+template<typename AllocPolicy>
+using SmprintfPolicyPointer = mozilla::UniquePtr<char, detail::AllocPolicyBasedFreePolicy<AllocPolicy>>;
+
+// The default type if no alloc policy is specified.
+typedef SmprintfPolicyPointer<mozilla::MallocAllocPolicy> SmprintfPointer;
+
 // Used in the implementation of Smprintf et al.
 template<typename AllocPolicy>
 class MOZ_STACK_CLASS SprintfState final : private mozilla::PrintfTarget, private AllocPolicy
@@ -125,8 +146,8 @@ class MOZ_STACK_CLASS SprintfState final : private mozilla::PrintfTarget, privat
         return mozilla::PrintfTarget::vprint(format, ap_list) && append("", 1);
     }
 
-    char* release() {
-        char* result = mBase;
+    SmprintfPolicyPointer<AllocPolicy> release() {
+        SmprintfPolicyPointer<AllocPolicy> result(mBase);
         mBase = nullptr;
         return result;
     }
@@ -173,7 +194,7 @@ class MOZ_STACK_CLASS SprintfState final : private mozilla::PrintfTarget, privat
 */
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
 MOZ_FORMAT_PRINTF(1, 2)
-char* Smprintf(const char* fmt, ...)
+SmprintfPolicyPointer<AllocPolicy> Smprintf(const char* fmt, ...)
 {
     SprintfState<AllocPolicy> ss(nullptr);
     va_list ap;
@@ -195,9 +216,10 @@ char* Smprintf(const char* fmt, ...)
 */
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
 MOZ_FORMAT_PRINTF(2, 3)
-char* SmprintfAppend(char* last, const char* fmt, ...)
+SmprintfPolicyPointer<AllocPolicy> SmprintfAppend(SmprintfPolicyPointer<AllocPolicy>&& last,
+                                                  const char* fmt, ...)
 {
-    SprintfState<AllocPolicy> ss(last);
+    SprintfState<AllocPolicy> ss(last.release());
     va_list ap;
     va_start(ap, fmt);
     bool r = ss.vprint(fmt, ap);
@@ -212,7 +234,7 @@ char* SmprintfAppend(char* last, const char* fmt, ...)
 ** va_list forms of the above.
 */
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
-char* Vsmprintf(const char* fmt, va_list ap)
+SmprintfPolicyPointer<AllocPolicy> Vsmprintf(const char* fmt, va_list ap)
 {
     SprintfState<AllocPolicy> ss(nullptr);
     if (!ss.vprint(fmt, ap))
@@ -221,9 +243,10 @@ char* Vsmprintf(const char* fmt, va_list ap)
 }
 
 template<typename AllocPolicy = mozilla::MallocAllocPolicy>
-char* VsmprintfAppend(char* last, const char* fmt, va_list ap)
+SmprintfPolicyPointer<AllocPolicy> VsmprintfAppend(SmprintfPolicyPointer<AllocPolicy>&& last,
+                                                   const char* fmt, va_list ap)
 {
-    SprintfState<AllocPolicy> ss(last);
+    SprintfState<AllocPolicy> ss(last.release());
     if (!ss.vprint(fmt, ap))
         return nullptr;
     return ss.release();
