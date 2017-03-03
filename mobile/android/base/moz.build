@@ -355,6 +355,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'cleanup/FileCleanupController.java',
     'cleanup/FileCleanupService.java',
     'CustomEditText.java',
+    'customtabs/ActionBarPresenter.java',
     'customtabs/CustomTabsActivity.java',
     'customtabs/GeckoCustomTabsService.java',
     'customtabs/IntentUtil.java',
