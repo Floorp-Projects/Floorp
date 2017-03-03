@@ -78,7 +78,7 @@ WidevineVideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
     return;
   }
   config.format = kYv12;
-  config.coded_size = Size(aCodecSettings.mWidth, aCodecSettings.mHeight);
+  config.coded_size = mCodedSize = Size(aCodecSettings.mWidth, aCodecSettings.mHeight);
   nsTArray<uint8_t> extraData;
   if (aCodecSpecificLength > 0) {
     // The first byte is the WebRTC packetization mode, which can be ignored.
@@ -128,7 +128,18 @@ WidevineVideoDecoder::Decode(GMPVideoEncodedFrame* aInputFrame,
   aInputFrame->Destroy();
   aInputFrame = nullptr;
 
-  if (rv == kSuccess) {
+  if (rv == kSuccess || rv == kNoKey) {
+    if (rv == kNoKey) {
+      CDM_LOG("NoKey for sample at time=%" PRId64 "!", sample.timestamp);
+      // Somehow our key became unusable. Typically this would happen when
+      // a stream requires output protection, and the configuration changed
+      // such that output protection is no longer available. For example, a
+      // non-compliant monitor was attached. The JS player should notice the
+      // key status changing to "output-restricted", and is supposed to switch
+      // to a stream that doesn't require OP. In order to keep the playback
+      // pipeline rolling, just output a black frame. See bug 1343140.
+      frame.InitToBlack(mCodedSize.width, mCodedSize.height, sample.timestamp);
+    }
     if (!ReturnOutput(frame)) {
       CDM_LOG("WidevineVideoDecoder::Decode() Failed in ReturnOutput()");
       mCallback->Error(GMPDecodeErr);
