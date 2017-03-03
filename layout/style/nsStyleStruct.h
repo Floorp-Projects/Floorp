@@ -4078,4 +4078,21 @@ STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleTransition>,
 STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<mozilla::StyleAnimation>,
                                  nsTArray_Simple<mozilla::StyleAnimation>);
 
+/**
+ * <div rustbindgen replaces="nsCOMArray"></div>
+ *
+ * mozilla::ArrayIterator doesn't work well with bindgen.
+ */
+template<typename T>
+class nsCOMArray_Simple {
+  nsTArray<nsISupports*> mBuffer;
+};
+
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<nsIContent>,
+                                 nsCOMArray_Simple<nsIContent>);
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<nsINode>,
+                                 nsCOMArray_Simple<nsINode>);
+STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsCOMArray<imgIContainer>,
+                                 nsCOMArray_Simple<imgIContainer>);
+
 #endif /* nsStyleStruct_h___ */
