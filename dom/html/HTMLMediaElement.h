@@ -749,6 +749,8 @@ public:
 
   void SetMediaInfo(const MediaInfo& aInfo);
 
+  virtual AbstractThread* AbstractMainThread() const final override;
+
   // Telemetry: to record the usage of a {visible / invisible} video element as
   // the source of {drawImage(), createPattern(), createImageBitmap() and
   // captureStream()} APIs.
@@ -1187,8 +1189,6 @@ protected:
   {
     return this;
   }
-
-  virtual AbstractThread* AbstractMainThread() const final override;
 
   // Return true if decoding should be paused
   virtual bool GetPaused() final override

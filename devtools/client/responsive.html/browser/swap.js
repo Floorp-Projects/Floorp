@@ -55,6 +55,10 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
     start: Task.async(function* () {
       tab.isResponsiveDesignMode = true;
 
+      // Hide the browser content temporarily while things move around to avoid displaying
+      // strange intermediate states.
+      tab.linkedBrowser.style.visibility = "hidden";
+
       // Freeze navigation temporarily to avoid "blinking" in the location bar.
       freezeNavigationState(tab);
 
@@ -135,9 +139,16 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       thawNavigationState(tab);
       gBrowser.setTabTitle(tab);
       gBrowser.updateCurrentBrowser(true);
+
+      // Show the browser content again now that the move is done.
+      tab.linkedBrowser.style.visibility = "";
     }),
 
     stop() {
+      // Hide the browser content temporarily while things move around to avoid displaying
+      // strange intermediate states.
+      tab.linkedBrowser.style.visibility = "hidden";
+
       // 1. Stop the tunnel between outer and inner browsers.
       tunnel.stop();
       tunnel = null;
@@ -197,6 +208,9 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       tab.linkedBrowser.frameLoader.activateRemoteFrame();
 
       delete tab.isResponsiveDesignMode;
+
+      // Show the browser content again now that the move is done.
+      tab.linkedBrowser.style.visibility = "";
     },
 
   };

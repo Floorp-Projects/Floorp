@@ -32,15 +32,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
-const PREF_READERVIEW_TRIGGER = "browser.uitour.readerViewTrigger";
 const PREF_SURVEY_DURATION = "browser.uitour.surveyDuration";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
@@ -295,23 +292,6 @@ this.UITour = {
 
     Services.prefs.setCharPref(PREF_SEENPAGEIDS,
                                JSON.stringify([...this.seenPageIDs]));
-  },
-
-  get _readerViewTriggerRegEx() {
-    delete this._readerViewTriggerRegEx;
-    let readerViewUITourTrigger = Services.prefs.getCharPref(PREF_READERVIEW_TRIGGER);
-    return this._readerViewTriggerRegEx = new RegExp(readerViewUITourTrigger, "i");
-  },
-
-  onLocationChange(aLocation) {
-    // The ReaderView tour page is expected to run in Reader View,
-    // which disables JavaScript on the page. To get around that, we
-    // automatically start a pre-defined tour on page load (for hysterical
-    // raisins the ReaderView tour is known as "readinglist")
-    let originalUrl = ReaderMode.getOriginalUrl(aLocation);
-    if (this._readerViewTriggerRegEx.test(originalUrl)) {
-      this.startSubTour("readinglist");
-    }
   },
 
   onPageEvent(aMessage, aEvent) {
@@ -1936,19 +1916,6 @@ this.UITour = {
         targets: [],
       });
     });
-  },
-
-  startSubTour(aFeature) {
-    if (aFeature != "string") {
-      log.error("startSubTour: No feature option specified");
-      return;
-    }
-
-    if (aFeature == "readinglist") {
-      ReaderParent.showReaderModeInfoPanel(browser);
-    } else {
-      log.error("startSubTour: Unknown feature option specified");
-    }
   },
 
   addNavBarWidget(aTarget, aMessageManager, aCallbackID) {
