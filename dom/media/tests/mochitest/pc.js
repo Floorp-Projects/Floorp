@@ -1889,6 +1889,7 @@ function addLoadEvent() {}
 
 var scriptsReady = Promise.all([
   "/tests/SimpleTest/SimpleTest.js",
+  "../../test/manifest.js",
   "head.js",
   "templates.js",
   "turnConfig.js",
