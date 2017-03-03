@@ -353,6 +353,31 @@ Cu.import('resource://gre/modules/Services.jsm');
       return element;
     }
 
+    // https://w3c.github.io/webvtt/#webvtt-timestamp-object
+    // Return hhhhh:mm:ss.fff
+    function normalizedTimeStamp(secondsWithFrag) {
+      var totalsec = parseInt(secondsWithFrag, 10);
+      var hours = Math.floor(totalsec / 3600);
+      var minutes = Math.floor(totalsec % 3600 / 60);
+      var seconds = Math.floor(totalsec % 60);
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
+      var f = secondsWithFrag.toString().split(".");
+      if (f[1]) {
+        f = f[1].slice(0, 3).padEnd(3, "0");
+      } else {
+        f = "000";
+      }
+      return hours + ':' + minutes + ':' + seconds + '.' + f;
+    }
+
     var root;
     if (bReturnFrag) {
       root = window.document.createDocumentFragment();
@@ -379,7 +404,7 @@ Cu.import('resource://gre/modules/Services.jsm');
         var node;
         if (ts) {
           // Timestamps are lead nodes as well.
-          node = window.document.createProcessingInstruction("timestamp", ts);
+          node = window.document.createProcessingInstruction("timestamp", normalizedTimeStamp(ts));
           current.appendChild(node);
           continue;
         }
