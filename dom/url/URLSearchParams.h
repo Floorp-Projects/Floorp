@@ -20,7 +20,7 @@ namespace mozilla {
 namespace dom {
 
 class URLSearchParams;
-class USVStringSequenceSequenceOrUSVString;
+class USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString;
 
 class URLSearchParamsObserver : public nsISupports
 {
@@ -150,7 +150,7 @@ public:
 
   static already_AddRefed<URLSearchParams>
   Constructor(const GlobalObject& aGlobal,
-              const USVStringSequenceSequenceOrUSVString& aInit,
+              const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
               ErrorResult& aRv);
 
   void ParseInput(const nsACString& aInput);

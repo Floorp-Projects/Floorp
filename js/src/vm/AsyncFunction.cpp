@@ -174,22 +174,14 @@ AsyncFunctionResume(JSContext* cx, Handle<PromiseObject*> resultPromise, HandleV
                                  : cx->names().StarGeneratorThrow;
     FixedInvokeArgs<1> args(cx);
     args[0].set(valueOrReason);
-    RootedValue result(cx);
-    if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &result))
+    RootedValue value(cx);
+    if (!CallSelfHostedFunction(cx, funName, generatorVal, args, &value))
         return AsyncFunctionThrown(cx, resultPromise);
 
-    RootedObject resultObj(cx, &result.toObject());
-    RootedValue doneVal(cx);
-    RootedValue value(cx);
-    if (!GetProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
-        return false;
-    if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value))
-        return false;
+    if (generatorVal.toObject().as<GeneratorObject>().isAfterAwait())
+        return AsyncFunctionAwait(cx, resultPromise, value);
 
-    if (doneVal.toBoolean())
-        return AsyncFunctionReturned(cx, resultPromise, value);
-
-    return AsyncFunctionAwait(cx, resultPromise, value);
+    return AsyncFunctionReturned(cx, resultPromise, value);
 }
 
 // Async Functions proposal 2.2 steps 3-8.
@@ -244,10 +236,4 @@ bool
 js::IsWrappedAsyncFunction(JSFunction* fun)
 {
     return fun->maybeNative() == WrappedAsyncFunction;
-}
-
-MOZ_MUST_USE bool
-js::CheckAsyncResumptionValue(JSContext* cx, HandleValue v)
-{
-    return CheckStarGeneratorResumptionValue(cx, v);
 }

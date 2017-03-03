@@ -560,7 +560,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
       uint32_t size;
     };
     AutoTArray<nal_entry, 1> nals;
-    uint32_t size;
+    uint32_t size = 0;
     // make sure we don't read past the end of the buffer getting the size
     while (buffer+size_bytes < end) {
       switch (aEncodedFrame->BufferType()) {

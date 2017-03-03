@@ -1186,10 +1186,10 @@ EGLSurface nsWindow::PMPMSupport::sSurface;
 nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
-    // OnDestroy will call disposeNative after any pending native calls have
-    // been made.
-    MOZ_ASSERT(window.mEditableSupport);
+    MOZ_ASSERT(window.mEditableSupport && window.mEditable);
     window.mEditableSupport.Detach();
+    window.mEditable->OnViewChange(nullptr);
+    window.mEditable = nullptr;
 
     if (window.mNPZCSupport) {
         window.mNPZCSupport.Detach();
@@ -1256,7 +1256,10 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
 
     // Attach a new GeckoEditable support object to the new window.
     auto editable = GeckoEditable::New(aView);
-    window->mEditableSupport.Attach(editable, window, editable);
+    auto editableChild = GeckoEditableChild::New(editable);
+    editable->SetDefaultEditableChild(editableChild);
+    window->mEditable = editable;
+    window->mEditableSupport.Attach(editableChild, window, editableChild);
 
     // Attach the Compositor to the new window.
     auto compositor = LayerView::Compositor::LocalRef(
@@ -1301,8 +1304,8 @@ nsWindow::GeckoViewSupport::Reattach(const GeckoView::Window::LocalRef& inst,
                                      jni::Object::Param aDispatcher)
 {
     // Associate our previous GeckoEditable with the new GeckoView.
-    MOZ_ASSERT(window.mEditableSupport);
-    window.mEditableSupport->OnViewChange(aView);
+    MOZ_ASSERT(window.mEditable);
+    window.mEditable->OnViewChange(aView);
 
     // mNPZCSupport might have already been detached through the Java side calling
     // NativePanZoomController.destroy().
