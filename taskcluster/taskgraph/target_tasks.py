@@ -212,7 +212,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if platform in ('linux64-nightly', 'linux-nightly'):
             if task.kind not in [
                 'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
-                'checksums-signing',
+                'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing'
             ]:
                 return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
