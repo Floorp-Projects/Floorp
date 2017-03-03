@@ -15,7 +15,7 @@ namespace mozilla {
 namespace layers {
 
 void
-WebRenderContainerLayer::RenderLayer()
+WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
@@ -43,28 +43,24 @@ WebRenderContainerLayer::RenderLayer()
                   Stringify(transform).c_str(),
                   Stringify(mixBlendMode).c_str());
   }
-
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                            wr::ToWrRect(overflow),
-                            mask,
-                            GetLocalOpacity(),
-                            GetLayer()->GetAnimations(),
-                            transform,
-                            mixBlendMode,
-                            FrameMetrics::NULL_SCROLL_ID));
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                               wr::ToWrRect(overflow),
+                               mask.ptrOr(nullptr),
+                               GetLocalOpacity(),
+                               //GetLayer()->GetAnimations(),
+                               transform,
+                               mixBlendMode);
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
     }
-    ToWebRenderLayer(child.layer)->RenderLayer();
+    ToWebRenderLayer(child.layer)->RenderLayer(aBuilder);
   }
-  WrBridge()->AddWebRenderCommand(
-    OpDPPopStackingContext());
+  aBuilder.PopStackingContext();
 }
 
 void
-WebRenderRefLayer::RenderLayer()
+WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
@@ -79,7 +75,7 @@ WebRenderRefLayer::RenderLayer()
                   Stringify(transform).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::AsPipelineId(mId)));
+  aBuilder.PushIFrame(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::AsPipelineId(mId));
 }
 
 } // namespace layers

@@ -222,6 +222,22 @@ pub unsafe extern fn wr_api_finalize_builder(state: &mut WrState,
 }
 
 #[no_mangle]
+pub unsafe extern fn wr_dp_push_built_display_list(state: &mut WrState,
+                                                   dl_descriptor: BuiltDisplayListDescriptor,
+                                                   dl_data: WrVecU8,
+                                                   aux_descriptor: AuxiliaryListsDescriptor,
+                                                   aux_data: WrVecU8)
+{
+    let dl_vec = dl_data.to_vec();
+    let aux_vec = aux_data.to_vec();
+
+    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
+    let aux = AuxiliaryLists::from_data(aux_vec, aux_descriptor);
+
+    state.frame_builder.dl_builder.push_built_display_list(dl, aux);
+}
+
+#[no_mangle]
 pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
                                                   epoch: Epoch,
                                                   viewport_width: f32,

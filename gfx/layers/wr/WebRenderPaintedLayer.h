@@ -51,7 +51,7 @@ public:
   }
 
   Layer* GetLayer() override { return this; }
-  void RenderLayer() override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
   void PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates);
   void RenderLayerWithReadback(ReadbackProcessor *aReadback);
   RefPtr<ContentClient> mContentClient;

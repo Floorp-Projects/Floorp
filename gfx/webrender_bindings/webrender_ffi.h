@@ -604,6 +604,14 @@ wr_api_finalize_builder(WrState* wrState,
 WR_FUNC;
 
 WR_INLINE void
+wr_dp_push_built_display_list(WrState* wrState,
+                              WrBuiltDisplayListDescriptor dl_descriptor,
+                              WrVecU8 dl_data,
+                              WrAuxiliaryListsDescriptor aux_descriptor,
+                              WrVecU8 aux_data)
+WR_FUNC;
+
+WR_INLINE void
 wr_vec_u8_free(WrVecU8 dl_data)
 WR_FUNC;
 
