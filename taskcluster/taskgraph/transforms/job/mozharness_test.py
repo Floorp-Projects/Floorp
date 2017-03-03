@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 from voluptuous import Schema, Required
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import run_job_using
@@ -11,7 +13,7 @@ from taskgraph.transforms.tests import (
     normpath
 )
 from taskgraph.transforms.job.common import (
-    docker_worker_support_vcs_checkout,
+    support_vcs_checkout,
 )
 import os
 import re
@@ -117,7 +119,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     # Support vcs checkouts regardless of whether the task runs from
     # source or not in case it is needed on an interactive loaner.
-    docker_worker_support_vcs_checkout(config, test, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.

@@ -7,12 +7,10 @@ Support for running jobs that are invoked via the `run-task` script.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import copy
-
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_build_dependency,
-    docker_worker_support_vcs_checkout,
+    add_build_dependency,
+    support_vcs_checkout,
 )
 from voluptuous import Schema, Required, Any
 
@@ -39,17 +37,20 @@ run_task_schema = Schema({
 })
 
 
+def common_setup(config, job, taskdesc):
+    run = job['run']
+    if run['checkout']:
+        support_vcs_checkout(config, job, taskdesc)
+
+    if run['requires-build']:
+        add_build_dependency(config, job, taskdesc)
+
+
 @run_job_using("docker-worker", "run-task", schema=run_task_schema)
 def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
-
-    worker = taskdesc['worker'] = copy.deepcopy(job['worker'])
-
-    if run['checkout']:
-        docker_worker_support_vcs_checkout(config, job, taskdesc)
-
-    if run['requires-build']:
-        docker_worker_add_build_dependency(config, job, taskdesc)
+    worker = taskdesc['worker'] = job['worker']
+    common_setup(config, job, taskdesc)
 
     if run.get('cache-dotcache') and int(config.params['level']) > 1:
         worker['caches'].append({
@@ -63,7 +64,32 @@ def docker_worker_run_task(config, job, taskdesc):
         run_command = ['bash', '-cx', run_command]
     command = ['/home/worker/bin/run-task']
     if run['checkout']:
-        command.append('--vcs-checkout=/home/worker/checkouts/gecko')
+        command.append('--vcs-checkout=~/checkouts/gecko')
+    command.append('--fetch-hgfingerprint')
+    command.append('--')
+    command.extend(run_command)
+    worker['command'] = command
+
+
+@run_job_using("native-engine", "run-task", schema=run_task_schema)
+def native_engine_run_task(config, job, taskdesc):
+    run = job['run']
+    worker = taskdesc['worker'] = job['worker']
+    common_setup(config, job, taskdesc)
+
+    worker['context'] = '{}/raw-file/{}/taskcluster/docker/recipes/run-task'.format(
+        config.params['head_repository'], config.params['head_rev']
+    )
+
+    if run.get('cache-dotcache'):
+        raise Exception("No cache support on native-worker; can't use cache-dotcache")
+
+    run_command = run['command']
+    if isinstance(run_command, basestring):
+        run_command = ['bash', '-cx', run_command]
+    command = ['./run-task']
+    if run['checkout']:
+        command.append('--vcs-checkout=~/checkouts/gecko')
     command.append('--')
     command.extend(run_command)
     worker['command'] = command
