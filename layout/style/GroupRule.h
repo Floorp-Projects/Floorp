@@ -76,14 +76,6 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override = 0;
 
-  static bool
-  CloneRuleInto(Rule* aRule, void* aArray)
-  {
-    RefPtr<Rule> clone = aRule->Clone();
-    static_cast<IncrementalClearCOMRuleArray*>(aArray)->AppendObject(clone);
-    return true;
-  }
-
   // WebIDL API
   dom::CSSRuleList* CssRules();
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
