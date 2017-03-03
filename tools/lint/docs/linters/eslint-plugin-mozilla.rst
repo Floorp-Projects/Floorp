@@ -18,6 +18,12 @@ browser-window
 
 Defines the environment for scripts that are in the main browser.xul scope.
 
+places-overlay
+--------------
+
+Defines the environment for scripts that are in a scope where placesOverlay.xul
+is included.
+
 chrome-worker
 -------------
 
