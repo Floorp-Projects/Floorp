@@ -103,7 +103,7 @@ static char* GetVersion(void* verbuf)
                       HIWORD(fileInfo->dwFileVersionMS),
                       LOWORD(fileInfo->dwFileVersionMS),
                       HIWORD(fileInfo->dwFileVersionLS),
-                      LOWORD(fileInfo->dwFileVersionLS));
+                      LOWORD(fileInfo->dwFileVersionLS)).release();
   }
 
   return nullptr;

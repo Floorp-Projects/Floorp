@@ -31,11 +31,10 @@
 #include "mozilla/StaticMutex.h"
 
 #ifdef DEBUG
-#define LOG_ERROR(str, args...)                 \
-  PR_BEGIN_MACRO                                \
-  char *msg = mozilla::Smprintf(str, ## args);  \
-  NS_WARNING(msg);                              \
-  mozilla::SmprintfFree(msg);                   \
+#define LOG_ERROR(str, args...)                                   \
+  PR_BEGIN_MACRO                                                  \
+  mozilla::SmprintfPointer msg = mozilla::Smprintf(str, ## args); \
+  NS_WARNING(msg.get());                                          \
   PR_END_MACRO
 #else
 #define LOG_ERROR(str, args...) do { /* nothing */ } while(0)

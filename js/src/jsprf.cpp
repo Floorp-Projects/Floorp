@@ -18,13 +18,15 @@
 
 using namespace js;
 
+typedef mozilla::SmprintfPolicyPointer<js::SystemAllocPolicy> JSSmprintfPointer;
+
 JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char* result = mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
+    JSSmprintfPointer result = mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
     va_end(ap);
-    return result;
+    return result.release();
 }
 
 JS_PUBLIC_API(void) JS_smprintf_free(char* mem)
@@ -36,17 +38,19 @@ JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char* result = mozilla::VsmprintfAppend<js::SystemAllocPolicy>(last, fmt, ap);
+    JSSmprintfPointer result =
+        mozilla::VsmprintfAppend<js::SystemAllocPolicy>(JSSmprintfPointer(last), fmt, ap);
     va_end(ap);
-    return result;
+    return result.release();
 }
 
 JS_PUBLIC_API(char*) JS_vsmprintf(const char* fmt, va_list ap)
 {
-    return mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
+    return mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap).release();
 }
 
 JS_PUBLIC_API(char*) JS_vsprintf_append(char* last, const char* fmt, va_list ap)
 {
-    return mozilla::VsmprintfAppend<js::SystemAllocPolicy>(last, fmt, ap);
+    return mozilla::VsmprintfAppend<js::SystemAllocPolicy>(JSSmprintfPointer(last),
+                                                           fmt, ap).release();
 }

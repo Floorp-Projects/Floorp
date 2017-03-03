@@ -114,17 +114,16 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     PRIntervalTime start = PR_IntervalNow();
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char *buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf);
-        rv = WriteAll(out, buf, len, &writeCount);
+        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+        uint32_t len = strlen(buf.get());
+        rv = WriteAll(out, buf.get(), len, &writeCount);
         if (gTrace) {
             printf("wrote: ");
             for (uint32_t j = 0; j < writeCount; j++) {
-                putc(buf[j], stdout);
+              putc(buf.get()[j], stdout);
             }
             printf("\n");
         }
-        mozilla::SmprintfFree(buf);
         if (NS_FAILED(rv)) return rv;
         total += writeCount;
     }
@@ -232,18 +231,17 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     uint32_t total = 0;
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char* buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf);
+        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+        uint32_t len = strlen(buf.get());
         len = len * rand() / RAND_MAX;
         len = std::min(1u, len);
-        rv = WriteAll(out, buf, len, &writeCount);
+        rv = WriteAll(out, buf.get(), len, &writeCount);
         if (NS_FAILED(rv)) return rv;
         EXPECT_EQ(writeCount, len);
         total += writeCount;
 
         if (gTrace)
-            printf("wrote %d bytes: %s\n", writeCount, buf);
-        mozilla::SmprintfFree(buf);
+          printf("wrote %d bytes: %s\n", writeCount, buf.get());
         //printf("calling Flush\n");
         out->Flush();
         //printf("calling WaitForReceipt\n");
@@ -345,19 +343,17 @@ TEST(Pipes, ChainedPipes)
     uint32_t total = 0;
     for (uint32_t i = 0; i < ITERATIONS; i++) {
         uint32_t writeCount;
-        char* buf = mozilla::Smprintf("%d %s", i, kTestPattern);
-        uint32_t len = strlen(buf);
+        SmprintfPointer buf = mozilla::Smprintf("%d %s", i, kTestPattern);
+        uint32_t len = strlen(buf.get());
         len = len * rand() / RAND_MAX;
         len = std::max(1u, len);
-        rv = WriteAll(out1, buf, len, &writeCount);
+        rv = WriteAll(out1, buf.get(), len, &writeCount);
         if (NS_FAILED(rv)) return;
         EXPECT_EQ(writeCount, len);
         total += writeCount;
 
         if (gTrace)
-            printf("wrote %d bytes: %s\n", writeCount, buf);
-
-        mozilla::SmprintfFree(buf);
+            printf("wrote %d bytes: %s\n", writeCount, buf.get());
     }
     if (gTrace) {
         printf("wrote total of %d bytes\n", total);
