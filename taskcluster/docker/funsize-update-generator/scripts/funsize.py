@@ -188,8 +188,8 @@ def main():
     else:
         log.info("Refreshing clamav db...")
         try:
-            redo.retry(lambda:
-                    sh.freshclam("--stdout", "--verbose", _timeout=300, _err_to_out=True))
+            redo.retry(lambda: sh.freshclam("--stdout", "--verbose",
+                                            _timeout=300, _err_to_out=True))
             log.info("Done.")
         except sh.ErrorReturnCode:
             log.warning("Freshclam failed, skipping DB update")
