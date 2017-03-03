@@ -129,8 +129,10 @@ WebRenderLayer::buildMaskLayer() {
           gfx::IntSize size = surface->GetSize();
           MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
           wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-          wr::ImageKey maskKey;
-          WrBridge()->SendAddImage(size, map.GetStride(), SurfaceFormat::A8, buf, &maskKey);
+          WrImageKey maskKey;
+          maskKey.mNamespace = WrBridge()->GetNamespace();
+          maskKey.mHandle = WrBridge()->GetNextResourceId();
+          WrBridge()->SendAddImage(maskKey, size, map.GetStride(), SurfaceFormat::A8, buf);
 
           imageMask.image = maskKey;
           imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
@@ -217,13 +219,16 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
+  uint32_t id_namespace;
   PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
-                                                                            &textureFactoryIdentifier);
+                                                                            &textureFactoryIdentifier,
+                                                                            &id_namespace);
   MOZ_ASSERT(bridge);
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
+  WrBridge()->SetNamespace(id_namespace);
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
 }
 
@@ -316,7 +321,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(sync, mLatestTransactionId);
+  WrBridge()->DPEnd(size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
 

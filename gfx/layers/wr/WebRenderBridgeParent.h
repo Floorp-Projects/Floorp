@@ -46,6 +46,7 @@ public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
+                        CompositorVsyncScheduler* aScheduler,
                         RefPtr<wr::WebRenderAPI>&& aApi,
                         RefPtr<WebRenderCompositableHolder>&& aHolder);
 
@@ -60,25 +61,38 @@ public:
 
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
-  mozilla::ipc::IPCResult RecvAddImage(const gfx::IntSize& aSize,
+  mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
+                                       const gfx::IntSize& aSize,
                                        const uint32_t& aStride,
                                        const gfx::SurfaceFormat& aFormat,
-                                       const ByteBuffer& aBuffer,
-                                       wr::ImageKey* aOutImageKey) override;
+                                       const ByteBuffer& aBuffer) override;
+  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
+                                         const ByteBuffer& aBuffer,
+                                         const uint32_t& aFontIndex) override;
   mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
                                           const gfx::IntSize& aSize,
                                           const gfx::SurfaceFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
   mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
   mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
-  mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+  mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
+                                    InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
                                     const uint64_t& aFwdTransactionId,
-                                    const uint64_t& aTransactionId) override;
-  mozilla::ipc::IPCResult RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                                    const uint64_t& aTransactionId,
+                                    const ByteBuffer& dl,
+                                    const WrBuiltDisplayListDescriptor& dlDesc,
+                                    const ByteBuffer& aux,
+                                    const WrAuxiliaryListsDescriptor& auxDesc) override;
+  mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
+                                        InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                         const uint64_t& aFwdTransactionId,
-                                        const uint64_t& aTransactionId) override;
+                                        const uint64_t& aTransactionId,
+                                        const ByteBuffer& dl,
+                                        const WrBuiltDisplayListDescriptor& dlDesc,
+                                        const ByteBuffer& aux,
+                                        const WrAuxiliaryListsDescriptor& auxDesc) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
@@ -95,9 +109,6 @@ public:
 
   void Destroy();
 
-  const uint64_t& GetPendingTransactionId() { return mPendingTransactionId; }
-  void SetPendingTransactionId(uint64_t aId) { mPendingTransactionId = aId; }
-
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override { return false; }
   void FinishPendingComposite() override { }
@@ -111,7 +122,10 @@ public:
   void SendPendingAsyncMessages() override;
   void SetAboutToSendAsyncMessages() override;
 
-  void DidComposite(uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd);
+  void HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId);
+  uint64_t LastPendingTransactionId();
+  uint64_t FlushPendingTransactionIds();
+  uint64_t FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -127,25 +141,47 @@ public:
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
 
+  uint32_t GetIdNameSpace()
+  {
+    return mIdNameSpace;
+  }
+
 private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands, const wr::Epoch& aEpoch);
+  void ProcessWebrenderCommands(const gfx::IntSize &aSize, InfallibleTArray<WebRenderParentCommand>& commands, const wr::Epoch& aEpoch,
+                                    const ByteBuffer& dl,
+                                    const WrBuiltDisplayListDescriptor& dlDesc,
+                                    const ByteBuffer& aux,
+                                    const WrAuxiliaryListsDescriptor& auxDesc);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
-  void HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+  void HandleDPEnd(const gfx::IntSize& aSize,
+                   InfallibleTArray<WebRenderParentCommand>&& aCommands,
                    InfallibleTArray<OpDestroy>&& aToDestroy,
                    const uint64_t& aFwdTransactionId,
-                   const uint64_t& aTransactionId);
+                   const uint64_t& aTransactionId,
+                   const ByteBuffer& dl,
+                   const WrBuiltDisplayListDescriptor& dlDesc,
+                   const ByteBuffer& aux,
+                   const WrAuxiliaryListsDescriptor& auxDesc);
 
 private:
+  struct PendingTransactionId {
+    PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)
+      : mEpoch(aEpoch)
+      , mId(aId)
+    {}
+    wr::Epoch mEpoch;
+    uint64_t mId;
+  };
+
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
-  Maybe<wr::DisplayListBuilder> mBuilder;
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
@@ -160,9 +196,13 @@ private:
   uint64_t mChildLayerObserverEpoch;
   uint64_t mParentLayerObserverEpoch;
 
-  uint64_t mPendingTransactionId;
+  std::queue<PendingTransactionId> mPendingTransactionIds;
+  uint32_t mWrEpoch;
+  uint32_t mIdNameSpace;
 
   bool mDestroyed;
+
+  static uint32_t sIdNameSpace;
 };
 
 } // namespace layers

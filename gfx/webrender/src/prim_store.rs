@@ -20,7 +20,7 @@ use webrender_traits::{device_length, DeviceIntRect, DeviceIntSize};
 use webrender_traits::{DeviceRect, DevicePoint, DeviceSize};
 use webrender_traits::{LayerRect, LayerSize, LayerPoint};
 use webrender_traits::{LayerToWorldTransform, GlyphInstance, GlyphOptions};
-use webrender_traits::{ExtendMode, GradientStop};
+use webrender_traits::{ExtendMode, GradientStop, TileOffset};
 
 pub const CLIP_DATA_GPU_SIZE: usize = 5;
 pub const MASK_DATA_GPU_SIZE: usize = 1;
@@ -136,7 +136,7 @@ pub struct RectanglePrimitive {
 
 #[derive(Debug)]
 pub enum ImagePrimitiveKind {
-    Image(ImageKey, ImageRendering, LayerSize),
+    Image(ImageKey, ImageRendering, Option<TileOffset>, LayerSize),
     WebGL(WebGLContextId),
 }
 
@@ -838,7 +838,7 @@ impl PrimitiveStore {
                                    clip_info: &MaskCacheInfo,
                                    resource_cache: &ResourceCache) {
         if let Some((ref mask, gpu_address)) = clip_info.image {
-            let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto);
+            let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto, None);
             let mask_data = gpu_data32.get_slice_mut(gpu_address, MASK_DATA_GPU_SIZE);
             mask_data[0] = GpuBlock32::from(ImageMaskData {
                 uv_rect: DeviceRect::new(cache_item.uv0,
@@ -899,7 +899,7 @@ impl PrimitiveStore {
                     let image_cpu = &mut self.cpu_images[metadata.cpu_prim_index.0];
 
                     let (texture_id, cache_item) = match image_cpu.kind {
-                        ImagePrimitiveKind::Image(image_key, image_rendering, _) => {
+                        ImagePrimitiveKind::Image(image_key, image_rendering, tile_offset, _) => {
                             // Check if an external image that needs to be resolved
                             // by the render thread.
                             let image_properties = resource_cache.get_image_properties(image_key);
@@ -917,7 +917,7 @@ impl PrimitiveStore {
                                     (SourceTexture::External(external_id), None)
                                 }
                                 None => {
-                                    let cache_item = resource_cache.get_cached_image(image_key, image_rendering);
+                                    let cache_item = resource_cache.get_cached_image(image_key, image_rendering, tile_offset);
                                     (cache_item.texture_id, Some(cache_item))
                                 }
                             }
@@ -952,21 +952,21 @@ impl PrimitiveStore {
                     };
 
                     if image_cpu.y_texture_id == SourceTexture::Invalid {
-                        let y_cache_item = resource_cache.get_cached_image(image_cpu.y_key, ImageRendering::Auto);
+                        let y_cache_item = resource_cache.get_cached_image(image_cpu.y_key, ImageRendering::Auto, None);
                         image_cpu.y_texture_id = y_cache_item.texture_id;
                         image_gpu.y_uv0 = y_cache_item.uv0;
                         image_gpu.y_uv1 = y_cache_item.uv1;
                     }
 
                     if image_cpu.u_texture_id == SourceTexture::Invalid {
-                        let u_cache_item = resource_cache.get_cached_image(image_cpu.u_key, ImageRendering::Auto);
+                        let u_cache_item = resource_cache.get_cached_image(image_cpu.u_key, ImageRendering::Auto, None);
                         image_cpu.u_texture_id = u_cache_item.texture_id;
                         image_gpu.u_uv0 = u_cache_item.uv0;
                         image_gpu.u_uv1 = u_cache_item.uv1;
                     }
 
                     if image_cpu.v_texture_id == SourceTexture::Invalid {
-                        let v_cache_item = resource_cache.get_cached_image(image_cpu.v_key, ImageRendering::Auto);
+                        let v_cache_item = resource_cache.get_cached_image(image_cpu.v_key, ImageRendering::Auto, None);
                         image_cpu.v_texture_id = v_cache_item.texture_id;
                         image_gpu.v_uv0 = v_cache_item.uv0;
                         image_gpu.v_uv1 = v_cache_item.uv1;
@@ -1044,7 +1044,7 @@ impl PrimitiveStore {
                              device_pixel_ratio,
                              auxiliary_lists);
             if let &ClipSource::Region(ClipRegion{ image_mask: Some(ref mask), .. }) = metadata.clip_source.as_ref() {
-                resource_cache.request_image(mask.image, ImageRendering::Auto);
+                resource_cache.request_image(mask.image, ImageRendering::Auto, None);
                 prim_needs_resolve = true;
             }
         }
@@ -1169,8 +1169,8 @@ impl PrimitiveStore {
 
                 prim_needs_resolve = true;
                 match image_cpu.kind {
-                    ImagePrimitiveKind::Image(image_key, image_rendering, tile_spacing) => {
-                        resource_cache.request_image(image_key, image_rendering);
+                    ImagePrimitiveKind::Image(image_key, image_rendering, tile_offset, tile_spacing) => {
+                        resource_cache.request_image(image_key, image_rendering, tile_offset);
 
                         // TODO(gw): This doesn't actually need to be calculated each frame.
                         // It's cheap enough that it's not worth introducing a cache for images
@@ -1188,9 +1188,9 @@ impl PrimitiveStore {
                 let image_cpu = &mut self.cpu_yuv_images[metadata.cpu_prim_index.0];
                 prim_needs_resolve = true;
 
-                resource_cache.request_image(image_cpu.y_key, ImageRendering::Auto);
-                resource_cache.request_image(image_cpu.u_key, ImageRendering::Auto);
-                resource_cache.request_image(image_cpu.v_key, ImageRendering::Auto);
+                resource_cache.request_image(image_cpu.y_key, ImageRendering::Auto, None);
+                resource_cache.request_image(image_cpu.u_key, ImageRendering::Auto, None);
+                resource_cache.request_image(image_cpu.v_key, ImageRendering::Auto, None);
 
                 // TODO(nical): Currently assuming no tile_spacing for yuv images.
                 metadata.is_opaque = true;
