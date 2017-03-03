@@ -6,14 +6,14 @@ package org.mozilla.gecko.media;
 
 // Non-default types used in interface.
 import android.os.Bundle;
-import android.view.Surface;
+import org.mozilla.gecko.gfx.GeckoSurface;
 import org.mozilla.gecko.media.FormatParam;
 import org.mozilla.gecko.media.ICodecCallbacks;
 import org.mozilla.gecko.media.Sample;
 
 interface ICodec {
     void setCallbacks(in ICodecCallbacks callbacks);
-    boolean configure(in FormatParam format, inout Surface surface, int flags, in String drmStubId);
+    boolean configure(in FormatParam format, in GeckoSurface surface, in int flags, in String drmStubId);
     boolean isAdaptivePlaybackSupported();
     void start();
     void stop();
