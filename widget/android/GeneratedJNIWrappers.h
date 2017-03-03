@@ -4944,7 +4944,7 @@ public:
                 mozilla::jni::String::Param> Args;
         static constexpr char name[] = "create";
         static constexpr char signature[] =
-                "(ZLandroid/media/MediaFormat;Landroid/view/Surface;Lorg/mozilla/gecko/media/CodecProxy$Callbacks;Ljava/lang/String;)Lorg/mozilla/gecko/media/CodecProxy;";
+                "(ZLandroid/media/MediaFormat;Lorg/mozilla/gecko/gfx/GeckoSurface;Lorg/mozilla/gecko/media/CodecProxy$Callbacks;Ljava/lang/String;)Lorg/mozilla/gecko/media/CodecProxy;";
         static const bool isStatic = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;

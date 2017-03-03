@@ -39,6 +39,14 @@
     <application>
         <!-- New child services must also be added to the Fennec AndroidManifest.xml.in -->
         <service
+            android:name="org.mozilla.gecko.media.MediaManager"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":media"
+            android:isolatedProcess="false">
+        </service>
+
+        <service
             android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
             android:enabled="true"
             android:exported="false"
