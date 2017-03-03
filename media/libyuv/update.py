@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import datetime
 import subprocess
 import tarfile
 import urllib
@@ -22,6 +23,14 @@ def prepare_upstream(prefix, commit=None):
     os.remove(os.path.join(base, 'libyuv.tar.gz'))
     os.chdir(base)
     return commit
+
+def get_commit_date(prefix, commit=None):
+    upstream_url = 'https://chromium.googlesource.com/libyuv/libyuv/+/' + commit
+    text = urllib.urlopen(upstream_url).readlines()
+    text = "".join(text)
+    regex = '<tr><th class="Metadata-title">committer</th><td>.+</td><td>[^\s]+ ([0-9a-zA-Z: ]+)\s*\+*[0-9]*</td></tr>'
+    date = re.search(regex, text).groups(0)[0]
+    return datetime.datetime.strptime(date, "%b %d %H:%M:%S %Y")
 
 def cleanup_upstream():
     os.remove(os.path.join(base, 'libyuv/.gitignore'))
@@ -44,13 +53,13 @@ def apply_patches():
     # Patch for bug 1342732
     os.system("patch -p3 < row_any.patch")
 
-def update_readme(commit):
+def update_readme(commit, commitdate):
     with open('README_MOZILLA') as f:
         readme = f.read()
 
     if 'The git commit ID last used to import was ' in readme:
-        new_readme = re.sub('The git commit ID last used to import was [v\.a-f0-9]+',
-            'The git commit ID last used to import was %s' % commit, readme)
+        new_readme = re.sub('The git commit ID last used to import was [v\.a-f0-9]+ \(.+\)',
+            'The git commit ID last used to import was %s (%s)' % (commit, commitdate), readme)
     else:
         new_readme = "%s\n\nThe git commit ID last used to import was %s\n" % (readme, commit)
 
@@ -72,9 +81,10 @@ if __name__ == '__main__':
     prefix = os.path.join(base, 'libyuv/')
 
     commit = prepare_upstream(prefix, commit)
+    commitdate = get_commit_date(prefix, commit)
 
     apply_patches()
-    update_readme(commit)
+    update_readme(commit, commitdate)
 
     print('Patches applied; run "hg addremove --similarity 70 libyuv" before committing changes')
 
