@@ -16,6 +16,7 @@ module.exports = {
     "browser-window": require("../lib/environments/browser-window.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
+    "places-overlay": require("../lib/environments/places-overlay.js"),
     "simpletest": require("../lib/environments/simpletest.js"),
   },
   processors: {
