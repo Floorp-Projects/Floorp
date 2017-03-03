@@ -54,7 +54,7 @@ class AndroidSurfaceTextureData : public TextureData
 {
 public:
   static already_AddRefed<TextureClient>
-  CreateTextureClient(gl::AndroidSurfaceTexture* aSurfTex,
+  CreateTextureClient(AndroidSurfaceTextureHandle aHandle,
                       gfx::IntSize aSize,
                       gl::OriginPos aOriginPos,
                       LayersIPCChannel* aAllocator,
@@ -75,9 +75,9 @@ public:
   virtual void Deallocate(LayersIPCChannel*) override {}
 
 protected:
-  AndroidSurfaceTextureData(gl::AndroidSurfaceTexture* aSurfTex, gfx::IntSize aSize);
+  AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize);
 
-  const RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
+  const AndroidSurfaceTextureHandle mHandle;
   const gfx::IntSize mSize;
 };
 

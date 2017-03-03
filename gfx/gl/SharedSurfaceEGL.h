@@ -10,6 +10,11 @@
 #include "mozilla/Mutex.h"
 #include "SharedSurface.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "GeneratedJNIWrappers.h"
+#include "AndroidNativeWindow.h"
+#endif
+
 namespace mozilla {
 namespace gl {
 
@@ -58,7 +63,9 @@ protected:
 public:
     virtual ~SharedSurface_EGLImage();
 
-    virtual layers::TextureFlags GetTextureFlags() const override;
+    virtual layers::TextureFlags GetTextureFlags() const override {
+      return layers::TextureFlags::DEALLOCATE_CLIENT;
+    }
 
     virtual void LockProdImpl() override {}
     virtual void UnlockProdImpl() override {}
@@ -109,6 +116,90 @@ public:
         return SharedSurface_EGLImage::Create(mGL, mFormats, size, hasAlpha, mContext);
     }
 };
+
+#ifdef MOZ_WIDGET_ANDROID
+
+class SharedSurface_SurfaceTexture
+    : public SharedSurface
+{
+public:
+    static UniquePtr<SharedSurface_SurfaceTexture> Create(GLContext* prodGL,
+                                                          const GLFormats& formats,
+                                                          const gfx::IntSize& size,
+                                                          bool hasAlpha,
+                                                          java::GeckoSurface::Param surface);
+
+    static SharedSurface_SurfaceTexture* Cast(SharedSurface* surf) {
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::AndroidSurfaceTexture);
+
+        return (SharedSurface_SurfaceTexture*)surf;
+    }
+
+    java::GeckoSurface::Param JavaSurface() { return mSurface; }
+
+protected:
+    java::GeckoSurface::GlobalRef mSurface;
+    EGLSurface mEglSurface;
+    EGLSurface mOrigEglSurface;
+
+    SharedSurface_SurfaceTexture(GLContext* gl,
+                                 const gfx::IntSize& size,
+                                 bool hasAlpha,
+                                 const GLFormats& formats,
+                                 java::GeckoSurface::Param surface,
+                                 EGLSurface eglSurface);
+
+public:
+    virtual ~SharedSurface_SurfaceTexture();
+
+    virtual layers::TextureFlags GetTextureFlags() const override {
+      return layers::TextureFlags::DEALLOCATE_CLIENT;
+    }
+
+    virtual void LockProdImpl() override;
+    virtual void UnlockProdImpl() override;
+
+    virtual void ProducerAcquireImpl() override {}
+    virtual void ProducerReleaseImpl() override {}
+
+    virtual void ProducerReadAcquireImpl() override {}
+    virtual void ProducerReadReleaseImpl() override {}
+
+    // Implementation-specific functions below:
+    // Returns texture and target
+    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+
+    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) override { return false; }
+
+    virtual void Commit() override;
+
+    virtual void WaitForBufferOwnership() override;
+};
+
+
+
+class SurfaceFactory_SurfaceTexture
+    : public SurfaceFactory
+{
+public:
+    // Fallible:
+    static UniquePtr<SurfaceFactory_SurfaceTexture> Create(GLContext* prodGL,
+                                                           const SurfaceCaps& caps,
+                                                           const RefPtr<layers::LayersIPCChannel>& allocator,
+                                                           const layers::TextureFlags& flags);
+
+protected:
+    SurfaceFactory_SurfaceTexture(GLContext* prodGL, const SurfaceCaps& caps,
+                            const RefPtr<layers::LayersIPCChannel>& allocator,
+                            const layers::TextureFlags& flags)
+        : SurfaceFactory(SharedSurfaceType::AndroidSurfaceTexture, prodGL, caps, allocator, flags)
+    { }
+
+public:
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
+};
+
+#endif // MOZ_WIDGET_ANDROID
 
 } // namespace gl
 
