@@ -42,4 +42,5 @@ interface mozIMozIntl : nsISupports
   jsval getLocaleInfo([optional] in jsval locales);
 
   jsval createPluralRules([optional] in jsval locales, [optional] in jsval options);
+  jsval createDateTimeFormat([optional] in jsval locales, [optional] in jsval options);
 };

@@ -444,6 +444,13 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
+bool
+LocaleService::LanguagesMatch(const nsCString& aRequested,
+                              const nsCString& aAvailable)
+{
+  return Locale(aRequested, true).LanguageMatches(Locale(aAvailable, true));
+}
+
 /**
  * mozILocaleService methods
  */
@@ -648,20 +655,28 @@ LocaleService::Locale::Locale(const nsCString& aLocale, bool aRange)
   }
 }
 
+static bool
+SubtagMatches(const nsCString& aSubtag1, const nsCString& aSubtag2)
+{
+  return aSubtag1.EqualsLiteral("*") ||
+         aSubtag2.EqualsLiteral("*") ||
+         aSubtag1.Equals(aSubtag2, nsCaseInsensitiveCStringComparator());
+}
+
 bool
 LocaleService::Locale::Matches(const LocaleService::Locale& aLocale) const
 {
-  auto subtagMatches = [](const nsCString& aSubtag1,
-                          const nsCString& aSubtag2) {
-    return aSubtag1.EqualsLiteral("*") ||
-           aSubtag2.EqualsLiteral("*") ||
-           aSubtag1.Equals(aSubtag2, nsCaseInsensitiveCStringComparator());
-  };
+  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
+         SubtagMatches(mScript, aLocale.mScript) &&
+         SubtagMatches(mRegion, aLocale.mRegion) &&
+         SubtagMatches(mVariant, aLocale.mVariant);
+}
 
-  return subtagMatches(mLanguage, aLocale.mLanguage) &&
-         subtagMatches(mScript, aLocale.mScript) &&
-         subtagMatches(mRegion, aLocale.mRegion) &&
-         subtagMatches(mVariant, aLocale.mVariant);
+bool
+LocaleService::Locale::LanguageMatches(const LocaleService::Locale& aLocale) const
+{
+  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
+         SubtagMatches(mScript, aLocale.mScript);
 }
 
 void
