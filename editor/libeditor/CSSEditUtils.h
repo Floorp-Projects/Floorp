@@ -153,7 +153,7 @@ public:
    * @param aPropertyValue  [IN] The value of the property we have to remove
    *                             if the property accepts more than one value.
    */
-  nsresult RemoveCSSInlineStyle(nsIDOMNode* aNode, nsIAtom* aProperty,
+  nsresult RemoveCSSInlineStyle(nsINode& aNode, nsIAtom* aProperty,
                                 const nsAString& aPropertyValue);
 
   /**

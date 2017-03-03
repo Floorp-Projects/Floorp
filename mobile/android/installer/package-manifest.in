@@ -398,6 +398,11 @@
 @BINPATH@/components/TVSimulatorService.js
 @BINPATH@/components/TVSimulatorService.manifest
 
+#ifdef ENABLE_INTL_API
+@BINPATH@/components/mozIntl.manifest
+@BINPATH@/components/mozIntl.js
+#endif
+
 ; Modules
 @BINPATH@/modules/*
 

@@ -423,7 +423,7 @@ AbstractFramePtr::returnValue() const
     if (isInterpreterFrame())
         return asInterpreterFrame()->returnValue();
     if (isWasmDebugFrame())
-        return UndefinedHandleValue;
+        return asWasmDebugFrame()->returnValue();
     return asBaselineFrame()->returnValue();
 }
 

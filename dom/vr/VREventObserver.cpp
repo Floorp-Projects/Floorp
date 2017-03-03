@@ -45,8 +45,8 @@ VREventObserver::DisconnectFromOwner()
   mWindow = nullptr;
 
   // Unregister from VRManagerChild
-  VRManagerChild* vmc = VRManagerChild::Get();
-  if (vmc) {
+  if (VRManagerChild::IsCreated()) {
+    VRManagerChild* vmc = VRManagerChild::Get();
     vmc->RemoveListener(this);
   }
 }

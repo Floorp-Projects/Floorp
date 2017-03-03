@@ -62,7 +62,7 @@ public:
 
   // Notifies the MediaShutdownManager that it needs to track the shutdown
   // of this MediaDecoder.
-  void Register(MediaDecoder* aDecoder);
+  nsresult Register(MediaDecoder* aDecoder);
 
   // Notifies the MediaShutdownManager that a MediaDecoder that it was
   // tracking has shutdown, and it no longer needs to be shutdown in the
