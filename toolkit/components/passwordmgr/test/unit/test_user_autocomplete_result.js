@@ -66,7 +66,7 @@ let expectedResults = [
     matchingLogins,
     items: [{
       value: "",
-      label: "This connection is not secure. Logins entered here could be compromised.",
+      label: "Logins entered here could be compromised. Learn More",
       style: "insecureWarning"
     }, {
       value: "",
@@ -126,7 +126,7 @@ let expectedResults = [
     matchingLogins,
     items: [{
       value: "",
-      label: "This connection is not secure. Logins entered here could be compromised.",
+      label: "Logins entered here could be compromised. Learn More",
       style: "insecureWarning"
     }, {
       value: "emptypass1",
@@ -298,7 +298,7 @@ let expectedResults = [
     matchingLogins,
     items: [{
       value: "",
-      label: "This connection is not secure. Logins entered here could be compromised.",
+      label: "Logins entered here could be compromised. Learn More",
       style: "insecureWarning"
     }, {
       value: "",
@@ -358,7 +358,7 @@ let expectedResults = [
     matchingLogins,
     items: [{
       value: "",
-      label: "This connection is not secure. Logins entered here could be compromised.",
+      label: "Logins entered here could be compromised. Learn More",
       style: "insecureWarning"
     }, {
       value: "emptypass1",
