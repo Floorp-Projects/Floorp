@@ -27,6 +27,16 @@
 
 using namespace mozilla;
 
+static bool notifyOpenWindow(nsIWindowMediatorListener *aElement, void* aData);
+static bool notifyCloseWindow(nsIWindowMediatorListener *aElement, void* aData);
+static bool notifyWindowTitleChange(nsIWindowMediatorListener *aElement, void* aData);
+
+// for notifyWindowTitleChange
+struct WindowTitleData {
+  nsIXULWindow* mWindow;
+  const char16_t *mTitle;
+};
+
 nsresult
 nsWindowMediator::GetDOMWindow(nsIXULWindow* inWindow,
                                nsCOMPtr<nsPIDOMWindowOuter>& outDOMWindow)
@@ -81,10 +91,9 @@ NS_IMETHODIMP nsWindowMediator::RegisterWindow(nsIXULWindow* inWindow)
   // Create window info struct and add to list of windows
   nsWindowInfo* windowInfo = new nsWindowInfo(inWindow, mTimeStamp);
 
-  for (nsIWindowMediatorListener* listener : mListeners) {
-    listener->OnOpenWindow(inWindow);
-  }
-
+  WindowTitleData winData = { inWindow, nullptr };
+  mListeners.EnumerateForwards(notifyOpenWindow, &winData);
+  
   if (mOldestWindow)
     windowInfo->InsertAfter(mOldestWindow->mOlder, nullptr);
   else
@@ -114,9 +123,8 @@ nsWindowMediator::UnregisterWindow(nsWindowInfo *inInfo)
     index++;
   }
   
-  for (nsIWindowMediatorListener* listener : mListeners) {
-    listener->OnCloseWindow(inInfo->mWindow.get());
-  }
+  WindowTitleData winData = { inInfo->mWindow.get(), nullptr };
+  mListeners.EnumerateForwards(notifyCloseWindow, &winData);
 
   // Remove from the lists and free up 
   if (inInfo == mOldestWindow)
@@ -399,9 +407,8 @@ nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   NS_ENSURE_STATE(mReady);
   if (GetInfoFor(inWindow)) {
-    for (nsIWindowMediatorListener* listener : mListeners) {
-      listener->OnWindowTitleChange(inWindow, inTitle);
-    }
+    WindowTitleData winData = { inWindow, inTitle };
+    mListeners.EnumerateForwards(notifyWindowTitleChange, &winData);
   }
 
   return NS_OK;
@@ -809,4 +816,31 @@ nsWindowMediator::Observe(nsISupports* aSubject,
     mReady = false;
   }
   return NS_OK;
+}
+
+bool
+notifyOpenWindow(nsIWindowMediatorListener *aListener, void* aData)
+{
+  WindowTitleData* winData = static_cast<WindowTitleData*>(aData);
+  aListener->OnOpenWindow(winData->mWindow);
+
+  return true;
+}
+
+bool
+notifyCloseWindow(nsIWindowMediatorListener *aListener, void* aData)
+{
+  WindowTitleData* winData = static_cast<WindowTitleData*>(aData);
+  aListener->OnCloseWindow(winData->mWindow);
+
+  return true;
+}
+
+bool 
+notifyWindowTitleChange(nsIWindowMediatorListener *aListener, void* aData)
+{
+  WindowTitleData* titleData = reinterpret_cast<WindowTitleData*>(aData);
+  aListener->OnWindowTitleChange(titleData->mWindow, titleData->mTitle);
+
+  return true;
 }

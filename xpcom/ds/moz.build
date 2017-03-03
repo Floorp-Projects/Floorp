@@ -83,7 +83,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'ArrayIterator.h',
     'IncrementalTokenizer.h',
     'Observer.h',
     'StickyTimeDuration.h',
