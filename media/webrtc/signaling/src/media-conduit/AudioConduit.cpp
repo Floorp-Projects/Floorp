@@ -751,7 +751,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
 
 // Transport Layer Callbacks
 MediaConduitErrorCode
-WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
+WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len, uint32_t ssrc)
 {
   CSFLogDebug(logTag,  "%s : channel %d", __FUNCTION__, mChannel);
 

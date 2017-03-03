@@ -122,8 +122,7 @@ function RegExpMatch(string) {
         }
 
         // Step 5.
-        var sticky = !!(flags & REGEXP_STICKY_FLAG);
-        return RegExpLocalMatchOpt(rx, S, sticky);
+        return RegExpBuiltinExec(rx, S, false);
     }
 
     // Stes 4-6
@@ -220,37 +219,6 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
     }
 }
 
-// ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6 step 5.
-// Optimized path for @@match without global flag.
-function RegExpLocalMatchOpt(rx, S, sticky) {
-    // Step 4.
-    var lastIndex = ToLength(rx.lastIndex);
-
-    // Step 8.
-    if (!sticky) {
-        lastIndex = 0;
-    } else {
-        if (lastIndex > S.length) {
-            // Steps 12.a.i-ii, 12.c.i.1-2.
-            rx.lastIndex = 0;
-            return null;
-        }
-    }
-
-    // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
-    var result = RegExpMatcher(rx, S, lastIndex);
-    if (result === null) {
-        // Steps 12.a.i-ii, 12.c.i.1-2.
-        rx.lastIndex = 0;
-    } else {
-        // Step 15.
-        if (sticky)
-            rx.lastIndex = result.index + result[0].length;
-    }
-
-    return result;
-}
-
 // Checks if following properties and getters are not modified, and accessing
 // them not observed by content script:
 //   * flags
@@ -318,9 +286,10 @@ function RegExpReplace(string, replaceValue) {
 
             if (functionalReplace) {
                 var elemBase = GetElemBaseForLambda(replaceValue);
-                if (IsObject(elemBase))
+                if (IsObject(elemBase)) {
                     return RegExpGlobalReplaceOptElemBase(rx, S, lengthS, replaceValue,
                                                           fullUnicode, elemBase);
+                }
                 return RegExpGlobalReplaceOptFunc(rx, S, lengthS, replaceValue,
                                                   fullUnicode);
             }
@@ -336,18 +305,11 @@ function RegExpReplace(string, replaceValue) {
                                           fullUnicode);
         }
 
-        var sticky = !!(flags & REGEXP_STICKY_FLAG);
-
-        if (functionalReplace) {
-            return RegExpLocalReplaceOptFunc(rx, S, lengthS, replaceValue,
-                                             sticky);
-        }
-        if (firstDollarIndex !== -1) {
-            return RegExpLocalReplaceOptSubst(rx, S, lengthS, replaceValue,
-                                              sticky, firstDollarIndex);
-        }
-        return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue,
-                                     sticky);
+        if (functionalReplace)
+            return RegExpLocalReplaceOptFunc(rx, S, lengthS, replaceValue);
+        if (firstDollarIndex !== -1)
+            return RegExpLocalReplaceOptSubst(rx, S, lengthS, replaceValue, firstDollarIndex);
+        return RegExpLocalReplaceOpt(rx, S, lengthS, replaceValue);
     }
 
     // Steps 8-16.
