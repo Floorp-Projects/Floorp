@@ -98,7 +98,7 @@ select[size="1"] xul|scrollbarbutton {
 textarea,
 button,
 xul|button,
-* > input:not([type="image"]) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
 }
 
