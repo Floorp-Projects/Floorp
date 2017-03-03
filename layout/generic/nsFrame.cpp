@@ -10264,6 +10264,16 @@ nsIFrame::IsScrolledOutOfView()
   return IsFrameScrolledOutOfView(this);
 }
 
+/* virtual */
+void
+nsIFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                      nsStyleChangeList& aChangeList,
+                                      nsChangeHint aHintForThisFrame)
+{
+  MOZ_ASSERT(!(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES));
+  MOZ_ASSERT(false, "Why did this get called?");
+}
+
 nsIFrame::CaretPosition::CaretPosition()
   : mContentOffset(0)
 {

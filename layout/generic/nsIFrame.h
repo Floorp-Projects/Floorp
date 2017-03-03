@@ -39,6 +39,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
 #include "Visibility.h"
+#include "nsChangeHint.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -81,6 +82,7 @@ class nsLineList_iterator;
 class nsAbsoluteContainingBlock;
 class nsIContent;
 class nsContainerFrame;
+class nsStyleChangeList;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -95,6 +97,7 @@ enum class CSSPseudoElementType : uint8_t;
 class EventStates;
 struct ReflowInput;
 class ReflowOutput;
+class ServoStyleSet;
 
 namespace layers {
 class Layer;
@@ -3067,6 +3070,35 @@ public:
    *         style context should be the root of the style context tree.
    */
   virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const = 0;
+
+  /**
+   * Called by ServoRestyleManager to update the style contexts of anonymous
+   * boxes directly associtated with this frame.  The passed-in ServoStyleSet
+   * can be used to create new style contexts as needed.
+   *
+   * This function will be called after this frame's style context has already
+   * been updated.  This function will only be called on frames which have the
+   * NS_FRAME_OWNS_ANON_BOXES bit set.
+   *
+   * The nsStyleChangeList can be used to append additional changes.  It's
+   * guaranteed to already have a change in it for this frame and this frame's
+   * content and a change hint of aHintForThisFrame.
+   */
+  void UpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                   nsStyleChangeList& aChangeList,
+                                   nsChangeHint aHintForThisFrame) {
+    if (GetStateBits() & NS_FRAME_OWNS_ANON_BOXES) {
+      DoUpdateStyleOfOwnedAnonBoxes(aStyleSet, aChangeList, aHintForThisFrame);
+    }
+  }
+
+  /**
+   * Hook subclasses can override to actually implement updating of style of
+   * owned anon boxes.
+   */
+  virtual void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                             nsStyleChangeList& aChangeList,
+                                             nsChangeHint aHintForThisFrame);
 
   /**
    * Determines whether a frame is visible for painting;
