@@ -26,8 +26,12 @@ class ShutdownLeaks(object):
         self.seenShutdown = set()
 
     def log(self, message):
-        if message['action'] == 'log':
-            line = message['message']
+        action = message['action']
+
+        # Remove 'log' when jetpack and clipboard are gone and/or structured.
+        if action in ('log', 'process_output'):
+            line = message['message'] if action == 'log' else message['data']
+
             if line[2:11] == "DOMWINDOW":
                 self._logWindow(line)
             elif line[2:10] == "DOCSHELL":
@@ -35,12 +39,12 @@ class ShutdownLeaks(object):
             elif line.startswith("Completed ShutdownLeaks collections in process"):
                 pid = int(line.split()[-1])
                 self.seenShutdown.add(pid)
-        elif message['action'] == 'test_start':
+        elif action == 'test_start':
             fileName = message['test'].replace(
                 "chrome://mochitests/content/browser/", "")
             self.currentTest = {
                 "fileName": fileName, "windows": set(), "docShells": set()}
-        elif message['action'] == 'test_end':
+        elif action == 'test_end':
             # don't track a test if no windows or docShells leaked
             if self.currentTest and (self.currentTest["windows"] or self.currentTest["docShells"]):
                 self.tests.append(self.currentTest)
