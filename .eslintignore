@@ -288,6 +288,7 @@ security/nss/**
 
 # Uses `#filter substitution`
 services/sync/modules/constants.js
+services/sync/services-sync.js
 
 # Third party services
 services/common/kinto-http-client.js

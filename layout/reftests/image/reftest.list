@@ -12,12 +12,12 @@ fuzzy-if(Android,255,154) == image-seam-2.html  image-seam-2-ref.html  # Bug 112
 == sync-image-switch-1d.html sync-image-switch-1-ref.html
 
 # Tests for "object-fit" & "object-position"
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-dyn-1.html image-object-fit-dyn-1-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
-test-pref(layout.css.object-fit-and-position.enabled,true) fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
+== image-object-fit-dyn-1.html image-object-fit-dyn-1-ref.html
+== image-object-fit-with-background-1.html image-object-fit-with-background-1-ref.html
+== image-object-fit-with-background-2.html image-object-fit-with-background-2-ref.html
+== image-object-position-dyn-1.html image-object-position-dyn-1-ref.html
+== image-object-position-with-background-1.html image-object-position-with-background-1-ref.html
+fuzzy-if(winWidget,117,374) == image-object-position-with-background-2.html image-object-position-with-background-2-ref.html  # Bug 1128229
 
 # Tests for image-orientation used with 'from-image' (note that all
 # image-orientation tests are fuzzy because the JPEG images do not perfectly
