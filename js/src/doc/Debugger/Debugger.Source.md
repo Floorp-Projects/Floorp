@@ -156,6 +156,8 @@ from its prototype:
 
     * `"Function"`, for code passed to the `Function` constructor.
 
+    * `"Function.prototype"`, for `Function.prototype` internally generated code.
+
     * `"Worker"`, for code loaded by calling the Web worker constructor—the
       worker's main script.
 

@@ -58,7 +58,7 @@ public:
   int32_t StyleRuleCount() const { return mRules.Count(); }
   Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  typedef IncrementalClearCOMRuleArray::nsCOMArrayEnumFunc RuleEnumFunc;
+  typedef bool (*RuleEnumFunc)(Rule* aElement, void* aData);
   bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
@@ -75,14 +75,6 @@ public:
   // non-virtual -- it is only called by subclasses
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override = 0;
-
-  static bool
-  CloneRuleInto(Rule* aRule, void* aArray)
-  {
-    RefPtr<Rule> clone = aRule->Clone();
-    static_cast<IncrementalClearCOMRuleArray*>(aArray)->AppendObject(clone);
-    return true;
-  }
 
   // WebIDL API
   dom::CSSRuleList* CssRules();

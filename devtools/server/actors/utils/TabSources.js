@@ -801,8 +801,7 @@ TabSources.prototype = {
  * it's either internal or we don't support in the UI yet.
  */
 function isHiddenSource(source) {
-  // Ignore the internal Function.prototype script
-  return source.text === "() {\n}";
+  return source.introductionType === "Function.prototype";
 }
 
 /**

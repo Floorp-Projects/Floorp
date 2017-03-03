@@ -4647,8 +4647,6 @@ var XULBrowserWindow = {
 
       SocialUI.updateState();
 
-      UITour.onLocationChange(location);
-
       gTabletModePageCounter.inc();
 
       // Utility functions for disabling find

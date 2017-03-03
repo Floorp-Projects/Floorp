@@ -161,7 +161,10 @@ BrowserToolboxProcess.prototype = {
   _initProfile: function () {
     dumpn("Initializing the chrome toolbox user profile.");
 
-    let debuggingProfileDir = Services.dirsvc.get("ProfLD", Ci.nsIFile);
+    // We used to use `ProfLD` instead of `ProfD`, so migrate old profiles if they exist.
+    this._migrateProfileDir();
+
+    let debuggingProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
     debuggingProfileDir.append(CHROME_DEBUGGER_PROFILE_NAME);
     try {
       debuggingProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
@@ -192,6 +195,35 @@ BrowserToolboxProcess.prototype = {
 
     dumpn("Finished creating the chrome toolbox user profile at: " +
           this._dbgProfilePath);
+  },
+
+  /**
+   * Originally, the profile was placed in `ProfLD` instead of `ProfD`.  On some systems,
+   * such as macOS, `ProfLD` is in the user's Caches directory, which is not an
+   * appropriate place to store supposedly persistent profile data.
+   */
+  _migrateProfileDir() {
+    let oldDebuggingProfileDir = Services.dirsvc.get("ProfLD", Ci.nsIFile);
+    oldDebuggingProfileDir.append(CHROME_DEBUGGER_PROFILE_NAME);
+    if (!oldDebuggingProfileDir.exists()) {
+      return;
+    }
+    dumpn(`Old debugging profile exists: ${oldDebuggingProfileDir.path}`);
+    try {
+      // Remove the directory from the target location, if it exists
+      let newDebuggingProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      newDebuggingProfileDir.append(CHROME_DEBUGGER_PROFILE_NAME);
+      if (newDebuggingProfileDir.exists()) {
+        dumpn(`Removing folder at destination: ${newDebuggingProfileDir.path}`);
+        newDebuggingProfileDir.remove(true);
+      }
+      // Move profile from old to new location
+      let newDebuggingProfileParent = Services.dirsvc.get("ProfD", Ci.nsIFile);
+      oldDebuggingProfileDir.moveTo(newDebuggingProfileParent, null);
+      dumpn("Debugging profile migrated successfully");
+    } catch (e) {
+      dumpn(`Debugging profile migration failed: ${e}`);
+    }
   },
 
   /**
