@@ -970,7 +970,20 @@ bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
                                    UNDNAME_NO_ECSU;
 
   // Use get_undecoratedNameEx to get readable C++ names with arguments.
-  if (function->get_undecoratedNameEx(undecorate_options, name) != S_OK) {
+  // However, on some rust symbols it can crash with a divide-by-zero,
+  // so catch that.
+  HRESULT res;
+  __try {
+    res = function->get_undecoratedNameEx(undecorate_options, name);
+  }
+  __except (GetExceptionCode() == EXCEPTION_INT_DIVIDE_BY_ZERO ?
+            EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+  {
+    fprintf(stderr, "div-by-zero error in get_undecoratedNameEx\n");
+    // Fall through to using get_name
+    res = E_FAIL;
+  }
+  if (res != S_OK) {
     if (function->get_name(name) != S_OK) {
       fprintf(stderr, "failed to get function name\n");
       return false;
