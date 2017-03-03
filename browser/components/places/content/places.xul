@@ -45,8 +45,6 @@
   <script type="application/javascript"
           src="chrome://browser/content/places/places.js"/>
   <script type="application/javascript"
-          src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript"
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
   <stringbundleset id="placesStringSet">
@@ -89,7 +87,7 @@
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel"
          oncommand="close();"/>
-         
+
     <!-- Command Keys -->
     <key id="placesKey_find:all"
          command="OrganizerCommand_find:all"
@@ -375,7 +373,7 @@
               onkeypress="ContentTree.onKeyPress(event);"
               onopenflatcontainer="PlacesOrganizer.openFlatContainer(aContainer);">
           <treecols id="placeContentColumns" context="placesColumnsContext">
-            <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1" 
+            <treecol label="&col.name.label;" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
             <treecol label="&col.tags.label;" id="placesContentTags" anonid="tags" flex="2"

@@ -242,4 +242,3 @@ let PlacesProvider = {
 // Kept only for backwards-compatibility
 XPCOMUtils.defineLazyGetter(PlacesProvider, "LinkChecker",
   () => NewTabUtils.linkChecker);
-
