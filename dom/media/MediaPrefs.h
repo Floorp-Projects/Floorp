@@ -181,6 +181,9 @@ private:
   DECL_MEDIA_PREF("media.rust.mp4parser",                     EnableRustMP4Parser, bool, false);
 #endif
 
+  // Error/warning handling, Decoder Doctor
+  DECL_MEDIA_PREF("media.playback.warnings-as-errors",        MediaWarningsAsErrors, bool, false);
+
 public:
   // Manage the singleton:
   static MediaPrefs& GetSingleton();

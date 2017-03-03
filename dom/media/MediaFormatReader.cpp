@@ -10,7 +10,6 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "MediaFormatReader.h"
-#include "MediaPrefs.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
 #include "VideoFrameContainer.h"
@@ -1332,6 +1331,11 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
+
+  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+    mMetadataPromise.Reject(aResult, __func__);
+    return;
+  }
 
   mDemuxerInitDone = true;
 

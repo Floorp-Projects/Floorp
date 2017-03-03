@@ -6,6 +6,7 @@
 
 #include "TrackBuffersManager.h"
 #include "ContainerParser.h"
+#include "MediaPrefs.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "mozilla/Preferences.h"
@@ -858,6 +859,12 @@ TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
+
+  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+    RejectAppend(aResult, __func__);
+    return;
+  }
+
   // mInputDemuxer shouldn't have been destroyed while a demuxer init/reset
   // request was being processed. See bug 1239983.
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer);
@@ -955,6 +962,11 @@ TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult)
   MOZ_DIAGNOSTIC_ASSERT(mInputDemuxer, "mInputDemuxer has been destroyed");
 
   mDemuxerInitRequest.Complete();
+
+  if (NS_FAILED(aResult) && MediaPrefs::MediaWarningsAsErrors()) {
+    RejectAppend(aResult, __func__);
+    return;
+  }
 
   MediaInfo info;
 

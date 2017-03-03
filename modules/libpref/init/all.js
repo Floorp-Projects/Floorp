@@ -600,6 +600,9 @@ pref("media.decoder.recycle.enabled", false);
 // "verbose", "normal" and "" (log disabled).
 pref("media.cubeb.log_level", "");
 
+// Set to true to force demux/decode warnings to be treated as errors.
+pref("media.playback.warnings-as-errors", false);
+
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
 
