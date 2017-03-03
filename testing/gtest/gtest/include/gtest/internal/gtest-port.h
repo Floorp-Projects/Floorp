@@ -930,6 +930,7 @@ using ::std::tuple_size;
 
 #endif  // GTEST_HAS_SEH
 
+/*
 #ifdef _MSC_VER
 # if GTEST_LINKED_AS_SHARED_LIBRARY
 #  define GTEST_API_ __declspec(dllimport)
@@ -939,6 +940,7 @@ using ::std::tuple_size;
 #elif __GNUC__ >= 4 || defined(__clang__)
 # define GTEST_API_ __attribute__((visibility ("default")))
 #endif // _MSC_VER
+*/
 
 #ifndef GTEST_API_
 # define GTEST_API_
