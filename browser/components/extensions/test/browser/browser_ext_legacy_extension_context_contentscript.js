@@ -115,7 +115,7 @@ add_task(function* test_legacy_extension_context_contentscript_connection() {
 
   extension.sendMessage("open-test-tab");
 
-  let {uuid, tab} = yield extension.awaitMessage("get-expected-sender-info");
+  let {tab} = yield extension.awaitMessage("get-expected-sender-info");
 
   let {singleMsg, msgSender} = yield waitMessage;
   is(singleMsg, "webextension -> legacy_extension message",
