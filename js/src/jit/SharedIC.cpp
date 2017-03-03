@@ -1557,13 +1557,10 @@ DoCompareFallback(JSContext* cx, void* payload, ICCompare_Fallback* stub_, Handl
             return true;
         }
 
-        if ((lhs.isObject() || lhs.isNull() || lhs.isUndefined()) &&
-            (rhs.isObject() || rhs.isNull() || rhs.isUndefined()) &&
-            !stub->hasStub(ICStub::Compare_ObjectWithUndefined))
-        {
-            JitSpew(JitSpew_BaselineIC, "  Generating %s(Obj/Null/Undef, Obj/Null/Undef) stub",
+        if (lhs.isNullOrUndefined() || rhs.isNullOrUndefined()) {
+            JitSpew(JitSpew_BaselineIC, "  Generating %s(Null/Undef or X, Null/Undef or X) stub",
                     CodeName[op]);
-            bool lhsIsUndefined = lhs.isNull() || lhs.isUndefined();
+            bool lhsIsUndefined = lhs.isNullOrUndefined();
             bool compareWithNull = lhs.isNull() || rhs.isNull();
             ICCompare_ObjectWithUndefined::Compiler compiler(cx, op, engine,
                                                              lhsIsUndefined, compareWithNull);
@@ -1810,12 +1807,29 @@ ICCompare_ObjectWithUndefined::Compiler::generateStubCode(MacroAssembler& masm)
     masm.bind(&notObject);
 
     // Also support null == null or undefined == undefined comparisons.
+    Label differentTypes;
     if (compareWithNull)
-        masm.branchTestNull(Assembler::NotEqual, objectOperand, &failure);
+        masm.branchTestNull(Assembler::NotEqual, objectOperand, &differentTypes);
     else
-        masm.branchTestUndefined(Assembler::NotEqual, objectOperand, &failure);
+        masm.branchTestUndefined(Assembler::NotEqual, objectOperand, &differentTypes);
 
     masm.moveValue(BooleanValue(op == JSOP_STRICTEQ || op == JSOP_EQ), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&differentTypes);
+    // Also support null == undefined or undefined == null.
+    Label neverEqual;
+    if (compareWithNull)
+        masm.branchTestUndefined(Assembler::NotEqual, objectOperand, &neverEqual);
+    else
+        masm.branchTestNull(Assembler::NotEqual, objectOperand, &neverEqual);
+
+    masm.moveValue(BooleanValue(op == JSOP_EQ || op == JSOP_STRICTNE), R0);
+    EmitReturnFromIC(masm);
+
+    // null/undefined can only be equal to null/undefined or emulatesUndefined.
+    masm.bind(&neverEqual);
+    masm.moveValue(BooleanValue(op == JSOP_NE || op == JSOP_STRICTNE), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub
