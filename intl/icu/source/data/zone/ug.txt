@@ -3,36 +3,6 @@
 ug{
     Version{"2.1.28.76"}
     zoneStrings{
-        "Africa:Sao_Tome"{
-            ec{"سان-تومې"}
-        }
-        "America:Asuncion"{
-            ec{"ئاسۇنسىيون"}
-        }
-        "America:Curacao"{
-            ec{"كۇراسو"}
-        }
-        "America:St_Barthelemy"{
-            ec{"ساينىت-بارتھېلەمىي"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"دۇمونت دۇرۋىللې"}
-        }
-        "Asia:Saigon"{
-            ec{"خوچىمىن شەھىرى"}
-        }
-        "Etc:Unknown"{
-            ec{"يوچۇن شەھەر"}
-        }
-        "Europe:Dublin"{
-            ld{"ئىرېلاند يازلىق ۋاقتى"}
-        }
-        "Europe:London"{
-            ld{"ئەنگلىيە يازلىق ۋاقتى"}
-        }
-        "Indian:Reunion"{
-            ec{"رېئونىيون"}
-        }
         "meta:Acre"{
             ld{"ئاكرى يازلىق ۋاقتى"}
             lg{"ئاكرې ۋاقتى"}
