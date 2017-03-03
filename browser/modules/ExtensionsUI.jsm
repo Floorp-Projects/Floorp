@@ -141,6 +141,12 @@ this.ExtensionsUI = {
       }
 
       let strings = this._buildStrings(info);
+      // If this is an update with no promptable permissions, just apply it
+      if (info.type == "update" && strings.msgs.length == 0) {
+        info.resolve();
+        return;
+      }
+
       this.showPermissionsPrompt(target, strings, info.icon).then(answer => {
         if (answer) {
           info.resolve();
