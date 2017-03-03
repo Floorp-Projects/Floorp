@@ -140,7 +140,6 @@ void
 VRMockDisplay::Update()
 {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
 
   vm->SendSetSensorStateToMockDisplay(mDeviceID, mSensorState);
   vm->SendSetDisplayInfoToMockDisplay(mDeviceID, mDisplayInfo);
@@ -177,7 +176,6 @@ void
 VRMockController::NewButtonEvent(unsigned long aButton, bool aPressed)
 {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
   vm->SendNewButtonEventToMockController(mDeviceID, aButton, aPressed);
 }
 
@@ -185,7 +183,6 @@ void
 VRMockController::NewAxisMoveEvent(unsigned long aAxis, double aValue)
 {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
   vm->SendNewAxisMoveEventToMockController(mDeviceID, aAxis, aValue);
 }
 
@@ -198,9 +195,8 @@ VRMockController::NewPoseMove(const Nullable<Float32Array>& aPosition,
                               const Nullable<Float32Array>& aAngularAcceleration)
 {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
-
   GamepadPoseState poseState;
+
   poseState.flags = GamepadCapabilityFlags::Cap_Orientation |
                     GamepadCapabilityFlags::Cap_Position |
                     GamepadCapabilityFlags::Cap_AngularAcceleration |
@@ -292,7 +288,10 @@ VRServiceTest::CreateTestService(nsPIDOMWindowInner* aWindow)
 VRServiceTest::VRServiceTest(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow),
     mShuttingDown(false)
-{}
+{
+  gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+  vm->SendCreateVRTestSystem();
+}
 
 VRServiceTest::~VRServiceTest()
 {}
@@ -320,7 +319,6 @@ VRServiceTest::AttachVRDisplay(const nsAString& aID, ErrorResult& aRv)
   }
 
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
   vm->CreateVRServiceTestDisplay(nsCString(ToNewUTF8String(aID)), p);
 
   return p.forget();
@@ -341,7 +339,6 @@ VRServiceTest::AttachVRController(const nsAString& aID, ErrorResult& aRv)
   }
 
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-  MOZ_ASSERT(vm);
   vm->CreateVRServiceTestController(nsCString(ToNewUTF8String(aID)), p);
 
   return p.forget();

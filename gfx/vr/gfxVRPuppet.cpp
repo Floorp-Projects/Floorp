@@ -314,8 +314,6 @@ VRSystemManagerPuppet::VRSystemManagerPuppet()
 /*static*/ already_AddRefed<VRSystemManagerPuppet>
 VRSystemManagerPuppet::Create()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (!gfxPrefs::VREnabled() || !gfxPrefs::VRPuppetEnabled()) {
     return nullptr;
   }
