@@ -8240,11 +8240,10 @@ nsIPresShell::DispatchGotOrLostPointerCaptureEvent(
                                                 ePointerLostCapture,
                                 aPointerEvent->mWidget);
   localEvent.AssignPointerEventData(*aPointerEvent, true);
-  nsresult rv =
-    static_cast<PresShell*>(shell)->HandleEventWithTarget(
-                                      &localEvent,
-                                      aCaptureTarget->GetPrimaryFrame(),
-                                      aCaptureTarget, &status);
+  nsresult rv = shell->HandleEventWithTarget(
+                         &localEvent,
+                         aCaptureTarget->GetPrimaryFrame(),
+                         aCaptureTarget, &status);
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
