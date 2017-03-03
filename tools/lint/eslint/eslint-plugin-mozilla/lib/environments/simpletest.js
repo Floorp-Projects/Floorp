@@ -29,11 +29,11 @@ function getScriptGlobals() {
   let fileGlobals = [];
   let root = helpers.getRootDir(module.filename);
   for (let file of simpleTestFiles) {
-    let fileName = path.join(root, simpleTestPath, file)
+    let fileName = path.join(root, simpleTestPath, file);
     try {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
-      throw new Error(`Could not load globals from file ${fileName}: ${e}`)
+      throw new Error(`Could not load globals from file ${fileName}: ${e}`);
     }
   }
 
