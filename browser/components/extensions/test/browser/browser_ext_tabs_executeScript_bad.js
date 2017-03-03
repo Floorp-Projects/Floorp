@@ -90,7 +90,7 @@ add_task(function* testBadPermissions() {
         },
       },
     },
-    contentSetup() {
+    contentSetup: function() {
       browser.commands.onCommand.addListener(function(command) {
         if (command == "test-tabs-executeScript") {
           browser.test.sendMessage("tabs-command-key-pressed");
@@ -132,7 +132,7 @@ add_task(function* testBadPermissions() {
       "permissions": ["http://example.com/", "activeTab"],
       "page_action": {},
     },
-    async contentSetup() {
+    contentSetup: async function() {
       let [tab] = await browser.tabs.query({active: true, currentWindow: true});
       await browser.pageAction.show(tab.id);
     },

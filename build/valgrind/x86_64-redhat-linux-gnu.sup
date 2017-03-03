@@ -230,13 +230,14 @@
 #    by 0xE757308: gfxPlatform::Init()
 #    by 0xE75772C: gfxPlatform::GetPlatform()
 #    by 0xF1A3691: mozilla::dom::ContentProcess::Init()
+#               or mozilla::dom::ContentChild::RecvSetXPCOMProcessAttributes()
 {
    Skia and CPUID, Jan 2017, #2
    Memcheck:Cond
    fun:_ZN6SkOpts4InitEv
    fun:_ZN11gfxPlatform4InitEv
    fun:_ZN11gfxPlatform11GetPlatformEv
-   fun:_ZN7mozilla3dom14ContentProcess4InitEv
+   fun:_ZN7mozilla3dom*Content*
 }
 
 

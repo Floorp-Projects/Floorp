@@ -7798,13 +7798,21 @@ js::gc::Cell::dump() const
 }
 #endif
 
-JS_PUBLIC_API(bool)
-js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell)
+static inline bool
+CanCheckGrayBits(const Cell* cell)
 {
     MOZ_ASSERT(cell);
     if (!cell->isTenured())
         return false;
 
+    auto tc = &cell->asTenured();
+    auto rt = tc->runtimeFromAnyThread();
+    return CurrentThreadCanAccessRuntime(rt) && rt->gc.areGrayBitsValid();
+}
+
+JS_PUBLIC_API(bool)
+js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell)
+{
     // We ignore the gray marking state of cells and return false in the
     // following cases:
     //
@@ -7818,14 +7826,50 @@ js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell)
     // call this while parsing, and they are not allowed to inspect the
     // runtime's incremental state. The objects being operated on are not able
     // to be collected and will not be marked any color.
+
+    if (!CanCheckGrayBits(cell))
+        return false;
+
     auto tc = &cell->asTenured();
     auto rt = tc->runtimeFromAnyThread();
-    if (!CurrentThreadCanAccessRuntime(rt) ||
-        !rt->gc.areGrayBitsValid() ||
-        (rt->gc.isIncrementalGCInProgress() && !tc->zone()->wasGCStarted()))
-    {
+    if (rt->gc.isIncrementalGCInProgress() && !tc->zone()->wasGCStarted())
         return false;
-    }
 
     return detail::CellIsMarkedGray(tc);
 }
+
+#ifdef DEBUG
+JS_PUBLIC_API(bool)
+js::gc::detail::CellIsNotGray(const Cell* cell)
+{
+    // Check that a cell is not marked gray.
+    //
+    // Since this is a debug-only check, take account of the eventual mark state
+    // of cells that will be marked black by the next GC slice in an incremental
+    // GC. For performance reasons we don't do this in CellIsMarkedGrayIfKnown.
+
+    // TODO: I'd like to AssertHeapIsIdle() here, but this ends up getting
+    // called while iterating the heap for memory reporting.
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
+
+    if (!CanCheckGrayBits(cell))
+        return true;
+
+    auto tc = &cell->asTenured();
+    if (!detail::CellIsMarkedGray(tc))
+        return true;
+
+    auto rt = tc->runtimeFromAnyThread();
+    Zone* sourceZone = nullptr;
+    if (rt->gc.isIncrementalGCInProgress() &&
+        !tc->zone()->wasGCStarted() &&
+        (sourceZone = rt->gc.marker.stackContainsCrossZonePointerTo(tc)) &&
+        sourceZone->wasGCStarted())
+    {
+        return true;
+    }
+
+    return false;
+}
+#endif

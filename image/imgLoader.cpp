@@ -55,6 +55,7 @@
 #include "nsILoadContext.h"
 #include "nsILoadGroupChild.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocShell.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -587,6 +588,19 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
   // We call all Content Policies above, but we also have to call mcb
   // individually to check the intermediary redirect hops are secure.
   if (insecureRedirect) {
+    // Bug 1314356: If the image ended up in the cache upgraded by HSTS and the page
+    // uses upgrade-inscure-requests it had an insecure redirect (http->https).
+    // We need to invalidate the image and reload it because mixed content blocker
+    // only bails if upgrade-insecure-requests is set on the doc and the resource
+    // load is http: which would result in an incorrect mixed content warning.
+    nsCOMPtr<nsIDocShell> docShell = NS_CP_GetDocShellFromContext(aLoadingContext);
+    if (docShell) {
+      nsIDocument* document = docShell->GetDocument();
+      if (document && document->GetUpgradeInsecureRequests(false)) {
+        return false;
+      }
+    }
+
     if (!nsContentUtils::IsSystemPrincipal(aLoadingPrincipal)) {
       // Set the requestingLocation from the aLoadingPrincipal.
       nsCOMPtr<nsIURI> requestingLocation;

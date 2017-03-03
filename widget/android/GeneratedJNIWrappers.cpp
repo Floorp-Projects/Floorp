@@ -734,67 +734,6 @@ auto GeckoEditable::New(mozilla::jni::Object::Param a0) -> GeckoEditable::LocalR
     return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr, a0);
 }
 
-constexpr char GeckoEditable::DisposeNative_t::name[];
-constexpr char GeckoEditable::DisposeNative_t::signature[];
-
-constexpr char GeckoEditable::NotifyIME_t::name[];
-constexpr char GeckoEditable::NotifyIME_t::signature[];
-
-auto GeckoEditable::NotifyIME(int32_t a0) const -> void
-{
-    return mozilla::jni::Method<NotifyIME_t>::Call(GeckoEditable::mCtx, nullptr, a0);
-}
-
-constexpr char GeckoEditable::NotifyIMEContext_t::name[];
-constexpr char GeckoEditable::NotifyIMEContext_t::signature[];
-
-auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3) const -> void
-{
-    return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditable::mCtx, nullptr, a0, a1, a2, a3);
-}
-
-constexpr char GeckoEditable::OnDefaultKeyEvent_t::name[];
-constexpr char GeckoEditable::OnDefaultKeyEvent_t::signature[];
-
-auto GeckoEditable::OnDefaultKeyEvent(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<OnDefaultKeyEvent_t>::Call(GeckoEditable::mCtx, nullptr, a0);
-}
-
-constexpr char GeckoEditable::OnImeAddCompositionRange_t::name[];
-constexpr char GeckoEditable::OnImeAddCompositionRange_t::signature[];
-
-constexpr char GeckoEditable::OnImeReplaceText_t::name[];
-constexpr char GeckoEditable::OnImeReplaceText_t::signature[];
-
-constexpr char GeckoEditable::OnImeRequestCursorUpdates_t::name[];
-constexpr char GeckoEditable::OnImeRequestCursorUpdates_t::signature[];
-
-constexpr char GeckoEditable::OnImeSynchronize_t::name[];
-constexpr char GeckoEditable::OnImeSynchronize_t::signature[];
-
-constexpr char GeckoEditable::OnImeUpdateComposition_t::name[];
-constexpr char GeckoEditable::OnImeUpdateComposition_t::signature[];
-
-constexpr char GeckoEditable::OnKeyEvent_t::name[];
-constexpr char GeckoEditable::OnKeyEvent_t::signature[];
-
-constexpr char GeckoEditable::OnSelectionChange_t::name[];
-constexpr char GeckoEditable::OnSelectionChange_t::signature[];
-
-auto GeckoEditable::OnSelectionChange(int32_t a0, int32_t a1) const -> void
-{
-    return mozilla::jni::Method<OnSelectionChange_t>::Call(GeckoEditable::mCtx, nullptr, a0, a1);
-}
-
-constexpr char GeckoEditable::OnTextChange_t::name[];
-constexpr char GeckoEditable::OnTextChange_t::signature[];
-
-auto GeckoEditable::OnTextChange(mozilla::jni::String::Param a0, int32_t a1, int32_t a2, int32_t a3) const -> void
-{
-    return mozilla::jni::Method<OnTextChange_t>::Call(GeckoEditable::mCtx, nullptr, a0, a1, a2, a3);
-}
-
 constexpr char GeckoEditable::OnViewChange_t::name[];
 constexpr char GeckoEditable::OnViewChange_t::signature[];
 
@@ -803,13 +742,93 @@ auto GeckoEditable::OnViewChange(mozilla::jni::Object::Param a0) const -> void
     return mozilla::jni::Method<OnViewChange_t>::Call(GeckoEditable::mCtx, nullptr, a0);
 }
 
-constexpr char GeckoEditable::UpdateCompositionRects_t::name[];
-constexpr char GeckoEditable::UpdateCompositionRects_t::signature[];
+constexpr char GeckoEditable::SetDefaultEditableChild_t::name[];
+constexpr char GeckoEditable::SetDefaultEditableChild_t::signature[];
 
-auto GeckoEditable::UpdateCompositionRects(mozilla::jni::ObjectArray::Param a0) const -> void
+auto GeckoEditable::SetDefaultEditableChild(mozilla::jni::Object::Param a0) const -> void
 {
-    return mozilla::jni::Method<UpdateCompositionRects_t>::Call(GeckoEditable::mCtx, nullptr, a0);
+    return mozilla::jni::Method<SetDefaultEditableChild_t>::Call(GeckoEditable::mCtx, nullptr, a0);
 }
+
+const char GeckoEditableChild::name[] =
+        "org/mozilla/gecko/GeckoEditableChild";
+
+constexpr char GeckoEditableChild::New_t::name[];
+constexpr char GeckoEditableChild::New_t::signature[];
+
+auto GeckoEditableChild::New(mozilla::jni::Object::Param a0) -> GeckoEditableChild::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(GeckoEditableChild::Context(), nullptr, a0);
+}
+
+constexpr char GeckoEditableChild::NotifyIME_t::name[];
+constexpr char GeckoEditableChild::NotifyIME_t::signature[];
+
+auto GeckoEditableChild::NotifyIME(int32_t a0) const -> void
+{
+    return mozilla::jni::Method<NotifyIME_t>::Call(GeckoEditableChild::mCtx, nullptr, a0);
+}
+
+constexpr char GeckoEditableChild::NotifyIMEContext_t::name[];
+constexpr char GeckoEditableChild::NotifyIMEContext_t::signature[];
+
+auto GeckoEditableChild::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3) const -> void
+{
+    return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditableChild::mCtx, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char GeckoEditableChild::OnDefaultKeyEvent_t::name[];
+constexpr char GeckoEditableChild::OnDefaultKeyEvent_t::signature[];
+
+auto GeckoEditableChild::OnDefaultKeyEvent(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnDefaultKeyEvent_t>::Call(GeckoEditableChild::mCtx, nullptr, a0);
+}
+
+constexpr char GeckoEditableChild::OnImeAddCompositionRange_t::name[];
+constexpr char GeckoEditableChild::OnImeAddCompositionRange_t::signature[];
+
+constexpr char GeckoEditableChild::OnImeReplaceText_t::name[];
+constexpr char GeckoEditableChild::OnImeReplaceText_t::signature[];
+
+constexpr char GeckoEditableChild::OnImeRequestCursorUpdates_t::name[];
+constexpr char GeckoEditableChild::OnImeRequestCursorUpdates_t::signature[];
+
+constexpr char GeckoEditableChild::OnImeSynchronize_t::name[];
+constexpr char GeckoEditableChild::OnImeSynchronize_t::signature[];
+
+constexpr char GeckoEditableChild::OnImeUpdateComposition_t::name[];
+constexpr char GeckoEditableChild::OnImeUpdateComposition_t::signature[];
+
+constexpr char GeckoEditableChild::OnKeyEvent_t::name[];
+constexpr char GeckoEditableChild::OnKeyEvent_t::signature[];
+
+constexpr char GeckoEditableChild::OnSelectionChange_t::name[];
+constexpr char GeckoEditableChild::OnSelectionChange_t::signature[];
+
+auto GeckoEditableChild::OnSelectionChange(int32_t a0, int32_t a1) const -> void
+{
+    return mozilla::jni::Method<OnSelectionChange_t>::Call(GeckoEditableChild::mCtx, nullptr, a0, a1);
+}
+
+constexpr char GeckoEditableChild::OnTextChange_t::name[];
+constexpr char GeckoEditableChild::OnTextChange_t::signature[];
+
+auto GeckoEditableChild::OnTextChange(mozilla::jni::String::Param a0, int32_t a1, int32_t a2, int32_t a3) const -> void
+{
+    return mozilla::jni::Method<OnTextChange_t>::Call(GeckoEditableChild::mCtx, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char GeckoEditableChild::UpdateCompositionRects_t::name[];
+constexpr char GeckoEditableChild::UpdateCompositionRects_t::signature[];
+
+auto GeckoEditableChild::UpdateCompositionRects(mozilla::jni::ObjectArray::Param a0) const -> void
+{
+    return mozilla::jni::Method<UpdateCompositionRects_t>::Call(GeckoEditableChild::mCtx, nullptr, a0);
+}
+
+const char GeckoEditableClient::name[] =
+        "org/mozilla/gecko/GeckoEditableClient";
 
 const char GeckoEditableListener::name[] =
         "org/mozilla/gecko/GeckoEditableListener";

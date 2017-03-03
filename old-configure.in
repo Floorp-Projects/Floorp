@@ -5312,7 +5312,11 @@ dnl ========================================================
 dnl ICU Support
 dnl ========================================================
 
-_INTL_API=yes
+if test "$MOZ_WIDGET_TOOLKIT" != "android" -o -z "$RELEASE_OR_BETA"; then
+    _INTL_API=yes
+else
+    _INTL_API=no
+fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
     USE_ICU=1
