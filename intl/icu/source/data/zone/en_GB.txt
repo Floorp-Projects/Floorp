@@ -4,6 +4,9 @@ en_GB{
     %%Parent{"en_001"}
     Version{"2.1.29.24"}
     zoneStrings{
+        "Europe:London"{
+            sd{"BST"}
+        }
         "meta:Europe_Central"{
             sd{"CEST"}
             sg{"CET"}

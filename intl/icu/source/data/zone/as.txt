@@ -3,6 +3,9 @@
 as{
     Version{"2.1.27.40"}
     zoneStrings{
+        "Asia:Calcutta"{
+            ec{"এলাহাৱাদ"}
+        }
         "meta:India"{
             ls{"ভাৰতীয় সময়"}
             ss{"ভা. স."}

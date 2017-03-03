@@ -3,6 +3,44 @@
 en{
     Version{"2.1.30.50"}
     zoneStrings{
+        "Africa:Sao_Tome"{
+            ec{"São Tomé"}
+        }
+        "America:Asuncion"{
+            ec{"Asunción"}
+        }
+        "America:Curacao"{
+            ec{"Curaçao"}
+        }
+        "America:St_Barthelemy"{
+            ec{"St. Barthélemy"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
+        "Asia:Saigon"{
+            ec{"Ho Chi Minh City"}
+        }
+        "Etc:Unknown"{
+            ec{"Unknown City"}
+        }
+        "Europe:Dublin"{
+            ld{"Irish Standard Time"}
+        }
+        "Europe:London"{
+            ld{"British Summer Time"}
+        }
+        "Europe:Uzhgorod"{
+            ec{"Uzhhorod"}
+        }
+        "Indian:Reunion"{
+            ec{"Réunion"}
+        }
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Acre"{
             ld{"Acre Summer Time"}
             lg{"Acre Time"}

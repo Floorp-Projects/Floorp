@@ -3,6 +3,11 @@
 haw{
     Version{"2.1.27.98"}
     zoneStrings{
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Alaska"{
             sd{"AKDT"}
             sg{"AKT"}

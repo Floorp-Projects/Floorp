@@ -3,6 +3,9 @@
 zh_Hans_SG{
     Version{"2.1.27.99"}
     zoneStrings{
+        "America:Scoresbysund"{
+            ec{"斯考斯伯松德"}
+        }
         "meta:Malaysia"{
             ss{"MYT"}
         }
