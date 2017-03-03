@@ -235,6 +235,9 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     // XXX This could not always work as expected: there are kinds of content
     // with the first split and the last sharing style, but others not. We
     // should handle those properly.
+    // XXXbz I think the UpdateStyleOfOwnedAnonBoxes call below handles _that_
+    // right, but not other cases where we happen to have different styles on
+    // different continuations... (e.g. first-line).
     for (nsIFrame* f = styleFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
       f->SetStyleContext(newContext);
