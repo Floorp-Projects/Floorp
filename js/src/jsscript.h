@@ -1637,6 +1637,15 @@ class JSScript : public js::gc::TenuredCell
         MOZ_CRASH("Function extra body var scope not found");
     }
 
+    bool needsBodyEnvironment() const {
+        for (uint32_t i = 0; i < scopes()->length; i++) {
+            js::Scope* scope = getScope(i);
+            if (ScopeKindIsInBody(scope->kind()) && scope->hasEnvironment())
+                return true;
+        }
+        return false;
+    }
+
     inline js::LexicalScope* maybeNamedLambdaScope() const;
 
     js::Scope* enclosingScope() const {
