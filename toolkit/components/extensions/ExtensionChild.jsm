@@ -379,6 +379,7 @@ class Messenger {
   }
 
   onMessage(name) {
+    dump(`L0G MATTHEW onMessage name: ${name}\n`);
     return this._onMessage(name, sender => sender.id === this.sender.id);
   }
 

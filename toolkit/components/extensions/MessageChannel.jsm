@@ -370,20 +370,15 @@ this.MessageChannel = {
   },
 
   /**
-   * Returns true if the properties of the `data` object match those in
-   * the `filter` object. Matching is done on a strict equality basis,
-   * and the behavior varies depending on the value of the `strict`
-   * parameter.
-   *
    * @param {object} filter
    *    The filter object to match against.
    * @param {object} data
    *    The data object being matched.
-   * @param {boolean} [strict=false]
-   *    If true, all properties in the `filter` object have a
+   * @param {boolean} [strict=true]
+   *    If true, all properties in the `filter` object must have a
    *    corresponding property in `data` with the same value. If
    *    false, properties present in both objects must have the same
-   *    value.
+   *    value. Matching is done on a strict equality basis.
    * @returns {boolean} True if the objects match.
    */
   matchesFilter(filter, data, strict = true) {
