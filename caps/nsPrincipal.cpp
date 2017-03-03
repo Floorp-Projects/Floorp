@@ -138,6 +138,9 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(!NS_IsAboutBlank(origin),
+             "The inner URI for about:blank must be moz-safe-about:blank");
+
   if (!nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
       NS_URIIsLocalFile(origin)) {
     // If strict file origin policy is not in effect, all local files are
@@ -176,7 +179,11 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
   // to handle.
   bool isBehaved;
   if ((NS_SUCCEEDED(origin->SchemeIs("about", &isBehaved)) && isBehaved) ||
-      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) && isBehaved) ||
+      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) && isBehaved &&
+       // We generally consider two about:foo origins to be same-origin, but
+       // about:blank is special since it can be generated from different sources.
+       // We check for moz-safe-about:blank since origin is an innermost URI.
+       !origin->GetSpecOrDefault().EqualsLiteral("moz-safe-about:blank")) ||
       (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
     rv = origin->GetAsciiSpec(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
