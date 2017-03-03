@@ -516,13 +516,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     bool CheckProcessPolicy(int16_t *aContentPolicy);
 
     /**
-     * Checks whether the given type is a supported document type
-     *
-     * NOTE Does not take content policy or capabilities into account
-     */
-    bool IsSupportedDocument(const nsCString& aType);
-
-    /**
      * Gets the plugin instance and creates a plugin stream listener, assigning
      * it to mFinalListener
      */
