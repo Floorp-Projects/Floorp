@@ -4,8 +4,5 @@ en_IE{
     %%Parent{"en_001"}
     Version{"2.1.29.54"}
     zoneStrings{
-        "Europe:Dublin"{
-            sd{"IST"}
-        }
     }
 }
