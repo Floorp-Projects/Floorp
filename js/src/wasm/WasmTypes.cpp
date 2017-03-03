@@ -129,6 +129,7 @@ WasmHandleDebugTrap()
     }
     if (site->kind() == CallSite::LeaveFrame) {
         DebugFrame* frame = iter.debugFrame();
+        frame->updateReturnJSValue();
         bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
         frame->leaveFrame(cx);
         return ok;
@@ -174,6 +175,7 @@ WasmHandleThrow()
             continue;
 
         DebugFrame* frame = iter.debugFrame();
+        frame->clearReturnJSValue();
 
         // Assume JSTRAP_ERROR status if no exception is pending --
         // no onExceptionUnwind handlers must be fired.

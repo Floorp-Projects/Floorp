@@ -1213,7 +1213,7 @@ public:
 
   static void GetAllInFlowRectsAndTexts(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                         RectCallback* aCallback,
-                                        mozilla::dom::DOMStringList* aTextList,
+                                        mozilla::dom::Sequence<nsString>* aTextList,
                                         uint32_t aFlags = 0);
 
   /**

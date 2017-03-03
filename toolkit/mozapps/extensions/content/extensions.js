@@ -1102,6 +1102,8 @@ var gViewController = {
           document.getElementById("updates-progress").hidden = true;
           gUpdatesView.maybeRefresh();
 
+          Services.obs.notifyObservers(null, "EM-update-check-finished", null);
+
           if (numManualUpdates > 0 && numUpdated == 0) {
             document.getElementById("updates-manualUpdatesFound-btn").hidden = false;
             return;

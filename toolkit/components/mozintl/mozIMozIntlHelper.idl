@@ -1,0 +1,29 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This is an internal helper for mozIMozIntl API. There should be virtually
+ * no reason for you to call this API except from mozIMozIntl implementation.
+ *
+ * This API helps accessing the SpiderMonkey Intl APIs, but it is mozIMozIntl
+ * that exposes the thin wrapper around them that binds the functionality
+ * to Gecko.
+ */
+[scriptable, uuid(189eaa7d-b29a-43a9-b1fb-7658990df940)]
+interface mozIMozIntlHelper : nsISupports
+{
+  [implicit_jscontext] void addGetCalendarInfo(in jsval intlObject);
+  [implicit_jscontext] void addGetDisplayNames(in jsval intlObject);
+  [implicit_jscontext] void addGetLocaleInfo(in jsval intlObject);
+
+  /**
+   * Adds a PluralRules constructor to the given object.  This function may only
+   * be called once within a realm/global object: calling it multiple times will
+   * throw.
+   */
+  [implicit_jscontext] void addPluralRulesConstructor(in jsval intlObject);
+};

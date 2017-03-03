@@ -349,6 +349,7 @@ private:
       mDecodeRequest.DisconnectIfExists();
       mDrainRequest.DisconnectIfExists();
       mDrainState = DrainState::None;
+      CancelWaitingForKey();
       mOutput.Clear();
       mNumSamplesInput = 0;
       mNumSamplesOutput = 0;
@@ -381,6 +382,19 @@ private:
       mFlushed = true;
     }
 
+    bool CancelWaitingForKey()
+    {
+      if (!mWaitingForKey) {
+        return false;
+      }
+      mWaitingForKey = false;
+      if (IsWaiting() || !HasWaitingPromise()) {
+        return false;
+      }
+      mWaitingPromise.Resolve(mType, __func__);
+      return true;
+    }
+
     // Reset the state of the DecoderData, clearing all queued frames
     // (pending demuxed and decoded).
     // The track demuxer is *not* reset.
@@ -389,11 +403,11 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
-      mWaitingForKey = false;
       mQueuedSamples.Clear();
       mDecodeRequest.DisconnectIfExists();
       mDrainRequest.DisconnectIfExists();
       mDrainState = DrainState::None;
+      CancelWaitingForKey();
       mTimeThreshold.reset();
       mLastSampleTime.reset();
       mOutput.Clear();

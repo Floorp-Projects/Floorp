@@ -428,6 +428,7 @@ struct CustomSection
 
 typedef Vector<CustomSection, 0, SystemAllocPolicy> CustomSectionVector;
 typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
+typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
 
 // Metadata holds all the data that is needed to describe compiled wasm code
 // at runtime (as opposed to data that is only used to statically link or
@@ -479,6 +480,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     Uint32Vector          debugTrapFarJumpOffsets;
     Uint32Vector          debugFuncToCodeRange;
     FuncArgTypesVector    debugFuncArgTypes;
+    FuncReturnTypesVector debugFuncReturnTypes;
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
@@ -644,6 +646,7 @@ class Code
     // Stack inspection helpers.
 
     bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength);
+    ExprType debugGetResultType(uint32_t funcIndex);
 
     // about:memory reporting:
 

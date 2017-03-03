@@ -8,12 +8,18 @@ XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'mozIMozIntl.idl',
+    'mozIMozIntlHelper.idl',
 ]
 
 XPIDL_MODULE = 'mozintl'
 
 SOURCES += [
-    'MozIntl.cpp',
+    'MozIntlHelper.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'mozIntl.js',
+    'mozIntl.manifest',
 ]
 
 FINAL_LIBRARY = 'xul'
