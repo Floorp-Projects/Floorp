@@ -1,19 +1,21 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
-  <script type="text/javascript" src="../../test/manifest.js"></script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
-var manager = new MediaTestManager;
 
 createHTML({
   bug: "1081409",
   title: "Captured video-only over peer connection",
   visible: true
 }).then(() => new Promise(resolve => {
+  // Run tests in sequence for log readability.
+  PARALLEL_TESTS = 1;
+  let manager = new MediaTestManager;
+  window.mediaTestManager = manager;
   manager.runTests(getPlayableVideos(gLongerTests), startTest);
   manager.onFinished = () => {
     // Tear down before SimpleTest.finish.
@@ -25,10 +27,8 @@ createHTML({
 }))
 .catch(e => ok(false, "Unexpected " + e + ":\n" + e.stack));
 
-// Run tests in sequence for log readability.
-PARALLEL_TESTS = 1;
-
 function startTest(media, token) {
+  let manager = window.mediaTestManager;
   manager.started(token);
   var video = document.createElement('video');
   video.id = "id_" + media.name;
