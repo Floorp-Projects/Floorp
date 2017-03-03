@@ -24,7 +24,7 @@ public:
                            JSContext* cx, UniqueStacks& aUniqueStacks);
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId, double aSinceTime,
                            UniqueStacks& aUniqueStacks);
-  void DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime);
+  bool DuplicateLastSample(int aThreadId, const mozilla::TimeStamp& aStartTime);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
 

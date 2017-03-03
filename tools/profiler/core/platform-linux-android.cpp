@@ -366,8 +366,8 @@ SigprofSender(void* aArg)
           continue;
         }
 
-        if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
-          info->DuplicateLastSample(gBuffer, gStartTime);
+        if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
+            gBuffer->DuplicateLastSample(info->ThreadId(), gStartTime)) {
           continue;
         }
 
