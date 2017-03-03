@@ -379,10 +379,11 @@ class TlsAgentTestBase : public ::testing::Test {
  public:
   static ::testing::internal::ParamGenerator<std::string> kTlsRolesAll;
 
-  TlsAgentTestBase(TlsAgent::Role role, Mode mode)
+  TlsAgentTestBase(TlsAgent::Role role, Mode mode, uint16_t version = 0)
       : agent_(nullptr),
         role_(role),
         mode_(mode),
+        version_(version),
         sink_adapter_(new DummyPrSocket("sink", mode)) {}
   virtual ~TlsAgentTestBase() {}
 
@@ -421,25 +422,31 @@ class TlsAgentTestBase : public ::testing::Test {
   std::unique_ptr<TlsAgent> agent_;
   TlsAgent::Role role_;
   Mode mode_;
+  uint16_t version_;
   // This adapter is here just to accept packets from this agent.
   std::shared_ptr<DummyPrSocket> sink_adapter_;
 };
 
 class TlsAgentTest : public TlsAgentTestBase,
                      public ::testing::WithParamInterface<
-                         std::tuple<std::string, std::string>> {
+                         std::tuple<std::string, std::string, uint16_t>> {
  public:
   TlsAgentTest()
       : TlsAgentTestBase(ToRole(std::get<0>(GetParam())),
-                         ToMode(std::get<1>(GetParam()))) {}
+                         ToMode(std::get<1>(GetParam())),
+                         std::get<2>(GetParam())) {}
 };
 
-class TlsAgentTestClient : public TlsAgentTestBase,
-                           public ::testing::WithParamInterface<std::string> {
+class TlsAgentTestClient
+    : public TlsAgentTestBase,
+      public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsAgentTestClient()
-      : TlsAgentTestBase(TlsAgent::CLIENT, ToMode(GetParam())) {}
+      : TlsAgentTestBase(TlsAgent::CLIENT, ToMode(std::get<0>(GetParam())),
+                         std::get<1>(GetParam())) {}
 };
+
+class TlsAgentTestClient13 : public TlsAgentTestClient {};
 
 class TlsAgentStreamTestClient : public TlsAgentTestBase {
  public:
