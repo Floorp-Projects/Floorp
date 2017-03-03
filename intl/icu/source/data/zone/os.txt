@@ -3,18 +3,6 @@
 os{
     Version{"2.1.27.40"}
     zoneStrings{
-        "Asia:Tbilisi"{
-            ec{"Тбилис"}
-        }
-        "Etc:Unknown"{
-            ec{"Нӕзонгӕ"}
-        }
-        "Europe:Minsk"{
-            ec{"Минск"}
-        }
-        "Europe:Moscow"{
-            ec{"Мӕскуы"}
-        }
         "meta:Europe_Central"{
             ld{"Астӕуккаг Европӕйаг сӕрдыгон рӕстӕг"}
             lg{"Астӕуккаг Европӕйаг рӕстӕг"}
