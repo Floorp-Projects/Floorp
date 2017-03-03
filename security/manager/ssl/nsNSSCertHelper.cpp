@@ -89,9 +89,13 @@ GetPIPNSSBundle(nsIStringBundle** pipnssBundle)
                                      pipnssBundle);
 }
 
-static nsresult
+nsresult
 GetPIPNSSBundleString(const char* stringName, nsAString& result)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
   MOZ_ASSERT(stringName);
   if (!stringName) {
     return NS_ERROR_INVALID_ARG;
