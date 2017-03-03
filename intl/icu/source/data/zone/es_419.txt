@@ -3,6 +3,21 @@
 es_419{
     Version{"2.1.27.99"}
     zoneStrings{
+        "America:St_Johns"{
+            ec{"San Juan de Terranova"}
+        }
+        "America:St_Kitts"{
+            ec{"San Cristóbal"}
+        }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
+        "Etc:Unknown"{
+            ec{"Ciudad desconocida"}
+        }
+        "Pacific:Wake"{
+            ec{"Isla Wake"}
+        }
         "meta:Cook"{
             ld{"hora de verano media de las islas Cook"}
             lg{"hora de las islas Cook"}

@@ -4,6 +4,11 @@ en_CA{
     %%Parent{"en_001"}
     Version{"2.1.29.54"}
     zoneStrings{
+        "Pacific:Honolulu"{
+            sd{"HDT"}
+            sg{"HST"}
+            ss{"HST"}
+        }
         "meta:Alaska"{
             sd{"AKDT"}
             sg{"AKT"}

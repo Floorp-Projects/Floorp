@@ -3,6 +3,9 @@
 lrc{
     Version{"2.1.27.40"}
     zoneStrings{
+        "Etc:Unknown"{
+            ec{"نادیار"}
+        }
         "meta:America_Central"{
             ld{"روٙشنایی نئهادار روٙز"}
             lg{"گاٛت مینجاٛیی"}

@@ -3,6 +3,45 @@
 nn{
     Version{"2.1.28.76"}
     zoneStrings{
+        "America:Belem"{
+            ec{"Belém"}
+        }
+        "America:Cancun"{
+            ec{"Cancún"}
+        }
+        "America:Godthab"{
+            ec{"Godthåb"}
+        }
+        "America:Mexico_City"{
+            ec{"Mexico by"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Center, Nord-Dakota"}
+        }
+        "Asia:Tashkent"{
+            ec{"Tasjkent"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan Bator"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azorane"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanariøyane"}
+        }
+        "Etc:Unknown"{
+            ec{"ukjend"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisboa"}
+        }
+        "Europe:Moscow"{
+            ec{"Moskva"}
+        }
+        "Pacific:Easter"{
+            ec{"Påskeøya"}
+        }
         "meta:Africa_Central"{
             ls{"sentralafrikansk tid"}
         }

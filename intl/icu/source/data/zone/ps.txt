@@ -3,6 +3,9 @@
 ps{
     Version{"2.1.27.40"}
     zoneStrings{
+        "Asia:Kabul"{
+            ec{"کابل"}
+        }
         "meta:Almaty"{
             ld{"∅∅∅"}
             lg{"الماتا په وخت"}

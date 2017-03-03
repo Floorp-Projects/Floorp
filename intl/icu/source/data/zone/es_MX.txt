@@ -4,6 +4,87 @@ es_MX{
     %%Parent{"es_419"}
     Version{"2.1.28.76"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"Acra"}
+        }
+        "Africa:Bujumbura"{
+            ec{"Buyumbura"}
+        }
+        "Africa:Conakry"{
+            ec{"Conakri"}
+        }
+        "Africa:Dar_es_Salaam"{
+            ec{"Dar es-Salaam"}
+        }
+        "Africa:Khartoum"{
+            ec{"Jartum"}
+        }
+        "America:Belem"{
+            ec{"Belém"}
+        }
+        "America:Curacao"{
+            ec{"Curazao"}
+        }
+        "America:Rio_Branco"{
+            ec{"Rio Branco"}
+        }
+        "Asia:Almaty"{
+            ec{"Almatý"}
+        }
+        "Asia:Anadyr"{
+            ec{"Anádyr"}
+        }
+        "Asia:Dhaka"{
+            ec{"Daca"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Dusambé"}
+        }
+        "Asia:Pyongyang"{
+            ec{"Piongyang"}
+        }
+        "Asia:Qatar"{
+            ec{"Qatar"}
+        }
+        "Asia:Qyzylorda"{
+            ec{"Kyzylorda"}
+        }
+        "Asia:Tashkent"{
+            ec{"Taskent"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Ekaterinburgo"}
+        }
+        "Europe:Busingen"{
+            ec{"Büsingen"}
+        }
+        "Europe:Chisinau"{
+            ec{"Chisináu"}
+        }
+        "Europe:Dublin"{
+            ld{"Hora de verano irlandesa"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
+        "Europe:London"{
+            ld{"Hora de verano británica"}
+        }
+        "Europe:Simferopol"{
+            ec{"Simferópol"}
+        }
+        "Europe:Uzhgorod"{
+            ec{"Úzhgorod"}
+        }
+        "Europe:Zaporozhye"{
+            ec{"Zaporiyia"}
+        }
+        "Indian:Christmas"{
+            ec{"Navidad"}
+        }
+        "Pacific:Honolulu"{
+            ec{"Honolulu"}
+        }
         "meta:Africa_Central"{
             ls{"Hora de África Central"}
         }
