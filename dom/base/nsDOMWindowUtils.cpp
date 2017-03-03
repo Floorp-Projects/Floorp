@@ -2810,27 +2810,6 @@ nsDOMWindowUtils::GetContainerElement(nsIDOMElement** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
-                              nsISupports **aDOMFile)
-{
-  if (!aFile) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsPIDOMWindowInner* innerWindow = window->GetCurrentInnerWindow();
-  if (!innerWindow) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMBlob> blob = File::CreateFromFile(innerWindow, aFile);
-  blob.forget(aDOMFile);
-  return NS_OK;
-}
-
 #ifdef DEBUG
 static bool
 CheckLeafLayers(Layer* aLayer, const nsIntPoint& aOffset, nsIntRegion* aCoveredRegion)
