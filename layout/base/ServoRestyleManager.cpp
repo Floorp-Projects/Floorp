@@ -253,6 +253,11 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
       displayContentsNode->mStyle = newContext;
     }
 
+    if (styleFrame) {
+      styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeListToProcess,
+                                              changeHint);
+    }
+
     // Update pseudo-elements state if appropriate.
     const static CSSPseudoElementType pseudosToRestyle[] = {
       CSSPseudoElementType::before,
