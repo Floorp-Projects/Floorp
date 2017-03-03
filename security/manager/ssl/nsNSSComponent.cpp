@@ -1967,32 +1967,6 @@ nsNSSComponent::GetNewPrompter(nsIPrompt** result)
   return rv;
 }
 
-/*static*/ nsresult
-nsNSSComponent::ShowAlertWithConstructedString(const nsString& message)
-{
-  nsCOMPtr<nsIPrompt> prompter;
-  nsresult rv = GetNewPrompter(getter_AddRefs(prompter));
-  if (prompter) {
-    rv = prompter->Alert(nullptr, message.get());
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::ShowAlertFromStringBundle(const char* messageID)
-{
-  nsString message;
-  nsresult rv;
-
-  rv = GetPIPNSSBundleString(messageID, message);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("GetPIPNSSBundleString failed");
-    return rv;
-  }
-
-  return ShowAlertWithConstructedString(message);
-}
-
 nsresult nsNSSComponent::LogoutAuthenticatedPK11()
 {
   nsCOMPtr<nsICertOverrideService> icos =
