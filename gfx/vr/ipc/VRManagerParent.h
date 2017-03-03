@@ -94,6 +94,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvControllerListenerAdded() override;
   virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
   virtual mozilla::ipc::IPCResult RecvGetControllers(nsTArray<VRControllerInfo> *aControllers) override;
+  virtual mozilla::ipc::IPCResult RecvCreateVRTestSystem() override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID) override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestController(const nsCString& aID, const uint32_t& aPromiseID) override;
   virtual mozilla::ipc::IPCResult RecvSetDisplayInfoToMockDisplay(const uint32_t& aDeviceID,

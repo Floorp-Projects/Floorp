@@ -62,6 +62,7 @@ parent:
   // GetControllers synchronously returns the VR controllers that have already been
   // enumerated by RefreshVRControllers() but does not enumerate new ones.
   sync GetControllers() returns(VRControllerInfo[] aControllerInfo);
+  async CreateVRTestSystem();
   async CreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID);
   async CreateVRServiceTestController(nsCString aID, uint32_t aPromiseID);
   async SetDisplayInfoToMockDisplay(uint32_t aDeviceID, VRDisplayInfo aDisplayInfo);
