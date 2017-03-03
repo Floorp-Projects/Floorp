@@ -330,6 +330,14 @@ VRManagerParent::RecvGetControllers(nsTArray<VRControllerInfo> *aControllers)
 }
 
 mozilla::ipc::IPCResult
+VRManagerParent::RecvCreateVRTestSystem()
+{
+  VRManager* vm = VRManager::Get();
+  vm->CreateVRTestSystem();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 VRManagerParent::RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID)
 {
   nsTArray<VRDisplayInfo> displayInfoArray;
