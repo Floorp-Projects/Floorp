@@ -5540,6 +5540,7 @@ var XPInstallObserver = {
         // If nothing aborted, quit the app
         if (cancelQuit.data == false) {
           Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+          SharedPreferences.forApp().setBoolPref("browser.sessionstore.resume_session_once", true);
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }
