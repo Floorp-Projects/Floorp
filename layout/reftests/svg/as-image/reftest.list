@@ -60,7 +60,7 @@ fuzzy(1,2) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-d
 test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html lime100x100-ref.html
 == context-fill-02.html transparent100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
-test-pref(svg.context-properties.content.enabled,true) fails-if(stylo) == context-fill-03.html lime100x100-50pct-ref.html
+test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
 fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-fill-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-05.html context-fill-or-stroke-05-ref.html
@@ -72,7 +72,7 @@ test-pref(svg.context-properties.content.enabled,true) == context-fill-bg-image-
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-01.html lime100x100-ref.html
 == context-stroke-02.html transparent100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-02.html lime100x100-w-border-ref.html
-test-pref(svg.context-properties.content.enabled,true) fails-if(stylo) == context-stroke-03.html lime100x100-50pct-ref.html
+test-pref(svg.context-properties.content.enabled,true) == context-stroke-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
 fuzzy-if(winWidget,1,10000) test-pref(svg.context-properties.content.enabled,true) == context-stroke-04.html lime100x100-50pct-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-stroke-05.html context-fill-or-stroke-05-ref.html

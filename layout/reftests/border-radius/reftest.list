@@ -14,7 +14,7 @@
 != outline-square.html outline-ellips.html
 != outline-circle.html outline-ellips.html
 == border-value-interpret.html border-value-interpret-ref.html
-!= curved-borders-all-styles.html about:blank # no way to generate reference for dotted/dashed/inset/outset
+fails-if(stylo) != curved-borders-all-styles.html about:blank # no way to generate reference for dotted/dashed/inset/outset
 # ridge/groove borders
 
 # percent units
