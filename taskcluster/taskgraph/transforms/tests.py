@@ -407,9 +407,7 @@ def set_tier(config, tests):
         if 'tier' not in test or test['tier'] == 'default':
             if test['test-platform'] in ['linux32/opt',
                                          'linux32/debug',
-                                         'linux32-nightly/opt',
                                          'linux64/opt',
-                                         'linux64-nightly/opt',
                                          'linux64/debug',
                                          'linux64-pgo/opt',
                                          'linux64-asan/opt',
@@ -580,17 +578,6 @@ def set_tag(config, tests):
         tag = config.config['args'].tag
         if tag:
             test['mozharness']['extra-options'].extend(['--tag', tag])
-        yield test
-
-
-@transforms.add
-def set_nightly(config, tests):
-    """Set nightly attribute for tests."""
-    for test in tests:
-        if test['test-platform'] in ['linux32-nightly/opt', 'linux64-nightly/opt']:
-            attributes = test.get('attributes', {})
-            attributes['nightly'] = True
-            test['attributes'] = attributes
         yield test
 
 
