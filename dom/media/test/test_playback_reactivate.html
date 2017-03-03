@@ -17,6 +17,12 @@
    Test pass if the video plays to the end.
 */
 
+// longer timeout for slow platforms
+if (isSlowPlatform()) {
+  SimpleTest.requestLongerTimeout(1.5);
+  SimpleTest.requestCompleteLog();
+}
+
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
