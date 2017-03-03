@@ -2313,21 +2313,21 @@ LiveRange::toString() const
 {
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char* buf = JS_smprintf("v%u [%u,%u)", hasVreg() ? vreg() : 0, from().bits(), to().bits());
+    UniqueChars buf = JS_smprintf("v%u [%u,%u)", hasVreg() ? vreg() : 0, from().bits(), to().bits());
 
     if (buf && bundle() && !bundle()->allocation().isBogus())
-        buf = JS_sprintf_append(buf, " %s", bundle()->allocation().toString().get());
+        buf = JS_sprintf_append(Move(buf), " %s", bundle()->allocation().toString().get());
 
     if (buf && hasDefinition())
-        buf = JS_sprintf_append(buf, " (def)");
+        buf = JS_sprintf_append(Move(buf), " (def)");
 
     for (UsePositionIterator iter = usesBegin(); buf && iter; iter++)
-        buf = JS_sprintf_append(buf, " %s@%u", iter->use()->toString().get(), iter->pos.bits());
+        buf = JS_sprintf_append(Move(buf), " %s@%u", iter->use()->toString().get(), iter->pos.bits());
 
     if (!buf)
         oomUnsafe.crash("LiveRange::toString()");
 
-    return UniqueChars(buf);
+    return buf;
 }
 
 UniqueChars
@@ -2336,10 +2336,10 @@ LiveBundle::toString() const
     AutoEnterOOMUnsafeRegion oomUnsafe;
 
     // Suppress -Wformat warning.
-    char *buf = JS_smprintf("%s", "");
+    UniqueChars buf = JS_smprintf("%s", "");
 
     for (LiveRange::BundleLinkIterator iter = rangesBegin(); buf && iter; iter++) {
-        buf = JS_sprintf_append(buf, "%s %s",
+        buf = JS_sprintf_append(Move(buf), "%s %s",
                                 (iter == rangesBegin()) ? "" : " ##",
                                 LiveRange::get(*iter)->toString().get());
     }
@@ -2347,7 +2347,7 @@ LiveBundle::toString() const
     if (!buf)
         oomUnsafe.crash("LiveBundle::toString()");
 
-    return UniqueChars(buf);
+    return buf;
 }
 
 #endif // JS_JITSPEW

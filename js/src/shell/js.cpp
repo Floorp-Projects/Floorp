@@ -1363,22 +1363,22 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    char* names = strdup("");
+    UniqueChars names = DuplicateString("");
     bool found = false;
     if (names && oldContextOptions.extraWarnings()) {
-        names = JS_sprintf_append(names, "%s%s", found ? "," : "", "strict");
+        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "strict");
         found = true;
     }
     if (names && oldContextOptions.werror()) {
-        names = JS_sprintf_append(names, "%s%s", found ? "," : "", "werror");
+        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "werror");
         found = true;
     }
     if (names && oldContextOptions.throwOnAsmJSValidationFailure()) {
-        names = JS_sprintf_append(names, "%s%s", found ? "," : "", "throw_on_asmjs_validation_failure");
+        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "throw_on_asmjs_validation_failure");
         found = true;
     }
     if (names && oldContextOptions.strictMode()) {
-        names = JS_sprintf_append(names, "%s%s", found ? "," : "", "strict_mode");
+        names = JS_sprintf_append(Move(names), "%s%s", found ? "," : "", "strict_mode");
         found = true;
     }
     if (!names) {
@@ -1386,8 +1386,7 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSString* str = JS_NewStringCopyZ(cx, names);
-    free(names);
+    JSString* str = JS_NewStringCopyZ(cx, names.get());
     if (!str)
         return false;
     args.rval().setString(str);
@@ -4944,10 +4943,10 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
         // As a special case, if the caller passes "--js-cache", replace that
         // with "--js-cache=$(jsCacheDir)"
         if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
-            char* newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
+            UniqueChars newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
             if (!newArg)
                 return false;
-            argv.replaceBack(newArg);
+            argv.replaceBack(newArg.release());
         }
     }
 
@@ -8198,12 +8197,12 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     jsCacheDir = op.getStringOption("js-cache");
     if (jsCacheDir) {
         if (!op.getBoolOption("no-js-cache-per-process"))
-            jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid());
+            jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid()).release();
         else
             jsCacheDir = JS_strdup(cx, jsCacheDir);
         if (!jsCacheDir)
             return false;
-        jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
+        jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir).release();
     }
 
 #ifdef DEBUG
