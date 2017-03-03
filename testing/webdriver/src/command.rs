@@ -551,7 +551,7 @@ impl Parameters for TimeoutsParameters {
             None => None,
         };
 
-        let implicit = match data.get("script") {
+        let implicit = match data.get("implicit") {
             Some(json) => {
                 Some(try_opt!(json.as_u64(),
                               ErrorStatus::InvalidArgument,
