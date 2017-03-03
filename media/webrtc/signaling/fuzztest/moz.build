@@ -20,7 +20,7 @@ if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Darwin':
     ]
 
     USE_LIBS += [
-        '/media/webrtc/trunk/testing/gtest_gtest/gtest',
+        '/testing/gtest/gtest',
         'mozglue',
         'nspr',
     ]
