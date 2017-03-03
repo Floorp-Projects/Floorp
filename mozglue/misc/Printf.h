@@ -105,7 +105,7 @@ private:
 
 // Used in the implementation of Smprintf et al.
 template<typename AllocPolicy>
-class MOZ_STACK_CLASS SprintfState final : public mozilla::PrintfTarget, private AllocPolicy
+class MOZ_STACK_CLASS SprintfState final : private mozilla::PrintfTarget, private AllocPolicy
 {
  public:
     explicit SprintfState(char* base)
@@ -117,6 +117,12 @@ class MOZ_STACK_CLASS SprintfState final : public mozilla::PrintfTarget, private
 
     ~SprintfState() {
         this->free_(mBase);
+    }
+
+    bool vprint(const char* format, va_list ap_list) {
+        // The "" here has a single \0 character, which is what we're
+        // trying to append.
+        return mozilla::PrintfTarget::vprint(format, ap_list) && append("", 1);
     }
 
     char* release() {

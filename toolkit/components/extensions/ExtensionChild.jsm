@@ -329,7 +329,7 @@ class Messenger {
     return this.sendMessage(messageManager, msg, recipient, responseCallback);
   }
 
-  onMessage(name) {
+  _onMessage(name, filter) {
     return new SingletonEventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
@@ -337,7 +337,8 @@ class Messenger {
 
         filterMessage: (sender, recipient) => {
           // Ignore the message if it was sent by this Messenger.
-          return sender.contextId !== this.context.contextId;
+          return (sender.contextId !== this.context.contextId &&
+                  filter(sender, recipient));
         },
 
         receiveMessage: ({target, data: message, sender, recipient}) => {
@@ -377,6 +378,14 @@ class Messenger {
     }).api();
   }
 
+  onMessage(name) {
+    return this._onMessage(name, sender => sender.id === this.sender.id);
+  }
+
+  onMessageExternal(name) {
+    return this._onMessage(name, sender => sender.id !== this.sender.id);
+  }
+
   _connect(messageManager, port, recipient) {
     let msg = {
       name: port.name,
@@ -411,7 +420,7 @@ class Messenger {
     return this._connect(messageManager, port, recipient);
   }
 
-  onConnect(name) {
+  _onConnect(name, filter) {
     return new SingletonEventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
@@ -419,7 +428,8 @@ class Messenger {
 
         filterMessage: (sender, recipient) => {
           // Ignore the port if it was created by this Messenger.
-          return sender.contextId !== this.context.contextId;
+          return (sender.contextId !== this.context.contextId &&
+                  filter(sender, recipient));
         },
 
         receiveMessage: ({target, data: message, sender}) => {
@@ -441,6 +451,14 @@ class Messenger {
         MessageChannel.removeListener(this.messageManagers, "Extension:Connect", listener);
       };
     }).api();
+  }
+
+  onConnect(name) {
+    return this._onConnect(name, sender => sender.id === this.sender.id);
+  }
+
+  onConnectExternal(name) {
+    return this._onConnect(name, sender => sender.id !== this.sender.id);
   }
 }
 
@@ -782,7 +800,7 @@ class ExtensionBaseContextChild extends BaseContext {
 
     // This is the MessageSender property passed to extension.
     // It can be augmented by the "page-open" hook.
-    let sender = {id: extension.uuid};
+    let sender = {id: extension.id};
     if (viewType == "tab") {
       sender.tabId = tabId;
       this.tabId = tabId;

@@ -99,7 +99,8 @@ make-package: FORCE
 GARBAGE += make-package
 
 make-sourcestamp-file::
-	@awk '$$2 == "MOZ_BUILDID" {print $$3}' $(DEPTH)/buildid.h > $(MOZ_SOURCESTAMP_FILE)
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+	@echo '$(BUILDID)' > $(MOZ_SOURCESTAMP_FILE)
 ifdef MOZ_INCLUDE_SOURCE_INFO
 	@awk '$$2 == "MOZ_SOURCE_URL" {print $$3}' $(DEPTH)/source-repo.h >> $(MOZ_SOURCESTAMP_FILE)
 endif
@@ -159,7 +160,7 @@ source-package:
 	@echo 'Generate the sourcestamp file'
 	# Make sure to have repository information available and then generate the
 	# sourcestamp file.
-	$(MAKE) -C $(DEPTH) 'source-repo.h' 'buildid.h'
+	$(MAKE) -C $(DEPTH) 'source-repo.h'
 	$(MAKE) make-sourcestamp-file
 	@echo 'Packaging source tarball...'
 	# We want to include the sourcestamp file in the source tarball, so copy it

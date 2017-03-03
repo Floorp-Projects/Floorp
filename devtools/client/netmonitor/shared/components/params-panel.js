@@ -57,31 +57,13 @@ function ParamsPanel({
 
   // Query String section
   if (query) {
-    object[PARAMS_QUERY_STRING] =
-      parseQueryString(query)
-        .reduce((acc, { name, value }) =>
-          name ? Object.assign(acc, { [name]: value }) : acc
-        , {});
+    object[PARAMS_QUERY_STRING] = getProperties(parseQueryString(query));
   }
 
   // Form Data section
   if (formDataSections && formDataSections.length > 0) {
     let sections = formDataSections.filter((str) => /\S/.test(str)).join("&");
-    object[PARAMS_FORM_DATA] =
-      parseQueryString(sections)
-        .reduce((map, obj) => {
-          let value = map[obj.name];
-          // Deal with duplicate key case (ex: multiple selection)
-          if (value) {
-            if (typeof value !== "object") {
-              map[obj.name] = [value];
-            }
-            map[obj.name].push(obj.value);
-          } else {
-            map[obj.name] = obj.value;
-          }
-          return map;
-        }, {});
+    object[PARAMS_FORM_DATA] = getProperties(parseQueryString(sections));
   }
 
   // Request payload section
@@ -122,5 +104,29 @@ ParamsPanel.displayName = "ParamsPanel";
 ParamsPanel.propTypes = {
   request: PropTypes.object.isRequired,
 };
+
+/**
+ * Mapping array to dict for TreeView usage.
+ * Since TreeView only support Object(dict) format.
+ * This function also deal with duplicate key case
+ * (for multiple selection and query params with same keys)
+ *
+ * @param {Object[]} arr - key-value pair array like query or form params
+ * @returns {Object} Rep compatible object
+ */
+function getProperties(arr) {
+  return arr.reduce((map, obj) => {
+    let value = map[obj.name];
+    if (value) {
+      if (typeof value !== "object") {
+        map[obj.name] = [value];
+      }
+      map[obj.name].push(obj.value);
+    } else {
+      map[obj.name] = obj.value;
+    }
+    return map;
+  }, {});
+}
 
 module.exports = ParamsPanel;

@@ -89,7 +89,7 @@ partial interface Range {
 
 dictionary ClientRectsAndTexts {
   required DOMRectList rectList;
-  required DOMStringList textList;
+  required sequence<DOMString> textList;
 };
 
 partial interface Range {

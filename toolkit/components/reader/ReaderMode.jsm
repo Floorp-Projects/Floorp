@@ -377,8 +377,9 @@ this.ReaderMode = {
   },
 
   _blockedHosts: [
-    "mail.google.com",
+    "amazon.com",
     "github.com",
+    "mail.google.com",
     "pinterest.com",
     "reddit.com",
     "twitter.com",

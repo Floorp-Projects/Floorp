@@ -140,12 +140,18 @@ public:
   /* return the row ascent
    */
   nscoord GetRowBaseline(mozilla::WritingMode aWritingMode);
- 
+
   /** returns the ordinal position of this row in its table */
   virtual int32_t GetRowIndex() const;
 
   /** set this row's starting row index */
   void SetRowIndex (int aRowIndex);
+
+  // See nsTableFrame.h
+  int32_t GetAdjustmentForStoredIndex(int32_t aStoredIndex) const;
+
+  // See nsTableFrame.h
+  void AddDeletedRowIndex();
 
   /** used by row group frame code */
   nscoord ReflowCellFrame(nsPresContext*           aPresContext,
@@ -319,13 +325,34 @@ private:
 
 };
 
+inline int32_t
+nsTableRowFrame::GetAdjustmentForStoredIndex(int32_t aStoredIndex) const
+{
+  nsTableRowGroupFrame* parentFrame = GetTableRowGroupFrame();
+  return parentFrame->GetAdjustmentForStoredIndex(aStoredIndex);
+}
+
+inline void nsTableRowFrame::AddDeletedRowIndex()
+{
+  nsTableRowGroupFrame* parentFrame = GetTableRowGroupFrame();
+  parentFrame->AddDeletedRowIndex(int32_t(mBits.mRowIndex));
+}
+
 inline int32_t nsTableRowFrame::GetRowIndex() const
 {
-  return int32_t(mBits.mRowIndex);
+  int32_t storedRowIndex = int32_t(mBits.mRowIndex);
+  int32_t rowIndexAdjustment = GetAdjustmentForStoredIndex(storedRowIndex);
+  return (storedRowIndex - rowIndexAdjustment);
 }
 
 inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
+  // Note: Setting the index of a row (as in the case of adding new rows) should
+  // be preceded by a call to nsTableFrame::RecalculateRowIndices()
+  // so as to correctly clear mDeletedRowIndexRanges.
+  MOZ_ASSERT(GetTableRowGroupFrame()->
+               GetTableFrame()->IsDeletedRowIndexRangesEmpty(),
+             "mDeletedRowIndexRanges should be empty here!");
   mBits.mRowIndex = aRowIndex;
 }
 

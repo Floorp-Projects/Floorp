@@ -201,7 +201,7 @@ add_task(async function test_change_during_sync() {
     _("Perform first sync");
     {
       let changes = engine.pullNewChanges();
-      deepEqual(changes.ids().sort(), [folder1_guid, bmk1_guid, "toolbar"].sort(),
+      deepEqual(Object.keys(changes).sort(), [folder1_guid, bmk1_guid, "toolbar"].sort(),
         "Should track bookmark and folder created before first sync");
       await sync_engine_and_validate_telem(engine, false);
     }
@@ -230,7 +230,7 @@ add_task(async function test_change_during_sync() {
     _("Perform second sync");
     {
       let changes = engine.pullNewChanges();
-      deepEqual(changes.ids().sort(), [bmk3_guid, folder1_guid].sort(),
+      deepEqual(Object.keys(changes).sort(), [bmk3_guid, folder1_guid].sort(),
         "Should track bookmark added during last sync and its parent");
       await sync_engine_and_validate_telem(engine, false);
 

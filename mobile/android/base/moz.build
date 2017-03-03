@@ -246,6 +246,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoAppShell.java',
     'GeckoBatteryManager.java',
     'GeckoEditable.java',
+    'GeckoEditableChild.java',
     'GeckoEditableClient.java',
     'GeckoEditableListener.java',
     'GeckoHalDefines.java',
@@ -1183,5 +1184,7 @@ gbjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
 ]]
 
 gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
+    'IGeckoEditableChild.java',
+    'IGeckoEditableParent.java',
     'process/IChildProcess.java',
 ]]

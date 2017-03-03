@@ -428,6 +428,7 @@ struct CustomSection
 
 typedef Vector<CustomSection, 0, SystemAllocPolicy> CustomSectionVector;
 typedef Vector<ValTypeVector, 0, SystemAllocPolicy> FuncArgTypesVector;
+typedef Vector<ExprType, 0, SystemAllocPolicy> FuncReturnTypesVector;
 
 // Metadata holds all the data that is needed to describe compiled wasm code
 // at runtime (as opposed to data that is only used to statically link or
@@ -479,6 +480,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     Uint32Vector          debugTrapFarJumpOffsets;
     Uint32Vector          debugFuncToCodeRange;
     FuncArgTypesVector    debugFuncArgTypes;
+    FuncReturnTypesVector debugFuncReturnTypes;
 
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
@@ -529,25 +531,6 @@ struct ExprLoc
 };
 
 typedef Vector<ExprLoc, 0, SystemAllocPolicy> ExprLocVector;
-
-// The generated source WebAssembly function lines and expressions ranges.
-
-struct FunctionLoc
-{
-    size_t startExprsIndex;
-    size_t endExprsIndex;
-    uint32_t startLineno;
-    uint32_t endLineno;
-    FunctionLoc(size_t startExprsIndex_, size_t endExprsIndex_, uint32_t startLineno_, uint32_t endLineno_)
-      : startExprsIndex(startExprsIndex_),
-        endExprsIndex(endExprsIndex_),
-        startLineno(startLineno_),
-        endLineno(endLineno_)
-    {}
-};
-
-typedef Vector<FunctionLoc, 0, SystemAllocPolicy> FunctionLocVector;
-
 typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
 
 // The generated source map for WebAssembly binary file. This map is generated during
@@ -556,18 +539,12 @@ typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
 class GeneratedSourceMap
 {
     ExprLocVector exprlocs_;
-    FunctionLocVector functionlocs_;
     UniquePtr<ExprLocIndexVector> sortedByOffsetExprLocIndices_;
     uint32_t totalLines_;
 
   public:
-    explicit GeneratedSourceMap()
-     : exprlocs_(),
-       functionlocs_(),
-       totalLines_(0)
-    {}
+    explicit GeneratedSourceMap() : totalLines_(0) {}
     ExprLocVector& exprlocs() { return exprlocs_; }
-    FunctionLocVector& functionlocs() { return functionlocs_; }
 
     uint32_t totalLines() { return totalLines_; }
     void setTotalLines(uint32_t val) { totalLines_ = val; }
@@ -576,9 +553,7 @@ class GeneratedSourceMap
 };
 
 typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
-
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> StepModeCounters;
-
 typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy> WasmBreakpointSiteMap;
 
 // Code objects own executable code and the metadata that describes it. At the
@@ -671,6 +646,7 @@ class Code
     // Stack inspection helpers.
 
     bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals, size_t* argsLength);
+    ExprType debugGetResultType(uint32_t funcIndex);
 
     // about:memory reporting:
 

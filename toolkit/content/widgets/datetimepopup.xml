@@ -23,11 +23,8 @@
       <field name="DATE_PICKER_WIDTH" readonly="true">"23.1em"</field>
       <field name="DATE_PICKER_HEIGHT" readonly="true">"20.7em"</field>
       <constructor><![CDATA[
-        this.l10n = {};
-        const mozIntl = Components.classes["@mozilla.org/mozintl;1"]
-                          .getService(Components.interfaces.mozIMozIntl);
-        mozIntl.addGetCalendarInfo(this.l10n);
-        mozIntl.addGetDisplayNames(this.l10n);
+        this.mozIntl = Components.classes["@mozilla.org/mozintl;1"]
+                                 .getService(Components.interfaces.mozIMozIntl);
       ]]></constructor>
       <method name="loadPicker">
         <parameter name="type"/>
@@ -226,7 +223,7 @@
       <method name="getCalendarInfo">
         <parameter name="locale"/>
         <body><![CDATA[
-          const calendarInfo = this.l10n.getCalendarInfo(locale);
+          const calendarInfo = this.mozIntl.getCalendarInfo(locale);
 
           // Day of week from calendarInfo starts from 1 as Sunday to 7 as Saturday,
           // so they need to be mapped to JavaScript convention with 0 as Sunday
@@ -259,7 +256,7 @@
         <parameter name="keys"/>
         <parameter name="style"/>
         <body><![CDATA[
-          const displayNames = this.l10n.getDisplayNames(locale, {keys, style});
+          const displayNames = this.mozIntl.getDisplayNames(locale, {keys, style});
           return keys.map(key => displayNames.values[key]);
         ]]></body>
       </method>

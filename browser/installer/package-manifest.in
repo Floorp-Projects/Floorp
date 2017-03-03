@@ -550,6 +550,11 @@
 @RESPATH@/components/PresentationDataChannelSessionTransport.js
 @RESPATH@/components/PresentationDataChannelSessionTransport.manifest
 
+#ifdef ENABLE_INTL_API
+@RESPATH@/components/mozIntl.manifest
+@RESPATH@/components/mozIntl.js
+#endif
+
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @RESPATH@/components/TestInterfaceJS.js
 @RESPATH@/components/TestInterfaceJS.manifest

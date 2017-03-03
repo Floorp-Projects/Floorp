@@ -1,5 +1,4 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-default-preferences pref(layout.css.object-fit-and-position.enabled,true)
 # Tests for 'object-fit' / 'object-position' with a PNG image
 fails == object-fit-fill-png-001c.html object-fit-fill-png-001c.html
 # fails == object-fit-fill-png-001e.html object-fit-fill-png-001e.html

@@ -534,7 +534,7 @@ HTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
       RefPtr<HTMLEditRules> htmlRules =
         static_cast<HTMLEditRules*>(mRules.get());
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
-      nsresult rv = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
+      nsresult rv = htmlRules->MakeSureElemStartsOrEndsOnCR(*element);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = RemoveContainer(element);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -3,45 +3,6 @@
 fr_CA{
     Version{"2.1.27.99"}
     zoneStrings{
-        "Africa:Ndjamena"{
-            ec{"Ndjamena"}
-        }
-        "Africa:Tripoli"{
-            ec{"Tripoli [Libye]"}
-        }
-        "America:Barbados"{
-            ec{"Barbade (La)"}
-        }
-        "America:Cayman"{
-            ec{"Îles Caïmans"}
-        }
-        "America:North_Dakota:Beulah"{
-            ec{"Beulah [Dakota du Nord]"}
-        }
-        "America:North_Dakota:Center"{
-            ec{"Center [Dakota du Nord]"}
-        }
-        "America:North_Dakota:New_Salem"{
-            ec{"New Salem, Dakota du Nord"}
-        }
-        "America:St_Kitts"{
-            ec{"Saint-Christophe-et-Niévès"}
-        }
-        "America:St_Thomas"{
-            ec{"Saint Thomas"}
-        }
-        "Atlantic:Faeroe"{
-            ec{"Îles Féroé"}
-        }
-        "Europe:Dublin"{
-            ld{"heure avancée irlandaise"}
-        }
-        "Europe:London"{
-            ld{"heure avancée britannique"}
-        }
-        "Europe:Vatican"{
-            ec{"Vatican"}
-        }
         "meta:Acre"{
             ld{"heure avancée de l’Acre"}
             lg{"heure de l’Acre"}

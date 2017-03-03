@@ -3,12 +3,6 @@
 kea{
     Version{"2.1.27.46"}
     zoneStrings{
-        "America:Blanc-Sablon"{
-            ec{"Blank-Sablon"}
-        }
-        "Etc:Unknown"{
-            ec{"Sidadi Diskonxedu"}
-        }
         "meta:Africa_Central"{
             ls{"Ora di Afrika Sentral"}
         }

@@ -49,3 +49,21 @@ function* waitForTabBlockEvent(tab, expectBlocked) {
     });
   }
 }
+
+/**
+ * Used to check whether the tab has soundplaying attribute.
+ */
+function* waitForTabPlayingEvent(tab, expectPlaying) {
+  if (tab.soundPlaying == expectPlaying) {
+    ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+  } else {
+    info("Playing state doens't match, wait for attributes changes.");
+    yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+      if (event.detail.changed.indexOf("soundplaying") >= 0) {
+        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+        return true;
+      }
+      return false;
+    });
+  }
+}

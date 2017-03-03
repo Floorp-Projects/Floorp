@@ -65,9 +65,6 @@ pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/Sys
 // See the SCOPE constants in AddonManager.jsm for values to use here.
 pref("extensions.autoDisableScopes", 15);
 
-// Whether or not webextension themes are supported.
-pref("extensions.webextensions.themes.enabled", false);
-
 // Add-on content security policies.
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
@@ -188,8 +185,6 @@ pref("browser.uitour.loglevel", "Error");
 pref("browser.uitour.requireSecure", true);
 pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/themes/");
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
-// This is used as a regexp match against the page's URL.
-pref("browser.uitour.readerViewTrigger", "^https:\\/\\/www\\.mozilla\\.org\\/[^\\/]+\\/firefox\\/reading\\/start");
 // How long to show a Hearbeat survey (two hours, in seconds)
 pref("browser.uitour.surveyDuration", 7200);
 
@@ -1584,12 +1579,6 @@ pref("browser.crashReports.unsubmittedCheck.enabled", false);
 // some number of days.
 pref("browser.crashReports.unsubmittedCheck.chancesUntilSuppress", 4);
 pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
-
-#ifdef NIGHTLY_BUILD
-// Enable the (fairly costly) client/server validation on nightly only. The other prefs
-// controlling validation are located in /services/sync/services-sync.js
-pref("services.sync.validation.enabled", true);
-#endif
 
 // Preferences for the form autofill system extension
 pref("browser.formautofill.experimental", false);

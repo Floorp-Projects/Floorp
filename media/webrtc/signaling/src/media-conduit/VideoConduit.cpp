@@ -74,7 +74,7 @@ const uint32_t WebrtcVideoConduit::kDefaultMaxBitrate_bps = KBPS(2000);
 
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
-static const int kViEMinCodecBitrate = 30;
+static const int kViEMinCodecBitrate_bps = KBPS(30);
 
 template<typename T>
 T MinIgnoreZero(const T& a, const T& b)
@@ -176,6 +176,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mCapId(-1)
   , mCodecMutex("VideoConduit codec db")
   , mInReconfig(false)
+  , mRecvStream(nullptr)
+  , mSendStream(nullptr)
   , mLastWidth(0)
   , mLastHeight(0) // initializing as 0 forces a check for reconfig at start
   , mSendingWidth(0)
@@ -194,10 +196,10 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall)
   , mMinBitrateEstimate(0)
   , mCodecMode(webrtc::kRealtimeVideo)
   , mCall(aCall) // refcounted store of the call object
-  , mSendStream(nullptr)
   , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
-  , mRecvStream(nullptr)
   , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
+  , mRecvSSRCSet(false)
+  , mRecvSSRCSetInProgress(false)
   , mSendCodecPlugin(nullptr)
   , mRecvCodecPlugin(nullptr)
   , mVideoStatsTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
@@ -270,6 +272,7 @@ bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
   }
 
   if (wasTransmitting) {
+    MutexAutoLock lock(mCodecMutex);
     DeleteSendStream();
     if (StartTransmitting() != kMediaConduitNoError) {
       return false;
@@ -321,6 +324,7 @@ PayloadNameToEncoderType(const std::string& name)
 void
 WebrtcVideoConduit::DeleteSendStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
   if (mSendStream) {
 
     if (mLoadManager && mSendStream->LoadStateObserver()) {
@@ -336,6 +340,8 @@ WebrtcVideoConduit::DeleteSendStream()
 MediaConduitErrorCode
 WebrtcVideoConduit::CreateSendStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
+
   webrtc::VideoEncoder::EncoderType encoder_type =
     PayloadNameToEncoderType(mSendStreamConfig.encoder_settings.payload_name);
   if (encoder_type == webrtc::VideoEncoder::EncoderType::kUnsupportedCodec) {
@@ -389,6 +395,7 @@ PayloadNameToDecoderType(const std::string& name)
 void
 WebrtcVideoConduit::DeleteRecvStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
   if (mRecvStream) {
     mCall->Call()->DestroyVideoReceiveStream(mRecvStream);
     mRecvStream = nullptr;
@@ -399,6 +406,8 @@ WebrtcVideoConduit::DeleteRecvStream()
 MediaConduitErrorCode
 WebrtcVideoConduit::CreateRecvStream()
 {
+  mCodecMutex.AssertCurrentThreadOwns();
+
   webrtc::VideoReceiveStream::Decoder decoder_desc;
   std::unique_ptr<webrtc::VideoDecoder> decoder;
   webrtc::VideoDecoder::DecoderType decoder_type;
@@ -499,7 +508,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
                                           mSendingHeight);
 
   // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution changes
-  mNegotiatedMaxBitrate = codecConfig->mTias / 1000;
+  mNegotiatedMaxBitrate = codecConfig->mTias;
 
   // width/height will be overridden on the first frame; they must be 'sane' for
   // SetSendCodec()
@@ -562,7 +571,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     // Calculate these first
     video_stream.max_bitrate_bps = MinIgnoreZero(simulcastEncoding.constraints.maxBr,
                                                  kDefaultMaxBitrate_bps);
-    video_stream.max_bitrate_bps = MinIgnoreZero((int) mPrefMaxBitrate*1000,
+    video_stream.max_bitrate_bps = MinIgnoreZero((int) mPrefMaxBitrate,
                                                  video_stream.max_bitrate_bps);
     video_stream.min_bitrate_bps = (mMinBitrate ? mMinBitrate : kDefaultMinBitrate_bps);
     if (video_stream.min_bitrate_bps > video_stream.max_bitrate_bps) {
@@ -649,6 +658,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     }
 
     // This will cause a new encoder to be created by StartTransmitting()
+    MutexAutoLock lock(mCodecMutex);
     DeleteSendStream();
   }
 
@@ -682,11 +692,12 @@ bool
 WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
 {
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
-  unsigned int current_ssrc;
 
+  unsigned int current_ssrc;
   if (!GetRemoteSSRC(&current_ssrc)) {
     return false;
   }
+  mRecvSSRCSet = true;
 
   if (current_ssrc == ssrc || !mEngineReceiving) {
     return true;
@@ -696,13 +707,19 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
     return false;
   }
 
-  DeleteRecvStream();
-  MediaConduitErrorCode rval = CreateRecvStream();
-  if (rval != kMediaConduitNoError) {
-    CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
-    return false;
+  // This will destroy mRecvStream and create a new one (argh, why can't we change
+  // it without a full destroy?)
+  // We're going to modify mRecvStream, we must lock.  Only modified on MainThread.
+  // All non-MainThread users must lock before reading/using
+  {
+    MutexAutoLock lock(mCodecMutex);
+    DeleteRecvStream();
+    MediaConduitErrorCode rval = CreateRecvStream();
+    if (rval != kMediaConduitNoError) {
+      CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+      return false;
+    }
   }
-
   return (StartReceiving() == kMediaConduitNoError);
 }
 
@@ -862,25 +879,25 @@ WebrtcVideoConduit::InitMain()
             "media.peerconnection.video.min_bitrate", &temp))))
       {
          if (temp >= 0) {
-            mMinBitrate = temp;
+           mMinBitrate = KBPS(temp);
          }
       }
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.start_bitrate", &temp))))
       {
          if (temp >= 0) {
-         mStartBitrate = temp;
+           mStartBitrate = KBPS(temp);
          }
       }
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.max_bitrate", &temp))))
       {
         if (temp >= 0) {
-          mPrefMaxBitrate = temp;
+          mPrefMaxBitrate = KBPS(temp);
         }
       }
-      if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate) {
-        mMinBitrate = kViEMinCodecBitrate;
+      if (mMinBitrate != 0 && mMinBitrate < kViEMinCodecBitrate_bps) {
+        mMinBitrate = kViEMinCodecBitrate_bps;
       }
       if (mStartBitrate < mMinBitrate) {
         mStartBitrate = mMinBitrate;
@@ -888,11 +905,13 @@ WebrtcVideoConduit::InitMain()
       if (mPrefMaxBitrate && mStartBitrate > mPrefMaxBitrate) {
         mStartBitrate = mPrefMaxBitrate;
       }
+      // XXX We'd love if this was a live param for testing adaptation/etc
+      // in automation
       if (!NS_WARN_IF(NS_FAILED(branch->GetIntPref(
             "media.peerconnection.video.min_bitrate_estimate", &temp))))
       {
         if (temp >= 0) {
-          mMinBitrateEstimate = temp;
+          mMinBitrateEstimate = temp; // bps!
         }
       }
       bool use_loadmanager = false;
@@ -942,6 +961,7 @@ WebrtcVideoConduit::Destroy()
   // We can't delete the VideoEngine until all these are released!
   // And we can't use a Scoped ptr, since the order is arbitrary
 
+  MutexAutoLock lock(mCodecMutex);
   DeleteSendStream();
   DeleteRecvStream();
 }
@@ -1135,6 +1155,20 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.fec.red_rtx_payload_type = -1;
     }
 
+    if (!mRecvSSRCSet) {
+      // Handle un-signalled SSRCs by creating a random one and then when it actually gets set,
+      // we'll destroy and recreate.  Simpler than trying to unwind all the logic that assumes
+      // the receive stream is created and started when we ConfigureRecvMediaCodecs()
+      unsigned int ssrc;
+      do {
+        SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
+        if (rv != SECSuccess) {
+          return kMediaConduitUnknownError;
+        }
+      } while (ssrc == 0); // webrtc.org code has fits if you select an SSRC of 0
+
+      mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+    }
     // FIXME(jesup) - Bug 1325447 -- SSRCs configured here are a problem.
     // 0 isn't allowed.  Would be best to ask for a random SSRC from the RTP code.
     // Would need to call rtp_sender.cc -- GenerateSSRC(), which isn't exposed.  It's called on
@@ -1147,7 +1181,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       if (rv != SECSuccess) {
         return kMediaConduitUnknownError;
       }
-    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc);
+    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc || ssrc == 0);
+    // webrtc.org code has fits if you select an SSRC of 0
 
     mRecvStreamConfig.rtp.local_ssrc = ssrc;
 
@@ -1155,14 +1190,17 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     mRecvCodecList.SwapElements(recv_codecs);
     recv_codecs.Clear();
     mRecvStreamConfig.rtp.rtx.clear();
-    // Rebuilds mRecvStream from mRecvStreamConfig
-    DeleteRecvStream();
-    MediaConduitErrorCode rval = CreateRecvStream();
-    if (rval != kMediaConduitNoError) {
-      CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
-      return rval;
-    }
 
+    {
+      MutexAutoLock lock(mCodecMutex);
+      DeleteRecvStream();
+      // Rebuilds mRecvStream from mRecvStreamConfig
+      MediaConduitErrorCode rval = CreateRecvStream();
+      if (rval != kMediaConduitNoError) {
+        CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+        return rval;
+      }
+    }
     return StartReceiving();
   }
   return kMediaConduitNoError;
@@ -1345,7 +1383,7 @@ WebrtcVideoConduit::SelectBitrates(
     out_min = mMinBitrate;
   }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  out_min = std::max(kViEMinCodecBitrate, out_min);
+  out_min = std::max(kViEMinCodecBitrate_bps, out_min);
   if (mStartBitrate && mStartBitrate > out_start) {
     out_start = mStartBitrate;
   }
@@ -1732,8 +1770,61 @@ WebrtcVideoConduit::DeliverPacket(const void* data, int len)
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len)
+WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
 {
+  bool queue = mRecvSSRCSetInProgress;
+  if (!mRecvSSRCSet && !mRecvSSRCSetInProgress) {
+    mRecvSSRCSetInProgress = true;
+    queue = true;
+    // Handle the ssrc-not-signaled case; lock onto first ssrc
+    // We can't just do this here; it has to happen on MainThread :-(
+    // We also don't want to drop the packet, nor stall this thread, so we hold
+    // the packet (and any following) for inserting once the SSRC is set.
+
+    // Ensure lamba captures refs
+    RefPtr<WebrtcVideoConduit> self = this;
+    nsCOMPtr<nsIThread> thread;
+    if (NS_WARN_IF(NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread))))) {
+      return kMediaConduitRTPProcessingFailed;
+    }
+    NS_DispatchToMainThread(media::NewRunnableFrom([self, thread, ssrc]() mutable {
+          // Normally this is done in CreateOrUpdateMediaPipeline() for
+          // initial creation and renegotiation, but here we're rebuilding the
+          // Receive channel at a lower level.  This is needed whenever we're
+          // creating a GMPVideoCodec (in particular, H264) so it can communicate
+          // errors to the PC.
+          WebrtcGmpPCHandleSetter setter(self->mPCHandle);
+          self->SetRemoteSSRC(ssrc); // this will likely re-create the VideoReceiveStream
+          // We want to unblock the queued packets on the original thread
+          thread->Dispatch(media::NewRunnableFrom([self]() mutable {
+                self->mRecvSSRCSetInProgress = false;
+                // SSRC is set; insert queued packets
+                for (auto& packet : self->mQueuedPackets) {
+                  CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
+                              (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
+
+                  if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
+                    CSFLogError(logTag, "%s RTP Processing Failed", __FUNCTION__);
+                    // Keep delivering and then clear the queue
+                  }
+                }
+                self->mQueuedPackets.Clear();
+
+                return NS_OK;
+              }), NS_DISPATCH_NORMAL);
+          return NS_OK;
+        }));
+    // we'll return after queuing
+  }
+  if (queue) {
+    // capture packet for insertion after ssrc is set
+    UniquePtr<QueuedPacket> packet((QueuedPacket*) malloc(sizeof(QueuedPacket) + len-1));
+    packet->mLen = len;
+    memcpy(packet->mData, data, len);
+    mQueuedPackets.AppendElement(Move(packet));
+    return kMediaConduitNoError;
+  }
+
   CSFLogDebug(logTag, "%s: seq# %u, Len %d ", __FUNCTION__,
               (uint16_t)ntohs(((uint16_t*) data)[1]), len);
 
