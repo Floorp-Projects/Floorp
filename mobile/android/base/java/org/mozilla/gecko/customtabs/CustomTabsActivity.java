@@ -13,7 +13,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
@@ -29,10 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.TextView;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
@@ -44,7 +40,6 @@ import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
@@ -55,10 +50,9 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
     private static final int NO_COLOR = -1;
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
-    private ActionBar actionBar;
     private GeckoPopupMenu popupMenu;
     private int tabId = -1;
-    private boolean useDomainTitle = true;
+    private ActionBarPresenter actionBarPresenter;
     private int toolbarColor;
     private String toolbarTitle;
     // A state to indicate whether this activity is finishing with customize animation
@@ -78,34 +72,15 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         setThemeFromToolbarColor();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        updateActionBarWithToolbar(toolbar);
-        try {
-            // Since we don't create the Toolbar's TextView ourselves, this seems
-            // to be the only way of changing the ellipsize setting.
-            Field f = toolbar.getClass().getDeclaredField("mTitleTextView");
-            f.setAccessible(true);
-            TextView textView = (TextView) f.get(toolbar);
-            textView.setEllipsize(TextUtils.TruncateAt.START);
-        } catch (Exception e) {
-            // If we can't ellipsize at the start of the title, we shouldn't display the host
-            // so as to avoid displaying a misleadingly truncated host.
-            Log.w(LOGTAG, "Failed to get Toolbar TextView, using default title.");
-            useDomainTitle = false;
-        }
-        actionBar = getSupportActionBar();
-        actionBar.setTitle(toolbarTitle);
-        updateToolbarColor(toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        bindNavigationCallback(toolbar);
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Tabs tabs = Tabs.getInstance();
-                final Tab tab = tabs.getSelectedTab();
-                tabs.closeTab(tab);
-                finish();
-            }
-        });
+        actionBarPresenter = new ActionBarPresenter(actionBar, toolbar);
+        actionBarPresenter.setBackgroundColor(toolbarColor, getWindow());
+        actionBarPresenter.update(toolbarTitle);
 
         Tabs.registerOnTabsChangedListener(this);
     }
@@ -187,12 +162,12 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             if (uri != null) {
                 title = uri.getHost();
             }
-            if (!useDomainTitle || title == null || title.isEmpty()) {
+            if (title == null || title.isEmpty()) {
                 toolbarTitle = AppConstants.MOZ_APP_BASENAME;
             } else {
                 toolbarTitle = title;
             }
-            actionBar.setTitle(toolbarTitle);
+            actionBarPresenter.update(toolbarTitle);
         }
 
         updateMenuItemForward();
@@ -306,26 +281,16 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         return item;
     }
 
-    private void updateActionBarWithToolbar(final Toolbar toolbar) {
-        setSupportActionBar(toolbar);
-        final ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setDisplayHomeAsUpEnabled(true);
-        }
-    }
-
-    private void updateToolbarColor(final Toolbar toolbar) {
-        if (toolbarColor == NO_COLOR) {
-            return;
-        }
-
-        toolbar.setBackgroundColor(toolbarColor);
-
-        final Window window = getWindow();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(ColorUtil.darken(toolbarColor, 0.25));
-        }
+    private void bindNavigationCallback(@NonNull final Toolbar toolbar) {
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Tabs tabs = Tabs.getInstance();
+                final Tab tab = tabs.getSelectedTab();
+                tabs.closeTab(tab);
+                finish();
+            }
+        });
     }
 
     private void performPendingIntent(@NonNull PendingIntent pendingIntent) {
