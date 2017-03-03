@@ -83,6 +83,17 @@ ScopeKindIsCatch(ScopeKind kind)
     return kind == ScopeKind::SimpleCatch || kind == ScopeKind::Catch;
 }
 
+static inline bool
+ScopeKindIsInBody(ScopeKind kind)
+{
+    return kind == ScopeKind::Lexical ||
+           kind == ScopeKind::SimpleCatch ||
+           kind == ScopeKind::Catch ||
+           kind == ScopeKind::With ||
+           kind == ScopeKind::FunctionBodyVar ||
+           kind == ScopeKind::ParameterExpressionVar;
+}
+
 const char* BindingKindString(BindingKind kind);
 const char* ScopeKindString(ScopeKind kind);
 
