@@ -298,4 +298,14 @@ function run_test() {
   });
   Services.prefs.clearUserPref("security.fileuri.strict_origin_policy");
 
+  var aboutBlankURI = makeURI('about:blank');
+  var aboutBlankPrin = ssm.createCodebasePrincipal(aboutBlankURI, {});
+  var thrown = false;
+  try {
+    aboutBlankPrin.origin;
+  } catch (e) {
+    thrown = true;
+  }
+  do_check_true(thrown);
+
 }
