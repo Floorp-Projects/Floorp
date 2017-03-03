@@ -82,6 +82,8 @@
             android:drawableStart="@drawable/ic_search"
             android:gravity="center_vertical"
             android:padding="16dp"
+            android:lines="1"
+            android:ellipsize="end"
             android:background="?android:attr/selectableItemBackground" />
 
         <View
