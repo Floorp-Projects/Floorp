@@ -367,19 +367,19 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 315920-4.html 315920-4-ref.html
 fuzzy-if(skiaContent,1,1468) == 315920-5.html 315920-5-ref.html
 == 315920-6.html 315920-6-ref.html
-== 315920-7a.html 315920-7-ref.html
-== 315920-7b.html 315920-7-ref.html
-== 315920-7c.html 315920-7-ref.html
-== 315920-8a.html 315920-8-ref.html
-== 315920-8b.html 315920-8-ref.html
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-7a.html 315920-7-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-7b.html 315920-7-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-7c.html 315920-7-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-8a.html 315920-8-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-8b.html 315920-8-ref.html # bug 1342240
 == 315920-9.html 315920-9-ref.html
 == 315920-10.html 315920-10-ref.html
 == 315920-11.html 315920-11-ref.html
-== 315920-12a.html 315920-12-ref.html
-== 315920-12b.html 315920-12-ref.html
-== 315920-12c.html 315920-12-ref.html
-== 315920-13a.html 315920-13-ref.html
-== 315920-13b.html 315920-13-ref.html
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-12a.html 315920-12-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-12b.html 315920-12-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-12c.html 315920-12-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-13a.html 315920-13-ref.html # bug 1342240
+fuzzy-if(Android&&isDebugBuild,229,45) == 315920-13b.html 315920-13-ref.html # bug 1342240
 == 315920-14.html 315920-14-ref.html
 == 315920-15.html 315920-15-ref.html
 == 315920-16.html 315920-16-ref.html
