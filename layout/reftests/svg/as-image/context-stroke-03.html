@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test context-stroke where stroke is semi-transparent</title>
+    <style>
+
+img {
+  width: 100px;
+  height: 100px;
+  stroke: rgb(0% 100% 0% / 50%);
+}
+
+    </style>
+  </head>
+  <body>
+    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><line x1='0' y1='50%' x2='100%' y2='50%' stroke-width='120%' stroke='context-stroke red'/></svg>">
+  </body>
+</html>
