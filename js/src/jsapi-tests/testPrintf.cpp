@@ -22,13 +22,10 @@ print_one (const char *expect, const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    char *output = JS_vsmprintf (fmt, ap);
+    JS::UniqueChars output = JS_vsmprintf (fmt, ap);
     va_end(ap);
 
-    bool result = output && !strcmp(output, expect);
-    JS_smprintf_free(output);
-
-    return result;
+    return output && !strcmp(output.get(), expect);
 }
 
 static const char *
