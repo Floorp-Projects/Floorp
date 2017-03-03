@@ -12,6 +12,75 @@ category webextension-scripts idle chrome://extensions/content/ext-idle.js
 category webextension-scripts management chrome://extensions/content/ext-management.js
 category webextension-scripts notifications chrome://extensions/content/ext-notifications.js
 category webextension-scripts privacy chrome://extensions/content/ext-privacy.js
+category webextension-scripts proxy chrome://extensions/content/ext-proxy.js
+category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
+category webextension-scripts storage chrome://extensions/content/ext-storage.js
+category webextension-scripts theme chrome://extensions/content/ext-theme.js
+category webextension-scripts topSites chrome://extensions/content/ext-topSites.js
+category webextension-scripts webNavigation chrome://extensions/content/ext-webNavigation.js
+category webextension-scripts webRequest chrome://extensions/content/ext-webRequest.js
+
+# scripts specific for content process.
+category webextension-scripts-content extension chrome://extensions/content/ext-c-extension.js
+category webextension-scripts-content i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts-content runtime chrome://extensions/content/ext-c-runtime.js
+category webextension-scripts-content storage chrome://extensions/content/ext-c-storage.js
+category webextension-scripts-content test chrome://extensions/content/ext-c-test.js
+
+# scripts specific for devtools extension contexts.
+category webextension-scripts-devtools extension chrome://extensions/content/ext-c-extension.js
+category webextension-scripts-devtools i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts-devtools runtime chrome://extensions/content/ext-c-runtime.js
+category webextension-scripts-devtools storage chrome://extensions/content/ext-c-storage.js
+category webextension-scripts-devtools test chrome://extensions/content/ext-c-test.js
+
+# scripts that must run in the same process as addon code.
+category webextension-scripts-addon backgroundPage chrome://extensions/content/ext-c-backgroundPage.js
+category webextension-scripts-addon extension chrome://extensions/content/ext-c-extension.js
+category webextension-scripts-addon i18n chrome://extensions/content/ext-i18n.js
+#ifndef ANDROID
+category webextension-scripts-addon identity chrome://extensions/content/ext-c-identity.js
+#endif
+category webextension-scripts-addon runtime chrome://extensions/content/ext-c-runtime.js
+category webextension-scripts-addon storage chrome://extensions/content/ext-c-storage.js
+category webextension-scripts-addon test chrome://extensions/content/ext-c-test.js
+
+# schemas
+category webextension-schemas alarms chrome://extensions/content/schemas/alarms.json
+category webextension-schemas contextualIdentities chrome://extensions/content/schemas/contextual_identities.json
+category webextension-schemas cookies chrome://extensions/content/schemas/cookies.json
+category webextension-schemas downloads chrome://extensions/content/schemas/downloads.json
+category webextension-schemas events chrome://extensions/content/schemas/events.json
+category webextension-schemas extension chrome://extensions/content/schemas/extension.json
+category webextension-schemas extension_types chrome://extensions/content/schemas/extension_types.json
+category webextension-schemas handlers chrome://extensions/content/schemas/extension_protocol_handlers.json
+category webextension-schemas i18n chrome://extensions/content/schemas/i18n.json
+#ifndef ANDROID
+category webextension-schemas identity chrome://extensions/content/schemas/identity.json
+#endif
+category webextension-schemas idle chrome://extensions/content/schemas/idle.json
+category webextension-schemas management chrome://extensions/content/schemas/management.json
+category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
+category webextension-schemas notifications chrome://extensions/content/schemas/notifications.json
+category webextension-schemas privacy chrome://extensions/content/schemas/privacy.json
+category webextension-schemas proxy chrome://extensions/content/schemas/proxy.json
+category webextension-schemas runtime chrome://extensions/content/schemas/runtime.json
+category webextension-schemas storage chrome://extensions/content/schemas/storage.json
+category webextension-schemas test chrome://extensions/content/schemas/test.json
+category webextension-schemas theme chrome://extensions/content/schemas/theme.json# scripts
+category webextension-scripts alarms chrome://extensions/content/ext-alarms.js
+category webextension-scripts backgroundPage chrome://extensions/content/ext-backgroundPage.js
+category webextension-scripts contextualIdentities chrome://extensions/content/ext-contextualIdentities.js
+category webextension-scripts cookies chrome://extensions/content/ext-cookies.js
+category webextension-scripts downloads chrome://extensions/content/ext-downloads.js
+category webextension-scripts extension chrome://extensions/content/ext-extension.js
+category webextension-scripts geolocation chrome://extensions/content/ext-geolocation.js
+category webextension-scripts handlers chrome://extensions/content/ext-protocolHandlers.js
+category webextension-scripts i18n chrome://extensions/content/ext-i18n.js
+category webextension-scripts idle chrome://extensions/content/ext-idle.js
+category webextension-scripts management chrome://extensions/content/ext-management.js
+category webextension-scripts notifications chrome://extensions/content/ext-notifications.js
+category webextension-scripts privacy chrome://extensions/content/ext-privacy.js
 category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
 category webextension-scripts theme chrome://extensions/content/ext-theme.js
@@ -66,6 +135,11 @@ category webextension-schemas runtime chrome://extensions/content/schemas/runtim
 category webextension-schemas storage chrome://extensions/content/schemas/storage.json
 category webextension-schemas test chrome://extensions/content/schemas/test.json
 category webextension-schemas theme chrome://extensions/content/schemas/theme.json
+category webextension-schemas top_sites chrome://extensions/content/schemas/top_sites.json
+category webextension-schemas types chrome://extensions/content/schemas/types.json
+category webextension-schemas web_navigation chrome://extensions/content/schemas/web_navigation.json
+category webextension-schemas web_request chrome://extensions/content/schemas/web_request.json
+
 category webextension-schemas top_sites chrome://extensions/content/schemas/top_sites.json
 category webextension-schemas types chrome://extensions/content/schemas/types.json
 category webextension-schemas web_navigation chrome://extensions/content/schemas/web_navigation.json
