@@ -26,6 +26,12 @@ linux32/opt:
         -  linux32-tests
         -  linux32-opt-tests
         - external-media-tests
+linux32-nightly/opt:
+    build-platform: linux-nightly/opt
+    test-sets:
+        -  linux32-tests
+        -  linux32-opt-tests
+        - external-media-tests
 
 linux64/debug:
     build-platform: linux64/debug
@@ -35,6 +41,15 @@ linux64/debug:
         - web-platform-tests
 linux64/opt:
     build-platform: linux64/opt
+    test-sets:
+        - common-tests
+        - external-media-tests
+        - web-platform-tests
+        - opt-only-tests
+        - desktop-screenshot-capture
+        - talos
+linux64-nightly/opt:
+    build-platform: linux64-nightly/opt
     test-sets:
         - common-tests
         - external-media-tests
