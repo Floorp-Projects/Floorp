@@ -74,22 +74,21 @@ function run_test() {
 
 async function verifyTrackerEmpty() {
   let changes = engine.pullNewChanges();
-  equal(changes.count(), 0);
+  do_check_empty(changes);
   equal(tracker.score, 0);
 }
 
 async function verifyTrackedCount(expected) {
   let changes = engine.pullNewChanges();
-  equal(changes.count(), expected);
+  do_check_attribute_count(changes, expected);
 }
 
 async function verifyTrackedItems(tracked) {
   let changes = engine.pullNewChanges();
-  let trackedIDs = new Set(changes.ids());
+  let trackedIDs = new Set(Object.keys(changes));
   for (let guid of tracked) {
-    ok(changes.has(guid), `${guid} should be tracked`);
-    ok(changes.getModifiedTimestamp(guid) > 0,
-      `${guid} should have a modified time`);
+    ok(guid in changes, `${guid} should be tracked`);
+    ok(changes[guid] > 0, `${guid} should have a modified time`);
     trackedIDs.delete(guid);
   }
   equal(trackedIDs.size, 0, `Unhandled tracked IDs: ${

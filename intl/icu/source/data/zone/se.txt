@@ -3,24 +3,6 @@
 se{
     Version{"2.1.27.98"}
     zoneStrings{
-        "America:Curacao"{
-            ec{"Curaçao"}
-        }
-        "America:Merida"{
-            ec{"Mérida"}
-        }
-        "America:Sao_Paulo"{
-            ec{"São Paulo"}
-        }
-        "America:St_Barthelemy"{
-            ec{"Saint Barthélemy"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
-        }
-        "Etc:Unknown"{
-            ec{"dovdameahttun áigeavádat"}
-        }
         "meta:Europe_Central"{
             ld{"gaska-Eurohpá geassiáigi"}
             lg{"gaska-Eurohpá áigi"}

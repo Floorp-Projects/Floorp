@@ -327,7 +327,7 @@ URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 /* static */ already_AddRefed<URLSearchParams>
 URLSearchParams::Constructor(const GlobalObject& aGlobal,
-                             const USVStringSequenceSequenceOrUSVString& aInit,
+                             const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
                              ErrorResult& aRv)
 {
   RefPtr<URLSearchParams> sp =
@@ -350,6 +350,12 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
         return nullptr;
       }
       sp->Append(item[0], item[1]);
+    }
+  } else if (aInit.IsUSVStringUSVStringRecord()) {
+    const Record<nsString, nsString>& record =
+      aInit.GetAsUSVStringUSVStringRecord();
+    for (auto& entry : record.Entries()) {
+      sp->Append(entry.mKey, entry.mValue);
     }
   } else {
     MOZ_CRASH("This should not happen.");
