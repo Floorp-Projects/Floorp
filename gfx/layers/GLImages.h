@@ -64,13 +64,13 @@ private:
 
 class SurfaceTextureImage : public GLImage {
 public:
-  SurfaceTextureImage(gl::AndroidSurfaceTexture* aSurfTex,
+  SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize,
                       gl::OriginPos aOriginPos);
 
   gfx::IntSize GetSize() override { return mSize; }
-  gl::AndroidSurfaceTexture* GetSurfaceTexture() const {
-    return mSurfaceTexture;
+  AndroidSurfaceTextureHandle GetHandle() const {
+    return mHandle;
   }
   gl::OriginPos GetOriginPos() const {
     return mOriginPos;
@@ -81,7 +81,7 @@ public:
   }
 
 private:
-  RefPtr<gl::AndroidSurfaceTexture> mSurfaceTexture;
+  AndroidSurfaceTextureHandle mHandle;
   gfx::IntSize mSize;
   gl::OriginPos mOriginPos;
 };
