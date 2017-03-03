@@ -600,13 +600,13 @@ def build_macosx_engine_payload(config, task, task_def):
         'path': artifact['path'],
         'type': artifact['type'],
         'expires': task_def['expires'],
-    }, worker['artifacts'])
+    }, worker.get('artifacts', []))
 
     task_def['payload'] = {
         'context': worker['context'],
         'command': worker['command'],
         'env': worker['env'],
-        'reboot': worker['reboot'],
+        'reboot': worker.get('reboot', False),
         'artifacts': artifacts,
     }
 

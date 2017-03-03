@@ -12,7 +12,7 @@ from voluptuous import Schema, Required, Optional, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_public_artifacts,
-    docker_worker_support_vcs_checkout,
+    support_vcs_checkout,
 )
 
 sm_run_schema = Schema({
@@ -66,7 +66,7 @@ def docker_worker_spidermonkey(config, job, taskdesc, schema=sm_run_schema):
     if run.get('tooltool-manifest'):
         env['TOOLTOOL_MANIFEST'] = run['tooltool-manifest']
 
-    docker_worker_support_vcs_checkout(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     script = "build-sm.sh"
     if run['using'] == 'spidermonkey-package':
