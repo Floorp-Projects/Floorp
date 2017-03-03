@@ -10,7 +10,6 @@
   skin/classic/browser/aboutNetError.css                       (../shared/aboutNetError.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/error-pages.css                         (../shared/error-pages.css)
-  skin/classic/browser/browser.inc.css                         (../shared/browser.inc.css)
 * skin/classic/browser/aboutProviderDirectory.css              (../shared/aboutProviderDirectory.css)
 * skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
   skin/classic/browser/aboutSocialError.css                    (../shared/aboutSocialError.css)
