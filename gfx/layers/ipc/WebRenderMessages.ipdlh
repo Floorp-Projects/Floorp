@@ -26,6 +26,7 @@ using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageRendering from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::LayerIntRegion from "Units.h";
 
 namespace mozilla {
@@ -97,13 +98,9 @@ struct OpDPPushImage {
   ImageKey key;
 };
 
-struct OpDPPushExternalImageId {
-  LayerIntRegion validBufferRegion;
-  WrRect bounds;
-  WrRect clip;
-  MaybeImageMask mask;
-  ImageRendering filter;
+struct OpAddExternalImage {
   uint64_t externalImageId;
+  ImageKey key;
 };
 
 struct OpDPPushIframe {
@@ -116,10 +113,8 @@ struct OpDPPushText {
   WrRect bounds;
   WrRect clip;
   WrGlyphArray[] glyph_array;
-  uint32_t font_index;
   float glyph_size;
-  ByteBuffer font_buffer;
-  uint32_t font_buffer_length;
+  FontKey key;
 };
 
 struct OpDPPushBoxShadow {
@@ -144,10 +139,13 @@ union WebRenderCommand {
   OpDPPushLinearGradient;
   OpDPPushRadialGradient;
   OpDPPushImage;
-  OpDPPushExternalImageId;
   OpDPPushIframe;
   OpDPPushText;
   OpDPPushBoxShadow;
+};
+
+union WebRenderParentCommand {
+  OpAddExternalImage;
   CompositableOperation;
 };
 

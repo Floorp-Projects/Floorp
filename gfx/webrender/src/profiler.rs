@@ -257,10 +257,28 @@ impl FrameProfileCounters {
 }
 
 #[derive(Clone)]
+pub struct TextureCacheProfileCounters {
+    pub pages_a8: ResourceProfileCounter,
+    pub pages_rgb8: ResourceProfileCounter,
+    pub pages_rgba8: ResourceProfileCounter,
+}
+
+impl TextureCacheProfileCounters {
+    pub fn new() -> TextureCacheProfileCounters {
+        TextureCacheProfileCounters {
+            pages_a8: ResourceProfileCounter::new("Texture A8 cached pages"),
+            pages_rgb8: ResourceProfileCounter::new("Texture RGB8 cached pages"),
+            pages_rgba8: ResourceProfileCounter::new("Texture RGBA8 cached pages"),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct BackendProfileCounters {
     pub font_templates: ResourceProfileCounter,
     pub image_templates: ResourceProfileCounter,
     pub total_time: TimeProfileCounter,
+    pub texture_cache: TextureCacheProfileCounters,
 }
 
 impl BackendProfileCounters {
@@ -269,6 +287,7 @@ impl BackendProfileCounters {
             font_templates: ResourceProfileCounter::new("Font Templates"),
             image_templates: ResourceProfileCounter::new("Image Templates"),
             total_time: TimeProfileCounter::new("Backend CPU Time", false),
+            texture_cache: TextureCacheProfileCounters::new(),
         }
     }
 
@@ -639,6 +658,12 @@ impl Profiler {
         self.draw_counters(&[
             &backend_profile.font_templates,
             &backend_profile.image_templates,
+        ], debug_renderer, true);
+
+        self.draw_counters(&[
+            &backend_profile.texture_cache.pages_a8,
+            &backend_profile.texture_cache.pages_rgb8,
+            &backend_profile.texture_cache.pages_rgba8,
         ], debug_renderer, true);
 
         self.draw_counters(&[
