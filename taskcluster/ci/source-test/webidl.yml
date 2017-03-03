@@ -1,10 +1,10 @@
-webidl-test/opt:
+webidl-test:
     description: WebIDL parser tests
+    platform: lint/opt
     treeherder:
         symbol: Wp
         kind: test
         tier: 1
-        platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker
