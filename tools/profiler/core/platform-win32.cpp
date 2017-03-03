@@ -50,9 +50,9 @@ class PlatformData {
                                                aThreadId)) {}
 
   ~PlatformData() {
-    if (profiled_thread_ != NULL) {
+    if (profiled_thread_ != nullptr) {
       CloseHandle(profiled_thread_);
-      profiled_thread_ = NULL;
+      profiled_thread_ = nullptr;
     }
   }
 
@@ -87,35 +87,22 @@ static const HANDLE kNoThread = INVALID_HANDLE_VALUE;
 // that should be sampled, then pauses and samples them.
 class SamplerThread
 {
- public:
-  explicit SamplerThread(double aInterval)
-    : mThread(kNoThread)
-    , mInterval(floor(aInterval + 0.5))
-  {
-    if (mInterval <= 0) {
-      mInterval = 1;
-    }
-  }
-
-  ~SamplerThread() {
-    // Close our own handle for the thread.
-    if (mThread != kNoThread) {
-      CloseHandle(mThread);
-    }
-  }
-
+private:
   static unsigned int __stdcall ThreadEntry(void* aArg) {
-    SamplerThread* thread = reinterpret_cast<SamplerThread*>(aArg);
+    auto thread = static_cast<SamplerThread*>(aArg);
     thread->Run();
     return 0;
   }
 
-  // Create a new thread. It is important to use _beginthreadex() instead of
-  // the Win32 function CreateThread(), because the CreateThread() does not
-  // initialize thread-specific structures in the C runtime library.
-  void Start() {
+public:
+  explicit SamplerThread(double aInterval)
+    : mInterval(std::max(1, int(floor(aInterval + 0.5))))
+  {
+    // Create a new thread. It is important to use _beginthreadex() instead of
+    // the Win32 function CreateThread(), because the CreateThread() does not
+    // initialize thread-specific structures in the C runtime library.
     mThread = reinterpret_cast<HANDLE>(
-        _beginthreadex(NULL,
+        _beginthreadex(nullptr,
                        /* stack_size */ 0,
                        ThreadEntry,
                        this,
@@ -123,6 +110,13 @@ class SamplerThread
                        (unsigned int*) &mThreadId));
     if (mThread == 0) {
       MOZ_CRASH("_beginthreadex failed");
+    }
+  }
+
+  ~SamplerThread() {
+    // Close our own handle for the thread.
+    if (mThread != kNoThread) {
+      CloseHandle(mThread);
     }
   }
 
@@ -134,18 +128,17 @@ class SamplerThread
 
   static void StartSampler(double aInterval) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    MOZ_RELEASE_ASSERT(!mInstance);
+    MOZ_RELEASE_ASSERT(!sInstance);
 
-    mInstance = new SamplerThread(aInterval);
-    mInstance->Start();
+    sInstance = new SamplerThread(aInterval);
   }
 
   static void StopSampler() {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-    mInstance->Join();
-    delete mInstance;
-    mInstance = NULL;
+    sInstance->Join();
+    delete sInstance;
+    sInstance = nullptr;
   }
 
   void Run() {
@@ -195,7 +188,7 @@ class SamplerThread
   {
     uintptr_t thread = GetThreadHandle(aThreadInfo->GetPlatformData());
     HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
-    if (profiled_thread == NULL)
+    if (profiled_thread == nullptr)
       return;
 
     // Context used for sampling the register state of the profiled thread.
@@ -258,16 +251,16 @@ private:
   HANDLE mThread;
   Thread::tid_t mThreadId;
 
-  int mInterval; // units: ms
+  // The interval between samples, measured in milliseconds.
+  const int mInterval;
 
-  // Protects the process wide state below.
-  static SamplerThread* mInstance;
+  static SamplerThread* sInstance;
 
   SamplerThread(const SamplerThread&) = delete;
   void operator=(const SamplerThread&) = delete;
 };
 
-SamplerThread* SamplerThread::mInstance = NULL;
+SamplerThread* SamplerThread::sInstance = nullptr;
 
 static void
 PlatformInit()
