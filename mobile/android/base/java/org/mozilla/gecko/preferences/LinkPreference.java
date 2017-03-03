@@ -34,7 +34,10 @@ class LinkPreference extends Preference {
      */
     @Override
     protected void onClick() {
-        if (AppConstants.Versions.feature24Plus) {
+        if (GeckoPreferences.PREFS_DEFAULT_BROWSER.equals(getKey()) && AppConstants.Versions.feature24Plus) {
+            // We are special casing the link to set the default browser here: On old Android versions we
+            // link to a SUMO page but on new Android versions we can link to the default app settings where
+            // the user can actually set a default browser (Bug 1312686).
             Intent changeDefaultApps = new Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS");
             getContext().startActivity(changeDefaultApps);
         } else {
