@@ -7827,6 +7827,14 @@
     "description": "Number of times the DevTools Storage Inspector has been opened.",
     "releaseChannelCollection": "opt-out"
   },
+  "DEVTOOLS_DOM_OPENED_COUNT": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1343501],
+    "description": "Number of times the DevTools DOM Inspector has been opened.",
+    "releaseChannelCollection": "opt-out"
+  },
   "DEVTOOLS_PAINTFLASHING_OPENED_COUNT": {
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
     "expires_in_version": "never",
@@ -8101,6 +8109,15 @@
     "high": 10000000,
     "n_buckets": 100,
     "description": "How long has the storage inspector been active (seconds)"
+  },
+  "DEVTOOLS_DOM_TIME_ACTIVE_SECONDS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "bug_numbers": [1343501],
+    "high": 10000000,
+    "n_buckets": 100,
+    "description": "How long has the DOM inspector been active (seconds)"
   },
   "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
