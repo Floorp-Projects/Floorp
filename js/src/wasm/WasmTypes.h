@@ -41,7 +41,10 @@
 namespace js {
 
 class PropertyName;
-namespace jit { struct BaselineScript; }
+namespace jit {
+    struct BaselineScript;
+    enum class RoundingMode;
+}
 
 // This is a widespread header, so lets keep out the core wasm impl types.
 
@@ -1043,6 +1046,9 @@ enum class SymbolicAddress
     CurrentMemory,
     Limit
 };
+
+bool
+IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 
 void*
 AddressOf(SymbolicAddress imm, JSContext* cx);

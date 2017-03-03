@@ -297,6 +297,8 @@ class Assembler : public vixl::Assembler
     static bool SupportsUnalignedAccesses() { return true; }
     static bool SupportsSimd() { return js::jit::SupportsSimd; }
 
+    static bool HasRoundInstruction(RoundingMode mode) { return false; }
+
     // Tracks a jump that is patchable after finalization.
     void addJumpRelocation(BufferOffset src, Relocation::Kind reloc);
 
