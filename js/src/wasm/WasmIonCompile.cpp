@@ -415,6 +415,16 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* nearbyInt(MDefinition* input, RoundingMode roundingMode)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        auto* ins = MNearbyInt::New(alloc(), input, input->type(), roundingMode);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* unarySimd(MDefinition* input, MSimdUnaryArith::Operation op, MIRType type)
     {
         if (inDeadCode())
@@ -2338,16 +2348,38 @@ EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type v
 }
 
 static bool
+TryInlineUnaryBuiltin(FunctionCompiler& f, SymbolicAddress callee, MDefinition* input)
+{
+    if (!input)
+        return false;
+
+    MOZ_ASSERT(IsFloatingPointType(input->type()));
+
+    RoundingMode mode;
+    if (!IsRoundingFunction(callee, &mode))
+        return false;
+
+    if (!MNearbyInt::HasAssemblerSupport(mode))
+        return false;
+
+    f.iter().setResult(f.nearbyInt(input, mode));
+    return true;
+}
+
+static bool
 EmitUnaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType operandType)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-    CallCompileState call(f, lineOrBytecode);
-    if (!f.startCall(&call))
-        return false;
-
     MDefinition* input;
     if (!f.iter().readUnary(operandType, &input))
+        return false;
+
+    if (TryInlineUnaryBuiltin(f, callee, input))
+        return true;
+
+    CallCompileState call(f, lineOrBytecode);
+    if (!f.startCall(&call))
         return false;
 
     if (!f.passArg(input, operandType, &call))
