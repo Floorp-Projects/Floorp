@@ -180,6 +180,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
+#include "nsIObjectLoadingContent.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -4994,13 +4995,27 @@ ContentParent::TransmitPermissionsFor(nsIChannel* aChannel)
 {
   MOZ_ASSERT(aChannel);
 #ifdef MOZ_PERMISSIONS
-  // If the LOAD_DOCUMENT_URI load flag is not set, we don't need to send down
-  // permissions, as we won't create a document from this channel.
+  // Check if this channel is going to be used to create a document. If it has
+  // LOAD_DOCUMENT_URI set it is trivially creating a document. If
+  // LOAD_HTML_OBJECT_DATA is set it may or may not be used to create a
+  // document, depending on its MIME type.
   nsLoadFlags loadFlags;
   nsresult rv = aChannel->GetLoadFlags(&loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
+
   if (!(loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
-    return NS_OK;
+    if (loadFlags & nsIRequest::LOAD_HTML_OBJECT_DATA) {
+      nsAutoCString mimeType;
+      aChannel->GetContentType(mimeType);
+      if (nsContentUtils::HtmlObjectContentTypeForMIMEType(mimeType, nullptr) !=
+          nsIObjectLoadingContent::TYPE_DOCUMENT) {
+        // The MIME type would not cause the creation of a document
+        return NS_OK;
+      }
+    } else {
+      // neither flag was set
+      return NS_OK;
+    }
   }
 
   // Get the principal for the channel result, so that we can get the permission
