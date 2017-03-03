@@ -77,6 +77,7 @@ enum class SharedSurfaceType : uint8_t {
     IOSurface,
     GLXDrawable,
     SharedGLTexture,
+    AndroidSurfaceTexture,
 
     Max
 };
