@@ -1327,7 +1327,7 @@ struct ParamTraits<mozilla::Array<T, Length>>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     for (size_t i = 0; i < Length; i++) {
-      if (!ReadParam(aMsg, aIter, &aResult[i])) {
+      if (!ReadParam<T>(aMsg, aIter, &aResult->operator[](i))) {
         return false;
       }
     }
