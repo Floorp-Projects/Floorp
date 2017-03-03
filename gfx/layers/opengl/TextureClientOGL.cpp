@@ -79,34 +79,29 @@ EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 #ifdef MOZ_WIDGET_ANDROID
 
 already_AddRefed<TextureClient>
-AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTexture* aSurfTex,
+AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTextureHandle aHandle,
                                                gfx::IntSize aSize,
                                                gl::OriginPos aOriginPos,
                                                LayersIPCChannel* aAllocator,
                                                TextureFlags aFlags)
 {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "Can't pass an android surfaces between processes.");
-
-  if (!aSurfTex || !XRE_IsParentProcess()) {
-    return nullptr;
-  }
-
   if (aOriginPos == gl::OriginPos::BottomLeft) {
     aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }
 
   return TextureClient::CreateWithData(
-    new AndroidSurfaceTextureData(aSurfTex, aSize),
+    new AndroidSurfaceTextureData(aHandle, aSize),
     aFlags, aAllocator
   );
 }
 
-AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTexture* aSurfTex,
+AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle,
                                                      gfx::IntSize aSize)
-  : mSurfTex(aSurfTex)
+  : mHandle(aHandle)
   , mSize(aSize)
-{}
+{
+  MOZ_ASSERT(mHandle);
+}
 
 AndroidSurfaceTextureData::~AndroidSurfaceTextureData()
 {}
@@ -125,8 +120,7 @@ AndroidSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
 bool
 AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  aOutDescriptor = SurfaceTextureDescriptor((uintptr_t)mSurfTex.get(),
-                                            mSize);
+  aOutDescriptor = SurfaceTextureDescriptor(mHandle, mSize);
   return true;
 }
 
