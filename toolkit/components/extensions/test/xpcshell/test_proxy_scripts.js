@@ -1,6 +1,6 @@
 "use strict";
 
-/* no-unused-vars": ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
+/* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
 
 Cu.import("resource://gre/modules/Extension.jsm");
 Cu.import("resource://gre/modules/ProxyScriptContext.jsm");

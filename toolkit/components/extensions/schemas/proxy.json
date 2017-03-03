@@ -1,0 +1,49 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "proxy"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "proxy",
+    "description": "Use the browser.proxy API to register proxy scripts in Firefox. Proxy scripts in Firefox are proxy auto-config files with extra contextual information and support for additional return types.",
+    "permissions": ["proxy"],
+    "functions": [
+      {
+        "name": "registerProxyScript",
+        "type": "function",
+        "description": "Registers the proxy script for the extension.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "url",
+            "type": "string",
+            "format": "strictRelativeUrl"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "name": "onProxyError",
+        "type": "function",
+        "description": "Notifies about proxy script errors.",
+        "parameters": [
+          {
+            "name": "error",
+            "type": "object"
+          }
+        ]
+      }
+    ]
+  }
+]
