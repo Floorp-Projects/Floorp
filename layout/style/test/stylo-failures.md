@@ -57,9 +57,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * Property parsing and computation:
-    * test_inherit_computation.html `animation` [6]
-    * test_initial_computation.html `animation` [12]
-    * test_property_syntax_errors.html `animation` [404]
+    * test_inherit_computation.html `animation` [0]
+    * test_initial_computation.html `animation` [0]
+    * test_property_syntax_errors.html `animation` [518]
     * test_value_storage.html `animation` [1063]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
@@ -138,7 +138,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [822]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [966]
 * flex-basis glue not implemented bug 1331529
   * test_flexbox_flex_shorthand.html `flex-basis` [28]
   * test_flexbox_layout.html [355]
