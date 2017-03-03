@@ -2538,7 +2538,8 @@ nsObjectLoadingContent::OpenChannel()
                      shim,  // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                      nsIChannel::LOAD_CLASSIFY_URI |
-                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
+                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
+                     nsIRequest::LOAD_HTML_OBJECT_DATA);
   NS_ENSURE_SUCCESS(rv, rv);
   if (inherit) {
     nsCOMPtr<nsILoadInfo> loadinfo = chan->GetLoadInfo();
