@@ -124,6 +124,13 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_BACKGROUND = 1 << 0;
 
+    /**
+     * This flag marks the request as being made to load the data for an html
+     * <object> tag. This means that the LOAD_DOCUMENT_URI flag may be set after
+     * the channel has been provided with the MIME type.
+     */
+    const unsigned long LOAD_HTML_OBJECT_DATA = 1 << 1;
+
     /**************************************************************************
      * The following flags control the flow of data into the cache.
      */
