@@ -59,14 +59,19 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
 {
 }
 
+static bool
+ClearParentPtr(nsISHEntry* aEntry, void* /* aData */)
+{
+  if (aEntry) {
+    aEntry->SetParent(nullptr);
+  }
+  return true;
+}
+
 nsSHEntry::~nsSHEntry()
 {
   // Null out the mParent pointers on all our kids.
-  for (nsISHEntry* entry : mChildren) {
-    if (entry) {
-      entry->SetParent(nullptr);
-    }
-  }
+  mChildren.EnumerateForwards(ClearParentPtr, nullptr);
 }
 
 NS_IMPL_ISUPPORTS(nsSHEntry, nsISHContainer, nsISHEntry, nsISHEntryInternal)
