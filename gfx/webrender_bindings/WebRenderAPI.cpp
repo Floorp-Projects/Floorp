@@ -384,17 +384,16 @@ DisplayListBuilder::End()
   wr_dp_end(mWrState);
 }
 
-void
-DisplayListBuilder::Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
-                             wr::VecU8& dl_data,
-                             WrAuxiliaryListsDescriptor& aux_descriptor,
-                             wr::VecU8& aux_data)
+BuiltDisplayList
+DisplayListBuilder::Finalize()
 {
-    wr_api_finalize_builder(mWrState,
-                            dl_descriptor,
-                            dl_data.inner,
-                            aux_descriptor,
-                            aux_data.inner);
+  BuiltDisplayList dl;
+  wr_api_finalize_builder(mWrState,
+                          dl.dl_desc,
+                          dl.dl.inner,
+                          dl.aux_desc,
+                          dl.aux.inner);
+  return dl;
 }
 
 void
@@ -413,6 +412,16 @@ void
 DisplayListBuilder::PopStackingContext()
 {
   wr_dp_pop_stacking_context(mWrState);
+}
+
+void
+DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
+{
+  wr_dp_push_built_display_list(mWrState,
+                                dl.dl_desc,
+                                dl.dl.Extract(),
+                                dl.aux_desc,
+                                dl.aux.Extract());
 }
 
 void

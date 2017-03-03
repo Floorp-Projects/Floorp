@@ -18,7 +18,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderBorderLayer::RenderLayer()
+WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
@@ -54,23 +54,20 @@ WebRenderBorderLayer::RenderLayer()
                   Stringify(clip).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              Nothing(),
-                              1.0f,
-                              GetAnimations(),
-                              transform,
-                              WrMixBlendMode::Normal,
-                              FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
-                   wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
-                   wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
-                   wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
-                   wr::ToWrBorderSide(mWidths[3], mColors[3], mBorderStyles[3]),
-                   wr::ToWrBorderRadius(mCorners[0], mCorners[1], mCorners[3], mCorners[2])));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                               wr::ToWrRect(overflow),
+                               nullptr,
+                               1.0f,
+                               //GetAnimations(),
+                               transform,
+                               WrMixBlendMode::Normal);
+  aBuilder.PushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
+                      wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
+                      wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
+                      wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
+                      wr::ToWrBorderSide(mWidths[3], mColors[3], mBorderStyles[3]),
+                      wr::ToWrBorderRadius(mCorners[0], mCorners[1], mCorners[3], mCorners[2]));
+  aBuilder.PopStackingContext();
 }
 
 } // namespace layers

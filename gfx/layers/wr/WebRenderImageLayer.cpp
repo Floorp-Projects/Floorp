@@ -80,7 +80,7 @@ WebRenderImageLayer::ClearCachedResources()
 }
 
 void
-WebRenderImageLayer::RenderLayer()
+WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   if (!mContainer) {
      return;
@@ -165,21 +165,20 @@ WebRenderImageLayer::RenderLayer()
                   Stringify(mixBlendMode).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                            wr::ToWrRect(overflow),
-                            mask,
-                            1.0f,
-                            GetAnimations(),
-                            transform,
-                            mixBlendMode,
-                            FrameMetrics::NULL_SCROLL_ID));
   WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  WrBridge()->AddWebRenderCommand(OpDPPushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, key));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                            wr::ToWrRect(overflow),
+                            mask.ptrOr(nullptr),
+                            1.0f,
+                            //GetAnimations(),
+                            transform,
+                            mixBlendMode);
+  aBuilder.PushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), nullptr, filter, key);
+  aBuilder.PopStackingContext();
 
   //mContainer->SetImageFactory(originalIF);
 }

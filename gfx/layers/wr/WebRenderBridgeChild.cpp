@@ -189,13 +189,11 @@ WebRenderBridgeChild::ProcessWebrenderCommands(const gfx::IntSize &aSize,
     }
   }
   builder.End();
-  wr::BuiltDisplayList dl;
-  builder.Finalize(dl.dl_desc, dl.dl, dl.aux_desc, dl.aux);
-  return dl;
+  return builder.Finalize();
 }
 
 void
-WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId)
+WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -209,7 +207,7 @@ WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aT
     }
   }
 
-  wr::BuiltDisplayList dl = ProcessWebrenderCommands(aSize, mCommands);
+  wr::BuiltDisplayList dl = aBuilder.Finalize();
   ByteBuffer dlData(Move(dl.dl));
   ByteBuffer auxData(Move(dl.aux));
 
