@@ -188,6 +188,7 @@ LINTER = {
         'testing/mochitest',
         'testing/talos/',
         'tools/lint',
+        'toolkit/components/telemetry',
     ],
     'exclude': ["testing/mozbase/mozdevice/mozdevice/Zeroconf.py",
                 'testing/mochitest/pywebsocket'],
