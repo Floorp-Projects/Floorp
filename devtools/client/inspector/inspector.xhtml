@@ -98,13 +98,15 @@
             <div id="ruleview-command-toolbar">
               <button id="ruleview-add-rule-button" data-localization="title=inspector.addRule.tooltip" class="devtools-button"></button>
               <button id="pseudo-class-panel-toggle" data-localization="title=inspector.togglePseudo.tooltip" class="devtools-button"></button>
+              <button id="class-panel-toggle" data-localization="title=inspector.classPanel.toggleClass.tooltip" class="devtools-button"></button>
             </div>
           </div>
-          <div id="pseudo-class-panel" hidden="true">
+          <div id="pseudo-class-panel" class="ruleview-reveal-panel" hidden="true">
             <label><input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</label>
             <label><input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</label>
             <label><input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</label>
-        </div>
+          </div>
+          <div id="ruleview-class-panel" class="ruleview-reveal-panel" hidden="true"></div>
         </div>
 
         <div id="ruleview-container" class="ruleview">
