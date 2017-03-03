@@ -18,7 +18,6 @@ fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1
 # These tests should be very similar to tests in our w3c-css/submitted/images3
 # reftest directory. They live here because they use XUL, and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL.
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
 == object-fit-contain-png-001.xul object-fit-contain-png-001-ref.html
 == object-fit-contain-png-002.xul object-fit-contain-png-002-ref.html
 == object-fit-contain-svg-001.xul object-fit-contain-svg-001-ref.html

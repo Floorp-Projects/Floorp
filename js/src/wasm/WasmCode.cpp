@@ -717,43 +717,31 @@ Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
     return AtomizeUTF8Chars(cx, name.begin(), name.length());
 }
 
-const char experimentalWarning[] =
-    "Temporary\n"
-    ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
-    "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
-    "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
-    "|(_ o _)  |  ||___|  /  |(_ o _).   |  |\\_   /|  |\n"
-    "| (_,_) \\ |  |   _.-`   | (_,_). '. |  _( )_/ |  |\n"
-    "|  |/    \\|  |.'   _    |.---.  \\  :| (_ o _) |  |\n"
-    "|  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
-    "|    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
-    "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
-    "text support (Work In Progress):\n\n";
-
-const size_t experimentalWarningLinesCount = 12;
-
 const char enabledMessage[] =
     "Restart with developer tools open to view WebAssembly source";
 
-struct LineComparator
-{
-    const uint32_t lineno;
-    explicit LineComparator(uint32_t lineno) : lineno(lineno) {}
+const char tooBigMessage[] =
+    "Unfortunately, this WebAssembly module is too big to view as text.\n"
+    "We are working hard to remove this limitation.";
 
-    int operator()(const ExprLoc& loc) const {
-        return lineno == loc.lineno ? 0 : lineno < loc.lineno ? -1 : 1;
-    }
-};
+static const unsigned TooBig = 1000000;
 
 JSString*
 Code::createText(JSContext* cx)
 {
     StringBuffer buffer(cx);
-    if (maybeBytecode_) {
-        const Bytes& bytes = maybeBytecode_->bytes;
-        if (!buffer.append(experimentalWarning))
+    if (!maybeBytecode_) {
+        if (!buffer.append(enabledMessage))
             return nullptr;
 
+        MOZ_ASSERT(!maybeSourceMap_);
+    } else if (maybeBytecode_->bytes.length() > TooBig) {
+        if (!buffer.append(tooBigMessage))
+            return nullptr;
+
+        MOZ_ASSERT(!maybeSourceMap_);
+    } else {
+        const Bytes& bytes = maybeBytecode_->bytes;
         auto sourceMap = MakeUnique<GeneratedSourceMap>();
         if (!sourceMap) {
             ReportOutOfMemory(cx);
@@ -765,24 +753,15 @@ Code::createText(JSContext* cx)
             return nullptr;
 
 #if DEBUG
-        // Checking source map invariant: expression and function locations must be sorted
-        // by line number.
+        // Check that expression locations are sorted by line number.
         uint32_t lastLineno = 0;
         for (const ExprLoc& loc : maybeSourceMap_->exprlocs()) {
             MOZ_ASSERT(lastLineno <= loc.lineno);
             lastLineno = loc.lineno;
         }
-        lastLineno = 0;
-        for (const FunctionLoc& loc : maybeSourceMap_->functionlocs()) {
-            MOZ_ASSERT(lastLineno <= loc.startLineno);
-            MOZ_ASSERT(loc.startLineno <= loc.endLineno);
-            lastLineno = loc.endLineno + 1;
-        }
 #endif
-    } else {
-        if (!buffer.append(enabledMessage))
-            return nullptr;
     }
+
     return buffer.finishString();
 }
 
@@ -796,6 +775,16 @@ Code::ensureSourceMap(JSContext* cx)
     return createText(cx);
 }
 
+struct LineComparator
+{
+    const uint32_t lineno;
+    explicit LineComparator(uint32_t lineno) : lineno(lineno) {}
+
+    int operator()(const ExprLoc& loc) const {
+        return lineno == loc.lineno ? 0 : lineno < loc.lineno ? -1 : 1;
+    }
+};
+
 bool
 Code::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 {
@@ -807,11 +796,6 @@ Code::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
 
     if (!maybeSourceMap_)
         return true; // no source text available, keep offsets empty.
-
-    if (lineno < experimentalWarningLinesCount)
-        return true;
-
-    lineno -= experimentalWarningLinesCount;
 
     ExprLocVector& exprlocs = maybeSourceMap_->exprlocs();
 
@@ -852,7 +836,7 @@ Code::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lin
 
     const ExprLoc& loc = maybeSourceMap_->exprlocs()[foundAt];
     *found = true;
-    *lineno = loc.lineno + experimentalWarningLinesCount;
+    *lineno = loc.lineno;
     *column = loc.column;
     return true;
 }
@@ -868,7 +852,7 @@ Code::totalSourceLines(JSContext* cx, uint32_t* count)
         return false;
 
     if (maybeSourceMap_)
-        *count = maybeSourceMap_->totalLines() + experimentalWarningLinesCount;
+        *count = maybeSourceMap_->totalLines();
     return true;
 }
 

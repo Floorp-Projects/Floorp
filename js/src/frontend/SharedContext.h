@@ -549,7 +549,7 @@ class FunctionBox : public ObjectBox, public SharedContext
         return isStarGenerator() || isLegacyGenerator() || isAsync();
     }
     bool needsIteratorResult() const {
-        return isStarGenerator() || isAsync();
+        return isStarGenerator();
     }
 
     bool isAsync() const { return asyncKind() == AsyncFunction; }
