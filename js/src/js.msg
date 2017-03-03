@@ -432,7 +432,6 @@ MSG_DEF(JSMSG_SC_SAB_DISABLED,         0, JSEXN_TYPEERR, "SharedArrayBuffer not 
 
 // Debugger
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")
-MSG_DEF(JSMSG_DEBUG_BAD_AWAIT,         0, JSEXN_TYPEERR, "await expression received invalid value")
 MSG_DEF(JSMSG_DEBUG_BAD_LINE,          0, JSEXN_TYPEERR, "invalid line number")
 MSG_DEF(JSMSG_DEBUG_BAD_OFFSET,        0, JSEXN_TYPEERR, "invalid script offset")
 MSG_DEF(JSMSG_DEBUG_BAD_REFERENT,      2, JSEXN_TYPEERR, "{0} does not refer to {1}")
