@@ -160,10 +160,7 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
   WrPipelineId pipeline;
   WrEpoch epoch;
   while (wr_rendered_epochs_next(aEpochs, &pipeline, &epoch)) {
-    // TODO - Currently each bridge seems to  only have one pipeline but at some
-    // point we should pass make sure we only notify bridges that have the
-    // corresponding pipeline id.
-    aBridge->NotifyDidComposite(epoch.mHandle, aStart, aEnd);
+    aBridge->NotifyDidCompositeToPipeline(pipeline, epoch, aStart, aEnd);
   }
   wr_rendered_epochs_delete(aEpochs);
 }

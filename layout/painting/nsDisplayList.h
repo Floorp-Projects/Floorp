@@ -59,6 +59,7 @@ class Layer;
 class ImageLayer;
 class ImageContainer;
 class WebRenderCommand;
+class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
 } // namespace layers
 } // namespace mozilla
@@ -1585,6 +1586,7 @@ public:
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::WebRenderCommand WebRenderCommand;
+  typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
   typedef mozilla::layers::WebRenderDisplayItemLayer WebRenderDisplayItemLayer;
   typedef mozilla::LayerState LayerState;
   typedef class mozilla::gfx::DrawTarget DrawTarget;
@@ -1926,6 +1928,7 @@ public:
     * to their parent.
     */
    virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) {}
   /**
    * Builds a DisplayItemLayer and sets the display item to this.
@@ -2822,6 +2825,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) override;
 
 protected:
@@ -3384,6 +3388,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        WebRenderDisplayItemLayer* aLayer) override;
 
   nsRect GetBoundsInternal();
@@ -3432,6 +3437,16 @@ public:
     }
   }
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+  virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                       nsTArray<WebRenderParentCommand>& aParentCommand,
+                                       WebRenderDisplayItemLayer* aLayer) override;
+
 private:
   nsRegion mVisibleRegion;
 };
@@ -3458,6 +3473,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
   virtual void CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderDisplayItemLayer* aLayer) override;
   virtual bool IsInvisibleInRect(const nsRect& aRect) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;

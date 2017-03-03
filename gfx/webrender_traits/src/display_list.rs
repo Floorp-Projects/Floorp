@@ -8,7 +8,7 @@ use std::slice;
 use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem};
 use {BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
-use {DisplayItem, DisplayListMode, ExtendMode, FilterOp, YuvColorSpace};
+use {DisplayItem, ExtendMode, FilterOp, YuvColorSpace};
 use {FontKey, GlyphInstance, GradientDisplayItem, RadialGradientDisplayItem, GradientStop, IframeDisplayItem};
 use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange, MixBlendMode, PipelineId};
 use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
@@ -19,7 +19,7 @@ use {BorderDetails, BorderWidths, GlyphOptions, PropertyBinding};
 
 impl BuiltDisplayListDescriptor {
     pub fn size(&self) -> usize {
-        self.display_list_items_size + self.display_items_size
+        self.display_list_items_size
     }
 }
 
@@ -48,7 +48,6 @@ impl BuiltDisplayList {
 
 #[derive(Clone)]
 pub struct DisplayListBuilder {
-    pub mode: DisplayListMode,
     pub list: Vec<DisplayItem>,
     auxiliary_lists_builder: AuxiliaryListsBuilder,
     pub pipeline_id: PipelineId,
@@ -58,7 +57,6 @@ pub struct DisplayListBuilder {
 impl DisplayListBuilder {
     pub fn new(pipeline_id: PipelineId) -> DisplayListBuilder {
         DisplayListBuilder {
-            mode: DisplayListMode::Default,
             list: Vec::new(),
             auxiliary_lists_builder: AuxiliaryListsBuilder::new(),
             pipeline_id: pipeline_id,
@@ -365,16 +363,15 @@ impl DisplayListBuilder {
         ClipRegion::new(rect, complex, image_mask, &mut self.auxiliary_lists_builder)
     }
 
-    pub fn finalize(self) -> (BuiltDisplayList, AuxiliaryLists) {
+    pub fn finalize(self) -> (PipelineId, BuiltDisplayList, AuxiliaryLists) {
         unsafe {
             let blob = convert_pod_to_blob(&self.list).to_vec();
             let display_list_items_size = blob.len();
 
-            (BuiltDisplayList {
+            (self.pipeline_id,
+             BuiltDisplayList {
                  descriptor: BuiltDisplayListDescriptor {
-                     mode: self.mode,
                      display_list_items_size: display_list_items_size,
-                     display_items_size: 0,
                  },
                  data: blob,
              },

@@ -107,7 +107,11 @@ WebRenderCanvasLayer::RenderLayer()
                               transform,
                               mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
+  WrImageKey key;
+  key.mNamespace = WrBridge()->GetNamespace();
+  key.mHandle = WrBridge()->GetNextResourceId();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  WrBridge()->AddWebRenderCommand(OpDPPushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, key));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 
