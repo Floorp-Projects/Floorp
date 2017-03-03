@@ -520,31 +520,30 @@ Options(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    char* names = nullptr;
+    UniqueChars names;
     if (oldContextOptions.extraWarnings()) {
-        names = JS_sprintf_append(names, "%s", "strict");
+        names = JS_sprintf_append(Move(names), "%s", "strict");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
     if (oldContextOptions.werror()) {
-        names = JS_sprintf_append(names, "%s%s", names ? "," : "", "werror");
+        names = JS_sprintf_append(Move(names), "%s%s", names ? "," : "", "werror");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
     if (names && oldContextOptions.strictMode()) {
-        names = JS_sprintf_append(names, "%s%s", names ? "," : "", "strict_mode");
+        names = JS_sprintf_append(Move(names), "%s%s", names ? "," : "", "strict_mode");
         if (!names) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
     }
 
-    str = JS_NewStringCopyZ(cx, names);
-    free(names);
+    str = JS_NewStringCopyZ(cx, names.get());
     if (!str)
         return false;
 
@@ -717,7 +716,7 @@ env_setProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
         return false;
 #if defined XP_WIN || defined HPUX || defined OSF1 || defined SCO
     {
-        char* waste = JS_smprintf("%s=%s", name.ptr(), value.ptr());
+        char* waste = JS_smprintf("%s=%s", name.ptr(), value.ptr()).release();
         if (!waste) {
             JS_ReportOutOfMemory(cx);
             return false;

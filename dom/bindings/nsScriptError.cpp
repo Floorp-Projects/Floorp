@@ -257,7 +257,7 @@ ToStringHelper(const char* aSeverity, const nsString& aMessage,
     static const char format2[] =
         "[%s: \"%s\"]";
 
-    char* temp;
+    UniqueChars temp;
     char* tempMessage = nullptr;
     char* tempSourceName = nullptr;
     char* tempSourceLine = nullptr;
@@ -301,8 +301,7 @@ ToStringHelper(const char* aSeverity, const nsString& aMessage,
     if (!temp)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    aResult.Assign(temp);
-    JS_smprintf_free(temp);
+    aResult.Assign(temp.get());
     return NS_OK;
 }
 
