@@ -25,7 +25,7 @@
 
       function parentReady(message) {
         MockFilePicker.init(content);
-        MockFilePicker.returnFiles = [message.data.file];
+        MockFilePicker.setFiles([message.data.file]);
         MockFilePicker.returnValue = MockFilePicker.returnOK;
 
         let input = content.document.getElementById("f");
