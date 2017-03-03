@@ -352,14 +352,14 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
             memcpy(&inaddr, hostent.h_addr, sizeof inaddr);
     }
 
-    char *signature =
+    mozilla::SmprintfPointer signature =
         mozilla::Smprintf("%s:%s%lu", inet_ntoa(inaddr), aHaveFcntlLock ? "+" : "",
                    (unsigned long)getpid());
     const char *fileName = lockFilePath.get();
     int symlink_rv, symlink_errno = 0, tries = 0;
 
     // use ns4.x-compatible symlinks if the FS supports them
-    while ((symlink_rv = symlink(signature, fileName)) < 0)
+    while ((symlink_rv = symlink(signature.get(), fileName)) < 0)
     {
         symlink_errno = errno;
         if (symlink_errno != EEXIST)
@@ -374,9 +374,6 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
         if (++tries > 100)
             break;
     }
-
-    mozilla::SmprintfFree(signature);
-    signature = nullptr;
 
     if (symlink_rv == 0)
     {

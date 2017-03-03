@@ -334,10 +334,9 @@ LogSuccess(bool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieStrin
   PR_BEGIN_MACRO                                                             \
   nsresult __rv = res; /* Do not evaluate |res| more than once! */           \
   if (NS_FAILED(__rv)) {                                                     \
-    char *msg = mozilla::Smprintf("NS_ASSERT_SUCCESS(%s) failed with result 0x%" PRIX32, \
+    SmprintfPointer msg = mozilla::Smprintf("NS_ASSERT_SUCCESS(%s) failed with result 0x%" PRIX32, \
                            #res, static_cast<uint32_t>(__rv));               \
-    NS_ASSERTION(NS_SUCCEEDED(__rv), msg);                                   \
-    mozilla::SmprintfFree(msg);                                                    \
+    NS_ASSERTION(NS_SUCCEEDED(__rv), msg.get());                             \
   }                                                                          \
   PR_END_MACRO
 #else
