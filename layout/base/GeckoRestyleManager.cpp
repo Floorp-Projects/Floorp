@@ -3472,7 +3472,7 @@ GeckoRestyleManager::ComputeAndProcessStyleChange(
     const RestyleHintData& aRestyleHintData)
 {
   MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
-  nsStyleChangeList changeList;
+  nsStyleChangeList changeList(StyleBackendType::Gecko);
   nsTArray<ElementRestyler::ContextToClear> contextsToClear;
 
   // swappedStructOwners needs to be kept alive until after
@@ -3517,7 +3517,7 @@ GeckoRestyleManager::ComputeAndProcessStyleChange(
   // ProcessRestyledFrames and ClearCachedInheritedStyleDataOnDescendants
   // calls; see comment in ElementRestyler::Restyle.
   nsTArray<RefPtr<nsStyleContext>> swappedStructOwners;
-  nsStyleChangeList changeList;
+  nsStyleChangeList changeList(StyleBackendType::Gecko);
   ElementRestyler r(frame->PresContext(), aElement, &changeList, aMinChange,
                     aRestyleTracker, selectorsForDescendants, treeMatchContext,
                     visibleKidsOfHiddenElement, contextsToClear,

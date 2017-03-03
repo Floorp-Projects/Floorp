@@ -10087,6 +10087,11 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
     &equalStructs,
     &samePointerStructs);
   if (childHint) {
+    if (childHint & nsChangeHint_ReconstructFrame) {
+      // If we generate a reconstruct here, remove any non-reconstruct hints we
+      // may have already generated for this content.
+      aChangeList.PopChangesForContent(aChildFrame->GetContent());
+    }
     aChangeList.AppendChange(aChildFrame, aChildFrame->GetContent(), childHint);
   }
 
