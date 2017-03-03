@@ -103,4 +103,7 @@ FINAL_TARGET_FILES += [
     'data/simple.mar',
     'data/wrong_product_channel.mar',
     'data/xpcshellUtilsAUS.js',
+    'TestAUSReadStrings1.ini',
+    'TestAUSReadStrings2.ini',
+    'TestAUSReadStrings3.ini',
 ]
