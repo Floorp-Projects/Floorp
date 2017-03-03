@@ -16,6 +16,10 @@ namespace widget {
 class CompositorWidget;
 }
 
+namespace wr {
+class DisplayListBuilder;
+}
+
 namespace layers {
 
 class CompositableClient;
@@ -36,9 +40,11 @@ public:
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
+
+  wr::PipelineId GetPipeline() { return mPipelineId; }
 
   // KnowsCompositor
   TextureForwarder* GetTextureForwarder() override;

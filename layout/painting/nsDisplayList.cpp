@@ -4147,7 +4147,7 @@ nsDisplayOutline::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayOutline::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+nsDisplayOutline::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                           nsTArray<WebRenderParentCommand>& aParentCommands,
                                           WebRenderDisplayItemLayer* aLayer)
 {
@@ -4164,10 +4164,10 @@ nsDisplayOutline::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
                                                      LayerSize(br->mBorderRadii[1].width, br->mBorderRadii[1].height),
                                                      LayerSize(br->mBorderRadii[3].width, br->mBorderRadii[3].height),
                                                      LayerSize(br->mBorderRadii[2].width, br->mBorderRadii[2].height));
-  aCommands.AppendElement(OpDPPushBorder(wr::ToWrRect(outlineTransformedRect),
-                                         wr::ToWrRect(outlineTransformedRect),
-                                         side[0], side[1], side[2], side[3],
-                                         borderRadius));
+  aBuilder.PushBorder(wr::ToWrRect(outlineTransformedRect),
+                      wr::ToWrRect(outlineTransformedRect),
+                      side[0], side[1], side[2], side[3],
+                      borderRadius);
 }
 
 bool
@@ -4427,7 +4427,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayCaret::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+nsDisplayCaret::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                         nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) {
   using namespace mozilla::layers;
@@ -4457,16 +4457,14 @@ nsDisplayCaret::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
   IntRect hook = RoundedToInt(hookTransformedRect);
 
   // Note, WR will pixel snap anything that is layout aligned.
-  aCommands.AppendElement(OpDPPushRect(
-                          wr::ToWrRect(caret),
-                          wr::ToWrRect(caret),
-                          wr::ToWrColor(color)));
+  aBuilder.PushRect(wr::ToWrRect(caret),
+                    wr::ToWrRect(caret),
+                    wr::ToWrColor(color));
 
   if (!devHookRect.IsEmpty()) {
-    aCommands.AppendElement(OpDPPushRect(
-                            wr::ToWrRect(hook),
-                            wr::ToWrRect(hook),
-                            wr::ToWrColor(color)));
+    aBuilder.PushRect(wr::ToWrRect(hook),
+                      wr::ToWrRect(hook),
+                      wr::ToWrColor(color));
   }
 }
 
@@ -4836,7 +4834,7 @@ nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+nsDisplayBoxShadowOuter::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                  nsTArray<WebRenderParentCommand>& aParentCommands,
                                                  WebRenderDisplayItemLayer* aLayer)
 {
@@ -4902,17 +4900,15 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
                                            : 0.0;
       float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
-      aCommands.AppendElement(OpDPPushBoxShadow(
-                              wr::ToWrRect(deviceBoxRect),
-                              wr::ToWrRect(deviceClipRect),
-                              wr::ToWrRect(deviceBoxRect),
-                              wr::ToWrPoint(shadowOffset),
-                              wr::ToWrColor(shadowColor),
-                              blurRadius,
-                              spreadRadius,
-                              borderRadius,
-                              WrBoxShadowClipMode::Outset
-                              ));
+      aBuilder.PushBoxShadow(wr::ToWrRect(deviceBoxRect),
+                             wr::ToWrRect(deviceClipRect),
+                             wr::ToWrRect(deviceBoxRect),
+                             wr::ToWrPoint(shadowOffset),
+                             wr::ToWrColor(shadowColor),
+                             blurRadius,
+                             spreadRadius,
+                             borderRadius,
+                             WrBoxShadowClipMode::Outset);
     }
   }
 }
@@ -4990,7 +4986,7 @@ nsDisplayBoxShadowInner::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsDisplayBoxShadowInner::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+nsDisplayBoxShadowInner::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                                  nsTArray<WebRenderParentCommand>& aParentCommands,
                                                  WebRenderDisplayItemLayer* aLayer)
 {
@@ -5037,17 +5033,15 @@ nsDisplayBoxShadowInner::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
       // NOTE: Any spread radius > 0 will render nothing. WR Bug.
       float spreadRadius = float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
 
-      aCommands.AppendElement(OpDPPushBoxShadow(
-                              wr::ToWrRect(deviceBoxRect),
-                              wr::ToWrRect(deviceClipRect),
-                              wr::ToWrRect(deviceBoxRect),
-                              wr::ToWrPoint(shadowOffset),
-                              wr::ToWrColor(shadowColor),
-                              blurRadius,
-                              spreadRadius,
-                              borderRadius,
-                              WrBoxShadowClipMode::Inset
-                              ));
+      aBuilder.PushBoxShadow(wr::ToWrRect(deviceBoxRect),
+                             wr::ToWrRect(deviceClipRect),
+                             wr::ToWrRect(deviceBoxRect),
+                             wr::ToWrPoint(shadowOffset),
+                             wr::ToWrColor(shadowColor),
+                             blurRadius,
+                             spreadRadius,
+                             borderRadius,
+                             WrBoxShadowClipMode::Inset);
     }
   }
 }

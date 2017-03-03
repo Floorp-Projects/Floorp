@@ -17,7 +17,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderColorLayer::RenderLayer()
+WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
@@ -58,18 +58,15 @@ WebRenderColorLayer::RenderLayer()
                   Stringify(mixBlendMode).c_str());
   }
 
-  WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds),
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                               wr::ToWrRect(overflow),
-                              mask,
+                              mask.ptrOr(nullptr),
                               1.0f,
-                              GetAnimations(),
+                              //GetAnimations(),
                               transform,
-                              mixBlendMode,
-                              FrameMetrics::NULL_SCROLL_ID));
-  WrBridge()->AddWebRenderCommand(
-    OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), wr::ToWrColor(mColor)));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+                              mixBlendMode);
+  aBuilder.PushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), wr::ToWrColor(mColor));
+  aBuilder.PopStackingContext();
 }
 
 } // namespace layers

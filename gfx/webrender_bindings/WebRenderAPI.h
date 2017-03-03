@@ -11,6 +11,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "GLTypes.h"
 #include "Units.h"
 
 namespace mozilla {
@@ -127,10 +128,7 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
-  void Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
-                wr::VecU8& dl_data,
-                WrAuxiliaryListsDescriptor& aux_descriptor,
-                wr::VecU8& aux_data);
+  wr::BuiltDisplayList Finalize();
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,
@@ -140,6 +138,8 @@ public:
                            const WrMixBlendMode& aMixBlendMode);
 
   void PopStackingContext();
+
+  void PushBuiltDisplayList(wr::BuiltDisplayList dl);
 
   void PushScrollLayer(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                        const WrRect& aOverflow,

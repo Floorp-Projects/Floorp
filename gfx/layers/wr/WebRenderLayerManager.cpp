@@ -317,12 +317,13 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
     return;
   }
 
-  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer();
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
 
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(size.ToUnknownSize(), sync, mLatestTransactionId);
+  WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
 

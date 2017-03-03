@@ -258,6 +258,22 @@ struct VecU8 {
     src.inner.capacity = 0;
   }
 
+  VecU8&
+  operator=(VecU8&& src) {
+    inner = src.inner;
+    src.inner.data = nullptr;
+    src.inner.capacity = 0;
+    return *this;
+  }
+
+  WrVecU8
+  Extract() {
+    WrVecU8 ret = inner;
+    inner.data = nullptr;
+    inner.capacity = 0;
+    return ret;
+  }
+
   ~VecU8() {
     if (inner.data) {
       wr_vec_u8_free(inner);
