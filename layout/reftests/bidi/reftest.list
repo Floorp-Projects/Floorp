@@ -81,7 +81,7 @@ fuzzy-if(skiaContent,1,1100) fails-if(stylo) == 267459-2.html 267459-2-ref.html
 random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
 == 332655-1.html 332655-1-ref.html
 == 332655-2.html 332655-2-ref.html
-== 381279-1.html 381279-1-ref.html
+fails-if(stylo) == 381279-1.html 381279-1-ref.html
 == 386339.html 386339-ref.html
 == 409375.html 409375-ref.html
 == 413542-1.html 413542-1-ref.html
@@ -97,7 +97,7 @@ fails-if(stylo) == 413928-2.html 413928-2-ref.html
 == 503269-1.html 503269-1-ref.html
 == 503957-1.html 503957-1-ref.html
 == 525740-1.html 525740-1-ref.html
-== 536963-1.html 536963-1-ref.html
+fails-if(stylo) == 536963-1.html 536963-1-ref.html
 == 562169-1.html 562169-1-ref.html
 fails-if(stylo) == 562169-1a.html 562169-1-ref.html
 == 562169-2.html 562169-2-ref.html

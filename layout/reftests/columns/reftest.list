@@ -29,8 +29,8 @@ fails-if(stylo) == columnrule-complex.html columnrule-complex-ref.html
 fails-if(stylo) == columnfill-overflow.html columnfill-overflow-ref.html
 == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1-ref.html
 == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2-ref.html
-== column-balancing-nested-000.html column-balancing-nested-000-ref.html
-== column-balancing-nested-001.html column-balancing-nested-001-ref.html
+fails-if(stylo) == column-balancing-nested-000.html column-balancing-nested-000-ref.html
+fails-if(stylo) == column-balancing-nested-001.html column-balancing-nested-001-ref.html
 == columnrule-overflow.html columnrule-overflow-ref.html
 == columns-table-caption-000.html columns-table-caption-000-ref.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501-ref.html
