@@ -129,20 +129,6 @@ ClearRestyleStateFromSubtree(Element* aElement)
   aElement->UnsetHasDirtyDescendantsForServo();
 }
 
-static void
-UpdateStyleContextForTableWrapper(nsIFrame* aTableWrapper,
-                                  nsStyleContext* aTableStyleContext,
-                                  ServoStyleSet* aStyleSet)
-{
-  MOZ_ASSERT(aTableWrapper->GetType() == nsGkAtoms::tableWrapperFrame);
-  MOZ_ASSERT(aTableWrapper->StyleContext()->GetPseudo() ==
-             nsCSSAnonBoxes::tableWrapper);
-  RefPtr<nsStyleContext> newContext =
-    aStyleSet->ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper,
-                                        aTableStyleContext);
-  aTableWrapper->SetStyleContext(newContext);
-}
-
 void
 ServoRestyleManager::RecreateStyleContexts(Element* aElement,
                                            nsStyleContext* aParentContext,
@@ -150,7 +136,6 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
                                            nsStyleChangeList& aChangeListToProcess)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
-  bool isTable = styleFrame != aElement->GetPrimaryFrame();
 
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
   // Although we shouldn't generate non-ReconstructFrame hints for elements with
@@ -158,22 +143,7 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   // PostRestyleEvent, such as a RepaintFrame hint when a :link changes to be
   // :visited.  Skip processing these hints if there is no frame.
   if ((styleFrame || (changeHint & nsChangeHint_ReconstructFrame)) && changeHint) {
-    if (isTable) {
-      // This part is a bit annoying: when isTable, that means the style frame
-      // is actually a _child_ of the primary frame.  In that situation, we want
-      // to go ahead and append the changeHint for the _parent_ but also append
-      // all the parts of it not handled for descendants for the _child_.
-      MOZ_ASSERT(styleFrame, "Or else GetPrimaryFrame() would be null too");
-      MOZ_ASSERT(styleFrame->GetParent() == aElement->GetPrimaryFrame(),
-                 "How did that happen?");
-      aChangeListToProcess.AppendChange(aElement->GetPrimaryFrame(), aElement,
-                                        changeHint);
-      // We may be able to do better here.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1340717 tracks that.
-      aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
-    } else {
-      aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
-    }
+    aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
   }
 
   // If our change hint is reconstruct, we delegate to the frame constructor,
@@ -241,14 +211,6 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     for (nsIFrame* f = styleFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
       f->SetStyleContext(newContext);
-    }
-
-    if (isTable) {
-      nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-      MOZ_ASSERT(primaryFrame->StyleContext()->GetPseudo() ==
-                   nsCSSAnonBoxes::tableWrapper,
-                 "What sort of frame is this?");
-      UpdateStyleContextForTableWrapper(primaryFrame, newContext, aStyleSet);
     }
 
     if (MOZ_UNLIKELY(displayContentsNode)) {
