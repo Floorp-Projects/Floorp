@@ -1390,7 +1390,43 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
   bool didUpdateCursor = false;
 
-  for (const nsStyleChangeData& data : aChangeList) {
+  for (size_t i = 0; i < aChangeList.Length(); ++i) {
+
+    // Collect and coalesce adjacent siblings for lazy frame construction.
+    // Eventually it would be even better to make RecreateFramesForContent
+    // accept a range and coalesce all adjacent reconstructs (bug 1344139).
+    size_t lazyRangeStart = i;
+    while (i < aChangeList.Length() &&
+           aChangeList[i].mContent &&
+           aChangeList[i].mContent->HasFlag(NODE_NEEDS_FRAME) &&
+           (i == lazyRangeStart ||
+            aChangeList[i - 1].mContent->GetNextSibling() == aChangeList[i].mContent))
+    {
+      MOZ_ASSERT(aChangeList[i].mHint & nsChangeHint_ReconstructFrame);
+      MOZ_ASSERT(!aChangeList[i].mFrame);
+      MOZ_ASSERT(!aChangeList[i].mContent->GetPrimaryFrame());
+      ++i;
+    }
+    if (i != lazyRangeStart) {
+      nsIContent* start = aChangeList[lazyRangeStart].mContent;
+      nsIContent* end = aChangeList[i-1].mContent->GetNextSibling();
+      nsIContent* container = start->GetFlattenedTreeParent();
+      MOZ_ASSERT(container);
+      if (!end) {
+        frameConstructor->ContentAppended(container, start, false);
+      } else {
+        frameConstructor->ContentRangeInserted(container, start, end, nullptr, false);
+      }
+    }
+    for (size_t j = lazyRangeStart; j < i; ++j) {
+      MOZ_ASSERT_IF(aChangeList[j].mContent->GetPrimaryFrame(),
+                    !aChangeList[j].mContent->HasFlag(NODE_NEEDS_FRAME));
+    }
+    if (i == aChangeList.Length()) {
+      break;
+    }
+
+    const nsStyleChangeData& data = aChangeList[i];
     nsIFrame* frame = data.mFrame;
     nsIContent* content = data.mContent;
     nsChangeHint hint = data.mHint;
