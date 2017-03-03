@@ -14,7 +14,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
     docker_worker_setup_secrets,
     docker_worker_add_public_artifacts,
-    docker_worker_support_vcs_checkout,
+    support_vcs_checkout,
 )
 
 haz_run_schema = Schema({
@@ -49,7 +49,7 @@ def docker_worker_hazard(config, job, taskdesc):
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
     docker_worker_setup_secrets(config, job, taskdesc)
-    docker_worker_support_vcs_checkout(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({

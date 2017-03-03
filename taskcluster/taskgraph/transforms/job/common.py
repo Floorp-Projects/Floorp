@@ -61,7 +61,7 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
     })
 
 
-def docker_worker_add_build_dependency(config, job, taskdesc):
+def add_build_dependency(config, job, taskdesc):
     """Add build dependency to the task description and installer_url to env."""
     key = job['platform']
     build_labels = config.config.get('dependent-build-platforms', {})
@@ -90,7 +90,7 @@ def docker_worker_add_build_dependency(config, job, taskdesc):
     env.update({'GECKO_INSTALLER_URL': {'task-reference': installer_url}})
 
 
-def docker_worker_support_vcs_checkout(config, job, taskdesc):
+def support_vcs_checkout(config, job, taskdesc):
     """Update a job/task with parameters to enable a VCS checkout.
 
     The configuration is intended for tasks using "run-task" and its
@@ -98,31 +98,37 @@ def docker_worker_support_vcs_checkout(config, job, taskdesc):
     """
     level = config.params['level']
 
-    taskdesc['worker'].setdefault('caches', []).append({
-        'type': 'persistent',
-        # History of versions:
-        #
-        # ``level-%s-checkouts`` was initially used and contained a number
-        # of backwards incompatible changes, such as moving HG_STORE_PATH
-        # from a separate cache to this cache.
-        #
-        # ``v1`` was introduced to provide a clean break from the unversioned
-        # cache.
-        'name': 'level-%s-checkouts-v1' % level,
-        'mount-point': '/home/worker/checkouts',
-    })
+    # native-engine does not support caches (yet), so we just do a full clone
+    # every time :(
+    if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
+        taskdesc['worker'].setdefault('caches', []).append({
+            'type': 'persistent',
+            # History of versions:
+            #
+            # ``level-%s-checkouts`` was initially used and contained a number
+            # of backwards incompatible changes, such as moving HG_STORE_PATH
+            # from a separate cache to this cache.
+            #
+            # ``v1`` was introduced to provide a clean break from the unversioned
+            # cache.
+            'name': 'level-%s-checkouts-v1' % level,
+            'mount-point': '/home/worker/checkouts',
+        })
 
     taskdesc['worker'].setdefault('env', {}).update({
         'GECKO_BASE_REPOSITORY': config.params['base_repository'],
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
-        'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
+        'HG_STORE_PATH': '~/checkouts/hg-store',
     })
 
     # Give task access to hgfingerprint secret so it can pin the certificate
     # for hg.mozilla.org.
     taskdesc['scopes'].append('secrets:get:project/taskcluster/gecko/hgfingerprint')
-    taskdesc['worker']['taskcluster-proxy'] = True
+
+    # only some worker platforms have taskcluster-proxy enabled
+    if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
+        taskdesc['worker']['taskcluster-proxy'] = True
 
 
 def docker_worker_setup_secrets(config, job, taskdesc):
