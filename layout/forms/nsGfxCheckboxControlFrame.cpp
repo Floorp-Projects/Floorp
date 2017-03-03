@@ -47,3 +47,130 @@ nsGfxCheckboxControlFrame::AccessibleType()
   return a11y::eHTMLCheckboxType;
 }
 #endif
+
+#ifdef ANDROID
+
+#include "mozilla/widget/AndroidColors.h"
+
+static void
+PaintCheckboxBorder(nsIFrame* aFrame,
+               DrawTarget* aDrawTarget,
+               const nsRect& aDirtyRect,
+               nsPoint aPt)
+{
+  nsRect rect(aPt, aFrame->GetSize());
+  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+
+  // Checkbox controls aren't something that we can render on Android
+  // natively. We fake native drawing of appearance: checkbox items
+  // out here, and use hardcoded colours from AndroidColors.h to
+  // simulate native theming.
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect devPxRect = NSRectToSnappedRect(rect, appUnitsPerDevPixel, *aDrawTarget);
+  aDrawTarget->StrokeRect(devPxRect, mozilla::widget::sAndroidBorderColor);
+}
+
+static void
+PaintCheckMark(nsIFrame* aFrame,
+               DrawTarget* aDrawTarget,
+               const nsRect& aDirtyRect,
+               nsPoint aPt)
+{
+  nsRect rect(aPt, aFrame->GetSize());
+  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+
+  // Points come from the coordinates on a 7X7 unit box centered at 0,0
+  const int32_t checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
+  const int32_t checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
+  const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(int32_t);
+  const int32_t checkSize      = 9; // 2 units of padding on either side
+                                    // of the 7x7 unit checkmark
+
+  // Scale the checkmark based on the smallest dimension
+  nscoord paintScale = std::min(rect.width, rect.height) / checkSize;
+  nsPoint paintCenter(rect.x + rect.width  / 2,
+                      rect.y + rect.height / 2);
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+  nsPoint p = paintCenter + nsPoint(checkPolygonX[0] * paintScale,
+                                    checkPolygonY[0] * paintScale);
+
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  builder->MoveTo(NSPointToPoint(p, appUnitsPerDevPixel));
+  for (int32_t polyIndex = 1; polyIndex < checkNumPoints; polyIndex++) {
+    p = paintCenter + nsPoint(checkPolygonX[polyIndex] * paintScale,
+                              checkPolygonY[polyIndex] * paintScale);
+    builder->LineTo(NSPointToPoint(p, appUnitsPerDevPixel));
+  }
+  RefPtr<Path> path = builder->Finish();
+  aDrawTarget->Fill(path, mozilla::widget::sAndroidCheckColor);
+}
+
+static void
+PaintIndeterminateMark(nsIFrame* aFrame,
+                       DrawTarget* aDrawTarget,
+                       const nsRect& aDirtyRect,
+                       nsPoint aPt)
+{
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+
+  nsRect rect(aPt, aFrame->GetSize());
+  rect.Deflate(aFrame->GetUsedBorderAndPadding());
+  rect.y += (rect.height - rect.height/4) / 2;
+  rect.height /= 4;
+
+  Rect devPxRect = NSRectToSnappedRect(rect, appUnitsPerDevPixel, *aDrawTarget);
+  aDrawTarget->FillRect(devPxRect, mozilla::widget::sAndroidCheckColor);
+}
+
+void
+nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                            const nsRect&           aDirtyRect,
+                                            const nsDisplayListSet& aLists)
+{
+  nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+
+  if (!IsVisibleForPainting(aBuilder)) {
+    return;   // nothing to paint.
+  }
+
+  if (IsThemed()) {
+    return; // No need to paint the checkmark. The theme will do it.
+  }
+
+  if (StyleDisplay()->mAppearance != NS_THEME_CHECKBOX) {
+    return;
+  }
+
+  aLists.Content()->AppendNewToTop(new (aBuilder)
+    nsDisplayGeneric(aBuilder, this, PaintCheckboxBorder,
+                     "CheckboxBorder", nsDisplayItem::TYPE_CHECKBOX_BORDER));
+
+  if (IsChecked() || IsIndeterminate()) {
+    aLists.Content()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(aBuilder, this,
+                       IsIndeterminate()
+                       ? PaintIndeterminateMark : PaintCheckMark,
+                       "CheckedCheckbox",
+                       nsDisplayItem::TYPE_CHECKED_CHECKBOX));
+  }
+}
+
+bool
+nsGfxCheckboxControlFrame::IsChecked()
+{
+  nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
+  bool retval = false;
+  elem->GetChecked(&retval);
+  return retval;
+}
+
+bool
+nsGfxCheckboxControlFrame::IsIndeterminate()
+{
+  nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(mContent));
+  bool retval = false;
+  elem->GetIndeterminate(&retval);
+  return retval;
+}
+#endif

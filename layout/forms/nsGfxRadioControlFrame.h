@@ -23,6 +23,15 @@ public:
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
+
+#ifdef ANDROID
+  // On Android, there's no native theme or native widget support for
+  // checkbox or radio buttons. We draw them ourselves here using
+  // hardcoded colour values in order to simulate native drawing.
+  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                const nsRect& aDirtyRect,
+                                const nsDisplayListSet& aLists) override;
+#endif
 };
 
 #endif
