@@ -17,13 +17,14 @@ var path = require("path");
 var helpers = require("../helpers");
 var globals = require("../globals");
 var root = helpers.getRootDir(module.filename);
-var modules = require(path.join(root, "tools", "lint", "eslint", "modules.json"));
+var modules = require(path.join(root,
+                                "tools", "lint", "eslint", "modules.json"));
 
 const placesOverlayFiles = [
   "toolkit/content/globalOverlay.js",
   "browser/base/content/utilityOverlay.js",
   "browser/components/places/content/controller.js",
-  "browser/components/places/content/treeView.js",
+  "browser/components/places/content/treeView.js"
 ];
 
 const extraPlacesDefinitions = [
@@ -32,26 +33,26 @@ const extraPlacesDefinitions = [
   {name: "Ci", writable: false},
   {name: "Cr", writable: false},
   {name: "Cu", writable: false},
-  // Via Components.utils / XPCOMUtils.defineLazyModuleGetter (and map to single)
-  // variable.
+  // Via Components.utils / XPCOMUtils.defineLazyModuleGetter (and map to
+  // single) variable.
   {name: "XPCOMUtils", writable: false},
   {name: "Task", writable: false},
   {name: "PlacesUIUtils", writable: false},
-  {name: "PlacesTransactions", writable: false},
-]
+  {name: "PlacesTransactions", writable: false}
+];
 
 const placesOverlayModules = [
-  "PlacesUtils.jsm",
-]
+  "PlacesUtils.jsm"
+];
 
 function getScriptGlobals() {
   let fileGlobals = [];
   for (let file of placesOverlayFiles) {
-    let fileName = path.join(root, file)
+    let fileName = path.join(root, file);
     try {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
-      throw new Error(`Could not load globals from file ${fileName}: ${e}`)
+      throw new Error(`Could not load globals from file ${fileName}: ${e}`);
     }
   }
 
