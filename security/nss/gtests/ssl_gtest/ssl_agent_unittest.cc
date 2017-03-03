@@ -67,11 +67,9 @@ TEST_P(TlsAgentTest, EarlyCertificateVerify) {
                  SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY);
 }
 
-TEST_P(TlsAgentTestClient, CannedHello) {
+TEST_P(TlsAgentTestClient13, CannedHello) {
   DataBuffer buffer;
   EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
   DataBuffer server_hello;
   MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
                        sizeof(kCannedTls13ServerHello), &server_hello);
@@ -80,7 +78,7 @@ TEST_P(TlsAgentTestClient, CannedHello) {
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
 }
 
-TEST_P(TlsAgentTestClient, EncryptedExtensionsInClear) {
+TEST_P(TlsAgentTestClient13, EncryptedExtensionsInClear) {
   DataBuffer server_hello;
   MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
                        sizeof(kCannedTls13ServerHello), &server_hello);
@@ -92,8 +90,6 @@ TEST_P(TlsAgentTestClient, EncryptedExtensionsInClear) {
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
              server_hello.data(), server_hello.len(), &buffer);
   EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -201,10 +197,14 @@ TEST_F(TlsAgentStreamTestServer, Set0RttOptionClientHelloThenRead) {
   ProcessMessage(buffer, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_MAC_READ);
 }
 
-INSTANTIATE_TEST_CASE_P(
-    AgentTests, TlsAgentTest,
-    ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
-                       TlsConnectTestBase::kTlsModesStream));
+INSTANTIATE_TEST_CASE_P(AgentTests, TlsAgentTest,
+                        ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
+                                           TlsConnectTestBase::kTlsModesStream,
+                                           TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(ClientTests, TlsAgentTestClient,
-                        TlsConnectTestBase::kTlsModesAll);
+                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                                           TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(ClientTests13, TlsAgentTestClient13,
+                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                                           TlsConnectTestBase::kTlsV13));
 }  // namespace nss_test
