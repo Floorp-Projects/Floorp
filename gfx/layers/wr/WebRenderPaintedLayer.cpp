@@ -208,6 +208,7 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                               mixBlendMode);
   aBuilder.PushImage(wr::ToWrRect(rect), clip, wr::ImageRendering::Auto, key);
   aBuilder.PopStackingContext();
+  Manager()->AddImageKeyForDiscard(key);
 }
 
 } // namespace layers
