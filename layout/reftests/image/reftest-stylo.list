@@ -13,11 +13,11 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1c.htm
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.html sync-image-switch-1d.html
 
 # Tests for "object-fit" & "object-position"
-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
-fails skip-if(stylo) pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html # Bug 1342188
-fails pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1.html
-fails pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1.html
+== image-object-fit-dyn-1.html image-object-fit-dyn-1.html
+fails skip-if(stylo) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html # Bug 1342188
+fails == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
+== image-object-position-dyn-1.html image-object-position-dyn-1.html
+fails == image-object-position-with-background-1.html image-object-position-with-background-1.html
 == image-object-position-with-background-2.html image-object-position-with-background-2.html
 
 # Tests for image-orientation used with 'from-image' (note that all

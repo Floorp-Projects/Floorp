@@ -270,8 +270,8 @@ jsreftest:
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 35
-            android.*: 10
+            android-4.3-arm7-api-15/debug: 100
+            android.*: 40
             windows.*: 2
             linux64-qr/.*: 4
             macosx.*: 2

@@ -689,59 +689,6 @@ TLSFilterTransaction::SetProxiedTransaction(nsAHttpTransaction *aTrans)
   return NS_OK;
 }
 
-// AddTransaction is for adding pipelined subtransactions
-nsresult
-TLSFilterTransaction::AddTransaction(nsAHttpTransaction *aTrans)
-{
-  LOG(("TLSFilterTransaction::AddTransaction passing on subtransaction "
-       "[this=%p] aTrans=%p ,mTransaction=%p\n", this, aTrans, mTransaction.get()));
-
-  if (!mTransaction) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mTransaction->AddTransaction(aTrans);
-}
-
-uint32_t
-TLSFilterTransaction::PipelineDepth()
-{
-  if (!mTransaction) {
-    return 0;
-  }
-
-  return mTransaction->PipelineDepth();
-}
-
-nsresult
-TLSFilterTransaction::SetPipelinePosition(int32_t aPosition)
-{
-  if (!mTransaction) {
-    return NS_OK;
-  }
-
-  return mTransaction->SetPipelinePosition(aPosition);
-}
-
-int32_t
-TLSFilterTransaction::PipelinePosition()
-{
-  if (!mTransaction) {
-    return 1;
-  }
-
-  return mTransaction->PipelinePosition();
-}
-
-nsHttpPipeline *
-TLSFilterTransaction::QueryPipeline()
-{
-  if (!mTransaction) {
-    return nullptr;
-  }
-  return mTransaction->QueryPipeline();
-}
-
 bool
 TLSFilterTransaction::IsNullTransaction()
 {

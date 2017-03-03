@@ -7,6 +7,7 @@ modules = []
 modules += [
     'immutable.js',
     'jsol.js',
+    'jszip.js',
     'react-addons-shallow-compare.js',
 ]
 

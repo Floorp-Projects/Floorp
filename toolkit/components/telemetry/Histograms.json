@@ -2570,13 +2570,6 @@
     "n_buckets": 100,
     "description": "Time from submission to dispatch of HTTP transaction (ms)"
   },
-  "TRANSACTION_WAIT_TIME_HTTP_PIPELINES": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 100,
-    "description": "Time from submission to dispatch of HTTP with pipelines transaction (ms)"
-  },
   "TRANSACTION_WAIT_TIME_SPDY": {
     "expires_in_version": "never",
     "kind": "exponential",

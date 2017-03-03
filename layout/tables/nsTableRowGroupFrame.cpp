@@ -120,6 +120,51 @@ void  nsTableRowGroupFrame::AdjustRowIndices(int32_t aRowIndex,
     }
   }
 }
+
+int32_t
+nsTableRowGroupFrame::GetAdjustmentForStoredIndex(int32_t aStoredIndex)
+{
+  nsTableFrame* tableFrame = GetTableFrame();
+  return tableFrame->GetAdjustmentForStoredIndex(aStoredIndex);
+}
+
+void
+nsTableRowGroupFrame::MarkRowsAsDeleted(nsTableRowFrame& aStartRowFrame,
+                                        int32_t          aNumRowsToDelete)
+{
+  nsTableRowFrame* currentRowFrame = &aStartRowFrame;
+  for (;;) {
+    // XXXneerja - Instead of calling AddDeletedRowIndex() per row frame
+    // it is possible to change AddDeleteRowIndex to instead take
+    // <start row index> and <num of rows to mark for deletion> as arguments.
+    // The problem that emerges here is mDeletedRowIndexRanges only stores
+    // disjoint index ranges and since AddDeletedRowIndex() must operate on
+    // the "stored" index, in some cases it is possible that the range
+    // of indices to delete becomes overlapping EG: Deleting rows 9 - 11 and
+    // then from the remaining rows deleting the *new* rows 7 to 20.
+    // Handling these overlapping ranges is much more complicated to
+    // implement and so I opted to add the deleted row index of one row at a
+    // time and maintain the invariant that the range of deleted row indices
+    // is always disjoint.
+    currentRowFrame->AddDeletedRowIndex();
+    if (--aNumRowsToDelete == 0) {
+      break;
+    }
+    currentRowFrame = do_QueryFrame(currentRowFrame->GetNextSibling());
+    if (!currentRowFrame) {
+      MOZ_ASSERT_UNREACHABLE("expected another row frame");
+      break;
+    }
+  }
+}
+
+void
+nsTableRowGroupFrame::AddDeletedRowIndex(int32_t aDeletedRowStoredIndex)
+{
+  nsTableFrame* tableFrame = GetTableFrame();
+  return tableFrame->AddDeletedRowIndex(aDeletedRowStoredIndex);
+}
+
 nsresult
 nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame)
 {

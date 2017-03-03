@@ -5,9 +5,10 @@
 "use strict";
 
 const Services = require("Services");
+const FileSaver = require("devtools/client/shared/file-saver");
+const JSZip = require("devtools/client/shared/vendor/jszip");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
-const { HarUtils } = require("./har-utils.js");
-const { HarBuilder } = require("./har-builder.js");
+const { HarBuilder } = require("./har-builder");
 
 var uid = 1;
 
@@ -61,31 +62,48 @@ const HarExporter = {
    * - forceExport {Boolean}: The result HAR file is created even if
    *   there are no HTTP entries.
    */
-  save: function (options) {
+  async save(options) {
     // Set default options related to save operation.
-    options.defaultFileName = Services.prefs.getCharPref(
+    let defaultFileName = Services.prefs.getCharPref(
       "devtools.netmonitor.har.defaultFileName");
-    options.compress = Services.prefs.getBoolPref(
+    let compress = Services.prefs.getBoolPref(
       "devtools.netmonitor.har.compress");
 
-    // Get target file for exported data. Bail out, if the user
-    // presses cancel.
-    let file = HarUtils.getTargetFile(options.defaultFileName,
-      options.jsonp, options.compress);
+    trace.log("HarExporter.save; " + defaultFileName, options);
 
-    if (!file) {
-      return Promise.resolve();
+    let data = await this.fetchHarData(options);
+    let fileName = this.getHarFileName(defaultFileName, options.jsonp, compress);
+
+    if (compress) {
+      data = await JSZip().file(fileName, data).generateAsync({
+        compression: "DEFLATE",
+        platform: Services.appinfo.OS === "WINNT" ? "DOS" : "UNIX",
+        type: "blob",
+      });
     }
 
-    trace.log("HarExporter.save; " + options.defaultFileName, options);
+    fileName = `${fileName}${compress ? ".zip" : ""}`;
+    let blob = compress ? data : new Blob([data], { type: "application/json" });
 
-    return this.fetchHarData(options).then(jsonString => {
-      if (!HarUtils.saveToFile(file, jsonString, options.compress)) {
-        let msg = "Failed to save HAR file at: " + options.defaultFileName;
-        console.error(msg);
-      }
-      return jsonString;
-    });
+    FileSaver.saveAs(blob, fileName, document);
+  },
+
+  formatDate(date) {
+    let year = String(date.getFullYear() % 100).padStart(2, "0");
+    let month = String(date.getMonth() + 1).padStart(2, "0");
+    let day = String(date.getDate()).padStart(2, "0");
+    let hour = String(date.getHours()).padStart(2, "0");
+    let minutes = String(date.getMinutes()).padStart(2, "0");
+    let seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hour}-${minutes}-${seconds}`;
+  },
+
+  getHarFileName(defaultFileName, jsonp, compress) {
+    let name = defaultFileName.replace(/%date/g, this.formatDate(new Date()));
+    name = name.replace(/\:/gm, "-", "");
+    name = name.replace(/\//gm, "_", "");
+    return `${name}.${jsonp ? "harp" : "har"}`;
   },
 
   /**

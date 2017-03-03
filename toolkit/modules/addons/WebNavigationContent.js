@@ -23,6 +23,55 @@ addMessageListener("Extension:DisableWebNavigation", () => {
   removeEventListener("DOMContentLoaded", loadListener);
 });
 
+var CreatedNavigationTargetListener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  init() {
+    Services.obs.addObserver(this, "webNavigation-createdNavigationTarget-from-js", false);
+  },
+  uninit() {
+    Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget-from-js");
+  },
+
+  observe(subject, topic, data) {
+    if (!(subject instanceof Ci.nsIPropertyBag2)) {
+      return;
+    }
+
+    let props = subject.QueryInterface(Ci.nsIPropertyBag2);
+
+    const createdDocShell = props.getPropertyAsInterface("createdTabDocShell", Ci.nsIDocShell);
+    const sourceDocShell = props.getPropertyAsInterface("sourceTabDocShell", Ci.nsIDocShell);
+
+    const isSourceTabDescendant = WebNavigationFrames.isDescendantDocShell(sourceDocShell, docShell);
+
+    if (docShell !== createdDocShell && docShell !== sourceDocShell &&
+        !isSourceTabDescendant) {
+      // if the createdNavigationTarget is not related to this docShell
+      // (this docShell is not the newly created docShell, it is not the source docShell,
+      // and the source docShell is not a descendant of it)
+      // there is nothing to do here and return early.
+      return;
+    }
+
+    const isSourceTab = docShell === sourceDocShell || isSourceTabDescendant;
+    const sourceWindowId = WebNavigationFrames.getDocShellWindowId(sourceDocShell);
+    const createdWindowId = WebNavigationFrames.getDocShellWindowId(createdDocShell);
+
+    let url;
+    if (props.hasKey("url")) {
+      url = props.getPropertyAsACString("url");
+    }
+
+    sendAsyncMessage("Extension:CreatedNavigationTarget", {
+      url,
+      sourceWindowId,
+      createdWindowId,
+      isSourceTab,
+    });
+  },
+};
+
 var FormSubmitListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIFormSubmitObserver,
@@ -256,11 +305,13 @@ var WebProgressListener = {
 var disabled = false;
 WebProgressListener.init();
 FormSubmitListener.init();
+CreatedNavigationTargetListener.init();
 addEventListener("unload", () => {
   if (!disabled) {
     disabled = true;
     WebProgressListener.uninit();
     FormSubmitListener.uninit();
+    CreatedNavigationTargetListener.uninit();
   }
 });
 addMessageListener("Extension:DisableWebNavigation", () => {
@@ -268,5 +319,6 @@ addMessageListener("Extension:DisableWebNavigation", () => {
     disabled = true;
     WebProgressListener.uninit();
     FormSubmitListener.uninit();
+    CreatedNavigationTargetListener.uninit();
   }
 });

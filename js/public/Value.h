@@ -1452,6 +1452,27 @@ template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(
 
 } // namespace js
 
+#ifdef DEBUG
+namespace JS {
+
+MOZ_ALWAYS_INLINE bool
+ValueIsNotGray(const Value& value)
+{
+    if (!value.isGCThing())
+        return true;
+
+    return CellIsNotGray(value.toGCThing());
+}
+
+MOZ_ALWAYS_INLINE bool
+ValueIsNotGray(const Heap<Value>& value)
+{
+    return ValueIsNotGray(value.unbarrieredGet());
+}
+
+} // namespace JS
+#endif
+
 /************************************************************************/
 
 namespace JS {

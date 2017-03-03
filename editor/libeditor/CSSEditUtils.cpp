@@ -582,11 +582,11 @@ CSSEditUtils::GetComputedStyle(Element* aElement)
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the whole node
 // if it is a span and if its only attribute is _moz_dirty
 nsresult
-CSSEditUtils::RemoveCSSInlineStyle(nsIDOMNode* aNode,
+CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode,
                                    nsIAtom* aProperty,
                                    const nsAString& aPropertyValue)
 {
-  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  RefPtr<Element> element = aNode.AsElement();
   NS_ENSURE_STATE(element);
 
   // remove the property from the style attribute
