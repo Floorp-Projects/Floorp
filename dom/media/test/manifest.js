@@ -1612,10 +1612,6 @@ const DEBUG_TEST_LOOP_FOREVER = false;
 //      or end the mochitest if all the tests are done.
 function MediaTestManager() {
 
-  // Set a very large timeout to prevent Mochitest timeout.
-  // Instead MediaTestManager will manage timeout of each test.
-  SimpleTest.requestLongerTimeout(1000);
-
   // Return how many seconds elapsed since |begin|.
   function elapsedTime(begin) {
     var end = new Date();
@@ -1639,7 +1635,6 @@ function MediaTestManager() {
     this.isShutdown = false;
     this.numTestsRunning = 0;
     this.handlers = {};
-    this.timers = {};
 
     // Always wait for explicit finish.
     SimpleTest.waitForExplicitFinish();
@@ -1666,14 +1661,6 @@ function MediaTestManager() {
     this.tokens.push(token);
     this.numTestsRunning++;
     this.handlers[token] = handler;
-
-    var onTimeout = function() {
-      ok(false, `${token} timed out!`);
-      this.finished(token);
-    }.bind(this);
-    // Default timeout to 180s for each test.
-    this.timers[token] = setTimeout(onTimeout, 180000);
-
     is(this.numTestsRunning, this.tokens.length,
        "[started " + token + " t=" + elapsedTime(this.startTime) + "] Length of array should match number of running tests");
   }
@@ -1687,12 +1674,6 @@ function MediaTestManager() {
     if (i != -1) {
       // Remove the element from the list of running tests.
       this.tokens.splice(i, 1);
-    }
-
-    if (this.timers[token]) {
-      // Cancel the timer when the test finishes.
-      clearTimeout(this.timers[token]);
-      this.timers[token] = null;
     }
 
     info("[finished " + token + "] remaining= " + this.tokens);
