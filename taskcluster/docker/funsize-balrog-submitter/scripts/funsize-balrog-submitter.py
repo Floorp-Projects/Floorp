@@ -4,7 +4,6 @@ import os
 import logging
 import argparse
 import json
-import sys
 import hashlib
 import requests
 import tempfile
