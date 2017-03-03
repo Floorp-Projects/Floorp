@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for the proxy API</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+/* eslint no-unused-vars: ["error", {"args": "none", "varsIgnorePattern": "^(FindProxyForURL)$"}] */
+
+"use strict";
+
+function* testProxyScript(script, expected) {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.proxy.onProxyError.addListener(error => {
+        browser.test.sendMessage("proxy-error-received", error);
+      });
+
+      browser.proxy.registerProxyScript("proxy_script.js");
+    },
+    manifest: {
+      "permissions": ["proxy"],
+    },
+    files: {
+      "proxy_script.js": String(script).replace(/^.*?\{([^]*)\}$/, "$1"),
+    },
+  });
+
+  yield extension.startup();
+
+  let win = window.open("http://example.com/");
+  let error = yield extension.awaitMessage("proxy-error-received");
+  is(error.message, expected.message, "Correct error message received");
+  win.close();
+
+  if (expected.errorInfo) {
+    ok(error.fileName.includes("proxy_script.js"), "Error should include file name");
+    is(error.lineNumber, 3, "Error should include line number");
+    ok(error.stack.includes("proxy_script.js:3:9"), "Error should include stack trace");
+  }
+
+  yield extension.unload();
+}
+
+add_task(function* test_invalid_FindProxyForURL_type() {
+  yield testProxyScript(
+    () => { }, {
+      message: "The proxy script must define FindProxyForURL as a function",
+    });
+
+  yield testProxyScript(
+    () => {
+      var FindProxyForURL = 5; // eslint-disable-line mozilla/var-only-at-top-level
+    }, {
+      message: "The proxy script must define FindProxyForURL as a function",
+    });
+});
+
+add_task(function* test_invalid_FindProxyForURL_return_type() {
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return 5;
+      }
+    }, {
+      message: "FindProxyForURL: Return type must be a string",
+    });
+
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return "INVALID";
+      }
+    }, {
+      message: "FindProxyForURL: Invalid Proxy Rule: INVALID",
+    });
+});
+
+add_task(function* test_runtime_error_in_FindProxyForURL() {
+  yield testProxyScript(
+    () => {
+      function FindProxyForURL() {
+        return not_defined; // eslint-disable-line no-undef
+      }
+    }, {
+      message: "not_defined is not defined",
+      errorInfo: true,
+    });
+});
+
+</script>
+
+</body>
+</html>
