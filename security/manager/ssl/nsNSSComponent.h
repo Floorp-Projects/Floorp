@@ -54,8 +54,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
 
-  NS_IMETHOD ShowAlertFromStringBundle(const char* messageID) = 0;
-
   NS_IMETHOD GetPIPNSSBundleString(const char* name,
                                    nsAString& outString) = 0;
   NS_IMETHOD PIPBundleFormatStringFromName(const char* name,
@@ -107,8 +105,6 @@ public:
   nsresult Init();
 
   static nsresult GetNewPrompter(nsIPrompt** result);
-  static nsresult ShowAlertWithConstructedString(const nsString& message);
-  NS_IMETHOD ShowAlertFromStringBundle(const char* messageID) override;
 
   NS_IMETHOD GetPIPNSSBundleString(const char* name,
                                    nsAString& outString) override;

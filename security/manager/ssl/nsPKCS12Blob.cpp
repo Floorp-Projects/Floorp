@@ -7,11 +7,12 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Unused.h"
 #include "nsICertificateDialogs.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
+#include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
@@ -26,8 +27,6 @@ extern LazyLogModule gPIPNSSLog;
 
 #define PIP_PKCS12_TMPFILENAME   NS_LITERAL_CSTRING(".pip_p12tmp")
 #define PIP_PKCS12_BUFFER_SIZE   2048
-#define PIP_PKCS12_RESTORE_OK          1
-#define PIP_PKCS12_BACKUP_OK           2
 #define PIP_PKCS12_USER_CANCELED       3
 #define PIP_PKCS12_NOSMARTCARD_EXPORT  4
 #define PIP_PKCS12_RESTORE_FAILED      5
@@ -134,7 +133,6 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
   srv = SEC_PKCS12DecoderImportBags(dcx);
   if (srv) goto finish;
   // Later - check to see if this should become default email cert
-  handleError(PIP_PKCS12_RESTORE_OK);
 finish:
   // If srv != SECSuccess, NSS probably set a specific error code.
   // We should use that error code instead of inventing a new one
@@ -305,7 +303,6 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
   // encode and write
   srv = SEC_PKCS12Encode(ecx, write_export_file, this);
   if (srv) goto finish;
-  handleError(PIP_PKCS12_BACKUP_OK);
 finish:
   if (NS_FAILED(rv) || srv != SECSuccess) {
     handleError(PIP_PKCS12_BACKUP_FAILED);
@@ -429,17 +426,15 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 SECItem *
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   *cancel = false;
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv)) return nullptr;
   int count = 1;
   nsCString nickname;
   nsAutoString nickFromProp;
-  nssComponent->GetPIPNSSBundleString("P12DefaultNickname", nickFromProp);
+  nsresult rv = GetPIPNSSBundleString("P12DefaultNickname", nickFromProp);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
   NS_ConvertUTF16toUTF8 nickFromPropC(nickFromProp);
   // The user is trying to import a PKCS#12 file that doesn't have the
   // attribute we use to set the nickname.  So in order to reduce the
@@ -516,10 +511,8 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 void
 nsPKCS12Blob::handleError(int myerr)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
+  MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
-    NS_ERROR("nsPKCS12Blob::handleError called off the mai nthread.");
     return;
   }
 
@@ -530,8 +523,6 @@ nsPKCS12Blob::handleError(int myerr)
   const char * msgID = nullptr;
 
   switch (myerr) {
-  case PIP_PKCS12_RESTORE_OK:       msgID = "SuccessfulP12Restore"; break;
-  case PIP_PKCS12_BACKUP_OK:        msgID = "SuccessfulP12Backup";  break;
   case PIP_PKCS12_USER_CANCELED:
     return;  /* Just ignore it for now */
   case PIP_PKCS12_NOSMARTCARD_EXPORT: msgID = "PKCS12InfoNoSmartcardBackup"; break;
@@ -563,8 +554,18 @@ nsPKCS12Blob::handleError(int myerr)
   if (!msgID)
     msgID = "PKCS12UnknownErr";
 
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent = do_GetService(kNSSComponentCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    (void) nssComponent->ShowAlertFromStringBundle(msgID);
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  if (!wwatch) {
+    return;
+  }
+  nsCOMPtr<nsIPrompt> prompter;
+  if (NS_FAILED(wwatch->GetNewPrompter(nullptr, getter_AddRefs(prompter)))) {
+    return;
+  }
+  nsAutoString message;
+  if (NS_FAILED(GetPIPNSSBundleString(msgID, message))) {
+    return;
+  }
+
+  Unused << prompter->Alert(nullptr, message.get());
 }

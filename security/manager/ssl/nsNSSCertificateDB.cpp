@@ -969,6 +969,9 @@ nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
 NS_IMETHODIMP
 nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
 {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -983,6 +986,9 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
                                      nsIX509Cert** certs)
 {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
