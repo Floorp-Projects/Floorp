@@ -29,7 +29,7 @@ class MochiRemote(MochitestDesktop):
     logMessages = []
 
     def __init__(self, automation, devmgr, options):
-        MochitestDesktop.__init__(self, options)
+        MochitestDesktop.__init__(self, options.flavor, options)
 
         self._automation = automation
         self._dm = devmgr
