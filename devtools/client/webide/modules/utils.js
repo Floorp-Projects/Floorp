@@ -15,15 +15,20 @@ exports.doesFileExist = doesFileExist;
 
 function _getFile(location, ...pickerParams) {
   if (location) {
-    return new FileUtils.File(location);
+    return Promise.resolve(new FileUtils.File(location));
   }
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
   fp.init(...pickerParams);
-  let res = fp.show();
-  if (res == Ci.nsIFilePicker.returnCancel) {
-    return null;
-  }
-  return fp.file;
+
+  return new Promise(resolve => {
+    fp.open(res => {
+      if (res == Ci.nsIFilePicker.returnCancel) {
+        resolve(null);
+      } else {
+        resolve(fp.file);
+      }
+    });
+  });
 }
 
 function getCustomBinary(window, location) {
