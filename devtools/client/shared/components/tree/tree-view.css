@@ -85,6 +85,7 @@
 
 /* Learn More link */
 .treeTable .treeValueCell .learn-more-link {
+  -moz-user-select: none;
   color: var(--theme-highlight-blue);
   cursor: pointer;
   margin: 0 5px;
