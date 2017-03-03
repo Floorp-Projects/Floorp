@@ -1502,6 +1502,47 @@ impl ToJson for KeyDownAction {
 }
 
 #[derive(PartialEq)]
+pub enum PointerOrigin {
+    Viewport,
+    Pointer,
+    Element(WebElement),
+}
+
+impl Parameters for PointerOrigin {
+    fn from_json(body: &Json) -> WebDriverResult<PointerOrigin> {
+        match *body {
+            Json::String(ref x) => {
+                match &**x {
+                    "viewport" => Ok(PointerOrigin::Viewport),
+                    "pointer" => Ok(PointerOrigin::Pointer),
+                    _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                 "Unknown pointer origin"))
+                }
+            },
+            Json::Object(_) => Ok(PointerOrigin::Element(try!(WebElement::from_json(body)))),
+            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                        "Pointer origin was not a string or an object"))
+        }
+    }
+}
+
+impl ToJson for PointerOrigin {
+    fn to_json(&self) -> Json {
+        match *self {
+            PointerOrigin::Viewport => "viewport".to_json(),
+            PointerOrigin::Pointer => "pointer".to_json(),
+            PointerOrigin::Element(ref x) => x.to_json(),
+        }
+    }
+}
+
+impl Default for PointerOrigin {
+    fn default() -> PointerOrigin {
+        PointerOrigin::Viewport
+    }
+}
+
+#[derive(PartialEq)]
 pub enum PointerAction {
     Up(PointerUpAction),
     Down(PointerDownAction),
@@ -1602,7 +1643,7 @@ impl ToJson for PointerDownAction {
 #[derive(PartialEq)]
 pub struct PointerMoveAction {
     pub duration: Nullable<u64>,
-    pub element: Nullable<WebElement>,
+    pub origin: PointerOrigin,
     pub x: Nullable<u64>,
     pub y: Nullable<u64>
 }
@@ -1617,9 +1658,9 @@ impl Parameters for PointerMoveAction {
 
         };
 
-        let element = match body.find("element") {
-            Some(elem) => Some(try!(WebElement::from_json(elem))),
-            None => None
+        let origin = match body.find("origin") {
+            Some(o) => try!(PointerOrigin::from_json(o)),
+            None => PointerOrigin::default()
         };
 
         let x = match body.find("x") {
@@ -1642,7 +1683,7 @@ impl Parameters for PointerMoveAction {
 
         Ok(PointerMoveAction {
             duration: duration.into(),
-            element: element.into(),
+            origin: origin.into(),
             x: x.into(),
             y: y.into(),
         })
@@ -1657,10 +1698,9 @@ impl ToJson for PointerMoveAction {
             data.insert("duration".to_owned(),
                         self.duration.to_json());
         }
-        if self.element.is_value() {
-            data.insert("element".to_owned(),
-                        self.element.to_json());
-        }
+
+        data.insert("origin".to_owned(), self.origin.to_json());
+
         if self.x.is_value() {
             data.insert("x".to_owned(), self.x.to_json());
         }
