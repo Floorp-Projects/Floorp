@@ -705,16 +705,15 @@ class PushToTry(MachCommandBase):
             print(e.message)
             sys.exit(1)
 
-        if kwargs["verbose"]:
-            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
-                if kwargs["no_artifact"]:
-                    print('mozconfig has --enable-artifact-builds but '
-                          '--no-artifact specified, not including --artifact '
-                          'flag in try syntax')
-                else:
-                    print('mozconfig has --enable-artifact-builds; including '
-                          '--artifact flag in try syntax (use --no-artifact '
-                          'to override)')
+        if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+            if kwargs["no_artifact"]:
+                print('mozconfig has --enable-artifact-builds but '
+                      '--no-artifact specified, not including --artifact '
+                      'flag in try syntax')
+            else:
+                print('mozconfig has --enable-artifact-builds; including '
+                      '--artifact flag in try syntax (use --no-artifact '
+                      'to override)')
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')
