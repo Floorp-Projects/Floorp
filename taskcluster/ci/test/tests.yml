@@ -994,19 +994,24 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ]
-            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            default: []
     e10s:
+        # run only e10s tests for this platform see bug 1343301
         by-test-platform:
             linux64-stylo/opt:
+                # no opt on inbound see bug 1339604
                 by-project:
-                    mozilla-inbound: false
-                    default: both
+                    stylo: true
+                    autoland: true
+                    mozilla-central: true
+                    default: false
             linux64-stylo/debug:
-                # only e10s on inbound
                 by-project:
                     mozilla-inbound: true
-                    default: both
+                    stylo: true
+                    autoland: true
+                    mozilla-central: true
+                    default: false
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
