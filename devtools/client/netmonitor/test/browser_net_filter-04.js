@@ -60,7 +60,8 @@ add_task(function* () {
 
   let filters = Services.prefs.getCharPref("devtools.netmonitor.filters");
   is(filters, '["html","js"]',
-    "The filters preferences were saved directly after the click and only with the valid.");
+    "The filters preferences were saved directly after the click and only" +
+    " with the valid.");
 
   yield teardown(monitor);
 });
