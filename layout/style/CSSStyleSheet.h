@@ -38,7 +38,6 @@ class nsXMLNameSpaceMap;
 
 namespace mozilla {
 class CSSStyleSheet;
-struct ChildSheetListBuilder;
 
 namespace css {
 class GroupRule;
@@ -165,8 +164,7 @@ public:
 
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
-  static bool RebuildChildList(css::Rule* aRule,
-                               ChildSheetListBuilder* aBuilder);
+  static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 

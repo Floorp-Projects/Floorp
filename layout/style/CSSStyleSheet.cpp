@@ -165,8 +165,7 @@ struct ChildSheetListBuilder {
 };
 
 bool
-CSSStyleSheet::RebuildChildList(css::Rule* aRule,
-                                ChildSheetListBuilder* aBuilder)
+CSSStyleSheet::RebuildChildList(css::Rule* aRule, void* aBuilder)
 {
   int32_t type = aRule->GetType();
   if (type < css::Rule::IMPORT_RULE) {
@@ -178,6 +177,9 @@ CSSStyleSheet::RebuildChildList(css::Rule* aRule,
     // We're past all the import rules; stop the enumeration.
     return false;
   }
+
+  ChildSheetListBuilder* builder =
+    static_cast<ChildSheetListBuilder*>(aBuilder);
 
   // XXXbz We really need to decomtaminate all this stuff.  Is there a reason
   // that I can't just QI to ImportRule and get a CSSStyleSheet
@@ -195,9 +197,9 @@ CSSStyleSheet::RebuildChildList(css::Rule* aRule,
     return true;
   }
 
-  (*aBuilder->sheetSlot) = sheet;
-  aBuilder->SetParentLinks(*aBuilder->sheetSlot);
-  aBuilder->sheetSlot = &(*aBuilder->sheetSlot)->mNext;
+  (*builder->sheetSlot) = sheet;
+  builder->SetParentLinks(*builder->sheetSlot);
+  builder->sheetSlot = &(*builder->sheetSlot)->mNext;
   return true;
 }
 
@@ -236,18 +238,11 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
   : StyleSheetInfo(aCopy, aPrimarySheet)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
-  for (css::Rule* rule : aCopy.mOrderedRules) {
-    RefPtr<css::Rule> clone = rule->Clone();
-    mOrderedRules.AppendObject(clone);
-    clone->SetStyleSheet(aPrimarySheet);
-  }
+  aCopy.mOrderedRules.EnumerateForwards(css::GroupRule::CloneRuleInto, &mOrderedRules);
+  mOrderedRules.EnumerateForwards(SetStyleSheetReference, aPrimarySheet);
 
   ChildSheetListBuilder builder = { &mFirstChild, aPrimarySheet };
-  for (css::Rule* rule : mOrderedRules) {
-    if (!CSSStyleSheet::RebuildChildList(rule, &builder)) {
-      break;
-    }
-  }
+  mOrderedRules.EnumerateForwards(CSSStyleSheet::RebuildChildList, &builder);
 
   RebuildNameSpaces();
 }
@@ -255,9 +250,7 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
 CSSStyleSheetInner::~CSSStyleSheetInner()
 {
   MOZ_COUNT_DTOR(CSSStyleSheetInner);
-  for (css::Rule* rule : mOrderedRules) {
-    rule->SetStyleSheet(nullptr);
-  }
+  mOrderedRules.EnumerateForwards(SetStyleSheetReference, nullptr);
 }
 
 CSSStyleSheetInner*
@@ -269,11 +262,8 @@ CSSStyleSheetInner::CloneFor(CSSStyleSheet* aPrimarySheet)
 void
 CSSStyleSheetInner::RemoveSheet(StyleSheet* aSheet)
 {
-  if (aSheet == mSheets.ElementAt(0) && mSheets.Length() > 1) {
-    StyleSheet* sheet = mSheets[1];
-    for (css::Rule* rule : mOrderedRules) {
-      rule->SetStyleSheet(sheet);
-    }
+  if ((aSheet == mSheets.ElementAt(0)) && (mSheets.Length() > 1)) {
+    mOrderedRules.EnumerateForwards(SetStyleSheetReference, mSheets[1]);
 
     ChildSheetListBuilder::ReparentChildList(mSheets[1], mFirstChild);
   }
@@ -315,17 +305,7 @@ CSSStyleSheetInner::RebuildNameSpaces()
 {
   // Just nuke our existing namespace map, if any
   if (NS_SUCCEEDED(CreateNamespaceMap())) {
-    for (css::Rule* rule : mOrderedRules) {
-      switch (rule->GetType()) {
-        case css::Rule::NAMESPACE_RULE:
-          AddNamespaceRuleToMap(rule, mNameSpaceMap);
-          continue;
-        case css::Rule::CHARSET_RULE:
-        case css::Rule::IMPORT_RULE:
-          continue;
-      }
-      break;
-    }
+    mOrderedRules.EnumerateForwards(CreateNameSpace, mNameSpaceMap);
   }
 }
 
@@ -457,9 +437,7 @@ CSSStyleSheet::UnlinkInner()
     return;
   }
 
-  for (css::Rule* rule : Inner()->mOrderedRules) {
-    rule->SetStyleSheet(nullptr);
-  }
+  Inner()->mOrderedRules.EnumerateForwards(SetStyleSheetReference, nullptr);
   Inner()->mOrderedRules.Clear();
 
   StyleSheet::UnlinkInner();
