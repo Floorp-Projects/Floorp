@@ -886,6 +886,10 @@ PK11_GetPrivateModulusLen(SECKEYPrivateKey *key)
                 PORT_SetError(PK11_MapError(crv));
                 return -1;
             }
+            if (theTemplate.pValue == NULL) {
+                PORT_SetError(PK11_MapError(CKR_ATTRIBUTE_VALUE_INVALID));
+                return -1;
+            }
             length = theTemplate.ulValueLen;
             if (*(unsigned char *)theTemplate.pValue == 0) {
                 length--;
