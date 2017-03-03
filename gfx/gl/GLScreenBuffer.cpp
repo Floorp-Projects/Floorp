@@ -90,6 +90,12 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
                   factory = SurfaceFactory_GLXDrawable::Create(gl, caps, ipcChannel, flags);
 #elif defined(MOZ_WIDGET_UIKIT)
                 factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel, mFlags);
+#elif defined(MOZ_WIDGET_ANDROID)
+                if (XRE_IsParentProcess()) {
+                    factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
+                } else {
+                    factory = SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
+                }
 #else
                 if (gl->GetContextType() == GLContextType::EGL) {
                     if (XRE_IsParentProcess()) {

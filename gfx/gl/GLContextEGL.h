@@ -69,6 +69,9 @@ public:
     virtual bool ReleaseTexImage() override;
 
     void SetEGLSurfaceOverride(EGLSurface surf);
+    EGLSurface GetEGLSurfaceOverride() {
+        return mSurfaceOverride;
+    }
 
     virtual bool MakeCurrentImpl(bool aForce) override;
 
