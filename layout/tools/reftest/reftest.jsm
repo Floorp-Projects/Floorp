@@ -1116,8 +1116,12 @@ function ReadManifest(aURL, inherited_status, aFilter)
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             secMan.checkLoadURIWithPrincipal(principal, refURI,
                                              CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-
-            AddTestItem({ type: items[0],
+            var type = items[0];
+            if (gCompareStyloToGecko) {
+                type = TYPE_REFTEST_EQUAL
+                refURI = testURI;
+            }
+            AddTestItem({ type: type,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
                           prettyPath: prettyPath,
