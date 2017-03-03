@@ -2102,6 +2102,7 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
     innerFrame = NS_NewTableFrame(mPresShell, styleContext);
 
   InitAndRestoreFrame(aState, content, newFrame, innerFrame);
+  innerFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
 
   // Put the newly created frames into the right child list
   SetInitialSingleChild(newFrame, innerFrame);
