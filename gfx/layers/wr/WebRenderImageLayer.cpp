@@ -211,6 +211,7 @@ WebRenderImageLayer::RenderMaskLayer(const gfx::Matrix4x4& aTransform)
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+  Manager()->AddImageKeyForDiscard(key);
 
   gfx::IntSize size = image->GetSize();
   WrImageMask imageMask;

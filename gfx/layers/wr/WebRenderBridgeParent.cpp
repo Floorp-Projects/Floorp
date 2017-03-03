@@ -343,8 +343,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 const ByteBuffer& aux,
                                                 const WrAuxiliaryListsDescriptor& auxDesc)
 {
-  // XXX remove it when external image key is used.
-  std::vector<wr::ImageKey> keysToDelete;
 
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
@@ -375,7 +373,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
             mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
-            keysToDelete.push_back(key);
           } else {
             // XXX handling YUV
             gfx::SurfaceFormat format =
@@ -385,7 +382,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                          descriptor,
                                          wrTexture->GetExternalImageKey());
             mCompositableHolder->HoldExternalImage(mPipelineId, aEpoch, texture->AsWebRenderTextureHost());
-            keysToDelete.push_back(key);
           }
 
           break;
@@ -405,7 +401,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
         mApi->AddImage(key, descriptor, slice);
 
-        keysToDelete.push_back(key);
         dSurf->Unmap();
         break;
       }
@@ -432,11 +427,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 
   ScheduleComposition();
   DeleteOldImages();
-
-  // XXX remove it when external image key is used.
-  if (!keysToDelete.empty()) {
-    mKeysToDelete.swap(keysToDelete);
-  }
 
   if (ShouldParentObserveEpoch()) {
     mCompositorBridge->ObserveLayerUpdate(wr::AsUint64(mPipelineId), GetChildLayerObserverEpoch(), true);
