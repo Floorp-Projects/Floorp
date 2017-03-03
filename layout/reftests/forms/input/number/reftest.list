@@ -8,20 +8,20 @@ skip-if(Android) fails-if(stylo) != not-other-type-unthemed-1.html not-other-typ
 skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthemed-ref.html
 
 # should look the same as type=text, except for the spin box
-fails-if(stylo) == number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
-fails-if(stylo) == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
-fails-if(stylo) == number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
-fails-if(stylo) == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
+== number-similar-to-text-unthemed.html number-similar-to-text-unthemed-ref.html
+== number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl-ref.html
+== number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr-ref.html
+== number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
 
 # dynamic type changes:
 fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) fails-if(stylo) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
 fuzzy-if(skiaContent,2,5) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:
-fuzzy-if(skiaContent,2,13) fails-if(stylo) == show-value.html show-value-ref.html
+fuzzy-if(skiaContent,2,13) == show-value.html show-value-ref.html
 
 # disabled
-fails-if(stylo) == number-disabled.html number-disabled-ref.html
+== number-disabled.html number-disabled-ref.html
 
 # auto width:
 fails-if(stylo) == number-auto-width-1.html number-auto-width-1-ref.html
@@ -36,7 +36,7 @@ pref(layout.css.moz-appearance.enabled,true) skip-if(Android) == number-max-heig
 fails-if(stylo) == number-significant-fractional-digits.html number-significant-fractional-digits-ref.html
 
 # focus
-fuzzy-if(skiaContent,2,5) needs-focus fails-if(stylo) == focus-handling.html focus-handling-ref.html
+fuzzy-if(skiaContent,2,5) needs-focus random-if(stylo) == focus-handling.html focus-handling-ref.html
 
 # select
 fails-if(stylo) == number-selected.html number-selected-ref.html

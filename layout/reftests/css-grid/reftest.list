@@ -17,8 +17,8 @@ fails-if(stylo) == grid-placement-named-lines-002.html grid-placement-named-line
 fails-if(stylo) == grid-placement-named-lines-003.html grid-placement-named-lines-003-ref.html
 fails-if(stylo) == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 fails-if(stylo) == grid-track-sizing-002.html grid-track-sizing-002-ref.html
-fails-if(stylo) == grid-abspos-items-001.html grid-abspos-items-001-ref.html
-fails-if(stylo) == grid-abspos-items-002.html grid-abspos-items-002-ref.html
+== grid-abspos-items-001.html grid-abspos-items-001-ref.html
+== grid-abspos-items-002.html grid-abspos-items-002-ref.html
 fails-if(stylo) == grid-abspos-items-003.html grid-abspos-items-003-ref.html
 fails-if(stylo) == grid-abspos-items-004.html grid-abspos-items-004-ref.html
 fails-if(stylo) == grid-abspos-items-005.html grid-abspos-items-005-ref.html
@@ -38,7 +38,7 @@ fuzzy-if(skiaContent,1,200) fails-if(stylo) == grid-order-placement-definite-001
 skip-if(Android) fails-if(stylo) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001-ref.html
 fails-if(stylo) == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002-ref.html
 skip-if(Android) fuzzy-if(winWidget,1,32) fails-if(stylo) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001-ref.html
-fails-if(stylo) == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
+== grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001-ref.html
 fails-if(stylo) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
 fails-if(stylo) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
 fails-if(stylo) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
@@ -81,8 +81,8 @@ fails-if(stylo) == grid-track-fit-content-sizing-001.html grid-track-fit-content
 fails-if(stylo) == grid-track-fit-content-sizing-002.html grid-track-fit-content-sizing-002-ref.html
 fails-if(stylo) == grid-max-sizing-flex-001.html grid-max-sizing-flex-001-ref.html
 fails-if(stylo) == grid-max-sizing-flex-002.html grid-max-sizing-flex-002-ref.html
-fails-if(stylo) == grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
-fails-if(stylo) == grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
+== grid-max-sizing-flex-003.html grid-max-sizing-flex-003-ref.html
+== grid-max-sizing-flex-004.html grid-max-sizing-flex-004-ref.html
 fails-if(stylo) == grid-max-sizing-flex-005.html grid-max-sizing-flex-005-ref.html
 fails-if(stylo) == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
 fails-if(stylo) == grid-max-sizing-flex-007.html grid-max-sizing-flex-007-ref.html
@@ -141,7 +141,7 @@ random-if(http.oscpu!="Linux\u0020i686") fails-if(stylo) == grid-item-mixed-base
 skip-if(!gtkWidget) fails-if(stylo) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto
 fails-if(stylo) == grid-align-content-001.html grid-align-content-001-ref.html
 fails-if(stylo) == grid-justify-content-001.html grid-justify-content-001-ref.html
-skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
+skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
 skip-if(Android&&isDebugBuild) fails-if(stylo) == grid-justify-content-003.html grid-justify-content-003-ref.html # Bug 1245884 - slow
 skip-if(!gtkWidget) fails-if(stylo) == grid-container-baselines-001.html grid-container-baselines-001-ref.html
 skip-if(!gtkWidget) fails-if(stylo) == grid-container-baselines-002.html grid-container-baselines-002-ref.html
@@ -185,7 +185,7 @@ fails-if(stylo) == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-
 fails-if(stylo) == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009-ref.html
 fails-if(stylo) == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010-ref.html
 fails-if(stylo) == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-010-ref.html
-fails-if(stylo) == grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
+== grid-item-blockifying-001.html grid-item-blockifying-001-ref.html
 fails-if(stylo) == grid-fragmentation-001.html grid-fragmentation-001-ref.html
 fails-if(stylo) == grid-fragmentation-002.html grid-fragmentation-002-ref.html
 fails-if(stylo) == grid-fragmentation-003.html grid-fragmentation-003-ref.html

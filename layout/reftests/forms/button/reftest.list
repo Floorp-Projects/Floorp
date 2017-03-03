@@ -1,7 +1,7 @@
 fails-if(stylo) == first-letter-1.html first-letter-1-ref.html
 fails-if(stylo) != first-letter-1.html first-letter-1-noref.html
 
-fails-if(stylo) == max-height.html max-height-ref.html
+== max-height.html max-height-ref.html
 == min-height.html min-height-ref.html
 
 # Android is off ever-so-slightly on the points where the text
@@ -23,7 +23,7 @@ fails-if(stylo) != line-height-input-1.5.html line-height-input-1.0.html
 
 # Looks like Android changes the text color, but to something slightly
 # different from ColorGray
-fails-if(Android) fails-if(stylo) == disabled-1.html disabled-1-ref.html
+fails-if(Android) == disabled-1.html disabled-1-ref.html
 fails-if(stylo) == disabled-2.html disabled-2-ref.html
 
 fails-if(stylo) != disabled-3.html disabled-3-notref.html

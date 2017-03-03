@@ -1,7 +1,7 @@
 default-preferences pref(dom.forms.number,true) pref(dom.forms.datetime,true)
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == input-load.html input-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == input-create.html input-ref.html
-fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == input-number.html input-number-ref.html
+fuzzy-if(skiaContent,1,3) needs-focus == input-number.html input-number-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == input-time.html input-time-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == button-load.html button-ref.html
 fuzzy-if(skiaContent,1,3) needs-focus fails-if(stylo) == button-create.html button-ref.html
