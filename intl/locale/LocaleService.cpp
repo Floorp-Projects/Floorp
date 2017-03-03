@@ -29,7 +29,10 @@ ReadAppLocales(nsTArray<nsCString>& aRetVal)
   nsCOMPtr<nsIToolkitChromeRegistry> cr =
     mozilla::services::GetToolkitChromeRegistryService();
   if (cr) {
-    cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), true, uaLangTag);
+    // We don't want to canonicalize the locale from ChromeRegistry into
+    // it's BCP47 form because we will use it for direct language
+    // negotiation and BCP47 changes `ja-JP-mac` into `ja-JP-x-variant-mac`.
+    cr->GetSelectedLocale(NS_LITERAL_CSTRING("global"), false, uaLangTag);
   }
   if (!uaLangTag.IsEmpty()) {
     aRetVal.AppendElement(uaLangTag);
