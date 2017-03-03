@@ -135,6 +135,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitFloor(MFloor* ins);
     void visitCeil(MCeil* ins);
     void visitRound(MRound* ins);
+    void visitNearbyInt(MNearbyInt* ins);
     void visitMinMax(MMinMax* ins);
     void visitAbs(MAbs* ins);
     void visitClz(MClz* ins);

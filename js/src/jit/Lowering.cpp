@@ -1433,6 +1433,22 @@ LIRGenerator::visitRound(MRound* ins)
 }
 
 void
+LIRGenerator::visitNearbyInt(MNearbyInt* ins)
+{
+    MIRType inputType = ins->input()->type();
+    MOZ_ASSERT(IsFloatingPointType(inputType));
+    MOZ_ASSERT(ins->type() == inputType);
+
+    LInstructionHelper<1, 1, 0>* lir;
+    if (inputType == MIRType::Double)
+        lir = new(alloc()) LNearbyInt(useRegisterAtStart(ins->input()));
+    else
+        lir = new(alloc()) LNearbyIntF(useRegisterAtStart(ins->input()));
+
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitMinMax(MMinMax* ins)
 {
     MDefinition* first = ins->getOperand(0);

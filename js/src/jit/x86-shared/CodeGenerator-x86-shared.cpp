@@ -2338,6 +2338,26 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF* lir)
 }
 
 void
+CodeGeneratorX86Shared::visitNearbyInt(LNearbyInt* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    RoundingMode roundingMode = lir->mir()->roundingMode();
+    masm.vroundsd(Assembler::ToX86RoundingMode(roundingMode), input, output, output);
+}
+
+void
+CodeGeneratorX86Shared::visitNearbyIntF(LNearbyIntF* lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister output = ToFloatRegister(lir->output());
+
+    RoundingMode roundingMode = lir->mir()->roundingMode();
+    masm.vroundss(Assembler::ToX86RoundingMode(roundingMode), input, output, output);
+}
+
+void
 CodeGeneratorX86Shared::visitGuardShape(LGuardShape* guard)
 {
     Register obj = ToRegister(guard->input());

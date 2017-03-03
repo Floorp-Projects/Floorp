@@ -263,6 +263,7 @@ namespace jit {
     _(Floor)                                                                \
     _(Ceil)                                                                 \
     _(Round)                                                                \
+    _(NearbyInt)                                                            \
     _(In)                                                                   \
     _(InstanceOf)                                                           \
     _(CallInstanceOf)                                                       \

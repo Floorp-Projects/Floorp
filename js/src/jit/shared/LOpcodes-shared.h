@@ -371,6 +371,8 @@
     _(CeilF)                        \
     _(Round)                        \
     _(RoundF)                       \
+    _(NearbyInt)                    \
+    _(NearbyIntF)                   \
     _(In)                           \
     _(InArray)                      \
     _(InstanceOfO)                  \
