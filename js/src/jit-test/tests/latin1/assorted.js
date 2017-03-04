@@ -23,7 +23,7 @@ assertEq(o.toSource(), '({get prop() { return "\\u1200"; }, set prop() { return 
 var ff = function() { return 10; };
 ff.toSource = function() { return "((11))"; }
 Object.defineProperty(o, "prop", {get: ff, set: ff, enumerable: true});
-assertEq(o.toSource(), "({prop:((11)), prop:((11))})");
+assertEq(o.toSource(), "({get prop(11), set prop(11)})");
 
 // XDR
 load(libdir + 'bytecode-cache.js');
