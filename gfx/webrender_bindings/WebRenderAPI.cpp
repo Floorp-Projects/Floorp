@@ -51,7 +51,7 @@ public:
     *mUseANGLE = gl->IsANGLE();
 
     WrRenderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, nullptr, mWrApi, &wrRenderer)) {
+    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, mWrApi, &wrRenderer)) {
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -63,6 +63,10 @@ public:
                                             aWindowId,
                                             wrRenderer,
                                             mBridge);
+    if (wrRenderer && renderer) {
+      WrExternalImageHandler handler = renderer->GetExternalImageHandler();
+      wr_renderer_set_external_image_handler(wrRenderer, &handler);
+    }
 
     aRenderThread.AddRenderer(aWindowId, Move(renderer));
   }
@@ -135,6 +139,11 @@ WebRenderAPI::Create(bool aEnableProfiler,
   return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id, maxTextureSize, useANGLE)).forget();
 }
 
+WrIdNamespace
+WebRenderAPI::GetNamespace() {
+  return wr_api_get_namespace(mWrApi);
+}
+
 WebRenderAPI::~WebRenderAPI()
 {
   layers::SynchronousTask task("Destroy WebRenderAPI");
@@ -146,14 +155,33 @@ WebRenderAPI::~WebRenderAPI()
 }
 
 void
+WebRenderAPI::GenerateFrame()
+{
+  wr_api_generate_frame(mWrApi);
+}
+
+void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
-                                 DisplayListBuilder& aBuilder)
+				 WrPipelineId pipeline_id,
+				 WrBuiltDisplayListDescriptor dl_descriptor,
+				 uint8_t *dl_data,
+				 size_t dl_size,
+				 WrAuxiliaryListsDescriptor aux_descriptor,
+				 uint8_t *aux_data,
+				 size_t aux_size)
 {
-  wr_api_set_root_display_list(mWrApi, aBuilder.mWrState,
-                               aEpoch,
-                               aViewportSize.width, aViewportSize.height);
+    wr_api_set_root_display_list(mWrApi,
+				 aEpoch,
+				 aViewportSize.width, aViewportSize.height,
+                                 pipeline_id,
+                                 dl_descriptor,
+                                 dl_data,
+                                 dl_size,
+                                 aux_descriptor,
+                                 aux_data,
+                                 aux_size);
 }
 
 void
@@ -209,24 +237,40 @@ WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
   wr_api_set_root_pipeline(mWrApi, aPipeline);
 }
 
-ImageKey
-WebRenderAPI::AddImageBuffer(const ImageDescriptor& aDescritptor,
-                             Range<uint8_t> aBytes)
+void
+WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescritptor,
+                       Range<uint8_t> aBytes)
 {
-  return ImageKey(wr_api_add_image(mWrApi,
-                                   &aDescritptor,
-                                   &aBytes[0], aBytes.length()));
+  wr_api_add_image(mWrApi,
+                   key,
+                   &aDescritptor,
+                   &aBytes[0], aBytes.length());
 }
 
-ImageKey
-WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
+void
+WebRenderAPI::AddExternalImageHandle(ImageKey key,
+                                     gfx::IntSize aSize,
                                      gfx::SurfaceFormat aFormat,
                                      uint64_t aHandle)
 {
   auto format = SurfaceFormatToWrImageFormat(aFormat).value();
-  return ImageKey(wr_api_add_external_image_texture(mWrApi,
-                                                    aSize.width, aSize.height, format,
-                                                    aHandle));
+  wr_api_add_external_image_handle(mWrApi,
+                                   key,
+                                   aSize.width, aSize.height, format,
+                                   aHandle);
+}
+
+void
+WebRenderAPI::AddExternalImageBuffer(ImageKey key,
+                                     gfx::IntSize aSize,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint64_t aHandle)
+{
+  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
+  wr_api_add_external_image_buffer(mWrApi,
+                                   key,
+                                   aSize.width, aSize.height, format,
+                                   aHandle);
 }
 
 void
@@ -246,10 +290,10 @@ WebRenderAPI::DeleteImage(ImageKey aKey)
   wr_api_delete_image(mWrApi, aKey);
 }
 
-wr::FontKey
-WebRenderAPI::AddRawFont(Range<uint8_t> aBytes)
+void
+WebRenderAPI::AddRawFont(wr::FontKey key, Range<uint8_t> aBytes)
 {
-  return wr::FontKey(wr_api_add_raw_font(mWrApi, &aBytes[0], aBytes.length()));
+  wr_api_add_raw_font(mWrApi, key, &aBytes[0], aBytes.length());
 }
 
 void
@@ -298,10 +342,10 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
   wr_api_send_external_event(mWrApi, event);
 }
 
-DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
+DisplayListBuilder::DisplayListBuilder(PipelineId aId)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
-  mWrState = wr_state_new(aSize.width, aSize.height, aId);
+  mWrState = wr_state_new(aId);
 }
 
 DisplayListBuilder::~DisplayListBuilder()
@@ -317,9 +361,22 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 }
 
 void
-DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
+DisplayListBuilder::End()
 {
-  wr_dp_end(mWrState, aApi.mWrApi, aEpoch);
+  wr_dp_end(mWrState);
+}
+
+void
+DisplayListBuilder::Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
+                             wr::VecU8& dl_data,
+                             WrAuxiliaryListsDescriptor& aux_descriptor,
+                             wr::VecU8& aux_data)
+{
+    wr_api_finalize_builder(mWrState,
+                            dl_descriptor,
+                            dl_data.inner,
+                            aux_descriptor,
+                            aux_data.inner);
 }
 
 void

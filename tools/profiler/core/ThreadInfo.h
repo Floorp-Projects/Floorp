@@ -65,9 +65,6 @@ public:
   // become invalid, i.e., just before JS shutdown.
   void FlushSamplesAndMarkers(ProfileBuffer* aBuffer);
 
-  void DuplicateLastSample(ProfileBuffer* aBuffer,
-                           const mozilla::TimeStamp& aStartTime);
-
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 
   void UpdateThreadResponsiveness() {

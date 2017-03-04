@@ -4148,6 +4148,7 @@ nsDisplayOutline::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayOutline::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                          nsTArray<WebRenderParentCommand>& aParentCommands,
                                           WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(mBorderRenderer.isSome());
@@ -4427,6 +4428,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCaret::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                         WebRenderDisplayItemLayer* aLayer) {
   using namespace mozilla::layers;
   int32_t contentOffset;
@@ -4835,6 +4837,7 @@ nsDisplayBoxShadowOuter::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                                 nsTArray<WebRenderParentCommand>& aParentCommands,
                                                  WebRenderDisplayItemLayer* aLayer)
 {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -4854,6 +4857,22 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
   bool nativeTheme = nsCSSRendering::HasBoxShadowNativeTheme(mFrame,
                                                              hasBorderRadius);
 
+  // Don't need the full size of the shadow rect like we do in
+  // nsCSSRendering since WR takes care of calculations for blur
+  // and spread radius.
+  nsRect shadowRect = nsCSSRendering::GetShadowRect(borderRect,
+                                                    nativeTheme,
+                                                    mFrame);
+
+  RectCornerRadii borderRadii;
+  if (hasBorderRadius) {
+    hasBorderRadius = nsCSSRendering::GetBorderRadii(shadowRect,
+                                                     borderRect,
+                                                     mFrame,
+                                                     borderRadii);
+    MOZ_ASSERT(borderRadii.AreRadiiSame(), "WR only supports uniform borders");
+  }
+
   // Everything here is in app units, change to device units.
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
@@ -4861,12 +4880,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
 
     for (uint32_t j = shadows->Length(); j  > 0; j--) {
       nsCSSShadowItem* shadow = shadows->ShadowAt(j - 1);
-      // Don't need the full size of the shadow rect like we do in
-      // nsCSSRendering since WR takes care of calculations for blur
-      // and spread radius.
-      nsRect shadowRect = nsCSSRendering::GetShadowRect(borderRect,
-                                                        nativeTheme,
-                                                        mFrame);
+
       gfx::Color shadowColor = nsCSSRendering::GetShadowColor(shadow,
                                                               mFrame,
                                                               mOpacity);
@@ -4882,10 +4896,11 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCo
 
       Rect deviceClipRect = aLayer->RelativeToParent(clipRect + shadowOffset);
 
-      float blurRadius = shadow->mRadius / appUnitsPerDevPixel;
-      // TODO: Calculate the border radius here.
-      float borderRadius = 0.0;
-      float spreadRadius = shadow->mSpread / appUnitsPerDevPixel;
+      float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
+      // TODO: support non-uniform border radius.
+      float borderRadius = hasBorderRadius ? borderRadii.TopLeft().width
+                                           : 0.0;
+      float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
 
       aCommands.AppendElement(OpDPPushBoxShadow(
                               wr::ToWrRect(deviceBoxRect),
@@ -4951,6 +4966,89 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
     gfx->Clip(NSRectToSnappedRect(rects[i], appUnitsPerDevPixel, *drawTarget));
     nsCSSRendering::PaintBoxShadowInner(presContext, *aCtx, mFrame, borderRect);
     gfx->Restore();
+  }
+}
+
+LayerState
+nsDisplayBoxShadowInner::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                       LayerManager* aManager,
+                                       const ContainerLayerParameters& aParameters)
+{
+  if (gfxPrefs::LayersAllowInsetBoxShadow()) {
+    return LAYER_ACTIVE;
+  }
+
+  return LAYER_NONE;
+}
+
+already_AddRefed<Layer>
+nsDisplayBoxShadowInner::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                    LayerManager* aManager,
+                                    const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayBoxShadowInner::CreateWebRenderCommands(nsTArray<WebRenderCommand>& aCommands,
+                                                 nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                 WebRenderDisplayItemLayer* aLayer)
+{
+  if (!nsCSSRendering::CanPaintBoxShadowInner(mFrame)) {
+    return;
+  }
+
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+
+  AutoTArray<nsRect,10> rects;
+  nsRegion visible = aLayer->GetVisibleRegion().ToAppUnits(appUnitsPerDevPixel);
+  ComputeDisjointRectangles(visible, &rects);
+
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+
+  for (uint32_t i = 0; i < rects.Length(); ++i) {
+    Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
+
+    for (uint32_t i = shadows->Length(); i > 0; --i) {
+      nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
+      if (!shadowItem->mInset) {
+        continue;
+      }
+
+      nsRect shadowRect =
+        nsCSSRendering::GetBoxShadowInnerPaddingRect(mFrame, borderRect);
+      RectCornerRadii innerRadii;
+      nsCSSRendering::GetShadowInnerRadii(mFrame, borderRect, innerRadii);
+
+      // Now translate everything to device pixels.
+      Rect deviceBoxRect = NSRectToRect(shadowRect, appUnitsPerDevPixel);
+      Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
+      Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, mFrame, 1.0);
+
+      Point shadowOffset;
+      shadowOffset.x = (shadowItem->mXOffset / appUnitsPerDevPixel);
+      shadowOffset.y = (shadowItem->mYOffset / appUnitsPerDevPixel);
+
+      float blurRadius = float(shadowItem->mRadius) / float(appUnitsPerDevPixel);
+      // TODO: WR doesn't support non-uniform border radii
+      float borderRadius = innerRadii.TopLeft().width;
+      // NOTE: Any spread radius > 0 will render nothing. WR Bug.
+      float spreadRadius = float(shadowItem->mSpread) / float(appUnitsPerDevPixel);
+
+      aCommands.AppendElement(OpDPPushBoxShadow(
+                              wr::ToWrRect(deviceBoxRect),
+                              wr::ToWrRect(deviceClipRect),
+                              wr::ToWrRect(deviceBoxRect),
+                              wr::ToWrPoint(shadowOffset),
+                              wr::ToWrColor(shadowColor),
+                              blurRadius,
+                              spreadRadius,
+                              borderRadius,
+                              WrBoxShadowClipMode::Inset
+                              ));
+    }
   }
 }
 

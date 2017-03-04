@@ -14,7 +14,7 @@ use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveGeometry, Prim
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, RadialGradientPrimitiveGpu};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextRunPrimitiveGpu};
 use prim_store::{TexelRect, YuvImagePrimitiveCpu, YuvImagePrimitiveGpu};
-use profiler::FrameProfileCounters;
+use profiler::{FrameProfileCounters, TextureCacheProfileCounters};
 use render_task::{AlphaRenderItem, MaskCacheKey, MaskResult, RenderTask, RenderTaskIndex};
 use render_task::RenderTaskLocation;
 use resource_cache::ResourceCache;
@@ -28,7 +28,7 @@ use util::{self, pack_as_float, rect_from_points_f, subtract_rect, TransformedRe
 use util::{RectHelpers, TransformedRectKind};
 use webrender_traits::{as_scroll_parent_rect, BorderDetails, BorderDisplayItem, BorderSide, BorderStyle};
 use webrender_traits::{BoxShadowClipMode, ClipRegion, ColorF, device_length, DeviceIntPoint};
-use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintSize, ExtendMode, FontKey};
+use webrender_traits::{DeviceIntRect, DeviceIntSize, DeviceUintSize, ExtendMode, FontKey, TileOffset};
 use webrender_traits::{FontRenderMode, GlyphOptions, ImageKey, ImageRendering, ItemRange};
 use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, PipelineId};
 use webrender_traits::{RepeatMode, ScrollLayerId, ScrollLayerPixel, WebGLContextId, YuvColorSpace};
@@ -417,7 +417,8 @@ impl FrameBuilder {
                                    &segment.tile_spacing,
                                    Some(segment.sub_rect),
                                    border.image_key,
-                                   ImageRendering::Auto);
+                                   ImageRendering::Auto,
+                                   None);
                 }
             }
             BorderDetails::Normal(ref border) => {
@@ -715,8 +716,13 @@ impl FrameBuilder {
         // The local space box shadow rect. It is the element rect
         // translated by the box shadow offset and inflated by the
         // box shadow spread.
+        let inflate_amount = match clip_mode {
+            BoxShadowClipMode::Outset | BoxShadowClipMode::None => spread_radius,
+            BoxShadowClipMode::Inset => -spread_radius,
+        };
+
         let bs_rect = box_bounds.translate(box_offset)
-                                .inflate(spread_radius, spread_radius);
+                                .inflate(inflate_amount, inflate_amount);
 
         // Get the outer rectangle, based on the blur radius.
         let outside_edge_size = 2.0 * blur_radius;
@@ -833,10 +839,12 @@ impl FrameBuilder {
                      tile_spacing: &LayerSize,
                      sub_rect: Option<TexelRect>,
                      image_key: ImageKey,
-                     image_rendering: ImageRendering) {
+                     image_rendering: ImageRendering,
+                     tile: Option<TileOffset>) {
         let prim_cpu = ImagePrimitiveCpu {
             kind: ImagePrimitiveKind::Image(image_key,
                                             image_rendering,
+                                            tile,
                                             *tile_spacing),
             color_texture_id: SourceTexture::Invalid,
             resource_address: GpuStoreAddress(0),
@@ -1084,7 +1092,9 @@ impl FrameBuilder {
                  frame_id: FrameId,
                  clip_scroll_tree: &ClipScrollTree,
                  auxiliary_lists_map: &AuxiliaryListsMap,
-                 device_pixel_ratio: f32) -> Frame {
+                 device_pixel_ratio: f32,
+                 texture_cache_profile: &mut TextureCacheProfileCounters)
+                 -> Frame {
         profile_scope!("build");
 
         let mut profile_counters = FrameProfileCounters::new();
@@ -1121,7 +1131,7 @@ impl FrameBuilder {
         let mut required_pass_count = 0;
         main_render_task.max_depth(0, &mut required_pass_count);
 
-        resource_cache.block_until_all_resources_added();
+        resource_cache.block_until_all_resources_added(texture_cache_profile);
 
         for scroll_layer in self.scroll_layer_store.iter() {
             if let Some(ref clip_info) = scroll_layer.clip_cache_info {
@@ -1361,7 +1371,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
 
         if let Some(mask) = scroll_layer.clip_source.image_mask() {
             // We don't add the image mask for resolution, because layer masks are resolved later.
-            self.resource_cache.request_image(mask.image, ImageRendering::Auto);
+            self.resource_cache.request_image(mask.image, ImageRendering::Auto, None);
         }
     }
 

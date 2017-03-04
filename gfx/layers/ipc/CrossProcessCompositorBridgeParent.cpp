@@ -198,7 +198,8 @@ CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 
 PWebRenderBridgeParent*
 CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
-                                                                TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                                uint32_t *aIdNamespace)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -221,12 +222,14 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   WebRenderBridgeParent* parent = nullptr;
   RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
   RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
-  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api), Move(holder));
+  parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->CompositorScheduler(), Move(api), Move(holder));
 
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[pipelineHandle].mCrossProcessParent = this;
   sIndirectLayerTrees[pipelineHandle].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
+  *aIdNamespace = parent->GetIdNameSpace();
+
   return parent;
 }
 
@@ -323,8 +326,7 @@ CrossProcessCompositorBridgeParent::DidComposite(
     Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
   } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
-    Unused << SendDidComposite(aId, wrbridge->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
-    wrbridge->SetPendingTransactionId(0);
+    Unused << SendDidComposite(aId, wrbridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
   }
 }
 

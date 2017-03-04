@@ -304,7 +304,7 @@ class GCMarker : public JSTracer
 
     bool shouldCheckCompartments() { return strictCompartmentChecking; }
 
-    Zone* stackContainsCrossZonePointerTo(const gc::TenuredCell* cell) const;
+    Zone* stackContainsCrossZonePointerTo(const gc::Cell* cell) const;
 
 #endif
 
