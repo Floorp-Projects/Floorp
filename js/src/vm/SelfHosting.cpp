@@ -575,7 +575,9 @@ intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(args.length() >= 3);
+    // When DefineDataProperty is called with 3 arguments, it's compiled to
+    // JSOP_INITELEM in the bytecode emitter so we shouldn't get here.
+    MOZ_ASSERT(args.length() == 4);
     MOZ_ASSERT(args[0].isObject());
 
     RootedObject obj(cx, &args[0].toObject());
@@ -585,29 +587,23 @@ intrinsic_DefineDataProperty(JSContext* cx, unsigned argc, Value* vp)
     RootedValue value(cx, args[2]);
 
     unsigned attrs = 0;
-    if (args.length() >= 4) {
-        unsigned attributes = args[3].toInt32();
+    unsigned attributes = args[3].toInt32();
 
-        MOZ_ASSERT(bool(attributes & ATTR_ENUMERABLE) != bool(attributes & ATTR_NONENUMERABLE),
-                   "_DefineDataProperty must receive either ATTR_ENUMERABLE xor ATTR_NONENUMERABLE");
-        if (attributes & ATTR_ENUMERABLE)
-            attrs |= JSPROP_ENUMERATE;
+    MOZ_ASSERT(bool(attributes & ATTR_ENUMERABLE) != bool(attributes & ATTR_NONENUMERABLE),
+               "_DefineDataProperty must receive either ATTR_ENUMERABLE xor ATTR_NONENUMERABLE");
+    if (attributes & ATTR_ENUMERABLE)
+        attrs |= JSPROP_ENUMERATE;
 
-        MOZ_ASSERT(bool(attributes & ATTR_CONFIGURABLE) != bool(attributes & ATTR_NONCONFIGURABLE),
-                   "_DefineDataProperty must receive either ATTR_CONFIGURABLE xor "
-                   "ATTR_NONCONFIGURABLE");
-        if (attributes & ATTR_NONCONFIGURABLE)
-            attrs |= JSPROP_PERMANENT;
+    MOZ_ASSERT(bool(attributes & ATTR_CONFIGURABLE) != bool(attributes & ATTR_NONCONFIGURABLE),
+               "_DefineDataProperty must receive either ATTR_CONFIGURABLE xor "
+               "ATTR_NONCONFIGURABLE");
+    if (attributes & ATTR_NONCONFIGURABLE)
+        attrs |= JSPROP_PERMANENT;
 
-        MOZ_ASSERT(bool(attributes & ATTR_WRITABLE) != bool(attributes & ATTR_NONWRITABLE),
-                   "_DefineDataProperty must receive either ATTR_WRITABLE xor ATTR_NONWRITABLE");
-        if (attributes & ATTR_NONWRITABLE)
-            attrs |= JSPROP_READONLY;
-    } else {
-        // If the fourth argument is unspecified, the attributes are for a
-        // plain data property.
-        attrs = JSPROP_ENUMERATE;
-    }
+    MOZ_ASSERT(bool(attributes & ATTR_WRITABLE) != bool(attributes & ATTR_NONWRITABLE),
+               "_DefineDataProperty must receive either ATTR_WRITABLE xor ATTR_NONWRITABLE");
+    if (attributes & ATTR_NONWRITABLE)
+        attrs |= JSPROP_READONLY;
 
     Rooted<PropertyDescriptor> desc(cx);
     desc.setDataDescriptor(value, attrs);
@@ -2406,13 +2402,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_FinishBoundFunctionInit", intrinsic_FinishBoundFunctionInit, 3,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
     JS_FN("AddContentTelemetry",     intrinsic_AddContentTelemetry,     2,0),
+    JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
                     IntrinsicIsConstructing),
     JS_INLINABLE_FN("SubstringKernel", intrinsic_SubstringKernel,       3,0,
                     IntrinsicSubstringKernel),
-    JS_INLINABLE_FN("_DefineDataProperty",              intrinsic_DefineDataProperty,      4,0,
-                    IntrinsicDefineDataProperty),
     JS_INLINABLE_FN("ObjectHasPrototype",               intrinsic_ObjectHasPrototype,      2,0,
                     IntrinsicObjectHasPrototype),
     JS_INLINABLE_FN("UnsafeSetReservedSlot",            intrinsic_UnsafeSetReservedSlot,   3,0,
