@@ -446,25 +446,27 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         return false;
     };
 
-    // Client exts are ready. (But not display exts!)
-    if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
-        const GLLibraryLoader::SymLoadStruct d3dSymbols[] = {
-            SYMBOL(ANGLEPlatformInitialize),
-            SYMBOL(ANGLEPlatformShutdown),
-            SYMBOL(GetPlatformDisplayEXT),
-            END_OF_SYMBOLS
-        };
-        if (!fnLoadSymbols(d3dSymbols)) {
-            NS_ERROR("EGL supports ANGLE_platform_angle_d3d without exposing its functions!");
-            MarkExtensionUnsupported(ANGLE_platform_angle_d3d);
-        }
-    }
-
     // Check the ANGLE support the system has
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     mIsANGLE = IsExtensionSupported(ANGLE_platform_angle);
 
     EGLDisplay chosenDisplay = nullptr;
+
+    // Client exts are ready. (But not display exts!)
+
+    if (mIsANGLE) {
+        MOZ_ASSERT(IsExtensionSupported(ANGLE_platform_angle_d3d));
+        const GLLibraryLoader::SymLoadStruct angleSymbols[] = {
+            { (PRFuncPtr*)&mSymbols.fANGLEPlatformInitialize, { "ANGLEPlatformInitialize", nullptr } },
+            { (PRFuncPtr*)&mSymbols.fANGLEPlatformShutdown, { "ANGLEPlatformShutdown", nullptr } },
+            SYMBOL(GetPlatformDisplayEXT),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(angleSymbols)) {
+            gfxCriticalError() << "Failed to load ANGLE symbols!";
+            return false;
+        }
+    }
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
         nsCString accelAngleFailureId;
