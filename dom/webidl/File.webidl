@@ -26,6 +26,7 @@ dictionary FilePropertyBag {
 
 dictionary ChromeFilePropertyBag : FilePropertyBag {
   DOMString name = "";
+  boolean existenceCheck = true;
 };
 
 // Mozilla extensions
