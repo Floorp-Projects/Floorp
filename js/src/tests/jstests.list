@@ -136,10 +136,6 @@ skip-if(!xulRuntime.shell) script test262/language/expressions/object/method-def
 # Test262 tests skipped due to SpiderMonkey bugs #
 ##################################################
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1344479
-# Windows js shell normalizes while reading source.
-skip-if(xulRuntime.shell) script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
-
 # %ThrowTypeError% should be anonymous
 skip script test262/built-ins/ThrowTypeError/name.js
 
