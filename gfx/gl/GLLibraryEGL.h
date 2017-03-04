@@ -110,58 +110,13 @@ class GLLibraryEGL
 {
 public:
     GLLibraryEGL()
-        : mInitialized(false),
-          mEGLLibrary(nullptr),
-          mEGLDisplay(EGL_NO_DISPLAY),
-          mIsANGLE(false),
-          mIsWARP(false)
-    {
-        ClearSymbols();
-    }
-
-    void ClearSymbols() {
-        mSymbols.fANGLEPlatformInitialize = nullptr;
-        mSymbols.fANGLEPlatformShutdown = nullptr;
-        mSymbols.fGetDisplay = nullptr;
-        mSymbols.fGetPlatformDisplayEXT = nullptr;
-        mSymbols.fTerminate = nullptr;
-        mSymbols.fGetCurrentSurface = nullptr;
-        mSymbols.fGetCurrentContext = nullptr;
-        mSymbols.fMakeCurrent = nullptr;
-        mSymbols.fDestroyContext = nullptr;
-        mSymbols.fCreateContext = nullptr;
-        mSymbols.fDestroySurface = nullptr;
-        mSymbols.fCreateWindowSurface = nullptr;
-        mSymbols.fCreatePbufferSurface = nullptr;
-        mSymbols.fCreatePbufferFromClientBuffer = nullptr;
-        mSymbols.fCreatePixmapSurface = nullptr;
-        mSymbols.fBindAPI = nullptr;
-        mSymbols.fInitialize = nullptr;
-        mSymbols.fChooseConfig = nullptr;
-        mSymbols.fGetError = nullptr;
-        mSymbols.fGetConfigAttrib = nullptr;
-        mSymbols.fGetConfigs = nullptr;
-        mSymbols.fWaitNative = nullptr;
-        mSymbols.fGetProcAddress = nullptr;
-        mSymbols.fSwapBuffers = nullptr;
-        mSymbols.fCopyBuffers = nullptr;
-        mSymbols.fQueryString = nullptr;
-        mSymbols.fQueryStringImplementationANDROID = nullptr;
-        mSymbols.fQueryContext = nullptr;
-        mSymbols.fBindTexImage = nullptr;
-        mSymbols.fReleaseTexImage = nullptr;
-        mSymbols.fCreateImage = nullptr;
-        mSymbols.fDestroyImage = nullptr;
-        mSymbols.fLockSurface = nullptr;
-        mSymbols.fUnlockSurface = nullptr;
-        mSymbols.fQuerySurface = nullptr;
-        mSymbols.fQuerySurfacePointerANGLE = nullptr;
-        mSymbols.fCreateSync = nullptr;
-        mSymbols.fDestroySync = nullptr;
-        mSymbols.fClientWaitSync = nullptr;
-        mSymbols.fGetSyncAttrib = nullptr;
-        mSymbols.fDupNativeFenceFDANDROID = nullptr;
-    }
+        : mSymbols{nullptr}
+        , mInitialized(false)
+        , mEGLLibrary(nullptr)
+        , mEGLDisplay(EGL_NO_DISPLAY)
+        , mIsANGLE(false)
+        , mIsWARP(false)
+    { }
 
     void InitClientExtensions();
     void InitDisplayExtensions();
@@ -202,6 +157,9 @@ protected:
     std::bitset<Extensions_Max> mAvailableExtensions;
 
 public:
+    GLLibraryLoader::PlatformLookupFunction GetLookupFunction() const {
+        return (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+    }
 
     EGLDisplay fGetDisplay(void* display_id)
     {
@@ -390,14 +348,9 @@ public:
     const GLubyte* fQueryString(EGLDisplay dpy, EGLint name)
     {
         BEFORE_GL_CALL;
-        const GLubyte* b;
-        if (mSymbols.fQueryStringImplementationANDROID) {
-          b = mSymbols.fQueryStringImplementationANDROID(dpy, name);
-        } else {
-          b = mSymbols.fQueryString(dpy, name);
-        }
+        const auto ret = mSymbols.fQueryString(dpy, name);
         AFTER_GL_CALL;
-        return b;
+        return ret;
     }
 
     EGLBoolean fQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint* value)
@@ -427,7 +380,7 @@ public:
     EGLImage fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list)
     {
          BEFORE_GL_CALL;
-         EGLImage i = mSymbols.fCreateImage(dpy, ctx, target, buffer, attrib_list);
+         EGLImage i = mSymbols.fCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
          AFTER_GL_CALL;
          return i;
     }
@@ -435,7 +388,7 @@ public:
     EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroyImage(dpy, image);
+        EGLBoolean b = mSymbols.fDestroyImageKHR(dpy, image);
         AFTER_GL_CALL;
         return b;
     }
@@ -444,7 +397,7 @@ public:
     EGLBoolean fLockSurface(EGLDisplay dpy, EGLSurface surface, const EGLint* attrib_list)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fLockSurface(dpy, surface, attrib_list);
+        EGLBoolean b = mSymbols.fLockSurfaceKHR(dpy, surface, attrib_list);
         AFTER_GL_CALL;
         return b;
     }
@@ -452,7 +405,7 @@ public:
     EGLBoolean fUnlockSurface(EGLDisplay dpy, EGLSurface surface)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fUnlockSurface(dpy, surface);
+        EGLBoolean b = mSymbols.fUnlockSurfaceKHR(dpy, surface);
         AFTER_GL_CALL;
         return b;
     }
@@ -476,7 +429,7 @@ public:
     EGLSync fCreateSync(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list)
     {
         BEFORE_GL_CALL;
-        EGLSync ret = mSymbols.fCreateSync(dpy, type, attrib_list);
+        EGLSync ret = mSymbols.fCreateSyncKHR(dpy, type, attrib_list);
         AFTER_GL_CALL;
         return ret;
     }
@@ -484,7 +437,7 @@ public:
     EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroySync(dpy, sync);
+        EGLBoolean b = mSymbols.fDestroySyncKHR(dpy, sync);
         AFTER_GL_CALL;
         return b;
     }
@@ -492,7 +445,7 @@ public:
     EGLint fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout)
     {
         BEFORE_GL_CALL;
-        EGLint ret = mSymbols.fClientWaitSync(dpy, sync, flags, timeout);
+        EGLint ret = mSymbols.fClientWaitSyncKHR(dpy, sync, flags, timeout);
         AFTER_GL_CALL;
         return ret;
     }
@@ -500,7 +453,7 @@ public:
     EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint* value)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fGetSyncAttrib(dpy, sync, attribute, value);
+        EGLBoolean b = mSymbols.fGetSyncAttribKHR(dpy, sync, attribute, value);
         AFTER_GL_CALL;
         return b;
     }
@@ -572,95 +525,83 @@ public:
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();
 
+private:
     struct {
-        typedef EGLDisplay (GLAPIENTRY * pfnGetDisplay)(void* display_id);
-        pfnGetDisplay fGetDisplay;
-        typedef EGLDisplay(GLAPIENTRY * pfnGetPlatformDisplayEXT)(EGLenum platform, void* native_display, const EGLint* attrib_list);
-        pfnGetPlatformDisplayEXT fGetPlatformDisplayEXT;
-        typedef EGLBoolean (GLAPIENTRY * pfnTerminate)(EGLDisplay dpy);
-        pfnTerminate fTerminate;
-        typedef EGLSurface (GLAPIENTRY * pfnGetCurrentSurface)(EGLint);
-        pfnGetCurrentSurface fGetCurrentSurface;
-        typedef EGLContext (GLAPIENTRY * pfnGetCurrentContext)(void);
-        pfnGetCurrentContext fGetCurrentContext;
-        typedef EGLBoolean (GLAPIENTRY * pfnMakeCurrent)(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
-        pfnMakeCurrent fMakeCurrent;
-        typedef EGLBoolean (GLAPIENTRY * pfnDestroyContext)(EGLDisplay dpy, EGLContext ctx);
-        pfnDestroyContext fDestroyContext;
-        typedef EGLContext (GLAPIENTRY * pfnCreateContext)(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list);
-        pfnCreateContext fCreateContext;
-        typedef EGLBoolean (GLAPIENTRY * pfnDestroySurface)(EGLDisplay dpy, EGLSurface surface);
-        pfnDestroySurface fDestroySurface;
-        typedef EGLSurface (GLAPIENTRY * pfnCreateWindowSurface)(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint* attrib_list);
-        pfnCreateWindowSurface fCreateWindowSurface;
-        typedef EGLSurface (GLAPIENTRY * pfnCreatePbufferSurface)(EGLDisplay dpy, EGLConfig config, const EGLint* attrib_list);
-        pfnCreatePbufferSurface fCreatePbufferSurface;
-        typedef EGLSurface (GLAPIENTRY * pfnCreatePbufferFromClientBuffer)(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list);
-        pfnCreatePbufferFromClientBuffer fCreatePbufferFromClientBuffer;
-        typedef EGLSurface (GLAPIENTRY * pfnCreatePixmapSurface)(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list);
-        pfnCreatePixmapSurface fCreatePixmapSurface;
-        typedef EGLBoolean (GLAPIENTRY * pfnBindAPI)(EGLenum api);
-        pfnBindAPI fBindAPI;
-        typedef EGLBoolean (GLAPIENTRY * pfnInitialize)(EGLDisplay dpy, EGLint* major, EGLint* minor);
-        pfnInitialize fInitialize;
-        typedef EGLBoolean (GLAPIENTRY * pfnChooseConfig)(EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config);
-        pfnChooseConfig fChooseConfig;
-        typedef EGLint (GLAPIENTRY * pfnGetError)(void);
-        pfnGetError fGetError;
-        typedef EGLBoolean (GLAPIENTRY * pfnGetConfigAttrib)(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint* value);
-        pfnGetConfigAttrib fGetConfigAttrib;
-        typedef EGLBoolean (GLAPIENTRY * pfnGetConfigs)(EGLDisplay dpy, EGLConfig* configs, EGLint config_size, EGLint* num_config);
-        pfnGetConfigs fGetConfigs;
-        typedef EGLBoolean (GLAPIENTRY * pfnWaitNative)(EGLint engine);
-        pfnWaitNative fWaitNative;
-        typedef EGLCastToRelevantPtr (GLAPIENTRY * pfnGetProcAddress)(const char* procname);
-        pfnGetProcAddress fGetProcAddress;
-        typedef EGLBoolean (GLAPIENTRY * pfnSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
-        pfnSwapBuffers fSwapBuffers;
-        typedef EGLBoolean (GLAPIENTRY * pfnCopyBuffers)(EGLDisplay dpy, EGLSurface surface,
-                                                         EGLNativePixmapType target);
-        pfnCopyBuffers fCopyBuffers;
-        typedef const GLubyte* (GLAPIENTRY * pfnQueryString)(EGLDisplay, EGLint name);
-        pfnQueryString fQueryString;
-        pfnQueryString fQueryStringImplementationANDROID;
-        typedef EGLBoolean (GLAPIENTRY * pfnQueryContext)(EGLDisplay dpy, EGLContext ctx,
-                                                          EGLint attribute, EGLint* value);
-        pfnQueryContext fQueryContext;
-        typedef EGLBoolean (GLAPIENTRY * pfnBindTexImage)(EGLDisplay, EGLSurface surface, EGLint buffer);
-        pfnBindTexImage fBindTexImage;
-        typedef EGLBoolean (GLAPIENTRY * pfnReleaseTexImage)(EGLDisplay, EGLSurface surface, EGLint buffer);
-        pfnReleaseTexImage fReleaseTexImage;
-        typedef EGLImage (GLAPIENTRY * pfnCreateImage)(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list);
-        pfnCreateImage fCreateImage;
-        typedef EGLBoolean (GLAPIENTRY * pfnDestroyImage)(EGLDisplay dpy, EGLImage image);
-        pfnDestroyImage fDestroyImage;
-
+        EGLCastToRelevantPtr (GLAPIENTRY * fGetProcAddress)(const char* procname);
+        EGLDisplay (GLAPIENTRY * fGetDisplay)(void* display_id);
+        EGLDisplay (GLAPIENTRY * fGetPlatformDisplayEXT)(EGLenum platform,
+                                                         void* native_display,
+                                                         const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fTerminate)(EGLDisplay dpy);
+        EGLSurface (GLAPIENTRY * fGetCurrentSurface)(EGLint);
+        EGLContext (GLAPIENTRY * fGetCurrentContext)(void);
+        EGLBoolean (GLAPIENTRY * fMakeCurrent)(EGLDisplay dpy, EGLSurface draw,
+                                               EGLSurface read, EGLContext ctx);
+        EGLBoolean (GLAPIENTRY * fDestroyContext)(EGLDisplay dpy, EGLContext ctx);
+        EGLContext (GLAPIENTRY * fCreateContext)(EGLDisplay dpy, EGLConfig config,
+                                                 EGLContext share_context,
+                                                 const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fDestroySurface)(EGLDisplay dpy, EGLSurface surface);
+        EGLSurface (GLAPIENTRY * fCreateWindowSurface)(EGLDisplay dpy, EGLConfig config,
+                                                       EGLNativeWindowType win,
+                                                       const EGLint* attrib_list);
+        EGLSurface (GLAPIENTRY * fCreatePbufferSurface)(EGLDisplay dpy, EGLConfig config,
+                                                        const EGLint* attrib_list);
+        EGLSurface (GLAPIENTRY * fCreatePbufferFromClientBuffer)(EGLDisplay dpy,
+                                                                 EGLenum buftype,
+                                                                 EGLClientBuffer buffer,
+                                                                 EGLConfig config,
+                                                                 const EGLint* attrib_list);
+        EGLSurface (GLAPIENTRY * fCreatePixmapSurface)(EGLDisplay dpy, EGLConfig config,
+                                                       EGLNativePixmapType pixmap,
+                                                       const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fBindAPI)(EGLenum api);
+        EGLBoolean (GLAPIENTRY * fInitialize)(EGLDisplay dpy, EGLint* major,
+                                              EGLint* minor);
+        EGLBoolean (GLAPIENTRY * fChooseConfig)(EGLDisplay dpy, const EGLint* attrib_list,
+                                                EGLConfig* configs, EGLint config_size,
+                                                EGLint* num_config);
+        EGLint     (GLAPIENTRY * fGetError)(void);
+        EGLBoolean (GLAPIENTRY * fGetConfigAttrib)(EGLDisplay dpy, EGLConfig config,
+                                                   EGLint attribute, EGLint* value);
+        EGLBoolean (GLAPIENTRY * fGetConfigs)(EGLDisplay dpy, EGLConfig* configs,
+                                              EGLint config_size, EGLint* num_config);
+        EGLBoolean (GLAPIENTRY * fWaitNative)(EGLint engine);
+        EGLBoolean (GLAPIENTRY * fSwapBuffers)(EGLDisplay dpy, EGLSurface surface);
+        EGLBoolean (GLAPIENTRY * fCopyBuffers)(EGLDisplay dpy, EGLSurface surface,
+                                               EGLNativePixmapType target);
+        const GLubyte* (GLAPIENTRY * fQueryString)(EGLDisplay, EGLint name);
+        EGLBoolean (GLAPIENTRY * fQueryContext)(EGLDisplay dpy, EGLContext ctx,
+                                                EGLint attribute, EGLint* value);
+        EGLBoolean (GLAPIENTRY * fBindTexImage)(EGLDisplay, EGLSurface surface,
+                                                EGLint buffer);
+        EGLBoolean (GLAPIENTRY * fReleaseTexImage)(EGLDisplay, EGLSurface surface,
+                                                   EGLint buffer);
+        EGLImage   (GLAPIENTRY * fCreateImageKHR)(EGLDisplay dpy, EGLContext ctx,
+                                                  EGLenum target, EGLClientBuffer buffer,
+                                                  const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fDestroyImageKHR)(EGLDisplay dpy, EGLImage image);
         // New extension which allow us to lock texture and get raw image pointer
-        typedef EGLBoolean (GLAPIENTRY * pfnLockSurface)(EGLDisplay dpy, EGLSurface surface, const EGLint* attrib_list);
-        pfnLockSurface fLockSurface;
-        typedef EGLBoolean (GLAPIENTRY * pfnUnlockSurface)(EGLDisplay dpy, EGLSurface surface);
-        pfnUnlockSurface fUnlockSurface;
-        typedef EGLBoolean (GLAPIENTRY * pfnQuerySurface)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint* value);
-        pfnQuerySurface fQuerySurface;
-
-        typedef EGLBoolean (GLAPIENTRY * pfnQuerySurfacePointerANGLE)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void** value);
-        pfnQuerySurfacePointerANGLE fQuerySurfacePointerANGLE;
-
-        typedef EGLSync (GLAPIENTRY * pfnCreateSync)(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
-        pfnCreateSync fCreateSync;
-        typedef EGLBoolean (GLAPIENTRY * pfnDestroySync)(EGLDisplay dpy, EGLSync sync);
-        pfnDestroySync fDestroySync;
-        typedef EGLint (GLAPIENTRY * pfnClientWaitSync)(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
-        pfnClientWaitSync fClientWaitSync;
-        typedef EGLBoolean (GLAPIENTRY * pfnGetSyncAttrib)(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint* value);
-        pfnGetSyncAttrib fGetSyncAttrib;
-        typedef EGLint (GLAPIENTRY * pfnDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
-        pfnDupNativeFenceFDANDROID fDupNativeFenceFDANDROID;
-
-        typedef void (GLAPIENTRY * pfnANGLEPlatformInitialize)(angle::Platform* platform);
-        pfnANGLEPlatformInitialize fANGLEPlatformInitialize;
-        typedef void (GLAPIENTRY * pfnANGLEPlatformShutdown)();
-        pfnANGLEPlatformShutdown fANGLEPlatformShutdown;
+        EGLBoolean (GLAPIENTRY * fLockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface,
+                                                  const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fUnlockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface);
+        EGLBoolean (GLAPIENTRY * fQuerySurface)(EGLDisplay dpy, EGLSurface surface,
+                                                EGLint attribute, EGLint* value);
+        EGLBoolean (GLAPIENTRY * fQuerySurfacePointerANGLE)(EGLDisplay dpy,
+                                                            EGLSurface surface,
+                                                            EGLint attribute,
+                                                            void** value);
+        EGLSync    (GLAPIENTRY * fCreateSyncKHR)(EGLDisplay dpy, EGLenum type,
+                                                 const EGLint* attrib_list);
+        EGLBoolean (GLAPIENTRY * fDestroySyncKHR)(EGLDisplay dpy, EGLSync sync);
+        EGLint     (GLAPIENTRY * fClientWaitSyncKHR)(EGLDisplay dpy, EGLSync sync,
+                                                     EGLint flags,
+                                                     EGLTime timeout);
+        EGLBoolean (GLAPIENTRY * fGetSyncAttribKHR)(EGLDisplay dpy, EGLSync sync,
+                                                    EGLint attribute, EGLint* value);
+        EGLint     (GLAPIENTRY * fDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
+        void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
+        void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
 
 #ifdef DEBUG
@@ -668,6 +609,7 @@ public:
     static void AfterGLCall(const char* glFunction);
 #endif
 
+public:
 #ifdef MOZ_B2G
     EGLContext CachedCurrentContext() {
         return sCurrentContext.get();
