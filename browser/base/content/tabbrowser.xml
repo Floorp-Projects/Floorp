@@ -4300,25 +4300,16 @@
             onTabChildNotReady(browser) {
               let tab = this.tabbrowser.getTabForBrowser(browser);
 
-              let state = this.getTabState(tab);
-              this.assert(state == this.STATE_LOADING ||
-                          state == this.STATE_LOADED);
+              this.assert(this.getTabState(tab) == this.STATE_LOADING);
 
-              // Because the TabChildNotReady event is queued from
-              // off of the main thread, it's possible that while
-              // it was being queued, the layer tree became ready
-              // and the state changed to STATE_LOADED. In that
-              // case, there's nothing to do here.
-              if (state == this.STATE_LOADING) {
-                this.logState(`onTabChildNotReady(${tab._tPos})`);
-                this.pendingTabChild.add(browser);
-                this.maybeFinishTabSwitch();
+              this.logState(`onTabChildNotReady(${tab._tPos})`);
+              this.pendingTabChild.add(browser);
+              this.maybeFinishTabSwitch();
 
-                if (this.loadingTab === tab) {
-                  this.clearTimer(this.loadTimer);
-                  this.loadTimer = null;
-                  this.loadingTab = null;
-                }
+              if (this.loadingTab === tab) {
+                this.clearTimer(this.loadTimer);
+                this.loadTimer = null;
+                this.loadingTab = null;
               }
             },
 

@@ -780,6 +780,10 @@ private:
   // the tab's docshell is inactive.
   bool mPreserveLayers;
 
+  // True if this TabParent has had its layer tree sent to the compositor
+  // at least once.
+  bool mHasPresented;
+
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
 };

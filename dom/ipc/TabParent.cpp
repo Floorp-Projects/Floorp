@@ -167,6 +167,7 @@ TabParent::TabParent(nsIContentParent* aManager,
 #endif
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
+  , mHasPresented(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2853,6 +2854,7 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   if (aActive) {
+    mHasPresented = true;
     event->InitEvent(NS_LITERAL_STRING("MozLayerTreeReady"), true, false);
   } else {
     event->InitEvent(NS_LITERAL_STRING("MozLayerTreeCleared"), true, false);
@@ -3340,6 +3342,13 @@ TabParent::DispatchTabChildNotReadyEvent()
   nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
   if (!target) {
     NS_WARNING("Could not locate target for tab child not ready event.");
+    return;
+  }
+
+  if (mHasPresented) {
+    // We shouldn't dispatch this event because clearly the
+    // TabChild _became_ ready by the time we were told to
+    // dispatch.
     return;
   }
 
