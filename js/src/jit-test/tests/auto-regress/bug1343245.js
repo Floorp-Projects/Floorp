@@ -1,3 +1,4 @@
+// |jit-test| error:TypeError
 var o = {
     __iterator__: function() {
         return {};
