@@ -504,7 +504,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_funapply(uint32_t argc);
     AbortReasonOr<Ok> jsop_funapplyarguments(uint32_t argc);
     AbortReasonOr<Ok> jsop_funapplyarray(uint32_t argc);
-    AbortReasonOr<Ok> jsop_call(uint32_t argc, bool constructing);
+    AbortReasonOr<Ok> jsop_call(uint32_t argc, bool constructing, bool ignoresReturnValue);
     AbortReasonOr<Ok> jsop_eval(uint32_t argc);
     AbortReasonOr<Ok> jsop_label();
     AbortReasonOr<Ok> jsop_andor(JSOp op);
@@ -1177,16 +1177,21 @@ class CallInfo
     MDefinition* newTargetArg_;
     MDefinitionVector args_;
 
-    bool constructing_;
-    bool setter_;
+    bool constructing_:1;
+
+    // True if the caller does not use the return value.
+    bool ignoresReturnValue_:1;
+
+    bool setter_:1;
 
   public:
-    CallInfo(TempAllocator& alloc, bool constructing)
+    CallInfo(TempAllocator& alloc, bool constructing, bool ignoresReturnValue)
       : fun_(nullptr),
         thisArg_(nullptr),
         newTargetArg_(nullptr),
         args_(alloc),
         constructing_(constructing),
+        ignoresReturnValue_(ignoresReturnValue),
         setter_(false)
     { }
 
@@ -1195,6 +1200,7 @@ class CallInfo
 
         fun_ = callInfo.fun();
         thisArg_ = callInfo.thisArg();
+        ignoresReturnValue_ = callInfo.ignoresReturnValue();
 
         if (constructing())
             newTargetArg_ = callInfo.getNewTarget();
@@ -1289,6 +1295,10 @@ class CallInfo
 
     bool constructing() const {
         return constructing_;
+    }
+
+    bool ignoresReturnValue() const {
+        return ignoresReturnValue_;
     }
 
     void setNewTarget(MDefinition* newTarget) {
