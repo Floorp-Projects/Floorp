@@ -167,14 +167,14 @@ assertEq(g.toString(), funcBody2);
 assertEq(g.toSource(), '(' + funcBody2 + ')');
 
 f2 = new Function('glob', 'ffi', bodyOnly);
-assertEq(f2.toString(), "function anonymous(glob, ffi\n) {\n" + bodyOnly + "\n}");
-assertEq(f2.toSource(), "(function anonymous(glob, ffi\n) {\n" + bodyOnly + "\n})");
+assertEq(f2.toString(), "function anonymous(glob,ffi\n) {\n" + bodyOnly + "\n}");
+assertEq(f2.toSource(), "(function anonymous(glob,ffi\n) {\n" + bodyOnly + "\n})");
 
 if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
     var m = new Function('glob', 'ffi', bodyOnly);
     assertEq(isAsmJSModuleLoadedFromCache(m), true);
-    assertEq(m.toString(), "function anonymous(glob, ffi\n) {\n" + bodyOnly + "\n}");
-    assertEq(m.toSource(), "(function anonymous(glob, ffi\n) {\n" + bodyOnly + "\n})");
+    assertEq(m.toString(), "function anonymous(glob,ffi\n) {\n" + bodyOnly + "\n}");
+    assertEq(m.toSource(), "(function anonymous(glob,ffi\n) {\n" + bodyOnly + "\n})");
 }
 
 })();
@@ -227,14 +227,14 @@ assertEq(g.toString(), funcBody2);
 assertEq(g.toSource(), '(' + funcBody2 + ')');
 
 f3 = new Function('glob', 'ffi', 'heap', bodyOnly);
-assertEq(f3.toString(), "function anonymous(glob, ffi, heap\n) {\n" + bodyOnly + "\n}");
-assertEq(f3.toSource(), "(function anonymous(glob, ffi, heap\n) {\n" + bodyOnly + "\n})");
+assertEq(f3.toString(), "function anonymous(glob,ffi,heap\n) {\n" + bodyOnly + "\n}");
+assertEq(f3.toSource(), "(function anonymous(glob,ffi,heap\n) {\n" + bodyOnly + "\n})");
 
 if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
     var m = new Function('glob', 'ffi', 'heap', bodyOnly);
     assertEq(isAsmJSModuleLoadedFromCache(m), true);
-    assertEq(m.toString(), "function anonymous(glob, ffi, heap\n) {\n" + bodyOnly + "\n}");
-    assertEq(m.toSource(), "(function anonymous(glob, ffi, heap\n) {\n" + bodyOnly + "\n})");
+    assertEq(m.toString(), "function anonymous(glob,ffi,heap\n) {\n" + bodyOnly + "\n}");
+    assertEq(m.toSource(), "(function anonymous(glob,ffi,heap\n) {\n" + bodyOnly + "\n})");
 }
 
 })();
