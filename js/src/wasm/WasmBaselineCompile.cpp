@@ -3230,11 +3230,13 @@ class BaseCompiler
 #endif // FLOAT_TO_I64_CALLOUT
 
 #ifndef I64_TO_FLOAT_CALLOUT
-    bool convertI64ToFloatNeedsTemp(bool isUnsigned) const {
+    bool convertI64ToFloatNeedsTemp(ValType to, bool isUnsigned) const {
 # if defined(JS_CODEGEN_X86)
-        return isUnsigned && AssemblerX86Shared::HasSSE3();
+        return isUnsigned &&
+               ((to == ValType::F64 && AssemblerX86Shared::HasSSE3()) ||
+               to == ValType::F32);
 # else
-        return false;
+        return isUnsigned;
 # endif
     }
 
@@ -5024,7 +5026,7 @@ BaseCompiler::emitConvertU64ToF32()
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
     RegI32 temp;
-    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+    if (convertI64ToFloatNeedsTemp(ValType::F32, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF32(r0, IsUnsigned(true), f0, temp);
     if (temp != Register::Invalid())
@@ -5081,7 +5083,7 @@ BaseCompiler::emitConvertU64ToF64()
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
     RegI32 temp;
-    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+    if (convertI64ToFloatNeedsTemp(ValType::F64, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF64(r0, IsUnsigned(true), d0, temp);
     if (temp != Register::Invalid())
@@ -5971,21 +5973,15 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
 # endif
-    masm.callWithABI(callee, MoveOp::DOUBLE);
+    masm.callWithABI(callee, resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
 
     freeI32(temp);
     freeI64(input);
 
-    RegF64 rv = captureReturnedF64(call);
-
-    if (resultType == ValType::F32) {
-        RegF32 rv2 = needF32();
-        masm.convertDoubleToFloat32(rv, rv2);
-        freeF64(rv);
-        pushF32(rv2);
-    } else {
-        pushF64(rv);
-    }
+    if (resultType == ValType::F32)
+        pushF32(captureReturnedF32(call));
+    else
+        pushF64(captureReturnedF64(call));
 
     return true;
 }
@@ -7120,7 +7116,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F32ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Int64ToFloatingPoint,
+                                                SymbolicAddress::Int64ToFloat32,
                                                 ValType::I64, ValType::F32));
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF32, ValType::I64, ValType::F32));
@@ -7128,7 +7124,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F32ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Uint64ToFloatingPoint,
+                                                SymbolicAddress::Uint64ToFloat32,
                                                 ValType::I64, ValType::F32));
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF32, ValType::I64, ValType::F32));
@@ -7185,7 +7181,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Int64ToFloatingPoint,
+                                                SymbolicAddress::Int64ToDouble,
                                                 ValType::I64, ValType::F64));
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF64, ValType::I64, ValType::F64));
@@ -7193,7 +7189,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Uint64ToFloatingPoint,
+                                                SymbolicAddress::Uint64ToDouble,
                                                 ValType::I64, ValType::F64));
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF64, ValType::I64, ValType::F64));
