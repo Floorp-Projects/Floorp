@@ -7,7 +7,7 @@ use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use internal_types::{FontTemplate, GLContextHandleWrapper, GLContextWrapper};
 use internal_types::{SourceTexture, ResultMsg, RendererFrame};
-use profiler::BackendProfileCounters;
+use profiler::{BackendProfileCounters, TextureCacheProfileCounters};
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
 use scene::Scene;
@@ -96,8 +96,7 @@ impl RenderBackend {
         }
     }
 
-    pub fn run(&mut self) {
-        let mut profile_counters = BackendProfileCounters::new();
+    pub fn run(&mut self, mut profile_counters: BackendProfileCounters) {
         let mut frame_counter: u32 = 0;
 
         loop {
@@ -126,11 +125,11 @@ impl RenderBackend {
                             };
                             tx.send(glyph_dimensions).unwrap();
                         }
-                        ApiMsg::AddImage(id, descriptor, data) => {
+                        ApiMsg::AddImage(id, descriptor, data, tiling) => {
                             if let ImageData::Raw(ref bytes) = data {
                                 profile_counters.image_templates.inc(bytes.len());
                             }
-                            self.resource_cache.add_image_template(id, descriptor, data);
+                            self.resource_cache.add_image_template(id, descriptor, data, tiling);
                         }
                         ApiMsg::UpdateImage(id, descriptor, bytes) => {
                             self.resource_cache.update_image_template(id, descriptor, bytes);
@@ -213,13 +212,16 @@ impl RenderBackend {
                         }
                         ApiMsg::Scroll(delta, cursor, move_phase) => {
                             profile_scope!("Scroll");
-                            let frame = profile_counters.total_time.profile(|| {
-                                if self.frame.scroll(delta, cursor, move_phase) {
-                                    Some(self.render())
-                                } else {
-                                    None
-                                }
-                            });
+                            let frame = {
+                                let counters = &mut profile_counters.texture_cache;
+                                profile_counters.total_time.profile(|| {
+                                    if self.frame.scroll(delta, cursor, move_phase) {
+                                        Some(self.render(counters))
+                                    } else {
+                                        None
+                                    }
+                                })
+                            };
 
                             match frame {
                                 Some(frame) => {
@@ -231,13 +233,16 @@ impl RenderBackend {
                         }
                         ApiMsg::ScrollLayersWithScrollId(origin, pipeline_id, scroll_root_id) => {
                             profile_scope!("ScrollLayersWithScrollId");
-                            let frame = profile_counters.total_time.profile(|| {
-                                if self.frame.scroll_nodes(origin, pipeline_id, scroll_root_id) {
-                                    Some(self.render())
-                                } else {
-                                    None
-                                }
-                            });
+                            let frame = {
+                                let counters = &mut profile_counters.texture_cache;
+                                profile_counters.total_time.profile(|| {
+                                    if self.frame.scroll_nodes(origin, pipeline_id, scroll_root_id) {
+                                        Some(self.render(counters))
+                                    } else {
+                                        None
+                                    }
+                                })
+                            };
 
                             match frame {
                                 Some(frame) => {
@@ -250,10 +255,13 @@ impl RenderBackend {
                         }
                         ApiMsg::TickScrollingBounce => {
                             profile_scope!("TickScrollingBounce");
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.frame.tick_scrolling_bounce_animations();
-                                self.render()
-                            });
+                            let frame = {
+                                let counters = &mut profile_counters.texture_cache;
+                                profile_counters.total_time.profile(|| {
+                                    self.frame.tick_scrolling_bounce_animations();
+                                    self.render(counters)
+                                })
+                            };
 
                             self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
                         }
@@ -346,9 +354,12 @@ impl RenderBackend {
                                 self.build_scene();
                             }
 
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.render()
-                            });
+                            let frame = {
+                                let counters = &mut profile_counters.texture_cache;
+                                profile_counters.total_time.profile(|| {
+                                    self.render(counters)
+                                })
+                            };
                             if self.scene.root_pipeline_id.is_some() {
                                 self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
                                 frame_counter += 1;
@@ -407,13 +418,16 @@ impl RenderBackend {
             webgl_context.unbind();
         }
 
-        self.frame.create(&self.scene);
+        self.frame.create(&self.scene, &mut self.resource_cache);
     }
 
-    fn render(&mut self) -> RendererFrame {
+    fn render(&mut self,
+              texture_cache_profile: &mut TextureCacheProfileCounters)
+              -> RendererFrame {
         let frame = self.frame.build(&mut self.resource_cache,
                                      &self.scene.pipeline_auxiliary_lists,
-                                     self.device_pixel_ratio);
+                                     self.device_pixel_ratio,
+                                     texture_cache_profile);
 
         frame
     }

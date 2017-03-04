@@ -1631,7 +1631,12 @@ impl Device {
             None => width,
         };
 
-        assert!(data.len() as u32 == bpp * row_length * height);
+        // Take the stride into account for all rows, except the last one.
+        let len = bpp * row_length * (height - 1)
+                + width * bpp;
+
+        assert!(data.len() as u32 >= len);
+        let data = &data[0..len as usize];
 
         if let Some(..) = stride {
             gl::pixel_store_i(gl::UNPACK_ROW_LENGTH, row_length as gl::GLint);

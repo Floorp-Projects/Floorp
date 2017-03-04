@@ -58,7 +58,7 @@ function promiseImageDownloaded() {
     MockFilePicker.showCallback = function(fp) {
       fileName = fp.defaultString;
       destFile.append(fileName);
-      MockFilePicker.returnFiles = [destFile];
+      MockFilePicker.setFiles([destFile]);
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
 

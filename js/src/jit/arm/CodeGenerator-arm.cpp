@@ -3026,7 +3026,6 @@ void
 CodeGeneratorARM::visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
-    FloatRegister output = ToFloatRegister(lir->output());
 
     MInt64ToFloatingPoint* mir = lir->mir();
     MIRType toType = mir->type();
@@ -3040,16 +3039,19 @@ CodeGeneratorARM::visitInt64ToFloatingPointCall(LInt64ToFloatingPointCall* lir)
     masm.setupUnalignedABICall(temp);
     masm.passABIArg(input.high);
     masm.passABIArg(input.low);
-    if (lir->mir()->isUnsigned())
-        masm.callWithABI(wasm::SymbolicAddress::Uint64ToFloatingPoint, MoveOp::DOUBLE);
-    else
-        masm.callWithABI(wasm::SymbolicAddress::Int64ToFloatingPoint, MoveOp::DOUBLE);
 
-    MOZ_ASSERT_IF(toType == MIRType::Double, output == ReturnDoubleReg);
-    if (toType == MIRType::Float32) {
-        MOZ_ASSERT(output == ReturnFloat32Reg);
-        masm.convertDoubleToFloat32(ReturnDoubleReg, output);
-    }
+    bool isUnsigned = mir->isUnsigned();
+    wasm::SymbolicAddress callee = toType == MIRType::Float32
+                                   ? (isUnsigned ? wasm::SymbolicAddress::Uint64ToFloat32
+                                                 : wasm::SymbolicAddress::Int64ToFloat32)
+                                   : (isUnsigned ? wasm::SymbolicAddress::Uint64ToDouble
+                                                 : wasm::SymbolicAddress::Int64ToDouble);
+
+    masm.callWithABI(callee, toType == MIRType::Float32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
+
+    DebugOnly<FloatRegister> output(ToFloatRegister(lir->output()));
+    MOZ_ASSERT_IF(toType == MIRType::Double, output.value == ReturnDoubleReg);
+    MOZ_ASSERT_IF(toType == MIRType::Float32, output.value == ReturnFloat32Reg);
 }
 
 void

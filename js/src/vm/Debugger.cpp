@@ -11710,6 +11710,28 @@ JS::dbg::GetDebuggeeGlobals(JSContext* cx, JSObject& dbgObj, AutoObjectVector& v
     return true;
 }
 
+#ifdef DEBUG
+/* static */ bool
+Debugger::isDebuggerCrossCompartmentEdge(JSObject* obj, const gc::Cell* target)
+{
+    MOZ_ASSERT(target);
+
+    auto cls = obj->getClass();
+    const gc::Cell* referent = nullptr;
+    if (cls == &DebuggerScript_class) {
+        referent = GetScriptReferentCell(obj);
+    } else if (cls == &DebuggerSource_class) {
+        referent = GetSourceReferentRawObject(obj);
+    } else if (obj->is<DebuggerObject>()) {
+        referent = static_cast<gc::Cell*>(obj->as<DebuggerObject>().getPrivate());
+    } else if (obj->is<DebuggerEnvironment>()) {
+        referent = static_cast<gc::Cell*>(obj->as<DebuggerEnvironment>().getPrivate());
+    }
+
+    return referent == target;
+}
+#endif
+
 
 /*** JS::dbg::GarbageCollectionEvent **************************************************************/
 

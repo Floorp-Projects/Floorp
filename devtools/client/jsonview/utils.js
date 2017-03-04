@@ -23,21 +23,24 @@ const OPEN_FLAGS = {
  * Open File Save As dialog and let the user to pick proper file location.
  */
 exports.getTargetFile = function () {
-  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  return new Promise(resolve => {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
-  let win = getMostRecentBrowserWindow();
-  fp.init(win, null, Ci.nsIFilePicker.modeSave);
-  fp.appendFilter("JSON Files", "*.json; *.jsonp;");
-  fp.appendFilters(Ci.nsIFilePicker.filterText);
-  fp.appendFilters(Ci.nsIFilePicker.filterAll);
-  fp.filterIndex = 0;
+    let win = getMostRecentBrowserWindow();
+    fp.init(win, null, Ci.nsIFilePicker.modeSave);
+    fp.appendFilter("JSON Files", "*.json; *.jsonp;");
+    fp.appendFilters(Ci.nsIFilePicker.filterText);
+    fp.appendFilters(Ci.nsIFilePicker.filterAll);
+    fp.filterIndex = 0;
 
-  let rv = fp.show();
-  if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
-    return fp.file;
-  }
-
-  return null;
+    fp.open(rv => {
+      if (rv == Ci.nsIFilePicker.returnOK || rv == Ci.nsIFilePicker.returnReplace) {
+        resolve(fp.file);
+      } else {
+        resolve(null);
+      }
+    });
+  });
 };
 
 /**

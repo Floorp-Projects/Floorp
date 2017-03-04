@@ -55,7 +55,7 @@ function test() {
     is(gDownloadLastDir.file.path, aDisplayDir.path,
        "gDownloadLastDir should be the expected display dir");
 
-    MockFilePicker.returnFiles = [aFile];
+    MockFilePicker.setFiles([aFile]);
     MockFilePicker.displayDirectory = null;
 
     launcher.saveDestinationAvailable = function(file) {

@@ -40,7 +40,7 @@ WebRenderTextLayer::RenderLayer()
     }
 
     nsTArray<WebRenderCommand> commands;
-    mGlyphHelper.BuildWebRenderCommands(commands, mGlyphs, mFont,
+    mGlyphHelper.BuildWebRenderCommands(WrBridge(), commands, mGlyphs, mFont,
                                         GetOffsetToParent(), rect, clip);
     WrBridge()->AddWebRenderCommands(commands);
 }

@@ -1035,8 +1035,10 @@ enum class SymbolicAddress
     UModI64,
     TruncateDoubleToInt64,
     TruncateDoubleToUint64,
-    Uint64ToFloatingPoint,
-    Int64ToFloatingPoint,
+    Uint64ToFloat32,
+    Uint64ToDouble,
+    Int64ToFloat32,
+    Int64ToDouble,
     GrowMemory,
     CurrentMemory,
     Limit

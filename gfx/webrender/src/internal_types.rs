@@ -387,6 +387,7 @@ pub enum TextureUpdateOp {
         height: u32,
         data: Arc<Vec<u8>>,
         stride: Option<u32>,
+        offset: u32,
     },
     UpdateForExternalBuffer {
         rect: DeviceUintRect,

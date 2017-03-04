@@ -7,9 +7,9 @@
 #ifndef WR_h
 #define WR_h
 
-#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/gfx/Types.h"
-
+#include "nsTArray.h"
+#include "mozilla/gfx/Point.h"
 // ---
 #define WR_DECL_FFI_1(WrType, t1)                 \
 struct WrType {                                   \
@@ -49,6 +49,7 @@ extern "C" {
 // serialization code in WebRenderMessageUtils.h and the rust bindings.
 
 WR_DECL_FFI_1(WrEpoch, uint32_t)
+WR_DECL_FFI_1(WrIdNamespace, uint32_t)
 WR_DECL_FFI_1(WrWindowId, uint64_t)
 
 WR_DECL_FFI_2(WrPipelineId, uint32_t, uint32_t)
@@ -63,6 +64,7 @@ WR_DECL_FFI_2(WrFontKey, uint32_t, uint32_t)
 // ----
 
 bool is_in_compositor_thread();
+bool is_in_main_thread();
 bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
@@ -113,12 +115,14 @@ enum class WrImageRendering: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
-enum class WrExternalImageIdType
-{
-  TEXTURE_HANDLE, // Currently, we only support gl texture handle.
-  // TODO(Jerry): handle shmem or cpu raw buffers.
-  //// MEM_OR_SHMEM,
-};
+// TODO(Jerry): handle shmem or cpu raw buffers.
+//enum class WrExternalImageIdType: uint32_t
+//{
+//  TextureHandle = 0,
+//  MemOrShmem    = 1,
+//
+//  Sentinel /* this must be last, for IPC serialization purposes */
+//};
 
 enum class WrMixBlendMode: uint32_t
 {
@@ -298,14 +302,14 @@ struct WrImageMask
   }
 };
 
-struct WrExternalImageIdId
+struct WrExternalImageId
 {
   WrImageIdType id;
 };
 
-struct WrExternalImageId
+struct WrExternalImage
 {
-  WrExternalImageIdType type;
+  //WrExternalImageIdType type;
 
   // Texture coordinate
   float u0, v0;
@@ -320,13 +324,13 @@ struct WrExternalImageId
   //// size_t size;
 };
 
-typedef WrExternalImageId (*LockExternalImageCallback)(void*, WrExternalImageIdId);
-typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageIdId);
-typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageIdId);
+typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
+typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId);
+typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageId);
 
-struct WrExternalImageIdHandler
+struct WrExternalImageHandler
 {
-  void* ExternalImageObj;
+  void* renderer_obj;
   LockExternalImageCallback lock_func;
   UnlockExternalImageCallback unlock_func;
   ReleaseExternalImageCallback release_func;
@@ -338,6 +342,23 @@ struct WrImageDescriptor {
     uint32_t height;
     uint32_t stride;
     bool is_opaque;
+};
+
+struct WrBuiltDisplayListDescriptor {
+    size_t display_list_items_size;
+};
+
+struct WrAuxiliaryListsDescriptor {
+    size_t gradient_stops_size;
+    size_t complex_clip_regions_size;
+    size_t filters_size;
+    size_t glyph_instances_size;
+};
+
+struct WrVecU8 {
+    uint8_t *data;
+    size_t length;
+    size_t capacity;
 };
 
 // -----
@@ -366,6 +387,11 @@ struct WrRenderedEpochs;
 struct WrRenderer;
 struct WrState;
 struct WrAPI;
+
+WR_INLINE void
+wr_renderer_set_external_image_handler(WrRenderer* renderer,
+                                       WrExternalImageHandler* handler)
+WR_FUNC;
 
 WR_INLINE void
 wr_renderer_update(WrRenderer* renderer)
@@ -403,7 +429,6 @@ WR_INLINE bool
 wr_window_new(WrWindowId window_id,
               void* aGLContext,
               bool enable_profiler,
-              WrExternalImageIdHandler* handler,
               WrAPI** out_api,
               WrRenderer** out_renderer)
 WR_FUNC;
@@ -412,20 +437,19 @@ WR_INLINE void
 wr_api_delete(WrAPI* api)
 WR_DESTRUCTOR_SAFE_FUNC;
 
-WR_INLINE WrImageKey
-wr_api_add_image(WrAPI* api, const WrImageDescriptor* descriptor, uint8_t *buffer, size_t buffer_size)
+WR_INLINE void
+wr_api_add_image(WrAPI* api, WrImageKey key, const WrImageDescriptor* descriptor, uint8_t *buffer, size_t buffer_size)
 WR_FUNC;
 
-WR_INLINE WrImageKey
-wr_api_add_external_image_texture(WrAPI* api, uint32_t width, uint32_t height,
-                                  WrImageFormat format, uint64_t external_image_id)
+WR_INLINE void
+wr_api_add_external_image_handle(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
+                                 WrImageFormat format, uint64_t external_image_id)
 WR_FUNC;
 
-//TODO(Jerry): handle shmem in WR
-//// WR_INLINE WrImageKey
-//// wr_api_add_external_image_buffer(WrAPI* api, uint32_t width, uint32_t height, uint32_t stride,
-////                                  WrImageFormat format, uint8_t *bytes, size_t size)
-//// WR_FUNC;
+WR_INLINE void
+wr_api_add_external_image_buffer(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
+                                 WrImageFormat format, uint64_t external_image_id)
+WR_FUNC;
 
 WR_INLINE void
 wr_api_update_image(WrAPI* api, WrImageKey key,
@@ -442,19 +466,30 @@ wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_api_set_root_display_list(WrAPI* api, WrState* state, WrEpoch epoch, float w, float h)
+wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
+                             WrPipelineId pipeline_id,
+                             WrBuiltDisplayListDescriptor dl_descriptor,
+                             uint8_t *dl_data,
+                             size_t dl_size,
+                             WrAuxiliaryListsDescriptor aux_descriptor,
+                             uint8_t *aux_data,
+                             size_t aux_size)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_generate_frame(WrAPI* api)
 WR_FUNC;
 
 WR_INLINE void
 wr_api_send_external_event(WrAPI* api, uintptr_t evt)
 WR_DESTRUCTOR_SAFE_FUNC;
 
-WR_INLINE WrFontKey
-wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size)
+WR_INLINE void
+wr_api_add_raw_font(WrAPI* api, WrFontKey key, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
 WR_INLINE WrState*
-wr_state_new(uint32_t width, uint32_t height, WrPipelineId pipeline_id)
+wr_state_new(WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
@@ -488,7 +523,7 @@ wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(WrState* builder, WrAPI* api, WrEpoch epoch)
+wr_dp_end(WrState* wrState)
 WR_FUNC;
 
 WR_INLINE void
@@ -544,6 +579,22 @@ wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrRect clip,
                       WrRect box_bounds, WrPoint offset, WrColor color,
                       float blur_radius, float spread_radius, float border_radius,
                       WrBoxShadowClipMode clip_mode)
+WR_FUNC;
+
+WR_INLINE WrIdNamespace
+wr_api_get_namespace(WrAPI* api)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_finalize_builder(WrState* wrState,
+                        WrBuiltDisplayListDescriptor& dl_descriptor,
+                        WrVecU8& dl_data,
+                        WrAuxiliaryListsDescriptor& aux_descriptor,
+                        WrVecU8& aux_data)
+WR_FUNC;
+
+WR_INLINE void
+wr_vec_u8_free(WrVecU8 dl_data)
 WR_FUNC;
 
 #undef WR_FUNC

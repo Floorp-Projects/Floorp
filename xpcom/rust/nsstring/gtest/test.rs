@@ -110,3 +110,9 @@ pub extern fn Rust_StringWrite() {
     expect_eq!(cs, "abc123");
 }
 
+#[no_mangle]
+pub extern fn Rust_FromEmptyRustString() {
+    let mut test = nsString::from("Blah");
+    test.assign_utf8(&nsCString::from(String::new()));
+    assert!(test.is_empty());
+}

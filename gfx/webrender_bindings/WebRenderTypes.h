@@ -10,6 +10,9 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/Range.h"
+#include "Units.h"
+#include "nsStyleConsts.h"
 
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
@@ -235,6 +238,33 @@ static inline WrPoint ToWrPoint(const gfx::Point& point)
   return p;
 }
 
+static inline WrExternalImageId ToWrExternalImageId(uint64_t aID)
+{
+  WrExternalImageId id;
+  id.id = aID;
+  return id;
+}
+
+struct VecU8 {
+  WrVecU8 inner;
+  VecU8() {
+    inner.data = nullptr;
+    inner.capacity = 0;
+  }
+  VecU8(VecU8&) = delete;
+  VecU8(VecU8&& src) {
+    inner = src.inner;
+    src.inner.data = nullptr;
+    src.inner.capacity = 0;
+  }
+
+  ~VecU8() {
+    if (inner.data) {
+      wr_vec_u8_free(inner);
+    }
+  }
+};
+
 struct ByteBuffer
 {
   ByteBuffer(size_t aLength, uint8_t* aData)
@@ -242,6 +272,23 @@ struct ByteBuffer
     , mData(aData)
     , mOwned(false)
   {}
+
+  // XXX: this is a bit of hack that assumes
+  // the allocators are the same
+  explicit ByteBuffer(VecU8&& vec)
+  {
+    if (vec.inner.capacity) {
+      mLength = vec.inner.length;
+      mData = vec.inner.data;
+      vec.inner.data = nullptr;
+      vec.inner.capacity = 0;
+      mOwned = true;
+    } else {
+      mOwned = false;
+      mData = nullptr;
+      mLength = 0;
+    }
+  }
 
   ByteBuffer()
     : mLength(0)
@@ -281,6 +328,13 @@ struct ByteBuffer
   size_t mLength;
   uint8_t* mData;
   bool mOwned;
+};
+
+struct BuiltDisplayList {
+  VecU8 dl;
+  WrBuiltDisplayListDescriptor dl_desc;
+  VecU8 aux;
+  WrAuxiliaryListsDescriptor aux_desc;
 };
 
 } // namespace wr

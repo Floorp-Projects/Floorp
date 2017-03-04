@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyGetter(this, "getMostRecentBrowserWindow", function () {
   return require("sdk/window/utils").getMostRecentBrowserWindow;
 });
 
-const nsIFilePicker = Ci.nsIFilePicker;
-
 const OPEN_FLAGS = {
   RDONLY: parseInt("0x01", 16),
   WRONLY: parseInt("0x02", 16),
@@ -52,30 +50,6 @@ function formatDate(date) {
  * Helper API for HAR export features.
  */
 var HarUtils = {
-  /**
-   * Open File Save As dialog and let the user pick the proper file
-   * location for generated HAR log.
-   */
-  getTargetFile: function (fileName, jsonp, compress) {
-    let browser = getMostRecentBrowserWindow();
-
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(browser, null, nsIFilePicker.modeSave);
-    fp.appendFilter(
-      "HTTP Archive Files", "*.har; *.harp; *.json; *.jsonp; *.zip");
-    fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText);
-    fp.filterIndex = 1;
-
-    fp.defaultString = this.getHarFileName(fileName, jsonp, compress);
-
-    let rv = fp.show();
-    if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-      return fp.file;
-    }
-
-    return null;
-  },
-
   getHarFileName: function (defaultFileName, jsonp, compress) {
     let extension = jsonp ? ".harp" : ".har";
 
