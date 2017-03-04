@@ -104,35 +104,6 @@ nsFilePicker.prototype = {
     if (!this.mFilesEnumerator) {
       return null;
     }
-
-    if (!this.mDOMFilesEnumerator) {
-      this.mDOMFilesEnumerator = {
-        QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISimpleEnumerator]),
-
-        mFiles: [],
-        mIndex: 0,
-
-        hasMoreElements() {
-          return (this.mIndex < this.mFiles.length);
-        },
-
-        getNext() {
-          if (this.mIndex >= this.mFiles.length) {
-            throw Components.results.NS_ERROR_FAILURE;
-          }
-          return this.mFiles[this.mIndex++];
-        }
-      };
-
-      var utils = this.mParentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                    .getInterface(Components.interfaces.nsIDOMWindowUtils);
-
-      for (var i = 0; i < this.mFilesEnumerator.mFiles.length; ++i) {
-        var file = utils.wrapDOMFile(this.mFilesEnumerator.mFiles[i]);
-        this.mDOMFilesEnumerator.mFiles.push(file);
-      }
-    }
-
     return this.mDOMFilesEnumerator;
   },
 
@@ -230,16 +201,54 @@ nsFilePicker.prototype = {
   open(aFilePickerShownCallback) {
     var tm = Components.classes["@mozilla.org/thread-manager;1"]
                        .getService(Components.interfaces.nsIThreadManager);
-    tm.mainThread.dispatch(function() {
+    tm.mainThread.dispatch(() => {
       let result = Components.interfaces.nsIFilePicker.returnCancel;
       try {
         result = this.show();
       } catch (ex) {
       }
-      if (aFilePickerShownCallback) {
-        aFilePickerShownCallback.done(result);
+
+      let promises = [];
+
+      // Let's create the DOMFileEnumerator right now because it requires some
+      // async operation.
+      if (this.mFilesEnumerator) {
+        this.mDOMFilesEnumerator = {
+          QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISimpleEnumerator]),
+
+          mFiles: [],
+          mIndex: 0,
+
+          hasMoreElements() {
+            return (this.mIndex < this.mFiles.length);
+          },
+
+          getNext() {
+            if (this.mIndex >= this.mFiles.length) {
+              throw Components.results.NS_ERROR_FAILURE;
+            }
+            return this.mFiles[this.mIndex++];
+          }
+        };
+
+        for (let i = 0; i < this.mFilesEnumerator.mFiles.length; ++i) {
+          if (this.mFilesEnumerator.mFiles[i].exists()) {
+            let promise =
+              this.mParentWindow.File.createFromNsIFile(
+                this.mFilesEnumerator.mFiles[i]).then(file => {
+                  this.mDOMFilesEnumerator.mFiles.push(file);
+                });
+            promises.push(promise);
+          }
+        }
       }
-    }.bind(this), Components.interfaces.nsIThread.DISPATCH_NORMAL);
+
+      Promise.all(promises).then(() => {
+        if (aFilePickerShownCallback) {
+          aFilePickerShownCallback.done(result);
+        }
+      });
+    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
   },
 
   show() {

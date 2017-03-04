@@ -92,7 +92,7 @@ ProjectList.prototype = {
     let parentWindow = this._parentWindow;
     let UI = this._UI;
     return UI.busyUntil(Task.spawn(function* () {
-      let directory = utils.getPackagedDirectory(parentWindow, location);
+      let directory = yield utils.getPackagedDirectory(parentWindow, location);
 
       if (!directory) {
         // User cancelled directory selection

@@ -268,8 +268,6 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
   void SetUp() override {
     TlsAgentTestClient::SetUp();
     EnsureInit();
-    agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                            SSL_LIBRARY_VERSION_TLS_1_3);
     agent_->StartConnect();
   }
 
@@ -354,7 +352,8 @@ TEST_P(HelloRetryRequestAgentTest, HandleHelloRetryRequestCookie) {
 }
 
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,
-                        TlsConnectTestBase::kTlsModesAll);
+                        ::testing::Combine(TlsConnectTestBase::kTlsModesAll,
+                                           TlsConnectTestBase::kTlsV13));
 #ifndef NSS_DISABLE_TLS_1_3
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestKeyExchangeTests, TlsKeyExchange13,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesAll,

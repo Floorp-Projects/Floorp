@@ -236,13 +236,6 @@ ThreadInfo::GetMutex()
   return *mMutex.get();
 }
 
-void
-ThreadInfo::DuplicateLastSample(ProfileBuffer* aBuffer,
-                                const TimeStamp& aStartTime)
-{
-  aBuffer->DuplicateLastSample(mThreadId, aStartTime);
-}
-
 size_t
 ThreadInfo::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
