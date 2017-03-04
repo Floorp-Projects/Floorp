@@ -534,10 +534,5 @@ skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-t
 skip script test262/built-ins/DataView/prototype/setFloat64/detached-buffer-after-toindex-byteoffset.js
 skip script test262/built-ins/DataView/prototype/setInt16/detached-buffer-after-toindex-byteoffset.js
 
-# Removed from the proposal: https://github.com/tc39/Function-prototype-toString-revision/issues/19
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-LF.js
-
 # https://github.com/tc39/Function-prototype-toString-revision/issues/20
 skip script test262/built-ins/Function/prototype/toString/AsyncFunction.js
