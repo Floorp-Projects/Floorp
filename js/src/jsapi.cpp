@@ -4319,7 +4319,7 @@ JS_GetFunctionScript(JSContext* cx, HandleFunction fun)
  */
 static bool
 CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-                const char* name,
+                HandleAtom name, bool isInvalidName,
                 SourceBufferHolder& srcBuf, uint32_t parameterListEnd,
                 HandleObject enclosingEnv, HandleScope enclosingScope,
                 MutableHandleFunction fun)
@@ -4330,13 +4330,8 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     assertSameCompartment(cx, enclosingEnv);
     RootedAtom funAtom(cx);
 
-    if (name) {
-        funAtom = Atomize(cx, name, strlen(name));
-        if (!funAtom)
-            return false;
-    }
-
-    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED_NORMAL, funAtom,
+    fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED_NORMAL,
+                                isInvalidName ? nullptr : name,
                                 /* proto = */ nullptr,
                                 gc::AllocKind::FUNCTION, TenuredObject,
                                 enclosingEnv));
@@ -4354,11 +4349,17 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
         return false;
     }
 
+    // When function name is not valid identifier, generated function source
+    // in srcBuf doesn't have function name.  Set it here.
+    if (isInvalidName)
+        fun->setAtom(name);
+
     return true;
 }
 
 static MOZ_MUST_USE bool
-BuildFunctionString(unsigned nargs, const char* const* argnames,
+BuildFunctionString(const char* name, size_t nameLen,
+                    unsigned nargs, const char* const* argnames,
                     const SourceBufferHolder& srcBuf, StringBuffer* out,
                     uint32_t* parameterListEnd)
 {
@@ -4366,7 +4367,13 @@ BuildFunctionString(unsigned nargs, const char* const* argnames,
     MOZ_ASSERT(parameterListEnd);
 
     if (!out->ensureTwoByteChars())
+       return false;
+    if (!out->append("function "))
         return false;
+    if (name) {
+        if (!out->append(name, nameLen))
+            return false;
+    }
     if (!out->append("("))
         return false;
     for (unsigned i = 0; i < nargs; i++) {
@@ -4403,15 +4410,33 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& envChain,
     if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope))
         return false;
 
+    size_t nameLen = 0;
+    bool isInvalidName = false;
+    RootedAtom nameAtom(cx);
+    if (name) {
+        nameLen = strlen(name);
+        nameAtom = Atomize(cx, name, nameLen);
+        if (!nameAtom)
+            return false;
+
+        // If name is not valid identifier
+        if (!js::frontend::IsIdentifier(name, nameLen))
+            isInvalidName = true;
+    }
+
     uint32_t parameterListEnd;
     StringBuffer funStr(cx);
-    if (!BuildFunctionString(nargs, argnames, srcBuf, &funStr, &parameterListEnd))
+    if (!BuildFunctionString(isInvalidName ? nullptr : name, nameLen, nargs, argnames, srcBuf,
+                             &funStr, &parameterListEnd))
+    {
         return false;
+    }
 
     size_t newLen = funStr.length();
     SourceBufferHolder newSrcBuf(funStr.stealChars(), newLen, SourceBufferHolder::GiveOwnership);
 
-    return CompileFunction(cx, options, name, newSrcBuf, parameterListEnd, env, scope, fun);
+    return CompileFunction(cx, options, nameAtom, isInvalidName, newSrcBuf, parameterListEnd, env,
+                           scope, fun);
 }
 
 JS_PUBLIC_API(bool)
