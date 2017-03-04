@@ -137,7 +137,7 @@ public:
         if (!gl->MakeCurrent())
             return nullptr;
 
-        const auto interopDevice = wgl->fDXOpenDevice(d3d);
+        const auto interopDevice = wgl->mSymbols.fDXOpenDeviceNV(d3d);
         if (!interopDevice) {
             gfxCriticalNote << "DXInterop2Device::Open: DXOpenDevice failed.";
             return nullptr;
@@ -157,7 +157,7 @@ public:
     ~DXInterop2Device() {
         const auto isCurrent = mGL->MakeCurrent();
 
-        if (mWGL->fDXCloseDevice(mInteropDevice))
+        if (mWGL->mSymbols.fDXCloseDeviceNV(mInteropDevice))
             return;
 
         if (isCurrent) {
@@ -176,8 +176,8 @@ public:
         if (!mGL->MakeCurrent())
             return nullptr;
 
-        const auto ret = mWGL->fDXRegisterObject(mInteropDevice, d3dObject, name, type,
-                                                 access);
+        const auto& ret = mWGL->mSymbols.fDXRegisterObjectNV(mInteropDevice, d3dObject,
+                                                             name, type, access);
         if (ret)
             return ret;
 
@@ -193,7 +193,7 @@ public:
     bool UnregisterObject(HANDLE lockHandle) const {
         const auto isCurrent = mGL->MakeCurrent();
 
-        if (mWGL->fDXUnregisterObject(mInteropDevice, lockHandle))
+        if (mWGL->mSymbols.fDXUnregisterObjectNV(mInteropDevice, lockHandle))
             return true;
 
         if (!isCurrent) {
@@ -210,7 +210,7 @@ public:
     bool LockObject(HANDLE lockHandle) const {
         MOZ_ASSERT(mGL->IsCurrent());
 
-        if (mWGL->fDXLockObjects(mInteropDevice, 1, &lockHandle))
+        if (mWGL->mSymbols.fDXLockObjectsNV(mInteropDevice, 1, &lockHandle))
             return true;
 
         if (!mGL->MakeCurrent())
@@ -219,7 +219,7 @@ public:
         gfxCriticalNote << "wglDXLockObjects called without mGL being current."
                         << " Retrying after MakeCurrent.";
 
-        if (mWGL->fDXLockObjects(mInteropDevice, 1, &lockHandle))
+        if (mWGL->mSymbols.fDXLockObjectsNV(mInteropDevice, 1, &lockHandle))
             return true;
 
         const uint32_t error = GetLastError();
@@ -233,7 +233,7 @@ public:
     bool UnlockObject(HANDLE lockHandle) const {
         MOZ_ASSERT(mGL->IsCurrent());
 
-        if (mWGL->fDXUnlockObjects(mInteropDevice, 1, &lockHandle))
+        if (mWGL->mSymbols.fDXUnlockObjectsNV(mInteropDevice, 1, &lockHandle))
             return true;
 
         if (!mGL->MakeCurrent())
@@ -242,7 +242,7 @@ public:
         gfxCriticalNote << "wglDXUnlockObjects called without mGL being current."
                         << " Retrying after MakeCurrent.";
 
-        if (mWGL->fDXUnlockObjects(mInteropDevice, 1, &lockHandle))
+        if (mWGL->mSymbols.fDXUnlockObjectsNV(mInteropDevice, 1, &lockHandle))
             return true;
 
         const uint32_t error = GetLastError();

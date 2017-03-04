@@ -99,56 +99,59 @@ GLXLibrary::EnsureInitialized()
         mDebug = true;
     }
 
-    GLLibraryLoader::SymLoadStruct symbols[] = {
+#define SYMBOL(X) { (PRFuncPtr*)&mSymbols.f##X, { "glX" #X, nullptr } }
+#define END_OF_SYMBOLS { nullptr, { nullptr } }
+
+    const GLLibraryLoader::SymLoadStruct symbols[] = {
         /* functions that were in GLX 1.0 */
-        { (PRFuncPtr*) &xDestroyContextInternal, { "glXDestroyContext", nullptr } },
-        { (PRFuncPtr*) &xMakeCurrentInternal, { "glXMakeCurrent", nullptr } },
-        { (PRFuncPtr*) &xSwapBuffersInternal, { "glXSwapBuffers", nullptr } },
-        { (PRFuncPtr*) &xQueryVersionInternal, { "glXQueryVersion", nullptr } },
-        { (PRFuncPtr*) &xGetCurrentContextInternal, { "glXGetCurrentContext", nullptr } },
-        { (PRFuncPtr*) &xWaitGLInternal, { "glXWaitGL", nullptr } },
-        { (PRFuncPtr*) &xWaitXInternal, { "glXWaitX", nullptr } },
+        SYMBOL(DestroyContext),
+        SYMBOL(MakeCurrent),
+        SYMBOL(SwapBuffers),
+        SYMBOL(QueryVersion),
+        SYMBOL(GetCurrentContext),
+        SYMBOL(WaitGL),
+        SYMBOL(WaitX),
         /* functions introduced in GLX 1.1 */
-        { (PRFuncPtr*) &xQueryExtensionsStringInternal, { "glXQueryExtensionsString", nullptr } },
-        { (PRFuncPtr*) &xGetClientStringInternal, { "glXGetClientString", nullptr } },
-        { (PRFuncPtr*) &xQueryServerStringInternal, { "glXQueryServerString", nullptr } },
+        SYMBOL(QueryExtensionsString),
+        SYMBOL(GetClientString),
+        SYMBOL(QueryServerString),
         /* functions introduced in GLX 1.3 */
-        { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfig", nullptr } },
-        { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttrib", nullptr } },
+        SYMBOL(ChooseFBConfig),
+        SYMBOL(GetFBConfigAttrib),
         // WARNING: xGetFBConfigs not set in symbols13_ext
-        { (PRFuncPtr*) &xGetFBConfigsInternal, { "glXGetFBConfigs", nullptr } },
+        SYMBOL(GetFBConfigs),
         // WARNING: symbols13_ext sets xCreateGLXPixmapWithConfig instead
-        { (PRFuncPtr*) &xCreatePixmapInternal, { "glXCreatePixmap", nullptr } },
-        { (PRFuncPtr*) &xDestroyPixmapInternal, { "glXDestroyPixmap", nullptr } },
-        { (PRFuncPtr*) &xCreateNewContextInternal, { "glXCreateNewContext", nullptr } },
+        SYMBOL(CreatePixmap),
+        SYMBOL(DestroyPixmap),
+        SYMBOL(CreateNewContext),
         /* functions introduced in GLX 1.4 */
-        { (PRFuncPtr*) &xGetProcAddressInternal, { "glXGetProcAddress", nullptr } },
-        { nullptr, { nullptr } }
+        SYMBOL(GetProcAddress),
+        END_OF_SYMBOLS
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_texturefrompixmap[] = {
-        { (PRFuncPtr*) &xBindTexImageInternal, { "glXBindTexImageEXT", nullptr } },
-        { (PRFuncPtr*) &xReleaseTexImageInternal, { "glXReleaseTexImageEXT", nullptr } },
-        { nullptr, { nullptr } }
+    const GLLibraryLoader::SymLoadStruct symbols_texturefrompixmap[] = {
+        SYMBOL(BindTexImageEXT),
+        SYMBOL(ReleaseTexImageEXT),
+        END_OF_SYMBOLS
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_createcontext[] = {
-        { (PRFuncPtr*) &xCreateContextAttribsInternal, { "glXCreateContextAttribsARB", nullptr } },
-        { nullptr, { nullptr } }
+    const GLLibraryLoader::SymLoadStruct symbols_createcontext[] = {
+        SYMBOL(CreateContextAttribsARB),
+        END_OF_SYMBOLS
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_videosync[] = {
-      { (PRFuncPtr*) &xGetVideoSyncInternal, { "glXGetVideoSyncSGI", nullptr } },
-      { (PRFuncPtr*) &xWaitVideoSyncInternal, { "glXWaitVideoSyncSGI", nullptr } },
-      { nullptr, { nullptr } }
+    const GLLibraryLoader::SymLoadStruct symbols_videosync[] = {
+        SYMBOL(GetVideoSyncSGI),
+        SYMBOL(WaitVideoSyncSGI),
+        END_OF_SYMBOLS
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_swapcontrol[] = {
-      { (PRFuncPtr*) &xSwapIntervalInternal, { "glXSwapIntervalEXT", nullptr } },
-      { nullptr, { nullptr } }
+    const GLLibraryLoader::SymLoadStruct symbols_swapcontrol[] = {
+        SYMBOL(SwapIntervalEXT),
+        END_OF_SYMBOLS
     };
 
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
+    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols)) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
     }
@@ -166,13 +169,23 @@ GLXLibrary::EnsureInitialized()
         }
     }
 
+    const auto lookupFunction =
+        (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+
+    const auto fnLoadSymbols = [&](const GLLibraryLoader::SymLoadStruct* symbols) {
+        if (GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols, lookupFunction))
+            return true;
+
+        GLLibraryLoader::ClearSymbols(symbols);
+        return false;
+    };
+
     const char* clientVendor = xGetClientString(display, LOCAL_GLX_VENDOR);
     const char* serverVendor = xQueryServerString(display, screen, LOCAL_GLX_VENDOR);
     const char* extensionsStr = xQueryExtensionsString(display, screen);
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap,
-                                         (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+        fnLoadSymbols(symbols_texturefrompixmap))
     {
         mUseTextureFromPixmap = gfxPrefs::UseGLXTextureFromPixmap();
     } else {
@@ -182,26 +195,23 @@ GLXLibrary::EnsureInitialized()
 
     if (HasExtension(extensionsStr, "GLX_ARB_create_context") &&
         HasExtension(extensionsStr, "GLX_ARB_create_context_profile") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_createcontext,
-                                     (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+        fnLoadSymbols(symbols_createcontext))
     {
         mHasCreateContextAttribs = true;
     }
 
-    if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness"))
-    {
+    if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness")) {
         mHasRobustness = true;
     }
 
     if (HasExtension(extensionsStr, "GLX_SGI_video_sync") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_videosync,
-                                     (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+        fnLoadSymbols(symbols_videosync))
     {
         mHasVideoSync = true;
     }
 
-    if (!(HasExtension(extensionsStr, "GLX_EXT_swap_control") &&
-          GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_swapcontrol)))
+    if (!HasExtension(extensionsStr, "GLX_EXT_swap_control") ||
+        !fnLoadSymbols(symbols_swapcontrol))
     {
         NS_WARNING("GLX_swap_control unsupported, ASAP mode may still block on buffer swaps.");
     }
@@ -489,7 +499,7 @@ void
 GLXLibrary::xDestroyContext(Display* display, GLXContext context)
 {
     BEFORE_GLX_CALL;
-    xDestroyContextInternal(display, context);
+    mSymbols.fDestroyContext(display, context);
     AFTER_GLX_CALL;
 }
 
@@ -499,7 +509,7 @@ GLXLibrary::xMakeCurrent(Display* display,
                          GLXContext context)
 {
     BEFORE_GLX_CALL;
-    Bool result = xMakeCurrentInternal(display, drawable, context);
+    const auto result = mSymbols.fMakeCurrent(display, drawable, context);
     AFTER_GLX_CALL;
     return result;
 }
@@ -508,16 +518,7 @@ GLXContext
 GLXLibrary::xGetCurrentContext()
 {
     BEFORE_GLX_CALL;
-    GLXContext result = xGetCurrentContextInternal();
-    AFTER_GLX_CALL;
-    return result;
-}
-
-/* static */ void*
-GLXLibrary::xGetProcAddress(const char* procName)
-{
-    BEFORE_GLX_CALL;
-    void* result = sGLXLibrary.xGetProcAddressInternal(procName);
+    const auto result = mSymbols.fGetCurrentContext();
     AFTER_GLX_CALL;
     return result;
 }
@@ -529,7 +530,7 @@ GLXLibrary::xChooseFBConfig(Display* display,
                             int* nelements)
 {
     BEFORE_GLX_CALL;
-    GLXFBConfig* result = xChooseFBConfigInternal(display, screen, attrib_list, nelements);
+    const auto result = mSymbols.fChooseFBConfig(display, screen, attrib_list, nelements);
     AFTER_GLX_CALL;
     return result;
 }
@@ -540,7 +541,7 @@ GLXLibrary::xGetFBConfigs(Display* display,
                           int* nelements)
 {
     BEFORE_GLX_CALL;
-    GLXFBConfig* result = xGetFBConfigsInternal(display, screen, nelements);
+    const auto result = mSymbols.fGetFBConfigs(display, screen, nelements);
     AFTER_GLX_CALL;
     return result;
 }
@@ -553,9 +554,8 @@ GLXLibrary::xCreateNewContext(Display* display,
                               Bool direct)
 {
     BEFORE_GLX_CALL;
-    GLXContext result = xCreateNewContextInternal(display, config,
-                                                  render_type,
-                                                  share_list, direct);
+    const auto result = mSymbols.fCreateNewContext(display, config, render_type,
+                                                   share_list, direct);
     AFTER_GLX_CALL;
     return result;
 }
@@ -567,8 +567,7 @@ GLXLibrary::xGetFBConfigAttrib(Display* display,
                                int* value)
 {
     BEFORE_GLX_CALL;
-    int result = xGetFBConfigAttribInternal(display, config,
-                                            attribute, value);
+    const auto result = mSymbols.fGetFBConfigAttrib(display, config, attribute, value);
     AFTER_GLX_CALL;
     return result;
 }
@@ -577,7 +576,7 @@ void
 GLXLibrary::xSwapBuffers(Display* display, GLXDrawable drawable)
 {
     BEFORE_GLX_CALL;
-    xSwapBuffersInternal(display, drawable);
+    mSymbols.fSwapBuffers(display, drawable);
     AFTER_GLX_CALL;
 }
 
@@ -586,7 +585,7 @@ GLXLibrary::xQueryExtensionsString(Display* display,
                                    int screen)
 {
     BEFORE_GLX_CALL;
-    const char* result = xQueryExtensionsStringInternal(display, screen);
+    const auto result = mSymbols.fQueryExtensionsString(display, screen);
     AFTER_GLX_CALL;
     return result;
 }
@@ -596,7 +595,7 @@ GLXLibrary::xGetClientString(Display* display,
                              int screen)
 {
     BEFORE_GLX_CALL;
-    const char* result = xGetClientStringInternal(display, screen);
+    const auto result = mSymbols.fGetClientString(display, screen);
     AFTER_GLX_CALL;
     return result;
 }
@@ -606,7 +605,7 @@ GLXLibrary::xQueryServerString(Display* display,
                                int screen, int name)
 {
     BEFORE_GLX_CALL;
-    const char* result = xQueryServerStringInternal(display, screen, name);
+    const auto result = mSymbols.fQueryServerString(display, screen, name);
     AFTER_GLX_CALL;
     return result;
 }
@@ -618,7 +617,7 @@ GLXLibrary::xCreatePixmap(Display* display,
                           const int* attrib_list)
 {
     BEFORE_GLX_CALL;
-    GLXPixmap result = xCreatePixmapInternal(display, config,
+    const auto result = mSymbols.fCreatePixmap(display, config,
                                              pixmap, attrib_list);
     AFTER_GLX_CALL;
     return result;
@@ -630,7 +629,7 @@ GLXLibrary::xCreateGLXPixmapWithConfig(Display* display,
                                        Pixmap pixmap)
 {
     BEFORE_GLX_CALL;
-    GLXPixmap result = xCreateGLXPixmapWithConfigInternal(display, config, pixmap);
+    const auto result = mSymbols.fCreateGLXPixmapWithConfig(display, config, pixmap);
     AFTER_GLX_CALL;
     return result;
 }
@@ -639,7 +638,7 @@ void
 GLXLibrary::xDestroyPixmap(Display* display, GLXPixmap pixmap)
 {
     BEFORE_GLX_CALL;
-    xDestroyPixmapInternal(display, pixmap);
+    mSymbols.fDestroyPixmap(display, pixmap);
     AFTER_GLX_CALL;
 }
 
@@ -649,7 +648,7 @@ GLXLibrary::xQueryVersion(Display* display,
                           int* minor)
 {
     BEFORE_GLX_CALL;
-    Bool result = xQueryVersionInternal(display, major, minor);
+    const auto result = mSymbols.fQueryVersion(display, major, minor);
     AFTER_GLX_CALL;
     return result;
 }
@@ -661,7 +660,7 @@ GLXLibrary::xBindTexImage(Display* display,
                           const int* attrib_list)
 {
     BEFORE_GLX_CALL;
-    xBindTexImageInternal(display, drawable, buffer, attrib_list);
+    mSymbols.fBindTexImageEXT(display, drawable, buffer, attrib_list);
     AFTER_GLX_CALL;
 }
 
@@ -671,7 +670,7 @@ GLXLibrary::xReleaseTexImage(Display* display,
                              int buffer)
 {
     BEFORE_GLX_CALL;
-    xReleaseTexImageInternal(display, drawable, buffer);
+    mSymbols.fReleaseTexImageEXT(display, drawable, buffer);
     AFTER_GLX_CALL;
 }
 
@@ -679,7 +678,7 @@ void
 GLXLibrary::xWaitGL()
 {
     BEFORE_GLX_CALL;
-    xWaitGLInternal();
+    mSymbols.fWaitGL();
     AFTER_GLX_CALL;
 }
 
@@ -687,7 +686,7 @@ void
 GLXLibrary::xWaitX()
 {
     BEFORE_GLX_CALL;
-    xWaitXInternal();
+    mSymbols.fWaitX();
     AFTER_GLX_CALL;
 }
 
@@ -699,11 +698,8 @@ GLXLibrary::xCreateContextAttribs(Display* display,
                                   const int* attrib_list)
 {
     BEFORE_GLX_CALL;
-    GLXContext result = xCreateContextAttribsInternal(display,
-                                                      config,
-                                                      share_list,
-                                                      direct,
-                                                      attrib_list);
+    const auto result = mSymbols.fCreateContextAttribsARB(display, config, share_list,
+                                                          direct, attrib_list);
     AFTER_GLX_CALL;
     return result;
 }
@@ -712,7 +708,7 @@ int
 GLXLibrary::xGetVideoSync(unsigned int* count)
 {
     BEFORE_GLX_CALL;
-    int result = xGetVideoSyncInternal(count);
+    const auto result = mSymbols.fGetVideoSyncSGI(count);
     AFTER_GLX_CALL;
     return result;
 }
@@ -721,7 +717,7 @@ int
 GLXLibrary::xWaitVideoSync(int divisor, int remainder, unsigned int* count)
 {
     BEFORE_GLX_CALL;
-    int result = xWaitVideoSyncInternal(divisor, remainder, count);
+    const auto result = mSymbols.fWaitVideoSyncSGI(divisor, remainder, count);
     AFTER_GLX_CALL;
     return result;
 }
@@ -730,7 +726,7 @@ void
 GLXLibrary::xSwapInterval(Display* display, GLXDrawable drawable, int interval)
 {
     BEFORE_GLX_CALL;
-    xSwapIntervalInternal(display, drawable, interval);
+    mSymbols.fSwapIntervalEXT(display, drawable, interval);
     AFTER_GLX_CALL;
 }
 
@@ -906,7 +902,7 @@ GLContextGLX::IsCurrent() {
 bool
 GLContextGLX::SetupLookupFunction()
 {
-    mLookupFunc = (PlatformLookupFunction)&GLXLibrary::xGetProcAddress;
+    mLookupFunc = (PlatformLookupFunction)sGLXLibrary.GetGetProcAddress();
     return true;
 }
 
