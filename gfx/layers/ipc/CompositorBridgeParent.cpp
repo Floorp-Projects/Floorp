@@ -1572,7 +1572,8 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 
 PWebRenderBridgeParent*
 CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
-                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                                    TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                    uint32_t* aIdNamespace)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -1591,7 +1592,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<WebRenderCompositableHolder> holder = new WebRenderCompositableHolder();
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(api), Move(holder));
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(holder));
+  *aIdNamespace = mWrBridge->GetIdNameSpace();
 
   mCompositorScheduler = mWrBridge->CompositorScheduler();
   MOZ_ASSERT(mCompositorScheduler);
@@ -1816,8 +1818,44 @@ void
 CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
                                      TimeStamp& aCompositeEnd)
 {
-  NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
-  mPendingTransaction = 0;
+  if (mWrBridge) {
+    NotifyDidComposite(mWrBridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
+  } else {
+    NotifyDidComposite(mPendingTransaction, aCompositeStart, aCompositeEnd);
+    mPendingTransaction = 0;
+  }
+}
+
+void
+CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
+{
+  if (mPaused) {
+    return;
+  }
+  MOZ_ASSERT(mWrBridge);
+
+  if (mWrBridge->PipelineId() == aPipelineId) {
+    uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
+    Unused << SendDidComposite(0, transactionId, aCompositeStart, aCompositeEnd);
+
+    nsTArray<ImageCompositeNotificationInfo> notifications;
+    mWrBridge->ExtractImageCompositeNotifications(&notifications);
+    if (!notifications.IsEmpty()) {
+      Unused << ImageBridgeParent::NotifyImageComposites(notifications);
+    }
+    return;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
+    if (lts->mCrossProcessParent &&
+        lts->mWrBridge &&
+        lts->mWrBridge->PipelineId() == aPipelineId) {
+      CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+      uint64_t transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
+      Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
+    }
+  });
 }
 
 void

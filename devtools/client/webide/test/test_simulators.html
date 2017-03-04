@@ -190,7 +190,7 @@
 
           // Pick custom binary, but act like the user aborted the file picker.
 
-          MockFilePicker.returnFiles = [];
+          MockFilePicker.setFiles([]);
           yield set(form.version, "pick");
 
           is(form.version.value, sim20.addonID, "Version selector reverted to last valid choice after customization abort");
@@ -198,10 +198,10 @@
 
           // Pick custom binary, and actually follow through. (success, verify value = "custom" and textContent = custom path)
 
-          MockFilePicker.useAnyFile();
+          yield MockFilePicker.useAnyFile();
           yield set(form.version, "pick");
 
-          let fakeBinary = MockFilePicker.returnFiles[0];
+          let fakeBinary = MockFilePicker.file;
 
           ok(form.version.value == "custom", "Version selector was set to a new custom binary");
           ok(form.version.classList.contains("custom"), "Version selector is now customized");
@@ -221,7 +221,7 @@
           is(form.profile.value, "default", "Default simulator profile");
           ok(!form.profile.classList.contains("custom"), "Profile selector is not customized");
 
-          MockFilePicker.returnFiles = [];
+          MockFilePicker.setFiles([]);
           yield set(form.profile, "pick");
 
           is(form.profile.value, "default", "Profile selector reverted to last valid choice after customization abort");
@@ -229,7 +229,7 @@
 
           let fakeProfile = FileUtils.getDir("TmpD", []);
 
-          MockFilePicker.returnFiles = [ fakeProfile ];
+          MockFilePicker.setFiles([ fakeProfile ]);
           yield set(form.profile, "pick");
 
           ok(form.profile.value == "custom", "Profile selector was set to a new custom directory");

@@ -17,6 +17,7 @@
 #include "nsRegionFwd.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/webrender/webrender_ffi.h"
 
 class gfxASurface;
 class gfxDrawable;
@@ -26,6 +27,7 @@ class nsIPresShell;
 
 namespace mozilla {
 namespace layers {
+class WebRenderBridgeChild;
 class GlyphArray;
 struct PlanarYCbCrData;
 class WebRenderCommand;
@@ -325,7 +327,8 @@ public:
     }
   }
 
-  void BuildWebRenderCommands(nsTArray<layers::WebRenderCommand>& aCommands,
+  void BuildWebRenderCommands(layers::WebRenderBridgeChild* aChild,
+                              nsTArray<layers::WebRenderCommand>& aCommands,
                               const nsTArray<layers::GlyphArray>& aGlyphs,
                               ScaledFont* aFont,
                               const Point& aOffset,

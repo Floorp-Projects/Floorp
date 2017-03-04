@@ -21,12 +21,14 @@ WebRenderDisplayItemLayer::RenderLayer()
   if (mItem) {
     // We might have recycled this layer. Throw away the old commands.
     mCommands.Clear();
-    mItem->CreateWebRenderCommands(mCommands, this);
+    mParentCommands.Clear();
+    mItem->CreateWebRenderCommands(mCommands, mParentCommands, this);
   }
   // else we have an empty transaction and just use the
   // old commands.
 
   WrBridge()->AddWebRenderCommands(mCommands);
+  WrBridge()->AddWebRenderParentCommands(mParentCommands);
 }
 
 uint64_t

@@ -2570,20 +2570,25 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 
 #ifdef DEBUG
 Zone*
-GCMarker::stackContainsCrossZonePointerTo(const TenuredCell* target) const
+GCMarker::stackContainsCrossZonePointerTo(const Cell* target) const
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+
+    Zone* targetZone = target->asTenured().zone();
 
     for (MarkStackIter iter(stack); !iter.done(); iter.next()) {
         if (iter.peekTag() != MarkStack::ObjectTag)
             continue;
 
         auto source = iter.peekPtr().as<JSObject>();
-        if (source->is<ProxyObject>() &&
-            source->as<ProxyObject>().target() == static_cast<const Cell*>(target) &&
-            source->zone() != target->zone())
+        Zone* sourceZone = source->zone();
+        if (sourceZone == targetZone)
+            continue;
+
+        if ((source->is<ProxyObject>() && source->as<ProxyObject>().target() == target) ||
+            Debugger::isDebuggerCrossCompartmentEdge(source, target))
         {
-            return source->zone();
+            return sourceZone;
         }
     }
 

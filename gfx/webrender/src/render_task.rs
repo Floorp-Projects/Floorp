@@ -67,13 +67,12 @@ pub struct AlphaRenderTask {
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 pub enum MaskSegment {
-    // This must match the SEGMENT_ values
-    // in clip_shared.glsl!
+    // This must match the SEGMENT_ values in clip_shared.glsl!
     All = 0,
-    Corner_TopLeft,
-    Corner_TopRight,
-    Corner_BottomLeft,
-    Corner_BottomRight,
+    TopLeftCorner,
+    TopRightCorner,
+    BottomLeftCorner,
+    BottomRightCorner,
 }
 
 #[derive(Debug, Copy, Clone)]
