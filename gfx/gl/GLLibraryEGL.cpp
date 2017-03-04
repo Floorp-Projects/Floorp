@@ -733,7 +733,6 @@ GLLibraryEGL::DumpEGLConfigs()
     delete [] ec;
 }
 
-#ifdef DEBUG
 static bool
 ShouldTrace()
 {
@@ -741,22 +740,21 @@ ShouldTrace()
     return ret;
 }
 
-/*static*/ void
-GLLibraryEGL::BeforeGLCall(const char* glFunction)
+void
+BeforeEGLCall(const char* glFunction)
 {
     if (ShouldTrace()) {
         printf_stderr("[egl] > %s\n", glFunction);
     }
 }
 
-/*static*/ void
-GLLibraryEGL::AfterGLCall(const char* glFunction)
+void
+AfterEGLCall(const char* glFunction)
 {
     if (ShouldTrace()) {
         printf_stderr("[egl] < %s\n", glFunction);
     }
 }
-#endif
 
 } /* namespace gl */
 } /* namespace mozilla */

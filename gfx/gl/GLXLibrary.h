@@ -43,73 +43,119 @@ public:
         , mOGLLibrary(nullptr)
     {}
 
-    void xDestroyContext(Display* display, GLXContext context);
-    Bool xMakeCurrent(Display* display,
-                      GLXDrawable drawable,
-                      GLXContext context);
-
-    GLXContext xGetCurrentContext();
-    GLXFBConfig* xChooseFBConfig(Display* display,
-                                 int screen,
-                                 const int* attrib_list,
-                                 int* nelements);
-    GLXFBConfig* xGetFBConfigs(Display* display,
-                               int screen,
-                               int* nelements);
-    GLXContext xCreateNewContext(Display* display,
-                                 GLXFBConfig config,
-                                 int render_type,
-                                 GLXContext share_list,
-                                 Bool direct);
-    int xGetFBConfigAttrib(Display* display,
-                           GLXFBConfig config,
-                           int attribute,
-                           int* value);
-    void xSwapBuffers(Display* display, GLXDrawable drawable);
-    const char* xQueryExtensionsString(Display* display,
-                                       int screen);
-    const char* xGetClientString(Display* display,
-                                 int screen);
-    const char* xQueryServerString(Display* display,
-                                   int screen, int name);
-    GLXPixmap xCreatePixmap(Display* display,
-                            GLXFBConfig config,
-                            Pixmap pixmap,
-                            const int* attrib_list);
-    GLXPixmap xCreateGLXPixmapWithConfig(Display* display,
-                                         GLXFBConfig config,
-                                         Pixmap pixmap);
-    void xDestroyPixmap(Display* display, GLXPixmap pixmap);
-    Bool xQueryVersion(Display* display,
-                       int* major,
-                       int* minor);
-    void xBindTexImage(Display* display,
-                       GLXDrawable drawable,
-                       int buffer,
-                       const int* attrib_list);
-    void xReleaseTexImage(Display* display,
-                          GLXDrawable drawable,
-                          int buffer);
-    void xWaitGL();
-    void xWaitX();
-
-    GLXContext xCreateContextAttribs(Display* display,
-                                     GLXFBConfig config,
-                                     GLXContext share_list,
-                                     Bool direct,
-                                     const int* attrib_list);
-
-    int xGetVideoSync(unsigned int* count);
-    int xWaitVideoSync(int divisor, int remainder, unsigned int* count);
-    void xSwapInterval(Display* dpy, GLXDrawable drawable, int interval);
-
     bool EnsureInitialized();
+
+private:
+    void BeforeGLXCall() const;
+    void AfterGLXCall() const;
+
+public:
+
+#ifdef DEBUG
+#define BEFORE_CALL BeforeGLXCall();
+#define AFTER_CALL AfterGLXCall();
+#else
+#define BEFORE_CALL
+#define AFTER_CALL
+#endif
+
+#define WRAP(X) \
+    { \
+        BEFORE_CALL \
+        const auto ret = mSymbols. X ; \
+        AFTER_CALL \
+        return ret; \
+    }
+#define VOID_WRAP(X) \
+    { \
+        BEFORE_CALL \
+        mSymbols. X ; \
+        AFTER_CALL \
+    }
+
+    void           fDestroyContext(Display* display, GLXContext context) const
+        VOID_WRAP( fDestroyContext(display, context) )
+
+    Bool      fMakeCurrent(Display* display, GLXDrawable drawable, GLXContext context) const
+        WRAP( fMakeCurrent(display, drawable, context) )
+
+    GLXContext fGetCurrentContext() const
+        WRAP(  fGetCurrentContext() )
+
+    GLXFBConfig* fChooseFBConfig(Display* display, int screen, const int* attrib_list, int* nelements) const
+        WRAP(    fChooseFBConfig(display, screen, attrib_list, nelements) )
+
+    GLXFBConfig* fGetFBConfigs(Display* display, int screen, int* nelements) const
+        WRAP(    fGetFBConfigs(display, screen, nelements) )
+
+    GLXContext fCreateNewContext(Display* display, GLXFBConfig config, int render_type, GLXContext share_list, Bool direct) const
+        WRAP(  fCreateNewContext(display, config, render_type, share_list, direct) )
+
+    int       fGetFBConfigAttrib(Display* display, GLXFBConfig config, int attribute, int* value) const
+        WRAP( fGetFBConfigAttrib(display, config, attribute, value) )
+
+    void           fSwapBuffers(Display* display, GLXDrawable drawable) const
+        VOID_WRAP( fSwapBuffers(display, drawable) )
+
+    const char* fQueryExtensionsString(Display* display, int screen) const
+        WRAP(   fQueryExtensionsString(display, screen) )
+
+    const char* fGetClientString(Display* display, int screen) const
+        WRAP(   fGetClientString(display, screen) )
+
+    const char* fQueryServerString(Display* display, int screen, int name) const
+        WRAP(   fQueryServerString(display, screen, name) )
+
+    GLXPixmap fCreatePixmap(Display* display, GLXFBConfig config, Pixmap pixmap, const int* attrib_list) const
+        WRAP( fCreatePixmap(display, config, pixmap, attrib_list) )
+
+    GLXPixmap fCreateGLXPixmapWithConfig(Display* display, GLXFBConfig config, Pixmap pixmap) const
+        WRAP( fCreateGLXPixmapWithConfig(display, config, pixmap) )
+
+    void           fDestroyPixmap(Display* display, GLXPixmap pixmap) const
+        VOID_WRAP( fDestroyPixmap(display, pixmap) )
+
+    Bool      fQueryVersion(Display* display, int* major, int* minor) const
+        WRAP( fQueryVersion(display, major, minor) )
+
+    void           fBindTexImage(Display* display, GLXDrawable drawable, int buffer, const int* attrib_list) const
+        VOID_WRAP( fBindTexImageEXT(display, drawable, buffer, attrib_list) )
+
+    void           fReleaseTexImage(Display* display, GLXDrawable drawable, int buffer) const
+        VOID_WRAP( fReleaseTexImageEXT(display, drawable, buffer) )
+
+    void           fWaitGL() const
+        VOID_WRAP( fWaitGL() )
+
+    void           fWaitX() const
+        VOID_WRAP( fWaitX() )
+
+    GLXContext fCreateContextAttribs(Display* display, GLXFBConfig config, GLXContext share_list, Bool direct, const int* attrib_list) const
+        WRAP(  fCreateContextAttribsARB(display, config, share_list, direct, attrib_list) )
+
+    int       fGetVideoSync(unsigned int* count) const
+        WRAP( fGetVideoSyncSGI(count) )
+
+    int       fWaitVideoSync(int divisor, int remainder, unsigned int* count) const
+        WRAP( fWaitVideoSyncSGI(divisor, remainder, count) )
+
+    void           fSwapInterval(Display* dpy, GLXDrawable drawable, int interval) const
+        VOID_WRAP( fSwapIntervalEXT(dpy, drawable, interval) )
+
+#undef WRAP
+#undef VOID_WRAP
+#undef BEFORE_CALL
+#undef AFTER_CALL
+
+    ////
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
     void DestroyPixmap(Display* aDisplay, GLXPixmap aPixmap);
     void BindTexImage(Display* aDisplay, GLXPixmap aPixmap);
     void ReleaseTexImage(Display* aDisplay, GLXPixmap aPixmap);
     void UpdateTexImage(Display* aDisplay, GLXPixmap aPixmap);
+
+    ////
 
     bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }
