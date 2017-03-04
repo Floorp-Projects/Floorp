@@ -1,0 +1,212 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1341994
+-->
+<head>
+  <title>Test for Bug 1341994 </title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1341994 ">Mozilla Bug 1341994</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<script>
+
+var testData = [
+  {
+    locales: ["en-US"],
+    options: undefined,
+    expected: {
+      locale: "en-US",
+      style: "long",
+      value: ""
+    }
+  },
+  {
+    locales: ["en-US"],
+    options: {
+      keys: [
+        "dates/gregorian/weekdays/wednesday"
+      ],
+      style: 'narrow'
+    },
+    expected: {
+      locale: 'en-US',
+      style: 'narrow',
+      values: {
+        "dates/gregorian/weekdays/wednesday": "W"
+      }
+    }
+  },
+  {
+    locales: ["fr"],
+    options: {
+      keys: [
+        'dates/fields/year',
+        'dates/fields/day',
+        'dates/gregorian/months/october',
+        'dates/gregorian/weekdays/saturday',
+        'dates/gregorian/dayperiods/pm'
+      ]
+    },
+    expected: {
+      locale: "fr",
+      style: "long",
+      values: {
+        'dates/fields/year': 'année',
+        'dates/fields/day': 'jour',
+        'dates/gregorian/months/october': 'octobre',
+        'dates/gregorian/weekdays/saturday': 'samedi',
+        'dates/gregorian/dayperiods/pm': 'PM'
+      }
+    }
+  },
+  {
+    locales: ["it"],
+    options: {
+      style: "short",
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
+    },
+    expected: {
+      locale: "it",
+      style: "short",
+      values: {
+        'dates/gregorian/weekdays/thursday': 'gio',
+        'dates/gregorian/months/august': 'ago',
+        'dates/gregorian/dayperiods/am': 'AM',
+        'dates/fields/month': 'mese'
+      }
+    }
+  },
+  {
+    locales: ["ar"],
+    options: {
+      style: 'long',
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
+    },
+    expected: {
+      locale: "ar",
+      style: "long",
+      values: {
+        'dates/gregorian/weekdays/thursday': 'الخميس',
+        'dates/gregorian/months/august': 'أغسطس',
+        'dates/gregorian/dayperiods/am': 'ص',
+        'dates/fields/month': 'الشهر'
+      }
+    }
+  },
+  {
+    locales: ["zh-TW"],
+    options: {
+      style: "short",
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+        'dates/gregorian/months/august',
+        'dates/gregorian/dayperiods/am',
+        'dates/fields/month',
+      ]
+    },
+    expected: {
+      locale: "zh-TW",
+      style: "short",
+      values: {
+        'dates/gregorian/weekdays/thursday': "週四",
+        'dates/gregorian/months/august': "8月",
+        'dates/gregorian/dayperiods/am': "上午",
+        'dates/fields/month': "月"
+      }
+    }
+  },
+
+  /* Invalid input */
+
+  {
+    locales: ["en-US"],
+    options: {
+      style: "",
+      keys: [
+        'dates/gregorian/weekdays/thursday',
+      ]
+    },
+    expected: {
+      exception: true
+    }
+  },
+  {
+    locales: ["foo-X"],
+    options: {
+      keys: [
+        "dates/gregorian/weekdays/thursday",
+      ]
+    },
+    expected: {
+      exception: true
+    }
+  },
+  {
+    locales: ["en-US"],
+    options: {
+      keys: [
+        ""
+      ],
+    },
+    expected: {
+      exception: true
+    }
+  },
+  {
+    locales: ["en-US"],
+    options: {
+      keys: [
+        "no/such/key",
+      ]
+    },
+    expected: {
+      exception: true
+    }
+  }
+]
+
+let intlUtils = window.intlUtils;
+ok(intlUtils, "window.intlUtils should exist");
+
+for (let { locales, options, expected } of testData) {
+  try {
+    let result = intlUtils.getDisplayNames(locales, options);
+
+    is(result.locale, expected.locale, "locale is " + expected.locale);
+    is(result.style, expected.style, "style is " + expected.style);
+
+    let values = result.values;
+    let expectedValues = expected.values;
+
+    let valuesKeys = Object.getOwnPropertyNames(values).sort();
+    let expectedValuesKeys = Object.getOwnPropertyNames(expectedValues).sort();
+
+    isDeeply(valuesKeys, expectedValuesKeys, "Returned values' keys");
+
+    for (let key of expectedValuesKeys) {
+      is(values[key], expectedValues[key], "value is " + expectedValues[key]);
+    }
+  } catch (e) {
+    if (expected.exception) {
+      ok(true, "Exception expected : " + e.name);
+    }
+  }
+}
+
+</script>
+</body>
+</html>
