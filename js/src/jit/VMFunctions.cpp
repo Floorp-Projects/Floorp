@@ -54,8 +54,8 @@ VMFunction::addToFunctions()
 }
 
 bool
-InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc, Value* argv,
-               MutableHandleValue rval)
+InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, bool ignoresReturnValue,
+               uint32_t argc, Value* argv, MutableHandleValue rval)
 {
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
     TraceLogStartEvent(logger, TraceLogger_Call);
@@ -104,7 +104,7 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
         return InternalConstructWithProvidedThis(cx, fval, thisv, cargs, newTarget, rval);
     }
 
-    InvokeArgs args(cx);
+    InvokeArgsMaybeIgnoresReturnValue args(cx, ignoresReturnValue);
     if (!args.init(cx, argc))
         return false;
 
@@ -120,7 +120,7 @@ InvokeFunctionShuffleNewTarget(JSContext* cx, HandleObject obj, uint32_t numActu
 {
     MOZ_ASSERT(numFormalArgs > numActualArgs);
     argv[1 + numActualArgs] = argv[1 + numFormalArgs];
-    return InvokeFunction(cx, obj, true, numActualArgs, argv, rval);
+    return InvokeFunction(cx, obj, true, false, numActualArgs, argv, rval);
 }
 
 #ifdef JS_SIMULATOR

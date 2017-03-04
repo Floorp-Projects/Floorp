@@ -572,6 +572,10 @@ class JSFunction : public js::NativeObject
         return offsetof(JSFunction, u.nativeOrScript);
     }
 
+    static unsigned offsetOfJitInfo() {
+        return offsetof(JSFunction, u.n.jitinfo);
+    }
+
     inline void trace(JSTracer* trc);
 
     /* Bound function accessors. */

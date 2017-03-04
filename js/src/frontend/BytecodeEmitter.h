@@ -167,6 +167,11 @@ struct JumpList {
     void patchAll(jsbytecode* code, JumpTarget target);
 };
 
+enum class ValueUsage {
+    WantValue,
+    IgnoreValue
+};
+
 struct MOZ_STACK_CLASS BytecodeEmitter
 {
     class TDZCheckCache;
@@ -430,10 +435,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     };
 
     // Emit code for the tree rooted at pn.
-    MOZ_MUST_USE bool emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
+    MOZ_MUST_USE bool emitTree(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue,
+                               EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
 
     // Emit code for the tree rooted at pn with its own TDZ cache.
-    MOZ_MUST_USE bool emitTreeInBranch(ParseNode* pn);
+    MOZ_MUST_USE bool emitTreeInBranch(ParseNode* pn,
+                                       ValueUsage valueUsage = ValueUsage::WantValue);
 
     // Emit global, eval, or module code for tree rooted at body. Always
     // encompasses the entire source.
@@ -731,16 +738,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitRightAssociative(ParseNode* pn);
     MOZ_MUST_USE bool emitLeftAssociative(ParseNode* pn);
     MOZ_MUST_USE bool emitLogical(ParseNode* pn);
-    MOZ_MUST_USE bool emitSequenceExpr(ParseNode* pn);
+    MOZ_MUST_USE bool emitSequenceExpr(ParseNode* pn,
+                                       ValueUsage valueUsage = ValueUsage::WantValue);
 
     MOZ_NEVER_INLINE MOZ_MUST_USE bool emitIncOrDec(ParseNode* pn);
 
-    MOZ_MUST_USE bool emitConditionalExpression(ConditionalExpression& conditional);
+    MOZ_MUST_USE bool emitConditionalExpression(ConditionalExpression& conditional,
+                                                ValueUsage valueUsage = ValueUsage::WantValue);
 
     MOZ_MUST_USE bool isRestParameter(ParseNode* pn, bool* result);
     MOZ_MUST_USE bool emitOptimizeSpread(ParseNode* arg0, JumpList* jmp, bool* emitted);
 
-    MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn);
+    MOZ_MUST_USE bool emitCallOrNew(ParseNode* pn, ValueUsage valueUsage = ValueUsage::WantValue);
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedResumeGenerator(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedForceInterpreter(ParseNode* pn);

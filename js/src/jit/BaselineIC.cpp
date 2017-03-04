@@ -10,6 +10,8 @@
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
 
+#include "jsfriendapi.h"
+#include "jsfun.h"
 #include "jslibmath.h"
 #include "jstypes.h"
 
@@ -2196,11 +2198,17 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             MOZ_ASSERT_IF(templateObject, !templateObject->group()->maybePreliminaryObjects());
         }
 
+        bool ignoresReturnValue = false;
+        if (op == JSOP_CALL_IGNORES_RV && fun->isNative()) {
+            const JSJitInfo* jitInfo = fun->jitInfo();
+            ignoresReturnValue = jitInfo && jitInfo->type() == JSJitInfo::IgnoresReturnValueNative;
+        }
+
         JitSpew(JitSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s, spread=%s)",
                 fun.get(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
         ICCall_Native::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                         fun, templateObject, constructing, isSpread,
-                                         script->pcToOffset(pc));
+                                         fun, templateObject, constructing, ignoresReturnValue,
+                                         isSpread, script->pcToOffset(pc));
         ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -2298,12 +2306,14 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
 
     MOZ_ASSERT(argc == GET_ARGC(pc));
     bool constructing = (op == JSOP_NEW);
+    bool ignoresReturnValue = (op == JSOP_CALL_IGNORES_RV);
 
     // Ensure vp array is rooted - we may GC in here.
     size_t numValues = argc + 2 + constructing;
     AutoArrayRooter vpRoot(cx, numValues, vp);
 
-    CallArgs callArgs = CallArgsFromSp(argc + constructing, vp + numValues, constructing);
+    CallArgs callArgs = CallArgsFromSp(argc + constructing, vp + numValues, constructing,
+                                       ignoresReturnValue);
     RootedValue callee(cx, vp[0]);
 
     // Handle funapply with JSOP_ARGUMENTS
@@ -2333,6 +2343,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
             return false;
     } else {
         MOZ_ASSERT(op == JSOP_CALL ||
+                   op == JSOP_CALL_IGNORES_RV ||
                    op == JSOP_CALLITER ||
                    op == JSOP_FUNCALL ||
                    op == JSOP_FUNAPPLY ||
@@ -3384,7 +3395,12 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
     // stub and use that instead of the original one.
     masm.callWithABI(Address(ICStubReg, ICCall_Native::offsetOfNative()));
 #else
-    masm.callWithABI(Address(callee, JSFunction::offsetOfNativeOrScript()));
+    if (ignoresReturnValue_) {
+        masm.loadPtr(Address(callee, JSFunction::offsetOfJitInfo()), callee);
+        masm.callWithABI(Address(callee, JSJitInfo::offsetOfIgnoresReturnValueNative()));
+    } else {
+        masm.callWithABI(Address(callee, JSFunction::offsetOfNativeOrScript()));
+    }
 #endif
 
     // Test for failure.
