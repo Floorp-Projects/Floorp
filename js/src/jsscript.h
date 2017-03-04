@@ -581,10 +581,6 @@ class ScriptSource
         hasIntroductionOffset_ = true;
     }
 
-    uint32_t parameterListEnd() const {
-        return parameterListEnd_;
-    }
-
     // Return wether an XDR encoder is present or not.
     bool hasEncoder() const { return bool(xdrEncoder_); }
 
@@ -885,9 +881,19 @@ class JSScript : public js::gc::TenuredCell
 
     uint32_t        bodyScopeIndex_; /* index into the scopes array of the body scope */
 
-    /* Range of characters in scriptSource which contains this script's source. */
+    // Range of characters in scriptSource which contains this script's source.
+    // each field points the following location.
+    //
+    //   function * f(a, b) { return a + b; }
+    //   ^          ^                        ^
+    //   |          |                        |
+    //   |          sourceStart_             sourceEnd_
+    //   |
+    //   preludeStart_
+    //
     uint32_t        sourceStart_;
     uint32_t        sourceEnd_;
+    uint32_t        preludeStart_;
 
 #ifdef MOZ_VTUNE
     // Unique Method ID passed to the VTune profiler, or 0 if unset.
@@ -1057,7 +1063,7 @@ class JSScript : public js::gc::TenuredCell
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
 #if JS_BITS_PER_WORD == 32
-    // Currently no padding is needed.
+    uint32_t padding;
 #endif
 
     //
@@ -1068,7 +1074,7 @@ class JSScript : public js::gc::TenuredCell
     static JSScript* Create(JSContext* cx,
                             const JS::ReadOnlyCompileOptions& options,
                             js::HandleObject sourceObject, uint32_t sourceStart,
-                            uint32_t sourceEnd);
+                            uint32_t sourceEnd, uint32_t preludeStart);
 
     void initCompartment(JSContext* cx);
 
@@ -1217,6 +1223,10 @@ class JSScript : public js::gc::TenuredCell
 
     uint32_t sourceEnd() const {
         return sourceEnd_;
+    }
+
+    size_t preludeStart() const {
+        return preludeStart_;
     }
 
     bool noScriptRval() const {
@@ -1552,6 +1562,7 @@ class JSScript : public js::gc::TenuredCell
     bool mayReadFrameArgsDirectly();
 
     static JSFlatString* sourceData(JSContext* cx, JS::HandleScript script);
+    static JSFlatString* sourceDataWithPrelude(JSContext* cx, JS::HandleScript script);
 
     static bool loadSource(JSContext* cx, js::ScriptSource* ss, bool* worked);
 
@@ -1980,7 +1991,7 @@ class LazyScript : public gc::TenuredCell
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
 #if JS_BITS_PER_WORD == 32
-    uint32_t padding;
+    // Currently no padding is needed.
 #endif
 
   private:
@@ -2025,20 +2036,25 @@ class LazyScript : public gc::TenuredCell
     };
 
     // Source location for the script.
+    // See the comment in JSScript for the details
     uint32_t begin_;
     uint32_t end_;
+    uint32_t preludeStart_;
+    // Line and column of |begin_| position, that is the position where we
+    // start parsing.
     uint32_t lineno_;
     uint32_t column_;
 
     LazyScript(JSFunction* fun, void* table, uint64_t packedFields,
-               uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column);
+               uint32_t begin, uint32_t end, uint32_t preludeStart,
+               uint32_t lineno, uint32_t column);
 
     // Create a LazyScript without initializing the closedOverBindings and the
     // innerFunctions. To be GC-safe, the caller must initialize both vectors
     // with valid atoms and functions.
     static LazyScript* CreateRaw(JSContext* cx, HandleFunction fun,
                                  uint64_t packedData, uint32_t begin, uint32_t end,
-                                 uint32_t lineno, uint32_t column);
+                                 uint32_t preludeStart, uint32_t lineno, uint32_t column);
 
   public:
     static const uint32_t NumClosedOverBindingsLimit = 1 << NumClosedOverBindingsBits;
@@ -2050,7 +2066,7 @@ class LazyScript : public gc::TenuredCell
                               const frontend::AtomVector& closedOverBindings,
                               Handle<GCVector<JSFunction*, 8>> innerFunctions,
                               JSVersion version, uint32_t begin, uint32_t end,
-                              uint32_t lineno, uint32_t column);
+                              uint32_t preludeStart, uint32_t lineno, uint32_t column);
 
     // Create a LazyScript and initialize the closedOverBindings and the
     // innerFunctions with dummy values to be replaced in a later initialization
@@ -2065,7 +2081,7 @@ class LazyScript : public gc::TenuredCell
                               HandleScript script, HandleScope enclosingScope,
                               HandleScriptSource sourceObject,
                               uint64_t packedData, uint32_t begin, uint32_t end,
-                              uint32_t lineno, uint32_t column);
+                              uint32_t preludeStart, uint32_t lineno, uint32_t column);
 
     void initRuntimeFields(uint64_t packedFields);
 
@@ -2246,6 +2262,9 @@ class LazyScript : public gc::TenuredCell
     uint32_t end() const {
         return end_;
     }
+    uint32_t preludeStart() const {
+        return preludeStart_;
+    }
     uint32_t lineno() const {
         return lineno_;
     }
@@ -2272,7 +2291,8 @@ class LazyScript : public gc::TenuredCell
 };
 
 /* If this fails, add/remove padding within LazyScript. */
-JS_STATIC_ASSERT(sizeof(LazyScript) % js::gc::CellSize == 0);
+static_assert(sizeof(LazyScript) % js::gc::CellSize == 0,
+              "Size of LazyScript must be an integral multiple of js::gc::CellSize");
 
 struct ScriptAndCounts
 {

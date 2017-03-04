@@ -840,8 +840,10 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 
     RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
 
-    const char* rawSource = "() {\n}";
+    const char* rawSource = "function () {\n}";
     size_t sourceLen = strlen(rawSource);
+    size_t begin = 9;
+    MOZ_ASSERT(rawSource[begin] == '(');
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> source(InflateString(cx, rawSource, &sourceLen));
     if (!source)
         return nullptr;
@@ -866,8 +868,9 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     RootedScript script(cx, JSScript::Create(cx,
                                              options,
                                              sourceObject,
-                                             0,
-                                             ss->length()));
+                                             begin,
+                                             ss->length(),
+                                             0));
     if (!script || !JSScript::initFunctionPrototype(cx, script, functionProto))
         return nullptr;
 
@@ -999,30 +1002,13 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         }
     }
 
-    bool funIsMethodOrNonArrowLambda = (fun->isLambda() && !fun->isArrow()) || fun->isMethod() ||
-                                        fun->isGetter() || fun->isSetter();
+    bool funIsNonArrowLambda = fun->isLambda() && !fun->isArrow();
     bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
 
-    // If we're not in pretty mode, put parentheses around lambda functions and methods.
-    if (haveSource && !prettyPrint && funIsMethodOrNonArrowLambda) {
+    // If we're not in pretty mode, put parentheses around lambda functions
+    // so that eval returns lambda, not function statement.
+    if (haveSource && !prettyPrint && funIsNonArrowLambda) {
         if (!out.append("("))
-            return nullptr;
-    }
-    if (fun->isAsync()) {
-        if (!out.append("async "))
-            return nullptr;
-    }
-    if (!fun->isArrow()) {
-        bool ok;
-        if (fun->isStarGenerator())
-            ok = out.append("function* ");
-        else
-            ok = out.append("function ");
-        if (!ok)
-            return nullptr;
-    }
-    if (fun->explicitName()) {
-        if (!out.append(fun->explicitName()))
             return nullptr;
     }
 
@@ -1031,20 +1017,47 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
     {
         return nullptr;
     }
+
+    auto AppendPrelude = [&out, &fun]() {
+        if (fun->isAsync()) {
+            if (!out.append("async "))
+                return false;
+        }
+
+        if (!fun->isArrow()) {
+            if (!out.append("function"))
+                return false;
+
+            if (fun->isStarGenerator()) {
+                if (!out.append('*'))
+                    return false;
+            }
+        }
+
+        if (fun->explicitName()) {
+            if (!out.append(' '))
+                return false;
+            if (!out.append(fun->explicitName()))
+                return false;
+        }
+        return true;
+    };
+
     if (haveSource) {
-        Rooted<JSFlatString*> src(cx, JSScript::sourceData(cx, script));
+        Rooted<JSFlatString*> src(cx, JSScript::sourceDataWithPrelude(cx, script));
         if (!src)
             return nullptr;
 
         if (!out.append(src))
             return nullptr;
 
-        if (!prettyPrint && funIsMethodOrNonArrowLambda) {
+        if (!prettyPrint && funIsNonArrowLambda) {
             if (!out.append(")"))
                 return nullptr;
         }
     } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
-        if (!out.append("() {\n    ") ||
+        if (!AppendPrelude() ||
+            !out.append("() {\n    ") ||
             !out.append("[sourceless code]") ||
             !out.append("\n}"))
         {
@@ -1053,13 +1066,15 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
     } else {
         bool derived = fun->infallibleIsDefaultClassConstructor(cx);
         if (derived && fun->isDerivedClassConstructor()) {
-            if (!out.append("(...args) {\n    ") ||
+            if (!AppendPrelude() ||
+                !out.append("(...args) {\n    ") ||
                 !out.append("super(...args);\n}"))
             {
                 return nullptr;
             }
         } else {
-            if (!out.append("() {\n    "))
+            if (!AppendPrelude() ||
+                !out.append("() {\n    "))
                 return nullptr;
 
             if (!derived) {
@@ -1639,7 +1654,18 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
 
     StringBuffer sb(cx);
 
-    if (!sb.append('('))
+    if (isAsync) {
+        if (!sb.append("async "))
+            return false;
+    }
+    if (!sb.append("function"))
+         return false;
+    if (isStarGenerator && !isAsync) {
+        if (!sb.append('*'))
+            return false;
+    }
+
+    if (!sb.append(" anonymous("))
         return false;
 
     if (args.length() > 1) {
@@ -1665,6 +1691,9 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
             }
         }
     }
+
+    if (!sb.append('\n'))
+        return false;
 
     // Remember the position of ")".
     Maybe<uint32_t> parameterListEnd = Some(uint32_t(sb.length()));
