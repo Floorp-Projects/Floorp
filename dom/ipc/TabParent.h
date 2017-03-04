@@ -599,8 +599,6 @@ public:
   void LiveResizeStarted() override;
   void LiveResizeStopped() override;
 
-  void DispatchTabChildNotReadyEvent();
-
 protected:
   bool ReceiveMessage(const nsString& aMessage,
                       bool aSync,
