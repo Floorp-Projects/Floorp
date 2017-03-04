@@ -26,7 +26,6 @@ class VRDisplayOSVR : public VRDisplayHost
 {
 public:
   VRHMDSensorState GetSensorState() override;
-  VRHMDSensorState GetImmediateSensorState() override;
   void ZeroSensor() override;
 
 protected:
