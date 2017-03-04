@@ -221,6 +221,9 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
 
     MOZ_ASSERT(zone->runtimeFromAnyThread() == trc->runtime());
 
+    // It shouldn't be possible to trace into zones used by helper threads.
+    MOZ_ASSERT(!zone->usedByHelperThread());
+
     MOZ_ASSERT(thing->isAligned());
     MOZ_ASSERT(MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind ==
                thing->getTraceKind());
