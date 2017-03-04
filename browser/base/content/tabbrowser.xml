@@ -4242,9 +4242,18 @@
 
               let otherTabbrowser = otherBrowser.ownerGlobal.gBrowser;
               let otherState;
+              let pendingTabChild = false;
               if (otherTabbrowser && otherTabbrowser._switcher) {
                 let otherTab = otherTabbrowser.getTabForBrowser(otherBrowser);
-                otherState = otherTabbrowser._switcher.getTabState(otherTab);
+                let otherSwitcher = otherTabbrowser._switcher;
+                otherState = otherSwitcher.getTabState(otherTab);
+                pendingTabChild = otherSwitcher.pendingTabChild.has(otherBrowser);
+
+                if (pendingTabChild) {
+                  this.assert(otherState == this.STATE_LOADING);
+                }
+
+                otherSwitcher.pendingTabChild.delete(otherBrowser);
               } else {
                 otherState = (otherBrowser.docShellIsActive
                               ? this.STATE_LOADED
@@ -4254,7 +4263,10 @@
               if (!this.swapMap) {
                 this.swapMap = new WeakMap();
               }
-              this.swapMap.set(otherBrowser, otherState);
+              this.swapMap.set(otherBrowser, {
+                state: otherState,
+                pendingTabChild,
+              });
             },
 
             onEndSwapDocShells(ourBrowser, otherBrowser) {
@@ -4273,12 +4285,17 @@
               }
               this.loadingTab = null;
 
-              let otherState = this.swapMap.get(otherBrowser);
+              let { state: otherState, pendingTabChild } =
+                this.swapMap.get(otherBrowser);
+
               this.swapMap.delete(otherBrowser);
 
               let ourTab = this.tabbrowser.getTabForBrowser(ourBrowser);
               if (ourTab) {
                 this.setTabStateNoAction(ourTab, otherState);
+                if (pendingTabChild) {
+                  this.pendingTabChild.add(ourTab.linkedBrowser);
+                }
               }
             },
 
