@@ -64,47 +64,10 @@ class DataSourceSurface;
 
 namespace gl {
 
-#undef BEFORE_GL_CALL
-#undef AFTER_GL_CALL
-
-#ifdef DEBUG
-
-#ifndef MOZ_FUNCTION_NAME
-# ifdef __GNUC__
-#  define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
-# elif defined(_MSC_VER)
-#  define MOZ_FUNCTION_NAME __FUNCTION__
-# else
-#  define MOZ_FUNCTION_NAME __func__  // defined in C99, supported in various C++ compilers. Just raw function name.
-# endif
-#endif
-
-#ifdef MOZ_WIDGET_ANDROID
-// Record the name of the GL call for better hang stacks on Android.
-#define BEFORE_GL_CALL                      \
-    PROFILER_LABEL_FUNC(                    \
-      js::ProfileEntry::Category::GRAPHICS);\
-    BeforeGLCall(MOZ_FUNCTION_NAME)
-#else
-#define BEFORE_GL_CALL do {          \
-    BeforeGLCall(MOZ_FUNCTION_NAME); \
-} while (0)
-#endif
-
-#define AFTER_GL_CALL do {           \
-    AfterGLCall(MOZ_FUNCTION_NAME);  \
-} while (0)
-#else
-#ifdef MOZ_WIDGET_ANDROID
-// Record the name of the GL call for better hang stacks on Android.
-#define BEFORE_GL_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS)
-#else
-#define BEFORE_GL_CALL
-#endif
-#define AFTER_GL_CALL
-#endif
-
 class GLContext;
+
+void BeforeEGLCall(const char* funcName);
+void AfterEGLCall(const char* funcName);
 
 class GLLibraryEGL
 {
@@ -161,327 +124,177 @@ public:
         return (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
     }
 
-    EGLDisplay fGetDisplay(void* display_id)
-    {
-        BEFORE_GL_CALL;
-        EGLDisplay disp = mSymbols.fGetDisplay(display_id);
-        AFTER_GL_CALL;
-        return disp;
+    ////
+
+#ifdef MOZ_WIDGET_ANDROID
+#define PROFILE_CALL PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+#else
+#define PROFILE_CALL
+#endif
+
+#ifndef MOZ_FUNCTION_NAME
+# ifdef __GNUC__
+#  define MOZ_FUNCTION_NAME __PRETTY_FUNCTION__
+# elif defined(_MSC_VER)
+#  define MOZ_FUNCTION_NAME __FUNCTION__
+# else
+#  define MOZ_FUNCTION_NAME __func__  // defined in C99, supported in various C++ compilers. Just raw function name.
+# endif
+#endif
+
+#ifdef DEBUG
+#define BEFORE_CALL BeforeEGLCall(MOZ_FUNCTION_NAME);
+#define AFTER_CALL  AfterEGLCall(MOZ_FUNCTION_NAME);
+#else
+#define BEFORE_CALL
+#define AFTER_CALL
+#endif
+
+#define WRAP(X) \
+    { \
+        PROFILE_CALL \
+        BEFORE_CALL \
+        const auto ret = mSymbols. X ; \
+        AFTER_CALL \
+        return ret; \
     }
 
-    EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLDisplay disp = mSymbols.fGetPlatformDisplayEXT(platform, native_display, attrib_list);
-        AFTER_GL_CALL;
-        return disp;
+#define VOID_WRAP(X) \
+    { \
+        PROFILE_CALL \
+        BEFORE_CALL \
+        mSymbols. X ; \
+        AFTER_CALL \
     }
 
-    EGLBoolean fTerminate(EGLDisplay display)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean ret = mSymbols.fTerminate(display);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLDisplay fGetDisplay(void* display_id) const
+        WRAP(  fGetDisplay(display_id) )
 
-    EGLSurface fGetCurrentSurface(EGLint id)
-    {
-        BEFORE_GL_CALL;
-        EGLSurface surf = mSymbols.fGetCurrentSurface(id);
-        AFTER_GL_CALL;
-        return surf;
-    }
+    EGLDisplay fGetPlatformDisplayEXT(EGLenum platform, void* native_display, const EGLint* attrib_list) const
+        WRAP(  fGetPlatformDisplayEXT(platform, native_display, attrib_list) )
 
-    EGLContext fGetCurrentContext()
-    {
-        BEFORE_GL_CALL;
-        EGLContext context = mSymbols.fGetCurrentContext();
-        AFTER_GL_CALL;
-        return context;
-    }
+    EGLBoolean fTerminate(EGLDisplay display) const
+        WRAP( fTerminate(display) )
 
-    EGLBoolean fMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fMakeCurrent(dpy, draw, read, ctx);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLSurface fGetCurrentSurface(EGLint id) const
+        WRAP(  fGetCurrentSurface(id) )
 
-    EGLBoolean fDestroyContext(EGLDisplay dpy, EGLContext ctx)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroyContext(dpy, ctx);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLContext fGetCurrentContext() const
+        WRAP(  fGetCurrentContext() )
 
-    EGLContext fCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLContext ctx = mSymbols.fCreateContext(dpy, config, share_context, attrib_list);
-        AFTER_GL_CALL;
-        return ctx;
-    }
+    EGLBoolean fMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx) const
+        WRAP(  fMakeCurrent(dpy, draw, read, ctx) )
 
-    EGLBoolean fDestroySurface(EGLDisplay dpy, EGLSurface surface)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroySurface(dpy, surface);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fDestroyContext(EGLDisplay dpy, EGLContext ctx) const
+        WRAP(  fDestroyContext(dpy, ctx) )
 
-    EGLSurface fCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLSurface surf = mSymbols.fCreateWindowSurface(dpy, config, win, attrib_list);
-        AFTER_GL_CALL;
-        return surf;
-    }
+    EGLContext fCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list) const
+        WRAP(  fCreateContext(dpy, config, share_context, attrib_list) )
 
-    EGLSurface fCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLSurface surf = mSymbols.fCreatePbufferSurface(dpy, config, attrib_list);
-        AFTER_GL_CALL;
-        return surf;
-    }
+    EGLBoolean fDestroySurface(EGLDisplay dpy, EGLSurface surface) const
+        WRAP(  fDestroySurface(dpy, surface) )
 
-    EGLSurface fCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLSurface ret = mSymbols.fCreatePbufferFromClientBuffer(dpy, buftype, buffer, config, attrib_list);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLSurface fCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint* attrib_list) const
+        WRAP(  fCreateWindowSurface(dpy, config, win, attrib_list) )
 
-    EGLSurface fCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLSurface surf = mSymbols.fCreatePixmapSurface(dpy, config, pixmap, attrib_list);
-        AFTER_GL_CALL;
-        return surf;
-    }
+    EGLSurface fCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint* attrib_list) const
+        WRAP(  fCreatePbufferSurface(dpy, config, attrib_list) )
 
-    EGLBoolean fBindAPI(EGLenum api)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fBindAPI(api);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLSurface fCreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list) const
+        WRAP(  fCreatePbufferFromClientBuffer(dpy, buftype, buffer, config, attrib_list) )
 
-    EGLBoolean fInitialize(EGLDisplay dpy, EGLint* major, EGLint* minor)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fInitialize(dpy, major, minor);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLSurface fCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list) const
+        WRAP(  fCreatePixmapSurface(dpy, config, pixmap, attrib_list) )
 
-    EGLBoolean fChooseConfig(EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fChooseConfig(dpy, attrib_list, configs, config_size, num_config);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fBindAPI(EGLenum api) const
+        WRAP(  fBindAPI(api) )
 
-    EGLint fGetError()
-    {
-        BEFORE_GL_CALL;
-        EGLint i = mSymbols.fGetError();
-        AFTER_GL_CALL;
-        return i;
-    }
+    EGLBoolean fInitialize(EGLDisplay dpy, EGLint* major, EGLint* minor) const
+        WRAP(  fInitialize(dpy, major, minor) )
 
-    EGLBoolean fGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint* value)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fGetConfigAttrib(dpy, config, attribute, value);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fChooseConfig(EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config) const
+        WRAP(  fChooseConfig(dpy, attrib_list, configs, config_size, num_config) )
 
-    EGLBoolean fGetConfigs(EGLDisplay dpy, EGLConfig* configs, EGLint config_size, EGLint* num_config)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fGetConfigs(dpy, configs, config_size, num_config);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLint    fGetError() const
+        WRAP( fGetError() )
 
-    EGLBoolean fWaitNative(EGLint engine)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fWaitNative(engine);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint* value) const
+        WRAP(  fGetConfigAttrib(dpy, config, attribute, value) )
 
-    EGLCastToRelevantPtr fGetProcAddress(const char* procname)
-    {
-        BEFORE_GL_CALL;
-        EGLCastToRelevantPtr p = mSymbols.fGetProcAddress(procname);
-        AFTER_GL_CALL;
-        return p;
-    }
+    EGLBoolean fGetConfigs(EGLDisplay dpy, EGLConfig* configs, EGLint config_size, EGLint* num_config) const
+        WRAP(  fGetConfigs(dpy, configs, config_size, num_config) )
 
-    EGLBoolean fSwapBuffers(EGLDisplay dpy, EGLSurface surface)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fSwapBuffers(dpy, surface);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fWaitNative(EGLint engine) const
+        WRAP(  fWaitNative(engine) )
 
-    EGLBoolean fCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fCopyBuffers(dpy, surface, target);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLCastToRelevantPtr fGetProcAddress(const char* procname) const
+        WRAP(            fGetProcAddress(procname) )
 
-    const GLubyte* fQueryString(EGLDisplay dpy, EGLint name)
-    {
-        BEFORE_GL_CALL;
-        const auto ret = mSymbols.fQueryString(dpy, name);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLBoolean fSwapBuffers(EGLDisplay dpy, EGLSurface surface) const
+        WRAP(  fSwapBuffers(dpy, surface) )
 
-    EGLBoolean fQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint* value)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fQueryContext(dpy, ctx, attribute, value);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target) const
+        WRAP(  fCopyBuffers(dpy, surface, target) )
 
-    EGLBoolean fBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fBindTexImage(dpy, surface, buffer);
-        AFTER_GL_CALL;
-        return b;
-    }
+    const GLubyte* fQueryString(EGLDisplay dpy, EGLint name) const
+        WRAP(      fQueryString(dpy, name) )
 
-    EGLBoolean fReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fReleaseTexImage(dpy, surface, buffer);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint* value) const
+        WRAP(  fQueryContext(dpy, ctx, attribute, value) )
 
-    EGLImage fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list)
-    {
-         BEFORE_GL_CALL;
-         EGLImage i = mSymbols.fCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
-         AFTER_GL_CALL;
-         return i;
-    }
+    EGLBoolean fBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) const
+        WRAP(  fBindTexImage(dpy, surface, buffer) )
 
-    EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroyImageKHR(dpy, image);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer) const
+        WRAP(  fReleaseTexImage(dpy, surface, buffer) )
 
-    // New extension which allow us to lock texture and get raw image pointer
-    EGLBoolean fLockSurface(EGLDisplay dpy, EGLSurface surface, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fLockSurfaceKHR(dpy, surface, attrib_list);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLImage   fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list) const
+        WRAP(  fCreateImageKHR(dpy, ctx, target, buffer, attrib_list) )
 
-    EGLBoolean fUnlockSurface(EGLDisplay dpy, EGLSurface surface)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fUnlockSurfaceKHR(dpy, surface);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image) const
+        WRAP(  fDestroyImageKHR(dpy, image) )
 
-    EGLBoolean fQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint* value)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fQuerySurface(dpy, surface, attribute, value);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fLockSurface(EGLDisplay dpy, EGLSurface surface, const EGLint* attrib_list) const
+        WRAP(  fLockSurfaceKHR(dpy, surface, attrib_list) )
 
-    EGLBoolean fQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void** value)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fQuerySurfacePointerANGLE(dpy, surface, attribute, value);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fUnlockSurface(EGLDisplay dpy, EGLSurface surface) const
+        WRAP(  fUnlockSurfaceKHR(dpy, surface) )
 
-    EGLSync fCreateSync(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list)
-    {
-        BEFORE_GL_CALL;
-        EGLSync ret = mSymbols.fCreateSyncKHR(dpy, type, attrib_list);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLBoolean fQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint* value) const
+        WRAP(  fQuerySurface(dpy, surface, attribute, value) )
 
-    EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroySyncKHR(dpy, sync);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void** value) const
+        WRAP(  fQuerySurfacePointerANGLE(dpy, surface, attribute, value) )
 
-    EGLint fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout)
-    {
-        BEFORE_GL_CALL;
-        EGLint ret = mSymbols.fClientWaitSyncKHR(dpy, sync, flags, timeout);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLSync   fCreateSync(EGLDisplay dpy, EGLenum type, const EGLint* attrib_list) const
+        WRAP( fCreateSyncKHR(dpy, type, attrib_list) )
 
-    EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint* value)
-    {
-        BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fGetSyncAttribKHR(dpy, sync, attribute, value);
-        AFTER_GL_CALL;
-        return b;
-    }
+    EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync) const
+        WRAP(  fDestroySyncKHR(dpy, sync) )
 
-    EGLint fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync)
-    {
-        MOZ_ASSERT(mSymbols.fDupNativeFenceFDANDROID);
-        BEFORE_GL_CALL;
-        EGLint ret = mSymbols.fDupNativeFenceFDANDROID(dpy, sync);
-        AFTER_GL_CALL;
-        return ret;
-    }
+    EGLint    fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout) const
+        WRAP( fClientWaitSyncKHR(dpy, sync, flags, timeout) )
 
-    void fANGLEPlatformInitialize(angle::Platform* platform)
-    {
-        MOZ_ASSERT(mSymbols.fANGLEPlatformInitialize);
-        BEFORE_GL_CALL;
-        mSymbols.fANGLEPlatformInitialize(platform);
-        AFTER_GL_CALL;
-    }
+    EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint* value) const
+        WRAP(  fGetSyncAttribKHR(dpy, sync, attribute, value) )
 
-    void fANGLEPlatformShutdown()
-    {
-        MOZ_ASSERT(mSymbols.fANGLEPlatformShutdown);
-        BEFORE_GL_CALL;
-        mSymbols.fANGLEPlatformShutdown();
-        AFTER_GL_CALL;
-    }
+    EGLint    fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync) const
+        WRAP( fDupNativeFenceFDANDROID(dpy, sync) )
+
+    void           fANGLEPlatformInitialize(angle::Platform* platform) const
+        VOID_WRAP( fANGLEPlatformInitialize(platform) )
+
+    void fANGLEPlatformShutdown() const
+        VOID_WRAP( fANGLEPlatformShutdown() )
+
+#undef WRAP
+#undef VOID_WRAP
+#undef PROFILE_CALL
+#undef BEFORE_CALL
+#undef AFTER_CALL
+#undef MOZ_FUNCTION_NAME
+
+    ////
 
     EGLDisplay Display() {
         MOZ_ASSERT(mInitialized);
@@ -603,11 +416,6 @@ private:
         void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
         void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;
-
-#ifdef DEBUG
-    static void BeforeGLCall(const char* glFunction);
-    static void AfterGLCall(const char* glFunction);
-#endif
 
 public:
 #ifdef MOZ_B2G
