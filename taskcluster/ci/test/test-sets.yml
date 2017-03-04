@@ -79,6 +79,7 @@ qr-tests:
     - jsreftest
     - mochitest-a11y
     - mochitest-gpu
+    - mochitest-webgl
     - reftest
     - reftest-no-accel
     - xpcshell

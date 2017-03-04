@@ -14,6 +14,19 @@
 namespace mozilla {
 namespace wr {
 
+WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId)
+{
+  return WrExternalImage { /*WrExternalImageIdType::TextureHandle, */0.0f, 0.0f, 0.0f, 0.0f, 0 };
+}
+
+void UnlockExternalImage(void* aObj, WrExternalImageId aId)
+{
+}
+
+void ReleaseExternalImage(void* aObj, WrExternalImageId aId)
+{
+}
+
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
@@ -39,6 +52,17 @@ RendererOGL::~RendererOGL()
 {
   MOZ_COUNT_DTOR(RendererOGL);
   wr_renderer_delete(mWrRenderer);
+}
+
+WrExternalImageHandler
+RendererOGL::GetExternalImageHandler()
+{
+  return WrExternalImageHandler {
+    this,
+    LockExternalImage,
+    UnlockExternalImage,
+    ReleaseExternalImage,
+  };
 }
 
 void

@@ -172,14 +172,9 @@ public:
       holder->DisconnectIfExists();
       iter.Remove();
     }
-    RefPtr<EMEDecryptor> self = this;
+    RefPtr<SamplesWaitingForKey> k = mSamplesWaitingForKey;
     return mDecoder->Flush()->Then(mTaskQueue, __func__,
-                                   [self, this]() {
-                                     mSamplesWaitingForKey->Flush();
-                                   },
-                                   [self, this]() {
-                                     mSamplesWaitingForKey->Flush();
-                                   });
+                                   [k]() { k->Flush(); });
   }
 
   RefPtr<DecodePromise> Drain() override

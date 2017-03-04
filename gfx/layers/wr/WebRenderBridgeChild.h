@@ -32,9 +32,11 @@ public:
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
   void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
+  void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
+  void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
 
@@ -54,12 +56,22 @@ public:
   bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
   bool IsDestroyed() const { return mDestroyed; }
 
+  uint32_t GetNextResourceId() { return ++mResourceId; }
+  uint32_t GetNamespace() { return mIdNamespace; }
+  void SetNamespace(uint32_t aIdNamespace)
+  {
+    mIdNamespace = aIdNamespace;
+  }
+
 private:
   friend class CompositorBridgeChild;
 
   ~WebRenderBridgeChild() {}
 
   uint64_t GetNextExternalImageId();
+
+  wr::BuiltDisplayList ProcessWebrenderCommands(const gfx::IntSize &aSize,
+                                                InfallibleTArray<WebRenderCommand>& aCommands);
 
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
@@ -99,9 +111,13 @@ private:
   bool AddOpDestroy(const OpDestroy& aOp);
 
   nsTArray<WebRenderCommand> mCommands;
+  nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
   bool mIsInTransaction;
+  uint32_t mIdNamespace;
+  uint32_t mResourceId;
+  wr::PipelineId mPipelineId;
 
   bool mIPCOpen;
   bool mDestroyed;

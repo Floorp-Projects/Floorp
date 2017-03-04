@@ -1441,6 +1441,25 @@ nsCSSRendering::GetShadowRect(const nsRect aFrameArea,
   return frameRect;
 }
 
+bool
+nsCSSRendering::GetBorderRadii(const nsRect& aFrameRect,
+                               const nsRect& aBorderRect,
+                               nsIFrame* aFrame,
+                               RectCornerRadii& aOutRadii)
+{
+  const nscoord twipsPerPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
+  nscoord twipsRadii[8];
+  NS_ASSERTION(aBorderRect.Size() == aFrame->VisualBorderRectRelativeToSelf().Size(),
+              "unexpected size");
+  nsSize sz = aFrameRect.Size();
+  bool hasBorderRadius = aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
+  if (hasBorderRadius) {
+    ComputePixelRadii(twipsRadii, twipsPerPixel, &aOutRadii);
+  }
+
+  return hasBorderRadius;
+}
+
 void
 nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     nsRenderingContext& aRenderingContext,
@@ -1659,55 +1678,96 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   }
 }
 
-void
-nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
-                                    nsRenderingContext& aRenderingContext,
-                                    nsIFrame* aForFrame,
-                                    const nsRect& aFrameArea)
+nsRect
+nsCSSRendering::GetBoxShadowInnerPaddingRect(nsIFrame* aFrame,
+                                             const nsRect& aFrameArea)
 {
-  nsCSSShadowArray* shadows = aForFrame->StyleEffects()->mBoxShadow;
+  Sides skipSides = aFrame->GetSkipSides();
+  nsRect frameRect =
+    ::BoxDecorationRectForBorder(aFrame, aFrameArea, skipSides);
+
+  nsRect paddingRect = frameRect;
+  nsMargin border = aFrame->GetUsedBorder();
+  paddingRect.Deflate(border);
+  return paddingRect;
+}
+
+bool
+nsCSSRendering::CanPaintBoxShadowInner(nsIFrame* aFrame)
+{
+  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
   if (!shadows)
-    return;
-  if (aForFrame->IsThemed() && aForFrame->GetContent() &&
-      !nsContentUtils::IsChromeDoc(aForFrame->GetContent()->GetUncomposedDoc())) {
+    return false;
+
+  if (aFrame->IsThemed() && aFrame->GetContent() &&
+      !nsContentUtils::IsChromeDoc(aFrame->GetContent()->GetUncomposedDoc())) {
     // There's no way of getting hold of a shape corresponding to a
     // "padding-box" for native-themed widgets, so just don't draw
     // inner box-shadows for them. But we allow chrome to paint inner
     // box shadows since chrome can be aware of the platform theme.
-    return;
+    return false;
   }
 
-  NS_ASSERTION(aForFrame->GetType() == nsGkAtoms::fieldSetFrame ||
-               aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+  return true;
+}
 
-  Sides skipSides = aForFrame->GetSkipSides();
-  nsRect frameRect =
-    ::BoxDecorationRectForBorder(aForFrame, aFrameArea, skipSides);
-  nsRect paddingRect = frameRect;
-  nsMargin border = aForFrame->GetUsedBorder();
-  paddingRect.Deflate(border);
-
+bool
+nsCSSRendering::GetShadowInnerRadii(nsIFrame* aFrame,
+                                    const nsRect& aFrameArea,
+                                    RectCornerRadii& aOutInnerRadii)
+{
   // Get any border radius, since box-shadow must also have rounded corners
   // if the frame does.
   nscoord twipsRadii[8];
+  nsRect frameRect =
+    ::BoxDecorationRectForBorder(aFrame, aFrameArea, aFrame->GetSkipSides());
   nsSize sz = frameRect.Size();
-  bool hasBorderRadius = aForFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
-  const nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
+  nsMargin border = aFrame->GetUsedBorder();
+  bool hasBorderRadius = aFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
+  const nscoord twipsPerPixel = aFrame->PresContext()->DevPixelsToAppUnits(1);
 
-  RectCornerRadii innerRadii;
+  RectCornerRadii borderRadii;
+
+  hasBorderRadius = GetBorderRadii(frameRect, aFrameArea, aFrame, borderRadii);
   if (hasBorderRadius) {
-    RectCornerRadii borderRadii;
-
     ComputePixelRadii(twipsRadii, twipsPerPixel, &borderRadii);
+
     Float borderSizes[4] = {
       Float(border.top / twipsPerPixel),
       Float(border.right / twipsPerPixel),
       Float(border.bottom / twipsPerPixel),
       Float(border.left / twipsPerPixel)
     };
-    nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
-                                           &innerRadii);
+    nsCSSBorderRenderer::ComputeInnerRadii(borderRadii,
+                                           borderSizes,
+                                           &aOutInnerRadii);
   }
+
+  return hasBorderRadius;
+}
+
+void
+nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
+                                    nsRenderingContext& aRenderingContext,
+                                    nsIFrame* aForFrame,
+                                    const nsRect& aFrameArea)
+{
+  if (!CanPaintBoxShadowInner(aForFrame)) {
+    return;
+  }
+
+  nsCSSShadowArray* shadows = aForFrame->StyleEffects()->mBoxShadow;
+  NS_ASSERTION(aForFrame->GetType() == nsGkAtoms::fieldSetFrame ||
+               aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
+
+  nsRect paddingRect = GetBoxShadowInnerPaddingRect(aForFrame, aFrameArea);
+
+  RectCornerRadii innerRadii;
+  bool hasBorderRadius = GetShadowInnerRadii(aForFrame,
+                                             aFrameArea,
+                                             innerRadii);
+
+  const nscoord twipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 
   for (uint32_t i = shadows->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
@@ -1722,9 +1782,6 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       nsContextBoxBlur::GetBlurRadiusMargin(blurRadius, twipsPerPixel);
     nsRect shadowPaintRect = paddingRect;
     shadowPaintRect.Inflate(blurMargin);
-
-    Rect shadowPaintGfxRect = NSRectToRect(shadowPaintRect, twipsPerPixel);
-    shadowPaintGfxRect.RoundOut();
 
     // Round the spread radius to device pixels (by truncation).
     // This mostly matches what we do for borders, except that we don't round
