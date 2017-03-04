@@ -3231,41 +3231,6 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTION
 
 /*** Cycle Collector Barrier Implementation *******************************************************/
 
-#ifdef DEBUG
-struct AssertNonGrayTracer : public JS::CallbackTracer {
-    explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
-    void onChild(const JS::GCCellPtr& thing) override {
-        MOZ_ASSERT_IF(thing.asCell()->isTenured(),
-                      !thing.asCell()->asTenured().isMarked(js::gc::GRAY));
-    }
-};
-#endif
-
-struct UnmarkGrayTracer : public JS::CallbackTracer
-{
-    /*
-     * We set weakMapAction to DoNotTraceWeakMaps because the cycle collector
-     * will fix up any color mismatches involving weakmaps when it runs.
-     */
-    explicit UnmarkGrayTracer(JSRuntime *rt, bool tracingShape = false)
-      : JS::CallbackTracer(rt, DoNotTraceWeakMaps)
-      , tracingShape(tracingShape)
-      , previousShape(nullptr)
-      , unmarkedAny(false)
-    {}
-
-    void onChild(const JS::GCCellPtr& thing) override;
-
-    /* True iff we are tracing the immediate children of a shape. */
-    bool tracingShape;
-
-    /* If tracingShape, shape child or nullptr. Otherwise, nullptr. */
-    Shape* previousShape;
-
-    /* Whether we unmarked anything. */
-    bool unmarkedAny;
-};
-
 /*
  * The GC and CC are run independently. Consequently, the following sequence of
  * events can occur:
@@ -3298,20 +3263,47 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
  *   of the containers, we must add unmark-graying read barriers to these
  *   containers.
  */
+
+#ifdef DEBUG
+struct AssertNonGrayTracer : public JS::CallbackTracer {
+    explicit AssertNonGrayTracer(JSRuntime* rt) : JS::CallbackTracer(rt) {}
+    void onChild(const JS::GCCellPtr& thing) override {
+        MOZ_ASSERT_IF(thing.asCell()->isTenured(),
+                      !thing.asCell()->asTenured().isMarked(js::gc::GRAY));
+    }
+};
+#endif
+
+class UnmarkGrayTracer : public JS::CallbackTracer
+{
+  public:
+    // We set weakMapAction to DoNotTraceWeakMaps because the cycle collector
+    // will fix up any color mismatches involving weakmaps when it runs.
+    explicit UnmarkGrayTracer(JSRuntime *rt)
+      : JS::CallbackTracer(rt, DoNotTraceWeakMaps)
+      , unmarkedAny(false)
+      , oom(false)
+      , stack(rt->gc.unmarkGrayStack)
+    {}
+
+    void unmark(JS::GCCellPtr cell);
+
+    // Whether we unmarked anything.
+    bool unmarkedAny;
+
+    // Whether we ran out of memory.
+    bool oom;
+
+  private:
+    // Stack of cells to traverse.
+    Vector<JS::GCCellPtr, 0, SystemAllocPolicy>& stack;
+
+    void onChild(const JS::GCCellPtr& thing) override;
+};
+
 void
 UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
 {
-    int stackDummy;
-    JSContext* cx = TlsContext.get();
-    if (!JS_CHECK_STACK_SIZE(cx->nativeStackLimit[JS::StackForSystemCode], &stackDummy)) {
-        /*
-         * If we run out of stack, we take a more drastic measure: require that
-         * we GC again before the next CC.
-         */
-        runtime()->gc.setGrayBitsInvalid();
-        return;
-    }
-
     Cell* cell = thing.asCell();
 
     // Cells in the nursery cannot be gray, and therefore must necessarily point
@@ -3325,41 +3317,33 @@ UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
     }
 
     TenuredCell& tenured = cell->asTenured();
-    if (!tenured.isMarked(js::gc::GRAY))
+    if (!tenured.isMarked(GRAY))
         return;
-    tenured.unmark(js::gc::GRAY);
 
+    tenured.unmark(GRAY);
     unmarkedAny = true;
 
-    // Trace children of |tenured|. If |tenured| and its parent are both
-    // shapes, |tenured| will get saved to mPreviousShape without being traced.
-    // The parent will later trace |tenured|. This is done to avoid increasing
-    // the stack depth during shape tracing. It is safe to do because a shape
-    // can only have one child that is a shape.
-    UnmarkGrayTracer childTracer(runtime(), thing.kind() == JS::TraceKind::Shape);
+    if (!stack.append(thing))
+        oom = true;
+}
 
-    if (thing.kind() != JS::TraceKind::Shape) {
-        TraceChildren(&childTracer, &tenured, thing.kind());
-        MOZ_ASSERT(!childTracer.previousShape);
-        unmarkedAny |= childTracer.unmarkedAny;
+void
+UnmarkGrayTracer::unmark(JS::GCCellPtr cell)
+{
+    MOZ_ASSERT(stack.empty());
+
+    onChild(cell);
+
+    while (!stack.empty() && !oom)
+        TraceChildren(this, stack.popCopy());
+
+    if (oom) {
+         // If we run out of memory, we take a drastic measure: require that we
+         // GC again before the next CC.
+        stack.clear();
+        runtime()->gc.setGrayBitsInvalid();
         return;
     }
-
-    MOZ_ASSERT(thing.kind() == JS::TraceKind::Shape);
-    Shape* shape = static_cast<Shape*>(&tenured);
-    if (tracingShape) {
-        MOZ_ASSERT(!previousShape);
-        previousShape = shape;
-        return;
-    }
-
-    do {
-        MOZ_ASSERT(!shape->isMarked(js::gc::GRAY));
-        shape->traceChildren(&childTracer);
-        shape = childTracer.previousShape;
-        childTracer.previousShape = nullptr;
-    } while (shape);
-    unmarkedAny |= childTracer.unmarkedAny;
 }
 
 template <typename T>
@@ -3372,21 +3356,11 @@ TypedUnmarkGrayCellRecursively(T* t)
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCycleCollecting());
 
-    bool unmarkedArg = false;
-    if (t->isTenured()) {
-        if (!t->asTenured().isMarked(GRAY))
-            return false;
-
-        t->asTenured().unmark(GRAY);
-        unmarkedArg = true;
-    }
-
-    UnmarkGrayTracer trc(rt);
+    UnmarkGrayTracer unmarker(rt);
     gcstats::AutoPhase outerPhase(rt->gc.stats(), gcstats::PHASE_BARRIER);
     gcstats::AutoPhase innerPhase(rt->gc.stats(), gcstats::PHASE_UNMARK_GRAY);
-    t->traceChildren(&trc);
-
-    return unmarkedArg || trc.unmarkedAny;
+    unmarker.unmark(JS::GCCellPtr(t, MapTypeToTraceKind<T>::kind));
+    return unmarker.unmarkedAny;
 }
 
 struct UnmarkGrayCellRecursivelyFunctor {

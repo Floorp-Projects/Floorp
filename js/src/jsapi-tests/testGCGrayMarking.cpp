@@ -56,7 +56,8 @@ BEGIN_TEST(testGCGrayMarking)
         TestWeakMaps() &&
         TestUnassociatedWeakMaps() &&
         TestWatchpoints() &&
-        TestCCWs();
+        TestCCWs() &&
+        TestGrayUnmarking();
 
     global1 = nullptr;
     global2 = nullptr;
@@ -567,6 +568,70 @@ TestCCWs()
     return true;
 }
 
+bool
+TestGrayUnmarking()
+{
+    const size_t length = 2000;
+
+    JSObject* chain = AllocObjectChain(length);
+    CHECK(chain);
+
+    RootedObject blackRoot(cx, chain);
+    JS_GC(cx);
+    size_t count;
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(BLACK, &count)));
+    CHECK(count == length);
+
+    blackRoot = nullptr;
+    grayRoots.grayRoot1 = chain;
+    JS_GC(cx);
+    CHECK(cx->runtime()->gc.areGrayBitsValid());
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(GRAY, &count)));
+    CHECK(count == length);
+
+    JS::ExposeObjectToActiveJS(chain);
+    CHECK(cx->runtime()->gc.areGrayBitsValid());
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(BLACK, &count)));
+    CHECK(count == length);
+
+    grayRoots.grayRoot1 = nullptr;
+
+    return true;
+}
+
+struct ColorCheckFunctor
+{
+    uint32_t color;
+    size_t& count;
+
+    ColorCheckFunctor(uint32_t colorArg, size_t* countArg)
+      : color(colorArg), count(*countArg)
+    {
+        count = 0;
+    }
+
+    bool operator()(JSObject* obj) {
+        if (!CheckCellColor(obj, color))
+            return false;
+
+        NativeObject& nobj = obj->as<NativeObject>();
+        if (!CheckCellColor(nobj.shape(), color))
+            return false;
+
+        Shape* shape = nobj.shape();
+        if (!CheckCellColor(shape, color))
+            return false;
+
+        // Shapes and symbols are never marked gray.
+        jsid id = shape->propid();
+        if (JSID_IS_GCTHING(id) && !CheckCellColor(JSID_TO_GCTHING(id).asCell(), BLACK))
+            return false;
+
+        count++;
+        return true;
+    }
+};
+
 JS::PersistentRootedObject global1;
 JS::PersistentRootedObject global2;
 
@@ -694,20 +759,78 @@ AllocDelegateForKey(JSObject* key)
     return obj;
 }
 
-bool
-IsMarkedBlack(JSObject* obj)
+JSObject*
+AllocObjectChain(size_t length)
 {
-    TenuredCell* cell = &obj->asTenured();
-    return cell->isMarked(BLACK) && !cell->isMarked(GRAY);
+    // Allocate a chain of linked JSObjects.
+
+    // Use a unique property name so the shape is not shared with any other
+    // objects.
+    RootedString nextPropName(cx, JS_NewStringCopyZ(cx, "unique14142135"));
+    RootedId nextId(cx);
+    if (!JS_StringToId(cx, nextPropName, &nextId))
+        return nullptr;
+
+    RootedObject head(cx);
+    for (size_t i = 0; i < length; i++) {
+        RootedValue next(cx, ObjectOrNullValue(head));
+        head = AllocPlainObject();
+        if (!head)
+            return nullptr;
+        if (!JS_DefinePropertyById(cx, head, nextId, next, 0))
+            return nullptr;
+    }
+
+    return head;
 }
 
-bool
-IsMarkedGray(JSObject* obj)
+template <typename F>
+bool IterateObjectChain(JSObject* chain, F f)
 {
-    TenuredCell* cell = &obj->asTenured();
-    bool isGray = cell->isMarked(GRAY);
-    MOZ_ASSERT_IF(isGray, cell->isMarked(BLACK));
+    RootedObject obj(cx, chain);
+    while (obj) {
+        if (!f(obj))
+            return false;
+
+        // Access the 'next' property via the object's slots to avoid triggering
+        // gray marking assertions when calling JS_GetPropertyById.
+        NativeObject& nobj = obj->as<NativeObject>();
+        MOZ_ASSERT(nobj.slotSpan() == 1);
+        obj = nobj.getSlot(0).toObjectOrNull();
+    }
+
+    return true;
+}
+
+static bool
+IsMarkedBlack(Cell* cell)
+{
+    TenuredCell* tc = &cell->asTenured();
+    return tc->isMarked(BLACK) && !tc->isMarked(GRAY);
+}
+
+static bool
+IsMarkedGray(Cell* cell)
+{
+    TenuredCell* tc = &cell->asTenured();
+    bool isGray = tc->isMarked(GRAY);
+    MOZ_ASSERT_IF(isGray, tc->isMarked(BLACK));
     return isGray;
+}
+
+static bool
+CheckCellColor(Cell* cell, uint32_t color)
+{
+    MOZ_ASSERT(color == BLACK || color == GRAY);
+    if (color == BLACK && !IsMarkedBlack(cell)) {
+        printf("Found non-black cell: %p\n", cell);
+        return false;
+    } else if (color == GRAY && !IsMarkedGray(cell)) {
+        printf("Found non-gray cell: %p\n", cell);
+        return false;
+    }
+
+    return true;
 }
 
 void
