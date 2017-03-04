@@ -140,12 +140,6 @@ VRDisplayPuppet::GetSensorState()
 }
 
 VRHMDSensorState
-VRDisplayPuppet::GetImmediateSensorState()
-{
-  return GetSensorState(0.0f);
-}
-
-VRHMDSensorState
 VRDisplayPuppet::GetSensorState(double timeOffset)
 {
   return mSensorState;
