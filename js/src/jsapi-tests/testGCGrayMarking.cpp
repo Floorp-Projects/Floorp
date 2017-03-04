@@ -35,7 +35,6 @@ struct GCPolicy<js::ObjectWeakMap*> {
 
 } // namespace JS
 
-
 class AutoNoAnalysisForTest
 {
   public:
@@ -45,6 +44,7 @@ class AutoNoAnalysisForTest
 BEGIN_TEST(testGCGrayMarking)
 {
     AutoNoAnalysisForTest disableAnalysis;
+    AutoDisableCompactingGC disableCompactingGC(cx);
 
     CHECK(InitGlobals());
     JSAutoCompartment ac(cx, global1);
