@@ -192,11 +192,11 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-colors` [96]
     * test_shorthand_property_getters.html `-colors` [1]
   * -moz-box-{direction,ordinal-group,orient,pack}
-    * test_compute_data_with_start_struct.html `-moz-box-` [8]
-    * test_inherit_computation.html `-box-` [16]
-    * test_inherit_storage.html `-box-` [20]
-    * test_initial_computation.html `-box-` [32]
-    * test_initial_storage.html `-box-` [40]
+    * test_compute_data_with_start_struct.html `-moz-box-` [2]
+    * test_inherit_computation.html `-box-` [4]
+    * test_inherit_storage.html `-box-` [5]
+    * test_initial_computation.html `-box-` [8]
+    * test_initial_storage.html `-box-` [10]
     * test_value_storage.html `-box-` [172]
   * -moz-force-broken-image-icon
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
@@ -422,12 +422,6 @@ Any line which doesn't follow the format above would be ignored like comment.
   * whitespace should be required around '+'/'-' servo/servo#15486
     * test_property_syntax_errors.html `calc(2em+` [6]
     * ... `calc(50%+` [8]
-  * &lt;position&gt; value accepts invalid 3-value forms servo/servo#15488
-    * test_property_syntax_errors.html `'background-position'` [12]
-    * ... `mask-position'` [20]
-    * ... `object-position` [4]
-    * ... `circle(at ` [2]
-    * ... `ellipse(at ` [2]
   * accepts rubbish for second part of value:
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726

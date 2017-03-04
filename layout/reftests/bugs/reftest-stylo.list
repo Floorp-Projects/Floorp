@@ -1724,7 +1724,7 @@ fails == 735481-1.html 735481-1.html
 fails == 748692-1a.html 748692-1a.html
 fails == 748692-1b.html 748692-1b.html
 fails == 748803-1.html 748803-1.html
-fails == 750551-1.html 750551-1.html
+== 750551-1.html 750551-1.html
 fails == 751012-1a.html 751012-1a.html
 fails == 751012-1b.html 751012-1b.html
 == 753329-1.html 753329-1.html
