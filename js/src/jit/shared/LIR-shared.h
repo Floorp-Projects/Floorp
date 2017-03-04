@@ -1910,6 +1910,9 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     bool isConstructing() const {
         return mir()->isConstructing();
     }
+    bool ignoresReturnValue() const {
+        return mir()->ignoresReturnValue();
+    }
 };
 
 // Generates a polymorphic callsite, wherein the function being called is

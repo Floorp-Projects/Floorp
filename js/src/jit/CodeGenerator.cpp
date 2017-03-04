@@ -3931,7 +3931,13 @@ CodeGenerator::visitCallNative(LCallNative* call)
     masm.passABIArg(argContextReg);
     masm.passABIArg(argUintNReg);
     masm.passABIArg(argVpReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, target->native()));
+    JSNative native = target->native();
+    if (call->ignoresReturnValue()) {
+        const JSJitInfo* jitInfo = target->jitInfo();
+        if (jitInfo && jitInfo->type() == JSJitInfo::IgnoresReturnValueNative)
+            native = jitInfo->ignoresReturnValueMethod;
+    }
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, native));
 
     emitTracelogStopEvent(TraceLogger_Call);
 
@@ -4088,13 +4094,15 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue* lir)
     callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, bool, uint32_t, Value*, MutableHandleValue);
+typedef bool (*InvokeFunctionFn)(JSContext*, HandleObject, bool, bool, uint32_t, Value*,
+                                 MutableHandleValue);
 static const VMFunction InvokeFunctionInfo =
     FunctionInfo<InvokeFunctionFn>(InvokeFunction, "InvokeFunction");
 
 void
 CodeGenerator::emitCallInvokeFunction(LInstruction* call, Register calleereg,
-                                      bool constructing, uint32_t argc, uint32_t unusedStack)
+                                      bool constructing, bool ignoresReturnValue,
+                                      uint32_t argc, uint32_t unusedStack)
 {
     // Nestle %esp up to the argument vector.
     // Each path must account for framePushed_ separately, for callVM to be valid.
@@ -4102,6 +4110,7 @@ CodeGenerator::emitCallInvokeFunction(LInstruction* call, Register calleereg,
 
     pushArg(masm.getStackPointer()); // argv.
     pushArg(Imm32(argc));            // argc.
+    pushArg(Imm32(ignoresReturnValue));
     pushArg(Imm32(constructing));    // constructing.
     pushArg(calleereg);              // JSFunction*.
 
@@ -4188,8 +4197,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
 
     // Handle uncompiled or native functions.
     masm.bind(&invoke);
-    emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(),
-                           unusedStack);
+    emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->ignoresReturnValue(),
+                           call->numActualArgs(), unusedStack);
 
     masm.bind(&end);
 
@@ -4244,7 +4253,8 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     masm.checkStackAlignment();
 
     if (target->isClassConstructor() && !call->isConstructing()) {
-        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(), unusedStack);
+        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->ignoresReturnValue(),
+                               call->numActualArgs(), unusedStack);
         return;
     }
 
@@ -4288,7 +4298,8 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     if (call->isConstructing() && target->nargs() > call->numActualArgs())
         emitCallInvokeFunctionShuffleNewTarget(call, calleereg, target->nargs(), unusedStack);
     else
-        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->numActualArgs(), unusedStack);
+        emitCallInvokeFunction(call, calleereg, call->isConstructing(), call->ignoresReturnValue(),
+                               call->numActualArgs(), unusedStack);
 
     masm.bind(&end);
 
@@ -4315,6 +4326,7 @@ CodeGenerator::emitCallInvokeFunction(T* apply, Register extraStackSize)
 
     pushArg(objreg);                           // argv.
     pushArg(ToRegister(apply->getArgc()));     // argc.
+    pushArg(Imm32(false));                     // ignoresReturnValue.
     pushArg(Imm32(false));                     // isConstrucing.
     pushArg(ToRegister(apply->getFunction())); // JSFunction*.
 
