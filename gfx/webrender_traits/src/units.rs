@@ -73,6 +73,10 @@ pub type WorldPoint = TypedPoint2D<f32, WorldPixel>;
 pub type WorldSize = TypedSize2D<f32, WorldPixel>;
 pub type WorldPoint4D = TypedPoint4D<f32, WorldPixel>;
 
+/// Offset in number of tiles.
+#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Tiles;
+pub type TileOffset = TypedPoint2D<u16, Tiles>;
 
 pub type LayoutTransform = TypedMatrix4D<f32, LayoutPixel, LayoutPixel>;
 pub type LayerTransform = TypedMatrix4D<f32, LayerPixel, LayerPixel>;

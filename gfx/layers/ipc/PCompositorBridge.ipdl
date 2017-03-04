@@ -243,7 +243,7 @@ parent:
 
   // The pipelineId is the same as the layersId
   sync PWebRenderBridge(PipelineId pipelineId)
-    returns (TextureFactoryIdentifier textureFactoryIdentifier);
+    returns (TextureFactoryIdentifier textureFactoryIdentifier, uint32_t idNamespace); //XXX: use the WrIdNamespace type
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

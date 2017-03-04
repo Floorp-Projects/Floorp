@@ -838,6 +838,10 @@ mochitest-webgl:
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
     docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            linux64-qr/.*: ['graphics', 'mozilla-central']
+            default: ['all']
     chunks:
         by-test-platform:
             android.*: 10

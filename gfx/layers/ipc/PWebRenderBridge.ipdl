@@ -18,6 +18,8 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
+using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
+using WrAuxiliaryListsDescriptor from "mozilla/webrender/webrender_ffi.h";
 
 namespace mozilla {
 namespace layers {
@@ -31,15 +33,17 @@ parent:
   async ReleaseCompositable(CompositableHandle compositable);
 
   sync Create(IntSize aSize);
-  sync AddImage(IntSize aSize, uint32_t aStride,
-                SurfaceFormat aFormat, ByteBuffer aBytes)
-    returns (ImageKey aOutImageKey);
+  sync AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
+                SurfaceFormat aFormat, ByteBuffer aBytes);
   sync UpdateImage(ImageKey aImageKey, IntSize aSize,
                    SurfaceFormat aFormat, ByteBuffer aBytes);
   sync DeleteImage(ImageKey aImageKey);
+  async AddRawFont(FontKey aFontKey, ByteBuffer aBytes, uint32_t aFontIndex);
   async DPBegin(IntSize aSize);
-  async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
-  sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
+  async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
+              ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc);
+  sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
+                 ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc, ByteBuffer aAux, WrAuxiliaryListsDescriptor aAuxDesc);
   sync DPGetSnapshot(PTexture texture);
   async AddExternalImageId(uint64_t aImageId, CompositableHandle aHandle);
   async AddExternalImageIdForCompositable(uint64_t aImageId, CompositableHandle aHandle);

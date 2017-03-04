@@ -15,14 +15,29 @@ impl FreeListItemId {
 
     #[inline]
     pub fn value(&self) -> u32 {
-        let FreeListItemId(value) = *self;
-        value
+        self.0
     }
 }
 
 pub trait FreeListItem {
+    fn take(&mut self) -> Self;
     fn next_free_id(&self) -> Option<FreeListItemId>;
     fn set_next_free_id(&mut self, id: Option<FreeListItemId>);
+}
+
+struct FreeListIter<'a, T: 'a> {
+    items: &'a [T],
+    cur_index: Option<FreeListItemId>,
+}
+
+impl<'a, T: FreeListItem> Iterator for FreeListIter<'a, T> {
+    type Item = FreeListItemId;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.cur_index.map(|free_id| {
+            self.cur_index = self.items[free_id.0 as usize].next_free_id();
+            free_id
+        })
+    }
 }
 
 pub struct FreeList<T> {
@@ -37,6 +52,13 @@ impl<T: FreeListItem> FreeList<T> {
             items: Vec::new(),
             first_free_index: None,
             alloc_count: 0,
+        }
+    }
+
+    fn free_iter(&self) -> FreeListIter<T> {
+        FreeListIter {
+            items: &self.items,
+            cur_index: self.first_free_index,
         }
     }
 
@@ -58,31 +80,14 @@ impl<T: FreeListItem> FreeList<T> {
         }
     }
 
-    #[allow(dead_code)]
-    fn assert_not_in_free_list(&self, id: FreeListItemId) {
-        let FreeListItemId(id) = id;
-        let mut next_free_id = self.first_free_index;
-
-        while let Some(free_id) = next_free_id {
-            let FreeListItemId(index) = free_id;
-            assert!(index != id);
-            let free_item = &self.items[index as usize];
-            next_free_id = free_item.next_free_id();
-        }
-    }
-
     pub fn get(&self, id: FreeListItemId) -> &T {
-        //self.assert_not_in_free_list(id);
-
-        let FreeListItemId(index) = id;
-        &self.items[index as usize]
+        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
+        &self.items[id.0 as usize]
     }
 
     pub fn get_mut(&mut self, id: FreeListItemId) -> &mut T {
-        //self.assert_not_in_free_list(id);
-
-        let FreeListItemId(index) = id;
-        &mut self.items[index as usize]
+        debug_assert_eq!(self.free_iter().find(|&fid| fid==id), None);
+        &mut self.items[id.0 as usize]
     }
 
     #[allow(dead_code)]
@@ -90,30 +95,27 @@ impl<T: FreeListItem> FreeList<T> {
         self.alloc_count
     }
 
-    // TODO(gw): Actually free items from the texture cache!!
-    #[allow(dead_code)]
-    pub fn free(&mut self, id: FreeListItemId) {
+    pub fn free(&mut self, id: FreeListItemId) -> T {
         self.alloc_count -= 1;
         let FreeListItemId(index) = id;
         let item = &mut self.items[index as usize];
+        let data = item.take();
         item.set_next_free_id(self.first_free_index);
         self.first_free_index = Some(id);
+        data
     }
 
     pub fn for_each_item<F>(&mut self, f: F) where F: Fn(&mut T) {
-        let mut free_ids = HashSet::new();
-
-        let mut next_free_id = self.first_free_index;
-        while let Some(free_id) = next_free_id {
-            free_ids.insert(free_id);
-            let FreeListItemId(index) = free_id;
-            let free_item = &self.items[index as usize];
-            next_free_id = free_item.next_free_id();
-        }
+        //TODO: this could be done much faster. Instead of gathering the free
+        // indices into a set, we could re-order the free list to be ascending.
+        // That is an one-time operation with at most O(nf^2), where
+        //    nf = number of elements in the free list
+        // Then this code would just walk both `items` and the ascending free
+        // list, essentially skipping the free indices for free.
+        let free_ids: HashSet<_> = self.free_iter().collect();
 
         for (index, mut item) in self.items.iter_mut().enumerate() {
-            let id = FreeListItemId(index as u32);
-            if !free_ids.contains(&id) {
+            if !free_ids.contains(&FreeListItemId(index as u32)) {
                 f(&mut item);
             }
         }

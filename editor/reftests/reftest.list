@@ -82,7 +82,7 @@ needs-focus == spellcheck-non-latin-japanese.html spellcheck-non-latin-japanese-
 needs-focus == spellcheck-non-latin-korean.html spellcheck-non-latin-korean-ref.html
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
-fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-2) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
+fuzzy-if(browserIsRemote,255,3) asserts-if(browserIsRemote,0-2) asserts-if(webrender&&!browserIsRemote,0-1) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2824) == 642800.html 642800-ref.html
 == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html

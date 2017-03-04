@@ -29,6 +29,8 @@ class DisplayListBuilder;
 class RendererOGL;
 class RendererEvent;
 
+
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
@@ -41,19 +43,34 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
+  void GenerateFrame();
+
   void SetRootDisplayList(gfx::Color aBgColor,
-                          wr::Epoch aEpoch,
+                          Epoch aEpoch,
                           LayerSize aViewportSize,
-                          DisplayListBuilder& aBuilder);
+                          WrPipelineId pipeline_id,
+                          WrBuiltDisplayListDescriptor dl_descriptor,
+                          uint8_t *dl_data,
+                          size_t dl_size,
+                          WrAuxiliaryListsDescriptor aux_descriptor,
+                          uint8_t *aux_data,
+                          size_t aux_size);
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
-  wr::ImageKey AddImageBuffer(const ImageDescriptor& aDescriptor,
-                              Range<uint8_t> aBytes);
+  void AddImage(wr::ImageKey aKey,
+                const ImageDescriptor& aDescriptor,
+                Range<uint8_t> aBytes);
 
-  wr::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
-                                      gfx::SurfaceFormat aFormat,
-                                      uint64_t aHandle);
+  void AddExternalImageHandle(ImageKey key,
+                              gfx::IntSize aSize,
+                              gfx::SurfaceFormat aFormat,
+                              uint64_t aHandle);
+
+  void AddExternalImageBuffer(ImageKey key,
+                              gfx::IntSize aSize,
+                              gfx::SurfaceFormat aFormat,
+                              uint64_t aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
@@ -61,7 +78,7 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  wr::FontKey AddRawFont(Range<uint8_t> aBytes);
+  void AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes);
 
   void DeleteFont(wr::FontKey aKey);
 
@@ -70,6 +87,7 @@ public:
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
+  WrIdNamespace GetNamespace();
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
 
@@ -96,14 +114,18 @@ protected:
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
 public:
-  DisplayListBuilder(const LayerIntSize& aSize, wr::PipelineId aId);
+  explicit DisplayListBuilder(wr::PipelineId aId);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
 
   void Begin(const LayerIntSize& aSize);
 
-  void End(WebRenderAPI& aApi, wr::Epoch aEpoch);
+  void End();
+  void Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
+                wr::VecU8& dl_data,
+                WrAuxiliaryListsDescriptor& aux_descriptor,
+                wr::VecU8& aux_data);
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,
