@@ -171,6 +171,13 @@ private:
     DrainAborted,
   };
 
+  class SharedShutdownPromiseHolder : public MozPromiseHolder<ShutdownPromise>
+  {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedShutdownPromiseHolder)
+  private:
+    ~SharedShutdownPromiseHolder() { }
+  };
+
   struct DecoderData
   {
     DecoderData(MediaFormatReader* aOwner,
@@ -185,6 +192,7 @@ private:
       , mWaitingForData(false)
       , mWaitingForKey(false)
       , mReceivedNewData(false)
+      , mFlushing(false)
       , mFlushed(true)
       , mDrainState(DrainState::None)
       , mNumOfConsecutiveError(0)
@@ -213,27 +221,7 @@ private:
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
     const char* mDescription;
-    void ShutdownDecoder()
-    {
-      MutexAutoLock lock(mMutex);
-      if (mDecoder) {
-        RefPtr<MediaFormatReader> owner = mOwner;
-        TrackType type = mType == MediaData::AUDIO_DATA
-                         ? TrackType::kAudioTrack
-                         : TrackType::kVideoTrack;
-        mDecoder->Shutdown()
-          ->Then(mOwner->OwnerThread(), __func__,
-                 [owner, this, type]() {
-                   mShutdownRequest.Complete();
-                   mShutdownPromise.ResolveIfExists(true, __func__);
-                   owner->ScheduleUpdate(type);
-                 },
-                 []() { MOZ_RELEASE_ASSERT(false, "Can't ever be here"); })
-          ->Track(mShutdownRequest);
-      }
-      mDescription = "shutdown";
-      mDecoder = nullptr;
-    }
+    void ShutdownDecoder();
 
     // Only accessed from reader's task queue.
     bool mUpdateScheduled;
@@ -264,11 +252,10 @@ private:
 
     // MediaDataDecoder handler's variables.
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDecodeRequest;
-    MozPromiseRequestHolder<MediaDataDecoder::FlushPromise> mFlushRequest;
+    bool mFlushing; // True if flush is in action.
     // Set to true if the last operation run on the decoder was a flush.
     bool mFlushed;
-    MozPromiseHolder<ShutdownPromise> mShutdownPromise;
-    MozPromiseRequestHolder<ShutdownPromise> mShutdownRequest;
+    RefPtr<SharedShutdownPromiseHolder> mShutdownPromise;
 
     MozPromiseRequestHolder<MediaDataDecoder::DecodePromise> mDrainRequest;
     DrainState mDrainState;
@@ -340,47 +327,7 @@ private:
 
     // Flush the decoder if present and reset decoding related data.
     // Following a flush, the decoder is ready to accept any new data.
-    void Flush()
-    {
-      if (mFlushRequest.Exists() || mFlushed) {
-        // Flush still pending or already flushed, nothing more to do.
-        return;
-      }
-      mDecodeRequest.DisconnectIfExists();
-      mDrainRequest.DisconnectIfExists();
-      mDrainState = DrainState::None;
-      CancelWaitingForKey();
-      mOutput.Clear();
-      mNumSamplesInput = 0;
-      mNumSamplesOutput = 0;
-      mSizeOfQueue = 0;
-      if (mDecoder && !mFlushed) {
-        RefPtr<MediaFormatReader> owner = mOwner;
-        TrackType type = mType == MediaData::AUDIO_DATA
-                         ? TrackType::kAudioTrack
-                         : TrackType::kVideoTrack;
-        mDecoder->Flush()
-          ->Then(mOwner->OwnerThread(), __func__,
-                 [owner, type, this]() {
-                   mFlushRequest.Complete();
-                   if (!mShutdownPromise.IsEmpty()) {
-                     ShutdownDecoder();
-                     return;
-                   }
-                   owner->ScheduleUpdate(type);
-                 },
-                 [owner, type, this](const MediaResult& aError) {
-                   mFlushRequest.Complete();
-                   if (!mShutdownPromise.IsEmpty()) {
-                     ShutdownDecoder();
-                     return;
-                   }
-                   owner->NotifyError(type, aError);
-                 })
-          ->Track(mFlushRequest);
-      }
-      mFlushed = true;
-    }
+    void Flush();
 
     bool CancelWaitingForKey()
     {
@@ -608,7 +555,6 @@ private:
   bool mHasStartTime = false;
 
   void ShutdownDecoder(TrackType aTrack);
-  RefPtr<ShutdownPromise> ShutdownDecoderWithPromise(TrackType aTrack);
   RefPtr<ShutdownPromise> TearDownDecoders();
 };
 
