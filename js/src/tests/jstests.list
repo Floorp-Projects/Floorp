@@ -353,38 +353,12 @@ skip script test262/built-ins/TypedArrays/typedarray-arg-same-ctor-buffer-ctor-s
 skip script test262/built-ins/WeakMap/proto-from-ctor-realm.js
 skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317400
-skip script test262/built-ins/Function/prototype/toString/AsyncFunction.js
-skip script test262/built-ins/Function/prototype/toString/Function.js
-skip script test262/built-ins/Function/prototype/toString/GeneratorFunction.js
-skip script test262/built-ins/Function/prototype/toString/async-function-declaration.js
-skip script test262/built-ins/Function/prototype/toString/async-function-expression.js
-skip script test262/built-ins/Function/prototype/toString/async-method.js
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1216630
 skip script test262/built-ins/Function/prototype/toString/class-declaration-complex-heritage.js
 skip script test262/built-ins/Function/prototype/toString/class-declaration-explicit-ctor.js
 skip script test262/built-ins/Function/prototype/toString/class-declaration-implicit-ctor.js
 skip script test262/built-ins/Function/prototype/toString/class-expression-explicit-ctor.js
 skip script test262/built-ins/Function/prototype/toString/class-expression-implicit-ctor.js
-skip script test262/built-ins/Function/prototype/toString/function-declaration-non-simple-parameter-list.js
-skip script test262/built-ins/Function/prototype/toString/function-declaration.js
-skip script test262/built-ins/Function/prototype/toString/function-expression.js
-skip script test262/built-ins/Function/prototype/toString/generator-function-declaration.js
-skip script test262/built-ins/Function/prototype/toString/generator-function-expression.js
-skip script test262/built-ins/Function/prototype/toString/generator-method.js
-skip script test262/built-ins/Function/prototype/toString/getter-class-static.js
-skip script test262/built-ins/Function/prototype/toString/getter-class.js
-skip script test262/built-ins/Function/prototype/toString/getter-object.js
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js
-skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-LF.js
-skip script test262/built-ins/Function/prototype/toString/method-class-static.js
-skip script test262/built-ins/Function/prototype/toString/method-class.js
-skip script test262/built-ins/Function/prototype/toString/method-computed-property-name.js
-skip script test262/built-ins/Function/prototype/toString/method-object.js
-skip script test262/built-ins/Function/prototype/toString/setter-class-static.js
-skip script test262/built-ins/Function/prototype/toString/setter-class.js
-skip script test262/built-ins/Function/prototype/toString/setter-object.js
-skip script test262/built-ins/Function/prototype/toString/unicode.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317397
 skip script test262/built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js
@@ -559,3 +533,11 @@ skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-t
 # Expects TypeError, but RangeError thrown.
 skip script test262/built-ins/DataView/prototype/setFloat64/detached-buffer-after-toindex-byteoffset.js
 skip script test262/built-ins/DataView/prototype/setInt16/detached-buffer-after-toindex-byteoffset.js
+
+# Removed from the proposal: https://github.com/tc39/Function-prototype-toString-revision/issues/19
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR-LF.js
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js
+skip script test262/built-ins/Function/prototype/toString/line-terminator-normalisation-LF.js
+
+# https://github.com/tc39/Function-prototype-toString-revision/issues/20
+skip script test262/built-ins/Function/prototype/toString/AsyncFunction.js

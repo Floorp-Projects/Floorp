@@ -1686,7 +1686,7 @@ FunctionConstructor(JSContext* cx, const CallArgs& args, GeneratorKind generator
 
             if (i < args.length() - 2) {
                 // Step 9.d.iii.
-                if (!sb.append(", "))
+                if (!sb.append(","))
                     return false;
             }
         }
