@@ -10073,10 +10073,13 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
     aStyleSet.ResolveAnonymousBoxStyle(pseudo, StyleContext());
 
   // Figure out whether we have an actual change.  It's important that we do
-  // this, even though all the child's changes are due to properties it inherits
-  // from us, because it's possible that no one ever asked us for those style
-  // structs and hence changes to them aren't reflected in aHintForThisFrame at
-  // all.
+  // this, for several reasons:
+  //
+  // 1) Even if all the child's changes are due to properties it inherits from
+  //    us, it's possible that no one ever asked us for those style structs and
+  //    hence changes to them aren't reflected in aHintForThisFrame at all.
+  // 2) Extensions can add/remove stylesheets that change the styles of
+  //    anonymous boxed directly.
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
   nsChangeHint childHint = aChildFrame->StyleContext()->CalcStyleDifference(
     newContext,
