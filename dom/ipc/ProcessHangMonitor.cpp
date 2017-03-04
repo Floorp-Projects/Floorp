@@ -275,11 +275,7 @@ private:
   nsDataHashtable<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
   Mutex mBrowserCrashDumpHashLock;
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory;
-
-  static bool sShouldForcePaint;
 };
-
-bool HangMonitorParent::sShouldForcePaint = true;
 
 } // namespace
 
@@ -579,13 +575,6 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mReportHangs = mozilla::Preferences::GetBool("dom.ipc.reportProcessHangs", false);
-
-  static bool sInited = false;
-  if (!sInited) {
-    sInited = true;
-    Preferences::AddBoolVarCache(&sShouldForcePaint,
-                                 "browser.tabs.remote.force-paint", true);
-  }
 }
 
 HangMonitorParent::~HangMonitorParent()
@@ -643,11 +632,9 @@ void
 HangMonitorParent::ForcePaint(dom::TabParent* aTab, uint64_t aLayerObserverEpoch)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (sShouldForcePaint) {
-    TabId id = aTab->GetTabId();
-    MonitorLoop()->PostTask(NewNonOwningRunnableMethod<TabId, uint64_t>(
-                              this, &HangMonitorParent::ForcePaintOnThread, id, aLayerObserverEpoch));
-  }
+  TabId id = aTab->GetTabId();
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod<TabId, uint64_t>(
+                            this, &HangMonitorParent::ForcePaintOnThread, id, aLayerObserverEpoch));
 }
 
 void

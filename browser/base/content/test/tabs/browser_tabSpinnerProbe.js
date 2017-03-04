@@ -85,15 +85,7 @@ function* testProbe(aProbe) {
 
 add_task(function* setup() {
   yield SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.ipc.processCount", 1],
-      // We can interrupt JS to paint now, which is great for
-      // users, but bad for testing spinners. We temporarily
-      // disable that feature for this test so that we can
-      // easily get ourselves into a predictable tab spinner
-      // state.
-      ["browser.tabs.remote.force-paint", false],
-    ]
+    set: [["dom.ipc.processCount", 1]]
   });
 });
 
