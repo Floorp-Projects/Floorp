@@ -6,10 +6,8 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
