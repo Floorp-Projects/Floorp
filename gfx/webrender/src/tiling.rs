@@ -808,22 +808,22 @@ impl ClipBatcher {
                         self.rectangles.extend(&[
                             CacheClipInstance {
                                 address: GpuStoreAddress(offset),
-                                segment: MaskSegment::Corner_TopLeft as i32,
+                                segment: MaskSegment::TopLeftCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
                                 address: GpuStoreAddress(offset),
-                                segment: MaskSegment::Corner_TopRight as i32,
+                                segment: MaskSegment::TopRightCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
                                 address: GpuStoreAddress(offset),
-                                segment: MaskSegment::Corner_BottomLeft as i32,
+                                segment: MaskSegment::BottomLeftCorner as i32,
                                 ..instance
                             },
                             CacheClipInstance {
                                 address: GpuStoreAddress(offset),
-                                segment: MaskSegment::Corner_BottomRight as i32,
+                                segment: MaskSegment::BottomRightCorner as i32,
                                 ..instance
                             },
                         ]);
@@ -832,7 +832,7 @@ impl ClipBatcher {
             }
 
             if let Some((ref mask, address)) = info.image {
-                let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto);
+                let cache_item = resource_cache.get_cached_image(mask.image, ImageRendering::Auto, None);
                 self.images.entry(cache_item.texture_id)
                            .or_insert(Vec::new())
                            .push(CacheClipInstance {

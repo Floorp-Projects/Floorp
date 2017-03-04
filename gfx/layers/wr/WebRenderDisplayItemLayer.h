@@ -39,6 +39,7 @@ public:
 
 private:
   nsTArray<WebRenderCommand> mCommands;
+  nsTArray<WebRenderParentCommand> mParentCommands;
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;
   uint64_t mExternalImageId;
