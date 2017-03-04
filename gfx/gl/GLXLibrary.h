@@ -7,6 +7,7 @@
 #define GFX_GLXLIBRARY_H
 
 #include "GLContextTypes.h"
+#include "prlink.h"
 typedef realGLboolean GLboolean;
 
 // stuff from glx.h
@@ -16,10 +17,6 @@ typedef XID GLXPixmap;
 typedef XID GLXDrawable;
 /* GLX 1.3 and later */
 typedef struct __GLXFBConfigRec* GLXFBConfig;
-typedef XID GLXFBConfigID;
-typedef XID GLXContextID;
-typedef XID GLXWindow;
-typedef XID GLXPbuffer;
 // end of stuff from glx.h
 #include "prenv.h"
 
@@ -32,38 +29,18 @@ namespace gl {
 class GLXLibrary
 {
 public:
-    constexpr GLXLibrary()
-    : xDestroyContextInternal(nullptr)
-    , xMakeCurrentInternal(nullptr)
-    , xGetCurrentContextInternal(nullptr)
-    , xGetProcAddressInternal(nullptr)
-    , xChooseFBConfigInternal(nullptr)
-    , xGetFBConfigsInternal(nullptr)
-    , xCreateNewContextInternal(nullptr)
-    , xGetFBConfigAttribInternal(nullptr)
-    , xSwapBuffersInternal(nullptr)
-    , xQueryExtensionsStringInternal(nullptr)
-    , xGetClientStringInternal(nullptr)
-    , xQueryServerStringInternal(nullptr)
-    , xCreatePixmapInternal(nullptr)
-    , xCreateGLXPixmapWithConfigInternal(nullptr)
-    , xDestroyPixmapInternal(nullptr)
-    , xQueryVersionInternal(nullptr)
-    , xBindTexImageInternal(nullptr)
-    , xReleaseTexImageInternal(nullptr)
-    , xWaitGLInternal(nullptr)
-    , xWaitXInternal(nullptr)
-    , xCreateContextAttribsInternal(nullptr)
-    , xGetVideoSyncInternal(nullptr)
-    , xWaitVideoSyncInternal(nullptr)
-    , xSwapIntervalInternal(nullptr)
-    , mInitialized(false), mTriedInitializing(false)
-    , mUseTextureFromPixmap(false), mDebug(false)
-    , mHasRobustness(false), mHasCreateContextAttribs(false)
-    , mHasVideoSync(false)
-    , mIsATI(false), mIsNVIDIA(false)
-    , mClientIsMesa(false)
-    , mOGLLibrary(nullptr)
+    GLXLibrary()
+        : mSymbols{nullptr}
+        , mInitialized(false)
+        , mTriedInitializing(false)
+        , mUseTextureFromPixmap(false)
+        , mDebug(false)
+        , mHasRobustness(false)
+        , mHasCreateContextAttribs(false)
+        , mHasVideoSync(false)
+        , mIsATI(false), mIsNVIDIA(false)
+        , mClientIsMesa(false)
+        , mOGLLibrary(nullptr)
     {}
 
     void xDestroyContext(Display* display, GLXContext context);
@@ -72,7 +49,6 @@ public:
                       GLXContext context);
 
     GLXContext xGetCurrentContext();
-    static void* xGetProcAddress(const char* procName);
     GLXFBConfig* xChooseFBConfig(Display* display,
                                  int screen,
                                  const int* attrib_list,
@@ -140,108 +116,47 @@ public:
     bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
     bool SupportsVideoSync();
-    bool SupportsSwapControl() const { return bool(xSwapIntervalInternal); }
+    bool SupportsSwapControl() const { return bool(mSymbols.fSwapIntervalEXT); }
     bool IsATI() { return mIsATI; }
     bool IsMesa() { return mClientIsMesa; }
 
+    PRFuncPtr GetGetProcAddress() const {
+        return (PRFuncPtr)mSymbols.fGetProcAddress;
+    }
+
 private:
-
-    typedef void (GLAPIENTRY * PFNGLXDESTROYCONTEXTPROC) (Display*,
-                                                          GLXContext);
-    PFNGLXDESTROYCONTEXTPROC xDestroyContextInternal;
-    typedef Bool (GLAPIENTRY * PFNGLXMAKECURRENTPROC) (Display*,
-                                                       GLXDrawable,
-                                                       GLXContext);
-    PFNGLXMAKECURRENTPROC xMakeCurrentInternal;
-    typedef GLXContext (GLAPIENTRY * PFNGLXGETCURRENTCONTEXT) ();
-    PFNGLXGETCURRENTCONTEXT xGetCurrentContextInternal;
-    typedef void* (GLAPIENTRY * PFNGLXGETPROCADDRESSPROC) (const char*);
-    PFNGLXGETPROCADDRESSPROC xGetProcAddressInternal;
-    typedef GLXFBConfig* (GLAPIENTRY * PFNGLXCHOOSEFBCONFIG) (Display*,
-                                                              int,
-                                                              const int*,
-                                                              int*);
-    PFNGLXCHOOSEFBCONFIG xChooseFBConfigInternal;
-    typedef GLXFBConfig* (GLAPIENTRY * PFNGLXGETFBCONFIGS) (Display*,
-                                                            int,
-                                                            int*);
-    PFNGLXGETFBCONFIGS xGetFBConfigsInternal;
-    typedef GLXContext (GLAPIENTRY * PFNGLXCREATENEWCONTEXT) (Display*,
-                                                              GLXFBConfig,
-                                                              int,
-                                                              GLXContext,
-                                                              Bool);
-    PFNGLXCREATENEWCONTEXT xCreateNewContextInternal;
-    typedef int (GLAPIENTRY * PFNGLXGETFBCONFIGATTRIB) (Display*,
-                                                        GLXFBConfig,
-                                                        int,
-                                                        int*);
-    PFNGLXGETFBCONFIGATTRIB xGetFBConfigAttribInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXSWAPBUFFERS) (Display*,
-                                                   GLXDrawable);
-    PFNGLXSWAPBUFFERS xSwapBuffersInternal;
-    typedef const char* (GLAPIENTRY * PFNGLXQUERYEXTENSIONSSTRING) (Display*,
-                                                                    int);
-    PFNGLXQUERYEXTENSIONSSTRING xQueryExtensionsStringInternal;
-    typedef const char* (GLAPIENTRY * PFNGLXGETCLIENTSTRING) (Display*,
-                                                              int);
-    PFNGLXGETCLIENTSTRING xGetClientStringInternal;
-    typedef const char* (GLAPIENTRY * PFNGLXQUERYSERVERSTRING) (Display*,
-                                                                int,
-                                                                int);
-    PFNGLXQUERYSERVERSTRING xQueryServerStringInternal;
-
-    typedef GLXPixmap (GLAPIENTRY * PFNGLXCREATEPIXMAP) (Display*,
-                                                         GLXFBConfig,
-                                                         Pixmap,
-                                                         const int*);
-    PFNGLXCREATEPIXMAP xCreatePixmapInternal;
-    typedef GLXPixmap (GLAPIENTRY * PFNGLXCREATEGLXPIXMAPWITHCONFIG)
-                                                        (Display*,
-                                                         GLXFBConfig,
-                                                         Pixmap);
-    PFNGLXCREATEGLXPIXMAPWITHCONFIG xCreateGLXPixmapWithConfigInternal;
-    typedef void (GLAPIENTRY * PFNGLXDESTROYPIXMAP) (Display*,
-                                                     GLXPixmap);
-    PFNGLXDESTROYPIXMAP xDestroyPixmapInternal;
-    typedef Bool (GLAPIENTRY * PFNGLXQUERYVERSION) (Display*,
-                                                    int*,
-                                                    int*);
-    PFNGLXQUERYVERSION xQueryVersionInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXBINDTEXIMAGE) (Display*,
-                                                    GLXDrawable,
-                                                    int,
-                                                    const int*);
-    PFNGLXBINDTEXIMAGE xBindTexImageInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXRELEASETEXIMAGE) (Display*,
-                                                       GLXDrawable,
-                                                       int);
-    PFNGLXRELEASETEXIMAGE xReleaseTexImageInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXWAITGL) ();
-    PFNGLXWAITGL xWaitGLInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXWAITX) ();
-    PFNGLXWAITGL xWaitXInternal;
-
-    typedef GLXContext (GLAPIENTRY * PFNGLXCREATECONTEXTATTRIBS) (Display*,
-                                                                  GLXFBConfig,
-                                                                  GLXContext,
-                                                                  Bool,
-                                                                  const int*);
-    PFNGLXCREATECONTEXTATTRIBS xCreateContextAttribsInternal;
-
-    typedef int (GLAPIENTRY * PFNGLXGETVIDEOSYNCSGI) (unsigned int* count);
-    PFNGLXGETVIDEOSYNCSGI xGetVideoSyncInternal;
-
-    typedef int (GLAPIENTRY * PFNGLXWAITVIDEOSYNCSGI) (int divisor, int remainder, unsigned int* count);
-    PFNGLXWAITVIDEOSYNCSGI xWaitVideoSyncInternal;
-
-    typedef void (GLAPIENTRY * PFNGLXSWAPINTERVALEXT) (Display* dpy, GLXDrawable drawable, int interval);
-    PFNGLXSWAPINTERVALEXT xSwapIntervalInternal;
+    struct {
+        void         (GLAPIENTRY *fDestroyContext) (Display*, GLXContext);
+        Bool         (GLAPIENTRY *fMakeCurrent) (Display*, GLXDrawable, GLXContext);
+        GLXContext   (GLAPIENTRY *fGetCurrentContext) ();
+        void*        (GLAPIENTRY *fGetProcAddress) (const char*);
+        GLXFBConfig* (GLAPIENTRY *fChooseFBConfig) (Display*, int, const int*, int*);
+        GLXFBConfig* (GLAPIENTRY *fGetFBConfigs) (Display*, int, int*);
+        GLXContext   (GLAPIENTRY *fCreateNewContext) (Display*, GLXFBConfig, int,
+                                                      GLXContext, Bool);
+        int          (GLAPIENTRY *fGetFBConfigAttrib) (Display*, GLXFBConfig, int, int*);
+        void         (GLAPIENTRY *fSwapBuffers) (Display*, GLXDrawable);
+        const char*  (GLAPIENTRY *fQueryExtensionsString) (Display*, int);
+        const char*  (GLAPIENTRY *fGetClientString) (Display*, int);
+        const char*  (GLAPIENTRY *fQueryServerString) (Display*, int, int);
+        GLXPixmap    (GLAPIENTRY *fCreatePixmap) (Display*, GLXFBConfig, Pixmap,
+                                                  const int*);
+        GLXPixmap    (GLAPIENTRY *fCreateGLXPixmapWithConfig) (Display*, GLXFBConfig,
+                                                              Pixmap);
+        void         (GLAPIENTRY *fDestroyPixmap) (Display*, GLXPixmap);
+        Bool         (GLAPIENTRY *fQueryVersion) (Display*, int*, int*);
+        void         (GLAPIENTRY *fWaitGL) ();
+        void         (GLAPIENTRY *fWaitX) ();
+        void         (GLAPIENTRY *fBindTexImageEXT) (Display*, GLXDrawable, int,
+                                                     const int*);
+        void         (GLAPIENTRY *fReleaseTexImageEXT) (Display*, GLXDrawable, int);
+        GLXContext   (GLAPIENTRY *fCreateContextAttribsARB) (Display*, GLXFBConfig,
+                                                             GLXContext, Bool,
+                                                             const int*);
+        int          (GLAPIENTRY *fGetVideoSyncSGI) (unsigned int*);
+        int          (GLAPIENTRY *fWaitVideoSyncSGI) (int, int, unsigned int*);
+        void         (GLAPIENTRY *fSwapIntervalEXT) (Display*, GLXDrawable, int);
+    } mSymbols;
 
 #ifdef DEBUG
     void BeforeGLXCall();
