@@ -24,20 +24,7 @@ public:
   }
 
   NS_DECL_ISUPPORTS
-
-  // nsILayoutHistoryState
-  virtual void
-  AddState(const nsCString& aKey, nsPresState* aState) override;
-  virtual nsPresState*
-  GetState(const nsCString& aKey) override;
-  virtual void
-  RemoveState(const nsCString& aKey) override;
-  virtual bool
-  HasStates() const override;
-  virtual void
-  SetScrollPositionOnly(const bool aFlag) override;
-  virtual void
-  ResetScrollState() override;
+  NS_DECL_NSILAYOUTHISTORYSTATE
 
 private:
   ~nsLayoutHistoryState() {}
@@ -85,7 +72,7 @@ nsLayoutHistoryState::RemoveState(const nsCString& aKey)
 }
 
 bool
-nsLayoutHistoryState::HasStates() const
+nsLayoutHistoryState::HasStates()
 {
   return mStates.Count() != 0;
 }
