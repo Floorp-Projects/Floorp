@@ -480,13 +480,13 @@ partial interface Window {
 
 // https://webaudio.github.io/web-audio-api/#widl-Window-audioWorklet
 partial interface Window {
-  [Pref="dom.audioWorklet.enabled", Throws, SameObject]
+  [Pref="dom.audioWorklet.enabled", Throws]
   readonly attribute Worklet audioWorklet;
 };
 
 // https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
 partial interface Window {
-    [Pref="dom.paintWorklet.enabled", Throws, SameObject]
+    [Pref="dom.paintWorklet.enabled", Throws]
     readonly attribute Worklet paintWorklet;
 };
 
