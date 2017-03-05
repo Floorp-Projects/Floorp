@@ -65,6 +65,7 @@ const RequestListItem = createClass({
     index: PropTypes.number.isRequired,
     isSelected: PropTypes.bool.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
+    fromCache: PropTypes.bool.isRequired,
     onContextMenu: PropTypes.func.isRequired,
     onFocusedNodeChange: PropTypes.func,
     onMouseDown: PropTypes.func.isRequired,
@@ -97,6 +98,7 @@ const RequestListItem = createClass({
       index,
       isSelected,
       firstRequestStartedMillis,
+      fromCache,
       onContextMenu,
       onMouseDown,
       onSecurityIconClick
@@ -106,6 +108,11 @@ const RequestListItem = createClass({
     if (isSelected) {
       classList.push("selected");
     }
+
+    if (fromCache) {
+      classList.push("fromCache");
+    }
+
     classList.push(index % 2 ? "odd" : "even");
 
     return (
@@ -383,11 +390,11 @@ const TransferredSizeColumn = createFactory(createClass({
   },
 
   render() {
-    const { transferredSize, fromCache, fromServiceWorker } = this.props.item;
+    const { transferredSize, fromCache, fromServiceWorker, status } = this.props.item;
 
     let text;
     let className = "subitem-label";
-    if (fromCache) {
+    if (fromCache || status === "304") {
       text = L10N.getStr("networkMenu.sizeCached");
       className += " theme-comment";
     } else if (fromServiceWorker) {
