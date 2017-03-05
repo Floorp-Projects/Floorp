@@ -18,6 +18,7 @@
 #include "nsPresContext.h"
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
+#include "nsContentUtils.h"
 #include "nsCSSRules.h"
 #include "mozilla/GeckoRestyleManager.h"
 #include "nsLayoutUtils.h"
@@ -191,7 +192,8 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
   // Get the nsAnimationManager so we can queue events on it
-  nsPresContext* presContext = mOwningElement.GetRenderedPresContext();
+  nsPresContext* presContext =
+    nsContentUtils::GetContextForContent(owningElement);
   if (!presContext) {
     return;
   }
