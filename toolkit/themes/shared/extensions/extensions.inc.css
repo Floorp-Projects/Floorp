@@ -1010,11 +1010,6 @@ button.button-link {
   margin: 0 6px;
 }
 
-button.button-link:not(:-moz-focusring) > .button-box {
-  border-width: 0;
-  margin: 1px;
-}
-
 button.button-link:hover {
   background-color: transparent;
   color: #178ce5;
