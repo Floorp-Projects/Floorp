@@ -3904,12 +3904,15 @@
             // This function is called after all the main state changes to
             // make sure we display the right tab.
             updateDisplay() {
-              let shouldBeBlank = this.pendingTabChild.has(
-                this.requestedTab.linkedBrowser);
+              let requestedTabState = this.getTabState(this.requestedTab);
+
+              let shouldBeBlank =
+                this.pendingTabChild.has(this.requestedTab.linkedBrowser) &&
+                requestedTabState == this.STATE_LOADING;
 
               // Figure out which tab we actually want visible right now.
               let showTab = null;
-              if (this.getTabState(this.requestedTab) != this.STATE_LOADED &&
+              if (requestedTabState != this.STATE_LOADED &&
                   this.lastVisibleTab && this.loadTimer && !shouldBeBlank) {
                 // If we can't show the requestedTab, and lastVisibleTab is
                 // available, show it.
@@ -4315,6 +4318,8 @@
             // of painting it right away. We'll paint a blank
             // tab instead.
             onTabChildNotReady(browser) {
+              this.assert(browser.isRemoteBrowser);
+
               let tab = this.tabbrowser.getTabForBrowser(browser);
 
               this.assert(this.getTabState(tab) == this.STATE_LOADING);
