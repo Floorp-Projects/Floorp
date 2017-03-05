@@ -129,8 +129,6 @@ public:
     aPseudoType = mPseudoType;
   }
 
-  nsPresContext* GetRenderedPresContext() const;
-
 private:
   dom::Element* MOZ_NON_OWNING_REF mElement;
   CSSPseudoElementType             mPseudoType;
