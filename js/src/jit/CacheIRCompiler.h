@@ -543,6 +543,12 @@ class MOZ_RAII CacheIRCompiler
     CacheRegisterAllocator allocator;
     Vector<FailurePath, 4, SystemAllocPolicy> failurePaths;
 
+    // Float registers that are live. Registers not in this set can be
+    // clobbered and don't need to be saved before performing a VM call.
+    // Doing this for non-float registers is a bit more complicated because
+    // the IC register allocator allocates GPRs.
+    LiveFloatRegisterSet liveFloatRegs_;
+
     Maybe<TypedOrValueRegister> outputUnchecked_;
     Mode mode_;
 
@@ -554,6 +560,7 @@ class MOZ_RAII CacheIRCompiler
         reader(writer),
         writer_(writer),
         allocator(writer_),
+        liveFloatRegs_(FloatRegisterSet::All()),
         mode_(mode)
     {
         MOZ_ASSERT(!writer.failed());
@@ -561,6 +568,12 @@ class MOZ_RAII CacheIRCompiler
 
     MOZ_MUST_USE bool addFailurePath(FailurePath** failure);
     MOZ_MUST_USE bool emitFailurePath(size_t i);
+
+    // Returns the set of volatile float registers that are live. These
+    // registers need to be saved when making non-GC calls with callWithABI.
+    FloatRegisterSet liveVolatileFloatRegs() const {
+        return FloatRegisterSet::Intersect(liveFloatRegs_.set(), FloatRegisterSet::Volatile());
+    }
 
     void emitLoadTypedObjectResultShared(const Address& fieldAddr, Register scratch,
                                          TypedThingLayout layout, uint32_t typeDescr,
