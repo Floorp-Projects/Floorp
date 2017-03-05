@@ -591,6 +591,10 @@
   background-color: var(--theme-selection-background-semitransparent);
 }
 
+.request-list-item.fromCache > .requests-list-subitem:not(.requests-list-waterfall) {
+    opacity: 0.6;
+}
+
 .theme-firebug .request-list-item:not(.selected):hover {
   background: #EFEFEF;
 }

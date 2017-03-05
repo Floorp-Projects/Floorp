@@ -42,6 +42,7 @@ const RequestListContent = createClass({
     dispatch: PropTypes.func.isRequired,
     displayedRequests: PropTypes.object.isRequired,
     firstRequestStartedMillis: PropTypes.number.isRequired,
+    fromCache: PropTypes.bool.isRequired,
     onItemMouseDown: PropTypes.func.isRequired,
     onSecurityIconClick: PropTypes.func.isRequired,
     onSelectDelta: PropTypes.func.isRequired,
@@ -240,6 +241,7 @@ const RequestListContent = createClass({
       },
         displayedRequests.map((item, index) => RequestListItem({
           firstRequestStartedMillis,
+          fromCache: item.status === "304" || item.fromCache,
           item,
           index,
           isSelected: item.id === selectedRequestId,
