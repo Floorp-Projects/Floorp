@@ -8,7 +8,6 @@
 #define nsPKCS11Slot_h
 
 #include "ScopedNSSTypes.h"
-#include "nsICryptoFIPSInfo.h"
 #include "nsIPKCS11Module.h"
 #include "nsIPKCS11ModuleDB.h"
 #include "nsIPKCS11Slot.h"
@@ -64,13 +63,11 @@ private:
 };
 
 class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
-                       , public nsICryptoFIPSInfo
                        , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULEDB
-  NS_DECL_NSICRYPTOFIPSINFO
 
   nsPKCS11ModuleDB();
 
