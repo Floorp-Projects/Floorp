@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
-  ignoreEvent,
 } = ExtensionUtils;
 
 const defaultTransitionTypes = {
