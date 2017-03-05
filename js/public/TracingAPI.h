@@ -86,6 +86,7 @@ class JS_PUBLIC_API(JSTracer)
     bool isTenuringTracer() const { return tag_ == TracerKindTag::Tenuring; }
     bool isCallbackTracer() const { return tag_ == TracerKindTag::Callback; }
     inline JS::CallbackTracer* asCallbackTracer();
+    bool traceWeakEdges() const { return traceWeakEdges_; }
 #ifdef DEBUG
     bool checkEdges() { return checkEdges_; }
 #endif
@@ -99,6 +100,7 @@ class JS_PUBLIC_API(JSTracer)
       , checkEdges_(true)
 #endif
       , tag_(tag)
+      , traceWeakEdges_(true)
     {}
 
 #ifdef DEBUG
@@ -117,6 +119,7 @@ class JS_PUBLIC_API(JSTracer)
 
   protected:
     TracerKindTag tag_;
+    bool traceWeakEdges_;
 };
 
 namespace JS {
@@ -231,6 +234,11 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
     void dispatchToOnEdge(js::jit::JitCode** codep) { onJitCodeEdge(codep); }
     void dispatchToOnEdge(js::LazyScript** lazyp) { onLazyScriptEdge(lazyp); }
     void dispatchToOnEdge(js::Scope** scopep) { onScopeEdge(scopep); }
+
+  protected:
+    void setTraceWeakEdges(bool value) {
+        traceWeakEdges_ = value;
+    }
 
   private:
     friend class AutoTracingName;
