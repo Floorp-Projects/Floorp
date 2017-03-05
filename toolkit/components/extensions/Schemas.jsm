@@ -1304,7 +1304,8 @@ SubModuleType = class SubModuleType extends Type {
 
     // The path we pass in here is only used for error messages.
     path = [...path, schema.id];
-    let functions = schema.functions.map(fun => FunctionEntry.parseSchema(fun, path));
+    let functions = schema.functions.filter(fun => !fun.unsupported)
+                          .map(fun => FunctionEntry.parseSchema(fun, path));
 
     return new this(functions);
   }
@@ -1750,10 +1751,6 @@ FunctionEntry = class FunctionEntry extends CallEntry {
   }
 
   getDescriptor(path, context) {
-    if (this.unsupported) {
-      return;
-    }
-
     if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
       return;
     }
@@ -1832,10 +1829,6 @@ class Event extends CallEntry {
   }
 
   getDescriptor(path, context) {
-    if (this.unsupported) {
-      return;
-    }
-
     if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
       return;
     }
@@ -1922,7 +1915,7 @@ class Namespace extends Map {
    * Initializes the keys of this namespace based on the schema objects
    * added via previous `addSchema` calls.
    */
-  init() {
+  init() { // eslint-disable-line complexity
     if (!this._lazySchemas) {
       return;
     }
@@ -1933,7 +1926,9 @@ class Namespace extends Map {
 
     for (let schema of this._lazySchemas) {
       for (let type of schema.types || []) {
-        this.types.get(type.$extend || type.id).push(type);
+        if (!type.unsupported) {
+          this.types.get(type.$extend || type.id).push(type);
+        }
       }
 
       for (let [name, prop] of Object.entries(schema.properties || {})) {
@@ -1943,11 +1938,15 @@ class Namespace extends Map {
       }
 
       for (let fun of schema.functions || []) {
-        this.functions.get(fun.name).push(fun);
+        if (!fun.unsupported) {
+          this.functions.get(fun.name).push(fun);
+        }
       }
 
       for (let event of schema.events || []) {
-        this.events.get(event.name).push(event);
+        if (!event.unsupported) {
+          this.events.get(event.name).push(event);
+        }
       }
     }
 
