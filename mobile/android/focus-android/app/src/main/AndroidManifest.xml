@@ -48,7 +48,8 @@
 
         <activity android:name=".activity.HelpActivity" />
 
-        <activity android:name=".activity.RightsActivity" />
+        <activity android:name=".activity.RightsActivity"
+            android:label="@string/your_rights"/>
 
         <activity android:name=".activity.InfoActivity"
                   android:theme="@style/SettingsTheme"/>

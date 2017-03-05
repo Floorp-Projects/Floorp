@@ -1,0 +1,33 @@
+body, html {
+    background: #221F1F;
+    color: #FFFFFF;
+    font-family: roboto-regular;
+    line-height: 24px;
+    font-size: 14px;
+}
+
+body{
+    padding-left: 24px;
+    padding-right: 24px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+a {
+    color: #0A9AF4;
+}
+
+p.title {
+    font-family: roboto-medium;
+    font-size: 18px;
+}
+
+@font-face {
+  font-family: roboto-regular;
+  src: url('file:///android_asset/Roboto-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: roboto-medium;
+  src: url('file:///android_asset/Roboto-Medium.ttf') format('truetype');
+}
