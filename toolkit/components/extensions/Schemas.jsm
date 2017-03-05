@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultMap,
+  DefaultWeakMap,
   instanceOf,
 } = ExtensionUtils;
 
@@ -138,9 +139,10 @@ function exportLazyProperty(object, prop, getter) {
 
   let redefine = obj => {
     let desc = getter.call(obj);
-    if (desc === undefined) {
-      delete object[prop];
-    } else {
+    getter = null;
+
+    delete object[prop];
+    if (desc) {
       let defaults = {
         configurable: true,
         enumerable: true,
@@ -153,8 +155,6 @@ function exportLazyProperty(object, prop, getter) {
       Object.defineProperty(object, prop,
                             Object.assign(defaults, desc));
     }
-
-    getter = null;
   };
 
   Object.defineProperty(object, prop, {
@@ -226,8 +226,9 @@ const CONTEXT_FOR_VALIDATION = [
 // Callers of Schemas.inject should implement all of these methods.
 const CONTEXT_FOR_INJECTION = [
   ...CONTEXT_FOR_VALIDATION,
-  "shouldInject",
   "getImplementation",
+  "isPermissionRevokable",
+  "shouldInject",
 ];
 
 /**
@@ -315,6 +316,19 @@ class Context {
    * @returns {boolean} True if the context has the given permission.
    */
   hasPermission(permission) {
+    return false;
+  }
+
+  /**
+   * Checks whether the given permission can be dynamically revoked or
+   * granted.
+   *
+   * @param {string} permission
+   *        The name of the permission to check.
+   *
+   * @returns {boolean} True if the given permission is revokable.
+   */
+  isPermissionRevokable(permission) {
     return false;
   }
 
@@ -457,6 +471,186 @@ class Context {
 }
 
 /**
+ * Represents a schema entry to be injected into an object. Handles the
+ * injection, revocation, and permissions of said entry.
+ *
+ * @param {InjectionContext} context
+ *        The injection context for the entry.
+ * @param {Entry} entry
+ *        The entry to inject.
+ * @param {object} parentObject
+ *        The object into which to inject this entry.
+ * @param {string} name
+ *        The property name at which to inject this entry.
+ * @param {Array<string>} path
+ *        The full path from the root entry to this entry.
+ * @param {Entry} parentEntry
+ *        The parent entry for the injected entry.
+ */
+class InjectionEntry {
+  constructor(context, entry, parentObj, name, path, parentEntry) {
+    this.context = context;
+    this.entry = entry;
+    this.parentObj = parentObj;
+    this.name = name;
+    this.path = path;
+    this.parentEntry = parentEntry;
+
+    this.injected = null;
+    this.lazyInjected = null;
+  }
+
+  /**
+   * @property {Array<string>} allowedContexts
+   *        The list of allowed contexts into which the entry may be
+   *        injected.
+   */
+  get allowedContexts() {
+    let {allowedContexts} = this.entry;
+    if (allowedContexts.length) {
+      return allowedContexts;
+    }
+    return this.parentEntry.defaultContexts;
+  }
+
+  /**
+   * @property {boolean} isRevokable
+   *        Returns true if this entry may be dynamically injected or
+   *        revoked based on its permissions.
+   */
+  get isRevokable() {
+    return (this.entry.permissions &&
+            this.entry.permissions.some(perm => this.context.isPermissionRevokable(perm)));
+  }
+
+  /**
+   * @property {boolean} hasPermission
+   *        Returns true if the injection context currently has the
+   *        appropriate permissions to access this entry.
+   */
+  get hasPermission() {
+    return (!this.entry.permissions ||
+            this.entry.permissions.some(perm => this.context.hasPermission(perm)));
+  }
+
+  /**
+   * @property {boolean} shouldInject
+   *        Returns true if this entry should be injected in the given
+   *        context, without respect to permissions.
+   */
+  get shouldInject() {
+    return this.context.shouldInject(this.path.join("."), this.name, this.allowedContexts);
+  }
+
+  /**
+   * Revokes this entry, removing its property from its parent object,
+   * and invalidating its wrappers.
+   */
+  revoke() {
+    if (this.lazyInjected) {
+      this.lazyInjected = false;
+    } else if (this.injected) {
+      if (this.injected.revoke) {
+        this.injected.revoke();
+      }
+
+      try {
+        let unwrapped = Cu.waiveXrays(this.parentObj);
+        delete unwrapped[this.name];
+      } catch (e) {
+        Cu.reportError(e);
+      }
+
+      let {value} = this.injected.descriptor;
+      if (value) {
+        this.context.revokeChildren(value);
+      }
+
+      this.injected = null;
+    }
+  }
+
+  /**
+   * Returns a property descriptor object for this entry, if it should
+   * be injected, or undefined if it should not.
+   *
+   * @returns {object?}
+   *        A property descriptor object, or undefined if the property
+   *        should be removed.
+   */
+  getDescriptor() {
+    this.lazyInjected = false;
+
+    if (this.injected) {
+      let path = [...this.path, this.name];
+      throw new Error(`Attempting to re-inject already injected entry: ${path.join(".")}`);
+    }
+
+    if (!this.shouldInject) {
+      return;
+    }
+
+    if (this.isRevokable) {
+      this.context.pendingEntries.add(this);
+    }
+
+    if (!this.hasPermission) {
+      return;
+    }
+
+    this.injected = this.entry.getDescriptor(this.path, this.context);
+    if (!this.injected) {
+      return undefined;
+    }
+
+    return this.injected.descriptor;
+  }
+
+  /**
+   * Injects a lazy property descriptor into the parent object which
+   * checks permissions and eligibility for injection the first time it
+   * is accessed.
+   */
+  lazyInject() {
+    if (this.lazyInjected || this.injected) {
+      let path = [...this.path, this.name];
+      throw new Error(`Attempting to re-lazy-inject already injected entry: ${path.join(".")}`);
+    }
+
+    this.lazyInjected = true;
+    exportLazyProperty(this.parentObj, this.name, () => {
+      if (this.lazyInjected) {
+        return this.getDescriptor();
+      }
+    });
+  }
+
+  /**
+   * Injects or revokes this entry if its current state does not match
+   * the context's current permissions.
+   */
+  permissionsChanged() {
+    if (this.injected) {
+      this.maybeRevoke();
+    } else {
+      this.maybeInject();
+    }
+  }
+
+  maybeInject() {
+    if (!this.injected && !this.lazyInjected) {
+      this.lazyInject();
+    }
+  }
+
+  maybeRevoke() {
+    if (this.injected && !this.hasPermission) {
+      this.revoke();
+    }
+  }
+}
+
+/**
  * Holds methods that run the actual implementation of the extension APIs. These
  * methods are only called if the extension API invocation matches the signature
  * as defined in the schema. Otherwise an error is reported to the context.
@@ -464,6 +658,14 @@ class Context {
 class InjectionContext extends Context {
   constructor(params) {
     super(params, CONTEXT_FOR_INJECTION);
+
+    this.pendingEntries = new Set();
+    this.children = new DefaultWeakMap(() => new Map());
+
+    if (params.setPermissionsChangedCallback) {
+      params.setPermissionsChangedCallback(
+        this.permissionsChanged.bind(this));
+    }
   }
 
   /**
@@ -496,6 +698,102 @@ class InjectionContext extends Context {
    */
   getImplementation(namespace, name) {
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Updates all injection entries which may need to be updated after a
+   * permission change, revoking or re-injecting them as necessary.
+   */
+  permissionsChanged() {
+    for (let entry of this.pendingEntries) {
+      try {
+        entry.permissionsChanged();
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  }
+
+  /**
+   * Recursively revokes all child injection entries of the given
+   * object.
+   *
+   * @param {object} object
+   *        The object for which to invoke children.
+   */
+  revokeChildren(object) {
+    if (!this.children.has(object)) {
+      return;
+    }
+
+    let children = this.children.get(object);
+    for (let [name, entry] of children.entries()) {
+      try {
+        entry.revoke();
+      } catch (e) {
+        Cu.reportError(e);
+      }
+      children.delete(name);
+
+      // When we revoke children for an object, we consider that object
+      // dead. If the entry is ever reified again, a new object is
+      // created, with new child entries.
+      this.pendingEntries.delete(entry);
+    }
+    this.children.delete(object);
+  }
+
+  _getInjectionEntry(entry, dest, name, path, parentEntry) {
+    let injection = new InjectionEntry(this, entry, dest, name, path, parentEntry);
+
+    this.children.get(dest).set(name, injection);
+
+    return injection;
+  }
+
+  /**
+   * Returns the property descriptor for the given entry.
+   *
+   * @param {Entry} entry
+   *        The entry instance to return a descriptor for.
+   * @param {object} dest
+   *        The object into which this entry is being injected.
+   * @param {string} name
+   *        The property name on the destination object where the entry
+   *        will be injected.
+   * @param {Array<string>} path
+   *        The full path from the root injection object to this entry.
+   * @param {Entry} parentEntry
+   *        The parent entry for this entry.
+   *
+   * @returns {object?}
+   *        A property descriptor object, or null if the entry should
+   *        not be injected.
+   */
+  getDescriptor(entry, dest, name, path, parentEntry) {
+    let injection = this._getInjectionEntry(entry, dest, name, path, parentEntry);
+
+    return injection.getDescriptor();
+  }
+
+  /**
+   * Lazily injects the given entry into the given object.
+   *
+   * @param {Entry} entry
+   *        The entry instance to lazily inject.
+   * @param {object} dest
+   *        The object into which to inject this entry.
+   * @param {string} name
+   *        The property name at which to inject the entry.
+   * @param {Array<string>} path
+   *        The full path from the root injection object to this entry.
+   * @param {Entry} parentEntry
+   *        The parent entry for this entry.
+   */
+  injectInto(entry, dest, name, path, parentEntry) {
+    let injection = this._getInjectionEntry(entry, dest, name, path, parentEntry);
+
+    injection.lazyInject();
   }
 }
 
@@ -691,13 +989,16 @@ class Entry {
   }
 
   /**
-   * Returns a property descriptor for use when injecting this entry
-   * into an API object.
+   * Returns an object containing property descriptor for use when
+   * injecting this entry into an API object.
    *
    * @param {Array<string>} path The API path, e.g. `["storage", "local"]`.
    * @param {InjectionContext} context
    *
-   * @returns {object|undefined}
+   * @returns {object?}
+   *        An object containing a `descriptor` property, specifying the
+   *        entry's property descriptor, and an optional `revoke`
+   *        method, to be called when the entry is being revoked.
    */
   getDescriptor(path, context) {
     return undefined;
@@ -1039,7 +1340,9 @@ class StringType extends Type {
         obj[e.toUpperCase()] = e;
       }
 
-      return {value: obj};
+      return {
+        descriptor: {value: obj},
+      };
     }
   }
 }
@@ -1529,19 +1832,22 @@ class ValueProperty extends Entry {
   }
 
   getDescriptor(path, context) {
-    return {value: this.value};
+    return {
+      descriptor: {value: this.value},
+    };
   }
 }
 
 // Represents a "property" defined in a schema namespace that is not a
 // constant.
 class TypeProperty extends Entry {
-  constructor(schema, path, name, type, writable) {
+  constructor(schema, path, name, type, writable, permissions) {
     super(schema);
     this.path = path;
     this.name = name;
     this.type = type;
     this.writable = writable;
+    this.permissions = permissions;
   }
 
   throwError(context, msg) {
@@ -1560,7 +1866,7 @@ class TypeProperty extends Entry {
       return apiImpl.getProperty();
     };
 
-    let desc = {
+    let descriptor = {
       get: Cu.exportFunction(getStub, context.cloneScope),
     };
 
@@ -1574,10 +1880,16 @@ class TypeProperty extends Entry {
         apiImpl.setProperty(normalized.value);
       };
 
-      desc.set = Cu.exportFunction(setStub, context.cloneScope);
+      descriptor.set = Cu.exportFunction(setStub, context.cloneScope);
     }
 
-    return desc;
+    return {
+      descriptor,
+      revoke() {
+        apiImpl.revoke();
+        apiImpl = null;
+      },
+    };
   }
 }
 
@@ -1592,13 +1904,14 @@ class SubModuleProperty extends Entry {
   // namespaceName: Namespace in which the property lives.
   // reference: Name of the type defining the functions to add to the property.
   // properties: Additional properties to add to the module (unsupported).
-  constructor(schema, path, name, reference, properties) {
+  constructor(schema, path, name, reference, properties, permissions) {
     super(schema);
     this.name = name;
     this.path = path;
     this.namespaceName = path.join(".");
     this.reference = reference;
     this.properties = properties;
+    this.permissions = permissions;
   }
 
   getDescriptor(path, context) {
@@ -1619,20 +1932,27 @@ class SubModuleProperty extends Entry {
       }
     }
     let subpath = [...path, this.name];
-    let namespace = subpath.join(".");
 
     let functions = type.functions;
     for (let fun of functions) {
-      let allowedContexts = fun.allowedContexts.length ? fun.allowedContexts : ns.defaultContexts;
-      if (context.shouldInject(namespace, fun.name, allowedContexts)) {
-        exportLazyProperty(obj, fun.name,
-                           () => fun.getDescriptor(subpath, context));
-      }
+      context.injectInto(fun, obj, fun.name, subpath, ns);
     }
 
     // TODO: Inject this.properties.
 
-    return {value: obj};
+    return {
+      descriptor: {value: obj},
+      revoke() {
+        let unwrapped = Cu.waiveXrays(obj);
+        for (let fun of functions) {
+          try {
+            delete unwrapped[fun.name];
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+      },
+    };
   }
 }
 
@@ -1751,10 +2071,6 @@ FunctionEntry = class FunctionEntry extends CallEntry {
   }
 
   getDescriptor(path, context) {
-    if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
-      return;
-    }
-
     let apiImpl = context.getImplementation(path.join("."), this.name);
 
     let stub;
@@ -1788,7 +2104,13 @@ FunctionEntry = class FunctionEntry extends CallEntry {
       };
     }
 
-    return {value: Cu.exportFunction(stub, context.cloneScope)};
+    return {
+      descriptor: {value: Cu.exportFunction(stub, context.cloneScope)},
+      revoke() {
+        apiImpl.revoke();
+        apiImpl = null;
+      },
+    };
   }
 };
 
@@ -1829,10 +2151,6 @@ class Event extends CallEntry {
   }
 
   getDescriptor(path, context) {
-    if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
-      return;
-    }
-
     let apiImpl = context.getImplementation(path.join("."), this.name);
 
     let addStub = (listener, ...args) => {
@@ -1857,7 +2175,18 @@ class Event extends CallEntry {
     Cu.exportFunction(removeStub, obj, {defineAs: "removeListener"});
     Cu.exportFunction(hasStub, obj, {defineAs: "hasListener"});
 
-    return {value: obj};
+    return {
+      descriptor: {value: obj},
+      revoke() {
+        apiImpl.revoke();
+        apiImpl = null;
+
+        let unwrapped = Cu.waiveXrays(obj);
+        delete unwrapped.addListener;
+        delete unwrapped.removeListener;
+        delete unwrapped.hasListener;
+      },
+    };
   }
 }
 
@@ -2030,15 +2359,17 @@ class Namespace extends Map {
     if ("$ref" in prop) {
       if (!prop.unsupported) {
         return new SubModuleProperty(prop, this.path, name,
-                                     prop.$ref, prop.properties || {});
+                                     prop.$ref, prop.properties || {},
+                                     prop.permissions || null);
       }
     } else if ("value" in prop) {
       return new ValueProperty(prop, name, prop.value);
     } else {
       // We ignore the "optional" attribute on properties since we
       // don't inject anything here anyway.
-      let type = Schemas.parseSchema(prop, [this.name], ["optional", "writable"]);
-      return new TypeProperty(prop, this.path, name, type, prop.writable || false);
+      let type = Schemas.parseSchema(prop, [this.name], ["optional", "permissions", "writable"]);
+      return new TypeProperty(prop, this.path, name, type, prop.writable || false,
+                              prop.permissions || null);
     }
   }
 
@@ -2063,18 +2394,7 @@ class Namespace extends Map {
       exportLazyProperty(dest, name, () => {
         let entry = this.get(name);
 
-        if (entry.permissions && !entry.permissions.some(perm => context.hasPermission(perm))) {
-          return;
-        }
-
-        let allowedContexts = entry.allowedContexts;
-        if (!allowedContexts.length) {
-          allowedContexts = this.defaultContexts;
-        }
-
-        if (context.shouldInject(this.path.join("."), name, allowedContexts)) {
-          return entry.getDescriptor(this.path, context);
-        }
+        return context.getDescriptor(entry, dest, name, this.path, this);
       });
     }
   }
@@ -2086,7 +2406,9 @@ class Namespace extends Map {
 
     // Only inject the namespace object if it isn't empty.
     if (Object.keys(obj).length) {
-      return {value: obj};
+      return {
+        descriptor: {value: obj},
+      };
     }
   }
 
@@ -2155,6 +2477,8 @@ class Namespace extends Map {
 
 this.Schemas = {
   initialized: false,
+
+  REVOKE: Symbol("@@revoke"),
 
   // Maps a schema URL to the JSON contained in that schema file. This
   // is useful for sending the JSON across processes.

@@ -671,7 +671,11 @@ SingletonEventManager.prototype = {
 
     let unregister = this.unregister.get(callback);
     this.unregister.delete(callback);
-    unregister();
+    try {
+      unregister();
+    } catch (e) {
+      Cu.reportError(e);
+    }
     if (this.unregister.size == 0) {
       this.context.forgetOnClose(this);
     }
@@ -681,10 +685,14 @@ SingletonEventManager.prototype = {
     return this.unregister.has(callback);
   },
 
-  close() {
-    for (let unregister of this.unregister.values()) {
-      unregister();
+  revoke() {
+    for (let callback of this.unregister.keys()) {
+      this.removeListener(callback);
     }
+  },
+
+  close() {
+    this.revoke();
   },
 
   api() {
@@ -692,6 +700,7 @@ SingletonEventManager.prototype = {
       addListener: (...args) => this.addListener(...args),
       removeListener: (...args) => this.removeListener(...args),
       hasListener: (...args) => this.hasListener(...args),
+      [Schemas.REVOKE]: () => this.revoke(),
     };
   },
 };
