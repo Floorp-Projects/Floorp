@@ -524,6 +524,16 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
     this.childApiManager = childApiManager;
   }
 
+  revoke() {
+    let map = this.childApiManager.listeners.get(this.path);
+    for (let listener of map.keys()) {
+      this.removeListener(listener);
+    }
+
+    this.path = null;
+    this.childApiManager = null;
+  }
+
   callFunctionNoReturn(args) {
     this.childApiManager.callParentFunctionNoReturn(this.path, args);
   }
