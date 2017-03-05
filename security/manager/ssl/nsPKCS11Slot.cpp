@@ -360,7 +360,7 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
   return array->Enumerate(_retval);
 }
 
-NS_IMPL_ISUPPORTS(nsPKCS11ModuleDB, nsIPKCS11ModuleDB, nsICryptoFIPSInfo)
+NS_IMPL_ISUPPORTS(nsPKCS11ModuleDB, nsIPKCS11ModuleDB)
 
 nsPKCS11ModuleDB::nsPKCS11ModuleDB()
 {
@@ -564,10 +564,4 @@ nsPKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled)
 
   *aIsFIPSEnabled = PK11_IsFIPS();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPKCS11ModuleDB::GetIsFIPSModeActive(bool* aIsFIPSModeActive)
-{
-  return GetIsFIPSEnabled(aIsFIPSModeActive);
 }
