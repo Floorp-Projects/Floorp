@@ -411,6 +411,9 @@ IonCacheIRCompiler::init()
         MOZ_CRASH("Invalid cache");
     }
 
+    if (liveRegs_)
+        liveFloatRegs_ = LiveFloatRegisterSet(liveRegs_->fpus());
+
     allocator.initAvailableRegs(available);
     allocator.initAvailableRegsAfterSpill();
     return true;
@@ -591,7 +594,7 @@ IonCacheIRCompiler::emitGuardSpecificAtom()
 
     // We have a non-atomized string with the same length. Call a helper
     // function to do the comparison.
-    LiveRegisterSet volatileRegs(RegisterSet::Volatile());
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
     masm.setupUnalignedABICall(scratch);
@@ -1083,15 +1086,12 @@ IonCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
 
     if (op == CacheOp::AllocateAndStoreDynamicSlot) {
         // We have to (re)allocate dynamic slots. Do this first, as it's the
-        // only fallible operation here. This simplifies the callTypeUpdateIC
-        // call below: it does not have to worry about saving registers used by
-        // failure paths.
+        // only fallible operation here. Note that growSlotsDontReportOOM is
+        // fallible but does not GC.
         int32_t numNewSlots = int32StubField(reader.stubOffset());
         MOZ_ASSERT(numNewSlots > 0);
 
-        AllocatableRegisterSet regs(RegisterSet::Volatile());
-        LiveRegisterSet save(regs.asLiveSet());
-
+        LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
         masm.PushRegsInMask(save);
 
         masm.setupUnalignedABICall(scratch1);
