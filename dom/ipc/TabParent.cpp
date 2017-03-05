@@ -3352,6 +3352,26 @@ TabParent::DispatchTabChildNotReadyEvent()
     return;
   }
 
+  if (!mDocShellIsActive) {
+    return;
+  }
+
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  if (!frameLoader) {
+    return;
+  }
+
+  nsCOMPtr<Element> frameElement(mFrameElement);
+  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(frameElement);
+  if (!owner) {
+    return;
+  }
+
+  RefPtr<nsFrameLoader> currentFrameLoader = owner->GetFrameLoader();
+  if (currentFrameLoader != frameLoader) {
+    return;
+  }
+
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   event->InitEvent(NS_LITERAL_STRING("MozTabChildNotReady"), true, false);
   event->SetTrusted(true);
