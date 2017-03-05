@@ -313,7 +313,6 @@ public:
   nsresult TraverseRoots(nsCycleCollectionNoteRootCallback& aCb);
   virtual bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
-  void CheckGrayBits() const;
   bool AreGCGrayBitsValid() const;
   void GarbageCollect(uint32_t aReason) const;
 
