@@ -492,16 +492,6 @@ IterateGrayObjects(JS::Zone* zone, GCThingCallback cellCallback, void* data);
 extern JS_FRIEND_API(void)
 IterateGrayObjectsUnderCC(JS::Zone* zone, GCThingCallback cellCallback, void* data);
 
-#ifdef DEBUG
-// Trace the heap and check there are no black to gray edges. These are
-// not allowed since the cycle collector could throw away the gray thing and
-// leave a dangling pointer.
-//
-// This doesn't trace weak maps as these are handled separately.
-extern JS_FRIEND_API(bool)
-CheckGrayMarkingState(JSContext* cx);
-#endif
-
 #ifdef JS_HAS_CTYPES
 extern JS_FRIEND_API(size_t)
 SizeOfDataIfCDataObject(mozilla::MallocSizeOf mallocSizeOf, JSObject* obj);
