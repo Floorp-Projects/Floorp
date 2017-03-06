@@ -20,8 +20,8 @@ function checkDuration(actual, expected, name) {
 }
 
 function cloneLoaded(event) {
-  ok(true, "Clone loaded OK");
   var e = event.target;
+  ok(true, `${e.token} loaded OK`);
   checkDuration(e.duration, e._expectedDuration, e.token);
   removeNodeAndSource(e);
   manager.finished(e.token);
@@ -30,7 +30,9 @@ function cloneLoaded(event) {
 function tryClone(event) {
   var e = event.target;
   var clone = e.cloneNode(false);
-  clone.token = e.token;
+  clone.token = `${e.token}(cloned)`;
+  manager.started(clone.token);
+  manager.finished(e.token);
 
   // Log events for debugging.
   var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
@@ -38,7 +40,7 @@ function tryClone(event) {
                 "waiting", "pause"];
   function logEvent(evt) {
     var e = evt.target;
-    info(e.token + ": got " + evt.type);
+    info(`${e.token} got ${evt.type}`);
   }
   events.forEach(function(e) {
     clone.addEventListener(e, logEvent);
@@ -50,7 +52,7 @@ function tryClone(event) {
 
   clone.addEventListener("loadeddata", cloneLoaded, {once: true});
   clone.addEventListener("loadstart", function(evt) {
-    info("cloned " + evt.target.token + " start loading.");
+    info(`${evt.target.token} starts loading.`);
     // Since there is only one H264 decoder instance, we have to delete the
     // decoder of the original element for the cloned element to load. However,
     // we can't delete the decoder too early otherwise cloning decoder will
