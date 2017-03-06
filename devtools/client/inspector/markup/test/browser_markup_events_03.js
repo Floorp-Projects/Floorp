@@ -23,7 +23,7 @@ const TEST_DATA = [ // eslint-disable-line
           "Bubbling",
           "DOM2"
         ],
-        handler: "function es6Method(foo, bar) {\n" +
+        handler: "es6Method(foo, bar) {\n" +
                  "  alert(\"obj.es6Method\");\n" +
                  "}"
       }

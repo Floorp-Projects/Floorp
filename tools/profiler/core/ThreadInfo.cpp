@@ -66,7 +66,7 @@ ThreadInfo::CanInvokeJS() const
 
 void
 ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
-                       double aSinceTime)
+                       const TimeStamp& aStartTime, double aSinceTime)
 {
   // mUniqueStacks may already be emplaced from FlushSamplesAndMarkers.
   if (!mUniqueStacks.isSome()) {
@@ -75,7 +75,8 @@ ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
 
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
-    StreamSamplesAndMarkers(aBuffer, aWriter, aSinceTime, *mUniqueStacks);
+    StreamSamplesAndMarkers(aBuffer, aWriter, aStartTime, aSinceTime,
+                            *mUniqueStacks);
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -126,6 +127,7 @@ ThreadInfo::StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
 void
 ThreadInfo::StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
                                     SpliceableJSONWriter& aWriter,
+                                    const TimeStamp& aStartTime,
                                     double aSinceTime,
                                     UniqueStacks& aUniqueStacks)
 {
@@ -180,7 +182,7 @@ ThreadInfo::StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
         aWriter.Splice(mSavedStreamedMarkers.get());
         mSavedStreamedMarkers.reset();
       }
-      aBuffer->StreamMarkersToJSON(aWriter, mThreadId, aSinceTime,
+      aBuffer->StreamMarkersToJSON(aWriter, mThreadId, aStartTime, aSinceTime,
                                    aUniqueStacks);
     }
     aWriter.EndArray();
@@ -189,7 +191,9 @@ ThreadInfo::StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
 }
 
 void
-ThreadInfo::FlushSamplesAndMarkers(ProfileBuffer* aBuffer)
+ThreadInfo::FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
+                                   const TimeStamp& aStartTime)
+
 {
   // This function is used to serialize the current buffer just before
   // JSContext destruction.
@@ -219,7 +223,8 @@ ThreadInfo::FlushSamplesAndMarkers(ProfileBuffer* aBuffer)
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
     {
-      aBuffer->StreamMarkersToJSON(b, mThreadId, /* aSinceTime = */ 0, *mUniqueStacks);
+      aBuffer->StreamMarkersToJSON(b, mThreadId, aStartTime,
+                                   /* aSinceTime = */ 0, *mUniqueStacks);
     }
     b.EndBareList();
     mSavedStreamedMarkers = b.WriteFunc()->CopyData();

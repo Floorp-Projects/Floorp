@@ -6,7 +6,6 @@
 DevToolsModules(
     'debugger.css',
     'debugger.js',
-    'integration-tests.js',
     'panel.js',
     'pretty-print-worker.js',
     'source-map-worker.js'
