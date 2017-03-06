@@ -21,6 +21,12 @@ struct InitParams
 {
 };
 
+struct InitOriginParams
+{
+  PrincipalInfo principalInfo;
+  PersistenceType persistenceType;
+};
+
 struct UsageParams
 {
   PrincipalInfo principalInfo;
@@ -56,6 +62,7 @@ struct ResetAllParams
 union RequestParams
 {
   InitParams;
+  InitOriginParams;
   ClearOriginParams;
   ClearDataParams;
   ClearAllParams;
