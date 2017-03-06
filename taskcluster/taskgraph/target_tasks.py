@@ -149,6 +149,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if platform in ('android-api-15', 'android-x86'):
             return True
         if platform in ('linux64-nightly', 'linux-nightly'):
+            if task.kind in ["test"]:
+                return True
             if task.kind not in [
                 'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
                 'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing'
