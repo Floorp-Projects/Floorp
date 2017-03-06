@@ -1434,10 +1434,6 @@ protected:
   { }
 
   nsresult
-  AddOriginDirectory(nsIFile* aDirectory,
-                     OriginProps** aOriginProps);
-
-  nsresult
   ProcessOriginDirectories();
 
   virtual nsresult
@@ -1478,6 +1474,9 @@ public:
     , mNeedsRestore(false)
     , mIgnore(false)
   { }
+
+  nsresult
+  Init(nsIFile* aDirectory);
 };
 
 class MOZ_STACK_CLASS OriginParser final
@@ -6785,49 +6784,6 @@ ClearDataOp::GetResponse(RequestResponse& aResponse)
 }
 
 nsresult
-StorageDirectoryHelper::AddOriginDirectory(nsIFile* aDirectory,
-                                           OriginProps** aOriginProps)
-{
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aDirectory);
-
-  OriginProps* originProps;
-
-  nsString leafName;
-  nsresult rv = aDirectory->GetLeafName(leafName);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (leafName.EqualsLiteral(kChromeOrigin)) {
-    originProps = mOriginProps.AppendElement();
-    originProps->mDirectory = aDirectory;
-    originProps->mSpec = kChromeOrigin;
-    originProps->mType = OriginProps::eChrome;
-  } else {
-    nsCString spec;
-    OriginAttributes attrs;
-    bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                            spec, &attrs);
-    if (NS_WARN_IF(!result)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    originProps = mOriginProps.AppendElement();
-    originProps->mDirectory = aDirectory;
-    originProps->mSpec = spec;
-    originProps->mAttrs = attrs;
-    originProps->mType = OriginProps::eContent;
-  }
-
-  if (aOriginProps) {
-    *aOriginProps = originProps;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 StorageDirectoryHelper::ProcessOriginDirectories()
 {
   AssertIsOnIOThread();
@@ -6934,6 +6890,41 @@ StorageDirectoryHelper::Run()
 
   mWaiting = false;
   mCondVar.Notify();
+
+  return NS_OK;
+}
+
+nsresult
+StorageDirectoryHelper::
+OriginProps::Init(nsIFile* aDirectory)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+
+  nsString leafName;
+  nsresult rv = aDirectory->GetLeafName(leafName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (leafName.EqualsLiteral(kChromeOrigin)) {
+    mDirectory = aDirectory;
+    mSpec = kChromeOrigin;
+    mType = eChrome;
+  } else {
+    nsCString spec;
+    OriginAttributes attrs;
+    bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
+                                            spec, &attrs);
+    if (NS_WARN_IF(!result)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mDirectory = aDirectory;
+    mSpec = spec;
+    mAttrs = attrs;
+    mType = eContent;
+  }
 
   return NS_OK;
 }
@@ -7394,8 +7385,8 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
       }
     }
 
-    OriginProps* originProps;
-    rv = AddOriginDirectory(originDir, &originProps);
+    OriginProps originProps;
+    rv = originProps.Init(originDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7417,22 +7408,24 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
           return rv;
         }
 
-        originProps->mTimestamp = timestamp;
-        originProps->mNeedsRestore = true;
+        originProps.mTimestamp = timestamp;
+        originProps.mNeedsRestore = true;
       } else if (hasIsApp) {
-        originProps->mIgnore = true;
+        originProps.mIgnore = true;
       }
     }
     else if (!QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                          originProps->mSpec)) {
+                                                           originProps.mSpec)) {
       int64_t timestamp = INT64_MIN;
       rv = GetLastModifiedTime(originDir, &timestamp);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      originProps->mTimestamp = timestamp;
+      originProps.mTimestamp = timestamp;
     }
+
+    mOriginProps.AppendElement(Move(originProps));
   }
 
   if (mOriginProps.IsEmpty()) {
@@ -7777,8 +7770,8 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
       continue;
     }
 
-    OriginProps* originProps;
-    rv = AddOriginDirectory(originDir, &originProps);
+    OriginProps originProps;
+    rv = originProps.Init(originDir);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7798,12 +7791,14 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        originProps->mTimestamp = timestamp;
+        originProps.mTimestamp = timestamp;
       }
-      originProps->mNeedsRestore = true;
+      originProps.mNeedsRestore = true;
     } else {
-      originProps->mTimestamp = timestamp;
+      originProps.mTimestamp = timestamp;
     }
+
+    mOriginProps.AppendElement(Move(originProps));
   }
 
   if (mOriginProps.IsEmpty()) {
@@ -7930,8 +7925,8 @@ RestoreDirectoryMetadata2Helper::RestoreMetadata2File()
 
   nsresult rv;
 
-  OriginProps* originProps;
-  rv = AddOriginDirectory(mDirectory, &originProps);
+  OriginProps originProps;
+  rv = originProps.Init(mDirectory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7943,8 +7938,10 @@ RestoreDirectoryMetadata2Helper::RestoreMetadata2File()
       return rv;
     }
 
-    originProps->mTimestamp = timestamp;
+    originProps.mTimestamp = timestamp;
   }
+
+  mOriginProps.AppendElement(Move(originProps));
 
   rv = ProcessOriginDirectories();
   if (NS_WARN_IF(NS_FAILED(rv))) {
