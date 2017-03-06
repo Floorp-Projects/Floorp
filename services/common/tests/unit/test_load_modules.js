@@ -8,6 +8,7 @@ const shared_modules = [
   "async.js",
   "logmanager.js",
   "rest.js",
+  "stringbundle.js",
   "utils.js",
 ];
 
