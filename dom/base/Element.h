@@ -534,20 +534,6 @@ protected:
     NotifyStateChange(aStates);
   }
 public:
-  // Public methods to manage state bits in MANUALLY_MANAGED_STATES.
-  void AddManuallyManagedStates(EventStates aStates)
-  {
-    MOZ_ASSERT(MANUALLY_MANAGED_STATES.HasAllStates(aStates),
-               "Should only be adding manually-managed states here");
-    AddStates(aStates);
-  }
-  void RemoveManuallyManagedStates(EventStates aStates)
-  {
-    MOZ_ASSERT(MANUALLY_MANAGED_STATES.HasAllStates(aStates),
-               "Should only be removing manually-managed states here");
-    RemoveStates(aStates);
-  }
-
   virtual void UpdateEditableState(bool aNotify) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

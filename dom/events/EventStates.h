@@ -314,23 +314,11 @@ private:
 
 #define DIRECTION_STATES (NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
 
-// Event states that can be added and removed through
-// Element::{Add,Remove}ManuallyManagedStates.
-//
-// Take care when manually managing state bits.  You are responsible for
-// setting or clearing the bit when an Element is added or removed from a
-// document (e.g. in BindToTree and UnbindFromTree), if that is an
-// appropriate thing to do for your state bit.
-#define MANUALLY_MANAGED_STATES (             \
-  mozilla::EventStates() /* none so far */    \
-)
-
 // Event states that are managed externally to an element (by the
 // EventStateManager, or by other code).  As opposed to those in
 // INTRINSIC_STATES, which are are computed by the element itself
 // and returned from Element::IntrinsicState.
 #define EXTERNALLY_MANAGED_STATES (           \
-  MANUALLY_MANAGED_STATES |                   \
   NS_EVENT_STATE_ACTIVE |                     \
   NS_EVENT_STATE_DRAGOVER |                   \
   NS_EVENT_STATE_FOCUS |                      \
