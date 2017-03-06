@@ -53,8 +53,9 @@ add_task(function* test_reader_button() {
      "Should have detected the first article");
 
   // Switch page into reader mode.
+  let promiseTabLoad = promiseTabLoadEvent(tab);
   readerButton.click();
-  yield promiseTabLoadEvent(tab);
+  yield promiseTabLoad;
   ok(!UITour.isInfoOnTarget(window, "readerMode-urlBar"), "Info panel should have closed");
 
   let readerUrl = gBrowser.selectedBrowser.currentURI.spec;
@@ -84,9 +85,11 @@ add_task(function* test_reader_button() {
   ok(gBrowser.selectedBrowser.canGoForward,
     "Moved one step back in the session history.");
 
+  let nonReadableUrl = TEST_PATH + "readerModeNonArticle.html";
+
   // Load a new tab that is NOT reader-able.
   let newTab = gBrowser.selectedTab = gBrowser.addTab();
-  yield promiseTabLoadEvent(newTab, "about:robots");
+  yield promiseTabLoadEvent(newTab, nonReadableUrl);
   yield promiseWaitForCondition(() => readerButton.hidden);
   is_element_hidden(readerButton, "Reader mode button is not present on a non-reader-able page");
 
@@ -94,6 +97,23 @@ add_task(function* test_reader_button() {
   gBrowser.removeCurrentTab();
   yield promiseWaitForCondition(() => !readerButton.hidden);
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
+
+  // Load a new tab in reader mode that is NOT reader-able in the reader mode.
+  newTab = gBrowser.selectedTab = gBrowser.addTab();
+  let promiseAboutReaderError = BrowserTestUtils.waitForContentEvent(newTab.linkedBrowser, "AboutReaderContentError");
+  yield promiseTabLoadEvent(newTab, "about:reader?url=" + nonReadableUrl);
+  yield promiseAboutReaderError;
+  yield promiseWaitForCondition(() => !readerButton.hidden);
+  is_element_visible(readerButton, "Reader mode button is present on about:reader even in error state");
+
+  // Switch page back out of reader mode.
+  promisePageShow = BrowserTestUtils.waitForContentEvent(newTab.linkedBrowser, "pageshow");
+  readerButton.click();
+  yield promisePageShow;
+  is(gBrowser.selectedBrowser.currentURI.spec, nonReadableUrl,
+    "Back to the original non-reader-able page after clicking active reader mode button");
+  yield promiseWaitForCondition(() => readerButton.hidden);
+  is_element_hidden(readerButton, "Reader mode button is not present on a non-reader-able page");
 });
 
 add_task(function* test_getOriginalUrl() {
