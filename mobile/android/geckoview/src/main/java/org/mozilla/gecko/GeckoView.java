@@ -74,7 +74,8 @@ public class GeckoView extends LayerView
         mStateHolder.setState(newState);
     }
 
-    private final EventDispatcher mEventDispatcher = new EventDispatcher();
+    private final EventDispatcher mEventDispatcher =
+        new EventDispatcher(mStateHolder);
 
     private ChromeDelegate mChromeDelegate;
     /* package */ ContentListener mContentListener;
