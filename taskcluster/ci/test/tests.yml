@@ -996,6 +996,11 @@ reftest-stylo:
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     chunks: 16
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/opt: [ 'stylo', 'autoland', 'mozilla-central', 'try' ]
+            linux64-stylo/debug: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            default: []
     e10s:
         # run only e10s tests for this platform see bug 1343301
         by-test-platform:
