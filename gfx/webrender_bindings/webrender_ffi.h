@@ -477,6 +477,10 @@ wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
 WR_FUNC;
 
 WR_INLINE void
+wr_api_clear_root_display_list(WrAPI* api, WrEpoch epoch, WrPipelineId pipeline_id)
+WR_FUNC;
+
+WR_INLINE void
 wr_api_generate_frame(WrAPI* api)
 WR_FUNC;
 

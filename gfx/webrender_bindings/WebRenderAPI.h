@@ -56,6 +56,9 @@ public:
                           uint8_t *aux_data,
                           size_t aux_size);
 
+  void ClearRootDisplayList(Epoch aEpoch,
+                            WrPipelineId pipeline_id);
+
   void SetRootPipeline(wr::PipelineId aPipeline);
 
   void AddImage(wr::ImageKey aKey,

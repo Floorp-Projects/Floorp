@@ -259,6 +259,22 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
 }
 
 #[no_mangle]
+pub unsafe extern fn wr_api_clear_root_display_list(api: &mut RenderApi,
+                                                    epoch: Epoch,
+                                                    pipeline_id: PipelineId) {
+    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+    let preserve_frame_state = true;
+    let frame_builder = WebRenderFrameBuilder::new(pipeline_id);
+
+    api.set_root_display_list(Some(root_background_color),
+                              epoch,
+                              LayoutSize::new(0.0, 0.0),
+                              frame_builder.dl_builder.finalize(),
+                              preserve_frame_state);
+}
+
+
+#[no_mangle]
 pub extern fn wr_api_generate_frame(api: &mut RenderApi) {
   api.generate_frame(None);
 }

@@ -570,6 +570,10 @@ WebRenderBridgeParent::ScheduleComposition()
 void
 WebRenderBridgeParent::ClearResources()
 {
+  if (mApi) {
+    ++mWrEpoch; // Update webrender epoch
+    mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+  }
   DeleteOldImages();
   if (mCompositableHolder) {
     for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
