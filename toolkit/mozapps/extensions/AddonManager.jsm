@@ -332,7 +332,7 @@ function getLocale() {
     if (Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE)) {
       const osPrefs =
         Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
-      return osPrefs.getSystemLocale();
+      return osPrefs.systemLocale;
     }
   } catch (e) { }
 

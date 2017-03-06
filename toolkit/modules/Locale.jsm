@@ -21,7 +21,7 @@ this.Locale = {
     if (Preferences.get(PREF_MATCH_OS_LOCALE, false)) {
       const osPrefs =
         Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
-      return osPrefs.getSystemLocale();
+      return osPrefs.systemLocale;
     }
     try {
       let locale = Preferences.get(PREF_SELECTED_LOCALE, null, Ci.nsIPrefLocalizedString);
