@@ -1558,7 +1558,11 @@ evbuffer_add(struct evbuffer *buf, const void *data_in, size_t datlen)
 		goto done;
 	}
 
-	chain = buf->last;
+	if (*buf->last_with_datap == NULL) {
+		chain = buf->last;
+	} else {
+		chain = *buf->last_with_datap;
+	}
 
 	/* If there are no chains allocated for this buffer, allocate one
 	 * big enough to hold all the data. */
@@ -1800,8 +1804,7 @@ evbuffer_expand_singlechain(struct evbuffer *buf, size_t datlen)
 	/* Would expanding this chunk be affordable and worthwhile? */
 	if (CHAIN_SPACE_LEN(chain) < chain->buffer_len / 8 ||
 	    chain->off > MAX_TO_COPY_IN_EXPAND ||
-	    (datlen < EVBUFFER_CHAIN_MAX &&
-		EVBUFFER_CHAIN_MAX - datlen >= chain->off)) {
+	    datlen >= (EVBUFFER_CHAIN_MAX - chain->off)) {
 		/* It's not worth resizing this chain. Can the next one be
 		 * used? */
 		if (chain->next && CHAIN_SPACE_LEN(chain->next) >= datlen) {
