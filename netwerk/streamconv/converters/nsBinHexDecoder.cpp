@@ -175,7 +175,9 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
       break;
 
     case BINHEX_STATE_FNAME:
-      mName.BeginWriting()[mCount] = c;
+      if (mCount < mName.Length()) {
+        mName.BeginWriting()[mCount] = c;
+      }
 
       if (++mCount > mName.Length())
       {
