@@ -84,6 +84,8 @@ function run_test() {
 }
 
 add_task(async function test_noEngines() {
+  enableValidationPrefs();
+
   _("Test: An empty array of engines to sync does nothing.");
   let server = await setUp();
 
@@ -99,6 +101,8 @@ add_task(async function test_noEngines() {
 });
 
 add_task(async function test_oneEngine() {
+  enableValidationPrefs();
+
   _("Test: Only one engine is synced.");
   let server = await setUp();
 
@@ -115,6 +119,8 @@ add_task(async function test_oneEngine() {
 });
 
 add_task(async function test_bothEnginesSpecified() {
+  enableValidationPrefs();
+
   _("Test: All engines are synced when specified in the correct order (1).");
   let server = await setUp();
 
@@ -130,6 +136,8 @@ add_task(async function test_bothEnginesSpecified() {
 });
 
 add_task(async function test_bothEnginesSpecified() {
+  enableValidationPrefs();
+
   _("Test: All engines are synced when specified in the correct order (2).");
   let server = await setUp();
 
@@ -145,6 +153,8 @@ add_task(async function test_bothEnginesSpecified() {
 });
 
 add_task(async function test_bothEnginesDefault() {
+  enableValidationPrefs();
+
   _("Test: All engines are synced when nothing is specified.");
   let server = await setUp();
 
