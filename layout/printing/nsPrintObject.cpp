@@ -31,10 +31,6 @@ nsPrintObject::nsPrintObject() :
 nsPrintObject::~nsPrintObject()
 {
   MOZ_COUNT_DTOR(nsPrintObject);
-  for (uint32_t i=0;i<mKids.Length();i++) {
-    nsPrintObject* po = mKids[i];
-    delete po;
-  }
 
   DestroyPresentation();
   if (mDidCreateDocShell && mDocShell) {

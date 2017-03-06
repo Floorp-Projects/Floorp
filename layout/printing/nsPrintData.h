@@ -7,6 +7,7 @@
 #define nsPrintData_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 // Interfaces
 #include "nsDeviceContext.h"
@@ -57,15 +58,19 @@ public:
   RefPtr<nsDeviceContext>   mPrintDC;
   FILE                        *mDebugFilePtr;    // a file where information can go to when printing
 
-  nsPrintObject *                mPrintObject;
-  nsPrintObject *                mSelectedPO;
+  mozilla::UniquePtr<nsPrintObject> mPrintObject;
+  nsPrintObject* mSelectedPO; // This is a non-owning pointer.
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
   nsCOMPtr<nsPIDOMWindowOuter> mCurrentFocusWin; // cache a pointer to the currently focused window
 
+  // Array of non-owning pointers to all the nsPrintObjects owned by this
+  // nsPrintData. This includes this->mPrintObject, as well as all of its
+  // mKids (and their mKids, etc.)
   nsTArray<nsPrintObject*>    mPrintDocList;
+
   bool                        mIsIFrameSelected;
   bool                        mIsParentAFrameSet;
   bool                        mOnStartSent;
