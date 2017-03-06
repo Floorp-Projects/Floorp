@@ -120,40 +120,6 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, JSContext* cx)
 }
 
 static void
-SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& metadata,
-                   ArrayBufferObjectMaybeShared& buffer)
-{
-#ifdef WASM_HUGE_MEMORY
-    MOZ_RELEASE_ASSERT(metadata.boundsChecks.empty());
-#else
-    uint32_t limit = buffer.wasmBoundsCheckLimit();
-    MOZ_RELEASE_ASSERT(IsValidBoundsCheckImmediate(limit));
-
-    for (const BoundsCheck& check : metadata.boundsChecks)
-        MacroAssembler::wasmPatchBoundsCheck(check.patchAt(cs.base()), limit);
-#endif
-
-#if defined(JS_CODEGEN_X86)
-    uint8_t* memoryBase = buffer.dataPointerEither().unwrap(/* code patching */);
-    if (prevMemoryBase != memoryBase) {
-        for (MemoryPatch patch : metadata.memoryPatches) {
-            void* patchAt = cs.base() + patch.offset;
-
-            uint8_t* prevImm = (uint8_t*)X86Encoding::GetPointer(patchAt);
-            MOZ_ASSERT(prevImm >= prevMemoryBase);
-
-            uint32_t offset = prevImm - prevMemoryBase;
-            MOZ_ASSERT(offset <= INT32_MAX);
-
-            X86Encoding::SetPointer(patchAt, memoryBase + offset);
-        }
-    }
-#else
-    MOZ_RELEASE_ASSERT(metadata.memoryPatches.empty());
-#endif
-}
-
-static void
 SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
 {
     bool enabled = false;
@@ -241,8 +207,6 @@ CodeSegment::create(JSContext* cx,
 
         memcpy(codeBase, bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
-        if (memory)
-            SpecializeToMemory(nullptr, *cs, metadata, memory->buffer());
     }
 
     // Reprotect the whole region to avoid having separate RW and RX mappings.
@@ -273,16 +237,6 @@ CodeSegment::~CodeSegment()
     vtune::UnmarkBytes(bytes_, size);
 #endif
     DeallocateExecutableMemory(bytes_, size);
-}
-
-void
-CodeSegment::onMovingGrow(uint8_t* prevMemoryBase, const Metadata& metadata, ArrayBufferObject& buffer)
-{
-    AutoWritableJitCode awjc(base(), length());
-    AutoFlushICache afc("CodeSegment::onMovingGrow");
-    AutoFlushICache::setRange(uintptr_t(base()), length());
-
-    SpecializeToMemory(prevMemoryBase, *this, metadata, buffer);
 }
 
 size_t
@@ -457,8 +411,6 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(globals) +
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(memoryAccesses) +
-           SerializedPodVectorSize(memoryPatches) +
-           SerializedPodVectorSize(boundsChecks) +
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
@@ -480,8 +432,6 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, globals);
     cursor = SerializePodVector(cursor, tables);
     cursor = SerializePodVector(cursor, memoryAccesses);
-    cursor = SerializePodVector(cursor, memoryPatches);
-    cursor = SerializePodVector(cursor, boundsChecks);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
     cursor = SerializePodVector(cursor, callThunks);
@@ -501,8 +451,6 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &globals)) &&
     (cursor = DeserializePodVector(cursor, &tables)) &&
     (cursor = DeserializePodVector(cursor, &memoryAccesses)) &&
-    (cursor = DeserializePodVector(cursor, &memoryPatches)) &&
-    (cursor = DeserializePodVector(cursor, &boundsChecks)) &&
     (cursor = DeserializePodVector(cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cursor, &callSites)) &&
     (cursor = DeserializePodVector(cursor, &callThunks)) &&
@@ -526,8 +474,6 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            globals.sizeOfExcludingThis(mallocSizeOf) +
            tables.sizeOfExcludingThis(mallocSizeOf) +
            memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
-           memoryPatches.sizeOfExcludingThis(mallocSizeOf) +
-           boundsChecks.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
