@@ -6615,14 +6615,6 @@ HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
   if (IsInComposedDoc()) {
     GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
   }
-  if (!GetPrimaryFrame()) {
-    // Can we return a selection range anyway here, now that it lives on our
-    // state?  In fact, could we make this behave more like
-    // GetSelectionDirection, in the sense of working even when we have no
-    // frame, by just delegating entirely to mState?  And then, do we really
-    // need the flush?
-    return NS_ERROR_FAILURE;
-  }
 
   nsTextEditorState* state = GetEditorState();
   if (!state) {
