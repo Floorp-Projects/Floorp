@@ -37,6 +37,7 @@
   locale/@AB_CD@/global/customizeToolbar.dtd            (%chrome/global/customizeToolbar.dtd)
   locale/@AB_CD@/global/customizeToolbar.properties     (%chrome/global/customizeToolbar.properties)
 #endif
+  locale/@AB_CD@/global/datetimebox.dtd                 (%chrome/global/datetimebox.dtd)
   locale/@AB_CD@/global/datetimepicker.dtd              (%chrome/global/datetimepicker.dtd)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
 #ifndef MOZ_FENNEC
