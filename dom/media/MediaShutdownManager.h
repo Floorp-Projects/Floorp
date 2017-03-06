@@ -54,6 +54,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
+  static void InitStatics();
+
   // The MediaShutdownManager is a singleton, access its instance with
   // this accessor.
   static MediaShutdownManager& Instance();
@@ -71,10 +73,7 @@ private:
 
   MediaShutdownManager();
   virtual ~MediaShutdownManager();
-
-  // Ensures we have a shutdown listener if we need one, and removes the
-  // listener and destroys the singleton if we don't.
-  void EnsureCorrectShutdownObserverState();
+  void RemoveBlocker();
 
   static StaticRefPtr<MediaShutdownManager> sInstance;
 
@@ -83,10 +82,7 @@ private:
   // we're shutting down (in the non xpcom-shutdown case).
   nsTHashtable<nsRefPtrHashKey<MediaDecoder>> mDecoders;
 
-  // True if we have an XPCOM shutdown observer.
-  bool mIsObservingShutdown;
-
-  bool mIsDoingXPCOMShutDown;
+  bool mIsDoingXPCOMShutDown = false;
 };
 
 } // namespace mozilla
