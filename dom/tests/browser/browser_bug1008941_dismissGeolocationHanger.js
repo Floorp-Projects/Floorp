@@ -4,7 +4,7 @@
  */
 "use strict";
 
-const TEST_URI = "http://example.com/" +
+const TEST_URI = "https://example.com/" +
                  "browser/dom/tests/browser/position.html";
 
 add_task(function* testDismissHanger() {
