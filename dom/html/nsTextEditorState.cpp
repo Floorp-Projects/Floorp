@@ -1553,10 +1553,12 @@ nsresult
 nsTextEditorState::GetSelectionRange(int32_t* aSelectionStart,
                                      int32_t* aSelectionEnd)
 {
-  MOZ_ASSERT(mBoundFrame,
-             "Caller didn't flush out frames and check for a frame?");
   MOZ_ASSERT(aSelectionStart);
   MOZ_ASSERT(aSelectionEnd);
+
+  if (!mBoundFrame) {
+    return NS_ERROR_FAILURE;
+  }
 
   // It's not clear that all the checks here are needed, but the previous
   // version of this code in nsTextControlFrame was doing them, so we keep them
