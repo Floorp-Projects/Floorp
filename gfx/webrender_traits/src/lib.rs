@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![cfg_attr(feature = "nightly", feature(nonzero))]
-#![cfg_attr(feature = "serde_derive", feature(rustc_attrs, structural_match))]
 
 extern crate app_units;
 extern crate byteorder;
@@ -17,7 +16,6 @@ extern crate heapsize;
 extern crate ipc_channel;
 extern crate offscreen_gl_context;
 extern crate serde;
-#[cfg(feature = "serde_derive")]
 #[macro_use]
 extern crate serde_derive;
 
@@ -27,10 +25,6 @@ extern crate core_graphics;
 #[cfg(target_os = "windows")]
 extern crate dwrote;
 
-#[cfg(feature = "serde_codegen")]
-include!(concat!(env!("OUT_DIR"), "/types.rs"));
-
-#[cfg(feature = "serde_derive")]
 include!("types.rs");
 
 mod units;

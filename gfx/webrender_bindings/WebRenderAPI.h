@@ -39,7 +39,8 @@ public:
   /// This can be called on the compositor thread only.
   static already_AddRefed<WebRenderAPI> Create(bool aEnableProfiler,
                                                layers::CompositorBridgeParentBase* aBridge,
-                                               RefPtr<widget::CompositorWidget>&& aWidget);
+                                               RefPtr<widget::CompositorWidget>&& aWidget,
+                                               LayoutDeviceIntSize aSize);
 
   wr::WindowId GetId() const { return mId; }
 
