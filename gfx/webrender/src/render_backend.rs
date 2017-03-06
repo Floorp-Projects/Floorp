@@ -18,6 +18,7 @@ use std::sync::mpsc::Sender;
 use texture_cache::TextureCache;
 use thread_profiler::register_thread_with_profiler;
 use threadpool::ThreadPool;
+use webrender_traits::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use webrender_traits::{ApiMsg, AuxiliaryLists, BuiltDisplayList, IdNamespace, ImageData};
 use webrender_traits::{PipelineId, RenderNotifier, RenderDispatcher, WebGLCommand, WebGLContextId};
 use webrender_traits::channel::{PayloadHelperMethods, PayloadReceiver, PayloadSender, MsgReceiver};
@@ -35,6 +36,9 @@ pub struct RenderBackend {
     result_tx: Sender<ResultMsg>,
 
     device_pixel_ratio: f32,
+    page_zoom_factor: f32,
+    window_size: DeviceUintSize,
+    inner_rect: DeviceUintRect,
     next_namespace_id: IdNamespace,
 
     resource_cache: ResourceCache,
@@ -69,7 +73,8 @@ impl RenderBackend {
                recorder: Option<Box<ApiRecordingReceiver>>,
                main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
                blob_image_renderer: Option<Box<BlobImageRenderer>>,
-               vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>) -> RenderBackend {
+               vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
+               initial_window_size: DeviceUintSize) -> RenderBackend {
 
         let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer, enable_aa);
 
@@ -81,6 +86,7 @@ impl RenderBackend {
             payload_tx: payload_tx,
             result_tx: result_tx,
             device_pixel_ratio: device_pixel_ratio,
+            page_zoom_factor: 1.0,
             resource_cache: resource_cache,
             scene: Scene::new(),
             frame: Frame::new(config),
@@ -92,7 +98,9 @@ impl RenderBackend {
             recorder: recorder,
             main_thread_dispatcher: main_thread_dispatcher,
             next_webgl_id: 0,
-            vr_compositor_handler: vr_compositor_handler
+            vr_compositor_handler: vr_compositor_handler,
+            window_size: initial_window_size,
+            inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), initial_window_size),
         }
     }
 
@@ -117,6 +125,9 @@ impl RenderBackend {
                             self.resource_cache
                                 .add_font_template(id, FontTemplate::Native(native_font_handle));
                         }
+                        ApiMsg::DeleteFont(id) => {
+                            self.resource_cache.delete_font_template(id);
+                        }
                         ApiMsg::GetGlyphDimensions(glyph_keys, tx) => {
                             let mut glyph_dimensions = Vec::with_capacity(glyph_keys.len());
                             for glyph_key in &glyph_keys {
@@ -136,6 +147,13 @@ impl RenderBackend {
                         }
                         ApiMsg::DeleteImage(id) => {
                             self.resource_cache.delete_image_template(id);
+                        }
+                        ApiMsg::SetPageZoom(factor) => {
+                            self.page_zoom_factor = factor.get();
+                        }
+                        ApiMsg::SetWindowParameters(window_size, inner_rect) => {
+                            self.window_size = window_size;
+                            self.inner_rect = inner_rect;
                         }
                         ApiMsg::CloneApi(sender) => {
                             let result = self.next_namespace_id;
@@ -418,17 +436,23 @@ impl RenderBackend {
             webgl_context.unbind();
         }
 
-        self.frame.create(&self.scene, &mut self.resource_cache);
+        let device_pixel_ratio = self.device_pixel_ratio * self.page_zoom_factor;
+
+        self.frame.create(&self.scene,
+                          &mut self.resource_cache,
+                          self.window_size,
+                          self.inner_rect,
+                          device_pixel_ratio);
     }
 
     fn render(&mut self,
               texture_cache_profile: &mut TextureCacheProfileCounters)
               -> RendererFrame {
+        let device_pixel_ratio = self.device_pixel_ratio * self.page_zoom_factor;
         let frame = self.frame.build(&mut self.resource_cache,
                                      &self.scene.pipeline_auxiliary_lists,
-                                     self.device_pixel_ratio,
+                                     device_pixel_ratio,
                                      texture_cache_profile);
-
         frame
     }
 
