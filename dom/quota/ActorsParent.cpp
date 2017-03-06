@@ -77,6 +77,10 @@
 #define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
 #endif
 
+#define UNKNOWN_FILE_WARNING(_leafName) \
+  QM_WARNING("Something (%s) in the directory that doesn't belong!", \
+             NS_ConvertUTF16toUTF8(leafName).get())
+
 // The amount of time, in milliseconds, that our IO thread will stay alive
 // after the last event it processes.
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
@@ -3753,8 +3757,7 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
         continue;
       }
 
-      QM_WARNING("Something (%s) in the repository that doesn't belong!",
-                 NS_ConvertUTF16toUTF8(leafName).get());
+      UNKNOWN_FILE_WARNING(leafName);
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -3849,22 +3852,26 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
     NS_ENSURE_TRUE(file, NS_NOINTERFACE);
 
-    nsString leafName;
-    rv = file->GetLeafName(leafName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (leafName.EqualsLiteral(METADATA_FILE_NAME) ||
-        leafName.EqualsLiteral(METADATA_V2_FILE_NAME) ||
-        leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-      continue;
-    }
-
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
     if (!isDirectory) {
-      NS_WARNING("Unknown file found!");
+      if (leafName.EqualsLiteral(METADATA_FILE_NAME) ||
+          leafName.EqualsLiteral(METADATA_V2_FILE_NAME) ||
+          leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+        continue;
+      }
+
+      UNKNOWN_FILE_WARNING(leafName);
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -3875,7 +3882,7 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     Client::Type clientType;
     rv = Client::TypeFromText(leafName, clientType);
     if (NS_FAILED(rv)) {
-      NS_WARNING("Unknown directory found!");
+      UNKNOWN_FILE_WARNING(leafName);
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -6051,25 +6058,34 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
       nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
       NS_ENSURE_TRUE(file, NS_NOINTERFACE);
 
-      nsString leafName;
-      rv = file->GetLeafName(leafName);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (leafName.EqualsLiteral(METADATA_FILE_NAME) ||
-          leafName.EqualsLiteral(METADATA_V2_FILE_NAME) ||
-          leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-        continue;
+      bool isDirectory;
+      rv = file->IsDirectory(&isDirectory);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
 
-      if (!initialized) {
-        bool isDirectory;
-        rv = file->IsDirectory(&isDirectory);
-        NS_ENSURE_SUCCESS(rv, rv);
+      nsString leafName;
+      rv = file->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
-        if (!isDirectory) {
-          NS_WARNING("Unknown file found!");
+      if (!isDirectory) {
+        // We are maintaining existing behavior here (failing if the origin is
+        // not yet initialized or just continuing otherwise).
+        // This can possibly be used by developers to add temporary backups into
+        // origin directories without losing get usage functionality.
+        if (leafName.EqualsLiteral(METADATA_FILE_NAME) ||
+            leafName.EqualsLiteral(METADATA_V2_FILE_NAME) ||
+            leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
+          continue;
+        }
+
+        UNKNOWN_FILE_WARNING(leafName);
+        if (!initialized) {
           return NS_ERROR_UNEXPECTED;
         }
+        continue;
       }
 
       if (MaybeRemoveCorruptDirectory(leafName, file)) {
@@ -6079,7 +6095,7 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
       Client::Type clientType;
       rv = Client::TypeFromText(leafName, clientType);
       if (NS_FAILED(rv)) {
-        NS_WARNING("Unknown directory found!");
+        UNKNOWN_FILE_WARNING(leafName);
         if (!initialized) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -6509,9 +6525,9 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     }
 
     if (!isDirectory) {
+      // Unknown files during clearing are allowed. Just warn if we find them.
       if (!leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-        QM_WARNING("Something (%s) in the repository that doesn't belong!",
-                   NS_ConvertUTF16toUTF8(leafName).get());
+        UNKNOWN_FILE_WARNING(leafName);
       }
       continue;
     }
@@ -7288,10 +7304,9 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
         continue;
       }
     } else {
+      // Unknown files during upgrade are allowed. Just warn if we find them.
       if (!leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-        QM_WARNING("Something (%s) in the storage directory that doesn't belong!",
-                   NS_ConvertUTF16toUTF8(leafName).get());
-
+        UNKNOWN_FILE_WARNING(leafName);
       }
       continue;
     }
@@ -7671,10 +7686,9 @@ UpgradeDirectoryMetadataFrom1To2Helper::UpgradeMetadataFiles()
         return rv;
       }
 
+      // Unknown files during upgrade are allowed. Just warn if we find them.
       if (!leafName.EqualsLiteral(DSSTORE_FILE_NAME)) {
-        QM_WARNING("Something (%s) in the storage directory that doesn't belong!",
-                   NS_ConvertUTF16toUTF8(leafName).get());
-
+        UNKNOWN_FILE_WARNING(leafName);
       }
       continue;
     }
