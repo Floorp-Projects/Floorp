@@ -38,6 +38,7 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
     weakCaches_(group),
     gcWeakKeys_(group, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
     gcZoneGroupEdges_(group),
+    hasDeadProxies_(group),
     typeDescrObjects_(group, this, SystemAllocPolicy()),
     markedAtoms_(group),
     usage(&rt->gc.usage),
