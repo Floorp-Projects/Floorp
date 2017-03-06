@@ -12,8 +12,7 @@
  *          openExtensionContextMenu closeExtensionContextMenu
  *          openActionContextMenu openSubmenu closeActionContextMenu
  *          openTabContextMenu closeTabContextMenu
- *          imageBuffer imageBufferFromDataURI
- *          getListStyleImage getPanelForNode
+ *          imageBuffer getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
  */
@@ -65,13 +64,8 @@ var focusWindow = Task.async(function* focusWindow(win) {
   yield promise;
 });
 
-function imageBufferFromDataURI(encodedImageData) {
-  let decodedImageData = atob(encodedImageData);
-  return Uint8Array.from(decodedImageData, byte => byte.charCodeAt(0)).buffer;
-}
-
 let img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
-var imageBuffer = imageBufferFromDataURI(img);
+var imageBuffer = Uint8Array.from(atob(img), byte => byte.charCodeAt(0)).buffer;
 
 function getListStyleImage(button) {
   let style = button.ownerGlobal.getComputedStyle(button);

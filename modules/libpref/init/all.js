@@ -4775,7 +4775,6 @@ pref("extensions.webextensions.keepUuidOnUninstall", false);
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
 // Whether or not webextension themes are supported.
 pref("extensions.webextensions.themes.enabled", false);
-pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);
 
 // Report Site Issue button
