@@ -78,7 +78,7 @@ public:
   void Destroy();
   void DestroyPrintingData();
 
-  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint, 
+  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
                       nsIDocShell*            aContainer,
                       nsIDocument*            aDocument,
                       float                   aScreenDPI,
@@ -176,7 +176,7 @@ public:
 
   float GetPrintPreviewScale() { return mPrtPreview->mPrintObject->
                                         mPresContext->GetPrintPreviewScale(); }
-  
+
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
   // These calls also update the DocViewer
@@ -260,7 +260,7 @@ protected:
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsWeakPtr               mContainer;
   float                   mScreenDPI;
-  
+
   mozilla::UniquePtr<nsPrintData> mPrt;
   nsPagePrintTimer*       mPagePrintTimer;
   WeakFrame               mPageSeqFrame;
