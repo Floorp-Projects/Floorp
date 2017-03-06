@@ -109,13 +109,6 @@ toolbar:-moz-lwtheme {
   margin-top: var(--space-above-tabbar);
 }
 
-#main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[customizing-dragovertarget].customization-target::before,
-#main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #TabsToolbar[customizing-dragovertarget].customization-target::before,
-#main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #toolbar-menubar.customization-target:hover::before,
-#main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #TabsToolbar.customization-target:hover::before {
-  outline-color: CaptionText;
-}
-
 #navigator-toolbox {
   -moz-appearance: none;
   background-color: transparent;

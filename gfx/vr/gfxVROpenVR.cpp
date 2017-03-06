@@ -297,7 +297,15 @@ VRDisplayOpenVR::GetSensorState(double timeOffset)
 
   VRHMDSensorState result;
   result.Clear();
-  result.timestamp = PR_Now();
+
+  ::vr::Compositor_FrameTiming timing;
+  timing.m_nSize = sizeof(::vr::Compositor_FrameTiming);
+  if (mVRCompositor->GetFrameTiming(&timing)) {
+    result.timestamp = timing.m_flSystemTimeInSeconds;
+  } else {
+    // This should not happen, but log it just in case
+    NS_WARNING("OpenVR - IVRCompositor::GetFrameTiming failed");
+  }
 
   if (poses[::vr::k_unTrackedDeviceIndex_Hmd].bDeviceIsConnected &&
       poses[::vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid &&

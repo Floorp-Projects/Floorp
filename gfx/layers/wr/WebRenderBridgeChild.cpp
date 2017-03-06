@@ -17,7 +17,8 @@ namespace mozilla {
 namespace layers {
 
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
-  : mIsInTransaction(false)
+  : mReadLockSequenceNumber(0)
+  , mIsInTransaction(false)
   , mIdNamespace(0)
   , mResourceId(0)
   , mPipelineId(aPipelineId)
@@ -82,6 +83,8 @@ WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
   UpdateFwdTransactionId();
   this->SendDPBegin(aSize);
   mIsInTransaction = true;
+  mReadLockSequenceNumber = 0;
+  mReadLocks.AppendElement();
   return true;
 }
 
@@ -197,6 +200,15 @@ WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aT
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
 
+  for (nsTArray<ReadLockInit>& locks : mReadLocks) {
+    if (locks.Length()) {
+      if (!SendInitReadLocks(locks)) {
+        NS_WARNING("WARNING: sending read locks failed!");
+        return;
+      }
+    }
+  }
+
   wr::BuiltDisplayList dl = ProcessWebrenderCommands(aSize, mCommands);
   ByteBuffer dlData(Move(dl.dl));
   ByteBuffer auxData(Move(dl.aux));
@@ -212,6 +224,7 @@ WebRenderBridgeChild::DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aT
   mCommands.Clear();
   mParentCommands.Clear();
   mDestroyedActors.Clear();
+  mReadLocks.Clear();
   mIsInTransaction = false;
 }
 
@@ -376,9 +389,16 @@ WebRenderBridgeChild::UseTextures(CompositableClient* aCompositable,
     MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
     MOZ_RELEASE_ASSERT(t.mTextureClient->GetIPDLActor()->GetIPCChannel() == GetIPCChannel());
     ReadLockDescriptor readLock;
-    t.mTextureClient->SerializeReadLock(readLock);
+    ReadLockHandle readLockHandle;
+    if (t.mTextureClient->SerializeReadLock(readLock)) {
+      readLockHandle = ReadLockHandle(++mReadLockSequenceNumber);
+      if (mReadLocks.LastElement().Length() >= GetMaxFileDescriptorsPerMessage()) {
+        mReadLocks.AppendElement();
+      }
+      mReadLocks.LastElement().AppendElement(ReadLockInit(readLock, readLockHandle));
+    }
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
-                                        readLock,
+                                        readLockHandle,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
     GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);

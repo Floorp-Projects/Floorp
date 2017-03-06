@@ -451,11 +451,11 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 %endif
 
-#browser-bottombox[lwthemefooter="true"] {
+:root[lwthemefooter=true] #browser-bottombox:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: bottom left;
   background-color: var(--lwt-accent-color);
-  background-image: var(--lwt-header-image);
+  background-image: var(--lwt-footer-image);
 }
 
 .menuitem-iconic-tooltip {

@@ -129,3 +129,8 @@ extern "C" void Rust_StringWrite();
 TEST(RustNsString, StringWrite) {
   Rust_StringWrite();
 }
+
+extern "C" void Rust_FromEmptyRustString();
+TEST(RustNsString, FromEmptyRustString) {
+  Rust_FromEmptyRustString();
+}

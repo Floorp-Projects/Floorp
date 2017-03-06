@@ -3,12 +3,27 @@
 
 // Tests that keyboard navigation into and out of debugger code editor
 
-const {
-  setupTestRunner,
-  keyboardNavigation
-} = require("devtools/client/debugger/new/integration-tests");
+add_task(function* () {
+  const dbg = yield initDebugger("doc-scripts.html");
+  let doc = dbg.win.document;
 
-add_task(function*() {
-  setupTestRunner(this);
-  yield keyboardNavigation(this);
+  yield selectSource(dbg, "simple2");
+
+  yield waitForElement(dbg, ".CodeMirror");
+  findElementWithSelector(dbg, ".CodeMirror").focus();
+
+  // Enter code editor
+  pressKey(dbg, "Enter");
+  is(findElementWithSelector(dbg, "textarea"), doc.activeElement,
+    "Editor is enabled");
+
+  // Exit code editor and focus on container
+  pressKey(dbg, "Escape");
+  is(findElementWithSelector(dbg, ".CodeMirror"), doc.activeElement,
+    "Focused on container");
+
+  // Enter code editor
+  pressKey(dbg, "Tab");
+  is(findElementWithSelector(dbg, "textarea"), doc.activeElement,
+    "Editor is enabled");
 });

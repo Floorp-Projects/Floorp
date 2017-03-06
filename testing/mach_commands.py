@@ -18,7 +18,7 @@ from mach.decorators import (
     Command,
 )
 
-from mozbuild.base import MachCommandBase
+from mozbuild.base import BuildEnvironmentNotFoundException, MachCommandBase
 from mozbuild.base import MachCommandConditions as conditions
 import mozpack.path as mozpath
 from argparse import ArgumentParser
@@ -690,8 +690,18 @@ class PushToTry(MachCommandBase):
         else:
             paths_by_flavor = {}
 
+        local_artifact_build = False
+        try:
+            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+                local_artifact_build = True
+        except BuildEnvironmentNotFoundException:
+            # If we don't have a build locally, we can't tell whether
+            # an artifact build is desired, but we still want the
+            # command to succeed, if possible.
+            pass
+
         # Add --artifact if --enable-artifact-builds is set ...
-        if self.substs.get("MOZ_ARTIFACT_BUILDS"):
+        if local_artifact_build:
             extra["artifact"] = True
         # ... unless --no-artifact is explicitly given.
         if kwargs["no_artifact"]:
@@ -705,16 +715,15 @@ class PushToTry(MachCommandBase):
             print(e.message)
             sys.exit(1)
 
-        if kwargs["verbose"]:
-            if self.substs.get("MOZ_ARTIFACT_BUILDS"):
-                if kwargs["no_artifact"]:
-                    print('mozconfig has --enable-artifact-builds but '
-                          '--no-artifact specified, not including --artifact '
-                          'flag in try syntax')
-                else:
-                    print('mozconfig has --enable-artifact-builds; including '
-                          '--artifact flag in try syntax (use --no-artifact '
-                          'to override)')
+        if local_artifact_build:
+            if kwargs["no_artifact"]:
+                print('mozconfig has --enable-artifact-builds but '
+                      '--no-artifact specified, not including --artifact '
+                      'flag in try syntax')
+            else:
+                print('mozconfig has --enable-artifact-builds; including '
+                      '--artifact flag in try syntax (use --no-artifact '
+                      'to override)')
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')

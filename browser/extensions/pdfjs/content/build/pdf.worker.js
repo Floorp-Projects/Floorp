@@ -37484,22 +37484,22 @@ var Page = function PageClosure() {
    getArray = getArray || false;
    while (dict) {
     var value = getArray ? dict.getArray(key) : dict.get(key);
-    if (value) {
+    if (value !== undefined) {
      if (!valueArray) {
       valueArray = [];
      }
      valueArray.push(value);
     }
     if (++loopCount > MAX_LOOP_COUNT) {
-     warn('Page_getInheritedPageProp: maximum loop count exceeded.');
-     break;
+     warn('getInheritedPageProp: maximum loop count exceeded for ' + key);
+     return valueArray ? valueArray[0] : undefined;
     }
     dict = dict.get('Parent');
    }
    if (!valueArray) {
-    return Dict.empty;
+    return undefined;
    }
-   if (valueArray.length === 1 || !isDict(valueArray[0]) || loopCount > MAX_LOOP_COUNT) {
+   if (valueArray.length === 1 || !isDict(valueArray[0])) {
     return valueArray[0];
    }
    return Dict.merge(this.xref, valueArray);
@@ -37508,7 +37508,7 @@ var Page = function PageClosure() {
    return this.getPageProp('Contents');
   },
   get resources() {
-   return shadow(this, 'resources', this.getInheritedPageProp('Resources'));
+   return shadow(this, 'resources', this.getInheritedPageProp('Resources') || Dict.empty);
   },
   get mediaBox() {
    var mediaBox = this.getInheritedPageProp('MediaBox', true);
@@ -41657,10 +41657,14 @@ var CFFFont = function CFFFontClosure() {
   SKIP_PRIVATE_USE_RANGE_F000_TO_F01F = true;
  }
 }());
+exports.SEAC_ANALYSIS_ENABLED = SEAC_ANALYSIS_ENABLED;
+exports.PRIVATE_USE_OFFSET_START = PRIVATE_USE_OFFSET_START;
+exports.PRIVATE_USE_OFFSET_END = PRIVATE_USE_OFFSET_END;
 exports.ErrorFont = ErrorFont;
 exports.Font = Font;
 exports.FontFlags = FontFlags;
 exports.IdentityToUnicodeMap = IdentityToUnicodeMap;
+exports.ProblematicCharRanges = ProblematicCharRanges;
 exports.ToUnicodeMap = ToUnicodeMap;
 exports.getFontType = getFontType;
 
@@ -49125,8 +49129,8 @@ exports.Type1Parser = Type1Parser;
 
 "use strict";
 
-var pdfjsVersion = '1.7.337';
-var pdfjsBuild = '9163a6fb';
+var pdfjsVersion = '1.7.348';
+var pdfjsBuild = '754c4bd0';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

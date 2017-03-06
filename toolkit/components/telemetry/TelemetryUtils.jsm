@@ -126,12 +126,8 @@ this.TelemetryUtils = {
    * @return {String} The local time ISO string.
    */
   toLocalTimeISOString(date) {
-    function padNumber(number, places) {
-      number = number.toString();
-      while (number.length < places) {
-        number = "0" + number;
-      }
-      return number;
+    function padNumber(number, length) {
+      return number.toString().padStart(length, "0");
     }
 
     let sign = (n) => n >= 0 ? "+" : "-";

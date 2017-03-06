@@ -1177,7 +1177,8 @@ parent:
 
      async FileCreationRequest(nsID aID, nsString aFullPath, nsString aType,
                                nsString aName, bool lastModifiedPassed,
-                               int64_t lastModified, bool aIsFromNsIFile);
+                               int64_t lastModified, bool aExistenceCheck,
+                               bool aIsFromNsIFile);
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, PBlob blob,
                                                 Principal principal);

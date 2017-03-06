@@ -21,11 +21,11 @@ extensions.registerSchemaAPI("devtools.network", "devtools_parent", (context) =>
 
           let targetPromise = getDevToolsTargetForContext(context);
           targetPromise.then(target => {
-            target.on("will-navigate", listener);
+            target.on("navigate", listener);
           });
           return () => {
             targetPromise.then(target => {
-              target.off("will-navigate", listener);
+              target.off("navigate", listener);
             });
           };
         }).api(),

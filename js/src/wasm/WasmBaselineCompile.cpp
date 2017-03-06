@@ -1775,20 +1775,20 @@ class BaseCompiler
         return specific;
     }
 
-    MOZ_MUST_USE bool popConstI32(int32_t& c) {
+    MOZ_MUST_USE bool popConstI32(int32_t* c) {
         Stk& v = stk_.back();
         if (v.kind() != Stk::ConstI32)
             return false;
-        c = v.i32val();
+        *c = v.i32val();
         stk_.popBack();
         return true;
     }
 
-    MOZ_MUST_USE bool popConstI64(int64_t& c) {
+    MOZ_MUST_USE bool popConstI64(int64_t* c) {
         Stk& v = stk_.back();
         if (v.kind() != Stk::ConstI64)
             return false;
-        c = v.i64val();
+        *c = v.i64val();
         stk_.popBack();
         return true;
     }
@@ -1809,32 +1809,32 @@ class BaseCompiler
         return true;
     }
 
-    MOZ_MUST_USE bool popConstPositivePowerOfTwoI32(int32_t& c,
-                                                    uint_fast8_t& power,
+    MOZ_MUST_USE bool popConstPositivePowerOfTwoI32(int32_t* c,
+                                                    uint_fast8_t* power,
                                                     int32_t cutoff)
     {
         Stk& v = stk_.back();
         if (v.kind() != Stk::ConstI32)
             return false;
-        c = v.i32val();
-        if (c <= cutoff || !IsPowerOfTwo(static_cast<uint32_t>(c)))
+        *c = v.i32val();
+        if (*c <= cutoff || !IsPowerOfTwo(static_cast<uint32_t>(*c)))
             return false;
-        power = FloorLog2(c);
+        *power = FloorLog2(*c);
         stk_.popBack();
         return true;
     }
 
-    MOZ_MUST_USE bool popConstPositivePowerOfTwoI64(int64_t& c,
-                                                    uint_fast8_t& power,
+    MOZ_MUST_USE bool popConstPositivePowerOfTwoI64(int64_t* c,
+                                                    uint_fast8_t* power,
                                                     int64_t cutoff)
     {
         Stk& v = stk_.back();
         if (v.kind() != Stk::ConstI64)
             return false;
-        c = v.i64val();
-        if (c <= cutoff || !IsPowerOfTwo(static_cast<uint64_t>(c)))
+        *c = v.i64val();
+        if (*c <= cutoff || !IsPowerOfTwo(static_cast<uint64_t>(*c)))
             return false;
-        power = FloorLog2(c);
+        *power = FloorLog2(*c);
         stk_.popBack();
         return true;
     }
@@ -3230,11 +3230,13 @@ class BaseCompiler
 #endif // FLOAT_TO_I64_CALLOUT
 
 #ifndef I64_TO_FLOAT_CALLOUT
-    bool convertI64ToFloatNeedsTemp(bool isUnsigned) const {
+    bool convertI64ToFloatNeedsTemp(ValType to, bool isUnsigned) const {
 # if defined(JS_CODEGEN_X86)
-        return isUnsigned && AssemblerX86Shared::HasSSE3();
+        return isUnsigned &&
+               ((to == ValType::F64 && AssemblerX86Shared::HasSSE3()) ||
+               to == ValType::F32);
 # else
-        return false;
+        return isUnsigned;
 # endif
     }
 
@@ -3910,7 +3912,7 @@ void
 BaseCompiler::emitAddI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.add32(Imm32(c), r);
         pushI32(r);
@@ -3927,7 +3929,7 @@ void
 BaseCompiler::emitAddI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.add64(Imm64(c), r);
         pushI64(r);
@@ -3964,7 +3966,7 @@ void
 BaseCompiler::emitSubtractI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.sub32(Imm32(c), r);
         pushI32(r);
@@ -3981,7 +3983,7 @@ void
 BaseCompiler::emitSubtractI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.sub64(Imm64(c), r);
         pushI64(r);
@@ -4076,7 +4078,7 @@ BaseCompiler::emitQuotientI32()
 {
     int32_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI32(c, power, 0)) {
+    if (popConstPositivePowerOfTwoI32(&c, &power, 0)) {
         if (power != 0) {
             RegI32 r = popI32();
             Label positive;
@@ -4110,7 +4112,7 @@ BaseCompiler::emitQuotientU32()
 {
     int32_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI32(c, power, 0)) {
+    if (popConstPositivePowerOfTwoI32(&c, &power, 0)) {
         if (power != 0) {
             RegI32 r = popI32();
             masm.rshift32(Imm32(power & 31), r);
@@ -4137,7 +4139,7 @@ BaseCompiler::emitRemainderI32()
 {
     int32_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI32(c, power, 1)) {
+    if (popConstPositivePowerOfTwoI32(&c, &power, 1)) {
         RegI32 r = popI32();
         RegI32 temp = needI32();
         moveI32(r, temp);
@@ -4176,7 +4178,7 @@ BaseCompiler::emitRemainderU32()
 {
     int32_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI32(c, power, 1)) {
+    if (popConstPositivePowerOfTwoI32(&c, &power, 1)) {
         RegI32 r = popI32();
         masm.and32(Imm32(c-1), r);
         pushI32(r);
@@ -4203,7 +4205,7 @@ BaseCompiler::emitQuotientI64()
 # ifdef JS_PUNBOX64
     int64_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI64(c, power, 0)) {
+    if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
         if (power != 0) {
             RegI64 r = popI64();
             Label positive;
@@ -4234,7 +4236,7 @@ BaseCompiler::emitQuotientU64()
 # ifdef JS_PUNBOX64
     int64_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI64(c, power, 0)) {
+    if (popConstPositivePowerOfTwoI64(&c, &power, 0)) {
         if (power != 0) {
             RegI64 r = popI64();
             masm.rshift64(Imm32(power & 63), r);
@@ -4259,7 +4261,7 @@ BaseCompiler::emitRemainderI64()
 # ifdef JS_PUNBOX64
     int64_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI64(c, power, 1)) {
+    if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
         RegI64 r = popI64();
         RegI64 temp = needI64();
         moveI64(r, temp);
@@ -4295,7 +4297,7 @@ BaseCompiler::emitRemainderU64()
 # ifdef JS_PUNBOX64
     int64_t c;
     uint_fast8_t power;
-    if (popConstPositivePowerOfTwoI64(c, power, 1)) {
+    if (popConstPositivePowerOfTwoI64(&c, &power, 1)) {
         RegI64 r = popI64();
         masm.and64(Imm64(c-1), r);
         pushI64(r);
@@ -4444,7 +4446,7 @@ void
 BaseCompiler::emitOrI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.or32(Imm32(c), r);
         pushI32(r);
@@ -4461,7 +4463,7 @@ void
 BaseCompiler::emitOrI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.or64(Imm64(c), r);
         pushI64(r);
@@ -4478,7 +4480,7 @@ void
 BaseCompiler::emitAndI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.and32(Imm32(c), r);
         pushI32(r);
@@ -4495,7 +4497,7 @@ void
 BaseCompiler::emitAndI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.and64(Imm64(c), r);
         pushI64(r);
@@ -4512,7 +4514,7 @@ void
 BaseCompiler::emitXorI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.xor32(Imm32(c), r);
         pushI32(r);
@@ -4529,7 +4531,7 @@ void
 BaseCompiler::emitXorI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.xor64(Imm64(c), r);
         pushI64(r);
@@ -4546,7 +4548,7 @@ void
 BaseCompiler::emitShlI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.lshift32(Imm32(c & 31), r);
         pushI32(r);
@@ -4564,7 +4566,7 @@ void
 BaseCompiler::emitShlI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.lshift64(Imm32(c & 63), r);
         pushI64(r);
@@ -4581,7 +4583,7 @@ void
 BaseCompiler::emitShrI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.rshift32Arithmetic(Imm32(c & 31), r);
         pushI32(r);
@@ -4599,7 +4601,7 @@ void
 BaseCompiler::emitShrI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.rshift64Arithmetic(Imm32(c & 63), r);
         pushI64(r);
@@ -4616,7 +4618,7 @@ void
 BaseCompiler::emitShrU32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.rshift32(Imm32(c & 31), r);
         pushI32(r);
@@ -4634,7 +4636,7 @@ void
 BaseCompiler::emitShrU64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         masm.rshift64(Imm32(c & 63), r);
         pushI64(r);
@@ -4651,7 +4653,7 @@ void
 BaseCompiler::emitRotrI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.rotateRight(Imm32(c & 31), r, r);
         pushI32(r);
@@ -4668,7 +4670,7 @@ void
 BaseCompiler::emitRotrI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         RegI32 temp;
         if (rotate64NeedsTemp())
@@ -4690,7 +4692,7 @@ void
 BaseCompiler::emitRotlI32()
 {
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r = popI32();
         masm.rotateLeft(Imm32(c & 31), r, r);
         pushI32(r);
@@ -4707,7 +4709,7 @@ void
 BaseCompiler::emitRotlI64()
 {
     int64_t c;
-    if (popConstI64(c)) {
+    if (popConstI64(&c)) {
         RegI64 r = popI64();
         RegI32 temp;
         if (rotate64NeedsTemp())
@@ -5024,7 +5026,7 @@ BaseCompiler::emitConvertU64ToF32()
     RegI64 r0 = popI64();
     RegF32 f0 = needF32();
     RegI32 temp;
-    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+    if (convertI64ToFloatNeedsTemp(ValType::F32, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF32(r0, IsUnsigned(true), f0, temp);
     if (temp != Register::Invalid())
@@ -5081,7 +5083,7 @@ BaseCompiler::emitConvertU64ToF64()
     RegI64 r0 = popI64();
     RegF64 d0 = needF64();
     RegI32 temp;
-    if (convertI64ToFloatNeedsTemp(IsUnsigned(true)))
+    if (convertI64ToFloatNeedsTemp(ValType::F64, IsUnsigned(true)))
         temp = needI32();
     convertI64ToF64(r0, IsUnsigned(true), d0, temp);
     if (temp != Register::Invalid())
@@ -5162,7 +5164,7 @@ BaseCompiler::emitBranchSetup(BranchState* b)
       case LatentOp::Compare: {
         switch (latentType_) {
           case ValType::I32: {
-            if (popConstI32(b->i32.imm)) {
+            if (popConstI32(&b->i32.imm)) {
                 b->i32.lhs = popI32();
                 b->i32.rhsImm = true;
             } else {
@@ -5971,21 +5973,15 @@ BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee, ValType 
 # else
     MOZ_CRASH("BaseCompiler platform hook: emitConvertInt64ToFloatingCallout");
 # endif
-    masm.callWithABI(callee, MoveOp::DOUBLE);
+    masm.callWithABI(callee, resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
 
     freeI32(temp);
     freeI64(input);
 
-    RegF64 rv = captureReturnedF64(call);
-
-    if (resultType == ValType::F32) {
-        RegF32 rv2 = needF32();
-        masm.convertDoubleToFloat32(rv, rv2);
-        freeF64(rv);
-        pushF32(rv2);
-    } else {
-        pushF64(rv);
-    }
+    if (resultType == ValType::F32)
+        pushF32(captureReturnedF32(call));
+    else
+        pushF64(captureReturnedF64(call));
 
     return true;
 }
@@ -6330,7 +6326,7 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck)
     MOZ_ASSERT(!*omitBoundsCheck);
 
     int32_t addrTmp;
-    if (popConstI32(addrTmp)) {
+    if (popConstI32(&addrTmp)) {
         uint32_t addr = addrTmp;
 
         uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
@@ -6615,7 +6611,7 @@ BaseCompiler::emitCompareI32(Assembler::Condition compareOp, ValType compareType
         return;
 
     int32_t c;
-    if (popConstI32(c)) {
+    if (popConstI32(&c)) {
         RegI32 r0 = popI32();
         masm.cmp32Set(compareOp, r0, Imm32(c), r0);
         pushI32(r0);
@@ -7120,7 +7116,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F32ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Int64ToFloatingPoint,
+                                                SymbolicAddress::Int64ToFloat32,
                                                 ValType::I64, ValType::F32));
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF32, ValType::I64, ValType::F32));
@@ -7128,7 +7124,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F32ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Uint64ToFloatingPoint,
+                                                SymbolicAddress::Uint64ToFloat32,
                                                 ValType::I64, ValType::F32));
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF32, ValType::I64, ValType::F32));
@@ -7185,7 +7181,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64ConvertSI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Int64ToFloatingPoint,
+                                                SymbolicAddress::Int64ToDouble,
                                                 ValType::I64, ValType::F64));
 #else
             CHECK_NEXT(emitConversion(emitConvertI64ToF64, ValType::I64, ValType::F64));
@@ -7193,7 +7189,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::F64ConvertUI64):
 #ifdef I64_TO_FLOAT_CALLOUT
             CHECK_NEXT(emitCalloutConversionOOM(emitConvertInt64ToFloatingCallout,
-                                                SymbolicAddress::Uint64ToFloatingPoint,
+                                                SymbolicAddress::Uint64ToDouble,
                                                 ValType::I64, ValType::F64));
 #else
             CHECK_NEXT(emitConversion(emitConvertU64ToF64, ValType::I64, ValType::F64));

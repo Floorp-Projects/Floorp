@@ -109,7 +109,7 @@ function TestGeneratorFunction() {
     // Doesn't matter particularly what string gets serialized, as long
     // as it contains "function*" and "yield 10".
     assertEq(GeneratorFunction('yield 10').toString(),
-             "function* anonymous() {\nyield 10\n}");
+             "function* anonymous(\n) {\nyield 10\n}");
 }
 TestGeneratorFunction();
 

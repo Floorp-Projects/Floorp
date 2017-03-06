@@ -322,7 +322,7 @@ BaselineCacheIRCompiler::emitGuardSpecificAtom()
 
     // We have a non-atomized string with the same length. Call a helper
     // function to do the comparison.
-    LiveRegisterSet volatileRegs(RegisterSet::Volatile());
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
     masm.setupUnalignedABICall(scratch);
@@ -805,16 +805,15 @@ BaselineCacheIRCompiler::emitAddAndStoreSlotShared(CacheOp op)
         // We have to (re)allocate dynamic slots. Do this first, as it's the
         // only fallible operation here. This simplifies the callTypeUpdateIC
         // call below: it does not have to worry about saving registers used by
-        // failure paths.
+        // failure paths. Note that growSlotsDontReportOOM is fallible but does
+        // not GC.
         Address numNewSlotsAddr = stubAddress(reader.stubOffset());
 
         FailurePath* failure;
         if (!addFailurePath(&failure))
             return false;
 
-        AllocatableRegisterSet regs(RegisterSet::Volatile());
-        LiveRegisterSet save(regs.asLiveSet());
-
+        LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
         masm.PushRegsInMask(save);
 
         masm.setupUnalignedABICall(scratch1);
@@ -1697,6 +1696,9 @@ BaselineCacheIRCompiler::init(CacheKind kind)
 #endif
         break;
     }
+
+    // Baseline doesn't allocate float registers so none of them are live.
+    liveFloatRegs_ = LiveFloatRegisterSet(FloatRegisterSet());
 
     allocator.initAvailableRegs(available);
     outputUnchecked_.emplace(R0);

@@ -1134,7 +1134,7 @@ StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 
           MutexAutoLock lock(info->GetMutex());
 
-          info->StreamJSON(gBuffer, aWriter, aSinceTime);
+          info->StreamJSON(gBuffer, aWriter, gStartTime, aSinceTime);
         }
       }
 
@@ -1208,6 +1208,7 @@ ProfilerMarker::GetTime() const {
 }
 
 void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
+                                const TimeStamp& aStartTime,
                                 UniqueStacks& aUniqueStacks) const
 {
   // Schema:
@@ -1223,7 +1224,7 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
     if (mPayload) {
       aWriter.StartObjectElement();
       {
-          mPayload->StreamPayload(aWriter, aUniqueStacks);
+          mPayload->StreamPayload(aWriter, aStartTime, aUniqueStacks);
       }
       aWriter.EndObject();
     }
@@ -2383,20 +2384,13 @@ profiler_js_operation_callback()
 }
 
 double
-profiler_time(const mozilla::TimeStamp& aTime)
-{
-  // This function runs both on and off the main thread.
-
-  mozilla::TimeDuration delta = aTime - gStartTime;
-  return delta.ToMilliseconds();
-}
-
-double
 profiler_time()
 {
   // This function runs both on and off the main thread.
 
-  return profiler_time(mozilla::TimeStamp::Now());
+  mozilla::TimeDuration delta =
+    mozilla::TimeStamp::Now() - gStartTime;
+  return delta.ToMilliseconds();
 }
 
 bool
@@ -2598,7 +2592,7 @@ void PseudoStack::flushSamplerOnJSShutdown()
       }
 
       MutexAutoLock lock(info->GetMutex());
-      info->FlushSamplesAndMarkers(gBuffer);
+      info->FlushSamplesAndMarkers(gBuffer, gStartTime);
     }
   }
 

@@ -179,7 +179,7 @@ RequestListContextMenu.prototype = {
       click: () => this.openStatistics(true)
     }));
 
-    menu.popup(screenX, screenY, window.NetMonitorController._toolbox);
+    menu.popup(screenX, screenY, { doc: window.parent.document });
     return menu;
   },
 

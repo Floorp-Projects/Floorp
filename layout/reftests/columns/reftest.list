@@ -35,3 +35,4 @@ HTTP(..) == columnfill-auto-3.html columnfill-auto-2-ref.html
 == columns-table-caption-000.html columns-table-caption-000-ref.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501-ref.html
 fuzzy-if(browserIsRemote&&winWidget,140,276) == fieldset-columns-001.html fieldset-columns-001-ref.html
+== dynamic-change-with-overflow-1.html dynamic-change-with-overflow-1-ref.html

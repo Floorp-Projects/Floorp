@@ -18,6 +18,8 @@ public class Highlight implements Item {
     private final Utils.HighlightSource source;
     private final long time;
 
+    private long historyId;
+
     private Metadata metadata;
 
     private @Nullable Boolean isPinned;
@@ -32,6 +34,8 @@ public class Highlight implements Item {
         url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
         source = Utils.highlightSource(cursor);
         time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
+
+        historyId = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.HISTORY_ID));
 
         metadata = Metadata.fromCursor(cursor);
 
@@ -93,5 +97,9 @@ public class Highlight implements Item {
 
     public Utils.HighlightSource getSource() {
         return source;
+    }
+
+    public long getHistoryId() {
+        return historyId;
     }
 }

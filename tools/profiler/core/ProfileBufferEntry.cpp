@@ -719,8 +719,12 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
   }
 }
 
-void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                                        double aSinceTime, UniqueStacks& aUniqueStacks)
+void
+ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
+                                   int aThreadId,
+                                   const TimeStamp& aStartTime,
+                                   double aSinceTime,
+                                   UniqueStacks& aUniqueStacks)
 {
   int readPos = mReadPos;
   int currentThreadID = -1;
@@ -731,7 +735,7 @@ void ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThre
     } else if (currentThreadID == aThreadId && entry.isMarker()) {
       const ProfilerMarker* marker = entry.getMarker();
       if (marker->GetTime() >= aSinceTime) {
-        entry.getMarker()->StreamJSON(aWriter, aUniqueStacks);
+        entry.getMarker()->StreamJSON(aWriter, aStartTime, aUniqueStacks);
       }
     }
     readPos = (readPos + 1) % mEntrySize;
@@ -751,15 +755,16 @@ int ProfileBuffer::FindLastSampleOfThread(int aThreadId)
     }
   }
 
+  // This is rare. It typically happens after ProfileBuffer::reset() occurs.
   return -1;
 }
 
-void
+bool
 ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime)
 {
   int lastSampleStartPos = FindLastSampleOfThread(aThreadId);
   if (lastSampleStartPos == -1) {
-    return;
+    return false;
   }
 
   MOZ_ASSERT(mEntries[lastSampleStartPos].isThreadId());
@@ -773,7 +778,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime)
     switch (mEntries[readPos].kind()) {
       case ProfileBufferEntry::Kind::ThreadId:
         // We're done.
-        return;
+        return true;
       case ProfileBufferEntry::Kind::Time:
         // Copy with new time
         addTag(ProfileBufferEntry::Time((TimeStamp::Now() -
@@ -788,6 +793,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId, const TimeStamp& aStartTime)
         break;
     }
   }
+  return true;
 }
 
 // END ProfileBuffer

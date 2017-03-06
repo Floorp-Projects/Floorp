@@ -48,6 +48,7 @@ public:
                    const gfx::Rect& aRightEyeRect);
   RefPtr<gfx::VRControllerHost> GetController(const uint32_t& aControllerID);
   void GetVRControllerInfo(nsTArray<VRControllerInfo>& aControllerInfo);
+  void CreateVRTestSystem();
 
 protected:
   VRManager();
@@ -77,6 +78,7 @@ private:
   Atomic<bool> mInitialized;
 
   TimeStamp mLastRefreshTime;
+  bool mVRTestSystemCreated;
 };
 
 } // namespace gfx

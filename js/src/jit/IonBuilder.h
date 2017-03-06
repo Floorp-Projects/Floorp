@@ -395,12 +395,13 @@ class IonBuilder
                                             MDefinition* index, MDefinition* value);
     AbortReasonOr<Ok> setElemTryTypedStatic(bool* emitted, MDefinition* object,
                                             MDefinition* index, MDefinition* value);
-    AbortReasonOr<Ok> setElemTryDense(bool* emitted, MDefinition* object,
-                                      MDefinition* index, MDefinition* value, bool writeHole);
+    AbortReasonOr<Ok> initOrSetElemTryDense(bool* emitted, MDefinition* object,
+                                            MDefinition* index, MDefinition* value,
+                                            bool writeHole);
     AbortReasonOr<Ok> setElemTryArguments(bool* emitted, MDefinition* object,
                                           MDefinition* index, MDefinition* value);
-    AbortReasonOr<Ok> setElemTryCache(bool* emitted, MDefinition* object,
-                                      MDefinition* index, MDefinition* value);
+    AbortReasonOr<Ok> initOrSetElemTryCache(bool* emitted, MDefinition* object,
+                                            MDefinition* index, MDefinition* value);
     AbortReasonOr<Ok> setElemTryReferenceElemOfTypedObject(bool* emitted,
                                                            MDefinition* obj,
                                                            MDefinition* index,
@@ -528,7 +529,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_getelem_typed(MDefinition* obj, MDefinition* index,
                                          ScalarTypeDescr::Type arrayType);
     AbortReasonOr<Ok> jsop_setelem();
-    AbortReasonOr<Ok> jsop_setelem_dense(TemporaryTypeSet::DoubleConversion conversion,
+    AbortReasonOr<Ok> initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
                                          MDefinition* object, MDefinition* index,
                                          MDefinition* value, JSValueType unboxedType,
                                          bool writeHole, bool* emitted);
