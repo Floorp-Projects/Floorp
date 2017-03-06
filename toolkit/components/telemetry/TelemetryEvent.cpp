@@ -31,6 +31,7 @@ using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::StaticAutoPtr;
+using mozilla::TimeStamp;
 using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
@@ -583,7 +584,14 @@ TelemetryEvent::RecordChildEvents(GeckoProcessType aProcessType,
   StaticMutexAutoLock locker(gTelemetryEventsMutex);
   for (uint32_t i = 0; i < aEvents.Length(); ++i) {
     const mozilla::Telemetry::ChildEventData e = aEvents[i];
-    ::RecordEvent(locker, aProcessType, e.timestamp, e.category, e.method, e.object, e.value, e.extra);
+
+    // Timestamps from child processes are absolute. We fix them up here to be
+    // relative to the main process start time.
+    // This allows us to put events from all processes on the same timeline.
+    bool inconsistent = false;
+    double relativeTimestamp = (e.timestamp - TimeStamp::ProcessCreation(inconsistent)).ToMilliseconds();
+
+    ::RecordEvent(locker, aProcessType, relativeTimestamp, e.category, e.method, e.object, e.value, e.extra);
   }
   return NS_OK;
 }
@@ -594,15 +602,6 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
                             JS::HandleValue aExtra, JSContext* cx,
                             uint8_t optional_argc)
 {
-  // Get the current time.
-  double timestamp = -1;
-  nsresult rv = MsSinceProcessStart(&timestamp);
-  if (NS_FAILED(rv)) {
-    LogToBrowserConsole(nsIScriptError::warningFlag,
-                        NS_LITERAL_STRING("Failed to get time since process start."));
-    return NS_OK;
-  }
-
   // Check value argument.
   if ((optional_argc > 0) && !aValue.isNull() && !aValue.isString()) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
@@ -691,12 +690,19 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
     }
 
     if (res == RecordEventResult::Ok) {
-      TelemetryIPCAccumulator::RecordChildEvent(timestamp, aCategory, aMethod, aObject, value, extra);
+      TelemetryIPCAccumulator::RecordChildEvent(TimeStamp::NowLoRes(), aCategory,
+                                                aMethod, aObject, value, extra);
     }
   } else {
     StaticMutexAutoLock lock(gTelemetryEventsMutex);
 
     if (!gInitDone) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Get the current time.
+    double timestamp = -1;
+    if (NS_WARN_IF(NS_FAILED(MsSinceProcessStart(&timestamp)))) {
       return NS_ERROR_FAILURE;
     }
 
