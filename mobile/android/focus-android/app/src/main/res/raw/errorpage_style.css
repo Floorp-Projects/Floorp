@@ -13,14 +13,15 @@ body {
 
 body {
   /* Add a set of stripes at the top of pages */
-  background-image: linear-gradient(-45deg, #dfe8ee,     #dfe8ee 33%,
-                                            #ecf0f3 33%, #ecf0f3 66%,
-                                            #dfe8ee 66%, #dfe8ee);
+  background-image: linear-gradient(-45deg, #484443,     #484443 33%,
+                                            #3B3C3E 33%, #3B3C3E 66%,
+                                            #484443 66%, #484443);
   background-size: 64px var(--moz-background-height);
   /* background-size: 64px 32px; */
   background-repeat: repeat-x;
 
-  background-color: #f1f1f1;
+  background-color: #363B40;
+  color: #FFFFFF;
   padding: 0 20px;
 
   font-weight: 300;
@@ -81,7 +82,8 @@ button {
   border: none;
   padding: 1rem;
   font-family: sans-serif;
-  background-color: #e0e2e5;
+  background-color: #47404C;
+  color: #FFFFFF;
   font-weight: 300;
   border-radius: 2px;
   background-image: none;
