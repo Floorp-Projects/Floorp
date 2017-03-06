@@ -106,6 +106,22 @@ add_task(function* test_on_created_navigation_target_from_mouse_click() {
     },
   });
 
+  info("Open link with target=\"_blank\" in a new tab using click");
+
+  yield runTestCase({
+    extension,
+    openNavTarget() {
+      BrowserTestUtils.synthesizeMouseAtCenter("#test-create-new-tab-from-targetblank-click",
+                                               {},
+                                               tab.linkedBrowser);
+    },
+    expectedWebNavProps: {
+      sourceTabId: expectedSourceTab.sourceTabId,
+      sourceFrameId: 0,
+      url: `${OPENED_PAGE}#new-tab-from-targetblank-click`,
+    },
+  });
+
   yield BrowserTestUtils.removeTab(tab);
 
   yield extension.unload();
@@ -213,6 +229,25 @@ add_task(function* test_on_created_navigation_target_from_mouse_click_subframe()
       sourceTabId: expectedSourceTab.sourceTabId,
       sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
       url: `${OPENED_PAGE}#new-window-from-mouse-click-subframe`,
+    },
+  });
+
+  info("Open a subframe link with target=\"_blank\" in a new tab using click");
+
+  yield runTestCase({
+    extension,
+    openNavTarget() {
+      BrowserTestUtils.synthesizeMouseAtCenter(function() {
+        // This code runs as a framescript in the child process and it returns the
+        // target link in the subframe.
+        return this.content.frames[0].document // eslint-disable-line mozilla/no-cpows-in-tests
+          .querySelector("#test-create-new-tab-from-targetblank-click-subframe");
+      }, {}, tab.linkedBrowser);
+    },
+    expectedWebNavProps: {
+      sourceTabId: expectedSourceTab.sourceTabId,
+      sourceFrameId: expectedSourceTab.sourceTabFrames[1].frameId,
+      url: `${OPENED_PAGE}#new-tab-from-targetblank-click-subframe`,
     },
   });
 
