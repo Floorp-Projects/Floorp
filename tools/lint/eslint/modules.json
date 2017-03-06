@@ -194,7 +194,7 @@
   "require.js": ["require"],
   "RTCStatsReport.jsm": ["convertToRTCStatsReport"],
   "scratchpad-manager.jsm": ["ScratchpadManager"],
-  "server.js": ["MarionetteServer"],
+  "server.js": ["server"],
   "service.js": ["Service"],
   "SharedPromptUtils.jsm": ["PromptUtils", "EnableDelayHelper"],
   "ShutdownLeaksCollector.jsm": ["ContentCollector"],
