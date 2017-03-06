@@ -713,7 +713,7 @@ public:
     Replace(aCutStart, aCutLength, char_traits::sEmptyBuffer, 0);
   }
 
-  nsTSubstringSplitter_CharT Split(const char_type aChar);
+  nsTSubstringSplitter_CharT Split(const char_type aChar) const;
 
   /**
    * buffer sizing
