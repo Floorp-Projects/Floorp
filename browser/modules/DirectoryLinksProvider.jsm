@@ -195,7 +195,7 @@ var DirectoryLinksProvider = {
 
     if (matchOS) {
       return Cc["@mozilla.org/intl/ospreferences;1"].
-             getService(Ci.mozIOSPreferences).getSystemLocale();
+             getService(Ci.mozIOSPreferences).systemLocale;
     }
 
     try {
