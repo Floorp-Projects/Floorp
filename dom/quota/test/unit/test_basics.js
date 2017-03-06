@@ -8,6 +8,8 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const storageFile = "storage.sqlite";
+  const metadataFile = "storage/permanent/chrome/.metadata";
+  const metadata2File = "storage/permanent/chrome/.metadata-v2";
 
   info("Clearing");
 
@@ -57,6 +59,25 @@ function* testSteps()
 
   exists = file.exists();
   ok(exists, "Storage file does exist");
+
+  info("Initializing origin");
+
+  request = initChromeOrigin("persistent", continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  ok(request.result, "Origin directory was created");
+
+  file = getRelativeFile(metadataFile);
+
+  exists = file.exists();
+  ok(exists, "Metadata file does exist");
+
+  file = getRelativeFile(metadata2File);
+
+  exists = file.exists();
+  ok(exists, "Metadata v2 file does exist");
 
   finishTest();
 }

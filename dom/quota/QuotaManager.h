@@ -274,6 +274,14 @@ public:
                             const nsACString& aOrigin,
                             nsIFile** aDirectory);
 
+  nsresult
+  EnsureOriginIsInitializedInternal(PersistenceType aPersistenceType,
+                                    const nsACString& aSuffix,
+                                    const nsACString& aGroup,
+                                    const nsACString& aOrigin,
+                                    nsIFile** aDirectory,
+                                    bool* aCreated);
+
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
                        const nsACString& aOrigin);

@@ -275,6 +275,10 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
       HandleResponse();
       break;
 
+    case RequestResponse::TInitOriginResponse:
+      HandleResponse(aResponse.get_InitOriginResponse().created());
+      break;
+
     default:
       MOZ_CRASH("Unknown response type!");
   }

@@ -80,6 +80,18 @@ function init(callback)
   return request;
 }
 
+function initChromeOrigin(persistence, callback)
+{
+  let principal = Cc["@mozilla.org/systemprincipal;1"]
+                    .createInstance(Ci.nsIPrincipal);
+  let request =
+    SpecialPowers._getQuotaManager().initStoragesForPrincipal(principal,
+                                                              persistence);
+  request.callback = callback;
+
+  return request;
+}
+
 function clear(callback)
 {
   let request = SpecialPowers._getQuotaManager().clear();
