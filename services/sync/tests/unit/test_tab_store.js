@@ -80,9 +80,9 @@ function test_getAllTabs() {
 
   _("Sliced: " + JSON.stringify(tabs));
   equal(tabs.length, 1);
-  equal(tabs[0].urlHistory.length, 25);
+  equal(tabs[0].urlHistory.length, 5);
   equal(tabs[0].urlHistory[0], "http://foo40.bar");
-  equal(tabs[0].urlHistory[24], "http://foo16.bar");
+  equal(tabs[0].urlHistory[4], "http://foo36.bar");
 }
 
 function test_createRecord() {

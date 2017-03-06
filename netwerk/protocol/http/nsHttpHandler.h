@@ -321,13 +321,6 @@ public:
     SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
     bool IsH2MandatorySuiteEnabled() { return mH2MandatorySuiteEnabled; }
 
-    // Returns true if content-signature test pref is set such that they are
-    // NOT enforced on remote newtabs.
-    bool NewTabContentSignaturesDisabled()
-    {
-      return mNewTabContentSignaturesDisabled;
-    }
-
     // returns true in between Init and Shutdown states
     bool Active() { return mHandlerActive; }
 
@@ -552,9 +545,6 @@ private:
     FrameCheckLevel mEnforceH1Framing;
 
     nsCOMPtr<nsIRequestContextService> mRequestContextService;
-
-    // True if remote newtab content-signature disabled because of the channel.
-    bool mNewTabContentSignaturesDisabled;
 
     // If it is set to false, headers with empty value will not appear in the
     // header array - behavior as it used to be. If it is true: empty headers

@@ -50,7 +50,7 @@ module.exports = createClass({
 
     let touchButtonClass = "toolbar-button devtools-button";
     if (touchSimulation.enabled) {
-      touchButtonClass += " active";
+      touchButtonClass += " checked";
     }
 
     return dom.header(

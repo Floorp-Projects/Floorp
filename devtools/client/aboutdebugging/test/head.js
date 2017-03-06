@@ -90,6 +90,37 @@ function getAddonList(document) {
 }
 
 /**
+ * Depending on whether there are temporary addons installed, return either a
+ * target list element or its container.
+ * @param  {DOMDocument}  document   #temporary-addons section container document
+ * @return {DOMNode}                 target list or container element
+ */
+function getTemporaryAddonList(document) {
+  return document.querySelector("#temporary-addons .target-list") ||
+    document.querySelector("#temporary-addons .targets");
+}
+
+/**
+ * Depending on whether the addon is installed, return either the addon list
+ * element or throw an Error.
+ * @param  {DOMDocument}  document   addon section container document
+ * @return {DOMNode}                 target list
+ * @throws {Error}                   add-on not found error
+ */
+function getAddonListWithAddon(document, id) {
+  const addon = document.querySelector(`[data-addon-id="${id}"]`);
+  if (!addon) {
+    throw new Error("couldn't find add-on by id");
+  }
+  return addon.closest(".target-list");
+}
+
+function getInstalledAddonNames(document) {
+  const selector = "#addons .target-name, #temporary-addons .target-name";
+  return [...document.querySelectorAll(selector)];
+}
+
+/**
  * Depending on whether there are service workers installed, return either a
  * target list element or its container.
  * @param  {DOMDocument}  document   #service-workers section container document
@@ -118,7 +149,7 @@ function* installAddon({document, path, name, isWebExtension}) {
   let file = getSupportsFile(path);
   MockFilePicker.setFiles([file.file]);
 
-  let addonList = getAddonList(document);
+  let addonList = getTemporaryAddonList(document);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
   let onAddonInstalled;
@@ -159,7 +190,7 @@ function* installAddon({document, path, name, isWebExtension}) {
 }
 
 function* uninstallAddon({document, id, name}) {
-  let addonList = getAddonList(document);
+  let addonList = getAddonListWithAddon(document, id);
   let addonListMutation = waitForMutation(addonList, { childList: true });
 
   // Now uninstall this addon
@@ -340,7 +371,7 @@ function* setupTestAboutDebuggingWebExtension(name, path) {
   });
 
   // Retrieve the DEBUG button for the addon
-  let names = [...document.querySelectorAll("#addons .target-name")];
+  let names = getInstalledAddonNames(document);
   let nameEl = names.filter(element => element.textContent === name)[0];
   ok(name, "Found the addon in the list");
   let targetElement = nameEl.parentNode.parentNode;

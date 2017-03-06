@@ -19,11 +19,11 @@ public class Utils {
     }
 
     public static HighlightSource highlightSource(final Cursor cursor) {
-        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID))) {
+        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.BOOKMARK_ID))) {
             return HighlightSource.BOOKMARKED;
         }
 
-        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID))) {
+        if (-1 != cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.HISTORY_ID))) {
             return HighlightSource.VISITED;
         }
 

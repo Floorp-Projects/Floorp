@@ -18,6 +18,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/GamepadManager.h"
+#include "mozilla/dom/VRServiceTest.h"
 
 using layers::TextureClient;
 
@@ -43,6 +44,7 @@ VRManagerChild::VRManagerChild()
   , mMessageLoop(MessageLoop::current())
   , mFrameRequestCallbackCounter(0)
   , mBackend(layers::LayersBackend::LAYERS_NONE)
+  , mPromiseID(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -314,6 +316,22 @@ VRManagerChild::RefreshVRDisplaysWithCallback(uint64_t aWindowId)
   return success;
 }
 
+void
+VRManagerChild::CreateVRServiceTestDisplay(const nsCString& aID, dom::Promise* aPromise)
+{
+  SendCreateVRServiceTestDisplay(aID, mPromiseID);
+  mPromiseList.Put(mPromiseID, aPromise);
+  ++mPromiseID;
+}
+
+void
+VRManagerChild::CreateVRServiceTestController(const nsCString& aID, dom::Promise* aPromise)
+{
+  SendCreateVRServiceTestController(aID, mPromiseID);
+  mPromiseList.Put(mPromiseID, aPromise);
+  ++mPromiseID;
+}
+
 int
 VRManagerChild::GetInputFrameID()
 {
@@ -488,6 +506,36 @@ VRManagerChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
     gamepadManager->Update(aGamepadEvent);
   }
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+VRManagerChild::RecvReplyCreateVRServiceTestDisplay(const nsCString& aID,
+                                                    const uint32_t& aPromiseID,
+                                                    const uint32_t& aDeviceID)
+{
+  RefPtr<dom::Promise> p;
+  if (!mPromiseList.Get(aPromiseID, getter_AddRefs(p))) {
+    MOZ_CRASH("We should always have a promise.");
+  }
+
+  p->MaybeResolve(new VRMockDisplay(aID, aDeviceID));
+  mPromiseList.Remove(aPromiseID);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+VRManagerChild::RecvReplyCreateVRServiceTestController(const nsCString& aID,
+                                                       const uint32_t& aPromiseID,
+                                                       const uint32_t& aDeviceID)
+{
+  RefPtr<dom::Promise> p;
+  if (!mPromiseList.Get(aPromiseID, getter_AddRefs(p))) {
+    MOZ_CRASH("We should always have a promise.");
+  }
+
+  p->MaybeResolve(new VRMockController(aID, aDeviceID));
+  mPromiseList.Remove(aPromiseID);
   return IPC_OK();
 }
 

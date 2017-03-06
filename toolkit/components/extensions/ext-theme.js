@@ -55,7 +55,6 @@ class Theme {
    */
   loadColors(colors) {
     for (let color of Object.keys(colors)) {
-      Services.console.logStringMessage(`parsing color=${color}`);
       let val = colors[color];
 
       if (!val) {

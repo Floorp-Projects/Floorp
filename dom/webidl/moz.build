@@ -935,6 +935,7 @@ WEBIDL_FILES = [
     'VideoTrackList.webidl',
     'VRDisplay.webidl',
     'VRDisplayEvent.webidl',
+    'VRServiceTest.webidl',
     'VTTCue.webidl',
     'VTTRegion.webidl',
     'WaveShaperNode.webidl',
