@@ -73,13 +73,14 @@ def write_common_event_table(events, output, string_table, extra_table):
         print("  // objects: [%s]" % ", ".join(e.objects), file=output)
 
         # Write the common info structure
-        print("  {%d, %d, %d, %d, %d, %s}," %
+        print("  {%d, %d, %d, %d, %d, %s, %s}," %
                 (string_table.stringIndex(e.category),
                  string_table.stringIndex(e.expiry_version),
                  extras[0], # extra keys index
                  extras[1], # extra keys count
                  e.expiry_day,
-                 e.dataset),
+                 e.dataset,
+                 " | ".join(e.record_in_processes_enum)),
               file=output)
 
     print("};", file=output)
