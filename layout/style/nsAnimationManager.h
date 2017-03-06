@@ -355,12 +355,6 @@ protected:
   ~nsAnimationManager() override = default;
 
 private:
-
-  void BuildAnimations(nsStyleContext* aStyleContext,
-                       const mozilla::NonOwningAnimationTarget& aTarget,
-                       CSSAnimationCollection* aCollection,
-                       OwningCSSAnimationPtrArray& aAnimations);
-
   mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
 };
 
