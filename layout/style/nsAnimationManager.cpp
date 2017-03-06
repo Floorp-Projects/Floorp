@@ -642,27 +642,15 @@ GeckoCSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
                                          nsTArray<Keyframe>& aKeyframes)
 {
   MOZ_ASSERT(aPresContext);
+  MOZ_ASSERT(aPresContext->StyleSet()->IsGecko());
 
-  if (aPresContext->StyleSet()->IsServo()) {
-    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
-    MOZ_ASSERT(styleSet);
-    const ServoComputedValues* computedValues =
-      mStyleContext->StyleSource().AsServoComputedValues();
-    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
-    if (!styleSet->FillKeyframesForName(aSrc.GetName(),
-                                        timingFunction,
-                                        computedValues,
-                                        aKeyframes)) {
-      return false;
-    }
-  } else {
-    nsCSSKeyframesRule* rule =
-      aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
-    if (!rule) {
-      return false;
-    }
-    aKeyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
+  nsCSSKeyframesRule* rule =
+    aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
+  if (!rule) {
+    return false;
   }
+
+  aKeyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
 
   return true;
 }
