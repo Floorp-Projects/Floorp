@@ -25,7 +25,7 @@ static mozilla::LazyLogModule gPrintingLog("printing");
 //-- nsPrintData Class Impl
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
-  mType(aType), mDebugFilePtr(nullptr), mPrintObject(nullptr), mSelectedPO(nullptr),
+  mType(aType), mDebugFilePtr(nullptr), mSelectedPO(nullptr),
   mPrintDocList(0), mIsIFrameSelected(false),
   mIsParentAFrameSet(false), mOnStartSent(false),
   mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
@@ -83,8 +83,6 @@ nsPrintData::~nsPrintData()
       }
     }
   }
-
-  delete mPrintObject;
 
   if (mBrandName) {
     free(mBrandName);
