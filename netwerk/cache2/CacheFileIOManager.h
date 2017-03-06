@@ -336,7 +336,8 @@ public:
                                  bool             aPinning);
   static nsresult UpdateIndexEntry(CacheFileHandle *aHandle,
                                    const uint32_t  *aFrecency,
-                                   const uint32_t  *aExpirationTime);
+                                   const uint32_t  *aExpirationTime,
+                                   const bool      *aHasAltData);
 
   static nsresult UpdateIndexEntry();
 
