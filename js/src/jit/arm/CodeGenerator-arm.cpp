@@ -2292,6 +2292,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     MOZ_ASSERT(mir->offset() == 0);
 
     const LAllocation* ptr = ins->ptr();
+    const LAllocation* boundsCheckLimit = ins->boundsCheckLimit();
 
     bool isSigned;
     int size;
@@ -2325,7 +2326,6 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                                   ToRegister(ins->output()), scratch, Offset, Assembler::Always);
         }
     } else {
-        ScratchRegisterScope scratch(masm);
         Register ptrReg = ToRegister(ptr);
         if (isFloat) {
             FloatRegister output = ToFloatRegister(ins->output());
@@ -2334,8 +2334,8 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 
             Assembler::Condition cond = Assembler::Always;
             if (mir->needsBoundsCheck()) {
-                BufferOffset cmp = masm.as_cmp(ptrReg, Imm8(0));
-                masm.append(wasm::BoundsCheck(cmp.getOffset()));
+                Register boundsCheckLimitReg = ToRegister(boundsCheckLimit);
+                masm.as_cmp(ptrReg, O2Reg(boundsCheckLimitReg));
                 if (size == 32)
                     masm.ma_vimm_f32(GenericNaN(), output, Assembler::AboveOrEqual);
                 else
@@ -2343,19 +2343,20 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
                 cond = Assembler::Below;
             }
 
+            ScratchRegisterScope scratch(masm);
             masm.ma_vldr(output, HeapReg, ptrReg, scratch, 0, cond);
         } else {
             Register output = ToRegister(ins->output());
 
             Assembler::Condition cond = Assembler::Always;
             if (mir->needsBoundsCheck()) {
-                uint32_t cmpOffset = masm.as_cmp(ptrReg, Imm8(0)).getOffset();
-                masm.append(wasm::BoundsCheck(cmpOffset));
-
+                Register boundsCheckLimitReg = ToRegister(boundsCheckLimit);
+                masm.as_cmp(ptrReg, O2Reg(boundsCheckLimitReg));
                 masm.ma_mov(Imm32(0), output, Assembler::AboveOrEqual);
                 cond = Assembler::Below;
             }
 
+            ScratchRegisterScope scratch(masm);
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, scratch, Offset, cond);
         }
     }
@@ -2517,6 +2518,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     MOZ_ASSERT(mir->offset() == 0);
 
     const LAllocation* ptr = ins->ptr();
+    const LAllocation* boundsCheckLimit = ins->boundsCheckLimit();
 
     bool isSigned;
     int size;
@@ -2554,9 +2556,8 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 
         Assembler::Condition cond = Assembler::Always;
         if (mir->needsBoundsCheck()) {
-            BufferOffset cmp = masm.as_cmp(ptrReg, Imm8(0));
-            masm.append(wasm::BoundsCheck(cmp.getOffset()));
-
+            Register boundsCheckLimitReg = ToRegister(boundsCheckLimit);
+            masm.as_cmp(ptrReg, O2Reg(boundsCheckLimitReg));
             cond = Assembler::Below;
         }
 
