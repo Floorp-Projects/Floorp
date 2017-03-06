@@ -528,7 +528,6 @@ UpdateOldAnimationPropertiesWithNew(
 // with the new StyleAnimation.
 static already_AddRefed<CSSAnimation>
 BuildAnimation(nsPresContext* aPresContext,
-               nsStyleContext* aStyleContext,
                const NonOwningAnimationTarget& aTarget,
                const StyleAnimation& aSrc,
                CSSAnimationBuilder& aBuilder,
@@ -1033,15 +1032,13 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
 
 static nsAnimationManager::OwningCSSAnimationPtrArray
 BuildAnimations(nsPresContext* aPresContext,
-                nsStyleContext* aStyleContext,
                 const NonOwningAnimationTarget& aTarget,
                 const nsStyleAutoArray<StyleAnimation>& aStyleAnimations,
                 uint32_t aStyleAnimationNameCount,
+                CSSAnimationBuilder& aBuilder,
                 nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   nsAnimationManager::OwningCSSAnimationPtrArray result;
-
-  CSSAnimationBuilder builder(aStyleContext, aTarget);
 
   for (size_t animIdx = aStyleAnimationNameCount; animIdx-- != 0;) {
     const StyleAnimation& src = aStyleAnimations[animIdx];
@@ -1056,10 +1053,9 @@ BuildAnimations(nsPresContext* aPresContext,
     }
 
     RefPtr<CSSAnimation> dest = BuildAnimation(aPresContext,
-                                               aStyleContext,
                                                aTarget,
                                                src,
-                                               builder,
+                                               aBuilder,
                                                aCollection);
     if (!dest) {
       continue;
@@ -1104,11 +1100,13 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   // the existing collection as we go.
   OwningCSSAnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
+    CSSAnimationBuilder builder(aStyleContext, target);
+
     newAnimations = BuildAnimations(mPresContext,
-                                    aStyleContext,
                                     target,
                                     disp->mAnimations,
                                     disp->mAnimationNameCount,
+                                    builder,
                                     collection);
   }
 
