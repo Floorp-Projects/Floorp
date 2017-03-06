@@ -379,7 +379,7 @@ this.MessageChannel = {
    *    The filter object to match against.
    * @param {object} data
    *    The data object being matched.
-   * @param {boolean} [strict=false]
+   * @param {boolean} [strict=true]
    *    If true, all properties in the `filter` object have a
    *    corresponding property in `data` with the same value. If
    *    false, properties present in both objects must have the same
