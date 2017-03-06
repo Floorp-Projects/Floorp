@@ -21,6 +21,9 @@ import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
 import org.mozilla.gecko.util.WeakReferenceHandler;
+import org.mozilla.gecko.DynamicToolbar;
+import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
+import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -53,6 +56,7 @@ public class ToolbarProgressView extends ThemedImageView {
     private ProgressBounds mBounds;
     private Handler mHandler;
     private int mCurrentProgress;
+    private DynamicToolbar mDynamicToolbar;
 
     private PorterDuffColorFilter mPrivateBrowsingColorFilter;
 
@@ -66,6 +70,10 @@ public class ToolbarProgressView extends ThemedImageView {
         init(context);
     }
 
+    public void setDynamicToolbar(DynamicToolbar toolbar) {
+        mDynamicToolbar = toolbar;
+    }
+
     private void init(Context ctx) {
         mBounds = new ProgressBounds();
 
@@ -75,6 +83,19 @@ public class ToolbarProgressView extends ThemedImageView {
                 ContextCompat.getColor(ctx, R.color.private_browsing_purple), PorterDuff.Mode.SRC_IN);
 
         mHandler = new ToolbarProgressHandler(this);
+    }
+
+    void pinDynamicToolbar() {
+        if ((mDynamicToolbar != null) && mDynamicToolbar.isEnabled()) {
+            mDynamicToolbar.setPinned(true, PinReason.PAGE_LOADING);
+            mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+        }
+    }
+
+    void unpinDynamicToolbar() {
+        if ((mDynamicToolbar != null) && mDynamicToolbar.isEnabled()) {
+            mDynamicToolbar.setPinned(false, PinReason.PAGE_LOADING);
+        }
     }
 
     @Override
@@ -187,6 +208,7 @@ public class ToolbarProgressView extends ThemedImageView {
 
                 case MSG_HIDE:
                     that.setVisibility(View.GONE);
+                    that.unpinDynamicToolbar();
                     break;
             }
         }
