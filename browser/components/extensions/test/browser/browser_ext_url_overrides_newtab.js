@@ -76,11 +76,11 @@ add_task(function* test_sending_message_from_newtab_page() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "chrome_url_overrides": {
-        newtab: NEWTAB_URI_1,
+        newtab: NEWTAB_URI_2,
       },
     },
     files: {
-      [NEWTAB_URI_1]: `
+      [NEWTAB_URI_2]: `
         <!DOCTYPE html>
         <head>
           <meta charset="utf-8"/></head>
