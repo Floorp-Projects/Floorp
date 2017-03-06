@@ -418,6 +418,41 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   return result;
 }
 
+class MOZ_STACK_CLASS ServoCSSAnimationBuilder final {
+public:
+  ServoCSSAnimationBuilder(
+    const ServoComputedValues* aComputedValues,
+    const ServoComputedValues* aParentComputedValues)
+    : mComputedValues(aComputedValues)
+    , mParentComputedValues(aParentComputedValues)
+  {
+    MOZ_ASSERT(aComputedValues);
+  }
+
+  bool BuildKeyframes(nsPresContext* aPresContext,
+                      const StyleAnimation& aSrc,
+                      nsTArray<Keyframe>& aKeyframes)
+  {
+    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
+    MOZ_ASSERT(styleSet);
+    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
+    return styleSet->FillKeyframesForName(aSrc.GetName(),
+                                          timingFunction,
+                                          mComputedValues,
+                                          aKeyframes);
+  }
+  void SetKeyframes(KeyframeEffectReadOnly& aEffect,
+                    nsTArray<Keyframe>&& aKeyframes)
+  {
+    aEffect.SetKeyframes(Move(aKeyframes),
+                         { mComputedValues, mParentComputedValues });
+  }
+
+private:
+  const ServoComputedValues* mComputedValues;
+  const ServoComputedValues* mParentComputedValues;
+};
+
 class MOZ_STACK_CLASS GeckoCSSAnimationBuilder final {
 public:
   GeckoCSSAnimationBuilder(nsStyleContext* aStyleContext,
