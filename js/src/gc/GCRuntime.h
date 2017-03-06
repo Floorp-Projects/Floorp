@@ -979,7 +979,7 @@ class GCRuntime
 
     void beginSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
     void findZoneGroups(AutoLockForExclusiveAccess& lock);
-    MOZ_MUST_USE bool findZoneEdgesForWeakMaps();
+    MOZ_MUST_USE bool findInterZoneEdges();
     void getNextZoneGroup();
     void endMarkingZoneGroup();
     void beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock);
