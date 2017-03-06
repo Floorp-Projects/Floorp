@@ -1655,7 +1655,7 @@ public:
 
 private:
   nsresult
-  MaybeRemoveCorruptData(const OriginProps& aOriginProps);
+  MaybeUpgradeClients(const OriginProps& aOriginProps);
 
   nsresult
   MaybeRemoveAppsData(const OriginProps& aOriginProps,
@@ -4351,6 +4351,23 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   // directories with obsolete origin attributes don't prevent current Firefox
   // from initializing and using the storage, but they wouldn't ever be upgraded
   // again, potentially causing problems in future.
+  //
+  //
+  // File manager directory renaming (client specific)
+  // [Feature/Bug]:
+  // The original bug that added "on demand" file manager directory renaming is
+  // 1056939.
+  //
+  // [Mutations]:
+  // All file manager directories are renamed to contain the ".files" suffix.
+  //
+  // [Downgrade-incompatible changes]:
+  // File manager directories with the ".files" suffix prevent older versions of
+  // Firefox from initializing and using the storage.
+  // File manager directories without the ".files" suffix can appear if user
+  // runs an already upgraded profile in an older version of Firefox. File
+  // manager directories without the ".files" suffix then prevent current
+  // Firefox from initializing and using the storage.
 
   nsresult rv;
 
@@ -8099,11 +8116,7 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
       return rv;
     }
 
-    // The Cache API was creating top level morgue directories by accident for
-    // a short time in nightly.  This unfortunately prevents all storage from
-    // working.  So recover these profiles permanently by removing these corrupt
-    // directories as part of this upgrade.
-    rv = MaybeRemoveCorruptData(originProps);
+    rv = MaybeUpgradeClients(originProps);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8163,11 +8176,14 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
 }
 
 nsresult
-UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
+UpgradeStorageFrom1_0To2_0Helper::MaybeUpgradeClients(
                                                 const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aOriginProps.mDirectory);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsISimpleEnumerator> entries;
   nsresult rv =
@@ -8210,6 +8226,10 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
       continue;
     }
 
+    // The Cache API was creating top level morgue directories by accident for
+    // a short time in nightly.  This unfortunately prevents all storage from
+    // working.  So recover these profiles permanently by removing these corrupt
+    // directories as part of this upgrade.
     if (leafName.EqualsLiteral("morgue")) {
       QM_WARNING("Deleting accidental morgue directory!");
 
@@ -8226,6 +8246,14 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
     if (NS_FAILED(rv)) {
       UNKNOWN_FILE_WARNING(leafName);
       continue;
+    }
+
+    Client* client = quotaManager->GetClient(clientType);
+    MOZ_ASSERT(client);
+
+    rv = client->UpgradeStorageFrom1_0To2_0(file);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
