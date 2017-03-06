@@ -1127,6 +1127,32 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   DoUpdateAnimations(target, *disp, builder);
 }
 
+void
+nsAnimationManager::UpdateAnimations(
+  dom::Element* aElement,
+  nsIAtom* aPseudoTagOrNull,
+  const ServoComputedValues* aComputedValues,
+  const ServoComputedValues* aParentComputedValues)
+{
+  MOZ_ASSERT(mPresContext->IsDynamic(),
+             "Should not update animations for print or print preview");
+  MOZ_ASSERT(aElement->IsInComposedDoc(),
+             "Should not update animations that are not attached to the "
+             "document tree");
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+  NonOwningAnimationTarget target(aElement, pseudoType);
+  ServoCSSAnimationBuilder builder(aComputedValues, aParentComputedValues);
+
+  // Currently we don't seem to call this UpdateAnimations for elements in
+  // display:none subtree. We will call this function for such elements with
+  // null computed values in bug 1341985.
+  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aComputedValues);
+  DoUpdateAnimations(target, *disp, builder);
+}
+
 template<class BuilderType>
 void
 nsAnimationManager::DoUpdateAnimations(
