@@ -5076,7 +5076,6 @@ nsBrowserAccess.prototype = {
                                       fromExternal: aIsExternal,
                                       inBackground: loadInBackground,
                                       forceNotRemote: aForceNotRemote,
-                                      forceBrowserInsertion: true,
                                       opener: aOpener,
                                       });
     let browser = win.gBrowser.getBrowserForTab(tab);

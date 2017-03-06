@@ -30,4 +30,7 @@ function sortReducer(state = new Sort(), action) {
   }
 }
 
-module.exports = sortReducer;
+module.exports = {
+  Sort,
+  sortReducer
+};

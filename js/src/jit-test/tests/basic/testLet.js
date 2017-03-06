@@ -11,7 +11,7 @@ function test(str, arg, result)
     var fun = new Function('x', str);
 
     var got = fun.toSource();
-    var expect = '(function anonymous(x) {\n' + str + '\n})';
+    var expect = '(function anonymous(x\n) {\n' + str + '\n})';
     if (got !== expect) {
         print("GOT:    " + got);
         print("EXPECT: " + expect);

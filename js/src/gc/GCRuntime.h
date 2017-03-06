@@ -987,6 +987,7 @@ class GCRuntime
     void endSweepingZoneGroup();
     IncrementalProgress sweepPhase(SliceBudget& sliceBudget, AutoLockForExclusiveAccess& lock);
     void endSweepPhase(bool lastGC, AutoLockForExclusiveAccess& lock);
+    bool allCCVisibleZonesWereCollected() const;
     void sweepZones(FreeOp* fop, ZoneGroup* group, bool lastGC);
     void sweepZoneGroups(FreeOp* fop, bool destroyingRuntime);
     void decommitAllWithoutUnlocking(const AutoLockGC& lock);
@@ -1045,6 +1046,8 @@ class GCRuntime
     gcstats::Statistics& stats() { return stats_.ref(); }
 
     GCMarker marker;
+
+    Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
 
     /* Track heap usage for this runtime. */
     HeapUsage usage;

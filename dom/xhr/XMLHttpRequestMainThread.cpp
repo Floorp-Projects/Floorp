@@ -2643,10 +2643,6 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
     }
   }
 
-  // Blocking gets are common enough out of XHR that we should mark
-  // the channel slow by default for pipeline purposes
-  AddLoadFlags(mChannel, nsIRequest::INHIBIT_PIPELINE);
-
   // We never let XHR be blocked by head CSS/JS loads to avoid potential
   // deadlock where server generation of CSS/JS requires an XHR signal.
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));

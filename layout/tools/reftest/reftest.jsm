@@ -222,8 +222,9 @@ function LogWidgetLayersFailure()
 
 function AllocateCanvas()
 {
-    if (gRecycledCanvases.length > 0)
+    if (gRecycledCanvases.length > 0) {
         return gRecycledCanvases.shift();
+    }
 
     var canvas = gContainingWindow.document.createElementNS(XHTML_NS, "canvas");
     var r = gBrowser.getBoundingClientRect();
@@ -236,8 +237,9 @@ function AllocateCanvas()
 function ReleaseCanvas(canvas)
 {
     // store a maximum of 2 canvases, if we're not caching
-    if (!gNoCanvasCache || gRecycledCanvases.length < 2)
+    if (!gNoCanvasCache || gRecycledCanvases.length < 2) {
         gRecycledCanvases.push(canvas);
+    }
 }
 
 function IDForEventTarget(event)
@@ -1195,6 +1197,10 @@ function AddURIUseCount(uri)
 
 function BuildUseCounts()
 {
+    if (gNoCanvasCache) {
+        return;
+    }
+
     gURIUseCounts = {};
     for (var i = 0; i < gURLs.length; ++i) {
         var url = gURLs[i];
@@ -1457,7 +1463,7 @@ function UpdateCanvasCache(url, canvas)
 
     --gURIUseCounts[spec];
 
-    if (gNoCanvasCache || gURIUseCounts[spec] == 0) {
+    if (gURIUseCounts[spec] == 0) {
         ReleaseCanvas(canvas);
         delete gURICanvases[spec];
     } else if (gURIUseCounts[spec] > 0) {
@@ -1772,11 +1778,16 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                 }
                 logger.testEnd(gURLs[0].identifier, output.s[0], output.s[1], message, null, extra);
 
-                if (gURLs[0].prefSettings1.length == 0) {
-                    UpdateCanvasCache(gURLs[0].url1, gCanvas1);
-                }
-                if (gURLs[0].prefSettings2.length == 0) {
-                    UpdateCanvasCache(gURLs[0].url2, gCanvas2);
+                if (gNoCanvasCache) {
+                    ReleaseCanvas(gCanvas1);
+                    ReleaseCanvas(gCanvas2);
+                } else {
+                    if (gURLs[0].prefSettings1.length == 0) {
+                        UpdateCanvasCache(gURLs[0].url1, gCanvas1);
+                    }
+                    if (gURLs[0].prefSettings2.length == 0) {
+                        UpdateCanvasCache(gURLs[0].url2, gCanvas2);
+                    }
                 }
             }
 

@@ -651,7 +651,7 @@ public:
   bool TryReadLock();
   void ReadUnlock();
 
-  void SerializeReadLock(ReadLockDescriptor& aDescriptor);
+  bool SerializeReadLock(ReadLockDescriptor& aDescriptor);
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);

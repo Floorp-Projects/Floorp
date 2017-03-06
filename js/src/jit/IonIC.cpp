@@ -233,13 +233,19 @@ IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonSetProperty
         }
     }
 
+    jsbytecode* pc = ic->pc();
     if (ic->kind() == CacheKind::SetElem) {
-        if (!SetObjectElement(cx, obj, idVal, rhs, ic->strict()))
-            return false;
+        if (IsPropertyInitOp(JSOp(*pc))) {
+            if (!InitElemOperation(cx, pc, obj, idVal, rhs))
+                return false;
+        } else {
+            MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
+            if (!SetObjectElement(cx, obj, idVal, rhs, ic->strict()))
+                return false;
+        }
     } else {
         MOZ_ASSERT(ic->kind() == CacheKind::SetProp);
 
-        jsbytecode* pc = ic->pc();
         if (*pc == JSOP_INITGLEXICAL) {
             RootedScript script(cx, ic->script());
             MOZ_ASSERT(!script->hasNonSyntacticScope());
