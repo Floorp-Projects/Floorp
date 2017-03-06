@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+div {
+  display: flex;
+}
+
+button {
+  padding: 3px 2em;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+fieldset > legend {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.4em 0.7em;
+  font-size: 0.9em;
+  color: #808080;
+  background-color: var(--in-content-box-background-hover);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px 2px 0 0;
+}
+
+option:nth-child(even) {
+  background-color: -moz-oddtreerow;
+}
+
+#profiles {
+  font-size: 0.85em;
+  width: 100%;
+  height: 16.6em;
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+}
+
+#profiles > option {
+  padding-inline-start: 0.7em;
+}
+
+#controls-container {
+  flex: 0 1 100%;
+  justify-content: end;
+  font-size: 0.9em;
+  margin-top: 1em;
+}
+
+#remove {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+#edit {
+  margin-inline-end: 0;
+}
