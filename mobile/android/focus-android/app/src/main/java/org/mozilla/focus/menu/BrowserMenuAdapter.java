@@ -5,36 +5,65 @@
 
 package org.mozilla.focus.menu;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
+import org.mozilla.focus.utils.Browsers;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHolder> {
     static class MenuItem {
         public final int id;
-        public final int label;
+        public final String label;
 
-        public MenuItem(int id, int label) {
+        public MenuItem(int id, String label) {
             this.id = id;
             this.label = label;
         }
     }
 
-    private static final MenuItem[] MENU_ITEMS = new MenuItem[] {
-            new MenuItem(R.id.share, R.string.menu_share),
-            new MenuItem(R.id.open, R.string.menu_open_with),
-            new MenuItem(R.id.settings, R.string.menu_settings)
-    };
-
     private final BrowserMenu menu;
     private final BrowserFragment fragment;
 
-    public BrowserMenuAdapter(BrowserMenu menu, BrowserFragment fragment) {
+    private List<MenuItem> items;
+
+    public BrowserMenuAdapter(Context context, BrowserMenu menu, BrowserFragment fragment) {
         this.menu = menu;
         this.fragment = fragment;
+
+        initializeMenu(context, fragment.getUrl());
+    }
+
+    private void initializeMenu(Context context, String url) {
+        final Resources resources = context.getResources();
+        final Browsers browsers = new Browsers(context, url);
+
+        this.items = new ArrayList<>();
+
+        items.add(new MenuItem(R.id.share, resources.getString(R.string.menu_share)));
+
+        items.add(new MenuItem(R.id.open_firefox, resources.getString(
+                R.string.menu_open_with_default_browser, "Firefox")));
+
+        if (browsers.hasThirdPartyDefaultBrowser(context)) {
+            items.add(new MenuItem(R.id.open_default, resources.getString(
+                    R.string.menu_open_with_default_browser, browsers.getDefaultBrowser().loadLabel(
+                            context.getPackageManager()))));
+        }
+
+        if (browsers.hasMultipleThirdPartyBrowsers(context)) {
+            items.add(new MenuItem(R.id.open_select_browser, resources.getString(
+                    R.string.menu_open_with_a_browser)));
+        }
+
+        items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
     }
 
     @Override
@@ -56,7 +85,7 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
         holder.setOnClickListener(fragment);
 
         if (position > 0) {
-            ((MenuItemViewHolder) holder).bind(MENU_ITEMS[position - 1]);
+            ((MenuItemViewHolder) holder).bind(items.get(position - 1));
         }
     }
 
@@ -71,6 +100,7 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
     @Override
     public int getItemCount() {
-        return 1 + MENU_ITEMS.length;
+        // Button toolbar + menu items
+        return 1 + items.size();
     }
 }

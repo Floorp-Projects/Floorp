@@ -25,7 +25,7 @@ public class BrowserMenu extends PopupWindow {
 
         RecyclerView menuList = (RecyclerView) view.findViewById(R.id.list);
         menuList.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        menuList.setAdapter(new BrowserMenuAdapter(this, fragment));
+        menuList.setAdapter(new BrowserMenuAdapter(context, this, fragment));
 
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 

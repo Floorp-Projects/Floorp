@@ -7,6 +7,7 @@ package org.mozilla.focus.fragment;
 
 import android.content.Intent;
 import android.graphics.drawable.TransitionDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
+import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.web.IWebView;
 
 /**
@@ -163,10 +165,39 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                 startActivity(settingsIntent);
                 break;
 
-            case R.id.open:
-                // TODO: Switch to full featured browser (Issue #26)
+            case R.id.open_default: {
+                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
+                intent.setPackage(browsers.getDefaultBrowser().packageName);
+                startActivity(intent);
                 break;
+            }
+
+            case R.id.open_firefox: {
+                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+
+                if (browsers.isInstalled(Browsers.KnownBrowser.FIREFOX)) {
+                    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(webView.getUrl()));
+                    intent.setPackage(Browsers.KnownBrowser.FIREFOX.packageName);
+                    startActivity(intent);
+                } else {
+                    final Intent intent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX));
+                    startActivity(intent);
+                }
+
+                break;
+            }
+
+            case R.id.open_select_browser: {
+                // TODO: Show chooser for selecting a browser
+            }
         }
+    }
+
+    public String getUrl() {
+        return webView.getUrl();
     }
 
     public boolean canGoForward() {
