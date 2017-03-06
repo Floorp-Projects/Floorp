@@ -14,6 +14,8 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function test_locally_changed_keys() {
+  enableValidationPrefs();
+
   let hmacErrorCount = 0;
   function counting(f) {
     return function() {

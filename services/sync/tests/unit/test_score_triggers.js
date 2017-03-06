@@ -52,6 +52,7 @@ function run_test() {
 }
 
 add_test(function test_tracker_score_updated() {
+  enableValidationPrefs();
   let { engine, tracker } = registerRotaryEngine();
 
   let scoreUpdated = 0;
@@ -91,6 +92,8 @@ add_task(async function test_sync_triggered() {
   tracker.score += SCORE_INCREMENT_XLARGE;
 
   await promiseOneObserver("weave:service:sync:finish");
+
+  Service.startOver();
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
@@ -98,6 +101,8 @@ add_task(async function test_sync_triggered() {
 });
 
 add_task(async function test_clients_engine_sync_triggered() {
+  enableValidationPrefs();
+
   _("Ensure that client engine score changes trigger a sync.");
 
   // The clients engine is not registered like other engines. Therefore,
@@ -114,6 +119,8 @@ add_task(async function test_clients_engine_sync_triggered() {
 
   await promiseOneObserver("weave:service:sync:finish");
   _("Sync due to clients engine change completed.");
+
+  Service.startOver();
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
@@ -121,6 +128,8 @@ add_task(async function test_clients_engine_sync_triggered() {
 });
 
 add_task(async function test_incorrect_credentials_sync_not_triggered() {
+  enableValidationPrefs();
+
   _("Ensure that score changes don't trigger a sync if Status.login != LOGIN_SUCCEEDED.");
   let server = sync_httpd_setup();
   let { engine, tracker } = await setUp(server);

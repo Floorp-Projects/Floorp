@@ -493,3 +493,11 @@ function registerRotaryEngine() {
 
   return { engine, tracker: engine._tracker };
 }
+
+// Set the validation prefs to attempt validation every time to avoid non-determinism.
+function enableValidationPrefs() {
+  Svc.Prefs.set("engine.bookmarks.validation.interval", 0);
+  Svc.Prefs.set("engine.bookmarks.validation.percentageChance", 100);
+  Svc.Prefs.set("engine.bookmarks.validation.maxRecords", -1);
+  Svc.Prefs.set("engine.bookmarks.validation.enabled", true);
+}

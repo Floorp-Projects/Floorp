@@ -176,6 +176,8 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 // test setup has configured the client with a valid token, and that token
 // should be used to form the cluster URL.
 add_task(async function test_single_token_fetch() {
+  enableValidationPrefs();
+
   _("Test a normal sync only fetches 1 token");
 
   let numTokenFetches = 0;
@@ -201,10 +203,13 @@ add_task(async function test_single_token_fetch() {
   // that clusterURL we expect.
   let expectedClusterURL = server.baseURI + "1.1/johndoe/";
   do_check_eq(Service.clusterURL, expectedClusterURL);
+  Service.startOver();
   await promiseStopServer(server);
 });
 
 add_task(async function test_momentary_401_engine() {
+  enableValidationPrefs();
+
   _("Test a failure for engine URLs that's resolved by reassignment.");
   let server = await prepareServer();
   let john   = server.user("johndoe");
@@ -259,6 +264,8 @@ add_task(async function test_momentary_401_engine() {
 
 // This test ends up being a failing info fetch *after we're already logged in*.
 add_task(async function test_momentary_401_info_collections_loggedin() {
+  enableValidationPrefs();
+
   _("Test a failure for info/collections after login that's resolved by reassignment.");
   let server = await prepareServer();
 
@@ -287,6 +294,8 @@ add_task(async function test_momentary_401_info_collections_loggedin() {
 // In this case we expect to recover during the login phase - so the first
 // sync succeeds.
 add_task(async function test_momentary_401_info_collections_loggedout() {
+  enableValidationPrefs();
+
   _("Test a failure for info/collections before login that's resolved by reassignment.");
 
   let oldHandler;
@@ -319,6 +328,8 @@ add_task(async function test_momentary_401_info_collections_loggedout() {
 
 // This test ends up being a failing meta/global fetch *after we're already logged in*.
 add_task(async function test_momentary_401_storage_loggedin() {
+  enableValidationPrefs();
+
   _("Test a failure for any storage URL after login that's resolved by" +
     "reassignment.");
   let server = await prepareServer();
@@ -346,6 +357,8 @@ add_task(async function test_momentary_401_storage_loggedin() {
 
 // This test ends up being a failing meta/global fetch *before we've logged in*.
 add_task(async function test_momentary_401_storage_loggedout() {
+  enableValidationPrefs();
+
   _("Test a failure for any storage URL before login, not just engine parts. " +
     "Resolved by reassignment.");
   let server = await prepareServer();

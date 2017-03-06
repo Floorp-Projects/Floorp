@@ -58,6 +58,8 @@ async function cleanup(server) {
 }
 
 add_task(async function test_something() {
+  enableValidationPrefs();
+
   _("Ensure that a validation error triggers a repair request.");
 
   let contents = {
