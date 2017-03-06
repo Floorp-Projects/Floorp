@@ -3182,7 +3182,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks)
 
     AutoLockGC lock(rt);
 
-    // Release swept areans, dropping and reaquiring the lock every so often to
+    // Release swept arenas, dropping and reaquiring the lock every so often to
     // avoid blocking the active thread from allocating chunks.
     static const size_t LockReleasePeriod = 32;
     size_t releaseCount = 0;
@@ -4400,8 +4400,8 @@ DropStringWrappers(JSRuntime* rt)
  *
  * If compartment A has an edge to an unmarked object in compartment B, then we
  * must not sweep A in a later slice than we sweep B. That's because a write
- * barrier in A that could lead to the unmarked object in B becoming
- * marked. However, if we had already swept that object, we would be in trouble.
+ * barrier in A could lead to the unmarked object in B becoming marked.
+ * However, if we had already swept that object, we would be in trouble.
  *
  * If we consider these dependencies as a graph, then all the compartments in
  * any strongly-connected component of this graph must be swept in the same
@@ -4451,6 +4451,28 @@ JSCompartment::findOutgoingEdges(ZoneComponentFinder& finder)
     }
 }
 
+bool
+JSCompartment::findDeadProxyZoneEdges(bool* foundAny)
+{
+    // As an optimization, return whether any dead proxy objects are found in
+    // this compartment so that if a zone has none, its cross compartment
+    // wrappers do not need to be scanned.
+    *foundAny = false;
+    for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        Value value = e.front().value().get();
+        if (value.isObject()) {
+            if (IsDeadProxyObject(&value.toObject())) {
+                *foundAny = true;
+                CrossCompartmentKey& key = e.front().mutableKey();
+                if (!key.as<JSObject*>()->zone()->gcZoneGroupEdges().put(zone()))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void
 Zone::findOutgoingEdges(ZoneComponentFinder& finder)
 {
@@ -4475,7 +4497,7 @@ Zone::findOutgoingEdges(ZoneComponentFinder& finder)
 }
 
 bool
-GCRuntime::findZoneEdgesForWeakMaps()
+GCRuntime::findInterZoneEdges()
 {
     /*
      * Weakmaps which have keys with delegates in a different zone introduce the
@@ -4492,6 +4514,20 @@ GCRuntime::findZoneEdgesForWeakMaps()
             return false;
     }
 
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (zone->hasDeadProxies()) {
+            bool foundInZone = false;
+            for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+                bool foundInCompartment = false;
+                if (!comp->findDeadProxyZoneEdges(&foundInCompartment))
+                    return false;
+                foundInZone = foundInZone || foundInCompartment;
+            }
+            if (!foundInZone)
+                zone->setHasDeadProxies(false);
+        }
+    }
+
     return true;
 }
 
@@ -4505,7 +4541,7 @@ GCRuntime::findZoneGroups(AutoLockForExclusiveAccess& lock)
 
     JSContext* cx = TlsContext.get();
     ZoneComponentFinder finder(cx->nativeStackLimit[JS::StackForSystemCode], lock);
-    if (!isIncremental || !findZoneEdgesForWeakMaps())
+    if (!isIncremental || !findInterZoneEdges())
         finder.useOneComponent();
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
@@ -4780,6 +4816,8 @@ js::NotifyGCNukeWrapper(JSObject* obj)
      * remember to mark it.
      */
     RemoveFromGrayList(obj);
+
+    obj->zone()->setHasDeadProxies(true);
 }
 
 enum {
