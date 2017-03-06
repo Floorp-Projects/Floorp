@@ -185,6 +185,13 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
 }
 
 void
+WebRenderAPI::ClearRootDisplayList(Epoch aEpoch,
+                                   WrPipelineId pipeline_id)
+{
+  wr_api_clear_root_display_list(mWrApi, aEpoch, pipeline_id);
+}
+
+void
 WebRenderAPI::Readback(gfx::IntSize size,
                        uint8_t *buffer,
                        uint32_t buffer_size)
