@@ -31,7 +31,7 @@ public class Settings {
                 false);
     }
 
-    public static boolean shouldShowFirstrun(final Context context) {
-        return !PreferenceManager.getDefaultSharedPreferences(context).getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
+    public boolean shouldShowFirstrun() {
+        return preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
     }
 }
