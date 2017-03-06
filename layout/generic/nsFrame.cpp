@@ -9157,7 +9157,7 @@ GetCorrectedParent(const nsIFrame* aFrame)
   nsIContent* content = aFrame->GetContent();
   Element* element =
     content && content->IsElement() ? content->AsElement() : nullptr;
-  if (element && element->IsNativeAnonymous() &&
+  if (element && element->IsNativeAnonymous() && !element->IsNativeScrollbarContent() &&
       element->GetPseudoElementType() == aFrame->StyleContext()->GetPseudoType()) {
     while (parent->GetContent() && parent->GetContent()->IsNativeAnonymous()) {
       parent = parent->GetInFlowParent();
