@@ -166,7 +166,7 @@ static_assert(JS_STRUCTURED_CLONE_VERSION == 8,
               "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 25;
+const uint32_t kMajorSchemaVersion = 26;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -4134,6 +4134,110 @@ UpgradeSchemaFrom24_0To25_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+class StripObsoleteOriginAttributesFunction final
+  : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+
+private:
+  ~StripObsoleteOriginAttributesFunction()
+  { }
+
+  NS_IMETHOD
+  OnFunctionCall(mozIStorageValueArray* aArguments,
+                 nsIVariant** aResult) override
+  {
+    MOZ_ASSERT(aArguments);
+    MOZ_ASSERT(aResult);
+
+    PROFILER_LABEL("IndexedDB",
+                   "StripObsoleteOriginAttributesFunction::OnFunctionCall",
+                   js::ProfileEntry::Category::STORAGE);
+
+#ifdef DEBUG
+  {
+    uint32_t argCount;
+    MOZ_ALWAYS_SUCCEEDS(aArguments->GetNumEntries(&argCount));
+    MOZ_ASSERT(argCount == 1);
+
+    int32_t type;
+    MOZ_ALWAYS_SUCCEEDS(aArguments->GetTypeOfIndex(0, &type));
+    MOZ_ASSERT(type == mozIStorageValueArray::VALUE_TYPE_TEXT);
+  }
+#endif
+
+    nsCString origin;
+    nsresult rv = aArguments->GetUTF8String(0, origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Deserialize and re-serialize to automatically drop any obsolete origin
+    // attributes.
+    OriginAttributes oa;
+
+    nsCString originNoSuffix;
+    bool ok = oa.PopulateFromOrigin(origin, originNoSuffix);
+    if (NS_WARN_IF(!ok)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCString suffix;
+    oa.CreateSuffix(suffix);
+
+    nsCOMPtr<nsIVariant> result =
+      new mozilla::storage::UTF8TextVariant(originNoSuffix + suffix);
+
+    result.forget(aResult);
+    return NS_OK;
+  }
+};
+
+nsresult
+UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  PROFILER_LABEL("IndexedDB",
+                 "UpgradeSchemaFrom25_0To26_0",
+                 js::ProfileEntry::Category::STORAGE);
+
+  NS_NAMED_LITERAL_CSTRING(functionName, "strip_obsolete_attributes");
+
+  nsCOMPtr<mozIStorageFunction> stripObsoleteAttributes =
+    new StripObsoleteOriginAttributesFunction();
+
+  nsresult rv = aConnection->CreateFunction(functionName,
+                                            /* aNumArguments */ 1,
+                                            stripObsoleteAttributes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE DATABASE "
+      "SET origin = strip_obsolete_attributes(origin) "
+      "WHERE origin LIKE '%^%';"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->RemoveFunction(functionName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(26, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 GetDatabaseFileURL(nsIFile* aDatabaseFile,
                    PersistenceType aPersistenceType,
@@ -4640,7 +4744,7 @@ CreateStorageConnection(nsIFile* aDBFile,
       }
     } else  {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((25 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((26 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -4688,6 +4792,8 @@ CreateStorageConnection(nsIFile* aDBFile,
           rv = UpgradeSchemaFrom23_0To24_0(connection);
         } else if (schemaVersion == MakeSchemaVersion(24, 0)) {
           rv = UpgradeSchemaFrom24_0To25_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(25, 0)) {
+          rv = UpgradeSchemaFrom25_0To26_0(connection);
         } else {
           IDB_WARNING("Unable to open IndexedDB database, no upgrade path is "
                       "available!");
@@ -19468,6 +19574,7 @@ AutoProgressHandler::OnProgress(mozIStorageConnection* aConnection,
 
 NS_IMPL_ISUPPORTS(CompressDataBlobsFunction, mozIStorageFunction)
 NS_IMPL_ISUPPORTS(EncodeKeysFunction, mozIStorageFunction)
+NS_IMPL_ISUPPORTS(StripObsoleteOriginAttributesFunction, mozIStorageFunction);
 
 #if !defined(MOZ_B2G)
 
