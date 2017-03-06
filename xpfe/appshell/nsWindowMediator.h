@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsWeakReference.h"
-#include "nsCOMArray.h"
+#include "nsTObserverArray.h"
 
 class nsAppShellWindowEnumerator;
 class nsASXULWindowEarlyToLateEnumerator;
@@ -72,7 +72,8 @@ private:
   bool          mSortingZOrder;
   bool          mReady;
 
-  nsCOMArray<nsIWindowMediatorListener> mListeners;
+  typedef nsTObserverArray<nsCOMPtr<nsIWindowMediatorListener>> ListenerArray;
+  ListenerArray mListeners;
 };
 
 #endif
