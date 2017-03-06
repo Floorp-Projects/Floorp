@@ -1658,6 +1658,10 @@ private:
   MaybeRemoveCorruptData(const OriginProps& aOriginProps);
 
   nsresult
+  MaybeRemoveAppsData(const OriginProps& aOriginProps,
+                      bool* aRemoved);
+
+  nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
@@ -4312,6 +4316,21 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   // Morgue directories can reappear if user runs an already upgraded profile
   // in an older version of Firefox. Morgue directories then prevent current
   // Firefox from initializing and using the storage.
+  //
+  //
+  // App data removal
+  // [Feature/Bug]:
+  // The bug that removes isApp flags is 1311057.
+  //
+  // [Mutations]:
+  // Origin directories with appIds are removed during the upgrade process.
+  //
+  // [Downgrade-incompatible changes]:
+  // Origin directories with appIds can reappear if user runs an already
+  // upgraded profile in an older version of Firefox. Origin directories with
+  // appIds don't prevent current Firefox from initializing and using the
+  // storage, but they wouldn't ever be removed again, potentially causing
+  // problems once appId is removed from origin attributes.
 
   nsresult rv;
 
@@ -8069,6 +8088,15 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
       return rv;
     }
 
+    bool removed;
+    rv = MaybeRemoveAppsData(originProps, &removed);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    if (removed) {
+      continue;
+    }
+
     int64_t timestamp;
     nsCString group;
     nsCString origin;
@@ -8184,6 +8212,30 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
     return rv;
   }
 
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
+                                                const OriginProps& aOriginProps,
+                                                bool* aRemoved)
+{
+  AssertIsOnIOThread();
+
+  // XXX This will need to be reworked as part of bug 1320404 (appId is
+  //     going to be removed from origin attributes).
+  if (aOriginProps.mAttrs.mAppId != kNoAppId &&
+      aOriginProps.mAttrs.mAppId != kUnknownAppId) {
+    nsresult rv = RemoveObsoleteOrigin(aOriginProps);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    *aRemoved = true;
+    return NS_OK;
+  }
+
+  *aRemoved = false;
   return NS_OK;
 }
 
