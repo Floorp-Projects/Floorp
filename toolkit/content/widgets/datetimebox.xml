@@ -444,10 +444,16 @@
     <implementation>
       <constructor>
       <![CDATA[
-        // TODO: Bug 1301312 - localization for input type=time input.
+        const kDefaultAMString = "AM";
+        const kDefaultPMString = "PM";
+
+        let { amString, pmString } =
+          this.getStringsForLocale(this.mLocales);
+
+        this.mAMIndicator = amString || kDefaultAMString;
+        this.mPMIndicator = pmString || kDefaultPMString;
+
         this.mHour12 = true;
-        this.mAMIndicator = "AM";
-        this.mPMIndicator = "PM";
         this.mPlaceHolder = "--";
         this.mSeparatorText = ":";
         this.mMillisecSeparatorText = ".";
@@ -476,6 +482,12 @@
         this.mDayPeriodField =
           document.getAnonymousElementByAttribute(this, "anonid", "input-three");
         this.mDayPeriodField.classList.remove("numeric");
+
+        let dayPeriodLength =
+          Math.max(this.mAMIndicator.length, this.mPMIndicator.length);
+
+        this.mDayPeriodField.size = dayPeriodLength;
+        this.mDayPeriodField.maxLength = dayPeriodLength;
 
         this.mHourField.placeholder = this.mPlaceHolder;
         this.mMinuteField.placeholder = this.mPlaceHolder;
@@ -548,6 +560,33 @@
           container.insertBefore(field, this.mSpaceSeparator);
 
           return field;
+        ]]>
+        </body>
+      </method>
+
+      <method name="getStringsForLocale">
+        <parameter name="aLocales"/>
+        <body>
+        <![CDATA[
+          this.log("getStringsForLocale: " + aLocales);
+
+          let intlUtils = window.intlUtils;
+          if (!intlUtils) {
+            return {};
+          }
+
+          let amString, pmString;
+          let keys = [ "dates/gregorian/dayperiods/am",
+                       "dates/gregorian/dayperiods/pm" ];
+
+          let result = intlUtils.getDisplayNames(this.mLocales, {
+            style: "short",
+            keys
+          });
+
+          [ amString, pmString ] = keys.map(key => result.values[key]);
+
+          return { amString, pmString };
         ]]>
         </body>
       </method>
@@ -1024,6 +1063,7 @@
       <![CDATA[
         this.DEBUG = false;
         this.mInputElement = this.parentNode;
+        this.mLocales = window.getAppLocalesAsBCP47();
 
         this.mMin = this.mInputElement.min;
         this.mMax = this.mInputElement.max;
