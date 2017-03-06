@@ -6,9 +6,10 @@ import contextlib
 import time
 import urllib
 
-from marionette_driver import errors, By, Wait
+from marionette_driver import By, errors, expected, Wait
 from marionette_harness import (
     MarionetteTestCase,
+    run_if_e10s,
     run_if_manage_instance,
     skip,
     skip_if_mobile,
@@ -18,6 +19,216 @@ from marionette_harness import (
 
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
+
+
+class TestBackForwardNavigation(WindowManagerMixin, MarionetteTestCase):
+
+    def setUp(self):
+        super(TestBackForwardNavigation, self).setUp()
+
+        self.test_page = self.marionette.absolute_url('test.html')
+
+        def open_with_link():
+            link = self.marionette.find_element(By.ID, "new-blank-tab")
+            link.click()
+
+        # Always use a blank new tab for an empty history
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        self.new_tab = self.open_tab(open_with_link)
+        self.marionette.switch_to_window(self.new_tab)
+        self.assertEqual(self.history_length, 1)
+
+    def tearDown(self):
+        self.marionette.switch_to_parent_frame()
+        self.close_all_tabs()
+
+        super(TestBackForwardNavigation, self).tearDown()
+
+    @property
+    def history_length(self):
+        return self.marionette.execute_script("return window.history.length;")
+
+    def run_test(self, test_pages):
+        # Helper method to run simple back and forward testcases.
+        for index, page in enumerate(test_pages):
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.navigate(page["url"])
+            else:
+                self.marionette.navigate(page["url"])
+            self.assertEqual(page["url"], self.marionette.get_url())
+            self.assertEqual(self.history_length, index + 1)
+
+        for page in test_pages[-2::-1]:
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.go_back()
+            else:
+                self.marionette.go_back()
+            self.assertEqual(page["url"], self.marionette.get_url())
+
+        for page in test_pages[1::]:
+            if "error" in page:
+                with self.assertRaises(page["error"]):
+                    self.marionette.go_forward()
+            else:
+                self.marionette.go_forward()
+            self.assertEqual(page["url"], self.marionette.get_url())
+
+    def test_no_history_items(self):
+        # Both methods should not raise a failure if no navigation is possible
+        self.marionette.go_back()
+        self.marionette.go_forward()
+
+    def test_data_urls(self):
+        test_pages = [
+            {"url": inline("<p>foobar</p>")},
+            {"url": self.test_page},
+            {"url": inline("<p>foobar</p>")},
+        ]
+        self.run_test(test_pages)
+
+    def test_same_document_hash_change(self):
+        test_pages = [
+            {"url": "{}#23".format(self.test_page)},
+            {"url": self.test_page},
+            {"url": "{}#42".format(self.test_page)},
+        ]
+        self.run_test(test_pages)
+
+    @skip("Causes crashes for JS GC (bug 1344863) and a11y (bug 1344868)")
+    def test_frameset(self):
+        test_pages = [
+            {"url": self.marionette.absolute_url("frameset.html")},
+            {"url": self.test_page},
+            {"url": self.marionette.absolute_url("frameset.html")},
+        ]
+        self.run_test(test_pages)
+
+    def test_frameset_after_navigating_in_frame(self):
+        test_element_locator = (By.ID, "email")
+
+        self.marionette.navigate(self.test_page)
+        self.assertEqual(self.marionette.get_url(), self.test_page)
+        self.assertEqual(self.history_length, 1)
+        page = self.marionette.absolute_url("frameset.html")
+        self.marionette.navigate(page)
+        self.assertEqual(self.marionette.get_url(), page)
+        self.assertEqual(self.history_length, 2)
+        frame = self.marionette.find_element(By.ID, "fifth")
+        self.marionette.switch_to_frame(frame)
+        link = self.marionette.find_element(By.ID, "linkId")
+        link.click()
+
+        # We cannot use get_url() to wait until the target page has been loaded,
+        # because it will return the URL of the top browsing context and doesn't
+        # wait for the page load to be complete.
+        Wait(self.marionette, timeout=self.marionette.timeout.page_load).until(
+            expected.element_present(*test_element_locator),
+            message="Target element 'email' has not been found")
+        self.assertEqual(self.history_length, 3)
+
+        # Go back to the frame the click navigated away from
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), page)
+        with self.assertRaises(errors.NoSuchElementException):
+            self.marionette.find_element(*test_element_locator)
+
+        # Go back to the non-frameset page
+        self.marionette.switch_to_parent_frame()
+        self.marionette.go_back()
+        self.assertEqual(self.marionette.get_url(), self.test_page)
+
+        # Go forward to the frameset page
+        self.marionette.go_forward()
+        self.assertEqual(self.marionette.get_url(), page)
+
+        # Go forward to the frame the click navigated to
+        # TODO: See above for automatic browser context switches. Hard to do here
+        frame = self.marionette.find_element(By.ID, "fifth")
+        self.marionette.switch_to_frame(frame)
+        self.marionette.go_forward()
+        self.marionette.find_element(*test_element_locator)
+        self.assertEqual(self.marionette.get_url(), page)
+
+    def test_image_document_to_html(self):
+        test_pages = [
+            {"url": self.marionette.absolute_url('black.png')},
+            {"url": self.test_page},
+            {"url": self.marionette.absolute_url('white.png')},
+        ]
+        self.run_test(test_pages)
+
+    def test_image_document_to_image_document(self):
+        test_pages = [
+            {"url": self.marionette.absolute_url('black.png')},
+            {"url": self.marionette.absolute_url('white.png')},
+        ]
+        self.run_test(test_pages)
+
+    @run_if_e10s("Requires e10s mode enabled")
+    def test_remoteness_change(self):
+        # TODO: Verify that a remoteness change happened
+        # like: self.assertNotEqual(self.marionette.current_window_handle, self.new_tab)
+
+        # about:robots is always a non-remote page for now
+        test_pages = [
+            {"url": "about:robots"},
+            {"url": self.test_page},
+            {"url": "about:robots"},
+        ]
+        self.run_test(test_pages)
+
+    def test_navigate_to_requested_about_page_after_error_page(self):
+        test_pages = [
+            {"url": "about:neterror"},
+            {"url": self.marionette.absolute_url("test.html")},
+            {"url": "about:blocked"},
+        ]
+        self.run_test(test_pages)
+
+    def test_timeout_error(self):
+        urls = [
+            self.marionette.absolute_url('slow'),
+            self.test_page,
+            self.marionette.absolute_url('slow'),
+        ]
+
+        # First, load all pages completely to get them added to the cache
+        for index, url in enumerate(urls):
+            self.marionette.navigate(url)
+            self.assertEqual(url, self.marionette.get_url())
+            self.assertEqual(self.history_length, index + 1)
+
+        self.marionette.go_back()
+        self.assertEqual(urls[1], self.marionette.get_url())
+
+        # Force triggering a timeout error
+        self.marionette.timeout.page_load = 0.1
+        with self.assertRaises(errors.TimeoutException):
+            self.marionette.go_back()
+        self.assertEqual(urls[0], self.marionette.get_url())
+        self.marionette.timeout.page_load = 300000
+
+        self.marionette.go_forward()
+        self.assertEqual(urls[1], self.marionette.get_url())
+
+        # Force triggering a timeout error
+        self.marionette.timeout.page_load = 0.1
+        with self.assertRaises(errors.TimeoutException):
+            self.marionette.go_forward()
+        self.assertEqual(urls[2], self.marionette.get_url())
+        self.marionette.timeout.page_load = 300000
+
+    def test_certificate_error(self):
+        test_pages = [
+            {"url": self.fixtures.where_is("/test.html", on="https"),
+             "error": errors.InsecureCertificateException},
+            {"url": self.test_page},
+            {"url": self.fixtures.where_is("/test.html", on="https"),
+             "error": errors.InsecureCertificateException},
+        ]
+        self.run_test(test_pages)
 
 
 class TestNavigate(WindowManagerMixin, MarionetteTestCase):
@@ -30,7 +241,8 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.iframe_doc = self.marionette.absolute_url("test_iframe.html")
 
     def tearDown(self):
-        self.close_all_windows()
+        self.marionette.timeout.reset()
+        self.close_all_tabs()
 
         super(TestNavigate, self).tearDown()
 
@@ -50,11 +262,6 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
             "window.location.href = '%s'" % self.test_doc)
         Wait(self.marionette).until(
             lambda _: self.test_doc == self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-
-    def test_navigate(self):
-        self.marionette.navigate(self.test_doc)
-        self.assertNotEqual("about:", self.location_href)
         self.assertEqual("Marionette Test", self.marionette.title)
 
     def test_navigate_chrome_error(self):
@@ -77,33 +284,6 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.test_doc, self.marionette.get_url())
         self.marionette.navigate("about:blank")
         self.assertEqual("about:blank", self.marionette.get_url())
-
-    # TODO(ato): Remove wait conditions when fixing bug 1330348
-    def test_go_back(self):
-        self.marionette.navigate(self.test_doc)
-        self.assertNotEqual("about:blank", self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-        self.marionette.navigate("about:blank")
-        self.assertEqual("about:blank", self.location_href)
-        self.marionette.go_back()
-        Wait(self.marionette).until(lambda m: self.location_href == self.test_doc)
-        self.assertNotEqual("about:blank", self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-
-    # TODO(ato): Remove wait conditions when fixing bug 1330348
-    def test_go_forward(self):
-        self.marionette.navigate(self.test_doc)
-        self.assertNotEqual("about:blank", self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-        self.marionette.navigate("about:blank")
-        self.assertEqual("about:blank", self.location_href)
-        self.marionette.go_back()
-        Wait(self.marionette).until(lambda m: self.location_href == self.test_doc)
-        self.assertEqual(self.test_doc, self.location_href)
-        self.assertEqual("Marionette Test", self.marionette.title)
-        self.marionette.go_forward()
-        Wait(self.marionette).until(lambda m: self.location_href == "about:blank")
-        self.assertEqual("about:blank", self.location_href)
 
     def test_refresh(self):
         self.marionette.navigate(self.test_doc)
@@ -137,13 +317,6 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         with self.assertRaises(errors.MarionetteException):
             self.marionette.navigate("thisprotocoldoesnotexist://")
 
-    def test_should_navigate_to_requested_about_page(self):
-        self.marionette.navigate("about:neterror")
-        self.assertEqual(self.marionette.get_url(), "about:neterror")
-        self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.navigate("about:blocked")
-        self.assertEqual(self.marionette.get_url(), "about:blocked")
-
     def test_find_element_state_complete(self):
         self.marionette.navigate(self.test_doc)
         state = self.marionette.execute_script(
@@ -152,21 +325,21 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(self.marionette.find_element(By.ID, "mozLink"))
 
     def test_error_when_exceeding_page_load_timeout(self):
+        self.marionette.timeout.page_load = 0.1
         with self.assertRaises(errors.TimeoutException):
-            self.marionette.timeout.page_load = 0.1
             self.marionette.navigate(self.marionette.absolute_url("slow"))
-            self.marionette.find_element(By.TAG_NAME, "p")
 
-    def test_navigate_iframe(self):
-        self.marionette.navigate(self.iframe_doc)
-        self.assertTrue('test_iframe.html' in self.marionette.get_url())
-        self.assertTrue(self.marionette.find_element(By.ID, "test_iframe"))
+    def test_navigate_to_same_image_document_twice(self):
+        self.marionette.navigate(self.fixtures.where_is("black.png"))
+        self.assertIn("black.png", self.marionette.title)
+        self.marionette.navigate(self.fixtures.where_is("black.png"))
+        self.assertIn("black.png", self.marionette.title)
 
-    def test_fragment(self):
+    def test_navigate_hash_change(self):
         doc = inline("<p id=foo>")
         self.marionette.navigate(doc)
         self.marionette.execute_script("window.visited = true", sandbox=None)
-        self.marionette.navigate("%s#foo" % doc)
+        self.marionette.navigate("{}#foo".format(doc))
         self.assertTrue(self.marionette.execute_script(
             "return window.visited", sandbox=None))
 
@@ -186,23 +359,6 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate('about:blank')
         self.marionette.close()
         self.marionette.switch_to_window(self.start_window)
-
-    def test_error_on_tls_navigation(self):
-        self.assertRaises(errors.InsecureCertificateException,
-                          self.marionette.navigate, self.fixtures.where_is("/test.html", on="https"))
-
-    def test_html_document_to_image_document(self):
-        self.marionette.navigate(self.fixtures.where_is("test.html"))
-        self.marionette.navigate(self.fixtures.where_is("white.png"))
-        self.assertIn("white.png", self.marionette.title)
-
-    def test_image_document_to_image_document(self):
-        self.marionette.navigate(self.fixtures.where_is("test.html"))
-
-        self.marionette.navigate(self.fixtures.where_is("white.png"))
-        self.assertIn("white.png", self.marionette.title)
-        self.marionette.navigate(self.fixtures.where_is("black.png"))
-        self.assertIn("black.png", self.marionette.title)
 
     @run_if_manage_instance("Only runnable if Marionette manages the instance")
     @skip_if_mobile("Bug 1322993 - Missing temporary folder")
