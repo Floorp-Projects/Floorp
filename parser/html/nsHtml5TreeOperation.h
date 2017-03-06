@@ -7,7 +7,6 @@
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
-#include "nsXPCOMStrings.h"
 #include "mozilla/dom/FromParser.h"
 
 class nsIContent;

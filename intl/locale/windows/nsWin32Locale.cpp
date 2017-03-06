@@ -7,7 +7,6 @@
 
 #include "nscore.h"
 #include "nsString.h"
-#include "nsXPCOMStrings.h"
 #include "nsReadableUtils.h"
 #include "nsWin32Locale.h"
 #include <windows.h>

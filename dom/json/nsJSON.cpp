@@ -15,7 +15,6 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsXPCOMStrings.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsComponentManagerUtils.h"
