@@ -14,15 +14,15 @@
 SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
+function checkDuration(actual, expected, name) {
+  ok(Math.abs(actual - expected) < 0.1,
+     `${name} duration: ${actual} expected: ${expected}`);
+}
+
 function cloneLoaded(event) {
   ok(true, "Clone loaded OK");
   var e = event.target;
-
-  if (e._expectedDuration) {
-    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
-       "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
-  }
-
+  checkDuration(e.duration, e._expectedDuration, e.token);
   removeNodeAndSource(e);
   manager.finished(e.token);
 }
@@ -45,11 +45,8 @@ function tryClone(event) {
   });
 
 
-  if (e._expectedDuration) {
-    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
-       e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
-    clone._expectedDuration = e._expectedDuration;
-  }
+  checkDuration(e.duration, e._expectedDuration, e.token);
+  clone._expectedDuration = e._expectedDuration;
 
   clone.addEventListener("loadeddata", cloneLoaded, {once: true});
   clone.addEventListener("loadstart", function(evt) {
@@ -76,10 +73,8 @@ function initTest(test, token) {
   var e = document.createElement(elemType);
   e.preload = "auto";
   e.src = test.name;
-  if (test.duration) {
-    e._expectedDuration = test.duration;
-  }
-  ok(true, "Trying to load " + test.name);
+  e._expectedDuration = test.duration;
+  ok(true, `Trying to load ${test.name}, duration=${test.duration}`);
   e.addEventListener("loadeddata", tryClone, {once: true});
   e.token = token;
   manager.started(token);
