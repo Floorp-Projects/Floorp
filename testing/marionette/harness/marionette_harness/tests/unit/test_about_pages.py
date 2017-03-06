@@ -44,13 +44,10 @@ class TestAboutPages(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate("about:support")
 
         self.marionette.go_back()
-        Wait(self.marionette).until(lambda mn: mn.get_url() == self.remote_uri,
-                                    message="'{}' hasn't been loaded".format(self.remote_uri))
+        self.assertEqual(self.marionette.get_url(), self.remote_uri)
 
-        # Bug 1332998 - Timeout loading the page
-        # self.marionette.go_forward()
-        # Wait(self.marionette).until(lambda mn: mn.get_url() == self.remote_uri,
-        #                             message="'about:support' hasn't been loaded")
+        self.marionette.go_forward()
+        self.assertEqual(self.marionette.get_url(), "about:support")
 
         self.marionette.close()
         self.marionette.switch_to_window(self.start_tab)
