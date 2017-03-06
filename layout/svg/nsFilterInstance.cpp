@@ -529,9 +529,10 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget)
   MOZ_ASSERT(invertible);
   filterSpaceToUserSpace *= nsSVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
 
-  aDrawTarget->SetTransform(ToMatrix(filterSpaceToUserSpace) *
-                            aDrawTarget->GetTransform() *
-                            Matrix::Translation(filterRect.TopLeft()));
+  Matrix newTM =
+    ToMatrix(filterSpaceToUserSpace).PreTranslate(filterRect.x, filterRect.y) *
+    aDrawTarget->GetTransform();
+  aDrawTarget->SetTransform(newTM);
 
   ComputeNeededBoxes();
 
