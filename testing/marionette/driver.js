@@ -1010,18 +1010,86 @@ GeckoDriver.prototype.getPageSource = function* (cmd, resp) {
   }
 };
 
-/** Go back in history. */
-GeckoDriver.prototype.goBack = function*(cmd, resp) {
+/**
+ * Cause the browser to traverse one step backward in the joint history
+ * of the current browsing context.
+ */
+GeckoDriver.prototype.goBack = function* (cmd, resp) {
   assert.content(this.context);
 
-  yield this.listener.goBack();
+  if (!this.curBrowser.tab) {
+    // Navigation does not work for non-browser windows
+    return;
+  }
+
+  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
+  if (!contentBrowser.webNavigation.canGoBack) {
+    return;
+  }
+
+  let currentURL = yield this.listener.getCurrentUrl();
+  let goBack = this.listener.goBack({pageTimeout: this.timeouts.pageLoad});
+
+  // If a remoteness update interrupts our page load, this will never return
+  // We need to re-issue this request to correctly poll for readyState and
+  // send errors.
+  this.curBrowser.pendingCommands.push(() => {
+    let parameters = {
+      // TODO(ato): Bug 1242595
+      command_id: this.listener.activeMessageId,
+      lastSeenURL: currentURL,
+      pageTimeout: this.timeouts.pageLoad,
+      startTime: new Date().getTime(),
+    };
+    this.mm.broadcastAsyncMessage(
+        // TODO: combine with
+        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        parameters);
+  });
+
+  yield goBack;
 };
 
-/** Go forward in history. */
-GeckoDriver.prototype.goForward = function*(cmd, resp) {
+/**
+ * Cause the browser to traverse one step forward in the joint history
+ * of the current browsing context.
+ */
+GeckoDriver.prototype.goForward = function* (cmd, resp) {
   assert.content(this.context);
 
-  yield this.listener.goForward();
+  if (!this.curBrowser.tab) {
+    // Navigation does not work for non-browser windows
+    return;
+  }
+
+  let contentBrowser = browser.getBrowserForTab(this.curBrowser.tab)
+  if (!contentBrowser.webNavigation.canGoForward) {
+    return;
+  }
+
+  let currentURL = yield this.listener.getCurrentUrl();
+  let goForward = this.listener.goForward({pageTimeout: this.timeouts.pageLoad});
+
+  // If a remoteness update interrupts our page load, this will never return
+  // We need to re-issue this request to correctly poll for readyState and
+  // send errors.
+  this.curBrowser.pendingCommands.push(() => {
+    let parameters = {
+      // TODO(ato): Bug 1242595
+      command_id: this.listener.activeMessageId,
+      lastSeenURL: currentURL,
+      pageTimeout: this.timeouts.pageLoad,
+      startTime: new Date().getTime(),
+    };
+    this.mm.broadcastAsyncMessage(
+        // TODO: combine with
+        // "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
+        parameters);
+  });
+
+  yield goForward;
 };
 
 /** Refresh the page. */
