@@ -1457,10 +1457,13 @@ protected:
                         bool& aIsApp);
 
   nsresult
+  RemoveObsoleteOrigin(const OriginProps& aOriginProps);
+
+  nsresult
   ProcessOriginDirectories();
 
   virtual nsresult
-  DoProcessOriginDirectories() = 0;
+  ProcessOriginDirectory(const OriginProps& aOriginProps) = 0;
 
 private:
   nsresult
@@ -1475,10 +1478,12 @@ struct StorageDirectoryHelper::OriginProps
   enum Type
   {
     eChrome,
-    eContent
+    eContent,
+    eObsolete
   };
 
   nsCOMPtr<nsIFile> mDirectory;
+  nsString mLeafName;
   nsCString mSpec;
   OriginAttributes mAttrs;
   int64_t mTimestamp;
@@ -1506,6 +1511,14 @@ public:
 
 class MOZ_STACK_CLASS OriginParser final
 {
+public:
+  enum ResultType {
+    InvalidOrigin,
+    ObsoleteOrigin,
+    ValidOrigin
+  };
+
+private:
   static bool
   IgnoreWhitespace(char16_t /* aChar */)
   {
@@ -1567,12 +1580,12 @@ public:
     , mError(false)
   { }
 
-  static bool
+  static ResultType
   ParseOrigin(const nsACString& aOrigin,
               nsCString& aSpec,
               OriginAttributes* aAttrs);
 
-  bool
+  ResultType
   Parse(nsACString& aSpec, OriginAttributes* aAttrs);
 
 private:
@@ -1592,6 +1605,8 @@ private:
 class CreateOrUpgradeDirectoryMetadataHelper final
   : public StorageDirectoryHelper
 {
+  nsCOMPtr<nsIFile> mPermanentStorageDir;
+
 public:
   CreateOrUpgradeDirectoryMetadataHelper(nsIFile* aDirectory,
                                          bool aPersistent)
@@ -1605,8 +1620,8 @@ private:
   nsresult
   MaybeUpgradeOriginDirectory(nsIFile* aDirectory);
 
-  virtual nsresult
-  DoProcessOriginDirectories();
+  nsresult
+  ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 class UpgradeStorageFrom0_0To1_0Helper final
@@ -1622,8 +1637,8 @@ public:
   DoUpgrade();
 
 private:
-  virtual nsresult
-  DoProcessOriginDirectories() override;
+  nsresult
+  ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 class UpgradeStorageFrom1_0To2_0Helper final
@@ -1643,7 +1658,7 @@ private:
   MaybeRemoveCorruptData(const OriginProps& aOriginProps);
 
   nsresult
-  DoProcessOriginDirectories() override;
+  ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 class RestoreDirectoryMetadata2Helper final
@@ -1659,8 +1674,8 @@ public:
   RestoreMetadata2File();
 
 private:
-  virtual nsresult
-  DoProcessOriginDirectories();
+  nsresult
+  ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
 void
@@ -4737,11 +4752,13 @@ QuotaManager::EnsureOriginIsInitializedInternal(
     if (!leafName.EqualsLiteral(kChromeOrigin)) {
       nsCString spec;
       OriginAttributes attrs;
-      bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                              spec, &attrs);
-      if (NS_WARN_IF(!result)) {
+      OriginParser::ResultType result =
+        OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
+                                  spec,
+                                  &attrs);
+      if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
         QM_WARNING("Preventing creation of a new origin directory which is not "
-                   "supported by our origin parser!");
+                   "supported by our origin parser or is obsolete!");
 
         return NS_ERROR_FAILURE;
       }
@@ -6944,6 +6961,23 @@ StorageDirectoryHelper::GetDirectoryMetadata2(nsIFile* aDirectory,
 }
 
 nsresult
+StorageDirectoryHelper::RemoveObsoleteOrigin(const OriginProps& aOriginProps)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+
+  QM_WARNING("Deleting obsolete %s directory that is no longer a legal "
+             "origin!", NS_ConvertUTF16toUTF8(aOriginProps.mLeafName).get());
+
+  nsresult rv = aOriginProps.mDirectory->Remove(/* recursive */ true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 StorageDirectoryHelper::ProcessOriginDirectories()
 {
   AssertIsOnIOThread();
@@ -6968,9 +7002,26 @@ StorageDirectoryHelper::ProcessOriginDirectories()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = DoProcessOriginDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsresult rv;
+
+  // Don't try to upgrade obsolete origins, remove them right after we detect
+  // them.
+  for (auto& originProps : mOriginProps) {
+    if (originProps.mType == OriginProps::eObsolete) {
+      MOZ_ASSERT(originProps.mSuffix.IsEmpty());
+      MOZ_ASSERT(originProps.mGroup.IsEmpty());
+      MOZ_ASSERT(originProps.mOrigin.IsEmpty());
+
+      rv = RemoveObsoleteOrigin(originProps);
+    } else {
+      MOZ_ASSERT(!originProps.mGroup.IsEmpty());
+      MOZ_ASSERT(!originProps.mOrigin.IsEmpty());
+
+      rv = ProcessOriginDirectory(originProps);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -7027,6 +7078,11 @@ StorageDirectoryHelper::RunOnMainThread()
         break;
       }
 
+      case OriginProps::eObsolete: {
+        // There's no way to get info for obsolete origins.
+        break;
+      }
+
       default:
         MOZ_CRASH("Bad type!");
     }
@@ -7069,31 +7125,33 @@ OriginProps::Init(nsIFile* aDirectory)
 
   if (leafName.EqualsLiteral(kChromeOrigin)) {
     mDirectory = aDirectory;
+    mLeafName = leafName;
     mSpec = kChromeOrigin;
     mType = eChrome;
   } else {
     nsCString spec;
     OriginAttributes attrs;
-    bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                            spec, &attrs);
-    if (NS_WARN_IF(!result)) {
+    OriginParser::ResultType result =
+      OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName), spec, &attrs);
+    if (NS_WARN_IF(result == OriginParser::InvalidOrigin)) {
       return NS_ERROR_FAILURE;
     }
 
     mDirectory = aDirectory;
+    mLeafName = leafName;
     mSpec = spec;
     mAttrs = attrs;
-    mType = eContent;
+    mType = result == OriginParser::ObsoleteOrigin ? eObsolete : eContent;
   }
 
   return NS_OK;
 }
 
 // static
-bool
+auto
 OriginParser::ParseOrigin(const nsACString& aOrigin,
                           nsCString& aSpec,
-                          OriginAttributes* aAttrs)
+                          OriginAttributes* aAttrs) -> ResultType
 {
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(aAttrs);
@@ -7103,15 +7161,15 @@ OriginParser::ParseOrigin(const nsACString& aOrigin,
   nsCString originNoSuffix;
   bool ok = originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix);
   if (!ok) {
-    return false;
+    return InvalidOrigin;
   }
 
   OriginParser parser(originNoSuffix, originAttributes);
   return parser.Parse(aSpec, aAttrs);
 }
 
-bool
-OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
+auto
+OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs) -> ResultType
 {
   MOZ_ASSERT(aAttrs);
 
@@ -7140,7 +7198,7 @@ OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
     QM_WARNING("Origin '%s' failed to parse, handled tokens: %s", mOrigin.get(),
                mHandledTokens.get());
 
-    return false;
+    return InvalidOrigin;
   }
 
   MOZ_ASSERT(mState == eComplete || mState == eHandledTrailingSeparator);
@@ -7167,7 +7225,7 @@ OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
 
     aSpec = spec;
 
-    return true;
+    return ValidOrigin;
   }
 
   if (mSchemaType == eAbout) {
@@ -7185,7 +7243,7 @@ OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
 
   aSpec = spec;
 
-  return true;
+  return mSchema.EqualsLiteral("app") ? ObsoleteOrigin : ValidOrigin;
 }
 
 void
@@ -7698,34 +7756,29 @@ CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
 }
 
 nsresult
-CreateOrUpgradeDirectoryMetadataHelper::DoProcessOriginDirectories()
+CreateOrUpgradeDirectoryMetadataHelper::ProcessOriginDirectory(
+                                                const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
 
   nsresult rv;
 
-  nsCOMPtr<nsIFile> permanentStorageDir;
-
-  for (uint32_t count = mOriginProps.Length(), index = 0;
-       index < count;
-       index++) {
-    OriginProps& originProps = mOriginProps[index];
-
+  {
     if (mPersistent) {
-      rv = CreateDirectoryMetadata(originProps.mDirectory,
-                                   originProps.mTimestamp,
-                                   originProps.mSuffix,
-                                   originProps.mGroup,
-                                   originProps.mOrigin);
+      rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                   aOriginProps.mTimestamp,
+                                   aOriginProps.mSuffix,
+                                   aOriginProps.mGroup,
+                                   aOriginProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
       // Move whitelisted origins to new persistent storage.
       if (QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                           originProps.mSpec)) {
-        if (!permanentStorageDir) {
-          permanentStorageDir =
+                                                          aOriginProps.mSpec)) {
+        if (!mPermanentStorageDir) {
+          mPermanentStorageDir =
             do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
@@ -7737,20 +7790,20 @@ CreateOrUpgradeDirectoryMetadataHelper::DoProcessOriginDirectories()
           const nsString& permanentStoragePath =
             quotaManager->GetStoragePath(PERSISTENCE_TYPE_PERSISTENT);
 
-          rv = permanentStorageDir->InitWithPath(permanentStoragePath);
+          rv = mPermanentStorageDir->InitWithPath(permanentStoragePath);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         }
 
         nsString leafName;
-        rv = originProps.mDirectory->GetLeafName(leafName);
+        rv = aOriginProps.mDirectory->GetLeafName(leafName);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
         nsCOMPtr<nsIFile> newDirectory;
-        rv = permanentStorageDir->Clone(getter_AddRefs(newDirectory));
+        rv = mPermanentStorageDir->Clone(getter_AddRefs(newDirectory));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -7770,26 +7823,27 @@ CreateOrUpgradeDirectoryMetadataHelper::DoProcessOriginDirectories()
           QM_WARNING("Found %s in storage/persistent and storage/permanent !",
                      NS_ConvertUTF16toUTF8(leafName).get());
 
-          rv = originProps.mDirectory->Remove(/* recursive */ true);
+          rv = aOriginProps.mDirectory->Remove(/* recursive */ true);
         } else {
-          rv = originProps.mDirectory->MoveTo(permanentStorageDir, EmptyString());
+          rv = aOriginProps.mDirectory->MoveTo(mPermanentStorageDir,
+                                               EmptyString());
         }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
-    } else if (originProps.mNeedsRestore) {
-      rv = CreateDirectoryMetadata(originProps.mDirectory,
-                                   originProps.mTimestamp,
-                                   originProps.mSuffix,
-                                   originProps.mGroup,
-                                   originProps.mOrigin);
+    } else if (aOriginProps.mNeedsRestore) {
+      rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                   aOriginProps.mTimestamp,
+                                   aOriginProps.mSuffix,
+                                   aOriginProps.mGroup,
+                                   aOriginProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (!originProps.mIgnore) {
+    } else if (!aOriginProps.mIgnore) {
       nsCOMPtr<nsIFile> file;
-      rv = originProps.mDirectory->Clone(getter_AddRefs(file));
+      rv = aOriginProps.mDirectory->Clone(getter_AddRefs(file));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -7908,50 +7962,47 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
 }
 
 nsresult
-UpgradeStorageFrom0_0To1_0Helper::DoProcessOriginDirectories()
+UpgradeStorageFrom0_0To1_0Helper::ProcessOriginDirectory(
+                                                const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
 
-  for (uint32_t count = mOriginProps.Length(), index = 0;
-       index < count;
-       index++) {
-    OriginProps& originProps = mOriginProps[index];
-
+  {
     nsresult rv;
 
-    if (originProps.mNeedsRestore) {
-      rv = CreateDirectoryMetadata(originProps.mDirectory,
-                                   originProps.mTimestamp,
-                                   originProps.mSuffix,
-                                   originProps.mGroup,
-                                   originProps.mOrigin);
+    if (aOriginProps.mNeedsRestore) {
+      rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                   aOriginProps.mTimestamp,
+                                   aOriginProps.mSuffix,
+                                   aOriginProps.mGroup,
+                                   aOriginProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    rv = CreateDirectoryMetadata2(originProps.mDirectory,
-                                  originProps.mTimestamp,
-                                  originProps.mSuffix,
-                                  originProps.mGroup,
-                                  originProps.mOrigin);
+    rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                  aOriginProps.mTimestamp,
+                                  aOriginProps.mSuffix,
+                                  aOriginProps.mGroup,
+                                  aOriginProps.mOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     nsString oldName;
-    rv = originProps.mDirectory->GetLeafName(oldName);
+    rv = aOriginProps.mDirectory->GetLeafName(oldName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    nsAutoCString originSanitized(originProps.mOrigin);
+    nsAutoCString originSanitized(aOriginProps.mOrigin);
     SanitizeOriginString(originSanitized);
 
     NS_ConvertASCIItoUTF16 newName(originSanitized);
 
     if (!oldName.Equals(newName)) {
-      rv = originProps.mDirectory->RenameTo(nullptr, newName);
+      rv = aOriginProps.mDirectory->RenameTo(nullptr, newName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8141,30 +8192,31 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
 }
 
 nsresult
-UpgradeStorageFrom1_0To2_0Helper::DoProcessOriginDirectories()
+UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
+                                                const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
 
-  for (auto& originProps : mOriginProps) {
+  {
     nsresult rv;
 
-    if (originProps.mNeedsRestore) {
-      rv = CreateDirectoryMetadata(originProps.mDirectory,
-                                   originProps.mTimestamp,
-                                   originProps.mSuffix,
-                                   originProps.mGroup,
-                                   originProps.mOrigin);
+    if (aOriginProps.mNeedsRestore) {
+      rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                   aOriginProps.mTimestamp,
+                                   aOriginProps.mSuffix,
+                                   aOriginProps.mGroup,
+                                   aOriginProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    if (originProps.mNeedsRestore2) {
-      rv = CreateDirectoryMetadata2(originProps.mDirectory,
-                                    originProps.mTimestamp,
-                                    originProps.mSuffix,
-                                    originProps.mGroup,
-                                    originProps.mOrigin);
+    if (aOriginProps.mNeedsRestore2) {
+      rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                    aOriginProps.mTimestamp,
+                                    aOriginProps.mSuffix,
+                                    aOriginProps.mGroup,
+                                    aOriginProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8200,18 +8252,16 @@ RestoreDirectoryMetadata2Helper::RestoreMetadata2File()
 }
 
 nsresult
-RestoreDirectoryMetadata2Helper::DoProcessOriginDirectories()
+RestoreDirectoryMetadata2Helper::ProcessOriginDirectory(
+                                                const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mOriginProps.Length() == 1);
 
-  OriginProps& originProps = mOriginProps[0];
-
-  nsresult rv = CreateDirectoryMetadata2(originProps.mDirectory,
-                                         originProps.mTimestamp,
-                                         originProps.mSuffix,
-                                         originProps.mGroup,
-                                         originProps.mOrigin);
+  nsresult rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                         aOriginProps.mTimestamp,
+                                         aOriginProps.mSuffix,
+                                         aOriginProps.mGroup,
+                                         aOriginProps.mOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
