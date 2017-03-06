@@ -535,28 +535,18 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 class MOZ_STACK_CLASS CSSAnimationBuilder final {
 public:
   CSSAnimationBuilder(nsStyleContext* aStyleContext,
-                      dom::Element* aTarget,
-                      nsAnimationManager::CSSAnimationCollection* aCollection)
+                      dom::Element* aTarget)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
-    , mCollection(aCollection)
   {
     MOZ_ASSERT(aStyleContext);
     MOZ_ASSERT(aTarget);
-    mTimeline = mTarget->OwnerDoc()->Timeline();
   }
 
-  // Returns a new animation set up with given StyleAnimation.
-  // Or returns an existing animation matching StyleAnimation's name updated
-  // with the new StyleAnimation.
-  already_AddRefed<CSSAnimation>
-  Build(nsPresContext* aPresContext,
-        const StyleAnimation& aSrc);
-
-private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
                                           const StyleAnimation& aSrc,
                                           const nsCSSKeyframesRule* aRule);
+private:
   Maybe<ComputedTimingFunction> GetKeyframeTimingFunction(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
@@ -578,31 +568,26 @@ private:
   nsCSSValue GetComputedValue(nsPresContext* aPresContext,
                               nsCSSPropertyID aProperty);
 
-  static TimingParams TimingParamsFrom(const StyleAnimation& aStyleAnimation)
-  {
-    return TimingParamsFromCSSParams(aStyleAnimation.GetDuration(),
-                                     aStyleAnimation.GetDelay(),
-                                     aStyleAnimation.GetIterationCount(),
-                                     aStyleAnimation.GetDirection(),
-                                     aStyleAnimation.GetFillMode());
-  }
-
   RefPtr<nsStyleContext> mStyleContext;
   RefPtr<dom::Element> mTarget;
-  RefPtr<dom::DocumentTimeline> mTimeline;
 
   ResolvedStyleCache mResolvedStyles;
   RefPtr<nsStyleContext> mStyleWithoutAnimation;
-  // Existing collection, nullptr if the target element has no animations.
-  nsAnimationManager::CSSAnimationCollection* mCollection;
 };
 
 static Maybe<ComputedTimingFunction>
 ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
 
-already_AddRefed<CSSAnimation>
-CSSAnimationBuilder::Build(nsPresContext* aPresContext,
-                           const StyleAnimation& aSrc)
+// Returns a new animation set up with given StyleAnimation.
+// Or returns an existing animation matching StyleAnimation's name updated
+// with the new StyleAnimation.
+static already_AddRefed<CSSAnimation>
+BuildAnimation(nsPresContext* aPresContext,
+               nsStyleContext* aStyleContext,
+               dom::Element* aTarget,
+               const StyleAnimation& aSrc,
+               CSSAnimationBuilder& aBuilder,
+               nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   MOZ_ASSERT(aPresContext);
 
@@ -611,7 +596,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
     ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
     MOZ_ASSERT(styleSet);
     const ServoComputedValues* computedValues =
-      mStyleContext->StyleSource().AsServoComputedValues();
+      aStyleContext->StyleSource().AsServoComputedValues();
     const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
     if (!styleSet->FillKeyframesForName(aSrc.GetName(),
                                         timingFunction,
@@ -626,10 +611,14 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
       return nullptr;
     }
 
-    keyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
+    keyframes = aBuilder.BuildAnimationFrames(aPresContext, aSrc, rule);
   }
 
-  TimingParams timing = TimingParamsFrom(aSrc);
+  TimingParams timing = TimingParamsFromCSSParams(aSrc.GetDuration(),
+                                                  aSrc.GetDelay(),
+                                                  aSrc.GetIterationCount(),
+                                                  aSrc.GetDirection(),
+                                                  aSrc.GetFillMode());
 
   bool isStylePaused =
     aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -637,7 +626,7 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
   // Find the matching animation with animation name in the old list
   // of animations and remove the matched animation from the list.
   RefPtr<CSSAnimation> oldAnim =
-    PopExistingAnimation(aSrc.GetName(), mCollection);
+    PopExistingAnimation(aSrc.GetName(), aCollection);
 
   if (oldAnim) {
     // Copy over the start times and (if still paused) pause starts
@@ -652,27 +641,27 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
                                         timing,
                                         Move(keyframes),
                                         isStylePaused,
-                                        mStyleContext);
+                                        aStyleContext);
     return oldAnim.forget();
   }
 
   // mTarget is non-null here, so we emplace it directly.
   Maybe<OwningAnimationTarget> target;
-  target.emplace(mTarget, mStyleContext->GetPseudoType());
+  target.emplace(aTarget, aStyleContext->GetPseudoType());
   KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffectReadOnly> effect =
     new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
                                effectOptions);
 
-  effect->SetKeyframes(Move(keyframes), mStyleContext);
+  effect->SetKeyframes(Move(keyframes), aStyleContext);
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
                      aSrc.GetName());
   animation->SetOwningElement(
-    OwningElementRef(*mTarget, mStyleContext->GetPseudoType()));
+    OwningElementRef(*aTarget, aStyleContext->GetPseudoType()));
 
-  animation->SetTimelineNoUpdate(mTimeline);
+  animation->SetTimelineNoUpdate(aTarget->OwnerDoc()->Timeline());
   animation->SetEffectNoUpdate(effect);
 
   if (isStylePaused) {
@@ -1094,7 +1083,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
 
-  CSSAnimationBuilder builder(aStyleContext, aTarget, aCollection);
+  CSSAnimationBuilder builder(aStyleContext, aTarget);
 
   for (size_t animIdx = disp->mAnimationNameCount; animIdx-- != 0;) {
     const StyleAnimation& src = disp->mAnimations[animIdx];
@@ -1108,8 +1097,12 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    RefPtr<CSSAnimation> dest =
-      builder.Build(mPresContext, src);
+    RefPtr<CSSAnimation> dest = BuildAnimation(mPresContext,
+                                               aStyleContext,
+                                               aTarget,
+                                               src,
+                                               builder,
+                                               aCollection);
     if (!dest) {
       continue;
     }
