@@ -363,3 +363,8 @@ user_pref("signon.rememberSignons", false);
 
 // Enable form autofill feature testing.
 user_pref("browser.formautofill.experimental", true);
+
+// Disable all recommended Marionette preferences for Gecko tests.
+// The prefs recommended by Marionette are typically geared towards
+// consumer automation; not vendor testing.
+user_pref("marionette.prefs.recommended", false);
