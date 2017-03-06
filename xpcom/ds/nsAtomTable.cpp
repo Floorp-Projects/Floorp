@@ -389,10 +389,13 @@ DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
       i.Remove();
       delete atom;
       ++removedCount;
-    } else if (aKind == GCKind::Shutdown) {
-      // We only perform these kind of GCs in leak-checking builds.  If
-      // something is anomalous, then we'll report an error here, and crash
-      // later on in this function.
+    }
+#ifdef NS_FREE_PERMANENT_DATA
+    else if (aKind == GCKind::Shutdown && PR_GetEnv("XPCOM_MEM_BLOAT_LOG")) {
+      // Only report leaking atoms in leak-checking builds in a run
+      // where we are checking for leaks, during shutdown. If
+      // something is anomalous, then we'll assert later in this
+      // function.
       nsAutoCString name;
       atom->ToUTF8String(name);
       if (nonZeroRefcountAtomsCount == 0) {
@@ -404,6 +407,8 @@ DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
       }
       nonZeroRefcountAtomsCount++;
     }
+#endif
+
   }
   if (nonZeroRefcountAtomsCount) {
     nsPrintfCString msg("%d dynamic atom(s) with non-zero refcount: %s",
