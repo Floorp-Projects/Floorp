@@ -335,6 +335,10 @@ WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
       }
     }
   }
+  if (mWidget) {
+    LayoutDeviceIntSize size = mWidget->GetClientSize();
+    mApi->SetWindowParameters(size);
+  }
   mApi->SetRootDisplayList(gfx::Color(0.3f, 0.f, 0.f, 1.f), aEpoch, LayerSize(aSize.width, aSize.height),
                            mPipelineId,
                            dlDesc, dl.mData, dl.mLength,

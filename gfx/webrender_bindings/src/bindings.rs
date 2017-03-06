@@ -8,7 +8,7 @@ use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
 use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
-use webrender_traits::{DeviceUintSize, ExternalEvent};
+use webrender_traits::{DeviceUintSize, DeviceUintRect, DeviceUintPoint, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
 use webrender_traits::{BuiltDisplayListDescriptor, AuxiliaryListsDescriptor};
@@ -273,6 +273,16 @@ pub unsafe extern fn wr_api_clear_root_display_list(api: &mut RenderApi,
                               preserve_frame_state);
 }
 
+
+#[no_mangle]
+pub extern fn wr_api_set_window_parameters(api: &mut RenderApi,
+                                           width: i32, height: i32)
+{
+    let size = DeviceUintSize::new(width as u32, height as u32);
+    api.set_window_parameters(size,
+                              DeviceUintRect::new(DeviceUintPoint::new(0, 0), size));
+
+}
 
 #[no_mangle]
 pub extern fn wr_api_generate_frame(api: &mut RenderApi) {
