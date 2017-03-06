@@ -24,6 +24,7 @@ class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {
+enum class CSSPseudoElementType : uint8_t;
 
 namespace dom {
 class Element;
@@ -49,6 +50,26 @@ public:
     RemoveAllElementCollections();
 
     mPresContext = nullptr;
+  }
+
+  /**
+   * Stop animations on the element. This method takes the real element
+   * rather than the element for the generated content for animations on
+   * ::before and ::after.
+   */
+  void StopAnimationsForElement(dom::Element* aElement,
+                                CSSPseudoElementType aPseudoType)
+  {
+    MOZ_ASSERT(aElement);
+    AnimationCollection<AnimationType>* collection =
+      AnimationCollection<AnimationType>::GetAnimationCollection(aElement,
+                                                                 aPseudoType);
+    if (!collection) {
+      return;
+    }
+
+    nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
+    collection->Destroy();
   }
 
 protected:

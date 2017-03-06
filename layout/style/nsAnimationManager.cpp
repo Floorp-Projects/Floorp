@@ -358,22 +358,6 @@ PopExistingAnimation(const nsAString& aName,
   return nullptr;
 }
 
-void
-nsAnimationManager::StopAnimationsForElement(
-  mozilla::dom::Element* aElement,
-  mozilla::CSSPseudoElementType aPseudoType)
-{
-  MOZ_ASSERT(aElement);
-  CSSAnimationCollection* collection =
-    CSSAnimationCollection::GetAnimationCollection(aElement, aPseudoType);
-  if (!collection) {
-    return;
-  }
-
-  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
-  collection->Destroy();
-}
-
 class ResolvedStyleCache {
 public:
   ResolvedStyleCache() : mCache() {}
