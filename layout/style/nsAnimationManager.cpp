@@ -358,56 +358,6 @@ PopExistingAnimation(const nsAString& aName,
   return nullptr;
 }
 
-static void
-UpdateOldAnimationPropertiesWithNew(
-    CSSAnimation& aOld,
-    TimingParams& aNewTiming,
-    nsTArray<Keyframe>&& aNewKeyframes,
-    bool aNewIsStylePaused,
-    nsStyleContext* aStyleContext)
-{
-  bool animationChanged = false;
-
-  // Update the old from the new so we can keep the original object
-  // identity (and any expando properties attached to it).
-  if (aOld.GetEffect()) {
-    dom::AnimationEffectReadOnly* oldEffect = aOld.GetEffect();
-    animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
-    oldEffect->SetSpecifiedTiming(aNewTiming);
-
-    KeyframeEffectReadOnly* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
-    if (oldKeyframeEffect) {
-      oldKeyframeEffect->SetKeyframes(Move(aNewKeyframes), aStyleContext);
-    }
-  }
-
-  // Handle changes in play state. If the animation is idle, however,
-  // changes to animation-play-state should *not* restart it.
-  if (aOld.PlayState() != AnimationPlayState::Idle) {
-    // CSSAnimation takes care of override behavior so that,
-    // for example, if the author has called pause(), that will
-    // override the animation-play-state.
-    // (We should check aNew->IsStylePaused() but that requires
-    //  downcasting to CSSAnimation and we happen to know that
-    //  aNew will only ever be paused by calling PauseFromStyle
-    //  making IsPausedOrPausing synonymous in this case.)
-    if (!aOld.IsStylePaused() && aNewIsStylePaused) {
-      aOld.PauseFromStyle();
-      animationChanged = true;
-    } else if (aOld.IsStylePaused() && !aNewIsStylePaused) {
-      aOld.PlayFromStyle();
-      animationChanged = true;
-    }
-  }
-
-  // Updating the effect timing above might already have caused the
-  // animation to become irrelevant so only add a changed record if
-  // the animation is still relevant.
-  if (animationChanged && aOld.IsRelevant()) {
-    nsNodeUtils::AnimationChanged(&aOld);
-  }
-}
-
 void
 nsAnimationManager::StopAnimationsForElement(
   mozilla::dom::Element* aElement,
@@ -482,6 +432,12 @@ public:
   bool BuildKeyframes(nsPresContext* aPresContext,
                       const StyleAnimation& aSrc,
                       nsTArray<Keyframe>& aKeyframs);
+  void SetKeyframes(KeyframeEffectReadOnly& aEffect,
+                    nsTArray<Keyframe>&& aKeyframes)
+  {
+    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
+  }
+
 private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
                                           const StyleAnimation& aSrc,
@@ -516,6 +472,56 @@ private:
 
 static Maybe<ComputedTimingFunction>
 ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
+
+static void
+UpdateOldAnimationPropertiesWithNew(
+    CSSAnimation& aOld,
+    TimingParams& aNewTiming,
+    nsTArray<Keyframe>&& aNewKeyframes,
+    bool aNewIsStylePaused,
+    CSSAnimationBuilder& aBuilder)
+{
+  bool animationChanged = false;
+
+  // Update the old from the new so we can keep the original object
+  // identity (and any expando properties attached to it).
+  if (aOld.GetEffect()) {
+    dom::AnimationEffectReadOnly* oldEffect = aOld.GetEffect();
+    animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
+    oldEffect->SetSpecifiedTiming(aNewTiming);
+
+    KeyframeEffectReadOnly* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
+    if (oldKeyframeEffect) {
+      aBuilder.SetKeyframes(*oldKeyframeEffect, Move(aNewKeyframes));
+    }
+  }
+
+  // Handle changes in play state. If the animation is idle, however,
+  // changes to animation-play-state should *not* restart it.
+  if (aOld.PlayState() != AnimationPlayState::Idle) {
+    // CSSAnimation takes care of override behavior so that,
+    // for example, if the author has called pause(), that will
+    // override the animation-play-state.
+    // (We should check aNew->IsStylePaused() but that requires
+    //  downcasting to CSSAnimation and we happen to know that
+    //  aNew will only ever be paused by calling PauseFromStyle
+    //  making IsPausedOrPausing synonymous in this case.)
+    if (!aOld.IsStylePaused() && aNewIsStylePaused) {
+      aOld.PauseFromStyle();
+      animationChanged = true;
+    } else if (aOld.IsStylePaused() && !aNewIsStylePaused) {
+      aOld.PlayFromStyle();
+      animationChanged = true;
+    }
+  }
+
+  // Updating the effect timing above might already have caused the
+  // animation to become irrelevant so only add a changed record if
+  // the animation is still relevant.
+  if (animationChanged && aOld.IsRelevant()) {
+    nsNodeUtils::AnimationChanged(&aOld);
+  }
+}
 
 // Returns a new animation set up with given StyleAnimation.
 // Or returns an existing animation matching StyleAnimation's name updated
@@ -562,7 +568,7 @@ BuildAnimation(nsPresContext* aPresContext,
                                         timing,
                                         Move(keyframes),
                                         isStylePaused,
-                                        aStyleContext);
+                                        aBuilder);
     return oldAnim.forget();
   }
 
@@ -574,7 +580,7 @@ BuildAnimation(nsPresContext* aPresContext,
     new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
                                effectOptions);
 
-  effect->SetKeyframes(Move(keyframes), aStyleContext);
+  aBuilder.SetKeyframes(*effect, Move(keyframes));
 
   RefPtr<CSSAnimation> animation =
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
