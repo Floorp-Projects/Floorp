@@ -125,7 +125,7 @@ namespace {
 const uint32_t kSQLitePageSizeOverride = 512;
 
 // Major storage version. Bump for backwards-incompatible changes.
-const uint32_t kMajorStorageVersion = 1;
+const uint32_t kMajorStorageVersion = 2;
 
 // Minor storage version. Bump for backwards-compatible changes.
 const uint32_t kMinorStorageVersion = 0;
@@ -187,14 +187,12 @@ enum AppId {
  * SQLite functions
  ******************************************************************************/
 
-#if 0
 int32_t
 MakeStorageVersion(uint32_t aMajorStorageVersion,
                    uint32_t aMinorStorageVersion)
 {
   return int32_t((aMajorStorageVersion << 16) + aMinorStorageVersion);
 }
-#endif
 
 uint32_t
 GetMajorStorageVersion(int32_t aStorageVersion)
@@ -1444,6 +1442,20 @@ protected:
                        nsACString& aOrigin,
                        Nullable<bool>& aIsApp);
 
+  // Upgrade helper to load the contents of ".metadata-v2" files from previous
+  // schema versions.  Although QuotaManager has a similar GetDirectoryMetadata2
+  // method, it is only intended to read current version ".metadata-v2" files.
+  // And unlike the old ".metadata" files, the ".metadata-v2" format can evolve
+  // because our "storage.sqlite" lets us track the overall version of the
+  // storage directory.
+  nsresult
+  GetDirectoryMetadata2(nsIFile* aDirectory,
+                        int64_t& aTimestamp,
+                        nsACString& aSuffix,
+                        nsACString& aGroup,
+                        nsACString& aOrigin,
+                        bool& aIsApp);
+
   nsresult
   ProcessOriginDirectories();
 
@@ -1476,6 +1488,7 @@ struct StorageDirectoryHelper::OriginProps
 
   Type mType;
   bool mNeedsRestore;
+  bool mNeedsRestore2;
   bool mIgnore;
 
 public:
@@ -1483,6 +1496,7 @@ public:
     : mTimestamp(0)
     , mType(eContent)
     , mNeedsRestore(false)
+    , mNeedsRestore2(false)
     , mIgnore(false)
   { }
 
@@ -1609,6 +1623,23 @@ public:
 
 private:
   virtual nsresult
+  DoProcessOriginDirectories() override;
+};
+
+class UpgradeStorageFrom1_0To2_0Helper final
+  : public StorageDirectoryHelper
+{
+public:
+  UpgradeStorageFrom1_0To2_0Helper(nsIFile* aDirectory,
+                                   bool aPersistent)
+    : StorageDirectoryHelper(aDirectory, aPersistent)
+  { }
+
+  nsresult
+  DoUpgrade();
+
+private:
+  nsresult
   DoProcessOriginDirectories() override;
 };
 
@@ -2058,6 +2089,9 @@ CreateDirectoryMetadata2(nsIFile* aDirectory,
     return rv;
   }
 
+  // The suffix isn't used right now, but we might need it in future. It's
+  // a bit of redundancy we can live with given how painful is to upgrade
+  // metadata files.
   rv = stream->WriteStringZ(PromiseFlatCString(aSuffix).get());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4263,7 +4297,7 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
   }
 #endif
 
-  rv = aConnection->SetSchemaVersion(kStorageVersion);
+  rv = aConnection->SetSchemaVersion(MakeStorageVersion(1, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4271,14 +4305,49 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-#if 0
 nsresult
 QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
+  // The upgrade consists of a number of logically distinct bugs that
+  // intentionally got fixed at the same time to trigger just one major
+  // version bump.
+
   nsresult rv;
+
+  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
+    nsCOMPtr<nsIFile> directory =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = directory->InitWithPath(GetStoragePath(persistenceType));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = directory->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      continue;
+    }
+
+    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
+    RefPtr<UpgradeStorageFrom1_0To2_0Helper> helper =
+      new UpgradeStorageFrom1_0To2_0Helper(directory, persistent);
+
+    rv = helper->DoUpgrade();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
 #ifdef DEBUG
   {
@@ -4299,7 +4368,6 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
 
   return NS_OK;
 }
-#endif
 
 #ifdef DEBUG
 
@@ -4449,16 +4517,14 @@ QuotaManager::EnsureStorageIsInitialized()
       MOZ_ASSERT(storageVersion == kStorageVersion);
     } else {
       // This logic needs to change next time we change the storage!
-      static_assert(kStorageVersion == int32_t((1 << 16) + 0),
+      static_assert(kStorageVersion == int32_t((2 << 16) + 0),
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
         if (storageVersion == 0) {
           rv = UpgradeStorageFrom0_0To1_0(connection);
-#if 0
         } else if (storageVersion == MakeStorageVersion(1, 0)) {
           rv = UpgradeStorageFrom1_0To2_0(connection);
-#endif
         } else {
           NS_WARNING("Unable to initialize storage, no upgrade path is "
                      "available!");
@@ -6823,6 +6889,82 @@ StorageDirectoryHelper::GetDirectoryMetadata(nsIFile* aDirectory,
 }
 
 nsresult
+StorageDirectoryHelper::GetDirectoryMetadata2(nsIFile* aDirectory,
+                                              int64_t& aTimestamp,
+                                              nsACString& aSuffix,
+                                              nsACString& aGroup,
+                                              nsACString& aOrigin,
+                                              bool& aIsApp)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aTimestamp);
+
+  nsCOMPtr<nsIBinaryInputStream> binaryStream;
+  nsresult rv = GetBinaryInputStream(aDirectory,
+                                     NS_LITERAL_STRING(METADATA_V2_FILE_NAME),
+                                     getter_AddRefs(binaryStream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint64_t timestamp;
+  rv = binaryStream->Read64(&timestamp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool persisted;
+  rv = binaryStream->ReadBoolean(&persisted);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint32_t reservedData1;
+  rv = binaryStream->Read32(&reservedData1);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  uint32_t reservedData2;
+  rv = binaryStream->Read32(&reservedData2);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString suffix;
+  rv = binaryStream->ReadCString(suffix);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString group;
+  rv = binaryStream->ReadCString(group);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString origin;
+  rv = binaryStream->ReadCString(origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool isApp;
+  rv = binaryStream->ReadBoolean(&isApp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  aTimestamp = timestamp;
+  aSuffix = suffix;
+  aGroup = group;
+  aOrigin = origin;
+  aIsApp = isApp;
+  return NS_OK;
+}
+
+nsresult
 StorageDirectoryHelper::ProcessOriginDirectories()
 {
   AssertIsOnIOThread();
@@ -7831,6 +7973,137 @@ UpgradeStorageFrom0_0To1_0Helper::DoProcessOriginDirectories()
 
     if (!oldName.Equals(newName)) {
       rv = originProps.mDirectory->RenameTo(nullptr, newName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
+{
+  AssertIsOnIOThread();
+
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
+    MOZ_ASSERT(originDir);
+
+    bool isDirectory;
+    rv = originDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOSMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    OriginProps originProps;
+    rv = originProps.Init(originDir);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    int64_t timestamp;
+    nsCString group;
+    nsCString origin;
+    Nullable<bool> isApp;
+    nsresult rv = GetDirectoryMetadata(originDir,
+                                       timestamp,
+                                       group,
+                                       origin,
+                                       isApp);
+    if (NS_FAILED(rv) || isApp.IsNull()) {
+      originProps.mNeedsRestore = true;
+    }
+
+    nsCString suffix;
+    rv = GetDirectoryMetadata2(originDir,
+                               timestamp,
+                               suffix,
+                               group,
+                               origin,
+                               isApp.SetValue());
+    if (NS_FAILED(rv)) {
+      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
+      originProps.mNeedsRestore2 = true;
+    } else {
+      originProps.mTimestamp = timestamp;
+    }
+
+    mOriginProps.AppendElement(Move(originProps));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mOriginProps.IsEmpty()) {
+    return NS_OK;
+  }
+
+  rv = ProcessOriginDirectories();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom1_0To2_0Helper::DoProcessOriginDirectories()
+{
+  AssertIsOnIOThread();
+
+  for (auto& originProps : mOriginProps) {
+    nsresult rv;
+
+    if (originProps.mNeedsRestore) {
+      rv = CreateDirectoryMetadata(originProps.mDirectory,
+                                   originProps.mTimestamp,
+                                   originProps.mSuffix,
+                                   originProps.mGroup,
+                                   originProps.mOrigin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (originProps.mNeedsRestore2) {
+      rv = CreateDirectoryMetadata2(originProps.mDirectory,
+                                    originProps.mTimestamp,
+                                    originProps.mSuffix,
+                                    originProps.mGroup,
+                                    originProps.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
