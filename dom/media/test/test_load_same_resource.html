@@ -81,7 +81,6 @@ function initTest(test, token) {
   }
   ok(true, "Trying to load " + test.name);
   e.addEventListener("loadeddata", tryClone, {once: true});
-  e.load();
   e.token = token;
   manager.started(token);
 }
