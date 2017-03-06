@@ -71,8 +71,7 @@ function tryClone(event) {
 // failure.
 
 function initTest(test, token) {
-  var elemType = /^audio/.test(test.type) ? "audio" : "video";
-  var e = document.createElement(elemType);
+  var e = document.createElement("video");
   e.preload = "auto";
   e.src = test.name;
   e._expectedDuration = test.duration;
