@@ -241,7 +241,7 @@ MarionetteComponent.prototype.init = function() {
   let s;
   try {
     Cu.import("chrome://marionette/content/server.js");
-    s = new MarionetteServer(port, forceLocal);
+    s = new server.TCPListener(port, forceLocal);
     s.start();
     this.logger.info(`Listening on port ${s.port}`);
   } catch (e) {
