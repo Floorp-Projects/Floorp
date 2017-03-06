@@ -420,8 +420,7 @@ private:
   //
   // - It is written only by this thread, via setSleeping() and setAwake().
   //
-  // - It is read by the SamplerThread (on Win32 and Mac) or the SigprofSender
-  //   thread (on Linux and Android).
+  // - It is read by SamplerThread::Run().
   //
   // There are two cases where racing between threads can cause an issue.
   //
