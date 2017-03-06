@@ -931,6 +931,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
             }
           }
 #else
+          *aOutFoundRoot = false;
           // Non-Android platforms still care about this flag being cleared after
           // the first call to TransformShadowTree().
           mIsFirstPaint = false;
