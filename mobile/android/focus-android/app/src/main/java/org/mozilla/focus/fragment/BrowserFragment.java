@@ -21,6 +21,7 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
+import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.web.IWebView;
 
@@ -191,7 +192,13 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
             }
 
             case R.id.open_select_browser: {
-                // TODO: Show chooser for selecting a browser
+                final Browsers browsers = new Browsers(getContext(), webView.getUrl());
+
+                final OpenWithFragment fragment = OpenWithFragment.newInstance(
+                        browsers.getInstalledBrowsers(), webView.getUrl());
+                fragment.show(getFragmentManager(),OpenWithFragment.FRAGMENT_TAG);
+
+                break;
             }
         }
     }

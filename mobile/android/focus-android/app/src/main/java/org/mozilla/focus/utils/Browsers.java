@@ -160,7 +160,9 @@ public class Browsers {
         return browsers.containsKey(browser.packageName);
     }
 
-    public Collection<ActivityInfo> getInstalledBrowsers() {
-        return browsers.values();
+    public ActivityInfo[] getInstalledBrowsers() {
+        final Collection<ActivityInfo> collection = browsers.values();
+
+        return collection.toArray(new ActivityInfo[collection.size()]);
     }
 }
