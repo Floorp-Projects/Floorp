@@ -193,8 +193,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 mSentIndices.add(index);
                 mSentOutputs.add(output);
                 mCallbacks.onOutput(output);
-            } catch (RemoteException e) {
-                // Dead recipient.
+            } catch (Exception e) {
                 e.printStackTrace();
                 mCodec.releaseOutputBuffer(index, false);
             }
