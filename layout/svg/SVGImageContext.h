@@ -57,7 +57,9 @@ public:
     , mIsPaintingSVGImageElement(aIsPaintingSVGImageElement)
   { }
 
-  bool MaybeStoreContextPaint(nsIFrame* aFromFrame);
+  static void MaybeInitAndStoreContextPaint(Maybe<SVGImageContext>& aContext,
+                                            nsIFrame* aFromFrame,
+                                            imgIContainer* aImgContainer);
 
   const Maybe<CSSIntSize>& GetViewportSize() const {
     return mViewportSize;
