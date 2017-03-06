@@ -3,9 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-const NS_OK = 0x0;
+const NS_OK = Cr.NS_OK;
+const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
 
 function is(a, b, msg)
 {
@@ -80,6 +81,16 @@ function init(callback)
   return request;
 }
 
+function initOrigin(principal, persistence, callback)
+{
+  let request =
+    SpecialPowers._getQuotaManager().initStoragesForPrincipal(principal,
+                                                              persistence);
+  request.callback = callback;
+
+  return request;
+}
+
 function initChromeOrigin(persistence, callback)
 {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
@@ -95,6 +106,28 @@ function initChromeOrigin(persistence, callback)
 function clear(callback)
 {
   let request = SpecialPowers._getQuotaManager().clear();
+  request.callback = callback;
+
+  return request;
+}
+
+function clearOrigin(principal, persistence, callback)
+{
+  let request =
+    SpecialPowers._getQuotaManager().clearStoragesForPrincipal(principal,
+                                                               persistence);
+  request.callback = callback;
+
+  return request;
+}
+
+function clearChromeOrigin(callback)
+{
+  let principal = Cc["@mozilla.org/systemprincipal;1"]
+                    .createInstance(Ci.nsIPrincipal);
+  let request =
+    SpecialPowers._getQuotaManager().clearStoragesForPrincipal(principal,
+                                                              "persistent");
   request.callback = callback;
 
   return request;
@@ -197,6 +230,16 @@ function getUsage(usageHandler)
                                                           usageHandler);
 
   return request;
+}
+
+function getPrincipal(url)
+{
+  let uri = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService)
+              .newURI(url);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  return ssm.createCodebasePrincipal(uri, {});
 }
 
 var SpecialPowers = {
