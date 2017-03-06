@@ -1328,7 +1328,7 @@ MediaFormatReader::AsyncReadMetadata()
 }
 
 void
-MediaFormatReader::OnDemuxerInitDone(nsresult)
+MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
@@ -1451,6 +1451,16 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
     if (HasVideo()) {
       RequestDemuxSamples(TrackInfo::kVideoTrack);
     }
+  }
+
+  if (aResult != NS_OK && mDecoder) {
+    RefPtr<AbstractMediaDecoder> decoder = mDecoder;
+    mDecoder->AbstractMainThread()->Dispatch(NS_NewRunnableFunction(
+      [decoder, aResult] () {
+        if (decoder->GetOwner()) {
+          decoder->GetOwner()->DecodeWarning(aResult);
+        }
+      }));
   }
 
   MaybeResolveMetadataPromise();
