@@ -177,7 +177,7 @@ public final class CodecProxy {
             }
             mRemote.queueInput(sample);
             sample.dispose();
-        } catch (RemoteException | IOException e) {
+        } catch (Exception e) {
             Log.e(LOGTAG, "fail to input sample: size=" + info.size +
                     ", pts=" + info.presentationTimeUs +
                     ", flags=" + Integer.toHexString(info.flags), e);
