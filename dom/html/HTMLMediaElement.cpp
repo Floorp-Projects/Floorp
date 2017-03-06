@@ -32,7 +32,6 @@
 #include "nsError.h"
 #include "nsNodeInfoManager.h"
 #include "nsNetUtil.h"
-#include "nsXPCOMStrings.h"
 #include "xpcpublic.h"
 #include "nsThreadUtils.h"
 #include "nsIThreadInternal.h"

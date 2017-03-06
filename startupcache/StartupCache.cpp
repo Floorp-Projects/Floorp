@@ -6,7 +6,6 @@
 
 #include "prio.h"
 #include "PLDHashTable.h"
-#include "nsXPCOMStrings.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/scache/StartupCache.h"

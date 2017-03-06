@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsNodeInfoManager.h"
 #include "plbase64.h"
-#include "nsXPCOMStrings.h"
 #include "prlock.h"
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"

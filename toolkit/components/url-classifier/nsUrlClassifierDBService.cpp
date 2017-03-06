@@ -28,7 +28,6 @@
 #include "nsTArray.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMStrings.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "mozilla/Atomics.h"
