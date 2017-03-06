@@ -23,16 +23,16 @@ class nsIWebProgressListener;
 //------------------------------------------------------------------------
 // nsPrintData Class
 //
-// mPreparingForPrint - indicates that we have started Printing but 
-//   have not gone to the timer to start printing the pages. It gets turned 
+// mPreparingForPrint - indicates that we have started Printing but
+//   have not gone to the timer to start printing the pages. It gets turned
 //   off right before we go to the timer.
 //
 // mDocWasToBeDestroyed - Gets set when "someone" tries to unload the document
-//   while we were prparing to Print. This typically happens if a user starts 
-//   to print while a page is still loading. If they start printing and pause 
-//   at the print dialog and then the page comes in, we then abort printing 
+//   while we were prparing to Print. This typically happens if a user starts
+//   to print while a page is still loading. If they start printing and pause
+//   at the print dialog and then the page comes in, we then abort printing
 //   because the document is no longer stable.
-// 
+//
 //------------------------------------------------------------------------
 class nsPrintData {
 public:

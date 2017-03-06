@@ -49,7 +49,7 @@ public:
 
   nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;
-  
+
   nsTArray<nsPrintObject*> mKids;
   nsPrintObject*   mParent;
   bool             mHasBeenPrinted;
