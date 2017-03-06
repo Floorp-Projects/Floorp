@@ -32,6 +32,11 @@ parent:
   async NewCompositable(CompositableHandle handle, TextureInfo info);
   async ReleaseCompositable(CompositableHandle compositable);
 
+  // Creates a set of mappings between TextureReadLocks and an associated
+  // ReadLockHandle that can be used in Update, and persist until the
+  // next Update call.
+  async InitReadLocks(ReadLockInit[] locks);
+
   sync Create(IntSize aSize);
   sync AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
                 SurfaceFormat aFormat, ByteBuffer aBytes);

@@ -480,13 +480,13 @@ partial interface Window {
 
 // https://webaudio.github.io/web-audio-api/#widl-Window-audioWorklet
 partial interface Window {
-  [Pref="dom.audioWorklet.enabled", Throws, SameObject]
+  [Pref="dom.audioWorklet.enabled", Throws]
   readonly attribute Worklet audioWorklet;
 };
 
 // https://drafts.css-houdini.org/css-paint-api-1/#dom-window-paintworklet
 partial interface Window {
-    [Pref="dom.paintWorklet.enabled", Throws, SameObject]
+    [Pref="dom.paintWorklet.enabled", Throws]
     readonly attribute Worklet paintWorklet;
 };
 
@@ -521,16 +521,23 @@ partial interface Window {
 };
 
 partial interface Window {
-/**
-  * Returns a list of locales that the application should be localized to.
-  *
-  * The result is a sorted list of valid locale IDs and it should be
-  * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
-  *
-  * This API always returns at least one locale.
-  *
-  * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
-  */
+  /**
+   * Returns a list of locales that the application should be localized to.
+   *
+   * The result is a sorted list of valid locale IDs and it should be
+   * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
+   *
+   * This API always returns at least one locale.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   */
   [Func="IsChromeOrXBL"]
   sequence<DOMString> getAppLocales();
+
+  /**
+   * Getter funcion for IntlUtils, which provides helper functions for
+   * localization.
+   */
+  [Throws, Func="IsChromeOrXBL"]
+  readonly attribute IntlUtils intlUtils;
 };

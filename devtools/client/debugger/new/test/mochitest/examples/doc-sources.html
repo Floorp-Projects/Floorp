@@ -6,23 +6,18 @@
     <meta charset="utf-8"/>
     <title>Debugger test page</title>
   </head>
-
+ 
   <body>
     <script src="simple1.js"></script>
     <script src="simple2.js"></script>
     <script src="long.js"></script>
-    <script src="nested/nested-source.js"></script>
     <script>
       // This inline script allows this HTML page to show up as a
       // source. It also needs to introduce a new global variable so
       // it's not immediately garbage collected.
       function inline_script() { var x = 5; }
-
-      function loadScript() {
-        const script = document.createElement("script");
-        script.src = "math.min.js";
-        document.body.appendChild(script);
-      }
     </script>
+    <script src="nested/nested-source.js"></script>
+    <script src="nested/deeper/deeper-source.js"></script>
   </body>
 </html>

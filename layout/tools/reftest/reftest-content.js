@@ -143,7 +143,7 @@ function StartTestURI(type, uri, timeout)
     // the JS ref tests disable the normal browser chrome and do not otherwise
     // create substatial DOM garbage, the CC tends not to run enough normally.
     ++gTestCount;
-    if (gTestCount % 3000 == 0) {
+    if (gTestCount % 1000 == 0) {
         CU.forceGC();
         CU.forceCC();
     }
