@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIQuotaRequests.h"
+#include "nsIVariant.h"
 
 class nsIPrincipal;
 class nsIQuotaCallback;
@@ -117,13 +118,15 @@ class Request final
 {
   nsCOMPtr<nsIQuotaCallback> mCallback;
 
+  nsCOMPtr<nsIVariant> mResult;
+
 public:
   Request();
 
   explicit Request(nsIPrincipal* aPrincipal);
 
   void
-  SetResult();
+  SetResult(nsIVariant* aResult);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIQUOTAREQUESTBASE(RequestBase::)
