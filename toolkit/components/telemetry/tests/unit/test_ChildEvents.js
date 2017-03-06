@@ -16,14 +16,31 @@ const APP_ID = "xpcshell@tests.mozilla.org";
 const APP_NAME = "XPCShell";
 
 const RECORDED_CONTENT_EVENTS = [
-  ["telemetry.test", "test1", "object1"],
-  ["telemetry.test", "test1", "object1", null, {"key1": "x", "key2": "y"}],
-  ["telemetry.test", "test1", "object1", "foo", {"key1": "x", "key2": "y"}],
+  ["telemetry.test", "content_only", "object1"],
+  ["telemetry.test", "main_and_content", "object1"],
+  ["telemetry.test", "content_only", "object1", "some value"],
+  ["telemetry.test", "content_only", "object1", null, {foo: "x", bar: "y"}],
+  ["telemetry.test", "content_only", "object1", "some value", {foo: "x", bar: "y"}],
+];
+
+const UNRECORDED_CONTENT_EVENTS = [
+  ["telemetry.test", "main_only", "object1"],
+];
+
+const RECORDED_PARENT_EVENTS = [
+  ["telemetry.test", "main_and_content", "object1"],
+  ["telemetry.test", "main_only", "object1"],
+];
+
+const UNRECORDED_PARENT_EVENTS = [
+  ["telemetry.test", "content_only", "object1"],
 ];
 
 function run_child_test() {
   // Record some events in the "content" process.
   RECORDED_CONTENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
+  // These events should not be recorded for the content process.
+  UNRECORDED_CONTENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
 }
 
 /**
@@ -66,6 +83,10 @@ add_task(function*() {
   // and batch send the data back to the parent process.
   yield waitForContentEvents();
 
+  // Also record some events in the parent.
+  RECORDED_PARENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
+  UNRECORDED_PARENT_EVENTS.forEach(e => Telemetry.recordEvent(...e));
+
   // Get an "environment-changed" ping rather than a "test-ping", as
   // event measurements are only supported in subsession pings.
   const payload = TelemetrySession.getPayload("environment-change");
@@ -77,13 +98,22 @@ add_task(function*() {
   Assert.ok("content" in payload.processes, "Should have child process section");
   Assert.ok("events" in payload.processes.content, "Child process section should have events.");
 
-  let events = payload.processes.content.events.map(e => e.slice(1));
-  Assert.deepEqual(events, RECORDED_CONTENT_EVENTS, "Should have recorded content events.");
+  let contentEvents = payload.processes.content.events.map(e => e.slice(1));
+  Assert.equal(contentEvents.length, RECORDED_CONTENT_EVENTS.length, "Should match expected event count.");
+  for (let i = 0; i < RECORDED_CONTENT_EVENTS.length; ++i) {
+    Assert.deepEqual(contentEvents[i], RECORDED_CONTENT_EVENTS[i], "Should have recorded expected event.");
+  }
+
+  let parentEvents = payload.processes.parent.events.map(e => e.slice(1));
+  Assert.equal(parentEvents.length, RECORDED_PARENT_EVENTS.length, "Should match expected event count.");
+  for (let i = 0; i < RECORDED_PARENT_EVENTS.length; ++i) {
+    Assert.deepEqual(parentEvents[i], RECORDED_PARENT_EVENTS[i], "Should have recorded expected event.");
+  }
 
   // Make sure all events are cleared from storage properly.
   let snapshot =
       Telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
-  Assert.equal(Object.keys(snapshot).length, 1, "Should have events from one process.");
+  Assert.greaterOrEqual(Object.keys(snapshot).length, 2, "Should have events from at least two processes.");
   snapshot =
       Telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should have cleared all events from storage.");
