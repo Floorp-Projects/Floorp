@@ -40,3 +40,6 @@ ipc/chromium/src/third_party/libevent/patches/:
 
 - "fix-kqueue-workaround.patch". Fixes a broken check for an OSX kqueue bug
   that caused problems on newer OSX releases. See bug 1304266.
+
+- "backport-upstream-fixes.patch". Backports a few upstream fixes from 2.1.x
+  to our in-tree copy of 2.0.22.
