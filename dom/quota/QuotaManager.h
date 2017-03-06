@@ -370,13 +370,6 @@ public:
   static bool
   IsOriginWhitelistedForPersistentStorage(const nsACString& aOrigin);
 
-  static bool
-  IsFirstPromptRequired(PersistenceType aPersistenceType,
-                        const nsACString& aOrigin);
-
-  static bool
-  IsQuotaEnforced(PersistenceType aPersistenceType);
-
   static void
   ChromeOrigin(nsACString& aOrigin);
 
