@@ -96,6 +96,14 @@ The following event properties are valid:
 - ``objects`` *(required, list of strings)*: The valid event objects.
 - ``description`` *(required, string)*: Description of the event and its semantics.
 - ``release_channel_collection`` *(optional, string)*: This can be set to ``opt-in`` (default) or ``opt-out``.
+- ``record_in_processes`` *(required, list of strings)*: A list of processes the event can be recorded in. Currently supported values are:
+
+  - ``main``
+  - ``content``
+  - ``gpu``
+  - ``all_child`` (record in all the child processes)
+  - ``all`` (record in all the processes).
+
 - ``bug_numbers`` *(required, list of numbers)*: A list of bugzilla bug numbers that are relevant to this event.
 - ``notification_emails`` *(required, list of strings)*: A list of emails of owners for this event. This is used for contact for data reviews and potentially to email alerts.
 - expiry: There are two properties that can specify expiry, at least one needs to be set:
@@ -125,8 +133,6 @@ Record a registered event.
 
 Throws if the combination of ``category``, ``method`` and ``object`` is unknown.
 Recording an expired event will not throw, but print a warning into the browser console.
-
-Note: Currently events are only recorded in the main process. Recording in other processes is silently ignored (until `bug 1313326 <https://bugzilla.mozilla.org/show_bug.cgi?id=1313326>`_ is landed).
 
 Example:
 
@@ -165,3 +171,10 @@ Internal API
   Services.telemetry.clearEvents();
 
 These functions are only supposed to be used by Telemetry internally or in tests.
+
+Version History
+===============
+
+- Firefox 52: Initial event support (`bug 1302663 <https://bugzilla.mozilla.org/show_bug.cgi?id=1302663>`_).
+- Firefox 53: Event recording disabled by default (`bug 1329139 <https://bugzilla.mozilla.org/show_bug.cgi?id=1329139>`_).
+- Firefox 54: Added child process events (`bug 1313326 <https://bugzilla.mozilla.org/show_bug.cgi?id=1313326>`_).
