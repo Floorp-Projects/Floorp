@@ -197,6 +197,12 @@ WebRenderAPI::ClearRootDisplayList(Epoch aEpoch,
 }
 
 void
+WebRenderAPI::SetWindowParameters(LayoutDeviceIntSize size)
+{
+  wr_api_set_window_parameters(mWrApi, size.width, size.height);
+}
+
+void
 WebRenderAPI::Readback(gfx::IntSize size,
                        uint8_t *buffer,
                        uint32_t buffer_size)

@@ -468,6 +468,10 @@ wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id)
 WR_FUNC;
 
 WR_INLINE void
+wr_api_set_window_parameters(WrAPI* api, int width, int height)
+WR_FUNC;
+
+WR_INLINE void
 wr_api_set_root_display_list(WrAPI* api, WrEpoch epoch, float w, float h,
                              WrPipelineId pipeline_id,
                              WrBuiltDisplayListDescriptor dl_descriptor,
