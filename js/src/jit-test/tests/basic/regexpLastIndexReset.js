@@ -7,7 +7,7 @@ function test() {
   pattern.lastIndex = 3;
   var result = pattern.exec(string);
   assertEq(result, null);
-  assertEq(pattern.lastIndex, 0);
+  assertEq(pattern.lastIndex, 3);
 }
 
 for (let i = 0; i < 10; i++) {
@@ -18,7 +18,7 @@ function test2() {
   pattern.lastIndex = 3;
   var result = pattern.test(string);
   assertEq(result, false);
-  assertEq(pattern.lastIndex, 0);
+  assertEq(pattern.lastIndex, 3);
 }
 
 for (let i = 0; i < 10; i++) {
