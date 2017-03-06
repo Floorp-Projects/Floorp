@@ -42,7 +42,7 @@ dictionary RTCRTPStreamStats : RTCStats {
 
   // Local only measurements, RTCP related but not communicated via RTCP. Not
   // present in RTCP case.
-  unsigned long firCount;  
+  unsigned long firCount;
   unsigned long pliCount;
   unsigned long nackCount;
 };
@@ -54,7 +54,7 @@ dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
   unsigned long packetsLost;
   long mozAvSyncDelay;
   long mozJitterBufferDelay;
-  long mozRtt;
+  long roundTripTime;
 
   // Video decoder measurement, not present in RTCP case
   unsigned long discardedPackets;

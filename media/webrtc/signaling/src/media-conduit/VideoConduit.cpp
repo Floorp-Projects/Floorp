@@ -876,12 +876,7 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
     *cumulativeLost = ind->second.rtcp_stats.cumulative_lost;
     *bytesReceived = ind->second.rtp_stats.MediaPayloadBytes();
     *packetsReceived = ind->second.rtp_stats.transmitted.packets;
-    int64_t rtt = mSendStream->GetRtt(); // TODO: BUG 1241066, mozRtt is 0 or 1
-    if (rtt >= 0) {
-      *rttMs = rtt;
-    } else {
-      *rttMs = 0;
-    }
+    int64_t rtt = mSendStream->GetRtt();
 #ifdef DEBUG
     if (rtt > INT32_MAX) {
       CSFLogError(logTag,
@@ -889,6 +884,11 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
         " maximum size of an RTCP RTT.", __FUNCTION__, this);
     }
 #endif
+    if (rtt > 0) {
+      *rttMs = rtt;
+    } else {
+      *rttMs = 0;
+    }
     // Note: timestamp is not correct per the spec... should be time the rtcp
     // was received (remote) or sent (local)
     *timestamp = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();

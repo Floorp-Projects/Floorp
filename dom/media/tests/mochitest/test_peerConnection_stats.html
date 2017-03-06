@@ -14,7 +14,7 @@ var statsExpectedByType = {
   "inbound-rtp": {
     expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
       "packetsReceived", "packetsLost", "bytesReceived", "jitter",],
-    optional: ["mozRtt", "remoteId", "nackCount",],
+    optional: ["roundTripTime", "remoteId", "nackCount",],
     localVideoOnly: ["discardedPackets", "framerateStdDev", "framerateMean",
       "bitrateMean", "bitrateStdDev", "firCount", "pliCount",],
     unimplemented: ["mediaTrackId", "transportId", "codecId", "framesDecoded",
@@ -22,6 +22,7 @@ var statsExpectedByType = {
       "sliCount", "qpSum", "packetsRepaired", "fractionLost",
       "burstPacketsLost", "burstLossCount", "burstDiscardCount",
       "gapDiscardRate", "gapLossRate",],
+    deprecated: ["mozRtt"],
   },
   "outbound-rtp": {
     expected: ["id", "timestamp", "type", "ssrc", "isRemote", "mediaType",
@@ -31,7 +32,8 @@ var statsExpectedByType = {
       "framerateMean", "framerateStdDev", "framesEncoded", "firCount",
       "pliCount",],
     unimplemented: ["mediaTrackId", "transportId", "codecId",
-      "sliCount", "qpSum", "roundTripTime", "targetBitrate",],
+      "sliCount", "qpSum", "targetBitrate",],
+    deprecated: [],
   },
   "codec": { skip: true },
   "peer-connection": { skip: true },
@@ -79,6 +81,14 @@ var checkExpectedFields = report => report.forEach(stat => {
   //
   expectations.unimplemented.forEach(field => {
     ok(!Object.keys(stat).includes(field), "Unimplemented field " + stat.type
+      + "." + field + " does not exist.");
+  });
+
+  //
+  // Ensure that all deprecated fields are not present
+  //
+  expectations.deprecated.forEach(field => {
+    ok(!Object.keys(stat).includes(field), "Deprecated field " + stat.type
       + "." + field + " does not exist.");
   });
 });
@@ -201,12 +211,13 @@ var pedanticChecks = report => {
       // Optional fields
       //
 
-      // mozRtt
+      // roundTripTime
       if (stat.inner.isRemote) {
-        ok(stat.mozRtt >= 0, stat.type + ".mozRtt is sane.");
+        ok(stat.roundTripTime >= 0, stat.type + ".roundTripTime is sane with" +
+          "value of:" + stat.roundTripTime);
       } else {
-        is(stat.mozRtt, undefined, stat.type
-          + ".mozRtt is only set when isRemote is true");
+        is(stat.roundTripTime, undefined, stat.type
+          + ".roundTripTime is only set when isRemote is true");
       }
 
       //
@@ -362,40 +373,46 @@ var pedanticChecks = report => {
 
 // This MUST be run after PC_*_WAIT_FOR_MEDIA_FLOW to ensure that we have RTP
 // before checking for RTCP.
-var waitForRtcp = async pc => {
+var waitForSyncedRtcp = async pc => {
   // Ensures that RTCP is present
-  let ensureRtcp = async () => pc.getStats().then(stats => {
+  let ensureSyncedRtcp = async () => {
+    let stats = await pc.getStats();
     for (let [k, v] of stats) {
       if (v.type.endsWith("bound-rtp") && !v.remoteId) {
         throw new Error(v.id + " is missing remoteId: "
           + JSON.stringify(v));
       }
+      if (v.type == "inbound-rtp" && v.isRemote == true
+          && v.roundTripTime === undefined) {
+        throw new Error(v.id + " is missing roundTripTime: "
+          + JSON.stringify(v));
+      }
     }
     return stats;
-  });
-
+  }
   const waitPeriod = 500;
-  for (let totalTime = 10000; totalTime > 0; totalTime -= waitPeriod) {
+  const maxTime = 15000;
+  for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
     try {
-      return await ensureRtcp();
+      return await ensureSyncedRtcp();
     } catch (e) {
       info(e);
       await wait(waitPeriod);
     }
   }
-  throw new Error("Waiting for RTCP timed out after at least " + totalTime
+  throw new Error("Waiting for synced RTCP timed out after at least " + maxTime
     + "ms");
 }
 
 var PC_LOCAL_TEST_LOCAL_STATS = test => {
-  return waitForRtcp(test.pcLocal).then(stats => {
+  return waitForSyncedRtcp(test.pcLocal).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });
 }
 
 var PC_REMOTE_TEST_REMOTE_STATS = test => {
-  return waitForRtcp(test.pcRemote).then(stats => {
+  return waitForSyncedRtcp(test.pcRemote).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });
