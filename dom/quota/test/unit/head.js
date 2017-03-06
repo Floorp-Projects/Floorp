@@ -5,6 +5,8 @@
 
 var { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
 
+const NS_OK = 0x0;
+
 function is(a, b, msg)
 {
   do_check_eq(a, b, Components.stack.caller);
@@ -68,6 +70,14 @@ function enableTesting()
 function resetTesting()
 {
   SpecialPowers.clearUserPref("dom.quotaManager.testing");
+}
+
+function init(callback)
+{
+  let request = SpecialPowers._getQuotaManager().init();
+  request.callback = callback;
+
+  return request;
 }
 
 function clear(callback)
