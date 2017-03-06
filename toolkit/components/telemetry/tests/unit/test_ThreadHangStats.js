@@ -91,9 +91,7 @@ function run_test() {
         ok(endHangs.hangs.some((hang) => (
           hang.nativeStack &&
           Array.isArray(hang.nativeStack.memoryMap) &&
-          hang.nativeStack.memoryMap.length !== 0 &&
-          Array.isArray(hang.nativeStack.stacks) &&
-          hang.nativeStack.stacks.length !== 0
+          Array.isArray(hang.nativeStack.stacks)
         )));
       }
 
