@@ -447,11 +447,8 @@ skip script test262/intl402/NumberFormat/prototype/formatToParts/name.js
 skip script test262/intl402/NumberFormat/prototype/formatToParts/return-abrupt-tonumber.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1296234
-skip script test262/intl402/Collator/prototype/compare/name.js
 skip script test262/intl402/Collator/prototype/compare/compare-function-name.js
-skip script test262/intl402/DateTimeFormat/prototype/format/name.js
 skip script test262/intl402/DateTimeFormat/prototype/format/format-function-name.js
-skip script test262/intl402/NumberFormat/prototype/format/name.js
 skip script test262/intl402/NumberFormat/prototype/format/format-function-name.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=394604
