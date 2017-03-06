@@ -240,12 +240,17 @@ class CompileInfo
                 }
             }
         }
+
+        // If the script uses an environment in body, the environment chain
+        // will need to be observable.
+        needsBodyEnvironmentObject_ = script->needsBodyEnvironment();
     }
 
     explicit CompileInfo(unsigned nlocals)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr),
         analysisMode_(Analysis_None), scriptNeedsArgsObj_(false),
-        mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr)
+        mayReadFrameArgsDirectly_(false), inlineScriptTree_(nullptr),
+        needsBodyEnvironmentObject_(false)
     {
         nimplicit_ = 0;
         nargs_ = 0;
@@ -434,6 +439,10 @@ class CompileInfo
         return analysisMode_ != Analysis_None;
     }
 
+    bool needsBodyEnvironmentObject() const {
+        return needsBodyEnvironmentObject_;
+    }
+
     // Returns true if a slot can be observed out-side the current frame while
     // the frame is active on the stack.  This implies that these definitions
     // would have to be executed and that they cannot be removed even if they
@@ -449,6 +458,11 @@ class CompileInfo
     }
 
     bool isObservableFrameSlot(uint32_t slot) const {
+        // The |envChain| value must be preserved if environments are added
+        // after the prologue.
+        if (needsBodyEnvironmentObject() && slot == environmentChainSlot())
+            return true;
+
         if (!funMaybeLazy())
             return false;
 
@@ -495,9 +509,11 @@ class CompileInfo
     // definition which can be observed and recovered, implies that this
     // definition can be optimized away as long as we can compute its values.
     bool isRecoverableOperand(uint32_t slot) const {
-        // If this script is not a function, then none of the slots are
-        // observable.  If it this |slot| is not observable, thus we can always
-        // recover it.
+        // The |envChain| value cannot be recovered if environments can be
+        // added in body (after the prologue).
+        if (needsBodyEnvironmentObject() && slot == environmentChainSlot())
+            return false;
+
         if (!funMaybeLazy())
             return true;
 
@@ -547,6 +563,10 @@ class CompileInfo
     bool mayReadFrameArgsDirectly_;
 
     InlineScriptTree* inlineScriptTree_;
+
+    // Whether a script needs environments within its body. This informs us
+    // that the environment chain is not easy to reconstruct.
+    bool needsBodyEnvironmentObject_;
 };
 
 } // namespace jit

@@ -58,7 +58,8 @@ module.exports = createClass({
     // Only temporarily installed add-ons can be reloaded.
     const canBeReloaded = target.temporarilyInstalled;
 
-    return dom.li({ className: "target-container" },
+    return dom.li(
+      { className: "target-container", "data-addon-id": target.addonID },
       dom.img({
         className: "target-icon",
         role: "presentation",

@@ -247,6 +247,9 @@ module.exports = {
     "browser": true,
   },
   "globals": {
+    "BroadcastChannel": false,
+    // Specific to Firefox (Chrome code only).
+    "ChromeWindow": false,
     "ChromeWorker": false,
     "ChromeUtils": false,
     "Components": false,
@@ -257,6 +260,8 @@ module.exports = {
     "KeyEvent": false,
     "openDialog": false,
     "MenuBoxObject": false,
+    // Specific to Firefox (Chrome code only).
+    "MozSelfSupport": false,
     "SimpleGestureEvent": false,
     "sizeToContent": false,
     "SharedArrayBuffer": false,
@@ -265,6 +270,7 @@ module.exports = {
     "StopIteration": false,
     // Specific to Firefox
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    "uneval": false
+    "uneval": false,
+    "XULElement": false,
   }
 };

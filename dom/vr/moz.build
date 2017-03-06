@@ -11,12 +11,14 @@ EXPORTS.mozilla.dom += [
     'VRDisplay.h',
     'VRDisplayEvent.h',
     'VREventObserver.h',
+    'VRServiceTest.h'
     ]
 
 UNIFIED_SOURCES = [
     'VRDisplay.cpp',
     'VRDisplayEvent.cpp',
     'VREventObserver.cpp',
+    'VRServiceTest.cpp'
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -25,3 +27,5 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/base'
 ]
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']

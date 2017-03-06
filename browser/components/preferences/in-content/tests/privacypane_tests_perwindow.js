@@ -1,3 +1,6 @@
+// This file gets imported into the same scope as head.js.
+/* import-globals-from head.js */
+
 function* runTestOnPrivacyPrefPane(testFunc) {
   info("runTestOnPrivacyPrefPane entered");
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences", true, true);

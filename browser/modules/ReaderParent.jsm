@@ -88,7 +88,7 @@ var ReaderParent = {
 
     let button = win.document.getElementById("reader-mode-button");
     let command = win.document.getElementById("View:ReaderView");
-    let key = win.document.getElementById("toggleReaderMode");
+    let key = win.document.getElementById("key_toggleReaderMode");
     if (browser.currentURI.spec.startsWith("about:reader")) {
       button.setAttribute("readeractive", true);
       button.hidden = false;

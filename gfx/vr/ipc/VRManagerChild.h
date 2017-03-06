@@ -49,6 +49,8 @@ public:
   int GetInputFrameID();
   bool GetVRDisplays(nsTArray<RefPtr<VRDisplayClient> >& aDisplays);
   bool RefreshVRDisplaysWithCallback(uint64_t aWindowId);
+  void CreateVRServiceTestDisplay(const nsCString& aID, dom::Promise* aPromise);
+  void CreateVRServiceTestController(const nsCString& aID, dom::Promise* aPromise);
 
   static void InitSameProcess();
   static void InitWithGPUProcess(Endpoint<PVRManagerChild>&& aEndpoint);
@@ -117,6 +119,12 @@ protected:
   virtual mozilla::ipc::IPCResult RecvNotifyVSync() override;
   virtual mozilla::ipc::IPCResult RecvNotifyVRVSync(const uint32_t& aDisplayID) override;
   virtual mozilla::ipc::IPCResult RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent) override;
+  virtual mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestDisplay(const nsCString& aID,
+                                                                      const uint32_t& aPromiseID,
+                                                                      const uint32_t& aDeviceID) override;
+  virtual mozilla::ipc::IPCResult RecvReplyCreateVRServiceTestController(const nsCString& aID,
+                                                                         const uint32_t& aPromiseID,
+                                                                         const uint32_t& aDeviceID) override;
 
   // ShmemAllocator
 
@@ -177,6 +185,8 @@ private:
 
   layers::LayersBackend mBackend;
   RefPtr<layers::SyncObject> mSyncObject;
+  uint32_t mPromiseID;
+  nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 
   DISALLOW_COPY_AND_ASSIGN(VRManagerChild);
 };

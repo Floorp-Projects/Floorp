@@ -48,6 +48,7 @@ VRManager::ManagerInit()
 
 VRManager::VRManager()
   : mInitialized(false)
+  , mVRTestSystemCreated(false)
 {
   MOZ_COUNT_CTOR(VRManager);
   MOZ_ASSERT(sVRManagerSingleton == nullptr);
@@ -89,10 +90,6 @@ VRManager::VRManager()
       mManagers.AppendElement(mgr);
   }
 #endif
-  mgr = VRSystemManagerPuppet::Create();
-  if (mgr) {
-    mManagers.AppendElement(mgr);
-  }
   // Enable gamepad extensions while VR is enabled.
   // Preference only can be set at the Parent process.
   if (XRE_IsParentProcess() && gfxPrefs::VREnabled()) {
@@ -387,6 +384,21 @@ VRManager::RemoveControllers()
     mManagers[i]->RemoveControllers();
   }
   mVRControllers.Clear();
+}
+
+void
+VRManager::CreateVRTestSystem()
+{
+  if (mVRTestSystemCreated) {
+    return;
+  }
+
+  RefPtr<VRSystemManager> mgr = VRSystemManagerPuppet::Create();
+  if (mgr) {
+    mgr->Init();
+    mManagers.AppendElement(mgr);
+    mVRTestSystemCreated = true;
+  }
 }
 
 template<class T>

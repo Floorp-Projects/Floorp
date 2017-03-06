@@ -83,3 +83,5 @@
 == append-to-empty-trailing-inline-1.html append-to-empty-trailing-inline-1-ref.html
 == append-to-nested-split-inline-1.html append-to-nested-split-inline-1-ref.html
 == append-to-nested-split-inline-1-ref.html append-to-nested-split-inline-1-noib-ref.html
+== relpos-inline-1a.html relpos-inline-1-ref.html
+== relpos-inline-1b.html relpos-inline-1-ref.html

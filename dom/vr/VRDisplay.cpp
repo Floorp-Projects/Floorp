@@ -753,6 +753,23 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
                     float aDepthFar)
 {
   mVRState = aState;
+  if (mTimeStampOffset == 0.0f) {
+    /**
+     * A mTimeStampOffset value of 0.0f indicates that this is the first iteration
+     * and an offset has not yet been set.
+     *
+     * Generate a value for mTimeStampOffset such that if aState.timestamp is
+     * monotonically increasing, aState.timestamp + mTimeStampOffset will never
+     * be a negative number and will start at a pseudo-random offset
+     * between 1000.0f and 11000.0f seconds.
+     *
+     * We use a pseudo random offset rather than 0.0f just to discourage users
+     * from making the assumption that the timestamp returned in the WebVR API
+     * has a base of 0, which is not necessarily true in all UA's.
+     */
+    mTimeStampOffset = float(rand()) / RAND_MAX * 10000.0f + 1000.0f - aState.timestamp;
+  }
+  mVRState.timestamp = aState.timestamp + mTimeStampOffset;
 
   gfx::Quaternion qt;
   if (mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation) {
@@ -790,6 +807,7 @@ VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
 }
 
 VRFrameInfo::VRFrameInfo()
+ : mTimeStampOffset(0.0f)
 {
   mVRState.Clear();
 }

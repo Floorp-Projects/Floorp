@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <div style="overflow: hidden; width: 130px; white-space: nowrap">
+    Some long text that cannot possibly fit in 130 px, because it just can't.
+  </div>
+
+  <script>
+    onload = function() {
+      var div = document.querySelector("div");
+      // Make sure layout has happened.
+      window.width = div.offsetWidth;
+      div.style.textOverflow = "ellipsis";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>
