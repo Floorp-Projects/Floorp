@@ -1668,12 +1668,11 @@ CloneStoragePath(nsIFile* aBaseDir,
   return NS_OK;
 }
 
-nsresult
-GetLastModifiedTime(nsIFile* aFile, int64_t* aTimestamp)
+int64_t
+GetLastModifiedTime(nsIFile* aFile, bool aPersistent)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFile);
-  MOZ_ASSERT(aTimestamp);
 
   class MOZ_STACK_CLASS Helper final
   {
@@ -1749,14 +1748,17 @@ GetLastModifiedTime(nsIFile* aFile, int64_t* aTimestamp)
     }
   };
 
-  int64_t timestamp = INT64_MIN;
-  nsresult rv = Helper::GetLastModifiedTime(aFile, &timestamp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (aPersistent) {
+    return PR_Now();
   }
 
-  *aTimestamp = timestamp;
-  return NS_OK;
+  int64_t timestamp = INT64_MIN;
+  nsresult rv = Helper::GetLastModifiedTime(aFile, &timestamp);
+  if (NS_FAILED(rv)) {
+    timestamp = PR_Now();
+  }
+
+  return timestamp;
 }
 
 nsresult
@@ -7439,27 +7441,17 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
                                 origin,
                                 isApp);
       if (NS_FAILED(rv)) {
-        timestamp = INT64_MIN;
-        rv = GetLastModifiedTime(originDir, &timestamp);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        originProps.mTimestamp = timestamp;
+        originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
         originProps.mNeedsRestore = true;
       } else if (!isApp.IsNull()) {
         originProps.mIgnore = true;
       }
     }
-    else if (!QuotaManager::IsOriginWhitelistedForPersistentStorage(
-                                                           originProps.mSpec)) {
-      int64_t timestamp = INT64_MIN;
-      rv = GetLastModifiedTime(originDir, &timestamp);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      originProps.mTimestamp = timestamp;
+    else {
+      bool persistent =
+        QuotaManager::IsOriginWhitelistedForPersistentStorage(
+                                                             originProps.mSpec);
+      originProps.mTimestamp = GetLastModifiedTime(originDir, persistent);
     }
 
     mOriginProps.AppendElement(Move(originProps));
@@ -7773,13 +7765,7 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
                                        origin,
                                        isApp);
     if (NS_FAILED(rv) || isApp.IsNull()) {
-      if (!mPersistent) {
-        rv = GetLastModifiedTime(originDir, &timestamp);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        originProps.mTimestamp = timestamp;
-      }
+      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
       originProps.mNeedsRestore = true;
     } else {
       originProps.mTimestamp = timestamp;
@@ -7867,15 +7853,7 @@ RestoreDirectoryMetadata2Helper::RestoreMetadata2File()
     return rv;
   }
 
-  if (!mPersistent) {
-    int64_t timestamp = INT64_MIN;
-    rv = GetLastModifiedTime(mDirectory, &timestamp);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    originProps.mTimestamp = timestamp;
-  }
+  originProps.mTimestamp = GetLastModifiedTime(mDirectory, mPersistent);
 
   mOriginProps.AppendElement(Move(originProps));
 
