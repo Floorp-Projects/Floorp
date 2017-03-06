@@ -55,7 +55,7 @@ exports.runTest = function(ruleTester) {
       // Should not reject when there's 2 different variables
       "elt.addEventListener(event1, function listener() {" +
       "  elt.removeEventListener(event2, listener);" +
-      "});",
+      "});"
     ],
     invalid: [
       invalidCode("elt.addEventListener('click', function listener() {" +
@@ -76,7 +76,7 @@ exports.runTest = function(ruleTester) {
                   "});"),
       invalidCode("elt.addEventListener(eventName, function listener() {" +
                   "  elt.removeEventListener(eventName, listener);" +
-                  "});"),
+                  "});")
     ]
   });
 };

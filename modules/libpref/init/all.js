@@ -5036,7 +5036,9 @@ pref("gfx.vr.osvr.utilLibPath", "");
 pref("gfx.vr.osvr.commonLibPath", "");
 pref("gfx.vr.osvr.clientLibPath", "");
 pref("gfx.vr.osvr.clientKitLibPath", "");
-
+// Puppet device, used for simulating VR hardware within tests and dev tools
+pref("dom.vr.puppet.enabled", false);
+pref("dom.vr.test.enabled", false);
 // MMS UA Profile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");

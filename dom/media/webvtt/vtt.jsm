@@ -303,7 +303,7 @@ Cu.import('resource://gre/modules/Services.jsm');
   };
 
   // Parse content into a document fragment.
-  function parseContent(window, input) {
+  function parseContent(window, input, bReturnFrag) {
     function nextToken() {
       // Check for end-of-string.
       if (!input) {
@@ -347,14 +347,44 @@ Cu.import('resource://gre/modules/Services.jsm');
       var element = window.document.createElement(tagName);
       element.localName = tagName;
       var name = TAG_ANNOTATION[type];
-      if (name && annotation) {
-        element[name] = annotation.trim();
+      if (name) {
+        element[name] = annotation ? annotation.trim() : "";
       }
       return element;
     }
 
-    var rootDiv = window.document.createElement("div"),
-        current = rootDiv,
+    // https://w3c.github.io/webvtt/#webvtt-timestamp-object
+    // Return hhhhh:mm:ss.fff
+    function normalizedTimeStamp(secondsWithFrag) {
+      var totalsec = parseInt(secondsWithFrag, 10);
+      var hours = Math.floor(totalsec / 3600);
+      var minutes = Math.floor(totalsec % 3600 / 60);
+      var seconds = Math.floor(totalsec % 60);
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
+      var f = secondsWithFrag.toString().split(".");
+      if (f[1]) {
+        f = f[1].slice(0, 3).padEnd(3, "0");
+      } else {
+        f = "000";
+      }
+      return hours + ':' + minutes + ':' + seconds + '.' + f;
+    }
+
+    var root;
+    if (bReturnFrag) {
+      root = window.document.createDocumentFragment();
+    } else {
+      root = window.document.createElement("div");
+    }
+    var current = root,
         t,
         tagStack = [];
 
@@ -374,7 +404,7 @@ Cu.import('resource://gre/modules/Services.jsm');
         var node;
         if (ts) {
           // Timestamps are lead nodes as well.
-          node = window.document.createProcessingInstruction("timestamp", ts);
+          node = window.document.createProcessingInstruction("timestamp", normalizedTimeStamp(ts));
           current.appendChild(node);
           continue;
         }
@@ -409,7 +439,7 @@ Cu.import('resource://gre/modules/Services.jsm');
       current.appendChild(window.document.createTextNode(unescape(t)));
     }
 
-    return rootDiv;
+    return root;
   }
 
   function StyleBox() {
@@ -448,7 +478,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 
     // Parse our cue's text into a DOM tree rooted at 'cueDiv'. This div will
     // have inline positioning and will function as the cue background box.
-    this.cueDiv = parseContent(window, cue.text);
+    this.cueDiv = parseContent(window, cue.text, false);
     var styles = {
       color: color,
       backgroundColor: backgroundColor,
@@ -837,10 +867,10 @@ Cu.import('resource://gre/modules/Services.jsm');
   };
 
   WebVTT.convertCueToDOMTree = function(window, cuetext) {
-    if (!window || !cuetext) {
+    if (!window) {
       return null;
     }
-    return parseContent(window, cuetext);
+    return parseContent(window, cuetext, true);
   };
 
   var FONT_SIZE_PERCENT = 0.05;

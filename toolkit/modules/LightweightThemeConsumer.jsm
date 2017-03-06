@@ -17,7 +17,6 @@ this.LightweightThemeConsumer =
  function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
-  this._footerId = aDocument.documentElement.getAttribute("lightweightthemesfooter");
 
   let screen = this._win.screen;
   this._lastScreenWidth = screen.width;
@@ -123,15 +122,12 @@ LightweightThemeConsumer.prototype = {
 
     this._active = active;
 
-    _setImage(root, active, aData.headerURL, "--lwt-header-image");
-    if (this._footerId) {
-      let footer = this._doc.getElementById(this._footerId);
-      _setImage(footer, active, aData.footerURL, "--lwt-footer-image");
-      if (active && aData.footerURL)
-        footer.setAttribute("lwthemefooter", "true");
-      else
-        footer.removeAttribute("lwthemefooter");
-    }
+    _setImage(root, active, "--lwt-header-image", aData.headerURL);
+    _setImage(root, active, "--lwt-footer-image", aData.footerURL);
+    if (active && aData.footerURL)
+      root.setAttribute("lwthemefooter", "true");
+    else
+      root.removeAttribute("lwthemefooter");
 
     // On OS X, we extend the lightweight theme into the titlebar, which means setting
     // the chromemargin attribute. Some XUL applications already draw in the titlebar,
@@ -159,11 +155,11 @@ LightweightThemeConsumer.prototype = {
   }
 }
 
-function _setImage(aElement, aActive, aURL, aVariableName) {
+function _setImage(aRoot, aActive, aVariableName, aURL) {
   if (aActive && aURL) {
-    aElement.style.setProperty(aVariableName, `url("${aURL.replace(/"/g, '\\"')}")`);
+    aRoot.style.setProperty(aVariableName, `url("${aURL.replace(/"/g, '\\"')}")`);
   } else {
-    aElement.style.removeProperty(aVariableName);
+    aRoot.style.removeProperty(aVariableName);
   }
 }
 

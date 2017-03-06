@@ -7706,17 +7706,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         aStatus == NS_ERROR_INVALID_CONTENT_ENCODING) {
       DisplayLoadError(aStatus, url, nullptr, aChannel);
       return NS_OK;
-    } else if (aStatus == NS_ERROR_INVALID_SIGNATURE) {
-      // NS_ERROR_INVALID_SIGNATURE indicates a content-signature error.
-      // This currently only happens in case a remote about page fails.
-      // We have to load a fallback in this case.
-      // XXX: We always load about blank here, firefox has to overwrite this if
-      // it wants to display something else.
-      return LoadURI(u"about:blank",            // URI string
-                     nsIChannel::LOAD_NORMAL,   // Load flags
-                     nullptr,                   // Referring URI
-                     nullptr,                   // Post data stream
-                     nullptr);                  // Headers stream
     }
 
     // Handle iframe document not loading error because source was
@@ -9750,27 +9739,6 @@ nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
-bool
-nsDocShell::IsAboutNewtab(nsIURI* aURI)
-{
-  if (!aURI) {
-    return false;
-  }
-  bool isAbout;
-  if (NS_WARN_IF(NS_FAILED(aURI->SchemeIs("about", &isAbout)))) {
-    return false;
-  }
-  if (!isAbout) {
-    return false;
-  }
-
-  nsAutoCString module;
-  if (NS_WARN_IF(NS_FAILED(NS_GetAboutModuleName(aURI, module)))) {
-    return false;
-  }
-  return module.Equals("newtab");
-}
-
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIURI* aOriginalURI,
@@ -10606,16 +10574,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // used to cancel attempts to load URIs in the wrong process.
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
   if (browserChrome3) {
-    // In case this is a remote newtab load, set aURI to aOriginalURI (newtab).
-    // This ensures that the verifySignedContent flag is set on loadInfo in
-    // DoURILoad.
-    nsIURI* uriForShouldLoadCheck = aURI;
-    if (IsAboutNewtab(aOriginalURI)) {
-      uriForShouldLoadCheck = aOriginalURI;
-    }
     bool shouldLoad;
-    rv = browserChrome3->ShouldLoadURI(this, uriForShouldLoadCheck, aReferrer,
-                                       aTriggeringPrincipal, &shouldLoad);
+    rv = browserChrome3->ShouldLoadURI(this, aURI, aReferrer, aTriggeringPrincipal, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       return NS_OK;
     }
@@ -11281,15 +11241,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     if (aReferrerURI && aSendReferrer) {
       // Referrer is currenly only set for link clicks here.
       httpChannel->SetReferrerWithPolicy(aReferrerURI, aReferrerPolicy);
-    }
-    // set Content-Signature enforcing bit if aOriginalURI == about:newtab
-    if (aOriginalURI && httpChannel) {
-      if (IsAboutNewtab(aOriginalURI)) {
-        nsCOMPtr<nsILoadInfo> loadInfo = httpChannel->GetLoadInfo();
-        if (loadInfo) {
-          loadInfo->SetVerifySignedContent(true);
-        }
-      }
     }
   }
 

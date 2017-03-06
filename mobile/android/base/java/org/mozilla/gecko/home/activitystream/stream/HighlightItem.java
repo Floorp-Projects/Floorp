@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home.activitystream.stream;
 
-import android.database.Cursor;
 import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.View;
@@ -100,8 +99,8 @@ public class HighlightItem extends StreamItem implements IconCallback {
         ViewUtil.enableTouchRipple(menuButton);
     }
 
-    public void bind(Cursor cursor, int position, int tilesWidth, int tilesHeight) {
-        this.highlight = Highlight.fromCursor(cursor);
+    public void bind(Highlight highlight, int position, int tilesWidth, int tilesHeight) {
+        this.highlight = highlight;
         this.position = position;
 
         vLabel.setText(highlight.getTitle());

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <table>
+    <tr>
+      <td>
+        Some text
+      </td>
+    </tr>
+  </table>
+  <script>
+    onload = function() {
+      var td = document.querySelector("td");
+      // Make sure layout has happened.
+      var width = td.offsetWidth;
+      td.style.textIndent = "50px";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

@@ -41,9 +41,7 @@ add_task(function* () {
   ].join("\n");
 
   yield waitForClipboardPromise(function setup() {
-    // Context menu is appending in XUL document, we must select it from
-    // toolbox.doc
-    monitor.toolbox.doc
+    monitor.panelWin.parent.document
       .querySelector("#request-list-context-copy-request-headers").click();
   }, function validate(result) {
     // Sometimes, a "Cookie" header is left over from other tests. Remove it:
@@ -66,9 +64,7 @@ add_task(function* () {
     document.querySelectorAll(".request-list-item")[0]);
 
   yield waitForClipboardPromise(function setup() {
-    // Context menu is appending in XUL document, we must select it from
-    // _oolbox.doc
-    monitor.toolbox.doc
+    monitor.panelWin.parent.document
       .querySelector("#response-list-context-copy-response-headers").click();
   }, function validate(result) {
     // Fake the "Last-Modified" and "Date" headers because they will vary:

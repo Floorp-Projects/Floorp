@@ -289,6 +289,10 @@ partial interface Navigator {
   [Frozen, Cached, Pure, Pref="dom.vr.enabled"]
   readonly attribute sequence<VRDisplay> activeVRDisplays;
 };
+partial interface Navigator {
+  [Pref="dom.vr.test.enabled"]
+  VRServiceTest requestVRServiceTest();
+};
 
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime

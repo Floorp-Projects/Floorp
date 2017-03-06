@@ -146,17 +146,17 @@ public:
 
     // Cb plane.
     buffer.mPlanes[1].mData = frame.get() + sizeY;
-    buffer.mPlanes[1].mStride = mFrameWidth / 2;
-    buffer.mPlanes[1].mHeight = mFrameHeight / 2;
-    buffer.mPlanes[1].mWidth = mFrameWidth / 2;
+    buffer.mPlanes[1].mStride = (mFrameWidth + 1) / 2;
+    buffer.mPlanes[1].mHeight = (mFrameHeight + 1) / 2;
+    buffer.mPlanes[1].mWidth = (mFrameWidth + 1) / 2;
     buffer.mPlanes[1].mOffset = 0;
     buffer.mPlanes[1].mSkip = 0;
 
     // Cr plane.
     buffer.mPlanes[2].mData = frame.get() + sizeY;
-    buffer.mPlanes[2].mStride = mFrameWidth / 2;
-    buffer.mPlanes[2].mHeight = mFrameHeight / 2;
-    buffer.mPlanes[2].mWidth = mFrameWidth / 2;
+    buffer.mPlanes[2].mStride = (mFrameWidth + 1) / 2;
+    buffer.mPlanes[2].mHeight = (mFrameHeight + 1) / 2;
+    buffer.mPlanes[2].mWidth = (mFrameWidth + 1) / 2;
     buffer.mPlanes[2].mOffset = 0;
     buffer.mPlanes[2].mSkip = 0;
 

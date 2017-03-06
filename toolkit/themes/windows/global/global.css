@@ -156,8 +156,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 /* ::::: miscellaneous formatting ::::: */
 
-:root:-moz-lwtheme,
-[lwthemefooter="true"] {
+:root:-moz-lwtheme {
   -moz-appearance: none;
 }
 

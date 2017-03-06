@@ -13,59 +13,61 @@
 <script type="text/javascript">
 "use strict";
 
-if (AppConstants.platform === "android") {
-  SimpleTest.requestLongerTimeout(6);
-}
-
 add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   function background() {
-    let lastTest;
+    let listeners = [];
 
     function cleanupTestListeners() {
-      if (lastTest) {
-        let {event, okListener, failListener} = lastTest;
-        lastTest = null;
-        browser.test.log(`Cleanup previous test event listeners`);
-        browser.webNavigation[event].removeListener(okListener);
-        browser.webNavigation[event].removeListener(failListener);
+      browser.test.log(`Cleanup previous test event listeners`);
+      for (let {event, listener} of listeners.splice(0)) {
+        browser.webNavigation[event].removeListener(listener);
       }
     }
 
     function createTestListener(event, fail, urlFilter) {
-      function listener(details) {
-        let log = JSON.stringify({url: details.url, urlFilter});
-        if (fail) {
-          browser.test.fail(`Got an unexpected ${event} on the failure listener: ${log}`);
-        } else {
-          browser.test.succeed(`Got the expected ${event} on the success listener: ${log}`);
+      return new Promise(resolve => {
+        function listener(details) {
+          let log = JSON.stringify({url: details.url, urlFilter});
+          if (fail) {
+            browser.test.fail(`Got an unexpected ${event} on the failure listener: ${log}`);
+          } else {
+            browser.test.succeed(`Got the expected ${event} on the success listener: ${log}`);
+          }
+
+          resolve();
         }
 
-        cleanupTestListeners();
-        browser.test.sendMessage("test-filter-next");
-      }
-
-      browser.webNavigation[event].addListener(listener, urlFilter);
-
-      return listener;
+        browser.webNavigation[event].addListener(listener, {url: urlFilter});
+        listeners.push({event, listener});
+      });
     }
 
-    browser.test.onMessage.addListener((msg, event, okFilter, failFilter) => {
-      if (msg !== "test-filter") {
+    browser.test.onMessage.addListener((msg, events, data) => {
+      if (msg !== "test-filters") {
         return;
       }
 
-      lastTest = {
-        event,
-        // Register the failListener first, which should not be called
-        // and if it is called the test scenario is marked as a failure.
-        failListener: createTestListener(event, true, failFilter),
-        okListener: createTestListener(event, false, okFilter),
-      };
+      let promises = [];
+
+      for (let {okFilter, failFilter} of data.filters) {
+        for (let event of events) {
+          promises.push(
+            Promise.race([
+              createTestListener(event, false, okFilter),
+              createTestListener(event, true, failFilter),
+            ]));
+        }
+      }
+
+      Promise.all(promises).catch(e => {
+        browser.test.fail(`Error: ${e} :: ${e.stack}`);
+      }).then(() => {
+        cleanupTestListeners();
+        browser.test.sendMessage("test-filter-next");
+      });
 
       browser.test.sendMessage("test-filter-ready");
     });
-
-    browser.test.sendMessage("ready");
   }
 
   let extensionData = {
@@ -80,8 +82,6 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
   yield extension.startup();
-
-  yield extension.awaitMessage("ready");
 
   let win = window.open();
 
@@ -102,6 +102,18 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
         {
           okFilter: [{ports: [22, 443, [10, 80]]}],
           failFilter: [{ports: [22, 23, [81, 100]]}],
+        },
+        // multiple criteria in a single filter:
+        // if one of the critera is not verified, the event should not be received.
+        {
+          okFilter: [{schemes: ["http"], ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["http"], ports: [81, 82, 83]}],
+        },
+        // multiple urlFilters on the same listener
+        // if at least one of the critera is verified, the event should be received.
+        {
+          okFilter: [{schemes: ["https"]}, {ports: [80, 22, 443]}],
+          failFilter: [{schemes: ["https"]}, {ports: [81, 82, 83]}],
         },
       ],
     },
@@ -170,57 +182,31 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
         },
       ],
     },
-    {
-      url: "http://example.net/browser",
-      filters: [
-        // multiple criteria in a single filter:
-        // if one of the critera is not verified, the event should not be received.
-        {
-          okFilter: [{schemes: ["http"], ports: [80, 22, 443]}],
-          failFilter: [{schemes: ["http"], ports: [81, 82, 83]}],
-        },
-        // multiple urlFilters on the same listener
-        // if at least one of the critera is verified, the event should be received.
-        {
-          okFilter: [{schemes: ["https"]}, {ports: [80, 22, 443]}],
-          failFilter: [{schemes: ["https"]}, {ports: [81, 82, 83]}],
-        },
-      ],
-    },
   ];
 
-  function* runTestScenario(event, {url, filters}) {
-    for (let testFilters of filters) {
-      let {okFilter, failFilter} = testFilters;
+  info("WebNavigation event filters test scenarios starting...");
 
-      info(`Prepare the new test scenario: ${event} ${url} ${JSON.stringify(testFilters)}`);
-      win.location = "about:blank";
-
-      extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
-      yield extension.awaitMessage("test-filter-ready");
-
-      info(`Loading the test url: ${url}`);
-      win.location = url;
-
-      yield extension.awaitMessage("test-filter-next");
-
-      info("Test scenario completed. Moving to the next test scenario.");
-    }
-  }
-
-  const BASE_WEBNAV_EVENTS = [
+  const EVENTS = [
     "onBeforeNavigate",
     "onCommitted",
     "onDOMContentLoaded",
     "onCompleted",
   ];
 
-  info("WebNavigation event filters test scenarios starting...");
+  for (let data of testFilterScenarios) {
+    info(`Prepare the new test scenario: ${JSON.stringify(data)}`);
 
-  for (let filterScenario of testFilterScenarios) {
-    for (let event of BASE_WEBNAV_EVENTS) {
-      yield runTestScenario(event, filterScenario);
-    }
+    win.location = "about:blank";
+
+    extension.sendMessage("test-filters", EVENTS, data);
+    yield extension.awaitMessage("test-filter-ready");
+
+    info(`Loading the test url: ${data.url}`);
+    win.location = data.url;
+
+    yield extension.awaitMessage("test-filter-next");
+
+    info("Test scenario completed. Moving to the next test scenario.");
   }
 
   info("WebNavigation event filters test onReferenceFragmentUpdated scenario starting...");
@@ -230,17 +216,18 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
 
   let okFilter = [{urlContains: "_page3.html"}];
   let failFilter = [{ports: [444]}];
+  let data = {filters: [{okFilter, failFilter}]};
   let event = "onCompleted";
 
   info(`Loading the initial test url: ${url}`);
-  extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
+  extension.sendMessage("test-filters", [event], data);
 
   yield extension.awaitMessage("test-filter-ready");
   win.location = url;
   yield extension.awaitMessage("test-filter-next");
 
   event = "onReferenceFragmentUpdated";
-  extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
+  extension.sendMessage("test-filters", [event], data);
 
   yield extension.awaitMessage("test-filter-ready");
   win.location = url + "#ref1";
@@ -249,7 +236,7 @@ add_task(function* test_webnav_unresolved_uri_on_expected_URI_scheme() {
   info("WebNavigation event filters test onHistoryStateUpdated scenario starting...");
 
   event = "onHistoryStateUpdated";
-  extension.sendMessage("test-filter", event, {url: okFilter}, {url: failFilter});
+  extension.sendMessage("test-filters", [event], data);
   yield extension.awaitMessage("test-filter-ready");
 
   win.history.pushState({}, "", BASE + "/pushState_page3.html");

@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMHTMLElement;
+interface nsIDOMDocumentFragment;
 interface nsIWebVTTListener;
 interface mozIDOMWindow;
 interface nsIVariant;
@@ -60,8 +60,8 @@ interface nsIWebVTTParserWrapper : nsISupports
    * @param cue    The cue whose content will be converted to a document
    *               fragment.
    */
-  nsIDOMHTMLElement convertCueToDOMTree(in mozIDOMWindow window,
-                                        in nsISupports cue);
+  nsIDOMDocumentFragment convertCueToDOMTree(in mozIDOMWindow window,
+                                             in nsISupports cue);
 
 
   /**

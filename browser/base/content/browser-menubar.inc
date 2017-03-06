@@ -297,6 +297,7 @@
 #endif
                 <menuitem id="menu_readerModeItem"
                           observes="View:ReaderView"
+                          key="key_toggleReaderMode"
                           hidden="true"/>
                 <menuitem id="menu_showAllTabs"
                           hidden="true"

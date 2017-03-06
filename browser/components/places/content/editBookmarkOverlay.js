@@ -286,9 +286,13 @@ var gEditItemOverlay = {
     // Note: since all controls are collapsed by default, we don't get the
     // default XUL dialog behavior, that selects the first control, so we set
     // the focus explicitly.
+    // Note: If focusedElement === "preferred", this file expects gPrefService
+    // to be defined in the global scope.
     let elt;
     if (focusedElement === "preferred") {
+      /* eslint-disable no-undef */
       elt = this._element(gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField"));
+      /* eslint-enable no-undef */
     } else if (focusedElement === "first") {
       elt = document.querySelector("textbox:not([collapsed=true])");
     }
@@ -899,7 +903,7 @@ var gEditItemOverlay = {
 
     let tagsInField = this._getTagsArrayFromTagsInputField();
     let allTags = PlacesUtils.tagging.allTags;
-    for (tag of allTags) {
+    for (let tag of allTags) {
       let elt = document.createElement("listitem");
       elt.setAttribute("type", "checkbox");
       elt.setAttribute("label", tag);
@@ -1064,7 +1068,7 @@ var gEditItemOverlay = {
       // menulist has been changed, we need to update the label of its
       // representing element.
       let menupopup = this._folderMenuList.menupopup;
-      for (menuitem of menupopup.childNodes) {
+      for (let menuitem of menupopup.childNodes) {
         if ("folderId" in menuitem && menuitem.folderId == aItemId) {
           menuitem.label = aNewTitle;
           break;

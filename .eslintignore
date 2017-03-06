@@ -55,7 +55,6 @@ b2g/locales/en-US/b2g-l10n.js
 # browser/ exclusions
 browser/app/**
 browser/branding/**/firefox-branding.js
-browser/base/content/browser-social.js
 browser/base/content/nsContextMenu.js
 browser/base/content/sanitizeDialog.js
 browser/base/content/test/general/file_csp_block_all_mixedcontent.html
@@ -64,8 +63,8 @@ browser/base/content/newtab/**
 browser/components/downloads/**
 browser/components/sessionstore/**
 browser/components/tabview/**
-# generated files in cld2
-browser/components/translation/cld2/cld-worker.js
+# generated & special files in cld2
+browser/components/translation/cld2/**
 browser/extensions/pdfjs/content/build**
 browser/extensions/pdfjs/content/web**
 # generated or library files in pocket

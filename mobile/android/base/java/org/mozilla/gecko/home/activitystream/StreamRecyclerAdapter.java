@@ -17,6 +17,7 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.model.Highlight;
 import org.mozilla.gecko.home.activitystream.stream.HighlightItem;
 import org.mozilla.gecko.home.activitystream.stream.HighlightsTitle;
 import org.mozilla.gecko.home.activitystream.stream.StreamItem;
@@ -24,10 +25,11 @@ import org.mozilla.gecko.home.activitystream.stream.TopPanel;
 import org.mozilla.gecko.home.activitystream.stream.WelcomePanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 
 public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener {
-    private Cursor highlightsCursor;
     private Cursor topSitesCursor;
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
@@ -37,8 +39,12 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     private int tilesWidth;
     private int tilesHeight;
 
+    private List<Highlight> highlights;
+
     public StreamRecyclerAdapter() {
         setHasStableIds(true);
+
+        highlights = Collections.emptyList();
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
@@ -100,10 +106,11 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         int type = getItemViewType(position);
 
         if (type == HighlightItem.LAYOUT_ID) {
-            final int cursorPosition = translatePositionToCursor(position);
+            final int actualPosition = translatePositionToCursor(position);
 
-            highlightsCursor.moveToPosition(cursorPosition);
-            ((HighlightItem) holder).bind(highlightsCursor, cursorPosition, tilesWidth,  tilesHeight);
+            final Highlight highlight = highlights.get(actualPosition);
+
+            ((HighlightItem) holder).bind(highlight, actualPosition, tilesWidth,  tilesHeight);
         } else if (type == TopPanel.LAYOUT_ID) {
             ((TopPanel) holder).bind(topSitesCursor, tiles, tilesWidth, tilesHeight);
         }
@@ -116,17 +123,14 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             return;
         }
 
-        int actualPosition = translatePositionToCursor(position);
-        highlightsCursor.moveToPosition(actualPosition);
-
-        final String url = highlightsCursor.getString(
-                highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
+        final int actualPosition = translatePositionToCursor(position);
+        final Highlight highlight = highlights.get(actualPosition);
 
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                .forHighlightSource(Utils.highlightSource(highlightsCursor))
+                .forHighlightSource(highlight.getSource())
                 .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
                 .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actualPosition)
-                .set(ActivityStreamTelemetry.Contract.COUNT, highlightsCursor.getCount());
+                .set(ActivityStreamTelemetry.Contract.COUNT, highlights.size());
 
         Telemetry.sendUIEvent(
                 TelemetryContract.Event.LOAD_URL,
@@ -137,24 +141,17 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         // NB: This is hacky. We need to process telemetry data first, otherwise we run a risk of
         // not having a cursor to work with once url is opened and BrowserApp closes A-S home screen
         // and clears its resources (read: cursors). See Bug 1326018.
-        onUrlOpenListener.onUrlOpen(url, EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+        onUrlOpenListener.onUrlOpen(highlight.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
     }
 
     @Override
     public int getItemCount() {
-        final int highlightsCount;
-
-        if (highlightsCursor != null) {
-            highlightsCount = highlightsCursor.getCount();
-        } else {
-            highlightsCount = 0;
-        }
-
-        return highlightsCount + 3;
+        // Number of highlights + Top Sites Panel + Welcome Panel + Highlights Title
+        return highlights.size() + 3;
     }
 
-    public void swapHighlightsCursor(Cursor cursor) {
-        highlightsCursor = cursor;
+    public void swapHighlights(List<Highlight> highlights) {
+        this.highlights = highlights;
 
         notifyDataSetChanged();
     }
@@ -169,13 +166,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
     public long getItemId(int position) {
         final int type = getItemViewType(position);
 
-        // To avoid having clashing IDs, we:
-        // - use history ID's as is
-        // - use hardcoded negative ID's for fixed panels
-        // - multiply bookmark ID's by -1 to not clash with history, and add an offset to not
-        //   clash with the fixed panels above
-        final int offset = -10;
-
         // RecyclerView.NO_ID is -1, so start our hard-coded IDs at -2.
         switch (type) {
             case TopPanel.LAYOUT_ID:
@@ -185,24 +175,11 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             case HighlightsTitle.LAYOUT_ID:
                 return -4;
             case HighlightItem.LAYOUT_ID:
-                final int cursorPosition = translatePositionToCursor(position);
-                highlightsCursor.moveToPosition(cursorPosition);
+                final Highlight highlight = highlights.get(translatePositionToCursor(position));
 
-                final long historyID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
-                final boolean isHistory = -1 != historyID;
-
-                if (isHistory) {
-                    return historyID;
-                }
-
-                final long bookmarkID = highlightsCursor.getLong(highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
-                final boolean isBookmark = -1 != bookmarkID;
-
-                if (isBookmark) {
-                    return -1 * bookmarkID + offset;
-                }
-
-                throw new IllegalArgumentException("Unhandled highlight type in getItemId - has no history or bookmark ID");
+                // Highlights are always picked from recent history - So using the history id should
+                // give us a unique (positive) id.
+                return highlight.getHistoryId();
             default:
                 throw new IllegalArgumentException("StreamItem with LAYOUT_ID=" + type + " not handled in getItemId()");
         }
