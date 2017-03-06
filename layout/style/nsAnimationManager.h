@@ -15,6 +15,8 @@
 
 class nsIGlobalObject;
 class nsStyleContext;
+class CSSAnimationBuilder; // tentative, will be removed
+struct nsStyleDisplay;
 
 namespace mozilla {
 namespace css {
@@ -355,6 +357,11 @@ protected:
   ~nsAnimationManager() override = default;
 
 private:
+  void DoUpdateAnimations(
+    const mozilla::NonOwningAnimationTarget& aTarget,
+    const nsStyleDisplay& aStyleDisplay,
+    CSSAnimationBuilder& aBuilder);
+
   mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
 };
 

@@ -1077,38 +1077,49 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
              "Should not update animations that are not attached to the "
              "document tree");
 
-  NonOwningAnimationTarget target(aElement, aStyleContext->GetPseudoType());
+  if (aStyleContext->IsInDisplayNoneSubtree()) {
+    StopAnimationsForElement(aElement, aStyleContext->GetPseudoType());
+    return;
+  }
 
+  NonOwningAnimationTarget target(aElement, aStyleContext->GetPseudoType());
+  CSSAnimationBuilder builder(aStyleContext, target);
+
+  const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
+  DoUpdateAnimations(target, *disp, builder);
+}
+
+void
+nsAnimationManager::DoUpdateAnimations(
+  const NonOwningAnimationTarget& aTarget,
+  const nsStyleDisplay& aStyleDisplay,
+  CSSAnimationBuilder& aBuilder)
+{
   // Everything that causes our animation data to change triggers a
   // style change, which in turn triggers a non-animation restyle.
   // Likewise, when we initially construct frames, we're not in a
   // style change, but also not in an animation restyle.
 
-  const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   CSSAnimationCollection* collection =
-    CSSAnimationCollection::GetAnimationCollection(target.mElement,
-                                                   target.mPseudoType);
+    CSSAnimationCollection::GetAnimationCollection(aTarget.mElement,
+                                                   aTarget.mPseudoType);
   if (!collection &&
-      disp->mAnimationNameCount == 1 &&
-      disp->mAnimations[0].GetName().IsEmpty()) {
+      aStyleDisplay.mAnimationNameCount == 1 &&
+      aStyleDisplay.mAnimations[0].GetName().IsEmpty()) {
     return;
   }
 
-  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
+  nsAutoAnimationMutationBatch mb(aTarget.mElement->OwnerDoc());
 
   // Build the updated animations list, extracting matching animations from
   // the existing collection as we go.
   OwningCSSAnimationPtrArray newAnimations;
-  if (!aStyleContext->IsInDisplayNoneSubtree()) {
-    CSSAnimationBuilder builder(aStyleContext, target);
-
-    newAnimations = BuildAnimations(mPresContext,
-                                    target,
-                                    disp->mAnimations,
-                                    disp->mAnimationNameCount,
-                                    builder,
-                                    collection);
-  }
+  newAnimations = BuildAnimations(mPresContext,
+                                  aTarget,
+                                  aStyleDisplay.mAnimations,
+                                  aStyleDisplay.mAnimationNameCount,
+                                  aBuilder,
+                                  collection);
 
   if (newAnimations.IsEmpty()) {
     if (collection) {
@@ -1121,7 +1132,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     bool createdCollection = false;
     collection =
       CSSAnimationCollection::GetOrCreateAnimationCollection(
-        target.mElement, target.mPseudoType, &createdCollection);
+        aTarget.mElement, aTarget.mPseudoType, &createdCollection);
     if (!collection) {
       MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
       NS_WARNING("allocating collection failed");
@@ -1139,4 +1150,3 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     newAnimations[newAnimIdx]->CancelFromStyle();
   }
 }
-
