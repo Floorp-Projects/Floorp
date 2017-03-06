@@ -1211,7 +1211,7 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
 
   // If this tab or window has been opened by a window.open call, we have to provide
   // all the data needed to send a webNavigation.onCreatedNavigationTarget event.
-  if (aCalledFromJS && parentDocShell && newDocShellItem) {
+  if (parentDocShell && newDocShellItem) {
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
 
