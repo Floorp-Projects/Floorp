@@ -1662,6 +1662,10 @@ private:
                       bool* aRemoved);
 
   nsresult
+  MaybeStripObsoleteOriginAttributes(const OriginProps& aOriginProps,
+                                     bool* aStripped);
+
+  nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
 
@@ -4331,6 +4335,22 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   // appIds don't prevent current Firefox from initializing and using the
   // storage, but they wouldn't ever be removed again, potentially causing
   // problems once appId is removed from origin attributes.
+  //
+  //
+  // Strip obsolete origin attributes
+  // [Feature/Bug]:
+  // The bug that strips obsolete origin attributes is 1314361.
+  //
+  // [Mutations]:
+  // Origin directories with obsolete origin attributes are renamed and their
+  // metadata files are updated during the upgrade process.
+  //
+  // [Downgrade-incompatible changes]:
+  // Origin directories with obsolete origin attributes can reappear if user
+  // runs an already upgraded profile in an older version of Firefox. Origin
+  // directories with obsolete origin attributes don't prevent current Firefox
+  // from initializing and using the storage, but they wouldn't ever be upgraded
+  // again, potentially causing problems in future.
 
   nsresult rv;
 
@@ -8240,12 +8260,92 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
 }
 
 nsresult
+UpgradeStorageFrom1_0To2_0Helper::MaybeStripObsoleteOriginAttributes(
+                                                const OriginProps& aOriginProps,
+                                                bool* aStripped)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+
+  const nsAString& oldLeafName = aOriginProps.mLeafName;
+
+  nsCString originSanitized(aOriginProps.mOrigin);
+  SanitizeOriginString(originSanitized);
+
+  NS_ConvertUTF8toUTF16 newLeafName(originSanitized);
+
+  if (oldLeafName == newLeafName) {
+    *aStripped = false;
+    return NS_OK;
+  }
+
+  nsresult rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                        aOriginProps.mTimestamp,
+                                        aOriginProps.mSuffix,
+                                        aOriginProps.mGroup,
+                                        aOriginProps.mOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                aOriginProps.mTimestamp,
+                                aOriginProps.mSuffix,
+                                aOriginProps.mGroup,
+                                aOriginProps.mOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIFile> newFile;
+  rv = aOriginProps.mDirectory->GetParent(getter_AddRefs(newFile));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = newFile->Append(newLeafName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = newFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    QM_WARNING("Can't rename %s directory, %s directory already exists, "
+               "removing!",
+               NS_ConvertUTF16toUTF8(oldLeafName).get(),
+               NS_ConvertUTF16toUTF8(newLeafName).get());
+
+    rv = aOriginProps.mDirectory->Remove(/* recursive */ true);
+  } else {
+    rv = aOriginProps.mDirectory->RenameTo(nullptr, newLeafName);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  *aStripped = true;
+  return NS_OK;
+}
+
+nsresult
 UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
                                                 const OriginProps& aOriginProps)
 {
   AssertIsOnIOThread();
 
-  nsresult rv;
+  bool stripped;
+  nsresult rv = MaybeStripObsoleteOriginAttributes(aOriginProps, &stripped);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (stripped) {
+    return NS_OK;
+  }
 
   if (aOriginProps.mNeedsRestore) {
     rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
