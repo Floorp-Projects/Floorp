@@ -29,7 +29,8 @@ public class DynamicToolbarAnimator {
         RELAYOUT,
         ACTION_MODE,
         FULL_SCREEN,
-        CARET_DRAG
+        CARET_DRAG,
+        PAGE_LOADING
     }
 
     private final Set<PinReason> pinFlags = Collections.synchronizedSet(EnumSet.noneOf(PinReason.class));
