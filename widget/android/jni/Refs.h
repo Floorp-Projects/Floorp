@@ -106,6 +106,17 @@ public:
                 mInstance, typename T::Context().ClassRef());
     }
 
+    template<class T>
+    typename T::Ref Cast() const
+    {
+#ifdef MOZ_CHECK_JNI
+        MOZ_RELEASE_ASSERT(FindEnv()->IsAssignableFrom(
+                Context<Cls, Type>().ClassRef(),
+                typename T::Context().ClassRef()));
+#endif
+        return T::Ref::From(*this);
+    }
+
     bool operator==(const Ref& other) const
     {
         // Treat two references of the same object as being the same.
