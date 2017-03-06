@@ -192,11 +192,9 @@ add_task(function* checkAllTheProperties() {
   ok(uris.length, `Found ${uris.length} .properties files to scan for misused characters`);
 
   for (let uri of uris) {
-    let bundle = Services.strings.createBundle(uri.spec);
-    let enumerator = bundle.getSimpleEnumeration();
-
-    while (enumerator.hasMoreElements()) {
-      let entity = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
+    let bundle = new StringBundle(uri.spec);
+    let entities = bundle.getAll();
+    for (let entity of entities) {
       testForErrors(uri.spec, entity.key, entity.value);
     }
   }
