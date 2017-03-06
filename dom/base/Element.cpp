@@ -224,7 +224,7 @@ void
 Element::UpdateState(bool aNotify)
 {
   EventStates oldState = mState;
-  mState = IntrinsicState() | (oldState & EXTERNALLY_MANAGED_STATES);
+  mState = IntrinsicState() | (oldState & ESM_MANAGED_STATES);
   if (aNotify) {
     EventStates changedStates = oldState ^ mState;
     if (!changedStates.IsEmpty()) {
