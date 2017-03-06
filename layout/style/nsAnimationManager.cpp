@@ -418,10 +418,10 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   return result;
 }
 
-class MOZ_STACK_CLASS CSSAnimationBuilder final {
+class MOZ_STACK_CLASS GeckoCSSAnimationBuilder final {
 public:
-  CSSAnimationBuilder(nsStyleContext* aStyleContext,
-                      const NonOwningAnimationTarget& aTarget)
+  GeckoCSSAnimationBuilder(nsStyleContext* aStyleContext,
+                           const NonOwningAnimationTarget& aTarget)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
   {
@@ -602,9 +602,9 @@ BuildAnimation(nsPresContext* aPresContext,
 }
 
 bool
-CSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
-                                    const StyleAnimation& aSrc,
-                                    nsTArray<Keyframe>& aKeyframes)
+GeckoCSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
+                                         const StyleAnimation& aSrc,
+                                         nsTArray<Keyframe>& aKeyframes)
 {
   MOZ_ASSERT(aPresContext);
 
@@ -633,9 +633,9 @@ CSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
 }
 
 nsTArray<Keyframe>
-CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
-                                          const StyleAnimation& aSrc,
-                                          const nsCSSKeyframesRule* aRule)
+GeckoCSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
+                                               const StyleAnimation& aSrc,
+                                               const nsCSSKeyframesRule* aRule)
 {
   // Ideally we'd like to build up a set of Keyframe objects that more-or-less
   // reflect the keyframes as-specified in the @keyframes rule(s) so that
@@ -806,7 +806,7 @@ CSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
 }
 
 Maybe<ComputedTimingFunction>
-CSSAnimationBuilder::GetKeyframeTimingFunction(
+GeckoCSSAnimationBuilder::GetKeyframeTimingFunction(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction)
@@ -843,7 +843,7 @@ ConvertTimingFunction(const nsTimingFunction& aTimingFunction)
 }
 
 nsTArray<PropertyValuePair>
-CSSAnimationBuilder::GetKeyframePropertyValues(
+GeckoCSSAnimationBuilder::GetKeyframePropertyValues(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
     nsCSSPropertyIDSet& aAnimatedProperties)
@@ -919,7 +919,7 @@ FindMatchingKeyframe(
 }
 
 void
-CSSAnimationBuilder::FillInMissingKeyframeValues(
+GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
     nsPresContext* aPresContext,
     nsCSSPropertyIDSet aAnimatedProperties,
     nsCSSPropertyIDSet aPropertiesSetAtStart,
@@ -986,7 +986,7 @@ CSSAnimationBuilder::FillInMissingKeyframeValues(
 }
 
 void
-CSSAnimationBuilder::AppendProperty(
+GeckoCSSAnimationBuilder::AppendProperty(
     nsPresContext* aPresContext,
     nsCSSPropertyID aProperty,
     nsTArray<PropertyValuePair>& aPropertyValues)
@@ -999,8 +999,8 @@ CSSAnimationBuilder::AppendProperty(
 }
 
 nsCSSValue
-CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
-                                      nsCSSPropertyID aProperty)
+GeckoCSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
+                                           nsCSSPropertyID aProperty)
 {
   nsCSSValue result;
   StyleAnimationValue computedValue;
@@ -1086,7 +1086,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   }
 
   NonOwningAnimationTarget target(aElement, aStyleContext->GetPseudoType());
-  CSSAnimationBuilder builder(aStyleContext, target);
+  GeckoCSSAnimationBuilder builder(aStyleContext, target);
 
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   DoUpdateAnimations(target, *disp, builder);
