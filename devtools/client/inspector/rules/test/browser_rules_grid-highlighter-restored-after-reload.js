@@ -18,6 +18,19 @@ const TEST_URI = `
   </div>
 `;
 
+const OTHER_URI = `
+  <style type='text/css'>
+    #grid {
+      display: grid;
+    }
+  </style>
+  <div id="grid">
+    <div id="cell1">cell1</div>
+    <div id="cell2">cell2</div>
+    <div id="cell3">cell3</div>
+  </div>
+`;
+
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
@@ -37,10 +50,19 @@ add_task(function* () {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Reload the page, expect the highlighter to be displayed once again");
-  onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  let onStateRestored = highlighters.once("state-restored");
   yield refreshTab(gBrowser.selectedTab);
-  yield onHighlighterShown;
+  let { restored } = yield onStateRestored;
+  ok(restored, "The highlighter state was restored");
 
   info("Check that the grid highlighter can be displayed after reloading the page");
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
+
+  info("Navigate to another URL, and check that the highlighter is hidden");
+  let otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
+  onStateRestored = highlighters.once("state-restored");
+  yield navigateTo(inspector, otherUri);
+  ({ restored } = yield onStateRestored);
+  ok(!restored, "The highlighter state was not restored");
+  ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
 });
