@@ -173,6 +173,7 @@ enum AppId {
 
 // The name of the file that we use to load/save the last access time of an
 // origin.
+// XXX We should get rid of old metadata files at some point, bug 1343576.
 #define METADATA_FILE_NAME ".metadata"
 #define METADATA_V2_FILE_NAME ".metadata-v2"
 
@@ -1114,6 +1115,34 @@ public:
 private:
   ~InitOp()
   { }
+
+  nsresult
+  DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void
+  GetResponse(RequestResponse& aResponse) override;
+};
+
+class InitOriginOp final
+  : public QuotaRequestBase
+{
+  const InitOriginParams mParams;
+  nsCString mSuffix;
+  nsCString mGroup;
+  bool mCreated;
+
+public:
+  explicit InitOriginOp(const RequestParams& aParams);
+
+  bool
+  Init(Quota* aQuota) override;
+
+private:
+  ~InitOriginOp()
+  { }
+
+  nsresult
+  DoInitOnMainThread() override;
 
   nsresult
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
@@ -4491,6 +4520,36 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
                                         nsIFile** aDirectory)
 {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+
+  nsCOMPtr<nsIFile> directory;
+  bool created;
+  nsresult rv = EnsureOriginIsInitializedInternal(aPersistenceType,
+                                                  aSuffix,
+                                                  aGroup,
+                                                  aOrigin,
+                                                  getter_AddRefs(directory),
+                                                  &created);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  directory.forget(aDirectory);
+  return NS_OK;
+}
+
+nsresult
+QuotaManager::EnsureOriginIsInitializedInternal(
+                                               PersistenceType aPersistenceType,
+                                               const nsACString& aSuffix,
+                                               const nsACString& aGroup,
+                                               const nsACString& aOrigin,
+                                               nsIFile** aDirectory,
+                                               bool* aCreated)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aCreated);
 
   nsresult rv = EnsureStorageIsInitialized();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4504,6 +4563,7 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
     if (mInitializedOrigins.Contains(aOrigin)) {
       directory.forget(aDirectory);
+      *aCreated = false;
       return NS_OK;
     }
   } else if (!mTemporaryStorageInitialized) {
@@ -4643,6 +4703,7 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
   }
 
   directory.forget(aDirectory);
+  *aCreated = created;
   return NS_OK;
 }
 
@@ -5779,6 +5840,10 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
       actor = new InitOp();
       break;
 
+    case RequestParams::TInitOriginParams:
+      actor = new InitOriginOp(aParams);
+      break;
+
     case RequestParams::TClearOriginParams:
       actor = new ClearOriginOp(aParams);
       break;
@@ -6203,6 +6268,102 @@ InitOp::GetResponse(RequestResponse& aResponse)
   AssertIsOnOwningThread();
 
   aResponse = InitResponse();
+}
+
+InitOriginOp::InitOriginOp(const RequestParams& aParams)
+  : QuotaRequestBase(/* aExclusive */ false)
+  , mParams(aParams.get_InitOriginParams())
+  , mCreated(false)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == RequestParams::TInitOriginParams);
+}
+
+bool
+InitOriginOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  if (NS_WARN_IF(!QuotaRequestBase::Init(aQuota))) {
+    return false;
+  }
+
+  MOZ_ASSERT(mParams.persistenceType() != PERSISTENCE_TYPE_INVALID);
+
+  mPersistenceType.SetValue(mParams.persistenceType());
+
+  mNeedsMainThreadInit = true;
+
+  return true;
+}
+
+nsresult
+InitOriginOp::DoInitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Figure out which origin we're dealing with.
+  nsCString origin;
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
+                                          &origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mOriginScope.SetFromOrigin(origin);
+
+  return NS_OK;
+}
+
+nsresult
+InitOriginOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!mPersistenceType.IsNull());
+
+  PROFILER_LABEL("Quota", "InitOriginOp::DoDirectoryWork",
+                 js::ProfileEntry::Category::OTHER);
+
+  nsCOMPtr<nsIFile> directory;
+  bool created;
+  nsresult rv =
+    aQuotaManager->EnsureOriginIsInitializedInternal(mPersistenceType.Value(),
+                                                     mSuffix,
+                                                     mGroup,
+                                                     mOriginScope.GetOrigin(),
+                                                     getter_AddRefs(directory),
+                                                     &created);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mCreated = created;
+
+  return NS_OK;
+}
+
+void
+InitOriginOp::GetResponse(RequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  InitOriginResponse response;
+
+  response.created() = mCreated;
+
+  aResponse = response;
 }
 
 void
