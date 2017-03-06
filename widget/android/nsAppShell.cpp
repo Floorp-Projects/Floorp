@@ -259,6 +259,13 @@ public:
         NotifyObservers(aTopic, aData);
     }
 
+    template<typename Functor>
+    static void OnNativeCall(Functor&& aCall)
+    {
+        MOZ_ASSERT(aCall.IsTarget(&NotifyObservers));
+        NS_DispatchToMainThread(NS_NewRunnableFunction(mozilla::Move(aCall)));
+    }
+
     static void NotifyObservers(jni::String::Param aTopic,
                                 jni::String::Param aData)
     {
