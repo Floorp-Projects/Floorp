@@ -889,7 +889,7 @@ CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputS
            "[rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
       return rv;
     }
-    mMetadata->SetElement(CacheFileUtils::kAltDataKey, nullptr);
+    SetAltMetadata(nullptr);
     mAltDataOffset = -1;
   }
 
@@ -918,8 +918,6 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
 
   MOZ_ASSERT(mHandle || mMemoryOnly || mOpeningFile);
 
-  nsresult rv;
-
   if (!mReady) {
     LOG(("CacheFile::OpenAlternativeOutputStream() - CacheFile is not ready "
          "[this=%p]", this));
@@ -941,6 +939,8 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
     }
   }
 
+  nsresult rv;
+
   if (mAltDataOffset != -1) {
     // Truncate old alt-data
     rv = Truncate(mAltDataOffset);
@@ -956,12 +956,10 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
   nsAutoCString altMetadata;
   CacheFileUtils::BuildAlternativeDataInfo(aAltDataType, mAltDataOffset,
                                            altMetadata);
-  rv = mMetadata->SetElement(CacheFileUtils::kAltDataKey, altMetadata.get());
+  rv = SetAltMetadata(altMetadata.get());
   if (NS_FAILED(rv)) {
-    // Removing element shouldn't fail because it doesn't allocate memory.
-    mMetadata->SetElement(CacheFileUtils::kAltDataKey, nullptr);
-
-    mAltDataOffset = -1;
+    LOG(("CacheFile::OpenAlternativeOutputStream() - Set Metadata for alt-data"
+         "failed [rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
     return rv;
   }
 
@@ -1156,7 +1154,7 @@ CacheFile::SetExpirationTime(uint32_t aExpirationTime)
   PostWriteTimer();
 
   if (mHandle && !mHandle->IsDoomed())
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime, nullptr);
 
   return mMetadata->SetExpirationTime(aExpirationTime);
 }
@@ -1185,7 +1183,7 @@ CacheFile::SetFrecency(uint32_t aFrecency)
   PostWriteTimer();
 
   if (mHandle && !mHandle->IsDoomed())
-    CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr);
 
   return mMetadata->SetFrecency(aFrecency);
 }
@@ -1198,6 +1196,34 @@ CacheFile::GetFrecency(uint32_t *_retval)
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
   return mMetadata->GetFrecency(_retval);
+}
+
+nsresult
+CacheFile::SetAltMetadata(const char* aAltMetadata)
+{
+  LOG(("CacheFile::SetAltMetadata() this=%p, aAltMetadata=%s",
+       this, aAltMetadata ? aAltMetadata : ""));
+
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  PostWriteTimer();
+
+  nsresult rv = mMetadata->SetElement(CacheFileUtils::kAltDataKey, aAltMetadata);
+  bool hasAltData = aAltMetadata ? true : false;
+
+  if (NS_FAILED(rv)) {
+    // Removing element shouldn't fail because it doesn't allocate memory.
+    mMetadata->SetElement(CacheFileUtils::kAltDataKey, nullptr);
+
+    mAltDataOffset = -1;
+    hasAltData = false;
+  }
+
+  if (mHandle && !mHandle->IsDoomed()) {
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, &hasAltData);
+  }
+  return rv;
 }
 
 nsresult
@@ -2365,7 +2391,9 @@ CacheFile::InitIndexEntry()
   uint32_t frecency;
   mMetadata->GetFrecency(&frecency);
 
-  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &expTime);
+  bool hasAltData = mMetadata->GetElement(CacheFileUtils::kAltDataKey) ? true : false;
+
+  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &expTime, &hasAltData);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

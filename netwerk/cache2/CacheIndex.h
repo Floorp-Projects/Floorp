@@ -75,7 +75,8 @@ struct CacheIndexRecord {
    *    0001 0000 0000 0000 0000 0000 0000 0000 : dirty
    *    0000 1000 0000 0000 0000 0000 0000 0000 : fresh
    *    0000 0100 0000 0000 0000 0000 0000 0000 : pinned
-   *    0000 0011 0000 0000 0000 0000 0000 0000 : reserved
+   *    0000 0010 0000 0000 0000 0000 0000 0000 : has cached alt data
+   *    0000 0001 0000 0000 0000 0000 0000 0000 : reserved
    *    0000 0000 1111 1111 1111 1111 1111 1111 : file size (in kB)
    */
   uint32_t        mFlags;
@@ -208,6 +209,13 @@ public:
   }
   uint32_t GetExpirationTime() const { return mRec->mExpirationTime; }
 
+  void     SetHasAltData(bool aHasAltData)
+  {
+    aHasAltData ? mRec->mFlags |= kHasAltDataMask
+                : mRec->mFlags &= ~kHasAltDataMask;
+  }
+  bool     GetHasAltData() const { return !!(mRec->mFlags & kHasAltDataMask); }
+
   // Sets filesize in kilobytes.
   void     SetFileSize(uint32_t aFileSize)
   {
@@ -311,7 +319,9 @@ private:
   // Indicates a pinned entry.
   static const uint32_t kPinnedMask      = 0x04000000;
 
-  static const uint32_t kReservedMask    = 0x03000000;
+  // Indicates there is cached alternative data in the entry.
+  static const uint32_t kHasAltDataMask = 0x02000000;
+  static const uint32_t kReservedMask    = 0x01000000;
 
   // FileSize in kilobytes
   static const uint32_t kFileSizeMask    = 0x00FFFFFF;
@@ -363,6 +373,12 @@ public:
     CacheIndexEntry::SetExpirationTime(aExpirationTime);
   }
 
+  void SetHasAltData(bool aHasAltData)
+  {
+    mUpdateFlags |= kHasAltDataUpdatedMask;
+    CacheIndexEntry::SetHasAltData(aHasAltData);
+  }
+
   void SetFileSize(uint32_t aFileSize)
   {
     mUpdateFlags |= kFileSizeUpdatedMask;
@@ -379,12 +395,20 @@ public:
       aDst->mRec->mExpirationTime = mRec->mExpirationTime;
     }
     aDst->mRec->mOriginAttrsHash = mRec->mOriginAttrsHash;
+
+    if (mUpdateFlags & kHasAltDataUpdatedMask &&
+        ((aDst->mRec->mFlags ^ mRec->mFlags) & kHasAltDataMask)) {
+      // Toggle the bit if we need to.
+      aDst->mRec->mFlags ^= kHasAltDataMask;
+    }
+
     if (mUpdateFlags & kFileSizeUpdatedMask) {
-      aDst->mRec->mFlags = mRec->mFlags;
+      // Copy all flags except |HasAltData|.
+      aDst->mRec->mFlags |= (mRec->mFlags & ~kHasAltDataMask);
     } else {
-      // Copy all flags except file size.
+      // Copy all flags except |HasAltData| and file size.
       aDst->mRec->mFlags &= kFileSizeMask;
-      aDst->mRec->mFlags |= (mRec->mFlags & ~kFileSizeMask);
+      aDst->mRec->mFlags |= (mRec->mFlags & ~kHasAltDataMask & ~kFileSizeMask);
     }
   }
 
@@ -392,6 +416,7 @@ private:
   static const uint32_t kFrecencyUpdatedMask = 0x00000001;
   static const uint32_t kExpirationUpdatedMask = 0x00000002;
   static const uint32_t kFileSizeUpdatedMask = 0x00000004;
+  static const uint32_t kHasAltDataUpdatedMask = 0x00000008;
 
   uint32_t mUpdateFlags;
 };
@@ -632,6 +657,7 @@ public:
   static nsresult UpdateEntry(const SHA1Sum::Hash *aHash,
                               const uint32_t      *aFrecency,
                               const uint32_t      *aExpirationTime,
+                              const bool          *aHasAltData,
                               const uint32_t      *aSize);
 
   // Remove all entries from the index. Called when clearing the whole cache.
@@ -731,6 +757,7 @@ private:
   static bool HasEntryChanged(CacheIndexEntry *aEntry,
                               const uint32_t  *aFrecency,
                               const uint32_t  *aExpirationTime,
+                              const bool      *aHasAltData,
                               const uint32_t  *aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.
@@ -833,9 +860,9 @@ private:
   // Posts timer event that start update or build process.
   nsresult ScheduleUpdateTimer(uint32_t aDelay);
   nsresult SetupDirectoryEnumerator();
-  void InitEntryFromDiskData(CacheIndexEntry *aEntry,
-                             CacheFileMetadata *aMetaData,
-                             int64_t aFileSize);
+  nsresult InitEntryFromDiskData(CacheIndexEntry *aEntry,
+                                 CacheFileMetadata *aMetaData,
+                                 int64_t aFileSize);
   // Returns true when either a timer is scheduled or event is posted.
   bool IsUpdatePending();
   // Iterates through all files in entries directory that we didn't create/open
