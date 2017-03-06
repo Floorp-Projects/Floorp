@@ -47,8 +47,6 @@ int32_t rusturl_resolve(const rusturl* url, const nsACString* relative, nsACStri
 int32_t rusturl_common_base_spec(const rusturl* url1, const rusturl* url2, nsACString* cont);
 int32_t rusturl_relative_spec(const rusturl* url1, const rusturl* url2, nsACString* cont);
 
-int32_t rusturl_parse_ipv6addr(const nsACString* input, nsACString* cont);
-
 size_t sizeof_rusturl();
 
 }

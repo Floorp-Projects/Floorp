@@ -461,11 +461,3 @@ add_test(function test_invalidHostChars() {
   // hostname separators, so there is no way to set them and fail.
   run_next_test();
 });
-
-add_test(function test_normalize_ipv6() {
-  var url = stringToURL("http://example.com");
-  url.host = "[::192.9.5.5]";
-  do_check_eq(url.spec, "http://[::c009:505]/");
-
-  run_next_test();
-});
