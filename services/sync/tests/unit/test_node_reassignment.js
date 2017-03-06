@@ -135,6 +135,8 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 }
 
 add_task(async function test_momentary_401_engine() {
+  enableValidationPrefs();
+
   _("Test a failure for engine URLs that's resolved by reassignment.");
   let server = await prepareServer();
   let john   = server.user("johndoe");
@@ -189,6 +191,8 @@ add_task(async function test_momentary_401_engine() {
 
 // This test ends up being a failing fetch *after we're already logged in*.
 add_task(async function test_momentary_401_info_collections() {
+  enableValidationPrefs();
+
   _("Test a failure for info/collections that's resolved by reassignment.");
   let server = await prepareServer();
 
@@ -212,6 +216,8 @@ add_task(async function test_momentary_401_info_collections() {
 });
 
 add_task(async function test_momentary_401_storage_loggedin() {
+  enableValidationPrefs();
+
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
   let server = await prepareServer();
@@ -237,6 +243,8 @@ add_task(async function test_momentary_401_storage_loggedin() {
 });
 
 add_task(async function test_momentary_401_storage_loggedout() {
+  enableValidationPrefs();
+
   _("Test a failure for any storage URL, not just engine parts. " +
     "Resolved by reassignment.");
   let server = await prepareServer();
@@ -259,6 +267,8 @@ add_task(async function test_momentary_401_storage_loggedout() {
 });
 
 add_task(async function test_loop_avoidance_storage() {
+  enableValidationPrefs();
+
   _("Test that a repeated failure doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
 
@@ -358,6 +368,8 @@ add_task(async function test_loop_avoidance_storage() {
 });
 
 add_task(async function test_loop_avoidance_engine() {
+  enableValidationPrefs();
+
   _("Test that a repeated 401 in an engine doesn't result in a sync loop " +
     "if node reassignment cannot resolve the failure.");
   let server = await prepareServer();

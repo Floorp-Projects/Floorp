@@ -67,6 +67,8 @@ function generateAndUploadKeys(server) {
 
 
 add_task(async function test_backoff500() {
+  enableValidationPrefs();
+
   _("Test: HTTP 500 sets backoff status.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -94,6 +96,8 @@ add_task(async function test_backoff500() {
 });
 
 add_task(async function test_backoff503() {
+  enableValidationPrefs();
+
   _("Test: HTTP 503 with Retry-After header leads to backoff notification and sets backoff status.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -130,6 +134,8 @@ add_task(async function test_backoff503() {
 });
 
 add_task(async function test_overQuota() {
+  enableValidationPrefs();
+
   _("Test: HTTP 400 with body error code 14 means over quota.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -159,6 +165,8 @@ add_task(async function test_overQuota() {
 });
 
 add_task(async function test_service_networkError() {
+  enableValidationPrefs();
+
   _("Test: Connection refused error from Service.sync() leads to the right status code.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -181,6 +189,8 @@ add_task(async function test_service_networkError() {
 });
 
 add_task(async function test_service_offline() {
+  enableValidationPrefs();
+
   _("Test: Wanting to sync in offline mode leads to the right status code but does not increment the ignorable error count.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -206,6 +216,8 @@ add_task(async function test_service_offline() {
 });
 
 add_task(async function test_engine_networkError() {
+  enableValidationPrefs();
+
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
   let server = sync_httpd_setup();
   await setUp(server);
@@ -233,6 +245,8 @@ add_task(async function test_engine_networkError() {
 });
 
 add_task(async function test_resource_timeout() {
+  enableValidationPrefs();
+
   let server = sync_httpd_setup();
   await setUp(server);
 
