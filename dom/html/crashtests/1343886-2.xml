@@ -1,0 +1,3 @@
+<input xmlns="http://www.w3.org/1999/xhtml">
+  <script>document.documentElement.selectionStart</script>
+</input>
