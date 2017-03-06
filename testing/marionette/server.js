@@ -4,19 +4,20 @@
 
 "use strict";
 
-var {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
 const ServerSocket = CC("@mozilla.org/network/server-socket;1", "nsIServerSocket", "initSpecialConnection");
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
-Cu.import("chrome://marionette/content/dispatcher.js");
+Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/driver.js");
-Cu.import("chrome://marionette/content/element.js");
-Cu.import("chrome://marionette/content/simpletest.js");
+Cu.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/message.js");
 
 // Bug 1083711: Load transport.js as an SDK module instead of subscript
 loader.loadSubScript("resource://devtools/shared/transport/transport.js");
@@ -27,6 +28,7 @@ this.EXPORTED_SYMBOLS = ["server"];
 this.server = {};
 
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
+const PROTOCOL_VERSION = 3;
 
 // Marionette sets preferences recommended for automation when it starts,
 // unless |marionette.prefs.recommended| has been set to false.
@@ -253,23 +255,23 @@ const RECOMMENDED_PREFS = new Map([
 /**
  * Bootstraps Marionette and handles incoming client connections.
  *
- * Once started, it opens a TCP socket sporting the debugger transport
- * protocol on the provided port.  For every new client a Dispatcher is
- * created.
+ * Starting the Marionette server will open a TCP socket sporting the
+ * debugger transport interface on the provided |port|.  For every new
+ * connection, a |server.TCPConnection| is created.
  */
 server.TCPListener = class {
   /**
    * @param {number} port
    *     Port for server to listen to.
-   * @param {boolean} forceLocal
-   *     Listen only to connections from loopback if true.  If false,
-   *     accept all connections.
+   * @param {boolean=} forceLocal
+   *     Listen only to connections from loopback if true (default).
+   *     When false, accept all connections.
    */
-  constructor (port, forceLocal) {
+  constructor (port, forceLocal = true) {
     this.port = port;
     this.forceLocal = forceLocal;
-    this.conns = {};
-    this.nextConnId = 0;
+    this.conns = new Set();
+    this.nextConnID = 0;
     this.alive = false;
     this._acceptConnections = false;
     this.alteredPrefs = new Set();
@@ -353,20 +355,230 @@ server.TCPListener = class {
     let input = clientSocket.openInputStream(0, 0, 0);
     let output = clientSocket.openOutputStream(0, 0, 0);
     let transport = new DebuggerTransport(input, output);
-    let connId = "conn" + this.nextConnId++;
 
-    let dispatcher = new Dispatcher(connId, transport, this.driverFactory.bind(this));
-    dispatcher.onclose = this.onConnectionClosed.bind(this);
-    this.conns[connId] = dispatcher;
+    let conn = new server.TCPConnection(
+        this.nextConnID++, transport, this.driverFactory.bind(this));
+    conn.onclose = this.onConnectionClosed.bind(this);
+    this.conns.add(conn);
 
-    logger.debug(`Accepted connection ${connId} from ${clientSocket.host}:${clientSocket.port}`);
-    dispatcher.sayHello();
+    logger.debug(`Accepted connection ${conn.id} from ${clientSocket.host}:${clientSocket.port}`);
+    conn.sayHello();
     transport.ready();
   }
 
   onConnectionClosed (conn) {
-    let id = conn.connId;
-    delete this.conns[id];
-    logger.debug(`Closed connection ${id}`);
+    logger.debug(`Closed connection ${conn.id}`);
+    this.conns.delete(conn);
+  }
+};
+
+/**
+ * Marionette client connection.
+ *
+ * Dispatches packets received to their correct service destinations
+ * and sends back the service endpoint's return values.
+ *
+ * @param {number} connID
+ *     Unique identifier of the connection this dispatcher should handle.
+ * @param {DebuggerTransport} transport
+ *     Debugger transport connection to the client.
+ * @param {function(): GeckoDriver} driverFactory
+ *     Factory function that produces a |GeckoDriver|.
+ */
+server.TCPConnection = class {
+  constructor (connID, transport, driverFactory) {
+    this.id = connID;
+    this.conn = transport;
+
+    // transport hooks are TCPConnection#onPacket
+    // and TCPConnection#onClosed
+    this.conn.hooks = this;
+
+    // callback for when connection is closed
+    this.onclose = null;
+
+    // last received/sent message ID
+    this.lastID = 0;
+
+    this.driver = driverFactory();
+
+    // lookup of commands sent by server to client by message ID
+    this.commands_ = new Map();
+  }
+
+  /**
+   * Debugger transport callback that cleans up
+   * after a connection is closed.
+   */
+  onClosed (reason) {
+    this.driver.deleteSession();
+    if (this.onclose) {
+      this.onclose(this);
+    }
+  }
+
+  /**
+   * Callback that receives data packets from the client.
+   *
+   * If the message is a Response, we look up the command previously
+   * issued to the client and run its callback, if any.  In case of
+   * a Command, the corresponding is executed.
+   *
+   * @param {Array.<number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, method name or error, and parameters
+   *     or result.
+   */
+  onPacket (data) {
+    let msg = Message.fromMsg(data);
+    msg.origin = MessageOrigin.Client;
+    this.log_(msg);
+
+    if (msg instanceof Response) {
+      let cmd = this.commands_.get(msg.id);
+      this.commands_.delete(msg.id);
+      cmd.onresponse(msg);
+    } else if (msg instanceof Command) {
+      this.lastID = msg.id;
+      this.execute(msg);
+    }
+  }
+
+  /**
+   * Executes a WebDriver command and sends back a response when it has
+   * finished executing.
+   *
+   * Commands implemented in GeckoDriver and registered in its
+   * {@code GeckoDriver.commands} attribute.  The return values from
+   * commands are expected to be Promises.  If the resolved value of said
+   * promise is not an object, the response body will be wrapped in
+   * an object under a "value" field.
+   *
+   * If the command implementation sends the response itself by calling
+   * {@code resp.send()}, the response is guaranteed to not be sent twice.
+   *
+   * Errors thrown in commands are marshaled and sent back, and if they
+   * are not WebDriverError instances, they are additionally propagated
+   * and reported to {@code Components.utils.reportError}.
+   *
+   * @param {Command} cmd
+   *     The requested command to execute.
+   */
+  execute (cmd) {
+    let resp = new Response(cmd.id, this.send.bind(this));
+    let sendResponse = () => resp.sendConditionally(resp => !resp.sent);
+    let sendError = resp.sendError.bind(resp);
+
+    let req = Task.spawn(function*() {
+      let fn = this.driver.commands[cmd.name];
+      if (typeof fn == "undefined") {
+        throw new UnknownCommandError(cmd.name);
+      }
+
+      if (cmd.name !== "newSession") {
+        assert.session(this.driver);
+      }
+
+      let rv = yield fn.bind(this.driver)(cmd, resp);
+
+      if (typeof rv != "undefined") {
+        if (typeof rv != "object") {
+          resp.body = {value: rv};
+        } else {
+          resp.body = rv;
+        }
+      }
+    }.bind(this));
+
+    req.then(sendResponse, sendError).catch(error.report);
+  }
+
+  sendError (err, cmdID) {
+    let resp = new Response(cmdID, this.send.bind(this));
+    resp.sendError(err);
+  }
+
+  /**
+   * When a client connects we send across a JSON Object defining the
+   * protocol level.
+   *
+   * This is the only message sent by Marionette that does not follow
+   * the regular message format.
+   */
+  sayHello () {
+    let whatHo = {
+      applicationType: "gecko",
+      marionetteProtocol: PROTOCOL_VERSION,
+    };
+    this.sendRaw(whatHo);
+  };
+
+  /**
+   * Delegates message to client based on the provided  {@code cmdID}.
+   * The message is sent over the debugger transport socket.
+   *
+   * The command ID is a unique identifier assigned to the client's request
+   * that is used to distinguish the asynchronous responses.
+   *
+   * Whilst responses to commands are synchronous and must be sent in the
+   * correct order.
+   *
+   * @param {Command,Response} msg
+   *     The command or response to send.
+   */
+  send (msg) {
+    msg.origin = MessageOrigin.Server;
+    if (msg instanceof Command) {
+      this.commands_.set(msg.id, msg);
+      this.sendToEmulator(msg);
+    } else if (msg instanceof Response) {
+      this.sendToClient(msg);
+    }
+  }
+
+  // Low-level methods:
+
+  /**
+   * Send given response to the client over the debugger transport socket.
+   *
+   * @param {Response} resp
+   *     The response to send back to the client.
+   */
+  sendToClient (resp) {
+    this.driver.responseCompleted();
+    this.sendMessage(resp);
+  };
+
+  /**
+   * Marshal message to the Marionette message format and send it.
+   *
+   * @param {Command,Response} msg
+   *     The message to send.
+   */
+  sendMessage (msg) {
+    this.log_(msg);
+    let payload = msg.toMsg();
+    this.sendRaw(payload);
+  }
+
+  /**
+   * Send the given payload over the debugger transport socket to the
+   * connected client.
+   *
+   * @param {Object} payload
+   *     The payload to ship.
+   */
+  sendRaw (payload) {
+    this.conn.send(payload);
+  }
+
+  log_ (msg) {
+    let a = (msg.origin == MessageOrigin.Client ? " -> " : " <- ");
+    let s = JSON.stringify(msg.toMsg());
+    logger.trace(this.id + a + s);
+  }
+
+  toString () {
+    return `[object server.TCPConnection ${this.id}]`;
   }
 };
