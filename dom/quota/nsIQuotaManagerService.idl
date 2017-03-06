@@ -15,6 +15,16 @@ interface nsIQuotaUsageRequest;
 interface nsIQuotaManagerService : nsISupports
 {
   /**
+   * Initializes storage directory. This can be used in tests to verify
+   * upgrade methods.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  init();
+
+  /**
    * Schedules an asynchronous callback that will return the total amount of
    * disk space being used by storages for the given origin.
    *

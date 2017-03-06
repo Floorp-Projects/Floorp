@@ -7,6 +7,8 @@ var testGenerator = testSteps();
 
 function* testSteps()
 {
+  const storageFile = "storage.sqlite";
+
   info("Clearing");
 
   clear(continueToNextStepSync);
@@ -33,6 +35,28 @@ function* testSteps()
   usage = yield undefined;
 
   ok(usage > 0, "Usage is not zero");
+
+  info("Clearing");
+
+  clear(continueToNextStepSync);
+  yield undefined;
+
+  info("Checking storage file");
+
+  let file = getRelativeFile(storageFile);
+
+  let exists = file.exists();
+  ok(!exists, "Storage file doesn't exist");
+
+  info("Initializing");
+
+  let request = init(continueToNextStepSync);
+  yield undefined;
+
+  ok(request.resultCode == NS_OK, "Initialization succeeded");
+
+  exists = file.exists();
+  ok(exists, "Storage file does exist");
 
   finishTest();
 }

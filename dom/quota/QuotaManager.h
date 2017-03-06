@@ -256,6 +256,14 @@ public:
   CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
                             nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
 
+  void
+  AssertStorageIsInitialized() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
   nsresult
   EnsureStorageIsInitialized();
 

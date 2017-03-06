@@ -1101,6 +1101,27 @@ private:
   ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
+class InitOp final
+  : public QuotaRequestBase
+{
+public:
+  InitOp()
+    : QuotaRequestBase(/* aExclusive */ false)
+  {
+    AssertIsOnOwningThread();
+  }
+
+private:
+  ~InitOp()
+  { }
+
+  nsresult
+  DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void
+  GetResponse(RequestResponse& aResponse) override;
+};
+
 class ResetOrClearOp final
   : public QuotaRequestBase
 {
@@ -4158,6 +4179,17 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
 }
 #endif
 
+#ifdef DEBUG
+
+void
+QuotaManager::AssertStorageIsInitialized() const
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mStorageInitialized);
+}
+
+#endif // DEBUG
+
 nsresult
 QuotaManager::EnsureStorageIsInitialized()
 {
@@ -5711,6 +5743,10 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
   RefPtr<QuotaRequestBase> actor;
 
   switch (aParams.type()) {
+    case RequestParams::TInitParams:
+      actor = new InitOp();
+      break;
+
     case RequestParams::TClearOriginParams:
     case RequestParams::TClearOriginsParams:
       actor = new OriginClearOp(aParams);
@@ -6111,6 +6147,27 @@ QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnOwningThread();
 
   NoteActorDestroyed();
+}
+
+nsresult
+InitOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+{
+  AssertIsOnIOThread();
+
+  PROFILER_LABEL("Quota", "InitOp::DoDirectoryWork",
+                 js::ProfileEntry::Category::OTHER);
+
+  aQuotaManager->AssertStorageIsInitialized();
+
+  return NS_OK;
+}
+
+void
+InitOp::GetResponse(RequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  aResponse = InitResponse();
 }
 
 void

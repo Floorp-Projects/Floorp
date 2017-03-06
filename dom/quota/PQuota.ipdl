@@ -17,6 +17,10 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+struct InitParams
+{
+};
+
 struct UsageParams
 {
   PrincipalInfo principalInfo;
@@ -51,6 +55,7 @@ struct ResetAllParams
 
 union RequestParams
 {
+  InitParams;
   ClearOriginParams;
   ClearOriginsParams;
   ClearAllParams;
