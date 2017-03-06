@@ -1595,20 +1595,20 @@ private:
   DoProcessOriginDirectories();
 };
 
-class UpgradeDirectoryMetadataFrom1To2Helper final
+class UpgradeStorageFrom0_0To1_0Helper final
   : public StorageDirectoryHelper
 {
   const bool mPersistent;
 
 public:
-  UpgradeDirectoryMetadataFrom1To2Helper(nsIFile* aDirectory,
-                                         bool aPersistent)
+  UpgradeStorageFrom0_0To1_0Helper(nsIFile* aDirectory,
+                                   bool aPersistent)
     : StorageDirectoryHelper(aDirectory)
     , mPersistent(aPersistent)
   { }
 
   nsresult
-  UpgradeMetadataFiles();
+  DoUpgrade();
 
 private:
   nsresult
@@ -4253,10 +4253,10 @@ QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
     }
 
     bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
-    RefPtr<UpgradeDirectoryMetadataFrom1To2Helper> helper =
-      new UpgradeDirectoryMetadataFrom1To2Helper(directory, persistent);
+    RefPtr<UpgradeStorageFrom0_0To1_0Helper> helper =
+      new UpgradeStorageFrom0_0To1_0Helper(directory, persistent);
 
-    rv = helper->UpgradeMetadataFiles();
+    rv = helper->DoUpgrade();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7726,7 +7726,7 @@ CreateOrUpgradeDirectoryMetadataHelper::DoProcessOriginDirectories()
 }
 
 nsresult
-UpgradeDirectoryMetadataFrom1To2Helper::UpgradeMetadataFiles()
+UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
 {
   AssertIsOnIOThread();
 
@@ -7819,12 +7819,11 @@ UpgradeDirectoryMetadataFrom1To2Helper::UpgradeMetadataFiles()
 }
 
 nsresult
-UpgradeDirectoryMetadataFrom1To2Helper::GetDirectoryMetadata(
-                                                            nsIFile* aDirectory,
-                                                            int64_t* aTimestamp,
-                                                            nsACString& aGroup,
-                                                            nsACString& aOrigin,
-                                                            bool* aIsApp)
+UpgradeStorageFrom0_0To1_0Helper::GetDirectoryMetadata(nsIFile* aDirectory,
+                                                       int64_t* aTimestamp,
+                                                       nsACString& aGroup,
+                                                       nsACString& aOrigin,
+                                                       bool* aIsApp)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
@@ -7871,7 +7870,7 @@ UpgradeDirectoryMetadataFrom1To2Helper::GetDirectoryMetadata(
 }
 
 nsresult
-UpgradeDirectoryMetadataFrom1To2Helper::DoProcessOriginDirectories()
+UpgradeStorageFrom0_0To1_0Helper::DoProcessOriginDirectories()
 {
   AssertIsOnIOThread();
 
