@@ -451,7 +451,7 @@ private:
   class DemuxerProxy;
   UniquePtr<DemuxerProxy> mDemuxer;
   bool mDemuxerInitDone;
-  void OnDemuxerInitDone(nsresult);
+  void OnDemuxerInitDone(const MediaResult& aResult);
   void OnDemuxerInitFailed(const MediaResult& aError);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;
   MozPromiseRequestHolder<NotifyDataArrivedPromise> mNotifyDataArrivedPromise;
