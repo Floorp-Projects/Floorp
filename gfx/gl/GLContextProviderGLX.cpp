@@ -111,23 +111,43 @@ GLXLibrary::EnsureInitialized()
         SYMBOL(GetCurrentContext),
         SYMBOL(WaitGL),
         SYMBOL(WaitX),
+
         /* functions introduced in GLX 1.1 */
         SYMBOL(QueryExtensionsString),
         SYMBOL(GetClientString),
         SYMBOL(QueryServerString),
+
         /* functions introduced in GLX 1.3 */
         SYMBOL(ChooseFBConfig),
         SYMBOL(GetFBConfigAttrib),
-        // WARNING: xGetFBConfigs not set in symbols13_ext
         SYMBOL(GetFBConfigs),
-        // WARNING: symbols13_ext sets xCreateGLXPixmapWithConfig instead
         SYMBOL(CreatePixmap),
         SYMBOL(DestroyPixmap),
         SYMBOL(CreateNewContext),
-        /* functions introduced in GLX 1.4 */
-        SYMBOL(GetProcAddress),
+
+        // Core in GLX 1.4, ARB extension before.
+        { (PRFuncPtr*)&mSymbols.fGetProcAddress, { "glXGetProcAddress",
+                                                   "glXGetProcAddressARB",
+                                                   nullptr } },
         END_OF_SYMBOLS
     };
+    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols)) {
+        NS_WARNING("Couldn't load required GLX symbols.");
+        return false;
+    }
+
+    Display* display = DefaultXDisplay();
+    int screen = DefaultScreen(display);
+
+    {
+        int major, minor;
+        if (!fQueryVersion(display, &major, &minor) ||
+            major != 1 || minor < 3)
+        {
+            NS_ERROR("GLX version older than 1.3. (released in 1998)");
+            return false;
+        }
+    }
 
     const GLLibraryLoader::SymLoadStruct symbols_texturefrompixmap[] = {
         SYMBOL(BindTexImageEXT),
@@ -150,24 +170,6 @@ GLXLibrary::EnsureInitialized()
         SYMBOL(SwapIntervalEXT),
         END_OF_SYMBOLS
     };
-
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols)) {
-        NS_WARNING("Couldn't find required entry point in OpenGL shared library");
-        return false;
-    }
-
-    Display* display = DefaultXDisplay();
-    int screen = DefaultScreen(display);
-
-    {
-        int major, minor;
-        if (!fQueryVersion(display, &major, &minor) ||
-            major != 1 || minor < 4)
-        {
-            NS_ERROR("GLX version older than 1.4. (released in 2005)");
-            return false;
-        }
-    }
 
     const auto lookupFunction =
         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
