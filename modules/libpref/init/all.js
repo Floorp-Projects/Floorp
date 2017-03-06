@@ -2559,7 +2559,7 @@ pref("layout.css.convertFromNode.enabled", true);
 pref("layout.css.text-align-unsafe-value.enabled", false);
 
 // Is support for CSS text-justify property enabled?
-pref("layout.css.text-justify.enabled", false);
+pref("layout.css.text-justify.enabled", true);
 
 // Is support for CSS "float: inline-{start,end}" and
 // "clear: inline-{start,end}" enabled?
