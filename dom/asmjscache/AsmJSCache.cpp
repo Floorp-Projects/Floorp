@@ -351,7 +351,6 @@ public:
     mWriteParams(aWriteParams),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
-    mEnforcingQuota(true),
     mDeleteReceived(false),
     mActorDestroyed(false),
     mOpened(false)
@@ -580,7 +579,6 @@ private:
   State mState;
   JS::AsmJSCacheResult mResult;
 
-  bool mEnforcingQuota;
   bool mDeleteReceived;
   bool mActorDestroyed;
   bool mOpened;
@@ -603,9 +601,6 @@ ParentRunnable::InitOnMainThread()
   rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
                                           &mOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mEnforcingQuota =
-    QuotaManager::IsQuotaEnforced(quota::PERSISTENCE_TYPE_TEMPORARY);
 
   return NS_OK;
 }
@@ -711,26 +706,24 @@ ParentRunnable::OpenCacheFileForWrite()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
-    // Create the QuotaObject before all file IO and keep it alive until caching
-    // completes to get maximum assertion coverage in QuotaManager against
-    // concurrent removal, etc.
-    mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
-                                      mOrigin, file);
-    NS_ENSURE_STATE(mQuotaObject);
+  // Create the QuotaObject before all file IO and keep it alive until caching
+  // completes to get maximum assertion coverage in QuotaManager against
+  // concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
+                                    mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
 
+  if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
+                                     /* aTruncate */ false)) {
+    // If the request fails, it might be because mOrigin is using too much
+    // space (MaybeUpdateSize will not evict our own origin since it is
+    // active). Try to make some space by evicting LRU entries until there is
+    // enough space.
+    EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
     if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
                                        /* aTruncate */ false)) {
-      // If the request fails, it might be because mOrigin is using too much
-      // space (MaybeUpdateSize will not evict our own origin since it is
-      // active). Try to make some space by evicting LRU entries until there is
-      // enough space.
-      EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
-      if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
-                                         /* aTruncate */ false)) {
-        mResult = JS::AsmJSCache_QuotaExceeded;
-        return NS_ERROR_FAILURE;
-      }
+      mResult = JS::AsmJSCache_QuotaExceeded;
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -766,14 +759,12 @@ ParentRunnable::OpenCacheFileForRead()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
-    // Even though it's not strictly necessary, create the QuotaObject before
-    // all file IO and keep it alive until caching completes to get maximum
-    // assertion coverage in QuotaManager against concurrent removal, etc.
-    mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
-                                      mOrigin, file);
-    NS_ENSURE_STATE(mQuotaObject);
-  }
+  // Even though it's not strictly necessary, create the QuotaObject before all
+  // file IO and keep it alive until caching completes to get maximum assertion
+  // coverage in QuotaManager against concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
+                                    mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
 
   rv = file->GetFileSize(&mFileSize);
   NS_ENSURE_SUCCESS(rv, rv);
