@@ -8,8 +8,28 @@ var testGenerator = testSteps();
 function* testSteps()
 {
   const storageFile = "storage.sqlite";
-  const metadataFile = "storage/permanent/chrome/.metadata";
-  const metadata2File = "storage/permanent/chrome/.metadata-v2";
+
+  const metadataFiles = [
+    {
+      path: "storage/permanent/chrome/.metadata",
+      tmp: false
+    },
+
+    {
+      path: "storage/permanent/chrome/.metadata-tmp",
+      tmp: true
+    },
+
+    {
+      path: "storage/permanent/chrome/.metadata-v2",
+      tmp: false
+    },
+
+    {
+      path: "storage/permanent/chrome/.metadata-v2-tmp",
+      tmp: true
+    }
+  ]
 
   info("Clearing");
 
@@ -69,15 +89,17 @@ function* testSteps()
 
   ok(request.result, "Origin directory was created");
 
-  file = getRelativeFile(metadataFile);
+  for (let metadataFile of metadataFiles) {
+    file = getRelativeFile(metadataFile.path);
 
-  exists = file.exists();
-  ok(exists, "Metadata file does exist");
+    exists = file.exists();
 
-  file = getRelativeFile(metadata2File);
-
-  exists = file.exists();
-  ok(exists, "Metadata v2 file does exist");
+    if (metadataFile.tmp) {
+      ok(!exists, "Metadata file doesn't exist");
+    } else {
+      ok(exists, "Metadata file does exist");
+    }
+  }
 
   finishTest();
 }
