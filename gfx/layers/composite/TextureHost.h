@@ -578,6 +578,7 @@ public:
 
   void DeserializeReadLock(const ReadLockDescriptor& aDesc,
                            ISurfaceAllocator* aAllocator);
+  void SetReadLock(TextureReadLock* aReadLock);
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 

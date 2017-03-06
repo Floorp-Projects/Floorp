@@ -50,3 +50,26 @@ toolbar[brighttext] #downloads-indicator-progress-icon {
     filter: brightness(1);
   }
 }
+
+#downloads-button[notification="start"] > #downloads-indicator-anchor {
+  animation-name: downloadsIndicatorStartJump;
+  /* Upon changing the overall duration below, please keep the delay time of
+     setTimeout() identical in indicator.js for this animation. */
+  animation-duration: 0.5s;
+  animation-delay: 1s;
+  animation-iteration-count: 2;
+}
+
+@keyframes downloadsIndicatorStartJump {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: translateY(-3px);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

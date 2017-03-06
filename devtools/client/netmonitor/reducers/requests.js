@@ -245,4 +245,7 @@ function requestsReducer(state = new Requests(), action) {
   }
 }
 
-module.exports = requestsReducer;
+module.exports = {
+  Requests,
+  requestsReducer,
+};

@@ -2262,9 +2262,16 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
             s = iter.frameSlotValue(--index);
         } while (s != v || stackHits++ != skipStackHits);
 
-        MOZ_ASSERT(index < size_t(parser.stackDepthAtPC(current)));
 
-        *valuepc = parser.pcForStackOperand(current, index, defIndex);
+        // If the current PC has fewer values on the stack than the index we are
+        // looking for, the blamed value must be one pushed by the current
+        // bytecode (e.g. JSOP_MOREITER), so restore *valuepc.
+        if (index < size_t(parser.stackDepthAtPC(current))) {
+            *valuepc = parser.pcForStackOperand(current, index, defIndex);
+        } else {
+            *valuepc = current;
+            *defIndex = index - size_t(parser.stackDepthAtPC(current));
+        }
     } else {
         *valuepc = parser.pcForStackOperand(current, spindex, defIndex);
     }
