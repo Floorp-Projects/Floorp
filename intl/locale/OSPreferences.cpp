@@ -14,8 +14,10 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#ifdef ENABLE_INTL_API
 #include "unicode/udat.h"
 #include "unicode/udatpg.h"
+#endif
 
 using namespace mozilla::intl;
 
@@ -71,6 +73,7 @@ OSPreferences::Refresh()
 bool
 OSPreferences::CanonicalizeLanguageTag(nsCString& aLoc)
 {
+#ifdef ENABLE_INTL_API
   char langTag[512];
 
   UErrorCode status = U_ZERO_ERROR;
@@ -84,6 +87,9 @@ OSPreferences::CanonicalizeLanguageTag(nsCString& aLoc)
 
   aLoc.Assign(langTag, langTagLen);
   return true;
+#else
+  return false;
+#endif
 }
 
 /**
@@ -95,6 +101,7 @@ OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
                                           const nsACString& aLocale,
                                           nsAString& aRetVal)
 {
+#ifdef ENABLE_INTL_API
   UDateFormatStyle timeStyle = UDAT_NONE;
   UDateFormatStyle dateStyle = UDAT_NONE;
 
@@ -158,6 +165,9 @@ OSPreferences::GetDateTimePatternForStyle(DateTimeFormatStyle aDateStyle,
   }
   aRetVal.Assign((const char16_t*)pattern, patsize);
   return true;
+#else
+  return false;
+#endif
 }
 
 
@@ -175,6 +185,7 @@ OSPreferences::GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
                                            const nsACString& aLocale,
                                            nsAString& aRetVal)
 {
+#ifdef ENABLE_INTL_API
   nsAutoString pattern;
   if (!GetDateTimePatternForStyle(aDateStyle, aTimeStyle, aLocale, pattern)) {
     return false;
@@ -194,6 +205,9 @@ OSPreferences::GetDateTimeSkeletonForStyle(DateTimeFormatStyle aDateStyle,
 
   aRetVal.Assign((const char16_t*)skeleton, skelsize);
   return true;
+#else
+  return false;
+#endif
 }
 
 /**
@@ -210,6 +224,7 @@ OSPreferences::GetPatternForSkeleton(const nsAString& aSkeleton,
                                      const nsACString& aLocale,
                                      nsAString& aRetVal)
 {
+#ifdef ENABLE_INTL_API
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg = udatpg_open(PromiseFlatCString(aLocale).get(), &status);
   if (U_FAILURE(status)) {
@@ -230,6 +245,9 @@ OSPreferences::GetPatternForSkeleton(const nsAString& aSkeleton,
   udatpg_close(pg);
 
   return U_SUCCESS(status);
+#else
+  return false;
+#endif
 }
 
 /**
@@ -245,6 +263,7 @@ bool
 OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
                                            nsAString& aRetVal)
 {
+#ifdef ENABLE_INTL_API
   UErrorCode status = U_ZERO_ERROR;
   UDateTimePatternGenerator* pg = udatpg_open(PromiseFlatCString(aLocale).get(), &status);
   if (U_FAILURE(status)) {
@@ -257,6 +276,9 @@ OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
 
   aRetVal.Assign((char16_t*)value, resultSize);
   return true;
+#else
+  return false;
+#endif
 }
 
 /**
