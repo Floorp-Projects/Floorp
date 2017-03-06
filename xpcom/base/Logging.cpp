@@ -35,6 +35,9 @@ const uint32_t kInitialModuleCount = 256;
 // number of files we create and rotate.  When there is rotate:40,
 // we will keep four files per process, each limited to 10MB.  Sum is 40MB,
 // the given limit.
+//
+// (Note: When this is changed to be >= 10, SandboxBroker::LaunchApp must add
+// another rule to allow logfile.?? be written by content processes.)
 const uint32_t kRotateFilesNumber = 4;
 
 namespace mozilla {
