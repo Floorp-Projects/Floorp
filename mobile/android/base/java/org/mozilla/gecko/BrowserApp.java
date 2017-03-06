@@ -647,6 +647,7 @@ public class BrowserApp extends GeckoApp
         });
 
         mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
+        mProgressView.setDynamicToolbar(mDynamicToolbar);
         mBrowserToolbar.setProgressBar(mProgressView);
 
         // Initialize Tab History Controller.
@@ -1452,6 +1453,10 @@ public class BrowserApp extends GeckoApp
         if (mIsAbortingAppLaunch) {
             super.onDestroy();
             return;
+        }
+
+        if (mProgressView != null) {
+            mProgressView.setDynamicToolbar(null);
         }
 
         mDynamicToolbar.destroy();

@@ -520,8 +520,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             progressBar.setProgress(progress);
             progressBar.setPrivateMode(selectedTab.isPrivate());
             progressBar.setVisibility(View.VISIBLE);
+            progressBar.pinDynamicToolbar();
         } else {
             progressBar.setVisibility(View.GONE);
+            progressBar.unpinDynamicToolbar();
         }
     }
 
