@@ -16,11 +16,12 @@ module.exports = {
     "browser-window": require("../lib/environments/browser-window.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
-    "simpletest": require("../lib/environments/simpletest.js"),
+    "places-overlay": require("../lib/environments/places-overlay.js"),
+    "simpletest": require("../lib/environments/simpletest.js")
   },
   processors: {
     ".xml": require("../lib/processors/xbl-bindings"),
-    ".js": require("../lib/processors/self-hosted"),
+    ".js": require("../lib/processors/self-hosted")
   },
   rules: {
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
@@ -31,10 +32,13 @@ module.exports = {
     "no-aArgs": require("../lib/rules/no-aArgs"),
     "no-cpows-in-tests": require("../lib/rules/no-cpows-in-tests"),
     "no-single-arg-cu-import": require("../lib/rules/no-single-arg-cu-import"),
-    "no-import-into-var-and-global": require("../lib/rules/no-import-into-var-and-global.js"),
+    "no-import-into-var-and-global":
+      require("../lib/rules/no-import-into-var-and-global.js"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
-    "no-useless-removeEventListener": require("../lib/rules/no-useless-removeEventListener"),
-    "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
+    "no-useless-removeEventListener":
+      require("../lib/rules/no-useless-removeEventListener"),
+    "reject-importGlobalProperties":
+      require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")

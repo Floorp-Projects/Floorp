@@ -47,6 +47,7 @@
 #include "mozilla/dom/TCPSocket.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/VRDisplay.h"
+#include "mozilla/dom/VRServiceTest.h"
 #include "mozilla/dom/WebAuthentication.h"
 #include "mozilla/dom/workers/RuntimeService.h"
 #include "mozilla/Hal.h"
@@ -222,6 +223,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepadServiceTest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRGetDisplaysPromises)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRServiceTest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Navigator)
@@ -313,6 +315,11 @@ Navigator::Invalidate()
   }
 
   mVRGetDisplaysPromises.Clear();
+
+  if (mVRServiceTest) {
+    mVRServiceTest->Shutdown();
+    mVRServiceTest = nullptr;
+  }
 }
 
 //*****************************************************************************
@@ -1702,6 +1709,15 @@ void
 Navigator::NotifyActiveVRDisplaysChanged()
 {
   NavigatorBinding::ClearCachedActiveVRDisplaysValue(this);
+}
+
+VRServiceTest*
+Navigator::RequestVRServiceTest()
+{
+  if (!mVRServiceTest) {
+    mVRServiceTest = VRServiceTest::CreateTestService(mWindow);
+  }
+  return mVRServiceTest;
 }
 
 //*****************************************************************************

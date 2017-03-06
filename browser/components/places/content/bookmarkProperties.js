@@ -57,6 +57,8 @@
  * been performed by the dialog.
  */
 
+/* import-globals-from editBookmarkOverlay.js */
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");

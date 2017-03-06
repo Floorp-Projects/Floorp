@@ -230,9 +230,7 @@ function enforceBoolean(aValue) {
  */
 function getBrowserLocale() {
   try {
-    return Cc["@mozilla.org/chrome/chrome-registry;1"].
-             getService(Ci.nsIXULChromeRegistry).
-             getSelectedLocale("global");
+    return Services.locale.getAppLocale();
   } catch (e) {
     return null;
   }
@@ -244,7 +242,9 @@ function getBrowserLocale() {
  */
 function getSystemLocale() {
   try {
-    return Services.locale.getLocaleComponentForUserAgent();
+    return Cc["@mozilla.org/intl/ospreferences;1"].
+             getService(Ci.mozIOSPreferences).
+             getSystemLocale();
   } catch (e) {
     return null;
   }

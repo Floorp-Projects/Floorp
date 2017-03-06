@@ -194,7 +194,8 @@ var DirectoryLinksProvider = {
     } catch (e) {}
 
     if (matchOS) {
-      return Services.locale.getLocaleComponentForUserAgent();
+      return Cc["@mozilla.org/intl/ospreferences;1"].
+             getService(Ci.mozIOSPreferences).getSystemLocale();
     }
 
     try {

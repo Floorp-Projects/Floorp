@@ -12,28 +12,6 @@ aus-test-const_PATH   := $(XPCSHELLTESTROOT)/data
 aus-test-const_FLAGS  := -Fsubstitution $(DEFINES) $(ACDEFINES)
 aus-test-const_TARGET := misc
 
-INI_TEST_FILES = \
-  TestAUSReadStrings1.ini \
-  TestAUSReadStrings2.ini \
-  TestAUSReadStrings3.ini \
-  $(NULL)
-
 MOZ_WINCONSOLE = 1
 
 include $(topsrcdir)/config/rules.mk
-
-# TestAUSReadStrings runs during check in the following directory with a Unicode
-# char in order to test bug 473417 on Windows.
-ifeq ($(OS_ARCH),WINNT)
-bug473417dir = test_bug473417-ó
-else
-bug473417dir = test_bug473417
-endif
-
-check::
-	$(RM) -rf $(DEPTH)/_tests/updater/ && $(NSINSTALL) -D $(DEPTH)/_tests/updater/$(bug473417dir)/
-	for i in $(INI_TEST_FILES); do \
-	  $(INSTALL) $(srcdir)/$$i $(DEPTH)/_tests/updater/$(bug473417dir)/; \
-	done
-	$(INSTALL) $(FINAL_TARGET)/TestAUSReadStrings$(BIN_SUFFIX) $(DEPTH)/_tests/updater/$(bug473417dir)/
-	@$(RUN_TEST_PROGRAM) $(DEPTH)/_tests/updater/$(bug473417dir)/TestAUSReadStrings$(BIN_SUFFIX)

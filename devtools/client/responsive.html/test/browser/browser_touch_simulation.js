@@ -171,17 +171,17 @@ function testTouchButton(ui) {
   let { document } = ui.toolWindow;
   let touchButton = document.querySelector("#global-touch-simulation-button");
 
-  ok(touchButton.classList.contains("active"),
+  ok(touchButton.classList.contains("checked"),
     "Touch simulation is active at end of test.");
 
   touchButton.click();
 
-  ok(!touchButton.classList.contains("active"),
+  ok(!touchButton.classList.contains("checked"),
     "Touch simulation is stopped on click.");
 
   touchButton.click();
 
-  ok(touchButton.classList.contains("active"),
+  ok(touchButton.classList.contains("checked"),
     "Touch simulation is started on click.");
 }
 

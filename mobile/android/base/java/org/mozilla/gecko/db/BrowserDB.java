@@ -180,12 +180,12 @@ public abstract class BrowserDB {
     public abstract int getSuggestedBackgroundColorForUrl(String url);
 
     /**
-     * Obtain a set of links for highlights from bookmarks and history.
+     * Obtain a set of recently visited links to rank.
      *
-     * @param context The context to load the cursor.
+     * @param contentResolver to load the cursor.
      * @param limit Maximum number of results to return.
      */
-    public abstract CursorLoader getHighlights(Context context, int limit);
+    public abstract Cursor getHighlightCandidates(ContentResolver contentResolver, int limit);
 
     /**
      * Block a page from the highlights list.

@@ -5,9 +5,11 @@
 "use strict";
 
 const I = require("devtools/client/shared/vendor/immutable");
-const { ADD_TIMING_MARKER,
-        CLEAR_TIMING_MARKERS,
-        CLEAR_REQUESTS } = require("../constants");
+const {
+  ADD_TIMING_MARKER,
+  CLEAR_TIMING_MARKERS,
+  CLEAR_REQUESTS,
+} = require("../constants");
 
 const TimingMarkers = I.Record({
   firstDocumentDOMContentLoadedTimestamp: -1,
@@ -15,14 +17,14 @@ const TimingMarkers = I.Record({
 });
 
 function addTimingMarker(state, action) {
-  if (action.marker.name == "document::DOMContentLoaded" &&
-      state.firstDocumentDOMContentLoadedTimestamp == -1) {
+  if (action.marker.name === "document::DOMContentLoaded" &&
+      state.firstDocumentDOMContentLoadedTimestamp === -1) {
     return state.set("firstDocumentDOMContentLoadedTimestamp",
                      action.marker.unixTime / 1000);
   }
 
-  if (action.marker.name == "document::Load" &&
-      state.firstDocumentLoadTimestamp == -1) {
+  if (action.marker.name === "document::Load" &&
+      state.firstDocumentLoadTimestamp === -1) {
     return state.set("firstDocumentLoadTimestamp",
                      action.marker.unixTime / 1000);
   }

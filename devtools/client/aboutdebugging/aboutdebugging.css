@@ -43,13 +43,10 @@ button {
 
 .panel {
   max-width: 800px;
+  margin-bottom: 35px;
 }
 
 /* Targets */
-
-.targets {
-  margin-bottom: 35px;
-}
 
 .target-list {
   margin: 0;

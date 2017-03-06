@@ -23,12 +23,13 @@ exports.runTest = function(ruleTester) {
     valid: [
       "aEvent.target.ownerGlobal;",
       "this.DOMPointNode.ownerGlobal.getSelection();",
-      "windowToMessageManager(node.ownerGlobal);",
+      "windowToMessageManager(node.ownerGlobal);"
     ],
     invalid: [
       invalidCode("aEvent.target.ownerDocument.defaultView;"),
-      invalidCode("this.DOMPointNode.ownerDocument.defaultView.getSelection();"),
-      invalidCode("windowToMessageManager(node.ownerDocument.defaultView);"),
+      invalidCode(
+        "this.DOMPointNode.ownerDocument.defaultView.getSelection();"),
+      invalidCode("windowToMessageManager(node.ownerDocument.defaultView);")
     ]
   });
 };
