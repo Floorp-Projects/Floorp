@@ -186,6 +186,7 @@ private:
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
 
   void SetError(nsresult aStatus);
+  nsresult SetAltMetadata(const char* aAltMetadata);
 
   nsresult InitIndexEntry();
 
