@@ -253,7 +253,7 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
 
     case RequestResponse::TInitResponse:
     case RequestResponse::TClearOriginResponse:
-    case RequestResponse::TClearOriginsResponse:
+    case RequestResponse::TClearDataResponse:
     case RequestResponse::TClearAllResponse:
     case RequestResponse::TResetAllResponse:
       HandleResponse();

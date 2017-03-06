@@ -685,10 +685,10 @@ QuotaManagerService::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
     RefPtr<Request> request = new Request();
 
-    ClearOriginsParams requestParams;
-    requestParams.pattern() = nsDependentString(aData);
+    ClearDataParams params;
+    params.pattern() = nsDependentString(aData);
 
-    nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, requestParams));
+    nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
     nsresult rv = InitiateRequest(info);
     if (NS_WARN_IF(NS_FAILED(rv))) {

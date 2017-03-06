@@ -1149,33 +1149,65 @@ private:
   GetResponse(RequestResponse& aResponse) override;
 };
 
-class OriginClearOp final
+class ClearRequestBase
   : public QuotaRequestBase
 {
-  const RequestParams mParams;
-  const bool mMultiple;
-
-public:
-  explicit OriginClearOp(const RequestParams& aParams);
-
-  virtual bool
-  Init(Quota* aQuota) override;
-
-private:
-  ~OriginClearOp()
-  { }
-
-  virtual nsresult
-  DoInitOnMainThread() override;
+protected:
+  explicit ClearRequestBase(bool aExclusive)
+    : QuotaRequestBase(aExclusive)
+  {
+    AssertIsOnOwningThread();
+  }
 
   void
   DeleteFiles(QuotaManager* aQuotaManager,
               PersistenceType aPersistenceType);
 
-  virtual nsresult
+  nsresult
   DoDirectoryWork(QuotaManager* aQuotaManager) override;
+};
 
-  virtual void
+class ClearOriginOp final
+  : public ClearRequestBase
+{
+  const ClearOriginParams mParams;
+
+public:
+  explicit ClearOriginOp(const RequestParams& aParams);
+
+  bool
+  Init(Quota* aQuota) override;
+
+private:
+  ~ClearOriginOp()
+  { }
+
+  nsresult
+  DoInitOnMainThread() override;
+
+  void
+  GetResponse(RequestResponse& aResponse) override;
+};
+
+class ClearDataOp final
+  : public ClearRequestBase
+{
+  const ClearDataParams mParams;
+
+public:
+  explicit ClearDataOp(const RequestParams& aParams);
+
+  bool
+  Init(Quota* aQuota) override;
+
+private:
+  ~ClearDataOp()
+  { }
+
+  nsresult
+  DoInitOnMainThread() override;
+
+  void
   GetResponse(RequestResponse& aResponse) override;
 };
 
@@ -5730,7 +5762,7 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  if (aParams.type() == RequestParams::TClearOriginsParams) {
+  if (aParams.type() == RequestParams::TClearDataParams) {
     PBackgroundParent* actor = Manager();
     MOZ_ASSERT(actor);
 
@@ -5748,8 +5780,11 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
       break;
 
     case RequestParams::TClearOriginParams:
-    case RequestParams::TClearOriginsParams:
-      actor = new OriginClearOp(aParams);
+      actor = new ClearOriginOp(aParams);
+      break;
+
+    case RequestParams::TClearDataParams:
+      actor = new ClearDataOp(aParams);
       break;
 
     case RequestParams::TClearAllParams:
@@ -6252,83 +6287,9 @@ ResetOrClearOp::GetResponse(RequestResponse& aResponse)
   }
 }
 
-OriginClearOp::OriginClearOp(const RequestParams& aParams)
-  : QuotaRequestBase(/* aExclusive */ true)
-  , mParams(aParams)
-  , mMultiple(aParams.type() == RequestParams::TClearOriginsParams)
-{
-  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams ||
-             aParams.type() == RequestParams::TClearOriginsParams);
-}
-
-bool
-OriginClearOp::Init(Quota* aQuota)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aQuota);
-
-  if (NS_WARN_IF(!QuotaRequestBase::Init(aQuota))) {
-    return false;
-  }
-
-  if (!mMultiple) {
-    const ClearOriginParams& params = mParams.get_ClearOriginParams();
-
-    if (params.persistenceTypeIsExplicit()) {
-      MOZ_ASSERT(params.persistenceType() != PERSISTENCE_TYPE_INVALID);
-
-      mPersistenceType.SetValue(params.persistenceType());
-    }
-  }
-
-  mNeedsMainThreadInit = true;
-
-  return true;
-}
-
-nsresult
-OriginClearOp::DoInitOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(mNeedsMainThreadInit);
-
-  if (mMultiple) {
-    const ClearOriginsParams& params = mParams.get_ClearOriginsParams();
-
-    mOriginScope.SetFromJSONPattern(params.pattern());
-  } else {
-    const ClearOriginParams& params = mParams.get_ClearOriginParams();
-
-    const PrincipalInfo& principalInfo = params.principalInfo();
-
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(principalInfo, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Figure out which origin we're dealing with.
-    nsCString origin;
-    rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr,
-                                            &origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    if (params.clearAll()) {
-      mOriginScope.SetFromPrefix(origin);
-    } else {
-      mOriginScope.SetFromOrigin(origin);
-    }
-  }
-
-  return NS_OK;
-}
-
 void
-OriginClearOp::DeleteFiles(QuotaManager* aQuotaManager,
-                           PersistenceType aPersistenceType)
+ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
+                              PersistenceType aPersistenceType)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
@@ -6441,7 +6402,7 @@ OriginClearOp::DeleteFiles(QuotaManager* aQuotaManager,
 }
 
 nsresult
-OriginClearOp::DoDirectoryWork(QuotaManager* aQuotaManager)
+ClearRequestBase::DoDirectoryWork(QuotaManager* aQuotaManager)
 {
   AssertIsOnIOThread();
 
@@ -6459,16 +6420,115 @@ OriginClearOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   return NS_OK;
 }
 
+ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
+  : ClearRequestBase(/* aExclusive */ true)
+  , mParams(aParams)
+{
+  MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams);
+}
+
+bool
+ClearOriginOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  if (NS_WARN_IF(!QuotaRequestBase::Init(aQuota))) {
+    return false;
+  }
+
+  if (mParams.persistenceTypeIsExplicit()) {
+    MOZ_ASSERT(mParams.persistenceType() != PERSISTENCE_TYPE_INVALID);
+
+    mPersistenceType.SetValue(mParams.persistenceType());
+  }
+
+  mNeedsMainThreadInit = true;
+
+  return true;
+}
+
+nsresult
+ClearOriginOp::DoInitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  const PrincipalInfo& principalInfo = mParams.principalInfo();
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(principalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Figure out which origin we're dealing with.
+  nsCString origin;
+  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr,
+                                          &origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mParams.clearAll()) {
+    mOriginScope.SetFromPrefix(origin);
+  } else {
+    mOriginScope.SetFromOrigin(origin);
+  }
+
+  return NS_OK;
+}
+
 void
-OriginClearOp::GetResponse(RequestResponse& aResponse)
+ClearOriginOp::GetResponse(RequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
 
-  if (mMultiple) {
-    aResponse = ClearOriginsResponse();
-  } else {
-    aResponse = ClearOriginResponse();
+  aResponse = ClearOriginResponse();
+}
+
+ClearDataOp::ClearDataOp(const RequestParams& aParams)
+  : ClearRequestBase(/* aExclusive */ true)
+  , mParams(aParams)
+{
+  MOZ_ASSERT(aParams.type() == RequestParams::TClearDataParams);
+}
+
+bool
+ClearDataOp::Init(Quota* aQuota)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  if (NS_WARN_IF(!QuotaRequestBase::Init(aQuota))) {
+    return false;
   }
+
+  mNeedsMainThreadInit = true;
+
+  return true;
+}
+
+nsresult
+ClearDataOp::DoInitOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initializing);
+  MOZ_ASSERT(mNeedsMainThreadInit);
+
+  mOriginScope.SetFromJSONPattern(mParams.pattern());
+
+  return NS_OK;
+}
+
+void
+ClearDataOp::GetResponse(RequestResponse& aResponse)
+{
+  AssertIsOnOwningThread();
+
+  aResponse = ClearDataResponse();
 }
 
 nsresult

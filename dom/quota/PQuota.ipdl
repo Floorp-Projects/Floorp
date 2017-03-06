@@ -40,7 +40,7 @@ struct ClearOriginParams
   bool clearAll;
 };
 
-struct ClearOriginsParams
+struct ClearDataParams
 {
   nsString pattern;
 };
@@ -57,7 +57,7 @@ union RequestParams
 {
   InitParams;
   ClearOriginParams;
-  ClearOriginsParams;
+  ClearDataParams;
   ClearAllParams;
   ResetAllParams;
 };
