@@ -445,6 +445,14 @@ class ScriptSource
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
 
+    // Instant at which the first parse of this source ended, or null
+    // if the source hasn't been parsed yet.
+    //
+    // Used for statistics purposes, to determine how much time code spends
+    // syntax parsed before being full parsed, to help determine whether
+    // our syntax parse vs. full parse heuristics are correct.
+    mozilla::TimeStamp parseEnded_;
+
   public:
     explicit ScriptSource()
       : refs(0),
@@ -603,6 +611,15 @@ class ScriptSource
     // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
     // |buffer| is considered undefined.
     bool xdrFinalizeEncoder();
+
+    const mozilla::TimeStamp parseEnded() const {
+        return parseEnded_;
+    }
+    // Inform `this` source that it has been fully parsed.
+    void recordParseEnded() {
+        MOZ_ASSERT(parseEnded_.IsNull());
+        parseEnded_ = mozilla::TimeStamp::Now();
+    }
 };
 
 class ScriptSourceHolder
