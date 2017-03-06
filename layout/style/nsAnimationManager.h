@@ -26,6 +26,7 @@ class Promise;
 } /* namespace dom */
 
 enum class CSSPseudoElementType : uint8_t;
+struct NonOwningAnimationTarget;
 
 struct AnimationEventInfo {
   RefPtr<dom::Element> mElement;
@@ -356,7 +357,7 @@ protected:
 private:
 
   void BuildAnimations(nsStyleContext* aStyleContext,
-                       mozilla::dom::Element* aTarget,
+                       const mozilla::NonOwningAnimationTarget& aTarget,
                        CSSAnimationCollection* aCollection,
                        OwningCSSAnimationPtrArray& aAnimations);
 

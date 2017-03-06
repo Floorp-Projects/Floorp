@@ -7,6 +7,7 @@
 #include "nsTransitionManager.h"
 #include "mozilla/dom/CSSAnimationBinding.h"
 
+#include "mozilla/AnimationTarget.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
@@ -417,6 +418,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
              "Should not update animations that are not attached to the "
              "document tree");
 
+  NonOwningAnimationTarget target(aElement, aStyleContext->GetPseudoType());
+
   // Everything that causes our animation data to change triggers a
   // style change, which in turn triggers a non-animation restyle.
   // Likewise, when we initially construct frames, we're not in a
@@ -424,9 +427,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
   CSSAnimationCollection* collection =
-    CSSAnimationCollection::GetAnimationCollection(aElement,
-                                                   aStyleContext->
-                                                     GetPseudoType());
+    CSSAnimationCollection::GetAnimationCollection(target.mElement,
+                                                   target.mPseudoType);
   if (!collection &&
       disp->mAnimationNameCount == 1 &&
       disp->mAnimations[0].GetName().IsEmpty()) {
@@ -439,7 +441,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
   // the existing collection as we go.
   OwningCSSAnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
-    BuildAnimations(aStyleContext, aElement, collection, newAnimations);
+    BuildAnimations(aStyleContext, target, collection, newAnimations);
   }
 
   if (newAnimations.IsEmpty()) {
@@ -453,7 +455,7 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     bool createdCollection = false;
     collection =
       CSSAnimationCollection::GetOrCreateAnimationCollection(
-        aElement, aStyleContext->GetPseudoType(), &createdCollection);
+        target.mElement, target.mPseudoType, &createdCollection);
     if (!collection) {
       MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
       NS_WARNING("allocating collection failed");
@@ -535,12 +537,12 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 class MOZ_STACK_CLASS CSSAnimationBuilder final {
 public:
   CSSAnimationBuilder(nsStyleContext* aStyleContext,
-                      dom::Element* aTarget)
+                      const NonOwningAnimationTarget& aTarget)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
   {
     MOZ_ASSERT(aStyleContext);
-    MOZ_ASSERT(aTarget);
+    MOZ_ASSERT(aTarget.mElement);
   }
 
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
@@ -569,7 +571,7 @@ private:
                               nsCSSPropertyID aProperty);
 
   RefPtr<nsStyleContext> mStyleContext;
-  RefPtr<dom::Element> mTarget;
+  NonOwningAnimationTarget mTarget;
 
   ResolvedStyleCache mResolvedStyles;
   RefPtr<nsStyleContext> mStyleWithoutAnimation;
@@ -584,7 +586,7 @@ ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
 static already_AddRefed<CSSAnimation>
 BuildAnimation(nsPresContext* aPresContext,
                nsStyleContext* aStyleContext,
-               dom::Element* aTarget,
+               const NonOwningAnimationTarget& aTarget,
                const StyleAnimation& aSrc,
                CSSAnimationBuilder& aBuilder,
                nsAnimationManager::CSSAnimationCollection* aCollection)
@@ -647,7 +649,7 @@ BuildAnimation(nsPresContext* aPresContext,
 
   // mTarget is non-null here, so we emplace it directly.
   Maybe<OwningAnimationTarget> target;
-  target.emplace(aTarget, aStyleContext->GetPseudoType());
+  target.emplace(aTarget.mElement, aTarget.mPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<KeyframeEffectReadOnly> effect =
     new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
@@ -659,9 +661,9 @@ BuildAnimation(nsPresContext* aPresContext,
     new CSSAnimation(aPresContext->Document()->GetScopeObject(),
                      aSrc.GetName());
   animation->SetOwningElement(
-    OwningElementRef(*aTarget, aStyleContext->GetPseudoType()));
+    OwningElementRef(*aTarget.mElement, aTarget.mPseudoType));
 
-  animation->SetTimelineNoUpdate(aTarget->OwnerDoc()->Timeline());
+  animation->SetTimelineNoUpdate(aTarget.mElement->OwnerDoc()->Timeline());
   animation->SetEffectNoUpdate(effect);
 
   if (isStylePaused) {
@@ -1051,7 +1053,7 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
                "ServoStyleSet should not use nsAnimationManager for "
                "animations");
     mStyleWithoutAnimation = aPresContext->StyleSet()->AsGecko()->
-      ResolveStyleByRemovingAnimation(mTarget, mStyleContext,
+      ResolveStyleByRemovingAnimation(mTarget.mElement, mStyleContext,
                                       eRestyle_AllHintsWithAnimations);
   }
 
@@ -1075,7 +1077,7 @@ CSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
-                                    dom::Element* aTarget,
+                                    const NonOwningAnimationTarget& aTarget,
                                     CSSAnimationCollection* aCollection,
                                     OwningCSSAnimationPtrArray& aAnimations)
 {
