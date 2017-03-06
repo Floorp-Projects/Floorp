@@ -1409,6 +1409,9 @@ public:
 bool
 js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
 {
+    if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj)))
+        return true;
+
     if (JSID_IS_SYMBOL(id))
         return true;
 
@@ -1421,10 +1424,17 @@ js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
 bool
 js::SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index)
 {
+    if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj)))
+        return true;
+
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return SuppressDeletedProperty(cx, obj, id);
+
+    Rooted<JSFlatString*> str(cx, IdToString(cx, id));
+    if (!str)
+        return false;
+    return SuppressDeletedPropertyHelper(cx, obj, SingleStringPredicate(str));
 }
 
 bool

@@ -58,11 +58,13 @@ using namespace mozilla::media;
 
 typedef std::vector<CompositableOperation> OpVector;
 typedef nsTArray<OpDestroy> OpDestroyVector;
+typedef nsTArray<ReadLockInit> ReadLockVector;
 
 struct CompositableTransaction
 {
   CompositableTransaction()
-  : mFinished(true)
+  : mReadLockSequenceNumber(0)
+  , mFinished(true)
   {}
   ~CompositableTransaction()
   {
@@ -76,12 +78,15 @@ struct CompositableTransaction
   {
     MOZ_ASSERT(mFinished);
     mFinished = false;
+    mReadLockSequenceNumber = 0;
+    mReadLocks.AppendElement();
   }
   void End()
   {
     mFinished = true;
     mOperations.clear();
     mDestroyedActors.Clear();
+    mReadLocks.Clear();
   }
   bool IsEmpty() const
   {
@@ -93,8 +98,21 @@ struct CompositableTransaction
     mOperations.push_back(op);
   }
 
+  ReadLockHandle AddReadLock(const ReadLockDescriptor& aReadLock)
+  {
+    ReadLockHandle handle(++mReadLockSequenceNumber);
+    if (mReadLocks.LastElement().Length() >= CompositableForwarder::GetMaxFileDescriptorsPerMessage()) {
+      mReadLocks.AppendElement();
+    }
+    mReadLocks.LastElement().AppendElement(ReadLockInit(aReadLock, handle));
+    return handle;
+  }
+
   OpVector mOperations;
   OpDestroyVector mDestroyedActors;
+  nsTArray<ReadLockVector> mReadLocks;
+  uint64_t mReadLockSequenceNumber;
+
   bool mFinished;
 };
 
@@ -123,10 +141,13 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
     }
 
     ReadLockDescriptor readLock;
-    t.mTextureClient->SerializeReadLock(readLock);
+    ReadLockHandle readLockHandle;
+    if (t.mTextureClient->SerializeReadLock(readLock)) {
+      readLockHandle = mTxn->AddReadLock(readLock);
+    }
 
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
-                                        readLock,
+                                        readLockHandle,
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID));
 
@@ -142,32 +163,7 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
                                             TextureClient* aTextureOnBlack,
                                             TextureClient* aTextureOnWhite)
 {
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTextureOnWhite);
-  MOZ_ASSERT(aTextureOnBlack);
-  MOZ_ASSERT(aCompositable->IsConnected());
-  MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
-  MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
-  MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
-
-  ReadLockDescriptor readLockW;
-  ReadLockDescriptor readLockB;
-  aTextureOnBlack->SerializeReadLock(readLockB);
-  aTextureOnWhite->SerializeReadLock(readLockW);
-
-  HoldUntilCompositableRefReleasedIfNecessary(aTextureOnBlack);
-  HoldUntilCompositableRefReleasedIfNecessary(aTextureOnWhite);
-
-  mTxn->AddNoSwapEdit(
-    CompositableOperation(
-      aCompositable->GetIPCHandle(),
-      OpUseComponentAlphaTextures(
-        nullptr, aTextureOnBlack->GetIPDLActor(),
-        nullptr, aTextureOnWhite->GetIPDLActor(),
-        readLockB, readLockW
-      )
-    )
-  );
+  MOZ_CRASH("should not be called");
 }
 
 void
@@ -541,6 +537,15 @@ ImageBridgeChild::EndTransaction()
 
   if (!IsSameProcess()) {
     ShadowLayerForwarder::PlatformSyncBeforeUpdate();
+  }
+
+  for (ReadLockVector& locks : mTxn->mReadLocks) {
+    if (locks.Length()) {
+      if (!SendInitReadLocks(locks)) {
+        NS_WARNING("[LayersForwarder] WARNING: sending read locks failed!");
+        return;
+      }
+    }
   }
 
   if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {

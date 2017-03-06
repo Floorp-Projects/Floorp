@@ -226,6 +226,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const WrAuxiliaryListsDescriptor& auxDesc)
 {
   UpdateFwdTransactionId(aFwdTransactionId);
+  AutoClearReadLocks clearLocks(mReadLocks);
 
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
@@ -650,6 +651,15 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle)
 {
   ReleaseCompositable(aHandle);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
+{
+  if (!AddReadLocks(Move(aReadLocks))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
   return IPC_OK();
 }
 

@@ -24,7 +24,7 @@ var inputTests = [
   {
     input: "(function() { return 42; })",
     output: "function ()",
-    printOutput: "function () { return 42; }",
+    printOutput: "function() { return 42; }",
     suppressClick: true
   },
 
@@ -40,7 +40,7 @@ var inputTests = [
   {
     input: "testobj1.testfn2",
     output: "function testfn2()",
-    printOutput: "function () { return 42; }",
+    printOutput: "function() { return 42; }",
     suppressClick: true
   },
 

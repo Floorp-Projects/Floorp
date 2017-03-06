@@ -59,11 +59,12 @@ public:
 
   mozilla::Mutex& GetMutex();
   void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
-                  double aSinceTime = 0);
+                  const mozilla::TimeStamp& aStartTime, double aSinceTime);
 
   // Call this method when the JS entries inside the buffer are about to
   // become invalid, i.e., just before JS shutdown.
-  void FlushSamplesAndMarkers(ProfileBuffer* aBuffer);
+  void FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
+                              const mozilla::TimeStamp& aStartTime);
 
   ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 
@@ -73,6 +74,7 @@ public:
 
   void StreamSamplesAndMarkers(ProfileBuffer* aBuffer,
                                SpliceableJSONWriter& aWriter,
+                               const mozilla::TimeStamp& aStartTime,
                                double aSinceTime,
                                UniqueStacks& aUniqueStacks);
 
