@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" width="320" height="280" viewBox="0 0 320 280" xmlns:xlink="http://www.w3.org/1999/xlink" >
+<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" viewBox="0 0 320 280" xmlns:xlink="http://www.w3.org/1999/xlink" >
 <style>
 	#blueFill:target ~ use,
 	#blueFill:target ~ g {

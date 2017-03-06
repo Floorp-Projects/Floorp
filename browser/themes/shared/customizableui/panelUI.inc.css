@@ -804,6 +804,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 .fxaSyncIllustration {
+  width: 180px;
   height: var(--panel-ui-sync-illustration-height);
 }
 
