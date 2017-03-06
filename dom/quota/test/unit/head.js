@@ -35,7 +35,7 @@ if (!this.runTest) {
 
     enableTesting();
 
-    Cu.importGlobalProperties(["indexedDB"]);
+    Cu.importGlobalProperties(["indexedDB", "File", "Blob", "FileReader"]);
 
     do_test_pending();
     testGenerator.next();
@@ -49,6 +49,11 @@ function finishTest()
   do_execute_soon(function() {
     do_test_finished();
   })
+}
+
+function grabArgAndContinueHandler(arg)
+{
+  testGenerator.next(arg);
 }
 
 function continueToNextStep()
@@ -214,6 +219,22 @@ function getRelativeFile(relativePath)
   });
 
   return file;
+}
+
+function compareBuffers(buffer1, buffer2)
+{
+  if (buffer1.byteLength != buffer2.byteLength) {
+    return false;
+  }
+
+  let view1 = buffer1 instanceof Uint8Array ? buffer1 : new Uint8Array(buffer1);
+  let view2 = buffer2 instanceof Uint8Array ? buffer2 : new Uint8Array(buffer2);
+  for (let i = 0; i < buffer1.byteLength; i++) {
+    if (view1[i] != view2[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function grabUsageAndContinueHandler(request)

@@ -46,10 +46,6 @@ function* testSteps()
     // This one lives in storage/permanent/chrome
     { dbName: "dbL", dbVersion: 1 },
 
-    // This one lives in storage/default/1007+t+https+++developer.cdn.mozilla.net
-    { appId: 1007, inIsolatedMozBrowser: true, url: "https://developer.cdn.mozilla.net",
-      dbName: "dbN", dbVersion: 1 },
-
     // This one lives in storage/default/http+++127.0.0.1
     { url: "http://127.0.0.1", dbName: "dbO", dbVersion: 1 },
 
@@ -87,29 +83,15 @@ function* testSteps()
     { url: "http://localhost:82", dbName: "dbW",
       dbOptions: { version: 1, storage: "temporary" } },
 
-    // This one lives in storage/temporary/1007+t+https+++developer.cdn.mozilla.net
-    { appId: 1007, inIsolatedMozBrowser: true, url: "https://developer.cdn.mozilla.net",
-      dbName: "dbY", dbOptions: { version: 1, storage: "temporary" } },
-
     // This one lives in storage/temporary/http+++localhost
     { url: "http://localhost", dbName: "dbZ",
       dbOptions: { version: 1, storage: "temporary" } }
   ];
 
-  let ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                         .getService(SpecialPowers.Ci.nsIIOService);
-
-  let ssm = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                         .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-
   function openDatabase(params) {
     let request;
     if ("url" in params) {
-      let uri = ios.newURI(params.url);
-      let principal =
-        ssm.createCodebasePrincipal(uri,
-                                    {appId: params.appId || ssm.NO_APPID,
-                                     inIsolatedMozBrowser: params.inIsolatedMozBrowser});
+      let principal = getPrincipal(params.url);
       if ("dbVersion" in params) {
         request = indexedDB.openForPrincipal(principal, params.dbName,
                                              params.dbVersion);
