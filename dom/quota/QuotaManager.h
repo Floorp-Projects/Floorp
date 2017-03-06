@@ -389,6 +389,10 @@ public:
   static void
   ChromeOrigin(nsACString& aOrigin);
 
+  static bool
+  AreOriginsEqualOnDisk(nsACString& aOrigin1,
+                        nsACString& aOrigin2);
+
 private:
   QuotaManager();
 

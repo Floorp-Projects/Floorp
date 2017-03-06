@@ -5131,6 +5131,20 @@ QuotaManager::ChromeOrigin(nsACString& aOrigin)
   aOrigin.AssignLiteral(kChromeOrigin);
 }
 
+// static
+bool
+QuotaManager::AreOriginsEqualOnDisk(nsACString& aOrigin1,
+                                    nsACString& aOrigin2)
+{
+  nsCString origin1Sanitized(aOrigin1);
+  SanitizeOriginString(origin1Sanitized);
+
+  nsCString origin2Sanitized(aOrigin2);
+  SanitizeOriginString(origin2Sanitized);
+
+  return origin1Sanitized == origin2Sanitized;
+}
+
 uint64_t
 QuotaManager::LockedCollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
