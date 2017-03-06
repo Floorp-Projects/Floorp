@@ -1,7 +1,7 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 # L10n
-ac_add_options --with-l10n-base=../../mozilla-aurora
+ac_add_options --with-l10n-base=../../mozilla-beta
 
 # Global options
 ac_add_options --disable-tests
