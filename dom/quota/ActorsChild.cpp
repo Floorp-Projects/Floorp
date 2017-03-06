@@ -251,6 +251,7 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
       HandleResponse(aResponse.get_nsresult());
       break;
 
+    case RequestResponse::TInitResponse:
     case RequestResponse::TClearOriginResponse:
     case RequestResponse::TClearOriginsResponse:
     case RequestResponse::TClearAllResponse:

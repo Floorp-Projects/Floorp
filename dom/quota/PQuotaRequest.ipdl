@@ -8,6 +8,10 @@ namespace mozilla {
 namespace dom {
 namespace quota {
 
+struct InitResponse
+{
+};
+
 struct ClearOriginResponse
 {
 };
@@ -27,6 +31,7 @@ struct ResetAllResponse
 union RequestResponse
 {
   nsresult;
+  InitResponse;
   ClearOriginResponse;
   ClearOriginsResponse;
   ClearAllResponse;
