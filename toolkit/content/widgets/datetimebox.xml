@@ -4,6 +4,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!DOCTYPE bindings [
+<!ENTITY % datetimeboxDTD SYSTEM "chrome://global/locale/datetimebox.dtd">
+%datetimeboxDTD;
+]>
+
 <bindings id="datetimeboxBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:html="http://www.w3.org/1999/xhtml"
@@ -453,8 +458,15 @@
         this.mAMIndicator = amString || kDefaultAMString;
         this.mPMIndicator = pmString || kDefaultPMString;
 
+        /* eslint-disable no-multi-spaces */
+        this.mHourPlaceHolder = ]]>"&time.hour.placeholder;"<![CDATA[;
+        this.mMinutePlaceHolder = ]]>"&time.minute.placeholder;"<![CDATA[;
+        this.mSecondPlaceHolder = ]]>"&time.second.placeholder;"<![CDATA[;
+        this.mMillisecPlaceHolder = ]]>"&time.millisecond.placeholder;"<![CDATA[;
+        this.mDayPeriodPlaceHolder = ]]>"&time.dayperiod.placeholder;"<![CDATA[;
+        /* eslint-enable no-multi-spaces */
+
         this.mHour12 = true;
-        this.mPlaceHolder = "--";
         this.mSeparatorText = ":";
         this.mMillisecSeparatorText = ".";
         this.mMaxLength = 2;
@@ -489,9 +501,9 @@
         this.mDayPeriodField.size = dayPeriodLength;
         this.mDayPeriodField.maxLength = dayPeriodLength;
 
-        this.mHourField.placeholder = this.mPlaceHolder;
-        this.mMinuteField.placeholder = this.mPlaceHolder;
-        this.mDayPeriodField.placeholder = this.mPlaceHolder;
+        this.mHourField.placeholder = this.mHourPlaceHolder;
+        this.mMinuteField.placeholder = this.mMinutePlaceHolder;
+        this.mDayPeriodField.placeholder = this.mDayPeriodPlaceHolder;
 
         this.mHourField.setAttribute("min", this.mMinHourInHour12);
         this.mHourField.setAttribute("max", this.mMaxHourInHour12);
@@ -620,9 +632,9 @@
 
             if (!this.mSecondField) {
               this.mSecondSeparator = this.insertSeparator(this.mSeparatorText);
-              this.mSecondField = this.insertAdditionalField(this.mPlaceHolder,
-                this.mMinSecond, this.mMaxSecond, this.mMaxLength,
-                this.mMaxLength);
+              this.mSecondField = this.insertAdditionalField(
+                this.mSecondPlaceHolder, this.mMinSecond, this.mMaxSecond,
+                this.mMaxLength, this.mMaxLength);
             }
             this.setFieldValue(this.mSecondField, second);
 
@@ -631,8 +643,9 @@
                 this.mMillisecSeparator = this.insertSeparator(
                   this.mMillisecSeparatorText);
                 this.mMillisecField = this.insertAdditionalField(
-                  this.mPlaceHolder, this.mMinMillisecond, this.mMaxMillisecond,
-                  this.mMillisecMaxLength, this.mMillisecMaxLength);
+                  this.mMillisecPlaceHolder, this.mMinMillisecond,
+                  this.mMaxMillisecond, this.mMillisecMaxLength,
+                  this.mMillisecMaxLength);
               }
               this.setFieldValue(this.mMillisecField, millisecond);
             } else if (this.mMillisecField) {
