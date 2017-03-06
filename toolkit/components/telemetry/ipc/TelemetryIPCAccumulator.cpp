@@ -38,9 +38,12 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 const uint32_t kBatchTimeoutMs = 2000;
 
 // To stop growing unbounded in memory while waiting for kBatchTimeoutMs to
-// drain the g*Accumulations arrays, request an immediate flush if the arrays
-// manage to reach this high water mark of elements.
+// drain the probe accumulation arrays, we request an immediate flush if the
+// arrays manage to reach certain high water mark of elements.
 const size_t kHistogramAccumulationsArrayHighWaterMark = 5 * 1024;
+// With the current limits, events cost us about 1100 bytes each.
+// This limits memory use to about 10MB.
+const size_t kEventsArrayHighWaterMark = 10000;
 
 // This timer is used for batching and sending child process accumulations to the parent.
 nsITimer* gIPCTimer = nullptr;
@@ -184,10 +187,18 @@ TelemetryIPCAccumulator::RecordChildEvent(double timestamp,
                                           const nsTArray<mozilla::Telemetry::EventExtraEntry>& extra)
 {
   StaticMutexAutoLock locker(gTelemetryIPCAccumulatorMutex);
+
   if (!gChildEvents) {
     gChildEvents = new nsTArray<ChildEventData>();
   }
-  // Store the action.
+
+  if (gChildEvents->Length() == kEventsArrayHighWaterMark) {
+    TelemetryIPCAccumulator::DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+      TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
+    }));
+  }
+
+  // Store the event.
   gChildEvents->AppendElement(ChildEventData{timestamp, nsCString(category),
                                              nsCString(method), nsCString(object),
                                              value,
