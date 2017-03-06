@@ -1640,6 +1640,9 @@ public:
 
 private:
   nsresult
+  MaybeRemoveCorruptData(const OriginProps& aOriginProps);
+
+  nsresult
   DoProcessOriginDirectories() override;
 };
 
@@ -3869,37 +3872,6 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
   return NS_OK;
 }
 
-namespace {
-
-// The Cache API was creating top level morgue directories by accident for
-// a short time in nightly.  This unfortunately prevents all storage from
-// working.  So recover these profiles by removing these corrupt directories.
-// This should be removed at some point in the future.
-bool
-MaybeRemoveCorruptDirectory(const nsAString& aLeafName, nsIFile* aDir)
-{
-#ifdef NIGHTLY_BUILD
-  MOZ_ASSERT(aDir);
-
-  if (aLeafName != NS_LITERAL_STRING("morgue")) {
-    return false;
-  }
-
-  NS_WARNING("QuotaManager removing corrupt morgue directory!");
-
-  nsresult rv = aDir->Remove(true /* recursive */);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  return true;
-#else
-  return false;
-#endif // NIGHTLY_BUILD
-}
-
-} // namespace
-
 nsresult
 QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                                const nsACString& aGroup,
@@ -3961,10 +3933,6 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
       UNKNOWN_FILE_WARNING(leafName);
       return NS_ERROR_UNEXPECTED;
-    }
-
-    if (MaybeRemoveCorruptDirectory(leafName, file)) {
-      continue;
     }
 
     Client::Type clientType;
@@ -4314,6 +4282,21 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   // The upgrade consists of a number of logically distinct bugs that
   // intentionally got fixed at the same time to trigger just one major
   // version bump.
+  //
+  //
+  // Morgue directory cleanup
+  // [Feature/Bug]:
+  // The original bug that added "on demand" morgue cleanup is 1165119.
+  //
+  // [Mutations]:
+  // Morgue directories are removed from all origin directories during the
+  // upgrade process. Origin initialization and usage calculation doesn't try
+  // to remove morgue directories anymore.
+  //
+  // [Downgrade-incompatible changes]:
+  // Morgue directories can reappear if user runs an already upgraded profile
+  // in an older version of Firefox. Morgue directories then prevent current
+  // Firefox from initializing and using the storage.
 
   nsresult rv;
 
@@ -6219,10 +6202,6 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
         continue;
       }
 
-      if (MaybeRemoveCorruptDirectory(leafName, file)) {
-        continue;
-      }
-
       Client::Type clientType;
       rv = Client::TypeFromText(leafName, clientType);
       if (NS_FAILED(rv)) {
@@ -8034,6 +8013,15 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
       return rv;
     }
 
+    // The Cache API was creating top level morgue directories by accident for
+    // a short time in nightly.  This unfortunately prevents all storage from
+    // working.  So recover these profiles permanently by removing these corrupt
+    // directories as part of this upgrade.
+    rv = MaybeRemoveCorruptData(originProps);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     int64_t timestamp;
     nsCString group;
     nsCString origin;
@@ -8072,6 +8060,79 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
   }
 
   rv = ProcessOriginDirectories();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveCorruptData(
+                                                const OriginProps& aOriginProps)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv =
+    aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+    if (NS_WARN_IF(!file)) {
+      return rv;
+    }
+
+    bool isDirectory;
+    rv = file->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOriginMetadata(leafName) &&
+          !IsTempMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    if (leafName.EqualsLiteral("morgue")) {
+      QM_WARNING("Deleting accidental morgue directory!");
+
+      rv = file->Remove(/* recursive */ true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      continue;
+    }
+
+    Client::Type clientType;
+    rv = Client::TypeFromText(leafName, clientType);
+    if (NS_FAILED(rv)) {
+      UNKNOWN_FILE_WARNING(leafName);
+      continue;
+    }
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
