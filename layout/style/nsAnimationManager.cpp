@@ -479,10 +479,13 @@ public:
     MOZ_ASSERT(aTarget.mElement);
   }
 
+  bool BuildKeyframes(nsPresContext* aPresContext,
+                      const StyleAnimation& aSrc,
+                      nsTArray<Keyframe>& aKeyframs);
+private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
                                           const StyleAnimation& aSrc,
                                           const nsCSSKeyframesRule* aRule);
-private:
   Maybe<ComputedTimingFunction> GetKeyframeTimingFunction(
     nsPresContext* aPresContext,
     nsCSSKeyframeRule* aKeyframeRule,
@@ -528,26 +531,8 @@ BuildAnimation(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext);
 
   nsTArray<Keyframe> keyframes;
-  if (aPresContext->StyleSet()->IsServo()) {
-    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
-    MOZ_ASSERT(styleSet);
-    const ServoComputedValues* computedValues =
-      aStyleContext->StyleSource().AsServoComputedValues();
-    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
-    if (!styleSet->FillKeyframesForName(aSrc.GetName(),
-                                        timingFunction,
-                                        computedValues,
-                                        keyframes)) {
-      return nullptr;
-    }
-  } else {
-    nsCSSKeyframesRule* rule =
-      aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
-    if (!rule) {
-      return nullptr;
-    }
-
-    keyframes = aBuilder.BuildAnimationFrames(aPresContext, aSrc, rule);
+  if (!aBuilder.BuildKeyframes(aPresContext, aSrc, keyframes)) {
+    return nullptr;
   }
 
   TimingParams timing = TimingParamsFromCSSParams(aSrc.GetDuration(),
@@ -607,6 +592,37 @@ BuildAnimation(nsPresContext* aPresContext,
   }
 
   return animation.forget();
+}
+
+bool
+CSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
+                                    const StyleAnimation& aSrc,
+                                    nsTArray<Keyframe>& aKeyframes)
+{
+  MOZ_ASSERT(aPresContext);
+
+  if (aPresContext->StyleSet()->IsServo()) {
+    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
+    MOZ_ASSERT(styleSet);
+    const ServoComputedValues* computedValues =
+      mStyleContext->StyleSource().AsServoComputedValues();
+    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
+    if (!styleSet->FillKeyframesForName(aSrc.GetName(),
+                                        timingFunction,
+                                        computedValues,
+                                        aKeyframes)) {
+      return false;
+    }
+  } else {
+    nsCSSKeyframesRule* rule =
+      aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
+    if (!rule) {
+      return false;
+    }
+    aKeyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
+  }
+
+  return true;
 }
 
 nsTArray<Keyframe>
