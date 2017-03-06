@@ -189,16 +189,25 @@ nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument)
     return NS_OK;
 }
 
+mozilla::StyleSheet*
+nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI,
+                                   StyleBackendType aType)
+{
+    StyleSheetTable& table = TableForBackendType(aType);
+    return table.GetWeak(aURI);
+}
+
 nsresult
-nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet)
+nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet,
+                                   StyleBackendType aType)
 {
     nsIURI* uri = aStyleSheet->GetSheetURI();
 
-    mStyleSheetTable.Put(uri, aStyleSheet);
+    StyleSheetTable& table = TableForBackendType(aType);
+    table.Put(uri, aStyleSheet);
 
     return NS_OK;
 }
-
 
 JSScript*
 nsXULPrototypeCache::GetScript(nsIURI* aURI)
@@ -254,11 +263,16 @@ nsXULPrototypeCache::FlushSkinFiles()
   }
 
   // Now flush out our skin stylesheets from the cache.
-  for (auto iter = mStyleSheetTable.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoCString str;
-    iter.Data()->GetSheetURI()->GetPath(str);
-    if (strncmp(str.get(), "/skin", 5) == 0) {
-      iter.Remove();
+  mozilla::StyleBackendType tableTypes[] = { StyleBackendType::Gecko,
+                                             StyleBackendType::Servo };
+  for (auto tableType : tableTypes) {
+    StyleSheetTable& table = TableForBackendType(tableType);
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+      nsAutoCString str;
+      iter.Data()->GetSheetURI()->GetPath(str);
+      if (strncmp(str.get(), "/skin", 5) == 0) {
+        iter.Remove();
+      }
     }
   }
 
@@ -281,7 +295,8 @@ nsXULPrototypeCache::Flush()
 {
     mPrototypeTable.Clear();
     mScriptTable.Clear();
-    mStyleSheetTable.Clear();
+    mGeckoStyleSheetTable.Clear();
+    mServoStyleSheetTable.Clear();
     mXBLDocTable.Clear();
 }
 

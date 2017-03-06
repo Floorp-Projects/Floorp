@@ -1122,7 +1122,7 @@ Loader::CreateSheet(nsIURI* aURI,
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache) {
         if (cache->IsEnabled()) {
-          sheet = cache->GetStyleSheet(aURI);
+          sheet = cache->GetStyleSheet(aURI, GetStyleBackendType());
           LOG(("  From XUL cache: %p", sheet.get()));
         }
       }
@@ -1961,11 +1961,11 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
         GetStyleBackendType() == StyleBackendType::Gecko) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        if (!cache->GetStyleSheet(aLoadData->mURI)) {
+        if (!cache->GetStyleSheet(aLoadData->mURI, GetStyleBackendType())) {
           LOG(("  Putting sheet in XUL prototype cache"));
           NS_ASSERTION(sheet->IsComplete(),
                        "Should only be caching complete sheets");
-          cache->PutStyleSheet(sheet);
+          cache->PutStyleSheet(sheet, GetStyleBackendType());
         }
       }
     }
