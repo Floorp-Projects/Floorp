@@ -515,20 +515,21 @@ private:
   EventStates StyleStateFromLocks() const;
 
 protected:
-  // Methods for the ESM to manage state bits.  These will handle
-  // setting up script blockers when they notify, so no need to do it
-  // in the callers unless desired.
+  // Methods for the ESM, nsGlobalWindow and focus manager to manage state bits.
+  // These will handle setting up script blockers when they notify, so no need
+  // to do it in the callers unless desired.  States passed here must only be
+  // those in EXTERNALLY_MANAGED_STATES.
   virtual void AddStates(EventStates aStates)
   {
     NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
-                    "Should only be adding ESM-managed states here");
+                    "Should only be adding externally-managed states here");
     AddStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
   virtual void RemoveStates(EventStates aStates)
   {
     NS_PRECONDITION(!aStates.HasAtLeastOneOfStates(INTRINSIC_STATES),
-                    "Should only be removing ESM-managed states here");
+                    "Should only be removing externally-managed states here");
     RemoveStatesSilently(aStates);
     NotifyStateChange(aStates);
   }
