@@ -16,6 +16,7 @@
 class nsIGlobalObject;
 class nsStyleContext;
 struct nsStyleDisplay;
+struct ServoComputedValues;
 
 namespace mozilla {
 namespace css {
@@ -321,6 +322,16 @@ public:
    */
   void UpdateAnimations(nsStyleContext* aStyleContext,
                         mozilla::dom::Element* aElement);
+
+  /**
+   * This function does the same thing as the above UpdateAnimations()
+   * but with servo's computed values.
+   */
+  void UpdateAnimations(
+    mozilla::dom::Element* aElement,
+    nsIAtom* aPseudoTagOrNull,
+    const ServoComputedValues* aComputedValues,
+    const ServoComputedValues* aParentComputedValus);
 
   /**
    * Add a pending event.
