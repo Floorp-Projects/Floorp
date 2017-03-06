@@ -1159,6 +1159,11 @@ struct TlsData
     // Pointer to the base of the default memory (or null if there is none).
     uint8_t* memoryBase;
 
+#ifndef WASM_HUGE_MEMORY
+    // Bounds check limit of memory, in bytes (or zero if there is no memory).
+    uint32_t boundsCheckLimit;
+#endif
+
     // Stack limit for the current thread. This limit is checked against the
     // stack pointer in the prologue of functions that allocate stack space. See
     // `CodeGenerator::generateWasm`.
@@ -1432,32 +1437,6 @@ ComputeMappedSize(uint32_t maxSize);
 
 #endif // WASM_HUGE_MEMORY
 
-// Metadata for bounds check instructions that are patched at runtime with the
-// appropriate bounds check limit. On WASM_HUGE_MEMORY platforms for wasm (and
-// SIMD/Atomic) bounds checks, no BoundsCheck is created: the signal handler
-// catches everything. On !WASM_HUGE_MEMORY, a BoundsCheck is created for each
-// memory access (except when statically eliminated by optimizations) so that
-// the length can be patched in as an immediate. This requires that the bounds
-// check limit IsValidBoundsCheckImmediate.
-
-class BoundsCheck
-{
-  public:
-    BoundsCheck() = default;
-
-    explicit BoundsCheck(uint32_t cmpOffset)
-      : cmpOffset_(cmpOffset)
-    { }
-
-    uint8_t* patchAt(uint8_t* code) const { return code + cmpOffset_; }
-    void offsetBy(uint32_t offset) { cmpOffset_ += offset; }
-
-  private:
-    uint32_t cmpOffset_;
-};
-
-WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
-
 // Metadata for memory accesses. On WASM_HUGE_MEMORY platforms, only
 // (non-SIMD/Atomic) asm.js loads and stores create a MemoryAccess so that the
 // signal handler can implement the semantically-correct wraparound logic; the
@@ -1497,26 +1476,6 @@ class MemoryAccess
 };
 
 WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
-
-// Metadata for the offset of an instruction to patch with the base address of
-// memory. In practice, this is only used for x86 where the offset points to the
-// *end* of the instruction (which is a non-fixed offset from the beginning of
-// the instruction). As part of the move away from code patching, this should be
-// removed.
-
-struct MemoryPatch
-{
-    uint32_t offset;
-
-    MemoryPatch() = default;
-    explicit MemoryPatch(uint32_t offset) : offset(offset) {}
-
-    void offsetBy(uint32_t delta) {
-        offset += delta;
-    }
-};
-
-WASM_DECLARE_POD_VECTOR(MemoryPatch, MemoryPatchVector)
 
 // As an invariant across architectures, within wasm code:
 //   $sp % WasmStackAlignment = (sizeof(wasm::Frame) + masm.framePushed) % WasmStackAlignment
