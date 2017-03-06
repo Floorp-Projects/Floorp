@@ -8459,11 +8459,10 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
 
     const char16_t* begin = parser.tokenStream.rawCharPtrAt(ModuleChars::beginOffset(parser));
     const char16_t* end = parser.tokenStream.rawCharPtrAt(ModuleChars::endOffset(parser));
-    bool installed = parser.options().installedFile;
 
     ScopedCacheEntryOpenedForWrite entry(cx, serializedSize);
     JS::AsmJSCacheResult openResult =
-        open(cx->global(), installed, begin, end, serializedSize, &entry.memory, &entry.handle);
+        open(cx->global(), begin, end, serializedSize, &entry.memory, &entry.handle);
     if (openResult != JS::AsmJSCache_Success)
         return openResult;
 
