@@ -14,7 +14,6 @@
 #include "mozilla/Hal.h"
 #include "nsXULAppAPI.h"
 #include <prthread.h>
-#include "nsXPCOMStrings.h"
 #include "AndroidBridge.h"
 #include "AndroidJNIWrapper.h"
 #include "AndroidBridgeUtilities.h"

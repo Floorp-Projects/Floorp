@@ -26,7 +26,6 @@
 #include "nsNetUtil.h"
 #include "mozilla/Services.h"
 #include "nsIOutputStream.h"
-#include "nsXPCOMStrings.h"
 #include "nscore.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsITimer.h"
