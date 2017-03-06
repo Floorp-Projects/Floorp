@@ -21,7 +21,8 @@ public:
               bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
-              bool aEnableProfiler)
+              bool aEnableProfiler,
+              LayoutDeviceIntSize aSize)
     : mWrApi(aApi)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
@@ -29,6 +30,7 @@ public:
     , mCompositorWidget(Move(aWidget))
     , mTask(aTask)
     , mEnableProfiler(aEnableProfiler)
+    , mSize(aSize)
   {
     MOZ_COUNT_CTOR(NewRenderer);
   }
@@ -51,7 +53,8 @@ public:
     *mUseANGLE = gl->IsANGLE();
 
     WrRenderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, mWrApi, &wrRenderer)) {
+    if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
+                       this->mEnableProfiler, mWrApi, &wrRenderer)) {
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -79,6 +82,7 @@ private:
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
   bool mEnableProfiler;
+  LayoutDeviceIntSize mSize;
 };
 
 class RemoveRenderer : public RendererEvent
@@ -110,7 +114,8 @@ private:
 already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(bool aEnableProfiler,
                      layers::CompositorBridgeParentBase* aBridge,
-                     RefPtr<widget::CompositorWidget>&& aWidget)
+                     RefPtr<widget::CompositorWidget>&& aWidget,
+                     LayoutDeviceIntSize aSize)
 {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
@@ -127,7 +132,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
   // the next time we need to access the WrApi object.
   layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, &maxTextureSize, &useANGLE,
-                                       Move(aWidget), &task, aEnableProfiler);
+                                       Move(aWidget), &task, aEnableProfiler, aSize);
   RenderThread::Get()->RunEvent(id, Move(event));
 
   task.Wait();

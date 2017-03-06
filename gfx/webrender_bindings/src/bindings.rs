@@ -282,6 +282,8 @@ pub extern fn wr_api_generate_frame(api: &mut RenderApi) {
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern fn wr_window_new(window_id: WrWindowId,
+                            window_width: u32,
+                            window_height: u32,
                             gl_context: *mut c_void,
                             enable_profiler: bool,
                             out_api: &mut *mut RenderApi,
@@ -310,7 +312,8 @@ pub extern fn wr_window_new(window_id: WrWindowId,
         .. Default::default()
     };
 
-    let (renderer, sender) = match Renderer::new(opts) {
+    let window_size = DeviceUintSize::new(window_width, window_height);
+    let (renderer, sender) = match Renderer::new(opts, window_size) {
         Ok((renderer, sender)) => { (renderer, sender) }
         Err(e) => {
             println!(" Failed to create a Renderer: {:?}", e);
@@ -361,8 +364,8 @@ pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
         bounds,
         ClipRegion::simple(&bounds),
         0,
-        PropertyBinding::Value(LayoutTransform::identity()),
-        LayoutTransform::identity(),
+        None,
+        None,
         webrender_traits::MixBlendMode::Normal,
         Vec::new(),
     );
@@ -637,8 +640,8 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
                                   bounds,
                                   clip_region2,
                                   state.z_index,
-                                  PropertyBinding::Value(*transform),
-                                  LayoutTransform::identity(),
+                                  Some(PropertyBinding::Value(*transform)),
+                                  None,
                                   mix_blend_mode,
                                   filters);
     state.frame_builder.dl_builder.push_scroll_layer(clip_region, bounds.size, ServoScrollRootId(1));

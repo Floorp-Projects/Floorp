@@ -1886,6 +1886,30 @@ impl Device {
         }
     }
 
+    pub fn clear_target_rect(&self,
+                             color: Option<[f32; 4]>,
+                             depth: Option<f32>,
+                             rect: DeviceIntRect) {
+        let mut clear_bits = 0;
+
+        if let Some(color) = color {
+            gl::clear_color(color[0], color[1], color[2], color[3]);
+            clear_bits |= gl::COLOR_BUFFER_BIT;
+        }
+
+        if let Some(depth) = depth {
+            gl::clear_depth(depth as f64);
+            clear_bits |= gl::DEPTH_BUFFER_BIT;
+        }
+
+        if clear_bits != 0 {
+            gl::enable(gl::SCISSOR_TEST);
+            gl::scissor(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+            gl::clear(clear_bits);
+            gl::disable(gl::SCISSOR_TEST);
+        }
+    }
+
     pub fn enable_depth(&self) {
         gl::enable(gl::DEPTH_TEST);
     }

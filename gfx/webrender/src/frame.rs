@@ -20,7 +20,7 @@ use webrender_traits::{AuxiliaryLists, ClipRegion, ColorF, DisplayItem, Epoch, F
 use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform, LayoutTransform, TileOffset};
 use webrender_traits::{MixBlendMode, PipelineId, ScrollEventPhase, ScrollLayerId, ScrollLayerState};
 use webrender_traits::{ScrollLocation, ScrollPolicy, ServoScrollRootId, SpecificDisplayItem};
-use webrender_traits::{StackingContext, WorldPoint, ImageDisplayItem, DeviceUintSize};
+use webrender_traits::{StackingContext, WorldPoint, ImageDisplayItem, DeviceUintRect, DeviceUintSize};
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct FrameId(pub u32);
@@ -228,7 +228,12 @@ impl Frame {
         self.clip_scroll_tree.discard_frame_state_for_pipeline(pipeline_id);
     }
 
-    pub fn create(&mut self, scene: &Scene, resource_cache: &mut ResourceCache) {
+    pub fn create(&mut self,
+                  scene: &Scene,
+                  resource_cache: &mut ResourceCache,
+                  window_size: DeviceUintSize,
+                  inner_rect: DeviceUintRect,
+                  device_pixel_ratio: f32) {
         let root_pipeline_id = match scene.root_pipeline_id {
             Some(root_pipeline_id) => root_pipeline_id,
             None => return,
@@ -245,6 +250,11 @@ impl Frame {
             None => return,
         };
 
+        if window_size.width == 0 || window_size.height == 0 {
+            println!("ERROR: Invalid window dimensions! Please call api.set_window_size()");
+            return;
+        }
+
         let old_scrolling_states = self.reset();
         self.pipeline_auxiliary_lists = scene.pipeline_auxiliary_lists.clone();
 
@@ -258,8 +268,19 @@ impl Frame {
             }
         };
 
+        let inner_origin = inner_rect.origin.to_f32();
+        let viewport_offset = LayerPoint::new((inner_origin.x / device_pixel_ratio).round(),
+                                              (inner_origin.y / device_pixel_ratio).round());
+        let outer_size = window_size.to_f32();
+        let outer_size = LayerSize::new((outer_size.width / device_pixel_ratio).round(),
+                                        (outer_size.height / device_pixel_ratio).round());
+        let clip_size = LayerSize::new(outer_size.width + 2.0 * viewport_offset.x,
+                                       outer_size.height + 2.0 * viewport_offset.y);
+
         self.clip_scroll_tree.establish_root(root_pipeline_id,
                                              &root_pipeline.viewport_size,
+                                             viewport_offset,
+                                             clip_size,
                                              &root_clip.main.size);
 
         let background_color = root_pipeline.background_color.and_then(|color| {
@@ -270,7 +291,7 @@ impl Frame {
             }
         });
 
-        let mut frame_builder = FrameBuilder::new(root_pipeline.viewport_size,
+        let mut frame_builder = FrameBuilder::new(window_size,
                                                   background_color,
                                                   self.frame_builder_config);
 
@@ -288,21 +309,15 @@ impl Frame {
 
             let viewport_rect = LayerRect::new(LayerPoint::zero(), root_pipeline.viewport_size);
             let clip = ClipRegion::simple(&viewport_rect);
-            context.builder.push_clip_scroll_node(reference_frame_id,
-                                                  &clip,
-                                                  &LayerPoint::zero(),
-                                                  &root_pipeline.viewport_size);
-            context.builder.push_clip_scroll_node(topmost_scroll_layer_id,
-                                                  &clip,
-                                                  &LayerPoint::zero(),
-                                                  &root_clip.main.size);
+            context.builder.push_clip_scroll_node(reference_frame_id, &clip);
+            context.builder.push_clip_scroll_node(topmost_scroll_layer_id, &clip);
 
             self.flatten_stacking_context(&mut traversal,
                                           root_pipeline_id,
                                           &mut context,
                                           reference_frame_id,
                                           topmost_scroll_layer_id,
-                                          LayerToScrollTransform::identity(),
+                                          LayerPoint::zero(),
                                           0,
                                           &root_stacking_context,
                                           root_clip);
@@ -321,7 +336,7 @@ impl Frame {
                                 context: &mut FlattenContext,
                                 current_reference_frame_id: ScrollLayerId,
                                 parent_scroll_layer_id: ScrollLayerId,
-                                layer_relative_transform: LayerToScrollTransform,
+                                reference_frame_relative_offset: LayerPoint,
                                 level: i32,
                                 clip: &ClipRegion,
                                 content_size: &LayerSize,
@@ -332,23 +347,17 @@ impl Frame {
             return;
         }
 
-        let clip_rect = clip.main;
-        let node = ClipScrollNode::new(&clip_rect,
-                                       *content_size,
-                                       &layer_relative_transform,
-                                       pipeline_id);
+        let clip_rect = clip.main.translate(&reference_frame_relative_offset);
+        let node = ClipScrollNode::new(&clip_rect, &clip_rect, *content_size, pipeline_id);
         self.clip_scroll_tree.add_node(node, new_scroll_layer_id, parent_scroll_layer_id);
-        context.builder.push_clip_scroll_node(new_scroll_layer_id,
-                                              clip,
-                                              &clip_rect.origin,
-                                              &content_size);
+        context.builder.push_clip_scroll_node(new_scroll_layer_id, clip);
 
         self.flatten_items(traversal,
                            pipeline_id,
                            context,
                            current_reference_frame_id,
                            new_scroll_layer_id,
-                           LayerToScrollTransform::identity(),
+                           reference_frame_relative_offset,
                            level);
 
         context.builder.pop_clip_scroll_node();
@@ -360,7 +369,7 @@ impl Frame {
                                     context: &mut FlattenContext,
                                     current_reference_frame_id: ScrollLayerId,
                                     current_scroll_layer_id: ScrollLayerId,
-                                    layer_relative_transform: LayerToScrollTransform,
+                                    mut reference_frame_relative_offset: LayerPoint,
                                     level: i32,
                                     stacking_context: &StackingContext,
                                     clip_region: &ClipRegion) {
@@ -384,17 +393,6 @@ impl Frame {
             return;
         }
 
-        let stacking_context_transform = context.scene
-                                                .properties
-                                                .resolve_layout_transform(&stacking_context.transform);
-
-        let mut transform =
-            layer_relative_transform.pre_translated(stacking_context.bounds.origin.x,
-                                                    stacking_context.bounds.origin.y,
-                                                    0.0)
-                                     .pre_mul(&stacking_context_transform)
-                                     .pre_mul(&stacking_context.perspective);
-
         let mut reference_frame_id = current_reference_frame_id;
         let mut scroll_layer_id = match stacking_context.scroll_policy {
             ScrollPolicy::Fixed => current_reference_frame_id,
@@ -403,32 +401,48 @@ impl Frame {
 
         // If we have a transformation, we establish a new reference frame. This means
         // that fixed position stacking contexts are positioned relative to us.
-        if stacking_context_transform != LayoutTransform::identity() ||
-           stacking_context.perspective != LayoutTransform::identity() {
+        if stacking_context.transform.is_some() || stacking_context.perspective.is_some() {
+            let transform = stacking_context.transform.as_ref();
+            let transform = context.scene.properties.resolve_layout_transform(transform);
+            let perspective =
+                stacking_context.perspective.unwrap_or_else(LayoutTransform::identity);
+            let transform =
+                LayerToScrollTransform::create_translation(reference_frame_relative_offset.x,
+                                                           reference_frame_relative_offset.y,
+                                                           0.0)
+                                        .pre_translated(stacking_context.bounds.origin.x,
+                                                        stacking_context.bounds.origin.y,
+                                                        0.0)
+                                        .pre_mul(&transform)
+                                        .pre_mul(&perspective);
             scroll_layer_id = self.clip_scroll_tree.add_reference_frame(clip_region.main,
                                                                         transform,
                                                                         pipeline_id,
                                                                         scroll_layer_id);
             reference_frame_id = scroll_layer_id;
-            transform = LayerToScrollTransform::identity();
+            reference_frame_relative_offset = LayerPoint::zero();
+        } else {
+            reference_frame_relative_offset = LayerPoint::new(
+                reference_frame_relative_offset.x + stacking_context.bounds.origin.x,
+                reference_frame_relative_offset.y + stacking_context.bounds.origin.y);
         }
 
         if level == 0 {
             if let Some(pipeline) = context.scene.pipeline_map.get(&pipeline_id) {
                 if let Some(bg_color) = pipeline.background_color {
-
                     // Adding a dummy layer for this rectangle in order to disable clipping.
-                    let no_clip = ClipRegion::simple(&clip_region.main);
-                    context.builder.push_stacking_context(clip_region.main,
-                                                          transform,
+                    context.builder.push_stacking_context(reference_frame_relative_offset,
+                                                          clip_region.main,
                                                           pipeline_id,
-                                                          scroll_layer_id,
+                                                          false,
                                                           CompositeOps::empty());
 
-                    //Note: we don't use the original clip region here,
+                    // Note: we don't use the original clip region here,
                     // it's already processed by the node we just pushed.
-                    context.builder.add_solid_rectangle(&clip_region.main,
-                                                        &no_clip,
+                    let background_rect = LayerRect::new(LayerPoint::zero(), clip_region.main.size);
+                    context.builder.add_solid_rectangle(scroll_layer_id,
+                                                        &clip_region.main,
+                                                        &ClipRegion::simple(&background_rect),
                                                         &bg_color,
                                                         PrimitiveFlags::None);
 
@@ -438,10 +452,10 @@ impl Frame {
         }
 
          // TODO(gw): Int with overflow etc
-        context.builder.push_stacking_context(clip_region.main,
-                                              transform,
+        context.builder.push_stacking_context(reference_frame_relative_offset,
+                                              clip_region.main,
                                               pipeline_id,
-                                              scroll_layer_id,
+                                              level == 0,
                                               composition_operations);
 
         self.flatten_items(traversal,
@@ -449,12 +463,13 @@ impl Frame {
                            context,
                            reference_frame_id,
                            scroll_layer_id,
-                           transform,
+                           reference_frame_relative_offset,
                            level);
 
         if level == 0 && self.frame_builder_config.enable_scrollbars {
             let scrollbar_rect = LayerRect::new(LayerPoint::zero(), LayerSize::new(10.0, 70.0));
             context.builder.add_solid_rectangle(
+                scroll_layer_id,
                 &scrollbar_rect,
                 &ClipRegion::simple(&scrollbar_rect),
                 &DEFAULT_SCROLLBAR_COLOR,
@@ -469,7 +484,7 @@ impl Frame {
                           bounds: &LayerRect,
                           context: &mut FlattenContext,
                           current_scroll_layer_id: ScrollLayerId,
-                          layer_relative_transform: LayerToScrollTransform) {
+                          reference_frame_relative_offset: LayerPoint) {
 
         let pipeline = match context.scene.pipeline_map.get(&pipeline_id) {
             Some(pipeline) => pipeline,
@@ -493,9 +508,10 @@ impl Frame {
         self.pipeline_epoch_map.insert(pipeline_id, pipeline.epoch);
 
         let iframe_rect = LayerRect::new(LayerPoint::zero(), bounds.size);
-        let transform = layer_relative_transform.pre_translated(bounds.origin.x,
-                                                                bounds.origin.y,
-                                                                0.0);
+        let transform = LayerToScrollTransform::create_translation(
+            reference_frame_relative_offset.x + bounds.origin.x,
+            reference_frame_relative_offset.y + bounds.origin.y,
+            0.0);
         let iframe_reference_frame_id =
             self.clip_scroll_tree.add_reference_frame(iframe_rect,
                                                       transform,
@@ -503,21 +519,15 @@ impl Frame {
                                                       current_scroll_layer_id);
         let iframe_scroll_layer_id = ScrollLayerId::root_scroll_layer(pipeline_id);
         let node = ClipScrollNode::new(&LayerRect::new(LayerPoint::zero(), iframe_rect.size),
+                                       &LayerRect::new(LayerPoint::zero(), iframe_rect.size),
                                        iframe_clip.main.size,
-                                       &LayerToScrollTransform::identity(),
                                        pipeline_id);
         self.clip_scroll_tree.add_node(node.clone(),
                                        iframe_scroll_layer_id,
                                        iframe_reference_frame_id);
 
-        context.builder.push_clip_scroll_node(iframe_reference_frame_id,
-                                              iframe_clip,
-                                              &LayerPoint::zero(),
-                                              &iframe_rect.size);
-        context.builder.push_clip_scroll_node(iframe_scroll_layer_id,
-                                              iframe_clip,
-                                              &LayerPoint::zero(),
-                                              &iframe_clip.main.size);
+        context.builder.push_clip_scroll_node(iframe_reference_frame_id, iframe_clip);
+        context.builder.push_clip_scroll_node(iframe_scroll_layer_id, iframe_clip);
 
         let mut traversal = DisplayListTraversal::new_skipping_first(display_list);
 
@@ -526,7 +536,7 @@ impl Frame {
                                       context,
                                       iframe_reference_frame_id,
                                       iframe_scroll_layer_id,
-                                      LayerToScrollTransform::identity(),
+                                      LayerPoint::zero(),
                                       0,
                                       &iframe_stacking_context,
                                       iframe_clip);
@@ -541,13 +551,15 @@ impl Frame {
                          context: &mut FlattenContext,
                          current_reference_frame_id: ScrollLayerId,
                          current_scroll_layer_id: ScrollLayerId,
-                         layer_relative_transform: LayerToScrollTransform,
+                         reference_frame_relative_offset: LayerPoint,
                          level: i32) {
         while let Some(item) = traversal.next() {
             match item.item {
                 SpecificDisplayItem::WebGL(ref info) => {
-                    context.builder.add_webgl_rectangle(item.rect,
-                                                        &item.clip, info.context_id);
+                    context.builder.add_webgl_rectangle(current_scroll_layer_id,
+                                                        item.rect,
+                                                        &item.clip,
+                                                        info.context_id);
                 }
                 SpecificDisplayItem::Image(ref info) => {
                     let image = context.resource_cache.get_image_properties(info.image_key);
@@ -555,9 +567,15 @@ impl Frame {
                         // The image resource is tiled. We have to generate an image primitive
                         // for each tile.
                         let image_size = DeviceUintSize::new(image.descriptor.width, image.descriptor.height);
-                        self.decompose_tiled_image(context, &item, info, image_size, tile_size as u32);
+                        self.decompose_tiled_image(current_scroll_layer_id,
+                                                   context,
+                                                   &item,
+                                                   info,
+                                                   image_size,
+                                                   tile_size as u32);
                     } else {
-                        context.builder.add_image(item.rect,
+                        context.builder.add_image(current_scroll_layer_id,
+                                                  item.rect,
                                                   &item.clip,
                                                   &info.stretch_size,
                                                   &info.tile_spacing,
@@ -568,7 +586,8 @@ impl Frame {
                     }
                 }
                 SpecificDisplayItem::YuvImage(ref info) => {
-                    context.builder.add_yuv_image(item.rect,
+                    context.builder.add_yuv_image(current_scroll_layer_id,
+                                                  item.rect,
                                                   &item.clip,
                                                   info.y_image_key,
                                                   info.u_image_key,
@@ -576,7 +595,8 @@ impl Frame {
                                                   info.color_space);
                 }
                 SpecificDisplayItem::Text(ref text_info) => {
-                    context.builder.add_text(item.rect,
+                    context.builder.add_text(current_scroll_layer_id,
+                                             item.rect,
                                              &item.clip,
                                              text_info.font_key,
                                              text_info.size,
@@ -586,13 +606,15 @@ impl Frame {
                                              text_info.glyph_options);
                 }
                 SpecificDisplayItem::Rectangle(ref info) => {
-                    context.builder.add_solid_rectangle(&item.rect,
+                    context.builder.add_solid_rectangle(current_scroll_layer_id,
+                                                        &item.rect,
                                                         &item.clip,
                                                         &info.color,
                                                         PrimitiveFlags::None);
                 }
                 SpecificDisplayItem::Gradient(ref info) => {
-                    context.builder.add_gradient(item.rect,
+                    context.builder.add_gradient(current_scroll_layer_id,
+                                                 item.rect,
                                                  &item.clip,
                                                  info.start_point,
                                                  info.end_point,
@@ -600,7 +622,8 @@ impl Frame {
                                                  info.extend_mode);
                 }
                 SpecificDisplayItem::RadialGradient(ref info) => {
-                    context.builder.add_radial_gradient(item.rect,
+                    context.builder.add_radial_gradient(current_scroll_layer_id,
+                                                        item.rect,
                                                         &item.clip,
                                                         info.start_center,
                                                         info.start_radius,
@@ -610,7 +633,8 @@ impl Frame {
                                                         info.extend_mode);
                 }
                 SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
-                    context.builder.add_box_shadow(&box_shadow_info.box_bounds,
+                    context.builder.add_box_shadow(current_scroll_layer_id,
+                                                   &box_shadow_info.box_bounds,
                                                    &item.clip,
                                                    &box_shadow_info.offset,
                                                    &box_shadow_info.color,
@@ -620,7 +644,10 @@ impl Frame {
                                                    box_shadow_info.clip_mode);
                 }
                 SpecificDisplayItem::Border(ref info) => {
-                    context.builder.add_border(item.rect, &item.clip, info);
+                    context.builder.add_border(current_scroll_layer_id,
+                                               item.rect,
+                                               &item.clip,
+                                               info);
                 }
                 SpecificDisplayItem::PushStackingContext(ref info) => {
                     self.flatten_stacking_context(traversal,
@@ -628,7 +655,7 @@ impl Frame {
                                                   context,
                                                   current_reference_frame_id,
                                                   current_scroll_layer_id,
-                                                  layer_relative_transform,
+                                                  reference_frame_relative_offset,
                                                   level + 1,
                                                   &info.stacking_context,
                                                   &item.clip);
@@ -639,7 +666,7 @@ impl Frame {
                                               context,
                                               current_reference_frame_id,
                                               current_scroll_layer_id,
-                                              layer_relative_transform,
+                                              reference_frame_relative_offset,
                                               level,
                                               &item.clip,
                                               &info.content_size,
@@ -650,7 +677,7 @@ impl Frame {
                                         &item.rect,
                                         context,
                                         current_scroll_layer_id,
-                                        layer_relative_transform);
+                                        reference_frame_relative_offset);
                 }
                 SpecificDisplayItem::PopStackingContext |
                 SpecificDisplayItem::PopScrollLayer => return,
@@ -659,6 +686,7 @@ impl Frame {
     }
 
     fn decompose_tiled_image(&mut self,
+                             scroll_layer_id: ScrollLayerId,
                              context: &mut FlattenContext,
                              item: &DisplayItem,
                              info: &ImageDisplayItem,
@@ -749,7 +777,10 @@ impl Frame {
 
         for ty in 0..num_tiles_y {
             for tx in 0..num_tiles_x {
-                self.add_tile_primitive(context, item, info,
+                self.add_tile_primitive(scroll_layer_id,
+                                        context,
+                                        item,
+                                        info,
                                         TileOffset::new(tx, ty),
                                         stretched_tile_size,
                                         1.0, 1.0,
@@ -757,7 +788,10 @@ impl Frame {
             }
             if leftover.width != 0 {
                 // Tiles on the right edge that are smaller than the tile size.
-                self.add_tile_primitive(context, item, info,
+                self.add_tile_primitive(scroll_layer_id,
+                                        context,
+                                        item,
+                                        info,
                                         TileOffset::new(num_tiles_x, ty),
                                         stretched_tile_size,
                                         (leftover.width as f32) / tile_size_f32,
@@ -769,27 +803,36 @@ impl Frame {
         if leftover.height != 0 {
             for tx in 0..num_tiles_x {
                 // Tiles on the bottom edge that are smaller than the tile size.
-                self.add_tile_primitive(context, item, info,
+                self.add_tile_primitive(scroll_layer_id,
+                                        context,
+                                        item,
+                                        info,
                                         TileOffset::new(tx, num_tiles_y),
                                         stretched_tile_size,
                                         1.0,
                                         (leftover.height as f32) / tile_size_f32,
-                                        repeat_x, repeat_y);
+                                        repeat_x,
+                                        repeat_y);
             }
 
             if leftover.width != 0 {
                 // Finally, the bottom-right tile with a "leftover" size.
-                self.add_tile_primitive(context, item, info,
+                self.add_tile_primitive(scroll_layer_id,
+                                        context,
+                                        item,
+                                        info,
                                         TileOffset::new(num_tiles_x, num_tiles_y),
                                         stretched_tile_size,
                                         (leftover.width as f32) / tile_size_f32,
                                         (leftover.height as f32) / tile_size_f32,
-                                        repeat_x, repeat_y);
+                                        repeat_x,
+                                        repeat_y);
             }
         }
     }
 
     fn add_tile_primitive(&mut self,
+                          scroll_layer_id: ScrollLayerId,
                           context: &mut FlattenContext,
                           item: &DisplayItem,
                           info: &ImageDisplayItem,
@@ -833,7 +876,8 @@ impl Frame {
 
         // Fix up the primitive's rect if it overflows the original item rect.
         if let Some(prim_rect) = prim_rect.intersection(&item.rect) {
-            context.builder.add_image(prim_rect,
+            context.builder.add_image(scroll_layer_id,
+                                      prim_rect,
                                       &item.clip,
                                       &stretched_size,
                                       &info.tile_spacing,

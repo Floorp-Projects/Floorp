@@ -10,8 +10,8 @@ impl StackingContext {
     pub fn new(scroll_policy: ScrollPolicy,
                bounds: LayoutRect,
                z_index: i32,
-               transform: PropertyBinding<LayoutTransform>,
-               perspective: LayoutTransform,
+               transform: Option<PropertyBinding<LayoutTransform>>,
+               perspective: Option<LayoutTransform>,
                mix_blend_mode: MixBlendMode,
                filters: Vec<FilterOp>,
                auxiliary_lists_builder: &mut AuxiliaryListsBuilder)

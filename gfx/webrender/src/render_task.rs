@@ -62,6 +62,7 @@ pub struct AlphaRenderTask {
     screen_origin: DeviceIntPoint,
     pub opaque_items: Vec<AlphaRenderItem>,
     pub alpha_items: Vec<AlphaRenderItem>,
+    pub isolate_clear: bool,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -144,6 +145,7 @@ pub struct RenderTask {
 impl RenderTask {
     pub fn new_alpha_batch(task_index: RenderTaskIndex,
                            screen_origin: DeviceIntPoint,
+                           isolate_clear: bool,
                            location: RenderTaskLocation) -> RenderTask {
         RenderTask {
             id: RenderTaskId::Static(task_index),
@@ -153,6 +155,7 @@ impl RenderTask {
                 screen_origin: screen_origin,
                 alpha_items: Vec::new(),
                 opaque_items: Vec::new(),
+                isolate_clear: isolate_clear,
             }),
         }
     }

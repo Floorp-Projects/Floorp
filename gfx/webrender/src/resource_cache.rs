@@ -41,6 +41,8 @@ enum GlyphCacheMsg {
     AddFont(FontKey, FontTemplate),
     /// Request glyphs for a text run.
     RequestGlyphs(FontKey, Au, ColorF, Vec<GlyphInstance>, FontRenderMode, Option<GlyphOptions>),
+    // Remove an existing font.
+    DeleteFont(FontKey),
     /// Finished requesting glyphs. Reply with new glyphs.
     EndFrame,
 }
@@ -258,6 +260,13 @@ impl ResourceCache {
             .send(GlyphCacheMsg::AddFont(font_key, template.clone()))
             .unwrap();
         self.font_templates.insert(font_key, template);
+    }
+
+    pub fn delete_font_template(&mut self, font_key: FontKey) {
+        self.glyph_cache_tx
+            .send(GlyphCacheMsg::DeleteFont(font_key))
+            .unwrap();
+        self.font_templates.remove(&font_key);
     }
 
     pub fn add_image_template(&mut self,
@@ -838,6 +847,23 @@ fn spawn_glyph_cache_thread(workers: Arc<Mutex<ThreadPool>>) -> (Sender<GlyphCac
                             barrier.wait();
                         });
                     }
+                }
+                GlyphCacheMsg::DeleteFont(font_key) => {
+                    profile_scope!("DeleteFont");
+
+                    // Delete a font from the font context in each worker thread.
+                    let barrier = Arc::new(Barrier::new(worker_count));
+                    for _ in 0..worker_count {
+                        let barrier = barrier.clone();
+                        workers.lock().unwrap().execute(move || {
+                            FONT_CONTEXT.with(|font_context| {
+                                let mut font_context = font_context.borrow_mut();
+                                font_context.delete_font(&font_key);
+                            });
+                            barrier.wait();
+                        });
+                    }
+
                 }
                 GlyphCacheMsg::RequestGlyphs(key, size, color, glyph_instances, render_mode, glyph_options) => {
                     profile_scope!("RequestGlyphs");

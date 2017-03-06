@@ -147,6 +147,18 @@ impl FontContext {
         self.cg_fonts.insert((*font_key).clone(), native_font_handle);
     }
 
+    pub fn delete_font(&mut self, font_key: &FontKey) {
+        if let Some(cg_font) = self.cg_fonts.remove(font_key) {
+            let ct_font_keys = self.ct_fonts.keys()
+                                            .filter(|k| k.0 == *font_key)
+                                            .cloned()
+                                            .collect::<Vec<_>>();
+            for ct_font_key in ct_font_keys {
+                self.ct_fonts.remove(&ct_font_key);
+            }
+        }
+    }
+
     fn get_ct_font(&mut self,
                    font_key: FontKey,
                    size: Au) -> Option<CTFont> {

@@ -427,6 +427,8 @@ wr_rendered_epochs_delete(WrRenderedEpochs* pipeline_epochs) WR_DESTRUCTOR_SAFE_
 
 WR_INLINE bool
 wr_window_new(WrWindowId window_id,
+              uint32_t window_width,
+              uint32_t window_height,
               void* aGLContext,
               bool enable_profiler,
               WrAPI** out_api,

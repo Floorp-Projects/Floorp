@@ -80,10 +80,6 @@ pub enum BlendMode {
     None,
     Alpha,
 
-    Multiply,
-    Max,
-    Min,
-
     // Use the color of the text itself as a constant color blend factor.
     Subpixel(ColorF),
 }
@@ -513,7 +509,8 @@ impl Renderer {
     /// };
     /// let (renderer, sender) = Renderer::new(opts);
     /// ```
-    pub fn new(mut options: RendererOptions) -> Result<(Renderer, RenderApiSender), InitError> {
+    pub fn new(mut options: RendererOptions,
+               initial_window_size: DeviceUintSize) -> Result<(Renderer, RenderApiSender), InitError> {
         let (api_tx, api_rx) = try!{ channel::msg_channel() };
         let (payload_tx, payload_rx) = try!{ channel::payload_channel() };
         let (result_tx, result_rx) = channel();
@@ -805,7 +802,8 @@ impl Renderer {
                                                  recorder,
                                                  backend_main_thread_dispatcher,
                                                  blob_image_renderer,
-                                                 backend_vr_compositor);
+                                                 backend_vr_compositor,
+                                                 initial_window_size);
             backend.run(backend_profile_counters);
         })};
 
@@ -1206,7 +1204,6 @@ impl Renderer {
                         let shader = match batch.key.blend_mode {
                             BlendMode::Subpixel(..) => self.ps_text_run_subpixel.get(&mut self.device, transform_kind),
                             BlendMode::Alpha | BlendMode::None => self.ps_text_run.get(&mut self.device, transform_kind),
-                            _ => unreachable!(),
                         };
                         (GPU_TAG_PRIM_TEXT_RUN, shader)
                     }
@@ -1290,20 +1287,18 @@ impl Renderer {
                 let width = readback.data[2];
                 let height = readback.data[3];
 
-                // Need to invert the y coordinates when reading back from
-                // the framebuffer.
-                let y0 = if render_target.is_some() {
-                    src_y as i32
-                } else {
-                    target_dimensions.height as i32 - height as i32 - src_y as i32
-                };
+                let mut src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32, src_y as i32),
+                                                 DeviceIntSize::new(width as i32, height as i32));
+                let mut dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32, dest_y as i32),
+                                                  DeviceIntSize::new(width as i32, height as i32));
 
-                let src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32,
-                                                                 y0),
-                                             DeviceIntSize::new(width as i32, height as i32));
-                let dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32,
-                                                                  dest_y as i32),
-                                              DeviceIntSize::new(width as i32, height as i32));
+                // Need to invert the y coordinates and flip the image vertically when
+                // reading back from the framebuffer.
+                if render_target.is_none() {
+                    src.origin.y = target_dimensions.height as i32 - src.size.height - src.origin.y;
+                    dest.origin.y += dest.size.height;
+                    dest.size.height = -dest.size.height;
+                }
 
                 self.device.blit_render_target(render_target,
                                                Some(src),
@@ -1380,6 +1375,11 @@ impl Renderer {
             };
 
             self.device.clear_target(clear_color, clear_depth);
+
+            let isolate_clear_color = Some([0.0, 0.0, 0.0, 0.0]);
+            for isolate_clear in &target.isolate_clears {
+                self.device.clear_target_rect(isolate_clear_color, None, *isolate_clear);
+            }
 
             projection
         };
@@ -1501,18 +1501,6 @@ impl Renderer {
                     BlendMode::None => {
                         self.device.set_blend(false);
                     }
-                    BlendMode::Multiply => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_multiply();
-                    }
-                    BlendMode::Max => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_max();
-                    }
-                    BlendMode::Min => {
-                        self.device.set_blend(true);
-                        self.device.set_blend_mode_min();
-                    }
                     BlendMode::Alpha => {
                         self.device.set_blend(true);
                         self.device.set_blend_mode_alpha();
@@ -1601,10 +1589,8 @@ impl Renderer {
         // Some tests use a restricted viewport smaller than the main screen size.
         // Ensure we clear the framebuffer in these tests.
         // TODO(gw): Find a better solution for this?
-        let viewport_size = DeviceIntSize::new((frame.viewport_size.width * frame.device_pixel_ratio) as i32,
-                                               (frame.viewport_size.height * frame.device_pixel_ratio) as i32);
-        let needs_clear = viewport_size.width < framebuffer_size.width as i32 ||
-                          viewport_size.height < framebuffer_size.height as i32;
+        let needs_clear = frame.window_size.width < framebuffer_size.width ||
+                          frame.window_size.height < framebuffer_size.height;
 
         self.device.disable_depth_write();
         self.device.disable_stencil();

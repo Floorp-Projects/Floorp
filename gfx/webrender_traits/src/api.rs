@@ -6,14 +6,15 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
-use {ApiMsg, ColorF, DisplayListBuilder, Epoch, ImageDescriptor};
+use {ApiMsg, ColorF, Epoch, ImageDescriptor};
 use {FontKey, IdNamespace, ImageKey, NativeFontHandle, PipelineId};
 use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, ScrollLocation, ServoScrollRootId};
 use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand, TileSize};
 use {DeviceIntSize, DynamicProperties, LayoutPoint, LayoutSize, WorldPoint, PropertyBindingKey, PropertyBindingId};
+use {DeviceUintRect, DeviceUintSize};
 use {BuiltDisplayList, AuxiliaryLists};
 use VRCompositorCommand;
-use ExternalEvent;
+use {ExternalEvent, PageZoomFactor};
 use std::marker::PhantomData;
 
 impl RenderApiSender {
@@ -67,6 +68,11 @@ impl RenderApi {
 
     pub fn add_native_font(&self, key: FontKey, native_font_handle: NativeFontHandle) {
         let msg = ApiMsg::AddNativeFont(key, native_font_handle);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn delete_font(&self, key: FontKey) {
+        let msg = ApiMsg::DeleteFont(key);
         self.api_sender.send(msg).unwrap();
     }
 
@@ -190,6 +196,18 @@ impl RenderApi {
                                              pipeline_id: PipelineId,
                                              scroll_root_id: ServoScrollRootId) {
         let msg = ApiMsg::ScrollLayersWithScrollId(new_scroll_origin, pipeline_id, scroll_root_id);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn set_page_zoom(&self, page_zoom: PageZoomFactor) {
+        let msg = ApiMsg::SetPageZoom(page_zoom);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn set_window_parameters(&self,
+                                 window_size: DeviceUintSize,
+                                 inner_rect: DeviceUintRect) {
+        let msg = ApiMsg::SetWindowParameters(window_size, inner_rect);
         self.api_sender.send(msg).unwrap();
     }
 

@@ -30,6 +30,7 @@ pub type TileSize = u16;
 pub enum ApiMsg {
     AddRawFont(FontKey, Vec<u8>),
     AddNativeFont(FontKey, NativeFontHandle),
+    DeleteFont(FontKey),
     /// Gets the glyph dimensions
     GetGlyphDimensions(Vec<GlyphKey>, MsgSender<Vec<Option<GlyphDimensions>>>),
     /// Adds an image from the resource cache.
@@ -50,7 +51,9 @@ pub enum ApiMsg {
                        BuiltDisplayListDescriptor,
                        AuxiliaryListsDescriptor,
                        bool),
+    SetPageZoom(PageZoomFactor),
     SetRootPipeline(PipelineId),
+    SetWindowParameters(DeviceUintSize, DeviceUintRect),
     Scroll(ScrollLocation, WorldPoint, ScrollEventPhase),
     ScrollLayersWithScrollId(LayoutPoint, PipelineId, ServoScrollRootId),
     TickScrollingBounce,
@@ -900,8 +903,8 @@ pub struct StackingContext {
     pub scroll_policy: ScrollPolicy,
     pub bounds: LayoutRect,
     pub z_index: i32,
-    pub transform: PropertyBinding<LayoutTransform>,
-    pub perspective: LayoutTransform,
+    pub transform: Option<PropertyBinding<LayoutTransform>>,
+    pub perspective: Option<LayoutTransform>,
     pub mix_blend_mode: MixBlendMode,
     pub filters: ItemRange,
 }
@@ -1186,6 +1189,22 @@ pub enum VRCompositorCommand {
     Release(VRCompositorId)
 }
 
+/// Represents a desktop style page zoom factor.
+#[derive(Clone, Copy, Serialize, Deserialize, Debug)]
+pub struct PageZoomFactor(f32);
+
+impl PageZoomFactor {
+    /// Construct a new page zoom factor.
+    pub fn new(scale: f32) -> PageZoomFactor {
+        PageZoomFactor(scale)
+    }
+
+    /// Get the page zoom factor as an untyped float.
+    pub fn get(&self) -> f32 {
+        self.0
+    }
+}
+
 // Trait object that handles WebVR commands.
 // Receives the texture_id associated to the WebGLContext.
 pub trait VRCompositorHandler: Send {
@@ -1197,6 +1216,7 @@ impl fmt::Debug for ApiMsg {
         match self {
             &ApiMsg::AddRawFont(..) => { write!(f, "ApiMsg::AddRawFont") }
             &ApiMsg::AddNativeFont(..) => { write!(f, "ApiMsg::AddNativeFont") }
+            &ApiMsg::DeleteFont(..) => { write!(f, "ApiMsg::DeleteFont") }
             &ApiMsg::GetGlyphDimensions(..) => { write!(f, "ApiMsg::GetGlyphDimensions") }
             &ApiMsg::AddImage(..) => { write!(f, "ApiMsg::AddImage") }
             &ApiMsg::UpdateImage(..) => { write!(f, "ApiMsg::UpdateImage") }
@@ -1216,6 +1236,8 @@ impl fmt::Debug for ApiMsg {
             &ApiMsg::VRCompositorCommand(..) => { write!(f, "ApiMsg::VRCompositorCommand") }
             &ApiMsg::ExternalEvent(..) => { write!(f, "ApiMsg::ExternalEvent") }
             &ApiMsg::ShutDown => { write!(f, "ApiMsg::ShutDown") }
+            &ApiMsg::SetPageZoom(..) => { write!(f, "ApiMsg::SetPageZoom") }
+            &ApiMsg::SetWindowParameters(..) => { write!(f, "ApiMsg::SetWindowParameters") }
         }
     }
 }
