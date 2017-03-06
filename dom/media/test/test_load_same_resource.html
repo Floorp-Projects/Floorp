@@ -82,7 +82,10 @@ function initTest(test, token) {
   manager.started(token);
 }
 
-manager.runTests(gCloneTests, initTest);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["logging.MediaDecoder", "Debug"]]},
+  manager.runTests.bind(manager, gCloneTests, initTest));
 
 </script>
 </pre>
