@@ -10858,6 +10858,12 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     // first element that is not itself NAC (distinct from whether it happens
     // to be in a NAC subtree).
     //
+    // The one exception to all of this is scrollbar content, which we parent
+    // directly to the scrollframe. This is because the special-snowflake
+    // construction of scroll frames doesn't result in the placeholder frame
+    // being constructed until later, which means that GetInFlowParent() doesn't
+    // work right in the case of out-of-flow scrollframes.
+    //
     // To implement all this, we need to pass the correct parent style context
     // here because SetPrimaryFrame() may not have been called on the content
     // yet and thus ResolveStyleContext can't find it otherwise.
@@ -10867,9 +10873,12 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     // to worry about anonymous boxes, which CorrectStyleParentFrame handles
     // for us.
     nsIFrame* inheritFrame = aFrame;
-    while (inheritFrame->GetContent()->IsNativeAnonymous()) {
-      inheritFrame = inheritFrame->GetInFlowParent();
+    if (!content->IsNativeScrollbarContent()) {
+      while (inheritFrame->GetContent()->IsNativeAnonymous()) {
+        inheritFrame = inheritFrame->GetInFlowParent();
+      }
     }
+
     if (inheritFrame->GetType() == nsGkAtoms::canvasFrame) {
       // CorrectStyleParentFrame returns nullptr if the prospective parent is
       // the canvas frame, so avoid calling it in that situation.
