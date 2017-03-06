@@ -11,6 +11,10 @@ module.exports = {
     "mozilla/simpletest": true,
   },
 
+  "plugins": [
+    "mozilla"
+  ],
+
   // All globals made available in the test environment.
   "globals": {
     // `$` is defined in SimpleTest.js
