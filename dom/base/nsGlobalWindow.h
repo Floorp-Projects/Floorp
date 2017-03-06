@@ -122,6 +122,7 @@ enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
 class IncrementalRunnable;
+class IntlUtils;
 class Location;
 class MediaQueryList;
 class MozSelfSupport;
@@ -949,6 +950,9 @@ public:
 
   void
   GetAppLocales(nsTArray<nsString>& aLocales);
+
+  mozilla::dom::IntlUtils*
+  GetIntlUtils(mozilla::ErrorResult& aRv);
 
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
@@ -2031,6 +2035,8 @@ protected:
   nsTArray<RefPtr<mozilla::dom::VRDisplay>> mVRDisplays;
 
   RefPtr<mozilla::dom::VREventObserver> mVREventObserver;
+
+  RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

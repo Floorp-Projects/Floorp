@@ -739,17 +739,21 @@ CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     Register64 input = ToRegister64(lir->getInt64Operand(0));
     FloatRegister output = ToFloatRegister(lir->output());
 
-    MIRType outputType = lir->mir()->type();
+    MInt64ToFloatingPoint* mir = lir->mir();
+    bool isUnsigned = mir->isUnsigned();
+
+    MIRType outputType = mir->type();
     MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
+    MOZ_ASSERT(isUnsigned == !lir->getTemp(0)->isBogusTemp());
 
     if (outputType == MIRType::Double) {
-        if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToDouble(input, output, Register::Invalid());
+        if (isUnsigned)
+            masm.convertUInt64ToDouble(input, output, ToRegister(lir->getTemp(0)));
         else
             masm.convertInt64ToDouble(input, output);
     } else {
-        if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToFloat32(input, output, Register::Invalid());
+        if (isUnsigned)
+            masm.convertUInt64ToFloat32(input, output, ToRegister(lir->getTemp(0)));
         else
             masm.convertInt64ToFloat32(input, output);
     }

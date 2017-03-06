@@ -76,7 +76,6 @@ ToolSidebar.prototype = {
       "devtools/client/shared/components/tabs/tabbar"));
 
     let sidebar = Tabbar({
-      toolbox: this._toolPanel._toolbox,
       showAllTabsMenu: true,
       onSelect: this.handleSelectionChange.bind(this),
     });

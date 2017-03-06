@@ -371,7 +371,7 @@ function* testTouchEventsOverride(ui, expected) {
   let flag = yield ui.emulationFront.getTouchEventsOverride();
   is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
     `Touch events override should be ${expected ? "enabled" : "disabled"}`);
-  is(touchButton.classList.contains("active"), expected,
+  is(touchButton.classList.contains("checked"), expected,
     `Touch simulation button should be ${expected ? "" : "in"}active.`);
 }
 

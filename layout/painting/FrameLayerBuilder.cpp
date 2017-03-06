@@ -1063,7 +1063,8 @@ public:
     mContainerCompositorASR(aContainerCompositorASR),
     mParameters(aParameters),
     mPaintedLayerDataTree(*this, aBackgroundColor),
-    mFlattenToSingleLayer(aFlattenToSingleLayer)
+    mFlattenToSingleLayer(aFlattenToSingleLayer),
+    mLastDisplayPortAGR(nullptr)
   {
     nsPresContext* presContext = aContainerFrame->PresContext();
     mAppUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -1384,6 +1385,12 @@ protected:
                                   AnimatedGeometryRoot** aAnimatedGeometryRoot,
                                   const ActiveScrolledRoot** aASR);
 
+  /**
+   * Get the display port for an AGR.
+   * The result would be cached for later reusing.
+   */
+  nsRect GetDisplayPortForAnimatedGeometryRoot(AnimatedGeometryRoot* aAnimatedGeometryRoot);
+
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
   FrameLayerBuilder*               mLayerBuilder;
@@ -1454,6 +1461,10 @@ protected:
 
   nsDataHashtable<nsGenericHashKey<MaskLayerKey>, RefPtr<ImageLayer>>
     mRecycledMaskImageLayers;
+  // Keep display port of AGR to avoid wasting time on doing the same
+  // thing repeatly.
+  AnimatedGeometryRoot* mLastDisplayPortAGR;
+  nsRect mLastDisplayPortRect;
 };
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
@@ -3763,6 +3774,33 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
   return false;
 }
 
+nsRect
+ContainerState::GetDisplayPortForAnimatedGeometryRoot(AnimatedGeometryRoot* aAnimatedGeometryRoot)
+{
+  if (mLastDisplayPortAGR == aAnimatedGeometryRoot) {
+    return mLastDisplayPortRect;
+  }
+
+  nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(*aAnimatedGeometryRoot);
+  if (sf == nullptr) {
+    return nsRect();
+  }
+
+  mLastDisplayPortAGR = aAnimatedGeometryRoot;
+  nsRect& displayport = mLastDisplayPortRect;;
+  bool usingDisplayport =
+    nsLayoutUtils::GetDisplayPort((*aAnimatedGeometryRoot)->GetContent(), &displayport,
+                                  RelativeTo::ScrollFrame);
+  if (!usingDisplayport) {
+    // No async scrolling, so all that matters is that the layer contents
+    // cover the scrollport.
+    displayport = sf->GetScrollPortRect();
+  }
+  nsIFrame* scrollFrame = do_QueryFrame(sf);
+  displayport += scrollFrame->GetOffsetToCrossDoc(mContainerReferenceFrame);
+  return displayport;
+}
+
 nsIntRegion
 ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
                                   AnimatedGeometryRoot* aAnimatedGeometryRoot,
@@ -3801,22 +3839,11 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
     return opaquePixels;
   }
 
-  nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(*aAnimatedGeometryRoot);
-  if (sf) {
-    nsRect displayport;
-    bool usingDisplayport =
-      nsLayoutUtils::GetDisplayPort((*aAnimatedGeometryRoot)->GetContent(), &displayport,
-        RelativeTo::ScrollFrame);
-    if (!usingDisplayport) {
-      // No async scrolling, so all that matters is that the layer contents
-      // cover the scrollport.
-      displayport = sf->GetScrollPortRect();
-    }
-    nsIFrame* scrollFrame = do_QueryFrame(sf);
-    displayport += scrollFrame->GetOffsetToCrossDoc(mContainerReferenceFrame);
-    if (opaquePixels.Contains(ScaleRegionToNearestPixels(displayport))) {
-      *aOpaqueForAnimatedGeometryRootParent = true;
-    }
+  const nsRect& displayport =
+    GetDisplayPortForAnimatedGeometryRoot(aAnimatedGeometryRoot);
+  if (!displayport.IsEmpty() &&
+      opaquePixels.Contains(ScaleRegionToNearestPixels(displayport))) {
+    *aOpaqueForAnimatedGeometryRootParent = true;
   }
   return opaquePixels;
 }

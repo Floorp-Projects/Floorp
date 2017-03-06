@@ -18,7 +18,7 @@ assertEq((async (a, b, c) => { await a; }).toSource(),
          "async (a, b, c) => { await a; }");
 
 assertEq({ async foo(a, b, c) { await a; } }.foo.toSource(),
-         "(async function foo(a, b, c) { await a; })");
+         "async foo(a, b, c) { await a; }");
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

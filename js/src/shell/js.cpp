@@ -1114,7 +1114,7 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
-        file = fopen(filename, "r");
+        file = fopen(filename, "rb");
         if (!file) {
             ReportCantOpenErrorUnknownEncoding(cx, filename);
             return false;
@@ -1220,7 +1220,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    FILE* file = fopen(filename.ptr(), "r");
+    FILE* file = fopen(filename.ptr(), "rb");
     if (!file) {
         ReportCantOpenErrorUnknownEncoding(cx, filename.ptr());
         return false;
@@ -3025,7 +3025,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        FILE* file = fopen(script->filename(), "r");
+        FILE* file = fopen(script->filename(), "rb");
         if (!file) {
             /* FIXME: script->filename() should become UTF-8 (bug 987069). */
             ReportCantOpenErrorUnknownEncoding(cx, script->filename());
@@ -7462,6 +7462,20 @@ static const JS::AsmJSCacheOps asmJSCacheOps = {
     ShellCloseAsmJSCacheEntryForWrite
 };
 
+static bool
+TimesAccessed(JSContext* cx, unsigned argc, Value* vp)
+{
+    static int32_t accessed = 0;
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(++accessed);
+    return true;
+}
+
+static const JSPropertySpec TestingProperties[] = {
+    JS_PSG("timesAccessed", TimesAccessed, 0),
+    JS_PS_END
+};
+
 static JSObject*
 NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
                 JSPrincipals* principals)
@@ -7502,6 +7516,8 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
             return nullptr;
         }
         if (!js::DefineTestingFunctions(cx, glob, fuzzingSafe, disableOOMFunctions))
+            return nullptr;
+        if (!JS_DefineProperties(cx, glob, TestingProperties))
             return nullptr;
 
         if (!fuzzingSafe) {

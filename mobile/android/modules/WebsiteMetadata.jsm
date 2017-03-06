@@ -22,7 +22,8 @@ var WebsiteMetadata = {
     Task.spawn(function() {
       let metadata = getMetadata(doc, doc.location.href, {
         image_url: metadataRules['image_url'],
-        provider: metadataRules['provider']
+        provider: metadataRules['provider'],
+        description_length: metadataRules['description_length']
       });
 
       // No metadata was extracted, so don't bother sending it.
@@ -92,12 +93,21 @@ function buildRuleset(name, rules, processors) {
   };
 }
 
+const descriptionRules = [
+  ['meta[property="og:description"]', node => node.element.getAttribute('content')],
+  ['meta[name="description"]', node => node.element.getAttribute('content')],
+];
+
 const metadataRules = {
   description: {
-    rules: [
-      ['meta[property="og:description"]', node => node.element.getAttribute('content')],
-      ['meta[name="description"]', node => node.element.getAttribute('content')],
-    ],
+    rules: descriptionRules
+  },
+
+  description_length: {
+    rules: descriptionRules,
+    processors: [
+      (description) => description.length
+    ]
   },
 
   icon_url: {

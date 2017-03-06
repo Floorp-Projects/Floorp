@@ -450,6 +450,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        bufEnd;
     uint32_t        startLine;
     uint32_t        startColumn;
+    uint32_t        preludeStart;
     uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
@@ -479,8 +480,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     FunctionContextFlags funCxFlags;
 
     FunctionBox(JSContext* cx, LifoAlloc& alloc, ObjectBox* traceListHead, JSFunction* fun,
-                Directives directives, bool extraWarnings, GeneratorKind generatorKind,
-                FunctionAsyncKind asyncKind);
+                uint32_t preludeStart, Directives directives, bool extraWarnings,
+                GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
     MutableHandle<LexicalScope::Data*> namedLambdaBindings() {
         MOZ_ASSERT(context->keepAtoms);

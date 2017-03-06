@@ -42,7 +42,6 @@ function TabboxPanel({
   cloneSelectedRequest,
   request,
   selectTab,
-  toolbox,
 }) {
   if (!request) {
     return null;
@@ -54,7 +53,6 @@ function TabboxPanel({
       onSelect: selectTab,
       renderOnlySelected: true,
       showAllTabsMenu: true,
-      toolbox,
     },
       TabPanel({
         id: "headers",
@@ -111,7 +109,6 @@ TabboxPanel.propTypes = {
   cloneSelectedRequest: PropTypes.func.isRequired,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
-  toolbox: PropTypes.object.isRequired,
 };
 
 module.exports = connect(

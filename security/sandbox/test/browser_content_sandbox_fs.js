@@ -147,22 +147,8 @@ add_task(function*() {
     prefExists = false;
   }
 
-  // Special case Linux on !isNightly
-  if (isLinux() && !isNightly()) {
-    todo(prefExists, "pref security.sandbox.content.level exists");
-    if (!prefExists) {
-      return;
-    }
-  }
-
   ok(prefExists, "pref security.sandbox.content.level exists");
   if (!prefExists) {
-    return;
-  }
-
-  // Special case Linux on !isNightly
-  if (isLinux() && !isNightly()) {
-    todo(level > 0, "content sandbox enabled for !nightly.");
     return;
   }
 
@@ -174,12 +160,6 @@ add_task(function*() {
   }
 
   let isFileIOSandboxed = isContentFileIOSandboxed(level);
-
-  // Special case Linux on !isNightly
-  if (isLinux() && !isNightly()) {
-    todo(isFileIOSandboxed, "content file I/O sandbox enabled for !nightly.");
-    return;
-  }
 
   // Content sandbox enabled, but level doesn't include file I/O sandboxing.
   ok(isFileIOSandboxed, "content file I/O sandboxing is enabled.");

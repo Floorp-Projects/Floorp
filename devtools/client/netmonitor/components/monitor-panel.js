@@ -82,11 +82,13 @@ const MonitorPanel = createClass({
 
   componentWillUnmount() {
     MediaQueryList.removeListener(this.onLayoutChange);
-    let { clientWidth, clientHeight } = findDOMNode(this.refs.networkDetailsPanel) || {};
+
+    let { clientWidth, clientHeight } = findDOMNode(this.refs.endPanel) || {};
 
     if (this.state.isVerticalSpliter && clientWidth) {
       Prefs.networkDetailsWidth = clientWidth;
-    } else if (clientHeight) {
+    }
+    if (!this.state.isVerticalSpliter && clientHeight) {
       Prefs.networkDetailsHeight = clientHeight;
     }
   },
@@ -110,11 +112,7 @@ const MonitorPanel = createClass({
           maxSize: "80%",
           splitterSize: "1px",
           startPanel: RequestList({ isEmpty }),
-          endPanel: networkDetailsOpen ?
-            NetworkDetailsPanel({
-              ref: "networkDetailsPanel",
-              toolbox: window.NetMonitorController._toolbox,
-            }) : null,
+          endPanel: networkDetailsOpen && NetworkDetailsPanel({ ref: "endPanel" }),
           endPanelControl: true,
           vert: this.state.isVerticalSpliter,
         }),

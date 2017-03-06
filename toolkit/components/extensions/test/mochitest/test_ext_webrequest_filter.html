@@ -105,6 +105,8 @@ add_task(function* test_webRequest_filter_tab() {
     set: [["dom.serviceWorkers.testing.enabled", true]],
   });
 
+  let img = `file_image_good.png?r=${Math.random()}`;
+
   let events = {
     "onBeforeRequest":     [{urls: ["<all_urls>"], tabId: windowData.tabId}],
     "onBeforeSendHeaders": [{urls: ["<all_urls>"], tabId: windowData.tabId}, ["requestHeaders"]],
@@ -130,7 +132,7 @@ add_task(function* test_webRequest_filter_tab() {
 
   if (AppConstants.MOZ_BUILD_APP === "browser") {
     // We should not get events for a new window load.
-    let newWindow = window.open("file_image_good.png", "_blank", "width=100,height=100");
+    let newWindow = window.open(img, "_blank", "width=100,height=100");
     yield waitForLoad(newWindow);
     newWindow.close();
   }
@@ -139,7 +141,7 @@ add_task(function* test_webRequest_filter_tab() {
   let registration = yield navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
 
   // We should get events for the reload.
-  testWindow.location = "file_image_good.png";
+  testWindow.location = img;
   yield extension.awaitMessage("done");
 
   yield registration.unregister();
