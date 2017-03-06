@@ -79,17 +79,15 @@ function initTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var e = document.createElement(elemType);
   e.preload = "auto";
-  if (e.canPlayType(test.type)) {
-    e.src = test.name;
-    if (test.duration) {
-      e._expectedDuration = test.duration;
-    }
-    ok(true, "Trying to load " + test.name);
-    e.addEventListener("loadeddata", tryClone);
-    e.load();
-    e.token = token;
-    manager.started(token);
+  e.src = test.name;
+  if (test.duration) {
+    e._expectedDuration = test.duration;
   }
+  ok(true, "Trying to load " + test.name);
+  e.addEventListener("loadeddata", tryClone);
+  e.load();
+  e.token = token;
+  manager.started(token);
 }
 
 manager.runTests(gCloneTests, initTest);
