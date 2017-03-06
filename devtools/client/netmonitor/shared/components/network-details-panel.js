@@ -27,7 +27,6 @@ function NetworkDetailsPanel({
   cloneSelectedRequest,
   request,
   selectTab,
-  toolbox,
 }) {
   if (!request) {
     return null;
@@ -40,7 +39,6 @@ function NetworkDetailsPanel({
           activeTabId,
           request,
           selectTab,
-          toolbox,
         }) :
         CustomRequestPanel({
           cloneSelectedRequest,
@@ -58,7 +56,6 @@ NetworkDetailsPanel.propTypes = {
   open: PropTypes.bool,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
-  toolbox: PropTypes.object.isRequired,
 };
 
 module.exports = connect(

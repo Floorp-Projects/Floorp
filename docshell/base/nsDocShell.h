@@ -738,9 +738,6 @@ protected:
   // Convenience method for getting our parent docshell. Can return null
   already_AddRefed<nsDocShell> GetParentDocshell();
 
-  // Check if aURI is about:newtab.
-  bool IsAboutNewtab(nsIURI* aURI);
-
 protected:
   nsresult GetCurScrollPos(int32_t aScrollOrientation, int32_t* aCurPos);
   nsresult SetCurScrollPosEx(int32_t aCurHorizontalPos,

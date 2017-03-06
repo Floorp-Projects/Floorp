@@ -20,6 +20,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
+#include "mozilla/dom/TelemetryScrollProbe.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -3351,6 +3352,8 @@ TabChildGlobal::Init()
   mMessageManager = new nsFrameMessageManager(mTabChild,
                                               nullptr,
                                               MM_CHILD);
+
+  TelemetryScrollProbe::Create(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)

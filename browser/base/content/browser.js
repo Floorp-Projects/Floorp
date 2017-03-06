@@ -2540,11 +2540,8 @@ function URLBarSetURI(aURI) {
     } catch (e) {}
 
     // Replace initial page URIs with an empty string
-    // 1. only if there's no opener (bug 370555).
-    // 2. if remote newtab is enabled and it's the default remote newtab page
-    let defaultRemoteURL = gAboutNewTabService.remoteEnabled &&
-                           uri.spec === gAboutNewTabService.newTabURL;
-    if ((gInitialPages.includes(uri.spec) || defaultRemoteURL) &&
+    // only if there's no opener (bug 370555).
+    if (gInitialPages.includes(uri.spec) &&
         checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
       value = "";
     } else {
@@ -5079,7 +5076,6 @@ nsBrowserAccess.prototype = {
                                       fromExternal: aIsExternal,
                                       inBackground: loadInBackground,
                                       forceNotRemote: aForceNotRemote,
-                                      forceBrowserInsertion: true,
                                       opener: aOpener,
                                       });
     let browser = win.gBrowser.getBrowserForTab(tab);

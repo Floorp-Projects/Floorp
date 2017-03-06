@@ -41,4 +41,4 @@ module.exports = {
   postprocess: function(messages, filename) {
     return Array.prototype.concat.apply([], messages);
   }
-}
+};

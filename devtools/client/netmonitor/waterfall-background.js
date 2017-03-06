@@ -28,8 +28,7 @@ const STATE_KEYS = [
 /**
  * Creates the background displayed on each waterfall view in this container.
  */
-function WaterfallBackground(document) {
-  this.document = document;
+function WaterfallBackground() {
   this.canvas = document.createElementNS(HTML_NS, "canvas");
   this.ctx = this.canvas.getContext("2d");
   this.prevState = {};
@@ -45,8 +44,8 @@ WaterfallBackground.prototype = {
 
     this.prevState = state;
 
-    if (state.waterfallWidth == null || state.scale == null) {
-      this.document.mozSetImageElement("waterfall-background", null);
+    if (state.waterfallWidth === null || state.scale === null) {
+      document.mozSetImageElement("waterfall-background", null);
       return;
     }
 
@@ -78,7 +77,7 @@ WaterfallBackground.prototype = {
       optimalTickIntervalFound = true;
     }
 
-    const isRTL = isDocumentRTL(this.document);
+    const isRTL = isDocumentRTL(document);
     const [r, g, b] = REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB;
     let alphaComponent = REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN;
 
@@ -98,7 +97,7 @@ WaterfallBackground.prototype = {
     }
 
     function drawTimestamp(timestamp, color) {
-      if (timestamp == -1) {
+      if (timestamp === -1) {
         return;
       }
 
@@ -116,11 +115,11 @@ WaterfallBackground.prototype = {
     pixelArray.set(view8bit);
     this.ctx.putImageData(imageData, 0, 0);
 
-    this.document.mozSetImageElement("waterfall-background", this.canvas);
+    document.mozSetImageElement("waterfall-background", this.canvas);
   },
 
   destroy() {
-    this.document.mozSetImageElement("waterfall-background", null);
+    document.mozSetImageElement("waterfall-background", null);
   }
 };
 

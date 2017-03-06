@@ -359,9 +359,11 @@ var PerformanceView = {
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogJSONFilter"), "*.json");
     fp.appendFilter(L10N.getStr("recordingsList.saveDialogAllFilter"), "*.*");
 
-    if (fp.show() == Ci.nsIFilePicker.returnOK) {
-      this.emit(EVENTS.UI_IMPORT_RECORDING, fp.file);
-    }
+    fp.open(rv => {
+      if (rv == Ci.nsIFilePicker.returnOK) {
+        this.emit(EVENTS.UI_IMPORT_RECORDING, fp.file);
+      }
+    });
   },
 
   /**

@@ -62,6 +62,16 @@ parent:
   // GetControllers synchronously returns the VR controllers that have already been
   // enumerated by RefreshVRControllers() but does not enumerate new ones.
   sync GetControllers() returns(VRControllerInfo[] aControllerInfo);
+  async CreateVRTestSystem();
+  async CreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID);
+  async CreateVRServiceTestController(nsCString aID, uint32_t aPromiseID);
+  async SetDisplayInfoToMockDisplay(uint32_t aDeviceID, VRDisplayInfo aDisplayInfo);
+  async SetSensorStateToMockDisplay(uint32_t aDeviceID, VRHMDSensorState aSensorState);
+  async NewButtonEventToMockController(uint32_t aDeviceID, long aButton,
+                                       bool aPressed);
+  async NewAxisMoveEventToMockController(uint32_t aDeviceID, long aAxis,
+                                         double aValue);
+  async NewPoseMoveToMockController(uint32_t aDeviceID, GamepadPoseState aPose);
 
 child:
 
@@ -76,6 +86,10 @@ child:
   async NotifyVSync();
   async NotifyVRVSync(uint32_t aDisplayID);
   async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
+  async ReplyCreateVRServiceTestDisplay(nsCString aID, uint32_t aPromiseID,
+                                        uint32_t aDeviceID);
+  async ReplyCreateVRServiceTestController(nsCString aID, uint32_t aPromiseID,
+                                           uint32_t aDeviceID);
 
   async __delete__();
 

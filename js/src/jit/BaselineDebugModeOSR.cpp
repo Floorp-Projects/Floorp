@@ -712,6 +712,13 @@ CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t ent
     ICStub* oldStub = entry.oldStub;
     MOZ_ASSERT(oldStub->makesGCCalls());
 
+    // If this script was not recompiled (because it already had the correct
+    // debug instrumentation), don't clone to avoid attaching duplicate stubs.
+    if (!entry.recompiled()) {
+        entry.newStub = nullptr;
+        return true;
+    }
+
     if (entry.frameKind == ICEntry::Kind_Invalid) {
         // The exception handler can modify the frame's override pc while
         // unwinding scopes. This is fine, but if we have a stub frame, the code

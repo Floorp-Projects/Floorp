@@ -5052,7 +5052,7 @@ HTMLEditRules::CheckForInvisibleBR(Element& aBlock,
 /**
  * aLists and aTables allow the caller to specify what kind of content to
  * "look inside".  If aTables is Tables::yes, look inside any table content,
- * and insert the inner content into the supplied issupportsarray at offset
+ * and insert the inner content into the supplied nsTArray at offset
  * aIndex.  Similarly with aLists and list content.  aIndex is updated to
  * point past inserted elements.
  */

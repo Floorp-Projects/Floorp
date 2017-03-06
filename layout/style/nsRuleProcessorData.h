@@ -411,6 +411,12 @@ struct MOZ_STACK_CLASS TreeMatchContext {
       }
     }
   }
+
+  enum ForFrameConstructionTag { ForFrameConstruction };
+
+  TreeMatchContext(nsIDocument* aDocument, ForFrameConstructionTag)
+    : TreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited, aDocument)
+  {}
 };
 
 struct MOZ_STACK_CLASS RuleProcessorData {

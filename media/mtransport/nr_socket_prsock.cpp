@@ -207,9 +207,16 @@ public:
    * Keep track of how many instances are using a SingletonThreadHolder.
    * When no one is using it, shut it down
    */
-  MozExternalRefCountType AddUse()
+  void AddUse()
   {
-    MOZ_ASSERT(mParentThread == NS_GetCurrentThread());
+    RUN_ON_THREAD(mParentThread,
+                  mozilla::WrapRunnable(RefPtr<SingletonThreadHolder>(this),
+                                        &SingletonThreadHolder::AddUse_i),
+                  NS_DISPATCH_SYNC);
+  }
+
+  void AddUse_i()
+  {
     MOZ_ASSERT(int32_t(mUseCount) >= 0, "illegal refcnt");
     nsrefcnt count = ++mUseCount;
     if (count == 1) {
@@ -220,11 +227,18 @@ public:
       r_log(LOG_GENERIC,LOG_DEBUG,"Created wrapped SingletonThread %p",
             mThread.get());
     }
-    r_log(LOG_GENERIC,LOG_DEBUG,"AddUse: %lu", (unsigned long) count);
-    return count;
+    r_log(LOG_GENERIC,LOG_DEBUG,"AddUse_i: %lu", (unsigned long) count);
   }
 
-  MozExternalRefCountType ReleaseUse()
+  void ReleaseUse()
+  {
+    RUN_ON_THREAD(mParentThread,
+                  mozilla::WrapRunnable(RefPtr<SingletonThreadHolder>(this),
+                                        &SingletonThreadHolder::ReleaseUse_i),
+                  NS_DISPATCH_SYNC);
+  }
+
+  void ReleaseUse_i()
   {
     MOZ_ASSERT(mParentThread == NS_GetCurrentThread());
     nsrefcnt count = --mUseCount;
@@ -238,8 +252,7 @@ public:
       // It'd be nice to use a timer instead...  But be careful of
       // xpcom-shutdown-threads in that case
     }
-    r_log(LOG_GENERIC,LOG_DEBUG,"ReleaseUse: %lu", (unsigned long) count);
-    return count;
+    r_log(LOG_GENERIC,LOG_DEBUG,"ReleaseUse_i: %lu", (unsigned long) count);
   }
 
 private:
@@ -1688,8 +1701,7 @@ NrTcpSocketIpc::~NrTcpSocketIpc()
   // close(), but transfer the socket_child_ reference to die as well
   RUN_ON_THREAD(io_thread_,
                 mozilla::WrapRunnableNM(&NrTcpSocketIpc::release_child_i,
-                                        socket_child_.forget().take(),
-                                        sts_thread_),
+                                        socket_child_.forget().take()),
                 NS_DISPATCH_NORMAL);
 }
 
@@ -2001,8 +2013,7 @@ void NrTcpSocketIpc::close_i() {
 
 // close(), but transfer the socket_child_ reference to die as well
 // static
-void NrTcpSocketIpc::release_child_i(dom::TCPSocketChild* aChild,
-                                     nsCOMPtr<nsIEventTarget> sts_thread) {
+void NrTcpSocketIpc::release_child_i(dom::TCPSocketChild* aChild) {
   RefPtr<dom::TCPSocketChild> socket_child_ref =
     already_AddRefed<dom::TCPSocketChild>(aChild);
   if (socket_child_ref) {

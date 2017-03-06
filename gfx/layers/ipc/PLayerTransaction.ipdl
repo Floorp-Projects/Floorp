@@ -50,6 +50,11 @@ sync protocol PLayerTransaction {
   manager PCompositorBridge;
 
 parent:
+  // Creates a set of mappings between TextureReadLocks and an associated
+  // ReadLockHandle that can be used in Update, and persist until the
+  // next Update call.
+  async InitReadLocks(ReadLockInit[] locks);
+
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
   async Update(TransactionInfo txn);

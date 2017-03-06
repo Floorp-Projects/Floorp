@@ -728,6 +728,19 @@ struct ParamTraits<mozilla::layers::CompositableHandle>
   }
 };
 
+template<>
+struct ParamTraits<mozilla::layers::ReadLockHandle>
+{
+  typedef mozilla::layers::ReadLockHandle paramType;
+
+  static void Write(Message* msg, const paramType& param) {
+    WriteParam(msg, param.mHandle);
+  }
+  static bool Read(const Message* msg, PickleIterator* iter, paramType* result) {
+    return ReadParam(msg, iter, &result->mHandle);
+  }
+};
+
 // Helper class for reading bitfields.
 // If T has bitfields members, derive ParamTraits<T> from BitfieldHelper<T>.
 template <typename ParamType>
@@ -1327,7 +1340,7 @@ struct ParamTraits<mozilla::Array<T, Length>>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     for (size_t i = 0; i < Length; i++) {
-      if (!ReadParam(aMsg, aIter, &aResult[i])) {
+      if (!ReadParam<T>(aMsg, aIter, &aResult->operator[](i))) {
         return false;
       }
     }

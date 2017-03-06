@@ -906,6 +906,9 @@ void TlsAgentTestBase::Reset(const std::string& server_name) {
   agent_.reset(
       new TlsAgent(role_ == TlsAgent::CLIENT ? TlsAgent::kClient : server_name,
                    role_, mode_));
+  if (version_) {
+    agent_->SetVersionRange(version_, version_);
+  }
   agent_->adapter()->SetPeer(sink_adapter_);
   agent_->StartConnect();
 }

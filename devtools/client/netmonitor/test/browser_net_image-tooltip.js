@@ -16,7 +16,7 @@ add_task(function* test() {
   let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { ACTIVITY_TYPE, EVENTS } = windowRequire("devtools/client/netmonitor/constants");
-  let toolboxDoc = monitor.toolbox.doc;
+  let toolboxDoc = monitor.panelWin.parent.document;
 
   gStore.dispatch(Actions.batchEnable(false));
 

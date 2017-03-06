@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 354945;
 var summary = 'Do not crash with new Iterator';
-var expect = 'TypeError: trap __iterator__ for ({__iterator__:(function (){ })}) returned a primitive value';
+var expect = 'TypeError: trap __iterator__ for ({__iterator__:(function(){ })}) returned a primitive value';
 var actual;
 
 

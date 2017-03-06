@@ -14,7 +14,6 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const Actions = require("../actions/index");
 const { L10N } = require("../utils/l10n");
-const { Prefs } = require("../utils/prefs");
 const {
   getDisplayedRequestsSummary,
   getRequestFilterTypes,
@@ -54,10 +53,6 @@ const Toolbar = createClass({
     summary: PropTypes.object.isRequired,
     toggleNetworkDetails: PropTypes.func.isRequired,
     toggleRequestFilterType: PropTypes.func.isRequired,
-  },
-
-  componentDidMount() {
-    Prefs.filters.forEach(this.props.toggleRequestFilterType);
   },
 
   toggleRequestFilterType(evt) {
@@ -121,7 +116,7 @@ const Toolbar = createClass({
             title: TOOLBAR_CLEAR,
             onClick: clearRequests,
           }),
-          div({ id: "requests-list-filter-buttons" }, buttons),
+          div({ className: "requests-list-filter-buttons" }, buttons),
         ),
         span({ className: "devtools-toolbar-group" },
           button({

@@ -29,9 +29,14 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
              // display:contents elements posts the changes for their children:
              (aFrame && aContent->GetParent() &&
              aFrame->PresContext()->FrameManager()->
-               GetDisplayContentsStyleFor(aContent->GetParent())),
+               GetDisplayContentsStyleFor(aContent->GetParent())) ||
+             (aContent->IsNodeOfType(nsINode::eTEXT) &&
+              aContent->IsStyledByServo() &&
+              aContent->HasFlag(NODE_NEEDS_FRAME) &&
+              aHint & nsChangeHint_ReconstructFrame),
              "Shouldn't be trying to restyle non-elements directly, "
-             "except if it's a display:contents child");
+             "except if it's a display:contents child or a text node "
+             "doing lazy frame construction");
   MOZ_ASSERT(!(aHint & nsChangeHint_AllReflowHints) ||
              (aHint & nsChangeHint_NeedReflow),
              "Reflow hint bits set without actually asking for a reflow");
