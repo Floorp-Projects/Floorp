@@ -36,8 +36,6 @@ public:
   void SetTimestamp(int64_t aTimestamp) override;
   int64_t Timestamp() const override;
 
-  void InitToBlack(uint32_t aWidth, uint32_t aHeight, int64_t aTimeStamp);
-
 protected:
   cdm::VideoFormat mFormat;
   cdm::Size mSize;
