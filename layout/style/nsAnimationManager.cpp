@@ -1013,16 +1013,16 @@ static nsAnimationManager::OwningCSSAnimationPtrArray
 BuildAnimations(nsPresContext* aPresContext,
                 nsStyleContext* aStyleContext,
                 const NonOwningAnimationTarget& aTarget,
+                const nsStyleAutoArray<StyleAnimation>& aStyleAnimations,
+                uint32_t aStyleAnimationNameCount,
                 nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   nsAnimationManager::OwningCSSAnimationPtrArray result;
 
-  const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-
   CSSAnimationBuilder builder(aStyleContext, aTarget);
 
-  for (size_t animIdx = disp->mAnimationNameCount; animIdx-- != 0;) {
-    const StyleAnimation& src = disp->mAnimations[animIdx];
+  for (size_t animIdx = aStyleAnimationNameCount; animIdx-- != 0;) {
+    const StyleAnimation& src = aStyleAnimations[animIdx];
 
     // CSS Animations whose animation-name does not match a @keyframes rule do
     // not generate animation events. This includes when the animation-name is
@@ -1085,6 +1085,8 @@ nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
     newAnimations = BuildAnimations(mPresContext,
                                     aStyleContext,
                                     target,
+                                    disp->mAnimations,
+                                    disp->mAnimationNameCount,
                                     collection);
   }
 
