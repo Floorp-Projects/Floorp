@@ -37,6 +37,7 @@ using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::MsSinceProcessStart;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
+using mozilla::Telemetry::Common::CanRecordInProcess;
 using mozilla::Telemetry::EventExtraEntry;
 using mozilla::Telemetry::ChildEventData;
 
@@ -106,6 +107,8 @@ enum class RecordEventResult {
   UnknownEvent,
   InvalidExtraKey,
   StorageLimitReached,
+  ExpiredEvent,
+  WrongProcess,
 };
 
 typedef nsTArray<EventExtraEntry> ExtraArray;
@@ -273,13 +276,18 @@ nsClassHashtable<nsUint32HashKey, EventRecordArray> gEventRecords;
 namespace {
 
 bool
-CanRecordEvent(const StaticMutexAutoLock& lock, const CommonEventInfo& info)
+CanRecordEvent(const StaticMutexAutoLock& lock, const CommonEventInfo& info,
+               GeckoProcessType process)
 {
   if (!gCanRecordBase) {
     return false;
   }
 
   if (!CanRecordDataset(info.dataset, gCanRecordBase, gCanRecordExtended)) {
+    return false;
+  }
+
+  if (!CanRecordInProcess(info.record_in_processes, process)) {
     return false;
   }
 
@@ -297,6 +305,16 @@ GetEventRecordsForProcess(const StaticMutexAutoLock& lock, GeckoProcessType proc
   return eventRecords;
 }
 
+bool
+GetEventId(const StaticMutexAutoLock& lock, const nsACString& category,
+           const nsACString& method, const nsACString& object,
+           uint32_t* eventId)
+{
+  MOZ_ASSERT(eventId);
+  const nsCString& name = UniqueEventName(category, method, object);
+  return gEventNameIDMap.Get(name, eventId);
+}
+
 RecordEventResult
 RecordEvent(const StaticMutexAutoLock& lock, GeckoProcessType processType,
             double timestamp, const nsACString& category,
@@ -311,23 +329,22 @@ RecordEvent(const StaticMutexAutoLock& lock, GeckoProcessType processType,
   }
 
   // Look up the event id.
-  const nsCString& name = UniqueEventName(category, method, object);
   uint32_t eventId;
-  if (!gEventNameIDMap.Get(name, &eventId)) {
+  if (!GetEventId(lock, category, method, object, &eventId)) {
     return RecordEventResult::UnknownEvent;
   }
 
-  // If the event is expired, silently drop this call.
+  // If the event is expired or not enabled for this process, we silently drop this call.
   // We don't want recording for expired probes to be an error so code doesn't
   // have to be removed at a specific time or version.
   // Even logging warnings would become very noisy.
   if (eventId == kExpiredEventId) {
-    return RecordEventResult::Ok;
+    return RecordEventResult::ExpiredEvent;
   }
 
   // Check whether we can record this event.
   const CommonEventInfo& common = gEventInfo[eventId].common_info;
-  if (!CanRecordEvent(lock, common)) {
+  if (!CanRecordEvent(lock, common, processType)) {
     return RecordEventResult::Ok;
   }
 
@@ -345,6 +362,27 @@ RecordEvent(const StaticMutexAutoLock& lock, GeckoProcessType processType,
 
   // Add event record.
   eventRecords->AppendElement(EventRecord(timestamp, eventId, value, extra));
+  return RecordEventResult::Ok;
+}
+
+RecordEventResult
+ShouldRecordChildEvent(const StaticMutexAutoLock& lock, const nsACString& category,
+                       const nsACString& method, const nsACString& object)
+{
+  uint32_t eventId;
+  if (!GetEventId(lock, category, method, object, &eventId)) {
+    return RecordEventResult::UnknownEvent;
+  }
+
+  if (eventId == kExpiredEventId) {
+    return RecordEventResult::ExpiredEvent;
+  }
+
+  const auto processes = gEventInfo[eventId].common_info.record_in_processes;
+  if (!CanRecordInProcess(processes, XRE_GetProcessType())) {
+    return RecordEventResult::WrongProcess;
+  }
+
   return RecordEventResult::Ok;
 }
 
@@ -485,8 +523,9 @@ TelemetryEvent::InitializeGlobalState(bool aCanRecordBase, bool aCanRecordExtend
     const EventInfo& info = gEventInfo[i];
     uint32_t eventId = i;
 
-    // If this event is expired, mark it with a special event id.
-    // This avoids doing expensive expiry checks at runtime.
+    // If this event is expired or not recorded in this process, mark it with
+    // a special event id.
+    // This avoids doing repeated checks at runtime.
     if (IsExpiredVersion(info.common_info.expiration_version()) ||
         IsExpiredDate(info.common_info.expiration_day)) {
       eventId = kExpiredEventId;
@@ -641,16 +680,20 @@ TelemetryEvent::RecordEvent(const nsACString& aCategory, const nsACString& aMeth
     }
   }
 
-  if (!XRE_IsParentProcess()) {
-    TelemetryIPCAccumulator::RecordChildEvent(timestamp, aCategory, aMethod, aObject, value, extra);
-    return NS_OK;
-  }
-
   // Lock for accessing internal data.
   // While the lock is being held, no complex calls like JS calls can be made,
   // as all of these could record Telemetry, which would result in deadlock.
   RecordEventResult res;
-  {
+  if (!XRE_IsParentProcess()) {
+    {
+      StaticMutexAutoLock lock(gTelemetryEventsMutex);
+      res = ::ShouldRecordChildEvent(lock, aCategory, aMethod, aObject);
+    }
+
+    if (res == RecordEventResult::Ok) {
+      TelemetryIPCAccumulator::RecordChildEvent(timestamp, aCategory, aMethod, aObject, value, extra);
+    }
+  } else {
     StaticMutexAutoLock lock(gTelemetryEventsMutex);
 
     if (!gInitDone) {

@@ -901,16 +901,8 @@ internal_IsKeyedScalar(mozilla::Telemetry::ScalarID aId)
 bool
 internal_CanRecordProcess(mozilla::Telemetry::ScalarID aId)
 {
-  // Get the scalar info from the id.
   const ScalarInfo &info = internal_InfoForScalarID(aId);
-
-  bool recordAllChild = !!(info.record_in_processes & RecordedProcessType::AllChilds);
-  // We can use (1 << ProcessType) due to the way RecordedProcessType is defined
-  // in ScalarInfo.h
-  bool canRecordProcess =
-    !!(info.record_in_processes & static_cast<RecordedProcessType>(1 << XRE_GetProcessType()));
-
-  return canRecordProcess || (!XRE_IsParentProcess() && recordAllChild);
+  return CanRecordInProcess(info.record_in_processes, XRE_GetProcessType());
 }
 
 bool
