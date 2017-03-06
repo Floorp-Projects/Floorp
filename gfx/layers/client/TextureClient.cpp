@@ -582,7 +582,7 @@ TextureClient::EnableReadLock()
   }
 }
 
-void
+bool
 TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 {
   if (mReadLock && mUpdated) {
@@ -591,8 +591,10 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
     mReadLock->ReadLock();
     mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid());
     mUpdated = false;
+    return true;
   } else {
     aDescriptor = null_t();
+    return false;
   }
 }
 

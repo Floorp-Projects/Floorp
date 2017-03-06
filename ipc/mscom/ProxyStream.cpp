@@ -8,7 +8,10 @@
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Utils.h"
+
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 
 #include <windows.h>
 #include <objbase.h>
@@ -71,11 +74,13 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
     EnsureMTA mta(marshalFn);
   }
 
+#ifdef MOZ_CRASHREPORTER
   if (FAILED(unmarshalResult)) {
     nsPrintfCString hrAsStr("0x%08X", unmarshalResult);
     CrashReporter::AnnotateCrashReport(
         NS_LITERAL_CSTRING("CoGetInterfaceAndReleaseStreamFailure"), hrAsStr);
   }
+#endif
 }
 
 already_AddRefed<IStream>
@@ -193,11 +198,13 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject)
     EnsureMTA mta(marshalFn);
   }
 
+#ifdef MOZ_CRASHREPORTER
   if (FAILED(marshalResult)) {
     nsPrintfCString hrAsStr("0x%08X", marshalResult);
     CrashReporter::AnnotateCrashReport(
         NS_LITERAL_CSTRING("CoMarshalInterfaceFailure"), hrAsStr);
   }
+#endif
 
   mStream = mozilla::Move(stream);
   if (hglobal) {

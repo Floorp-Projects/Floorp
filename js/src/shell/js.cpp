@@ -1114,7 +1114,7 @@ Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = File
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
-        file = fopen(filename, "r");
+        file = fopen(filename, "rb");
         if (!file) {
             ReportCantOpenErrorUnknownEncoding(cx, filename);
             return false;
@@ -1220,7 +1220,7 @@ CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    FILE* file = fopen(filename.ptr(), "r");
+    FILE* file = fopen(filename.ptr(), "rb");
     if (!file) {
         ReportCantOpenErrorUnknownEncoding(cx, filename.ptr());
         return false;
@@ -3025,7 +3025,7 @@ DisassWithSrc(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
 
-        FILE* file = fopen(script->filename(), "r");
+        FILE* file = fopen(script->filename(), "rb");
         if (!file) {
             /* FIXME: script->filename() should become UTF-8 (bug 987069). */
             ReportCantOpenErrorUnknownEncoding(cx, script->filename());

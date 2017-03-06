@@ -46,7 +46,7 @@ function onNewGlobal() {
 
 function onNewSource(event, packet) {
   if (packet.source.url.startsWith("chrome:")) {
-    ok(true, `Received a new chrome source: ${ packet.source.url}`);
+    ok(true, "Received a new chrome source: " + packet.source.url);
     gThreadClient.removeListener("newSource", onNewSource);
     gNewChromeSource.resolve();
   }

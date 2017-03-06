@@ -241,7 +241,7 @@ add_task(function* test_on_created_navigation_target_from_context_menu_subframe(
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
-        pageElementSelector() {
+        pageElementSelector: function() {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
           return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests
@@ -263,7 +263,7 @@ add_task(function* test_on_created_navigation_target_from_context_menu_subframe(
     extension,
     async openNavTarget() {
       await clickContextMenuItem({
-        pageElementSelector() {
+        pageElementSelector: function() {
           // This code runs as a framescript in the child process and it returns the
           // target link in the subframe.
           return this.content.frames[0] // eslint-disable-line mozilla/no-cpows-in-tests

@@ -1,5 +1,3 @@
-// |jit-test| --unboxed-arrays
-
 let moduleRepo = {};
 setModuleResolveHook(function(module, specifier) {
         return moduleRepo[specifier];

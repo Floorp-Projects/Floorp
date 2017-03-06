@@ -7827,7 +7827,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
 
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());
             Rooted<JSScript*> script(cx, JSScript::Create(cx, options, sourceObject,
-                                                          funbox->bufStart, funbox->bufEnd));
+                                                          funbox->bufStart, funbox->bufEnd,
+                                                          funbox->preludeStart));
             if (!script)
                 return false;
 
@@ -8973,6 +8974,35 @@ BytecodeEmitter::emitSelfHostedAllowContentIter(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitSelfHostedDefineDataProperty(ParseNode* pn)
+{
+    // Only optimize when 3 arguments are passed (we use 4 to include |this|).
+    MOZ_ASSERT(pn->pn_count == 4);
+
+    ParseNode* funNode = pn->pn_head;  // The _DefineDataProperty node.
+
+    ParseNode* objNode = funNode->pn_next;
+    if (!emitTree(objNode))
+        return false;
+
+    ParseNode* idNode = objNode->pn_next;
+    if (!emitTree(idNode))
+        return false;
+
+    ParseNode* valNode = idNode->pn_next;
+    if (!emitTree(valNode))
+        return false;
+
+    // This will leave the object on the stack instead of pushing |undefined|,
+    // but that's fine because the self-hosted code doesn't use the return
+    // value.
+    if (!emit1(JSOP_INITELEM))
+        return false;
+
+    return true;
+}
+
+bool
 BytecodeEmitter::isRestParameter(ParseNode* pn, bool* result)
 {
     if (!sc->isFunctionBox()) {
@@ -9100,6 +9130,8 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
                 return emitSelfHostedForceInterpreter(pn);
             if (pn2->name() == cx->names().allowContentIter)
                 return emitSelfHostedAllowContentIter(pn);
+            if (pn2->name() == cx->names().defineDataPropertyIntrinsic && pn->pn_count == 4)
+                return emitSelfHostedDefineDataProperty(pn);
             // Fall through.
         }
         if (!emitGetName(pn2, callop))

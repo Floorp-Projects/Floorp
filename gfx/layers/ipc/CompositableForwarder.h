@@ -114,6 +114,8 @@ public:
     MOZ_ASSERT(InForwarderThread());
   }
 
+  static uint32_t GetMaxFileDescriptorsPerMessage();
+
 protected:
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;

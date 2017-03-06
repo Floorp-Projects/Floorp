@@ -3,12 +3,20 @@
 
 // Tests pretty-printing a source that is currently paused.
 
-const {
-  setupTestRunner,
-  prettyPrintPaused
-} = require("devtools/client/debugger/new/integration-tests");
+add_task(function* () {
+  const dbg = yield initDebugger("doc-minified.html");
 
-add_task(function*() {
-  setupTestRunner(this);
-  yield prettyPrintPaused(this);
+  yield selectSource(dbg, "math.min.js");
+  yield addBreakpoint(dbg, "math.min.js", 2);
+
+  invokeInTab("arithmetic");
+  yield waitForPaused(dbg);
+  assertPausedLocation(dbg, "math.min.js", 2);
+
+  clickElement(dbg, "prettyPrintButton");
+  yield waitForDispatch(dbg, "TOGGLE_PRETTY_PRINT");
+
+  assertPausedLocation(dbg, "math.min.js:formatted", 18);
+
+  yield resume(dbg);
 });
