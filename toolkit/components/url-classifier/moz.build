@@ -84,4 +84,6 @@ if CONFIG['GNU_CXX']:
 if CONFIG['NIGHTLY_BUILD'] or CONFIG['MOZ_DEBUG']:
     DEFINES['MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES'] = True
 
+SPHINX_TREES['url-classifier'] = 'docs'
+
 include('/ipc/chromium/chromium-config.mozbuild')
