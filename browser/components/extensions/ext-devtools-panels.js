@@ -170,6 +170,12 @@ class ParentDevToolsPanel {
       unwatchExtensionProxyContextLoad();
       browser.remove();
       toolbox.off("select", this.onToolboxPanelSelect);
+
+      // If the panel has been disabled from the toolbox preferences,
+      // we need to re-initialize the waitTopLevelContext Promise.
+      this.waitTopLevelContext = new Promise(resolve => {
+        this._resolveTopLevelContext = resolve;
+      });
     };
   }
 
@@ -184,7 +190,6 @@ class ParentDevToolsPanel {
     if (!this.waitTopLevelContext || !this.panelAdded) {
       return;
     }
-
     if (!this.visible && id === this.id) {
       // Wait that the panel is fully loaded and emit show.
       this.waitTopLevelContext.then(() => {
@@ -218,6 +223,8 @@ class ParentDevToolsPanel {
 
     this.context = null;
     this.toolbox = null;
+    this.waitTopLevelContext = null;
+    this._resolveTopLevelContext = null;
   }
 }
 

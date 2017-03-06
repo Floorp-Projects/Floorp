@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <div style="overflow: hidden; width: 130px">
+    Some long text that cannot possibly fit in 130px.
+  </div>
+
+  <script>
+    onload = function() {
+      var div = document.querySelector("div");
+      // Make sure layout has happened.
+      window.width = div.offsetWidth;
+      div.style.columnCount = "2";
+      document.documentElement.className = "";
+    }
+  </script>
+</html>

@@ -121,7 +121,7 @@ const Toolbar = createClass({
             title: TOOLBAR_CLEAR,
             onClick: clearRequests,
           }),
-          div({ id: "requests-list-filter-buttons" }, buttons),
+          div({ className: "requests-list-filter-buttons" }, buttons),
         ),
         span({ className: "devtools-toolbar-group" },
           button({

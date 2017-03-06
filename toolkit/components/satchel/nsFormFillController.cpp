@@ -68,13 +68,14 @@ nsFormFillController::nsFormFillController() :
   mFocusedInput(nullptr),
   mFocusedInputNode(nullptr),
   mListNode(nullptr),
-  // This matches the threshold in
+  // The amount of time a context menu event supresses showing a
+  // popup from a focus event in ms. This matches the threshold in
   // toolkit/components/passwordmgr/LoginManagerContent.jsm.
-  mFocusAfterContextMenuThreshold(250),
+  mFocusAfterContextMenuThreshold(400),
   mTimeout(50),
   mMinResultsForPopup(1),
   mMaxRows(0),
-  mLastContextMenuEventTimeStamp(TimeStamp::Now()),
+  mLastContextMenuEventTimeStamp(TimeStamp()),
   mDisableAutoComplete(false),
   mCompleteDefaultIndex(false),
   mCompleteSelectedIndex(false),
@@ -1029,8 +1030,15 @@ nsFormFillController::FocusEventDelayedCallback(nsIFormControl* aFormControl)
 {
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
 
-  if (!formControl || formControl != aFormControl) {
+  if (!formControl || formControl != aFormControl ||
+      formControl->GetType() != NS_FORM_INPUT_PASSWORD) {
     return;
+  }
+
+  // If we have not seen a context menu call yet, just show the popup.
+  if (mLastContextMenuEventTimeStamp.IsNull()) {
+   ShowPopup();
+   return;
   }
 
   uint64_t timeDiff = fabs((TimeStamp::Now() - mLastContextMenuEventTimeStamp).ToMilliseconds());
@@ -1039,8 +1047,7 @@ nsFormFillController::FocusEventDelayedCallback(nsIFormControl* aFormControl)
   // This is done to avoid showing both the context menu and the popup
   // at the same time. The threshold should be a low amount of time that
   // makes it impossible for the user to accidentally trigger this condition.
-  if (timeDiff > mFocusAfterContextMenuThreshold
-      && formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
+  if (timeDiff > mFocusAfterContextMenuThreshold) {
    ShowPopup();
   }
 }

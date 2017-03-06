@@ -305,17 +305,6 @@ class TryFinallyControl : public BytecodeEmitter::NestableControl
     }
 };
 
-static bool
-ScopeKindIsInBody(ScopeKind kind)
-{
-    return kind == ScopeKind::Lexical ||
-           kind == ScopeKind::SimpleCatch ||
-           kind == ScopeKind::Catch ||
-           kind == ScopeKind::With ||
-           kind == ScopeKind::FunctionBodyVar ||
-           kind == ScopeKind::ParameterExpressionVar;
-}
-
 static inline void
 MarkAllBindingsClosedOver(LexicalScope::Data& data)
 {

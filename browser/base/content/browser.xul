@@ -52,7 +52,6 @@
 #endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         lightweightthemes="true"
-        lightweightthemesfooter="browser-bottombox"
         windowtype="navigator:browser"
         macanimationtype="document"
         screenX="4" screenY="4"

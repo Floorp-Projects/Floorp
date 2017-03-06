@@ -168,13 +168,19 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
       aElementForAnimation->IsInComposedDoc()) {
     // Update/build CSS animations in the case where animation properties are
     // changed.
-    // FIXME: This isn't right place to update CSS animations. We should do it
-    // , presumably, in cascade_node() in servo side and process the initial
-    // restyle there too.
-    // To do that we need to make updating CSS animations process independent
-    // from nsStyleContext. Also we need to make the process thread safe.
-    mPresContext->AnimationManager()->UpdateAnimations(result,
-                                                       aElementForAnimation);
+    // FIXME: Bug 1341985: This isn't right place to update CSS animations.
+    // We should do it in a SequentialTask and trigger the second traversal for
+    // the animation's restyle after the SequentialTask.
+    const ServoComputedValues* currentStyle =
+      result->StyleSource().AsServoComputedValues();
+    const ServoComputedValues* parentStyle =
+      result->GetParent()
+        ? result->GetParent()->StyleSource().AsServoComputedValues()
+        : nullptr;
+    mPresContext->AnimationManager()->UpdateAnimations(aElementForAnimation,
+                                                       aPseudoTag,
+                                                       currentStyle,
+                                                       parentStyle);
   }
 
   return result.forget();

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "nsIAboutNewTabService");
 
 registerCleanupFunction(function() {
-  Services.prefs.setBoolPref("browser.newtabpage.remote", false);
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", false);
   aboutNewTabService.resetNewTabURL();
 });
 

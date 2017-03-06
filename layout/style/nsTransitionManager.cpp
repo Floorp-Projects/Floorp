@@ -11,6 +11,7 @@
 #include "mozilla/dom/CSSTransitionBinding.h"
 
 #include "nsIContent.h"
+#include "nsContentUtils.h"
 #include "nsStyleContext.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -189,7 +190,8 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
   mOwningElement.GetElement(owningElement, owningPseudoType);
   MOZ_ASSERT(owningElement, "Owning element should be set");
 
-  nsPresContext* presContext = mOwningElement.GetRenderedPresContext();
+  nsPresContext* presContext =
+    nsContentUtils::GetContextForContent(owningElement);
   if (!presContext) {
     return;
   }
@@ -1077,20 +1079,4 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     // |collection| is now a dangling pointer!
     collection = nullptr;
   }
-}
-
-void
-nsTransitionManager::StopTransitionsForElement(
-  mozilla::dom::Element* aElement,
-  mozilla::CSSPseudoElementType aPseudoType)
-{
-  MOZ_ASSERT(aElement);
-  CSSTransitionCollection* collection =
-    CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  if (!collection) {
-    return;
-  }
-
-  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
-  collection->Destroy();
 }

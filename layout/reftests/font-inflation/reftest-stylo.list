@@ -106,7 +106,7 @@ pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,tru
 
 fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == min-width-passes-1.html min-width-passes-1.html
 
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) == xul-reflow-1.html xul-reflow-1.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) == xul-reflow-1.html xul-reflow-1.html
 
 # reset the default preferences
 default-preferences

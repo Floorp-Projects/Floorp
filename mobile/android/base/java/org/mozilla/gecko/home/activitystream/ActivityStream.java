@@ -21,14 +21,28 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.model.Highlight;
 import org.mozilla.gecko.home.activitystream.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
+
+import java.util.Collections;
+import java.util.List;
 
 public class ActivityStream extends FrameLayout {
     private final StreamRecyclerAdapter adapter;
 
     private static final int LOADER_ID_HIGHLIGHTS = 0;
     private static final int LOADER_ID_TOPSITES = 1;
+
+    /**
+     * Number of database entries to consider and rank for finding highlights.
+     */
+    private static final int HIGHLIGHTS_CANDIDATES = 500;
+
+    /**
+     * Number of highlights that should be returned (max).
+     */
+    private static final int HIGHLIGHTS_LIMIT = 10;
 
     private static final int MINIMUM_TILES = 4;
     private static final int MAXIMUM_TILES = 6;
@@ -73,14 +87,14 @@ public class ActivityStream extends FrameLayout {
     }
 
     public void load(LoaderManager lm) {
-        CursorLoaderCallbacks callbacks = new CursorLoaderCallbacks();
+        lm.initLoader(LOADER_ID_TOPSITES, null, new TopSitesCallback());
+        lm.initLoader(LOADER_ID_HIGHLIGHTS, null, new HighlightsCallbacks());
 
-        lm.initLoader(LOADER_ID_HIGHLIGHTS, null, callbacks);
-        lm.initLoader(LOADER_ID_TOPSITES, null, callbacks);
     }
 
     public void unload() {
-        adapter.swapHighlightsCursor(null);
+        adapter.swapHighlights(Collections.<Highlight>emptyList());
+
         adapter.swapTopSitesCursor(null);
     }
 
@@ -114,38 +128,41 @@ public class ActivityStream extends FrameLayout {
         adapter.setTileSize(tiles, tilesWidth, tilesHeight);
     }
 
-    private class CursorLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+    private class HighlightsCallbacks implements LoaderManager.LoaderCallbacks<List<Highlight>> {
+        @Override
+        public Loader<List<Highlight>> onCreateLoader(int id, Bundle args) {
+            return new HighlightsLoader(getContext(), HIGHLIGHTS_CANDIDATES, HIGHLIGHTS_LIMIT);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<Highlight>> loader, List<Highlight> data) {
+            adapter.swapHighlights(data);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<Highlight>> loader) {
+            adapter.swapHighlights(Collections.<Highlight>emptyList());
+        }
+    }
+
+    private class TopSitesCallback implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             final Context context = getContext();
-            if (id == LOADER_ID_HIGHLIGHTS) {
-                return BrowserDB.from(context).getHighlights(context, 10);
-            } else if (id == LOADER_ID_TOPSITES) {
-                return BrowserDB.from(context).getActivityStreamTopSites(
-                        context,
-                        MAXIMUM_TILES * TopSitesPagerAdapter.SUGGESTED_SITES_MAX_PAGES,
-                        MAXIMUM_TILES * TopSitesPagerAdapter.PAGES);
-            } else {
-                throw new IllegalArgumentException("Can't handle loader id " + id);
-            }
+            return BrowserDB.from(context).getActivityStreamTopSites(
+                    context,
+                    MAXIMUM_TILES * TopSitesPagerAdapter.SUGGESTED_SITES_MAX_PAGES,
+                    MAXIMUM_TILES * TopSitesPagerAdapter.PAGES);
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (loader.getId() == LOADER_ID_HIGHLIGHTS) {
-                adapter.swapHighlightsCursor(data);
-            } else if (loader.getId() == LOADER_ID_TOPSITES) {
-                adapter.swapTopSitesCursor(data);
-            }
+            adapter.swapTopSitesCursor(data);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            if (loader.getId() == LOADER_ID_HIGHLIGHTS) {
-                adapter.swapHighlightsCursor(null);
-            } else if (loader.getId() == LOADER_ID_TOPSITES) {
-                adapter.swapTopSitesCursor(null);
-            }
+            adapter.swapTopSitesCursor(null);
         }
     }
 }

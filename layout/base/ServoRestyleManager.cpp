@@ -127,53 +127,36 @@ ClearRestyleStateFromSubtree(Element* aElement)
 
   Unused << Servo_TakeChangeHint(aElement);
   aElement->UnsetHasDirtyDescendantsForServo();
-}
-
-static void
-UpdateStyleContextForTableWrapper(nsIFrame* aTableWrapper,
-                                  nsStyleContext* aTableStyleContext,
-                                  ServoStyleSet* aStyleSet)
-{
-  MOZ_ASSERT(aTableWrapper->GetType() == nsGkAtoms::tableWrapperFrame);
-  MOZ_ASSERT(aTableWrapper->StyleContext()->GetPseudo() ==
-             nsCSSAnonBoxes::tableWrapper);
-  RefPtr<nsStyleContext> newContext =
-    aStyleSet->ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper,
-                                        aTableStyleContext);
-  aTableWrapper->SetStyleContext(newContext);
+  aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
 }
 
 void
-ServoRestyleManager::RecreateStyleContexts(Element* aElement,
-                                           nsStyleContext* aParentContext,
-                                           ServoStyleSet* aStyleSet,
-                                           nsStyleChangeList& aChangeListToProcess)
+ServoRestyleManager::ProcessPostTraversal(Element* aElement,
+                                          nsStyleContext* aParentContext,
+                                          ServoStyleSet* aStyleSet,
+                                          nsStyleChangeList& aChangeList)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
-  bool isTable = styleFrame != aElement->GetPrimaryFrame();
 
+  // Grab the change hint from Servo.
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
+
+  // Handle lazy frame construction by posting a reconstruct for any lazily-
+  // constructed roots.
+  if (aElement->HasFlag(NODE_NEEDS_FRAME)) {
+    changeHint |= nsChangeHint_ReconstructFrame;
+    // The only time the primary frame is non-null is when image maps do hacky
+    // SetPrimaryFrame calls.
+    MOZ_ASSERT_IF(styleFrame, styleFrame->GetType() == nsGkAtoms::imageFrame);
+    styleFrame = nullptr;
+  }
+
   // Although we shouldn't generate non-ReconstructFrame hints for elements with
   // no frames, we can still get them here if they were explicitly posted by
   // PostRestyleEvent, such as a RepaintFrame hint when a :link changes to be
   // :visited.  Skip processing these hints if there is no frame.
   if ((styleFrame || (changeHint & nsChangeHint_ReconstructFrame)) && changeHint) {
-    if (isTable) {
-      // This part is a bit annoying: when isTable, that means the style frame
-      // is actually a _child_ of the primary frame.  In that situation, we want
-      // to go ahead and append the changeHint for the _parent_ but also append
-      // all the parts of it not handled for descendants for the _child_.
-      MOZ_ASSERT(styleFrame, "Or else GetPrimaryFrame() would be null too");
-      MOZ_ASSERT(styleFrame->GetParent() == aElement->GetPrimaryFrame(),
-                 "How did that happen?");
-      aChangeListToProcess.AppendChange(aElement->GetPrimaryFrame(), aElement,
-                                        changeHint);
-      // We may be able to do better here.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1340717 tracks that.
-      aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
-    } else {
-      aChangeListToProcess.AppendChange(styleFrame, aElement, changeHint);
-    }
+    aChangeList.AppendChange(styleFrame, aElement, changeHint);
   }
 
   // If our change hint is reconstruct, we delegate to the frame constructor,
@@ -235,22 +218,21 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     // XXX This could not always work as expected: there are kinds of content
     // with the first split and the last sharing style, but others not. We
     // should handle those properly.
+    // XXXbz I think the UpdateStyleOfOwnedAnonBoxes call below handles _that_
+    // right, but not other cases where we happen to have different styles on
+    // different continuations... (e.g. first-line).
     for (nsIFrame* f = styleFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldStyleContext)) {
       f->SetStyleContext(newContext);
     }
 
-    if (isTable) {
-      nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-      MOZ_ASSERT(primaryFrame->StyleContext()->GetPseudo() ==
-                   nsCSSAnonBoxes::tableWrapper,
-                 "What sort of frame is this?");
-      UpdateStyleContextForTableWrapper(primaryFrame, newContext, aStyleSet);
-    }
-
     if (MOZ_UNLIKELY(displayContentsNode)) {
       MOZ_ASSERT(!styleFrame);
       displayContentsNode->mStyle = newContext;
+    }
+
+    if (styleFrame) {
+      styleFrame->UpdateStyleOfOwnedAnonBoxes(*aStyleSet, aChangeList, changeHint);
     }
 
     // Update pseudo-elements state if appropriate.
@@ -288,8 +270,10 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     }
   }
 
-  bool traverseElementChildren = aElement->HasDirtyDescendantsForServo();
-  bool traverseTextChildren = recreateContext;
+  bool descendantsNeedFrames = aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+  bool traverseElementChildren =
+    aElement->HasDirtyDescendantsForServo() || descendantsNeedFrames;
+  bool traverseTextChildren = recreateContext || descendantsNeedFrames;
   if (traverseElementChildren || traverseTextChildren) {
     nsStyleContext* upToDateContext =
       recreateContext ? newContext : oldStyleContext;
@@ -297,22 +281,31 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
     StyleChildrenIterator it(aElement);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
-        RecreateStyleContexts(n->AsElement(), upToDateContext,
-                              aStyleSet, aChangeListToProcess);
+        ProcessPostTraversal(n->AsElement(), upToDateContext,
+                             aStyleSet, aChangeList);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
-        RecreateStyleContextsForText(n, upToDateContext, aStyleSet);
+        ProcessPostTraversalForText(n, upToDateContext, aStyleSet, aChangeList);
       }
     }
   }
 
   aElement->UnsetHasDirtyDescendantsForServo();
+  aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
 }
 
 void
-ServoRestyleManager::RecreateStyleContextsForText(nsIContent* aTextNode,
-                                                  nsStyleContext* aParentContext,
-                                                  ServoStyleSet* aStyleSet)
+ServoRestyleManager::ProcessPostTraversalForText(nsIContent* aTextNode,
+                                                 nsStyleContext* aParentContext,
+                                                 ServoStyleSet* aStyleSet,
+                                                 nsStyleChangeList& aChangeList)
 {
+  // Handle lazy frame construction.
+  if (aTextNode->HasFlag(NODE_NEEDS_FRAME)) {
+    aChangeList.AppendChange(nullptr, aTextNode, nsChangeHint_ReconstructFrame);
+    return;
+  }
+
+  // Handle restyle.
   nsIFrame* primaryFrame = aTextNode->GetPrimaryFrame();
   if (primaryFrame) {
     RefPtr<nsStyleContext> oldStyleContext = primaryFrame->StyleContext();
@@ -390,24 +383,14 @@ ServoRestyleManager::ProcessPendingRestyles()
   // uninstalling XBL bindings) can trigger additional style validations.
   mInStyleRefresh = true;
   while (styleSet->StyleDocument()) {
-
     PresContext()->EffectCompositor()->ClearElementsToRestyle();
 
-    // First do any queued-up frame creation. (see bugs 827239 and 997506).
-    //
-    // XXXEmilio I'm calling this to avoid random behavior changes, since we
-    // delay frame construction after styling we should re-check once our
-    // model is more stable whether we can skip this call.
-    //
-    // Note this has to be *after* restyling, because otherwise frame
-    // construction will find unstyled nodes, and that's not funny.
-    PresContext()->FrameConstructor()->CreateNeededFrames();
-
-    // Recreate style contexts and queue up change hints.
+    // Recreate style contexts, and queue up change hints (which also handle
+    // lazy frame construction).
     nsStyleChangeList currentChanges;
     DocumentStyleRootIterator iter(doc);
     while (Element* root = iter.GetNextStyleRoot()) {
-      RecreateStyleContexts(root, nullptr, styleSet, currentChanges);
+      ProcessPostTraversal(root, nullptr, styleSet, currentChanges);
     }
 
     // Process the change hints.

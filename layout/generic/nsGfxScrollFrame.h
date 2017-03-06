@@ -1037,6 +1037,14 @@ public:
     return mHelper.AsyncScrollbarDragRejected();
   }
 
+  // Update the style on our scrolled frame.
+  virtual void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                             nsStyleChangeList& aChangeList,
+                                             nsChangeHint aHintForThisFrame) override {
+    UpdateStyleOfChildAnonBox(mHelper.GetScrolledFrame(), aStyleSet,
+                              aChangeList, aHintForThisFrame);
+  }
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
@@ -1469,6 +1477,13 @@ public:
 
   virtual void AsyncScrollbarDragRejected() override {
     return mHelper.AsyncScrollbarDragRejected();
+  }
+
+  virtual void DoUpdateStyleOfOwnedAnonBoxes(mozilla::ServoStyleSet& aStyleSet,
+                                             nsStyleChangeList& aChangeList,
+                                             nsChangeHint aHintForThisFrame) override {
+    UpdateStyleOfChildAnonBox(mHelper.GetScrolledFrame(), aStyleSet,
+                              aChangeList, aHintForThisFrame);
   }
 
 #ifdef DEBUG_FRAME_DUMP

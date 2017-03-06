@@ -3331,7 +3331,7 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     mImage->GetWidth(&imageWidth);
     mImage->GetHeight(&imageHeight);
     NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
-  
+
     int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
     LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(GetDestRect(), appUnitsPerDevPixel);
 
@@ -3831,7 +3831,7 @@ nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
   IntSize containerSize = aLayer->GetContainer()
                         ? aLayer->GetContainer()->GetCurrentSize()
                         : IntSize(imageWidth, imageHeight);
-  
+
   const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   const LayoutDeviceRect destRect =
     LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
@@ -6590,7 +6590,7 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
     return false;
   }
   nscoord perspective = cbDisplay->mChildPerspective.GetCoordValue();
-  if (perspective < 0) {
+  if (perspective < std::numeric_limits<Float>::epsilon()) {
     return true;
   }
 
@@ -6643,10 +6643,9 @@ nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
    */
   perspectiveOrigin += frameToCbGfxOffset;
 
-  Float perspectivePx = std::max(NSAppUnitsToFloatPixels(perspective,
-                                                         aAppUnitsPerPixel),
-                                 std::numeric_limits<Float>::epsilon());
-  aOutMatrix._34 = -1.0 / perspectivePx;
+  aOutMatrix._34 =
+    -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
+
   aOutMatrix.ChangeBasis(perspectiveOrigin);
   return true;
 }
@@ -7069,8 +7068,10 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   // If the transform is 3d, the layer takes part in preserve-3d
   // sorting, or the layer is a separator then we *always* want this
   // to be an active layer.
+  // Checking HasPerspective() is needed to handle perspective value 0 when
+  // the transform is 2D.
   if (!GetTransform().Is2D() || mFrame->Combines3DTransformWithAncestors() ||
-      mIsTransformSeparator) {
+      mIsTransformSeparator || mFrame->HasPerspective()) {
     return LAYER_ACTIVE_FORCE;
   }
 
