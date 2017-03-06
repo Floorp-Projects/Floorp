@@ -107,7 +107,9 @@ module.exports = createClass({
     const rect = this.refs.box.getBoundingClientRect();
     const { left, right } = rect;
     const width = right - left;
-    const relative = event.clientX - left;
+    const direction = this.refs.box.ownerDocument.dir;
+    const relative = direction == "rtl" ? right - event.clientX
+                                        : event.clientX - left;
     this.props.onResize(relative / width);
 
     event.preventDefault();

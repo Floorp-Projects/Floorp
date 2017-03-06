@@ -36,3 +36,4 @@ fails == column-balancing-nested-001.html column-balancing-nested-001.html
 == columns-table-caption-000.html columns-table-caption-000.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501.html
 == fieldset-columns-001.html fieldset-columns-001.html
+== dynamic-change-with-overflow-1.html dynamic-change-with-overflow-1.html

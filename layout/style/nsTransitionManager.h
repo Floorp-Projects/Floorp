@@ -405,12 +405,6 @@ public:
   void SortEvents()      { mEventDispatcher.SortEvents(); }
   void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
 
-  // Stop transitions on the element. This method takes the real element
-  // rather than the element for the generated content for transitions on
-  // ::before and ::after.
-  void StopTransitionsForElement(mozilla::dom::Element* aElement,
-                                 mozilla::CSSPseudoElementType aPseudoType);
-
 protected:
   virtual ~nsTransitionManager() {}
 

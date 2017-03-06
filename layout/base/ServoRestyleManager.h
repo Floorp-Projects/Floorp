@@ -100,17 +100,17 @@ protected:
 
 private:
   /**
-   * Traverses a tree of content that Servo has just restyled, recreating style
-   * contexts for their frames with the new style data.
+   * Performs post-Servo-traversal processing on this element and its descendants.
    */
-  void RecreateStyleContexts(Element* aElement,
-                             nsStyleContext* aParentContext,
-                             ServoStyleSet* aStyleSet,
-                             nsStyleChangeList& aChangeList);
+  void ProcessPostTraversal(Element* aElement,
+                            nsStyleContext* aParentContext,
+                            ServoStyleSet* aStyleSet,
+                            nsStyleChangeList& aChangeList);
 
-  void RecreateStyleContextsForText(nsIContent* aTextNode,
-                                    nsStyleContext* aParentContext,
-                                    ServoStyleSet* aStyleSet);
+  void ProcessPostTraversalForText(nsIContent* aTextNode,
+                                   nsStyleContext* aParentContext,
+                                   ServoStyleSet* aStyleSet,
+                                   nsStyleChangeList& aChangeList);
 
   inline ServoStyleSet* StyleSet() const
   {

@@ -13,7 +13,7 @@ Cu.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
 
-this.syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, fxAccounts});
+var syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, fxAccounts});
 
 let onLoaded = () => {
   syncedTabsDeckComponent.init();

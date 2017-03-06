@@ -19,8 +19,10 @@
 #include "nsDisplayList.h"
 #include "mozilla/Likely.h"
 #include "SVGTextFrame.h"
+#include "nsStyleChangeList.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 
 #ifdef DEBUG
 #undef NOISY_PUSHING
@@ -1020,6 +1022,65 @@ nsInlineFrame::AccessibleType()
   return a11y::eNoType;
 }
 #endif
+
+void
+nsInlineFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                             nsStyleChangeList& aChangeList,
+                                             nsChangeHint aHintForThisFrame)
+{
+  MOZ_ASSERT(GetStateBits() & NS_FRAME_OWNS_ANON_BOXES,
+             "Why did we get called?");
+  MOZ_ASSERT(GetStateBits() & NS_FRAME_PART_OF_IBSPLIT,
+             "Why did we have the NS_FRAME_OWNS_ANON_BOXES bit set?");
+  // Note: this assert _looks_ expensive, but it's cheap in all the cases when
+  // it passes!
+  MOZ_ASSERT(nsLayoutUtils::FirstContinuationOrIBSplitSibling(this) == this,
+             "Only the primary frame of the inline in a block-inside-inline "
+             "split should have NS_FRAME_OWNS_ANON_BOXES");
+  MOZ_ASSERT(mContent->GetPrimaryFrame() == this,
+             "We should be the primary frame for our element");
+
+  nsPresContext* presContext = PresContext();
+  // Get the FramePropertyTable up front, since we are likely to need it
+  // multiple times.  The other option would be to just call
+  // nsIFrame::Properties() every time we need to do a lookup, but that does
+  // more pointer-chasing.
+  FramePropertyTable* propTable = presContext->PropertyTable();
+  nsIFrame* blockFrame = propTable->Get(this, nsIFrame::IBSplitSibling());
+  MOZ_ASSERT(blockFrame, "Why did we have an IB split?");
+
+  nsIAtom* pseudo = blockFrame->StyleContext()->GetPseudo();
+  MOZ_ASSERT(pseudo == nsCSSAnonBoxes::mozAnonymousBlock ||
+             pseudo == nsCSSAnonBoxes::mozAnonymousPositionedBlock,
+             "Unexpected kind of style context");
+
+  // The anonymous block's style inherits from ours, and we already have our new
+  // style context.
+  RefPtr<nsStyleContext> newContext =
+    aStyleSet.ResolveAnonymousBoxStyle(pseudo, StyleContext());
+
+  // We're guaranteed that newContext only differs from the old style context on
+  // the block in things they might inherit from us.  And changehint processing
+  // guarantees walking the continuation and ib-sibling chains, so our existing
+  // changehint beign in aChangeList is good enough.  So we don't need to touch
+  // aChangeList at all here.
+
+  while (blockFrame) {
+    MOZ_ASSERT(!blockFrame->GetPrevContinuation(),
+               "Must be first continuation");
+    // We _could_ just walk along using GetNextContinuationWithSameStyle here,
+    // but it would involve going back to the first continuation every so often,
+    // which is a bit silly when we can just keep track of our first
+    // continuations.
+    for (nsIFrame* cont = blockFrame; cont; cont = cont->GetNextContinuation()) {
+      cont->SetStyleContext(newContext);
+    }
+
+    nsIFrame* nextInline = propTable->Get(blockFrame, nsIFrame::IBSplitSibling());
+    MOZ_ASSERT(nextInline, "There is always a trailing inline in an IB split");
+    blockFrame = propTable->Get(nextInline, nsIFrame::IBSplitSibling());
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 

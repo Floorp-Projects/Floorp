@@ -737,6 +737,21 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
         } else {
             MOZ_ASSERT(v.isUndefined() || v.isMagic(JS_OPTIMIZED_OUT));
 
+#ifdef DEBUG
+            // The |envChain| slot must not be optimized out if the currently
+            // active scope requires any EnvironmentObjects beyond what is
+            // available at body scope. This checks that scope chain does not
+            // require any such EnvironmentObjects.
+            // See also: |CompileInfo::isObservableFrameSlot|
+            jsbytecode* pc = script->offsetToPC(iter.pcOffset());
+            Scope* scopeIter = script->innermostScope(pc);
+            while (scopeIter != script->bodyScope()) {
+                MOZ_ASSERT(scopeIter);
+                MOZ_ASSERT(!scopeIter->hasEnvironment());
+                scopeIter = scopeIter->enclosing();
+            }
+#endif
+
             // Get env chain from function or script.
             if (fun) {
                 // If pcOffset == 0, we may have to push a new call object, so

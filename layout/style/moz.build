@@ -147,7 +147,6 @@ EXPORTS.mozilla.css += [
 
 UNIFIED_SOURCES += [
     'AnimationCollection.cpp',
-    'AnimationCommon.cpp',
     'BindingStyleRule.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',

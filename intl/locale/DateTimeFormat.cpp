@@ -7,7 +7,7 @@
 #include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsILocaleService.h"
+#include "mozilla/intl/LocaleService.h"
 #include "unicode/udatpg.h"
 
 namespace mozilla {
@@ -17,29 +17,16 @@ nsCString* DateTimeFormat::mLocale = nullptr;
 /*static*/ nsresult
 DateTimeFormat::Initialize()
 {
-  nsAutoString localeStr;
-  nsresult rv = NS_OK;
-
-  if (!mLocale) {
-    mLocale = new nsCString();
-  } else if (!mLocale->IsEmpty()) {
+  if (mLocale) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsILocaleService> localeService =
-           do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsILocale> appLocale;
-    rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
-    if (NS_SUCCEEDED(rv)) {
-      rv = appLocale->GetCategory(NS_LITERAL_STRING("NSILOCALE_TIME"), localeStr);
-      if (NS_SUCCEEDED(rv) && !localeStr.IsEmpty()) {
-        *mLocale = NS_LossyConvertUTF16toASCII(localeStr); // cache locale name
-      }
-    }
-  }
+  mLocale = new nsCString();
+  nsAutoCString locale;
+  intl::LocaleService::GetInstance()->GetAppLocale(locale);
+  mLocale->Assign(locale);
 
-  return rv;
+  return NS_OK;
 }
 
 // performs a locale sensitive date formatting operation on the time_t parameter

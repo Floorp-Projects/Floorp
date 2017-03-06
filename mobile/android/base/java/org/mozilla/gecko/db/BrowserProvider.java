@@ -15,6 +15,7 @@ import java.util.Map;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
 import org.mozilla.gecko.db.BrowserContract.ActivityStreamBlocklist;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -30,6 +31,7 @@ import org.mozilla.gecko.db.BrowserContract.TopSites;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
+import org.mozilla.gecko.home.activitystream.model.Highlight;
 import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
@@ -142,7 +144,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     static final int METADATA = 1200;
 
-    static final int HIGHLIGHTS = 1300;
+    static final int HIGHLIGHT_CANDIDATES = 1300;
 
     static final int ACTIVITY_STREAM_BLOCKLIST = 1400;
 
@@ -322,9 +324,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // Combined pinned sites, top visited sites, and suggested sites
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "topsites", TOPSITES);
 
-        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "highlights", HIGHLIGHTS);
-
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, ActivityStreamBlocklist.TABLE_NAME, ACTIVITY_STREAM_BLOCKLIST);
+
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "highlight_candidates", HIGHLIGHT_CANDIDATES);
     }
 
     private static class ShrinkMemoryReceiver extends BroadcastReceiver {
@@ -1178,59 +1180,30 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
     }
 
-    /**
-     * Obtain a set of links for highlights (from bookmarks and history).
-     *
-     * Based on the query for Activity^ Stream (desktop):
-     * https://github.com/mozilla/activity-stream/blob/9eb9f451b553bb62ae9b8d6b41a8ef94a2e020ea/addon/PlacesProvider.js#L578
-     */
-    public Cursor getHighlights(final SQLiteDatabase db, String limit) {
-        final int totalLimit = limit == null ? 20 : Integer.parseInt(limit);
+    public Cursor getHighlightCandidates(final SQLiteDatabase db, String limit) {
+        final String query = "SELECT " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " AS " + Highlights.URL + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + ", " +
+                DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.JSON) + " AS " + Highlights.METADATA + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + ", " +
 
-        final long threeDaysAgo = System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 3);
-        final long bookmarkLimit = 1;
+                DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " AS " + Highlights.TITLE + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Highlights.POSITION + ", " +
+                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " AS " + Highlights.PARENT + ", " +
+                DBUtils.qualifyColumn(History.TABLE_NAME, History._ID) + " AS " + Highlights.HISTORY_ID + ", " +
 
-        // Select recent bookmarks that have not been visited much
-        final String bookmarksQuery = "SELECT * FROM (SELECT " +
-                "-1 AS " + Combined.HISTORY_ID + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " AS " + Bookmarks.PARENT + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TITLE) + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " AS " + Highlights.DATE + ", " +
-                DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.JSON) + " AS " + Highlights.METADATA + " " +
-                "FROM " + Bookmarks.TABLE_NAME + " " +
-                "LEFT JOIN " + History.TABLE_NAME + " ON " +
-                    DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
-                    DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " " +
-                // 1:1 relationship (Metadata is added via INSERT OR REPLACE)
-                "LEFT JOIN " + PageMetadata.TABLE_NAME + " ON " +
-                    DBUtils.qualifyColumn(History.TABLE_NAME, History.GUID) + " = " +
-                    DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.HISTORY_GUID) + " " +
-                "WHERE " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " > " + threeDaysAgo + " " +
-                "AND (" + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
-                  "OR " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " IS NULL) " +
-                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.IS_DELETED)  + " = 0 " +
-                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.TYPE) + " = " + Bookmarks.TYPE_BOOKMARK + " " +
-                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " >= " + Bookmarks.FIXED_ROOT_ID + " " +
-                "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
-                "ORDER BY " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " DESC " +
-                "LIMIT " + bookmarkLimit + ")";
+                "CASE WHEN " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " IS NOT NULL "
+                + "AND " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " IS NOT " + Bookmarks.FIXED_PINNED_LIST_ID + " "
+                + "THEN " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks._ID) + " "
+                + "ELSE -1 "
+                + "END AS " + Highlights.BOOKMARK_ID + ", " +
 
-        final long last30Minutes = System.currentTimeMillis() - (1000 * 60 * 30);
-        final long historyLimit = totalLimit - bookmarkLimit;
+                "CASE WHEN " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " IS NOT NULL "
+                    + "THEN " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.DATE_CREATED) + " "
+                    + "ELSE " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " "
+                    + "END AS " + Highlights.DATE + " " +
 
-        // Select recent history that has not been visited much.
-        final String historyQuery = "SELECT * FROM (SELECT " +
-                DBUtils.qualifyColumn(History.TABLE_NAME, History._ID) + " AS " + Combined.HISTORY_ID + ", " +
-                "-1 AS " + Combined.BOOKMARK_ID + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.PARENT) + " AS " + Bookmarks.PARENT + ", " +
-                DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.POSITION) + " AS " + Bookmarks.POSITION + ", " +
-                DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + ", " +
-                DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + ", " +
-                DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " AS " + Highlights.DATE + ", " +
-                DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.JSON) + " AS " + Highlights.METADATA + " " +
                 "FROM " + History.TABLE_NAME + " " +
                 "LEFT JOIN " + Bookmarks.TABLE_NAME + " ON " +
                     DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " = " +
@@ -1239,25 +1212,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 "LEFT JOIN " + PageMetadata.TABLE_NAME + " ON " +
                     DBUtils.qualifyColumn(History.TABLE_NAME, History.GUID) + " = " +
                     DBUtils.qualifyColumn(PageMetadata.TABLE_NAME, PageMetadata.HISTORY_GUID) + " " +
-                "WHERE " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " < " + last30Minutes + " " +
-                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.VISITS) + " <= 3 " +
-                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " NOT NULL AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.TITLE) + " != '' " +
-                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.IS_DELETED) + " = 0 " +
-                "AND " + DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
-                // TODO: Implement domain black list (bug 1298786)
-                // TODO: Group by host (bug 1298785)
-                "ORDER BY " + DBUtils.qualifyColumn(History.TABLE_NAME, History.DATE_LAST_VISITED) + " DESC " +
-                "LIMIT " + historyLimit + ")";
-
-        final String query = "SELECT DISTINCT * " +
-                "FROM (" + bookmarksQuery + " " +
-                "UNION ALL " + historyQuery + ") " +
-                "GROUP BY " + Combined.URL + ";";
+                "WHERE " + DBUtils.qualifyColumn(History.TABLE_NAME, History.URL) + " NOT IN (SELECT " + ActivityStreamBlocklist.URL + " FROM " + ActivityStreamBlocklist.TABLE_NAME + " )" +
+                "ORDER BY " + Highlights.DATE + " DESC " +
+                "LIMIT " + limit;
 
         final Cursor cursor = db.rawQuery(query, null);
+        final Context context = getContext();
 
-        cursor.setNotificationUri(getContext().getContentResolver(),
-                BrowserContract.AUTHORITY_URI);
+        if (cursor != null && context != null) {
+            cursor.setNotificationUri(context.getContentResolver(), BrowserContract.AUTHORITY_URI);
+        }
 
         return cursor;
     }
@@ -1418,11 +1382,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 break;
             }
 
-            case HIGHLIGHTS: {
-                debug("Highlights query: " + uri);
-
-                return getHighlights(db, limit);
-            }
+            case HIGHLIGHT_CANDIDATES:
+                debug("Highlight candidates query: " + uri);
+                return getHighlightCandidates(db, limit);
 
             case PAGE_METADATA: {
                 debug("PageMetadata query: " + uri);

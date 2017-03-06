@@ -3,6 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- This file is imported into the browser window. -->
+<!-- eslint-env mozilla/browser-window -->
+
+<!-- XULCommandEvent is a specialised global. -->
+<!-- global XULCommandEvent -->
+
 <!DOCTYPE bindings [
 <!ENTITY % searchBarDTD SYSTEM "chrome://browser/locale/searchbar.dtd" >
 %searchBarDTD;

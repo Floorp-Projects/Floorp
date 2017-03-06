@@ -31,7 +31,7 @@ exports.runTest = function(ruleTester) {
       invalidCode("elt.parentNode.removeChild(elt);"),
       invalidCode("elt.parentNode.parentNode.removeChild(elt.parentNode);"),
       invalidCode("$(e).parentNode.removeChild($(e));"),
-      invalidCode("$('e').parentNode.removeChild($('e'));"),
+      invalidCode("$('e').parentNode.removeChild($('e'));")
     ]
   });
 };

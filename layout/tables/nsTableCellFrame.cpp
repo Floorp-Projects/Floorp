@@ -1104,6 +1104,17 @@ nsTableCellFrame::GetType() const
   return nsGkAtoms::tableCellFrame;
 }
 
+void
+nsTableCellFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
+                                                nsStyleChangeList& aChangeList,
+                                                nsChangeHint aHintForThisFrame)
+{
+  nsIFrame* kid = mFrames.FirstChild();
+  MOZ_ASSERT(kid && !kid->GetNextSibling(),
+             "Table cells should have just one child");
+  UpdateStyleOfChildAnonBox(kid, aStyleSet, aChangeList, aHintForThisFrame);
+}
+
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsTableCellFrame::GetFrameName(nsAString& aResult) const

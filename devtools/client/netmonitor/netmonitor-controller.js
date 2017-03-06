@@ -7,7 +7,6 @@
 const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { CurlUtils } = require("devtools/client/shared/curl");
 const { ACTIVITY_TYPE, EVENTS } = require("./constants");
-const { configureStore } = require("./store");
 const Actions = require("./actions/index");
 const {
   fetchHeaders,
@@ -22,7 +21,7 @@ const {
   getDisplayedRequestById,
 } = require("./selectors/index");
 
-const gStore = window.gStore = configureStore();
+const gStore = window.gStore;
 
 /**
  * Object defining the network monitor controller components.
@@ -312,7 +311,7 @@ var NetMonitorController = {
    * Open a given source in Debugger
    */
   viewSourceInDebugger(sourceURL, sourceLine) {
-    return this._toolbox.viewSourceInDebugger(sourceURL, sourceLine);
+    return this.toolbox.viewSourceInDebugger(sourceURL, sourceLine);
   },
 
   /**
@@ -829,6 +828,7 @@ NetworkEventsHandler.prototype = {
  * Preliminary setup for the NetMonitorController object.
  */
 NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
+window.NetMonitorController = NetMonitorController;
 window.gNetwork = NetMonitorController.NetworkEventsHandler;
 
 exports.NetMonitorController = NetMonitorController;

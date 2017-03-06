@@ -32,18 +32,23 @@ const EXTRA_SCRIPTS = [
   // placesOverlay.xul.
   "toolkit/content/globalOverlay.js",
   // Via editMenuOverlay.xul
-  "toolkit/content/editMenuOverlay.js"
+  "toolkit/content/editMenuOverlay.js",
+  // Via baseMenuOverlay.xul
+  "browser/base/content/utilityOverlay.js"
 ];
 
 // Some files in global-scripts.inc need mapping to specific locations.
 const MAPPINGS = {
   "printUtils.js": "toolkit/components/printing/content/printUtils.js",
-  "browserPlacesViews.js": "browser/components/places/content/browserPlacesViews.js",
+  "browserPlacesViews.js":
+    "browser/components/places/content/browserPlacesViews.js",
   "panelUI.js": "browser/components/customizableui/content/panelUI.js",
-  "viewSourceUtils.js": "toolkit/components/viewsource/content/viewSourceUtils.js",
+  "viewSourceUtils.js":
+    "toolkit/components/viewsource/content/viewSourceUtils.js"
 };
 
-const globalScriptsRegExp = /<script type=\"application\/javascript\" src=\"(.*)\"\/>/;
+const globalScriptsRegExp =
+  /<script type=\"application\/javascript\" src=\"(.*)\"\/>/;
 
 function getGlobalScriptsIncludes() {
   let globalScriptsPath = path.join(rootDir, "browser", "base", "content",
@@ -57,8 +62,9 @@ function getGlobalScriptsIncludes() {
   for (let line of fileData) {
     let match = line.match(globalScriptsRegExp);
     if (match) {
-      let sourceFile = match[1].replace("chrome://browser/content/", "browser/base/content/")
-                               .replace("chrome://global/content/", "toolkit/content/");
+      let sourceFile =
+        match[1].replace("chrome://browser/content/", "browser/base/content/")
+                .replace("chrome://global/content/", "toolkit/content/");
 
       for (let mapping of Object.getOwnPropertyNames(MAPPINGS)) {
         if (sourceFile.includes(mapping)) {
@@ -82,8 +88,9 @@ function getScriptGlobals() {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
     } catch (e) {
       console.error(`Could not load globals from file ${fileName}: ${e}`);
-      console.error(`You may need to update the mappings in ${module.filename}`);
-      throw new Error(`Could not load globals from file ${fileName}: ${e}`)
+      console.error(
+        `You may need to update the mappings in ${module.filename}`);
+      throw new Error(`Could not load globals from file ${fileName}: ${e}`);
     }
   }
 

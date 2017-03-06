@@ -326,6 +326,7 @@ if (typeof Mozilla == "undefined") {
 })();
 
 // Make this library Require-able.
+/* eslint-env commonjs */
 if (typeof module !== "undefined" && module.exports) {
   module.exports = Mozilla.UITour;
 }

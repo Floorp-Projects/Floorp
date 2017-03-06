@@ -289,7 +289,7 @@ load 468578-1.xhtml
 # browser does when setting up print preview, but adding them anyway.
 load 468645-1.xhtml
 load 468645-2.xhtml
-asserts-if(stylo,1) load 468645-3.xhtml # bug 1337696
+load 468645-3.xhtml
 load 469861-1.xhtml
 load 469861-2.xhtml
 load 470851-1.xhtml

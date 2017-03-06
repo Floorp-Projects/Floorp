@@ -36,6 +36,8 @@ public:
   using base_type::end;
   using base_type::IsEmpty;
   using base_type::Clear;
+  using base_type::Length;
+  using base_type::operator[];
 
   nsStyleChangeList() { MOZ_COUNT_CTOR(nsStyleChangeList); }
   ~nsStyleChangeList() { MOZ_COUNT_DTOR(nsStyleChangeList); }
