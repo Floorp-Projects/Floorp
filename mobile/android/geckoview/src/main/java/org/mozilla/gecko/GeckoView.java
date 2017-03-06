@@ -12,6 +12,7 @@ import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.NativeQueue.StateHolder;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -40,6 +41,38 @@ public class GeckoView extends LayerView
     private static final String LOGTAG = "GeckoView";
 
     private static final boolean DEBUG = false;
+
+    /* package */ enum State implements NativeQueue.State {
+        @WrapForJNI INITIAL(0),
+        @WrapForJNI READY(1);
+
+        private int rank;
+
+        private State(int rank) {
+            this.rank = rank;
+        }
+
+        @Override
+        public boolean is(final NativeQueue.State other) {
+            return this == other;
+        }
+
+        @Override
+        public boolean isAtLeast(final NativeQueue.State other) {
+            if (other instanceof State) {
+                return this.rank >= ((State) other).rank;
+            }
+            return false;
+        }
+    }
+
+    private final StateHolder mStateHolder =
+        new StateHolder(State.INITIAL, State.READY);
+
+    @WrapForJNI(calledFrom = "gecko")
+    private void setState(final State newState) {
+        mStateHolder.setState(newState);
+    }
 
     private final EventDispatcher mEventDispatcher = new EventDispatcher();
 
