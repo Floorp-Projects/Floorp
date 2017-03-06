@@ -8,6 +8,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaShutdownManager.h"
 #include "MediaSource.h"
 #include "MediaSourceResource.h"
 #include "MediaSourceUtils.h"
@@ -54,13 +55,19 @@ MediaSourceDecoder::Load(nsIStreamListener**)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!GetStateMachine());
+
+  nsresult rv = MediaShutdownManager::Instance().Register(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   SetStateMachine(CreateStateMachine());
   if (!GetStateMachine()) {
     NS_WARNING("Failed to create state machine!");
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = GetStateMachine()->Init(this);
+  rv = GetStateMachine()->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
