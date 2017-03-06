@@ -226,12 +226,11 @@ this.BrowserTestUtils = {
    * @return {Promise}
    * @resolves Once the selected browser fires its load event.
    */
-  firstBrowserLoaded(win, aboutBlank = true) {
+  firstBrowserLoaded(win) {
     let mm = win.messageManager;
     return this.waitForMessage(mm, "browser-test-utils:loadEvent", (msg) => {
       let selectedBrowser = win.gBrowser.selectedBrowser;
-      return msg.target == selectedBrowser &&
-             (aboutBlank || selectedBrowser.currentURI.spec != "about:blank")
+      return msg.target == selectedBrowser;
     });
   },
 
