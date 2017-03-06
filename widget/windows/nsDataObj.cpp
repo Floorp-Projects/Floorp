@@ -1599,7 +1599,7 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
       wideFileName);
     if (FAILED(res))
       return res;
-    NS_UTF16ToCString(wideFileName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, filename);
+    NS_CopyUnicodeToNative(wideFileName, filename);
 
     dropFile->AppendNative(filename);
     rv = dropFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
@@ -2087,7 +2087,7 @@ HRESULT nsDataObj::GetFileDescriptor_IStreamA(FORMATETC& aFE, STGMEDIUM& aSTG)
   }
 
   nsAutoCString nativeFileName;
-  NS_UTF16ToCString(wideFileName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, nativeFileName);
+  NS_CopyUnicodeToNative(wideFileName, nativeFileName);
   
   strncpy(fileGroupDescA->fgd[0].cFileName, nativeFileName.get(), NS_MAX_FILEDESCRIPTOR - 1);
   fileGroupDescA->fgd[0].cFileName[NS_MAX_FILEDESCRIPTOR - 1] = '\0';
