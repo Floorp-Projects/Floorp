@@ -26,7 +26,6 @@ const logger = Log.repository.getLogger("Marionette");
 this.EXPORTED_SYMBOLS = ["MarionetteServer"];
 
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
-const MANAGE_OFFLINE_STATUS_PREF = "network.gonk.manage-offline-status";
 
 /**
  * Bootstraps Marionette and handles incoming client connections.
@@ -59,19 +58,8 @@ this.MarionetteServer = function (port, forceLocal) {
  *     A driver instance.
  */
 MarionetteServer.prototype.driverFactory = function() {
-  let appName = isMulet() ? "B2G" : Services.appinfo.name;
-  let bypassOffline = false;
-
   Preferences.set(CONTENT_LISTENER_PREF, false);
-
-  if (bypassOffline) {
-      logger.debug("Bypassing offline status");
-      Preferences.set(MANAGE_OFFLINE_STATUS_PREF, false);
-      Services.io.manageOfflineStatus = false;
-      Services.io.offline = false;
-  }
-
-  return new GeckoDriver(appName, this);
+  return new GeckoDriver(Services.appinfo.name, this);
 };
 
 MarionetteServer.prototype.__defineSetter__("acceptConnections", function (value) {
@@ -139,6 +127,3 @@ MarionetteServer.prototype.onConnectionClosed = function (conn) {
   logger.debug(`Closed connection ${id}`);
 };
 
-function isMulet() {
-  return Preferences.get("b2g.is_mulet", false);
-}
