@@ -13,6 +13,7 @@ const {
   formDataURI,
 } = require("./utils/request-utils");
 const {
+  getWebConsoleClient,
   onFirefoxConnect,
   onFirefoxDisconnect,
 } = require("./utils/client");
@@ -87,7 +88,6 @@ var NetMonitorController = {
       if (this._target.isTabActor) {
         this.tabClient = this._target.activeTab;
       }
-      this.webConsoleClient = this._target.activeConsole;
 
       let connectTimeline = () => {
         // Don't start up waiting for timeline markers if the server isn't
@@ -103,8 +103,12 @@ var NetMonitorController = {
 
       onFirefoxConnect(this._target);
       this._target.on("close", this._onTabDetached);
+
+      this.webConsoleClient = getWebConsoleClient();
+      this.NetworkEventsHandler = new NetworkEventsHandler();
       this.NetworkEventsHandler.connect();
 
+      window.gNetwork = this.NetworkEventsHandler;
       window.emit(EVENTS.CONNECTED);
 
       resolve();
@@ -823,12 +827,5 @@ NetworkEventsHandler.prototype = {
     return this.webConsoleClient.getString(stringGrip);
   }
 };
-
-/**
- * Preliminary setup for the NetMonitorController object.
- */
-NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
-window.NetMonitorController = NetMonitorController;
-window.gNetwork = NetMonitorController.NetworkEventsHandler;
 
 exports.NetMonitorController = NetMonitorController;
