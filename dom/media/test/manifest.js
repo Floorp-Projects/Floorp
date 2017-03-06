@@ -93,12 +93,11 @@ var gPlayedTests = [
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
 // anything for testing clone-specific bugs.
 var cloneKey = Math.floor(Math.random()*100000000);
-var gCloneTests = gSmallTests.concat([
-  { name:"bug520908.ogv", type:"video/ogg", duration:0.2 },
+var gCloneTests = [
   // short-video is more like 1s, so if you load this twice you'll get an unexpected duration
   { name:"dynamic_resource.sjs?key=" + cloneKey + "&res1=320x240.ogv&res2=short-video.ogv",
     type:"video/ogg", duration:0.266 },
-]);
+];
 
 // Used by test_play_twice.  Need one test file per decoder backend, plus
 // anything for testing bugs that occur when replying a played file.
