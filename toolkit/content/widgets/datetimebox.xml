@@ -45,38 +45,7 @@
         this.mDayPageUpDownInterval = 7;
         this.mYearPageUpDownInterval = 10;
 
-        // Default to en-US, month-day-year order.
-        this.mMonthField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-one");
-        this.mDayField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-two");
-        this.mYearField =
-          document.getAnonymousElementByAttribute(this, "anonid", "input-three");
-        this.mYearField.size = this.mYearLength;
-        this.mYearField.maxLength = this.mMaxYear.toString().length;
-
-        this.mMonthField.placeholder = this.mMonthPlaceHolder;
-        this.mDayField.placeholder = this.mDayPlaceHolder;
-        this.mYearField.placeholder = this.mYearPlaceHolder;
-
-        this.mMonthField.setAttribute("min", this.mMinMonth);
-        this.mMonthField.setAttribute("max", this.mMaxMonth);
-        this.mMonthField.setAttribute("pginterval",
-                                      this.mMonthPageUpDownInterval);
-        this.mDayField.setAttribute("min", this.mMinDay);
-        this.mDayField.setAttribute("max", this.mMaxDay);
-        this.mDayField.setAttribute("pginterval", this.mDayPageUpDownInterval);
-        this.mYearField.setAttribute("min", this.mMinYear);
-        this.mYearField.setAttribute("max", this.mMaxYear);
-        this.mYearField.setAttribute("pginterval",
-                                     this.mYearPageUpDownInterval);
-
-        this.mDaySeparator =
-           document.getAnonymousElementByAttribute(this, "anonid", "sep-first");
-        this.mDaySeparator.textContent = this.mSeparatorText;
-        this.mYearSeparator =
-          document.getAnonymousElementByAttribute(this, "anonid", "sep-second");
-        this.mYearSeparator.textContent = this.mSeparatorText;
+        this.buildEditFields();
 
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
@@ -84,6 +53,57 @@
         this.updateResetButtonVisibility();
       ]]>
       </constructor>
+
+      <method name="buildEditFields">
+        <body>
+        <![CDATA[
+          const HTML_NS = "http://www.w3.org/1999/xhtml";
+          let root =
+            document.getAnonymousElementByAttribute(this, "anonid", "edit-wrapper");
+
+          this.mYearField = this.createEditField(this.mYearPlaceHolder,
+            this.mYearLength, true, this.mMinYear, this.mMaxYear,
+            this.mYearPageUpDownInterval);
+          this.mYearField.maxLength = this.mMaxYear.toString().length;
+          this.mMonthField = this.createEditField(this.mMonthPlaceHolder,
+            this.mMonthDayLength, true, this.mMinMonth, this.mMaxMonth,
+            this.mMonthPageUpDownInterval);
+          this.mDayField = this.createEditField(this.mDayPlaceHolder,
+            this.mMonthDayLength, true, this.mMinDay, this.mMaxDay,
+            this.mDayPageUpDownInterval);
+
+          let fragment = document.createDocumentFragment();
+          let formatter = Intl.DateTimeFormat(this.mLocales, {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric"
+          });
+          formatter.formatToParts(Date.now()).map(part => {
+            switch (part.type) {
+              case "year":
+                fragment.appendChild(this.mYearField);
+                break;
+              case "month":
+                fragment.appendChild(this.mMonthField);
+                break;
+              case "day":
+                fragment.appendChild(this.mDayField);
+                break;
+              default:
+                // Remove bidirectional formatting characters, we'll handle
+                // directions on our own.
+                let value = this.stripDirFormattingChars(part.value);
+                let span = document.createElementNS(HTML_NS, "span");
+                span.textContent = value;
+                fragment.appendChild(span);
+                break;
+            }
+          });
+
+          root.appendChild(fragment);
+        ]]>
+        </body>
+      </method>
 
       <method name="clearInputFields">
         <parameter name="aFromInputElement"/>
