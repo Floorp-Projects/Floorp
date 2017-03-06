@@ -35,7 +35,7 @@ public class UrlUtils {
             return false;
         }
 
-        return url.contains(".");
+        return url.contains(".") || url.contains(":");
     }
 
     public static boolean isSearchQuery(String text) {
