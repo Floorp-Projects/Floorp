@@ -10,6 +10,8 @@ Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function run_test() {
+  enableValidationPrefs();
+
   validate_all_future_pings();
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 

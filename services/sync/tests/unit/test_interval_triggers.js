@@ -58,6 +58,8 @@ function run_test() {
 }
 
 add_task(async function test_successful_sync_adjustSyncInterval() {
+  enableValidationPrefs();
+
   _("Test successful sync calling adjustSyncInterval");
   let syncSuccesses = 0;
   function onSyncFinish() {
@@ -157,6 +159,8 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 });
 
 add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
+  enableValidationPrefs();
+
   _("Test unsuccessful sync calling adjustSyncInterval");
 
   let syncFailures = 0;
@@ -263,6 +267,8 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 });
 
 add_task(async function test_back_triggers_sync() {
+  enableValidationPrefs();
+
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -292,6 +298,8 @@ add_task(async function test_back_triggers_sync() {
 });
 
 add_task(async function test_adjust_interval_on_sync_error() {
+  enableValidationPrefs();
+
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -323,6 +331,8 @@ add_task(async function test_adjust_interval_on_sync_error() {
 });
 
 add_task(async function test_bug671378_scenario() {
+  enableValidationPrefs();
+
   // Test scenario similar to bug 671378. This bug appeared when a score
   // update occurred that wasn't large enough to trigger a sync so
   // scheduleNextSync() was called without a time interval parameter,
