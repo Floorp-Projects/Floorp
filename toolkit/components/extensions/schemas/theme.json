@@ -51,6 +51,136 @@
                 "optional": true
               }
             }
+          },
+          "icons": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "back": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "forward": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "reload": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "stop": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "bookmark_star": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "bookmark_menu": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "downloads": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "home": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "app_menu": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "cut": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "copy": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "paste": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "new_window": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "new_private_window": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "save_page": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "print": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "history": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "full_screen": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "find": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "options": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "addons": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "developer": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "synced_tabs": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "open_file": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "sidebars": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "share_page": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "subscribe": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "text_encoding": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "email_link": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "forget": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              },
+              "pocket": {
+                "$ref": "ExtensionURL",
+                "optional": true
+              }
+            }
           }
         }
       },
