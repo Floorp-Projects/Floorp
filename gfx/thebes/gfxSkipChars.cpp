@@ -19,8 +19,12 @@ void
 gfxSkipCharsIterator::SetOriginalOffset(int32_t aOffset)
 {
     aOffset += mOriginalStringToSkipCharsOffset;
-    NS_ASSERTION(uint32_t(aOffset) <= mSkipChars->mCharCount,
-                 "Invalid offset");
+    if (MOZ_UNLIKELY(uint32_t(aOffset) > mSkipChars->mCharCount)) {
+        gfxCriticalError() <<
+            "invalid offset " << aOffset <<
+            " for gfxSkipChars length " << mSkipChars->mCharCount;
+        aOffset = mSkipChars->mCharCount;
+    }
 
     mOriginalStringOffset = aOffset;
 
