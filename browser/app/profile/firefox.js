@@ -1289,11 +1289,6 @@ pref("geo.provider.use_gpsd", true);
 
 #endif
 
-// We keep allowing non-HTTPS geo requests on all the release
-// channels, for now.
-// TODO: default to false (or remove altogether) for #1072859.
-pref("geo.security.allowinsecure", true);
-
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s
 pref("network.disable.ipc.security", true);
