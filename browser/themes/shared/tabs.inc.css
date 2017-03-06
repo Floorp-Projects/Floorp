@@ -407,7 +407,7 @@
 }
 
 /*
- * LightweightThemeListener will set the current lightweight theme's header
+ * LightweightThemeConsumer will set the current lightweight theme's header
  * image to the lwt-header-image variable, used in each of the following rulesets.
  */
 

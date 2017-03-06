@@ -28,6 +28,7 @@ this.EXPORTED_SYMBOLS = [
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
@@ -173,9 +174,8 @@ ClientEngine.prototype = {
   },
 
   get brandName() {
-    let brand = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties");
-    return brand.GetStringFromName("brandShortName");
+    let brand = new StringBundle("chrome://branding/locale/brand.properties");
+    return brand.get("brandShortName");
   },
 
   get localName() {
