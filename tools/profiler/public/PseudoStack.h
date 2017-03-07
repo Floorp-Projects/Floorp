@@ -304,8 +304,6 @@ public:
       return;
     }
 
-    static_assert(sizeof(mStack[0]) == sizeof(js::ProfileEntry),
-                  "mStack must be binary compatible with js::ProfileEntry.");
     js::SetContextProfilingStack(context,
                                  (js::ProfileEntry*) mStack,
                                  (uint32_t*) &mStackPointer,
