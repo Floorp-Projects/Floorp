@@ -27,8 +27,10 @@ const logger = Log.repository.getLogger("Marionette");
 this.EXPORTED_SYMBOLS = ["server"];
 this.server = {};
 
-const CONTENT_LISTENER_PREF = "marionette.contentListener";
 const PROTOCOL_VERSION = 3;
+
+const PREF_CONTENT_LISTENER = "marionette.contentListener";
+const PREF_RECOMMENDED = "marionette.prefs.recommended";
 
 // Marionette sets preferences recommended for automation when it starts,
 // unless |marionette.prefs.recommended| has been set to false.
@@ -286,7 +288,7 @@ server.TCPListener = class {
    *     A driver instance.
    */
   driverFactory () {
-    Preferences.set(CONTENT_LISTENER_PREF, false);
+    Preferences.set(PREF_CONTENT_LISTENER, false);
     return new GeckoDriver(Services.appinfo.name, this);
   }
 
@@ -305,12 +307,14 @@ server.TCPListener = class {
       return;
     }
 
-    // set recommended preferences if they are not already user-defined
-    for (let [k, v] of RECOMMENDED_PREFS) {
-      if (!Preferences.isSet(k)) {
-        logger.debug(`Setting recommended pref ${k} to ${v}`);
-        Preferences.set(k, v);
-        this.alteredPrefs.add(k);
+    if (Preferences.get(PREF_RECOMMENDED)) {
+      // set recommended prefs if they are not already user-defined
+      for (let [k, v] of RECOMMENDED_PREFS) {
+        if (!Preferences.isSet(k)) {
+          logger.debug(`Setting recommended pref ${k} to ${v}`);
+          Preferences.set(k, v);
+          this.alteredPrefs.add(k);
+        }
       }
     }
 
