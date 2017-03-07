@@ -1,4 +1,4 @@
-// |reftest| skip -- jstests don't yet support module tests
+// |reftest| module
 // Copyright (C) 2016 Kevin Gibbons. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
