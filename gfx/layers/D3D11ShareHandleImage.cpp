@@ -31,7 +31,11 @@ bool
 D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice)
 {
   if (aAllocator) {
-    mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+    if (gfxPrefs::PDMWMFUseNV12Format()) {
+      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
+    } else {
+      mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+    }
     if (mTextureClient) {
       mTexture = static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
       return true;
@@ -188,12 +192,16 @@ already_AddRefed<TextureClient>
 D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                              const gfx::IntSize& aSize)
 {
+  TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
+  if (gfxPrefs::PDMWMFUseSyncTexture()) {
+    allocFlags = TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION;
+  }
   RefPtr<TextureClient> textureClient =
     CreateOrRecycle(aFormat,
                     aSize,
                     BackendSelector::Content,
                     layers::TextureFlags::DEFAULT,
-                    TextureAllocationFlags::ALLOC_DEFAULT);
+                    allocFlags);
   return textureClient.forget();
 }
 

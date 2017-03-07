@@ -699,7 +699,7 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     mTextureClientAllocator = new D3D11RecycleAllocator(
       layers::ImageBridgeChild::GetSingleton().get(), mDevice);
 
-    if (ImageBridgeChild::GetSingleton()) {
+    if (ImageBridgeChild::GetSingleton() && gfxPrefs::PDMWMFUseSyncTexture()) {
       // We use a syncobject to avoid the cost of the mutex lock when compositing,
       // and because it allows color conversion ocurring directly from this texture
       // DXVA does not seem to accept IDXGIKeyedMutex textures as input.
@@ -711,12 +711,14 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   } else {
     mTextureClientAllocator =
       new D3D11RecycleAllocator(aKnowsCompositor, mDevice);
-    // We use a syncobject to avoid the cost of the mutex lock when compositing,
-    // and because it allows color conversion ocurring directly from this texture
-    // DXVA does not seem to accept IDXGIKeyedMutex textures as input.
-    mSyncObject =
-      layers::SyncObject::CreateSyncObject(aKnowsCompositor->GetTextureFactoryIdentifier().mSyncHandle,
-                                            mDevice);
+    if (gfxPrefs::PDMWMFUseSyncTexture()) {
+      // We use a syncobject to avoid the cost of the mutex lock when compositing,
+      // and because it allows color conversion ocurring directly from this texture
+      // DXVA does not seem to accept IDXGIKeyedMutex textures as input.
+      mSyncObject =
+        layers::SyncObject::CreateSyncObject(aKnowsCompositor->GetTextureFactoryIdentifier().mSyncHandle,
+                                             mDevice);
+    }
   }
   mTextureClientAllocator->SetMaxPoolSize(5);
 
