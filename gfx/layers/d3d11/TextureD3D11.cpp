@@ -395,6 +395,10 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
                                 aSize.width, aSize.height, 1, 1,
                                 D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 
+  if (aFormat == SurfaceFormat::NV12) {
+    newDesc.Format = DXGI_FORMAT_NV12;
+  }
+
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
   if (!NS_IsMainThread() || !!(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) {
     // On the main thread we use the syncobject to handle synchronization.
