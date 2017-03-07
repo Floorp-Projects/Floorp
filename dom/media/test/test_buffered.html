@@ -100,7 +100,7 @@ function startTest(test, token) {
     v.src = uri;
     v._name = test.name;
     v._test = test;
-    v.addEventListener("timeupdate", testBuffered, {once: true});
+    v.addEventListener("loadeddata", testBuffered, {once: true});
     document.body.appendChild(v);
   };
 
