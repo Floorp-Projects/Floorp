@@ -22,6 +22,8 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent
                                                     const double& aIntensity,
                                                     const double& aDuration,
                                                     const uint32_t& aPromiseID) override;
+  virtual mozilla::ipc::IPCResult RecvStopVibrateHaptic(
+                                    const uint32_t& aGamepadIndex) override;
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
   bool HasGamepadListener() const { return mHasGamepadListener; }
  private:

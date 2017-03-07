@@ -94,12 +94,13 @@ private:
                            double aDuration,
                            uint64_t aVibrateIndex,
                            uint32_t aPromiseID);
+  void VibrateHapticComplete(uint32_t aPromiseID);
 
   // The index of tracked devices from vr::IVRSystem.
   uint32_t mTrackedIndex;
   float mTrigger;
   nsCOMPtr<nsIThread> mVibrateThread;
-  bool mIsVibrating;
+  Atomic<bool> mIsVibrateStopped;
 };
 
 } // namespace impl

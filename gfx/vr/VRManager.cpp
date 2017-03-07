@@ -434,5 +434,21 @@ VRManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
   }
 }
 
+void
+VRManager::StopVibrateHaptic(uint32_t aControllerIdx)
+{
+  for (const auto& manager: mManagers) {
+    manager->StopVibrateHaptic(aControllerIdx);
+  }
+}
+
+void
+VRManager::NotifyVibrateHapticCompleted(uint32_t aPromiseID)
+{
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendReplyGamepadVibrateHaptic(aPromiseID);
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla

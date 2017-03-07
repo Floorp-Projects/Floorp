@@ -451,6 +451,14 @@ VRManagerParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+VRManagerParent::RecvStopVibrateHaptic(const uint32_t& aControllerIdx)
+{
+  VRManager* vm = VRManager::Get();
+  vm->StopVibrateHaptic(aControllerIdx);
+  return IPC_OK();
+}
+
 bool
 VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
@@ -459,6 +467,19 @@ VRManagerParent::SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
   if (mHaveControllerListener &&
       (mIsContentChild || IsSameProcess())) {
     return PVRManagerParent::SendGamepadUpdate(aGamepadEvent);
+  } else {
+    return true;
+  }
+}
+
+bool
+VRManagerParent::SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID)
+{
+  // GamepadManager only exists at the content process
+  // or the same process in non-e10s mode.
+  if (mHaveControllerListener &&
+      (mIsContentChild || IsSameProcess())) {
+    return PVRManagerParent::SendReplyGamepadVibrateHaptic(aPromiseID);
   } else {
     return true;
   }
