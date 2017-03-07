@@ -626,5 +626,18 @@ ChromiumCDMParent::RecvDrainComplete()
   mDecodePromise.ResolveIfExists(MediaDataDecoder::DecodedData(), __func__);
   return IPC_OK();
 }
+RefPtr<ShutdownPromise>
+ChromiumCDMParent::ShutdownVideoDecoder()
+{
+  mInitVideoDecoderPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED,
+                                          __func__);
+  MOZ_ASSERT(mDecodePromise.IsEmpty());
+  MOZ_ASSERT(mFlushDecoderPromise.IsEmpty());
+  if (!SendDeinitializeVideoDecoder()) {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
+  return ShutdownPromise::CreateAndResolve(true, __func__);
+}
+
 } // namespace gmp
 } // namespace mozilla

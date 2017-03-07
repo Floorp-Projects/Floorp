@@ -134,7 +134,15 @@ ChromiumCDMVideoDecoder::Drain()
 RefPtr<ShutdownPromise>
 ChromiumCDMVideoDecoder::Shutdown()
 {
-  return ShutdownPromise::CreateAndResolve(true, __func__);
+  if (!mCDMParent) {
+    // Must have failed to get the CDMParent from the ChromiumCDMProxy
+    // in our constructor; the MediaKeys must have shut down the CDM
+    // before we had a chance to start up the decoder.
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
+  RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
+  return InvokeAsync(
+    mGMPThread, __func__, [cdm]() { return cdm->ShutdownVideoDecoder(); });
 }
 
 } // namespace mozilla
