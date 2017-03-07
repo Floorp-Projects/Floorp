@@ -7,9 +7,14 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MacroForEach.h"
 
+#define HELPER_IDENTITY(x) x
 #define HELPER_IDENTITY_PLUS(x) x +
 static_assert(MOZ_FOR_EACH(HELPER_IDENTITY_PLUS, (), (10)) 0 == 10, "");
 static_assert(MOZ_FOR_EACH(HELPER_IDENTITY_PLUS, (), (1, 1, 1)) 0 == 3, "");
+static_assert(MOZ_FOR_EACH_SEPARATED(HELPER_IDENTITY, (+),
+                                     (), (10)) == 10, "");
+static_assert(MOZ_FOR_EACH_SEPARATED(HELPER_IDENTITY, (+),
+                                     (), (1, 1, 1)) == 3, "");
 
 #define HELPER_DEFINE_VAR(x) const int test1_##x = x;
 MOZ_FOR_EACH(HELPER_DEFINE_VAR, (), (10, 20))
@@ -19,11 +24,18 @@ static_assert(test1_10 == 10 && test1_20 == 20, "");
 MOZ_FOR_EACH(HELPER_DEFINE_VAR2, (5,), (10, 20))
 static_assert(test2_10 == 15 && test2_20 == 25, "");
 
-#define HELPER_IDENTITY_COMMA(k1, k2, x) k1, k2, x,
+#define HELPER_DEFINE_PARAM(t, n) t n
+constexpr int
+test(MOZ_FOR_EACH_SEPARATED(HELPER_DEFINE_PARAM, (,), (int,), (a, b, c)))
+{
+  return a + b + c;
+}
+static_assert(test(1, 2, 3) == 6, "");
 
 int
 main()
 {
+#define HELPER_IDENTITY_COMMA(k1, k2, x) k1, k2, x,
   const int a[] = {
     MOZ_FOR_EACH(HELPER_IDENTITY_COMMA, (1, 2,), (10, 20, 30))
   };
