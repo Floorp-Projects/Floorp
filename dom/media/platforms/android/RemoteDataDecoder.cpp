@@ -5,7 +5,7 @@
 #include "AndroidBridge.h"
 #include "AndroidDecoderModule.h"
 #include "AndroidSurfaceTexture.h"
-#include "DurationMap.h"
+#include "SimpleMap.h"
 #include "FennecJNINatives.h"
 #include "GLImages.h"
 #include "MediaData.h"
@@ -285,7 +285,7 @@ public:
 private:
   layers::ImageContainer* mImageContainer;
   RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
-  DurationMap mInputDurations;
+  SimpleMap<int64_t> mInputDurations;
   bool mIsCodecSupportAdaptivePlayback = false;
   Mutex mMutex; // Protects mConfig
   VideoInfo mConfig;
