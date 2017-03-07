@@ -16,6 +16,7 @@
  *          getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
+ *          promisePrefChangeObserved
  */
 
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
@@ -347,4 +348,12 @@ function closePageAction(extension, win = window) {
   }
 
   return Promise.resolve();
+}
+
+function promisePrefChangeObserved(pref) {
+  return new Promise((resolve, reject) =>
+    Preferences.observe(pref, function prefObserver() {
+      Preferences.ignore(pref, prefObserver);
+      resolve();
+    }));
 }
