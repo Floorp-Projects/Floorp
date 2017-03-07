@@ -291,8 +291,13 @@ FileReader::DoReadData(uint64_t aCount)
     NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t bytesRead = 0;
-    mAsyncStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
-                               &bytesRead);
+    nsresult rv =
+      mAsyncStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
+                                 &bytesRead);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     MOZ_ASSERT(bytesRead == aCount, "failed to read data");
   }
   else {
@@ -314,7 +319,11 @@ FileReader::DoReadData(uint64_t aCount)
 
     uint32_t bytesRead = 0;
     MOZ_DIAGNOSTIC_ASSERT(mFileData);
-    mAsyncStream->Read(mFileData + mDataLen, aCount, &bytesRead);
+    nsresult rv = mAsyncStream->Read(mFileData + mDataLen, aCount, &bytesRead);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     MOZ_ASSERT(bytesRead == aCount, "failed to read data");
   }
 
@@ -613,25 +622,25 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
   // be 100% sure we have a workerHolder when OnLoadEnd() is called.
   FileReaderDecreaseBusyCounter RAII(this);
 
-  uint64_t aCount;
-  nsresult rv = aStream->Available(&aCount);
+  uint64_t count;
+  nsresult rv = aStream->Available(&count);
 
-  if (NS_SUCCEEDED(rv) && aCount) {
-    rv = DoReadData(aCount);
+  if (NS_SUCCEEDED(rv) && count) {
+    rv = DoReadData(count);
   }
 
   if (NS_SUCCEEDED(rv)) {
     rv = DoAsyncWait();
   }
 
-  if (NS_FAILED(rv) || !aCount) {
+  if (NS_FAILED(rv) || !count) {
     if (rv == NS_BASE_STREAM_CLOSED) {
       rv = NS_OK;
     }
     return OnLoadEnd(rv);
   }
 
-  mTransferred += aCount;
+  mTransferred += count;
 
   //Notify the timer is the appropriate timeframe has passed
   if (mTimerIsActive) {
