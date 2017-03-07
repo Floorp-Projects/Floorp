@@ -629,12 +629,13 @@ DXGIYCbCrTextureData::Deallocate(LayersIPCChannel*)
 already_AddRefed<TextureHost>
 CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
+                       LayersBackend aBackend,
                        TextureFlags aFlags)
 {
   RefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer: {
-      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
+      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
       break;
     }
     case SurfaceDescriptor::TSurfaceDescriptorD3D10: {

@@ -215,6 +215,7 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderLayerManager.h',
     'wr/WebRenderLayersLogging.h',
     'wr/WebRenderMessageUtils.h',
+    'wr/WebRenderTextureHost.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -405,6 +406,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderLayersLogging.cpp',
     'wr/WebRenderPaintedLayer.cpp',
     'wr/WebRenderTextLayer.cpp',
+    'wr/WebRenderTextureHost.cpp',
 ]
 
 SOURCES += [

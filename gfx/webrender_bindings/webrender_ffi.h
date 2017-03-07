@@ -23,6 +23,9 @@ struct WrType {                                   \
   bool operator<(const WrType& rhs) const {       \
     return mHandle < rhs.mHandle;                 \
   }                                               \
+  bool operator<=(const WrType& rhs) const {      \
+    return mHandle <= rhs.mHandle;                \
+  }                                               \
 };                                                \
 // ---
 
@@ -115,14 +118,13 @@ enum class WrImageRendering: uint32_t
   Sentinel /* this must be last, for IPC serialization purposes */
 };
 
-// TODO(Jerry): handle shmem or cpu raw buffers.
-//enum class WrExternalImageIdType: uint32_t
-//{
-//  TextureHandle = 0,
-//  MemOrShmem    = 1,
-//
-//  Sentinel /* this must be last, for IPC serialization purposes */
-//};
+enum class WrExternalImageIdType: uint32_t
+{
+  NativeTexture, // Currently, we only support gl texture handle.
+  RawData,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
 
 enum class WrMixBlendMode: uint32_t
 {
@@ -309,7 +311,7 @@ struct WrExternalImageId
 
 struct WrExternalImage
 {
-  //WrExternalImageIdType type;
+  WrExternalImageIdType type;
 
   // Texture coordinate
   float u0, v0;
@@ -318,10 +320,9 @@ struct WrExternalImage
   // external buffer handle
   uint32_t handle;
 
-  // TODO(Jerry): handle shmem or cpu raw buffers.
-  //// shmem or memory buffer
-  //// uint8_t* buff;
-  //// size_t size;
+  // handle RawData.
+  uint8_t* buff;
+  size_t size;
 };
 
 typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId);
