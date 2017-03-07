@@ -65,8 +65,7 @@ class EVCertVerificationResult {
 }
 
 function asyncTestEV(cert, expectedPRErrorCode, expectedEV,
-                     expectedOCSPRequestPaths, ocspResponseTypes = undefined)
-{
+                     expectedOCSPRequestPaths, ocspResponseTypes = undefined) {
   let now = Date.now() / 1000;
   return new Promise((resolve, reject) => {
     let ocspResponder = expectedOCSPRequestPaths.length > 0

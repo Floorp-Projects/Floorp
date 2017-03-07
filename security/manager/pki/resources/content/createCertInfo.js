@@ -8,8 +8,7 @@
 
 var keygenThread;
 
-function onLoad()
-{
+function onLoad() {
   keygenThread = window.arguments[0].QueryInterface(Components.interfaces.nsIKeygenThread);
 
   if (!keygenThread) {
@@ -30,8 +29,7 @@ function onLoad()
   keygenThread.startKeyGeneration(obs);
 }
 
-function onClose()
-{
+function onClose() {
   window.setCursor("auto");
 
   var alreadyClosed = {};

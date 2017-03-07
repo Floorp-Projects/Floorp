@@ -14,10 +14,10 @@ FakeSSLStatus.prototype = {
   isNotValidAtThisTime: false,
   isUntrusted: false,
   isExtendedValidation: false,
-  getInterface: function(aIID) {
+  getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsISSLStatus) ||
         aIID.equals(Ci.nsISupports)) {
       return this;
@@ -86,10 +86,10 @@ function test() {
   // test first when on private mode
   testOnWindow({private: true}, function(aWin) {
     doTest(true, aWin, function() {
-      //test when not on private mode
+      // test when not on private mode
       testOnWindow({}, function(aWin) {
         doTest(false, aWin, function() {
-          //test again when on private mode
+          // test again when on private mode
           testOnWindow({private: true}, function(aWin) {
             doTest(true, aWin, function () {
               finish();
