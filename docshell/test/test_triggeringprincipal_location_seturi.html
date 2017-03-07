@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN_URI = "http://mochi.test:8888/tests/docshell/test/dummy_page.html";
+const CROSS_ORIGIN_URI = "http://example.com/tests/docshell/test/dummy_page.html";
+const NUMBER_OF_TESTS = 3;
+let testCounter = 0;
+
+function checkFinish() {
+  testCounter++;
+  if (testCounter < NUMBER_OF_TESTS) {
+  	return;
+  }
+  SimpleTest.finish();
+}
+
+// ---- test 1 ----
+
+let myFrame1 = document.createElement("iframe");
+myFrame1.src = SAME_ORIGIN_URI;
+myFrame1.addEventListener("load", checkLoadFrame1);
+document.documentElement.appendChild(myFrame1);
+
+function checkLoadFrame1() {
+  myFrame1.removeEventListener('load', checkLoadFrame1, false);
+  // window.location.href is no longer cross-origin accessible in gecko.
+  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, SAME_ORIGIN_URI,
+    "initial same origin dummy loaded into frame1");
+
+  SpecialPowers.wrap(myFrame1.contentWindow).location.hash = "#bar";
+  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, SAME_ORIGIN_URI + "#bar",
+    "initial same origin dummy#bar loaded into iframe1");
+
+  myFrame1.addEventListener("load", checkNavFrame1);
+  myFrame1.src = CROSS_ORIGIN_URI;
+}
+
+function checkNavFrame1() {
+  myFrame1.removeEventListener('load', checkNavFrame1, false);
+  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, CROSS_ORIGIN_URI,
+    "cross origin dummy loaded into frame1");
+
+  myFrame1.addEventListener("load", checkBackNavFrame1);
+  myFrame1.src = SAME_ORIGIN_URI + "#bar";
+}
+
+function checkBackNavFrame1() {
+  myFrame1.removeEventListener('load', checkBackNavFrame1, false);
+  is(SpecialPowers.wrap(myFrame1.contentWindow).location.href, SAME_ORIGIN_URI + "#bar",
+    "navagiating back to same origin dummy for frame1");
+  checkFinish();
+}
+
+// ---- test 2 ----
+
+let myFrame2 = document.createElement("iframe");
+myFrame2.src = "about:blank";
+myFrame2.addEventListener("load", checkLoadFrame2);
+document.documentElement.appendChild(myFrame2);
+
+function checkLoadFrame2() {
+  myFrame2.removeEventListener('load', checkLoadFrame2, false);
+  is(SpecialPowers.wrap(myFrame2.contentWindow).location.href, "about:blank",
+    "initial about:blank frame loaded");
+
+  myFrame2.contentWindow.location.hash = "#foo";
+  is(SpecialPowers.wrap(myFrame2.contentWindow).location.href, "about:blank#foo",
+      "about:blank#foo frame loaded");
+  
+  myFrame2.addEventListener('load', checkHistoryFrame2);
+  myFrame2.src = "about:blank";
+}
+
+function checkHistoryFrame2() {
+  myFrame2.removeEventListener('load', checkHistoryFrame2, false);
+  is(SpecialPowers.wrap(myFrame2.contentWindow).location.href, "about:blank",
+    "about:blank frame loaded again");
+  checkFinish();
+}
+
+// ---- test 3 ----
+
+let myFrame3 = document.createElement("frame");
+document.documentElement.appendChild(myFrame3);
+myFrame3.contentWindow.location.hash = "#foo";
+
+is(myFrame3.contentWindow.location.href, "about:blank#foo",
+   "created history entry with about:blank#foo");
+checkFinish();
+
+</script>
+</body>
+</html>
