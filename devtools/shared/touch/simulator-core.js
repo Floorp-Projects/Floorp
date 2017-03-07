@@ -21,19 +21,8 @@ var systemAppOrigin = (function () {
   return systemOrigin;
 })();
 
-var threshold = 25;
-try {
-  threshold = Services.prefs.getIntPref("ui.dragThresholdX");
-} catch (e) {
-  // Fall back to default value
-}
-
-var delay = 500;
-try {
-  delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
-} catch (e) {
-  // Fall back to default value
-}
+var threshold = Services.prefs.getIntPref("ui.dragThresholdX", 25);
+var delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay", 500);
 
 function SimulatorCore(simulatorTarget) {
   this.simulatorTarget = simulatorTarget;

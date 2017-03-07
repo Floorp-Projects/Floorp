@@ -211,16 +211,11 @@ var ActiveProviders = {
 };
 
 function migrateSettings() {
-  let activeProviders, enabled;
-  try {
-    activeProviders = Services.prefs.getCharPref("social.activeProviders");
-  } catch (e) {
-    // not set, we'll check if we need to migrate older prefs
-  }
+  let enabled;
   if (Services.prefs.prefHasUserValue("social.enabled")) {
     enabled = Services.prefs.getBoolPref("social.enabled");
   }
-  if (activeProviders) {
+  if (Services.prefs.getCharPref("social.activeProviders", "")) {
     // migration from fx21 to fx22 or later
     // ensure any *builtin* provider in activeproviders is in user level prefs
     for (let origin in ActiveProviders._providers) {
