@@ -159,7 +159,7 @@ public:
    * Returns null if non available.
    */
   static already_AddRefed<ContentParent>
-  RandomSelect(const nsTArray<ContentParent*>& aContentParents,
+  MinTabSelect(const nsTArray<ContentParent*>& aContentParents,
                ContentParent* aOpener,
                int32_t maxContentParents);
 

@@ -48,5 +48,36 @@ RandomSelector.prototype = {
   },
 };
 
-var components = [RandomSelector];
+// Fills up aProcesses until max and then selects one from the available
+// ones that host the least number of tabs.
+function MinTabSelector() {
+}
+
+MinTabSelector.prototype = {
+  classID:          Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIContentProcessProvider]),
+
+  provideProcess(aType, aOpener, aProcesses, aCount) {
+    let maxContentParents = getMaxContentParents(aType);
+    if (aCount < maxContentParents) {
+      return Ci.nsIContentProcessProvider.NEW_PROCESS;
+    }
+
+    let min = Number.MAX_VALUE;
+    let candidate = Ci.nsIContentProcessProvider.NEW_PROCESS;
+
+    for (let i = 0; i < maxContentParents; i++) {
+      let process = aProcesses[i];
+      let tabCount = process.tabCount;
+      if (process.opener === aOpener && tabCount < min) {
+        min = tabCount;
+        candidate = i;
+      }
+    }
+
+    return candidate;
+  },
+};
+
+var components = [RandomSelector, MinTabSelector];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
