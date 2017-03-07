@@ -46,6 +46,8 @@ child:
 
   async DecryptAndDecodeFrame(CDMInputBuffer aBuffer);
 
+  async Drain();
+
   async Destroy();
 
 parent:
@@ -88,6 +90,8 @@ parent:
   async DecodeFailed(uint32_t aStatus);
 
   async ResetVideoDecoderComplete();
+
+  async DrainComplete();
 
   async Shutdown();
 };

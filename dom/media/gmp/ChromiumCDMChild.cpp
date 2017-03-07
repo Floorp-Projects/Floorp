@@ -488,35 +488,56 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
           rv);
 
   if (rv == cdm::kSuccess) {
-    // TODO: WidevineBuffers should hold a shmem instead of a array, and we can
-    // send the handle instead of copying the array here.
-
-    gmp::CDMVideoFrame output;
-    output.mFormat() = static_cast<cdm::VideoFormat>(frame.Format());
-    output.mImageWidth() = frame.Size().width;
-    output.mImageHeight() = frame.Size().height;
-    output.mData() = Move(
-      reinterpret_cast<WidevineBuffer*>(frame.FrameBuffer())->ExtractBuffer());
-    output.mYPlane() = { frame.PlaneOffset(cdm::VideoFrame::kYPlane),
-                         frame.Stride(cdm::VideoFrame::kYPlane) };
-    output.mUPlane() = { frame.PlaneOffset(cdm::VideoFrame::kUPlane),
-                         frame.Stride(cdm::VideoFrame::kUPlane) };
-    output.mVPlane() = { frame.PlaneOffset(cdm::VideoFrame::kVPlane),
-                         frame.Stride(cdm::VideoFrame::kVPlane) };
-    output.mTimestamp() = frame.Timestamp();
-
-    uint64_t duration = 0;
-    if (mFrameDurations.Find(frame.Timestamp(), duration)) {
-      output.mDuration() = duration;
-    }
-
-    Unused << SendDecoded(output);
+    ReturnOutput(frame);
   } else if (rv == cdm::kNeedMoreData) {
     Unused << SendDecoded(gmp::CDMVideoFrame());
   } else {
     Unused << SendDecodeFailed(rv);
   }
 
+  return IPC_OK();
+}
+
+void
+ChromiumCDMChild::ReturnOutput(WidevineVideoFrame& aFrame)
+{
+  // TODO: WidevineBuffers should hold a shmem instead of a array, and we can
+  // send the handle instead of copying the array here.
+  gmp::CDMVideoFrame output;
+  output.mFormat() = static_cast<cdm::VideoFormat>(aFrame.Format());
+  output.mImageWidth() = aFrame.Size().width;
+  output.mImageHeight() = aFrame.Size().height;
+  output.mData() = Move(
+    reinterpret_cast<WidevineBuffer*>(aFrame.FrameBuffer())->ExtractBuffer());
+  output.mYPlane() = { aFrame.PlaneOffset(cdm::VideoFrame::kYPlane),
+                       aFrame.Stride(cdm::VideoFrame::kYPlane) };
+  output.mUPlane() = { aFrame.PlaneOffset(cdm::VideoFrame::kUPlane),
+                       aFrame.Stride(cdm::VideoFrame::kUPlane) };
+  output.mVPlane() = { aFrame.PlaneOffset(cdm::VideoFrame::kVPlane),
+                       aFrame.Stride(cdm::VideoFrame::kVPlane) };
+  output.mTimestamp() = aFrame.Timestamp();
+
+  uint64_t duration = 0;
+  if (mFrameDurations.Find(aFrame.Timestamp(), duration)) {
+    output.mDuration() = duration;
+  }
+
+  Unused << SendDecoded(output);
+}
+
+mozilla::ipc::IPCResult
+ChromiumCDMChild::RecvDrain()
+{
+  WidevineVideoFrame frame;
+  cdm::InputBuffer sample;
+  cdm::Status rv = mCDM->DecryptAndDecodeFrame(sample, &frame);
+  CDM_LOG("ChromiumCDMChild::RecvDrain();  DecryptAndDecodeFrame() rv=%d", rv);
+  if (rv == cdm::kSuccess) {
+    MOZ_ASSERT(frame.Format() != cdm::kUnknownVideoFormat);
+    ReturnOutput(frame);
+  } else {
+    Unused << SendDrainComplete();
+  }
   return IPC_OK();
 }
 
