@@ -40,7 +40,7 @@ public:
   using base_type::Length;
   using base_type::operator[];
 
-  nsStyleChangeList(mozilla::StyleBackendType aType) :
+  explicit nsStyleChangeList(mozilla::StyleBackendType aType) :
     mType(aType) { MOZ_COUNT_CTOR(nsStyleChangeList); }
   ~nsStyleChangeList() { MOZ_COUNT_DTOR(nsStyleChangeList); }
   void AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint);
