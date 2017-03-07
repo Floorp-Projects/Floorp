@@ -430,10 +430,20 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           //  |  ID   | L=?   |UTF-8 RID value......          |...
           //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-          // TODO(jesup) - avoid allocating on each packet - high watermark the RID buffer?
-          char* ptrRID = new char[len+1];
-          memcpy(ptrRID, ptr, len);
-          ptrRID[len] = '\0';
+          // As per RFC 5285 section 4.2, len is the length of the header data
+          // - 1. E.G. a len of 0 indicates a header data length of 1
+          if ( &ptr[len + 1] > ptrRTPDataExtensionEnd ) {
+            LOG(LS_WARNING) << "Extension RtpStreamId data length " << (len + 1)
+              << " is longer than remaining input parse buffer "
+              << static_cast<size_t>(ptrRTPDataExtensionEnd - ptr);
+            return;
+          }
+
+          // TODO(jesup) - avoid allocating on each packet - high watermark the
+          // RID buffer?
+          char* ptrRID = new char[len + 2];
+          memcpy(ptrRID, ptr, len + 1);
+          ptrRID[len + 1] = '\0';
           header->extension.rid = ptrRID;
           header->extension.hasRID = true;
           break;

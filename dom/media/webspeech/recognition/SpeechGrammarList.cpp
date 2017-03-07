@@ -9,7 +9,6 @@
 #include "mozilla/dom/SpeechGrammarListBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
-#include "nsXPCOMStrings.h"
 #include "SpeechRecognition.h"
 
 namespace mozilla {

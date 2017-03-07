@@ -77,11 +77,13 @@ button {
   fill: var(--button-font-color-active);
 }
 
-.nav > button.left {
+.nav > button.prev,
+.nav > button.next:dir(rtl) {
   background: url("chrome://global/skin/icons/calendar-arrows.svg#left") no-repeat 50% 50%;
 }
 
-.nav > button.right {
+.nav > button.next,
+.nav > button.prev:dir(rtl) {
   background: url("chrome://global/skin/icons/calendar-arrows.svg#right") no-repeat 50% 50%;
 }
 
@@ -92,6 +94,7 @@ button {
   align-items: center;
   top: 0;
   left: 3rem;
+  right: 3rem;
   width: 17.1rem;
   height: var(--date-picker-item-height);
   z-index: 10;
@@ -101,7 +104,10 @@ button.month-year {
   font-size: 1.3rem;
   border: var(--border);
   border-radius: 0.3rem;
-  padding: 0.2rem 2.6rem 0.2rem 1.2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  padding-inline-start: 1.2rem;
+  padding-inline-end: 2.6rem;
 }
 
 button.month-year:hover {

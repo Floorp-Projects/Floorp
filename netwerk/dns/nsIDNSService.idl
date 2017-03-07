@@ -4,6 +4,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "mozilla/BasePrincipal.h"
+%}
+
 interface nsICancelable;
 interface nsIEventTarget;
 interface nsIDNSRecord;
@@ -17,6 +21,7 @@ namespace mozilla { namespace net {
 %}
 
 [ptr] native EntriesArray(nsTArray<mozilla::net::DNSCacheEntries>);
+[ref] native OriginAttributes(const mozilla::OriginAttributes);
 
 /**
  * nsIDNSService
@@ -39,13 +44,27 @@ interface nsIDNSService : nsISupports
      *        listener's onLookupComplete should be called.  however, if this
      *        parameter is null, then onLookupComplete will be called on an
      *        unspecified thread (possibly recursively).
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving, the DNS cache will be
+     *        separated according to this originAttributes. This attribute is
+     *        optional to avoid breaking add-ons.
      *
      * @return An object that can be used to cancel the host lookup.
      */
+    [implicit_jscontext, optional_argc]
     nsICancelable asyncResolve(in AUTF8String       aHostName,
                                in unsigned long     aFlags,
                                in nsIDNSListener    aListener,
-                               in nsIEventTarget    aListenerTarget);
+                               in nsIEventTarget    aListenerTarget,
+                    [optional] in jsval aOriginAttributes);
+
+    [notxpcom]
+    nsresult asyncResolveNative(in AUTF8String       aHostName,
+                                in unsigned long     aFlags,
+                                in nsIDNSListener    aListener,
+                                in nsIEventTarget    aListenerTarget,
+                                in OriginAttributes  aOriginAttributes,
+                                out nsICancelable    aResult);
 
     /**
      * Attempts to cancel a previously requested async DNS lookup
@@ -59,13 +78,25 @@ interface nsIDNSService : nsISupports
      *        result - used to match request information to requestor.
      * @param aReason
      *        nsresult reason for the cancellation
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving. This attribute is optional
+     *        to avoid breaking add-ons.
      *
      * @return An object that can be used to cancel the host lookup.
      */
+    [implicit_jscontext, optional_argc]
     void cancelAsyncResolve(in AUTF8String       aHostName,
                             in unsigned long     aFlags,
                             in nsIDNSListener    aListener,
-                            in nsresult          aReason);
+                            in nsresult          aReason,
+                 [optional] in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult cancelAsyncResolveNative(in AUTF8String       aHostName,
+                                      in unsigned long     aFlags,
+                                      in nsIDNSListener    aListener,
+                                      in nsresult          aReason,
+                                      in OriginAttributes  aOriginAttributes);
 
     /**
      * called to synchronously resolve a hostname.  warning this method may
@@ -76,12 +107,24 @@ interface nsIDNSService : nsISupports
      *        the hostname or IP-address-literal to resolve.
      * @param aFlags
      *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
+     * @param aOriginAttributes
+     *        the originAttribute for this resolving, the DNS cache will be
+     *        separated according to this originAttributes. This attribute is
+     *        optional to avoid breaking add-ons.
      *
      * @return DNS record corresponding to the given hostname.
      * @throws NS_ERROR_UNKNOWN_HOST if host could not be resolved.
      */
+    [implicit_jscontext, optional_argc]
     nsIDNSRecord resolve(in AUTF8String   aHostName,
-                         in unsigned long aFlags);
+                         in unsigned long aFlags,
+              [optional] in jsval         aOriginAttributes);
+
+    [notxpcom]
+    nsresult resolveNative(in AUTF8String       aHostName,
+                           in unsigned long     aFlags,
+                           in OriginAttributes  aOriginAttributes,
+                           out nsIDNSRecord     aResult);
 
     /**
      * kicks off an asynchronous host lookup.
@@ -92,21 +135,42 @@ interface nsIDNSService : nsISupports
      * Setting aNetworkInterface value make only sense for gonk,because it
      * an per networking interface query is possible.
      */
+    [implicit_jscontext, optional_argc]
     nsICancelable asyncResolveExtended(in AUTF8String       aHostName,
                                        in unsigned long     aFlags,
                                        in AUTF8String       aNetworkInterface,
                                        in nsIDNSListener    aListener,
-                                       in nsIEventTarget    aListenerTarget);
+                                       in nsIEventTarget    aListenerTarget,
+                            [optional] in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult asyncResolveExtendedNative(in AUTF8String       aHostName,
+                                        in unsigned long     aFlags,
+                                        in AUTF8String       aNetworkInterface,
+                                        in nsIDNSListener    aListener,
+                                        in nsIEventTarget    aListenerTarget,
+                                        in OriginAttributes  aOriginAttributes,
+                                        out nsICancelable    aResult);
 
     /**
      * Attempts to cancel a previously requested async DNS lookup
      * This is an extended versin with a additional parameter aNetworkInterface
      */
+    [implicit_jscontext, optional_argc]
     void cancelAsyncResolveExtended(in AUTF8String       aHostName,
                                     in unsigned long     aFlags,
                                     in AUTF8String       aNetworkInterface,
                                     in nsIDNSListener    aListener,
-                                    in nsresult          aReason);
+                                    in nsresult          aReason,
+                         [optional] in jsval             aOriginAttributes);
+
+    [notxpcom]
+    nsresult cancelAsyncResolveExtendedNative(in AUTF8String       aHostName,
+                                              in unsigned long     aFlags,
+                                              in AUTF8String       aNetworkInterface,
+                                              in nsIDNSListener    aListener,
+                                              in nsresult          aReason,
+                                              in OriginAttributes  aOriginAttributes);
 
     /**
      * The method takes a pointer to an nsTArray

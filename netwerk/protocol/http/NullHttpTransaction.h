@@ -38,7 +38,7 @@ public:
                       nsIInterfaceRequestor *callbacks,
                       uint32_t caps);
 
-  bool Claim();
+  MOZ_MUST_USE bool Claim();
 
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() override final { return true; }

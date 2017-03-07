@@ -32,9 +32,11 @@ nsDNSPrefetch::Shutdown()
 }
 
 nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI,
+                             mozilla::OriginAttributes& aOriginAttributes,
                              nsIDNSListener *aListener,
                              bool storeTiming)
-    : mStoreTiming(storeTiming)
+    : mOriginAttributes(aOriginAttributes)
+    , mStoreTiming(storeTiming)
     , mListener(do_GetWeakReference(aListener))
 {
     aURI->GetAsciiHost(mHostname);
@@ -58,10 +60,10 @@ nsDNSPrefetch::Prefetch(uint16_t flags)
     // mEndTimestamp will be a null timestamp and callers should check
     // TimingsValid() before using the timing.
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    return sDNSService->AsyncResolve(mHostname,
-                                     flags | nsIDNSService::RESOLVE_SPECULATE,
-                                     this, mainThread,
-                                     getter_AddRefs(tmpOutstanding));
+    return sDNSService->AsyncResolveNative(mHostname,
+                                           flags | nsIDNSService::RESOLVE_SPECULATE,
+                                           this, mainThread, mOriginAttributes,
+                                           getter_AddRefs(tmpOutstanding));
 }
 
 nsresult

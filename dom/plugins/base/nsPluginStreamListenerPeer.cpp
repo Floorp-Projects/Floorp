@@ -777,7 +777,8 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
+  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString, false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   mAbort = true; // instruct old stream listener to cancel
   // the request on the next ODA.
@@ -1174,7 +1175,8 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     }
 
     // Also provide all HTTP response headers to our listener.
-    httpChannel->VisitResponseHeaders(this);
+    rv = httpChannel->VisitResponseHeaders(this);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     mSeekable = false;
     // first we look for a content-encoding header. If we find one, we tell the

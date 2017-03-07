@@ -31,6 +31,7 @@ Structure:
       processType: <type>, // Type of process that crashed, see below for a list of types
       payload: {
         crashDate: "YYYY-MM-DD",
+        crashTime: <ISO Date>, // per-hour resolution
         version: 1,
         sessionId: <UUID>, // may be missing for crashes that happen early
                            // in startup. Added in Firefox 48 with the

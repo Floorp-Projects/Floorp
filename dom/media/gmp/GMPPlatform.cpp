@@ -10,6 +10,7 @@
 #include "GMPChild.h"
 #include "mozilla/Mutex.h"
 #include "base/thread.h"
+#include "base/time.h"
 #include "mozilla/ReentrantMonitor.h"
 
 #include <ctime>
@@ -220,8 +221,11 @@ SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS)
 GMPErr
 GetClock(GMPTimestamp* aOutTime)
 {
-  *aOutTime = time(0) * 1000;
-  return GMPNoErr;
+  if (!aOutTime) {
+    return GMPGenericErr;
+  }
+  *aOutTime = base::Time::Now().ToDoubleT() * 1000.0;
+ return GMPNoErr;
 }
 
 void

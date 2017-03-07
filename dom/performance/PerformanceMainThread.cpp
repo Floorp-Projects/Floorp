@@ -154,7 +154,8 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
       new PerformanceResourceTiming(performanceTiming, this, entryName);
 
     nsAutoCString protocol;
-    channel->GetProtocolVersion(protocol);
+    // Can be an empty string.
+    Unused << channel->GetProtocolVersion(protocol);
 
     // If this is a local fetch, nextHopProtocol should be set to empty string.
     nsCOMPtr<nsICacheInfoChannel> cachedChannel = do_QueryInterface(channel);
@@ -169,15 +170,15 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
     performanceEntry->SetNextHopProtocol(NS_ConvertUTF8toUTF16(protocol));
 
     uint64_t encodedBodySize = 0;
-    channel->GetEncodedBodySize(&encodedBodySize);
+    Unused << channel->GetEncodedBodySize(&encodedBodySize);
     performanceEntry->SetEncodedBodySize(encodedBodySize);
 
     uint64_t transferSize = 0;
-    channel->GetTransferSize(&transferSize);
+    Unused << channel->GetTransferSize(&transferSize);
     performanceEntry->SetTransferSize(transferSize);
 
     uint64_t decodedBodySize = 0;
-    channel->GetDecodedBodySize(&decodedBodySize);
+    Unused << channel->GetDecodedBodySize(&decodedBodySize);
     if (decodedBodySize == 0) {
       decodedBodySize = encodedBodySize;
     }

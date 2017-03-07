@@ -224,7 +224,8 @@ nsHttpTransaction::Init(uint32_t caps,
         if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
         }
-        httpChannelInternal->GetInitialRwin(&mInitialRwin);
+        rv = httpChannelInternal->GetInitialRwin(&mInitialRwin);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     // create transport event sink proxy. it coalesces consecutive
@@ -257,7 +258,8 @@ nsHttpTransaction::Init(uint32_t caps,
     //   field unless the server is known to be HTTP/1.1 compliant.
     if ((requestHead->IsPost() || requestHead->IsPut()) &&
         !requestBody && !requestHead->HasHeader(nsHttp::Transfer_Encoding)) {
-        requestHead->SetHeader(nsHttp::Content_Length, NS_LITERAL_CSTRING("0"));
+        rv = requestHead->SetHeader(nsHttp::Content_Length, NS_LITERAL_CSTRING("0"));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     // grab a weak reference to the request head
@@ -282,13 +284,17 @@ nsHttpTransaction::Init(uint32_t caps,
         mReqHeaderBuf.AppendLiteral("\r\n");
 
     // report the request header
-    if (mActivityDistributor)
-        mActivityDistributor->ObserveActivity(
+    if (mActivityDistributor) {
+        rv = mActivityDistributor->ObserveActivity(
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
             NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_HEADER,
             PR_Now(), 0,
             mReqHeaderBuf);
+        if (NS_FAILED(rv)) {
+            LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+        }
+    }
 
     // Create a string stream for the request header buf (the stream holds
     // a non-owning reference to the request header data, so we MUST keep
@@ -576,21 +582,28 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     if (mActivityDistributor) {
         // upon STATUS_WAITING_FOR; report request body sent
         if ((mHasRequestBody) &&
-            (status == NS_NET_STATUS_WAITING_FOR))
-            mActivityDistributor->ObserveActivity(
+            (status == NS_NET_STATUS_WAITING_FOR)) {
+            nsresult rv = mActivityDistributor->ObserveActivity(
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_REQUEST_BODY_SENT,
                 PR_Now(), 0, EmptyCString());
+            if (NS_FAILED(rv)) {
+                LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+            }
+        }
 
         // report the status and progress
-        mActivityDistributor->ObserveActivity(
+        nsresult rv = mActivityDistributor->ObserveActivity(
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_SOCKET_TRANSPORT,
             static_cast<uint32_t>(status),
             PR_Now(),
             progress,
             EmptyCString());
+        if (NS_FAILED(rv)) {
+            LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+        }
     }
     
     // nsHttpChannel synthesizes progress events in OnDataAvailable
@@ -743,7 +756,7 @@ nsHttpTransaction::ReadSegments(nsAHttpSegmentReader *reader,
                 do_QueryInterface(mRequestStream);
         if (asyncIn) {
             nsCOMPtr<nsIEventTarget> target;
-            gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
+            Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
             if (target)
                 asyncIn->AsyncWait(this, 0, 0, target);
             else {
@@ -851,7 +864,7 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
     // occur on socket thread so we stay synchronized.
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         nsCOMPtr<nsIEventTarget> target;
-        gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
+        Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
         if (target) {
             mPipeOut->AsyncWait(this, 0, 0, target);
             mWaitingOnPipeOut = true;
@@ -894,21 +907,28 @@ nsHttpTransaction::Close(nsresult reason)
 
     if (mActivityDistributor) {
         // report the reponse is complete if not already reported
-        if (!mResponseIsComplete)
-            mActivityDistributor->ObserveActivity(
+        if (!mResponseIsComplete) {
+            nsresult rv = mActivityDistributor->ObserveActivity(
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
                 static_cast<uint64_t>(mContentRead),
                 EmptyCString());
+            if (NS_FAILED(rv)) {
+                LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+            }
+        }
 
         // report that this transaction is closing
-        mActivityDistributor->ObserveActivity(
+        nsresult rv = mActivityDistributor->ObserveActivity(
             mChannel,
             NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
             NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE,
             PR_Now(), 0, EmptyCString());
+        if (NS_FAILED(rv)) {
+            LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+        }
     }
 
     // we must no longer reference the connection!  find out if the
@@ -1027,7 +1047,7 @@ nsHttpTransaction::Close(nsresult reason)
         if (!mHaveAllHeaders) {
             char data = '\n';
             uint32_t unused;
-            ParseHead(&data, 1, &unused);
+            Unused << ParseHead(&data, 1, &unused);
 
             if (mResponseHead->Version() == NS_HTTP_VERSION_0_9) {
                 // Reject 0 byte HTTP/0.9 Responses - bug 423506
@@ -1148,7 +1168,10 @@ nsHttpTransaction::Restart()
          mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
          mConnInfo = ci;
         if (mRequestHead) {
-            mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("0"));
+            DebugOnly<nsresult> rv =
+                mRequestHead->SetHeader(nsHttp::Alternate_Service_Used,
+                                        NS_LITERAL_CSTRING("0"));
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
@@ -1321,11 +1344,15 @@ nsHttpTransaction::ParseHead(char *buf,
         // report that we have a least some of the response
         if (mActivityDistributor && !mReportedStart) {
             mReportedStart = true;
-            mActivityDistributor->ObserveActivity(
+            rv = mActivityDistributor->ObserveActivity(
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_START,
                 PR_Now(), 0, EmptyCString());
+            if (NS_FAILED(rv)) {
+                LOG3(("ObserveActivity failed (%08x)",
+                      static_cast<uint32_t>(rv)));
+            }
         }
     }
 
@@ -1449,7 +1476,9 @@ nsHttpTransaction::HandleContentStart()
 
         // notify the connection, give it a chance to cause a reset.
         bool reset = false;
-        mConnection->OnHeadersAvailable(this, mRequestHead, mResponseHead, &reset);
+        nsresult rv = mConnection->OnHeadersAvailable(this, mRequestHead,
+                                                      mResponseHead, &reset);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // looks like we should ignore this response, resetting...
         if (reset) {
@@ -1606,14 +1635,19 @@ nsHttpTransaction::HandleContent(char *buf,
         }
 
         // report the entire response has arrived
-        if (mActivityDistributor)
-            mActivityDistributor->ObserveActivity(
+        if (mActivityDistributor) {
+            rv = mActivityDistributor->ObserveActivity(
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
                 PR_Now(),
                 static_cast<uint64_t>(mContentRead),
                 EmptyCString());
+            if (NS_FAILED(rv)) {
+                LOG3(("ObserveActivity failed (%08x)",
+                      static_cast<uint32_t>(rv)));
+            }
+        }
     }
 
     return NS_OK;
@@ -1663,12 +1697,16 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
             nsAutoCString completeResponseHeaders;
             mResponseHead->Flatten(completeResponseHeaders, false);
             completeResponseHeaders.AppendLiteral("\r\n");
-            mActivityDistributor->ObserveActivity(
+            rv = mActivityDistributor->ObserveActivity(
                 mChannel,
                 NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
                 NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER,
                 PR_Now(), 0,
                 completeResponseHeaders);
+            if (NS_FAILED(rv)) {
+                LOG3(("ObserveActivity failed (%08x)",
+                      static_cast<uint32_t>(rv)));
+            }
         }
     }
 
@@ -1696,7 +1734,8 @@ nsHttpTransaction::ProcessData(char *buf, uint32_t count, uint32_t *countRead)
         // the excess bytes back to the connection
         if (mResponseIsComplete && countRemaining) {
             MOZ_ASSERT(mConnection);
-            mConnection->PushBack(buf + *countRead, countRemaining);
+            rv = mConnection->PushBack(buf + *countRead, countRemaining);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
 
         if (!mContentDecodingCheck && mResponseHead) {
@@ -1754,7 +1793,11 @@ nsHttpTransaction::RemoveDispatchedAsBlocking()
     if (NS_SUCCEEDED(rv) && !blockers) {
         LOG(("nsHttpTransaction %p triggering release of blocked channels "
              " with request context=%p\n", this, mRequestContext.get()));
-        gHttpHandler->ConnMgr()->ProcessPendingQ();
+        rv = gHttpHandler->ConnMgr()->ProcessPendingQ();
+        if (NS_FAILED(rv)) {
+            LOG(("nsHttpTransaction::RemoveDispatchedAsBlocking\n"
+                 "    failed to process pending queue\n"));
+        }
     }
 
     mDispatchedAsBlocking = false;
@@ -1819,8 +1862,8 @@ nsHttpTransaction::CheckForStickyAuthSchemeAt(nsHttpAtom const& header)
       nsCOMPtr<nsIHttpAuthenticator> authenticator(do_CreateInstance(contractid.get()));
       if (authenticator) {
           uint32_t flags;
-          authenticator->GetAuthFlags(&flags);
-          if (flags & nsIHttpAuthenticator::CONNECTION_BASED) {
+          nsresult rv = authenticator->GetAuthFlags(&flags);
+          if (NS_SUCCEEDED(rv) && (flags & nsIHttpAuthenticator::CONNECTION_BASED)) {
               LOG(("  connection made sticky, found %s auth shema", schema.get()));
               // This is enough to make this transaction keep it's current connection,
               // prevents the connection from being released back to the pool.
@@ -2006,7 +2049,7 @@ nsHttpTransaction::TryToRunPacedRequest()
 
     mSubmittedRatePacing = true;
     mSynchronousRatePaceRequest = true;
-    gHttpHandler->SubmitPacedRequest(this, getter_AddRefs(mTokenBucketCancel));
+    Unused << gHttpHandler->SubmitPacedRequest(this, getter_AddRefs(mTokenBucketCancel));
     mSynchronousRatePaceRequest = false;
     return mPassedRatePacing;
 }
@@ -2017,8 +2060,13 @@ nsHttpTransaction::OnTokenBucketAdmitted()
     mPassedRatePacing = true;
     mTokenBucketCancel = nullptr;
 
-    if (!mSynchronousRatePaceRequest)
-        gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+    if (!mSynchronousRatePaceRequest) {
+        nsresult rv = gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+        if (NS_FAILED(rv)) {
+            LOG(("nsHttpTransaction::OnTokenBucketAdmitted\n"
+                 "    failed to process pending queue\n"));
+        }
+    }
 }
 
 void

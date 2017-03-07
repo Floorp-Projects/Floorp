@@ -25,7 +25,11 @@ namespace net {
 void
 nsHttpConnectionMgr::PrintDiagnostics()
 {
-  PostEvent(&nsHttpConnectionMgr::OnMsgPrintDiagnostics, 0, nullptr);
+  nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgPrintDiagnostics, 0, nullptr);
+  if (NS_FAILED(rv)) {
+    LOG(("nsHttpConnectionMgr::PrintDiagnostics\n"
+         "  failed to post OnMsgPrintDiagnostics event"));
+  }
 }
 
 void

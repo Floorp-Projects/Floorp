@@ -66,7 +66,10 @@ TransportProviderParent::MaybeNotify()
     return;
   }
 
-  mListener->OnTransportAvailable(mTransport, mSocketIn, mSocketOut);
+  DebugOnly<nsresult> rv = mListener->OnTransportAvailable(mTransport,
+                                                           mSocketIn,
+                                                           mSocketOut);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 
