@@ -506,6 +506,19 @@ ScriptableCPInfo::GetOpener(nsIContentProcessInfo** aInfo)
 }
 
 NS_IMETHODIMP
+ScriptableCPInfo::GetTabCount(int32_t* aTabCount)
+{
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  *aTabCount = cpm->GetTabParentCountByProcessId(mContentParent->ChildID());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ScriptableCPInfo::GetMessageManager(nsIMessageSender** aMessenger)
 {
   *aMessenger = nullptr;
@@ -757,23 +770,28 @@ ContentParent::ReleaseCachedProcesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::RandomSelect(const nsTArray<ContentParent*>& aContentParents,
+ContentParent::MinTabSelect(const nsTArray<ContentParent*>& aContentParents,
                             ContentParent* aOpener, int32_t aMaxContentParents)
 {
   uint32_t maxSelectable = std::min(static_cast<uint32_t>(aContentParents.Length()),
                                     static_cast<uint32_t>(aMaxContentParents));
-  uint32_t startIdx = rand() % maxSelectable;
-  uint32_t currIdx = startIdx;
-  do {
-    RefPtr<ContentParent> p = aContentParents[currIdx];
+  uint32_t min = INT_MAX;
+  RefPtr<ContentParent> candidate;
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+
+  for (uint32_t i = 0; i < maxSelectable; i++) {
+    ContentParent* p = aContentParents[i];
     NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sBrowserContentParents?");
     if (p->mOpener == aOpener) {
-      return p.forget();
+      uint32_t tabCount = cpm->GetTabParentCountByProcessId(p->ChildID());
+      if (tabCount < min) {
+        candidate = p;
+        min = tabCount;
+      }
     }
-    currIdx = (currIdx + 1) % maxSelectable;
-  } while (currIdx != startIdx);
+  }
 
-  return nullptr;
+  return candidate.forget();
 }
 
 /*static*/ already_AddRefed<ContentParent>
@@ -816,7 +834,7 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
       NS_WARNING("nsIContentProcessProvider failed to return a process");
       RefPtr<ContentParent> random;
       if (contentParents.Length() >= maxContentParents &&
-          (random = RandomSelect(contentParents, aOpener, maxContentParents))) {
+          (random = MinTabSelect(contentParents, aOpener, maxContentParents))) {
         return random.forget();
       }
     }

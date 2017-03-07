@@ -28,6 +28,11 @@ interface nsIContentProcessInfo : nsISupports
   readonly attribute nsIContentProcessInfo opener;
 
   /**
+   * Number of opened tabs living in this content process.
+   */
+  readonly attribute int32_t tabCount;
+
+  /**
    * The process manager for this ContentParent (so a process message manager
    * as opposed to a frame message manager.
    */
