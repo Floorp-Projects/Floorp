@@ -188,15 +188,5 @@ ChromeUtils::IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
 
-/* static */ bool
-ChromeUtils::IsOriginAttributesEqualIgnoringFPD(const dom::OriginAttributesDictionary& aA,
-                                                const dom::OriginAttributesDictionary& aB)
-{
-  return aA.mAppId == aB.mAppId &&
-         aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
-         aA.mUserContextId == aB.mUserContextId &&
-         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
-}
-
 } // namespace dom
 } // namespace mozilla
