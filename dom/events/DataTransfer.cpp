@@ -332,11 +332,8 @@ DataTransfer::GetTypes(nsTArray<nsString>& aTypes, CallerType aCallerType) const
       continue;
     }
 
-    // NOTE: The reason why we get the internal type here is because we want
-    // kFileMime to appear in the types list for backwards compatibility
-    // reasons.
     nsAutoString type;
-    item->GetInternalType(type);
+    item->GetType(type);
     if (item->Kind() == DataTransferItem::KIND_STRING || type.EqualsASCII(kFileMime)) {
       // If the entry has kind KIND_STRING, we want to add it to the list.
       aTypes.AppendElement(type);
@@ -524,11 +521,8 @@ DataTransfer::MozTypesAt(uint32_t aIndex, CallerType aCallerType,
         continue;
       }
 
-      // NOTE: The reason why we get the internal type here is because we want
-      // kFileMime to appear in the types list for backwards compatibility
-      // reasons.
       nsAutoString type;
-      items[i]->GetInternalType(type);
+      items[i]->GetType(type);
       if (NS_WARN_IF(!types->Add(type))) {
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
@@ -987,7 +981,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
       }
 
       nsAutoString type;
-      formatitem->GetInternalType(type);
+      formatitem->GetType(type);
 
       // If the data is of one of the well-known formats, use it directly.
       bool isCustomFormat = true;
