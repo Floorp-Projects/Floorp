@@ -1,11 +1,13 @@
+import os
 BRANCH = "mozilla-beta"
 MOZ_UPDATE_CHANNEL = "beta"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-15/en-US"
+EN_US_BINARY_URL = None
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
+    "branch": BRANCH,
     "stage_product": "mobile",
     "log_name": "single_locale",
     "objdir": OBJDIR,
@@ -13,13 +15,16 @@ config = {
     "buildbot_json_path": "buildprops.json",
     "force_clobber": True,
     "clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
-    "locales_file": "buildbot-configs/mozilla/l10n-changesets_mobile-beta.json",
+    "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
-    "locales_platform": "android",
+    "locales_platform": "android-api-15",
     "ignore_locales": ["en-US"],
     "balrog_credentials_file": "oauth.txt",
     "tools_repo": "https://hg.mozilla.org/build/tools",
+    "platform": "android",
     "is_release_or_beta": True,
+    "build_type": "api-15-opt",
+    "build_target": "Android_arm-eabi-gcc3",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
@@ -32,10 +37,6 @@ config = {
         "branch": "default",
         "dest": MOZILLA_DIR,
     }, {
-        "repo": "https://hg.mozilla.org/build/buildbot-configs",
-        "branch": "default",
-        "dest": "buildbot-configs"
-    }, {
         "repo": "https://hg.mozilla.org/build/tools",
         "branch": "default",
         "dest": "tools"
@@ -45,19 +46,16 @@ config = {
     'vcs_share_base': HG_SHARE_BASE_DIR,
     "l10n_dir": MOZILLA_DIR,
 
-    "release_config_file": "buildbot-configs/mozilla/release-fennec-mozilla-beta.py",
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
-        "MOZ_PKG_VERSION": "%(version)s",
+        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "MOZ_OBJDIR": OBJDIR,
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "base_en_us_binary_url": EN_US_BINARY_URL,
     "upload_branch": "%s-android-api-15" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-15/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates %(post_upload_extra)s",
     "merge_locales": True,
     "mozilla_dir": MOZILLA_DIR,
     "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-15/l10n-release" % MOZILLA_DIR,
