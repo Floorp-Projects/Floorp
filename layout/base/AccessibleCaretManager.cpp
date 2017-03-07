@@ -811,6 +811,14 @@ AccessibleCaretManager::GetFrameSelection() const
   }
 }
 
+nsAutoString
+AccessibleCaretManager::StringifiedSelection() const
+{
+  nsAutoString str;
+  GetSelection()->Stringify(str);
+  return str;
+}
+
 Element*
 AccessibleCaretManager::GetEditingHostForFrame(nsIFrame* aFrame) const
 {
@@ -957,8 +965,7 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     // we can compare them with the modified ones later.
     nsINode* oldFocusNode = selection->GetFocusNode();
     uint32_t oldFocusOffset = selection->FocusOffset();
-    nsAutoString oldSelectedText;
-    selection->Stringify(oldSelectedText);
+    nsAutoString oldSelectedText = StringifiedSelection();
 
     // Extend the selection by one char.
     selection->Modify(NS_LITERAL_STRING("extend"),
@@ -979,8 +986,7 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     // returned by stringify() won't have a new line at the beginning or the
     // end of the string. Therefore, if either focus node or offset is
     // changed, but selected text is not changed, we're done, too.
-    nsAutoString selectedText;
-    selection->Stringify(selectedText);
+    nsAutoString selectedText = StringifiedSelection();
     nsAutoString phoneRegex(NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
 
     if (!nsContentUtils::IsPatternMatching(selectedText, phoneRegex, doc) ||
