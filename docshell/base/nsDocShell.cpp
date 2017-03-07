@@ -425,7 +425,7 @@ public:
     mLoadGroup = aLoadGroup;
   }
 
-  nsresult StartTimeout();
+  nsresult StartTimeout(Dispatcher* aDispatcher);
 
 private:
   ~nsPingListener();
@@ -445,9 +445,12 @@ nsPingListener::~nsPingListener()
 }
 
 nsresult
-nsPingListener::StartTimeout()
+nsPingListener::StartTimeout(Dispatcher* aDispatcher)
 {
+  NS_ENSURE_ARG(aDispatcher);
+
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  timer->SetTarget(aDispatcher->EventTargetFor(TaskCategory::Network));
 
   if (timer) {
     nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, mLoadGroup,
@@ -641,7 +644,7 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   info->numPings++;
 
   // Prevent ping requests from stalling and never being garbage collected...
-  if (NS_FAILED(pingListener->StartTimeout())) {
+  if (NS_FAILED(pingListener->StartTimeout(doc->GetDocGroup()))) {
     // If we failed to setup the timer, then we should just cancel the channel
     // because we won't be able to ensure that it goes away in a timely manner.
     chan->Cancel(NS_ERROR_ABORT);
@@ -1743,6 +1746,33 @@ nsDocShell::FirePageHideNotificationInternal(bool aIsUnload,
     // any farther.
     DetachEditorFromWindow();
   }
+}
+
+nsresult
+nsDocShell::DispatchToTabGroup(const char* aName,
+                               TaskCategory aCategory,
+                               already_AddRefed<nsIRunnable>&& aRunnable)
+{
+  // Hold the ref so we won't forget to release it.
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+  if (!win) {
+    // Window should only be unavailable after destroyed.
+    MOZ_ASSERT(mIsBeingDestroyed);
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
+  return tabGroup->Dispatch(aName, aCategory, runnable.forget());
+}
+
+NS_IMETHODIMP
+nsDocShell::DispatchLocationChangeEvent()
+{
+  return DispatchToTabGroup("nsDocShell::FireDummyOnLocationChange",
+                            TaskCategory::Other,
+                            NewRunnableMethod(this,
+                              &nsDocShell::FireDummyOnLocationChange));
 }
 
 bool
@@ -6745,8 +6775,11 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
     // timer and fire it right away.
     nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
+    nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+    NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
     mRefreshURIList->AppendElement(timer, /*weak =*/ false);  // owning timer ref
+    timer->SetTarget(win->TabGroup()->EventTargetFor(TaskCategory::Network));
     timer->InitWithCallback(refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT);
   }
   return NS_OK;
@@ -7228,12 +7261,14 @@ nsDocShell::RefreshURIFromQueue()
         static_cast<nsRefreshTimer*>(
           static_cast<nsITimerCallback*>(refreshInfo))->GetDelay();
       nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
-      if (timer) {
+      nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
+      if (timer && win) {
         // Replace the nsRefreshTimer element in the queue with
         // its corresponding timer object, so that in case another
         // load comes through before the timer can go off, the timer will
         // get cancelled in CancelRefreshURITimer()
         mRefreshURIList->ReplaceElementAt(timer, n, /*weak =*/ false);
+        timer->SetTarget(win->TabGroup()->EventTargetFor(TaskCategory::Network));
         timer->InitWithCallback(refreshInfo, delay, nsITimer::TYPE_ONE_SHOT);
       }
     }
@@ -8514,7 +8549,9 @@ nsDocShell::RestorePresentation(nsISHEntry* aSHEntry, bool* aRestoring)
   mRestorePresentationEvent.Revoke();
 
   RefPtr<RestorePresentationEvent> evt = new RestorePresentationEvent(this);
-  nsresult rv = NS_DispatchToCurrentThread(evt);
+  nsresult rv = DispatchToTabGroup("nsDocShell::RestorePresentationEvent",
+                                   TaskCategory::Other,
+                                   RefPtr<RestorePresentationEvent>(evt).forget());
   if (NS_SUCCEEDED(rv)) {
     mRestorePresentationEvent = evt.get();
     // The rest of the restore processing will happen on our event
@@ -10212,7 +10249,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                               aFlags, aTypeHint, aPostData, aHeadersData,
                               aLoadType, aSHEntry, aFirstParty, aSrcdoc,
                               aSourceDocShell, aBaseURI, false);
-      return NS_DispatchToCurrentThread(ev);
+      return DispatchToTabGroup("nsDocShell::InternalLoadEvent",
+                                TaskCategory::Other, ev.forget());
     }
 
     // Just ignore this load attempt
@@ -14007,7 +14045,8 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
                          aPostDataStream, aHeadersDataStream, noOpenerImplied,
                          aIsTrusted, aTriggeringPrincipal);
-  return NS_DispatchToCurrentThread(ev);
+  return DispatchToTabGroup("nsDocShell::OnLinkClickEvent",
+                            TaskCategory::UI, ev.forget());
 }
 
 NS_IMETHODIMP
