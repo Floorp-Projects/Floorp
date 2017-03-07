@@ -99,7 +99,11 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
 #. Optimize the target task graph using task-specific optimization methods.
    The result is the "optimized task graph" with fewer nodes than the target
    task graph.  See :ref:`optimization`.
-#. Create tasks for all tasks in the optimized task graph.
+#. Morph the graph. Morphs are like syntactic sugar: they keep the same meaning,
+   but express it in a lower-level way. These generally work around limitations
+   in the TaskCluster platform, such as number of dependencies or routes in
+   a task.
+#. Create tasks for all tasks in the morphed task graph.
 
 Transitive Closure
 ..................
