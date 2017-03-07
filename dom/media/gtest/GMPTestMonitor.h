@@ -36,8 +36,10 @@ private:
 public:
   void SetFinished()
   {
-    NS_DispatchToMainThread(mozilla::NewNonOwningRunnableMethod(this,
-                                                                &GMPTestMonitor::MarkFinished));
+    mozilla::SystemGroup::Dispatch(
+      "GMPTestMonitor::SetFinished",
+      mozilla::TaskCategory::Other,
+      mozilla::NewNonOwningRunnableMethod(this, &GMPTestMonitor::MarkFinished));
   }
 
 private:

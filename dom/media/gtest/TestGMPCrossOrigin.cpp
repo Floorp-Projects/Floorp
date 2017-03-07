@@ -427,12 +427,13 @@ ClearGMPStorage(already_AddRefed<nsIRunnable> aContinuation,
 {
   RefPtr<ClearGMPStorageTask> task(
     new ClearGMPStorageTask(Move(aContinuation), aTarget, aSince));
-  NS_DispatchToMainThread(task, NS_DISPATCH_NORMAL);
+  SystemGroup::Dispatch("ClearGMPStorage", TaskCategory::Other, task.forget());
 }
 
 static void
 SimulatePBModeExit()
 {
+  // SystemGroup::EventTargetFor() doesn't support NS_DISPATCH_SYNC.
   NS_DispatchToMainThread(new NotifyObserversTask("last-pb-context-exited"), NS_DISPATCH_SYNC);
 }
 
@@ -785,7 +786,10 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"),
                            NodeIdCollector(siteInfo.get()));
     // Invoke "Forget this site" on the main thread.
-    NS_DispatchToMainThread(NewRunnableMethod<UniquePtr<NodeInfo>&&>(
+    SystemGroup::Dispatch(
+      "TestForgetThisSite_Forget",
+      TaskCategory::Other,
+      NewRunnableMethod<UniquePtr<NodeInfo>&&>(
         this, &GMPStorageTest::TestForgetThisSite_Forget, Move(siteInfo)));
   }
 
@@ -1169,7 +1173,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     RefPtr<GMPShutdownObserver> task(
       new GMPShutdownObserver(NewRunnableMethod(this, &GMPStorageTest::Shutdown),
                               Move(aContinuation), mNodeId));
-    NS_DispatchToMainThread(task, NS_DISPATCH_NORMAL);
+    SystemGroup::Dispatch("GMPShutdownObserver", TaskCategory::Other, task.forget());
   }
 
   void Shutdown() {
@@ -1186,7 +1190,8 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   void SetFinished() {
     mFinished = true;
     Shutdown();
-    NS_DispatchToMainThread(NewRunnableMethod(this, &GMPStorageTest::Dummy));
+    nsCOMPtr<nsIRunnable> task = NewRunnableMethod(this, &GMPStorageTest::Dummy);
+    SystemGroup::Dispatch("GMPStorageTest::Dummy", TaskCategory::Other, task.forget());
   }
 
   void SessionMessage(const nsCString& aSessionId,
