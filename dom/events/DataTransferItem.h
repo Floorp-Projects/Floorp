@@ -69,12 +69,10 @@ public:
     }
   }
 
-  void GetInternalType(nsAString& aType) const
+  void GetType(nsAString& aType) const
   {
     aType = mType;
   }
-
-  void GetType(nsAString& aType);
 
   eKind Kind() const
   {

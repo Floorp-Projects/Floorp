@@ -10,7 +10,6 @@
 <body>
 <p id="display"></p>
 <div id="content" style="border: 3px solid black; padding: 3em;">CONTENT TEXT<input id="content-input" value="INPUT TEXT"></div>
-<img id="image" src="image_50.png">
 <button id="button">Button</button>
 
 <div id="syntheticSpot" oncut="compareSynthetic(event, 'cut')"
@@ -57,7 +56,6 @@ var testFunctions = [
   test_input_copy_button_dataTransfer,
   test_eventspref_disabled,
   test_input_cut_disallowed_types_dataTransfer,
-  test_image_dataTransfer,
   ];
 
 function doTests()
@@ -707,40 +705,6 @@ function test_input_cut_disallowed_types_dataTransfer() {
     ok(oncutExecuted, "The oncut handler should have been executed");
   } finally {
     contentInput.oncut = null;
-  }
-}
-
-// Try copying an image to the clipboard and make sure that it looks correct when pasting it.
-function test_image_dataTransfer() {
-  // Copy the image's data to the clipboard
-  SpecialPowers.setCommandNode(window, document.getElementById("image"));
-  SpecialPowers.doCommand(window, "cmd_copyImageContents");
-
-  let onpasteCalled = false;
-  document.onpaste = function(event) {
-    ok(event instanceof ClipboardEvent, "paste event is an ClipboardEvent");
-    ok(event.clipboardData instanceof DataTransfer, "paste event dataTransfer is a DataTransfer");
-    let items = event.clipboardData.items;
-    let foundData = false;
-    for (let i = 0; i < items.length; ++i)  {
-      if (items[i].kind == "file") {
-        foundData = true;
-        is(items[i].type, "image/png", "The type of the data must be image/png");
-        is(items[i].getAsFile().type, "image/png", "The attached file must be image/png");
-      }
-    }
-    ok(foundData, "Should have found a file entry in the DataTransferItemList");
-    let files = event.clipboardData.files;
-    is(files.length, 1, "There should only be one file on the DataTransfer");
-    is(files[0].type, "image/png", "The only file should be an image/png");
-    onpasteCalled = true;
-  }
-
-  try {
-    synthesizeKey("v", {accelKey: 1});
-    ok(onpasteCalled, "The paste event listener must have been called");
-  } finally {
-    document.onpaste = null;
   }
 }
 
