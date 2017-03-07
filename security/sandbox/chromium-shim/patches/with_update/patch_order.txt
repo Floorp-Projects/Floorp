@@ -12,3 +12,4 @@ fix_Wcomma_warning_in_time_cc.patch
 allow_read_only_all_paths_rule.patch
 revert_TargetNtSetInformationThread_change.patch
 mingw_base_win_get_caller.patch
+mingw_duplicate_instatinations.patch
