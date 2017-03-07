@@ -77,7 +77,7 @@ typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
  * translucent selection overlay. In general these parts can be drawn at
  * discontiguous z-levels; see CSS2.1 appendix E:
  * http://www.w3.org/TR/CSS21/zindex.html
- * 
+ *
  * We construct a display list for a frame tree that contains one item
  * for each visual part. The display list is itself a tree since some items
  * are containers for other items; however, its structure does not match
@@ -91,20 +91,20 @@ typedef mozilla::EnumSet<mozilla::gfx::CompositionOp> BlendModeSet;
  * example, when painting we avoid creating nsDisplayBackground items for
  * frames that don't display a visible background, but for event handling
  * we need those backgrounds because they are not transparent to events.
- * 
+ *
  * We could avoid constructing an explicit display list by traversing the
  * frame tree multiple times in clever ways. However, reifying the display list
  * reduces code complexity and reduces the number of times each frame must be
  * traversed to one, which seems to be good for performance. It also means
  * we can share code for painting, event handling and scroll analysis.
- * 
+ *
  * Display lists are short-lived; content and frame trees cannot change
  * between a display list being created and destroyed. Display lists should
  * not be created during reflow because the frame tree may be in an
  * inconsistent state (e.g., a frame's stored overflow-area may not include
  * the bounds of all its children). However, it should be fine to create
  * a display list while a reflow is pending, before it starts.
- * 
+ *
  * A display list covers the "extended" frame tree; the display list for a frame
  * tree containing FRAME/IFRAME elements can include frames from the subdocuments.
  *
@@ -411,14 +411,14 @@ public:
    * @return the root of the display list's frame (sub)tree, whose origin
    * establishes the coordinate system for the display list
    */
-  nsIFrame* RootReferenceFrame() 
+  nsIFrame* RootReferenceFrame()
   {
     return mReferenceFrame;
   }
 
   /**
    * @return a point pt such that adding pt to a coordinate relative to aFrame
-   * makes it relative to ReferenceFrame(), i.e., returns 
+   * makes it relative to ReferenceFrame(), i.e., returns
    * aFrame->GetOffsetToCrossDoc(ReferenceFrame()). The returned point is in
    * the appunits of aFrame.
    */
@@ -551,8 +551,8 @@ public:
   bool HaveScrollableDisplayPort() const { return mHaveScrollableDisplayPort; }
   void SetHaveScrollableDisplayPort() { mHaveScrollableDisplayPort = true; }
 
-  bool SetIsCompositingCheap(bool aCompositingCheap) { 
-    bool temp = mIsCompositingCheap; 
+  bool SetIsCompositingCheap(bool aCompositingCheap) {
+    bool temp = mIsCompositingCheap;
     mIsCompositingCheap = aCompositingCheap;
     return temp;
   }
@@ -1299,7 +1299,7 @@ public:
 
   /**
    * mContainsBlendMode is true if we processed a display item that
-   * has a blend mode attached. We do this so we can insert a 
+   * has a blend mode attached. We do this so we can insert a
    * nsDisplayBlendContainer in the parent stacking context.
    */
   void SetContainsBlendMode(bool aContainsBlendMode) { mContainsBlendMode = aContainsBlendMode; }
@@ -1557,8 +1557,8 @@ class nsDisplayItemLink {
   // destructors.
 protected:
   nsDisplayItemLink() : mAbove(nullptr) {}
-  nsDisplayItem* mAbove;  
-  
+  nsDisplayItem* mAbove;
+
   friend class nsDisplayList;
 };
 
@@ -1566,14 +1566,14 @@ protected:
  * This is the unit of rendering and event testing. Each instance of this
  * class represents an entity that can be drawn on the screen, e.g., a
  * frame's CSS background, or a frame's text string.
- * 
+ *
  * nsDisplayItems can be containers --- i.e., they can perform hit testing
  * and painting by recursively traversing a list of child items.
- * 
+ *
  * These are arena-allocated during display list construction. A typical
  * subclass would just have a frame pointer, so its object would be just three
  * pointers (vtable, next-item, frame).
- * 
+ *
  * Display items belong to a list at all times (except temporarily as they
  * move from one list to another).
  */
@@ -1729,7 +1729,7 @@ public:
    * Checks if the frame(s) owning this display item have been marked as invalid,
    * and needing repainting.
    */
-  virtual bool IsInvalid(nsRect& aRect) { 
+  virtual bool IsInvalid(nsRect& aRect) {
     bool result = mFrame ? mFrame->IsInvalid(aRect) : false;
     aRect += ToReferenceFrame();
     return result;
@@ -1738,7 +1738,7 @@ public:
   /**
    * Creates and initializes an nsDisplayItemGeometry object that retains the current
    * areas covered by this display item. These need to retain enough information
-   * such that they can be compared against a future nsDisplayItem of the same type, 
+   * such that they can be compared against a future nsDisplayItem of the same type,
    * and determine if repainting needs to happen.
    *
    * Subclasses wishing to store more information need to override both this
@@ -1754,17 +1754,17 @@ public:
   }
 
   /**
-   * Compares an nsDisplayItemGeometry object from a previous paint against the 
-   * current item. Computes if the geometry of the item has changed, and the 
+   * Compares an nsDisplayItemGeometry object from a previous paint against the
+   * current item. Computes if the geometry of the item has changed, and the
    * invalidation area required for correct repainting.
    *
-   * The existing geometry will have been created from a display item with a 
+   * The existing geometry will have been created from a display item with a
    * matching GetPerFrameKey()/mFrame pair to the current item.
    *
    * The default implementation compares the display item bounds, and the frame's
    * border rect, and invalidates the entire bounds if either rect changes.
    *
-   * @param aGeometry The geometry of the matching display item from the 
+   * @param aGeometry The geometry of the matching display item from the
    * previous paint.
    * @param aInvalidRegion Output param, the region to invalidate, or
    * unchanged if none.
@@ -1912,7 +1912,7 @@ public:
    * If GetLayerState returned LAYER_NONE then Paint will be called
    * instead.
    * This is called while aManager is in the construction phase.
-   * 
+   *
    * The caller (nsDisplayList) is responsible for setting the visible
    * region of the layer.
    *
@@ -2118,7 +2118,7 @@ public:
   virtual bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) {
     return false;
   }
-  
+
   virtual bool SupportsOptimizingToImage() { return false; }
 
   const DisplayItemClip& GetClip()
@@ -2174,12 +2174,12 @@ protected:
 
 /**
  * Manages a singly-linked list of display list items.
- * 
+ *
  * mSentinel is the sentinel list value, the first value in the null-terminated
  * linked list of items. mTop is the last item in the list (whose 'above'
  * pointer is null). This class has no virtual methods. So list objects are just
  * two pointers.
- * 
+ *
  * Stepping upward through this list is very fast. Stepping downward is very
  * slow so we don't support it. The methods that need to step downward
  * (HitTest(), ComputeVisibility()) internally build a temporary array of all
@@ -2221,7 +2221,7 @@ public:
     mTop->mAbove = aItem;
     mTop = aItem;
   }
-  
+
   /**
    * Append a new item to the top of the list. The intended usage is
    * AppendNewToTop(new ...);
@@ -2231,7 +2231,7 @@ public:
       AppendToTop(aItem);
     }
   }
-  
+
   /**
    * Append a new item to the bottom of the list. The intended usage is
    * AppendNewToBottom(new ...);
@@ -2241,7 +2241,7 @@ public:
       AppendToBottom(aItem);
     }
   }
-  
+
   /**
    * Append a new item to the bottom of the list. The item must be non-null
    * and not already in a list.
@@ -2255,7 +2255,7 @@ public:
       mTop = aItem;
     }
   }
-  
+
   /**
    * Removes all items from aList and appends them to the top of this list
    */
@@ -2267,7 +2267,7 @@ public:
       aList->mSentinel.mAbove = nullptr;
     }
   }
-  
+
   /**
    * Removes all items from aList and prepends them to the bottom of this list
    */
@@ -2278,22 +2278,22 @@ public:
       if (mTop == &mSentinel) {
         mTop = aList->mTop;
       }
-           
+
       aList->mTop = &aList->mSentinel;
       aList->mSentinel.mAbove = nullptr;
     }
   }
-  
+
   /**
    * Remove an item from the bottom of the list and return it.
    */
   nsDisplayItem* RemoveBottom();
-  
+
   /**
    * Remove all items from the list and call their destructors.
    */
   void DeleteAll();
-  
+
   /**
    * @return the item at the top of the list, or null if the list is empty
    */
@@ -2305,7 +2305,7 @@ public:
    */
   nsDisplayItem* GetBottom() const { return mSentinel.mAbove; }
   bool IsEmpty() const { return mTop == &mSentinel; }
-  
+
   /**
    * This is *linear time*!
    * @return the number of items in the list
@@ -2350,7 +2350,7 @@ public:
    * visiblity with different regions later (see
    * FrameLayerBuilder::DrawPaintedLayer).
    * This method needs to be idempotent.
-   * 
+   *
    * @param aVisibleRegion the area that is visible, relative to the
    * reference frame; on return, this contains the area visible under the list.
    * I.e., opaque contents of this list are subtracted from aVisibleRegion.
@@ -2392,13 +2392,13 @@ public:
    * aCtx's current transform should make (0,0) pixel-aligned. The
    * rectangle in aDirtyRect is painted, which *must* be contained in the
    * dirty rect used to construct the display list.
-   * 
+   *
    * If aFlags contains PAINT_USE_WIDGET_LAYERS and
    * ShouldUseWidgetLayerManager() is set, then we will paint using
    * the reference frame's widget's layer manager (and ctx may be null),
    * otherwise we will use a temporary BasicLayerManager and ctx must
    * not be null.
-   * 
+   *
    * If PAINT_EXISTING_TRANSACTION is set, the reference frame's widget's
    * layer manager has already had BeginTransaction() called on it and
    * we should not call it again.
@@ -2467,7 +2467,7 @@ private:
   // This class is only used on stack, so we don't have to worry about leaking
   // it.  Don't let us be heap-allocated!
   void* operator new(size_t sz) CPP_THROW_NEW;
-  
+
   nsDisplayItemLink  mSentinel;
   nsDisplayItemLink* mTop;
 
@@ -2505,7 +2505,7 @@ public:
    */
   nsDisplayList* Floats() const { return mFloats; }
   /**
-   * @return a list where one should place the (pseudo) stacking contexts 
+   * @return a list where one should place the (pseudo) stacking contexts
    * for descendants of this frame (everything from steps 3, 7 and 8
    * of CSS 2.1 appendix E)
    */
@@ -2519,7 +2519,7 @@ public:
    * @return a list where one should place all other content
    */
   nsDisplayList* Content() const { return mContent; }
-  
+
   nsDisplayListSet(nsDisplayList* aBorderBackground,
                    nsDisplayList* aBlockBorderBackgrounds,
                    nsDisplayList* aFloats,
@@ -2537,7 +2537,7 @@ public:
   /**
    * A copy constructor that lets the caller override the BorderBackground
    * list.
-   */  
+   */
   nsDisplayListSet(const nsDisplayListSet& aLists,
                    nsDisplayList* aBorderBackground) :
      mBorderBackground(aBorderBackground),
@@ -2547,7 +2547,7 @@ public:
      mPositioned(aLists.PositionedDescendants()),
      mOutlines(aLists.Outlines()) {
   }
-  
+
   /**
    * Move all display items in our lists to top of the corresponding lists in the
    * destination.
@@ -2582,7 +2582,7 @@ struct nsDisplayListCollection : public nsDisplayListSet {
 
   /**
    * Sort all lists by content order.
-   */                     
+   */
   void SortAllByContentOrder(nsIContent* aCommonAncestor) {
     for (int32_t i = 0; i < 6; ++i) {
       mLists[i].SortByContentOrder(aCommonAncestor);
@@ -2633,7 +2633,7 @@ public:
  * Use this class to implement not-very-frequently-used display items
  * that are not opaque, do not receive events, and are bounded by a frame's
  * border-rect.
- * 
+ *
  * This should not be used for display items which are created frequently,
  * because each item is one or two pointers bigger than an item from a
  * custom display item class could be, and fractionally slower. However it does
@@ -2675,7 +2675,7 @@ public:
     MOZ_COUNT_DTOR(nsDisplayGeneric);
   }
 #endif
-  
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override {
     MOZ_ASSERT(!!mPaint != !!mOldPaint);
@@ -3127,7 +3127,7 @@ public:
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
-  
+
   virtual bool CanOptimizeToImageLayer(LayerManager* aManager,
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
@@ -3367,11 +3367,11 @@ public:
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
   NS_DISPLAY_DECL_NAME("BoxShadowOuter", TYPE_BOX_SHADOW_OUTER)
-  
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override;
-  
+
   virtual void ApplyOpacity(nsDisplayListBuilder* aBuilder,
                             float aOpacity,
                             const DisplayItemClipChain* aClip) override
@@ -3427,7 +3427,7 @@ public:
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
   NS_DISPLAY_DECL_NAME("BoxShadowInner", TYPE_BOX_SHADOW_INNER)
-  
+
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
     return new nsDisplayBoxShadowInnerGeometry(this, aBuilder);
@@ -3623,13 +3623,13 @@ private:
 
 /**
  * A class that lets you wrap a display list as a display item.
- * 
+ *
  * GetUnderlyingFrame() is troublesome for wrapped lists because if the wrapped
  * list has many items, it's not clear which one has the 'underlying frame'.
  * Thus we force the creator to specify what the underlying frame is. The
  * underlying frame should be the root of a stacking context, because sorting
  * a list containing this item will not get at the children.
- * 
+ *
  * In some cases (e.g., clipping) we want to wrap a list but we don't have a
  * particular underlying frame that is a stacking context root. In that case
  * we allow the frame to be nullptr. Callers to GetUnderlyingFrame must
@@ -3707,7 +3707,7 @@ public:
   NS_DISPLAY_DECL_NAME("WrapList", TYPE_WRAP_LIST)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override;
-                                    
+
   virtual nsDisplayList* GetSameCoordinateSystemChildren() override
   {
     NS_ASSERTION(mList.IsEmpty() || !ReferenceFrame() ||
@@ -3906,7 +3906,7 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual ~nsDisplayBlendContainer();
 #endif
-    
+
     virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                                LayerManager* aManager,
                                                const ContainerLayerParameters& aContainerParameters) override;
@@ -3973,7 +3973,7 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
-  
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4201,7 +4201,7 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayZoom();
 #endif
-  
+
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
@@ -4376,7 +4376,7 @@ public:
  * INVARIANT: The wrapped frame is transformed or we supplied a transform getter
  * function.
  * INVARIANT: The wrapped frame is non-null.
- */ 
+ */
 class nsDisplayTransform: public nsDisplayItem
 {
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
@@ -4477,9 +4477,9 @@ public:
   virtual bool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                  nsRegion *aVisibleRegion) override;
   virtual bool TryMerge(nsDisplayItem *aItem) override;
-  
+
   virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
-  
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override
@@ -4494,7 +4494,7 @@ public:
     if (!mTransformGetter) {
       return mFrame;
     }
-    return nsDisplayItem::ReferenceFrameForChildren(); 
+    return nsDisplayItem::ReferenceFrameForChildren();
   }
 
   AnimatedGeometryRoot* AnimatedGeometryRootForScrollMetadata() const override {
@@ -4545,7 +4545,7 @@ public:
    *        bounding rect as frame bounds, use this rectangle instead.  Pass
    *        nullptr (or nothing at all) to use the default.
    */
-  static nsRect TransformRect(const nsRect &aUntransformedBounds, 
+  static nsRect TransformRect(const nsRect &aUntransformedBounds,
                               const nsIFrame* aFrame,
                               const nsRect* aBoundsOverride = nullptr);
 
