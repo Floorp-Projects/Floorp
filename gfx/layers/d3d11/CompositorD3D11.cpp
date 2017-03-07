@@ -47,6 +47,12 @@ struct Vertex
     float position[2];
 };
 
+struct TexturedVertex
+{
+    float position[2];
+    float texCoords[2];
+};
+
 // {1E4D7BEB-D8EC-4A0B-BF0A-63E6DE129425}
 static const GUID sDeviceAttachmentsD3D11 =
 { 0x1e4d7beb, 0xd8ec, 0x4a0b, { 0xbf, 0xa, 0x63, 0xe6, 0xde, 0x12, 0x94, 0x25 } };
@@ -55,6 +61,8 @@ static const GUID sLayerManagerCount =
 { 0x88041664, 0xc835, 0x4aa8, { 0xac, 0xb8, 0x7e, 0xc8, 0x32, 0x35, 0x7e, 0xd8 } };
 
 const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
+
+static const size_t kInitialMaximumTriangles = 64;
 
 namespace TexSlot {
   static const int RGB = 0;
@@ -84,10 +92,17 @@ struct DeviceAttachmentsD3D11
           PixelShaderArray;
 
   RefPtr<ID3D11InputLayout> mInputLayout;
+  RefPtr<ID3D11InputLayout> mDynamicInputLayout;
+
   RefPtr<ID3D11Buffer> mVertexBuffer;
+  RefPtr<ID3D11Buffer> mDynamicVertexBuffer;
 
   VertexShaderArray mVSQuadShader;
   VertexShaderArray mVSQuadBlendShader;
+
+  VertexShaderArray mVSDynamicShader;
+  VertexShaderArray mVSDynamicBlendShader;
+
   PixelShaderArray mSolidColorShader;
   PixelShaderArray mRGBAShader;
   PixelShaderArray mRGBShader;
@@ -99,6 +114,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11RasterizerState> mRasterizerState;
   RefPtr<ID3D11SamplerState> mLinearSamplerState;
   RefPtr<ID3D11SamplerState> mPointSamplerState;
+
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
@@ -150,6 +166,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent, widget::Compos
   , mDisableSequenceForNextFrame(false)
   , mAllowPartialPresents(false)
   , mVerifyBuffersFailed(false)
+  , mMaximumTriangles(kInitialMaximumTriangles)
 {
 }
 
@@ -176,6 +193,74 @@ CompositorD3D11::~CompositorD3D11()
       delete attachments;
     }
   }
+}
+
+
+template<typename VertexType>
+void
+CompositorD3D11::SetVertexBuffer(ID3D11Buffer* aBuffer)
+{
+  UINT size = sizeof(VertexType);
+  UINT offset = 0;
+  mContext->IASetVertexBuffers(0, 1, &aBuffer, &size, &offset);
+}
+
+bool
+CompositorD3D11::SupportsLayerGeometry() const
+{
+  return gfxPrefs::D3D11LayerGeometry();
+}
+
+bool
+CompositorD3D11::UpdateDynamicVertexBuffer(const nsTArray<gfx::TexturedTriangle>& aTriangles)
+{
+  HRESULT hr;
+
+  // Resize the dynamic vertex buffer if needed.
+  if (aTriangles.Length() > mMaximumTriangles) {
+    CD3D11_BUFFER_DESC bufferDesc(sizeof(TexturedVertex) * aTriangles.Length() * 3,
+                                  D3D11_BIND_VERTEX_BUFFER,
+                                  D3D11_USAGE_DYNAMIC,
+                                  D3D11_CPU_ACCESS_WRITE);
+
+    hr = mDevice->CreateBuffer(&bufferDesc, nullptr,
+                               getter_AddRefs(mAttachments->mDynamicVertexBuffer));
+
+    if (Failed(hr, "resize dynamic vertex buffer")) {
+      return false;
+    }
+
+    mMaximumTriangles = aTriangles.Length();
+  }
+
+  MOZ_ASSERT(mMaximumTriangles >= aTriangles.Length());
+
+  D3D11_MAPPED_SUBRESOURCE resource {};
+  hr = mContext->Map(mAttachments->mDynamicVertexBuffer, 0,
+                     D3D11_MAP_WRITE_DISCARD, 0, &resource);
+
+  if (Failed(hr, "map dynamic vertex buffer")) {
+    return false;
+  }
+
+  const auto vertexFromPoints = [](const gfx::Point& p, const gfx::Point& t) {
+    return TexturedVertex { { p.x, p.y }, { t.x, t.y } };
+  };
+
+  nsTArray<TexturedVertex> vertices;
+
+  for (const gfx::TexturedTriangle& t : aTriangles) {
+    vertices.AppendElement(vertexFromPoints(t.p1, t.textureCoords.p1));
+    vertices.AppendElement(vertexFromPoints(t.p2, t.textureCoords.p2));
+    vertices.AppendElement(vertexFromPoints(t.p3, t.textureCoords.p3));
+  }
+
+  memcpy(resource.pData, vertices.Elements(),
+         vertices.Length() * sizeof(TexturedVertex));
+
+  mContext->Unmap(mAttachments->mDynamicVertexBuffer, 0);
+
+  return true;
 }
 
 bool
@@ -245,8 +330,37 @@ CompositorD3D11::Initialize(nsCString* const out_failureReason)
     data.pSysMem = (void*)vertices;
 
     hr = mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mAttachments->mVertexBuffer));
-
     if (Failed(hr, "create vertex buffer")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
+      return false;
+    }
+
+    // Create a second input layout for layers with dynamic geometry.
+    D3D11_INPUT_ELEMENT_DESC dynamicLayout[] =
+    {
+      { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+      { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    hr = mDevice->CreateInputLayout(dynamicLayout,
+                                    sizeof(dynamicLayout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
+                                    LayerDynamicVS,
+                                    sizeof(LayerDynamicVS),
+                                    getter_AddRefs(mAttachments->mDynamicInputLayout));
+
+    if (Failed(hr, "CreateInputLayout")) {
+      *out_failureReason = "FEATURE_FAILURE_D3D11_INPUT_LAYOUT";
+      return false;
+    }
+
+    // Allocate memory for the dynamic vertex buffer.
+    bufferDesc = CD3D11_BUFFER_DESC(sizeof(TexturedVertex) * mMaximumTriangles * 3,
+                                    D3D11_BIND_VERTEX_BUFFER,
+                                    D3D11_USAGE_DYNAMIC,
+                                    D3D11_CPU_ACCESS_WRITE);
+
+    hr = mDevice->CreateBuffer(&bufferDesc, nullptr, getter_AddRefs(mAttachments->mDynamicVertexBuffer));
+    if (Failed(hr, "create dynamic vertex buffer")) {
       *out_failureReason = "FEATURE_FAILURE_D3D11_VERTEX_BUFFER";
       return false;
     }
@@ -633,8 +747,14 @@ CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget)
 }
 
 ID3D11PixelShader*
-CompositorD3D11::GetPSForEffect(Effect* aEffect, MaskType aMaskType)
+CompositorD3D11::GetPSForEffect(Effect* aEffect,
+                                const bool aUseBlendShader,
+                                const MaskType aMaskType)
 {
+  if (aUseBlendShader) {
+    return mAttachments->mBlendShader[MaskType::MaskNone];
+  }
+
   switch (aEffect->mType) {
   case EffectTypes::SOLID_COLOR:
     return mAttachments->mSolidColorShader[aMaskType];
@@ -733,6 +853,116 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
                           const gfx::Matrix4x4& aTransform,
                           const gfx::Rect& aVisibleRect)
 {
+  DrawGeometry(aRect, aRect, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect);
+}
+
+void
+CompositorD3D11::DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                               const gfx::Rect& aRect,
+                               const gfx::IntRect& aClipRect,
+                               const EffectChain& aEffectChain,
+                               gfx::Float aOpacity,
+                               const gfx::Matrix4x4& aTransform,
+                               const gfx::Rect& aVisibleRect)
+{
+  DrawGeometry(aTriangles, aRect, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect);
+}
+
+void
+CompositorD3D11::PrepareDynamicVertexBuffer()
+{
+  mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  mContext->IASetInputLayout(mAttachments->mDynamicInputLayout);
+  SetVertexBuffer<TexturedVertex>(mAttachments->mDynamicVertexBuffer);
+}
+
+void
+CompositorD3D11::PrepareStaticVertexBuffer()
+{
+  mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+  mContext->IASetInputLayout(mAttachments->mInputLayout);
+  SetVertexBuffer<Vertex>(mAttachments->mVertexBuffer);
+}
+
+void
+CompositorD3D11::Draw(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                      const gfx::Rect*)
+{
+  if (!UpdateConstantBuffers()) {
+    NS_WARNING("Failed to update shader constant buffers");
+    return;
+  }
+
+  PrepareDynamicVertexBuffer();
+
+  if (!UpdateDynamicVertexBuffer(aTriangles)) {
+    NS_WARNING("Failed to update shader dynamic buffers");
+    return;
+  }
+
+  mContext->Draw(3 * aTriangles.Length(), 0);
+
+  PrepareStaticVertexBuffer();
+}
+
+void
+CompositorD3D11::Draw(const gfx::Rect& aRect,
+                      const gfx::Rect* aTexCoords)
+{
+  Rect layerRects[4] = { aRect };
+  Rect textureRects[4] = { };
+  size_t rects = 1;
+
+  if (aTexCoords) {
+    rects = DecomposeIntoNoRepeatRects(aRect, *aTexCoords,
+                                       &layerRects, &textureRects);
+  }
+
+  for (size_t i = 0; i < rects; i++) {
+    mVSConstants.layerQuad = layerRects[i];
+    mVSConstants.textureCoords = textureRects[i];
+
+    if (!UpdateConstantBuffers()) {
+      NS_WARNING("Failed to update shader constant buffers");
+      break;
+    }
+
+    mContext->Draw(4, 0);
+  }
+}
+
+ID3D11VertexShader*
+CompositorD3D11::GetVSForGeometry(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                                  const bool aUseBlendShaders,
+                                  const MaskType aMaskType)
+{
+  return aUseBlendShaders
+    ? mAttachments->mVSDynamicBlendShader[aMaskType]
+    : mAttachments->mVSDynamicShader[aMaskType];
+}
+
+ID3D11VertexShader*
+CompositorD3D11::GetVSForGeometry(const gfx::Rect& aRect,
+                                  const bool aUseBlendShaders,
+                                  const MaskType aMaskType)
+{
+  return aUseBlendShaders
+    ? mAttachments->mVSQuadBlendShader[aMaskType]
+    : mAttachments->mVSQuadShader[aMaskType];
+}
+
+template<typename Geometry>
+void
+CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
+                              const gfx::Rect& aRect,
+                              const gfx::IntRect& aClipRect,
+                              const EffectChain& aEffectChain,
+                              gfx::Float aOpacity,
+                              const gfx::Matrix4x4& aTransform,
+                              const gfx::Rect& aVisibleRect)
+{
   if (mCurrentClip.IsEmpty()) {
     return;
   }
@@ -788,9 +1018,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
   scissor.top = clipRect.y;
   scissor.bottom = clipRect.YMost();
 
-  RefPtr<ID3D11VertexShader> vertexShader = mAttachments->mVSQuadShader[maskType];
-  RefPtr<ID3D11PixelShader> pixelShader = GetPSForEffect(aEffectChain.mPrimaryEffect, maskType);
-
+  bool useBlendShaders = false;
   RefPtr<ID3D11Texture2D> mixBlendBackdrop;
   gfx::CompositionOp blendMode = gfx::CompositionOp::OP_OVER;
   if (aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE]) {
@@ -808,8 +1036,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       if (CopyBackdrop(rect, &mixBlendBackdrop, &srv) &&
           mAttachments->InitBlendShaders())
       {
-        vertexShader = mAttachments->mVSQuadBlendShader[maskType];
-        pixelShader = mAttachments->mBlendShader[MaskType::MaskNone];
+        useBlendShaders = true;
 
         ID3D11ShaderResourceView* srView = srv.get();
         mContext->PSSetShaderResources(TexSlot::Backdrop, 1, &srView);
@@ -825,7 +1052,13 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
   }
 
   mContext->RSSetScissorRects(1, &scissor);
-  mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+  RefPtr<ID3D11VertexShader> vertexShader =
+    GetVSForGeometry(aGeometry, useBlendShaders, maskType);
+
+  RefPtr<ID3D11PixelShader> pixelShader =
+    GetPSForEffect(aEffectChain.mPrimaryEffect, useBlendShaders, maskType);
+
   mContext->VSSetShader(vertexShader, nullptr, 0);
   mContext->PSSetShader(pixelShader, nullptr, 0);
 
@@ -935,32 +1168,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
     return;
   }
 
-  if (pTexCoordRect) {
-    Rect layerRects[4];
-    Rect textureRects[4];
-    size_t rects = DecomposeIntoNoRepeatRects(aRect,
-                                              *pTexCoordRect,
-                                              &layerRects,
-                                              &textureRects);
-    for (size_t i = 0; i < rects; i++) {
-      mVSConstants.layerQuad = layerRects[i];
-      mVSConstants.textureCoords = textureRects[i];
-
-      if (!UpdateConstantBuffers()) {
-        NS_WARNING("Failed to update shader constant buffers");
-        break;
-      }
-      mContext->Draw(4, 0);
-    }
-  } else {
-    mVSConstants.layerQuad = aRect;
-
-    if (!UpdateConstantBuffers()) {
-      NS_WARNING("Failed to update shader constant buffers");
-    } else {
-      mContext->Draw(4, 0);
-    }
-  }
+  Draw(aGeometry, pTexCoordRect);
 
   if (restoreBlendMode) {
     mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
@@ -1034,12 +1242,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     return;
   }
 
-  mContext->IASetInputLayout(mAttachments->mInputLayout);
-
-  ID3D11Buffer* buffer = mAttachments->mVertexBuffer;
-  UINT size = sizeof(Vertex);
-  UINT offset = 0;
-  mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
+  PrepareStaticVertexBuffer();
 
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
   mInvalidRegion = invalidRegionSafe;
@@ -1404,6 +1607,12 @@ DeviceAttachmentsD3D11::InitBlendShaders()
     InitVertexShader(sLayerQuadBlendVS, mVSQuadBlendShader, MaskType::MaskNone);
     InitVertexShader(sLayerQuadBlendMaskVS, mVSQuadBlendShader, MaskType::Mask);
   }
+
+  if (!mVSDynamicBlendShader[MaskType::MaskNone]) {
+    InitVertexShader(sLayerDynamicBlendVS, mVSDynamicBlendShader, MaskType::MaskNone);
+    InitVertexShader(sLayerDynamicBlendMaskVS, mVSDynamicBlendShader, MaskType::Mask);
+  }
+
   if (!mBlendShader[MaskType::MaskNone]) {
     InitPixelShader(sBlendShader, mBlendShader, MaskType::MaskNone);
   }
@@ -1415,6 +1624,9 @@ DeviceAttachmentsD3D11::CreateShaders()
 {
   InitVertexShader(sLayerQuadVS, mVSQuadShader, MaskType::MaskNone);
   InitVertexShader(sLayerQuadMaskVS, mVSQuadShader, MaskType::Mask);
+
+  InitVertexShader(sLayerDynamicVS, mVSDynamicShader, MaskType::MaskNone);
+  InitVertexShader(sLayerDynamicMaskVS, mVSDynamicShader, MaskType::Mask);
 
   InitPixelShader(sSolidColorShader, mSolidColorShader, MaskType::MaskNone);
   InitPixelShader(sSolidColorShaderMask, mSolidColorShader, MaskType::Mask);

@@ -275,7 +275,6 @@ nsNSSHttpRequestSession::setPostDataFcn(const char* http_data,
 mozilla::pkix::Result
 nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc** pPollDesc,
                                               uint16_t* http_response_code,
-                                              const char** http_response_content_type,
                                               const char** http_response_headers,
                                               const char** http_response_data,
                                               uint32_t* http_response_data_len)
@@ -328,7 +327,7 @@ nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc** pPollDesc,
 
     rv =
       internal_send_receive_attempt(retryable_error, pPollDesc, http_response_code,
-                                    http_response_content_type, http_response_headers,
+                                    http_response_headers,
                                     http_response_data, http_response_data_len);
   }
   while (retryable_error &&
@@ -367,14 +366,12 @@ mozilla::pkix::Result
 nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
                                                        PRPollDesc **pPollDesc,
                                                        uint16_t *http_response_code,
-                                                       const char **http_response_content_type,
                                                        const char **http_response_headers,
                                                        const char **http_response_data,
                                                        uint32_t *http_response_data_len)
 {
   if (pPollDesc) *pPollDesc = nullptr;
   if (http_response_code) *http_response_code = 0;
-  if (http_response_content_type) *http_response_content_type = 0;
   if (http_response_headers) *http_response_headers = 0;
   if (http_response_data) *http_response_data = 0;
 
@@ -531,12 +528,6 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
     *http_response_data = (const char*)mListener->mResultData;
   }
 
-  if (mListener->mHttpRequestSucceeded && http_response_content_type) {
-    if (mListener->mHttpResponseContentType.Length()) {
-      *http_response_content_type = mListener->mHttpResponseContentType.get();
-    }
-  }
-
   return Success;
 }
 
@@ -648,14 +639,11 @@ nsHTTPListener::OnStreamComplete(nsIStreamLoader* aLoader,
       mHttpResponseCode = 500;
     else
       mHttpResponseCode = rcode;
-
-    hchan->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"), 
-                                    mHttpResponseContentType);
   }
 
   if (mResponsibleForDoneSignal)
     send_done_signal();
-  
+
   return aStatus;
 }
 

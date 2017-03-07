@@ -54,17 +54,17 @@ interface nsIHttpAuthManager : nsISupports
      *        the principal from which to derive information about which
      *        app/mozbrowser is in use for this request
      */
-    void getAuthIdentity(in ACString aScheme,
-                         in ACString aHost,
-                         in int32_t  aPort,
-                         in ACString aAuthType,
-                         in ACString aRealm,
-                         in ACString aPath,
-                         out AString aUserDomain,
-                         out AString aUserName,
-                         out AString aUserPassword,
-                         [optional] in bool aIsPrivate,
-                         [optional] in nsIPrincipal aPrincipal);
+    [must_use] void getAuthIdentity(in ACString aScheme,
+                                    in ACString aHost,
+                                    in int32_t  aPort,
+                                    in ACString aAuthType,
+                                    in ACString aRealm,
+                                    in ACString aPath,
+                                    out AString aUserDomain,
+                                    out AString aUserName,
+                                    out AString aUserPassword,
+                                    [optional] in bool aIsPrivate,
+                                    [optional] in nsIPrincipal aPrincipal);
 
     /**
      * Store auth identity.
@@ -96,20 +96,20 @@ interface nsIHttpAuthManager : nsISupports
      *        the principal from which to derive information about which
      *        app/mozbrowser is in use for this request
      */
-    void setAuthIdentity(in ACString aScheme,
-                         in ACString aHost,
-                         in int32_t  aPort,
-                         in ACString aAuthType,
-                         in ACString aRealm,
-                         in ACString aPath,
-                         in AString  aUserDomain,
-                         in AString  aUserName,
-                         in AString  aUserPassword,
-                         [optional] in boolean aIsPrivate,
-                         [optional] in nsIPrincipal aPrincipal);
+    [must_use] void setAuthIdentity(in ACString aScheme,
+                                    in ACString aHost,
+                                    in int32_t  aPort,
+                                    in ACString aAuthType,
+                                    in ACString aRealm,
+                                    in ACString aPath,
+                                    in AString  aUserDomain,
+                                    in AString  aUserName,
+                                    in AString  aUserPassword,
+                                    [optional] in boolean aIsPrivate,
+                                    [optional] in nsIPrincipal aPrincipal);
 
     /**
      * Clear all auth cache.
      */
-    void clearAll();
+    [must_use] void clearAll();
 };

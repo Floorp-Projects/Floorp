@@ -120,7 +120,7 @@ struct nsHttpAtom
 
 struct nsHttp
 {
-    static nsresult CreateAtomTable();
+    static MOZ_MUST_USE nsresult CreateAtomTable();
     static void DestroyAtomTable();
 
     // The mutex is valid any time the Atom Table is valid
@@ -164,12 +164,13 @@ struct nsHttp
     //
     // TODO(darin): Replace this with something generic.
     //
-    static bool ParseInt64(const char *input, const char **next,
-                             int64_t *result);
+    static MOZ_MUST_USE bool ParseInt64(const char *input, const char **next,
+                                        int64_t *result);
 
     // Variant on ParseInt64 that expects the input string to contain nothing
     // more than the value being parsed.
-    static inline bool ParseInt64(const char *input, int64_t *result) {
+    static inline MOZ_MUST_USE bool ParseInt64(const char *input,
+                                               int64_t *result) {
         const char *next;
         return ParseInt64(input, &next, result) && *next == '\0';
     }

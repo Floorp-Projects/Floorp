@@ -39,10 +39,13 @@ public:
 
     NS_IMETHOD Run() override
     {
-        for (size_t i = 0 ; i < mObservers.Length() ; i++)
-            mObservers[i]->ObserveActivity(mHttpChannel, mActivityType,
-                                           mActivitySubtype, mTimestamp,
-                                           mExtraSizeData, mExtraStringData);
+        for (size_t i = 0 ; i < mObservers.Length() ; i++) {
+            Unused <<
+                mObservers[i]->ObserveActivity(mHttpChannel, mActivityType,
+                                               mActivitySubtype, mTimestamp,
+                                               mExtraSizeData,
+                                               mExtraStringData);
+        }
         return NS_OK;
     }
 

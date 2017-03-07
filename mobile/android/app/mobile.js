@@ -137,7 +137,6 @@ pref("browser.sessionhistory.contentViewerTimeout", 360);
 pref("browser.sessionhistory.bfcacheIgnoreMemoryPressure", false);
 
 /* session store */
-pref("browser.sessionstore.resume_session_once", false);
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.interval", 10000); // milliseconds
 pref("browser.sessionstore.backupInterval", 120000); // milliseconds -> 2 minutes

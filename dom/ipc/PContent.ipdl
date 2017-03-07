@@ -1022,6 +1022,9 @@ parent:
      */
     async NotifyTabDestroying(TabId tabId,
                               ContentParentId cpId);
+
+    async TabChildNotReady(TabId tabId);
+
     /**
      * Starts an offline application cache update.
      * @param manifestURI

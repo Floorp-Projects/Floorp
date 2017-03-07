@@ -205,7 +205,6 @@
   "StateMachineHelper.jsm": ["State", "CommandType"],
   "status.js": ["Status"],
   "storageserver.js": ["ServerBSO", "StorageServerCallback", "StorageServerCollection", "StorageServer", "storageServerForUsers"],
-  "stringbundle.js": ["StringBundle"],
   "strings.js": ["trim", "vslice"],
   "StructuredLog.jsm": ["StructuredLogger", "StructuredFormatter"],
   "StyleEditorUtil.jsm": ["getString", "assert", "log", "text", "wire", "showFilePicker"],

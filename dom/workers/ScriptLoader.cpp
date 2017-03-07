@@ -1062,15 +1062,15 @@ private:
         return NS_ERROR_NOT_AVAILABLE;
       }
 
-      httpChannel->GetResponseHeader(
+      Unused << httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("content-security-policy"),
         tCspHeaderValue);
 
-      httpChannel->GetResponseHeader(
+      Unused << httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("content-security-policy-report-only"),
         tCspROHeaderValue);
 
-      httpChannel->GetResponseHeader(
+      Unused << httpChannel->GetResponseHeader(
         NS_LITERAL_CSTRING("referrer-policy"),
         tRPHeaderCValue);
     }

@@ -14,11 +14,6 @@
                 "optional": true,
                 "preprocess": "localize"
               },
-              "home": {
-                "$ref": "ExtensionURL",
-                "optional": true,
-                "preprocess": "localize"
-              },
               "bookmarks": {
                 "unsupported": true,
                 "$ref": "ExtensionURL",

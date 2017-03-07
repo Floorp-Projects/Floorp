@@ -428,8 +428,8 @@ nsDSURIContentListener::CheckFrameOptions(nsIRequest* aRequest)
   }
 
   nsAutoCString xfoHeaderCValue;
-  httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("X-Frame-Options"),
-                                 xfoHeaderCValue);
+  Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("X-Frame-Options"),
+                                           xfoHeaderCValue);
   NS_ConvertUTF8toUTF16 xfoHeaderValue(xfoHeaderCValue);
 
   // if no header value, there's nothing to do.

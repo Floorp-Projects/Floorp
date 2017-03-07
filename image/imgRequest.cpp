@@ -599,17 +599,17 @@ imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
     if (httpChannel) {
       bool bMustRevalidate = false;
 
-      httpChannel->IsNoStoreResponse(&bMustRevalidate);
+      Unused << httpChannel->IsNoStoreResponse(&bMustRevalidate);
 
       if (!bMustRevalidate) {
-        httpChannel->IsNoCacheResponse(&bMustRevalidate);
+        Unused << httpChannel->IsNoCacheResponse(&bMustRevalidate);
       }
 
       if (!bMustRevalidate) {
         nsAutoCString cacheHeader;
 
-        httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
-                                            cacheHeader);
+        Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                                 cacheHeader);
         if (PL_strcasestr(cacheHeader.get(), "must-revalidate")) {
           bMustRevalidate = true;
         }
