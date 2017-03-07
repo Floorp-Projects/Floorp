@@ -5239,6 +5239,7 @@ pref("urlclassifier.flashExceptTable", "testexcept-flash-simple");
 pref("urlclassifier.flashSubDocTable", "test-flashsubdoc-simple");
 pref("urlclassifier.flashSubDocExceptTable", "testexcept-flashsubdoc-simple");
 
+pref("plugins.http_https_only", true);
 pref("plugins.flashBlock.enabled", false);
 
 // Allow users to ignore Safe Browsing warnings.
