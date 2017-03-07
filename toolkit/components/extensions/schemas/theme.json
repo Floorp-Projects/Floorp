@@ -22,7 +22,8 @@
                 "type": "string",
                 "optional": true
               }
-            }
+            },
+            "additionalProperties": { "$ref": "UnrecognizedProperty" }
           },
           "colors": {
             "type": "object",
@@ -50,7 +51,8 @@
                 "type": "string",
                 "optional": true
               }
-            }
+            },
+            "additionalProperties": { "$ref": "UnrecognizedProperty" }
           },
           "icons": {
             "type": "object",
@@ -180,9 +182,11 @@
                 "$ref": "ExtensionURL",
                 "optional": true
               }
-            }
+            },
+            "additionalProperties": { "$ref": "UnrecognizedProperty" }
           }
-        }
+        },
+        "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
         "$extend": "WebExtensionManifest",
