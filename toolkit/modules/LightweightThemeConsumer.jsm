@@ -122,8 +122,19 @@ LightweightThemeConsumer.prototype = {
 
     this._active = active;
 
+    if (aData.icons) {
+      let activeIcons = active ? Object.keys(aData.icons).join(" ") : "";
+      root.setAttribute("lwthemeicons", activeIcons);
+      for (let [name, value] of Object.entries(aData.icons)) {
+        _setImage(root, active, name, value);
+      }
+    } else {
+      root.removeAttribute("lwthemeicons");
+    }
+
     _setImage(root, active, "--lwt-header-image", aData.headerURL);
     _setImage(root, active, "--lwt-footer-image", aData.footerURL);
+
     if (active && aData.footerURL)
       root.setAttribute("lwthemefooter", "true");
     else

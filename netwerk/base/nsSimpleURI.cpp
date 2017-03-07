@@ -424,7 +424,10 @@ nsSimpleURI::SetPath(const nsACString &aPath)
 {
     NS_ENSURE_STATE(mMutable);
 
-    nsAutoCString path(aPath);
+    nsAutoCString path;
+    if (!path.Assign(aPath, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     int32_t queryPos = path.FindChar('?');
     int32_t hashPos = path.FindChar('#');
 

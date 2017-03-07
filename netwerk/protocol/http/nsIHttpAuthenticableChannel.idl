@@ -16,72 +16,72 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
     /**
      * If the channel being authenticated is using SSL.
      */
-    readonly attribute boolean isSSL;
+    [must_use] readonly attribute boolean isSSL;
 
     /**
      * Returns if the proxy HTTP method used is CONNECT. If no proxy is being
      * used it must return PR_FALSE.
      */
-    readonly attribute boolean proxyMethodIsConnect;
+    [must_use] readonly attribute boolean proxyMethodIsConnect;
 
     /**
      * Cancels the current request. See nsIRequest.
      */
-    void cancel(in nsresult aStatus);
+    [must_use] void cancel(in nsresult aStatus);
 
     /**
      * The load flags of this request. See nsIRequest.
      */
-    readonly attribute nsLoadFlags loadFlags;
+    [must_use] readonly attribute nsLoadFlags loadFlags;
 
     /**
      * The URI corresponding to the channel. See nsIChannel.
      */
-    readonly attribute nsIURI URI;
+    [must_use] readonly attribute nsIURI URI;
 
     /**
      * The load group of this request. It is here for querying its
      * notificationCallbacks. See nsIRequest.
      */
-    readonly attribute nsILoadGroup loadGroup;
+    [must_use] readonly attribute nsILoadGroup loadGroup;
 
     /**
      * The notification callbacks for the channel. See nsIChannel.
      */
-    readonly attribute nsIInterfaceRequestor notificationCallbacks;
+    [must_use] readonly attribute nsIInterfaceRequestor notificationCallbacks;
 
     /**
      * The HTTP request method. See nsIHttpChannel.
      */
-    readonly attribute ACString requestMethod;
+    [must_use] readonly attribute ACString requestMethod;
 
     /**
      * The "Server" response header.
      * Return NS_ERROR_NOT_AVAILABLE if not available.
      */
-    readonly attribute ACString serverResponseHeader;
+    [must_use] readonly attribute ACString serverResponseHeader;
 
     /**
      * The Proxy-Authenticate response header.
      */
-    readonly attribute ACString proxyChallenges;
+    [must_use] readonly attribute ACString proxyChallenges;
 
     /**
      * The WWW-Authenticate response header.
      */
-    readonly attribute ACString WWWChallenges;
+    [must_use] readonly attribute ACString WWWChallenges;
 
     /**
      * Sets the Proxy-Authorization request header. An empty string
      * will clear it.
      */
-    void setProxyCredentials(in ACString credentials);
+    [must_use] void setProxyCredentials(in ACString credentials);
 
     /**
      * Sets the Authorization request header. An empty string
      * will clear it.
      */
-    void setWWWCredentials(in ACString credentials);
+    [must_use] void setWWWCredentials(in ACString credentials);
 
     /**
      * Called when authentication information is ready and has been set on this
@@ -94,7 +94,7 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      *
      * @note  Any exceptions thrown from this method should be ignored.
      */
-    void onAuthAvailable();
+    [must_use] void onAuthAvailable();
 
     /**
      * Notifies that the prompt was cancelled. It is called asynchronously
@@ -104,12 +104,12 @@ interface nsIHttpAuthenticableChannel : nsIProxiedChannel
      * @param userCancel
      *        If the user was cancelled has cancelled the authentication prompt.
      */
-    void onAuthCancelled(in boolean userCancel);
+    [must_use] void onAuthCancelled(in boolean userCancel);
 
     /**
      * Tells the channel to drop and close any sticky connection, since this
      * connection oriented schema cannot be negotiated second time on
      * the same connection.
      */
-    void closeStickyConnection();
+    [must_use] void closeStickyConnection();
 };

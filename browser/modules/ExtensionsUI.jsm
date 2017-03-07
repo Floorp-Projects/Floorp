@@ -33,8 +33,11 @@ this.ExtensionsUI = {
   sideloaded: new Set(),
   updates: new Set(),
   sideloadListener: null,
+  histogram: null,
 
   init() {
+    this.histogram = Services.telemetry.getHistogramById("EXTENSION_INSTALL_PROMPT_RESULT");
+
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
     Services.obs.addObserver(this, "webextension-update-permissions", false);
     Services.obs.addObserver(this, "webextension-install-notify", false);
@@ -88,13 +91,13 @@ this.ExtensionsUI = {
     });
   },
 
-  showAddonsManager(browser, strings, icon) {
+  showAddonsManager(browser, strings, icon, histkey) {
     let global = browser.selectedBrowser.ownerGlobal;
     return global.BrowserOpenAddonsMgr("addons://list/extension").then(aomWin => {
       let aomBrowser = aomWin.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDocShell)
                              .chromeEventHandler;
-      return this.showPermissionsPrompt(aomBrowser, strings, icon);
+      return this.showPermissionsPrompt(aomBrowser, strings, icon, histkey);
     });
   },
 
@@ -108,13 +111,14 @@ this.ExtensionsUI = {
       permissions: addon.userPermissions,
       type: "sideload",
     });
-    this.showAddonsManager(browser, strings, addon.iconURL).then(answer => {
-      addon.userDisabled = !answer;
-    });
+    this.showAddonsManager(browser, strings, addon.iconURL, "sideload")
+        .then(answer => {
+          addon.userDisabled = !answer;
+        });
   },
 
   showUpdate(browser, info) {
-    this.showAddonsManager(browser, info.strings, info.addon.iconURL)
+    this.showAddonsManager(browser, info.strings, info.addon.iconURL, "update")
         .then(answer => {
           if (answer) {
             info.resolve();
@@ -147,13 +151,27 @@ this.ExtensionsUI = {
         return;
       }
 
-      this.showPermissionsPrompt(target, strings, info.icon).then(answer => {
-        if (answer) {
-          info.resolve();
-        } else {
-          info.reject();
-        }
-      });
+      let histkey;
+      if (info.type == "sideload") {
+        histkey = "sideload";
+      } else if (info.type == "update") {
+        histkey = "update";
+      } else if (info.source == "AMO") {
+        histkey = "installAmo";
+      } else if (info.source == "local") {
+        histkey = "installLocal";
+      } else {
+        histkey = "installWeb";
+      }
+
+      this.showPermissionsPrompt(target, strings, info.icon, histkey)
+          .then(answer => {
+            if (answer) {
+              info.resolve();
+            } else {
+              info.reject();
+            }
+          });
     } else if (topic == "webextension-update-permissions") {
       let info = subject.wrappedJSObject;
       info.type = "update";
@@ -307,7 +325,7 @@ this.ExtensionsUI = {
     return result;
   },
 
-  showPermissionsPrompt(browser, strings, icon) {
+  showPermissionsPrompt(browser, strings, icon, histkey) {
     function eventCallback(topic) {
       if (topic == "showing") {
         let doc = this.browser.ownerDocument;
@@ -349,13 +367,19 @@ this.ExtensionsUI = {
       let action = {
         label: strings.acceptText,
         accessKey: strings.acceptKey,
-        callback: () => resolve(true),
+        callback: () => {
+          this.histogram.add(histkey + "Accepted");
+          resolve(true);
+        },
       };
       let secondaryActions = [
         {
           label: strings.cancelText,
           accessKey: strings.cancelKey,
-          callback: () => resolve(false),
+          callback: () => {
+            this.histogram.add(histkey + "Rejected");
+            resolve(false);
+          },
         },
       ];
 

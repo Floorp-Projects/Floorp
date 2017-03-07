@@ -196,7 +196,7 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
   const char* httpResponseData;
   uint32_t httpResponseDataLen = 0; // 0 means any response size is acceptable
   rv = nsNSSHttpInterface::trySendAndReceiveFcn(requestSession.get(), nullptr,
-                                                &httpResponseCode, nullptr,
+                                                &httpResponseCode,
                                                 nullptr, &httpResponseData,
                                                 &httpResponseDataLen);
   if (rv != Success) {

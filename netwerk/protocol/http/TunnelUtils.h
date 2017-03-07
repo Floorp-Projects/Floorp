@@ -118,10 +118,11 @@ public:
                        nsAHttpSegmentWriter *writer);
 
   const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
-  nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) override;
-  nsresult GetTransactionSecurityInfo(nsISupports **) override;
-  nsresult NudgeTunnel(NudgeTunnelCallback *callback);
-  nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
+  MOZ_MUST_USE nsresult CommitToSegmentSize(uint32_t size,
+                                            bool forceCommitment) override;
+  MOZ_MUST_USE nsresult GetTransactionSecurityInfo(nsISupports **) override;
+  MOZ_MUST_USE nsresult NudgeTunnel(NudgeTunnelCallback *callback);
+  MOZ_MUST_USE nsresult SetProxiedTransaction(nsAHttpTransaction *aTrans);
   void     newIODriver(nsIAsyncInputStream *aSocketIn,
                        nsIAsyncOutputStream *aSocketOut,
                        nsIAsyncInputStream **outSocketIn,
@@ -134,7 +135,7 @@ public:
   SpdyConnectTransaction *QuerySpdyConnectTransaction() override;
 
 private:
-  nsresult StartTimerCallback();
+  MOZ_MUST_USE nsresult StartTimerCallback();
   void Cleanup();
   int32_t FilterOutput(const char *aBuf, int32_t aAmount);
   int32_t FilterInput(char *aBuf, int32_t aAmount);
@@ -194,10 +195,12 @@ public:
   void MapStreamToHttpConnection(nsISocketTransport *aTransport,
                                  nsHttpConnectionInfo *aConnInfo);
 
-  nsresult ReadSegments(nsAHttpSegmentReader *reader,
-                        uint32_t count, uint32_t *countRead) override final;
-  nsresult WriteSegments(nsAHttpSegmentWriter *writer,
-                         uint32_t count, uint32_t *countWritten) override final;
+  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *reader,
+                                     uint32_t count,
+                                     uint32_t *countRead) override final;
+  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *writer,
+                                      uint32_t count,
+                                      uint32_t *countWritten) override final;
   nsHttpRequestHead *RequestHead() override final;
   void Close(nsresult reason) override final;
 
@@ -209,7 +212,7 @@ private:
   friend class InputStreamShim;
   friend class OutputStreamShim;
 
-  nsresult Flush(uint32_t count, uint32_t *countRead);
+  MOZ_MUST_USE nsresult Flush(uint32_t count, uint32_t *countRead);
   void CreateShimError(nsresult code);
 
   nsCString             mConnectString;

@@ -329,8 +329,10 @@ HttpChannelParentListener::ChannelIntercepted(nsIInterceptedChannel* aChannel)
   mSynthesizedResponseHead->StatusText(statusText);
   aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(), statusText);
   nsCOMPtr<nsIHttpHeaderVisitor> visitor = new HeaderVisitor(aChannel);
-  mSynthesizedResponseHead->VisitHeaders(visitor,
-                                         nsHttpHeaderArray::eFilterResponse);
+  DebugOnly<nsresult> rv =
+    mSynthesizedResponseHead->VisitHeaders(visitor,
+                                           nsHttpHeaderArray::eFilterResponse);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsCOMPtr<nsIRunnable> event = new FinishSynthesizedResponse(aChannel);
   NS_DispatchToCurrentThread(event);

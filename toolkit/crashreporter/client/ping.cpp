@@ -94,6 +94,7 @@ GenerateUUID()
 }
 
 const char kISO8601Date[] = "%F";
+const char kISO8601DateHours[] = "%FT%H:00:00.000Z";
 const char kISO8601FullDate[] = "%FT%T.000Z";
 
 // Return the current date as a string in the specified format, the following
@@ -170,6 +171,7 @@ CreatePayloadNode(StringTable& strings, const string& aSessionId)
   payload["sessionId"] = aSessionId;
   payload["version"] = 1;
   payload["crashDate"] = CurrentDate(kISO8601Date);
+  payload["crashTime"] = CurrentDate(kISO8601DateHours);
   payload["hasCrashEnvironment"] = true;
   payload["crashId"] = GetDumpLocalID();
   payload["processType"] = "main"; // This is always a main crash

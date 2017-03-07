@@ -332,7 +332,7 @@ function getLocale() {
     if (Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE)) {
       const osPrefs =
         Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences);
-      return osPrefs.getSystemLocale();
+      return osPrefs.systemLocale;
     }
   } catch (e) { }
 
@@ -2191,17 +2191,17 @@ var AddonManagerInternal = {
       // install in that case.
       new BrowserListener(aBrowser, aInstallingPrincipal, aInstall);
 
-      AddonManagerInternal.setupPromptHandler(aBrowser, aInstallingPrincipal.URI, aInstall, true);
+      let startInstall = (source) => {
+        AddonManagerInternal.setupPromptHandler(aBrowser, aInstallingPrincipal.URI, aInstall, true, source);
 
-      let startInstall = () => {
         AddonManagerInternal.startInstall(aBrowser, aInstallingPrincipal.URI, aInstall);
       };
       if (!this.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
         this.installNotifyObservers("addon-install-blocked", topBrowser,
                                     aInstallingPrincipal.URI, aInstall,
-                                    startInstall);
+                                    () => startInstall("other"));
       } else {
-        startInstall();
+        startInstall("AMO");
       }
     } catch (e) {
       // In the event that the weblistener throws during instantiation or when
@@ -2228,7 +2228,7 @@ var AddonManagerInternal = {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
 
-    AddonManagerInternal.setupPromptHandler(browser, uri, install, true);
+    AddonManagerInternal.setupPromptHandler(browser, uri, install, true, "local");
     AddonManagerInternal.startInstall(browser, uri, install);
   },
 
@@ -2825,7 +2825,7 @@ var AddonManagerInternal = {
     return gHotfixID;
   },
 
-  setupPromptHandler(browser, url, install, requireConfirm) {
+  setupPromptHandler(browser, url, install, requireConfirm, source) {
     install.promptHandler = info => new Promise((resolve, _reject) => {
       let reject = () => {
         this.installNotifyObservers("addon-install-cancelled",
@@ -2852,7 +2852,7 @@ var AddonManagerInternal = {
         let subject = {
           wrappedJSObject: {
             target: browser,
-            info: Object.assign({resolve, reject}, info),
+            info: Object.assign({resolve, reject, source}, info),
           }
         };
         subject.wrappedJSObject.info.permissions = info.addon.userPermissions;
@@ -3041,7 +3041,7 @@ var AddonManagerInternal = {
 
       return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash)
                                  .then(install => {
-        AddonManagerInternal.setupPromptHandler(target, null, install, false);
+        AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
 
         let id = this.nextInstall++;
         let {listener, installPromise} = this.makeListener(id, target.messageManager);
