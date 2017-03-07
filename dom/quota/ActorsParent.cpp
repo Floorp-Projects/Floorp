@@ -6964,7 +6964,6 @@ StorageDirectoryHelper::GetDirectoryMetadata2(nsIFile* aDirectory,
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
-  MOZ_ASSERT(aTimestamp);
 
   nsCOMPtr<nsIBinaryInputStream> binaryStream;
   nsresult rv = GetBinaryInputStream(aDirectory,
