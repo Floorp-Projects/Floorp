@@ -406,6 +406,7 @@ struct JSCompartment
   public:
     bool                         isSelfHosting;
     bool                         marked;
+    bool                         warnedAboutDateToLocaleFormat;
     bool                         warnedAboutExprClosure;
     bool                         warnedAboutForEach;
     uint32_t                     warnedAboutStringGenericsMethods;
