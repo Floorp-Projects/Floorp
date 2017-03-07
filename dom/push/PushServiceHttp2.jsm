@@ -332,7 +332,6 @@ SubscriptionListener.prototype = {
       ctime: Date.now(),
     });
 
-    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_HTTP2_TIME").add(Date.now() - this._ctime);
     this._resolve(reply);
   },
 

@@ -639,7 +639,6 @@ this.PushServiceWebSocket = {
         appServerKey: tmp.record.appServerKey,
         ctime: Date.now(),
       });
-      Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_WS_TIME").add(Date.now() - tmp.ctime);
       tmp.resolve(record);
     } else {
       console.error("handleRegisterReply: Unexpected server response", reply);
