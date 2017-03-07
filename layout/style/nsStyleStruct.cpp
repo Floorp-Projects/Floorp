@@ -2935,21 +2935,11 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
     if (mSourceURI) {
-      if (mSourceURI->IsLocalRef()) {
-        maybeSVGMask = true;
-      } else if (mSourceURI->GetURI()) {
-        mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
-      }
+      maybeSVGMask = mSourceURI->HasRef();
     }
 
-    if (!maybeSVGMask) {
-      if (aNewLayer.mSourceURI) {
-        if (aNewLayer.mSourceURI->IsLocalRef()) {
-          maybeSVGMask = true;
-        } else if (aNewLayer.mSourceURI->GetURI()) {
-          aNewLayer.mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
-        }
-      }
+    if (!maybeSVGMask && aNewLayer.mSourceURI) {
+      maybeSVGMask = aNewLayer.mSourceURI->HasRef();
     }
 
     // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG

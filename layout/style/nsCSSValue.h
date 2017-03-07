@@ -138,6 +138,8 @@ public:
 
   bool IsLocalRef() const { return mIsLocalRef; }
 
+  bool HasRef() const;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLValueData)
 
   // When matching a url with mIsLocalRef set, resolve it against aURI;
