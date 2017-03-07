@@ -118,12 +118,7 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
                 MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
 
                 if (keyVal.isPrimitive()) {
-                    UniqueChars bytes =
-                        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
-                    if (!bytes)
-                        return false;
-                    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
-                                               JSMSG_NOT_NONNULL_OBJECT, bytes.get());
+                    ReportNotObjectWithName(cx, "WeakSet value", keyVal);
                     return false;
                 }
 
