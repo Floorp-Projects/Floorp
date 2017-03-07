@@ -107,7 +107,6 @@ struct DeviceAttachmentsD3D11
   PixelShaderArray mRGBAShader;
   PixelShaderArray mRGBShader;
   PixelShaderArray mYCbCrShader;
-  PixelShaderArray mNV12Shader;
   PixelShaderArray mComponentAlphaShader;
   PixelShaderArray mBlendShader;
   RefPtr<ID3D11Buffer> mPSConstantBuffer;
@@ -767,8 +766,6 @@ CompositorD3D11::GetPSForEffect(Effect* aEffect,
            ? mAttachments->mRGBAShader[aMaskType]
            : mAttachments->mRGBShader[aMaskType];
   }
-  case EffectTypes::NV12:
-    return mAttachments->mNV12Shader[aMaskType];
   case EffectTypes::YCBCR:
     return mAttachments->mYCbCrShader[aMaskType];
   case EffectTypes::COMPONENT_ALPHA:
@@ -842,8 +839,6 @@ EffectToBlendLayerType(Effect* aEffect)
     return PS_LAYER_RGBA;
   case EffectTypes::YCBCR:
     return PS_LAYER_YCBCR;
-  case EffectTypes::NV12:
-    return PS_LAYER_NV12;
   default:
     MOZ_ASSERT_UNREACHABLE("blending not supported for this layer type");
     return 0;
@@ -1101,45 +1096,6 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
         mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
         restoreBlendMode = true;
       }
-
-      SetSamplerForSamplingFilter(texturedEffect->mSamplingFilter);
-    }
-    break;
-  case EffectTypes::NV12:
-    {
-      TexturedEffect* texturedEffect =
-        static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
-
-      pTexCoordRect = &texturedEffect->mTextureCoords;
-
-      TextureSourceD3D11* source = texturedEffect->mTexture->AsSourceD3D11();
-      if (!source) {
-        NS_WARNING("Missing texture source!");
-        return;
-      }
-
-      RefPtr<ID3D11Texture2D> texture = source->GetD3D11Texture();
-      if (!texture) {
-        NS_WARNING("No texture found in texture source!");
-      }
-
-      // Might want to cache these for efficiency.
-      RefPtr<ID3D11ShaderResourceView> srViewY;
-      RefPtr<ID3D11ShaderResourceView> srViewCbCr;
-      mDevice->CreateShaderResourceView(texture,
-                                        &CD3D11_SHADER_RESOURCE_VIEW_DESC(D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                                          DXGI_FORMAT_R8_UNORM),
-                                        getter_AddRefs(srViewY));
-      mDevice->CreateShaderResourceView(texture,
-                                        &CD3D11_SHADER_RESOURCE_VIEW_DESC(D3D11_SRV_DIMENSION_TEXTURE2D,
-                                                                          DXGI_FORMAT_R8G8_UNORM),
-                                        getter_AddRefs(srViewCbCr));
-
-      ID3D11ShaderResourceView* views[] = { srViewY, srViewCbCr };
-      mContext->PSSetShaderResources(TexSlot::Y, 2, views);
-
-      const float* yuvToRgb = gfxUtils::YuvToRgbMatrix4x3RowMajor(YUVColorSpace::BT601);
-      memcpy(&mPSConstants.yuvColorMatrix, yuvToRgb, sizeof(mPSConstants.yuvColorMatrix));
 
       SetSamplerForSamplingFilter(texturedEffect->mSamplingFilter);
     }
@@ -1680,8 +1636,6 @@ DeviceAttachmentsD3D11::CreateShaders()
   InitPixelShader(sRGBAShaderMask, mRGBAShader, MaskType::Mask);
   InitPixelShader(sYCbCrShader, mYCbCrShader, MaskType::MaskNone);
   InitPixelShader(sYCbCrShaderMask, mYCbCrShader, MaskType::Mask);
-  InitPixelShader(sNV12Shader, mNV12Shader, MaskType::MaskNone);
-  InitPixelShader(sNV12ShaderMask, mNV12Shader, MaskType::Mask);
   if (gfxPrefs::ComponentAlphaEnabled()) {
     InitPixelShader(sComponentAlphaShader, mComponentAlphaShader, MaskType::MaskNone);
     InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader, MaskType::Mask);
