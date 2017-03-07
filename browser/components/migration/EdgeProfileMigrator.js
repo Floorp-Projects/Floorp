@@ -234,30 +234,9 @@ EdgeBookmarksMigrator.prototype = {
 
   get exists() {
     if (!("_exists" in this)) {
-      this._exists = !!this.db && this._checkTableExists();
+      this._exists = !!this.db;
     }
     return this._exists;
-  },
-
-  _checkTableExists() {
-    let database;
-    let rv;
-    try {
-      let logFile = this.db.parent;
-      logFile.append("LogFiles");
-      database = ESEDBReader.openDB(this.db.parent, this.db, logFile);
-
-      rv = database.tableExists(this.TABLE_NAME);
-    } catch (ex) {
-      Cu.reportError("Failed to check for table " + this.TABLE_NAME + " in Edge database at " +
-                     this.db.path + " due to the following error: " + ex);
-      return false;
-    } finally {
-      if (database) {
-        ESEDBReader.closeDB(database);
-      }
-    }
-    return rv;
   },
 
   migrate(callback) {
@@ -403,12 +382,8 @@ EdgeProfileMigrator.prototype.getESEMigratorForTesting = function(dbOverride) {
 };
 
 EdgeProfileMigrator.prototype.getResources = function() {
-  let bookmarksMigrator = new EdgeBookmarksMigrator();
-  if (!bookmarksMigrator.exists) {
-    bookmarksMigrator = MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE);
-  }
   let resources = [
-    bookmarksMigrator,
+    new EdgeBookmarksMigrator(),
     MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
     new EdgeTypedURLMigrator(),
     new EdgeReadingListMigrator(),
