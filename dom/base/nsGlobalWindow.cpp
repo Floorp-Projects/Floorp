@@ -2408,8 +2408,13 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument* aNewDocument)
     return false;
   }
 
-  NS_ASSERTION(NS_IsAboutBlank(mDoc->GetDocumentURI()),
-               "How'd this happen?");
+#ifdef DEBUG
+{
+  nsCOMPtr<nsIURI> uri;
+  mDoc->GetDocumentURI()->CloneIgnoringRef(getter_AddRefs(uri));
+  NS_ASSERTION(NS_IsAboutBlank(uri), "How'd this happen?");
+}
+#endif
 
   // Great, we're the original document, check for one of the other
   // conditions.
