@@ -72,12 +72,7 @@ this.FxAccountsConfig = {
       whitelistValue = whitelistValue.slice(autoconfigURL.length + 1);
       // Check and see if the value will be the default, and just clear the pref if it would
       // to avoid it showing up as changed in about:config.
-      let defaultWhitelist;
-      try {
-        defaultWhitelist = Services.prefs.getDefaultBranch("webchannel.allowObject.").getCharPref("urlWhitelist");
-      } catch (e) {
-        // No default value ...
-      }
+      let defaultWhitelist = Services.prefs.getDefaultBranch("webchannel.allowObject.").getCharPref("urlWhitelist", "");
 
       if (defaultWhitelist === whitelistValue) {
         Services.prefs.clearUserPref("webchannel.allowObject.urlWhitelist");
@@ -88,10 +83,7 @@ this.FxAccountsConfig = {
   },
 
   getAutoConfigURL() {
-    let pref;
-    try {
-      pref = Services.prefs.getCharPref("identity.fxaccounts.autoconfig.uri");
-    } catch (e) { /* no pref */ }
+    let pref = Services.prefs.getCharPref("identity.fxaccounts.autoconfig.uri", "");
     if (!pref) {
       // no pref / empty pref means we don't bother here.
       return "";

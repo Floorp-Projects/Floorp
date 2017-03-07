@@ -392,12 +392,7 @@ function isPartnerBuild() {
 
 // Method to determine if we should be using geo-specific defaults
 function geoSpecificDefaultsEnabled() {
-  let geoSpecificDefaults = false;
-  try {
-    geoSpecificDefaults = Services.prefs.getBoolPref("browser.search.geoSpecificDefaults");
-  } catch (e) {}
-
-  return geoSpecificDefaults;
+  return Services.prefs.getBoolPref("browser.search.geoSpecificDefaults", false);
 }
 
 // Some notes on countryCode and region prefs:
@@ -502,10 +497,7 @@ function isUSTimezone() {
 // If it fails we don't touch that pref so isUS() does its normal thing.
 var ensureKnownCountryCode = Task.async(function* (ss) {
   // If we have a country-code already stored in our prefs we trust it.
-  let countryCode;
-  try {
-    countryCode = Services.prefs.getCharPref("browser.search.countryCode");
-  } catch (e) {}
+  let countryCode = Services.prefs.getCharPref("browser.search.countryCode", "");
 
   if (!countryCode) {
     // We don't have it cached, so fetch it. fetchCountryCode() will call
@@ -728,10 +720,7 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
 
   // Append the optional cohort value.
   const cohortPref = "browser.search.cohort";
-  let cohort;
-  try {
-    cohort = Services.prefs.getCharPref(cohortPref);
-  } catch (e) {}
+  let cohort = Services.prefs.getCharPref(cohortPref, "");
   if (cohort)
     endpoint += "/" + cohort;
 

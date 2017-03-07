@@ -360,12 +360,7 @@ this.AsyncShutdown = {
    * Access function getPhase. For testing purposes only.
    */
   get _getPhase() {
-    let accepted = false;
-    try {
-      accepted = Services.prefs.getBoolPref("toolkit.asyncshutdown.testing");
-    } catch (ex) {
-      // Ignore errors
-    }
+    let accepted = Services.prefs.getBoolPref("toolkit.asyncshutdown.testing", false);
     if (accepted) {
       return getPhase;
     }
@@ -464,12 +459,7 @@ function getPhase(topic) {
      * notification. For testing purposes only.
      */
     get _trigger() {
-      let accepted = false;
-      try {
-        accepted = Services.prefs.getBoolPref("toolkit.asyncshutdown.testing");
-      } catch (ex) {
-        // Ignore errors
-      }
+      let accepted = Services.prefs.getBoolPref("toolkit.asyncshutdown.testing", false);
       if (accepted) {
         return () => spinner.observe();
       }

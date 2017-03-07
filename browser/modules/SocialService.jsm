@@ -284,10 +284,7 @@ function migrateSettings() {
   }
 
   // primary migration from pre-fx21
-  let active;
-  try {
-    active = Services.prefs.getBoolPref("social.active");
-  } catch (e) {}
+  let active = Services.prefs.getBoolPref("social.active", false);
   if (!active)
     return;
 

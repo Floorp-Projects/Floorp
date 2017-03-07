@@ -563,11 +563,7 @@ var BrowserApp = {
   get _startupStatus() {
     delete this._startupStatus;
 
-    let savedMilestone = null;
-    try {
-      savedMilestone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
-    } catch (e) {
-    }
+    let savedMilestone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone", "");
     let ourMilestone = AppConstants.MOZ_APP_VERSION;
     this._startupStatus = "";
     if (ourMilestone != savedMilestone) {
@@ -987,10 +983,7 @@ var BrowserApp = {
 
   _migrateUI: function() {
     const UI_VERSION = 3;
-    let currentUIVersion = 0;
-    try {
-      currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
-    } catch(ex) {}
+    let currentUIVersion = Services.prefs.getIntPref("browser.migration.version", 0);
     if (currentUIVersion >= UI_VERSION) {
       return;
     }
@@ -5332,10 +5325,7 @@ var XPInstallObserver = {
         if (!tab)
           return;
 
-        let enabled = true;
-        try {
-          enabled = Services.prefs.getBoolPref("xpinstall.enabled");
-        } catch (e) {}
+        let enabled = Services.prefs.getBoolPref("xpinstall.enabled", true);
 
         let buttons, message, callback;
         if (!enabled) {

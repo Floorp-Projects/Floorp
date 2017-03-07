@@ -31,14 +31,8 @@
     Cu.import("resource://gre/modules/Services.jsm");
     for (var stage of [ "install", "startup", "shutdown", "uninstall" ]) {
       for (var symbol of [ "IDBKeyRange", "indexedDB" ]) {
-        let pref;
-        try {
-          pref = Services.prefs.getBoolPref("indexeddbtest.bootstrap." + stage +
-                                            "." + symbol);
-        }
-        catch(ex) {
-          pref = false;
-        }
+        let pref = Services.prefs.getBoolPref("indexeddbtest.bootstrap." + stage +
+                                              "." + symbol, false);
         ok(pref, "Symbol '" + symbol + "' present during '" + stage + "'");
       }
     }

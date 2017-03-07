@@ -63,11 +63,7 @@ var PrefObserver = {
      Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
      Services.obs.removeObserver(this, "xpcom-shutdown");
    } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
-     let debugLogEnabled = false;
-     try {
-       debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
-     } catch (e) {
-     }
+     let debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED, false);
      if (debugLogEnabled) {
        parentLogger.level = Log.Level.Debug;
      } else {

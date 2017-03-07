@@ -653,10 +653,7 @@
           delete this.mControl.mAddon;
           this.mControl.mInstall = this.mInstall;
           this.mControl.setAttribute("status", "installing");
-          let prompt = false;
-          try {
-            prompt = Services.prefs.getBoolPref("extensions.webextPermissionPrompts");
-          } catch (err) {}
+          let prompt = Services.prefs.getBoolPref("extensions.webextPermissionPrompts", false);
           if (prompt) {
             this.mInstall.promptHandler = info => new Promise((resolve, reject) => {
               let subject = {

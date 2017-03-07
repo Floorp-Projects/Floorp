@@ -22,10 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 this.DistributionCustomizer = function DistributionCustomizer() {
   // For parallel xpcshell testing purposes allow loading the distribution.ini
   // file from the profile folder through an hidden pref.
-  let loadFromProfile = false;
-  try {
-    loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile");
-  } catch (ex) {}
+  let loadFromProfile = Services.prefs.getBoolPref("distribution.testing.loadFromProfile", false);
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
   try {
@@ -60,12 +57,7 @@ DistributionCustomizer.prototype = {
   },
 
   get _locale() {
-    let locale;
-    try {
-      locale = this._prefs.getCharPref("general.useragent.locale");
-    } catch (e) {
-      locale = "en-US";
-    }
+    let locale = this._prefs.getCharPref("general.useragent.locale", "en-US");
     this.__defineGetter__("_locale", () => locale);
     return this._locale;
   },
@@ -289,10 +281,7 @@ DistributionCustomizer.prototype = {
         this._ini.getString("Global", "id") + ".bookmarksProcessed";
     }
 
-    let bmProcessed = false;
-    try {
-      bmProcessed = this._prefs.getBoolPref(bmProcessedPref);
-    } catch (e) {}
+    let bmProcessed = this._prefs.getBoolPref(bmProcessedPref, false);
 
     if (!bmProcessed) {
       if (sections["BookmarksMenu"])

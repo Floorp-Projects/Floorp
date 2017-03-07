@@ -168,11 +168,7 @@ var PrefObserver = {
         Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
         Services.obs.removeObserver(this, "xpcom-shutdown");
       } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
-        let debugLogEnabled = false;
-        try {
-          debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
-        } catch (e) {
-        }
+        let debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED, false);
         if (debugLogEnabled) {
           parentLogger.level = Log.Level.Debug;
         } else {
@@ -821,10 +817,7 @@ var AddonManagerInternal = {
 
       Extension.browserUpdated = appChanged;
 
-      let oldPlatformVersion = null;
-      try {
-        oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION);
-      } catch (e) { }
+      let oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION, "");
 
       if (appChanged !== false) {
         logger.debug("Application has been upgraded");
@@ -882,10 +875,7 @@ var AddonManagerInternal = {
       } catch (e) {}
       Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this, false);
 
-      let defaultProvidersEnabled = true;
-      try {
-        defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED);
-      } catch (e) {}
+      let defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED, true);
       AddonManagerPrivate.recordSimpleMeasure("default_providers", defaultProvidersEnabled);
 
       // Ensure all default providers have had a chance to register themselves
@@ -1226,11 +1216,7 @@ var AddonManagerInternal = {
     switch (aData) {
       case PREF_EM_CHECK_COMPATIBILITY: {
         let oldValue = gCheckCompatibility;
-        try {
-          gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
-        } catch (e) {
-          gCheckCompatibility = true;
-        }
+        gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY, true);
 
         this.callManagerListeners("onCompatibilityModeChanged");
 
@@ -1241,11 +1227,7 @@ var AddonManagerInternal = {
       }
       case PREF_EM_STRICT_COMPATIBILITY: {
         let oldValue = gStrictCompatibility;
-        try {
-          gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
-        } catch (e) {
-          gStrictCompatibility = true;
-        }
+        gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
 
         this.callManagerListeners("onCompatibilityModeChanged");
 
@@ -1256,11 +1238,7 @@ var AddonManagerInternal = {
       }
       case PREF_EM_CHECK_UPDATE_SECURITY: {
         let oldValue = gCheckUpdateSecurity;
-        try {
-          gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
-        } catch (e) {
-          gCheckUpdateSecurity = true;
-        }
+        gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, true);
 
         this.callManagerListeners("onCheckUpdateSecurityChanged");
 
@@ -1270,31 +1248,19 @@ var AddonManagerInternal = {
         break;
       }
       case PREF_EM_UPDATE_ENABLED: {
-        try {
-          gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED);
-        } catch (e) {
-          gUpdateEnabled = true;
-        }
+        gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED, true);
 
         this.callManagerListeners("onUpdateModeChanged");
         break;
       }
       case PREF_EM_AUTOUPDATE_DEFAULT: {
-        try {
-          gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
-        } catch (e) {
-          gAutoUpdateDefault = true;
-        }
+        gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT, true);
 
         this.callManagerListeners("onUpdateModeChanged");
         break;
       }
       case PREF_EM_HOTFIX_ID: {
-        try {
-          gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
-        } catch (e) {
-          gHotfixID = null;
-        }
+        gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID, "");
         break;
       }
       case PREF_MIN_WEBEXT_PLATFORM_VERSION: {
@@ -1474,10 +1440,7 @@ var AddonManagerInternal = {
       }
 
       if (checkHotfix) {
-        var hotfixVersion = "";
-        try {
-          hotfixVersion = Services.prefs.getCharPref(PREF_EM_HOTFIX_LASTVERSION);
-        } catch (e) { }
+        var hotfixVersion = Services.prefs.getCharPref(PREF_EM_HOTFIX_LASTVERSION, "");
 
         let url = null;
         if (Services.prefs.getPrefType(PREF_EM_HOTFIX_URL) == Ci.nsIPrefBranch.PREF_STRING)
