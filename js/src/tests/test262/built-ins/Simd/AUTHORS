@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('SIMD')) -- needs SIMD
 Arun Purushan <arun.etm@gmail.com>
 Benjamin Bouvier <public@benj.me>
 Bill Budge <bbudge@chromium.org>
@@ -11,5 +10,3 @@ Jakob Stoklund Olesen <jolesen@mozilla.com>
 John McCutchan <john@johnmccutchan.com>
 Ningxin Hu <ningxin.hu@intel.com>
 Peter Jensen <peter.jensen@intel.com>
-
-reportCompare(0, 0);
