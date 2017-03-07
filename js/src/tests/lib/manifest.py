@@ -156,6 +156,11 @@ def _parse_one(testcase, terms, xul_tester):
             if xul_tester.test("xulRuntime.OS == 'Darwin'"):
                 testcase.expect = testcase.enable = False
             pos += 1
+        elif parts[pos].startswith('error:'):
+            # This directive allows to specify an error type.
+            (_, _, errortype) = parts[pos].partition(':')
+            testcase.error = errortype
+            pos += 1
         else:
             print('warning: invalid manifest line element "{}"'.format(
                 parts[pos]))
@@ -163,10 +168,20 @@ def _parse_one(testcase, terms, xul_tester):
 
 def _build_manifest_script_entry(script_name, test):
     line = []
+    properties = []
     if test.terms:
-        line.append(test.terms)
+        # Remove jsreftest internal terms.
+        terms = " ".join([term for term in test.terms.split()
+                          if not (term.startswith("error:"))])
+        if terms:
+            line.append(terms)
+    if test.error:
+        properties.append("error=" + test.error)
     line.append("script")
-    line.append(script_name)
+    script = script_name
+    if properties:
+        script = ";".join([script] + properties)
+    line.append(script)
     if test.comment:
         line.append("#")
         line.append(test.comment)
@@ -248,7 +263,7 @@ def _append_terms_and_comment(testcase, terms, comment):
 
     if testcase.comment is None:
         testcase.comment = comment
-    else:
+    elif comment:
         testcase.comment += "; " + comment
 
 def _parse_test_header(fullpath, testcase, xul_tester):

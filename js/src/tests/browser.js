@@ -315,28 +315,39 @@ var GLOBAL = this + '';
 // Variables local to jstests harness.
 var jstestsOptions;
 
-window.onerror = function (msg, page, line)
-{
+window.onerror = function (msg, page, line, column, error) {
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
 
   optionsPush();
 
-  if (typeof DESCRIPTION == 'undefined')
-  {
+  if (typeof DESCRIPTION == 'undefined') {
     DESCRIPTION = 'Unknown';
   }
-  if (typeof EXPECTED == 'undefined')
-  {
+  if (typeof EXPECTED == 'undefined') {
     EXPECTED = 'Unknown';
   }
 
   var testcase = new TestCase("unknown-test-name", DESCRIPTION, EXPECTED, "error");
 
-  if (document.location.href.indexOf('-n.js') != -1)
-  {
-    // negative test
+  var href = document.location.href;
+  if (href.indexOf('-n.js') !== -1) {
+    // Negative test without a specific error type.
     testcase.passed = true;
+  } else if (href.indexOf('error=') !== -1) {
+    // Negative test which expects a specific error type.
+    var startIndex = href.indexOf('error=');
+    var endIndex = href.indexOf(';', startIndex);
+    if (endIndex === -1)
+      endIndex = href.length;
+    var errorType = href.substring(startIndex + 'error='.length, endIndex);
+
+    // Check the error type when an actual error object is available.
+    if (Error.prototype.isPrototypeOf(error)) {
+      testcase.passed = error.constructor.name === errorType;
+    } else {
+      testcase.passed = true;
+    }
   }
 
   testcase.reason = page + ':' + line + ': ' + msg;
