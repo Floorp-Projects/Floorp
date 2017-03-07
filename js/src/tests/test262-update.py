@@ -59,7 +59,7 @@ def tryParseTestFile(test262parser, source, testName):
         print("Please report this error to the test262 GitHub repository!")
         return None
 
-def createRefTestEntry(skip, skipIf):
+def createRefTestEntry(skip, skipIf, error):
     """
     Creates the |reftest| entry from the input list. Or the empty string if no
     reftest entry is required.
@@ -75,6 +75,9 @@ def createRefTestEntry(skip, skipIf):
     if skipIf:
         terms.append("skip-if(" + "||".join([cond for (cond, _) in skipIf]) + ")")
         comments.extend([comment for (_, comment) in skipIf])
+
+    if error:
+        terms.append("error:" + error)
 
     line = " ".join(terms)
     if comments:
@@ -206,10 +209,11 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # Negative tests have additional meta-data to specify the error type and
     # when the error is issued (runtime error or early parse error). We're
-    # currently ignoring this additional meta-data.
+    # currently ignoring the error phase attribute.
     # testRec["negative"] == {type=<error name>, phase=early|runtime}
     isNegative = "negative" in testRec
     assert not isNegative or type(testRec["negative"]) == dict
+    errorType = testRec["negative"]["type"] if isNegative else None
 
     # Skip non-test files.
     isSupportFile = fileNameEndsWith(testName, "FIXTURE")
@@ -239,7 +243,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     else:
         testEpilogue = ""
 
-    refTest = createRefTestEntry(refTestSkip, refTestSkipIf)
+    refTest = createRefTestEntry(refTestSkip, refTestSkipIf, errorType)
 
     # Don't write a strict-mode variant for raw or support files.
     noStrictVariant = raw or isSupportFile
@@ -251,8 +255,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         testPrologue = ""
         nonStrictSource = createSource(testSource, refTest, testPrologue, testEpilogue)
         testFileName = testName
-        if isNegative:
-            testFileName = addSuffixToFileName(testFileName, "-n")
         yield (testFileName, nonStrictSource)
 
     # Write strict mode test.
@@ -262,8 +264,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         testFileName = testName
         if not noStrict:
             testFileName = addSuffixToFileName(testFileName, "-strict")
-        if isNegative:
-            testFileName = addSuffixToFileName(testFileName, "-n")
         yield (testFileName, strictSource)
 
 def process_test262(test262Dir, test262OutDir, strictTests):

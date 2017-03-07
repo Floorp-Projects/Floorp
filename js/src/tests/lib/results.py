@@ -57,7 +57,7 @@ class TestResult:
         result = None          # str:      overall result, see class-level variables
         results = []           # (str,str) list: subtest results (pass/fail, message)
 
-        out, rc = output.out, output.rc
+        out, err, rc = output.out, output.err, output.rc
 
         failures = 0
         passes = 0
@@ -80,6 +80,12 @@ class TestResult:
                              ' ((?:-|\\d)+) ---', line)
                 if m:
                     expected_rcs.append(int(m.group(1)))
+
+        if test.error is not None:
+            expected_rcs.append(3)
+            if test.error not in err:
+                failures += 1
+                results.append((cls.FAIL, "Expected uncaught error: {}".format(test.error)))
 
         if rc and not rc in expected_rcs:
             if rc == 3:
