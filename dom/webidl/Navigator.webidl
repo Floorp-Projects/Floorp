@@ -87,7 +87,7 @@ interface NavigatorContentUtils {
   //void unregisterContentHandler(DOMString mimeType, DOMString url);
 };
 
-[NoInterfaceObject, Exposed=(Window,Worker)]
+[SecureContext, NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorStorage {
   [Func="mozilla::dom::StorageManager::PrefEnabled"]
   readonly attribute StorageManager storage;
