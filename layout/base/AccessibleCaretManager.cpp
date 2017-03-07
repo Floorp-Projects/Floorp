@@ -68,23 +68,23 @@ std::ostream& operator<<(std::ostream& aStream,
 }
 #undef AC_PROCESS_ENUM_TO_STREAM
 
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sSelectionBarEnabled = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = true;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sHapticFeedback = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sExtendSelectionForPhoneNumber = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sHideCaretsForMouseInput = true;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
