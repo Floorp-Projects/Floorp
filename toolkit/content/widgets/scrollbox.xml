@@ -824,11 +824,9 @@
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor><![CDATA[
-        try {
-          this._scrollDelay = this._prefBranch
-                                  .getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
-        } catch (ex) {
-        }
+        this._scrollDelay =
+          this._prefBranch.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay",
+                                      this._scrollDelay);
       ]]></constructor>
 
       <destructor><![CDATA[

@@ -256,15 +256,11 @@ var shell = {
       // If --start-manifest hasn't been specified, we re-use the latest specified manifest.
       // If it's the first launch, we will fallback to b2g.default.start_manifest_url
       if (AppConstants.MOZ_GRAPHENE && !startManifestURL) {
-        try {
-          startManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
-        } catch(e) {}
+        startManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url", "");
       }
 
       if (!startManifestURL) {
-        try {
-          startManifestURL = Services.prefs.getCharPref("b2g.default.start_manifest_url");
-        } catch(e) {}
+        startManifestURL = Services.prefs.getCharPref("b2g.default.start_manifest_url", "");
       }
 
       if (startManifestURL) {

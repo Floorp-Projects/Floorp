@@ -793,11 +793,8 @@ nsPlacesExpiration.prototype = {
 
   _loadPrefs: Task.async(function* () {
     // Get the user's limit, if it was set.
-    try {
-      // We want to silently fail since getIntPref throws if it does not exist,
-      // and use a default to fallback to.
-      this._urisLimit = this._prefBranch.getIntPref(PREF_MAX_URIS);
-    } catch (ex) { /* User limit not set */ }
+    this._urisLimit = this._prefBranch.getIntPref(PREF_MAX_URIS,
+                                                  PREF_MAX_URIS_NOTSET);
 
     if (this._urisLimit < 0) {
       // Some testing code expects a pref change to be synchronous, so
@@ -855,11 +852,8 @@ nsPlacesExpiration.prototype = {
                                 this._urisLimit);
 
     // Get the expiration interval value.
-    try {
-      // We want to silently fail since getIntPref throws if it does not exist,
-      // and use a default to fallback to.
-      this._interval = this._prefBranch.getIntPref(PREF_INTERVAL_SECONDS);
-    } catch (ex) { /* User interval not set */ }
+    this._interval = this._prefBranch.getIntPref(PREF_INTERVAL_SECONDS,
+                                                 PREF_INTERVAL_SECONDS_NOTSET);
     if (this._interval <= 0) {
       this._interval = PREF_INTERVAL_SECONDS_NOTSET;
     }

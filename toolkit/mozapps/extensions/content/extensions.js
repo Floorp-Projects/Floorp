@@ -1887,6 +1887,7 @@ var gCategories = {
 
     AddonManager.addTypeListener(this);
 
+    // eslint-disable-next-line mozilla/use-default-preference-values
     try {
       this.node.value = Services.prefs.getCharPref(PREF_UI_LASTCATEGORY);
     } catch (e) { }
