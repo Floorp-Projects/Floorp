@@ -34,8 +34,10 @@ function Reflect_apply(target, thisArgument, argumentsList) {
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, target));
 
     // Step 2.
-    if (!IsObject(argumentsList))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(2, argumentsList));
+    if (!IsObject(argumentsList)) {
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT_ARG, "`argumentsList`", "Reflect.apply",
+                       ToSource(argumentsList));
+    }
 
     // Steps 2-4.
     return callFunction(std_Function_apply, target, thisArgument, argumentsList);
@@ -59,8 +61,10 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
     }
 
     // Step 4.
-    if (!IsObject(argumentsList))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(1, argumentsList));
+    if (!IsObject(argumentsList)) {
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT_ARG, "`argumentsList`", "Reflect.construct",
+                       ToSource(argumentsList));
+    }
 
     // Fast path when we can avoid calling CreateListFromArrayLikeForArgs().
     var args = (IsPackedArray(argumentsList) && argumentsList.length <= MAX_ARGS_LENGTH)
@@ -105,7 +109,8 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
 function Reflect_has(target, propertyKey) {
     // Step 1.
     if (!IsObject(target))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(0, target));
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT_ARG, "`target`", "Reflect.has",
+                       ToSource(target));
 
     // Steps 2-3 are identical to the runtime semantics of the "in" operator.
     return propertyKey in target;
