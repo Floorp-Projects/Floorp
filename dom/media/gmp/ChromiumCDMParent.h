@@ -71,6 +71,8 @@ public:
 
   RefPtr<MediaDataDecoder::FlushPromise> FlushVideoDecoder();
 
+  RefPtr<MediaDataDecoder::DecodePromise> Drain();
+
 protected:
   ~ChromiumCDMParent() {}
 
@@ -105,6 +107,7 @@ protected:
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
   ipc::IPCResult RecvShutdown() override;
   ipc::IPCResult RecvResetVideoDecoderComplete() override;
+  ipc::IPCResult RecvDrainComplete() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   void RejectPromise(uint32_t aPromiseId,

@@ -6,9 +6,10 @@
 #ifndef ChromiumCDMChild_h_
 #define ChromiumCDMChild_h_
 
-#include "mozilla/gmp/PChromiumCDMChild.h"
 #include "content_decryption_module.h"
+#include "mozilla/gmp/PChromiumCDMChild.h"
 #include "SimpleMap.h"
+#include "WidevineVideoFrame.h"
 
 namespace mozilla {
 namespace gmp {
@@ -102,9 +103,11 @@ protected:
   ipc::IPCResult RecvResetVideoDecoder() override;
   ipc::IPCResult RecvDecryptAndDecodeFrame(
     const CDMInputBuffer& aBuffer) override;
+  ipc::IPCResult RecvDrain() override;
   ipc::IPCResult RecvDestroy() override;
 
   void DecryptFailed(uint32_t aId, cdm::Status aStatus);
+  void ReturnOutput(WidevineVideoFrame& aFrame);
 
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_8* mCDM = nullptr;
