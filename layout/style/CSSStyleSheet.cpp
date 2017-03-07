@@ -135,27 +135,6 @@ CSSStyleSheetInner::CSSStyleSheetInner(CORSMode aCORSMode,
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
 }
 
-struct ChildSheetListBuilder {
-  RefPtr<StyleSheet>* sheetSlot;
-  StyleSheet* parent;
-
-  void SetParentLinks(StyleSheet* aSheet) {
-    aSheet->mParent = parent;
-    aSheet->SetAssociatedDocument(parent->mDocument,
-                                  parent->mDocumentAssociationMode);
-  }
-
-  static void ReparentChildList(StyleSheet* aPrimarySheet,
-                                StyleSheet* aFirstChild)
-  {
-    for (StyleSheet *child = aFirstChild; child; child = child->mNext) {
-      child->mParent = aPrimarySheet;
-      child->SetAssociatedDocument(aPrimarySheet->mDocument,
-                                   aPrimarySheet->mDocumentAssociationMode);
-    }
-  }
-};
-
 bool
 CSSStyleSheet::RebuildChildList(css::Rule* aRule,
                                 ChildSheetListBuilder* aBuilder)
@@ -234,7 +213,7 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
     clone->SetStyleSheet(aPrimarySheet);
   }
 
-  ChildSheetListBuilder builder = { &mFirstChild, aPrimarySheet };
+  StyleSheet::ChildSheetListBuilder builder = { &mFirstChild, aPrimarySheet };
   for (css::Rule* rule : mOrderedRules) {
     if (!CSSStyleSheet::RebuildChildList(rule, &builder)) {
       break;
@@ -266,8 +245,6 @@ CSSStyleSheetInner::RemoveSheet(StyleSheet* aSheet)
     for (css::Rule* rule : mOrderedRules) {
       rule->SetStyleSheet(sheet);
     }
-
-    ChildSheetListBuilder::ReparentChildList(mSheets[1], mFirstChild);
   }
 
   // Don't do anything after this call, because superclass implementation

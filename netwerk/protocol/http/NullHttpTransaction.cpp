@@ -64,14 +64,16 @@ public:
     }
 
     RefPtr<NullHttpChannel> channel = new NullHttpChannel();
-    channel->Init(uri, 0, nullptr, 0, nullptr);
-    mActivityDistributor->ObserveActivity(
+    rv = channel->Init(uri, 0, nullptr, 0, nullptr);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mActivityDistributor->ObserveActivity(
       nsCOMPtr<nsISupports>(do_QueryObject(channel)),
       mActivityType,
       mActivitySubtype,
       mTimestamp,
       mExtraSizeData,
       mExtraStringData);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
@@ -244,7 +246,8 @@ NullHttpTransaction::RequestHead()
                                                   mConnectionInfo->OriginPort(),
                                                   hostHeader);
     if (NS_SUCCEEDED(rv)) {
-      mRequestHead->SetHeader(nsHttp::Host, hostHeader);
+      rv = mRequestHead->SetHeader(nsHttp::Host, hostHeader);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
       if (mActivityDistributor) {
         // Report request headers.
         nsCString reqHeaderBuf;

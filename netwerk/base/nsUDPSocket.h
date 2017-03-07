@@ -65,6 +65,7 @@ private:
   Mutex                                mLock;
   PRFileDesc                          *mFD;
   NetAddr                              mAddr;
+  OriginAttributes                     mOriginAttributes;
   nsCOMPtr<nsIUDPSocketListener>       mListener;
   nsCOMPtr<nsIEventTarget>             mListenerTarget;
   bool                                 mAttached;

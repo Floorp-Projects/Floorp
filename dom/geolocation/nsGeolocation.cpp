@@ -693,15 +693,6 @@ nsresult nsGeolocationService::Init()
   mProvider = new AndroidLocationProvider();
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-  // GonkGPSGeolocationProvider can be started at boot up time for initialization reasons.
-  // do_getService gets hold of the already initialized component and starts
-  // processing location requests immediately.
-  // do_Createinstance will create multiple instances of the provider which is not right.
-  // bug 993041
-  mProvider = do_GetService(GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID);
-#endif
-
 #ifdef MOZ_WIDGET_GTK
 #ifdef MOZ_GPSD
   if (Preferences::GetBool("geo.provider.use_gpsd", false)) {
@@ -733,11 +724,11 @@ nsresult nsGeolocationService::Init()
   // "geo.provider.testing" is always set for all plain and browser chrome
   // mochitests, and also for xpcshell tests.
   if (!mProvider || Preferences::GetBool("geo.provider.testing", false)) {
-    nsCOMPtr<nsIGeolocationProvider> geo_net_provider =
+    nsCOMPtr<nsIGeolocationProvider> geoTestProvider =
       do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
 
-    if (geo_net_provider) {
-      mProvider = geo_net_provider;
+    if (geoTestProvider) {
+      mProvider = geoTestProvider;
     }
   }
 

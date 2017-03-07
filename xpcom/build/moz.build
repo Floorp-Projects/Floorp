@@ -53,7 +53,6 @@ UNIFIED_SOURCES += [
     'IOInterposer.cpp',
     'LateWriteChecks.cpp',
     'MainThreadIOLogger.cpp',
-    'nsXPCOMStrings.cpp',
     'Services.cpp',
     'XPCOMInit.cpp',
 ]

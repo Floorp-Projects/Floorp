@@ -32,7 +32,7 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    * Initializes the http authentication support for the channel.
    * Implementations must hold a weak reference of the channel.
    */
-  void init(in nsIHttpAuthenticableChannel channel);
+  [must_use] void init(in nsIHttpAuthenticableChannel channel);
 
   /**
    * Upon receipt of a server challenge, this function is called to determine
@@ -53,8 +53,8 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    *                               nsIHttpAuthenticableChannel's methods or
    *                               until disconnect be called.
    */
-  void processAuthentication(in unsigned long httpStatus,
-                             in boolean sslConnectFailed);
+  [must_use] void processAuthentication(in unsigned long httpStatus,
+                                        in boolean sslConnectFailed);
 
   /**
    * Add credentials from the http auth cache.
@@ -63,17 +63,17 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    *    When true, the method will not add any Authorization headers from
    *    the auth cache.
    */
-  void addAuthorizationHeaders(in boolean dontUseCachedWWWCreds);
+  [must_use] void addAuthorizationHeaders(in boolean dontUseCachedWWWCreds);
 
   /**
    * Check if an unnecessary(and maybe malicious) url authentication has been
    * provided.
    */
-  void checkForSuperfluousAuth();
+  [must_use] void checkForSuperfluousAuth();
 
   /**
    * Cancel pending user auth prompts and release the callback and channel
    * weak references.
    */
-  void disconnect(in nsresult status);
+  [must_use] void disconnect(in nsresult status);
 };

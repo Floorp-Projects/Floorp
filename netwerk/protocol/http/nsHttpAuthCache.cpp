@@ -65,8 +65,10 @@ nsHttpAuthCache::nsHttpAuthCache()
 
 nsHttpAuthCache::~nsHttpAuthCache()
 {
-    if (mDB)
-        ClearAll();
+    if (mDB) {
+        DebugOnly<nsresult> rv = ClearAll();
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
         obsSvc->RemoveObserver(mObserver, "clear-origin-attributes-data");
@@ -587,7 +589,8 @@ nsHttpAuthNode::SetAuthEntry(const char *path,
     }
     else {
         // update the entry...
-        entry->Set(path, realm, creds, challenge, ident, metadata);
+        nsresult rv = entry->Set(path, realm, creds, challenge, ident, metadata);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;

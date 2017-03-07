@@ -129,7 +129,9 @@ nsHTMLDNSPrefetch::PrefetchHigh(Link *aElement)
 }
 
 nsresult
-nsHTMLDNSPrefetch::Prefetch(const nsAString &hostname, uint16_t flags)
+nsHTMLDNSPrefetch::Prefetch(const nsAString &hostname,
+                            const OriginAttributes &aOriginAttributes,
+                            uint16_t flags)
 {
   if (IsNeckoChild()) {
     // We need to check IsEmpty() because net_IsValidHostName()
@@ -138,7 +140,8 @@ nsHTMLDNSPrefetch::Prefetch(const nsAString &hostname, uint16_t flags)
         net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
       // during shutdown gNeckoChild might be null
       if (gNeckoChild) {
-        gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+        gNeckoChild->SendHTMLDNSPrefetch(nsString(hostname),
+                                         aOriginAttributes, flags);
       }
     }
     return NS_OK;
@@ -148,28 +151,31 @@ nsHTMLDNSPrefetch::Prefetch(const nsAString &hostname, uint16_t flags)
     return NS_ERROR_NOT_AVAILABLE;
 
   nsCOMPtr<nsICancelable> tmpOutstanding;
-  return sDNSService->AsyncResolve(NS_ConvertUTF16toUTF8(hostname),
-                                   flags | nsIDNSService::RESOLVE_SPECULATE,
-                                   sDNSListener, nullptr, 
-                                   getter_AddRefs(tmpOutstanding));
+  return sDNSService->AsyncResolveNative(NS_ConvertUTF16toUTF8(hostname),
+                                         flags | nsIDNSService::RESOLVE_SPECULATE,
+                                         sDNSListener, nullptr, aOriginAttributes,
+                                         getter_AddRefs(tmpOutstanding));
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchLow(const nsAString &hostname)
+nsHTMLDNSPrefetch::PrefetchLow(const nsAString &hostname,
+                               const OriginAttributes &aOriginAttributes)
 {
-  return Prefetch(hostname, nsIDNSService::RESOLVE_PRIORITY_LOW);
+  return Prefetch(hostname, aOriginAttributes, nsIDNSService::RESOLVE_PRIORITY_LOW);
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchMedium(const nsAString &hostname)
+nsHTMLDNSPrefetch::PrefetchMedium(const nsAString &hostname,
+                                  const OriginAttributes &aOriginAttributes)
 {
-  return Prefetch(hostname, nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
+  return Prefetch(hostname, aOriginAttributes, nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchHigh(const nsAString &hostname)
+nsHTMLDNSPrefetch::PrefetchHigh(const nsAString &hostname,
+                                const OriginAttributes &aOriginAttributes)
 {
-  return Prefetch(hostname, 0);
+  return Prefetch(hostname, aOriginAttributes, 0);
 }
 
 nsresult
@@ -182,11 +188,19 @@ nsHTMLDNSPrefetch::CancelPrefetch(Link *aElement,
 
   nsAutoString hostname;
   aElement->GetHostname(hostname);
-  return CancelPrefetch(hostname, flags, aReason);
+
+  Element* element = aElement->GetElement();
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+  return CancelPrefetch(hostname,
+                        element->NodePrincipal()
+                               ->OriginAttributesRef(),
+                        flags, aReason);
 }
 
 nsresult
 nsHTMLDNSPrefetch::CancelPrefetch(const nsAString &hostname,
+                                  const OriginAttributes &aOriginAttributes,
                                   uint16_t flags,
                                   nsresult aReason)
 {
@@ -198,7 +212,9 @@ nsHTMLDNSPrefetch::CancelPrefetch(const nsAString &hostname,
         net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
       // during shutdown gNeckoChild might be null
       if (gNeckoChild) {
-        gNeckoChild->SendCancelHTMLDNSPrefetch(nsString(hostname), flags,
+        gNeckoChild->SendCancelHTMLDNSPrefetch(nsString(hostname),
+                                               aOriginAttributes,
+                                               flags,
                                                aReason);
       }
     }
@@ -209,10 +225,10 @@ nsHTMLDNSPrefetch::CancelPrefetch(const nsAString &hostname,
     return NS_ERROR_NOT_AVAILABLE;
 
   // Forward cancellation to DNS service
-  return sDNSService->CancelAsyncResolve(NS_ConvertUTF16toUTF8(hostname),
-                                         flags
-                                         | nsIDNSService::RESOLVE_SPECULATE,
-                                         sDNSListener, aReason);
+  return sDNSService->CancelAsyncResolveNative(NS_ConvertUTF16toUTF8(hostname),
+                                               flags
+                                               | nsIDNSService::RESOLVE_SPECULATE,
+                                               sDNSListener, aReason, aOriginAttributes);
 }
 
 nsresult
@@ -223,9 +239,11 @@ nsHTMLDNSPrefetch::CancelPrefetchLow(Link *aElement, nsresult aReason)
 }
 
 nsresult
-nsHTMLDNSPrefetch::CancelPrefetchLow(const nsAString &hostname, nsresult aReason)
+nsHTMLDNSPrefetch::CancelPrefetchLow(const nsAString &hostname,
+                                     const OriginAttributes &aOriginAttributes,
+                                     nsresult aReason)
 {
-  return CancelPrefetch(hostname, nsIDNSService::RESOLVE_PRIORITY_LOW,
+  return CancelPrefetch(hostname, aOriginAttributes, nsIDNSService::RESOLVE_PRIORITY_LOW,
                         aReason);
 }
 
@@ -318,6 +336,7 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
         nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nullptr);
         bool isLocalResource = false;
         nsresult rv = NS_OK;
+        Element* element = link->GetElement();
 
         hostName.Truncate();
         if (hrefURI) {
@@ -327,21 +346,26 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
                                    &isLocalResource);
         }
 
-        if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource) {
+        if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource &&
+            element) {
           if (IsNeckoChild()) {
             // during shutdown gNeckoChild might be null
             if (gNeckoChild) {
               gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
+                                               element->NodePrincipal()
+                                                      ->OriginAttributesRef(),
                                                mEntries[mTail].mFlags);
             }
           } else {
             nsCOMPtr<nsICancelable> tmpOutstanding;
 
-            rv = sDNSService->AsyncResolve(hostName,
-                                           mEntries[mTail].mFlags
-                                           | nsIDNSService::RESOLVE_SPECULATE,
-                                           sDNSListener, nullptr,
-                                           getter_AddRefs(tmpOutstanding));
+            rv = sDNSService->AsyncResolveNative(hostName,
+                                                 mEntries[mTail].mFlags
+                                                 | nsIDNSService::RESOLVE_SPECULATE,
+                                                 sDNSListener, nullptr,
+                                                 element->NodePrincipal()
+                                                        ->OriginAttributesRef(),
+                                                 getter_AddRefs(tmpOutstanding));
             // Tell link that deferred prefetch was requested
             if (NS_SUCCEEDED(rv))
               link->OnDNSPrefetchRequested();
@@ -349,11 +373,11 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
         }
       }
     }
-    
+
     mEntries[mTail].mElement = nullptr;
     mTail = (mTail + 1) & sMaxDeferredMask;
   }
-  
+
   if (mTimerArmed) {
     mTimerArmed = false;
     mTimer->Cancel();

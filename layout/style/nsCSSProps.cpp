@@ -2435,6 +2435,12 @@ const KTableEntry nsCSSProps::kColumnFillKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+const KTableEntry nsCSSProps::kColumnSpanKTable[] = {
+  { eCSSKeyword_all, NS_STYLE_COLUMN_SPAN_ALL },
+  { eCSSKeyword_none, NS_STYLE_COLUMN_SPAN_NONE },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
 static inline bool
 IsKeyValSentinel(const KTableEntry& aTableEntry)
 {

@@ -620,6 +620,9 @@ pref("layers.geometry.opengl.enabled", true);
 // Whether to enable arbitrary layer geometry for Basic compositor
 pref("layers.geometry.basic.enabled", true);
 
+// Whether to enable arbitrary layer geometry for DirectX compositor
+pref("layers.geometry.d3d11.enabled", true);
+
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
@@ -2553,7 +2556,7 @@ pref("layout.css.convertFromNode.enabled", true);
 pref("layout.css.text-align-unsafe-value.enabled", false);
 
 // Is support for CSS text-justify property enabled?
-pref("layout.css.text-justify.enabled", false);
+pref("layout.css.text-justify.enabled", true);
 
 // Is support for CSS "float: inline-{start,end}" and
 // "clear: inline-{start,end}" enabled?
@@ -2678,6 +2681,9 @@ pref("layout.css.control-characters.visible", false);
 #else
 pref("layout.css.control-characters.visible", true);
 #endif
+
+// Is support for column-span enabled?
+pref("layout.css.column-span.enabled", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -4769,6 +4775,7 @@ pref("extensions.webextensions.keepUuidOnUninstall", false);
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
 // Whether or not webextension themes are supported.
 pref("extensions.webextensions.themes.enabled", false);
+pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);
 
 // Report Site Issue button

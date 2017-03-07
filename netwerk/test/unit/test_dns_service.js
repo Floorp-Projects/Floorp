@@ -16,10 +16,12 @@ var listener = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
   var mainThread = threadManager.currentThread;
-  dns.asyncResolve("localhost", 0, listener, mainThread);
+  dns.asyncResolve("localhost", 0, listener, mainThread, defaultOriginAttributes);
 
   do_test_pending();
 }

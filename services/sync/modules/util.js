@@ -8,7 +8,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-common/stringbundle.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/async.js", this);
 Cu.import("resource://services-crypto/utils.js");
@@ -218,8 +217,8 @@ this.Utils = {
   },
 
   lazyStrings: function Weave_lazyStrings(name) {
-    let bundle = "chrome://weave/locale/services/" + name + ".properties";
-    return () => new StringBundle(bundle);
+    return () => Services.strings.createBundle(
+      `chrome://weave/locale/services/${name}.properties`);
   },
 
   deepEquals: function eq(a, b) {
@@ -461,11 +460,15 @@ this.Utils = {
 
   getErrorString: function Utils_getErrorString(error, args) {
     try {
-      return Str.errors.get(error, args || null);
+      if (args) {
+        return Str.errors.formatStringFromName(error, args, args.length);
+      } else {
+        return Str.errors.GetStringFromName(error);
+      }
     } catch (e) {}
 
     // basically returns "Unknown Error"
-    return Str.errors.get("error.reason.unknown");
+    return Str.errors.GetStringFromName('error.reason.unknown');
   },
 
   /**
@@ -683,13 +686,14 @@ this.Utils = {
       user = env.get("USERNAME");
     }
 
-    let brand = new StringBundle("chrome://branding/locale/brand.properties");
-    let brandName = brand.get("brandShortName");
+    let brand = Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties");
+    let brandName = brand.GetStringFromName("brandShortName");
 
     let appName;
     try {
-      let syncStrings = new StringBundle("chrome://browser/locale/sync.properties");
-      appName = syncStrings.getFormattedString("sync.defaultAccountApplication", [brandName]);
+      let syncStrings = Services.strings.createBundle("chrome://browser/locale/sync.properties");
+      appName = syncStrings.formatStringFromName("sync.defaultAccountApplication", [brandName], 1);
     } catch (ex) {}
     appName = appName || brandName;
 
@@ -701,7 +705,7 @@ this.Utils = {
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
-    return Str.sync.get("client.name2", [user, appName, system]);
+    return Str.sync.formatStringFromName("client.name2", [user, appName, system], 3);
   },
 
   getDeviceName() {

@@ -41,18 +41,20 @@ public:
   virtual Http2Stream *GetConsumerStream() override { return mConsumerStream; };
 
   void SetConsumerStream(Http2Stream *aStream);
-  bool GetHashKey(nsCString &key);
+  MOZ_MUST_USE bool GetHashKey(nsCString &key);
 
   // override of Http2Stream
-  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *) override;
-  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) override;
+  MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader *,
+                                     uint32_t, uint32_t *) override;
+  MOZ_MUST_USE nsresult WriteSegments(nsAHttpSegmentWriter *,
+                                      uint32_t, uint32_t *) override;
   void AdjustInitialWindow() override;
 
   nsIRequestContext *RequestContext() override { return mRequestContext; };
   void ConnectPushedStream(Http2Stream *consumer);
 
-  bool TryOnPush();
-  static bool TestOnPush(Http2Stream *consumer);
+  MOZ_MUST_USE bool TryOnPush();
+  static MOZ_MUST_USE bool TestOnPush(Http2Stream *consumer);
 
   virtual bool DeferCleanup(nsresult status) override;
   void SetDeferCleanupOnSuccess(bool val) { mDeferCleanupOnSuccess = val; }
@@ -60,7 +62,8 @@ public:
   bool IsOrphaned(TimeStamp now);
   void OnPushFailed() { mDeferCleanupOnPush = false; mOnPushFailed = true; }
 
-  nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
+  MOZ_MUST_USE nsresult GetBufferedData(char *buf, uint32_t count,
+                                        uint32_t *countWritten);
 
   // overload of Http2Stream
   virtual bool HasSink() override { return !!mConsumerStream; }
@@ -104,7 +107,8 @@ public:
 
   Http2PushTransactionBuffer();
 
-  nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
+  MOZ_MUST_USE nsresult GetBufferedData(char *buf, uint32_t count,
+                                        uint32_t *countWritten);
   void SetPushStream(Http2PushedStream *stream) { mPushStream = stream; }
 
 private:

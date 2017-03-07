@@ -355,7 +355,10 @@ InternalHeaders::FillResponseHeaders(nsIRequest* aRequest)
   }
 
   RefPtr<FillHeaders> visitor = new FillHeaders(this);
-  httpChannel->VisitResponseHeaders(visitor);
+  nsresult rv = httpChannel->VisitResponseHeaders(visitor);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to fill headers");
+  }
 }
 
 bool

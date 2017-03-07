@@ -1018,7 +1018,8 @@ nsMultiMixedConv::ProcessHeader()
       nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(mChannel);
       mResponseHeaderValue.CompressWhitespace();
       if (httpInternal) {
-        httpInternal->SetCookie(mResponseHeaderValue.get());
+        DebugOnly<nsresult> rv = httpInternal->SetCookie(mResponseHeaderValue.get());
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
       break;
     }

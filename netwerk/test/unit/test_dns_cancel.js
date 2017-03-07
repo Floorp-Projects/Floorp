@@ -54,6 +54,8 @@ var listener2 = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
   var mainThread = threadManager.currentThread;
@@ -61,21 +63,27 @@ function run_test() {
   var flags = Ci.nsIDNSService.RESOLVE_BYPASS_CACHE;
 
   // This one will be canceled with cancelAsyncResolve.
-  requestList1Canceled1 = dns.asyncResolve(hostname2, flags, listener1, mainThread);
-  dns.cancelAsyncResolve(hostname2, flags, listener1, Cr.NS_ERROR_ABORT);
+  requestList1Canceled1 = dns.asyncResolve(hostname2, flags, listener1,
+                                           mainThread, defaultOriginAttributes);
+  dns.cancelAsyncResolve(hostname2, flags, listener1,
+                         Cr.NS_ERROR_ABORT, defaultOriginAttributes);
 
   // This one will not be canceled.
-  requestList1NotCanceled = dns.asyncResolve(hostname1, flags, listener1, mainThread);
+  requestList1NotCanceled = dns.asyncResolve(hostname1, flags, listener1,
+                                             mainThread, defaultOriginAttributes);
 
   // This one will be canceled with cancel(Cr.NS_ERROR_ABORT).
-  requestList1Canceled2 = dns.asyncResolve(hostname1, flags, listener1, mainThread);
+  requestList1Canceled2 = dns.asyncResolve(hostname1, flags, listener1,
+                                           mainThread, defaultOriginAttributes);
   requestList1Canceled2.cancel(Cr.NS_ERROR_ABORT);
 
   // This one will not be canceled.
-  requestList2NotCanceled = dns.asyncResolve(hostname1, flags, listener2, mainThread);
+  requestList2NotCanceled = dns.asyncResolve(hostname1, flags, listener2,
+                                             mainThread, defaultOriginAttributes);
 
   // This one will be canceled with cancel(Cr.NS_ERROR_ABORT).
-  requestList2Canceled = dns.asyncResolve(hostname2, flags, listener2, mainThread);
+  requestList2Canceled = dns.asyncResolve(hostname2, flags, listener2,
+                                          mainThread, defaultOriginAttributes);
   requestList2Canceled.cancel(Cr.NS_ERROR_ABORT);
 
   do_test_pending();

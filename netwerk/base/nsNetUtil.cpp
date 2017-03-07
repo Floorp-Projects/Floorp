@@ -848,7 +848,8 @@ NS_NewStreamLoaderInternal(nsIStreamLoader        **outStream,
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    httpChannel->SetReferrer(aReferrer);
+    rv = httpChannel->SetReferrer(aReferrer);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
   rv = NS_NewStreamLoader(outStream, aObserver);
   NS_ENSURE_SUCCESS(rv, rv);

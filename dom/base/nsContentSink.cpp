@@ -894,7 +894,8 @@ nsContentSink::PrefetchDNS(const nsAString &aHref)
   }
 
   if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
-    nsHTMLDNSPrefetch::PrefetchLow(hostname);
+    nsHTMLDNSPrefetch::PrefetchLow(hostname,
+                                   mDocument->NodePrincipal()->OriginAttributesRef());
   }
 }
 

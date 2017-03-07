@@ -2,6 +2,8 @@
 const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
 
+Cu.import("resource:///modules/ExtensionsUI.jsm");
+
 /**
  * Wait for the given PopupNotification to display
  *
@@ -201,10 +203,13 @@ function checkNotification(panel, checkIcon, permissions) {
  *        Callable that takes the name of an xpi file to install and
  *        starts to install it.  Should return a Promise that resolves
  *        when the install is finished or rejects if the install is canceled.
+ * @param {string} telemetryBase
+ *        If supplied, the base type for telemetry events that should be
+ *        recorded for this install method.
  *
  * @returns {Promise}
  */
-async function testInstallMethod(installFn) {
+async function testInstallMethod(installFn, telemetryBase) {
   const PERMS_XPI = "browser_webext_permissions.xpi";
   const NO_PERMS_XPI = "browser_webext_nopermissions.xpi";
   const ID = "permissions@test.mozilla.org";
@@ -216,6 +221,10 @@ async function testInstallMethod(installFn) {
     // XXX remove this when prompts are enabled by default
     ["extensions.webextPermissionPrompts", true],
   ]});
+
+  if (telemetryBase !== undefined) {
+    hookExtensionsTelemetry();
+  }
 
   let testURI = makeURI("https://example.com/");
   Services.perms.add(testURI, "install", Services.perms.ALLOW_ACTION);
@@ -316,6 +325,12 @@ async function testInstallMethod(installFn) {
   //    the extension to clean up.)
   await runOnce(PERMS_XPI, false);
 
+  if (telemetryBase !== undefined) {
+    // Should see 2 canceled installs followed by 1 successful install
+    // for this method.
+    expectTelemetry([`${telemetryBase}Rejected`, `${telemetryBase}Rejected`, `${telemetryBase}Accepted`]);
+  }
+
   await SpecialPowers.popPrefEnv();
 }
 
@@ -347,3 +362,21 @@ add_task(async function() {
     }
   });
 });
+
+let collectedTelemetry = [];
+function hookExtensionsTelemetry() {
+  let originalHistogram = ExtensionsUI.histogram;
+  ExtensionsUI.histogram = {
+    add(value) { collectedTelemetry.push(value); },
+  };
+  registerCleanupFunction(() => {
+    is(collectedTelemetry.length, 0, "No unexamined telemetry after test is finished");
+    ExtensionsUI.histogram = originalHistogram;
+  });
+}
+
+function expectTelemetry(values) {
+  Assert.deepEqual(values, collectedTelemetry);
+  collectedTelemetry = [];
+}
+

@@ -962,7 +962,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString method;
-    httpChannel->GetRequestMethod(method);
+    Unused << httpChannel->GetRequestMethod(method);
     // XXX does Necko have a way to renavigate POST, etc. without hitting
     // the network?
     if (!method.EqualsLiteral("GET")) {

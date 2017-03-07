@@ -617,20 +617,25 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
-                                       mDocument->GetReferrerPolicy());
+    rv = httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
+                                            mDocument->GetReferrerPolicy());
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
     if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED)) {
       accept.Insert(NS_LITERAL_CSTRING("application/font-woff2;q=1.0,"), 0);
     }
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  accept, false);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                       accept, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
     // and apply additional compression at the content-encoding layer
     if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
                                       gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
-      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
-                                    NS_LITERAL_CSTRING("identity"), false);
+      rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Encoding"),
+                                         NS_LITERAL_CSTRING("identity"), false);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
   nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));

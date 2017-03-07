@@ -1264,3 +1264,5 @@ toolbarpaletteitem[place="palette"][hidden] {
   opacity: 0.65;
   -moz-window-shadow: none;
 }
+
+%include theme-vars.inc.css

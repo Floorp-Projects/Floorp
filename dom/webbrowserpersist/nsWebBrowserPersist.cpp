@@ -1386,8 +1386,10 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     {
         nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
                 do_QueryInterface(inputChannel);
-        if (httpChannelInternal)
-            httpChannelInternal->SetThirdPartyFlags(nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+        if (httpChannelInternal) {
+            rv = httpChannelInternal->SetThirdPartyFlags(nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
     }
 
     // Set the referrer, post data and headers if any
@@ -1397,7 +1399,8 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         // Referrer
         if (aReferrer)
         {
-            httpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+            rv = httpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
 
         // Post data

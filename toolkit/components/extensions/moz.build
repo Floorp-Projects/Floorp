@@ -21,6 +21,7 @@ EXTRA_JS_MODULES += [
     'LegacyExtensionsUtils.jsm',
     'MessageChannel.jsm',
     'NativeMessaging.jsm',
+    'ProxyScriptContext.jsm',
     'Schemas.jsm',
 ]
 

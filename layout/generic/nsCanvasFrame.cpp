@@ -15,6 +15,7 @@
 #include "nsStyleContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
+#include "nsIFrameInlines.h"
 #include "nsIPresShell.h"
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"

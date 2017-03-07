@@ -7,7 +7,6 @@
 
 #include "nscore.h"
 #include "nsString.h"
-#include "nsXPCOMStrings.h"
 #include "nsReadableUtils.h"
 #include "nsWin32Locale.h"
 #include <windows.h>
@@ -497,8 +496,8 @@ nsWin32Locale::GetPlatformLocale(const nsAString& locale, LCID* winLCID)
   size_t  i, j;
 
   // parse the locale
-  const char16_t* data;
-  j = NS_StringGetData(locale, &data);
+  const char16_t* data = locale.BeginReading();
+  j = locale.Length();
   for (i = 0; i < 7 && i < j; i++) {
     locale_string[i] = data[i] == '-' ? '\0' : data[i];
   }

@@ -665,6 +665,7 @@
                                 .getInterface(Ci.nsIDocShell).chromeEventHandler,
                   info: {
                     addon: info.addon,
+                    source: "AMO",
                     icon: info.addon.iconURL,
                     permissions: info.addon.userPermissions,
                     resolve,

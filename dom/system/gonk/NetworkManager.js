@@ -960,7 +960,8 @@ NetworkManager.prototype = {
                                          0,
                                          aNetId,
                                          onLookupComplete,
-                                         Services.tm.mainThread);
+                                         Services.tm.mainThread,
+                                         {});
       });
     };
 
