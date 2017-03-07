@@ -14,3 +14,7 @@ pref("marionette.forcelocal", true);
 // Marionette logging verbosity.  Allowed values are "fatal", "error",
 // "warn", "info", "config", "debug", and "trace".
 pref("marionette.log.level", "info");
+
+// Sets preferences recommended when using Firefox in automation with
+// Marionette.
+pref("marionette.prefs.recommended", true);
