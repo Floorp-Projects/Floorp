@@ -232,7 +232,7 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
                                       size);
   };
 
-  function<void()> failure = [self, sessionId, aPromiseId] {
+  function<void()> failure = [self, aPromiseId] {
     if (!self->mHost) {
       return;
     }
@@ -586,7 +586,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
 
   vector<uint8_t> emptyKeydata;
 
-  function<void()> resolve = [self, aPromiseId, sessionId] ()
+  function<void()> resolve = [self, aPromiseId] ()
   {
     if (!self->mHost) {
       return;
@@ -594,7 +594,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
     self->mHost->OnResolvePromise(aPromiseId);
   };
 
-  function<void()> reject = [self, aPromiseId, sessionId] ()
+  function<void()> reject = [self, aPromiseId] ()
   {
     if (!self->mHost) {
       return;

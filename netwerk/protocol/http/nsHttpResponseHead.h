@@ -65,8 +65,9 @@ public:
      */
     int64_t TotalEntitySize();
 
-    nsresult SetHeader(nsHttpAtom h, const nsACString &v, bool m=false);
-    nsresult GetHeader(nsHttpAtom h, nsACString &v);
+    MOZ_MUST_USE nsresult SetHeader(nsHttpAtom h, const nsACString &v,
+                                    bool m=false);
+    MOZ_MUST_USE nsresult GetHeader(nsHttpAtom h, nsACString &v);
     void ClearHeader(nsHttpAtom h);
     void ClearHeaders();
     bool HasHeaderValue(nsHttpAtom h, const char *v);
@@ -90,19 +91,19 @@ public:
     // ParseCachedOriginalHeaders FIRST and then ParseCachedHead.
     //
     // block must be null terminated.
-    nsresult ParseCachedHead(const char *block);
-    nsresult ParseCachedOriginalHeaders(char *block);
+    MOZ_MUST_USE nsresult ParseCachedHead(const char *block);
+    MOZ_MUST_USE nsresult ParseCachedOriginalHeaders(char *block);
 
     // parse the status line.
     void ParseStatusLine(const nsACString &line);
 
     // parse a header line.
-    nsresult ParseHeaderLine(const nsACString &line);
+    MOZ_MUST_USE nsresult ParseHeaderLine(const nsACString &line);
 
     // cache validation support methods
-    nsresult ComputeFreshnessLifetime(uint32_t *);
-    nsresult ComputeCurrentAge(uint32_t now, uint32_t requestTime,
-                               uint32_t *result);
+    MOZ_MUST_USE nsresult ComputeFreshnessLifetime(uint32_t *);
+    MOZ_MUST_USE nsresult ComputeCurrentAge(uint32_t now, uint32_t requestTime,
+                                            uint32_t *result);
     bool MustValidate();
     bool MustValidateIfExpired();
 
@@ -114,30 +115,30 @@ public:
     bool ExpiresInPast();
 
     // update headers...
-    nsresult UpdateHeaders(nsHttpResponseHead *headers);
+    MOZ_MUST_USE nsresult UpdateHeaders(nsHttpResponseHead *headers);
 
     // reset the response head to it's initial state
     void Reset();
 
-    nsresult GetAgeValue(uint32_t *result);
-    nsresult GetMaxAgeValue(uint32_t *result);
-    nsresult GetDateValue(uint32_t *result);
-    nsresult GetExpiresValue(uint32_t *result);
-    nsresult GetLastModifiedValue(uint32_t *result);
+    MOZ_MUST_USE nsresult GetAgeValue(uint32_t *result);
+    MOZ_MUST_USE nsresult GetMaxAgeValue(uint32_t *result);
+    MOZ_MUST_USE nsresult GetDateValue(uint32_t *result);
+    MOZ_MUST_USE nsresult GetExpiresValue(uint32_t *result);
+    MOZ_MUST_USE nsresult GetLastModifiedValue(uint32_t *result);
 
     bool operator==(const nsHttpResponseHead& aOther) const;
 
     // Using this function it is possible to itereate through all headers
     // automatically under one lock.
-    nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor,
-                          nsHttpHeaderArray::VisitorFilter filter);
-    nsresult GetOriginalHeader(nsHttpAtom aHeader,
-                               nsIHttpHeaderVisitor *aVisitor);
+    MOZ_MUST_USE nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor,
+                                       nsHttpHeaderArray::VisitorFilter filter);
+    MOZ_MUST_USE nsresult GetOriginalHeader(nsHttpAtom aHeader,
+                                            nsIHttpHeaderVisitor *aVisitor);
 
     bool HasContentType();
     bool HasContentCharset();
 private:
-    nsresult SetHeader_locked(nsHttpAtom h, const nsACString &v,
+    MOZ_MUST_USE nsresult SetHeader_locked(nsHttpAtom h, const nsACString &v,
                               bool m=false);
     void AssignDefaultStatusText();
     void ParseVersion(const char *);
@@ -145,22 +146,24 @@ private:
     void ParsePragma(const char *);
 
     void ParseStatusLine_locked(const nsACString &line);
-    nsresult ParseHeaderLine_locked(const nsACString &line, bool originalFromNetHeaders);
+    MOZ_MUST_USE nsresult ParseHeaderLine_locked(const nsACString &line,
+                                                 bool originalFromNetHeaders);
 
     // these return failure if the header does not exist.
-    nsresult ParseDateHeader(nsHttpAtom header, uint32_t *result) const;
+    MOZ_MUST_USE nsresult ParseDateHeader(nsHttpAtom header,
+                                          uint32_t *result) const;
 
     bool ExpiresInPast_locked() const;
-    nsresult GetAgeValue_locked(uint32_t *result) const;
-    nsresult GetExpiresValue_locked(uint32_t *result) const;
-    nsresult GetMaxAgeValue_locked(uint32_t *result) const;
+    MOZ_MUST_USE nsresult GetAgeValue_locked(uint32_t *result) const;
+    MOZ_MUST_USE nsresult GetExpiresValue_locked(uint32_t *result) const;
+    MOZ_MUST_USE nsresult GetMaxAgeValue_locked(uint32_t *result) const;
 
-    nsresult GetDateValue_locked(uint32_t *result) const
+    MOZ_MUST_USE nsresult GetDateValue_locked(uint32_t *result) const
     {
         return ParseDateHeader(nsHttp::Date, result);
     }
 
-    nsresult GetLastModifiedValue_locked(uint32_t *result) const
+    MOZ_MUST_USE nsresult GetLastModifiedValue_locked(uint32_t *result) const
     {
         return ParseDateHeader(nsHttp::Last_Modified, result);
     }

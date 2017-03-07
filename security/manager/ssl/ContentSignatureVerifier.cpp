@@ -22,7 +22,6 @@
 #include "nsSecurityHeaderParser.h"
 #include "nsStreamUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nsXPCOMStrings.h"
 #include "nssb64.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixtypes.h"

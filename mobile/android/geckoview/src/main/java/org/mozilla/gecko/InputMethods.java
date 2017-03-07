@@ -10,6 +10,7 @@ import java.util.Collection;
 import android.content.Context;
 import android.os.Build;
 import android.provider.Settings.Secure;
+import android.view.View;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 
@@ -23,6 +24,7 @@ final public class InputMethods {
     public static final String METHOD_OPENWNN_PLUS = "com.owplus.ime.openwnnplus/.OpenWnnJAJP";
     public static final String METHOD_SAMSUNG = "com.sec.android.inputmethod/.SamsungKeypad";
     public static final String METHOD_SIMEJI = "com.adamrocker.android.input.simeji/.OpenWnnSimeji";
+    public static final String METHOD_SONY = "com.sonyericsson.textinput.uxp/.glue.InputMethodServiceGlue";
     public static final String METHOD_SWIFTKEY = "com.touchtype.swiftkey/com.touchtype.KeyboardService";
     public static final String METHOD_SWYPE = "com.swype.android.inputmethod/.SwypeInputMethod";
     public static final String METHOD_SWYPE_BETA = "com.nuance.swype.input/.IME";
@@ -50,6 +52,13 @@ final public class InputMethods {
         return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
+    public static void restartInput(Context context, View view) {
+        final InputMethodManager imm = getInputMethodManager(context);
+        if (imm != null) {
+            imm.restartInput(view);
+        }
+    }
+
     public static boolean needsSoftResetWorkaround(String inputMethod) {
         // Stock latin IME on Android 4.2 and above
         return Build.VERSION.SDK_INT >= 17 &&
@@ -61,15 +70,8 @@ final public class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
-    public static boolean isGestureKeyboard(Context context) {
-        // SwiftKey is a gesture keyboard, but it doesn't seem to need any special-casing
-        // to do AwesomeBar auto-spacing.
+    public static boolean needsRemoveAutocompleteHack(Context context) {
         String inputMethod = getCurrentInputMethod(context);
-        return (Build.VERSION.SDK_INT >= 17 &&
-                (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
-                 METHOD_GOOGLE_LATINIME.equals(inputMethod))) ||
-               METHOD_SWYPE.equals(inputMethod) ||
-               METHOD_SWYPE_BETA.equals(inputMethod) ||
-               METHOD_TOUCHPAL_KEYBOARD.equals(inputMethod);
+        return METHOD_SONY.equals(inputMethod);
     }
 }

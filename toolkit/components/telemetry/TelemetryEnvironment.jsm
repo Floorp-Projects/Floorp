@@ -246,7 +246,7 @@ function getSystemLocale() {
   try {
     return Cc["@mozilla.org/intl/ospreferences;1"].
              getService(Ci.mozIOSPreferences).
-             getSystemLocale();
+             systemLocale;
   } catch (e) {
     return null;
   }

@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/Unused.h"
 #include "nsHttpResponseHead.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsPrintfCString.h"
@@ -227,11 +228,14 @@ nsHttpResponseHead::SetContentLength(int64_t len)
     mContentLength = len;
     if (len < 0)
         mHeaders.ClearHeader(nsHttp::Content_Length);
-    else
-        mHeaders.SetHeader(nsHttp::Content_Length,
-                           nsPrintfCString("%" PRId64, len),
-                           false,
-                           nsHttpHeaderArray::eVarietyResponse);
+    else {
+        DebugOnly<nsresult> rv =
+            mHeaders.SetHeader(nsHttp::Content_Length,
+                               nsPrintfCString("%" PRId64, len),
+                               false,
+                               nsHttpHeaderArray::eVarietyResponse);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
 }
 
 void
@@ -294,7 +298,7 @@ nsHttpResponseHead::ParseCachedHead(const char *block)
         if (!p)
             return NS_ERROR_UNEXPECTED;
 
-        ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
+        Unused << ParseHeaderLine_locked(nsDependentCSubstring(block, p - block), false);
 
     } while (1);
 
@@ -890,7 +894,8 @@ nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead *aOther)
             LOG(("new response header [%s: %s]\n", header.get(), val));
 
             // overwrite the current header value with the new value...
-            SetHeader_locked(header, nsDependentCString(val));
+            DebugOnly<nsresult> rv = SetHeader_locked(header, nsDependentCString(val));
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 

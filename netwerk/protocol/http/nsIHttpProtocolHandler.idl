@@ -11,21 +11,21 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     /**
      * Get the HTTP advertised user agent string.
      */
-    readonly attribute ACString userAgent;
+    [must_use] readonly attribute ACString userAgent;
 
     /**
      * Get the application name.
 	 *
      * @return The name of this application (eg. "Mozilla").
      */
-    readonly attribute ACString appName;
+    [must_use] readonly attribute ACString appName;
 
     /**
      * Get the application version string.
      *
      * @return The complete version (major and minor) string. (eg. "5.0")
      */
-    readonly attribute ACString appVersion;
+    [must_use] readonly attribute ACString appVersion;
 
     /**
      * Get the current platform.
@@ -33,19 +33,19 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * @return The platform this application is running on
      *		   (eg. "Windows", "Macintosh", "X11")
      */
-    readonly attribute ACString platform;
+    [must_use] readonly attribute ACString platform;
 
     /**
      * Get the current oscpu.
      *
      * @return The oscpu this application is running on
      */
-    readonly attribute ACString oscpu;
+    [must_use] readonly attribute ACString oscpu;
 
     /**
      * Get the application comment misc portion.
      */
-    readonly attribute ACString misc;
+    [must_use] readonly attribute ACString misc;
 
 };
 

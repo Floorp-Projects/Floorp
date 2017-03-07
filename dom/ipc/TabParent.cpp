@@ -167,6 +167,7 @@ TabParent::TabParent(nsIContentParent* aManager,
 #endif
   , mLayerTreeEpoch(0)
   , mPreserveLayers(false)
+  , mHasPresented(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -2853,6 +2854,7 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 
   RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   if (aActive) {
+    mHasPresented = true;
     event->InitEvent(NS_LITERAL_STRING("MozLayerTreeReady"), true, false);
   } else {
     event->InitEvent(NS_LITERAL_STRING("MozLayerTreeCleared"), true, false);
@@ -3330,6 +3332,52 @@ void
 TabParent::LiveResizeStopped()
 {
   SuppressDisplayport(false);
+}
+
+void
+TabParent::DispatchTabChildNotReadyEvent()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(mFrameElement);
+  if (!target) {
+    NS_WARNING("Could not locate target for tab child not ready event.");
+    return;
+  }
+
+  if (mHasPresented) {
+    // We shouldn't dispatch this event because clearly the
+    // TabChild _became_ ready by the time we were told to
+    // dispatch.
+    return;
+  }
+
+  if (!mDocShellIsActive) {
+    return;
+  }
+
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  if (!frameLoader) {
+    return;
+  }
+
+  nsCOMPtr<Element> frameElement(mFrameElement);
+  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(frameElement);
+  if (!owner) {
+    return;
+  }
+
+  RefPtr<nsFrameLoader> currentFrameLoader = owner->GetFrameLoader();
+  if (currentFrameLoader != frameLoader) {
+    return;
+  }
+
+  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
+  event->InitEvent(NS_LITERAL_STRING("MozTabChildNotReady"), true, false);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+  bool dummy;
+  mFrameElement->DispatchEvent(event, &dummy);
 }
 
 NS_IMETHODIMP

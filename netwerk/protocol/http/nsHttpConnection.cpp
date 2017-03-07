@@ -300,7 +300,8 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mTLSFilter;
     if (spdyProxy) {
         RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
-        mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
+        rv = mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         gHttpHandler->ConnMgr()->MoveToWildCardConnEntry(mConnInfo,
                                                          wildCardProxyCi, this);
         mConnInfo = wildCardProxyCi;
@@ -325,7 +326,11 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     if (!mTLSFilter) {
         mTransaction = mSpdySession;
     } else {
-        mTLSFilter->SetProxiedTransaction(mSpdySession);
+        rv = mTLSFilter->SetProxiedTransaction(mSpdySession);
+        if (NS_FAILED(rv)) {
+            LOG(("nsHttpConnection::StartSpdy [%p] SetProxiedTransaction failed"
+                 " rv[0x%x]", this, static_cast<uint32_t>(rv)));
+        }
     }
     if (mDontReuse) {
         mSpdySession->DontReuse();
@@ -555,7 +560,7 @@ nsHttpConnection::OnTunnelNudged(TLSFilterTransaction *trans)
         return;
     }
     LOG(("nsHttpConnection::OnTunnelNudged %p Calling OnSocketWritable\n", this));
-    OnSocketWritable();
+    Unused << OnSocketWritable();
 }
 
 // called on the socket thread
@@ -644,7 +649,8 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     }
 
     if (mTLSFilter) {
-        mTLSFilter->SetProxiedTransaction(trans);
+        rv = mTLSFilter->SetProxiedTransaction(trans);
+        NS_ENSURE_SUCCESS(rv, rv);
         mTransaction = mTLSFilter;
     }
 
@@ -681,12 +687,14 @@ nsHttpConnection::SetupSSL()
 
     // if we are connected to the proxy with TLS, start the TLS
     // flow immediately without waiting for a CONNECT sequence.
+    DebugOnly<nsresult> rv;
     if (mInSpdyTunnel) {
-        InitSSLParams(false, true);
+        rv = InitSSLParams(false, true);
     } else {
         bool usingHttpsProxy = mConnInfo->UsingHttpsProxy();
-        InitSSLParams(usingHttpsProxy, usingHttpsProxy);
+        rv = InitSSLParams(usingHttpsProxy, usingHttpsProxy);
     }
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 // The naming of NPN is historical - this function creates the basic
@@ -761,7 +769,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
         return NS_ERROR_FAILURE;
     }
 
-    ResumeSend();
+    Unused << ResumeSend();
     return NS_OK;
 }
 
@@ -989,8 +997,10 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     MOZ_ASSERT(responseHead, "No response head?");
 
     if (mInSpdyTunnel) {
-        responseHead->SetHeader(nsHttp::X_Firefox_Spdy_Proxy,
-                                NS_LITERAL_CSTRING("true"));
+        DebugOnly<nsresult> rv =
+            responseHead->SetHeader(nsHttp::X_Firefox_Spdy_Proxy,
+                                    NS_LITERAL_CSTRING("true"));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     // we won't change our keep-alive policy unless the server has explicitly
@@ -1052,7 +1062,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     bool foundKeepAliveMax = false;
     if (mKeepAlive) {
         nsAutoCString keepAlive;
-        responseHead->GetHeader(nsHttp::Keep_Alive, keepAlive);
+        Unused << responseHead->GetHeader(nsHttp::Keep_Alive, keepAlive);
 
         if (!mUsingSpdyVersion) {
             const char *cp = PL_strcasestr(keepAlive.get(), "timeout=");
@@ -1754,7 +1764,7 @@ nsHttpConnection::OnSocketReadable()
         // give the handler a chance to create a new persistent connection to
         // this host if we've been busy for too long.
         mKeepAliveMask = false;
-        gHttpHandler->ProcessPendingQ(mConnInfo);
+        Unused << gHttpHandler->ProcessPendingQ(mConnInfo);
     }
 
     // Reduce the estimate of the time since last read by up to 1 RTT to
@@ -1859,23 +1869,30 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    nsHttpHandler::GenerateHostPort(
-        nsDependentCString(trans->ConnectionInfo()->Origin()),
-                           trans->ConnectionInfo()->OriginPort(), result);
+    DebugOnly<nsresult> rv;
+
+    rv = nsHttpHandler::GenerateHostPort(
+            nsDependentCString(trans->ConnectionInfo()->Origin()),
+                               trans->ConnectionInfo()->OriginPort(), result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // CONNECT host:port HTTP/1.1
     request->SetMethod(NS_LITERAL_CSTRING("CONNECT"));
     request->SetVersion(gHttpHandler->HttpVersion());
     request->SetRequestURI(result);
-    request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+    rv = request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // a CONNECT is always persistent
-    request->SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
-    request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+    rv = request->SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // all HTTP/1.1 requests must include a Host header (even though it
     // may seem redundant in this case; see bug 82388).
-    request->SetHeader(nsHttp::Host, result);
+    rv = request->SetHeader(nsHttp::Host, result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     nsAutoCString val;
     if (NS_SUCCEEDED(trans->RequestHead()->GetHeader(
@@ -1883,7 +1900,8 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
                          val))) {
         // we don't know for sure if this authorization is intended for the
         // SSL proxy, so we add it just in case.
-        request->SetHeader(nsHttp::Proxy_Authorization, val);
+        rv = request->SetHeader(nsHttp::Proxy_Authorization, val);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     result.Truncate();
@@ -2084,7 +2102,7 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 
         if (!CanReuse()) {
             LOG(("Server initiated close of idle conn %p\n", this));
-            gHttpHandler->ConnMgr()->CloseIdleConnection(this);
+            Unused << gHttpHandler->ConnMgr()->CloseIdleConnection(this);
             return NS_OK;
         }
 

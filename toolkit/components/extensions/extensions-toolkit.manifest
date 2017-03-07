@@ -12,6 +12,7 @@ category webextension-scripts idle chrome://extensions/content/ext-idle.js
 category webextension-scripts management chrome://extensions/content/ext-management.js
 category webextension-scripts notifications chrome://extensions/content/ext-notifications.js
 category webextension-scripts privacy chrome://extensions/content/ext-privacy.js
+category webextension-scripts proxy chrome://extensions/content/ext-proxy.js
 category webextension-scripts runtime chrome://extensions/content/ext-runtime.js
 category webextension-scripts storage chrome://extensions/content/ext-storage.js
 category webextension-scripts theme chrome://extensions/content/ext-theme.js
@@ -62,6 +63,7 @@ category webextension-schemas management chrome://extensions/content/schemas/man
 category webextension-schemas native_host_manifest chrome://extensions/content/schemas/native_host_manifest.json
 category webextension-schemas notifications chrome://extensions/content/schemas/notifications.json
 category webextension-schemas privacy chrome://extensions/content/schemas/privacy.json
+category webextension-schemas proxy chrome://extensions/content/schemas/proxy.json
 category webextension-schemas runtime chrome://extensions/content/schemas/runtime.json
 category webextension-schemas storage chrome://extensions/content/schemas/storage.json
 category webextension-schemas test chrome://extensions/content/schemas/test.json

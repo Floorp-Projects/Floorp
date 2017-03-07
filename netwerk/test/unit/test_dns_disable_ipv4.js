@@ -28,10 +28,13 @@ var listener = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   do_test_pending();
   try {
-    dns.asyncResolve("example.org", Ci.nsIDNSService.RESOLVE_DISABLE_IPV4, listener, null);
+    dns.asyncResolve("example.org", Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
+                     listener, null, defaultOriginAttributes);
   } catch (e) {
     dump(e);
     do_check_true(false);

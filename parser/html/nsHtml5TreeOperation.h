@@ -7,7 +7,6 @@
 
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
-#include "nsXPCOMStrings.h"
 #include "mozilla/dom/FromParser.h"
 
 class nsIContent;
@@ -418,7 +417,7 @@ class nsHtml5TreeOperation {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
 
-      char16_t* str = NS_StringCloneData(aString);
+      char16_t* str = ToNewUnicode(aString);
       mOpCode = aOpCode;
       mOne.unicharPtr = str;
     }

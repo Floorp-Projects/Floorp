@@ -48,7 +48,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMStrings.h"
 
 #include "nsIContentPolicy.h"
 #include "nsILoadInfo.h"

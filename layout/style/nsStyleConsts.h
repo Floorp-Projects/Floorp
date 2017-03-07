@@ -1036,6 +1036,9 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_COLUMN_FILL_AUTO               0
 #define NS_STYLE_COLUMN_FILL_BALANCE            1
 
+#define NS_STYLE_COLUMN_SPAN_NONE               0
+#define NS_STYLE_COLUMN_SPAN_ALL                1
+
 // See nsStyleUIReset
 #define NS_STYLE_IME_MODE_AUTO                  0
 #define NS_STYLE_IME_MODE_NORMAL                1

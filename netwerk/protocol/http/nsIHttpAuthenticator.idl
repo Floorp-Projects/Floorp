@@ -47,6 +47,7 @@ interface nsIHttpAuthenticator : nsISupports
      *        return value indicating whether or not to prompt the user for a
      *        revised identity.
      */
+    [must_use]
     void challengeReceived(in    nsIHttpAuthenticableChannel aChannel,
                            in    string       aChallenge,
                            in    boolean      aProxyAuth,
@@ -92,6 +93,7 @@ interface nsIHttpAuthenticator : nsISupports
      *        returns cancellable runnable object which caller can use to cancel
      *        calling aCallback when finished.
      */
+    [must_use]
     void generateCredentialsAsync(in    nsIHttpAuthenticableChannel aChannel,
                                   in    nsIHttpAuthenticatorCallback aCallback,
                                   in    string         aChallenge,
@@ -138,6 +140,7 @@ interface nsIHttpAuthenticator : nsISupports
      * @param aFlags
      *        authenticator may return one of the generate flags bellow.
      */
+    [must_use]
     string generateCredentials(in    nsIHttpAuthenticableChannel aChannel,
                                in    string         aChallenge,
                                in    boolean        aProxyAuth,
@@ -163,7 +166,7 @@ interface nsIHttpAuthenticator : nsISupports
     /**
      * Flags defining various properties of the authenticator.
      */
-    readonly attribute unsigned long authFlags;
+    [must_use] readonly attribute unsigned long authFlags;
 
     /**
      * A request based authentication scheme only authenticates an individual

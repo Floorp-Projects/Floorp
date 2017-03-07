@@ -16,11 +16,11 @@
 [scriptable, uuid(b4f96c89-5238-450c-8bda-e12c26f1d150)]
 interface nsIWellKnownOpportunisticUtils : nsISupports
 {
-    void verify(in ACString aJSON,
+    [must_use] void verify(in ACString aJSON,
                in ACString  aOrigin,
                in long      aAlternatePort);
 
-   readonly attribute bool valid;
-   readonly attribute bool mixed; /* mixed-scheme */
-   readonly attribute long lifetime;
+    [must_use] readonly attribute bool valid;
+    [must_use] readonly attribute bool mixed; /* mixed-scheme */
+    [must_use] readonly attribute long lifetime;
 };

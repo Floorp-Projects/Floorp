@@ -18,7 +18,6 @@ import os
 import pprint
 import sys
 import time
-from urlparse import urlparse
 try:
     import simplejson as json
     assert json
@@ -29,10 +28,20 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import HgErrorList
 from mozharness.base.vcs.vcsbase import VCSScript
-from mozharness.base.log import ERROR, FATAL
+from mozharness.base.log import FATAL
 
 
 class L10nBumper(VCSScript):
+    config_options = [[
+        ['--ignore-closed-tree', ],
+        {
+            "action": "store_true",
+            "dest": "ignore_closed_tree",
+            "default": False,
+            "help": "Bump l10n changesets on a closed tree."
+        }
+    ]]
+
     def __init__(self, require_config_file=True):
         super(L10nBumper, self).__init__(
             all_actions=[
@@ -47,6 +56,7 @@ class L10nBumper(VCSScript):
                 'push-loop',
             ],
             require_config_file=require_config_file,
+            config_options=self.config_options,
             # Default config options
             config={
                 'treestatus_base_url': 'https://treestatus.mozilla-releng.net',
@@ -81,7 +91,7 @@ class L10nBumper(VCSScript):
         cmd = hg + ['add', path]
         self.run_command(cmd, cwd=repo_path, env=env)
         cmd = hg + ['commit', '-u', user, '-m', message]
-        status = self.run_command(cmd, cwd=repo_path, env=env)
+        self.run_command(cmd, cwd=repo_path, env=env)
 
     def hg_push(self, repo_path):
         hg = self.query_exe('hg', return_type='list')
@@ -123,7 +133,7 @@ class L10nBumper(VCSScript):
         for key in old_contents:
             if key not in new_contents:
                 locale_map[key] = "removed"
-        for k,v in new_contents.items():
+        for k, v in new_contents.items():
             if old_contents.get(k, {}).get('revision') != v['revision']:
                 locale_map[k] = v['revision']
             elif old_contents.get(k, {}).get('platforms') != v['platforms']:
@@ -171,13 +181,13 @@ class L10nBumper(VCSScript):
         return revision_dict
 
     def build_commit_message(self, name, locale_map):
-        revisions = []
         comments = ''
+        approval_str = 'a=l10n-bump'
         for locale, revision in sorted(locale_map.items()):
             comments += "%s -> %s\n" % (locale, revision)
-        message = 'Bumping %s a=l10n-bump\n\n' % (
-            name,
-        )
+        if self.config['ignore_closed_tree']:
+            approval_str += " CLOSED TREE"
+        message = 'Bumping %s %s\n\n' % (name, approval_str)
         message += comments
         message = message.encode("utf-8")
         return message
@@ -204,7 +214,7 @@ class L10nBumper(VCSScript):
 
     # Actions {{{1
     def check_treestatus(self):
-        if not self.query_treestatus():
+        if not self.config['ignore_closed_tree'] and not self.query_treestatus():
             self.info("breaking early since treestatus is closed")
             sys.exit(0)
 

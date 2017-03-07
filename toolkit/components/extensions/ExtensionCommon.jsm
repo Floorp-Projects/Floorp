@@ -542,6 +542,7 @@ class SchemaAPIManager extends EventEmitter {
    *     "addon" - An addon process.
    *     "content" - A content process.
    *     "devtools" - A devtools process.
+   *     "proxy" - A proxy script process.
    */
   constructor(processType) {
     super();
@@ -555,6 +556,7 @@ class SchemaAPIManager extends EventEmitter {
       content_child: [],
       devtools_parent: [],
       devtools_child: [],
+      proxy_script: [],
     };
   }
 
@@ -606,12 +608,13 @@ class SchemaAPIManager extends EventEmitter {
    *     the moment - see bugzil.la/1295774.
    * @param {string} envType Restricts the API to contexts that run in the
    *    given environment. Must be one of the following:
-   *     - "addon_parent" - addon APIs that runs in the main process.
-   *     - "addon_child" - addon APIs that runs in an addon process.
-   *     - "content_parent" - content script APIs that runs in the main process.
-   *     - "content_child" - content script APIs that runs in a content process.
-   *     - "devtools_parent" - devtools APIs that runs in the main process.
-   *     - "devtools_child" - devtools APIs that runs in a devtools process.
+   *     - "addon_parent" - addon APIs that run in the main process.
+   *     - "addon_child" - addon APIs that run in an addon process.
+   *     - "content_parent" - content script APIs that run in the main process.
+   *     - "content_child" - content script APIs that run in a content process.
+   *     - "devtools_parent" - devtools APIs that run in the main process.
+   *     - "devtools_child" - devtools APIs that run in a devtools process.
+   *     - "proxy_script" - proxy script APIs that run in the main process.
    * @param {function(BaseContext)} getAPI A function that returns an object
    *     that will be merged with |chrome| and |browser|. The next example adds
    *     the create, update and remove methods to the tabs API.

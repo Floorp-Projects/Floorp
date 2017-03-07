@@ -102,6 +102,7 @@ EXTRA_JS_MODULES += [
 EXTRA_JS_MODULES.third_party.jsesc += ['third_party/jsesc/jsesc.js']
 EXTRA_JS_MODULES.sessionstore += [
     'sessionstore/PrivacyLevel.jsm',
+    'sessionstore/SessionHistory.jsm',
     'sessionstore/Utils.jsm',
 ]
 

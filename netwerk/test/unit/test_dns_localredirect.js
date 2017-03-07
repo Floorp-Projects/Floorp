@@ -19,12 +19,15 @@ var listener = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   prefs.setCharPref("network.dns.localDomains", "local.vingtetun.org");
 
   var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
   var mainThread = threadManager.currentThread;
-  dns.asyncResolve("local.vingtetun.org", 0, listener, mainThread);
+  dns.asyncResolve("local.vingtetun.org", 0, listener,
+                   mainThread, defaultOriginAttributes);
 
   do_test_pending();
 }

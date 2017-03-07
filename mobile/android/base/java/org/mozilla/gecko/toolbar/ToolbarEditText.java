@@ -6,10 +6,8 @@
 package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.AboutPages;
-import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.CustomEditText;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
@@ -441,10 +439,7 @@ public class ToolbarEditText extends CustomEditText
                     // are deleting, we should delete the autocomplete text first.
                     // Make the IME aware that we interrupted the deleteSurroundingText call,
                     // by restarting the IME.
-                    final InputMethodManager imm = InputMethods.getInputMethodManager(mContext);
-                    if (imm != null) {
-                        imm.restartInput(ToolbarEditText.this);
-                    }
+                    InputMethods.restartInput(mContext, ToolbarEditText.this);
                     return false;
                 }
                 return super.deleteSurroundingText(beforeLength, afterLength);
@@ -480,6 +475,9 @@ public class ToolbarEditText extends CustomEditText
             @Override
             public boolean setComposingText(final CharSequence text, final int newCursorPosition) {
                 if (removeAutocompleteOnComposing(text)) {
+                    if (InputMethods.needsRemoveAutocompleteHack(mContext)) {
+                        InputMethods.restartInput(mContext, ToolbarEditText.this);
+                    }
                     return false;
                 }
                 return super.setComposingText(text, newCursorPosition);

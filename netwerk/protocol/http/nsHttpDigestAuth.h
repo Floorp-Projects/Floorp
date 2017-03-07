@@ -41,48 +41,48 @@ class nsHttpDigestAuth final : public nsIHttpAuthenticator
   protected:
     ~nsHttpDigestAuth();
 
-    nsresult ExpandToHex(const char * digest, char * result);
+    MOZ_MUST_USE nsresult ExpandToHex(const char * digest, char * result);
 
-    nsresult CalculateResponse(const char * ha1_digest,
-                               const char * ha2_digest,
-                               const nsAFlatCString & nonce,
-                               uint16_t qop,
-                               const char * nonce_count,
-                               const nsAFlatCString & cnonce,
-                               char * result);
+    MOZ_MUST_USE nsresult CalculateResponse(const char * ha1_digest,
+                                            const char * ha2_digest,
+                                            const nsAFlatCString & nonce,
+                                            uint16_t qop,
+                                            const char * nonce_count,
+                                            const nsAFlatCString & cnonce,
+                                            char * result);
 
-    nsresult CalculateHA1(const nsAFlatCString & username,
-                          const nsAFlatCString & password,
-                          const nsAFlatCString & realm,
-                          uint16_t algorithm,
-                          const nsAFlatCString & nonce,
-                          const nsAFlatCString & cnonce,
-                          char * result);
+    MOZ_MUST_USE nsresult CalculateHA1(const nsAFlatCString & username,
+                                       const nsAFlatCString & password,
+                                       const nsAFlatCString & realm,
+                                       uint16_t algorithm,
+                                       const nsAFlatCString & nonce,
+                                       const nsAFlatCString & cnonce,
+                                       char * result);
 
-    nsresult CalculateHA2(const nsAFlatCString & http_method,
-                          const nsAFlatCString & http_uri_path,
-                          uint16_t qop,
-                          const char * body_digest,
-                          char * result);
+    MOZ_MUST_USE nsresult CalculateHA2(const nsAFlatCString & http_method,
+                                       const nsAFlatCString & http_uri_path,
+                                       uint16_t qop,
+                                       const char * body_digest,
+                                       char * result);
 
-    nsresult ParseChallenge(const char * challenge,
-                            nsACString & realm,
-                            nsACString & domain,
-                            nsACString & nonce,
-                            nsACString & opaque,
-                            bool * stale,
-                            uint16_t * algorithm,
-                            uint16_t * qop);
+    MOZ_MUST_USE nsresult ParseChallenge(const char * challenge,
+                                         nsACString & realm,
+                                         nsACString & domain,
+                                         nsACString & nonce,
+                                         nsACString & opaque,
+                                         bool * stale,
+                                         uint16_t * algorithm,
+                                         uint16_t * qop);
 
     // result is in mHashBuf
-    nsresult MD5Hash(const char *buf, uint32_t len);
+    MOZ_MUST_USE nsresult MD5Hash(const char *buf, uint32_t len);
 
-    nsresult GetMethodAndPath(nsIHttpAuthenticableChannel *,
-                              bool, nsCString &, nsCString &);
+    MOZ_MUST_USE nsresult GetMethodAndPath(nsIHttpAuthenticableChannel *,
+                                           bool, nsCString &, nsCString &);
 
     // append the quoted version of value to aHeaderLine
-    nsresult AppendQuotedString(const nsACString & value,
-                                nsACString & aHeaderLine);
+    MOZ_MUST_USE nsresult AppendQuotedString(const nsACString & value,
+                                             nsACString & aHeaderLine);
 
   protected:
     nsCOMPtr<nsICryptoHash>        mVerifier;

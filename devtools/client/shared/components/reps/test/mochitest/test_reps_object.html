@@ -14,8 +14,8 @@ Test Obj rep
 </head>
 <body>
 <pre id="test">
-<script src="head.js" type="application/javascript"></script>
-<script type="application/javascript">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   const { REPS, MODE } = browserRequire("devtools/client/shared/components/reps/reps");
   let { Rep, Obj } = REPS;
@@ -29,6 +29,9 @@ window.onload = Task.async(function* () {
     yield testMaxProps();
     yield testMoreThanMaxProps();
     yield testUninterestingProps();
+
+    // Test that unusual property names are escaped.
+    yield testEscapedPropertyNames();
 
     // Test that properties are rendered as expected by PropRep
     yield testNested();
@@ -157,6 +160,32 @@ window.onload = Task.async(function* () {
     ];
 
     testRepRenderModes(modeTests, "testUninterestingProps", componentUnderTest, stub);
+  }
+
+  function testEscapedPropertyNames() {
+    const stub = {"":1, "quote-this":2, noquotes:3};
+    const defaultOutput = `Object { "": 1, "quote-this": 2, noquotes: 3 }`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.TINY,
+        expectedOutput: `Object`,
+      },
+      {
+        mode: MODE.SHORT,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: MODE.LONG,
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, "testEscapedPropertyNames", componentUnderTest, stub);
   }
 
   function testNested() {

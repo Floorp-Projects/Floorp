@@ -26,8 +26,8 @@ NullHttpChannel::NullHttpChannel(nsIHttpChannel * chan)
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   ssm->GetChannelURIPrincipal(chan, getter_AddRefs(mResourcePrincipal));
 
-  chan->GetResponseHeader(NS_LITERAL_CSTRING("Timing-Allow-Origin"),
-                          mTimingAllowOriginHeader);
+  Unused << chan->GetResponseHeader(NS_LITERAL_CSTRING("Timing-Allow-Origin"),
+                                    mTimingAllowOriginHeader);
   chan->GetURI(getter_AddRefs(mURI));
   chan->GetOriginalURI(getter_AddRefs(mOriginalURI));
 

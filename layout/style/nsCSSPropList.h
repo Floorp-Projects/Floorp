@@ -1553,6 +1553,16 @@ CSS_PROP_COLUMN(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
+    column-span,
+    column_span,
+    ColumnSpan,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.column-span.enabled",
+    VARIANT_HK,
+    kColumnSpanKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Discrete)
+CSS_PROP_COLUMN(
     column-width,
     column_width,
     ColumnWidth,

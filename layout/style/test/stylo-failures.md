@@ -57,10 +57,8 @@ Any line which doesn't follow the format above would be ignored like comment.
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * Property parsing and computation:
-    * test_inherit_computation.html `animation` [6]
-    * test_initial_computation.html `animation` [12]
     * test_property_syntax_errors.html `animation` [404]
-    * test_value_storage.html `animation` [1063]
+    * test_value_storage.html `animation` [265]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
   * @namespace ##easy##
@@ -96,17 +94,14 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_bug73586.html [20]
 * Transition support:
   * test_bug621351.html [4]
-  * test_compute_data_with_start_struct.html `transition` [8]
-  * test_inherit_computation.html `transition` [30]
-  * test_initial_computation.html `transition` [60]
+  * test_compute_data_with_start_struct.html `transition` [2]
   * test_transitions.html [63]
   * test_transitions_and_reframes.html [16]
   * test_transitions_and_restyles.html [3]
-  * test_transitions_computed_value_combinations.html [553]
-  * test_transitions_computed_values.html [10]
+  * test_transitions_computed_value_combinations.html [145]
   * test_transitions_dynamic_changes.html [10]
   * test_transitions_step_functions.html [24]
-  * test_value_storage.html `transition` [620]
+  * test_value_storage.html `transition` [776]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * url value in style attribute bug 1310886
@@ -138,7 +133,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_namespace_rule.html [17]
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
-* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [822]
+* test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [966]
 * flex-basis glue not implemented bug 1331529
   * test_flexbox_flex_shorthand.html `flex-basis` [28]
   * test_flexbox_layout.html [355]
@@ -197,7 +192,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `-box-` [5]
     * test_initial_computation.html `-box-` [8]
     * test_initial_storage.html `-box-` [10]
-    * test_value_storage.html `-box-` [172]
+    * test_value_storage.html `-box-` [118]
   * -moz-force-broken-image-icon
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
@@ -284,6 +279,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `text-justify` [4]
     * test_initial_computation.html `text-justify` [2]
     * test_initial_storage.html `text-justify` [2]
+    * test_value_storage.html `text-justify` [10]
   * touch-action property
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
@@ -363,8 +359,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-moz-element` [49]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
-  * various values on -{webkit,moz}-user-select servo/servo#15197
-    * test_value_storage.html `user-select` [18]
+  * various values on -{webkit,moz}-user-select **need investigation**
+    * test_value_storage.html `user-select` [3]
   * -moz-default-background-color
     * test_value_storage.html `-moz-default-background-color` [1]
   * several prefixed values in cursor property
@@ -441,17 +437,15 @@ Any line which doesn't follow the format above would be ignored like comment.
     * ... `-webkit-transform` [109]
     * test_specified_value_serialization.html [27]
     * test_units_angle.html [3]
-  * test_value_storage.html `columns:`: servo/servo#15190 [32]
+  * test_value_storage.html `columns:`: **need investigation** [20]
   * {background,mask}-position lacks comma for serialization servo/servo#15200
     * test_value_storage.html `background-position` [81]
-    * ... `for 'mask-position` [18]
-    * ... `for '-webkit-mask-position` [36]
-    * ... `for '-webkit-mask` [3]
+    * ... `for 'mask-position` [94]
+    * ... `for '-webkit-mask-position` [188]
+    * ... `for '-webkit-mask` [38]
     * test_shorthand_property_getters.html `background-position` [1]
   * box-shadow wrong order of &lt;length&gt; values servo/servo#15203
     * test_value_storage.html `box-shadow` [44]
-  * outline shorthand generates "initial" as part servo/servo#15206
-    * test_value_storage.html `'outline:` [4]
   * color value not canonicalized servo/servo#15397
     * test_shorthand_property_getters.html `should condense to canonical case` [2]
   * background-position invalid 3-value form **issue to be filed**

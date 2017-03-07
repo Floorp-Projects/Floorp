@@ -14,16 +14,15 @@
 SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
+function checkDuration(actual, expected, name) {
+  ok(Math.abs(actual - expected) < 0.1,
+     `${name} duration: ${actual} expected: ${expected}`);
+}
+
 function cloneLoaded(event) {
-  ok(true, "Clone loaded OK");
   var e = event.target;
-
-  if (e._expectedDuration) {
-    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
-       "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
-  }
-
-  e.removeEventListener("loadeddata", cloneLoaded);
+  ok(true, `${e.token} loaded OK`);
+  checkDuration(e.duration, e._expectedDuration, e.token);
   removeNodeAndSource(e);
   manager.finished(e.token);
 }
@@ -31,7 +30,9 @@ function cloneLoaded(event) {
 function tryClone(event) {
   var e = event.target;
   var clone = e.cloneNode(false);
-  clone.token = e.token;
+  clone.token = `${e.token}(cloned)`;
+  manager.started(clone.token);
+  manager.finished(e.token);
 
   // Log events for debugging.
   var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
@@ -39,23 +40,19 @@ function tryClone(event) {
                 "waiting", "pause"];
   function logEvent(evt) {
     var e = evt.target;
-    info(e.token + ": got " + evt.type);
+    info(`${e.token} got ${evt.type}`);
   }
   events.forEach(function(e) {
     clone.addEventListener(e, logEvent);
   });
 
 
-  if (e._expectedDuration) {
-    ok(Math.abs(e.duration - e._expectedDuration) < 0.1,
-       e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
-    clone._expectedDuration = e._expectedDuration;
-  }
+  checkDuration(e.duration, e._expectedDuration, e.token);
+  clone._expectedDuration = e._expectedDuration;
 
-  clone.addEventListener("loadeddata", cloneLoaded);
-  clone.onloadstart = function(evt) {
-    info("cloned " + evt.target.token + " start loading.");
-    evt.target.onloadstart = null;
+  clone.addEventListener("loadeddata", cloneLoaded, {once: true});
+  clone.addEventListener("loadstart", function(evt) {
+    info(`${evt.target.token} starts loading.`);
     // Since there is only one H264 decoder instance, we have to delete the
     // decoder of the original element for the cloned element to load. However,
     // we can't delete the decoder too early otherwise cloning decoder will
@@ -63,9 +60,7 @@ function tryClone(event) {
     // know when the decoder is already cloned and we can delete the decoder of
     // the original element.
     removeNodeAndSource(e);
-  }
-
-  e.removeEventListener("loadeddata", tryClone);
+  }, {once: true});
 }
 
 // This test checks that loading the same URI twice in different elements at the same time
@@ -76,23 +71,20 @@ function tryClone(event) {
 // failure.
 
 function initTest(test, token) {
-  var elemType = /^audio/.test(test.type) ? "audio" : "video";
-  var e = document.createElement(elemType);
+  var e = document.createElement("video");
   e.preload = "auto";
-  if (e.canPlayType(test.type)) {
-    e.src = test.name;
-    if (test.duration) {
-      e._expectedDuration = test.duration;
-    }
-    ok(true, "Trying to load " + test.name);
-    e.addEventListener("loadeddata", tryClone);
-    e.load();
-    e.token = token;
-    manager.started(token);
-  }
+  e.src = test.name;
+  e._expectedDuration = test.duration;
+  ok(true, `Trying to load ${test.name}, duration=${test.duration}`);
+  e.addEventListener("loadeddata", tryClone, {once: true});
+  e.token = token;
+  manager.started(token);
 }
 
-manager.runTests(gCloneTests, initTest);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["logging.MediaDecoder", "Debug"]]},
+  manager.runTests.bind(manager, gCloneTests, initTest));
 
 </script>
 </pre>

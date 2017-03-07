@@ -332,7 +332,7 @@ TLSFilterTransaction::ReadSegments(nsAHttpSegmentReader *aReader,
     rv = NS_BASE_STREAM_WOULD_BLOCK;
     LOG(("TLSFilterTransaction %p read segment blocked found rv=%" PRIx32 "\n",
          this, static_cast<uint32_t>(rv)));
-    Connection()->ForceSend();
+    Unused << Connection()->ForceSend();
   }
 
   return rv;
@@ -355,7 +355,7 @@ TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
     // nsPipe turns failures into silent OK.. undo that!
     rv = mFilterReadCode;
     if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
-      Connection()->ResumeRecv();
+      Unused << Connection()->ResumeRecv();
     }
   }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%" PRIx32 " %d\n",
@@ -394,7 +394,7 @@ TLSFilterTransaction::NudgeTunnel(NudgeTunnelCallback *aCallback)
     return NS_ERROR_FAILURE;
   }
 
-  OnReadSegment("", 0, &notUsed);
+  Unused << OnReadSegment("", 0, &notUsed);
 
   // The SSL Layer does some unusual things with PR_Poll that makes it a bad
   // match for multiplexed SSL sessions. We work around this by manually polling for
@@ -440,7 +440,8 @@ TLSFilterTransaction::Notify(nsITimer *timer)
   if (timer != mTimer) {
     return NS_ERROR_UNEXPECTED;
   }
-  StartTimerCallback();
+  DebugOnly<nsresult> rv = StartTimerCallback();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   return NS_OK;
 }
 
@@ -963,7 +964,9 @@ SpdyConnectTransaction::SpdyConnectTransaction(nsHttpConnectionInfo *ci,
 
   mTimestampSyn = TimeStamp::Now();
   mRequestHead = new nsHttpRequestHead();
-  nsHttpConnection::MakeConnectString(trans, mRequestHead, mConnectString);
+  DebugOnly<nsresult> rv =
+    nsHttpConnection::MakeConnectString(trans, mRequestHead, mConnectString);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   mDrivingTransaction = trans;
 }
 
@@ -973,8 +976,8 @@ SpdyConnectTransaction::~SpdyConnectTransaction()
 
   if (mDrivingTransaction) {
     // requeue it I guess. This should be gone.
-    gHttpHandler->InitiateTransaction(mDrivingTransaction,
-                                      mDrivingTransaction->Priority());
+    Unused << gHttpHandler->InitiateTransaction(mDrivingTransaction,
+                                                mDrivingTransaction->Priority());
   }
 }
 
@@ -1011,12 +1014,14 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   mTunneledConn->SetTransactionCaps(Caps());
   MOZ_ASSERT(aConnInfo->UsingHttpsProxy());
   TimeDuration rtt = TimeStamp::Now() - mTimestampSyn;
-  mTunneledConn->Init(aConnInfo,
-                      gHttpHandler->ConnMgr()->MaxRequestDelay(),
-                      mTunnelTransport, mTunnelStreamIn, mTunnelStreamOut,
-                      true, callbacks,
-                      PR_MillisecondsToInterval(
-                        static_cast<uint32_t>(rtt.ToMilliseconds())));
+  DebugOnly<nsresult> rv =
+    mTunneledConn->Init(aConnInfo,
+                        gHttpHandler->ConnMgr()->MaxRequestDelay(),
+                        mTunnelTransport, mTunnelStreamIn, mTunnelStreamOut,
+                        true, callbacks,
+                        PR_MillisecondsToInterval(
+                          static_cast<uint32_t>(rtt.ToMilliseconds())));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (mForcePlainText) {
       mTunneledConn->ForcePlainText();
   } else {
@@ -1031,7 +1036,7 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   mDrivingTransaction->MakeSticky();
 
   // jump the priority and start the dispatcher
-  gHttpHandler->InitiateTransaction(
+  Unused << gHttpHandler->InitiateTransaction(
     mDrivingTransaction, nsISupportsPriority::PRIORITY_HIGHEST - 60);
   mDrivingTransaction = nullptr;
 }
@@ -1126,7 +1131,7 @@ SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader *reader,
   }
 
   *countRead = 0;
-  Flush(count, countRead);
+  Unused << Flush(count, countRead);
   if (!mTunnelStreamOut->mCallback) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
