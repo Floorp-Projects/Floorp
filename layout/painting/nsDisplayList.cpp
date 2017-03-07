@@ -5409,8 +5409,7 @@ nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   const nsDisplayBorderGeometry* geometry = static_cast<const nsDisplayBorderGeometry*>(aGeometry);
   bool snap;
 
-  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-      !geometry->mContentRect.IsEqualInterior(GetContentRect())) {
+  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap))) {
     // We can probably get away with only invalidating the difference
     // between the border and padding rects, but the XUL ui at least
     // is apparently painting a background with this?
