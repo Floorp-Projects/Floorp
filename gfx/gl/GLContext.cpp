@@ -1009,6 +1009,11 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     ////////////////
 
+    const auto err = mSymbols.fGetError();
+    MOZ_RELEASE_ASSERT(!err);
+    if (err)
+        return false;
+
     LoadMoreSymbols(prefix, trygl);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1146,6 +1151,14 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
     };
 
     if (IsSupported(GLFeature::robustness)) {
+        const auto resetStrategy = GetIntAs<GLuint>(LOCAL_GL_RESET_NOTIFICATION_STRATEGY);
+        if (resetStrategy != LOCAL_GL_LOSE_CONTEXT_ON_RESET) {
+            MOZ_ASSERT(resetStrategy == LOCAL_GL_NO_RESET_NOTIFICATION);
+            NS_WARNING("Robustness supported, but not active!");
+            MarkUnsupported(GLFeature::robustness);
+        }
+    }
+    if (IsSupported(GLFeature::robustness)) {
         const SymLoadStruct symbols[] = {
             { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatus",
                                                                 "GetGraphicsResetStatusARB",
@@ -1154,7 +1167,13 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
                                                                 nullptr } },
             END_SYMBOLS
         };
-        fnLoadForFeature(symbols, GLFeature::sync);
+        if (fnLoadForFeature(symbols, GLFeature::robustness)) {
+            const auto status = mSymbols.fGetGraphicsResetStatus();
+            MOZ_ALWAYS_TRUE(!status);
+
+            const auto err = mSymbols.fGetError();
+            MOZ_ALWAYS_TRUE(!err);
+        }
     }
 
     if (IsSupported(GLFeature::sync)) {
