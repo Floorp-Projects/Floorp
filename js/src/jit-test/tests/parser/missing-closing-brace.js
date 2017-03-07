@@ -28,3 +28,49 @@ function test2() {
 function test3() {
 }
 `, [4, 17]);
+
+// Block statement.
+test(`
+{
+  if (true) {
+}
+`, [2, 0]);
+test(`
+if (true) {
+  if (true) {
+}
+`, [2, 10]);
+test(`
+for (;;) {
+  if (true) {
+}
+`, [2, 9]);
+test(`
+while (true) {
+  if (true) {
+}
+`, [2, 13]);
+test(`
+do {
+  do {
+} while(true);
+`, [2, 3]);
+
+// try-catch-finally.
+test(`
+try {
+  if (true) {
+}
+`, [2, 4]);
+test(`
+try {
+} catch (e) {
+  if (true) {
+}
+`, [3, 12]);
+test(`
+try {
+} finally {
+  if (true) {
+}
+`, [3, 10]);
