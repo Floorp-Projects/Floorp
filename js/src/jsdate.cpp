@@ -2822,6 +2822,17 @@ date_toLocaleFormat_impl(JSContext* cx, const CallArgs& args)
 {
     Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
 
+#if EXPOSE_INTL_API
+    if (!cx->compartment()->warnedAboutDateToLocaleFormat) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_DEPRECATED_TOLOCALEFORMAT))
+        {
+            return false;
+        }
+        cx->compartment()->warnedAboutDateToLocaleFormat = true;
+    }
+#endif
+
     if (args.length() == 0) {
         /*
          * Use '%#c' for windows, because '%c' is backward-compatible and non-y2k
