@@ -5,8 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Audio/Video: cubeb")
+    BUG_COMPONENT = ("Core", "Audio/Video")
 
-DIRS += ['include', 'src']
-TEST_DIRS += ['gtest']
+with Files("update-libjpeg.sh"):
+    BUG_COMPONENT = ("Core", "ImageLib")
 
+with Files("openmax_il/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("gmp-clearkey/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: GMP")
