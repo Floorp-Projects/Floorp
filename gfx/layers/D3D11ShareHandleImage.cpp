@@ -12,6 +12,9 @@
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "d3d11.h"
+#include "gfxPrefs.h"
+#include "DXVA2Manager.h"
+#include <memory>
 
 namespace mozilla {
 namespace layers {
@@ -73,6 +76,30 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   D3D11_TEXTURE2D_DESC desc;
   texture->GetDesc(&desc);
 
+  HRESULT hr;
+
+  if (desc.Format == DXGI_FORMAT_NV12) {
+    nsAutoCString error;
+    std::unique_ptr<DXVA2Manager> manager(DXVA2Manager::CreateD3D11DXVA(nullptr, error, device));
+
+    if (!manager) {
+      gfxWarning() << "Failed to create DXVA2 manager!";
+      return nullptr;
+    }
+
+    RefPtr<ID3D11Texture2D> outTexture;
+
+    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
+
+    if (FAILED(hr)) {
+      gfxWarning() << "Failed to copy NV12 to BGRA texture.";
+      return nullptr;
+    }
+
+    texture = outTexture;
+    texture->GetDesc(&desc);
+  }
+
   CD3D11_TEXTURE2D_DESC softDesc(desc.Format, desc.Width, desc.Height);
   softDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
   softDesc.BindFlags = 0;
@@ -81,7 +108,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   softDesc.Usage = D3D11_USAGE_STAGING;
 
   RefPtr<ID3D11Texture2D> softTexture;
-  HRESULT hr = device->CreateTexture2D(&softDesc,
+  hr = device->CreateTexture2D(&softDesc,
                                        NULL,
                                        static_cast<ID3D11Texture2D**>(getter_AddRefs(softTexture)));
 
