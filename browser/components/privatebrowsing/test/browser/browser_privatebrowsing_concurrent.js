@@ -62,7 +62,7 @@ add_task(function* test() {
   private_browser = private_window.getBrowser().selectedBrowser;
 
   private_browser.loadURI(prefix + "?action=get&name=test2");
-  yield BrowserTestUtils.browserLoaded(private_browser, false, prefix + '?action=get&name=test2');
+  yield BrowserTestUtils.browserLoaded(private_browser, false, prefix + "?action=get&name=test2");
   elts = yield getElts(private_browser);
   isnot(elts[0], "value2", "public window shouldn't see cleared private storage");
   is(elts[1], "1", "public window should only see public items");
