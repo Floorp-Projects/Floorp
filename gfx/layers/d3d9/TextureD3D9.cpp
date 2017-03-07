@@ -49,12 +49,13 @@ TextureSourceD3D9::~TextureSourceD3D9()
 already_AddRefed<TextureHost>
 CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
                       ISurfaceAllocator* aDeallocator,
+                      LayersBackend aBackend,
                       TextureFlags aFlags)
 {
   RefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer: {
-      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
+      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
       break;
     }
     case SurfaceDescriptor::TSurfaceDescriptorD3D9: {

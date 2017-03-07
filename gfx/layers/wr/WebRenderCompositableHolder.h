@@ -6,12 +6,21 @@
 #ifndef MOZILLA_GFX_WEBRENDERCOMPOSITABLE_HOLDER_H
 #define MOZILLA_GFX_WEBRENDERCOMPOSITABLE_HOLDER_H
 
-#include "nsDataHashtable.h"
+#include <queue>
+
+#include "mozilla/layers/TextureHost.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
+
+namespace wr {
+class WebRenderAPI;
+}
+
 namespace layers {
 
 class CompositableHost;
+class WebRenderTextureHost;
 
 class WebRenderCompositableHolder final
 {
@@ -21,20 +30,26 @@ public:
   explicit WebRenderCompositableHolder();
 
 protected:
-  virtual ~WebRenderCompositableHolder();
+  ~WebRenderCompositableHolder();
 
 public:
-
-  virtual void Destroy();
-
-  void AddExternalImageId(uint64_t aExternalImageId, CompositableHost* aHost);
-  void RemoveExternalImageId(uint64_t aExternalImageId);
-  void UpdateExternalImages();
+  void Destroy();
+  void HoldExternalImage(const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
+  void Update(const wr::Epoch& aEpoch);
 
 private:
 
-  // Holds CompositableHosts that are bound to external image ids.
-  nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost> > mCompositableHosts;
+  struct ForwardingTextureHosts {
+    ForwardingTextureHosts(const wr::Epoch& aEpoch, TextureHost* aTexture)
+      : mEpoch(aEpoch)
+      , mTexture(aTexture)
+    {}
+    wr::Epoch mEpoch;
+    CompositableTextureHostRef mTexture;
+  };
+
+  // Holds forwarding WebRenderTextureHosts.
+  std::queue<ForwardingTextureHosts> mWebRenderTextureHosts;
 };
 
 } // namespace layers

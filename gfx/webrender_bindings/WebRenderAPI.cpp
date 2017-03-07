@@ -250,6 +250,42 @@ WebRenderAPI::Readback(gfx::IntSize size,
 }
 
 void
+WebRenderAPI::WaitFlushed()
+{
+    class WaitFlushedEvent : public RendererEvent
+    {
+        public:
+            explicit WaitFlushedEvent(layers::SynchronousTask* aTask)
+                : mTask(aTask)
+            {
+                MOZ_COUNT_CTOR(WaitFlushedEvent);
+            }
+
+            ~WaitFlushedEvent()
+            {
+                MOZ_COUNT_DTOR(WaitFlushedEvent);
+            }
+
+            virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+            {
+                layers::AutoCompleteTask complete(mTask);
+            }
+
+            layers::SynchronousTask* mTask;
+    };
+
+    layers::SynchronousTask task("WaitFlushed");
+    auto event = MakeUnique<WaitFlushedEvent>(&task);
+    // This event will be passed from wr_backend thread to renderer thread. That
+    // implies that all frame data have been processed when the renderer runs this
+    // read-back event. Then, we could make sure this read-back event gets the
+    // latest result.
+    RunOnRenderThread(Move(event));
+
+    task.Wait();
+}
+
+void
 WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
   wr_api_set_root_pipeline(mWrApi, aPipeline);

@@ -9,6 +9,7 @@
 #include "LayerScope.h"
 #include "LayersLogging.h"              // for AppendToString
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/CompositableTransactionParent.h" // for CompositableParentManager
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -20,6 +21,7 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/GPUVideoTextureHost.h"
+#include "mozilla/layers/WebRenderTextureHost.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -160,23 +162,27 @@ TextureHost::SetLastFwdTransactionId(uint64_t aTransactionId)
 
 // implemented in TextureHostOGL.cpp
 already_AddRefed<TextureHost> CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
-                                               ISurfaceAllocator* aDeallocator,
-                                               TextureFlags aFlags);
+                                                   ISurfaceAllocator* aDeallocator,
+                                                   LayersBackend aBackend,
+                                                   TextureFlags aFlags);
 
 // implemented in TextureHostBasic.cpp
 already_AddRefed<TextureHost> CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
-                                                 ISurfaceAllocator* aDeallocator,
-                                                 TextureFlags aFlags);
+                                                     ISurfaceAllocator* aDeallocator,
+                                                     LayersBackend aBackend,
+                                                     TextureFlags aFlags);
 
 // implemented in TextureD3D11.cpp
 already_AddRefed<TextureHost> CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
-                                                 ISurfaceAllocator* aDeallocator,
-                                                 TextureFlags aFlags);
+                                                     ISurfaceAllocator* aDeallocator,
+                                                     LayersBackend aBackend,
+                                                     TextureFlags aFlags);
 
 // implemented in TextureD3D9.cpp
 already_AddRefed<TextureHost> CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
-                                                ISurfaceAllocator* aDeallocator,
-                                                TextureFlags aFlags);
+                                                    ISurfaceAllocator* aDeallocator,
+                                                    LayersBackend aBackend,
+                                                    TextureFlags aFlags);
 
 already_AddRefed<TextureHost>
 TextureHost::Create(const SurfaceDescriptor& aDesc,
@@ -189,19 +195,19 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
     case SurfaceDescriptor::TSurfaceDescriptorFileMapping:
     case SurfaceDescriptor::TSurfaceDescriptorGPUVideo:
-      return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
+      return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aBackend, aFlags);
 
     case SurfaceDescriptor::TEGLImageDescriptor:
     case SurfaceDescriptor::TSurfaceTextureDescriptor:
     case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture:
-      return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
+      return CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (aBackend == LayersBackend::LAYERS_OPENGL ||
           aBackend == LayersBackend::LAYERS_WR) {
-        return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
+        return CreateTextureHostOGL(aDesc, aDeallocator, aBackend, aFlags);
       } else {
-        return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+        return CreateTextureHostBasic(aDesc, aDeallocator, aBackend, aFlags);
       }
 
 #ifdef MOZ_X11
@@ -213,14 +219,14 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
 
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D9:
-      return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
+      return CreateTextureHostD3D9(aDesc, aDeallocator, aBackend, aFlags);
 
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
     case SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr:
       if (aBackend == LayersBackend::LAYERS_D3D9) {
-        return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
+        return CreateTextureHostD3D9(aDesc, aDeallocator, aBackend, aFlags);
       } else {
-        return CreateTextureHostD3D11(aDesc, aDeallocator, aFlags);
+        return CreateTextureHostD3D11(aDesc, aDeallocator, aBackend, aFlags);
       }
 #endif
     default:
@@ -228,9 +234,21 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
   }
 }
 
+bool WrapWithWebRenderTextureHost(LayersBackend aBackend,
+                                  TextureFlags aFlags)
+{
+  if (!gfxVars::UseWebRender() ||
+      (aFlags & TextureFlags::SNAPSHOT) ||
+      (aBackend != LayersBackend::LAYERS_WR)) {
+    return false;
+  }
+  return true;
+}
+
 already_AddRefed<TextureHost>
 CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
+                                    LayersBackend aBackend,
                                     TextureFlags aFlags)
 {
   RefPtr<TextureHost> result;
@@ -244,12 +262,18 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                         bufferDesc.desc(),
                                         aDeallocator,
                                         aFlags);
+          if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
+            result = new WebRenderTextureHost(aFlags, result);
+          }
           break;
         }
         case MemoryOrShmem::Tuintptr_t: {
           result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(data.get_uintptr_t()),
                                          bufferDesc.desc(),
                                          aFlags);
+          if (WrapWithWebRenderTextureHost(aBackend, aFlags)) {
+            result = new WebRenderTextureHost(aFlags, result);
+          }
           break;
         }
         default:

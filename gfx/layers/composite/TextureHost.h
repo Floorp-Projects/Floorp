@@ -55,6 +55,7 @@ class TextureSourceBasic;
 class DataTextureSource;
 class PTextureParent;
 class TextureParent;
+class WebRenderTextureHost;
 class WrappingTextureSourceYCbCrBasic;
 
 /**
@@ -586,6 +587,8 @@ public:
 
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
 
+  virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
+
 protected:
   void ReadUnlock();
 
@@ -882,6 +885,7 @@ private:
 already_AddRefed<TextureHost>
 CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
+                                    LayersBackend aBackend,
                                     TextureFlags aFlags);
 
 } // namespace layers

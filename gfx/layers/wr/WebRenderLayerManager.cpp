@@ -348,7 +348,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
                                             SurfaceFormat::B8G8R8A8,
                                             aSize.ToUnknownSize(),
                                             BackendType::SKIA,
-                                            TextureFlags::DEFAULT);
+                                            TextureFlags::SNAPSHOT);
   if (!texture) {
     return;
   }

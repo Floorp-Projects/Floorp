@@ -491,16 +491,16 @@ pub struct WrState {
     frame_builder: WebRenderFrameBuilder,
 }
 
-// TODO(Jerry): handle shmem or cpu raw buffers.
-//#[repr(C)]
-//enum WrExternalImageType {
-//    TextureHandle,
-//    MemOrShmem,
-//}
+#[repr(C)]
+#[allow(dead_code)]
+enum WrExternalImageType {
+    NativeTexture,
+    RawData,
+}
 
 #[repr(C)]
 struct WrExternalImageStruct {
-    //image_type: WrExternalImageType,
+    image_type: WrExternalImageType,
 
     // Texture coordinate
     u0: f32,
@@ -511,9 +511,9 @@ struct WrExternalImageStruct {
     // external buffer handle
     handle: u32,
 
-    // TODO(Jerry): handle shmem or cpu raw buffers.
-    //// buff: *const u8,
-    //// size: usize,
+    // handle RawData.
+    buff: *const u8,
+    size: usize,
 }
 
 type LockExternalImageCallback = fn(*mut c_void, ExternalImageId) -> WrExternalImageStruct;
@@ -532,17 +532,24 @@ impl ExternalImageHandler for WrExternalImageHandler {
     fn lock(&mut self, id: ExternalImageId) -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id);
 
-        // TODO(Jerry): handle shmem or cpu raw buffers.
-        //match image.image_type {
-        //    WrExternalImageType::TextureHandle =>
+        match image.image_type {
+            WrExternalImageType::NativeTexture =>
                 ExternalImage {
                     u0: image.u0,
                     v0: image.v0,
                     u1: image.u1,
                     v1: image.v1,
                     source: ExternalImageSource::NativeTexture(image.handle)
-                }
-        //}
+                },
+            WrExternalImageType::RawData =>
+                ExternalImage {
+                    u0: image.u0,
+                    v0: image.v0,
+                    u1: image.u1,
+                    v1: image.v1,
+                    source: ExternalImageSource::RawData(unsafe { slice::from_raw_parts(image.buff, image.size)})
+                },
+        }
     }
 
     fn unlock(&mut self, id: ExternalImageId) {
