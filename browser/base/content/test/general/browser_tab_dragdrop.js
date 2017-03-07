@@ -40,7 +40,7 @@ function loadURI(tab, url) {
 // in the page which tells us the plugin hasn't been reinitialized.
 function* cacheObjectValue(browser) {
   yield ContentTask.spawn(browser, null, function*() {
-    let plugin = content.document.wrappedJSObject.body.firstChild;
+    let plugin = content.document.getElementById("p").wrappedJSObject;
     info(`plugin is ${plugin}`);
     let win = content.document.defaultView;
     info(`win is ${win}`);
@@ -103,7 +103,6 @@ function checkObjectValue(browser) {
 }
 
 add_task(function*() {
-  let embed = '<embed type="application/x-test" allowscriptaccess="always" allowfullscreen="true" wmode="window" width="640" height="480"></embed>'
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
 
   // create a few tabs
@@ -119,7 +118,7 @@ add_task(function*() {
   yield loadURI(tabs[1], "data:text/html;charset=utf-8,<title>tab1</title><body>tab1<iframe>");
   yield loadURI(tabs[2], "data:text/plain;charset=utf-8,tab2");
   yield loadURI(tabs[3], "data:text/html;charset=utf-8,<title>tab3</title><body>tab3<iframe>");
-  yield loadURI(tabs[4], "data:text/html;charset=utf-8,<body onload='clicks=0' onclick='++clicks'>" + embed);
+  yield loadURI(tabs[4], "http://example.com/browser/browser/base/content/test/general/browser_tab_dragdrop_embed.html");
   yield BrowserTestUtils.switchTab(gBrowser, tabs[3]);
 
   swapTabsAndCloseOther(2, 3); // now: 0 1 2 4
