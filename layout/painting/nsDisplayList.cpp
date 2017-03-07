@@ -5371,7 +5371,7 @@ nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
 {
   MOZ_COUNT_CTOR(nsDisplayBorder);
 
-  mBounds = CalculateBounds(*mFrame->StyleBorder()).GetBounds();
+  mBounds = CalculateBounds<nsRect>(*mFrame->StyleBorder());
 }
 
 bool
@@ -5684,53 +5684,6 @@ nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder,
 {
   *aSnap = true;
   return mBounds;
-}
-
-nsRegion
-nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder) const
-{
-  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  if (aStyleBorder.IsBorderImageLoaded()) {
-    borderBounds.Inflate(aStyleBorder.GetImageOutset());
-    return borderBounds;
-  } else {
-    nsMargin border = aStyleBorder.GetComputedBorder();
-    nsRegion result;
-    if (border.top > 0) {
-      result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
-    }
-    if (border.right > 0) {
-      result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
-    }
-    if (border.bottom > 0) {
-      result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
-    }
-    if (border.left > 0) {
-      result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
-    }
-
-    nscoord radii[8];
-    if (mFrame->GetBorderRadii(radii)) {
-      if (border.left > 0 || border.top > 0) {
-        nsSize cornerSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]);
-        result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
-      }
-      if (border.top > 0 || border.right > 0) {
-        nsSize cornerSize(radii[eCornerTopRightX], radii[eCornerTopRightY]);
-        result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
-      }
-      if (border.right > 0 || border.bottom > 0) {
-        nsSize cornerSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]);
-        result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
-      }
-      if (border.bottom > 0 || border.left > 0) {
-        nsSize cornerSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]);
-        result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
-      }
-    }
-
-    return result;
-  }
 }
 
 // Given a region, compute a conservative approximation to it as a list
