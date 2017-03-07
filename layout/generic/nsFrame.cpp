@@ -1557,6 +1557,9 @@ nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
 bool
 nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay, mozilla::EffectSet* aEffectSet) const
 {
+  if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
+    return false;
+  }
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
   if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
       !IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
