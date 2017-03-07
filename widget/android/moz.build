@@ -25,7 +25,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.widget += [
-    'AndroidColors.h',
     'AndroidCompositorWidget.h',
     'AndroidUiThread.h',
 ]
