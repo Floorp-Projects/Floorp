@@ -74,3 +74,10 @@ try {
   if (true) {
 }
 `, [3, 10]);
+
+// Object literal.
+test(`
+var x = {
+  foo: {
+};
+`, [2, 8]);

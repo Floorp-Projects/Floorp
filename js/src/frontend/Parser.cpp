@@ -9486,6 +9486,8 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
 
+    uint32_t openedPos = pos().begin;
+
     Node literal = handler.newObjectLiteral(pos().begin);
     if (!literal)
         return null();
@@ -9648,7 +9650,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
         if (tt == TOK_RC)
             break;
         if (tt != TOK_COMMA) {
-            error(JSMSG_CURLY_AFTER_LIST);
+            reportMissingClosing(JSMSG_CURLY_AFTER_LIST, JSMSG_CURLY_OPENED, openedPos);
             return null();
         }
     }
