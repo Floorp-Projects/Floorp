@@ -10,6 +10,7 @@
 #include "nsJSPrincipals.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -250,7 +251,7 @@ public:
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs);
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(const nsACString& aOrigin);
 
-  const OriginAttributes& OriginAttributesRef() override { return mOriginAttributes; }
+  const OriginAttributes& OriginAttributesRef() final { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }
@@ -266,11 +267,11 @@ public:
   bool AddonAllowsLoad(nsIURI* aURI, bool aExplicit = false);
 
   // Call these to avoid the cost of virtual dispatch.
-  bool FastEquals(nsIPrincipal* aOther);
-  bool FastEqualsConsideringDomain(nsIPrincipal* aOther);
-  bool FastSubsumes(nsIPrincipal* aOther);
-  bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
-  bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
+  inline bool FastEquals(nsIPrincipal* aOther);
+  inline bool FastEqualsConsideringDomain(nsIPrincipal* aOther);
+  inline bool FastSubsumes(nsIPrincipal* aOther);
+  inline bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
+  inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
 protected:
   virtual ~BasePrincipal();
@@ -299,6 +300,101 @@ protected:
   PrincipalKind mKind;
   bool mDomainSet;
 };
+
+inline bool
+BasePrincipal::FastEquals(nsIPrincipal* aOther)
+{
+  auto other = Cast(aOther);
+  if (Kind() != other->Kind()) {
+    // Principals of different kinds can't be equal.
+    return false;
+  }
+
+  // Two principals are considered to be equal if their origins are the same.
+  // If the two principals are codebase principals, their origin attributes
+  // (aka the origin suffix) must also match.
+  // If the two principals are null principals, they're only equal if they're
+  // the same object.
+  if (Kind() == eNullPrincipal || Kind() == eSystemPrincipal) {
+    return this == other;
+  }
+
+  if (mOriginNoSuffix) {
+    if (Kind() == eCodebasePrincipal) {
+      return mOriginNoSuffix == other->mOriginNoSuffix &&
+             mOriginSuffix == other->mOriginSuffix;
+    }
+
+    MOZ_ASSERT(Kind() == eExpandedPrincipal);
+    return mOriginNoSuffix == other->mOriginNoSuffix;
+  }
+
+  // If mOriginNoSuffix is null on one of our principals, we must fall back
+  // to the slow path.
+  return Subsumes(aOther, DontConsiderDocumentDomain) &&
+         other->Subsumes(this, DontConsiderDocumentDomain);
+}
+
+inline bool
+BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther)
+{
+  // If neither of the principals have document.domain set, we use the fast path
+  // in Equals().  Otherwise, we fall back to the slow path below.
+  auto other = Cast(aOther);
+  if (!mDomainSet && !other->mDomainSet) {
+    return FastEquals(aOther);
+  }
+
+  return Subsumes(aOther, ConsiderDocumentDomain) &&
+         other->Subsumes(this, ConsiderDocumentDomain);
+}
+
+inline bool
+BasePrincipal::FastSubsumes(nsIPrincipal* aOther)
+{
+  // If two principals are equal, then they both subsume each other.
+  // We deal with two special cases first:
+  // Null principals only subsume each other if they are equal, and are only
+  // equal if they're the same object.
+  // Also, if mOriginNoSuffix is null, FastEquals falls back to the slow path
+  // using Subsumes, so we don't want to use it in that case to avoid an
+  // infinite recursion.
+  auto other = Cast(aOther);
+  if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
+    return this == other;
+  }
+  if (mOriginNoSuffix && FastEquals(aOther)) {
+    return true;
+  }
+
+  // Otherwise, fall back to the slow path.
+  return Subsumes(aOther, DontConsiderDocumentDomain);
+}
+
+inline bool
+BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther)
+{
+  // If neither of the principals have document.domain set, we hand off to
+  // FastSubsumes() which has fast paths for some special cases. Otherwise, we fall
+  // back to the slow path below.
+  if (!mDomainSet && !Cast(aOther)->mDomainSet) {
+    return FastSubsumes(aOther);
+  }
+
+  return Subsumes(aOther, ConsiderDocumentDomain);
+}
+
+inline bool
+BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther)
+{
+  if (Kind() == eCodebasePrincipal &&
+      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+            mOriginAttributes, Cast(aOther)->mOriginAttributes)) {
+    return false;
+  }
+
+ return SubsumesInternal(aOther, ConsiderDocumentDomain);
+}
 
 } // namespace mozilla
 
