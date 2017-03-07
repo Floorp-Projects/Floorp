@@ -337,8 +337,8 @@ DXGITextureData::FillInfo(TextureData::Info& aInfo) const
 void
 D3D11TextureData::SyncWithObject(SyncObject* aSyncObject)
 {
-  if (!aSyncObject || mHasSynchronization) {
-    // When we have per texture synchronization we sync using the keyed mutex.
+  if (!aSyncObject || !NS_IsMainThread() || mIsForOutOfBandContent) {
+    // When off the main thread we sync using a keyed mutex per texture.
     return;
   }
 
@@ -394,10 +394,6 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
   CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
                                 aSize.width, aSize.height, 1, 1,
                                 D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
-
-  if (aFormat == SurfaceFormat::NV12) {
-    newDesc.Format = DXGI_FORMAT_NV12;
-  }
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
   if (!NS_IsMainThread() || !!(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) {
@@ -1199,15 +1195,10 @@ CompositingRenderTargetD3D11::GetSize() const
   return TextureSourceD3D11::GetSize();
 }
 
-SyncObjectD3D11::SyncObjectD3D11(SyncHandle aSyncHandle, ID3D11Device* aDevice)
+SyncObjectD3D11::SyncObjectD3D11(SyncHandle aSyncHandle)
  : mSyncHandle(aSyncHandle)
 {
-  if (!aDevice) {
-    mD3D11Device = DeviceManagerDx::Get()->GetContentDevice();
-    return;
-  }
-
-  mD3D11Device = aDevice;
+  mD3D11Device = DeviceManagerDx::Get()->GetContentDevice();
 }
 
 bool
@@ -1217,7 +1208,9 @@ SyncObjectD3D11::Init()
     return true;
   }
 
-  HRESULT hr = mD3D11Device->OpenSharedResource(
+  RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
+
+  HRESULT hr = device->OpenSharedResource(
     mSyncHandle,
     __uuidof(ID3D11Texture2D),
     (void**)(ID3D11Texture2D**)getter_AddRefs(mD3D11Texture));
@@ -1253,7 +1246,7 @@ bool
 SyncObjectD3D11::IsSyncObjectValid()
 {
   RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
-  if (!dev || (NS_IsMainThread() && dev != mD3D11Device)) {
+  if (!dev || (dev != mD3D11Device)) {
     return false;
   }
   return true;
@@ -1284,18 +1277,12 @@ SyncObjectD3D11::FinalizeFrame()
   box.front = box.top = box.left = 0;
   box.back = box.bottom = box.right = 1;
 
-  RefPtr<ID3D11Device> dev;
-  mD3D11Texture->GetDevice(getter_AddRefs(dev));
-
-  if (dev == DeviceManagerDx::Get()->GetContentDevice()) {
+  RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
+  if (!dev) {
     if (DeviceManagerDx::Get()->HasDeviceReset()) {
       return;
     }
-  }
-
-  if (dev != mD3D11Device) {
-    gfxWarning() << "Attempt to sync texture from invalid device.";
-    return;
+    MOZ_CRASH("GFX: Invalid D3D11 content device");
   }
 
   RefPtr<ID3D11DeviceContext> ctx;
