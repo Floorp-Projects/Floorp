@@ -4353,20 +4353,6 @@ SearchService.prototype = {
   _recordEngineTelemetry() {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_ENGINE_COUNT")
             .add(Object.keys(this._engines).length);
-    let hasUpdates = false;
-    let hasIconUpdates = false;
-    for (let name in this._engines) {
-      let engine = this._engines[name];
-      if (engine._hasUpdates) {
-        hasUpdates = true;
-        if (engine._iconUpdateURL) {
-          hasIconUpdates = true;
-          break;
-        }
-      }
-    }
-    Services.telemetry.getHistogramById("SEARCH_SERVICE_HAS_UPDATES").add(hasUpdates);
-    Services.telemetry.getHistogramById("SEARCH_SERVICE_HAS_ICON_UPDATES").add(hasIconUpdates);
   },
 
   /**
