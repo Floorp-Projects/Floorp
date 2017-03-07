@@ -1180,8 +1180,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // only need to return the hint if the overall computation of
     // whether we establish a containing block has changed.
 
-    // This depends on data in nsStyleDisplay and nsStyleEffects, so we
-    // do it here.
+    // This depends on data in nsStyleDisplay, nsStyleEffects and
+    // nsStyleSVGReset, so we do it here.
 
     // Note that it's perhaps good for this test to be last because it
     // doesn't use Peek* functions to get the structs on the old
