@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
           is(stripTrailingSlash(prin.URI.spec), url, 'Principal uri is correct: ' + url);
           function stripPath(s) { return s.replace(/(.*\/\/.+)\/.*/, '$1'); };
           is(prin.originNoSuffix, stripPath(url), 'Principal origin is correct: ' + prin.originNoSuffix);
-          is(prin.originAttributes.addonId, 'imaginaryaddon-' + url[url.indexOf('/') + 2], 'addonId is correct');
+          is(prin.addonId, 'imaginaryaddon-' + url[url.indexOf('/') + 2], 'addonId is correct');
           if (/_blank/.test(url)) {
             is(SpecialPowers.wrap(ifr.contentWindow).document.documentElement.innerHTML,
                '<head></head><body></body>', 'blank document looks right');

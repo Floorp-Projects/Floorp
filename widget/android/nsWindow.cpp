@@ -784,12 +784,9 @@ nsWindow::AndroidView::GetSettings(JSContext* aCx, JS::MutableHandleValue aOut)
         return NS_OK;
     }
 
-    JNIEnv* const env = jni::GetGeckoThreadEnv();
-    env->MonitorEnter(mSettings.Get());
-    nsresult rv = widget::EventDispatcher::UnboxBundle(aCx, mSettings, aOut);
-    env->MonitorExit(mSettings.Get());
-
-    return rv;
+    // Lock to prevent races with UI thread.
+    auto lock = mSettings.Lock();
+    return widget::EventDispatcher::UnboxBundle(aCx, mSettings, aOut);
 }
 
 /**

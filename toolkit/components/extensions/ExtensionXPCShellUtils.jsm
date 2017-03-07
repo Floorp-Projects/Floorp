@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["ExtensionTestUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -27,6 +28,14 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
 
 /* exported ExtensionTestUtils */
 
+const {
+  promiseDocumentLoaded,
+  promiseEvent,
+  promiseObserved,
+} = ExtensionUtils;
+
+var REMOTE_CONTENT_SCRIPTS = false;
+
 let BASE_MANIFEST = Object.freeze({
   "applications": Object.freeze({
     "gecko": Object.freeze({
@@ -39,6 +48,108 @@ let BASE_MANIFEST = Object.freeze({
   "name": "name",
   "version": "0",
 });
+
+
+function frameScript() {
+  Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
+
+  ExtensionContent.init(this);
+  addEventListener("unload", () => {
+    ExtensionContent.uninit(this);
+  });
+}
+
+const FRAME_SCRIPT = `data:text/javascript,(${frameScript}).call(this)`;
+
+
+const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeURI(
+  `<?xml version="1.0"?>
+  <window id="documentElement"/>`);
+
+let kungFuDeathGrip = new Set();
+function promiseBrowserLoaded(browser, url) {
+  return new Promise(resolve => {
+    const listener = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIWebProgressListener]),
+
+      onStateChange(webProgress, request, stateFlags, statusCode) {
+        let requestUrl = request.URI ? request.URI.spec : webProgress.DOMWindow.location.href;
+
+        if (webProgress.isTopLevel && requestUrl === url &&
+            (stateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
+          resolve();
+          kungFuDeathGrip.delete(listener);
+          browser.removeProgressListener(listener);
+        }
+      },
+    };
+
+    // addProgressListener only supports weak references, so we need to
+    // use one. But we also need to make sure it stays alive until we're
+    // done with it, so thunk away a strong reference to keep it alive.
+    kungFuDeathGrip.add(listener);
+    browser.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+  });
+}
+
+class ContentPage {
+  constructor(remote = REMOTE_CONTENT_SCRIPTS) {
+    this.remote = remote;
+
+    this.browserReady = this._initBrowser();
+  }
+
+  async _initBrowser() {
+    this.windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+
+    let system = Services.scriptSecurityManager.getSystemPrincipal();
+
+    let chromeShell = this.windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
+                                            .getInterface(Ci.nsIDocShell)
+                                            .QueryInterface(Ci.nsIWebNavigation);
+
+    chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.loadURI(XUL_URL, 0, null, null, null);
+
+    await promiseObserved("chrome-document-global-created",
+                          win => win.document == chromeShell.document);
+
+    let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
+
+    let browser = chromeDoc.createElement("browser");
+    browser.setAttribute("type", "content");
+
+    let awaitFrameLoader = Promise.resolve();
+    if (this.remote) {
+      awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
+      browser.setAttribute("remote", "true");
+    }
+
+    chromeDoc.documentElement.appendChild(browser);
+
+    await awaitFrameLoader;
+    browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
+
+    this.browser = browser;
+    return browser;
+  }
+
+  async loadURL(url) {
+    await this.browserReady;
+
+    this.browser.loadURI(url);
+    return promiseBrowserLoaded(this.browser, url);
+  }
+
+  async close() {
+    await this.browserReady;
+
+    this.browser = null;
+
+    this.windowlessBrowser.close();
+    this.windowlessBrowser = null;
+  }
+}
 
 class ExtensionWrapper {
   constructor(extension, testScope) {
@@ -127,17 +238,15 @@ class ExtensionWrapper {
       });
   }
 
-  unload() {
+  async unload() {
     if (this.state != "running") {
       throw new Error("Extension not running");
     }
     this.state = "unloading";
 
-    this.extension.shutdown();
+    await this.extension.shutdown();
 
     this.state = "unloaded";
-
-    return Promise.resolve();
   }
 
   /*
@@ -302,5 +411,21 @@ var ExtensionTestUtils = {
     let extension = Extension.generate(data);
 
     return new ExtensionWrapper(extension, this.currentScope);
+  },
+
+  get remoteContentScripts() {
+    return REMOTE_CONTENT_SCRIPTS;
+  },
+
+  set remoteContentScripts(val) {
+    REMOTE_CONTENT_SCRIPTS = !!val;
+  },
+
+  loadContentPage(url, remote = undefined) {
+    let contentPage = new ContentPage(remote);
+
+    return contentPage.loadURL(url).then(() => {
+      return contentPage;
+    });
   },
 };

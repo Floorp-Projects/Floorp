@@ -157,6 +157,15 @@ public:
     mOriginAttributes = aOriginAttributes;
   }
 
+  void
+  SetAddonId(nsIPrincipal* aPrincipal)
+  {
+    nsAutoString addonId;
+    aPrincipal->GetAddonId(addonId);
+
+    mAddonId = addonId;
+  }
+
   bool
   PopulateArgumentsSequence(Sequence<JS::Value>& aSequence) const
   {
@@ -249,6 +258,8 @@ public:
   nsString mInnerIDString;
 
   OriginAttributes mOriginAttributes;
+
+  nsString mAddonId;
 
   nsString mMethodString;
 
@@ -1217,6 +1228,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     }
 
     oa = principal->OriginAttributesRef();
+    callData->SetAddonId(principal);
 
 #ifdef DEBUG
     if (!nsContentUtils::IsSystemPrincipal(principal)) {
@@ -1499,6 +1511,8 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
   if (ToJSValue(aCx, aData->mOriginAttributes, &originAttributesValue)) {
     event.mOriginAttributes = originAttributesValue;
   }
+
+  event.mAddonId = aData->mAddonId;
 
   event.mID.Construct();
   event.mInnerID.Construct();

@@ -46,13 +46,11 @@ function* testSteps()
 
   info("Reading out contents of compiled blob");
 
+  File.createFromNsIFile(file).then(grabEventAndContinueHandler);
+  let domFile = yield undefined;
+
   let fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  let domFile;
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
   fileReader.readAsArrayBuffer(domFile);
 
   yield undefined;
@@ -85,12 +83,11 @@ function* testSteps()
 
   info("Reading out contents of new compiled blob");
 
+  File.createFromNsIFile(file).then(grabEventAndContinueHandler);
+  domFile = yield undefined;
+
   fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
   fileReader.readAsArrayBuffer(domFile);
 
   yield undefined;
@@ -113,14 +110,13 @@ function* testSteps()
   verifyWasmModule(request.result, wasmData.wasm);
   yield undefined;
 
-  info("Reading contents of new compiled blob again");
+  info("Reading out contents of new compiled blob again");
+
+  File.createFromNsIFile(file).then(grabEventAndContinueHandler);
+  domFile = yield undefined;
 
   fileReader = new FileReader();
   fileReader.onload = continueToNextStepSync;
-
-  File.createFromNsIFile(file).then(file => { domFile = file; }).then(continueToNextStepSync);
-  yield undefined;
-
   fileReader.readAsArrayBuffer(domFile);
 
   yield undefined;

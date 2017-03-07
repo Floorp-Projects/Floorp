@@ -688,6 +688,7 @@ stubPackets.set("console.log('foobar', 'test')", {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "foobar",
       "test"
@@ -712,6 +713,7 @@ stubPackets.set("console.log(undefined)", {
   "from": "server1.conn1.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "undefined"
@@ -737,6 +739,7 @@ stubPackets.set("console.warn('danger, will robinson!')", {
   "from": "server1.conn2.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "danger, will robinson!"
     ],
@@ -760,6 +763,7 @@ stubPackets.set("console.log(NaN)", {
   "from": "server1.conn3.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "NaN"
@@ -785,6 +789,7 @@ stubPackets.set("console.log(null)", {
   "from": "server1.conn4.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "null"
@@ -810,6 +815,7 @@ stubPackets.set("console.log('鼬')", {
   "from": "server1.conn5.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "鼬"
     ],
@@ -833,6 +839,7 @@ stubPackets.set("console.clear()", {
   "from": "server1.conn6.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [],
     "columnNumber": 27,
     "counter": null,
@@ -854,6 +861,7 @@ stubPackets.set("console.count('bar')", {
   "from": "server1.conn7.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -880,6 +888,7 @@ stubPackets.set("console.assert(false, {message: 'foobar'})", {
   "from": "server1.conn8.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "object",
@@ -933,6 +942,7 @@ stubPackets.set("console.log('hello \nfrom \rthe \"string world!')", {
   "from": "server1.conn9.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "hello \nfrom \rthe \"string world!"
     ],
@@ -956,6 +966,7 @@ stubPackets.set("console.log('úṇĩçödê țĕșť')", {
   "from": "server1.conn10.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "úṇĩçödê țĕșť"
     ],
@@ -979,6 +990,7 @@ stubPackets.set("console.dirxml(window)", {
   "from": "server1.conn11.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "object",
@@ -1014,6 +1026,7 @@ stubPackets.set("console.trace()", {
   "from": "server1.conn12.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [],
     "columnNumber": 3,
     "counter": null,
@@ -1058,6 +1071,7 @@ stubPackets.set("console.time('bar')", {
   "from": "server1.conn13.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -1083,6 +1097,7 @@ stubPackets.set("console.timeEnd('bar')", {
   "from": "server1.conn13.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -1109,6 +1124,7 @@ stubPackets.set("console.table('bar')", {
   "from": "server1.conn14.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -1132,6 +1148,7 @@ stubPackets.set("console.table(['a', 'b', 'c'])", {
   "from": "server1.conn15.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       {
         "type": "object",
@@ -1172,6 +1189,7 @@ stubPackets.set("console.group('bar')", {
   "from": "server1.conn16.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -1195,6 +1213,7 @@ stubPackets.set("console.groupEnd('bar')", {
   "from": "server1.conn16.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "bar"
     ],
@@ -1218,6 +1237,7 @@ stubPackets.set("console.groupCollapsed('foo')", {
   "from": "server1.conn17.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "foo"
     ],
@@ -1241,6 +1261,7 @@ stubPackets.set("console.groupEnd('foo')", {
   "from": "server1.conn17.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "foo"
     ],
@@ -1264,6 +1285,7 @@ stubPackets.set("console.group()", {
   "from": "server1.conn18.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [],
     "columnNumber": 1,
     "counter": null,
@@ -1285,6 +1307,7 @@ stubPackets.set("console.groupEnd()", {
   "from": "server1.conn18.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [],
     "columnNumber": 1,
     "counter": null,
@@ -1306,6 +1329,7 @@ stubPackets.set("console.log(%cfoobar)", {
   "from": "server1.conn19.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
+    "addonId": "",
     "arguments": [
       "foo",
       "bar"

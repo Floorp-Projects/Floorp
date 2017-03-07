@@ -55,7 +55,7 @@ regExp.lastIndex = {
     }
 };
 regExp[Symbol.match]("a");
-assertEq(regExp.lastIndex, 0, "Update the expected value to |9001| after fixing 1317397");
+assertEq(regExp.lastIndex, 9001);
 
 // Case 3.b: Removes sticky flag without match, validate by checking lastIndex.
 var regExp = new RegExp("a", "y");
@@ -69,7 +69,7 @@ regExp.lastIndex = {
     }
 };
 regExp[Symbol.match]("a");
-assertEq(regExp.lastIndex, 0, "Update the expected value to |9002| after fixing 1317397");
+assertEq(regExp.lastIndex, 9002);
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

@@ -746,12 +746,18 @@ int ProfileBuffer::FindLastSampleOfThread(int aThreadId)
 {
   // We search backwards from mWritePos-1 to mReadPos.
   // Adding mEntrySize makes the result of the modulus positive.
-  for (int readPos  = (mWritePos + mEntrySize - 1) % mEntrySize;
-           readPos !=  (mReadPos + mEntrySize - 1) % mEntrySize;
-           readPos  =   (readPos + mEntrySize - 1) % mEntrySize) {
-    ProfileBufferEntry entry = mEntries[readPos];
+  int currPos = (mWritePos + mEntrySize - 1) % mEntrySize;
+  int stopPos = (mReadPos + mEntrySize - 1) % mEntrySize;
+  while (currPos != stopPos) {
+    ProfileBufferEntry entry = mEntries[currPos];
     if (entry.isThreadId() && entry.mTagInt == aThreadId) {
-      return readPos;
+      return currPos;
+    }
+    currPos--;
+    if (currPos < 0) {
+      // This almost never happens, so is perfectly predicted, and hence
+      // almost free.
+      currPos = mEntrySize - 1;
     }
   }
 

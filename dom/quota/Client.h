@@ -13,6 +13,7 @@
 
 #include "PersistenceType.h"
 
+class nsIFile;
 class nsIRunnable;
 
 #define IDB_DIRECTORY_NAME "idb"
@@ -89,6 +90,12 @@ public:
   }
 
   // Methods which are called on the IO thred.
+  virtual nsresult
+  UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory)
+  {
+    return NS_OK;
+  }
+
   virtual nsresult
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,

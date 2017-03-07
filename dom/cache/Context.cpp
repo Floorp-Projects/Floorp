@@ -260,7 +260,6 @@ Context::QuotaInitRunnable::OpenDirectory()
   QuotaManager::Get()->OpenDirectory(PERSISTENCE_TYPE_DEFAULT,
                                      mQuotaInfo.mGroup,
                                      mQuotaInfo.mOrigin,
-                                     mQuotaInfo.mIsApp,
                                      quota::Client::DOMCACHE,
                                      /* aExclusive */ false,
                                      this);
@@ -377,8 +376,7 @@ Context::QuotaInitRunnable::Run()
       nsresult rv = QuotaManager::GetInfoFromPrincipal(principal,
                                                        &mQuotaInfo.mSuffix,
                                                        &mQuotaInfo.mGroup,
-                                                       &mQuotaInfo.mOrigin,
-                                                       &mQuotaInfo.mIsApp);
+                                                       &mQuotaInfo.mOrigin);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         resolver->Resolve(rv);
         break;
@@ -437,7 +435,6 @@ Context::QuotaInitRunnable::Run()
                                                   mQuotaInfo.mSuffix,
                                                   mQuotaInfo.mGroup,
                                                   mQuotaInfo.mOrigin,
-                                                  mQuotaInfo.mIsApp,
                                                   getter_AddRefs(mQuotaInfo.mDir));
       if (NS_FAILED(rv)) {
         resolver->Resolve(rv);
