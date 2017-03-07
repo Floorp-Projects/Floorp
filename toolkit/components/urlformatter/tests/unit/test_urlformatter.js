@@ -27,11 +27,9 @@ function run_test() {
                 QueryInterface(Ci.nsIXULRuntime);
   var abi = macutils && macutils.isUniversalBinary ? "Universal-gcc3" : appInfo.XPCOMABI;
 
-  let channel = "default";
   let defaults = prefs.QueryInterface(Ci.nsIPrefService).getDefaultBranch(null);
-  try {
-    channel = defaults.getCharPref("app.update.channel");
-  } catch (e) {}
+  let channel = defaults.getCharPref("app.update.channel", "default");
+
   // Set distribution values.
   defaults.setCharPref("distribution.id", "bacon");
   defaults.setCharPref("distribution.version", "1.0");

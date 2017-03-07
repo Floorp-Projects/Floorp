@@ -2793,9 +2793,7 @@ var gMenuButtonUpdateBadge = {
   cancelObserverRegistered: false,
 
   init() {
-    try {
-      this.enabled = Services.prefs.getBoolPref("app.update.badge");
-    } catch (e) {}
+    this.enabled = Services.prefs.getBoolPref("app.update.badge", false);
     if (this.enabled) {
       this.badgeWaitTime = Services.prefs.getIntPref("app.update.badgeWaitTime",
                                                      345600); // 4 days
