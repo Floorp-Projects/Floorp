@@ -9593,24 +9593,6 @@
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize firefox cookies (ms). A subset of FX_SANITIZE_COOKIES."
   },
-  "FX_SANITIZE_LOADED_FLASH": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1251469],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize Flash when it's already loaded (ms). A subset of FX_SANITIZE_PLUGINS."
-  },
-  "FX_SANITIZE_UNLOADED_FLASH": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1251469],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize Flash when it's not yet loaded (ms). A subset of FX_SANITIZE_PLUGINS."
-  },
   "FX_SANITIZE_HISTORY": {
     "alert_emails": ["firefox-dev@mozilla.org"],
     "expires_in_version": "never",
