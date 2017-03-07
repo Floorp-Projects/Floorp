@@ -139,12 +139,13 @@ class ArtifactJob(object):
     # be the same across platforms.
     _test_archive_suffix = '.common.tests.zip'
 
-    def __init__(self, package_re, tests_re, log=None, download_symbols=False):
+    def __init__(self, package_re, tests_re, log=None, download_symbols=False, substs=None):
         self._package_re = re.compile(package_re)
         self._tests_re = None
         if tests_re:
             self._tests_re = re.compile(tests_re)
         self._log = log
+        self._substs = substs
         self._symbols_archive_suffix = None
         if download_symbols:
             self._symbols_archive_suffix = 'crashreporter-symbols.zip'
@@ -308,28 +309,28 @@ class MacArtifactJob(ArtifactJob):
 
     def process_package_artifact(self, filename, processed_filename):
         tempdir = tempfile.mkdtemp()
+        oldcwd = os.getcwd()
         try:
             self.log(logging.INFO, 'artifact',
                 {'tempdir': tempdir},
                 'Unpacking DMG into {tempdir}')
-            mozinstall.install(filename, tempdir) # Doesn't handle already mounted DMG files nicely:
-
-            # InstallError: Failed to install "/Users/nalexander/.mozbuild/package-frontend/b38eeeb54cdcf744-firefox-44.0a1.en-US.mac.dmg (local variable 'appDir' referenced before assignment)"
-
-            #   File "/Users/nalexander/Mozilla/gecko/mobile/android/mach_commands.py", line 250, in artifact_install
-            #     return artifacts.install_from(source, self.distdir)
-            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 457, in install_from
-            #     return self.install_from_hg(source, distdir)
-            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 445, in install_from_hg
-            #     return self.install_from_url(url, distdir)
-            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 418, in install_from_url
-            #     return self.install_from_file(filename, distdir)
-            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 336, in install_from_file
-            #     mozinstall.install(filename, tempdir)
-            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 117, in install
-            #     install_dir = _install_dmg(src, dest)
-            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 261, in _install_dmg
-            #     subprocess.call('hdiutil detach %s -quiet' % appDir,
+            if self._substs['HOST_OS_ARCH'] == 'Linux':
+                # This is a cross build, use hfsplus and dmg tools to extract the dmg.
+                os.chdir(tempdir)
+                with open(os.devnull, 'wb') as devnull:
+                    subprocess.check_call([
+                        self._substs['DMG_TOOL'],
+                        'extract',
+                        filename,
+                        'extracted_img',
+                    ], stdout=devnull)
+                    subprocess.check_call([
+                        self._substs['HFS_TOOL'],
+                        'extracted_img',
+                        'extractall'
+                    ], stdout=devnull)
+            else:
+                mozinstall.install(filename, tempdir)
 
             bundle_dirs = glob.glob(mozpath.join(tempdir, '*.app'))
             if len(bundle_dirs) != 1:
@@ -395,6 +396,7 @@ class MacArtifactJob(ArtifactJob):
                         writer.add(destpath.encode('utf-8'), f.open(), mode=f.mode)
 
         finally:
+            os.chdir(oldcwd)
             try:
                 shutil.rmtree(tempdir)
             except (OSError, IOError):
@@ -487,9 +489,10 @@ JOB_DETAILS = {
 
 
 
-def get_job_details(job, log=None, download_symbols=False):
+def get_job_details(job, log=None, download_symbols=False, substs=None):
     cls, (package_re, tests_re) = JOB_DETAILS[job]
-    return cls(package_re, tests_re, log=log, download_symbols=download_symbols)
+    return cls(package_re, tests_re, log=log, download_symbols=download_symbols,
+               substs=substs)
 
 def cachedmethod(cachefunc):
     '''Decorator to wrap a class or instance method with a memoizing callable that
@@ -800,7 +803,9 @@ class Artifacts(object):
         self._topsrcdir = topsrcdir
 
         try:
-            self._artifact_job = get_job_details(self._job, log=self._log, download_symbols=self._download_symbols)
+            self._artifact_job = get_job_details(self._job, log=self._log,
+                                                 download_symbols=self._download_symbols,
+                                                 substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': self._job},
