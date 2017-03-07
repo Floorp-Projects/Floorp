@@ -561,6 +561,15 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
 
   private:
+    // List of non-ephemeron weak containers to sweep during beginSweepingZoneGroup.
+    js::ActiveThreadData<mozilla::LinkedList<JS::WeakCache<void*>>> weakCaches_;
+  public:
+    mozilla::LinkedList<JS::WeakCache<void*>>& weakCaches() { return weakCaches_.ref(); }
+    void registerWeakCache(JS::WeakCache<void*>* cachep) {
+        weakCaches().insertBack(cachep);
+    }
+
+  private:
     /*
      * Head of circular list of all enabled Debuggers that have
      * onNewGlobalObject handler methods established.
