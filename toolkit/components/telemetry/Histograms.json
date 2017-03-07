@@ -10740,13 +10740,6 @@
     "description": "OpenGL compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
     "bug_numbers": [1002846]
   },
-  "XHR_IN_WORKER": {
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "bug_numbers": [1280229],
-    "description": "Number of the use of XHR in workers."
-  },
   "WEBVTT_TRACK_KINDS": {
     "alert_emails": ["alwu@mozilla.com"],
     "expires_in_version": "55",
