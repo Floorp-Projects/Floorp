@@ -203,6 +203,13 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        webView.setCallback(null);
+    }
+
     public String getUrl() {
         return webView.getUrl();
     }
