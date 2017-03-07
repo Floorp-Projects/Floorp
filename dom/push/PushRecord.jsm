@@ -85,7 +85,6 @@ PushRecord.prototype = {
         Math.round(8 * Math.pow(daysElapsed, -0.8)),
         prefs.get("maxQuotaPerSubscription")
       );
-      Services.telemetry.getHistogramById("PUSH_API_QUOTA_RESET_TO").add(this.quota);
     }
   },
 
@@ -123,11 +122,6 @@ PushRecord.prototype = {
       return;
     }
     this.quota = Math.max(this.quota - 1, 0);
-    // We check for ctime > 0 to skip older records that did not have ctime.
-    if (this.isExpired() && this.ctime > 0) {
-      let duration = Date.now() - this.ctime;
-      Services.telemetry.getHistogramById("PUSH_API_QUOTA_EXPIRATION_TIME").add(duration / 1000);
-    }
   },
 
   /**

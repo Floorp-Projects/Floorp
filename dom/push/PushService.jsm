@@ -57,16 +57,6 @@ const PUSH_SERVICE_CONNECTION_DISABLE = 3;
 const PUSH_SERVICE_ACTIVE_OFFLINE = 4;
 const PUSH_SERVICE_RUNNING = 5;
 
-// Telemetry failure to send push notification to Service Worker reasons.
-// Key not found in local database.
-const kDROP_NOTIFICATION_REASON_KEY_NOT_FOUND = 0;
-// User cleared history.
-const kDROP_NOTIFICATION_REASON_NO_HISTORY = 1;
-// Version of message received not newer than previous one.
-const kDROP_NOTIFICATION_REASON_NO_VERSION_INCREMENT = 2;
-// Subscription has expired.
-const kDROP_NOTIFICATION_REASON_EXPIRED = 3;
-
 /**
  * State is change only in couple of functions:
  *   init - change state to PUSH_SERVICE_INIT if state was PUSH_SERVICE_UNINIT
@@ -660,8 +650,6 @@ this.PushService = {
     if (!record) {
       return;
     }
-
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFY_REGISTRATION_LOST").add();
     gPushNotifier.notifySubscriptionChange(record.scope, record.principal);
   },
 
@@ -735,12 +723,6 @@ this.PushService = {
       });
   },
 
-  _recordDidNotNotify: function(reason) {
-    Services.telemetry.
-      getHistogramById("PUSH_API_NOTIFICATION_RECEIVED_BUT_DID_NOT_NOTIFY").
-      add(reason);
-  },
-
   /**
    * Dispatches an incoming message to a service worker, recalculating the
    * quota for the associated push registration. If the quota is exceeded,
@@ -763,7 +745,6 @@ this.PushService = {
    */
   receivedPushMessage(keyID, messageID, headers, data, updateFunc) {
     console.debug("receivedPushMessage()");
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFICATION_RECEIVED").add();
 
     return this._updateRecordAfterPush(keyID, updateFunc).then(record => {
       if (record.quotaApplies()) {
@@ -796,14 +777,12 @@ this.PushService = {
   _updateRecordAfterPush(keyID, updateFunc) {
     return this.getByKeyID(keyID).then(record => {
       if (!record) {
-        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_KEY_NOT_FOUND);
         throw new Error("No record for key ID " + keyID);
       }
       return record.getLastVisit().then(lastVisit => {
         // As a special case, don't notify the service worker if the user
         // cleared their history.
         if (!isFinite(lastVisit)) {
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_NO_HISTORY);
           throw new Error("Ignoring message sent to unvisited origin");
         }
         return lastVisit;
@@ -813,7 +792,6 @@ this.PushService = {
         return this._db.update(keyID, record => {
           let newRecord = updateFunc(record);
           if (!newRecord) {
-            this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_NO_VERSION_INCREMENT);
             return null;
           }
           // Because `unregister` is advisory only, we can still receive messages
@@ -877,7 +855,6 @@ this.PushService = {
       return record;
     }).then(record => {
       if (record.isExpired()) {
-        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
         // Drop the registration in the background. If the user returns to the
         // site, the service worker will be notified on the next `idle-daily`
         // event.
@@ -1004,7 +981,6 @@ this.PushService = {
   _registerWithServer: function(aPageRecord) {
     console.debug("registerWithServer()", aPageRecord);
 
-    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_ATTEMPT").add();
     return this._sendRequest("register", aPageRecord)
       .then(record => this._onRegisterSuccess(record),
             err => this._onRegisterError(err))
@@ -1020,14 +996,7 @@ this.PushService = {
   },
 
   _sendUnregister(aRecord, aReason) {
-    Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_ATTEMPT").add();
-    return this._sendRequest("unregister", aRecord, aReason).then(function(v) {
-      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_SUCCEEDED").add();
-      return v;
-    }).catch(function(e) {
-      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_FAILED").add();
-      return Promise.reject(e);
-    });
+    return this._sendRequest("unregister", aRecord, aReason);
   },
 
   /**
@@ -1038,12 +1007,7 @@ this.PushService = {
     console.debug("_onRegisterSuccess()");
 
     return this._db.put(aRecord)
-      .then(record => {
-        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_SUCCEEDED").add();
-        return record;
-      })
       .catch(error => {
-        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
         // Unable to save. Destroy the subscription in the background.
         this._backgroundUnregister(aRecord,
                                    Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL);
@@ -1057,7 +1021,7 @@ this.PushService = {
    */
   _onRegisterError: function(reply) {
     console.debug("_onRegisterError()");
-    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
+
     if (!reply.error) {
       console.warn("onRegisterError: Called without valid error message!",
         reply);
