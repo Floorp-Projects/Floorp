@@ -149,10 +149,12 @@ protected:
                                                             const nsCString& aFilter) override;
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) override;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
+                                                    const OriginAttributes& aOriginAttributes,
                                                     const uint32_t& aFlags,
                                                     const nsCString& aNetworkInterface) override;
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(PDNSRequestParent* actor,
                                                              const nsCString& hostName,
+                                                             const OriginAttributes& aOriginAttributes,
                                                              const uint32_t& flags,
                                                              const nsCString& aNetworkInterface) override;
   virtual bool DeallocPDNSRequestParent(PDNSRequestParent*) override;
@@ -160,8 +162,10 @@ protected:
                                                          const Principal& aPrincipal,
                                                          const bool& aAnonymous) override;
   virtual mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(const nsString& hostname,
+                                                      const OriginAttributes& aOriginAttributes,
                                                       const uint16_t& flags) override;
   virtual mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(const nsString& hostname,
+                                                            const OriginAttributes& aOriginAttributes,
                                                             const uint16_t& flags,
                                                             const nsresult& reason) override;
   virtual PWebSocketEventListenerParent*

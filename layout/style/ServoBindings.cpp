@@ -993,6 +993,21 @@ Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen)
   }
 }
 
+void
+Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen)
+{
+  auto base =
+    reinterpret_cast<nsStyleAutoArray<StyleTransition>*>(aArray);
+
+  size_t oldLength = base->Length();
+
+  base->EnsureLengthAtLeast(aLen);
+
+  for (size_t i = oldLength; i < aLen; ++i) {
+    (*base)[i].SetInitialValues();
+  }
+}
+
 Keyframe*
 Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut aKeyframes,
                               float aOffset,

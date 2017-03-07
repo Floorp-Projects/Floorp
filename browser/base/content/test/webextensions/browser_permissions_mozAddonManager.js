@@ -11,4 +11,4 @@ async function installMozAM(filename) {
   });
 }
 
-add_task(() => testInstallMethod(installMozAM));
+add_task(() => testInstallMethod(installMozAM, "installAmo"));

@@ -4250,6 +4250,23 @@ ContentParent::RecvNotifyTabDestroying(const TabId& aTabId,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+ContentParent::RecvTabChildNotReady(const TabId& aTabId)
+{
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  RefPtr<TabParent> tp =
+    cpm->GetTopLevelTabParentByProcessAndTabId(this->ChildID(), aTabId);
+
+  if (!tp) {
+    NS_WARNING("Couldn't find TabParent for TabChildNotReady message.");
+    return IPC_OK();
+  }
+
+  tp->DispatchTabChildNotReadyEvent();
+
+  return IPC_OK();
+}
+
 nsTArray<TabContext>
 ContentParent::GetManagedTabContext()
 {
@@ -5075,6 +5092,13 @@ ContentParent::RecvUpdateChildKeyedScalars(
                 InfallibleTArray<KeyedScalarAction>&& aScalarActions)
 {
   TelemetryIPC::UpdateChildKeyedScalars(GeckoProcessType_Content, aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvRecordChildEvents(nsTArray<mozilla::Telemetry::ChildEventData>&& aEvents)
+{
+  TelemetryIPC::RecordChildEvents(GeckoProcessType_Content, aEvents);
   return IPC_OK();
 }
 

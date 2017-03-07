@@ -65,7 +65,8 @@ public:
 
   static void Shutdown();
 
-  nsresult Init(nsIChannel* aChannel, DataURIHandling aAllowDataURI);
+  MOZ_MUST_USE nsresult Init(nsIChannel* aChannel,
+                             DataURIHandling aAllowDataURI);
 
   void SetInterceptController(nsINetworkInterceptController* aInterceptController);
 
@@ -77,17 +78,20 @@ private:
 
   static void RemoveFromCorsPreflightCache(nsIURI* aURI,
                                            nsIPrincipal* aRequestingPrincipal);
-  static nsresult StartCORSPreflight(nsIChannel* aRequestChannel,
-                                     nsICorsPreflightCallback* aCallback,
-                                     nsTArray<nsCString>& aACUnsafeHeaders,
-                                     nsIChannel** aPreflightChannel);
+  static MOZ_MUST_USE nsresult
+  StartCORSPreflight(nsIChannel* aRequestChannel,
+                     nsICorsPreflightCallback* aCallback,
+                     nsTArray<nsCString>& aACUnsafeHeaders,
+                     nsIChannel** aPreflightChannel);
 
   ~nsCORSListenerProxy();
 
-  nsresult UpdateChannel(nsIChannel* aChannel, DataURIHandling aAllowDataURI,
-                         UpdateType aUpdateType);
-  nsresult CheckRequestApproved(nsIRequest* aRequest);
-  nsresult CheckPreflightNeeded(nsIChannel* aChannel, UpdateType aUpdateType);
+  MOZ_MUST_USE nsresult UpdateChannel(nsIChannel* aChannel,
+                                      DataURIHandling aAllowDataURI,
+                                      UpdateType aUpdateType);
+  MOZ_MUST_USE nsresult CheckRequestApproved(nsIRequest* aRequest);
+  MOZ_MUST_USE nsresult CheckPreflightNeeded(nsIChannel* aChannel,
+                                             UpdateType aUpdateType);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   // The principal that originally kicked off the request

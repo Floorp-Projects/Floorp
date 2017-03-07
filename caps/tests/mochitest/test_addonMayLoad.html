@@ -20,9 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
   let aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService).wrappedJSObject;
 
   SimpleTest.waitForExplicitFinish();
+  let oldAddonIdCallback = aps.setExtensionURIToAddonIdCallback(uri => uri.host);
   SimpleTest.registerCleanupFunction(function() {
-    aps.setAddonLoadURICallback('addonA', null);
-    aps.setAddonLoadURICallback('addonB', null);
+    aps.setAddonLoadURICallback('addona', null);
+    aps.setAddonLoadURICallback('addonb', null);
+    aps.setExtensionURIToAddonIdCallback(oldAddonIdCallback);
   });
 
   function tryLoad(sb, uri) {
@@ -39,42 +41,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
     return p;
   }
 
-  let exampleCom_addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com'), {addonId: 'addonA'}),
-                                         {wantGlobalProperties: ['XMLHttpRequest']});
-  let nullPrin_addonA = new Cu.Sandbox(ssm.createNullPrincipal({addonId: 'addonA'}),
-                                       {wantGlobalProperties: ['XMLHttpRequest']});
-  let exampleCom_addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com'), {addonId: 'addonB'}),
-                                         {wantGlobalProperties: ['XMLHttpRequest']});
+  let addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('moz-extension://addonA/'), {}),
+                              {wantGlobalProperties: ['XMLHttpRequest']});
+  let addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('moz-extension://addonB/'), {}),
+                              {wantGlobalProperties: ['XMLHttpRequest']});
 
   function uriForDomain(d) { return d + '/tests/caps/tests/mochitest/file_data.txt' }
 
-  tryLoad(exampleCom_addonA, uriForDomain('http://example.com'))
+  tryLoad(addonA, uriForDomain('http://test1.example.org'))
   .then(function(success) {
-    ok(success, "same-origin load should succeed for addon A");
-    return tryLoad(nullPrin_addonA, uriForDomain('http://example.com'));
-  }).then(function(success) {
-    ok(!success, "null-principal load should fail for addon A");
-    return tryLoad(exampleCom_addonB, uriForDomain('http://example.com'));
-  }).then(function(success) {
-    ok(success, "same-origin load should succeed for addon B");
-    return tryLoad(exampleCom_addonA, uriForDomain('http://test1.example.org'));
-  }).then(function(success) {
     ok(!success, "cross-origin load should fail for addon A");
-    aps.setAddonLoadURICallback('addonA', function(uri) { return /test1/.test(uri.host); });
-    aps.setAddonLoadURICallback('addonB', function(uri) { return /test2/.test(uri.host); });
-    return tryLoad(exampleCom_addonA, uriForDomain('http://test1.example.org'));
+    aps.setAddonLoadURICallback('addona', function(uri) { return /test1/.test(uri.host); });
+    aps.setAddonLoadURICallback('addonb', function(uri) { return /test2/.test(uri.host); });
+    return tryLoad(addonA, uriForDomain('http://test1.example.org'));
   }).then(function(success) {
     ok(success, "whitelisted cross-origin load of test1 should succeed for addon A");
-    return tryLoad(nullPrin_addonA, uriForDomain('http://test1.example.org'));
-  }).then(function(success) {
-    ok(!success, "whitelisted null principal load of test1 should still fail for addon A");
-    return tryLoad(exampleCom_addonB, uriForDomain('http://test1.example.org'));
+    return tryLoad(addonB, uriForDomain('http://test1.example.org'));
   }).then(function(success) {
     ok(!success, "non-whitelisted cross-origin load of test1 should fail for addon B");
-    return tryLoad(exampleCom_addonB, uriForDomain('http://test2.example.org'));
+    return tryLoad(addonB, uriForDomain('http://test2.example.org'));
   }).then(function(success) {
     ok(success, "whitelisted cross-origin load of test2 should succeed for addon B");
-    return tryLoad(exampleCom_addonA, uriForDomain('http://test2.example.org'));
+    return tryLoad(addonA, uriForDomain('http://test2.example.org'));
   }).then(function(success) {
     ok(!success, "non-whitelisted cross-origin load of test2 should fail for addon A");
     SimpleTest.finish();

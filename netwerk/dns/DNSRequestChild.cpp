@@ -171,7 +171,9 @@ public:
   {
     if (mDnsRequest->mIPCOpen) {
       // Send request to Parent process.
-      mDnsRequest->SendCancelDNSRequest(mDnsRequest->mHost, mDnsRequest->mFlags,
+      mDnsRequest->SendCancelDNSRequest(mDnsRequest->mHost,
+                                        mDnsRequest->mOriginAttributes,
+                                        mDnsRequest->mFlags,
                                         mDnsRequest->mNetworkInterface,
                                         mReasonForCancel);
     }
@@ -187,6 +189,7 @@ private:
 //-----------------------------------------------------------------------------
 
 DNSRequestChild::DNSRequestChild(const nsCString& aHost,
+                                 const OriginAttributes& aOriginAttributes,
                                  const uint32_t& aFlags,
                                  const nsCString& aNetworkInterface,
                                  nsIDNSListener *aListener,
@@ -195,6 +198,7 @@ DNSRequestChild::DNSRequestChild(const nsCString& aHost,
   , mTarget(target)
   , mResultStatus(NS_OK)
   , mHost(aHost)
+  , mOriginAttributes(aOriginAttributes)
   , mFlags(aFlags)
   , mNetworkInterface(aNetworkInterface)
   , mIPCOpen(false)
@@ -212,8 +216,8 @@ DNSRequestChild::StartRequest()
   }
 
   // Send request to Parent process.
-  gNeckoChild->SendPDNSRequestConstructor(this, mHost, mFlags,
-                                          mNetworkInterface);
+  gNeckoChild->SendPDNSRequestConstructor(this, mHost, mOriginAttributes,
+                                          mFlags, mNetworkInterface);
   mIPCOpen = true;
 
   // IPDL holds a reference until IPDL channel gets destroyed

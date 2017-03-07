@@ -2413,7 +2413,7 @@ CodeGeneratorMIPSShared::visitUDivOrMod(LUDivOrMod* ins)
     if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.ma_b(rhs, rhs, trap(ins, wasm::Trap::InvalidConversionToInteger), Assembler::Zero);
+                masm.ma_b(rhs, rhs, trap(ins, wasm::Trap::IntegerDivideByZero), Assembler::Zero);
             } else {
                 // Infinity|0 == 0
                 Label notzero;

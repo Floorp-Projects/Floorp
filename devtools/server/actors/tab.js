@@ -733,7 +733,7 @@ TabActor.prototype = {
       }
 
       // Collect the addonID from the document origin attributes.
-      let addonID = window.document.nodePrincipal.originAttributes.addonId;
+      let addonID = window.document.nodePrincipal.addonId;
 
       return {
         id,

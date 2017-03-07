@@ -243,6 +243,10 @@ StyleSheetInfo::AddSheet(StyleSheet* aSheet)
 void
 StyleSheetInfo::RemoveSheet(StyleSheet* aSheet)
 {
+  if ((aSheet == mSheets.ElementAt(0)) && (mSheets.Length() > 1)) {
+    StyleSheet::ChildSheetListBuilder::ReparentChildList(mSheets[1], mFirstChild);
+  }
+
   if (1 == mSheets.Length()) {
     NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
     delete this;
@@ -250,6 +254,25 @@ StyleSheetInfo::RemoveSheet(StyleSheet* aSheet)
   }
 
   mSheets.RemoveElement(aSheet);
+}
+
+void
+StyleSheet::ChildSheetListBuilder::SetParentLinks(StyleSheet* aSheet)
+{
+  aSheet->mParent = parent;
+  aSheet->SetAssociatedDocument(parent->mDocument,
+                                parent->mDocumentAssociationMode);
+}
+
+void
+StyleSheet::ChildSheetListBuilder::ReparentChildList(StyleSheet* aPrimarySheet,
+                                                     StyleSheet* aFirstChild)
+{
+  for (StyleSheet *child = aFirstChild; child; child = child->mNext) {
+    child->mParent = aPrimarySheet;
+    child->SetAssociatedDocument(aPrimarySheet->mDocument,
+                                 aPrimarySheet->mDocumentAssociationMode);
+  }
 }
 
 // nsIDOMStyleSheet interface

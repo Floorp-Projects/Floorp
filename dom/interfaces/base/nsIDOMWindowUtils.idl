@@ -1976,6 +1976,26 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   boolean isTimeoutTracking(in unsigned long timeoutId);
 
+  /**
+   * Adds an EventStates bit to the element.
+   *
+   * The state string must be one of the following:
+   *   * (none yet; but for example "higlighted" for NS_EVENT_STATE_HIGHLIGHTED)
+   *
+   * The supported state strings are defined in kManuallyManagedStates
+   * in nsDOMWindowUtils.cpp.
+   */
+  void addManuallyManagedState(in nsIDOMElement element,
+                               in AString state);
+
+  /**
+   * Removes the specified EventStates bits from the element.
+   *
+   * See above for the strings that can be passed for |state|.
+   */
+  void removeManuallyManagedState(in nsIDOMElement element,
+                                  in AString state);
+
   // These consts are only for testing purposes.
   const long DEFAULT_MOUSE_POINTER_ID = 0;
   const long DEFAULT_PEN_POINTER_ID   = 1;

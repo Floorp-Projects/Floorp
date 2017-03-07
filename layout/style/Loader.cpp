@@ -1115,16 +1115,11 @@ Loader::CreateSheet(nsIURI* aURI,
 
     // First, the XUL cache
 #ifdef MOZ_XUL
-    // The XUL cache is a singleton that only holds Gecko-style sheets, so
-    // only use the cache if the loader is also Gecko.
-    if (IsChromeURI(aURI) &&
-        GetStyleBackendType() == StyleBackendType::Gecko) {
+    if (IsChromeURI(aURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-      if (cache) {
-        if (cache->IsEnabled()) {
-          sheet = cache->GetStyleSheet(aURI);
-          LOG(("  From XUL cache: %p", sheet.get()));
-        }
+      if (cache && cache->IsEnabled()) {
+        sheet = cache->GetStyleSheet(aURI, GetStyleBackendType());
+        LOG(("  From XUL cache: %p", sheet.get()));
       }
     }
 #endif
@@ -1685,17 +1680,22 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
     // Send a minimal Accept header for text/css
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
-                                  NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
-                                  false);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                       NS_LITERAL_CSTRING("text/css,*/*;q=0.1"),
+                                       false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIURI> referrerURI = aLoadData->GetReferrerURI();
-    if (referrerURI)
-      httpChannel->SetReferrerWithPolicy(referrerURI,
-                                         aLoadData->mSheet->GetReferrerPolicy());
+    if (referrerURI) {
+      rv = httpChannel->SetReferrerWithPolicy(referrerURI,
+                                              aLoadData->mSheet->GetReferrerPolicy());
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChannel);
     if (internalChannel) {
-      internalChannel->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
+      rv = internalChannel->SetIntegrityMetadata(sriMetadata.GetIntegrityString());
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Set the initiator type
@@ -1957,15 +1957,14 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       data = data->mNext;
     }
 #ifdef MOZ_XUL
-    if (IsChromeURI(aLoadData->mURI) &&
-        GetStyleBackendType() == StyleBackendType::Gecko) {
+    if (IsChromeURI(aLoadData->mURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        if (!cache->GetStyleSheet(aLoadData->mURI)) {
+        if (!cache->GetStyleSheet(aLoadData->mURI, GetStyleBackendType())) {
           LOG(("  Putting sheet in XUL prototype cache"));
           NS_ASSERTION(sheet->IsComplete(),
                        "Should only be caching complete sheets");
-          cache->PutStyleSheet(sheet);
+          cache->PutStyleSheet(sheet, GetStyleBackendType());
         }
       }
     }

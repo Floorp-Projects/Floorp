@@ -1,17 +1,14 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for content script</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
+
+Cu.import("resource://gre/modules/Preferences.jsm");
+
+
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
+
+const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
+
+const XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 
 add_task(function* test_i18n_css() {
   let extension = ExtensionTestUtils.loadExtension({
@@ -19,6 +16,7 @@ add_task(function* test_i18n_css() {
       function backgroundFetch(url) {
         return new Promise((resolve, reject) => {
           let xhr = new XMLHttpRequest();
+          xhr.overrideMimeType("text/plain");
           xhr.open("GET", url);
           xhr.onload = () => { resolve(xhr.responseText); };
           xhr.onerror = reject;
@@ -42,7 +40,7 @@ add_task(function* test_i18n_css() {
       "web_accessible_resources": ["foo.css", "foo.txt", "locale.css"],
 
       "content_scripts": [{
-        "matches": ["http://mochi.test/*/file_sample.html"],
+        "matches": ["http://*/*/file_sample.html"],
         "css": ["foo.css"],
       }],
 
@@ -70,6 +68,7 @@ add_task(function* test_i18n_css() {
   function fetch(url) {
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
+      xhr.overrideMimeType("text/plain");
       xhr.open("GET", url);
       xhr.onload = () => { resolve(xhr.responseText); };
       xhr.onerror = reject;
@@ -79,19 +78,25 @@ add_task(function* test_i18n_css() {
 
   let css = yield fetch(cssURL);
 
-  is(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
+  equal(css, "body { max-width: 42px; }", "CSS file localized in mochitest scope");
 
-  let win = window.open("file_sample.html");
-  yield waitForLoad(win);
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  let style = win.getComputedStyle(win.document.body);
-  is(style.maxWidth, "42px", "stylesheet correctly applied");
-  win.close();
+  let maxWidth = yield ContentTask.spawn(contentPage.browser, {}, function* () {
+    /* globals content */
+    let style = content.getComputedStyle(content.document.body);
+
+    return style.maxWidth;
+  });
+
+  equal(maxWidth, "42px", "stylesheet correctly applied");
+
+  yield contentPage.close();
 
   cssURL = cssURL.replace(/foo.css$/, "locale.css");
 
   css = yield fetch(cssURL);
-  is(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
+  equal(css, '* { content: "en_US ltr rtl left right" }', "CSS file localized in mochitest scope");
 
   const LOCALE = "general.useragent.locale";
   const DIR = "intl.uidirection";
@@ -100,21 +105,17 @@ add_task(function* test_i18n_css() {
   // We don't wind up actually switching the chrome registry locale, since we
   // don't have a chrome package for Hebrew. So just override it, and force
   // RTL directionality.
-  SpecialPowers.setCharPref(LOCALE, "he");
-  SpecialPowers.setIntPref(DIR, 1);
-  SpecialPowers.setCharPref(DIR_LEGACY, "rtl");
+  Preferences.set(LOCALE, "he");
+  Preferences.set(DIR, 1);
+  Preferences.set(DIR_LEGACY, "rtl");
 
   css = yield fetch(cssURL);
-  is(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
+  equal(css, '* { content: "he rtl ltr right left" }', "CSS file localized in mochitest scope");
 
-  SpecialPowers.clearUserPref(LOCALE);
-  SpecialPowers.clearUserPref(DIR);
-  SpecialPowers.clearUserPref(DIR_LEGACY);
+  Preferences.reset(LOCALE);
+  Preferences.reset(DIR);
+  Preferences.reset(DIR_LEGACY);
 
   yield extension.awaitFinish("i18n-css");
   yield extension.unload();
 });
-</script>
-
-</body>
-</html>

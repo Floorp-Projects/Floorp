@@ -36,7 +36,7 @@ interface nsIHttpChannel : nsIChannel
      *
      * @throws NS_ERROR_IN_PROGRESS if set after the channel has been opened.
      */
-    attribute ACString requestMethod;
+    [must_use] attribute ACString requestMethod;
 
     /**
      * Get/set the HTTP referrer URI.  This is the address (URI) of the
@@ -55,7 +55,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_FAILURE if used for setting referrer during
      *         visitRequestHeaders. Getting the value will not throw.
      */
-    attribute nsIURI referrer;
+    [must_use] attribute nsIURI referrer;
 
     /**
      * Referrer policies. See ReferrerPolicy.h for more details.
@@ -91,12 +91,13 @@ interface nsIHttpChannel : nsIChannel
      * referrer tag, which can be one of many values (see ReferrerPolicy.h for
      * more details).
      */
-    readonly attribute unsigned long referrerPolicy;
+    [must_use] readonly attribute unsigned long referrerPolicy;
 
     /**
      * Set the HTTP referrer URI with a referrer policy.
      * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
+    [must_use]
     void setReferrerWithPolicy(in nsIURI referrer, in unsigned long referrerPolicy);
 
     /**
@@ -106,23 +107,23 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    readonly attribute ACString protocolVersion;
+    [must_use] readonly attribute ACString protocolVersion;
 
     /**
      * size consumed by the response header fields and the response payload body
      */
-    readonly attribute uint64_t transferSize;
+    [must_use] readonly attribute uint64_t transferSize;
 
     /**
      * The size of the message body received by the client,
      * after removing any applied content-codings
      */
-    readonly attribute uint64_t decodedBodySize;
+    [must_use] readonly attribute uint64_t decodedBodySize;
 
     /**
      * The size in octets of the payload body, prior to removing content-codings
      */
-    readonly attribute uint64_t encodedBodySize;
+    [must_use] readonly attribute uint64_t encodedBodySize;
 
     /**
      * Get the value of a particular request header.
@@ -134,7 +135,7 @@ interface nsIHttpChannel : nsIChannel
      * @return the value of the request header.
      * @throws NS_ERROR_NOT_AVAILABLE if the header is not set.
      */
-    ACString getRequestHeader(in ACString aHeader);
+    [must_use] ACString getRequestHeader(in ACString aHeader);
 
     /**
      * Set the value of a particular request header.
@@ -164,9 +165,9 @@ interface nsIHttpChannel : nsIChannel
      *         opened.
      * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
-    void setRequestHeader(in ACString aHeader,
-                          in ACString aValue,
-                          in boolean aMerge);
+    [must_use] void setRequestHeader(in ACString aHeader,
+                                     in ACString aValue,
+                                     in boolean aMerge);
 
     /**
      * Set a request header with empty value.
@@ -184,7 +185,7 @@ interface nsIHttpChannel : nsIChannel
      *         opened.
      * @throws NS_ERROR_FAILURE if called during visitRequestHeaders.
      */
-    void setEmptyRequestHeader(in ACString aHeader);
+    [must_use] void setEmptyRequestHeader(in ACString aHeader);
 
     /**
      * Call this method to visit all request headers.  Calling setRequestHeader
@@ -193,7 +194,7 @@ interface nsIHttpChannel : nsIChannel
      * @param aVisitor
      *        the header visitor instance.
      */
-    void visitRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
+    [must_use] void visitRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
      * Call this method to visit all non-default (UA-provided) request headers.
@@ -203,6 +204,7 @@ interface nsIHttpChannel : nsIChannel
      * @param aVisitor
      *        the header visitor instance.
      */
+    [must_use]
     void visitNonDefaultRequestHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
@@ -210,7 +212,7 @@ interface nsIHttpChannel : nsIChannel
      *
      * @throws NS_ERROR_FAILURE if set after the channel has been opened.
      */
-    attribute boolean allowPipelining;
+    [must_use] attribute boolean allowPipelining;
 
     /**
      * This attribute of the channel indicates whether or not
@@ -224,7 +226,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_IN_PROGRESS or NS_ERROR_ALREADY_OPENED
      *         if called after the channel has been opened.
      */
-    attribute boolean allowSTS;
+    [must_use] attribute boolean allowSTS;
 
     /**
      * This attribute specifies the number of redirects this channel is allowed
@@ -238,7 +240,7 @@ interface nsIHttpChannel : nsIChannel
      * for this attribute may be a configurable preference (depending on the
      * implementation).
      */
-    attribute unsigned long redirectionLimit;
+    [must_use] attribute unsigned long redirectionLimit;
 
 
     /**************************************************************************
@@ -253,7 +255,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    readonly attribute unsigned long responseStatus;
+    [must_use] readonly attribute unsigned long responseStatus;
 
     /**
      * Get the HTTP response status text (e.g., "OK").
@@ -265,7 +267,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    readonly attribute ACString responseStatusText;
+    [must_use] readonly attribute ACString responseStatusText;
 
     /**
      * Returns true if the HTTP response code indicates success.  The value of
@@ -280,13 +282,13 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    readonly attribute boolean requestSucceeded;
+    [must_use] readonly attribute boolean requestSucceeded;
 
    /** Indicates whether channel should be treated as the main one for the
     *  current document.  If manually set to true, will always remain true.  Otherwise,
     *  will be true iff LOAD_DOCUMENT_URI is set in the channel's loadflags.
     */
-    attribute boolean isMainDocumentChannel;
+    [must_use] attribute boolean isMainDocumentChannel;
 
     /**
      * Get the value of a particular response header.
@@ -301,7 +303,7 @@ interface nsIHttpChannel : nsIChannel
      *         has been received (before onStartRequest) or if the header is
      *         not set in the response.
      */
-    ACString getResponseHeader(in ACString header);
+    [must_use] ACString getResponseHeader(in ACString header);
 
     /**
      * Set the value of a particular response header.
@@ -332,9 +334,9 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_FAILURE if called during visitResponseHeaders,
      *         VisitOriginalResponseHeaders or getOriginalResponseHeader.
      */
-    void setResponseHeader(in ACString header,
-                           in ACString value,
-                           in boolean merge);
+    [must_use] void setResponseHeader(in ACString header,
+                                      in ACString value,
+                                      in boolean merge);
 
     /**
      * Call this method to visit all response headers.  Calling
@@ -347,7 +349,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    void visitResponseHeaders(in nsIHttpHeaderVisitor aVisitor);
+    [must_use] void visitResponseHeaders(in nsIHttpHeaderVisitor aVisitor);
 
      /**
      * Get the value(s) of a particular response header in the form and order
@@ -365,8 +367,8 @@ interface nsIHttpChannel : nsIChannel
      *         has been received (before onStartRequest) or if the header is
      *         not set in the response.
      */
-    void getOriginalResponseHeader(in ACString aHeader,
-                                   in nsIHttpHeaderVisitor aVisitor);
+    [must_use] void getOriginalResponseHeader(in ACString aHeader,
+                                              in nsIHttpHeaderVisitor aVisitor);
 
     /**
      * Call this method to visit all response headers in the form and order as
@@ -380,6 +382,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
+    [must_use]
     void visitOriginalResponseHeaders(in nsIHttpHeaderVisitor aVisitor);
 
     /**
@@ -389,7 +392,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    boolean isNoStoreResponse();
+    [must_use] boolean isNoStoreResponse();
 
     /**
      * Returns true if the server sent the equivalent of a "Cache-control:
@@ -400,7 +403,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    boolean isNoCacheResponse();
+    [must_use] boolean isNoCacheResponse();
 
     /**
      * Returns true if the server sent a "Cache-Control: private" response
@@ -409,7 +412,7 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called before the response
      *         has been received (before onStartRequest).
      */
-    boolean isPrivateResponse();
+    [must_use] boolean isPrivateResponse();
 
     /**
      * Instructs the channel to immediately redirect to a new destination.
@@ -439,25 +442,25 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_NOT_AVAILABLE if called after the channel has already
      *         started to deliver the content to its listener.
      */
-    void redirectTo(in nsIURI aTargetURI);
+    [must_use] void redirectTo(in nsIURI aTargetURI);
 
     /**
      * Identifies the request context for this load.
      */
-    [noscript] attribute nsID requestContextID;
+    [noscript, must_use] attribute nsID requestContextID;
 
     /**
      * Unique ID of the channel, shared between parent and child. Needed if
      * the channel activity needs to be monitored across process boundaries,
      * like in devtools net monitor. See bug 1274556.
      */
-    attribute ACString channelId;
+    [must_use] attribute ACString channelId;
 
     /**
      * ID of the top-level document's inner window.  Identifies the content
      * this channels is being load in.
      */
-    attribute uint64_t topLevelContentWindowId;
+    [must_use] attribute uint64_t topLevelContentWindowId;
 
     /**
      * Returns true if the channel has loaded a resource that is on the tracking

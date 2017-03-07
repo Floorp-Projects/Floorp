@@ -293,7 +293,7 @@ Http2Session::ReadTimeoutTick(PRIntervalTime now)
     mPingSentEpoch = 1; // avoid the 0 sentinel value
   }
   GeneratePing(false);
-  ResumeRecv(); // read the ping reply
+  Unused << ResumeRecv(); // read the ping reply
 
   // Check for orphaned push streams. This looks expensive, but generally the
   // list is empty.
@@ -389,7 +389,12 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
       LOG3(("Http2Session::AddStream %p atrans=%p trans=%p session unusable - resched.\n",
             this, aHttpTransaction, trans));
       aHttpTransaction->SetConnection(nullptr);
-      gHttpHandler->InitiateTransaction(trans, trans->Priority());
+      nsresult rv = gHttpHandler->InitiateTransaction(trans, trans->Priority());
+      if (NS_FAILED(rv)) {
+        LOG3(("Http2Session::AddStream %p atrans=%p trans=%p failed to initiate "
+              "transaction (%08x).\n", this, aHttpTransaction, trans,
+              static_cast<uint32_t>(rv)));
+      }
       return true;
     }
   }
@@ -418,7 +423,7 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
   // yet.
   if (mSegmentReader) {
     uint32_t countRead;
-    ReadSegments(nullptr, kDefaultBufferSize, &countRead);
+    Unused << ReadSegments(nullptr, kDefaultBufferSize, &countRead);
   }
 
   if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
@@ -493,8 +498,9 @@ Http2Session::NetworkRead(nsAHttpSegmentWriter *writer, char *buf,
 void
 Http2Session::SetWriteCallbacks()
 {
-  if (mConnection && (GetWriteQueueSize() || mOutputQueueUsed))
-    mConnection->ResumeSend();
+  if (mConnection && (GetWriteQueueSize() || mOutputQueueUsed)) {
+    Unused << mConnection->ResumeSend();
+  }
 }
 
 void
@@ -1079,7 +1085,8 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
       mPushedStreams.RemoveElement(aStream);
       Http2PushedStream *pushStream = static_cast<Http2PushedStream *>(aStream);
       nsAutoCString hashKey;
-      pushStream->GetHashKey(hashKey);
+      DebugOnly<bool> rv = pushStream->GetHashKey(hashKey);
+      MOZ_ASSERT(rv);
       nsIRequestContext *requestContext = aStream->RequestContext();
       if (requestContext) {
         SpdyPushCache *cache = nullptr;
@@ -1223,13 +1230,13 @@ Http2Session::RecvHeaders(Http2Session *self)
   if (self->mInputFrameFlags & kFlag_PRIORITY) {
     priorityLen = 5;
   }
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  nsresult rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Find out how much padding this frame has, so we can only extract the real
   // header data from the frame.
   uint16_t paddingLength = 0;
   uint8_t paddingControlBytes = 0;
-  nsresult rv;
 
   if (!isContinuation) {
     self->mDecompressBuffer.Truncate();
@@ -1377,9 +1384,13 @@ Http2Session::ResponseHeadersComplete()
   if (rv == NS_ERROR_ABORT) {
     LOG(("Http2Session::ResponseHeadersComplete ConvertResponseHeaders aborted\n"));
     if (mInputFrameDataStream->IsTunnel()) {
-      gHttpHandler->ConnMgr()->CancelTransactions(
+      rv = gHttpHandler->ConnMgr()->CancelTransactions(
         mInputFrameDataStream->Transaction()->ConnectionInfo(),
         NS_ERROR_CONNECTION_REFUSED);
+      if (NS_FAILED(rv)) {
+        LOG(("Http2Session::ResponseHeadersComplete "
+             "CancelTransactions failed: %08x\n", static_cast<uint32_t>(rv)));
+      }
     }
     CleanupStream(mInputFrameDataStream, rv, CANCEL_ERROR);
     ResetDownstreamState();
@@ -1454,7 +1465,8 @@ Http2Session::RecvRstStream(Http2Session *self)
   LOG3(("Http2Session::RecvRstStream %p RST_STREAM Reason Code %u ID %x\n",
         self, self->mDownstreamRstReason, self->mInputFrameID));
 
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  DebugOnly<nsresult> rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!self->mInputFrameDataStream) {
     // if we can't find the stream just ignore it (4.2 closed)
     self->ResetDownstreamState();
@@ -1773,7 +1785,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
   // Fake the request side of the pushed HTTP transaction. Sets up hash
   // key and origin
   uint32_t notUsed;
-  pushedStream->ReadSegments(nullptr, 1, &notUsed);
+  Unused << pushedStream->ReadSegments(nullptr, 1, &notUsed);
 
   nsAutoCString key;
   if (!pushedStream->GetHashKey(key)) {
@@ -2063,7 +2075,8 @@ Http2Session::RecvContinuation(Http2Session *self)
         self, self->mInputFrameFlags, self->mInputFrameID,
         self->mExpectedPushPromiseID, self->mExpectedHeaderID));
 
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  DebugOnly<nsresult> rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (!self->mInputFrameDataStream) {
     LOG3(("Http2Session::RecvContination stream ID 0x%X not found.",
@@ -2420,7 +2433,7 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
 
   // Allow new server reads - that might be data or control information
   // (e.g. window updates or http replies) that are responses to these writes
-  ResumeRecv();
+  Unused << ResumeRecv();
 
   if (stream->RequestBlockedOnRead()) {
 
@@ -2837,7 +2850,10 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
       CleanupStream(streamID, NS_OK, CANCEL_ERROR);
       mNeedsCleanup = nullptr;
       *again = false;
-      ResumeRecv();
+      rv = ResumeRecv();
+      if (NS_FAILED(rv)) {
+        LOG3(("ResumeRecv returned code %x", static_cast<uint32_t>(rv)));
+      }
       return NS_OK;
     }
 
@@ -2870,7 +2886,7 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
 
     if (!discardCount) {
       ResetDownstreamState();
-      ResumeRecv();
+      Unused << ResumeRecv();
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
@@ -3004,7 +3020,7 @@ Http2Session::Finish0RTT(bool aRestart, bool aAlpnChanged)
   } else {
     // 0RTT succeeded
     // Make sure we look for any incoming data in repsonse to our early data.
-    ResumeRecv();
+    Unused << ResumeRecv();
   }
 
   mAttemptingEarlyData = false;
@@ -3043,7 +3059,7 @@ Http2Session::ProcessConnectedPush(Http2Stream *pushConnectedStream,
   // assuming that nsHttpConnection::OnSocketWrite() was called.
   if (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) {
     rv = NS_BASE_STREAM_WOULD_BLOCK;
-    ResumeRecv();
+    Unused << ResumeRecv();
   }
   return rv;
 }
@@ -3259,7 +3275,12 @@ Http2Session::CloseTransaction(nsAHttpTransaction *aTransaction,
         "this=%p, trans=%p, result=%" PRIx32 ", streamID=0x%X stream=%p",
         this, aTransaction, static_cast<uint32_t>(aResult), stream->StreamID(), stream));
   CleanupStream(stream, aResult, CANCEL_ERROR);
-  ResumeRecv();
+  nsresult rv = ResumeRecv();
+  if (NS_FAILED(rv)) {
+    LOG3(("Http2Session::CloseTransaction %p %p %x ResumeRecv returned %x",
+          this, aTransaction, static_cast<uint32_t>(aResult),
+          static_cast<uint32_t>(rv)));
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -3480,7 +3501,7 @@ void
 Http2Session::ConnectPushedStream(Http2Stream *stream)
 {
   mPushesReadyForRead.Push(stream);
-  ForceRecv();
+  Unused << ForceRecv();
 }
 
 void
@@ -3489,7 +3510,7 @@ Http2Session::ConnectSlowConsumer(Http2Stream *stream)
   LOG3(("Http2Session::ConnectSlowConsumer %p 0x%X\n",
         this, stream->StreamID()));
   mSlowConsumersReadyForRead.Push(stream);
-  ForceRecv();
+  Unused << ForceRecv();
 }
 
 uint32_t
@@ -3540,7 +3561,8 @@ Http2Session::CreateTunnel(nsHttpTransaction *trans,
 
   RefPtr<SpdyConnectTransaction> connectTrans =
     new SpdyConnectTransaction(ci, aCallbacks, trans->Caps(), trans, this);
-  AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
+  DebugOnly<bool> rv = AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
+  MOZ_ASSERT(rv);
   Http2Stream *tunnel = mStreamTransactionHash.Get(connectTrans);
   MOZ_ASSERT(tunnel);
   RegisterTunnel(tunnel);
@@ -3575,7 +3597,11 @@ Http2Session::DispatchOnTunnel(nsAHttpTransaction *aHttpTransaction,
     // make a new tunnel or just wait longer.
     LOG3(("Http2Session::DispatchOnTunnel %p trans=%p queue in connection manager",
           this, trans));
-    gHttpHandler->InitiateTransaction(trans, trans->Priority());
+    nsresult rv = gHttpHandler->InitiateTransaction(trans, trans->Priority());
+    if (NS_FAILED(rv)) {
+      LOG3(("Http2Session::DispatchOnTunnel %p trans=%p failed to initiate "
+            "transaction (%08x)", this, trans, static_cast<uint32_t>(rv)));
+    }
   }
 }
 
@@ -3594,7 +3620,11 @@ Http2Session::MaybeReTunnel(nsAHttpTransaction *aHttpTransaction)
   if (mClosed || mShouldGoAway) {
     LOG(("Http2Session::MaybeReTunnel %p %p session closed - requeue\n", this, trans));
     trans->SetTunnelProvider(nullptr);
-    gHttpHandler->InitiateTransaction(trans, trans->Priority());
+    nsresult rv = gHttpHandler->InitiateTransaction(trans, trans->Priority());
+    if (NS_FAILED(rv)) {
+      LOG3(("Http2Session::MaybeReTunnel %p trans=%p failed to initiate "
+            "transaction (%08x)", this, trans, static_cast<uint32_t>(rv)));
+    }
     return true;
   }
 
@@ -3754,7 +3784,7 @@ Http2Session::TransactionHasDataToWrite(nsAHttpTransaction *caller)
   // NSPR poll will not poll the network if there are non system PR_FileDesc's
   // that are ready - so we can get into a deadlock waiting for the system IO
   // to come back here if we don't force the send loop manually.
-  ForceSend();
+  Unused << ForceSend();
 }
 
 void
@@ -3785,7 +3815,7 @@ Http2Session::TransactionHasDataToWrite(Http2Stream *stream)
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
-  ForceSend();
+  Unused << ForceSend();
 }
 
 bool
@@ -3963,7 +3993,7 @@ Http2Session::SendPing()
     mPingThreshold = gHttpHandler->NetworkChangedTimeout();
   }
   GeneratePing(false);
-  ResumeRecv();
+  Unused << ResumeRecv();
 }
 
 } // namespace net
