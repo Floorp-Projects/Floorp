@@ -335,40 +335,6 @@ BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsi
   return SubsumesInternal(aOther, aConsideration);
 }
 
-bool
-BasePrincipal::FastEquals(nsIPrincipal* aOther)
-{
-  auto other = Cast(aOther);
-  if (Kind() != other->Kind()) {
-    // Principals of different kinds can't be equal.
-    return false;
-  }
-
-  // Two principals are considered to be equal if their origins are the same.
-  // If the two principals are codebase principals, their origin attributes
-  // (aka the origin suffix) must also match.
-  // If the two principals are null principals, they're only equal if they're
-  // the same object.
-  if (Kind() == eNullPrincipal || Kind() == eSystemPrincipal) {
-    return this == other;
-  }
-
-  if (mOriginNoSuffix) {
-    if (Kind() == eCodebasePrincipal) {
-      return mOriginNoSuffix == other->mOriginNoSuffix &&
-             mOriginSuffix == other->mOriginSuffix;
-    }
-
-    MOZ_ASSERT(Kind() == eExpandedPrincipal);
-    return mOriginNoSuffix == other->mOriginNoSuffix;
-  }
-
-  // If mOriginNoSuffix is null on one of our principals, we must fall back
-  // to the slow path.
-  return Subsumes(aOther, DontConsiderDocumentDomain) &&
-         other->Subsumes(this, DontConsiderDocumentDomain);
-}
-
 NS_IMETHODIMP
 BasePrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
@@ -377,20 +343,6 @@ BasePrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
   *aResult = FastEquals(aOther);
 
   return NS_OK;
-}
-
-bool
-BasePrincipal::FastEqualsConsideringDomain(nsIPrincipal* aOther)
-{
-  // If neither of the principals have document.domain set, we use the fast path
-  // in Equals().  Otherwise, we fall back to the slow path below.
-  auto other = Cast(aOther);
-  if (!mDomainSet && !other->mDomainSet) {
-    return FastEquals(aOther);
-  }
-
-  return Subsumes(aOther, ConsiderDocumentDomain) &&
-         other->Subsumes(this, ConsiderDocumentDomain);
 }
 
 NS_IMETHODIMP
@@ -403,28 +355,6 @@ BasePrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
   return NS_OK;
 }
 
-bool
-BasePrincipal::FastSubsumes(nsIPrincipal* aOther)
-{
-  // If two principals are equal, then they both subsume each other.
-  // We deal with two special cases first:
-  // Null principals only subsume each other if they are equal, and are only
-  // equal if they're the same object.
-  // Also, if mOriginNoSuffix is null, FastEquals falls back to the slow path
-  // using Subsumes, so we don't want to use it in that case to avoid an
-  // infinite recursion.
-  auto other = Cast(aOther);
-  if (Kind() == eNullPrincipal && other->Kind() == eNullPrincipal) {
-    return this == other;
-  }
-  if (mOriginNoSuffix && FastEquals(aOther)) {
-    return true;
-  }
-
-  // Otherwise, fall back to the slow path.
-  return Subsumes(aOther, DontConsiderDocumentDomain);
-}
-
 NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
@@ -435,19 +365,6 @@ BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
   return NS_OK;
 }
 
-bool
-BasePrincipal::FastSubsumesConsideringDomain(nsIPrincipal* aOther)
-{
-  // If neither of the principals have document.domain set, we hand off to
-  // FastSubsumes() which has fast paths for some special cases. Otherwise, we fall
-  // back to the slow path below.
-  if (!mDomainSet && !Cast(aOther)->mDomainSet) {
-    return FastSubsumes(aOther);
-  }
-
-  return Subsumes(aOther, ConsiderDocumentDomain);
-}
-
 NS_IMETHODIMP
 BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
@@ -456,18 +373,6 @@ BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
   *aResult = FastSubsumesConsideringDomain(aOther);
 
   return NS_OK;
-}
-
-bool
-BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther)
-{
-  if (Kind() == eCodebasePrincipal &&
-      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
-            OriginAttributesRef(), aOther->OriginAttributesRef())) {
-    return false;
-  }
-
- return SubsumesInternal(aOther, ConsiderDocumentDomain);
 }
 
 NS_IMETHODIMP
