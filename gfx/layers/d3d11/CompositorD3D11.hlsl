@@ -255,35 +255,12 @@ float4 CalculateYCbCrColor(const float2 aTexCoords)
   return color;
 }
 
-float4 CalculateNV12Color(const float2 aTexCoords)
-{
-  float3 yuv;
-  float4 color;
-
-  yuv.x = tY.Sample(sSampler, aTexCoords).r  - 0.06275;
-  yuv.y = tCb.Sample(sSampler, aTexCoords).r - 0.50196;
-  yuv.z = tCb.Sample(sSampler, aTexCoords).g - 0.50196;
-
-  color.rgb = mul(mYuvColorMatrix, yuv);
-  color.a = 1.0f;
-
-  return color;
-}
-
 float4 YCbCrShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
 {
   float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
   float mask = tMask.Sample(sSampler, maskCoords).r;
 
   return CalculateYCbCrColor(aVertex.vTexCoords) * fLayerOpacity * mask;
-}
-
-float4 NV12ShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
-{
-  float2 maskCoords = aVertex.vMaskCoords.xy / aVertex.vMaskCoords.z;
-  float mask = tMask.Sample(sSampler, maskCoords).r;
-
-  return CalculateNV12Color(aVertex.vTexCoords) * fLayerOpacity * mask;
 }
 
 PS_OUTPUT ComponentAlphaShaderMask(const VS_MASK_OUTPUT aVertex) : SV_Target
@@ -329,11 +306,6 @@ float4 RGBShader(const VS_OUTPUT aVertex) : SV_Target
 float4 YCbCrShader(const VS_OUTPUT aVertex) : SV_Target
 {
   return CalculateYCbCrColor(aVertex.vTexCoords) * fLayerOpacity;
-}
-
-float4 NV12Shader(const VS_OUTPUT aVertex) : SV_Target
-{
-  return CalculateNV12Color(aVertex.vTexCoords) * fLayerOpacity;
 }
 
 PS_OUTPUT ComponentAlphaShader(const VS_OUTPUT aVertex) : SV_Target
@@ -418,8 +390,6 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return RGBAShader(tmp);
     } else if (iBlendConfig.x == PS_LAYER_YCBCR) {
       return YCbCrShader(tmp);
-    } else if (iBlendConfig.x == PS_LAYER_NV12) {
-      return NV12Shader(tmp);
     }
     return SolidColorShader(tmp);
   } else if (iBlendConfig.y == PS_MASK) {
@@ -434,8 +404,6 @@ float4 ComputeBlendSourceColor(const VS_BLEND_OUTPUT aVertex)
       return RGBAShaderMask(tmp);
     } else if (iBlendConfig.x == PS_LAYER_YCBCR) {
       return YCbCrShaderMask(tmp);
-    } else if (iBlendConfig.x == PS_LAYER_NV12) {
-      return NV12ShaderMask(tmp);
     }
     return SolidColorShaderMask(tmp);
   }

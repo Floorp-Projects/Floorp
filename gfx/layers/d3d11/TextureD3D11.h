@@ -413,7 +413,7 @@ private:
 class SyncObjectD3D11 : public SyncObject
 {
 public:
-  explicit SyncObjectD3D11(SyncHandle aSyncHandle, ID3D11Device* aDevice);
+  explicit SyncObjectD3D11(SyncHandle aSyncHandle);
   virtual void FinalizeFrame();
   virtual bool IsSyncObjectValid();
 
