@@ -448,7 +448,7 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "UpdateTransformLayer", "ReconstructFrame", "UpdateOverflow",
     "UpdateSubtreeOverflow", "UpdatePostTransformOverflow",
     "UpdateParentOverflow",
-    "ChildrenOnlyTransform", "RecomputePosition", "AddOrRemoveTransform",
+    "ChildrenOnlyTransform", "RecomputePosition", "UpdateContainingBlock",
     "BorderStyleNoneChange", "UpdateTextPath", "SchedulePaint",
     "NeutralChange", "InvalidateRenderingObservers",
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
