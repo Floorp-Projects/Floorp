@@ -1713,14 +1713,18 @@ UpdateYCbCrTextureClient(TextureClient* aTexture, const PlanarYCbCrData& aData)
 }
 
 already_AddRefed<SyncObject>
-SyncObject::CreateSyncObject(SyncHandle aHandle)
+SyncObject::CreateSyncObject(SyncHandle aHandle
+#ifdef XP_WIN
+                             , ID3D11Device* aDevice
+#endif
+                             )
 {
   if (!aHandle) {
     return nullptr;
   }
 
 #ifdef XP_WIN
-  return MakeAndAddRef<SyncObjectD3D11>(aHandle);
+  return MakeAndAddRef<SyncObjectD3D11>(aHandle, aDevice);
 #else
   MOZ_ASSERT_UNREACHABLE();
   return nullptr;
