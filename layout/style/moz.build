@@ -165,6 +165,7 @@ UNIFIED_SOURCES += [
     'FontFace.cpp',
     'FontFaceSet.cpp',
     'FontFaceSetIterator.cpp',
+    'GroupRule.cpp',
     'ImageLoader.cpp',
     'IncrementalClearCOMRuleArray.cpp',
     'LayerAnimationInfo.cpp',
