@@ -86,6 +86,8 @@ const PORTRAIT_MODE_WIDTH = 700;
  *      to source-mapped files)
  */
 function Inspector(toolbox) {
+  EventEmitter.decorate(this);
+
   this._toolbox = toolbox;
   this._target = toolbox.target;
   this.panelDoc = window.document;
@@ -114,8 +116,6 @@ function Inspector(toolbox) {
 
   this._target.on("will-navigate", this._onBeforeNavigate);
   this._detectingActorFeatures = this._detectActorFeatures();
-
-  EventEmitter.decorate(this);
 }
 
 Inspector.prototype = {
