@@ -937,7 +937,7 @@ ControlFlowGenerator::processWhileOrForInLoop(jssrcnote* sn)
 
     size_t stackPhiCount;
     if (SN_TYPE(sn) == SRC_FOR_OF)
-        stackPhiCount = 2;
+        stackPhiCount = 3;
     else if (SN_TYPE(sn) == SRC_FOR_IN)
         stackPhiCount = 1;
     else
