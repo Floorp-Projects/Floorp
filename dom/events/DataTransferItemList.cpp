@@ -294,9 +294,8 @@ DataTransferItemList::MozRemoveByTypeAt(const nsAString& aType,
   }
 
   for (uint32_t i = 0; i < count; ++i) {
-    // NOTE: As this is a moz-prefixed API, it works based on internal types.
     nsAutoString type;
-    items[i]->GetInternalType(type);
+    items[i]->GetType(type);
     if (type == aType) {
       ClearDataHelper(items[i], -1, i, aSubjectPrincipal, aRv);
       return;
@@ -314,9 +313,8 @@ DataTransferItemList::MozItemByTypeAt(const nsAString& aType, uint32_t aIndex)
   uint32_t count = mIndexedItems[aIndex].Length();
   for (uint32_t i = 0; i < count; i++) {
     RefPtr<DataTransferItem> item = mIndexedItems[aIndex][i];
-    // NOTE: As this is a moz-prefixed API it works on internal types
     nsString type;
-    item->GetInternalType(type);
+    item->GetType(type);
     if (type.Equals(aType)) {
       return item;
     }
@@ -340,7 +338,7 @@ DataTransferItemList::SetDataWithPrincipal(const nsAString& aType,
     for (uint32_t i = 0; i < count; i++) {
       RefPtr<DataTransferItem> item = items[i];
       nsString type;
-      item->GetInternalType(type);
+      item->GetType(type);
       if (type.Equals(aType)) {
         if (NS_WARN_IF(aInsertOnly)) {
           aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
