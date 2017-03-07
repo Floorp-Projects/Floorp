@@ -12,12 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Log only if browser.safebrowsing.debug is true
 function log(...stuff) {
-  let logging = null;
-  try {
-    logging = Services.prefs.getBoolPref("browser.safebrowsing.debug");
-  } catch(e) {
-    return;
-  }
+  let logging = Services.prefs.getBoolPref("browser.safebrowsing.debug", false);
   if (!logging) {
     return;
   }
@@ -29,18 +24,14 @@ function log(...stuff) {
 
 function getLists(prefName) {
   log("getLists: " + prefName);
-  let pref = null;
-  try {
-    pref = Services.prefs.getCharPref(prefName);
-  } catch(e) {
-    return null;
-  }
+  let pref = Services.prefs.getCharPref(prefName, "");
+
   // Splitting an empty string returns [''], we really want an empty array.
   if (!pref) {
     return [];
   }
-  return pref.split(",")
-    .map(function(value) { return value.trim(); });
+
+  return pref.split(",").map(value => value.trim());
 }
 
 const tablePreferences = [
