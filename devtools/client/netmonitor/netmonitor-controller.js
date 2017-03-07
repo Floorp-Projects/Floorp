@@ -13,6 +13,7 @@ const {
   formDataURI,
 } = require("./utils/request-utils");
 const {
+  getLongString,
   getWebConsoleClient,
   onFirefoxConnect,
   onFirefoxDisconnect,
@@ -108,7 +109,6 @@ var NetMonitorController = {
       this.NetworkEventsHandler = new NetworkEventsHandler();
       this.NetworkEventsHandler.connect();
 
-      window.gNetwork = this.NetworkEventsHandler;
       window.emit(EVENTS.CONNECTED);
 
       resolve();
@@ -373,7 +373,6 @@ var NetMonitorController = {
 function NetworkEventsHandler() {
   this.addRequest = this.addRequest.bind(this);
   this.updateRequest = this.updateRequest.bind(this);
-  this.getString = this.getString.bind(this);
   this._onNetworkEvent = this._onNetworkEvent.bind(this);
   this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this._onDocLoadingMarker = this._onDocLoadingMarker.bind(this);
@@ -516,7 +515,7 @@ NetworkEventsHandler.prototype = {
     let request = getRequestById(gStore.getState(), action.id);
 
     if (requestHeaders && requestHeaders.headers && requestHeaders.headers.length) {
-      let headers = await fetchHeaders(requestHeaders, this.getString);
+      let headers = await fetchHeaders(requestHeaders, getLongString);
       if (headers) {
         await gStore.dispatch(Actions.updateRequest(
           action.id,
@@ -527,7 +526,7 @@ NetworkEventsHandler.prototype = {
     }
 
     if (responseHeaders && responseHeaders.headers && responseHeaders.headers.length) {
-      let headers = await fetchHeaders(responseHeaders, this.getString);
+      let headers = await fetchHeaders(responseHeaders, getLongString);
       if (headers) {
         await gStore.dispatch(Actions.updateRequest(
           action.id,
@@ -540,7 +539,7 @@ NetworkEventsHandler.prototype = {
     if (request && responseContent && responseContent.content) {
       let { mimeType } = request;
       let { text, encoding } = responseContent.content;
-      let response = await this.getString(text);
+      let response = await getLongString(text);
       let payload = {};
 
       if (mimeType.includes("image/")) {
@@ -561,7 +560,7 @@ NetworkEventsHandler.prototype = {
     // them as a separate property, different from the classic headers.
     if (requestPostData && requestPostData.postData) {
       let { text } = requestPostData.postData;
-      let postData = await this.getString(text);
+      let postData = await getLongString(text);
       const headers = CurlUtils.getHeadersFromMultipartText(postData);
       const headersSize = headers.reduce((acc, { name, value }) => {
         return acc + name.length + value.length + 2;
@@ -586,7 +585,7 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           reqCookies.push(Object.assign({}, cookie, {
-            value: await this.getString(cookie.value),
+            value: await getLongString(cookie.value),
           }));
         }
         if (reqCookies.length) {
@@ -607,7 +606,7 @@ NetworkEventsHandler.prototype = {
       if (typeof cookies[Symbol.iterator] === "function") {
         for (let cookie of cookies) {
           resCookies.push(Object.assign({}, cookie, {
-            value: await this.getString(cookie.value),
+            value: await getLongString(cookie.value),
           }));
         }
         if (resCookies.length) {
@@ -804,27 +803,6 @@ NetworkEventsHandler.prototype = {
     }).then(() => {
       window.emit(EVENTS.RECEIVED_EVENT_TIMINGS, response.from);
     });
-  },
-
-  /**
-   * Fetches the full text of a LongString.
-   *
-   * @param object | string stringGrip
-   *        The long string grip containing the corresponding actor.
-   *        If you pass in a plain string (by accident or because you're lazy),
-   *        then a promise of the same string is simply returned.
-   * @return object Promise
-   *         A promise that is resolved when the full string contents
-   *         are available, or rejected if something goes wrong.
-   */
-  getString: function (stringGrip) {
-    // FIXME: this.webConsoleClient will be undefined in mochitest,
-    // so we return string instantly to skip undefined error
-    if (typeof stringGrip === "string") {
-      return Promise.resolve(stringGrip);
-    }
-
-    return this.webConsoleClient.getString(stringGrip);
   }
 };
 

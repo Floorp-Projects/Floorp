@@ -72,7 +72,29 @@ function getWebConsoleClient() {
   return activeConsole;
 }
 
+/**
+ * Fetches the full text of a LongString.
+ *
+ * @param object | string stringGrip
+ *        The long string grip containing the corresponding actor.
+ *        If you pass in a plain string (by accident or because you're lazy),
+ *        then a promise of the same string is simply returned.
+ * @return object Promise
+ *         A promise that is resolved when the full string contents
+ *         are available, or rejected if something goes wrong.
+ */
+function getLongString(stringGrip) {
+  // FIXME: this.webConsoleClient will be undefined in mochitest,
+  // so we return string instantly to skip undefined error
+  if (typeof stringGrip === "string") {
+    return Promise.resolve(stringGrip);
+  }
+
+  return activeConsole.getString(stringGrip);
+}
+
 module.exports = {
+  getLongString,
   getWebConsoleClient,
   onFirefoxConnect,
   onFirefoxDisconnect,
