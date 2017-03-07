@@ -872,12 +872,6 @@ public:
    */
   int32_t GetAdjustmentForStoredIndex(int32_t aStoredIndex);
 
-  /** Recalculate the row indices of all rows (if needed) and overwrite
-   *  the value of the stored index with this newly calculated index.
-   *  Returns whether recalculation was performed.
-   */
-  bool RecalculateRowIndices();
-
   /** Returns whether mDeletedRowIndexRanges is empty
    */
   bool IsDeletedRowIndexRangesEmpty() const {
