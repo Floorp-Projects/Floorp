@@ -338,6 +338,9 @@ Instance::Instance(JSContext* cx,
     tlsData()->instance = this;
     tlsData()->globalData = globals_->globalData();
     tlsData()->memoryBase = memory ? memory->buffer().dataPointerEither().unwrap() : nullptr;
+#ifndef WASM_HUGE_MEMORY
+    tlsData()->boundsCheckLimit = memory ? memory->buffer().wasmBoundsCheckLimit() : 0;
+#endif
     tlsData()->stackLimit = *(void**)cx->stackLimitAddressForJitCode(JS::StackForUntrustedScript);
 
     for (size_t i = 0; i < metadata().funcImports.length(); i++) {
@@ -755,7 +758,9 @@ Instance::onMovingGrowMemory(uint8_t* prevMemoryBase)
     MOZ_ASSERT(!isAsmJS());
     ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
     tlsData()->memoryBase = buffer.dataPointer();
-    code_->segment().onMovingGrow(prevMemoryBase, metadata(), buffer);
+#ifndef WASM_HUGE_MEMORY
+    tlsData()->boundsCheckLimit = buffer.wasmBoundsCheckLimit();
+#endif
 }
 
 void
