@@ -1777,6 +1777,20 @@ let DateTimePickerListener = {
 
 DateTimePickerListener.init();
 
+let URLBarZoom = {
+  init() {
+    addEventListener("FullZoomChange", e => {
+      if (!e.target.mozSyntheticDocument) {
+        return;
+      }
+      sendSyncMessage("SyntheticDocument:ZoomChange",
+        {"value": docShell.contentViewer.fullZoom});
+    });
+  }
+};
+
+URLBarZoom.init();
+
 addEventListener("mozshowdropdown", event => {
   if (!event.isTrusted)
     return;

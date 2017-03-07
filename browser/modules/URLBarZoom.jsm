@@ -26,7 +26,6 @@ function fullZoomObserver(aSubject, aTopic) {
     return;
   }
 
-  // Only allow pulse animation for zoom changes, not tab switching.
   let animate = (aTopic != "browser-fullZoom:location-change");
   updateZoomButton(aSubject, animate);
 }
@@ -35,7 +34,17 @@ function onEndSwapDocShells(event) {
   updateZoomButton(event.originalTarget);
 }
 
-function updateZoomButton(aBrowser, aAnimate = false) {
+  /**
+   * Updates the zoom button in the location bar.
+   *
+   * @param {object} aBrowser The browser that the zoomed content resides in.
+   * @param {boolean} aAnimate Should be True for all cases unless the zoom
+   *   change is related to tab switching. Optional
+   * @param {number} aValue The value that should be used for the zoom control.
+   *   If not provided then the value will be read from the window. Useful
+   *   if the data on the window may be stale.
+   */
+function updateZoomButton(aBrowser, aAnimate = false, aValue = undefined) {
   let win = aBrowser.ownerGlobal;
   if (aBrowser != win.gBrowser.selectedBrowser) {
     return;
@@ -51,7 +60,7 @@ function updateZoomButton(aBrowser, aAnimate = false) {
     return;
   }
 
-  let zoomFactor = Math.round(win.ZoomManager.zoom * 100);
+  let zoomFactor = Math.round((aValue || win.ZoomManager.zoom) * 100);
   if (zoomFactor != 100) {
     // Check if zoom button is visible and update label if it is
     if (zoomResetButton.hidden) {
@@ -73,3 +82,6 @@ function updateZoomButton(aBrowser, aAnimate = false) {
 Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomChange", false);
 Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:zoomReset", false);
 Services.obs.addObserver(fullZoomObserver, "browser-fullZoom:location-change", false);
+Services.mm.addMessageListener("SyntheticDocument:ZoomChange", function(aMessage) {
+  updateZoomButton(aMessage.target, true, aMessage.data.value);
+});
