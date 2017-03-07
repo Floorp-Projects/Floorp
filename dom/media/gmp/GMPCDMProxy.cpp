@@ -52,7 +52,8 @@ void
 GMPCDMProxy::Init(PromiseId aPromiseId,
                   const nsAString& aOrigin,
                   const nsAString& aTopLevelOrigin,
-                  const nsAString& aGMPName)
+                  const nsAString& aGMPName,
+                  nsIEventTarget* aMainThread)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
@@ -60,6 +61,8 @@ GMPCDMProxy::Init(PromiseId aPromiseId,
   EME_LOG("GMPCDMProxy::Init (%s, %s)",
           NS_ConvertUTF16toUTF8(aOrigin).get(),
           NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
+
+  mMainThread = aMainThread;
 
   nsCString pluginVersion;
   if (!mOwnerThread) {
@@ -141,7 +144,7 @@ void GMPCDMProxy::OnSetDecryptorId(uint32_t aId)
     NewRunnableMethod<uint32_t>(this,
                                 &GMPCDMProxy::OnCDMCreated,
                                 mCreatePromiseId));
-  NS_DispatchToMainThread(task);
+  mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 class gmp_InitDoneCallback : public GetGMPDecryptorCallback
@@ -518,7 +521,7 @@ GMPCDMProxy::RejectPromise(PromiseId aId, nsresult aCode,
   } else {
     nsCOMPtr<nsIRunnable> task(new RejectPromiseTask(this, aId, aCode,
                                                      aReason));
-    NS_DispatchToMainThread(task);
+    mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
@@ -536,7 +539,7 @@ GMPCDMProxy::ResolvePromise(PromiseId aId)
     task = NewRunnableMethod<PromiseId>(this,
                                         &GMPCDMProxy::ResolvePromise,
                                         aId);
-    NS_DispatchToMainThread(task);
+    mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
