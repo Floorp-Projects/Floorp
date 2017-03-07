@@ -22,6 +22,7 @@ using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 
 namespace mozilla {
 namespace gfx {
@@ -114,6 +115,7 @@ child:
   async AccumulateChildKeyedHistograms(KeyedAccumulation[] accumulations);
   async UpdateChildScalars(ScalarAction[] actions);
   async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
+  async RecordChildEvents(ChildEventData[] events);
 
   async NotifyDeviceReset();
 

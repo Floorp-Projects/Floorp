@@ -73,6 +73,7 @@ private:
   // If a reset is being performed. Used to track if ReturnOutput should
   // dump current frame.
   bool mResetInProgress;
+  cdm::Size mCodedSize;
 };
 
 } // namespace mozilla

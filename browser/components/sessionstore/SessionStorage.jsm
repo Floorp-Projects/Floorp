@@ -74,7 +74,14 @@ var SessionStorageInternal = {
 
       // Get the origin of the current history entry
       // and use that as a key for the per-principal storage data.
-      let origin = principal.origin;
+      let origin;
+      try {
+        // The origin getter may throw for about:blank iframes as of bug 1340710,
+        // but we should ignore them anyway.
+        origin = principal.origin;
+      } catch (e) {
+        return;
+      }
       if (visitedOrigins.has(origin)) {
         // Don't read a host twice.
         return;

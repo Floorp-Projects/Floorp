@@ -1439,8 +1439,8 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
         }
     }
 
-    nsCOMPtr<nsIExpandedPrincipal> result =
-        new nsExpandedPrincipal(allowedDomains, attrs.ref());
+    RefPtr<nsExpandedPrincipal> result =
+        nsExpandedPrincipal::Create(allowedDomains, attrs.ref());
     result.forget(out);
     return true;
 }

@@ -1125,6 +1125,8 @@ private:
     InfallibleTArray<ScalarAction>&& aScalarActions) override;
   virtual mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
     InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
+  virtual mozilla::ipc::IPCResult RecvRecordChildEvents(
+    nsTArray<ChildEventData>&& events) override;
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
