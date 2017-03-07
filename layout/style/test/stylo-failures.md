@@ -195,7 +195,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `-box-` [5]
     * test_initial_computation.html `-box-` [8]
     * test_initial_storage.html `-box-` [10]
-    * test_value_storage.html `-box-` [172]
+    * test_value_storage.html `-box-` [118]
   * -moz-force-broken-image-icon
     * test_compute_data_with_start_struct.html `-moz-force-broken-image-icon` [2]
     * test_inherit_computation.html `-moz-force-broken-image-icon` [2]
@@ -362,8 +362,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html `-moz-element` [49]
   * -moz-anchor-decoration value on text-decoration
     * test_value_storage.html `-moz-anchor-decoration` [10]
-  * various values on -{webkit,moz}-user-select servo/servo#15197
-    * test_value_storage.html `user-select` [18]
+  * various values on -{webkit,moz}-user-select **need investigation**
+    * test_value_storage.html `user-select` [3]
   * -moz-default-background-color
     * test_value_storage.html `-moz-default-background-color` [1]
   * several prefixed values in cursor property
