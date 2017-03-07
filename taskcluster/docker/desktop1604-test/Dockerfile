@@ -87,7 +87,10 @@ RUN rm -Rf .cache && mkdir -p .cache
 ADD release-upgrades /etc/update-manager/release-upgrades
 
 # Disable tools with on-login popups that interfere with tests; see bug 1240084 and bug 984944.
-ADD jockey-gtk.desktop deja-dup-monitor.desktop /etc/xdg/autostart/
+ADD autostart/jockey-gtk.desktop autostart/deja-dup-monitor.desktop /etc/xdg/autostart/
+
+# Bug 1345105 - Do not run periodical update checks and downloads
+ADD autostart/gnome-software-service.desktop /etc/xdg/autostart/
 
 # In test.sh we accept START_VNC to start a vnc daemon.
 # Exposing this port allows it to work.
