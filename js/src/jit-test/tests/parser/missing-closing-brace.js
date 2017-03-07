@@ -1,13 +1,13 @@
-function test(source, [lineNumber, columnNumber]) {
+function test(source, [lineNumber, columnNumber], openType = "{", closeType = "}") {
   let caught = false;
   try {
     Reflect.parse(source, { source: "foo.js" });
   } catch (e) {
-    assertEq(e.message.includes("missing } "), true);
+    assertEq(e.message.includes("missing " + closeType + " "), true);
     let notes = getErrorNotes(e);
     assertEq(notes.length, 1);
     let note = notes[0];
-    assertEq(note.message, "{ opened at line " + lineNumber + ", column " + columnNumber);
+    assertEq(note.message, openType + " opened at line " + lineNumber + ", column " + columnNumber);
     assertEq(note.fileName, "foo.js");
     assertEq(note.lineNumber, lineNumber);
     assertEq(note.columnNumber, columnNumber);
@@ -81,3 +81,10 @@ var x = {
   foo: {
 };
 `, [2, 8]);
+
+// Array literal.
+test(`
+var x = [
+  [
+];
+`, [2, 8], "[", "]");
