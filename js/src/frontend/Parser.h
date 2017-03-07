@@ -1448,6 +1448,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 
     bool hasValidSimpleStrictParameterNames();
 
+    void reportMissingClosing(unsigned errorNumber, unsigned noteNumber, uint32_t openedPos);
+
     void reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind, TokenPos pos,
                              uint32_t prevPos);
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
