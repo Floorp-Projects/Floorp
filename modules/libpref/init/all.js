@@ -169,9 +169,6 @@ pref("dom.enable_performance", true);
 // Whether resource timing will be gathered and returned by performance.GetEntries*
 pref("dom.enable_resource_timing", true);
 
-// Enable high-resolution timing markers for users
-pref("dom.enable_user_timing", true);
-
 // Enable printing performance marks/measures to log
 pref("dom.performance.enable_user_timing_logging", false);
 
