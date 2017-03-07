@@ -76,7 +76,8 @@ parent:
   async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
   async PUDPSocket(Principal principal, nsCString filter);
 
-  async PDNSRequest(nsCString hostName, uint32_t flags, nsCString networkInterface);
+  async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
+                    uint32_t flags, nsCString networkInterface);
 
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
@@ -89,8 +90,10 @@ parent:
   async PredReset();
 
   async SpeculativeConnect(URIParams uri, Principal principal, bool anonymous);
-  async HTMLDNSPrefetch(nsString hostname, uint16_t flags);
-  async CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
+  async HTMLDNSPrefetch(nsString hostname, OriginAttributes originAttributes,
+                        uint16_t flags);
+  async CancelHTMLDNSPrefetch(nsString hostname, OriginAttributes originAttributes,
+                              uint16_t flags, nsresult reason);
 
   /**
    * channelId is used to establish a connection between redirect channels in

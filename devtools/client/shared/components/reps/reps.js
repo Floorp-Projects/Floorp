@@ -60,13 +60,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  createFactories,
 	  parseURLEncodedText,
 	  parseURLParams,
-	  getSelectableInInspectorGrips
+	  getSelectableInInspectorGrips,
+	  maybeEscapePropertyName
 	} = __webpack_require__(4);
 	
 	module.exports = {
 	  REPS,
 	  MODE,
 	  createFactories,
+	  maybeEscapePropertyName,
 	  parseURLEncodedText,
 	  parseURLParams,
 	  getSelectableInInspectorGrips
@@ -354,6 +356,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }) + "\"";
 	}
 	
+	/**
+	 * Escape a property name, if needed.  "Escaping" in this context
+	 * means surrounding the property name with quotes.
+	 *
+	 * @param {String}
+	 *        name the property name
+	 * @return {String} either the input, or the input surrounded by
+	 *                  quotes, properly quoted in JS syntax.
+	 */
+	function maybeEscapePropertyName(name) {
+	  // Quote the property name if it needs quoting.  This particular
+	  // test is an approximation; see
+	  // https://mathiasbynens.be/notes/javascript-properties.  However,
+	  // the full solution requires a fair amount of Unicode data, and so
+	  // let's defer that until either it's important, or the \p regexp
+	  // syntax lands, see
+	  // https://github.com/tc39/proposal-regexp-unicode-property-escapes.
+	  if (!/^\w+$/.test(name)) {
+	    name = escapeString(name);
+	  }
+	  return name;
+	}
+	
 	function cropMultipleLines(text, limit) {
 	  return escapeNewLines(cropString(text, limit));
 	}
@@ -587,7 +612,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  parseURLEncodedText,
 	  getFileName,
 	  getURLDisplayString,
-	  getSelectableInInspectorGrips
+	  getSelectableInInspectorGrips,
+	  maybeEscapePropertyName
 	};
 
 /***/ },
@@ -978,9 +1004,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return x === y.toString();
 	    }
 	
-	    let props = Object.getOwnPropertyNames(array);
-	    for (let i = 0; i < props.length; i++) {
-	      let p = props[i];
+	    let propsArray = Object.getOwnPropertyNames(array);
+	    for (let i = 0; i < propsArray.length; i++) {
+	      let p = propsArray[i];
 	
 	      // Valid indexes are skipped
 	      if (isInteger(p)) {
@@ -1268,6 +1294,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	const React = __webpack_require__(3);
 	const {
 	  createFactories,
+	  maybeEscapePropertyName,
 	  wrapRender
 	} = __webpack_require__(4);
 	const { MODE } = __webpack_require__(1);
@@ -1295,7 +1322,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    attachedActorIds: React.PropTypes.array,
 	    onDOMNodeMouseOver: React.PropTypes.func,
 	    onDOMNodeMouseOut: React.PropTypes.func,
-	    onInspectIconClick: React.PropTypes.func
+	    onInspectIconClick: React.PropTypes.func,
+	    // Normally a PropRep will quote a property name that isn't valid
+	    // when unquoted; but this flag can be used to suppress the
+	    // quoting.
+	    suppressQuotes: React.PropTypes.bool
 	  },
 	
 	  render: wrapRender(function () {
@@ -1305,14 +1336,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      name,
 	      mode,
 	      equal,
-	      delim
+	      delim,
+	      suppressQuotes
 	    } = this.props;
 	
 	    let key;
 	    // The key can be a simple string, for plain objects,
 	    // or another object for maps and weakmaps.
-	    if (typeof this.props.name === "string") {
-	      key = span({ "className": "nodeName" }, this.props.name);
+	    if (typeof name === "string") {
+	      if (!suppressQuotes) {
+	        name = maybeEscapePropertyName(name);
+	      }
+	      key = span({ "className": "nodeName" }, name);
 	    } else {
 	      key = Rep(Object.assign({}, this.props, {
 	        object: name,
@@ -1424,19 +1459,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	
 	    const truncate = Object.keys(properties).length > max;
-	    let props = this.getProps(properties, indexes, truncate);
+	    // The server synthesizes some property names for a Proxy, like
+	    // <target> and <handler>; we don't want to quote these because,
+	    // as synthetic properties, they appear more natural when
+	    // unquoted.
+	    const suppressQuotes = object.class === "Proxy";
+	    let propsArray = this.getProps(properties, indexes, truncate, suppressQuotes);
 	    if (truncate) {
 	      // There are some undisplayed props. Then display "more...".
 	      let objectLink = this.props.objectLink || span;
 	
-	      props.push(Caption({
+	      propsArray.push(Caption({
 	        object: objectLink({
 	          object: object
 	        }, `${propertiesLength - max} more…`)
 	      }));
 	    }
 	
-	    return props;
+	    return propsArray;
 	  },
 	
 	  /**
@@ -1445,10 +1485,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @param {Object} properties Props object.
 	   * @param {Array} indexes Indexes of props.
 	   * @param {Boolean} truncate true if the grip will be truncated.
+	   * @param {Boolean} suppressQuotes true if we should suppress quotes
+	   *                  on property names.
 	   * @return {Array} Props.
 	   */
-	  getProps: function (properties, indexes, truncate) {
-	    let props = [];
+	  getProps: function (properties, indexes, truncate, suppressQuotes) {
+	    let propsArray = [];
 	
 	    // Make indexes ordered by ascending.
 	    indexes.sort(function (a, b) {
@@ -1459,7 +1501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      let name = Object.keys(properties)[i];
 	      let value = this.getPropValue(properties[name]);
 	
-	      props.push(PropRep(Object.assign({}, this.props, {
+	      propsArray.push(PropRep(Object.assign({}, this.props, {
 	        mode: MODE.TINY,
 	        name: name,
 	        object: value,
@@ -1467,11 +1509,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        delim: i !== indexes.length - 1 || truncate ? ", " : "",
 	        defaultRep: Grip,
 	        // Do not propagate title to properties reps
-	        title: undefined
+	        title: undefined,
+	        suppressQuotes
 	      })));
 	    });
 	
-	    return props;
+	    return propsArray;
 	  },
 	
 	  /**
@@ -1530,7 +1573,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  render: wrapRender(function () {
 	    let object = this.props.object;
-	    let props = this.safePropIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
+	    let propsArray = this.safePropIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
 	
 	    let objectLink = this.props.objectLink || span;
 	    if (this.props.mode === MODE.TINY) {
@@ -1543,7 +1586,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
 	      className: "objectLeftBrace",
 	      object: object
-	    }, " { "), ...props, objectLink({
+	    }, " { "), ...propsArray, objectLink({
 	      className: "objectRightBrace",
 	      object: object
 	    }, " }"));
@@ -2114,7 +2157,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        name: `<${key}>`,
 	        object,
 	        equal: ": ",
-	        delim: i < keys.length - 1 ? ", " : ""
+	        delim: i < keys.length - 1 ? ", " : "",
+	        suppressQuotes: true
 	      }));
 	    });
 	  },
@@ -2136,11 +2180,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, " }"));
 	    }
 	
-	    const props = this.getProps(promiseState);
+	    const propsArray = this.getProps(promiseState);
 	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
 	      className: "objectLeftBrace",
 	      object: object
-	    }, " { "), ...props, objectLink({
+	    }, " { "), ...propsArray, objectLink({
 	      className: "objectRightBrace",
 	      object: object
 	    }, " }"));
@@ -2456,7 +2500,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          draggable: false,
 	          // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
 	          title: "Click to select the node in the inspector",
-	          onClick: () => onInspectIconClick(object)
+	          onClick: e => onInspectIconClick(object, e)
 	        });
 	      }
 	    }
@@ -2747,7 +2791,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          draggable: false,
 	          // TODO: Localize this with "openNodeInInspector" when Bug 1317038 lands
 	          title: "Click to select the node in the inspector",
-	          onClick: () => onInspectIconClick(grip)
+	          onClick: e => onInspectIconClick(grip, e)
 	        });
 	      }
 	    }
@@ -3404,7 +3448,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	  render: wrapRender(function () {
 	    let object = this.props.object;
-	    let props = this.safeEntriesIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
+	    let propsArray = this.safeEntriesIterator(object, this.props.mode === MODE.LONG ? 10 : 3);
 	
 	    let objectLink = this.props.objectLink || span;
 	    if (this.props.mode === MODE.TINY) {
@@ -3417,7 +3461,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return span({ className: "objectBox objectBox-object" }, this.getTitle(object), objectLink({
 	      className: "objectLeftBrace",
 	      object: object
-	    }, " { "), props, objectLink({
+	    }, " { "), propsArray, objectLink({
 	      className: "objectRightBrace",
 	      object: object
 	    }, " }"));

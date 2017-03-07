@@ -59,6 +59,7 @@ protected:
                                                 const nsCString& aFilter) override;
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild*) override;
   virtual PDNSRequestChild* AllocPDNSRequestChild(const nsCString& aHost,
+                                                  const OriginAttributes& aOriginAttributes,
                                                   const uint32_t& aFlags,
                                                   const nsCString& aNetworkInterface) override;
   virtual bool DeallocPDNSRequestChild(PDNSRequestChild*) override;

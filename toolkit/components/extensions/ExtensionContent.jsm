@@ -331,10 +331,9 @@ class ContentScriptContextChild extends BaseContext {
     let contentPrincipal = contentWindow.document.nodePrincipal;
     let ssm = Services.scriptSecurityManager;
 
-    // copy origin attributes from the content window origin attributes to
-    // preserve the user context id. overwrite the addonId.
+    // Copy origin attributes from the content window origin attributes to
+    // preserve the user context id.
     let attrs = contentPrincipal.originAttributes;
-    attrs.addonId = this.extension.id;
     let extensionPrincipal = ssm.createCodebasePrincipal(this.extension.baseURI, attrs);
 
     let principal;
@@ -366,7 +365,7 @@ class ContentScriptContextChild extends BaseContext {
       // the tab holding the content page.
       let metadata = {
         "inner-window-id": this.innerWindowID,
-        addonId: attrs.addonId,
+        addonId: extensionPrincipal.addonId,
       };
 
       this.sandbox = Cu.Sandbox(principal, {

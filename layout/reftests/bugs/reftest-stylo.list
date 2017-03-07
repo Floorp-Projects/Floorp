@@ -574,7 +574,7 @@ fails == 364989-1.html 364989-1.html
 fails == 365173-1.html 365173-1.html
 == 366207-1.xul 366207-1.xul
 == 366616-1.xul 366616-1.xul
-fails asserts-if(stylo,30) == 367220-1.html 367220-1.html # bug 1324704
+fails asserts-if(stylo,30) skip-if(stylo) == 367220-1.html 367220-1.html # bug 1324704 # crash bug 1342106
 == 367247-s-visible.html 367247-s-visible.html
 == 367247-s-hidden.html 367247-s-hidden.html
 == 367247-s-auto.html 367247-s-auto.html

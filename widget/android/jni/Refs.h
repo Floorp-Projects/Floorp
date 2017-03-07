@@ -79,6 +79,45 @@ protected:
 public:
     using JNIType = Type;
 
+    class AutoLock
+    {
+        friend class Ref<Cls, Type>;
+
+        JNIEnv* const mEnv;
+        Type mInstance;
+
+        AutoLock(Type aInstance)
+            : mEnv(FindEnv())
+            , mInstance(mEnv->NewLocalRef(aInstance))
+        {
+            mEnv->MonitorEnter(mInstance);
+            MOZ_CATCH_JNI_EXCEPTION(mEnv);
+        }
+
+    public:
+        AutoLock(AutoLock&& aOther)
+            : mEnv(aOther.mEnv)
+            , mInstance(aOther.mInstance)
+        {
+            aOther.mInstance = nullptr;
+        }
+
+        ~AutoLock()
+        {
+            Unlock();
+        }
+
+        void Unlock()
+        {
+            if (mInstance) {
+                mEnv->MonitorExit(mInstance);
+                mEnv->DeleteLocalRef(mInstance);
+                MOZ_CATCH_JNI_EXCEPTION(mEnv);
+                mInstance = nullptr;
+            }
+        }
+    };
+
     // Construct a Ref form a raw JNI reference.
     static Ref<Cls, Type> From(JNIType obj)
     {
@@ -104,6 +143,22 @@ public:
     {
         return FindEnv()->IsInstanceOf(
                 mInstance, typename T::Context().ClassRef());
+    }
+
+    template<class T>
+    typename T::Ref Cast() const
+    {
+#ifdef MOZ_CHECK_JNI
+        MOZ_RELEASE_ASSERT(FindEnv()->IsAssignableFrom(
+                Context<Cls, Type>().ClassRef(),
+                typename T::Context().ClassRef()));
+#endif
+        return T::Ref::From(*this);
+    }
+
+    AutoLock Lock() const
+    {
+        return AutoLock(mInstance);
     }
 
     bool operator==(const Ref& other) const

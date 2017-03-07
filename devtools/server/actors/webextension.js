@@ -309,7 +309,7 @@ WebExtensionActor.prototype._shouldAddNewGlobalAsDebuggee = function (newGlobal)
   const global = unwrapDebuggerObjectGlobal(newGlobal);
 
   if (global instanceof Ci.nsIDOMWindow) {
-    return global.document.nodePrincipal.originAttributes.addonId == this.id;
+    return global.document.nodePrincipal.addonId == this.id;
   }
 
   try {

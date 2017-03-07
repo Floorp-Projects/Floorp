@@ -5,6 +5,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ScopeExit.h"
 
 #include "Database.h"
 
@@ -433,6 +434,16 @@ Database::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  bool initSucceeded = false;
+  auto guard = MakeScopeExit([&]() {
+    if (!initSucceeded) {
+      // If we bail out early here without doing anything else, the Database object
+      // will leak due to the cycle between the shutdown blockers and itself, so
+      // let's break the cycle first.
+      Shutdown();
+    }
+  });
+
   nsCOMPtr<mozIStorageService> storage =
     do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
   NS_ENSURE_STATE(storage);
@@ -497,6 +508,7 @@ Database::Init()
 
   // At this point we know the Database object points to a valid connection
   // and we need to setup async shutdown.
+  initSucceeded = true;
   {
     // First of all Places clients should block profile-change-teardown.
     nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase = GetProfileChangeTeardownPhase();

@@ -64,7 +64,6 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
-#include "nsXPCOMStrings.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -345,20 +344,6 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     return GetChannelURIPrincipal(aChannel, aPrincipal);
 }
 
-nsresult
-nsScriptSecurityManager::MaybeSetAddonIdFromURI(OriginAttributes& aAttrs, nsIURI* aURI)
-{
-  nsAutoCString scheme;
-  nsresult rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (scheme.EqualsLiteral("moz-extension") && GetAddonPolicyService()) {
-    rv = GetAddonPolicyService()->ExtensionURIToAddonId(aURI, aAttrs.mAddonId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
 /* The principal of the URI that this channel is loading. This is never
  * affected by things like sandboxed loads, or loads where we forcefully
  * inherit the principal.  Think of this as the principal of the server
@@ -396,8 +381,6 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
     if (loadInfo) {
       attrs.Inherit(loadInfo->GetOriginAttributes());
     }
-    rv = MaybeSetAddonIdFromURI(attrs, uri);
-    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     prin.forget(aPrincipal);
     return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -1166,8 +1149,6 @@ nsScriptSecurityManager::
   OriginAttributes attrs;
   attrs.Inherit(docShellAttrs);
 
-  nsresult rv = MaybeSetAddonIdFromURI(attrs, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -1181,8 +1162,6 @@ nsScriptSecurityManager::GetDocShellCodebasePrincipal(nsIURI* aURI,
   OriginAttributes attrs;
   attrs.Inherit(nsDocShell::Cast(aDocShell)->GetOriginAttributes());
 
-  nsresult rv = MaybeSetAddonIdFromURI(attrs, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
@@ -1334,7 +1313,7 @@ nsresult nsScriptSecurityManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create our system principal singleton
-    RefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
+    RefPtr<nsSystemPrincipal> system = nsSystemPrincipal::Create();
 
     mSystemPrincipal = system;
 

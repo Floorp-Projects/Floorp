@@ -7338,9 +7338,9 @@ ShellCloseAsmJSCacheEntryForRead(size_t serializedSize, const uint8_t* memory, i
 }
 
 static JS::AsmJSCacheResult
-ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
-                                 const char16_t* begin, const char16_t* end,
-                                 size_t serializedSize, uint8_t** memoryOut, intptr_t* handleOut)
+ShellOpenAsmJSCacheEntryForWrite(HandleObject global, const char16_t* begin,
+                                 const char16_t* end, size_t serializedSize,
+                                 uint8_t** memoryOut, intptr_t* handleOut)
 {
     if (!jsCachingEnabled || !jsCacheAsmJSPath)
         return JS::AsmJSCache_Disabled_ShellFlags;

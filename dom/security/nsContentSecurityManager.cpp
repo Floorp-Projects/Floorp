@@ -325,7 +325,8 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
         = do_QueryInterface(aChannel);
       MOZ_ASSERT(httpChannelInternal);
       if (httpChannelInternal) {
-        httpChannelInternal->GetProxyURI(getter_AddRefs(uri));
+        rv = httpChannelInternal->GetProxyURI(getter_AddRefs(uri));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
       mimeTypeGuess = EmptyCString();
       requestingContext = aLoadInfo->LoadingNode();

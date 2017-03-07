@@ -360,11 +360,6 @@ skip script test262/built-ins/Function/prototype/toString/class-declaration-impl
 skip script test262/built-ins/Function/prototype/toString/class-expression-explicit-ctor.js
 skip script test262/built-ins/Function/prototype/toString/class-expression-implicit-ctor.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317397
-skip script test262/built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js
-skip script test262/built-ins/RegExp/prototype/exec/failure-lastindex-no-access.js
-skip script test262/built-ins/RegExp/prototype/exec/success-lastindex-no-access.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
@@ -533,6 +528,10 @@ skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-t
 # Expects TypeError, but RangeError thrown.
 skip script test262/built-ins/DataView/prototype/setFloat64/detached-buffer-after-toindex-byteoffset.js
 skip script test262/built-ins/DataView/prototype/setInt16/detached-buffer-after-toindex-byteoffset.js
+
+# https://github.com/tc39/test262/pull/853
+skip script test262/built-ins/RegExp/prototype/exec/failure-lastindex-no-access.js
+skip script test262/built-ins/RegExp/prototype/exec/success-lastindex-no-access.js
 
 # https://github.com/tc39/Function-prototype-toString-revision/issues/20
 skip script test262/built-ins/Function/prototype/toString/AsyncFunction.js

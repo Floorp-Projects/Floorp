@@ -44,6 +44,7 @@ interface nsIHttpActivityObserver : nsISupports
      *        Any extra string data optionally available with
      *        this activity
      */
+    [must_use]
     void observeActivity(in nsISupports  aHttpChannel,
                          in uint32_t     aActivityType,
                          in uint32_t     aActivitySubtype,
@@ -57,7 +58,7 @@ interface nsIHttpActivityObserver : nsISupports
      * be called. It is present for compatibility reasons and should be
      * implemented only by nsHttpActivityDistributor.
      */
-    readonly attribute boolean isActive;
+    [must_use] readonly attribute boolean isActive;
 
     const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT     = 0x0001;
     const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION     = 0x0002;

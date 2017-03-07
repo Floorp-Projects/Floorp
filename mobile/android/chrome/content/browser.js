@@ -1347,11 +1347,11 @@ var BrowserApp = {
     for (let i = 0; i < this._tabs.length; ++i) {
       let tab = this._tabs[i];
       if (aOptions.startsWith) {
-        if (tab.browser.currentURI.spec.startsWith(aURL)) {
+        if (tab.currentURI.spec.startsWith(aURL)) {
           return tab;
         }
       } else {
-        if (tab.browser.currentURI.equals(uri)) {
+        if (tab.currentURI.equals(uri)) {
           return tab;
         }
       }
@@ -3972,6 +3972,17 @@ Tab.prototype = {
     });
   },
 
+  get currentURI() {
+    if (!this.browser.__SS_restore) {
+      return this.browser.currentURI;
+    } else {
+      // For zombie tabs we need to fall back to the session store data.
+      let data = this.browser.__SS_data;
+      let url = data.entries[data.index - 1].url;
+      return Services.io.newURI(url);
+    }
+  },
+
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
@@ -5540,6 +5551,7 @@ var XPInstallObserver = {
         // If nothing aborted, quit the app
         if (cancelQuit.data == false) {
           Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+          SharedPreferences.forApp().setBoolPref("browser.sessionstore.resume_session_once", true);
           let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
           appStartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
         }

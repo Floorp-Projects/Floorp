@@ -491,6 +491,8 @@ public:
   virtual mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                           const ContentParentId& aCpId) override;
 
+  virtual mozilla::ipc::IPCResult RecvTabChildNotReady(const TabId& aTabId) override;
+
   nsTArray<TabContext> GetManagedTabContext();
 
   virtual POfflineCacheUpdateParent*
@@ -1123,6 +1125,8 @@ private:
     InfallibleTArray<ScalarAction>&& aScalarActions) override;
   virtual mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
     InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
+  virtual mozilla::ipc::IPCResult RecvRecordChildEvents(
+    nsTArray<ChildEventData>&& events) override;
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);

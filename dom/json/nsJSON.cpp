@@ -15,7 +15,6 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsXPCOMStrings.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsComponentManagerUtils.h"
@@ -363,8 +362,8 @@ nsJSON::Decode(const nsAString& json, JSContext* cx,
   if (NS_FAILED(rv))
     return rv;
 
-  const char16_t *data;
-  uint32_t len = NS_StringGetData(json, &data);
+  const char16_t *data = json.BeginReading();
+  uint32_t len = json.Length();
   nsCOMPtr<nsIInputStream> stream;
   rv = NS_NewByteInputStream(getter_AddRefs(stream),
                              reinterpret_cast<const char*>(data),
