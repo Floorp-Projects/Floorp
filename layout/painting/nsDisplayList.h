@@ -3459,7 +3459,7 @@ public:
                                   bool* aSnap) const override
   {
     *aSnap = true;
-    return CalculateBounds(*mFrame->StyleBorder());
+    return CalculateBounds<nsRegion>(*mFrame->StyleBorder());
   }
 
 protected:
@@ -3468,7 +3468,51 @@ protected:
                                           const StackingContextHelper& aSc,
                                           mozilla::layers::WebRenderLayerManager* aManager,
                                           nsDisplayListBuilder* aDisplayListBuilder);
-  nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder) const;
+  template<typename T>
+  T CalculateBounds(const nsStyleBorder& aStyleBorder) const
+  {
+    nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
+    if (aStyleBorder.IsBorderImageLoaded()) {
+      borderBounds.Inflate(aStyleBorder.GetImageOutset());
+      return borderBounds;
+    } else {
+      nsMargin border = aStyleBorder.GetComputedBorder();
+      T result;
+      if (border.top > 0) {
+        result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
+      }
+      if (border.right > 0) {
+        result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
+      }
+      if (border.bottom > 0) {
+        result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
+      }
+      if (border.left > 0) {
+        result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
+      }
+
+      nscoord radii[8];
+      if (mFrame->GetBorderRadii(radii)) {
+        if (border.left > 0 || border.top > 0) {
+          nsSize cornerSize(radii[mozilla::eCornerTopLeftX], radii[mozilla::eCornerTopLeftY]);
+          result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
+        }
+        if (border.top > 0 || border.right > 0) {
+          nsSize cornerSize(radii[mozilla::eCornerTopRightX], radii[mozilla::eCornerTopRightY]);
+          result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
+        }
+        if (border.right > 0 || border.bottom > 0) {
+          nsSize cornerSize(radii[mozilla::eCornerBottomRightX], radii[mozilla::eCornerBottomRightY]);
+          result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
+        }
+        if (border.bottom > 0 || border.left > 0) {
+          nsSize cornerSize(radii[mozilla::eCornerBottomLeftX], radii[mozilla::eCornerBottomLeftY]);
+          result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
+        }
+      }
+      return result;
+    }
+  }
 
   mozilla::Array<mozilla::gfx::Color, 4> mColors;
   mozilla::Array<mozilla::LayerCoord, 4> mWidths;
