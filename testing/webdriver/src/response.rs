@@ -1,4 +1,4 @@
-use rustc_serialize::json;
+use rustc_serialize::json::{self, Json, ToJson};
 
 use common::{Nullable, Date};
 use cookie;
@@ -21,7 +21,7 @@ pub enum WebDriverResponse {
 impl WebDriverResponse {
     pub fn to_json_string(self) -> String {
         let obj = match self {
-            WebDriverResponse::CloseWindow(ref x) => json::encode(x),
+            WebDriverResponse::CloseWindow(ref x) => json::encode(&x.to_json()),
             WebDriverResponse::Cookie(ref x) => json::encode(x),
             WebDriverResponse::DeleteSession => Ok("{}".to_string()),
             WebDriverResponse::ElementRect(ref x) => json::encode(x),
@@ -34,7 +34,8 @@ impl WebDriverResponse {
         }.unwrap();
 
         match self {
-            WebDriverResponse::Generic(_) => obj,
+            WebDriverResponse::Generic(_) |
+            WebDriverResponse::Cookie(_) => obj,
             _ => {
                 let mut data = String::with_capacity(11 + obj.len());
                 data.push_str("{\"value\": ");
@@ -54,6 +55,15 @@ pub struct CloseWindowResponse {
 impl CloseWindowResponse {
     pub fn new(handles: Vec<String>) -> CloseWindowResponse {
         CloseWindowResponse { window_handles: handles }
+    }
+}
+
+impl ToJson for CloseWindowResponse {
+    fn to_json(&self) -> Json {
+        Json::Array(self.window_handles
+                    .iter()
+                    .map(|x| Json::String(x.clone()))
+                    .collect::<Vec<Json>>())
     }
 }
 
@@ -77,6 +87,16 @@ pub struct TimeoutsResponse {
     pub script: u64,
     pub pageLoad: u64,
     pub implicit: u64,
+}
+
+impl TimeoutsResponse {
+    pub fn new(script: u64, page_load: u64, implicit: u64) -> TimeoutsResponse {
+        TimeoutsResponse {
+            script: script,
+            pageLoad: page_load,
+            implicit: implicit,
+        }
+    }
 }
 
 #[derive(RustcEncodable, Debug)]
@@ -171,11 +191,11 @@ impl Into<cookie::Cookie<'static>> for Cookie {
             .secure(self.secure)
             .http_only(self.httpOnly);
         let cookie = match self.domain {
-            Nullable::Value(domain) => cookie.domain(domain), 
+            Nullable::Value(domain) => cookie.domain(domain),
             Nullable::Null => cookie,
         };
         let cookie = match self.path {
-            Nullable::Value(path) => cookie.path(path), 
+            Nullable::Value(path) => cookie.path(path),
             Nullable::Null => cookie,
         };
         let cookie = match self.expiry {
@@ -198,5 +218,106 @@ impl CookieResponse {
         CookieResponse {
             value: value
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+    use rustc_serialize::json::Json;
+    use super::{WebDriverResponse,
+                CloseWindowResponse,
+                CookieResponse,
+                ElementRectResponse,
+                NewSessionResponse,
+                ValueResponse,
+                TimeoutsResponse,
+                WindowPositionResponse,
+                WindowSizeResponse,
+                Cookie,
+                Nullable};
+
+    fn test(resp: WebDriverResponse, expected_str: &str) {
+        let data = resp.to_json_string();
+        let actual = Json::from_str(&*data).unwrap();
+        let expected = Json::from_str(expected_str).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_close_window() {
+        let resp = WebDriverResponse::CloseWindow(
+            CloseWindowResponse::new(vec!["test".into()]));
+        let expected = r#"{"value": ["test"]}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_cookie() {
+        let resp = WebDriverResponse::Cookie(CookieResponse::new(
+            vec![
+                Cookie::new("test".into(),
+                            "test_value".into(),
+                            Nullable::Value("/".into()),
+                            Nullable::Null,
+                            Nullable::Null,
+                            true,
+                            false)
+            ]));
+        let expected = r#"{"value": [{"name": "test", "value": "test_value", "path": "/",
+"domain": null, "expiry": null, "secure": true, "httpOnly": false}]}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_element_rect() {
+        let resp = WebDriverResponse::ElementRect(ElementRectResponse::new(
+            0f64, 1f64, 2f64, 3f64));
+        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_new_session() {
+        let resp = WebDriverResponse::NewSession(
+            NewSessionResponse::new("test".into(),
+                                    Json::Object(BTreeMap::new())));
+        let expected = r#"{"value": {"sessionId": "test", "value": {}}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_timeouts() {
+         let resp = WebDriverResponse::Timeouts(TimeoutsResponse::new(
+            1, 2, 3));
+        let expected = r#"{"value": {"script": 1, "pageLoad": 2, "implicit": 3}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_value() {
+        let mut value = BTreeMap::new();
+        value.insert("example".into(), Json::Array(vec![Json::String("test".into())]));
+        let resp = WebDriverResponse::Generic(ValueResponse::new(
+            Json::Object(value)));
+        let expected = r#"{"value": {"example": ["test"]}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_window_position() {
+         let resp = WebDriverResponse::WindowPosition(WindowPositionResponse::new(
+            1, 2));
+        let expected = r#"{"value": {"x": 1, "y": 2}}"#;
+        test(resp, expected);
+    }
+
+    #[test]
+    fn test_window_size() {
+         let resp = WebDriverResponse::WindowSize(WindowSizeResponse::new(
+            1, 2));
+        let expected = r#"{"value": {"width": 1, "height": 2}}"#;
+        test(resp, expected);
     }
 }
