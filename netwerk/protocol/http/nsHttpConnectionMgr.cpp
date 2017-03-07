@@ -218,7 +218,7 @@ nsresult
 nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler,
                                int32_t iparam, ARefBase *vparam)
 {
-    EnsureSocketThreadTarget();
+    Unused << EnsureSocketThreadTarget();
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -302,12 +302,12 @@ nsHttpConnectionMgr::Observe(nsISupports *subject,
     if (0 == strcmp(topic, NS_TIMER_CALLBACK_TOPIC)) {
         nsCOMPtr<nsITimer> timer = do_QueryInterface(subject);
         if (timer == mTimer) {
-            PruneDeadConnections();
+            Unused << PruneDeadConnections();
         }
         else if (timer == mTimeoutTick) {
             TimeoutTick();
         } else if (timer == mTrafficTimer) {
-            PruneNoTraffic();
+            Unused << PruneNoTraffic();
         }
         else {
             MOZ_ASSERT(false, "unexpected timer-callback");
@@ -452,7 +452,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
 nsresult
 nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget **target)
 {
-    EnsureSocketThreadTarget();
+    Unused << EnsureSocketThreadTarget();
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsCOMPtr<nsIEventTarget> temp(mSocketThreadTarget);
@@ -751,8 +751,18 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
         }
     }
 
-    ProcessPendingQ(ent->mConnInfo);
-    PostEvent(&nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ);
+    nsresult rv = ProcessPendingQ(ent->mConnInfo);
+    if (NS_FAILED(rv)) {
+        LOG(("ReportSpdyConnection conn=%p ent=%p "
+             "failed to process pending queue (%08x)\n", conn, ent,
+             static_cast<uint32_t>(rv)));
+    }
+    rv = PostEvent(&nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ);
+    if (NS_FAILED(rv)) {
+        LOG(("ReportSpdyConnection conn=%p ent=%p "
+             "failed to post event (%08x)\n", conn, ent,
+             static_cast<uint32_t>(rv)));
+    }
 }
 
 nsHttpConnectionMgr::nsConnectionEntry *
@@ -932,7 +942,6 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsHttpConnectionInfo *ci)
         return ProcessPendingQForEntry(ent, false);
     return false;
 }
-
 
 // we're at the active connection limit if any one of the following conditions is true:
 //  (1) at max-connections
@@ -1243,7 +1252,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             if ((caps & NS_HTTP_ALLOW_KEEPALIVE) || !conn->IsExperienced()) {
                 LOG(("   dispatch to spdy: [conn=%p]\n", conn.get()));
                 trans->RemoveDispatchedAsBlocking();  /* just in case */
-                DispatchTransaction(ent, trans, conn);
+                nsresult rv = DispatchTransaction(ent, trans, conn);
+                NS_ENSURE_SUCCESS(rv, rv);
                 return NS_OK;
             }
             unusedSpdyPersistentConnection = conn;
@@ -1332,7 +1342,8 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
             // This will update the class of the connection to be the class of
             // the transaction dispatched on it.
             AddActiveConn(conn, ent);
-            DispatchTransaction(ent, trans, conn);
+            nsresult rv = DispatchTransaction(ent, trans, conn);
+            NS_ENSURE_SUCCESS(rv, rv);
             LOG(("   dispatched step 2 (idle) trans=%p\n", trans));
             return NS_OK;
         }
@@ -1457,7 +1468,11 @@ nsHttpConnectionMgr::MakeConnectionHandle(nsHttpConnection *aWrapped)
 ConnectionHandle::~ConnectionHandle()
 {
     if (mConn) {
-        gHttpHandler->ReclaimConnection(mConn);
+        nsresult rv = gHttpHandler->ReclaimConnection(mConn);
+        if (NS_FAILED(rv)) {
+            LOG(("ConnectionHandle::~ConnectionHandle\n"
+                 "    failed to reclaim connection\n"));
+        }
     }
 }
 
@@ -1993,7 +2008,7 @@ nsHttpConnectionMgr::OnMsgProcessPendingQ(int32_t, ARefBase *param)
         LOG(("nsHttpConnectionMgr::OnMsgProcessPendingQ [ci=nullptr]\n"));
         // Try and dispatch everything
         for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
-            ProcessPendingQForEntry(iter.Data(), true);
+            Unused << ProcessPendingQForEntry(iter.Data(), true);
         }
         return;
     }
@@ -2333,10 +2348,16 @@ nsHttpConnectionMgr::OnMsgCompleteUpgrade(int32_t, ARefBase *param)
                                     getter_AddRefs(socketIn),
                                     getter_AddRefs(socketOut));
 
-    if (NS_SUCCEEDED(rv))
-        data->mUpgradeListener->OnTransportAvailable(socketTransport,
-                                                     socketIn,
-                                                     socketOut);
+    if (NS_SUCCEEDED(rv)) {
+        rv = data->mUpgradeListener->OnTransportAvailable(socketTransport,
+                                                          socketIn,
+                                                          socketOut);
+        if (NS_FAILED(rv)) {
+            LOG(("nsHttpConnectionMgr::OnMsgCompleteUpgrade "
+                 "this=%p conn=%p listener=%p\n", this, data->mConn.get(),
+                 data->mUpgradeListener.get()));
+        }
+    }
 }
 
 void
@@ -2503,7 +2524,8 @@ nsHttpConnectionMgr::GetOrCreateConnectionEntry(nsHttpConnectionInfo *specificCI
     // step 2
     if (!prohibitWildCard) {
         RefPtr<nsHttpConnectionInfo> wildCardProxyCI;
-        specificCI->CreateWildCard(getter_AddRefs(wildCardProxyCI));
+        DebugOnly<nsresult> rv = specificCI->CreateWildCard(getter_AddRefs(wildCardProxyCI));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         nsConnectionEntry *wildCardEnt = mCT.Get(wildCardProxyCI->HashKey());
         if (wildCardEnt && wildCardEnt->AvailableForDispatchNow()) {
             return wildCardEnt;
@@ -2581,7 +2603,10 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase *param)
          !ent->mIdleConns.Length()) &&
         !(keepAlive && RestrictConnections(ent)) &&
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
-        CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true, isFromPredictor, allow1918);
+        DebugOnly<nsresult> rv = CreateTransport(ent, args->mTrans,
+                                                 args->mTrans->Caps(), true,
+                                                 isFromPredictor, allow1918);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
         LOG(("OnMsgSpeculativeConnect Transport "
              "not created due to existing connection count\n"));
@@ -2938,7 +2963,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
     MOZ_ASSERT(mTransaction && !mTransaction->IsNullTransaction(),
                "null transactions dont have backup streams");
 
-    SetupBackupStreams();
+    DebugOnly<nsresult> rv = SetupBackupStreams();
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     mSynTimer = nullptr;
     return NS_OK;
@@ -3310,11 +3336,16 @@ nsConnectionEntry::RemoveHalfOpen(nsHalfOpenSocket *halfOpen)
         }
     }
 
-    if (!UnconnectedHalfOpens())
+    if (!UnconnectedHalfOpens()) {
         // perhaps this reverted RestrictConnections()
         // use the PostEvent version of processpendingq to avoid
         // altering the pending q vector from an arbitrary stack
-        gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+        nsresult rv = gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+        if (NS_FAILED(rv)) {
+            LOG(("nsHttpConnectionMgr::nsConnectionEntry::RemoveHalfOpen\n"
+                 "    failed to process pending queue\n"));
+        }
+    }
 }
 
 void

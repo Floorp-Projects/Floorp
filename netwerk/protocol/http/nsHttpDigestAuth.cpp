@@ -204,7 +204,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
   bool requireExtraQuotes = false;
   {
     nsAutoCString serverVal;
-    authChannel->GetServerResponseHeader(serverVal);
+    Unused << authChannel->GetServerResponseHeader(serverVal);
     if (!serverVal.IsEmpty()) {
       requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
     }
@@ -503,7 +503,8 @@ nsHttpDigestAuth::CalculateHA1(const nsAFlatCString & username,
 
   if (algorithm & ALGO_MD5_SESS) {
     char part1[EXPANDED_DIGEST_LENGTH+1];
-    ExpandToHex(mHashBuf, part1);
+    rv = ExpandToHex(mHashBuf, part1);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     contents.Assign(part1, EXPANDED_DIGEST_LENGTH);
     contents.Append(':');

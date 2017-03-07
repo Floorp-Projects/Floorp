@@ -52,6 +52,8 @@ add_task(function* setup() {
   });
 });
 
+hookExtensionsTelemetry();
+
 // Helper function to test background updates.
 function* backgroundUpdateTest(url, id, checkIconFn) {
   yield SpecialPowers.pushPrefEnv({set: [
@@ -162,6 +164,9 @@ function* backgroundUpdateTest(url, id, checkIconFn) {
   yield BrowserTestUtils.removeTab(tab);
 
   is(getBadgeStatus(), "", "Addon alert badge should be gone");
+
+  // Should have recorded 1 canceled followed by 1 accepted update.
+  expectTelemetry(["updateRejected", "updateAccepted"]);
 
   addon.uninstall();
   yield SpecialPowers.popPrefEnv();

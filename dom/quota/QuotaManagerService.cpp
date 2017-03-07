@@ -499,6 +499,79 @@ NS_IMPL_QUERY_INTERFACE(QuotaManagerService,
                         nsIObserver)
 
 NS_IMETHODIMP
+QuotaManagerService::Init(nsIQuotaRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  if (NS_WARN_IF(!gTestingMode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<Request> request = new Request();
+
+  InitParams params;
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+QuotaManagerService::InitStoragesForPrincipal(
+                                             nsIPrincipal* aPrincipal,
+                                             const nsACString& aPersistenceType,
+                                             nsIQuotaRequest** _retval)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  if (NS_WARN_IF(!gTestingMode)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<Request> request = new Request();
+
+  InitOriginParams params;
+
+  PrincipalInfo& principalInfo = params.principalInfo();
+
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (principalInfo.type() != PrincipalInfo::TContentPrincipalInfo &&
+      principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  Nullable<PersistenceType> persistenceType;
+  rv = NullablePersistenceTypeFromText(aPersistenceType, &persistenceType);
+  if (NS_WARN_IF(NS_FAILED(rv)) || persistenceType.IsNull()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  params.persistenceType() = persistenceType.Value();
+
+  nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
+
+  rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
                                           nsIQuotaUsageCallback* aCallback,
                                           bool aGetGroupUsage,
@@ -660,10 +733,10 @@ QuotaManagerService::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
     RefPtr<Request> request = new Request();
 
-    ClearOriginsParams requestParams;
-    requestParams.pattern() = nsDependentString(aData);
+    ClearDataParams params;
+    params.pattern() = nsDependentString(aData);
 
-    nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, requestParams));
+    nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
     nsresult rv = InitiateRequest(info);
     if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -29,11 +29,12 @@ use std::fmt;
 use style_traits::ToCss;
 use super::ComputedValues;
 use values::CSSFloat;
-use values::Either;
+use values::{Auto, Either};
 use values::computed::{Angle, LengthOrPercentageOrAuto, LengthOrPercentageOrNone};
 use values::computed::{BorderRadiusSize, ClipRect, LengthOrNone};
 use values::computed::{CalcLengthOrPercentage, Context, LengthOrPercentage};
 use values::computed::{MaxLength, MinLength};
+use values::computed::ColorOrAuto;
 use values::computed::position::{HorizontalPosition, Position, VerticalPosition};
 use values::computed::ToComputedValue;
 use values::specified::Angle as SpecifiedAngle;
@@ -122,6 +123,24 @@ impl From<TransitionProperty> for nsCSSPropertyID {
                 % endif
             % endfor
             TransitionProperty::All => nsCSSPropertyID::eCSSPropertyExtra_all_properties,
+        }
+    }
+}
+
+/// Convert nsCSSPropertyID to TransitionProperty
+#[cfg(feature = "gecko")]
+#[allow(non_upper_case_globals)]
+impl From<nsCSSPropertyID> for TransitionProperty {
+    fn from(property: nsCSSPropertyID) -> TransitionProperty {
+        match property {
+            % for prop in data.longhands:
+                % if prop.animatable:
+                    ${helpers.to_nscsspropertyid(prop.ident)}
+                        => TransitionProperty::${prop.camel_case},
+                % endif
+            % endfor
+            nsCSSPropertyID::eCSSPropertyExtra_all_properties => TransitionProperty::All,
+            _ => panic!("Unsupported Servo transition property: {:?}", property),
         }
     }
 }
@@ -1796,3 +1815,21 @@ impl Interpolate for TransformList {
     }
 }
 
+/// https://drafts.csswg.org/css-transitions-1/#animtype-color
+impl Interpolate for ColorOrAuto {
+    #[inline]
+    fn interpolate(&self, other: &Self, progress: f64) -> Result<Self, ()> {
+        match (*self, *other) {
+            (Either::First(ref this), Either::First(ref other)) => {
+                this.interpolate(&other, progress).map(Either::First)
+            },
+            (Either::Second(Auto), Either::Second(Auto)) => {
+                Ok(Either::Second(Auto))
+            },
+            _ => {
+                let interpolated = if progress < 0.5 { *self } else { *other };
+                Ok(interpolated)
+            }
+        }
+    }
+}

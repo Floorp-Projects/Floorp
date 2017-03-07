@@ -210,7 +210,7 @@
   "CHECKERBOARD_DURATION": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 100000,
     "n_buckets": 50,
@@ -219,7 +219,7 @@
   "CHECKERBOARD_PEAK": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 66355200,
     "n_buckets": 50,
@@ -228,7 +228,7 @@
   "CHECKERBOARD_POTENTIAL_DURATION": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 50,
@@ -237,7 +237,7 @@
   "CHECKERBOARD_SEVERITY": {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1238040],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "exponential",
     "high": 1073741824,
     "n_buckets": 50,
@@ -288,7 +288,7 @@
   "CONTENT_RESPONSE_DURATION" : {
     "alert_emails": ["kgupta@mozilla.com"],
     "bug_numbers": [1261373],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "description": "Main thread response times for APZ notifications about input events (ms)",
     "kind" : "exponential",
     "high": 60000,
@@ -10740,13 +10740,6 @@
     "description": "OpenGL compositor runtime and dynamic failure IDs. This will record a count for each context creation success or failure. Each failure id is a unique identifier that can be traced back to a particular failure branch or blocklist rule.",
     "bug_numbers": [1002846]
   },
-  "XHR_IN_WORKER": {
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "count",
-    "bug_numbers": [1280229],
-    "description": "Number of the use of XHR in workers."
-  },
   "WEBVTT_TRACK_KINDS": {
     "alert_emails": ["alwu@mozilla.com"],
     "expires_in_version": "55",
@@ -10782,7 +10775,7 @@
   },
   "CONTAINER_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "enumerated",
     "bug_numbers": [1276006],
     "n_values": 5,
@@ -10790,14 +10783,14 @@
   },
   "UNIQUE_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "58",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the unique number of opened Containers."
   },
   "TOTAL_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "58",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
@@ -11077,5 +11070,14 @@
     "bug_numbers": [1307689],
     "description": "Records a value each time a tab that is showing the loading throbber is interrupted. Desktop only.",
     "labels": ["stop", "back", "forward", "historyNavigation", "reload", "tabClosed", "newURI"]
+  },
+  "EXTENSION_INSTALL_PROMPT_RESULT": {
+    "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],
+    "bug_numbers": [1338713],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["installAmoAccepted", "installAmoRejected", "installLocalAccepted", "installLocalRejected", "installWebAccepted", "installWebRejected", "sideloadAccepted", "sideloadRejected", "updateAccepted", "updateRejected"],
+    "description": "Results of displaying add-on installation notifications.",
+    "releaseChannelCollection": "opt-out"
   }
 }

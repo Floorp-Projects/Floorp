@@ -2814,22 +2814,29 @@ WebSocketChannel::SetupRequest()
   rv = mChannel->HTTPUpgrade(NS_LITERAL_CSTRING("websocket"), this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mHttpChannel->SetRequestHeader(
+  rv = mHttpChannel->SetRequestHeader(
     NS_LITERAL_CSTRING("Sec-WebSocket-Version"),
     NS_LITERAL_CSTRING(SEC_WEBSOCKET_VERSION), false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  if (!mOrigin.IsEmpty())
-    mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Origin"), mOrigin,
-                                   false);
+  if (!mOrigin.IsEmpty()) {
+    rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Origin"), mOrigin,
+                                        false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
-  if (!mProtocol.IsEmpty())
-    mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"),
-                                   mProtocol, true);
+  if (!mProtocol.IsEmpty()) {
+    rv = mHttpChannel->SetRequestHeader(
+      NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), mProtocol, true);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
-  if (mAllowPMCE)
-    mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"),
-                                   NS_LITERAL_CSTRING("permessage-deflate"),
-                                   false);
+  if (mAllowPMCE) {
+    rv = mHttpChannel->SetRequestHeader(
+      NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"),
+      NS_LITERAL_CSTRING("permessage-deflate"), false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 
   uint8_t      *secKey;
   nsAutoCString secKeyString;
@@ -2842,8 +2849,9 @@ WebSocketChannel::SetupRequest()
     return NS_ERROR_OUT_OF_MEMORY;
   secKeyString.Assign(b64);
   PR_Free(b64);
-  mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
-                                 secKeyString, false);
+  rv = mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Key"),
+                                      secKeyString, false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   LOG(("WebSocketChannel::SetupRequest: client key %s\n", secKeyString.get()));
 
   // prepare the value we expect to see in
@@ -2874,7 +2882,9 @@ WebSocketChannel::DoAdmissionDNS()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_ASSERT(!mCancelable);
-  return dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mCancelable));
+  return dns->AsyncResolveNative(hostName, 0, this,
+                                 mainThread, mLoadInfo->GetOriginAttributes(),
+                                 getter_AddRefs(mCancelable));
 }
 
 nsresult

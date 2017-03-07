@@ -1366,7 +1366,6 @@ DeleteFilesRunnable::Open()
   quotaManager->OpenDirectory(mFileManager->Type(),
                               mFileManager->Group(),
                               mFileManager->Origin(),
-                              mFileManager->IsApp(),
                               Client::IDB,
                               /* aExclusive */ false,
                               this);

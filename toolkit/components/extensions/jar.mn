@@ -18,6 +18,7 @@ toolkit.jar:
     content/extensions/ext-notifications.js
     content/extensions/ext-privacy.js
     content/extensions/ext-protocolHandlers.js
+    content/extensions/ext-proxy.js
     content/extensions/ext-runtime.js
     content/extensions/ext-storage.js
     content/extensions/ext-theme.js

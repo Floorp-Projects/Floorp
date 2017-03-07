@@ -21,6 +21,7 @@ EXTRA_JS_MODULES += [
     'LegacyExtensionsUtils.jsm',
     'MessageChannel.jsm',
     'NativeMessaging.jsm',
+    'ProxyScriptContext.jsm',
     'Schemas.jsm',
 ]
 
@@ -48,5 +49,6 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/native_messaging.ini',
+    'test/xpcshell/xpcshell-remote.ini',
     'test/xpcshell/xpcshell.ini',
 ]

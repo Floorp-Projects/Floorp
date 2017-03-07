@@ -44,8 +44,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
   let onReadyForOpenPopup = new Promise(done => {
     Services.obs.addObserver(function listener(message, topic) {
       let apiMessage = message.wrappedJSObject;
-      if (!apiMessage.originAttributes ||
-          apiMessage.originAttributes.addonId != ADDON_ID) {
+      if (apiMessage.addonId != ADDON_ID) {
         return;
       }
 
@@ -149,8 +148,7 @@ add_task(function* testWebExtensionsToolboxSwitchToPopup() {
   let onPopupCustomMessage = new Promise(done => {
     Services.obs.addObserver(function listener(message, topic) {
       let apiMessage = message.wrappedJSObject;
-      if (!apiMessage.originAttributes ||
-          apiMessage.originAttributes.addonId != ADDON_ID) {
+      if (apiMessage.addonId != ADDON_ID) {
         return;
       }
 

@@ -15,9 +15,13 @@
 class nsExpandedPrincipal : public nsIExpandedPrincipal
                           , public mozilla::BasePrincipal
 {
-public:
   nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
                       const mozilla::OriginAttributes& aAttrs);
+
+public:
+  static already_AddRefed<nsExpandedPrincipal>
+  Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
+         const mozilla::OriginAttributes& aAttrs);
 
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
@@ -29,11 +33,10 @@ public:
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   virtual bool AddonHasPermission(const nsAString& aPerm) override;
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
-
-  PrincipalKind Kind() override { return eExpandedPrincipal; }
 
 protected:
   virtual ~nsExpandedPrincipal();

@@ -42,7 +42,6 @@ class FileManager final
   // Protected by IndexedDatabaseManager::FileMutex()
   nsDataHashtable<nsUint64HashKey, FileInfo*> mFileInfos;
 
-  const bool mIsApp;
   const bool mEnforcingQuota;
   bool mInvalidated;
 
@@ -67,7 +66,6 @@ public:
   FileManager(PersistenceType aPersistenceType,
               const nsACString& aGroup,
               const nsACString& aOrigin,
-              bool aIsApp,
               const nsAString& aDatabaseName,
               bool aEnforcingQuota);
 
@@ -87,12 +85,6 @@ public:
   Origin() const
   {
     return mOrigin;
-  }
-
-  bool
-  IsApp() const
-  {
-    return mIsApp;
   }
 
   const nsAString&

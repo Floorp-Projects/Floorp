@@ -14,7 +14,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PendingGlobalHistoryEntry.h"
 #include "mozilla/dom/TabChild.h"
@@ -542,24 +541,31 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
 
   // This is needed in order for 3rd-party cookie blocking to work.
   nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(httpChan);
+  nsresult rv;
   if (httpInternal) {
-    httpInternal->SetDocumentURI(doc->GetDocumentURI());
+    rv = httpInternal->SetDocumentURI(doc->GetDocumentURI());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  rv = httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Remove extraneous request headers (to reduce request size)
-  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
-                             EmptyCString(), false);
-  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
-                             EmptyCString(), false);
-  httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
-                             EmptyCString(), false);
+  rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
+                                  EmptyCString(), false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-language"),
+                                  EmptyCString(), false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
+                                  EmptyCString(), false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Always send a Ping-To header.
   nsAutoCString pingTo;
   if (NS_SUCCEEDED(info->target->GetSpec(pingTo))) {
-    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-To"), pingTo, false);
+    rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-To"), pingTo, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsCOMPtr<nsIScriptSecurityManager> sm =
@@ -568,7 +574,7 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
   if (sm && info->referrer) {
     bool referrerIsSecure;
     uint32_t flags = nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
-    nsresult rv = NS_URIChainHasFlags(info->referrer, flags, &referrerIsSecure);
+    rv = NS_URIChainHasFlags(info->referrer, flags, &referrerIsSecure);
 
     // Default to sending less data if NS_URIChainHasFlags() fails.
     referrerIsSecure = NS_FAILED(rv) || referrerIsSecure;
@@ -583,8 +589,9 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     if (sameOrigin || !referrerIsSecure) {
       nsAutoCString pingFrom;
       if (NS_SUCCEEDED(info->referrer->GetSpec(pingFrom))) {
-        httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-From"), pingFrom,
-                                   false);
+        rv = httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-From"),
+                                        pingFrom, false);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
     }
 
@@ -592,7 +599,8 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
     // over an encrypted connection and its address does not have the same
     // origin as "ping URL", send a referrer.
     if (!sameOrigin && !referrerIsSecure) {
-      httpChan->SetReferrerWithPolicy(info->referrer, info->referrerPolicy);
+      rv = httpChan->SetReferrerWithPolicy(info->referrer, info->referrerPolicy);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 
@@ -7506,7 +7514,7 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     uint32_t responseStatus = 0;
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
     if (httpChannel) {
-      (void)httpChannel->GetResponseStatus(&responseStatus);
+      Unused << httpChannel->GetResponseStatus(&responseStatus);
     }
 
     // Add visit N -1 => N
@@ -8028,9 +8036,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
   if (aPrincipal && !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
       mItemType != typeChrome) {
-    MOZ_ASSERT(ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(
-      aPrincipal->OriginAttributesRef(),
-      mOriginAttributes));
+    MOZ_ASSERT(aPrincipal->OriginAttributesRef() == mOriginAttributes);
   }
 
   // Make sure timing is created.  But first record whether we had it
@@ -11150,16 +11156,20 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     do_QueryInterface(channel));
   if (httpChannelInternal) {
     if (aForceAllowCookies) {
-      httpChannelInternal->SetThirdPartyFlags(
+      rv = httpChannelInternal->SetThirdPartyFlags(
         nsIHttpChannelInternal::THIRD_PARTY_FORCE_ALLOW);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
     if (aFirstParty) {
-      httpChannelInternal->SetDocumentURI(aURI);
+      rv = httpChannelInternal->SetDocumentURI(aURI);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
-      httpChannelInternal->SetDocumentURI(aReferrerURI);
+      rv = httpChannelInternal->SetDocumentURI(aReferrerURI);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-    httpChannelInternal->SetRedirectMode(
+    rv = httpChannelInternal->SetRedirectMode(
       nsIHttpChannelInternal::REDIRECT_MODE_MANUAL);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(channel));
@@ -11240,7 +11250,8 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     // Set the referrer explicitly
     if (aReferrerURI && aSendReferrer) {
       // Referrer is currenly only set for link clicks here.
-      httpChannel->SetReferrerWithPolicy(aReferrerURI, aReferrerPolicy);
+      rv = httpChannel->SetReferrerWithPolicy(aReferrerURI, aReferrerPolicy);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 
@@ -12332,8 +12343,10 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       uint32_t loadFlags;
       aChannel->GetLoadFlags(&loadFlags);
       loadReplace = loadFlags & nsIChannel::LOAD_REPLACE;
-      httpChannel->GetReferrer(getter_AddRefs(referrerURI));
-      httpChannel->GetReferrerPolicy(&referrerPolicy);
+      rv = httpChannel->GetReferrer(getter_AddRefs(referrerURI));
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      rv = httpChannel->GetReferrerPolicy(&referrerPolicy);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
 
       discardLayoutState = ShouldDiscardLayoutState(httpChannel);
     }
@@ -12359,7 +12372,6 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
             // get the OriginAttributes
             OriginAttributes attrs;
             loadInfo->GetOriginAttributes(&attrs);
-            attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
             principalToInherit = nsNullPrincipal::Create(attrs);
           }
         } else {
@@ -12976,7 +12988,7 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel* aChannel)
 
   // figure out if SH should be saving layout state
   bool noStore = false;
-  aChannel->IsNoStoreResponse(&noStore);
+  Unused << aChannel->IsNoStoreResponse(&noStore);
   return noStore;
 }
 
@@ -13048,7 +13060,7 @@ nsDocShell::ChannelIsPost(nsIChannel* aChannel)
   }
 
   nsAutoCString method;
-  httpChannel->GetRequestMethod(method);
+  Unused << httpChannel->GetRequestMethod(method);
   return method.EqualsLiteral("POST");
 }
 

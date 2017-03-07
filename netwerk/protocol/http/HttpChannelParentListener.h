@@ -47,8 +47,8 @@ public:
   explicit HttpChannelParentListener(HttpChannelParent* aInitialChannel);
 
   // For channel diversion from child to parent.
-  nsresult DivertTo(nsIStreamListener *aListener);
-  nsresult SuspendForDiversion();
+  MOZ_MUST_USE nsresult DivertTo(nsIStreamListener *aListener);
+  MOZ_MUST_USE nsresult SuspendForDiversion();
 
   void SetupInterception(const nsHttpResponseHead& aResponseHead);
   void SetupInterceptionAfterRedirect(bool aShouldIntercept);
@@ -58,7 +58,7 @@ private:
   virtual ~HttpChannelParentListener();
 
   // Private partner function to SuspendForDiversion.
-  nsresult ResumeForDiversion();
+  MOZ_MUST_USE nsresult ResumeForDiversion();
 
   // Can be the original HttpChannelParent that created this object (normal
   // case), a different {HTTP|FTP}ChannelParent that we've been redirected to,
