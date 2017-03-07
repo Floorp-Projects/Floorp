@@ -263,6 +263,11 @@ private:
     {
       return mDrainState != DrainState::None;
     }
+    bool HasCompletedDrain() const
+    {
+      return mDrainState == DrainState::DrainCompleted ||
+             mDrainState == DrainState::DrainAborted;
+    }
     void RequestDrain()
     {
         MOZ_RELEASE_ASSERT(mDrainState == DrainState::None);
