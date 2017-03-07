@@ -89,6 +89,13 @@ GamepadEventChannelParent::RecvVibrateHaptic(const uint32_t& aControllerIdx,
   return IPC_FAIL(this, "SendReplyGamepadVibrateHaptic fail.");
 }
 
+mozilla::ipc::IPCResult
+GamepadEventChannelParent::RecvStopVibrateHaptic(const uint32_t& aGamepadIndex)
+{
+  // TODO: Bug 680289, implement for standard gamepads
+  return IPC_OK();
+}
+
 void
 GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 {

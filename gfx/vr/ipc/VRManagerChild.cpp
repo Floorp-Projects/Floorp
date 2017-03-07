@@ -687,6 +687,11 @@ VRManagerChild::AddPromise(const uint32_t& aID, dom::Promise* aPromise)
 mozilla::ipc::IPCResult
 VRManagerChild::RecvReplyGamepadVibrateHaptic(const uint32_t& aPromiseID)
 {
+  // VRManagerChild could be at other processes, but GamepadManager
+  // only exists at the content process or the same process
+  // in non-e10s mode.
+  MOZ_ASSERT(XRE_IsContentProcess() || IsSameProcess());
+
   RefPtr<dom::Promise> p;
   if (!mGamepadPromiseList.Get(aPromiseID, getter_AddRefs(p))) {
     MOZ_CRASH("We should always have a promise.");

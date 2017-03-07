@@ -395,7 +395,7 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
   : VRControllerHost(VRDeviceType::OpenVR)
   , mTrigger(0)
   , mVibrateThread(nullptr)
-  , mIsVibrating(false)
+  , mIsVibrateStopped(false)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerOpenVR, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("OpenVR Gamepad");
@@ -450,8 +450,15 @@ VRControllerOpenVR::UpdateVibrateHaptic(vr::IVRSystem* aVRSystem,
 {
   // UpdateVibrateHaptic() only can be called by mVibrateThread
   MOZ_ASSERT(mVibrateThread == NS_GetCurrentThread());
+
+  // It has been interrupted by loss focus.
+  if (mIsVibrateStopped) {
+    VibrateHapticComplete(aPromiseID);
+    return;
+  }
   // Avoid the previous vibrate event to override the new one.
   if (mVibrateIndex != aVibrateIndex) {
+    VibrateHapticComplete(aPromiseID);
     return;
   }
 
@@ -474,7 +481,20 @@ VRControllerOpenVR::UpdateVibrateHaptic(vr::IVRSystem* aVRSystem,
         (this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
          aHapticIndex, aIntensity, duration - kVibrateRate, aVibrateIndex, aPromiseID);
     NS_DelayedDispatchToCurrentThread(runnable.forget(), kVibrateRate);
+  } else {
+    // The pulse has completed
+    VibrateHapticComplete(aPromiseID);
   }
+}
+
+void
+VRControllerOpenVR::VibrateHapticComplete(uint32_t aPromiseID)
+{
+  VRManager *vm = VRManager::Get();
+  MOZ_ASSERT(vm);
+
+  CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<uint32_t>
+    (vm, &VRManager::NotifyVibrateHapticCompleted, aPromiseID));
 }
 
 void
@@ -494,8 +514,8 @@ VRControllerOpenVR::VibrateHaptic(vr::IVRSystem* aVRSystem,
     }
   }
   ++mVibrateIndex;
+  mIsVibrateStopped = false;
 
-  mIsVibrating = true;
   RefPtr<Runnable> runnable =
       NewRunnableMethod<vr::IVRSystem*, uint32_t, double, double, uint64_t, uint32_t>
         (this, &VRControllerOpenVR::UpdateVibrateHaptic, aVRSystem,
@@ -506,7 +526,7 @@ VRControllerOpenVR::VibrateHaptic(vr::IVRSystem* aVRSystem,
 void
 VRControllerOpenVR::StopVibrateHaptic()
 {
-  mIsVibrating = false;
+  mIsVibrateStopped = true;
 }
 
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()

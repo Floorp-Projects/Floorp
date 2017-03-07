@@ -87,7 +87,9 @@ class GamepadManager final : public nsIObserver,
   // Trigger vibrate haptic event to gamepad channels.
   already_AddRefed<Promise> VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                                           double aIntensity, double aDuration,
-                                          nsIGlobalObject* aGlobal);
+                                          nsIGlobalObject* aGlobal, ErrorResult& aRv);
+  // Send stop haptic events to gamepad channels.
+  void StopHaptics();
 
  protected:
   GamepadManager();

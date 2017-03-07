@@ -61,6 +61,7 @@ public:
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
   bool SendGamepadUpdate(const GamepadChangeEvent& aGamepadEvent);
+  bool SendReplyGamepadVibrateHaptic(const uint32_t& aPromiseID);
 
 protected:
   ~VRManagerParent();
@@ -93,6 +94,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvControllerListenerRemoved() override;
   virtual mozilla::ipc::IPCResult RecvVibrateHaptic(const uint32_t& aControllerIdx, const uint32_t& aHapticIndex,
                                                     const double& aIntensity, const double& aDuration, const uint32_t& aPromiseID) override;
+  virtual mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx) override;
   
   virtual mozilla::ipc::IPCResult RecvCreateVRTestSystem() override;
   virtual mozilla::ipc::IPCResult RecvCreateVRServiceTestDisplay(const nsCString& aID, const uint32_t& aPromiseID) override;

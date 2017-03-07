@@ -698,6 +698,22 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
   return promise.forget();
 }
 
+void
+GamepadManager::StopHaptics()
+{
+  for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
+    const uint32_t gamepadIndex = iter.UserData()->HashKey();
+    if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {
+      const uint32_t index = gamepadIndex - VR_GAMEPAD_IDX_OFFSET;
+      mVRChannelChild->SendStopVibrateHaptic(index);
+    } else {
+      for (auto& channelChild : mChannelChildren) {
+        channelChild->SendStopVibrateHaptic(gamepadIndex);
+      }
+    }
+  }
+}
+
 //Override nsIIPCBackgroundChildCreateCallback
 void
 GamepadManager::ActorCreated(PBackgroundChild *aActor)

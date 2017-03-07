@@ -37,8 +37,6 @@ function pressButton() {
   GamepadService.newButtonEvent(gamepad_index, 0, false);
 }
 
-runGamepadTest(startTest);
-
 function startTest() {
   SpecialPowers.pushPrefEnv({ "set": [["dom.gamepad.extensions.enabled", true]] });
   // Add a gamepad
@@ -109,6 +107,12 @@ function posecheck() {
   pressButton();
 }
 
+function setFrameVisible(f, visible) {
+  var Ci = SpecialPowers.Ci;
+  var docshell = SpecialPowers.wrap(f.contentWindow).QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
+  docshell.isActive = visible;
+}
+
 function haptictest() {
   var gamepads = navigator.getGamepads();
   var hapticActuators = gamepads[0].hapticActuators[0];
@@ -117,9 +121,14 @@ function haptictest() {
     GamepadService.removeGamepad(gamepad_index);
     SimpleTest.finish();
   });
+  // When page is background, we should stop our haptics and still
+  // can get the promise.
+  var f1 = document.getElementById('f1');
+  setFrameVisible(f1, false);
 }
 
 </script>
+<iframe id="f1" src="gamepad_frame_state.html" onload="runGamepadTest(startTest)"></iframe>
 </body>
 </html>
 
