@@ -15,6 +15,8 @@ import android.util.Log;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 import java.util.List;
 
@@ -35,6 +37,9 @@ public class GeckoCustomTabsService extends CustomTabsService {
 
     @Override
     protected boolean warmup(long flags) {
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.SERVICE,"customtab-warmup");
+
         if (DEBUG) {
             Log.v(LOGTAG, "warming up...");
         }
