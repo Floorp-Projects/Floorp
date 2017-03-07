@@ -7,6 +7,9 @@ const { console, ConsoleAPI } = require("resource://gre/modules/Console.jsm");
 const { ConsoleAPIListener } = require("devtools/server/actors/utils/webconsole-listeners");
 const Services = require("Services");
 
+// FIXME: This test shouldn't need to rely on low-level internals.
+const {Service} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
+
 var seenMessages = 0;
 var seenTypes = 0;
 
@@ -16,8 +19,7 @@ var callback = {
       do_check_eq(message.level, "warn");
       do_check_eq(message.arguments[0], "Warning from foo");
       seenTypes |= 1;
-    } else if (message.originAttributes &&
-              message.originAttributes.addonId == "bar") {
+    } else if (message.addonId == "bar") {
       do_check_eq(message.level, "error");
       do_check_eq(message.arguments[0], "Error from bar");
       seenTypes |= 2;
@@ -31,10 +33,15 @@ var callback = {
 };
 
 function createFakeAddonWindow({addonId} = {}) {
-  let baseURI = Services.io.newURI("about:blank");
-  let originAttributes = {addonId};
+  const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  const uuid = uuidGen.generateUUID().number.slice(1, -1);
+
+  const url = `moz-extension://${uuid}/`;
+  Service.uuidMap.set(uuid, {id: addonId});
+
+  let baseURI = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager
-        .createCodebasePrincipal(baseURI, originAttributes);
+        .createCodebasePrincipal(baseURI, {});
   let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
   let docShell = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDocShell);
@@ -49,6 +56,8 @@ function createFakeAddonWindow({addonId} = {}) {
  * through to console messages.
  */
 function run_test() {
+  Service.init();
+
   // console1 Test Console.jsm messages tagged by the Addon SDK
   // are still filtered correctly.
   let console1 = new ConsoleAPI({

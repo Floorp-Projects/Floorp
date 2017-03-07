@@ -27,6 +27,7 @@
 
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
@@ -42,6 +43,19 @@ static bool URIIsImmutable(nsIURI* aURI)
     mutableObj &&
     NS_SUCCEEDED(mutableObj->GetMutable(&isMutable)) &&
     !isMutable;
+}
+
+static nsIAddonPolicyService*
+GetAddonPolicyService(nsresult* aRv)
+{
+  static nsCOMPtr<nsIAddonPolicyService> addonPolicyService;
+
+  *aRv = NS_OK;
+  if (!addonPolicyService) {
+    addonPolicyService = do_GetService("@mozilla.org/addons/policy-service;1", aRv);
+    ClearOnShutdown(&addonPolicyService);
+  }
+  return addonPolicyService;
 }
 
 NS_IMPL_CLASSINFO(nsPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -63,10 +77,12 @@ nsPrincipal::InitializeStatics()
 }
 
 nsPrincipal::nsPrincipal()
-  : mCodebaseImmutable(false)
+  : BasePrincipal(eCodebasePrincipal)
+  , mCodebaseImmutable(false)
   , mDomainImmutable(false)
   , mInitialized(false)
-{ }
+{
+}
 
 nsPrincipal::~nsPrincipal()
 {
@@ -84,9 +100,24 @@ nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
 
   mInitialized = true;
 
+  // Assert that the URI we get here isn't any of the schemes that we know we
+  // should not get here.  These schemes always either inherit their principal
+  // or fall back to a null principal.  These are schemes which return
+  // URI_INHERITS_SECURITY_CONTEXT from their protocol handler's
+  // GetProtocolFlags function.
+  bool hasFlag;
+  Unused << hasFlag; // silence possible compiler warnings.
+  MOZ_DIAGNOSTIC_ASSERT(
+      NS_SUCCEEDED(NS_URIChainHasFlags(aCodebase,
+                                       nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                                       &hasFlag)) &&
+      !hasFlag);
+
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
   mOriginAttributes = aOriginAttributes;
+
+  FinishInit();
 
   return NS_OK;
 }
@@ -107,6 +138,17 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
   nsCOMPtr<nsIURI> origin = NS_GetInnermostURI(mCodebase);
   if (!origin) {
     return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(!NS_IsAboutBlank(origin),
+             "The inner URI for about:blank must be moz-safe-about:blank");
+
+  if (!nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
+      NS_URIIsLocalFile(origin)) {
+    // If strict file origin policy is not in effect, all local files are
+    // considered to be same-origin, so return a known dummy origin here.
+    aOrigin.AssignLiteral("file://UNIVERSAL_FILE_URI_ORIGIN");
+    return NS_OK;
   }
 
   nsAutoCString hostPort;
@@ -139,7 +181,11 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
   // to handle.
   bool isBehaved;
   if ((NS_SUCCEEDED(origin->SchemeIs("about", &isBehaved)) && isBehaved) ||
-      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) && isBehaved) ||
+      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) && isBehaved &&
+       // We generally consider two about:foo origins to be same-origin, but
+       // about:blank is special since it can be generated from different sources.
+       // We check for moz-safe-about:blank since origin is an innermost URI.
+       !origin->GetSpecOrDefault().EqualsLiteral("moz-safe-about:blank")) ||
       (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
     rv = origin->GetAsciiSpec(aOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -291,13 +337,6 @@ nsPrincipal::MayLoadInternal(nsIURI* aURI)
   return false;
 }
 
-void
-nsPrincipal::SetURI(nsIURI* aURI)
-{
-  mCodebase = NS_TryToMakeImmutable(aURI);
-  mCodebaseImmutable = URIIsImmutable(mCodebase);
-}
-
 NS_IMETHODIMP
 nsPrincipal::GetHashValue(uint32_t* aValue)
 {
@@ -328,6 +367,7 @@ nsPrincipal::SetDomain(nsIURI* aDomain)
 {
   mDomain = NS_TryToMakeImmutable(aDomain);
   mDomainImmutable = URIIsImmutable(mDomain);
+  mDomainSet = true;
 
   // Recompute all wrappers between compartments using this principal and other
   // non-chrome compartments.
@@ -377,6 +417,35 @@ nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  if (mAddonIdCache.isSome()) {
+    aAddonId.Assign(mAddonIdCache.ref());
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(mCodebase, NS_ERROR_FAILURE);
+
+  nsresult rv;
+  bool isMozExt;
+  if (NS_SUCCEEDED(mCodebase->SchemeIs("moz-extension", &isMozExt)) && isMozExt) {
+    nsIAddonPolicyService* addonPolicyService = GetAddonPolicyService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString addonId;
+    rv = addonPolicyService->ExtensionURIToAddonId(mCodebase, addonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mAddonIdCache.emplace(addonId);
+  } else {
+    mAddonIdCache.emplace();
+  }
+
+  aAddonId.Assign(mAddonIdCache.ref());
+  return NS_OK;
+};
 
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)

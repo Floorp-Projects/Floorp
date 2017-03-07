@@ -12,6 +12,7 @@
 #include "builtin/Intl.h"
 
 #include "mozilla/Casting.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 
@@ -255,10 +256,22 @@ ucol_getAvailable(int32_t localeIndex)
     MOZ_CRASH("ucol_getAvailable: Intl API disabled");
 }
 
+UEnumeration*
+ucol_openAvailableLocales(UErrorCode* status)
+{
+    MOZ_CRASH("ucol_openAvailableLocales: Intl API disabled");
+}
+
 UCollator*
 ucol_open(const char* loc, UErrorCode* status)
 {
     MOZ_CRASH("ucol_open: Intl API disabled");
+}
+
+UColAttributeValue
+ucol_getAttribute(const UCollator* coll, UColAttribute attr, UErrorCode* status)
+{
+    MOZ_CRASH("ucol_getAttribute: Intl API disabled");
 }
 
 void
@@ -1326,12 +1339,14 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
         JSLinearString* caseFirst = value.toString()->ensureLinear(cx);
         if (!caseFirst)
             return nullptr;
-        if (StringEqualsAscii(caseFirst, "upper"))
+        if (StringEqualsAscii(caseFirst, "upper")) {
             uCaseFirst = UCOL_UPPER_FIRST;
-        else if (StringEqualsAscii(caseFirst, "lower"))
+        } else if (StringEqualsAscii(caseFirst, "lower")) {
             uCaseFirst = UCOL_LOWER_FIRST;
-        else
+        } else {
             MOZ_ASSERT(StringEqualsAscii(caseFirst, "false"));
+            uCaseFirst = UCOL_OFF;
+        }
     }
 
     UErrorCode status = U_ZERO_ERROR;
@@ -1419,6 +1434,142 @@ js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp)
     RootedString str1(cx, args[1].toString());
     RootedString str2(cx, args[2].toString());
     return intl_CompareStrings(cx, coll, str1, str2, args.rval());
+}
+
+js::SharedIntlData::LocaleHasher::Lookup::Lookup(JSLinearString* locale)
+  : js::SharedIntlData::LinearStringLookup(locale)
+{
+    if (isLatin1)
+        hash = mozilla::HashString(latin1Chars, length);
+    else
+        hash = mozilla::HashString(twoByteChars, length);
+}
+
+bool
+js::SharedIntlData::LocaleHasher::match(Locale key, const Lookup& lookup)
+{
+    if (key->length() != lookup.length)
+        return false;
+
+    if (key->hasLatin1Chars()) {
+        const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
+        if (lookup.isLatin1)
+            return EqualChars(keyChars, lookup.latin1Chars, lookup.length);
+        return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
+    }
+
+    const char16_t* keyChars = key->twoByteChars(lookup.nogc);
+    if (lookup.isLatin1)
+        return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
+    return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
+}
+
+bool
+js::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx)
+{
+    if (upperCaseFirstInitialized)
+        return true;
+
+    // If ensureUpperCaseFirstLocales() was called previously, but didn't
+    // complete due to OOM, clear all data and start from scratch.
+    if (upperCaseFirstLocales.initialized())
+        upperCaseFirstLocales.finish();
+    if (!upperCaseFirstLocales.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    UEnumeration* available = ucol_openAvailableLocales(&status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    ScopedICUObject<UEnumeration, uenum_close> toClose(available);
+
+    RootedAtom locale(cx);
+    while (true) {
+        int32_t size;
+        const char* rawLocale = uenum_next(available, &size, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        if (rawLocale == nullptr)
+            break;
+
+        UCollator* collator = ucol_open(rawLocale, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+        ScopedICUObject<UCollator, ucol_close> toCloseCollator(collator);
+
+        UColAttributeValue caseFirst = ucol_getAttribute(collator, UCOL_CASE_FIRST, &status);
+        if (U_FAILURE(status)) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return false;
+        }
+
+        if (caseFirst != UCOL_UPPER_FIRST)
+            continue;
+
+        MOZ_ASSERT(size >= 0);
+        locale = Atomize(cx, rawLocale, size_t(size));
+        if (!locale)
+            return false;
+
+        LocaleHasher::Lookup lookup(locale);
+        LocaleSet::AddPtr p = upperCaseFirstLocales.lookupForAdd(lookup);
+
+        // ICU shouldn't report any duplicate locales, but if it does, just
+        // ignore the duplicated locale.
+        if (!p && !upperCaseFirstLocales.add(p, locale)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    MOZ_ASSERT(!upperCaseFirstInitialized,
+               "ensureUpperCaseFirstLocales is neither reentrant nor thread-safe");
+    upperCaseFirstInitialized = true;
+
+    return true;
+}
+
+bool
+js::SharedIntlData::isUpperCaseFirst(JSContext* cx, HandleString locale, bool* isUpperFirst)
+{
+    if (!ensureUpperCaseFirstLocales(cx))
+        return false;
+
+    RootedLinearString localeLinear(cx, locale->ensureLinear(cx));
+    if (!localeLinear)
+        return false;
+
+    LocaleHasher::Lookup lookup(localeLinear);
+    *isUpperFirst = upperCaseFirstLocales.has(lookup);
+
+    return true;
+}
+
+bool
+js::intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isString());
+
+    SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+
+    RootedString locale(cx, args[0].toString());
+    bool isUpperFirst;
+    if (!sharedIntlData.isUpperCaseFirst(cx, locale, &isUpperFirst))
+        return false;
+
+    args.rval().setBoolean(isUpperFirst);
+    return true;
 }
 
 
@@ -2636,15 +2787,12 @@ HashStringIgnoreCaseASCII(const Char* s, size_t length)
 }
 
 js::SharedIntlData::TimeZoneHasher::Lookup::Lookup(JSLinearString* timeZone)
-  : isLatin1(timeZone->hasLatin1Chars()), length(timeZone->length())
+  : js::SharedIntlData::LinearStringLookup(timeZone)
 {
-    if (isLatin1) {
-        latin1Chars = timeZone->latin1Chars(nogc);
+    if (isLatin1)
         hash = HashStringIgnoreCaseASCII(latin1Chars, length);
-    } else {
-        twoByteChars = timeZone->twoByteChars(nogc);
+    else
         hash = HashStringIgnoreCaseASCII(twoByteChars, length);
-    }
 }
 
 bool
@@ -2683,7 +2831,7 @@ js::SharedIntlData::ensureTimeZones(JSContext* cx)
     if (timeZoneDataInitialized)
         return true;
 
-    // If initTimeZones() was called previously, but didn't complete due to
+    // If ensureTimeZones() was called previously, but didn't complete due to
     // OOM, clear all sets/maps and start from scratch.
     if (availableTimeZones.initialized())
         availableTimeZones.finish();
@@ -2851,6 +2999,7 @@ js::SharedIntlData::destroyInstance()
     availableTimeZones.finish();
     ianaZonesTreatedAsLinksByICU.finish();
     ianaLinksCanonicalizedDifferentlyByICU.finish();
+    upperCaseFirstLocales.finish();
 }
 
 void
@@ -2861,6 +3010,7 @@ js::SharedIntlData::trace(JSTracer* trc)
         availableTimeZones.trace(trc);
         ianaZonesTreatedAsLinksByICU.trace(trc);
         ianaLinksCanonicalizedDifferentlyByICU.trace(trc);
+        upperCaseFirstLocales.trace(trc);
     }
 }
 
@@ -2869,7 +3019,8 @@ js::SharedIntlData::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) cons
 {
     return availableTimeZones.sizeOfExcludingThis(mallocSizeOf) +
            ianaZonesTreatedAsLinksByICU.sizeOfExcludingThis(mallocSizeOf) +
-           ianaLinksCanonicalizedDifferentlyByICU.sizeOfExcludingThis(mallocSizeOf);
+           ianaLinksCanonicalizedDifferentlyByICU.sizeOfExcludingThis(mallocSizeOf) +
+           upperCaseFirstLocales.sizeOfExcludingThis(mallocSizeOf);
 }
 
 bool

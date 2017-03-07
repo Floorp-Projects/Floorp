@@ -230,8 +230,8 @@ var Service = {
   },
 
   // Finds the add-on ID associated with a given moz-extension:// URI.
-  // This is used to set the addonId on the originAttributes for the
-  // nsIPrincipal attached to the URI.
+  // This is used to set the addonId on the for the nsIPrincipal
+  // attached to the URI.
   extensionURIToAddonID(uri) {
     let uuid = uri.host;
     let extension = this.uuidMap.get(uuid);
@@ -242,11 +242,11 @@ var Service = {
 // API Levels Helpers
 
 // Find the add-on associated with this document via the
-// principal's originAttributes. This value is computed by
+// principal's addonId attribute. This value is computed by
 // extensionURIToAddonID, which ensures that we don't inject our
 // API into webAccessibleResources or remote web pages.
 function getAddonIdForWindow(window) {
-  return Cu.getObjectPrincipal(window).originAttributes.addonId;
+  return Cu.getObjectPrincipal(window).addonId;
 }
 
 const API_LEVELS = Object.freeze({

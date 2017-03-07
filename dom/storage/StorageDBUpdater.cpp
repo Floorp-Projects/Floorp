@@ -16,7 +16,7 @@
 #include "mozilla/Tokenizer.h"
 
 // Current version of the database schema
-#define CURRENT_SCHEMA_VERSION 1
+#define CURRENT_SCHEMA_VERSION 2
 
 namespace mozilla {
 namespace dom {
@@ -191,6 +191,47 @@ GetOriginParticular::OnFunctionCall(
     break;
   }
 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  outVar.forget(aResult);
+  return NS_OK;
+}
+
+class StripOriginAddonId final : public mozIStorageFunction
+{
+public:
+  explicit StripOriginAddonId() {}
+
+private:
+  ~StripOriginAddonId() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+NS_IMPL_ISUPPORTS(StripOriginAddonId, mozIStorageFunction)
+
+NS_IMETHODIMP
+StripOriginAddonId::OnFunctionCall(
+    mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
+{
+  nsresult rv;
+
+  nsAutoCString suffix;
+  rv = aFunctionArguments->GetUTF8String(0, suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Deserialize and re-serialize to automatically drop any obsolete origin
+  // attributes.
+  OriginAttributes oa;
+  bool ok = oa.PopulateFromSuffix(suffix);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  nsAutoCString newSuffix;
+  oa.CreateSuffix(newSuffix);
+
+  nsCOMPtr<nsIWritableVariant> outVar = new nsVariant();
+  rv = outVar->SetAsAUTF8String(newSuffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
   outVar.forget(aResult);
@@ -387,6 +428,25 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
     aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("GET_ORIGIN_KEY"));
 
     rv = aWorkerConnection->SetSchemaVersion(1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    MOZ_FALLTHROUGH;
+  }
+  case 1: {
+    nsCOMPtr<mozIStorageFunction> oaStripAddonId(
+      new StripOriginAddonId());
+    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("STRIP_ADDON_ID"), 1, oaStripAddonId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aWorkerConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "UPDATE webappsstore2 "
+          "SET originAttributes = STRIP_ADDON_ID(originAttributes) "
+          "WHERE originAttributes LIKE '^%'"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("STRIP_ADDON_ID"));
+
+    rv = aWorkerConnection->SetSchemaVersion(2);
     NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_FALLTHROUGH;

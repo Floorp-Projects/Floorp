@@ -474,11 +474,17 @@ static void FromJSON_str_t(JSONIterator& iterator, OutParam<str_t>::type& value)
           case 'u':
             if (tokenValue.cend() - next >= 5) {
               if (*(next + 1) == '0' &&
-                  *(next + 2) == '0' &&
-                  *(next + 3) == '0' &&
-                  *(next + 4) == '0') {
-                tokenValue.replace(it, next + 5, 1, '\0');
-                break;
+                  *(next + 2) == '0') {
+                unsigned int v;
+                std::stringstream x;
+                x << *(next + 3) << *(next + 4);
+                x >> std::hex >> v;
+                // Handle Control characters code units
+                // from U+0000 to U+001F.
+                if ( v < 0x0020) {
+                  tokenValue.replace(it, next + 5, 1, v);
+                  break;
+                }
               }
               Fail("Need to handle unicode escapes in strings: %s.",
                    tokenValue.c_str());

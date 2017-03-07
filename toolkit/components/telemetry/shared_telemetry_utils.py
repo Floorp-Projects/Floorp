@@ -9,6 +9,24 @@ from __future__ import print_function
 
 import re
 
+# This is a list of flags that determine which process a measurement is allowed
+# to record from.
+KNOWN_PROCESS_FLAGS = {
+    'all': 'All',
+    'all_childs': 'AllChilds',
+    'main': 'Main',
+    'content': 'Content',
+    'gpu': 'Gpu',
+}
+
+PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
+
+def is_valid_process_name(name):
+    return (name in KNOWN_PROCESS_FLAGS)
+
+def process_name_to_enum(name):
+    return PROCESS_ENUM_PREFIX + KNOWN_PROCESS_FLAGS.get(name)
+
 class StringTable:
     """Manages a string table and allows C style serialization to a file."""
 

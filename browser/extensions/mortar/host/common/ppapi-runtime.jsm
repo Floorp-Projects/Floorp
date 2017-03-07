@@ -3051,6 +3051,59 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
       //return [new PP_Var(), { exception: PP_Var.fromJSValue(e) }];
     },
 
+    /**
+    * PP_Resource Create([in] PP_Instance instance,
+    *                    [in] PP_InputEvent_Type type,
+    *                    [in] PP_TimeTicks time_stamp,
+    *                    [in] uint32_t modifiers,
+    *                    [in] uint32_t key_code,
+    *                    [in] PP_Var character_text,
+    *                    [in] PP_Var code);
+    */
+    PPB_KeyboardInputEvent_Create: function(json) {
+      let instance = this.instances[json.instance];
+      let charCode = 0;
+      if (PP_VarType[json.character_text.type] ==
+          PP_VarType.PP_VARTYPE_STRING) {
+        charCode = String_PP_Var.getAsJSValue(json.character_text).charCodeAt(0);
+      }
+      let location = instance.window.KeyboardEvent.DOM_KEY_LOCATION_STANDARD;
+      if (PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISLEFT &
+          json.modifiers) {
+        location = instance.window.KeyboardEvent.DOM_KEY_LOCATION_LEFT;
+      } else if (PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISRIGHT &
+                 json.modifiers) {
+        location = instance.window.KeyboardEvent.DOM_KEY_LOCATION_RIGHT;
+      } else if(PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISKEYPAD &
+                json.modifiers) {
+        location = instance.window.KeyboardEvent.DOM_KEY_LOCATION_NUMPAD;
+      }
+
+      // FIXME I skipped to put |PP_Var code| into keyboardEventInit here
+      // because I neither find any useful |code| value passing into here
+      // nor have any PPB APIs which gets access to |code| now.
+      let keyboardEventInit = {
+        altKey: PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ALTKEY &
+          json.modifiers,
+        charCode: charCode,
+        ctrlKey: PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_CONTROLKEY &
+          json.modifiers,
+        keyCode: json.key_code,
+        location: location,
+        metaKey: PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_METAKEY &
+          json.modifiers,
+        repeat: PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_ISAUTOREPEAT &
+          json.modifiers,
+        shiftKey: PP_InputEvent_Modifier.PP_INPUTEVENT_MODIFIER_SHIFTKEY &
+          json.modifiers,
+      };
+      let eventName = EventByTypes.get(PP_InputEvent_Type[json.type]);
+      let event = new instance.window.KeyboardEvent(eventName,
+                                                    keyboardEventInit);
+      let resource = new KeyboardInputEvent(instance, event);
+      resource.timeStamp = json.time_stamp;
+      return resource;
+    },
 
     /**
      * PP_Bool IsKeyboardInputEvent([in] PP_Resource resource);

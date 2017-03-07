@@ -478,6 +478,7 @@ function filterDevice() {
       }
 
       provider.listener = null;
+      provider = null;
       run_next_test();
     },
     updateDevice: function() {},
@@ -835,6 +836,7 @@ function ignoreIncompatibleDevice() {
     Assert.equal(listener.count(), 0);
 
     provider.listener = null;
+    provider = null;
 
     run_next_test();
   });
@@ -918,6 +920,7 @@ function ignoreSelfDevice() {
     Assert.equal(listener.count(), 0);
 
     provider.listener = null;
+    provider = null;
 
     run_next_test();
   });

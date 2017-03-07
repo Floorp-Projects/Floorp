@@ -6,6 +6,7 @@
 
 #include "ActorsChild.h"
 
+#include "nsVariant.h"
 #include "QuotaManagerService.h"
 #include "QuotaRequests.h"
 
@@ -231,7 +232,22 @@ QuotaRequestChild::HandleResponse()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
 
-  mRequest->SetResult();
+  RefPtr<nsVariant> variant = new nsVariant();
+  variant->SetAsVoid();
+
+  mRequest->SetResult(variant);
+}
+
+void
+QuotaRequestChild::HandleResponse(bool aResponse)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<nsVariant> variant = new nsVariant();
+  variant->SetAsBool(aResponse);
+
+  mRequest->SetResult(variant);
 }
 
 void
@@ -251,11 +267,16 @@ QuotaRequestChild::Recv__delete__(const RequestResponse& aResponse)
       HandleResponse(aResponse.get_nsresult());
       break;
 
+    case RequestResponse::TInitResponse:
     case RequestResponse::TClearOriginResponse:
-    case RequestResponse::TClearOriginsResponse:
+    case RequestResponse::TClearDataResponse:
     case RequestResponse::TClearAllResponse:
     case RequestResponse::TResetAllResponse:
       HandleResponse();
+      break;
+
+    case RequestResponse::TInitOriginResponse:
+      HandleResponse(aResponse.get_InitOriginResponse().created());
       break;
 
     default:

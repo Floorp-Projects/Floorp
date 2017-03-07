@@ -1601,14 +1601,41 @@ var collatorInternalProperties = {
         addSpecialMissingLanguageTags(locales);
         return (this._availableLocales = locales);
     },
-    relevantExtensionKeys: ["co", "kn"]
+    relevantExtensionKeys: ["co", "kn", "kf"]
 };
+
+
+/**
+ * Returns the default caseFirst values for the given locale and usage. The
+ * first element in the returned array denotes the default value per ES2017
+ * Intl, 9.1 Internal slots of Service Constructors.
+ */
+function collatorCaseFirst(locale, usage) {
+    assert(typeof locale === "string", "locale should be string");
+    assert(usage === "sort" || usage === "search", "invalid usage option");
+
+    if (usage === "sort") {
+        // If |locale| is the default locale (e.g. da-DK), but only supported
+        // through a fallback (da), we need to get the actual locale before we
+        // can call intl_isUpperCaseFirst. Also see BestAvailableLocaleHelper.
+        var availableLocales = callFunction(collatorInternalProperties.availableLocales,
+                                            collatorInternalProperties);
+        var actualLocale = BestAvailableLocaleIgnoringDefault(availableLocales, locale);
+
+        if (intl_isUpperCaseFirst(actualLocale))
+            return ["upper", "false", "lower"];
+    }
+
+    // Default caseFirst values for all other languages.
+    return ["false", "lower", "upper"];
+}
 
 
 function collatorSortLocaleData(locale) {
     return {
         co: intl_availableCollations(locale),
-        kn: ["false", "true"]
+        kn: ["false", "true"],
+        kf: collatorCaseFirst(locale, "sort"),
     };
 }
 
@@ -1617,6 +1644,7 @@ function collatorSearchLocaleData(locale) {
     return {
         co: [null],
         kn: ["false", "true"],
+        kf: collatorCaseFirst(locale, "search"),
         // In theory the default sensitivity is locale dependent;
         // in reality the CLDR/ICU default strength is always tertiary.
         sensitivity: "variant"

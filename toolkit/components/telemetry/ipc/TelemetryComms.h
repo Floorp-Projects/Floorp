@@ -9,6 +9,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsITelemetry.h"
 #include "nsVariant.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace Telemetry {
@@ -57,6 +58,20 @@ struct KeyedScalarAction
   // We need to wrap mData in a Maybe otherwise the IPC system
   // is unable to instantiate a ScalarAction.
   Maybe<ScalarVariant> mData;
+};
+
+struct EventExtraEntry {
+  nsCString key;
+  nsCString value;
+};
+
+struct ChildEventData {
+  mozilla::TimeStamp timestamp;
+  nsCString category;
+  nsCString method;
+  nsCString object;
+  mozilla::Maybe<nsCString> value;
+  nsTArray<EventExtraEntry> extra;
 };
 
 } // namespace Telemetry
@@ -282,6 +297,60 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
       default:
         MOZ_ASSERT(false, "Unknown keyed scalar type.");
         return false;
+    }
+
+    return true;
+  }
+};
+
+template<>
+struct
+ParamTraits<mozilla::Telemetry::ChildEventData>
+{
+  typedef mozilla::Telemetry::ChildEventData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.timestamp);
+    WriteParam(aMsg, aParam.category);
+    WriteParam(aMsg, aParam.method);
+    WriteParam(aMsg, aParam.object);
+    WriteParam(aMsg, aParam.value);
+    WriteParam(aMsg, aParam.extra);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->timestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->category)) ||
+        !ReadParam(aMsg, aIter, &(aResult->method)) ||
+        !ReadParam(aMsg, aIter, &(aResult->object)) ||
+        !ReadParam(aMsg, aIter, &(aResult->value)) ||
+        !ReadParam(aMsg, aIter, &(aResult->extra))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+template<>
+struct
+ParamTraits<mozilla::Telemetry::EventExtraEntry>
+{
+  typedef mozilla::Telemetry::EventExtraEntry paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.key);
+    WriteParam(aMsg, aParam.value);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->key)) ||
+        !ReadParam(aMsg, aIter, &(aResult->value))) {
+      return false;
     }
 
     return true;

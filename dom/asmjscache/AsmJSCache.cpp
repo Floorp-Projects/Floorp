@@ -31,7 +31,6 @@
 #include "nsIAtom.h"
 #include "nsIFile.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
-#include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsISimpleEnumerator.h"
@@ -350,11 +349,9 @@ public:
     mPrincipalInfo(aPrincipalInfo),
     mOpenMode(aOpenMode),
     mWriteParams(aWriteParams),
-    mPersistence(quota::PERSISTENCE_TYPE_INVALID),
     mState(eInitial),
     mResult(JS::AsmJSCache_InternalError),
-    mIsApp(false),
-    mEnforcingQuota(true),
+    mDeleteReceived(false),
     mActorDestroyed(false),
     mOpened(false)
   {
@@ -393,31 +390,6 @@ private:
     MOZ_ASSERT(!IsOnOwningThread());
   }
 
-  // This method is called on the owning thread when no cache entry was found
-  // to open. If we just tried a lookup in persistent storage then we might
-  // still get a hit in temporary storage (for an asm.js module that wasn't
-  // compiled at install-time).
-  void
-  CacheMiss()
-  {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(mState == eFailedToReadMetadata ||
-               mState == eWaitingToOpenCacheFileForRead);
-    MOZ_ASSERT(mOpenMode == eOpenForRead);
-
-    if (mPersistence == quota::PERSISTENCE_TYPE_TEMPORARY) {
-      Fail();
-      return;
-    }
-
-    // Try again with a clean slate. InitOnMainThread will see that mPersistence
-    // is initialized and switch to temporary storage.
-    MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT);
-    FinishOnOwningThread();
-    mState = eInitial;
-    NS_DispatchToMainThread(this);
-  }
-
   // This method is called on the owning thread when the JS engine is finished
   // reading/writing the cache entry.
   void
@@ -447,7 +419,7 @@ private:
 
     FinishOnOwningThread();
 
-    if (!mActorDestroyed) {
+    if (!mDeleteReceived && !mActorDestroyed) {
       Unused << Send__delete__(this, mResult);
     }
   }
@@ -465,9 +437,6 @@ private:
     mState = eFailing;
     MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
   }
-
-  void
-  InitPersistenceType();
 
   nsresult
   InitOnMainThread();
@@ -519,6 +488,9 @@ private:
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(mState != eFinished);
+    MOZ_ASSERT(!mDeleteReceived);
+
+    mDeleteReceived = true;
 
     if (mOpened) {
       Close();
@@ -571,23 +543,12 @@ private:
     return IPC_OK();
   }
 
-  mozilla::ipc::IPCResult
-  RecvCacheMiss() override
-  {
-    AssertIsOnOwningThread();
-
-    CacheMiss();
-
-    return IPC_OK();
-  }
-
   nsCOMPtr<nsIEventTarget> mOwningThread;
   const PrincipalInfo mPrincipalInfo;
   const OpenMode mOpenMode;
   const WriteParams mWriteParams;
 
   // State initialized during eInitial:
-  quota::PersistenceType mPersistence;
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
@@ -607,7 +568,6 @@ private:
     eWaitingToOpenDirectory, // Waiting to open directory
     eWaitingToOpenMetadata, // Waiting to be called back from OpenDirectory
     eReadyToReadMetadata, // Waiting to read the metadata file on the IO thread
-    eFailedToReadMetadata, // Waiting to be dispatched to owning thread after fail
     eSendingMetadataForRead, // Waiting to send OnOpenMetadataForRead
     eWaitingToOpenCacheFileForRead, // Waiting to hear back from child
     eReadyToOpenCacheFileForRead, // Waiting to open cache file for read
@@ -619,57 +579,10 @@ private:
   State mState;
   JS::AsmJSCacheResult mResult;
 
-  bool mIsApp;
-  bool mEnforcingQuota;
+  bool mDeleteReceived;
   bool mActorDestroyed;
   bool mOpened;
 };
-
-void
-ParentRunnable::InitPersistenceType()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == eInitial);
-
-  if (mOpenMode == eOpenForWrite) {
-    MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_INVALID);
-
-    // If we are performing install-time caching of an app, we'd like to store
-    // the cache entry in persistent storage so the entry is never evicted,
-    // but we need to check that quota is not enforced for the app.
-    // That justifies us in skipping all quota checks when storing the cache
-    // entry and avoids all the issues around the persistent quota prompt.
-    // If quota is enforced for the app, then we can still cache in temporary
-    // for a likely good first-run experience.
-
-    MOZ_ASSERT_IF(mWriteParams.mInstalled, mIsApp);
-
-    if (mWriteParams.mInstalled &&
-        !QuotaManager::IsQuotaEnforced(quota::PERSISTENCE_TYPE_PERSISTENT,
-                                       mOrigin, mIsApp)) {
-      mPersistence = quota::PERSISTENCE_TYPE_PERSISTENT;
-    } else {
-      mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
-    }
-
-    return;
-  }
-
-  // For the reasons described above, apps may have cache entries in both
-  // persistent and temporary storage. At lookup time we don't know how and
-  // where the given script was cached, so start the search in persistent
-  // storage and, if that fails, search in temporary storage. (Non-apps can
-  // only be stored in temporary storage.)
-
-  MOZ_ASSERT_IF(mPersistence != quota::PERSISTENCE_TYPE_INVALID,
-                mIsApp && mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT);
-
-  if (mPersistence == quota::PERSISTENCE_TYPE_INVALID && mIsApp) {
-    mPersistence = quota::PERSISTENCE_TYPE_PERSISTENT;
-  } else {
-    mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
-  }
-}
 
 nsresult
 ParentRunnable::InitOnMainThread()
@@ -686,13 +599,8 @@ ParentRunnable::InitOnMainThread()
   }
 
   rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
-                                          &mOrigin, &mIsApp);
+                                          &mOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  InitPersistenceType();
-
-  mEnforcingQuota =
-    QuotaManager::IsQuotaEnforced(mPersistence, mOrigin, mIsApp);
 
   return NS_OK;
 }
@@ -708,10 +616,9 @@ ParentRunnable::OpenDirectory()
   mState = eWaitingToOpenMetadata;
 
   // XXX The exclusive lock shouldn't be needed for read operations.
-  QuotaManager::Get()->OpenDirectory(mPersistence,
+  QuotaManager::Get()->OpenDirectory(quota::PERSISTENCE_TYPE_TEMPORARY,
                                      mGroup,
                                      mOrigin,
-                                     mIsApp,
                                      quota::Client::ASMJS,
                                      /* aExclusive */ true,
                                      this);
@@ -727,8 +634,8 @@ ParentRunnable::ReadMetadata()
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
   nsresult rv =
-    qm->EnsureOriginIsInitialized(mPersistence, mSuffix, mGroup, mOrigin,
-                                  mIsApp, getter_AddRefs(mDirectory));
+    qm->EnsureOriginIsInitialized(quota::PERSISTENCE_TYPE_TEMPORARY, mSuffix,
+                                  mGroup, mOrigin, getter_AddRefs(mDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mResult = JS::AsmJSCache_StorageInitFailure;
     return rv;
@@ -799,25 +706,24 @@ ParentRunnable::OpenCacheFileForWrite()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
-    // Create the QuotaObject before all file IO and keep it alive until caching
-    // completes to get maximum assertion coverage in QuotaManager against
-    // concurrent removal, etc.
-    mQuotaObject = qm->GetQuotaObject(mPersistence, mGroup, mOrigin, file);
-    NS_ENSURE_STATE(mQuotaObject);
+  // Create the QuotaObject before all file IO and keep it alive until caching
+  // completes to get maximum assertion coverage in QuotaManager against
+  // concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
+                                    mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
 
+  if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
+                                     /* aTruncate */ false)) {
+    // If the request fails, it might be because mOrigin is using too much
+    // space (MaybeUpdateSize will not evict our own origin since it is
+    // active). Try to make some space by evicting LRU entries until there is
+    // enough space.
+    EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
     if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
                                        /* aTruncate */ false)) {
-      // If the request fails, it might be because mOrigin is using too much
-      // space (MaybeUpdateSize will not evict our own origin since it is
-      // active). Try to make some space by evicting LRU entries until there is
-      // enough space.
-      EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
-      if (!mQuotaObject->MaybeUpdateSize(mWriteParams.mSize,
-                                         /* aTruncate */ false)) {
-        mResult = JS::AsmJSCache_QuotaExceeded;
-        return NS_ERROR_FAILURE;
-      }
+      mResult = JS::AsmJSCache_QuotaExceeded;
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -853,13 +759,12 @@ ParentRunnable::OpenCacheFileForRead()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
-    // Even though it's not strictly necessary, create the QuotaObject before
-    // all file IO and keep it alive until caching completes to get maximum
-    // assertion coverage in QuotaManager against concurrent removal, etc.
-    mQuotaObject = qm->GetQuotaObject(mPersistence, mGroup, mOrigin, file);
-    NS_ENSURE_STATE(mQuotaObject);
-  }
+  // Even though it's not strictly necessary, create the QuotaObject before all
+  // file IO and keep it alive until caching completes to get maximum assertion
+  // coverage in QuotaManager against concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY, mGroup,
+                                    mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
 
   rv = file->GetFileSize(&mFileSize);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -956,8 +861,7 @@ ParentRunnable::Run()
 
       rv = ReadMetadata();
       if (NS_FAILED(rv)) {
-        mState = eFailedToReadMetadata;
-        MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+        FailOnNonOwningThread();
         return NS_OK;
       }
 
@@ -976,18 +880,6 @@ ParentRunnable::Run()
 
       mState = eSendingCacheFile;
       MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
-      return NS_OK;
-    }
-
-    case eFailedToReadMetadata: {
-      AssertIsOnOwningThread();
-
-      if (mOpenMode == eOpenForRead) {
-        CacheMiss();
-        return NS_OK;
-      }
-
-      Fail();
       return NS_OK;
     }
 
@@ -1289,14 +1181,13 @@ private:
     MOZ_ASSERT(mState == eOpening);
 
     uint32_t moduleIndex;
-    if (FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
-      if (!SendSelectCacheFileToRead(moduleIndex)) {
-        return IPC_FAIL_NO_REASON(this);
-      }
+    if (!FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
+      Fail(JS::AsmJSCache_InternalError);
+      Send__delete__(this, JS::AsmJSCache_InternalError);
       return IPC_OK();
     }
 
-    if (!SendCacheMiss()) {
+    if (!SendSelectCacheFileToRead(moduleIndex)) {
       return IPC_FAIL_NO_REASON(this);
     }
     return IPC_OK();
@@ -1651,7 +1542,6 @@ CloseEntryForRead(size_t aSize,
 
 JS::AsmJSCacheResult
 OpenEntryForWrite(nsIPrincipal* aPrincipal,
-                  bool aInstalled,
                   const char16_t* aBegin,
                   const char16_t* aEnd,
                   size_t aSize,
@@ -1668,7 +1558,6 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
   static_assert(sNumFastHashChars < sMinCachedModuleLength, "HashString safe");
 
   WriteParams writeParams;
-  writeParams.mInstalled = aInstalled;
   writeParams.mSize = aSize;
   writeParams.mFastHash = HashString(aBegin, sNumFastHashChars);
   writeParams.mNumChars = aEnd - aBegin;
@@ -1890,7 +1779,6 @@ ParamTraits<WriteParams>::Write(Message* aMsg, const paramType& aParam)
   WriteParam(aMsg, aParam.mFastHash);
   WriteParam(aMsg, aParam.mNumChars);
   WriteParam(aMsg, aParam.mFullHash);
-  WriteParam(aMsg, aParam.mInstalled);
 }
 
 bool
@@ -1900,8 +1788,7 @@ ParamTraits<WriteParams>::Read(const Message* aMsg, PickleIterator* aIter,
   return ReadParam(aMsg, aIter, &aResult->mSize) &&
          ReadParam(aMsg, aIter, &aResult->mFastHash) &&
          ReadParam(aMsg, aIter, &aResult->mNumChars) &&
-         ReadParam(aMsg, aIter, &aResult->mFullHash) &&
-         ReadParam(aMsg, aIter, &aResult->mInstalled);
+         ReadParam(aMsg, aIter, &aResult->mFullHash);
 }
 
 void
@@ -1911,7 +1798,6 @@ ParamTraits<WriteParams>::Log(const paramType& aParam, std::wstring* aLog)
   LogParam(aParam.mFastHash, aLog);
   LogParam(aParam.mNumChars, aLog);
   LogParam(aParam.mFullHash, aLog);
-  LogParam(aParam.mInstalled, aLog);
 }
 
 } // namespace IPC

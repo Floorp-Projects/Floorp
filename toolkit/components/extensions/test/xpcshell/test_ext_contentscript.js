@@ -1,17 +1,9 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for content script</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
+
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
+
+const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(function* test_contentscript() {
   function background() {
@@ -41,7 +33,7 @@ add_task(function* test_contentscript() {
   function contentScript() {
     let manifest = browser.runtime.getManifest();
     void manifest.applications.gecko.id;
-    chrome.runtime.sendMessage(["chrome-namespace-ok"]);
+    browser.runtime.sendMessage(["chrome-namespace-ok"]);
   }
 
   let extensionData = {
@@ -49,22 +41,22 @@ add_task(function* test_contentscript() {
       applications: {gecko: {id: "contentscript@tests.mozilla.org"}},
       content_scripts: [
         {
-          "matches": ["http://mochi.test/*/file_sample.html"],
+          "matches": ["http://*/*/file_sample.html"],
           "js": ["content_script_start.js"],
           "run_at": "document_start",
         },
         {
-          "matches": ["http://mochi.test/*/file_sample.html"],
+          "matches": ["http://*/*/file_sample.html"],
           "js": ["content_script_end.js"],
           "run_at": "document_end",
         },
         {
-          "matches": ["http://mochi.test/*/file_sample.html"],
+          "matches": ["http://*/*/file_sample.html"],
           "js": ["content_script_idle.js"],
           "run_at": "document_idle",
         },
         {
-          "matches": ["http://mochi.test/*/file_sample.html"],
+          "matches": ["http://*/*/file_sample.html"],
           "js": ["content_script.js"],
           "run_at": "document_idle",
         },
@@ -96,21 +88,15 @@ add_task(function* test_contentscript() {
 
   yield extension.startup();
 
-  let win = window.open("file_sample.html");
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
-  yield Promise.all([waitForLoad(win), completePromise, chromeNamespacePromise]);
-  info("test page loaded");
+  yield Promise.all([completePromise, chromeNamespacePromise]);
 
-  win.close();
+  yield contentPage.close();
 
-  is(loadingCount, 1, "document_start script ran exactly once");
-  is(interactiveCount, 1, "document_end script ran exactly once");
-  is(completeCount, 1, "document_idle script ran exactly once");
+  equal(loadingCount, 1, "document_start script ran exactly once");
+  equal(interactiveCount, 1, "document_end script ran exactly once");
+  equal(completeCount, 1, "document_idle script ran exactly once");
 
   yield extension.unload();
-  info("extension unloaded");
 });
-</script>
-
-</body>
-</html>

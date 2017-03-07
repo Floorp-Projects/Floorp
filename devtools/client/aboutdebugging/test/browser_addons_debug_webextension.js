@@ -28,8 +28,7 @@ add_task(function* testWebExtensionsToolboxWebConsole() {
   let onCustomMessage = new Promise(done => {
     Services.obs.addObserver(function listener(message, topic) {
       let apiMessage = message.wrappedJSObject;
-      if (!apiMessage.originAttributes ||
-          apiMessage.originAttributes.addonId != ADDON_ID) {
+      if (apiMessage.addonId != ADDON_ID) {
         return;
       }
       Services.obs.removeObserver(listener, "console-api-log-event");

@@ -45,6 +45,7 @@ struct OriginComparator
 
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
                                          const OriginAttributes& aAttrs)
+  : BasePrincipal(eExpandedPrincipal)
 {
   // We force the principals to be sorted by origin so that nsExpandedPrincipal
   // origins can have a canonical form.
@@ -57,6 +58,15 @@ nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhit
 
 nsExpandedPrincipal::~nsExpandedPrincipal()
 { }
+
+already_AddRefed<nsExpandedPrincipal>
+nsExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
+                            const OriginAttributes& aAttrs)
+{
+  RefPtr<nsExpandedPrincipal> ep = new nsExpandedPrincipal(aWhiteList, aAttrs);
+  ep->FinishInit();
+  return ep.forget();
+}
 
 NS_IMETHODIMP
 nsExpandedPrincipal::GetDomain(nsIURI** aDomain)
@@ -159,6 +169,13 @@ nsExpandedPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   return NS_ERROR_NOT_AVAILABLE;
 }
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Truncate();
+  return NS_OK;
+};
 
 bool
 nsExpandedPrincipal::AddonHasPermission(const nsAString& aPerm)
