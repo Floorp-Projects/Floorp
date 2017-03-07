@@ -39,8 +39,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Performance,
                                            DOMEventTargetHelper)
 
-  static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
-
   static bool IsObserverEnabled(JSContext* aCx, JSObject* aGlobal);
 
   static already_AddRefed<Performance>

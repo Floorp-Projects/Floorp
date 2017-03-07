@@ -295,13 +295,15 @@ XPCWrappedNativeScope::EnsureContentXBLScope(JSContext* cx)
     MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
     nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
     principalAsArray.AppendElement(principal);
-    nsCOMPtr<nsIExpandedPrincipal> ep =
-        new nsExpandedPrincipal(principalAsArray,
-                                principal->OriginAttributesRef());
+    RefPtr<nsExpandedPrincipal> ep =
+        nsExpandedPrincipal::Create(principalAsArray,
+                                    principal->OriginAttributesRef());
 
     // Create the sandbox.
     RootedValue v(cx);
-    nsresult rv = CreateSandboxObject(cx, &v, ep, options);
+    nsresult rv = CreateSandboxObject(cx, &v,
+                                      static_cast<nsIExpandedPrincipal*>(ep),
+                                      options);
     NS_ENSURE_SUCCESS(rv, nullptr);
     mContentXBLScope = &v.toObject();
 

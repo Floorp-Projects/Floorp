@@ -22,7 +22,6 @@ child:
   async OnOpenMetadataForRead(Metadata metadata);
 parent:
   async SelectCacheFileToRead(uint32_t moduleIndex);
-  async CacheMiss();
 
 child:
   // Once the cache file has been opened, the child is notified and sent an

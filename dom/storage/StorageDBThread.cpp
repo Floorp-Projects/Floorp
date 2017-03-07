@@ -38,7 +38,7 @@
 #define MAX_WAL_SIZE_BYTES 512 * 1024
 
 // Current version of the database schema
-#define CURRENT_SCHEMA_VERSION 1
+#define CURRENT_SCHEMA_VERSION 2
 
 namespace mozilla {
 namespace dom {

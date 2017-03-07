@@ -1609,7 +1609,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
     // is available when calling into the resampler to call the callback: the input
     // refill event will be set shortly after to compensate for this lack of data.
     // In debug, four buffers are used, to avoid tripping up assertions down the line.
-#if !defined(NDEBUG)
+#if !defined(DEBUG)
     const int silent_buffer_count = 2;
 #else
     const int silent_buffer_count = 4;

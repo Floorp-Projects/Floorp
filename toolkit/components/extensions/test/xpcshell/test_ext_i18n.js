@@ -1,21 +1,18 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Test for WebExtension localization APIs</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
 "use strict";
 
-SimpleTest.registerCleanupFunction(() => { SpecialPowers.clearUserPref("intl.accept_languages"); });
-SimpleTest.registerCleanupFunction(() => { SpecialPowers.clearUserPref("general.useragent.locale"); });
+Cu.import("resource://gre/modules/Preferences.jsm");
+
+
+const server = createHttpServer();
+server.registerDirectory("/data/", do_get_file("data"));
+
+const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
+
+do_register_cleanup(() => {
+  Preferences.reset("intl.accept_languages");
+  Preferences.reset("general.useragent.locale");
+});
+
 
 add_task(function* test_i18n() {
   function runTests(assertEq) {
@@ -65,7 +62,7 @@ add_task(function* test_i18n() {
       "default_locale": "jp",
 
       content_scripts: [
-        {"matches": ["http://mochi.test/*/file_sample.html"],
+        {"matches": ["http://*/*/file_sample.html"],
          "js": ["content.js"]},
       ],
     },
@@ -154,90 +151,80 @@ add_task(function* test_i18n() {
 
   yield extension.startup();
 
-  let win = window.open("file_sample.html");
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
   yield extension.awaitMessage("content-script-finished");
-  win.close();
+  yield contentPage.close();
 
   yield extension.unload();
 });
 
 add_task(function* test_get_accept_languages() {
-  function background() {
-    function checkResults(source, results, expected) {
-      if (results[0] === "en-us" && expected[0] === "en-US") {
-        // This sometimes winds up with unexpected capitalization in Android tests.
-        expected[0] = expected[0].toLowerCase();
-      }
-
+  function checkResults(source, results, expected) {
+    browser.test.assertEq(
+      expected.length,
+      results.length,
+      `got expected number of languages in ${source}`);
+    results.forEach((lang, index) => {
       browser.test.assertEq(
-        expected.length,
-        results.length,
-        `got expected number of languages in ${source}`);
-      results.forEach((lang, index) => {
-        browser.test.assertEq(
-          expected[index],
-          lang,
-          `got expected language in ${source}`);
-      });
-    }
-
-    let tabId;
-
-    browser.tabs.query({currentWindow: true, active: true}).then(tabs => {
-      tabId = tabs[0].id;
-      browser.test.sendMessage("ready");
-    });
-
-    browser.test.onMessage.addListener(async ([msg, expected]) => {
-      let contentResults = await browser.tabs.sendMessage(tabId, "get-results");
-      let backgroundResults = await browser.i18n.getAcceptLanguages();
-
-      checkResults("contentScript", contentResults, expected);
-      checkResults("background", backgroundResults, expected);
-
-      browser.test.sendMessage("done");
+        expected[index],
+        lang,
+        `got expected language in ${source}`);
     });
   }
 
-  function content() {
-    browser.runtime.onMessage.addListener((msg, sender, respond) => {
-      browser.i18n.getAcceptLanguages(respond);
-      return true;
+  function background(checkResultsFn) {
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      browser.i18n.getAcceptLanguages().then(results => {
+        checkResultsFn("background", results, expected);
+
+        browser.test.sendMessage("background-done");
+      });
+    });
+  }
+
+  function content(checkResultsFn) {
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      browser.i18n.getAcceptLanguages().then(results => {
+        checkResultsFn("contentScript", results, expected);
+
+        browser.test.sendMessage("content-done");
+      });
     });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "content_scripts": [{
-        "matches": ["http://mochi.test/*/file_sample.html"],
+        "matches": ["http://*/*/file_sample.html"],
         "run_at": "document_start",
         "js": ["content_script.js"],
       }],
     },
 
-    background,
+    background: `(${background})(${checkResults})`,
 
     files: {
-      "content_script.js": content,
+      "content_script.js": `(${content})(${checkResults})`,
     },
   });
 
-  let win = window.open("file_sample.html");
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   yield extension.startup();
-  yield extension.awaitMessage("ready");
 
   let expectedLangs = ["en-US", "en"];
   extension.sendMessage(["expect-results", expectedLangs]);
-  yield extension.awaitMessage("done");
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
 
   expectedLangs = ["en-US", "en", "fr-CA", "fr"];
-  SpecialPowers.setCharPref("intl.accept_languages", expectedLangs.toString());
+  Preferences.set("intl.accept_languages", expectedLangs.toString());
   extension.sendMessage(["expect-results", expectedLangs]);
-  yield extension.awaitMessage("done");
-  SpecialPowers.clearUserPref("intl.accept_languages");
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
+  Preferences.reset("intl.accept_languages");
 
-  win.close();
+  yield contentPage.close();
 
   yield extension.unload();
 });
@@ -250,73 +237,68 @@ add_task(function* test_get_ui_language() {
     };
   }
 
-  function background(getResultsFn) {
-    function checkResults(source, results, expected) {
-      browser.test.assertEq(
-        expected,
-        results.getUILanguage,
-        `Got expected getUILanguage result in ${source}`
-      );
-      browser.test.assertEq(
-        expected,
-        results.getMessage,
-        `Got expected getMessage result in ${source}`
-      );
-    }
+  function checkResults(source, results, expected) {
+    browser.test.assertEq(
+      expected,
+      results.getUILanguage,
+      `Got expected getUILanguage result in ${source}`
+    );
+    browser.test.assertEq(
+      expected,
+      results.getMessage,
+      `Got expected getMessage result in ${source}`
+    );
+  }
 
-    let tabId;
-
+  function background(getResultsFn, checkResultsFn) {
     browser.test.onMessage.addListener(([msg, expected]) => {
-      browser.tabs.sendMessage(tabId, "get-results", result => {
-        checkResults("contentScript", result, expected);
-        checkResults("background", getResultsFn(), expected);
+      checkResultsFn("background", getResultsFn(), expected);
 
-        browser.test.sendMessage("done");
-      });
-    });
-
-    browser.tabs.query({currentWindow: true, active: true}, tabs => {
-      tabId = tabs[0].id;
-      browser.test.sendMessage("ready");
+      browser.test.sendMessage("background-done");
     });
   }
 
-  function content(getResultsFn) {
-    browser.runtime.onMessage.addListener((msg, sender, respond) => {
-      respond(getResultsFn());
+  function content(getResultsFn, checkResultsFn) {
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      checkResultsFn("contentScript", getResultsFn(), expected);
+
+      browser.test.sendMessage("content-done");
     });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "content_scripts": [{
-        "matches": ["http://mochi.test/*/file_sample.html"],
+        "matches": ["http://*/*/file_sample.html"],
         "run_at": "document_start",
         "js": ["content_script.js"],
       }],
     },
 
-    background: `(${background})(${getResults})`,
+    background: `(${background})(${getResults}, ${checkResults})`,
 
     files: {
-      "content_script.js": `(${content})(${getResults})`,
+      "content_script.js": `(${content})(${getResults}, ${checkResults})`,
     },
   });
 
-  let win = window.open("file_sample.html");
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   yield extension.startup();
-  yield extension.awaitMessage("ready");
 
   extension.sendMessage(["expect-results", "en_US"]);
-  yield extension.awaitMessage("done");
 
-  SpecialPowers.setCharPref("general.useragent.locale", "he");
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
+
+  Preferences.set("general.useragent.locale", "he");
 
   extension.sendMessage(["expect-results", "he"]);
-  yield extension.awaitMessage("done");
 
-  win.close();
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
+
+  yield contentPage.close();
 
   yield extension.unload();
 });
@@ -338,70 +320,61 @@ add_task(function* test_detect_language() {
     "Pour une aide rapide et effective, veuiller trouver votre aide dans le menu ci-dessus." +
     "Motoring events began soon after the construction of the first successful gasoline-fueled automobiles. The quick brown fox jumped over the lazy dog";
 
-  function background() {
-    function checkResult(source, result, expected) {
-      browser.test.assertEq(expected.isReliable, result.isReliable, "result.confident is true");
+  function checkResult(source, result, expected) {
+    browser.test.assertEq(expected.isReliable, result.isReliable, "result.confident is true");
+    browser.test.assertEq(
+      expected.languages.length,
+      result.languages.length,
+      `result.languages contains the expected number of languages in ${source}`);
+    expected.languages.forEach((lang, index) => {
       browser.test.assertEq(
-        expected.languages.length,
-        result.languages.length,
-        `result.languages contains the expected number of languages in ${source}`);
-      expected.languages.forEach((lang, index) => {
-        browser.test.assertEq(
-          lang.percentage,
-          result.languages[index].percentage,
-          `element ${index} of result.languages array has the expected percentage in ${source}`);
-        browser.test.assertEq(
-          lang.language,
-          result.languages[index].language,
-          `element ${index} of result.languages array has the expected language in ${source}`);
-      });
-    }
-
-    let tabId;
-
-    browser.tabs.query({currentWindow: true, active: true}, tabs => {
-      tabId = tabs[0].id;
-      browser.test.sendMessage("ready");
-    });
-
-    browser.test.onMessage.addListener(async ([msg, expected]) => {
-      let backgroundResults = await browser.i18n.detectLanguage(msg);
-      let contentResults = await browser.tabs.sendMessage(tabId, msg);
-
-      checkResult("background", backgroundResults, expected);
-      checkResult("contentScript", contentResults, expected);
-
-      browser.test.sendMessage("done");
+        lang.percentage,
+        result.languages[index].percentage,
+        `element ${index} of result.languages array has the expected percentage in ${source}`);
+      browser.test.assertEq(
+        lang.language,
+        result.languages[index].language,
+        `element ${index} of result.languages array has the expected language in ${source}`);
     });
   }
 
-  function content() {
-    browser.runtime.onMessage.addListener((msg, sender, respond) => {
-      browser.i18n.detectLanguage(msg, respond);
-      return true;
+  function backgroundScript(checkResultFn) {
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      browser.i18n.detectLanguage(msg).then(result => {
+        checkResultFn("background", result, expected);
+        browser.test.sendMessage("background-done");
+      });
+    });
+  }
+
+  function content(checkResultFn) {
+    browser.test.onMessage.addListener(([msg, expected]) => {
+      browser.i18n.detectLanguage(msg).then(result => {
+        checkResultFn("contentScript", result, expected);
+        browser.test.sendMessage("content-done");
+      });
     });
   }
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "content_scripts": [{
-        "matches": ["http://mochi.test/*/file_sample.html"],
+        "matches": ["http://*/*/file_sample.html"],
         "run_at": "document_start",
         "js": ["content_script.js"],
       }],
     },
 
-    background,
+    background: `(${backgroundScript})(${checkResult})`,
 
     files: {
-      "content_script.js": content,
+      "content_script.js": `(${content})(${checkResult})`,
     },
   });
 
-  let win = window.open("file_sample.html");
+  let contentPage = yield ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   yield extension.startup();
-  yield extension.awaitMessage("ready");
 
   let expected = {
     isReliable: true,
@@ -417,7 +390,8 @@ add_task(function* test_detect_language() {
     ],
   };
   extension.sendMessage([fr_en_string, expected]);
-  yield extension.awaitMessage("done");
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
 
   expected = {
     isReliable: true,
@@ -429,14 +403,10 @@ add_task(function* test_detect_language() {
     ],
   };
   extension.sendMessage([af_string, expected]);
-  yield extension.awaitMessage("done");
+  yield extension.awaitMessage("background-done");
+  yield extension.awaitMessage("content-done");
 
-  win.close();
+  yield contentPage.close();
 
   yield extension.unload();
 });
-
-</script>
-
-</body>
-</html>

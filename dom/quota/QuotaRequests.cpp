@@ -248,6 +248,7 @@ Request::Request(nsIPrincipal* aPrincipal)
   : RequestBase(aPrincipal)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aPrincipal);
 }
 
 Request::~Request()
@@ -256,17 +257,36 @@ Request::~Request()
 }
 
 void
-Request::SetResult()
+Request::SetResult(nsIVariant* aResult)
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aResult);
   MOZ_ASSERT(!mHaveResultOrErrorCode);
+
+  mResult = aResult;
 
   mHaveResultOrErrorCode = true;
 
   FireCallback();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Request, RequestBase, mCallback)
+NS_IMETHODIMP
+Request::GetResult(nsIVariant** aResult)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aResult);
+
+  if (!mHaveResultOrErrorCode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(mResult);
+
+  NS_ADDREF(*aResult = mResult);
+  return NS_OK;
+}
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Request, RequestBase, mCallback, mResult)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Request)
   NS_INTERFACE_MAP_ENTRY(nsIQuotaRequest)

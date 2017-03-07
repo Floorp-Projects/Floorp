@@ -35,11 +35,8 @@ partial interface Performance {
 // http://www.w3.org/TR/performance-timeline/#sec-window.performance-attribute
 [Exposed=(Window,Worker)]
 partial interface Performance {
-  [Func="Performance::IsEnabled"]
   PerformanceEntryList getEntries();
-  [Func="Performance::IsEnabled"]
   PerformanceEntryList getEntriesByType(DOMString entryType);
-  [Func="Performance::IsEnabled"]
   PerformanceEntryList getEntriesByName(DOMString name, optional DOMString
     entryType);
 };
@@ -47,11 +44,8 @@ partial interface Performance {
 // http://www.w3.org/TR/resource-timing/#extensions-performance-interface
 [Exposed=Window]
 partial interface Performance {
-  [Func="Performance::IsEnabled"]
   void clearResourceTimings();
-  [Func="Performance::IsEnabled"]
   void setResourceTimingBufferSize(unsigned long maxSize);
-  [Func="Performance::IsEnabled"]
   attribute EventHandler onresourcetimingbufferfull;
 };
 
@@ -65,13 +59,11 @@ partial interface Performance {
 // http://www.w3.org/TR/user-timing/
 [Exposed=(Window,Worker)]
 partial interface Performance {
-  [Func="Performance::IsEnabled", Throws]
+  [Throws]
   void mark(DOMString markName);
-  [Func="Performance::IsEnabled"]
   void clearMarks(optional DOMString markName);
-  [Func="Performance::IsEnabled", Throws]
+  [Throws]
   void measure(DOMString measureName, optional DOMString startMark, optional DOMString endMark);
-  [Func="Performance::IsEnabled"]
   void clearMeasures(optional DOMString measureName);
 };
 

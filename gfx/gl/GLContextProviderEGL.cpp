@@ -422,7 +422,7 @@ GLContextEGL::ReleaseSurface() {
 bool
 GLContextEGL::SetupLookupFunction()
 {
-    mLookupFunc = (PlatformLookupFunction)sEGLLibrary.mSymbols.fGetProcAddress;
+    mLookupFunc = sEGLLibrary.GetLookupFunction();
     return true;
 }
 

@@ -9,29 +9,8 @@ function* testSteps()
 {
   const openParams = [
     // This one lives in storage/default/http+++www.mozilla.org
-    { url: "http://www.mozilla.org", dbName: "dbB", dbVersion: 1 },
-
-    // This one lives in storage/default/1007+t+https+++developer.cdn.mozilla.net
-    { appId: 1007, inIsolatedMozBrowser: true, url: "https://developer.cdn.mozilla.net",
-      dbName: "dbN", dbVersion: 1 },
+    { url: "http://www.mozilla.org", dbName: "dbB", dbVersion: 1 }
   ];
-
-  let ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                         .getService(SpecialPowers.Ci.nsIIOService);
-
-  let ssm = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                         .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-
-  function openDatabase(params) {
-    let uri = ios.newURI(params.url);
-    let principal =
-      ssm.createCodebasePrincipal(uri,
-                                  {appId: params.appId || ssm.NO_APPID,
-                                   inIsolatedMozBrowser: params.inIsolatedMozBrowser});
-    let request = indexedDB.openForPrincipal(principal, params.dbName,
-                                             params.dbVersion);
-    return request;
-  }
 
   clearAllDatabases(continueToNextStepSync);
   yield undefined;
@@ -39,7 +18,9 @@ function* testSteps()
   installPackagedProfile("storagePersistentUpgrade_profile");
 
   for (let params of openParams) {
-    let request = openDatabase(params);
+    let request = indexedDB.openForPrincipal(getPrincipal(params.url),
+                                             params.dbName,
+                                             params.dbVersion);
     request.onerror = errorHandler;
     request.onupgradeneeded = unexpectedSuccessHandler;
     request.onsuccess = grabEventAndContinueHandler;
@@ -52,7 +33,9 @@ function* testSteps()
   yield undefined;
 
   for (let params of openParams) {
-    let request = openDatabase(params);
+    let request = indexedDB.openForPrincipal(getPrincipal(params.url),
+                                             params.dbName,
+                                             params.dbVersion);
     request.onerror = errorHandler;
     request.onupgradeneeded = unexpectedSuccessHandler;
     request.onsuccess = grabEventAndContinueHandler;
