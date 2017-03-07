@@ -9,6 +9,7 @@
 interface nsIPrincipal;
 interface nsIQuotaCallback;
 interface nsIQuotaUsageCallback;
+interface nsIVariant;
 
 [scriptable, uuid(9af54222-0407-48fd-a4ab-9457c986fc49)]
 interface nsIQuotaRequestBase : nsISupports
@@ -36,5 +37,7 @@ interface nsIQuotaUsageRequest : nsIQuotaRequestBase
 [scriptable, uuid(22890e3e-ff25-4372-9684-d901060e2f6c)]
 interface nsIQuotaRequest : nsIQuotaRequestBase
 {
+  [must_use] readonly attribute nsIVariant result;
+
   attribute nsIQuotaCallback callback;
 };

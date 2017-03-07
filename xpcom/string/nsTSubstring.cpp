@@ -1106,7 +1106,8 @@ nsTSubstring_CharT::SizeOfIncludingThisEvenIfShared(
   return aMallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
 }
 
-nsTSubstringSplitter_CharT nsTSubstring_CharT::Split(const nsTSubstring_CharT::char_type aChar)
+nsTSubstringSplitter_CharT
+nsTSubstring_CharT::Split(const nsTSubstring_CharT::char_type aChar) const
 {
   return nsTSubstringSplitter_CharT(this, aChar);
 }

@@ -94,7 +94,6 @@ GLContextCGL::~GLContextCGL()
         }
         [mContext release];
     }
-
 }
 
 bool

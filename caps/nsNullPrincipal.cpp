@@ -86,6 +86,8 @@ nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
     NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
   }
 
+  FinishInit();
+
   return NS_OK;
 }
 
@@ -155,6 +157,13 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   // For a null principal, we use our unique uuid as the base domain.
   return mURI->GetPath(aBaseDomain);
 }
+
+NS_IMETHODIMP
+nsNullPrincipal::GetAddonId(nsAString& aAddonId)
+{
+  aAddonId.Truncate();
+  return NS_OK;
+};
 
 /**
  * nsISerializable implementation

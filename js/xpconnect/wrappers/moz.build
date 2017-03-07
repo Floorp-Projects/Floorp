@@ -35,6 +35,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../../dom/base',
     '../src',
+    '/caps',
 ]
 
 if CONFIG['GNU_CXX']:

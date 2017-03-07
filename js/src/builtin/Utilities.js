@@ -109,7 +109,17 @@ function ToLength(v) {
     return std_Math_min(v, 0x1fffffffffffff);
 }
 
-/* Spec: ECMAScript Draft, 6th edition Oct 14, 2014, 7.2.4 */
+// ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
+// 7.2.9 SameValue ( x, y )
+function SameValue(x, y) {
+    if (x === y) {
+        return (x !== 0) || (1 / x === 1 / y);
+    }
+    return (x !== x && y !== y);
+}
+
+// ES2017 draft rev aebf014403a3e641fb1622aec47c40f051943527
+// 7.2.10 SameValueZero ( x, y )
 function SameValueZero(x, y) {
     return x === y || (x !== x && y !== y);
 }

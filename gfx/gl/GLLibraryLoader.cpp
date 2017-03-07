@@ -118,6 +118,14 @@ GLLibraryLoader::LoadSymbols(PRLibrary* lib,
     return failCount == 0 ? true : false;
 }
 
+/*static*/ void
+GLLibraryLoader::ClearSymbols(const SymLoadStruct* const firstStruct)
+{
+    for (auto cur = firstStruct; cur->symPointer; ++cur) {
+        *cur->symPointer = nullptr;
+    }
+}
+
 } /* namespace gl */
 } /* namespace mozilla */
 

@@ -56,6 +56,7 @@ assertEq(log,
          "get:lastIndex," +
          "set:lastIndex," +
          "get:exec,call:exec," +
+         "get:lastIndex," +
          "set:lastIndex," +
          "get:result[index],");
 
@@ -70,6 +71,7 @@ assertEq(log,
          "get:lastIndex," +
          "set:lastIndex," +
          "get:exec,call:exec," +
+         "get:lastIndex," +
          "set:lastIndex,");
 
 if (typeof reportCompare === "function")

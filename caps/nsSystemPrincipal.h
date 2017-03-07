@@ -22,7 +22,14 @@
 
 class nsSystemPrincipal final : public mozilla::BasePrincipal
 {
+  nsSystemPrincipal()
+    : BasePrincipal(eSystemPrincipal)
+  {
+  }
+
 public:
+  static already_AddRefed<nsSystemPrincipal> Create();
+
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   NS_IMETHOD GetHashValue(uint32_t* aHashValue) override;
@@ -34,9 +41,8 @@ public:
   NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
   NS_IMETHOD EnsurePreloadCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
+  NS_IMETHOD GetAddonId(nsAString& aAddonId) override;
   nsresult GetOriginInternal(nsACString& aOrigin) override;
-
-  nsSystemPrincipal() {}
 
   virtual nsresult GetScriptLocation(nsACString &aStr) override;
 
@@ -52,8 +58,6 @@ protected:
   {
     return true;
   }
-
-  PrincipalKind Kind() override { return eSystemPrincipal; }
 };
 
 #endif // nsSystemPrincipal_h__

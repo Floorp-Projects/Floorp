@@ -301,8 +301,7 @@ ConsoleAPIListener.prototype =
 
       // Filtering based on the originAttributes used by
       // the Console API object.
-      if (message.originAttributes &&
-          message.originAttributes.addonId == this.addonId) {
+      if (message.addonId == this.addonId) {
         return true;
       }
 

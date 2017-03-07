@@ -78,6 +78,7 @@ add_task(function* test_state() {
 
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
+  dirSvc = null;
 
   // We installed a non-restartless addon, need to restart the manager.
   restartManager();
