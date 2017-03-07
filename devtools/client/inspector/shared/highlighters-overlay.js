@@ -40,13 +40,15 @@ function HighlightersOverlay(inspector) {
   };
 
   this.onClick = this.onClick.bind(this);
+  this.onMarkupMutation = this.onMarkupMutation.bind(this);
   this.onMouseMove = this.onMouseMove.bind(this);
   this.onMouseOut = this.onMouseOut.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
   this.onNavigate = this.onNavigate.bind(this);
   this._handleRejection = this._handleRejection.bind(this);
 
-  // Add target events, not specific to a given view.
+  // Add inspector events, not specific to a given view.
+  this.inspector.on("markupmutation", this.onMarkupMutation);
   this.inspector.target.on("navigate", this.onNavigate);
   this.inspector.target.on("will-navigate", this.onWillNavigate);
 
@@ -376,6 +378,30 @@ HighlightersOverlay.prototype = {
   },
 
   /**
+   * Handler function for "markupmutation" events. Hides the grid highlighter if the grid
+   * container is no longer in the DOM tree.
+   */
+  onMarkupMutation: Task.async(function* (evt, mutations) {
+    let hasInterestingMutation = mutations.some(mut => mut.type === "childList");
+    if (!hasInterestingMutation || !this.gridHighlighterShown) {
+      // Bail out if the mutations did not remove nodes, or if no grid highlighter is
+      // displayed.
+      return;
+    }
+
+    let nodeFront = this.gridHighlighterShown;
+
+    try {
+      let isInTree = yield this.inspector.walker.isInDOMTree(nodeFront);
+      if (!isInTree) {
+        this.hideGridHighlighter(nodeFront);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }),
+
+  /**
    * Restore saved highlighter state after navigate.
    */
   onNavigate: Task.async(function* () {
@@ -410,7 +436,8 @@ HighlightersOverlay.prototype = {
       }
     }
 
-    // Remove target events.
+    // Remove inspector events.
+    this.inspector.off("markupmutation", this.onMarkupMutation);
     this.inspector.target.off("navigate", this.onNavigate);
     this.inspector.target.off("will-navigate", this.onWillNavigate);
 
