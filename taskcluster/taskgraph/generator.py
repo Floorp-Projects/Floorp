@@ -13,6 +13,7 @@ from .graph import Graph
 from .taskgraph import TaskGraph
 from .task import Task
 from .optimize import optimize_task_graph
+from .morph import morph
 from .util.python_path import find_object
 from .transforms.base import TransformSequence, TransformConfig
 from .util.verify import (
@@ -167,6 +168,17 @@ class TaskGraphGenerator(object):
         """
         return self._run_until('label_to_taskid')
 
+    @property
+    def morphed_task_graph(self):
+        """
+        The optimized task graph, with any subsequent morphs applied. This graph
+        will have the same meaning as the optimized task graph, but be in a form
+        more palatable to TaskCluster.
+
+        @type: TaskGraph
+        """
+        return self._run_until('morphed_task_graph')
+
     def _load_kinds(self):
         for path in os.listdir(self.root_dir):
             path = os.path.join(self.root_dir, path)
@@ -260,8 +272,13 @@ class TaskGraphGenerator(object):
         optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
                                                                     self.parameters,
                                                                     do_not_optimize)
-        yield 'label_to_taskid', label_to_taskid
+
         yield 'optimized_task_graph', optimized_task_graph
+
+        morphed_task_graph, label_to_taskid = morph(optimized_task_graph, label_to_taskid)
+
+        yield 'label_to_taskid', label_to_taskid
+        yield 'morphed_task_graph', morphed_task_graph
 
     def _run_until(self, name):
         while name not in self._run_results:
