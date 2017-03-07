@@ -38,11 +38,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.util.FileUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -223,7 +225,7 @@ public class Distribution {
             public void run() {
                 boolean distributionSet = distribution.doInit();
                 if (distributionSet) {
-                    String preferencesJSON = "";
+                    GeckoBundle data = null;
                     try {
                         final File descFile = distribution.getDistributionFile("preferences.json");
                         if (descFile == null) {
@@ -231,11 +233,15 @@ public class Distribution {
                             // preferences.json file.
                             throw new IOException("preferences.json not found");
                         }
-                        preferencesJSON = FileUtils.readStringFromFile(descFile);
+
+                        final String preferencesJSON = FileUtils.readStringFromFile(descFile);
+                        data = new GeckoBundle(1);
+                        data.putString("preferences", preferencesJSON);
+
                     } catch (IOException e) {
                         Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
                     }
-                    GeckoAppShell.notifyObservers("Distribution:Set", preferencesJSON);
+                    EventDispatcher.getInstance().dispatch("Distribution:Set", data);
                 }
             }
         });
@@ -343,7 +349,7 @@ public class Distribution {
         runLateReadyQueue();
 
         // Make sure that changes to search defaults are applied immediately.
-        GeckoAppShell.notifyObservers("Distribution:Changed", "");
+        EventDispatcher.getInstance().dispatch("Distribution:Changed", null);
     }
 
     /**

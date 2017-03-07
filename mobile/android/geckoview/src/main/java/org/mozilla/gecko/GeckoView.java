@@ -8,8 +8,6 @@ package org.mozilla.gecko;
 
 import java.util.Set;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
@@ -413,7 +411,9 @@ public class GeckoView extends LayerView
 
     public void importScript(final String url) {
         if (url.startsWith("resource://android/assets/")) {
-            GeckoAppShell.notifyObservers("GeckoView:ImportScript", url);
+            final GeckoBundle data = new GeckoBundle(1);
+            data.putString("scriptURL", url);
+            getEventDispatcher().dispatch("GeckoView:ImportScript", data);
             return;
         }
 

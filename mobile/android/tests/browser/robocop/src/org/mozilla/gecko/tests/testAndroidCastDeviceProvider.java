@@ -29,14 +29,11 @@ public class testAndroidCastDeviceProvider extends JavascriptTest implements Bun
         GeckoAppShell.notifyObservers("presentation-view-ready", "chromecast");
 
       } else if ("AndroidCastDevice:SyncDevice".equals(event)) {
-        final JSONObject json = new JSONObject();
-        try {
-            json.put("uuid", "existed-chromecast");
-            json.put("friendlyName", "existed-chromecast");
-            json.put("type", "chromecast");
-        } catch (JSONException ex) {
-        }
-        GeckoAppShell.notifyObservers("AndroidCastDevice:Added", json.toString());
+        final GeckoBundle data = new GeckoBundle(3);
+        data.putString("uuid", "existed-chromecast");
+        data.putString("friendlyName", "existed-chromecast");
+        data.putString("type", "chromecast");
+        EventDispatcher.getInstance().dispatch("AndroidCastDevice:Added", data);
       }
     }
 
