@@ -1003,6 +1003,35 @@ Parser<ParseHandler>::hasValidSimpleStrictParameterNames()
 
 template <typename ParseHandler>
 void
+Parser<ParseHandler>::reportMissingClosing(unsigned errorNumber, unsigned noteNumber,
+                                           uint32_t openedPos)
+{
+    auto notes = MakeUnique<JSErrorNotes>();
+    if (!notes)
+        return;
+
+    uint32_t line, column;
+    tokenStream.srcCoords.lineNumAndColumnIndex(openedPos, &line, &column);
+
+    const size_t MaxWidth = sizeof("4294967295");
+    char columnNumber[MaxWidth];
+    SprintfLiteral(columnNumber, "%" PRIu32, column);
+    char lineNumber[MaxWidth];
+    SprintfLiteral(lineNumber, "%" PRIu32, line);
+
+    if (!notes->addNoteASCII(pc->sc()->context,
+                             getFilename(), line, column,
+                             GetErrorMessage, nullptr,
+                             noteNumber, lineNumber, columnNumber))
+    {
+        return;
+    }
+
+    errorWithNotes(Move(notes), errorNumber);
+}
+
+template <typename ParseHandler>
+void
 Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind,
                                           TokenPos pos, uint32_t prevPos)
 {
@@ -1028,11 +1057,11 @@ Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKi
     char lineNumber[MaxWidth];
     SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-    if (!notes->addNoteLatin1(pc->sc()->context,
-                              getFilename(), line, column,
-                              GetErrorMessage, nullptr,
-                              JSMSG_REDECLARED_PREV,
-                              lineNumber, columnNumber))
+    if (!notes->addNoteASCII(pc->sc()->context,
+                             getFilename(), line, column,
+                             GetErrorMessage, nullptr,
+                             JSMSG_REDECLARED_PREV,
+                             lineNumber, columnNumber))
     {
         return;
     }
@@ -3607,6 +3636,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
+    uint32_t openedPos = 0;
     if (tt != TOK_LC) {
         if (funbox->isStarGenerator() || kind == Method ||
             kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
@@ -3629,6 +3659,8 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
         funbox->setIsExprBody();
+    } else {
+        openedPos = pos().begin;
     }
 
     // Arrow function parameters inherit yieldHandling from the enclosing
@@ -3670,7 +3702,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         if (!tokenStream.matchToken(&matched, TOK_RC, TokenStream::Operand))
             return false;
         if (!matched) {
-            error(JSMSG_CURLY_AFTER_BODY);
+            reportMissingClosing(JSMSG_CURLY_AFTER_BODY, JSMSG_CURLY_OPENED, openedPos);
             return false;
         }
         funbox->bufEnd = pos().end;
