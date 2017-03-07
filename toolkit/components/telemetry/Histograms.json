@@ -10775,7 +10775,7 @@
   },
   "CONTAINER_USED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "58",
     "kind": "enumerated",
     "bug_numbers": [1276006],
     "n_values": 5,
@@ -10783,14 +10783,14 @@
   },
   "UNIQUE_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "58",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the unique number of opened Containers."
   },
   "TOTAL_CONTAINERS_OPENED": {
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "never",
+    "expires_in_version": "58",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
