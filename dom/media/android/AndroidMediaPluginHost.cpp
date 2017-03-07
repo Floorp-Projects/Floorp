@@ -10,7 +10,6 @@
 #include "mozilla/Services.h"
 #include "AndroidMediaPluginHost.h"
 #include "nsAutoPtr.h"
-#include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"
 #include "nsIGfxInfo.h"
 #include "gfxCrashReporterUtils.h"
@@ -230,8 +229,8 @@ AndroidMediaPluginHost::~AndroidMediaPluginHost() {
 bool AndroidMediaPluginHost::FindDecoder(const MediaContainerType& aMimeType,
                                          MediaCodecs* aCodecs)
 {
-  const char *chars;
-  size_t len = NS_CStringGetData(aMimeType.Type().AsString(), &chars, nullptr);
+  const char *chars = aMimeType.Type().AsString().BeginReading();
+  size_t len = aMimeType.Type().AsString().Length();
   for (size_t n = 0; n < mPlugins.Length(); ++n) {
     Manifest *plugin = mPlugins[n];
     const char* const *codecs;
@@ -262,8 +261,8 @@ MPAPI::Decoder *AndroidMediaPluginHost::CreateDecoder(MediaResource *aResource,
     return nullptr;
   }
 
-  const char *chars;
-  size_t len = NS_CStringGetData(aMimeType.Type().AsString(), &chars, nullptr);
+  const char *chars = aMimeType.Type().AsString().BeginReading();
+  size_t len = aMimeType.Type().AsString().Length();
   for (size_t n = 0; n < mPlugins.Length(); ++n) {
     Manifest *plugin = mPlugins[n];
     const char* const *codecs;

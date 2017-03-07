@@ -110,10 +110,11 @@ public:
 
   HttpBaseChannel();
 
-  virtual nsresult Init(nsIURI *aURI, uint32_t aCaps, nsProxyInfo *aProxyInfo,
-                        uint32_t aProxyResolveFlags,
-                        nsIURI *aProxyURI,
-                        const nsID& aChannelId);
+  virtual MOZ_MUST_USE nsresult Init(nsIURI *aURI, uint32_t aCaps,
+                                     nsProxyInfo *aProxyInfo,
+                                     uint32_t aProxyResolveFlags,
+                                     nsIURI *aProxyURI,
+                                     const nsID& aChannelId);
 
   // nsIRequest
   NS_IMETHOD GetName(nsACString& aName) override;
@@ -231,7 +232,7 @@ public:
   NS_IMETHOD GetBeConservative(bool *aBeConservative) override;
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
   NS_IMETHOD GetApiRedirectToURI(nsIURI * *aApiRedirectToURI) override;
-  virtual nsresult AddSecurityMessage(const nsAString &aMessageTag, const nsAString &aMessageCategory);
+  virtual MOZ_MUST_USE nsresult AddSecurityMessage(const nsAString &aMessageTag, const nsAString &aMessageCategory);
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages) override;
   NS_IMETHOD GetResponseTimeoutEnabled(bool *aEnable) override;
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable) override;
@@ -312,7 +313,7 @@ public:
     private:
         virtual ~nsContentEncodings();
 
-        nsresult PrepareForNext(void);
+        MOZ_MUST_USE nsresult PrepareForNext(void);
 
         // We do not own the buffer.  The channel owns it.
         const char* mEncodingHeader;
@@ -332,7 +333,7 @@ public:
     const NetAddr& GetSelfAddr() { return mSelfAddr; }
     const NetAddr& GetPeerAddr() { return mPeerAddr; }
 
-    nsresult OverrideSecurityInfo(nsISupports* aSecurityInfo);
+    MOZ_MUST_USE nsresult OverrideSecurityInfo(nsISupports* aSecurityInfo);
 
 public: /* Necko internal use only... */
     bool IsNavigation();
@@ -344,8 +345,9 @@ public: /* Necko internal use only... */
 
     // Like nsIEncodedChannel::DoApplyConversions except context is set to
     // mListenerContext.
-    nsresult DoApplyContentConversions(nsIStreamListener *aNextListener,
-                                       nsIStreamListener **aNewNextListener);
+    MOZ_MUST_USE nsresult
+    DoApplyContentConversions(nsIStreamListener *aNextListener,
+                              nsIStreamListener **aNewNextListener);
 
     // Callback on main thread when NS_AsyncCopy() is finished populating
     // the new mUploadStream.
@@ -375,10 +377,9 @@ protected:
   nsPIDOMWindowInner* GetInnerDOMWindow();
 
   void AddCookiesToRequest();
-  virtual nsresult SetupReplacementChannel(nsIURI *,
-                                           nsIChannel *,
-                                           bool preserveMethod,
-                                           uint32_t redirectFlags);
+  virtual MOZ_MUST_USE nsresult
+  SetupReplacementChannel(nsIURI *, nsIChannel *, bool preserveMethod,
+                          uint32_t redirectFlags);
 
   // bundle calling OMR observers and marking flag into one function
   inline void CallOnModifyRequestObservers() {
@@ -402,7 +403,7 @@ protected:
   // GetPrincipal Returns the channel's URI principal.
   nsIPrincipal *GetURIPrincipal();
 
-  bool BypassServiceWorker() const;
+  MOZ_MUST_USE bool BypassServiceWorker() const;
 
   // Returns true if this channel should intercept the network request and prepare
   // for a possible synthesized response instead.
@@ -626,7 +627,7 @@ public:
 
   // Aborts channel: calls OnStart/Stop with provided status, removes channel
   // from loadGroup.
-  nsresult AsyncAbort(nsresult status);
+  MOZ_MUST_USE nsresult AsyncAbort(nsresult status);
 
   // Does most the actual work.
   void HandleAsyncAbort();
@@ -634,8 +635,8 @@ public:
   // AsyncCall calls a member function asynchronously (via an event).
   // retval isn't refcounted and is set only when event was successfully
   // posted, the event is returned for the purpose of cancelling when needed
-  nsresult AsyncCall(void (T::*funcPtr)(),
-                     nsRunnableMethod<T> **retval = nullptr);
+  MOZ_MUST_USE nsresult AsyncCall(void (T::*funcPtr)(),
+                                  nsRunnableMethod<T> **retval = nullptr);
 private:
   T *mThis;
 
@@ -645,7 +646,7 @@ protected:
 };
 
 template <class T>
-nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
+MOZ_MUST_USE nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
 {
   MOZ_LOG(gHttpLog, LogLevel::Debug,
          ("HttpAsyncAborter::AsyncAbort [this=%p status=%" PRIx32 "]\n",

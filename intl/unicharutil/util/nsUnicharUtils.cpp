@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicharUtils.h"
-#include "nsXPCOMStrings.h"
 #include "nsUTF8Utils.h"
 #include "nsUnicodeProperties.h"
 #include "mozilla/Likely.h"
@@ -63,11 +62,12 @@ void
 ToLowerCase(const nsAString& aSource,
             nsAString& aDest)
 {
-  const char16_t *in;
-  char16_t *out;
-  uint32_t len = NS_StringGetData(aSource, &in);
-  NS_StringGetMutableData(aDest, len, &out);
-  NS_ASSERTION(out, "Uh...");
+  const char16_t *in = aSource.BeginReading();
+  uint32_t len = aSource.Length();
+
+  aDest.SetLength(len);
+  char16_t *out = aDest.BeginWriting();
+
   ToLowerCase(in, out, len);
 }
 
@@ -88,11 +88,12 @@ void
 ToUpperCase(const nsAString& aSource,
             nsAString& aDest)
 {
-  const char16_t *in;
-  char16_t *out;
-  uint32_t len = NS_StringGetData(aSource, &in);
-  NS_StringGetMutableData(aDest, len, &out);
-  NS_ASSERTION(out, "Uh...");
+  const char16_t *in = aSource.BeginReading();
+  uint32_t len = aSource.Length();
+
+  aDest.SetLength(len);
+  char16_t *out = aDest.BeginWriting();
+
   ToUpperCase(in, out, len);
 }
 

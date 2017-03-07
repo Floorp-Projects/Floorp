@@ -792,7 +792,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
     if (httpChan) {
       nsAutoCString requestMethod;
-      httpChan->GetRequestMethod(requestMethod);
+      Unused << httpChan->GetRequestMethod(requestMethod);
       allowURLExt = !requestMethod.EqualsLiteral("POST");
     }
 
@@ -1674,8 +1674,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mOriginalChannel));
     if (httpChannel) {
       nsAutoCString refreshHeader;
-      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
-                                     refreshHeader);
+      Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
+                                               refreshHeader);
       if (!refreshHeader.IsEmpty()) {
         mShouldCloseWindow = false;
       }
@@ -1725,7 +1725,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   // Inform channel it is open on behalf of a download to prevent caching.
   nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
   if (httpInternal) {
-    httpInternal->SetChannelIsForDownload(true);
+    rv = httpInternal->SetChannelIsForDownload(true);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   // now that the temp file is set up, find out if we need to invoke a dialog

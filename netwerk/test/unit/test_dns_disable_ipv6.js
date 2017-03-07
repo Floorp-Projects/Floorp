@@ -29,10 +29,13 @@ var listener = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   do_test_pending();
   try {
-    dns.asyncResolve("example.com", Ci.nsIDNSService.RESOLVE_DISABLE_IPV6, listener, null);
+    dns.asyncResolve("example.com", Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
+                     listener, null, defaultOriginAttributes);
   } catch (e) {
     dump(e);
     do_check_true(false);

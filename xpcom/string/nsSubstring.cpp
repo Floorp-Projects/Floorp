@@ -343,15 +343,6 @@ nsStringBuffer::SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSiz
 #include "nsTSubstring.cpp"
 #include "string-template-undef.h"
 
-// Check that internal and external strings have the same size.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=430581
-
-#include "mozilla/Logging.h"
-#include "nsXPCOMStrings.h"
-
-static_assert(sizeof(nsStringContainer_base) == sizeof(nsSubstring),
-              "internal and external strings must have the same size");
-
 // Provide rust bindings to the nsA[C]String types
 extern "C" {
 

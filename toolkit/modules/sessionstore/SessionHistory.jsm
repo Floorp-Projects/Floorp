@@ -26,16 +26,16 @@ function debug(msg) {
  * The external API exported by this module.
  */
 this.SessionHistory = Object.freeze({
-  isEmpty: function (docShell) {
+  isEmpty(docShell) {
     return SessionHistoryInternal.isEmpty(docShell);
   },
 
-  collect: function (docShell, aFromIdx = -1) {
+  collect(docShell, aFromIdx = -1) {
     return SessionHistoryInternal.collect(docShell, aFromIdx);
   },
 
-  restore: function (docShell, tabData) {
-    SessionHistoryInternal.restore(docShell, tabData);
+  restore(docShell, tabData) {
+    return SessionHistoryInternal.restore(docShell, tabData);
   }
 });
 
@@ -54,7 +54,7 @@ var SessionHistoryInternal = {
    * @param docShell
    *        The docShell that owns the session history.
    */
-  isEmpty: function (docShell) {
+  isEmpty(docShell) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     if (!webNavigation.currentURI) {
@@ -73,7 +73,7 @@ var SessionHistoryInternal = {
    *        The starting local index to collect the history from.
    * @return An object reprereseting a partial global history update.
    */
-  collect: function (docShell, aFromIdx = -1) {
+  collect(docShell, aFromIdx = -1) {
     let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
@@ -141,7 +141,7 @@ var SessionHistoryInternal = {
    *        nsISHEntry instance
    * @return object
    */
-  serializeEntry: function (shEntry) {
+  serializeEntry(shEntry) {
     let entry = { url: shEntry.URI.spec };
 
     // Save some bytes and don't include the title property
@@ -275,8 +275,9 @@ var SessionHistoryInternal = {
    *        The docShell that owns the session history.
    * @param tabData
    *        The tabdata including all history entries.
+   * @return A reference to the docShell's nsISHistoryInternal interface.
    */
-  restore: function (docShell, tabData) {
+  restore(docShell, tabData) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     if (history.count > 0) {
@@ -288,7 +289,7 @@ var SessionHistoryInternal = {
     let docIdentMap = {};
     for (let i = 0; i < tabData.entries.length; i++) {
       let entry = tabData.entries[i];
-      //XXXzpao Wallpaper patch for bug 514751
+      // XXXzpao Wallpaper patch for bug 514751
       if (!entry.url)
         continue;
       let persist = "persist" in entry ? entry.persist : true;
@@ -300,6 +301,7 @@ var SessionHistoryInternal = {
     if (index < history.count && history.index != index) {
       history.getEntryAtIndex(index, true);
     }
+    return history;
   },
 
   /**
@@ -313,7 +315,7 @@ var SessionHistoryInternal = {
    *        Hash to ensure reuse of BFCache entries
    * @returns nsISHEntry
    */
-  deserializeEntry: function (entry, idMap, docIdentMap) {
+  deserializeEntry(entry, idMap, docIdentMap) {
 
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
@@ -401,10 +403,9 @@ var SessionHistoryInternal = {
       // for the document identifier.
       let matchingEntry = docIdentMap[entry.docIdentifier];
       if (!matchingEntry) {
-        matchingEntry = {shEntry: shEntry, childDocIdents: childDocIdents};
+        matchingEntry = {shEntry, childDocIdents};
         docIdentMap[entry.docIdentifier] = matchingEntry;
-      }
-      else {
+      } else {
         shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
         childDocIdents = matchingEntry.childDocIdents;
       }
@@ -435,7 +436,7 @@ var SessionHistoryInternal = {
 
     if (entry.children && shEntry instanceof Ci.nsISHContainer) {
       for (var i = 0; i < entry.children.length; i++) {
-        //XXXzpao Wallpaper patch for bug 514751
+        // XXXzpao Wallpaper patch for bug 514751
         if (!entry.children[i].url)
           continue;
 

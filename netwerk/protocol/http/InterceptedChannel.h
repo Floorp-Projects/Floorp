@@ -43,8 +43,10 @@ protected:
 
   void EnsureSynthesizedResponse();
   void DoNotifyController();
-  nsresult DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);
-  nsresult DoSynthesizeHeader(const nsACString& aName, const nsACString& aValue);
+  MOZ_MUST_USE nsresult DoSynthesizeStatus(uint16_t aStatus,
+                                           const nsACString& aReason);
+  MOZ_MUST_USE nsresult DoSynthesizeHeader(const nsACString& aName,
+                                           const nsACString& aValue);
 
   virtual ~InterceptedChannelBase();
 public:

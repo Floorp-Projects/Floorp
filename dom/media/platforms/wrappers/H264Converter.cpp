@@ -318,7 +318,7 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
         return NS_OK;
       }
 
-  mPendingSample = aSample;
+  RefPtr<MediaRawData> sample = aSample;
 
   if (CanRecycleDecoder()) {
     // Do not recreate the decoder, reuse it.
@@ -333,10 +333,9 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
     mDecoder->Flush()
       ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
              __func__,
-             [self, this]() {
+             [self, sample, this]() {
                mFlushRequest.Complete();
-               DecodeFirstSample(mPendingSample);
-               mPendingSample = nullptr;
+               DecodeFirstSample(sample);
              },
              [self, this](const MediaResult& aError) {
                mFlushRequest.Complete();
@@ -355,17 +354,16 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   mDecoder->Flush()
     ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
            __func__,
-           [self, this]() {
+           [self, sample, this]() {
              mFlushRequest.Complete();
              mShutdownPromise = Shutdown();
              mShutdownPromise
                ->Then(AbstractThread::GetCurrent()->AsTaskQueue(),
                       __func__,
-                      [self, this]() {
+                      [self, sample, this]() {
                         mShutdownRequest.Complete();
                         mShutdownPromise = nullptr;
                         mNeedAVCC.reset();
-                        RefPtr<MediaRawData> sample = mPendingSample.forget();
                         nsresult rv = CreateDecoderAndInit(sample);
                         if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
                           // All good so far, will continue later.

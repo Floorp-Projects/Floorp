@@ -32,12 +32,14 @@ var listener3 = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function run_test() {
   do_test_pending();
   prefs.setBoolPref("network.dns.offline-localhost", false);
   ioService.offline = true;
   try {
-    dns.asyncResolve("localhost", 0, listener1, mainThread);
+    dns.asyncResolve("localhost", 0, listener1, mainThread, defaultOriginAttributes);
   } catch (e) {
       do_check_eq(e.result, Cr.NS_ERROR_OFFLINE);
       test2();
@@ -55,7 +57,7 @@ function test2() {
 }
 
 function test2Continued() {
-  dns.asyncResolve("localhost", 0, listener2, mainThread);
+  dns.asyncResolve("localhost", 0, listener2, mainThread, defaultOriginAttributes);
 }
 
 function test3() {
@@ -66,7 +68,7 @@ function test3() {
 }
 
 function test3Continued() {
-  dns.asyncResolve("localhost", 0, listener3, mainThread);
+  dns.asyncResolve("localhost", 0, listener3, mainThread, defaultOriginAttributes);
 }
 
 function cleanup() {

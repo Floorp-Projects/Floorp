@@ -671,11 +671,13 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsIL
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
     // Spec says no redirects allowed for SW scripts.
-    httpChannel->SetRedirectionLimit(0);
+    rv = httpChannel->SetRedirectionLimit(0);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-    httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Service-Worker"),
-                                  NS_LITERAL_CSTRING("script"),
-                                  /* merge */ false);
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Service-Worker"),
+                                       NS_LITERAL_CSTRING("script"),
+                                       /* merge */ false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   nsCOMPtr<nsIStreamLoader> loader;
@@ -765,7 +767,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
     // Get the stringified numeric status code, not statusText which could be
     // something misleading like OK for a 404.
     uint32_t status = 0;
-    httpChannel->GetResponseStatus(&status); // don't care if this fails, use 0.
+    Unused << httpChannel->GetResponseStatus(&status); // don't care if this fails, use 0.
     nsAutoString statusAsText;
     statusAsText.AppendInt(status);
 

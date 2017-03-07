@@ -37,15 +37,19 @@ var listenerDontBlock = {
   }
 };
 
+const defaultOriginAttributes = {};
+
 function do_test_dontBlock() {
   prefs.setBoolPref("network.dns.blockDotOnion", false);
-  dns.asyncResolve("private.onion", 0, listenerDontBlock, mainThread);
+  dns.asyncResolve("private.onion", 0, listenerDontBlock,
+                   mainThread, defaultOriginAttributes);
 }
 
 function do_test_block() {
   prefs.setBoolPref("network.dns.blockDotOnion", true);
   try {
-    dns.asyncResolve("private.onion", 0, listenerBlock, mainThread);
+    dns.asyncResolve("private.onion", 0, listenerBlock,
+                     mainThread, defaultOriginAttributes);
   } catch (e) {
     // it is ok for this negative test to fail fast
     do_check_true(true);
