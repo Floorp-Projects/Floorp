@@ -2482,45 +2482,6 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                "How did we forget to pop some elements?");
 }
 
-static void Sort(nsDisplayList* aList, int32_t aCount, nsDisplayList::SortLEQ aCmp,
-                 void* aClosure) {
-  if (aCount < 2)
-    return;
-
-  nsDisplayList list1;
-  nsDisplayList list2;
-  int i;
-  int32_t half = aCount/2;
-  bool sorted = true;
-  nsDisplayItem* prev = nullptr;
-  for (i = 0; i < aCount; ++i) {
-    nsDisplayItem* item = aList->RemoveBottom();
-    (i < half ? &list1 : &list2)->AppendToTop(item);
-    if (sorted && prev && !aCmp(prev, item, aClosure)) {
-      sorted = false;
-    }
-    prev = item;
-  }
-  if (sorted) {
-    aList->AppendToTop(&list1);
-    aList->AppendToTop(&list2);
-    return;
-  }
-
-  Sort(&list1, half, aCmp, aClosure);
-  Sort(&list2, aCount - half, aCmp, aClosure);
-
-  for (i = 0; i < aCount; ++i) {
-    if (list1.GetBottom() &&
-        (!list2.GetBottom() ||
-         aCmp(list1.GetBottom(), list2.GetBottom(), aClosure))) {
-      aList->AppendToTop(list1.RemoveBottom());
-    } else {
-      aList->AppendToTop(list2.RemoveBottom());
-    }
-  }
-}
-
 static nsIContent* FindContentInDocument(nsDisplayItem* aItem, nsIDocument* aDoc) {
   nsIFrame* f = aItem->Frame();
   while (f) {
@@ -2533,41 +2494,55 @@ static nsIContent* FindContentInDocument(nsDisplayItem* aItem, nsIDocument* aDoc
   return nullptr;
 }
 
-static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                         void* aClosure) {
-  nsIContent* commonAncestor = static_cast<nsIContent*>(aClosure);
-  // It's possible that the nsIContent for aItem1 or aItem2 is in a subdocument
-  // of commonAncestor, because display items for subdocuments have been
-  // mixed into the same list. Ensure that we're looking at content
-  // in commonAncestor's document.
-  nsIDocument* commonAncestorDoc = commonAncestor->OwnerDoc();
-  nsIContent* content1 = FindContentInDocument(aItem1, commonAncestorDoc);
-  nsIContent* content2 = FindContentInDocument(aItem2, commonAncestorDoc);
-  if (!content1 || !content2) {
-    NS_ERROR("Document trees are mixed up!");
-    // Something weird going on
-    return true;
-  }
-  return nsLayoutUtils::CompareTreePosition(content1, content2, commonAncestor) <= 0;
-}
+struct ZSortItem {
+  nsDisplayItem* item;
+  int32_t zIndex;
 
-static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                        void* aClosure) {
-  // Note that we can't just take the difference of the two
-  // z-indices here, because that might overflow a 32-bit int.
-  return aItem1->ZIndex() <= aItem2->ZIndex();
-}
+  explicit ZSortItem(nsDisplayItem* aItem)
+    : item(aItem), zIndex(aItem->ZIndex()) {}
+
+  operator nsDisplayItem*() {
+    return item;
+  }
+};
+
+struct ZOrderComparator {
+  bool operator()(const ZSortItem& aLeft, const ZSortItem& aRight) const {
+    // Note that we can't just take the difference of the two
+    // z-indices here, because that might overflow a 32-bit int.
+    return aLeft.zIndex < aRight.zIndex;
+  }
+};
 
 void nsDisplayList::SortByZOrder() {
-  Sort(IsZOrderLEQ, nullptr);
+  Sort<ZSortItem>(ZOrderComparator());
 }
+
+struct ContentComparator {
+  nsIContent* mCommonAncestor;
+
+  explicit ContentComparator(nsIContent* aCommonAncestor)
+    : mCommonAncestor(aCommonAncestor) {}
+
+  bool operator()(nsDisplayItem* aLeft, nsDisplayItem* aRight) const {
+    // It's possible that the nsIContent for aItem1 or aItem2 is in a subdocument
+    // of commonAncestor, because display items for subdocuments have been
+    // mixed into the same list. Ensure that we're looking at content
+    // in commonAncestor's document.
+    nsIDocument* commonAncestorDoc = mCommonAncestor->OwnerDoc();
+    nsIContent* content1 = FindContentInDocument(aLeft, commonAncestorDoc);
+    nsIContent* content2 = FindContentInDocument(aRight, commonAncestorDoc);
+    if (!content1 || !content2) {
+      NS_ERROR("Document trees are mixed up!");
+      // Something weird going on
+      return true;
+    }
+    return nsLayoutUtils::CompareTreePosition(content1, content2, mCommonAncestor) < 0;
+  }
+};
 
 void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
-  Sort(IsContentLEQ, aCommonAncestor);
-}
-
-void nsDisplayList::Sort(SortLEQ aCmp, void* aClosure) {
-  ::Sort(this, Count(), aCmp, aClosure);
+  Sort<nsDisplayItem*>(ContentComparator(aCommonAncestor));
 }
 
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)

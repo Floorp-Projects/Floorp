@@ -1305,11 +1305,11 @@ GetTablePartRank(nsDisplayItem* aItem)
   return 3;
 }
 
-static bool CompareByTablePartRank(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                                     void* aClosure)
-{
-  return GetTablePartRank(aItem1) <= GetTablePartRank(aItem2);
-}
+struct TablePartRankComparator {
+  bool operator()(nsDisplayItem* aItem1, nsDisplayItem* aItem2) const {
+    return GetTablePartRank(aItem1) < GetTablePartRank(aItem2);
+  }
+};
 
 /* static */ void
 nsTableFrame::GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
@@ -1385,7 +1385,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
     // Ensure that the table frame event background goes before the
     // table rowgroups event backgrounds, before the table row event backgrounds,
     // before everything else (cells and their blocks)
-    separatedCollection.BorderBackground()->Sort(CompareByTablePartRank, nullptr);
+    separatedCollection.BorderBackground()->Sort<nsDisplayItem*>(TablePartRankComparator());
     separatedCollection.MoveTo(aLists);
   }
 
@@ -1402,7 +1402,7 @@ static inline bool FrameHasBorderOrBackground(nsTableFrame* tableFrame, nsIFrame
   }
   if (!f->StyleBackground()->IsTransparent(f) ||
       f->StyleDisplay()->mAppearance) {
-    
+
     nsTableCellFrame *cellFrame = do_QueryFrame(f);
     // We could also return false here if the current frame is the root
     // of a pseudo stacking context

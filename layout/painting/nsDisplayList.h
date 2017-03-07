@@ -2328,14 +2328,26 @@ public:
   void SortByContentOrder(nsIContent* aCommonAncestor);
 
   /**
-   * Generic stable sort. Take care, because some of the items might be nsDisplayLists
-   * themselves.
-   * aCmp(item1, item2) should return true if item1 <= item2. We sort the items
-   * into increasing order.
+   * Sort the display list using a stable sort. Take care, because some of the
+   * items might be nsDisplayLists themselves.
+   * aComparator(Item item1, Item item2) should return true if item1 should go
+   * before item2.
+   * We sort the items into increasing order.
    */
-  typedef bool (* SortLEQ)(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                             void* aClosure);
-  void Sort(SortLEQ aCmp, void* aClosure);
+  template<typename Item, typename Comparator>
+  void Sort(const Comparator& aComparator) {
+    nsTArray<Item> items;
+
+    while (nsDisplayItem* item = RemoveBottom()) {
+      items.AppendElement(Item(item));
+    }
+
+    std::stable_sort(items.begin(), items.end(), aComparator);
+
+    for (Item& item : items) {
+      AppendToTop(item);
+    }
+  }
 
   /**
    * Compute visiblity for the items in the list.
