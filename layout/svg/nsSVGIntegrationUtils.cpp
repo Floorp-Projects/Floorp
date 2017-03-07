@@ -137,16 +137,14 @@ nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
   // painting or hit-testing anyway.
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
   return aFrame->StyleEffects()->HasFilters() ||
-         style->HasClipPath() ||
-         style->mMask.HasLayerWithImage();
+         style->HasClipPath() || style->HasMask();
 }
 
 bool
 nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame)
 {
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-  return style->HasClipPath() ||
-         style->mMask.HasLayerWithImage();
+  return style->HasClipPath() || style->HasMask();
 }
 
 nsPoint
