@@ -246,7 +246,7 @@ MainThreadHandoff::OnCall(ICallFrame* aFrame)
     return hr;
   }
 
-  InterceptorTargetPtr targetInterface;
+  InterceptorTargetPtr<IUnknown> targetInterface;
   hr = interceptor->GetTargetForIID(iid, targetInterface);
   if (FAILED(hr)) {
     return hr;
@@ -415,23 +415,25 @@ MainThreadHandoff::GetHandler(CLSID* aHandlerClsid)
 }
 
 HRESULT
-MainThreadHandoff::GetHandlerPayloadSize(REFIID aIid, IUnknown* aTarget,
+MainThreadHandoff::GetHandlerPayloadSize(REFIID aIid,
+                                         InterceptorTargetPtr<IUnknown> aTarget,
                                          DWORD* aOutPayloadSize)
 {
   if (!mHandlerPayload) {
     return E_NOTIMPL;
   }
-  return mHandlerPayload->GetHandlerPayloadSize(aIid, aTarget, aOutPayloadSize);
+  return mHandlerPayload->GetHandlerPayloadSize(aIid, Move(aTarget),
+                                                aOutPayloadSize);
 }
 
 HRESULT
 MainThreadHandoff::WriteHandlerPayload(IStream* aStream, REFIID aIid,
-                                       IUnknown* aTarget)
+                                       InterceptorTargetPtr<IUnknown> aTarget)
 {
   if (!mHandlerPayload) {
     return E_NOTIMPL;
   }
-  return mHandlerPayload->WriteHandlerPayload(aStream, aIid, aTarget);
+  return mHandlerPayload->WriteHandlerPayload(aStream, aIid, Move(aTarget));
 }
 
 REFIID
@@ -482,7 +484,7 @@ MainThreadHandoff::OnWalkInterface(REFIID aIid, PVOID* aInterface,
   // as an interface that we are already managing. We can determine this by
   // querying (NOT casting!) both objects for IUnknown and then comparing the
   // resulting pointers.
-  InterceptorTargetPtr existingTarget;
+  InterceptorTargetPtr<IUnknown> existingTarget;
   hr = interceptor->GetTargetForIID(aIid, existingTarget);
   if (SUCCEEDED(hr)) {
     bool areIUnknownsEqual = false;
