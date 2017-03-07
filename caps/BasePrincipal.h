@@ -265,10 +265,12 @@ public:
   // use of all_urls permission, requiring the domain in its permissions.
   bool AddonAllowsLoad(nsIURI* aURI, bool aExplicit = false);
 
-  // Call this instead of Equals to avoid the cost of virtual dispatch.
+  // Call these to avoid the cost of virtual dispatch.
   bool FastEquals(nsIPrincipal* aOther);
-  // Call this instead of Subsumes to avoid the const of virtual dispatch.
+  bool FastEqualsConsideringDomain(nsIPrincipal* aOther);
   bool FastSubsumes(nsIPrincipal* aOther);
+  bool FastSubsumesConsideringDomain(nsIPrincipal* aOther);
+  bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
 protected:
   virtual ~BasePrincipal();
