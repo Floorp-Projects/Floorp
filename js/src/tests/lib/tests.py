@@ -141,6 +141,7 @@ class RefTest(object):
         self.test_reflect_stringify = None  # str or None: path to
                                             # reflect-stringify.js file to test
                                             # instead of actually running tests
+        self.is_module = False # bool: True => test is module code
 
     @staticmethod
     def prefix_command(path):
@@ -158,6 +159,8 @@ class RefTest(object):
               + RefTest.prefix_command(dirname)
         if self.test_reflect_stringify is not None:
             cmd += [self.test_reflect_stringify, "--check", self.path]
+        elif self.is_module:
+            cmd += ["--module", self.path]
         else:
             cmd += ["-f", self.path]
         return cmd
