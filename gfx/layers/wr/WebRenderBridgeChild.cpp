@@ -47,20 +47,6 @@ WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
 }
 
 void
-WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
-{
-  MOZ_ASSERT(mIsInTransaction);
-  mCommands.AppendElement(aCmd);
-}
-
-void
-WebRenderBridgeChild::AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands)
-{
-  MOZ_ASSERT(mIsInTransaction);
-  mCommands.AppendElements(aCommands);
-}
-
-void
 WebRenderBridgeChild::AddWebRenderParentCommand(const WebRenderParentCommand& aCmd)
 {
   MOZ_ASSERT(mIsInTransaction);
@@ -86,110 +72,6 @@ WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
   mReadLockSequenceNumber = 0;
   mReadLocks.AppendElement();
   return true;
-}
-
-wr::BuiltDisplayList
-WebRenderBridgeChild::ProcessWebrenderCommands(const gfx::IntSize &aSize,
-                                               InfallibleTArray<WebRenderCommand>& aCommands)
-{
-  wr::DisplayListBuilder builder(mPipelineId);
-  builder.Begin(ViewAs<LayerPixel>(aSize));
-
-  for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
-    const WebRenderCommand& cmd = aCommands[i];
-
-    switch (cmd.type()) {
-      case WebRenderCommand::TOpDPPushStackingContext: {
-        const OpDPPushStackingContext& op = cmd.get_OpDPPushStackingContext();
-        builder.PushStackingContext(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr), op.opacity(), op.matrix(), op.mixBlendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPopStackingContext: {
-        builder.PopStackingContext();
-        break;
-      }
-      case WebRenderCommand::TOpDPPushScrollLayer: {
-        const OpDPPushScrollLayer& op = cmd.get_OpDPPushScrollLayer();
-        builder.PushScrollLayer(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr));
-        break;
-      }
-      case WebRenderCommand::TOpDPPopScrollLayer: {
-        builder.PopScrollLayer();
-        break;
-      }
-      case WebRenderCommand::TOpDPPushRect: {
-        const OpDPPushRect& op = cmd.get_OpDPPushRect();
-        builder.PushRect(op.bounds(), op.clip(), op.color());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushBorder: {
-        const OpDPPushBorder& op = cmd.get_OpDPPushBorder();
-        builder.PushBorder(op.bounds(), op.clip(),
-                           op.top(), op.right(), op.bottom(), op.left(),
-                           op.radius());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushLinearGradient: {
-        const OpDPPushLinearGradient& op = cmd.get_OpDPPushLinearGradient();
-        builder.PushLinearGradient(op.bounds(), op.clip(),
-                                   op.startPoint(), op.endPoint(),
-                                   op.stops(), op.extendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushRadialGradient: {
-        const OpDPPushRadialGradient& op = cmd.get_OpDPPushRadialGradient();
-        builder.PushRadialGradient(op.bounds(), op.clip(),
-                                   op.startCenter(), op.endCenter(),
-                                   op.startRadius(), op.endRadius(),
-                                   op.stops(), op.extendMode());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushImage: {
-        const OpDPPushImage& op = cmd.get_OpDPPushImage();
-        builder.PushImage(op.bounds(), op.clip(),
-                          op.mask().ptrOr(nullptr), op.filter(), wr::ImageKey(op.key()));
-        break;
-      }
-      case WebRenderCommand::TOpDPPushIframe: {
-        const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        builder.PushIFrame(op.bounds(), op.clip(), op.pipelineId());
-        break;
-      }
-      case WebRenderCommand::TOpDPPushText: {
-        const OpDPPushText& op = cmd.get_OpDPPushText();
-        const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
-
-        for (size_t i = 0; i < glyph_array.Length(); i++) {
-          const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
-          builder.PushText(op.bounds(),
-                           op.clip(),
-                           glyph_array[i].color,
-                           op.key(),
-                           Range<const WrGlyphInstance>(glyphs.Elements(), glyphs.Length()),
-                           op.glyph_size());
-        }
-
-        break;
-      }
-      case WebRenderCommand::TOpDPPushBoxShadow: {
-        const OpDPPushBoxShadow& op = cmd.get_OpDPPushBoxShadow();
-        builder.PushBoxShadow(op.rect(),
-                              op.clip(),
-                              op.box_bounds(),
-                              op.offset(),
-                              op.color(),
-                              op.blur_radius(),
-                              op.spread_radius(),
-                              op.border_radius(),
-                              op.clip_mode());
-        break;
-      }
-      default:
-        NS_RUNTIMEABORT("not reached");
-    }
-  }
-  builder.End();
-  return builder.Finalize();
 }
 
 void
@@ -219,7 +101,6 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize
                     dlData, dl.dl_desc, auxData, dl.aux_desc);
   }
 
-  mCommands.Clear();
   mParentCommands.Clear();
   mDestroyedActors.Clear();
   mReadLocks.Clear();
