@@ -8,7 +8,10 @@
 #define mozilla_mscom_MainThreadInvoker_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Move.h"
 #include "mozilla/StaticPtr.h"
+#include "nsCOMPtr.h"
+#include "nsThreadUtils.h"
 
 #include <windows.h>
 
@@ -31,6 +34,19 @@ private:
 
   static HANDLE sMainThread;
 };
+
+template <typename Class, typename... Args>
+inline bool
+InvokeOnMainThread(Class* aObject, void (Class::*aMethod)(Args...),
+                   Args... aArgs)
+{
+  nsCOMPtr<nsIRunnable> runnable(
+      NewNonOwningRunnableMethod<Args...>(aObject, aMethod,
+                                          Forward<Args>(aArgs)...));
+
+  MainThreadInvoker invoker;
+  return invoker.Invoke(runnable.forget());
+}
 
 } // namespace mscom
 } // namespace mozilla
