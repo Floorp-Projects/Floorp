@@ -477,14 +477,8 @@ const PREF_OSFILE_LOG_REDIRECT = "toolkit.osfile.log.redirect";
  *        An optional value that the DEBUG flag was set to previously.
  */
 function readDebugPref(prefName, oldPref = false) {
-  let pref = oldPref;
-  try {
-    pref = Services.prefs.getBoolPref(prefName);
-  } catch (x) {
-    // In case of an error when reading a pref keep it as is.
-  }
   // If neither pref nor oldPref were set, default it to false.
-  return pref;
+  return Services.prefs.getBoolPref(prefName, oldPref);
 };
 
 /**
@@ -558,12 +552,8 @@ Services.prefs.addObserver(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
   function prefObserver() {
     // The temporary phase topic used to trigger the unclosed
     // phase warning.
-    let TOPIC = null;
-    try {
-      TOPIC = Services.prefs.getCharPref(
-        PREF_OSFILE_TEST_SHUTDOWN_OBSERVER);
-    } catch (x) {
-    }
+    let TOPIC = Services.prefs.getCharPref(PREF_OSFILE_TEST_SHUTDOWN_OBSERVER,
+                                           "");
     if (TOPIC) {
       // Generate a phase, add a blocker.
       // Note that this can work only if AsyncShutdown itself has been

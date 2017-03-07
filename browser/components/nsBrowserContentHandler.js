@@ -98,20 +98,14 @@ const OVERRIDE_NEW_BUILD_ID = 3;
  *  OVERRIDE_NONE otherwise.
  */
 function needHomepageOverride(prefb) {
-  var savedmstone = null;
-  try {
-    savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone");
-  } catch (e) {}
+  var savedmstone = prefb.getCharPref("browser.startup.homepage_override.mstone", "");
 
   if (savedmstone == "ignore")
     return OVERRIDE_NONE;
 
   var mstone = Services.appinfo.platformVersion;
 
-  var savedBuildID = null;
-  try {
-    savedBuildID = prefb.getCharPref("browser.startup.homepage_override.buildID");
-  } catch (e) {}
+  var savedBuildID = prefb.getCharPref("browser.startup.homepage_override.buildID", "");
 
   var buildID = Services.appinfo.platformBuildID;
 
@@ -484,10 +478,7 @@ nsBrowserContentHandler.prototype = {
       // URL if we do end up showing an overridePage. This makes it possible
       // to have the overridePage's content vary depending on the version we're
       // upgrading from.
-      let old_mstone = "unknown";
-      try {
-        old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
-      } catch (ex) {}
+      let old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone", "unknown");
       override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         switch (override) {

@@ -2280,12 +2280,7 @@ add_task(function* test_toSerializable_startTime() {
  */
 add_task(function* test_platform_integration() {
   let downloadFiles = [];
-  let oldDeviceStorageEnabled = false;
-  try {
-     oldDeviceStorageEnabled = Services.prefs.getBoolPref("device.storage.enabled");
-  } catch (e) {
-    // This happens if the pref doesn't exist.
-  }
+  let oldDeviceStorageEnabled = Services.prefs.getBoolPref("device.storage.enabled", false);
   let downloadWatcherNotified = false;
   let observer = {
     observe(subject, topic, data) {

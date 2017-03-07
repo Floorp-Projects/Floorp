@@ -71,11 +71,8 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
 
-  try {
-    this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize");
-  } catch (ex) {
-    this.maxChildren = DEFAULT_MAX_CHILDREN;
-  }
+  this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize",
+                                               DEFAULT_MAX_CHILDREN);
 
   this.collapseAttributes =
     Services.prefs.getBoolPref(ATTR_COLLAPSE_ENABLED_PREF);

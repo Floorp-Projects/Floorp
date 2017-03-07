@@ -108,10 +108,7 @@ var gSyncCallbacks = {};
  */
 function syncTimerCallback(timer) {
   for (let datasetId in gSyncCallbacks) {
-    let lastSyncTime = 0;
-    try {
-      lastSyncTime = Services.prefs.getIntPref(getLastSyncPrefName(datasetId));
-    } catch(e) { }
+    let lastSyncTime = Services.prefs.getIntPref(getLastSyncPrefName(datasetId), 0);
 
     let now = getNowInSeconds();
     let { interval: interval, callback: callback } = gSyncCallbacks[datasetId];

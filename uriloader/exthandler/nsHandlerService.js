@@ -352,17 +352,11 @@ HandlerService.prototype = {
       var prefSvc = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefService);
       var prefBranch = prefSvc.getBranch("network.protocol-handler.");
-      try {
-        alwaysAsk = prefBranch.getBoolPref("warn-external." + type);
-      } catch (e) {
-        // will throw if pref didn't exist.
-        try {
-          alwaysAsk = prefBranch.getBoolPref("warn-external-default");
-        } catch (e) {
-          // Nothing to tell us what to do, so be paranoid and prompt.
-          alwaysAsk = true;
-        }
-      }
+      // If neither of the prefs exists, be paranoid and prompt.
+      alwaysAsk =
+        prefBranch.getBoolPref("warn-external." + type,
+                               prefBranch.getBoolPref("warn-external-default",
+                                                      true));
     }
     aHandlerInfo.alwaysAskBeforeHandling = alwaysAsk;
 

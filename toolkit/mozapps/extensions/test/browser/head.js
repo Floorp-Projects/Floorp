@@ -48,10 +48,7 @@ const PREF_STRICT_COMPAT = "extensions.strictCompatibility";
 
 var PREF_CHECK_COMPATIBILITY;
 (function() {
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  } catch (e) { }
+  var channel = Services.prefs.getCharPref("app.update.channel", "default");
   if (channel != "aurora" &&
     channel != "beta" &&
     channel != "release" &&

@@ -964,11 +964,7 @@ BrowserElementChild.prototype = {
       self._takeScreenshot(maxWidth, maxHeight, mimeType, domRequestID);
     };
 
-    let maxDelayMS = 2000;
-    try {
-      maxDelayMS = Services.prefs.getIntPref('dom.browserElement.maxScreenshotDelayMS');
-    }
-    catch(e) {}
+    let maxDelayMS = Services.prefs.getIntPref('dom.browserElement.maxScreenshotDelayMS', 2000);
 
     // Try to wait for the event loop to go idle before we take the screenshot,
     // but once we've waited maxDelayMS milliseconds, go ahead and take it
@@ -1649,10 +1645,7 @@ BrowserElementChild.prototype = {
                 // certerror? If yes, maybe we should add a property to the
                 // event to to indicate whether there is a custom page. That would
                 // let the embedder have more control over the desired behavior.
-                let errorPage = null;
-                try {
-                  errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF);
-                } catch (e) {}
+                let errorPage = Services.prefs.getCharPref(CERTIFICATE_ERROR_PAGE_PREF, "");
 
                 if (errorPage == 'certerror') {
                   sendAsyncMsg('error', { type: 'certerror' });
