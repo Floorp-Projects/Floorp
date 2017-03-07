@@ -76,11 +76,12 @@ function fetch(url, fetched_callback) {
 
   var loaded = function (event) {
     if (xhr.status == 200 || xhr.status == 206) {
+      ok(true, `${url}: Fetch succeeded, status=${xhr.status}`);
       // Request fulfilled. Note sometimes we get 206... Presumably because either
       // httpd.js or Necko cached the result.
       fetched_callback(window.URL.createObjectURL(xhr.response));
     } else {
-      ok(false, "Fetch failed headers=" + xhr.getAllResponseHeaders());
+      ok(false, `${url}: Fetch failed, headers=${xhr.getAllResponseHeaders()}`);
     }
   };
 
