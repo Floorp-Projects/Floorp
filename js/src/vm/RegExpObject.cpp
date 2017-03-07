@@ -120,11 +120,13 @@ VectorMatchPairs::allocOrExpandArray(size_t pairCount)
 /* RegExpObject */
 
 static inline void
-MaybeTraceRegExpShared(JSContext* cx, RegExpShared* shared)
+RegExpSharedReadBarrier(JSContext* cx, RegExpShared* shared)
 {
     Zone* zone = cx->zone();
     if (zone->needsIncrementalBarrier())
         shared->trace(zone->barrierTracer());
+    if (shared->isMarkedGray())
+        shared->unmarkGray();
 }
 
 /* static */ bool
@@ -133,7 +135,7 @@ RegExpObject::getShared(JSContext* cx, Handle<RegExpObject*> regexp, RegExpGuard
     if (RegExpShared* shared = regexp->maybeShared()) {
         // Fetching a RegExpShared from an object requires a read
         // barrier, as the shared pointer might be weak.
-        MaybeTraceRegExpShared(cx, shared);
+        RegExpSharedReadBarrier(cx, shared);
 
         g->init(*shared);
         return true;
@@ -961,10 +963,30 @@ RegExpShared::trace(JSTracer* trc)
         marked_ = true;
 
     TraceNullableEdge(trc, &source, "RegExpShared source");
+    for (auto& comp : compilationArray)
+        TraceNullableEdge(trc, &comp.jitCode, "RegExpShared code");
+}
 
-    for (size_t i = 0; i < ArrayLength(compilationArray); i++) {
-        RegExpCompilation& compilation = compilationArray[i];
-        TraceNullableEdge(trc, &compilation.jitCode, "RegExpShared code");
+bool
+RegExpShared::isMarkedGray() const
+{
+    if (source && source->isMarked(gc::GRAY))
+        return true;
+    for (const auto& comp : compilationArray) {
+        if (comp.jitCode && comp.jitCode->isMarked(gc::GRAY))
+            return true;
+    }
+    return false;
+}
+
+void
+RegExpShared::unmarkGray()
+{
+    if (source)
+        JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(source));
+    for (const auto& comp : compilationArray) {
+        if (comp.jitCode)
+            JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(comp.jitCode.get()));
     }
 }
 
@@ -1343,7 +1365,7 @@ RegExpCompartment::get(JSContext* cx, JSAtom* source, RegExpFlag flags, RegExpGu
     if (p) {
         // Trigger a read barrier on existing RegExpShared instances fetched
         // from the table (which only holds weak references).
-        MaybeTraceRegExpShared(cx, *p);
+        RegExpSharedReadBarrier(cx, *p);
 
         g->init(**p);
         return true;
@@ -1359,7 +1381,7 @@ RegExpCompartment::get(JSContext* cx, JSAtom* source, RegExpFlag flags, RegExpGu
     }
 
     // Trace RegExpShared instances created during an incremental GC.
-    MaybeTraceRegExpShared(cx, shared);
+    RegExpSharedReadBarrier(cx, shared);
 
     g->init(*shared.forget());
     return true;
