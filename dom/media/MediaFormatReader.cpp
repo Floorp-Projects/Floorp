@@ -1467,6 +1467,17 @@ MediaFormatReader::Update(TrackType aTrack)
     return;
   }
 
+  if (decoder.HasWaitingPromise() && decoder.mDrainComplete) {
+    // This situation will occur when a change of stream ID occurred during
+    // internal seeking following a gap encountered in the data, a drain was
+    // requested and has now completed. We need to complete the draining process
+    // so that the new data can be processed.
+    // We can complete the draining operation now as we have no pending
+    // operation when a waiting promise is pending.
+    decoder.mDrainComplete = false;
+    decoder.mDraining = false;
+  }
+
   if (UpdateReceivedNewData(aTrack)) {
     LOGV("Nothing more to do");
     return;
