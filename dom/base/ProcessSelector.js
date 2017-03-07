@@ -12,15 +12,10 @@ const PREF_BRANCH = BASE_PREF + ".";
 
 // Utilities:
 function getMaxContentParents(processType) {
-  let maxContentParents = -1;
-  try {
-    maxContentParents = Services.prefs.getIntPref(PREF_BRANCH + processType);
-  } catch (e) {
-    // Pref probably didn't exist, get the default number of processes.
-    maxContentParents = Services.prefs.getIntPref(BASE_PREF, 1);
-  }
-
-  return maxContentParents;
+  // If the pref doesn't exist, get the default number of processes.
+  // If there's no pref, use only one process.
+  return Services.prefs.getIntPref(PREF_BRANCH + processType,
+                                   Services.prefs.getIntPref(BASE_PREF, 1));
 }
 
 // Fills up aProcesses until max and then selects randomly from the available
