@@ -40,8 +40,7 @@ function run_test() {
   run_next_test();
 }
 
-function add_tests()
-{
+function add_tests() {
   add_connection_test("ocsp-stapling-none.example.com",
                       SEC_ERROR_OCSP_BAD_SIGNATURE);
   add_connection_test("ocsp-stapling-none.example.com",

@@ -15,15 +15,13 @@ var params;
 var tokenName = "";
 var pw1;
 
-function doPrompt(msg)
-{
+function doPrompt(msg) {
   let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
     getService(Components.interfaces.nsIPromptService);
   prompts.alert(window, null, msg);
 }
 
-function onLoad()
-{
+function onLoad() {
   document.documentElement.getButton("accept").disabled = true;
 
   pw1 = document.getElementById("pw1");
@@ -35,8 +33,7 @@ function onLoad()
   process();
 }
 
-function process()
-{
+function process() {
   let bundle = document.getElementById("pippki_bundle");
 
   // If the token is unitialized, don't use the old password box.
@@ -83,8 +80,7 @@ function process()
   checkPasswords();
 }
 
-function setPassword()
-{
+function setPassword() {
   let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
                   .getService(Ci.nsIPK11TokenDB);
   let token;
@@ -162,8 +158,7 @@ function setPassword()
   return success;
 }
 
-function setPasswordStrength()
-{
+function setPasswordStrength() {
   // We weigh the quality of the password by checking the number of:
   //  - Characters
   //  - Numbers
@@ -208,12 +203,9 @@ function setPasswordStrength()
 
   let meter = document.getElementById("pwmeter");
   meter.setAttribute("value", pwstrength);
-
-  return;
 }
 
-function checkPasswords()
-{
+function checkPasswords() {
   let pw1 = document.getElementById("pw1").value;
   let pw2 = document.getElementById("pw2").value;
 

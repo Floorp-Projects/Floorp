@@ -35,8 +35,6 @@ function checkStateWritten(aSubject, aTopic, aData) {
   for (let line of lines) {
     let parts = line.split("\t");
     let host = parts[0];
-    let score = parts[1];
-    let lastAccessed = parts[2];
     let entry = parts[3].split(",");
     let expectedColumns = EXPECTED_HSTS_COLUMNS;
     if (host.indexOf("HPKP") != -1) {

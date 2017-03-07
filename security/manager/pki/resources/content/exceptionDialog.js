@@ -19,10 +19,10 @@ Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 function badCertListener() {}
 badCertListener.prototype = {
-  getInterface: function (aIID) {
+  getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
         aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
         aIID.equals(Components.interfaces.nsISupports)) {
@@ -31,7 +31,7 @@ badCertListener.prototype = {
 
     throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
   },
-  handle_test_result: function () {
+  handle_test_result() {
     if (gSSLStatus) {
       gCert = gSSLStatus.QueryInterface(Components.interfaces.nsISSLStatus).serverCert;
     }
@@ -216,8 +216,7 @@ function updateCertStatus() {
           use1 = true;
           shortDesc = exs;
           longDesc  = exl;
-        }
-        else {
+        } else {
           use2 = true;
           shortDesc2 = exs;
           longDesc2  = exl;
@@ -253,8 +252,7 @@ function updateCertStatus() {
       pe.checked = !inPrivateBrowsing;
 
       setText("headerDescription", gPKIBundle.getString("addExceptionInvalidHeader"));
-    }
-    else {
+    } else {
       shortDesc = "addExceptionValidShort";
       longDesc  = "addExceptionValidLong";
       gDialog.getButton("extra1").disabled = true;
@@ -269,8 +267,7 @@ function updateCertStatus() {
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(null, "cert-exception-ui-ready", null);
-  }
-  else if (gChecking) {
+  } else if (gChecking) {
     shortDesc = "addExceptionCheckingShort";
     longDesc  = "addExceptionCheckingLong2";
     // We're checking the certificate, so we disable the Get Certificate
@@ -280,8 +277,7 @@ function updateCertStatus() {
     document.getElementById("viewCertButton").disabled = true;
     gDialog.getButton("extra1").disabled = true;
     document.getElementById("permanent").disabled = true;
-  }
-  else {
+  } else {
     shortDesc = "addExceptionNoCertShort";
     longDesc  = "addExceptionNoCertLong2";
     // We're done checking the certificate, so allow the user to check it again.
