@@ -22,8 +22,7 @@ function downloadRoots() {
   req.open("GET", "https://pki.google.com/roots.pem", false);
   try {
     req.send();
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error("ERROR: problem downloading Google Root PEMs: " + e);
   }
 

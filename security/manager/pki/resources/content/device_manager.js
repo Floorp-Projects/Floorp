@@ -24,20 +24,18 @@ var secmoddb;
 var skip_enable_buttons = false;
 
 var smartCardObserver = {
-  observe: function() {
+  observe() {
     onSmartCardChange();
   }
 };
 
-function DeregisterSmartCardObservers()
-{
+function DeregisterSmartCardObservers() {
   Services.obs.removeObserver(smartCardObserver, "smartcard-insert");
   Services.obs.removeObserver(smartCardObserver, "smartcard-remove");
 }
 
 /* Do the initial load of all PKCS# modules and list them. */
-function LoadModules()
-{
+function LoadModules() {
   bundle = document.getElementById("pippki_bundle");
   secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
   Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
@@ -46,32 +44,27 @@ function LoadModules()
   RefreshDeviceList();
 }
 
-function getPKCS11()
-{
+function getPKCS11() {
   return Components.classes[nsPKCS11ContractID].getService(nsIPKCS11);
 }
 
-function getNSSString(name)
-{
+function getNSSString(name) {
   return document.getElementById("pipnss_bundle").getString(name);
 }
 
-function doPrompt(msg)
-{
+function doPrompt(msg) {
   let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
     getService(Components.interfaces.nsIPromptService);
   prompts.alert(window, null, msg);
 }
 
-function doConfirm(msg)
-{
+function doConfirm(msg) {
   let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
     getService(Components.interfaces.nsIPromptService);
   return prompts.confirm(window, null, msg);
 }
 
-function RefreshDeviceList()
-{
+function RefreshDeviceList() {
   let modules = secmoddb.listModules();
   while (modules.hasMoreElements()) {
     let module = modules.getNext().QueryInterface(nsIPKCS11Module);
@@ -89,8 +82,7 @@ function RefreshDeviceList()
   SetFIPSButton();
 }
 
-function SetFIPSButton()
-{
+function SetFIPSButton() {
   var fipsButton = document.getElementById("fipsbutton");
   var label;
   if (secmoddb.isFIPSEnabled) {
@@ -111,8 +103,7 @@ function SetFIPSButton()
 /* Add a module to the tree.  slots is the array of slots in the module,
  * to be represented as children.
  */
-function AddModule(module, slots)
-{
+function AddModule(module, slots) {
   var tree = document.getElementById("device_list");
   var item  = document.createElement("treeitem");
   var row  = document.createElement("treerow");
@@ -142,8 +133,7 @@ var selected_slot;
 var selected_module;
 
 /* get the slot selected by the user (can only be one-at-a-time) */
-function getSelectedItem()
-{
+function getSelectedItem() {
   var tree = document.getElementById("device_tree");
   if (tree.currentIndex < 0) return;
   var item = tree.contentView.getItemAtIndex(tree.currentIndex);
@@ -170,8 +160,7 @@ function getSelectedItem()
   }
 }
 
-function enableButtons()
-{
+function enableButtons() {
   if (skip_enable_buttons) {
     return;
   }
@@ -213,16 +202,14 @@ function enableButtons()
 }
 
 // clear the display of information for the slot
-function ClearInfoList()
-{
+function ClearInfoList() {
   let infoList = document.getElementById("info_list");
   while (infoList.hasChildNodes()) {
     infoList.removeChild(infoList.firstChild);
   }
 }
 
-function ClearDeviceList()
-{
+function ClearDeviceList() {
   ClearInfoList();
 
   skip_enable_buttons = true;
@@ -240,8 +227,7 @@ function ClearDeviceList()
 
 
 // show a list of info about a slot
-function showSlotInfo()
-{
+function showSlotInfo() {
   var present = true;
   ClearInfoList();
   switch (selected_slot.status) {
@@ -293,8 +279,7 @@ function showSlotInfo()
   }
 }
 
-function showModuleInfo()
-{
+function showModuleInfo() {
   ClearInfoList();
   AddInfoRow(bundle.getString("devinfo_modname"),
              selected_module.name, "module_name");
@@ -303,8 +288,7 @@ function showModuleInfo()
 }
 
 // add a row to the info list, as [col1 col2] (ex.: ["status" "logged in"])
-function AddInfoRow(col1, col2, cell_id)
-{
+function AddInfoRow(col1, col2, cell_id) {
   var tree = document.getElementById("info_list");
   var item  = document.createElement("treeitem");
   var row  = document.createElement("treerow");
@@ -322,8 +306,7 @@ function AddInfoRow(col1, col2, cell_id)
 }
 
 // log in to a slot
-function doLogin()
-{
+function doLogin() {
   getSelectedItem();
   // here's the workaround - login functions are with token
   var selected_token = selected_slot.getToken();
@@ -344,8 +327,7 @@ function doLogin()
 }
 
 // log out of a slot
-function doLogout()
-{
+function doLogout() {
   getSelectedItem();
   // here's the workaround - login functions are with token
   var selected_token = selected_slot.getToken();
@@ -365,22 +347,19 @@ function doLogout()
 }
 
 // load a new device
-function doLoad()
-{
+function doLoad() {
   window.open("load_device.xul", "loaddevice", "chrome,centerscreen,modal");
   ClearDeviceList();
   RefreshDeviceList();
 }
 
-function deleteSelected()
-{
+function deleteSelected() {
   getSelectedItem();
   if (selected_module &&
       doConfirm(getNSSString("DelModuleWarning"))) {
     try {
       getPKCS11().deleteModule(selected_module.name);
-    }
-    catch (e) {
+    } catch (e) {
       doPrompt(getNSSString("DelModuleError"));
       return false;
     }
@@ -390,8 +369,7 @@ function deleteSelected()
   return false;
 }
 
-function doUnload()
-{
+function doUnload() {
   if (deleteSelected()) {
     ClearDeviceList();
     RefreshDeviceList();
@@ -399,8 +377,7 @@ function doUnload()
 }
 
 // handle card insertion and removal
-function onSmartCardChange()
-{
+function onSmartCardChange() {
   var tree = document.getElementById("device_tree");
   var index = tree.currentIndex;
   tree.currentIndex = 0;
@@ -410,8 +387,7 @@ function onSmartCardChange()
   enableButtons();
 }
 
-function changePassword()
-{
+function changePassword() {
   getSelectedItem();
   let params = Components.classes[nsDialogParamBlock]
                          .createInstance(nsIDialogParamBlock);
@@ -423,8 +399,7 @@ function changePassword()
 }
 
 // browse fs for PKCS#11 device
-function doBrowseFiles()
-{
+function doBrowseFiles() {
   var srbundle = document.getElementById("pippki_bundle");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -437,8 +412,7 @@ function doBrowseFiles()
   }
 }
 
-function doLoadDevice()
-{
+function doLoadDevice() {
   var name_box = document.getElementById("device_name");
   var path_box = document.getElementById("device_path");
   try {
@@ -457,9 +431,7 @@ function doLoadDevice()
 
 // -------------------------------------   Old code
 
-function showTokenInfo()
-{
-  //ClearInfoList();
+function showTokenInfo() {
   var selected_token = selected_slot.getToken();
   AddInfoRow(bundle.getString("devinfo_label"),
              selected_token.tokenLabel, "tok_label");
@@ -473,8 +445,7 @@ function showTokenInfo()
              selected_token.tokenFWVersion, "tok_fwv");
 }
 
-function toggleFIPS()
-{
+function toggleFIPS() {
   if (!secmoddb.isFIPSEnabled) {
     // A restriction of FIPS mode is, the password must be set
     // In FIPS mode the password must be non-empty.
@@ -491,8 +462,7 @@ function toggleFIPS()
 
   try {
     secmoddb.toggleFIPSMode();
-  }
-  catch (e) {
+  } catch (e) {
     doPrompt(bundle.getString("unable_to_toggle_fips"));
     return;
   }
