@@ -30,19 +30,21 @@ var mediaPlayerDevice = {
   types: ["video/mp4", "video/webm", "application/x-mpegurl"],
   extensions: ["mp4", "webm", "m3u", "m3u8"],
   init: function() {
-    Services.obs.addObserver(this, "MediaPlayer:Added", false);
-    Services.obs.addObserver(this, "MediaPlayer:Changed", false);
-    Services.obs.addObserver(this, "MediaPlayer:Removed", false);
+    GlobalEventDispatcher.registerListener(this, [
+      "MediaPlayer:Added",
+      "MediaPlayer:Changed",
+      "MediaPlayer:Removed",
+    ]);
   },
-  observe: function(subject, topic, data) {
-    if (topic === "MediaPlayer:Added") {
-      let service = this.toService(JSON.parse(data));
+  onEvent: function(event, data, callback) {
+    if (event === "MediaPlayer:Added") {
+      let service = this.toService(data);
       SimpleServiceDiscovery.addService(service);
-    } else if (topic === "MediaPlayer:Changed") {
-      let service = this.toService(JSON.parse(data));
+    } else if (event === "MediaPlayer:Changed") {
+      let service = this.toService(data);
       SimpleServiceDiscovery.updateService(service);
-    } else if (topic === "MediaPlayer:Removed") {
-      SimpleServiceDiscovery.removeService(data);
+    } else if (event === "MediaPlayer:Removed") {
+      SimpleServiceDiscovery.removeService(data.id);
     }
   },
   toService: function(display) {

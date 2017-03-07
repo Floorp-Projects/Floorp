@@ -15,6 +15,10 @@ this.EXPORTED_SYMBOLS = ['AccessFu']; // jshint ignore:line
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 
+if (Utils.MozBuildApp === 'mobile/android') {
+  Cu.import('resource://gre/modules/Messaging.jsm');
+}
+
 const ACCESSFU_DISABLE = 0; // jshint ignore:line
 const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
@@ -32,11 +36,9 @@ this.AccessFu = { // jshint ignore:line
   attach: function attach(aWindow) {
     Utils.init(aWindow);
 
-    try {
-      Services.androidBridge.dispatch('Accessibility:Ready');
-      Services.obs.addObserver(this, 'Accessibility:Settings', false);
-    } catch (x) {
-      // Not on Android
+    if (Utils.MozBuildApp === 'mobile/android') {
+      EventDispatcher.instance.dispatch('Accessibility:Ready');
+      EventDispatcher.instance.registerListener(this, 'Accessibility:Settings');
     }
 
     this._activatePref = new PrefCache(
@@ -54,7 +56,7 @@ this.AccessFu = { // jshint ignore:line
       this._disable();
     }
     if (Utils.MozBuildApp === 'mobile/android') {
-      Services.obs.removeObserver(this, 'Accessibility:Settings');
+      EventDispatcher.instance.unregisterListener(this, 'Accessibility:Settings');
     }
     delete this._activatePref;
     Utils.uninit();
@@ -120,16 +122,21 @@ this.AccessFu = { // jshint ignore:line
     Output.start();
     PointerAdapter.start();
 
+    if (Utils.MozBuildApp === 'mobile/android') {
+      EventDispatcher.instance.registerListener(this, [
+        'Accessibility:ActivateObject',
+        'Accessibility:Focus',
+        'Accessibility:LongPress',
+        'Accessibility:MoveByGranularity',
+        'Accessibility:NextObject',
+        'Accessibility:PreviousObject',
+        'Accessibility:ScrollBackward',
+        'Accessibility:ScrollForward',
+      ]);
+    }
+
     Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'inprocess-browser-shown', false);
-    Services.obs.addObserver(this, 'Accessibility:NextObject', false);
-    Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
-    Services.obs.addObserver(this, 'Accessibility:Focus', false);
-    Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
-    Services.obs.addObserver(this, 'Accessibility:LongPress', false);
-    Services.obs.addObserver(this, 'Accessibility:ScrollForward', false);
-    Services.obs.addObserver(this, 'Accessibility:ScrollBackward', false);
-    Services.obs.addObserver(this, 'Accessibility:MoveByGranularity', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
     Utils.win.addEventListener('TabSelect', this);
@@ -169,14 +176,19 @@ this.AccessFu = { // jshint ignore:line
 
     Services.obs.removeObserver(this, 'remote-browser-shown');
     Services.obs.removeObserver(this, 'inprocess-browser-shown');
-    Services.obs.removeObserver(this, 'Accessibility:NextObject');
-    Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
-    Services.obs.removeObserver(this, 'Accessibility:Focus');
-    Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
-    Services.obs.removeObserver(this, 'Accessibility:LongPress');
-    Services.obs.removeObserver(this, 'Accessibility:ScrollForward');
-    Services.obs.removeObserver(this, 'Accessibility:ScrollBackward');
-    Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
+
+    if (Utils.MozBuildApp === 'mobile/android') {
+      EventDispatcher.instance.unregisterListener(this, [
+        'Accessibility:ActivateObject',
+        'Accessibility:Focus',
+        'Accessibility:LongPress',
+        'Accessibility:MoveByGranularity',
+        'Accessibility:NextObject',
+        'Accessibility:PreviousObject',
+        'Accessibility:ScrollBackward',
+        'Accessibility:ScrollForward',
+      ]);
+    }
 
     delete this._quicknavModesPref;
     delete this._notifyOutputPref;
@@ -288,24 +300,23 @@ this.AccessFu = { // jshint ignore:line
     this._loadFrameScript(aMessageManager);
   },
 
-  observe: function observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
+  onEvent: function (event, data, callback) {
+    switch (event) {
       case 'Accessibility:Settings':
-        this._systemPref = JSON.parse(aData).enabled;
+        this._systemPref = data.enabled;
         this._enableOrDisable();
         break;
       case 'Accessibility:NextObject':
-      case 'Accessibility:PreviousObject':
-      {
-        let rule = aData ?
-          aData.substr(0, 1).toUpperCase() + aData.substr(1).toLowerCase() :
+      case 'Accessibility:PreviousObject': {
+        let rule = data ?
+          data.rule.substr(0, 1).toUpperCase() + data.rule.substr(1).toLowerCase() :
           'Simple';
-        let method = aTopic.replace(/Accessibility:(\w+)Object/, 'move$1');
+        let method = event.replace(/Accessibility:(\w+)Object/, 'move$1');
         this.Input.moveCursor(method, rule, 'gesture');
         break;
       }
       case 'Accessibility:ActivateObject':
-        this.Input.activateCurrent(JSON.parse(aData));
+        this.Input.activateCurrent(data);
         break;
       case 'Accessibility:LongPress':
         this.Input.sendContextMenuMessage();
@@ -317,14 +328,19 @@ this.AccessFu = { // jshint ignore:line
         this.Input.androidScroll('backward');
         break;
       case 'Accessibility:Focus':
-        this._focused = JSON.parse(aData);
+        this._focused = data.gainFocus;
         if (this._focused) {
           this.autoMove({ forcePresent: true, noOpIfOnScreen: true });
         }
         break;
       case 'Accessibility:MoveByGranularity':
-        this.Input.moveByGranularity(JSON.parse(aData));
+        this.Input.moveByGranularity(data);
         break;
+    }
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
       case 'remote-browser-shown':
       case 'inprocess-browser-shown':
       {

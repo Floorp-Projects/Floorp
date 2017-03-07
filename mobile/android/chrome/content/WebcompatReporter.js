@@ -15,7 +15,7 @@ var WebcompatReporter = {
   menuItem: null,
   menuItemEnabled: null,
   init: function() {
-    Services.obs.addObserver(this, "DesktopMode:Change", false);
+    GlobalEventDispatcher.registerListener(this, "DesktopMode:Change");
     Services.obs.addObserver(this, "chrome-document-global-created", false);
     Services.obs.addObserver(this, "content-document-global-created", false);
 
@@ -26,6 +26,16 @@ var WebcompatReporter = {
     }
 
     this.addMenuItem(visible);
+  },
+
+  onEvent: function(event, data, callback) {
+    if (event === "DesktopMode:Change") {
+      let tab = BrowserApp.getTabForId(data.tabId);
+      let currentURI = tab.browser.currentURI.spec;
+      if (data.desktopMode && this.isReportableUrl(currentURI)) {
+        this.reportDesktopModePrompt(tab);
+      }
+    }
   },
 
   observe: function(subject, topic, data) {
@@ -44,13 +54,6 @@ var WebcompatReporter = {
       } else if (this.menuItemEnabled && !this.isReportableUrl(currentURI)) {
         NativeWindow.menu.update(this.menuItem, {enabled: false});
         this.menuItemEnabled = false;
-      }
-    } else if (topic === "DesktopMode:Change") {
-      let args = JSON.parse(data);
-      let tab = BrowserApp.getTabForId(args.tabId);
-      let currentURI = tab.browser.currentURI.spec;
-      if (args.desktopMode && this.isReportableUrl(currentURI)) {
-        this.reportDesktopModePrompt(tab);
       }
     }
   },
