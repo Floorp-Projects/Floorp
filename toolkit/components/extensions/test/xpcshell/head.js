@@ -4,13 +4,14 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 /* exported createHttpServer, promiseConsoleOutput, cleanupDir */
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Timer.jsm");
 Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentTask",
+                                  "resource://testing-common/ContentTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
@@ -54,6 +55,10 @@ function createHttpServer(port = -1) {
   });
 
   return server;
+}
+
+if (AppConstants.platform === "android") {
+  Services.io.offline = true;
 }
 
 var promiseConsoleOutput = Task.async(function* (task) {

@@ -913,13 +913,13 @@ this.Extension = class extends ExtensionData {
 
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
-    this.broadcast("Extension:FlushJarCache", {path: file.path}).then(() => {
+    return this.broadcast("Extension:FlushJarCache", {path: file.path}).then(() => {
       // We can't delete this file until everyone using it has
       // closed it (because Windows is dumb). So we wait for all the
       // child processes (including the parent) to flush their JAR
       // caches. These caches may keep the file open.
       file.remove(false);
-    });
+    }).catch(Cu.reportError);
   }
 
   shutdown(reason) {
@@ -955,7 +955,7 @@ this.Extension = class extends ExtensionData {
 
     ExtensionManagement.shutdownExtension(this.uuid);
 
-    this.cleanupGeneratedFile();
+    return this.cleanupGeneratedFile();
   }
 
   observe(subject, topic, data) {

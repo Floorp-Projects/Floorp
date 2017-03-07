@@ -238,17 +238,15 @@ class ExtensionWrapper {
       });
   }
 
-  unload() {
+  async unload() {
     if (this.state != "running") {
       throw new Error("Extension not running");
     }
     this.state = "unloading";
 
-    this.extension.shutdown();
+    await this.extension.shutdown();
 
     this.state = "unloaded";
-
-    return Promise.resolve();
   }
 
   /*
