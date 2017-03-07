@@ -219,6 +219,7 @@ MSG_DEF(JSMSG_BAD_SUPERCALL,           0, JSEXN_SYNTAXERR, "super() is only vali
 MSG_DEF(JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION, 0, JSEXN_SYNTAXERR, "missing ] after array comprehension")
 MSG_DEF(JSMSG_BRACKET_AFTER_LIST,      0, JSEXN_SYNTAXERR, "missing ] after element list")
 MSG_DEF(JSMSG_BRACKET_IN_INDEX,        0, JSEXN_SYNTAXERR, "missing ] in index expression")
+MSG_DEF(JSMSG_BRACKET_OPENED,          2, JSEXN_NOTE, "[ opened at line {0}, column {1}")
 MSG_DEF(JSMSG_CATCH_AFTER_GENERAL,     0, JSEXN_SYNTAXERR, "catch after unconditional catch")
 MSG_DEF(JSMSG_CATCH_IDENTIFIER,        0, JSEXN_SYNTAXERR, "missing identifier in catch")
 MSG_DEF(JSMSG_CATCH_OR_FINALLY,        0, JSEXN_SYNTAXERR, "missing catch or finally after try")

@@ -9265,7 +9265,9 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleErro
             }
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_RB, modifier, JSMSG_BRACKET_AFTER_LIST);
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, modifier,
+                                         reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                                              JSMSG_BRACKET_OPENED, begin));
     }
     handler.setEndPosition(literal, pos().end);
     return literal;
