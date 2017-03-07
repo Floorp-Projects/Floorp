@@ -10,7 +10,7 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu  } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // event name
@@ -162,25 +162,25 @@ function deviceManagement() {
       listener.reset();
       ok(listener.count() == 1, "There should be one device in device manager after sync device.");
       // Remove the device.
-      Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_REMOVED, "existed-chromecast");
+      EventDispatcher.instance.dispatch(TOPIC_ANDROID_CAST_DEVICE_REMOVED, {id: "existed-chromecast"});
       return listener.isRemoveDeviceCalled;
   }).then(() => {
       listener.reset();
       ok(listener.count() == 0, "There should be no any device after the device is removed.");
       // Add the device.
-      Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_ADDED, JSON.stringify(device));
+      EventDispatcher.instance.dispatch(TOPIC_ANDROID_CAST_DEVICE_ADDED, device);
       return listener.isAddDeviceCalled;
   }).then(() => {
       listener.reset();
       ok(listener.count() == 1, "There should be only one device in device manager.");
       // Add the same device, and it should trigger updateDevice.
-      Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_ADDED, JSON.stringify(device));
+      EventDispatcher.instance.dispatch(TOPIC_ANDROID_CAST_DEVICE_ADDED, device);
       return listener.isUpdateDeviceCalled;
   }).then(() => {
       listener.reset();
       ok(listener.count() == 1, "There should still only one device in device manager.");
       // Remove the device.
-      Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_REMOVED, device.uuid);
+      EventDispatcher.instance.dispatch(TOPIC_ANDROID_CAST_DEVICE_REMOVED, {id: device.uuid});
       return listener.isRemoveDeviceCalled;
   }).then(() => {
       listener.reset();
@@ -224,7 +224,7 @@ function presentationLaunchAndTerminate() {
   };
 
   // Add and get the device.
-  Services.obs.notifyObservers(null, TOPIC_ANDROID_CAST_DEVICE_ADDED, JSON.stringify(device));
+  EventDispatcher.instance.dispatch(TOPIC_ANDROID_CAST_DEVICE_ADDED, device);
   let presentationDevice = listener.getDevice(device.uuid).QueryInterface(Ci.nsIPresentationDevice);
   ok(presentationDevice != null, "It should have nsIPresentationDevice interface.");
 

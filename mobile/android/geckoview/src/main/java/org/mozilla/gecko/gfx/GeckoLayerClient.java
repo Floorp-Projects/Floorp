@@ -7,9 +7,11 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.LayerView.DrawListener;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -21,7 +23,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -231,25 +232,22 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                                     mScreenSize.width, mScreenSize.height);
         }
 
-        String json = "";
-        try {
-            if (scrollChange != null) {
-                int id = ++sPaintSyncId;
-                if (id == 0) {
-                    // never use 0 as that is the default value for "this is not
-                    // a special transaction"
-                    id = ++sPaintSyncId;
-                }
-                JSONObject jsonObj = new JSONObject();
-                jsonObj.put("x", scrollChange.x / mViewportMetrics.zoomFactor);
-                jsonObj.put("y", scrollChange.y / mViewportMetrics.zoomFactor);
-                jsonObj.put("id", id);
-                json = jsonObj.toString();
+        final GeckoBundle data;
+        if (scrollChange != null) {
+            int id = ++sPaintSyncId;
+            if (id == 0) {
+                // never use 0 as that is the default value for "this is not
+                // a special transaction"
+                id = ++sPaintSyncId;
             }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Unable to convert point to JSON", e);
+            data = new GeckoBundle(3);
+            data.putDouble("x", scrollChange.x / mViewportMetrics.zoomFactor);
+            data.putDouble("y", scrollChange.y / mViewportMetrics.zoomFactor);
+            data.putInt("id", id);
+        } else {
+            data = null;
         }
-        GeckoAppShell.notifyObservers("Window:Resize", json);
+        EventDispatcher.getInstance().dispatch("Window:Resize", data);
     }
 
     /**

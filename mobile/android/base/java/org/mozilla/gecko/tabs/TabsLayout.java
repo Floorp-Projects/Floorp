@@ -81,7 +81,6 @@ public abstract class TabsLayout extends RecyclerView
     public void hide() {
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
-        GeckoAppShell.notifyObservers("Tab:Screenshot:Cancel", "");
         tabsAdapter.clear();
     }
 

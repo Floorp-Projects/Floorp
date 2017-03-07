@@ -11,8 +11,6 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -127,27 +125,22 @@ public final class NotificationHelper implements BundleEventListener {
     }
 
     public static void getArgsAndSendNotificationIntent(SafeIntent intent) {
-        final JSONObject args = new JSONObject();
+        final GeckoBundle args = new GeckoBundle(5);
         final Uri data = intent.getData();
 
         final String notificationType = data.getQueryParameter(EVENT_TYPE_ATTR);
 
-        try {
-            args.put(ID_ATTR, data.getQueryParameter(ID_ATTR));
-            args.put(EVENT_TYPE_ATTR, notificationType);
-            args.put(HANDLER_ATTR, data.getQueryParameter(HANDLER_ATTR));
-            args.put(COOKIE_ATTR, intent.getStringExtra(COOKIE_ATTR));
+        args.putString(ID_ATTR, data.getQueryParameter(ID_ATTR));
+        args.putString(EVENT_TYPE_ATTR, notificationType);
+        args.putString(HANDLER_ATTR, data.getQueryParameter(HANDLER_ATTR));
+        args.putString(COOKIE_ATTR, intent.getStringExtra(COOKIE_ATTR));
 
-            if (BUTTON_EVENT.equals(notificationType)) {
-                final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
-                args.put(ACTION_ID_ATTR, actionName);
-            }
-
-            Log.i(LOGTAG, "Send " + args.toString());
-            GeckoAppShell.notifyObservers("Notification:Event", args.toString());
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error building JSON notification arguments.", e);
+        if (BUTTON_EVENT.equals(notificationType)) {
+            final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
+            args.putString(ACTION_ID_ATTR, actionName);
         }
+
+        EventDispatcher.getInstance().dispatch("Notification:Event", args);
     }
 
     public void handleNotificationIntent(SafeIntent i) {

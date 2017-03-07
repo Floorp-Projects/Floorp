@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -16,10 +17,9 @@ public class GeckoUpdateReceiver extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent) {
         if (UpdateServiceHelper.ACTION_CHECK_UPDATE_RESULT.equals(intent.getAction())) {
-            String result = intent.getStringExtra("result");
-            if (GeckoAppShell.getGeckoInterface() != null && result != null) {
-                GeckoAppShell.getGeckoInterface().notifyCheckUpdateResult(result);
-            }
+            final GeckoBundle data = new GeckoBundle(1);
+            data.putString("result", intent.getStringExtra("result"));
+            GeckoApp.getEventDispatcher().dispatch("Update:CheckResult", data);
         }
     }
 }

@@ -59,26 +59,19 @@ function init() {
   } catch (ex) {}
 
 #ifdef MOZ_UPDATER
-  let Updater = {
-    update: null,
-
-    init: function() {
-      Services.obs.addObserver(this, "Update:CheckResult", false);
-    },
-
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic == "Update:CheckResult") {
-        showUpdateMessage(aData);
-      }
-    },
-  };
-
-  Updater.init();
-
   function checkForUpdates() {
     showCheckingMessage();
 
     let window = Services.wm.getMostRecentWindow("navigator:browser");
+
+    window.WindowEventDispatcher.registerListener(
+        function listener(event, data, callback) {
+      if (event === "Update:CheckResult") {
+        EventDispatcher.instance.unregisterListener(listener, event);
+        showUpdateMessage(data.result);
+      }
+    }, "Update:CheckResult");
+
     window.WindowEventDispatcher.sendRequest({ type: "Update:Check" });
   }
 

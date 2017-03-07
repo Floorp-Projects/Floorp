@@ -13,13 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
@@ -84,11 +80,11 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
 
     public void startListeningForClosedTabs() {
         EventDispatcher.getInstance().registerUiThreadListener(this, "ClosedTabs:Data");
-        GeckoAppShell.notifyObservers("ClosedTabs:StartNotifications", null);
+        EventDispatcher.getInstance().dispatch("ClosedTabs:StartNotifications", null);
     }
 
     public void stopListeningForClosedTabs() {
-        GeckoAppShell.notifyObservers("ClosedTabs:StopNotifications", null);
+        EventDispatcher.getInstance().dispatch("ClosedTabs:StopNotifications", null);
         EventDispatcher.getInstance().unregisterUiThreadListener(this, "ClosedTabs:Data");
         recentlyClosedTabsReceived = false;
     }
@@ -295,14 +291,9 @@ public class RecentTabsAdapter extends RecyclerView.Adapter<CombinedHistoryItem>
     }
 
     private static void restoreSessionWithHistory(List<String> dataList) {
-        final JSONObject json = new JSONObject();
-        try {
-            json.put("tabs", new JSONArray(dataList));
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error", e);
-        }
-
-        GeckoAppShell.notifyObservers("Session:RestoreRecentTabs", json.toString());
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putStringArray("tabs", dataList);
+        EventDispatcher.getInstance().dispatch("Session:RestoreRecentTabs", data);
     }
 
     @Override
