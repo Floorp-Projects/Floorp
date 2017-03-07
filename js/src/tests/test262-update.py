@@ -232,18 +232,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         assert not raw, "Raw test with includes: %s" % testName
         includeSet.update(testRec["includes"])
 
-    # Skip intl402 tests when Intl isn't available.
-    if pathStartsWith(testName, "intl402"):
-        refTestSkipIf.append(("!this.hasOwnProperty('Intl')", "needs Intl"))
-
-    # Skip Intl.PluralRules tests when the addIntlExtras helper isn't available.
-    if pathStartsWith(testName, "intl402", "PluralRules"):
-        refTestSkipIf.append(("!this.hasOwnProperty('addIntlExtras')", "needs addIntlExtras"))
-
-    # Skip built-ins/Simd tests when SIMD isn't available.
-    if pathStartsWith(testName, "built-ins", "Simd"):
-        refTestSkipIf.append(("!this.hasOwnProperty('SIMD')", "needs SIMD"))
-
     # Add reportCompare() after all positive, synchronous tests.
     if not isNegative and not async:
         testEpilogue = """
