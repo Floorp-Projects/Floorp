@@ -99,135 +99,6 @@ struct ParamTraits<WrImageFormat>
 };
 
 template<>
-struct ParamTraits<WrBorderStyle>
-  : public ContiguousEnumSerializer<
-        WrBorderStyle,
-        WrBorderStyle::None,
-        WrBorderStyle::Sentinel>
-{
-};
-
-template<>
-struct ParamTraits<WrColor>
-{
-  static void
-  Write(Message* aMsg, const WrColor& aParam)
-  {
-    WriteParam(aMsg, aParam.r);
-    WriteParam(aMsg, aParam.g);
-    WriteParam(aMsg, aParam.b);
-    WriteParam(aMsg, aParam.a);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrColor* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->r)
-        && ReadParam(aMsg, aIter, &aResult->g)
-        && ReadParam(aMsg, aIter, &aResult->b)
-        && ReadParam(aMsg, aIter, &aResult->a);
-  }
-};
-
-template<>
-struct ParamTraits<WrGlyphInstance>
-{
-  static void
-  Write(Message* aMsg, const WrGlyphInstance& aParam)
-  {
-    WriteParam(aMsg, aParam.index);
-    WriteParam(aMsg, aParam.x);
-    WriteParam(aMsg, aParam.y);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrGlyphInstance* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->index)
-        && ReadParam(aMsg, aIter, &aResult->x)
-        && ReadParam(aMsg, aIter, &aResult->y);
-  }
-};
-
-template<>
-struct ParamTraits<WrGlyphArray>
-{
-  static void
-  Write(Message* aMsg, const WrGlyphArray& aParam)
-  {
-    WriteParam(aMsg, aParam.color);
-    size_t length = aParam.glyphs.Length();
-
-    WriteParam(aMsg, length);
-
-    for (size_t i = 0; i < length; i++) {
-      WriteParam(aMsg, aParam.glyphs[i]);
-    }
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrGlyphArray* aResult)
-  {
-    if (!ReadParam(aMsg, aIter, &aResult->color)) {
-      return false;
-    }
-
-    size_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
-      return false;
-    }
-
-    aResult->glyphs.SetLength(length);
-
-    for (size_t i = 0; i < length; i++) {
-      if (!ReadParam(aMsg, aIter, &aResult->glyphs[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-};
-
-template<>
-struct ParamTraits<WrGradientStop>
-{
-  static void
-  Write(Message* aMsg, const WrGradientStop& aParam)
-  {
-    WriteParam(aMsg, aParam.offset);
-    WriteParam(aMsg, aParam.color);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrGradientStop* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->offset)
-        && ReadParam(aMsg, aIter, &aResult->color);
-  }
-};
-
-template<>
-struct ParamTraits<WrBorderSide>
-{
-  static void
-  Write(Message* aMsg, const WrBorderSide& aParam)
-  {
-    WriteParam(aMsg, aParam.width);
-    WriteParam(aMsg, aParam.color);
-    WriteParam(aMsg, aParam.style);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrBorderSide* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->width)
-        && ReadParam(aMsg, aIter, &aResult->color)
-        && ReadParam(aMsg, aIter, &aResult->style);
-  }
-};
-
-template<>
 struct ParamTraits<WrLayoutSize>
 {
   static void
@@ -242,28 +113,6 @@ struct ParamTraits<WrLayoutSize>
   {
     return ReadParam(aMsg, aIter, &aResult->width)
         && ReadParam(aMsg, aIter, &aResult->height);
-  }
-};
-
-template<>
-struct ParamTraits<WrBorderRadius>
-{
-  static void
-  Write(Message* aMsg, const WrBorderRadius& aParam)
-  {
-    WriteParam(aMsg, aParam.top_left);
-    WriteParam(aMsg, aParam.top_right);
-    WriteParam(aMsg, aParam.bottom_left);
-    WriteParam(aMsg, aParam.bottom_right);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrBorderRadius* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->top_left)
-        && ReadParam(aMsg, aIter, &aResult->top_right)
-        && ReadParam(aMsg, aIter, &aResult->bottom_left)
-        && ReadParam(aMsg, aIter, &aResult->bottom_right);
   }
 };
 
@@ -308,26 +157,6 @@ struct ParamTraits<WrPoint>
 };
 
 template<>
-struct ParamTraits<WrImageMask>
-{
-  static void
-  Write(Message* aMsg, const WrImageMask& aParam)
-  {
-    WriteParam(aMsg, aParam.image);
-    WriteParam(aMsg, aParam.rect);
-    WriteParam(aMsg, aParam.repeat);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrImageMask* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->image)
-        && ReadParam(aMsg, aIter, &aResult->rect)
-        && ReadParam(aMsg, aIter, &aResult->repeat);
-  }
-};
-
-template<>
 struct ParamTraits<WrBuiltDisplayListDescriptor>
 {
   static void
@@ -363,43 +192,6 @@ struct ParamTraits<WrAuxiliaryListsDescriptor>
         && ReadParam(aMsg, aIter, &aResult->filters_size)
         && ReadParam(aMsg, aIter, &aResult->glyph_instances_size);
   }
-};
-
-
-template<>
-struct ParamTraits<WrImageRendering>
-  : public ContiguousEnumSerializer<
-        WrImageRendering,
-        WrImageRendering::Auto,
-        WrImageRendering::Sentinel>
-{
-};
-
-template<>
-struct ParamTraits<WrMixBlendMode>
-  : public ContiguousEnumSerializer<
-        WrMixBlendMode,
-        WrMixBlendMode::Normal,
-        WrMixBlendMode::Sentinel>
-{
-};
-
-template<>
-struct ParamTraits<WrBoxShadowClipMode>
-  : public ContiguousEnumSerializer<
-        WrBoxShadowClipMode,
-        WrBoxShadowClipMode::None,
-        WrBoxShadowClipMode::Sentinel>
-{
-};
-
-template<>
-struct ParamTraits<WrGradientExtendMode>
-  : public ContiguousEnumSerializer<
-        WrGradientExtendMode,
-        WrGradientExtendMode::Clamp,
-        WrGradientExtendMode::Sentinel>
-{
 };
 
 } // namespace IPC
