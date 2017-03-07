@@ -325,6 +325,18 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg* ins)
 }
 
 void
+LIRGeneratorX86Shared::lowerWasmLoad(MWasmLoad* ins)
+{
+    MOZ_ASSERT(ins->type() != MIRType::Int64);
+
+    MDefinition* base = ins->base();
+    MOZ_ASSERT(base->type() == MIRType::Int32);
+
+    auto* lir = new(alloc()) LWasmLoad(useRegisterOrZeroAtStart(base));
+    define(lir, ins);
+}
+
+void
 LIRGeneratorX86Shared::lowerUDiv(MDiv* div)
 {
     if (div->rhs()->isConstant()) {
