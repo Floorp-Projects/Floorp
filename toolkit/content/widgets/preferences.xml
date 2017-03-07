@@ -880,11 +880,8 @@
         <![CDATA[
           var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                                .getService(Components.interfaces.nsIPrefBranch);
-          var animate = /Mac/.test(navigator.platform);
-          try {
-            animate = psvc.getBoolPref("browser.preferences.animateFadeIn");
-          } catch (e) { }
-          return animate;
+          return psvc.getBoolPref("browser.preferences.animateFadeIn",
+                                  /Mac/.test(navigator.platform));
         ]]>
         </getter>
       </property>

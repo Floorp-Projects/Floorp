@@ -240,10 +240,9 @@ var Scheduler = this.Scheduler = {
    * Prepare to kill the OS.File worker after a few seconds.
    */
   restartTimer: function(arg) {
-    let delay;
-    try {
-      delay = Services.prefs.getIntPref("osfile.reset_worker_delay");
-    } catch(e) {
+    let delay = Services.prefs.getIntPref("osfile.reset_worker_delay", 0);
+
+    if (!delay) {
       // Don't auto-shutdown if we don't have a delay preference set.
       return;
     }

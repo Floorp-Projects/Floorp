@@ -1923,16 +1923,10 @@ var CustomizableUIInternal = {
   // state immediately when a browser window opens, which is important for
   // other consumers of this API.
   loadSavedState() {
-    let state = null;
-    try {
-      state = Services.prefs.getCharPref(kPrefCustomizationState);
-    } catch (e) {
-      log.debug("No saved state found");
-      // This will fail if nothing has been customized, so silently fall back to
-      // the defaults.
-    }
-
+    let state = Services.prefs.getCharPref(kPrefCustomizationState, "");
     if (!state) {
+      log.debug("No saved state found");
+      // Nothing has been customized, so silently fall back to the defaults.
       return;
     }
     try {

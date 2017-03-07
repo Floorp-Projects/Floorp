@@ -996,17 +996,15 @@ function QueryParameter(aName, aValue, aPurpose) {
 function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var value = aParamValue;
 
-  var distributionID = Services.appinfo.distributionID;
-  try {
-    distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
-  } catch (ex) { }
-  var official = MOZ_OFFICIAL;
-  try {
-    if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official"))
-      official = "official";
-    else
-      official = "unofficial";
-  } catch (ex) { }
+  var distributionID =
+    Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID",
+                               Services.appinfo.distributionID || "");
+
+  var official;
+  if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official", MOZ_OFFICIAL))
+    official = "official";
+  else
+    official = "unofficial";
 
   // Custom search parameters. These are only available to default search
   // engines.
