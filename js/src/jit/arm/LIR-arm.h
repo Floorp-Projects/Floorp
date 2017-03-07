@@ -612,7 +612,7 @@ class LWasmUnalignedLoadBase : public details::LWasmLoadBase<NumDefs, 4>
     explicit LWasmUnalignedLoadBase(const LAllocation& ptr, const LDefinition& ptrCopy,
                                     const LDefinition& temp1, const LDefinition& temp2,
                                     const LDefinition& temp3)
-      : Base(ptr, LAllocation())
+      : Base(ptr)
     {
         Base::setTemp(0, ptrCopy);
         Base::setTemp(1, temp1);

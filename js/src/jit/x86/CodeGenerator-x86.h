@@ -83,7 +83,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     void visitTestI64AndBranch(LTestI64AndBranch* lir);
 
   private:
-    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, Register memoryBase);
+    void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

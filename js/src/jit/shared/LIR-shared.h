@@ -8061,38 +8061,17 @@ class LWasmAddOffset : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LWasmBoundsCheck : public LInstructionHelper<0, 2, 0>
+class LWasmBoundsCheck : public LInstructionHelper<0, 1, 0>
 {
   public:
     LIR_HEADER(WasmBoundsCheck);
-    explicit LWasmBoundsCheck(const LAllocation& ptr,
-                              const LAllocation& boundsCheckLimit = LAllocation())
-    {
+    explicit LWasmBoundsCheck(const LAllocation& ptr) {
         setOperand(0, ptr);
-        setOperand(1, boundsCheckLimit);
     }
     MWasmBoundsCheck* mir() const {
         return mir_->toWasmBoundsCheck();
     }
     const LAllocation* ptr() {
-        return getOperand(0);
-    }
-    const LAllocation* boundsCheckLimit() {
-        return getOperand(1);
-    }
-};
-
-class LWasmLoadTls : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(WasmLoadTls);
-    explicit LWasmLoadTls(const LAllocation& tlsPtr) {
-        setOperand(0, tlsPtr);
-    }
-    MWasmLoadTls* mir() const {
-        return mir_->toWasmLoadTls();
-    }
-    const LAllocation* tlsPtr() {
         return getOperand(0);
     }
 };
@@ -8101,22 +8080,18 @@ namespace details {
 
 // This is a base class for LWasmLoad/LWasmLoadI64.
 template<size_t Defs, size_t Temp>
-class LWasmLoadBase : public LInstructionHelper<Defs, 2, Temp>
+class LWasmLoadBase : public LInstructionHelper<Defs, 1, Temp>
 {
   public:
-    typedef LInstructionHelper<Defs, 2, Temp> Base;
-    explicit LWasmLoadBase(const LAllocation& ptr, const LAllocation& memoryBase) {
+    typedef LInstructionHelper<Defs, 1, Temp> Base;
+    explicit LWasmLoadBase(const LAllocation& ptr) {
         Base::setOperand(0, ptr);
-        Base::setOperand(1, memoryBase);
     }
     MWasmLoad* mir() const {
         return Base::mir_->toWasmLoad();
     }
     const LAllocation* ptr() {
         return Base::getOperand(0);
-    }
-    const LAllocation* memoryBase() {
-        return Base::getOperand(1);
     }
 };
 
@@ -8125,8 +8100,8 @@ class LWasmLoadBase : public LInstructionHelper<Defs, 2, Temp>
 class LWasmLoad : public details::LWasmLoadBase<1, 1>
 {
   public:
-    explicit LWasmLoad(const LAllocation& ptr, const LAllocation& memoryBase = LAllocation())
-      : LWasmLoadBase(ptr, memoryBase)
+    explicit LWasmLoad(const LAllocation& ptr)
+      : LWasmLoadBase(ptr)
     {
         setTemp(0, LDefinition::BogusTemp());
     }
@@ -8141,8 +8116,8 @@ class LWasmLoad : public details::LWasmLoadBase<1, 1>
 class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 1>
 {
   public:
-    explicit LWasmLoadI64(const LAllocation& ptr, const LAllocation& memoryBase = LAllocation())
-      : LWasmLoadBase(ptr, memoryBase)
+    explicit LWasmLoadI64(const LAllocation& ptr)
+      : LWasmLoadBase(ptr)
     {
         setTemp(0, LDefinition::BogusTemp());
     }
@@ -8154,21 +8129,17 @@ class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 1>
     LIR_HEADER(WasmLoadI64);
 };
 
-class LWasmStore : public LInstructionHelper<0, 3, 1>
+class LWasmStore : public LInstructionHelper<0, 2, 1>
 {
   public:
     LIR_HEADER(WasmStore);
 
     static const size_t PtrIndex = 0;
     static const size_t ValueIndex = 1;
-    static const size_t MemoryBaseIndex = 2;
 
-    LWasmStore(const LAllocation& ptr, const LAllocation& value,
-               const LAllocation& memoryBase = LAllocation())
-    {
+    LWasmStore(const LAllocation& ptr, const LAllocation& value) {
         setOperand(PtrIndex, ptr);
         setOperand(ValueIndex, value);
-        setOperand(MemoryBaseIndex, memoryBase);
         setTemp(0, LDefinition::BogusTemp());
     }
     MWasmStore* mir() const {
@@ -8183,25 +8154,18 @@ class LWasmStore : public LInstructionHelper<0, 3, 1>
     const LAllocation* value() {
         return getOperand(ValueIndex);
     }
-    const LAllocation* memoryBase() {
-        return getOperand(MemoryBaseIndex);
-    }
 };
 
-class LWasmStoreI64 : public LInstructionHelper<0, INT64_PIECES + 2, 1>
+class LWasmStoreI64 : public LInstructionHelper<0, INT64_PIECES + 1, 1>
 {
   public:
     LIR_HEADER(WasmStoreI64);
 
     static const size_t PtrIndex = 0;
-    static const size_t MemoryBaseIndex = 1;
-    static const size_t ValueIndex = 2;
+    static const size_t ValueIndex = 1;
 
-    LWasmStoreI64(const LAllocation& ptr, const LInt64Allocation& value,
-                  const LAllocation& memoryBase = LAllocation())
-    {
+    LWasmStoreI64(const LAllocation& ptr, const LInt64Allocation& value) {
         setOperand(PtrIndex, ptr);
-        setOperand(MemoryBaseIndex, memoryBase);
         setInt64Operand(ValueIndex, value);
         setTemp(0, LDefinition::BogusTemp());
     }
@@ -8211,9 +8175,6 @@ class LWasmStoreI64 : public LInstructionHelper<0, INT64_PIECES + 2, 1>
     const LAllocation* ptr() {
         return getOperand(PtrIndex);
     }
-    const LAllocation* memoryBase() {
-        return getOperand(MemoryBaseIndex);
-    }
     const LDefinition* ptrCopy() {
         return getTemp(0);
     }
@@ -8222,16 +8183,12 @@ class LWasmStoreI64 : public LInstructionHelper<0, INT64_PIECES + 2, 1>
     }
 };
 
-class LAsmJSLoadHeap : public LInstructionHelper<1, 3, 0>
+class LAsmJSLoadHeap : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(AsmJSLoadHeap);
-    explicit LAsmJSLoadHeap(const LAllocation& ptr, const LAllocation& boundsCheckLimit = LAllocation(),
-                            const LAllocation& memoryBase = LAllocation())
-    {
+    explicit LAsmJSLoadHeap(const LAllocation& ptr) {
         setOperand(0, ptr);
-        setOperand(1, boundsCheckLimit);
-        setOperand(2, memoryBase);
     }
     MAsmJSLoadHeap* mir() const {
         return mir_->toAsmJSLoadHeap();
@@ -8239,26 +8196,15 @@ class LAsmJSLoadHeap : public LInstructionHelper<1, 3, 0>
     const LAllocation* ptr() {
         return getOperand(0);
     }
-    const LAllocation* boundsCheckLimit() {
-        return getOperand(1);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(2);
-    }
 };
 
-class LAsmJSStoreHeap : public LInstructionHelper<0, 4, 0>
+class LAsmJSStoreHeap : public LInstructionHelper<0, 2, 0>
 {
   public:
     LIR_HEADER(AsmJSStoreHeap);
-    LAsmJSStoreHeap(const LAllocation& ptr, const LAllocation& value,
-                    const LAllocation& boundsCheckLimit = LAllocation(),
-                    const LAllocation& memoryBase = LAllocation())
-    {
+    LAsmJSStoreHeap(const LAllocation& ptr, const LAllocation& value) {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, boundsCheckLimit);
-        setOperand(3, memoryBase);
     }
     MAsmJSStoreHeap* mir() const {
         return mir_->toAsmJSStoreHeap();
@@ -8269,30 +8215,21 @@ class LAsmJSStoreHeap : public LInstructionHelper<0, 4, 0>
     const LAllocation* value() {
         return getOperand(1);
     }
-    const LAllocation* boundsCheckLimit() {
-        return getOperand(2);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(3);
-    }
 };
 
-class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
+class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 4>
 {
   public:
     LIR_HEADER(AsmJSCompareExchangeHeap);
 
-    // ARM, ARM64, x86, x64
     LAsmJSCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
-                              const LAllocation& newValue, const LAllocation& memoryBase = LAllocation())
+                              const LAllocation& newValue)
     {
         setOperand(0, ptr);
         setOperand(1, oldValue);
         setOperand(2, newValue);
-        setOperand(3, memoryBase);
         setTemp(0, LDefinition::BogusTemp());
     }
-    // MIPS32, MIPS64
     LAsmJSCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
                               const LAllocation& newValue, const LDefinition& valueTemp,
                               const LDefinition& offsetTemp, const LDefinition& maskTemp)
@@ -8300,7 +8237,6 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
         setOperand(0, ptr);
         setOperand(1, oldValue);
         setOperand(2, newValue);
-        setOperand(3, LAllocation());
         setTemp(0, LDefinition::BogusTemp());
         setTemp(1, valueTemp);
         setTemp(2, offsetTemp);
@@ -8315,9 +8251,6 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
     }
     const LAllocation* newValue() {
         return getOperand(2);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(3);
     }
     const LDefinition* addrTemp() {
         return getTemp(0);
@@ -8343,28 +8276,23 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 4, 4>
     }
 };
 
-class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
+class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 4>
 {
   public:
     LIR_HEADER(AsmJSAtomicExchangeHeap);
 
-    // ARM, ARM64, x86, x64
-    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
-                             const LAllocation& memoryBase = LAllocation())
+    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value)
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, memoryBase);
         setTemp(0, LDefinition::BogusTemp());
     }
-    // MIPS32, MIPS64
     LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
                              const LDefinition& valueTemp, const LDefinition& offsetTemp,
                              const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, LAllocation());
         setTemp(0, LDefinition::BogusTemp());
         setTemp(1, valueTemp);
         setTemp(2, offsetTemp);
@@ -8376,9 +8304,6 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
     }
     const LAllocation* value() {
         return getOperand(1);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(2);
     }
     const LDefinition* addrTemp() {
         return getTemp(0);
@@ -8404,27 +8329,23 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 3, 4>
     }
 };
 
-class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
+class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 6>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeap);
 
     static const int32_t valueOp = 1;
 
-    // ARM, ARM64, x86, x64
     LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
                           const LDefinition& temp,
-                          const LDefinition& flagTemp = LDefinition::BogusTemp(),
-                          const LAllocation& memoryBase = LAllocation())
+                          const LDefinition& flagTemp = LDefinition::BogusTemp())
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, memoryBase);
         setTemp(0, temp);
         setTemp(1, LDefinition::BogusTemp());
         setTemp(2, flagTemp);
     }
-    // MIPS32, MIPS64
     LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
                           const LDefinition& temp, const LDefinition& flagTemp,
                           const LDefinition& valueTemp, const LDefinition& offsetTemp,
@@ -8432,7 +8353,6 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, LAllocation());
         setTemp(0, temp);
         setTemp(1, LDefinition::BogusTemp());
         setTemp(2, flagTemp);
@@ -8446,9 +8366,6 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
     const LAllocation* value() {
         MOZ_ASSERT(valueOp == 1);
         return getOperand(1);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(2);
     }
     const LDefinition* temp() {
         return getTemp(0);
@@ -8483,29 +8400,24 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 3, 6>
 };
 
 // Atomic binary operation where the result is discarded.
-class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
+class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 5>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeapForEffect);
-    // ARM, ARM64, x86, x64
     LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
-                                   const LDefinition& flagTemp = LDefinition::BogusTemp(),
-                                   const LAllocation& memoryBase = LAllocation())
+                                   const LDefinition& flagTemp = LDefinition::BogusTemp())
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, memoryBase);
         setTemp(0, LDefinition::BogusTemp());
         setTemp(1, flagTemp);
     }
-    // MIPS32, MIPS64
     LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
                                    const LDefinition& flagTemp, const LDefinition& valueTemp,
                                    const LDefinition& offsetTemp, const LDefinition& maskTemp)
     {
         setOperand(0, ptr);
         setOperand(1, value);
-        setOperand(2, LAllocation());
         setTemp(0, LDefinition::BogusTemp());
         setTemp(1, flagTemp);
         setTemp(2, valueTemp);
@@ -8517,9 +8429,6 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5>
     }
     const LAllocation* value() {
         return getOperand(1);
-    }
-    const LAllocation* memoryBase() {
-        return getOperand(2);
     }
 
     // Temp that may be used on some platforms to hold a computed address.
