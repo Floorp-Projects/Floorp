@@ -55,7 +55,7 @@ Message::Message()
 }
 
 Message::Message(int32_t routing_id, msgid_t type, NestedLevel nestedLevel, PriorityValue priority,
-                 MessageCompression compression, const char* const aName)
+                 MessageCompression compression, const char* const aName, bool recordWriteLatency)
     : Pickle(MSG_HEADER_SZ) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
@@ -85,6 +85,9 @@ Message::Message(int32_t routing_id, msgid_t type, NestedLevel nestedLevel, Prio
                     &_header->source_event_type);
   }
 #endif
+  if (recordWriteLatency) {
+    create_time_ = mozilla::TimeStamp::Now();
+  }
   InitLoggingVariables(aName);
 }
 
