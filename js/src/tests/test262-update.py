@@ -17,6 +17,9 @@ import sys
 from functools import partial
 from itertools import chain, imap
 
+# Skip all tests which use features not supported in SpiderMonkey.
+UNSUPPORTED_FEATURES = set(["tail-call-optimization"])
+
 @contextlib.contextmanager
 def TemporaryDirectory():
     tmpDir = tempfile.mkdtemp()
@@ -56,44 +59,48 @@ def tryParseTestFile(test262parser, source, testName):
         print("Please report this error to the test262 GitHub repository!")
         return None
 
-def makeRefTestLine(refTest):
+def createRefTestEntry(skip, skipIf):
     """
-    Creates the |reftest| entry from the input list. Or None if no reftest
-    entry is required.
+    Creates the |reftest| entry from the input list. Or the empty string if no
+    reftest entry is required.
     """
 
-    (refTestSkip, refTestSkipIf) = refTest
+    terms = []
+    comments = []
 
-    if refTestSkip:
-        comments = ", ".join(refTestSkip)
-        return "skip -- %s" % comments
+    if skip:
+        terms.append("skip")
+        comments.extend(skip)
 
-    if refTestSkipIf:
-        conditions = "||".join([cond for (cond, _) in refTestSkipIf])
-        comments = ", ".join([comment for (_, comment) in refTestSkipIf])
-        return "skip-if(%s) -- %s" % (conditions, comments)
+    if skipIf:
+        terms.append("skip-if(" + "||".join([cond for (cond, _) in skipIf]) + ")")
+        comments.extend([comment for (_, comment) in skipIf])
 
-    return None
+    line = " ".join(terms)
+    if comments:
+        line += " -- " + ", ".join(comments)
 
-def createSource(testName, testSource, refTest, directive, epilogue):
+    return line
+
+def createSource(testSource, refTest, prologue, epilogue):
     """
     Returns the post-processed source for |testSource|.
     """
 
     source = testSource
 
-    # Prepend a possible "use strict" directive.
-    if directive:
-        source = directive + "\n" + source
+    # Prepend any directives if present.
+    if prologue:
+        source = prologue + "\n" + source
 
-    # Add the |reftest| if present.
-    refTestLine = makeRefTestLine(refTest)
-    if refTestLine:
-        source = "// |reftest| " + refTestLine + "\n" + source
+    # Add the |reftest| line.
+    if refTest:
+        source = "// |reftest| " + refTest + "\n" + source
 
     # Append the test epilogue, i.e. the call to "reportCompare".
     # TODO: Does this conflict with raw tests?
-    source += epilogue
+    if epilogue:
+        source += "\n" + epilogue + "\n"
 
     return source
 
@@ -175,7 +182,6 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # jsreftest meta data
     refTestSkip = []
     refTestSkipIf = []
-    refTest = (refTestSkip, refTestSkipIf)
 
     # Skip all files which contain YAML errors.
     if testRec is None:
@@ -190,14 +196,13 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # The "raw" attribute is used in the default test262 runner to prevent
     # prepending additional content (use-strict directive, harness files)
-    # before the actual test source code. We can probably ignore it.
+    # before the actual test source code.
     raw = "raw" in testRec
-    assert not (raw and (onlyStrict or noStrict))
 
     # Async tests are marked with the "async" attribute. It is an error for a
     # test to use the $DONE function without specifying the "async" attribute.
     async = "async" in testRec
-    assert "$DONE" not in testSource or async
+    assert "$DONE" not in testSource or async, "Missing async attribute in: %s" % testName
 
     # Negative tests have additional meta-data to specify the error type and
     # when the error is issued (runtime error or early parse error). We're
@@ -217,11 +222,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
 
     # Skip tests with unsupported features.
     if "features" in testRec:
-        # tail-call-optimization isn't implemented in SpiderMonkey, skip all tests
-        # marked with this feature.
-        unsupportedFeatures = set(["tail-call-optimization"])
-
-        unsupported = unsupportedFeatures.intersection(testRec["features"])
+        unsupported = UNSUPPORTED_FEATURES.intersection(testRec["features"])
         if unsupported:
             refTestSkip.append("%s is not supported" % ",".join(list(unsupported)))
 
@@ -233,24 +234,31 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         includeSet.update(testRec["includes"])
 
     # Add reportCompare() after all positive, synchronous tests.
-    if not isNegative and not async:
-        testEpilogue = """
-reportCompare(0, 0);
-"""
+    if not isNegative and not async and not isSupportFile:
+        testEpilogue = "reportCompare(0, 0);"
     else:
         testEpilogue = ""
 
-    # Write raw or non-strict mode test.
-    if raw or noStrict or not onlyStrict:
-        nonStrictSource = createSource(testName, testSource, refTest, "", testEpilogue)
+    refTest = createRefTestEntry(refTestSkip, refTestSkipIf)
+
+    # Don't write a strict-mode variant for raw or support files.
+    noStrictVariant = raw or isSupportFile
+    assert not (noStrictVariant and (onlyStrict or noStrict)),\
+           "Unexpected onlyStrict or noStrict attribute: %s" % testName
+
+    # Write non-strict mode test.
+    if noStrictVariant or noStrict or not onlyStrict:
+        testPrologue = ""
+        nonStrictSource = createSource(testSource, refTest, testPrologue, testEpilogue)
         testFileName = testName
         if isNegative:
             testFileName = addSuffixToFileName(testFileName, "-n")
         yield (testFileName, nonStrictSource)
 
     # Write strict mode test.
-    if not raw and not isSupportFile and (onlyStrict or (not noStrict and strictTests)):
-        strictSource = createSource(testName, testSource, refTest, "'use strict';", testEpilogue)
+    if not noStrictVariant and (onlyStrict or (not noStrict and strictTests)):
+        testPrologue = "'use strict';"
+        strictSource = createSource(testSource, refTest, testPrologue, testEpilogue)
         testFileName = testName
         if not noStrict:
             testFileName = addSuffixToFileName(testFileName, "-strict")
@@ -318,6 +326,12 @@ def process_test262(test262Dir, test262OutDir, strictTests):
         for fileName in fileNames:
             filePath = os.path.join(dirPath, fileName)
             testName = os.path.relpath(filePath, testDir)
+
+            # Copy non-test files as is.
+            (_, fileExt) = os.path.splitext(fileName)
+            if fileExt != ".js":
+                shutil.copyfile(filePath, os.path.join(test262OutDir, testName))
+                continue
 
             # Read the original test source and preprocess it for the jstests harness.
             with io.open(filePath, "rb") as testFile:
