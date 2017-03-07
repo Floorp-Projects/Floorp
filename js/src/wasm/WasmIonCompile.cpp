@@ -711,30 +711,6 @@ class FunctionCompiler
     }
 
   private:
-    MWasmLoadTls* maybeLoadMemoryBase() {
-        MWasmLoadTls* load = nullptr;
-#ifdef JS_CODEGEN_X86
-        AliasSet aliases = env_.maxMemoryLength.isSome() ? AliasSet::None()
-                                                         : AliasSet::Load(AliasSet::WasmHeapMeta);
-        load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, memoryBase),
-                                 MIRType::Pointer, aliases);
-        curBlock_->add(load);
-#endif
-        return load;
-    }
-
-    MWasmLoadTls* maybeLoadBoundsCheckLimit() {
-        MWasmLoadTls* load = nullptr;
-#ifndef WASM_HUGE_MEMORY
-        AliasSet aliases = env_.maxMemoryLength.isSome() ? AliasSet::None()
-                                                         : AliasSet::Load(AliasSet::WasmHeapMeta);
-        load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, boundsCheckLimit),
-                                 MIRType::Int32, aliases);
-        curBlock_->add(load);
-#endif
-        return load;
-    }
-
     void checkOffsetAndBounds(MemoryAccessDesc* access, MDefinition** base)
     {
         // If the offset is bigger than the guard region, a separate instruction
@@ -747,9 +723,9 @@ class FunctionCompiler
             access->clearOffset();
         }
 
-        MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
-        if (boundsCheckLimit)
-            curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, trapOffset()));
+#ifndef WASM_HUGE_MEMORY
+        curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, trapOffset()));
+#endif
     }
 
   public:
@@ -758,15 +734,13 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
-        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* load = nullptr;
         if (access->isPlainAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
-            MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
-            load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type());
+            load = MAsmJSLoadHeap::New(alloc(), base, access->type());
         } else {
             checkOffsetAndBounds(access, &base);
-            load = MWasmLoad::New(alloc(), memoryBase, base, *access, ToMIRType(result));
+            load = MWasmLoad::New(alloc(), base, *access, ToMIRType(result));
         }
 
         curBlock_->add(load);
@@ -778,15 +752,13 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
-        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* store = nullptr;
         if (access->isPlainAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
-            MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
-            store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type(), v);
+            store = MAsmJSStoreHeap::New(alloc(), base, access->type(), v);
         } else {
             checkOffsetAndBounds(access, &base);
-            store = MWasmStore::New(alloc(), memoryBase, base, *access, v);
+            store = MWasmStore::New(alloc(), base, *access, v);
         }
 
         curBlock_->add(store);
@@ -799,8 +771,7 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), memoryBase, base, *access, oldv, newv, tlsPointer_);
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, *access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -812,8 +783,7 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), memoryBase, base, *access, value, tlsPointer_);
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, *access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -826,8 +796,7 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, memoryBase, base, *access, v, tlsPointer_);
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, *access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
     }
