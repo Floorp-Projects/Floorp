@@ -495,13 +495,7 @@ skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-gl
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-exsting-global-init.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1331092
-skip script test262/language/expressions/async-generators/expression-yield-as-statement.js
-skip script test262/language/expressions/async-generators/expression-await-thenable-as-yield-operand.js
-skip script test262/language/expressions/async-generators/expression-yield-as-operand.js
-skip script test262/language/expressions/async-generators/expression-await-as-yield-operand.js
-skip script test262/language/expressions/async-generators/expression-yield-newline.js
-skip script test262/language/expressions/async-generators/expression-await-promise-as-yield-operand.js
-skip script test262/language/expressions/async-generators/expression-yield-star-before-newline.js
+skip include test262/language/expressions/async-generators/jstests.list
 
 # SIMD.
 skip script test262/built-ins/Simd/check.js
@@ -511,10 +505,47 @@ skip script test262/built-ins/Simd/replace_lane.js
 skip script test262/built-ins/Simd/shuffle.js
 skip script test262/built-ins/Simd/swizzle.js
 
-# SIMD. Fails with --ion-eager --no-threads
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1336991
 skip script test262/built-ins/Simd/float_operators.js
 skip script test262/built-ins/Simd/all_true.js
 skip script test262/built-ins/Simd/any_true.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1340147
+skip script test262/language/module-code/eval-export-dflt-cls-anon.js
+skip script test262/language/module-code/eval-export-dflt-expr-cls-anon.js
+skip script test262/language/module-code/eval-export-dflt-expr-fn-anon.js
+skip script test262/language/module-code/eval-export-dflt-expr-gen-anon.js
+skip script test262/language/module-code/instn-named-bndng-dflt-fun-anon.js
+skip script test262/language/module-code/instn-named-bndng-dflt-gen-anon.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
+skip script test262/language/module-code/instn-resolve-empty-export.js
+skip script test262/language/module-code/instn-resolve-empty-import.js
+skip script test262/language/module-code/instn-resolve-err-reference.js
+skip script test262/language/module-code/instn-resolve-order-depth.js
+skip script test262/language/module-code/instn-resolve-order-src.js
+skip script test262/language/module-code/parse-err-reference.js
+skip script test262/language/expressions/postfix-increment/target-cover-yieldexpr.js
+skip script test262/language/expressions/postfix-increment/target-newtarget.js
+skip script test262/language/expressions/postfix-increment/target-cover-newtarget.js
+skip script test262/language/expressions/postfix-increment/non-simple.js
+skip script test262/language/expressions/postfix-decrement/target-cover-yieldexpr.js
+skip script test262/language/expressions/postfix-decrement/target-newtarget.js
+skip script test262/language/expressions/postfix-decrement/target-cover-newtarget.js
+skip script test262/language/expressions/postfix-decrement/non-simple.js
+skip script test262/language/expressions/prefix-increment/target-cover-yieldexpr.js
+skip script test262/language/expressions/prefix-increment/target-newtarget.js
+skip script test262/language/expressions/prefix-increment/target-cover-newtarget.js
+skip script test262/language/expressions/prefix-increment/non-simple.js
+skip script test262/language/expressions/prefix-decrement/target-cover-yieldexpr.js
+skip script test262/language/expressions/prefix-decrement/target-newtarget.js
+skip script test262/language/expressions/prefix-decrement/target-cover-newtarget.js
+skip script test262/language/expressions/prefix-decrement/non-simple.js
+skip script test262/language/asi/S7.9_A5.7_T1.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1340304
+skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular.js
+skip-if(!xulRuntime.shell) script test262/language/module-code/instn-iee-err-circular-as.js
 
 
 ####################################################
@@ -529,11 +560,21 @@ skip script test262/built-ins/Date/prototype/setFullYear/new-value-time-clip.js
 skip script test262/built-ins/Date/prototype/setMonth/new-value-time-clip.js
 
 # ES2017: https://github.com/tc39/ecma262/pull/453
-skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration-n.js
+skip script test262/language/block-scope/syntax/redeclaration-in-block/attempt-to-redeclare-function-declaration-with-function-declaration.js
 
 # Expects TypeError, but RangeError thrown.
 skip script test262/built-ins/DataView/prototype/setFloat64/detached-buffer-after-toindex-byteoffset.js
 skip script test262/built-ins/DataView/prototype/setInt16/detached-buffer-after-toindex-byteoffset.js
+
+# https://github.com/tc39/test262/pull/840
+skip script test262/language/module-code/namespace/internals/set-prototype-of-null.js
+skip script test262/language/module-code/namespace/internals/own-property-keys-sort.js
+skip script test262/language/module-code/namespace/internals/own-property-keys-binding-types.js
+
+# https://github.com/tc39/test262/pull/868
+skip script test262/language/module-code/instn-named-star-cycle.js
+skip script test262/language/module-code/instn-iee-star-cycle.js
+skip script test262/language/module-code/instn-star-star-cycle.js
 
 # https://github.com/tc39/test262/pull/853
 skip script test262/built-ins/RegExp/prototype/exec/failure-lastindex-no-access.js
