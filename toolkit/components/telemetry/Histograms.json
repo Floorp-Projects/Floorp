@@ -10203,7 +10203,7 @@
   "PUSH_API_NOTIFY": {
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["push@mozilla.com"],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Number of push messages that were successfully decrypted and delivered to a ServiceWorker."
   },
@@ -10263,9 +10263,9 @@
   },
   "WEB_NOTIFICATION_CLICKED": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1225336],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Count of times a web notification was clicked"
   },
@@ -10279,9 +10279,9 @@
   },
   "WEB_NOTIFICATION_SHOWN": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1225336],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "count",
     "description": "Count of times a Notification was rendered (accounting for XUL DND). A system backend may put the notification directly into the tray if its own DND is on."
   },
@@ -10382,9 +10382,9 @@
   },
   "WEB_NOTIFICATION_PERMISSIONS": {
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["firefox-dev@mozilla.org"],
+    "alert_emails": ["firefox-dev@mozilla.org", "push@mozilla.com"],
     "bug_numbers": [1219030],
-    "expires_in_version": "55",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
