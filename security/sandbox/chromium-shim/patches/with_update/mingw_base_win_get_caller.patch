@@ -1,0 +1,56 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1488916296 0
+#      Tue Mar 07 19:51:36 2017 +0000
+# Node ID 1a17ace7217e1cdf95189f09a458e3847e866ded
+# Parent  d4d53f4069f43eab1aae8bcf4def08bdb5a84d8d
+Bug 1431621 Remove the gcc variant of BASE_WIN_GET_CALLER, because MinGW defines _ReturnAddress() ?rbobowen
+
+Note that MinGW defines it without __builtin_extract_return_addr which
+means we're dropping that, but the gcc documentation indicates that
+shouldn't be an issue. It is needed when a fixup is necessary:
+
+> For example, on the 31-bit S/390 platform the highest bit has to
+> be masked out, or on SPARC platforms an offset has to be added for
+> the true next instruction to be executed.
+
+
+
+MozReview-Commit-ID: 4D5bIT9Fei4
+
+diff --git a/security/sandbox/chromium/base/win/scoped_handle.h b/security/sandbox/chromium/base/win/scoped_handle.h
+--- a/security/sandbox/chromium/base/win/scoped_handle.h
++++ b/security/sandbox/chromium/base/win/scoped_handle.h
+@@ -1,31 +1,26 @@
+ // Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef BASE_WIN_SCOPED_HANDLE_H_
+ #define BASE_WIN_SCOPED_HANDLE_H_
+ 
++#include <intrin.h>
+ #include <windows.h>
+ 
+ #include "base/base_export.h"
+ #include "base/gtest_prod_util.h"
+ #include "base/location.h"
+ #include "base/logging.h"
+ #include "base/macros.h"
+ 
+ // TODO(rvargas): remove this with the rest of the verifier.
+-#if defined(COMPILER_MSVC)
+-#include <intrin.h>
+ #define BASE_WIN_GET_CALLER _ReturnAddress()
+-#elif defined(COMPILER_GCC)
+-#define BASE_WIN_GET_CALLER __builtin_extract_return_addr(\\
+-    __builtin_return_address(0))
+-#endif
+ 
+ namespace base {
+ namespace win {
+ 
+ // Generic wrapper for raw handles that takes care of closing handles
+ // automatically. The class interface follows the style of
+ // the ScopedFILE class with two additions:
+ //   - IsValid() method can tolerate multiple invalid handle values such as NULL
