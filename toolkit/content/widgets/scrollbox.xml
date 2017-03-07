@@ -89,12 +89,8 @@
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
           if (this._scrollIncrement === null) {
-            try {
-              this._scrollIncrement = this._prefBranch
-                                          .getIntPref("toolkit.scrollbox.scrollIncrement");
-            } catch (ex) {
-              this._scrollIncrement = 20;
-            }
+            this._scrollIncrement = this._prefBranch
+                                        .getIntPref("toolkit.scrollbox.scrollIncrement", 20);
           }
           return this._scrollIncrement;
         ]]></getter>
@@ -107,12 +103,8 @@
             if (this.hasAttribute("smoothscroll")) {
               this._smoothScroll = (this.getAttribute("smoothscroll") == "true");
             } else {
-              try {
-                this._smoothScroll = this._prefBranch
-                                         .getBoolPref("toolkit.scrollbox.smoothScroll");
-              } catch (ex) {
-                this._smoothScroll = true;
-              }
+              this._smoothScroll = this._prefBranch
+                                       .getBoolPref("toolkit.scrollbox.smoothScroll", true);
             }
           }
           return this._smoothScroll;

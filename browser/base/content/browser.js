@@ -2797,11 +2797,8 @@ var gMenuButtonUpdateBadge = {
       this.enabled = Services.prefs.getBoolPref("app.update.badge");
     } catch (e) {}
     if (this.enabled) {
-      try {
-        this.badgeWaitTime = Services.prefs.getIntPref("app.update.badgeWaitTime");
-      } catch (e) {
-        this.badgeWaitTime = 345600; // 4 days
-      }
+      this.badgeWaitTime = Services.prefs.getIntPref("app.update.badgeWaitTime",
+                                                     345600); // 4 days
       Services.obs.addObserver(this, "update-staged", false);
       Services.obs.addObserver(this, "update-downloaded", false);
     }

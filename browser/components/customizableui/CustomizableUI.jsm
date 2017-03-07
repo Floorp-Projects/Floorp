@@ -158,10 +158,7 @@ var gUIStateBeforeReset = {
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
-  let debug;
-  try {
-    debug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-  } catch (ex) {}
+  let debug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
     maxLogLevel: debug ? "all" : "log",
     prefix: "CustomizableUI",
@@ -2220,10 +2217,7 @@ var CustomizableUIInternal = {
         this.notifyListeners("onWidgetAdded", widget.id, widget.currentArea,
                              widget.currentPosition);
       } else if (widgetMightNeedAutoAdding) {
-        let autoAdd = true;
-        try {
-          autoAdd = Services.prefs.getBoolPref(kPrefCustomizationAutoAdd);
-        } catch (e) {}
+        let autoAdd = Services.prefs.getBoolPref(kPrefCustomizationAutoAdd, true);
 
         // If the widget doesn't have an existing placement, and it hasn't been
         // seen before, then add it to its default area so it can be used.

@@ -277,23 +277,11 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                 getService(Components.interfaces.nsIPrefBranch);
-    try {
-        gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote.autostart");
-    } catch (e) {
-        gBrowserIsRemote = false;
-    }
+    gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote.autostart", false);
 
-    try {
-      gBrowserIsIframe = prefs.getBoolPref("reftest.browser.iframe.enabled");
-    } catch (e) {
-      gBrowserIsIframe = false;
-    }
+    gBrowserIsIframe = prefs.getBoolPref("reftest.browser.iframe.enabled", false);
 
-    try {
-      gLogLevel = prefs.getCharPref("reftest.logLevel");
-    } catch (e) {
-      gLogLevel ='info';
-    }
+    gLogLevel = prefs.getCharPref("reftest.logLevel", "info");
 
     if (win === undefined || win == null) {
       win = window;
@@ -375,17 +363,9 @@ function InitAndStartRefTests()
         }
     } catch(e) {}
 
-    try {
-        gRemote = prefs.getBoolPref("reftest.remote");
-    } catch(e) {
-        gRemote = false;
-    }
+    gRemote = prefs.getBoolPref("reftest.remote", false);
 
-    try {
-        gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
-    } catch(e) {
-        gIgnoreWindowSize = false;
-    }
+    gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize", false);
 
     /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {
@@ -473,39 +453,19 @@ function StartTests()
         logger.error("EXCEPTION: " + e);
     }
 
-    try {
-        gNoCanvasCache = prefs.getIntPref("reftest.nocache");
-    } catch(e) {
-        gNoCanvasCache = false;
-    }
+    gNoCanvasCache = prefs.getIntPref("reftest.nocache", false);
 
-    try {
-      gShuffle = prefs.getBoolPref("reftest.shuffle");
-    } catch (e) {
-      gShuffle = false;
-    }
+    gShuffle = prefs.getBoolPref("reftest.shuffle", false);
 
-    try {
-      gRunUntilFailure = prefs.getBoolPref("reftest.runUntilFailure");
-    } catch (e) {
-      gRunUntilFailure = false;
-    }
+    gRunUntilFailure = prefs.getBoolPref("reftest.runUntilFailure", false);
 
     // When we repeat this function is called again, so really only want to set
     // gRepeat once.
     if (gRepeat == null) {
-      try {
-        gRepeat = prefs.getIntPref("reftest.repeat");
-      } catch (e) {
-        gRepeat = 0;
-      }
+      gRepeat = prefs.getIntPref("reftest.repeat", 0);
     }
 
-    try {
-        gRunSlowTests = prefs.getIntPref("reftest.skipslowtests");
-    } catch(e) {
-        gRunSlowTests = false;
-    }
+    gRunSlowTests = prefs.getIntPref("reftest.skipslowtests", false);
 
     if (gShuffle) {
         gNoCanvasCache = true;
@@ -754,11 +714,7 @@ function BuildConditionSandbox(aURL) {
     } catch (e) {
         sandbox.nativeThemePref = true;
     }
-    try {
-        sandbox.gpuProcessForceEnabled = prefs.getBoolPref("layers.gpu-process.force-enabled");
-    } catch (e) {
-        sandbox.gpuProcessForceEnabled = false;
-    }
+    sandbox.gpuProcessForceEnabled = prefs.getBoolPref("layers.gpu-process.force-enabled", false);
 
     sandbox.prefs = CU.cloneInto({
         getBoolPref: function(p) { return prefs.getBoolPref(p); },

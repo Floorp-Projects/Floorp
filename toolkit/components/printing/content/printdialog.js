@@ -75,15 +75,7 @@ function stripTrailingWhitespace(element) {
 
 // ---------------------------------------------------
 function getPrinterDescription(printerName) {
-  var s = "";
-
-  try {
-    /* This may not work with non-ASCII test (see bug 235763 comment #16) */
-    s = gPrefs.getCharPref("print.printer_" + printerName + ".printer_description")
-  } catch (e) {
-  }
-
-  return s;
+  return gPrefs.getCharPref("print.printer_" + printerName + ".printer_description", "");
 }
 
 // ---------------------------------------------------

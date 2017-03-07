@@ -17,12 +17,7 @@ function getMaxContentParents(processType) {
     maxContentParents = Services.prefs.getIntPref(PREF_BRANCH + processType);
   } catch (e) {
     // Pref probably didn't exist, get the default number of processes.
-    try {
-      maxContentParents = Services.prefs.getIntPref(BASE_PREF);
-    } catch (e) {
-      // No prefs? That's odd, use only one process.
-      maxContentParents = 1;
-    }
+    maxContentParents = Services.prefs.getIntPref(BASE_PREF, 1);
   }
 
   return maxContentParents;
