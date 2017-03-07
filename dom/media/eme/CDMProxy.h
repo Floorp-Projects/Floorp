@@ -94,7 +94,8 @@ public:
   virtual void Init(PromiseId aPromiseId,
                     const nsAString& aOrigin,
                     const nsAString& aTopLevelOrigin,
-                    const nsAString& aName) = 0;
+                    const nsAString& aName,
+                    nsIEventTarget* aMainThread) = 0;
 
   virtual void OnSetDecryptorId(uint32_t aId) {}
 
@@ -258,6 +259,9 @@ protected:
   MainThreadOnlyRawPtr<dom::MediaKeys> mKeys;
 
   const nsString mKeySystem;
+
+  // The main thread associated with the root document. Must be set in Init().
+  nsCOMPtr<nsIEventTarget> mMainThread;
 
   // Onwer specified thread. e.g. Gecko Media Plugin thread.
   // All interactions with the out-of-process EME plugin must come from this thread.
