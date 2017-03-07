@@ -1,13 +1,26 @@
 "use strict";
 
-Cu.import("resource://gre/modules/ExtensionManagement.jsm");
+const {Service} = Cu.import("resource://gre/modules/ExtensionManagement.jsm", {});
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 function createWindowWithAddonId(addonId) {
-  let baseURI = Services.io.newURI("about:blank");
-  let originAttributes = {addonId};
+  const uuid = uuidGen.generateUUID().number.slice(1, -1);
+
+  const url = `moz-extension://${uuid}/`;
+
+  // Set the add-on ID for this moz-extensions: URL.
+  Service.uuidMap.set(uuid, {id: addonId});
+  do_register_cleanup(() => {
+    Service.uuidMap.delete(uuid);
+  });
+
+  let baseURI = Services.io.newURI(url);
   let principal = Services.scriptSecurityManager
-                          .createCodebasePrincipal(baseURI, originAttributes);
+                          .createCodebasePrincipal(baseURI, {});
   let chromeNav = Services.appShell.createWindowlessBrowser(true);
   let interfaceRequestor = chromeNav.QueryInterface(Ci.nsIInterfaceRequestor);
   let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
@@ -17,6 +30,8 @@ function createWindowWithAddonId(addonId) {
 }
 
 add_task(function* test_eventpages() {
+  Service.init();
+
   const {getAPILevelForWindow, getAddonIdForWindow} = ExtensionManagement;
   const {NO_PRIVILEGES, FULL_PRIVILEGES} = ExtensionManagement.API_LEVELS;
   const FAKE_ADDON_ID = "fakeAddonId";

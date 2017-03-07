@@ -24,7 +24,9 @@
 #include "nsIObserver.h"
 #ifdef XP_WIN
 #include "nsWindowsHelpers.h"
+#if defined(MOZ_SANDBOX)
 #include "sandboxPermissions.h"
+#endif
 #endif
 
 #ifdef MOZ_CRASHREPORTER

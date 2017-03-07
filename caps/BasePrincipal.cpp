@@ -56,7 +56,6 @@ OriginAttributes::Inherit(const OriginAttributes& aAttrs)
   mAppId = aAttrs.mAppId;
   mInIsolatedMozBrowser = aAttrs.mInIsolatedMozBrowser;
 
-  StripAttributes(STRIP_ADDON_ID);
 
   mUserContextId = aAttrs.mUserContextId;
 
@@ -96,7 +95,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
   // Important: While serializing any string-valued attributes, perform a
   // release-mode assertion to make sure that they don't contain characters that
   // will break the quota manager when it uses the serialization for file
-  // naming (see addonId below).
+  // naming.
   //
 
   if (mAppId != nsIScriptSecurityManager::NO_APP_ID) {
@@ -106,17 +105,6 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
 
   if (mInIsolatedMozBrowser) {
     params->Set(NS_LITERAL_STRING("inBrowser"), NS_LITERAL_STRING("1"));
-  }
-
-  if (!mAddonId.IsEmpty()) {
-    if (mAddonId.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) != kNotFound) {
-#ifdef MOZ_CRASHREPORTER
-      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Crash_AddonId"),
-                                         NS_ConvertUTF16toUTF8(mAddonId));
-#endif
-      MOZ_CRASH();
-    }
-    params->Set(NS_LITERAL_STRING("addonId"), mAddonId);
   }
 
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
@@ -204,8 +192,8 @@ public:
     }
 
     if (aName.EqualsLiteral("addonId")) {
-      MOZ_RELEASE_ASSERT(mOriginAttributes->mAddonId.IsEmpty());
-      mOriginAttributes->mAddonId.Assign(aValue);
+      // No longer supported. Silently ignore so that legacy origin strings
+      // don't cause failures.
       return true;
     }
 
@@ -299,7 +287,9 @@ OriginAttributes::IsPrivateBrowsing(const nsACString& aOrigin)
   return !!attrs.mPrivateBrowsingId;
 }
 
-BasePrincipal::BasePrincipal()
+BasePrincipal::BasePrincipal(PrincipalKind aKind)
+  : mKind(aKind)
+  , mDomainSet(false)
 {}
 
 BasePrincipal::~BasePrincipal()
@@ -308,11 +298,12 @@ BasePrincipal::~BasePrincipal()
 NS_IMETHODIMP
 BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
-  nsresult rv = GetOriginInternal(aOrigin);
+  nsresult rv = GetOriginNoSuffix(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString suffix;
-  mOriginAttributes.CreateSuffix(suffix);
+  rv = GetOriginSuffix(suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
   aOrigin.Append(suffix);
   return NS_OK;
 }
@@ -320,6 +311,9 @@ BasePrincipal::GetOrigin(nsACString& aOrigin)
 NS_IMETHODIMP
 BasePrincipal::GetOriginNoSuffix(nsACString& aOrigin)
 {
+  if (mOriginNoSuffix) {
+    return mOriginNoSuffix->ToUTF8String(aOrigin);
+  }
   return GetOriginInternal(aOrigin);
 }
 
@@ -327,13 +321,14 @@ bool
 BasePrincipal::Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration)
 {
   MOZ_ASSERT(aOther);
+  MOZ_ASSERT_IF(Kind() == eCodebasePrincipal, mOriginSuffix);
 
   // Expanded principals handle origin attributes for each of their
   // sub-principals individually, null principals do only simple checks for
   // pointer equality, and system principals are immune to origin attributes
   // checks, so only do this check for codebase principals.
   if (Kind() == eCodebasePrincipal &&
-      OriginAttributesRef() != Cast(aOther)->OriginAttributesRef()) {
+      mOriginSuffix != Cast(aOther)->mOriginSuffix) {
     return false;
   }
 
@@ -344,8 +339,9 @@ NS_IMETHODIMP
 BasePrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
-  *aResult = Subsumes(aOther, DontConsiderDocumentDomain) &&
-             Cast(aOther)->Subsumes(this, DontConsiderDocumentDomain);
+
+  *aResult = FastEquals(aOther);
+
   return NS_OK;
 }
 
@@ -353,32 +349,19 @@ NS_IMETHODIMP
 BasePrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
-  *aResult = Subsumes(aOther, ConsiderDocumentDomain) &&
-             Cast(aOther)->Subsumes(this, ConsiderDocumentDomain);
+
+  *aResult = FastEqualsConsideringDomain(aOther);
+
   return NS_OK;
-}
-
-bool
-BasePrincipal::EqualsIgnoringAddonId(nsIPrincipal *aOther)
-{
-  MOZ_ASSERT(aOther);
-
-  // Note that this will not work for expanded principals, nor is it intended
-  // to.
-  if (!dom::ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(
-          OriginAttributesRef(), Cast(aOther)->OriginAttributesRef())) {
-    return false;
-  }
-
-  return SubsumesInternal(aOther, DontConsiderDocumentDomain) &&
-         Cast(aOther)->SubsumesInternal(this, DontConsiderDocumentDomain);
 }
 
 NS_IMETHODIMP
 BasePrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
-  *aResult = Subsumes(aOther, DontConsiderDocumentDomain);
+
+  *aResult = FastSubsumes(aOther);
+
   return NS_OK;
 }
 
@@ -386,7 +369,9 @@ NS_IMETHODIMP
 BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
-  *aResult = Subsumes(aOther, ConsiderDocumentDomain);
+
+  *aResult = FastSubsumesConsideringDomain(aOther);
+
   return NS_OK;
 }
 
@@ -396,14 +381,7 @@ BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal *aOther,
 {
   NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
 
-  if (Kind() == eCodebasePrincipal &&
-      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
-            OriginAttributesRef(), aOther->OriginAttributesRef())) {
-    *aResult = false;
-    return NS_OK;
-  }
-
-  *aResult = SubsumesInternal(aOther, ConsiderDocumentDomain);
+  *aResult = FastSubsumesConsideringDomainIgnoringFPD(aOther);
 
   return NS_OK;
 }
@@ -559,8 +537,8 @@ BasePrincipal::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> 
 NS_IMETHODIMP
 BasePrincipal::GetOriginSuffix(nsACString& aOriginAttributes)
 {
-  mOriginAttributes.CreateSuffix(aOriginAttributes);
-  return NS_OK;
+  MOZ_ASSERT(mOriginSuffix);
+  return mOriginSuffix->ToUTF8String(aOriginAttributes);
 }
 
 NS_IMETHODIMP
@@ -581,13 +559,6 @@ BasePrincipal::GetAppId(uint32_t* aAppId)
   }
 
   *aAppId = AppId();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetAddonId(nsAString& aAddonId)
-{
-  aAddonId.Assign(mOriginAttributes.mAddonId);
   return NS_OK;
 }
 
@@ -622,15 +593,19 @@ BasePrincipal::GetUnknownAppId(bool* aUnknownAppId)
 bool
 BasePrincipal::AddonHasPermission(const nsAString& aPerm)
 {
-  if (mOriginAttributes.mAddonId.IsEmpty()) {
+  nsAutoString addonId;
+  NS_ENSURE_SUCCESS(GetAddonId(addonId), false);
+
+  if (addonId.IsEmpty()) {
     return false;
   }
+
   nsCOMPtr<nsIAddonPolicyService> aps =
     do_GetService("@mozilla.org/addons/policy-service;1");
   NS_ENSURE_TRUE(aps, false);
 
   bool retval = false;
-  nsresult rv = aps->AddonHasPermission(mOriginAttributes.mAddonId, aPerm, &retval);
+  nsresult rv = aps->AddonHasPermission(addonId, aPerm, &retval);
   NS_ENSURE_SUCCESS(rv, false);
   return retval;
 }
@@ -709,7 +684,10 @@ BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain()
 bool
 BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
 {
-  if (mOriginAttributes.mAddonId.IsEmpty()) {
+  nsAutoString addonId;
+  NS_ENSURE_SUCCESS(GetAddonId(addonId), false);
+
+  if (addonId.IsEmpty()) {
     return false;
   }
 
@@ -717,8 +695,29 @@ BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
   NS_ENSURE_TRUE(aps, false);
 
   bool allowed = false;
-  nsresult rv = aps->AddonMayLoadURI(mOriginAttributes.mAddonId, aURI, aExplicit, &allowed);
+  nsresult rv = aps->AddonMayLoadURI(addonId, aURI, aExplicit, &allowed);
   return NS_SUCCEEDED(rv) && allowed;
+}
+
+void
+BasePrincipal::FinishInit()
+{
+  // First compute the origin suffix since it's infallible.
+  nsAutoCString originSuffix;
+  mOriginAttributes.CreateSuffix(originSuffix);
+  mOriginSuffix = NS_Atomize(originSuffix);
+
+  // Then compute the origin without the suffix.
+  nsAutoCString originNoSuffix;
+  nsresult rv = GetOriginInternal(originNoSuffix);
+  if (NS_FAILED(rv)) {
+    // If GetOriginInternal fails, we will get a null atom for mOriginNoSuffix,
+    // which we deal with anywhere mOriginNoSuffix is used.
+    // Once this is made infallible we can remove those null checks.
+    mOriginNoSuffix = nullptr;
+    return;
+  }
+  mOriginNoSuffix = NS_Atomize(originNoSuffix);
 }
 
 } // namespace mozilla

@@ -146,7 +146,6 @@ GetLoadContextInfo(nsILoadContext *aLoadContext, bool aIsAnonymous)
 
   OriginAttributes oa;
   aLoadContext->GetOriginAttributes(oa);
-  oa.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
 
 #ifdef DEBUG
   nsCOMPtr<nsIDocShellTreeItem> docShell = do_QueryInterface(aLoadContext);

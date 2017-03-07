@@ -65,7 +65,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
   if (observerService) {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+    observerService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 }
 

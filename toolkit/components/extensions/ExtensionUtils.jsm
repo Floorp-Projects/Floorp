@@ -49,7 +49,7 @@ function getConsole() {
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
 let nextId = 0;
-const {uniqueProcessID} = Services.appinfo;
+XPCOMUtils.defineLazyGetter(this, "uniqueProcessID", () => Services.appinfo.uniqueProcessID);
 
 function getUniqueId() {
   return `${nextId++}-${uniqueProcessID}`;
@@ -869,25 +869,27 @@ function flushJarCache(jarPath) {
   Services.obs.notifyObservers(null, "flush-cache-entry", jarPath);
 }
 
-const PlatformInfo = Object.freeze({
-  os: (function() {
-    let os = AppConstants.platform;
-    if (os == "macosx") {
-      os = "mac";
-    }
-    return os;
-  })(),
-  arch: (function() {
-    let abi = Services.appinfo.XPCOMABI;
-    let [arch] = abi.split("-");
-    if (arch == "x86") {
-      arch = "x86-32";
-    } else if (arch == "x86_64") {
-      arch = "x86-64";
-    }
-    return arch;
-  })(),
-});
+function PlatformInfo() {
+  return Object.freeze({
+    os: (function() {
+      let os = AppConstants.platform;
+      if (os == "macosx") {
+        os = "mac";
+      }
+      return os;
+    })(),
+    arch: (function() {
+      let abi = Services.appinfo.XPCOMABI;
+      let [arch] = abi.split("-");
+      if (arch == "x86") {
+        arch = "x86-32";
+      } else if (arch == "x86_64") {
+        arch = "x86-64";
+      }
+      return arch;
+    })(),
+  });
+}
 
 function detectLanguage(text) {
   return LanguageDetector.detectLanguage(text).then(result => ({
@@ -1193,7 +1195,8 @@ this.ExtensionUtils = {
   LimitedSet,
   LocaleData,
   MessageManagerProxy,
-  PlatformInfo,
   SingletonEventManager,
   SpreadArgs,
 };
+
+XPCOMUtils.defineLazyGetter(this.ExtensionUtils, "PlatformInfo", PlatformInfo);

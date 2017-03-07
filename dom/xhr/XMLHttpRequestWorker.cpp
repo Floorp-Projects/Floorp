@@ -1582,8 +1582,6 @@ XMLHttpRequestWorker::Construct(const GlobalObject& aGlobal,
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
-  Telemetry::Accumulate(Telemetry::XHR_IN_WORKER, 1);
-
   RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);
 
   if (workerPrivate->XHRParamsAllowed()) {

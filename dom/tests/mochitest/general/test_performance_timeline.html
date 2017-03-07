@@ -17,8 +17,7 @@
 SimpleTest.waitForExplicitFinish();
 
 // Resource timing is prefed off by default, so we had to use this workaround
-SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true],
-                                   ["dom.enable_user_timing", true]]}, start);
+SpecialPowers.pushPrefEnv({"set": [["dom.enable_resource_timing", true]]}, start);
 var subwindow = null;
 
 function start() {

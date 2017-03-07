@@ -194,13 +194,11 @@ var UninstallObserver = {
       // Clear any IndexedDB storage created by the extension
       let baseURI = NetUtil.newURI(`moz-extension://${uuid}/`);
       let principal = Services.scriptSecurityManager.createCodebasePrincipal(
-        baseURI, {addonId: addon.id}
-      );
+        baseURI, {});
       Services.qms.clearStoragesForPrincipal(principal);
 
       // Clear localStorage created by the extension
-      let attrs = JSON.stringify({addonId: addon.id});
-      Services.obs.notifyObservers(null, "clear-origin-attributes-data", attrs);
+      Services.domStorageManager.getStorage(null, principal).clear();
     }
 
     if (!this.leaveUuid) {
@@ -712,8 +710,7 @@ this.Extension = class extends ExtensionData {
   }
 
   createPrincipal(uri = this.baseURI) {
-    return Services.scriptSecurityManager.createCodebasePrincipal(
-      uri, {addonId: this.id});
+    return Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   }
 
   // Checks that the given URL is a child of our baseURI.
@@ -916,13 +913,13 @@ this.Extension = class extends ExtensionData {
 
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
-    this.broadcast("Extension:FlushJarCache", {path: file.path}).then(() => {
+    return this.broadcast("Extension:FlushJarCache", {path: file.path}).then(() => {
       // We can't delete this file until everyone using it has
       // closed it (because Windows is dumb). So we wait for all the
       // child processes (including the parent) to flush their JAR
       // caches. These caches may keep the file open.
       file.remove(false);
-    });
+    }).catch(Cu.reportError);
   }
 
   shutdown(reason) {
@@ -958,7 +955,7 @@ this.Extension = class extends ExtensionData {
 
     ExtensionManagement.shutdownExtension(this.uuid);
 
-    this.cleanupGeneratedFile();
+    return this.cleanupGeneratedFile();
   }
 
   observe(subject, topic, data) {

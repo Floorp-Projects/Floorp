@@ -3192,8 +3192,8 @@ nsContentUtils::GetOriginAttributes(nsIDocument* aDocument)
 
   mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIChannel> channel = aDocument->GetChannel();
-  if (channel && NS_GetOriginAttributes(channel, attrs)) {
-    attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
+  if (channel) {
+    NS_GetOriginAttributes(channel, attrs);
   }
   return attrs;
 }
@@ -3210,8 +3210,8 @@ nsContentUtils::GetOriginAttributes(nsILoadGroup* aLoadGroup)
   aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
   if (callbacks) {
     nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-    if (loadContext && loadContext->GetOriginAttributes(attrs)) {
-      attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
+    if (loadContext) {
+      loadContext->GetOriginAttributes(attrs);
     }
   }
   return attrs;

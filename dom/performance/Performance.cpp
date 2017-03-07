@@ -516,23 +516,6 @@ Performance::QueueEntry(PerformanceEntry* aEntry)
 }
 
 /* static */ bool
-Performance::IsEnabled(JSContext* aCx, JSObject* aGlobal)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.enable_user_timing", false);
-  }
-
-  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-  workerPrivate->AssertIsOnWorkerThread();
-
-  RefPtr<PrefEnabledRunnable> runnable =
-    new PrefEnabledRunnable(workerPrivate,
-                            NS_LITERAL_CSTRING("dom.enable_user_timing"));
-  return runnable->Dispatch() && runnable->IsEnabled();
-}
-
-/* static */ bool
 Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   if (NS_IsMainThread()) {
