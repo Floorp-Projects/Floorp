@@ -34,8 +34,6 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
 public:
   explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
-  void AddWebRenderCommand(const WebRenderCommand& aCmd);
-  void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
@@ -76,9 +74,6 @@ private:
 
   uint64_t GetNextExternalImageId();
 
-  wr::BuiltDisplayList ProcessWebrenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderCommand>& aCommands);
-
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
                ImageContainer* aImageContainer = nullptr) override;
@@ -116,7 +111,6 @@ private:
 
   bool AddOpDestroy(const OpDestroy& aOp);
 
-  nsTArray<WebRenderCommand> mCommands;
   nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
