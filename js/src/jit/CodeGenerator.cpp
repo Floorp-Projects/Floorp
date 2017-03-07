@@ -3750,8 +3750,11 @@ CodeGenerator::visitPostWriteBarrierCommonO(LPostBarrierType* lir, OutOfLineCode
     maybeEmitGlobalBarrierCheck(lir->object(), ool);
 
     Register valueObj = ToRegister(lir->value());
-    masm.branchTestPtr(Assembler::Zero, valueObj, valueObj, ool->rejoin());
-    masm.branchPtrInNurseryChunk(Assembler::Equal, ToRegister(lir->value()), temp, ool->entry());
+    if (lir->mir()->value()->type() == MIRType::ObjectOrNull)
+        masm.branchTestPtr(Assembler::Zero, valueObj, valueObj, ool->rejoin());
+    else
+        MOZ_ASSERT(lir->mir()->value()->type() == MIRType::Object);
+    masm.branchPtrInNurseryChunk(Assembler::Equal, valueObj, temp, ool->entry());
 
     masm.bind(ool->rejoin());
 }
