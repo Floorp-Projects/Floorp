@@ -1279,7 +1279,8 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
                               nsDependentCString(msgName), aReply->size());
     }
 
-    if (latencyMs >= kMinTelemetrySyncIPCLatencyMs) {
+    // NOTE: Only collect IPC_SYNC_LATENCY_MS on the main thread (bug 1343729)
+    if (NS_IsMainThread() && latencyMs >= kMinTelemetrySyncIPCLatencyMs) {
       Telemetry::Accumulate(Telemetry::IPC_SYNC_LATENCY_MS,
                             nsDependentCString(msgName), latencyMs);
     }
