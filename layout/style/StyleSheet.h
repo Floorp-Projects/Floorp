@@ -25,10 +25,10 @@ class nsCSSRuleProcessor;
 
 namespace mozilla {
 
-struct ChildSheetListBuilder;
 class CSSStyleSheet;
 class ServoStyleSheet;
 struct StyleSheetInfo;
+struct CSSStyleSheetInner;
 
 namespace dom {
 class CSSRuleList;
@@ -226,6 +226,16 @@ private:
                          ErrorResult& aRv);
 
 protected:
+  struct ChildSheetListBuilder {
+    RefPtr<StyleSheet>* sheetSlot;
+    StyleSheet* parent;
+
+    void SetParentLinks(StyleSheet* aSheet);
+
+    static void ReparentChildList(StyleSheet* aPrimarySheet,
+                                  StyleSheet* aFirstChild);
+  };
+
   void UnparentChildren();
 
   // Return success if the subject principal subsumes the principal of our
@@ -274,13 +284,17 @@ protected:
   StyleSheetInfo* mInner;
 
   friend class ::nsCSSRuleProcessor;
-  friend struct mozilla::ChildSheetListBuilder;
 
   // Make CSSStyleSheet and ServoStyleSheet friends so they can access
   // protected members of other StyleSheet objects (useful for iterating
   // through children).
   friend class mozilla::CSSStyleSheet;
   friend class mozilla::ServoStyleSheet;
+
+  // Make StyleSheetInfo and subclasses into friends so they can use
+  // ChildSheetListBuilder.
+  friend struct mozilla::StyleSheetInfo;
+  friend struct mozilla::CSSStyleSheetInner;
 };
 
 } // namespace mozilla
