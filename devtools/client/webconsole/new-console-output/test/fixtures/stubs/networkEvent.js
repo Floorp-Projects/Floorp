@@ -161,14 +161,14 @@ stubPackets.set("GET request", {
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "filename": "resource://testing-common/content-task.js line 52 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "filename": "resource://testing-common/content-task.js",
         "lineNumber": 53,
         "columnNumber": 20,
         "functionName": null,
@@ -216,14 +216,14 @@ stubPackets.set("GET request eventTimings", {
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+          "filename": "resource://testing-common/content-task.js line 52 > eval",
           "lineNumber": 7,
           "columnNumber": 9,
           "functionName": null,
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+          "filename": "resource://testing-common/content-task.js",
           "lineNumber": 53,
           "columnNumber": 20,
           "functionName": null,
@@ -280,14 +280,14 @@ stubPackets.set("XHR GET request", {
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "filename": "resource://testing-common/content-task.js line 52 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "filename": "resource://testing-common/content-task.js",
         "lineNumber": 53,
         "columnNumber": 20,
         "functionName": null,
@@ -335,14 +335,14 @@ stubPackets.set("XHR GET request eventTimings", {
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+          "filename": "resource://testing-common/content-task.js line 52 > eval",
           "lineNumber": 7,
           "columnNumber": 9,
           "functionName": null,
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+          "filename": "resource://testing-common/content-task.js",
           "lineNumber": 53,
           "columnNumber": 20,
           "functionName": null,
@@ -399,14 +399,14 @@ stubPackets.set("XHR POST request", {
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "filename": "resource://testing-common/content-task.js line 52 > eval",
         "lineNumber": 7,
         "columnNumber": 9,
         "functionName": null,
         "asyncCause": null
       },
       {
-        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "filename": "resource://testing-common/content-task.js",
         "lineNumber": 53,
         "columnNumber": 20,
         "functionName": null,
@@ -454,14 +454,14 @@ stubPackets.set("XHR POST request eventTimings", {
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+          "filename": "resource://testing-common/content-task.js line 52 > eval",
           "lineNumber": 7,
           "columnNumber": 9,
           "functionName": null,
           "asyncCause": null
         },
         {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+          "filename": "resource://testing-common/content-task.js",
           "lineNumber": 53,
           "columnNumber": 20,
           "functionName": null,
