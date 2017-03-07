@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse_capi"
-version = "0.7.0"
+version = "0.7.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -22,7 +22,7 @@ build = false
 
 [dependencies]
 byteorder = "1.0.0"
-mp4parse = {version = "0.7.0", path = "../mp4parse"}
+mp4parse = {version = "0.7.1", path = "../mp4parse"}
 
 # Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
 [profile.release]
