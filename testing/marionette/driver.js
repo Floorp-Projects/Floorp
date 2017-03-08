@@ -41,7 +41,7 @@ Cu.import("chrome://marionette/content/wait.js");
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
 var FRAME_SCRIPT = "chrome://marionette/content/listener.js";
-
+const BROWSER_STARTUP_FINISHED = "browser-delayed-startup-finished";
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
 
@@ -69,6 +69,13 @@ var systemMessageListenerReady = false;
 Services.obs.addObserver(function() {
   systemMessageListenerReady = true;
 }, "system-message-listener-ready", false);
+
+// This is used on desktop to prevent newSession from returning before a page
+// load initiated by the Firefox command line has completed.
+var delayedBrowserStarted = false;
+Services.obs.addObserver(function () {
+  delayedBrowserStarted = true;
+}, BROWSER_STARTUP_FINISHED, false);
 
 this.Context = {
   CHROME: "chrome",
@@ -615,17 +622,29 @@ GeckoDriver.prototype.newSession = function* (cmd, resp) {
     }
   };
 
-  if (!Preferences.get(CONTENT_LISTENER_PREF)) {
-    waitForWindow.call(this);
-  } else if (this.appName != "Firefox" && this.curBrowser === null) {
-    // if there is a content listener, then we just wake it up
-    this.addBrowser(this.getCurrentWindow());
-    this.curBrowser.startSession(this.whenBrowserStarted.bind(this));
-    this.mm.broadcastAsyncMessage("Marionette:restart", {});
+  let runSessionStart = function() {
+    if (!Preferences.get(CONTENT_LISTENER_PREF)) {
+      waitForWindow.call(this);
+    } else if (this.appName != "Firefox" && this.curBrowser === null) {
+      // if there is a content listener, then we just wake it up
+      this.addBrowser(this.getCurrentWindow());
+      this.curBrowser.startSession(this.whenBrowserStarted.bind(this));
+      this.mm.broadcastAsyncMessage("Marionette:restart", {});
+    } else {
+      throw new WebDriverError("Session already running");
+    }
+    this.switchToGlobalMessageManager();
+  };
+
+  if (!delayedBrowserStarted && this.appName != "B2G") {
+    let self = this;
+    Services.obs.addObserver(function onStart() {
+      Services.obs.removeObserver(onStart, BROWSER_STARTUP_FINISHED);
+      runSessionStart.call(self);
+    }, BROWSER_STARTUP_FINISHED, false);
   } else {
-    throw new WebDriverError("Session already running");
+    runSessionStart.call(this);
   }
-  this.switchToGlobalMessageManager();
 
   yield registerBrowsers;
   yield browserListening;
