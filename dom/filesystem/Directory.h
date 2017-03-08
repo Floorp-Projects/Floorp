@@ -30,9 +30,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
   static bool
-  DeviceStorageEnabled(JSContext* aCx, JSObject* aObj);
-
-  static bool
   WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
 
   static already_AddRefed<Promise>
@@ -57,9 +54,6 @@ public:
 
   void
   GetName(nsAString& aRetval, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Get(const nsAString& aPath, ErrorResult& aRv);
 
   // From https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface :
 

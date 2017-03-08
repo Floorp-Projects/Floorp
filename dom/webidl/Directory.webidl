@@ -25,17 +25,6 @@ interface Directory {
    */
   [Throws]
   readonly attribute DOMString name;
-
-  /*
-   * Gets a descendent file or directory with the given path.
-   *
-   * @param path The descendent entry's relative path to current directory.
-   * @return If the path exists and no error occurs, the promise is resolved
-   * with a File or Directory object, depending on the entry's type. Otherwise,
-   * rejected with a DOM error.
-   */
-  [Func="mozilla::dom::Directory::DeviceStorageEnabled", NewObject]
-  Promise<(File or Directory)> get(DOMString path);
 };
 
 [Exposed=(Window,Worker)]
