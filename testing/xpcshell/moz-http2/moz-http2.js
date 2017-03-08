@@ -277,6 +277,11 @@ function handleRequest(req, res) {
     content = '<head> <script src="push.js"/></head>body text';
   }
 
+  else if (u.pathname === "/push.js") {
+    content = '// comments';
+    res.setHeader("pushed", "no");
+  }
+
   else if (u.pathname === "/push2") {
     push = res.push('/push2.js');
     push.writeHead(200, {
