@@ -210,6 +210,9 @@ class RegExpShared
     bool marked() const { return marked_; }
     void clearMarked() { marked_ = false; }
 
+    bool isMarkedGray() const;
+    void unmarkGray();
+
     static size_t offsetOfSource() {
         return offsetof(RegExpShared, source);
     }

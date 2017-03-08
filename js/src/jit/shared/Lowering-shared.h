@@ -125,6 +125,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline LAllocation useRegisterOrConstant(MDefinition* mir);
     inline LAllocation useRegisterOrConstantAtStart(MDefinition* mir);
     inline LAllocation useRegisterOrZeroAtStart(MDefinition* mir);
+    inline LAllocation useRegisterOrZero(MDefinition* mir);
     inline LAllocation useRegisterOrNonDoubleConstant(MDefinition* mir);
 
     inline LUse useRegisterForTypedLoad(MDefinition* mir, MIRType type);

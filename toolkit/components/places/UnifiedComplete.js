@@ -477,10 +477,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
     store.prefillSitesEnabled = prefs.get(...PREF_PREFILL_SITES_ENABLED);
     store.prefillSitesExpireDays = prefs.get(...PREF_PREFILL_SITES_EXPIRE_DAYS);
-    store.keywordEnabled = true;
-    try {
-      store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled");
-    } catch (ex) {}
+    store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled", true);
 
     // If history is not set, onlyTyped value should be ignored.
     if (!store.suggestHistory) {

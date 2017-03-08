@@ -95,11 +95,7 @@ function observe(subject, topic, data) {
 
     case "nsPref:changed":
       if (data == PREF_SHOW_REMOTE_ICONS) {
-        try {
-          showRemoteIcons = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_ICONS);
-        } catch (_) {
-          showRemoteIcons = true; // no such pref - default is to show the icons.
-        }
+        showRemoteIcons = Services.prefs.getBoolPref(PREF_SHOW_REMOTE_ICONS, true);
       }
       break;
 

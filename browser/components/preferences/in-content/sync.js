@@ -74,22 +74,14 @@ var gSyncPane = {
   },
 
   _showLoadPage(xps) {
-    let username;
-    try {
-      username = Services.prefs.getCharPref("services.sync.username");
-    } catch (e) {}
+    let username = Services.prefs.getCharPref("services.sync.username", "");
     if (!username) {
       this.page = FXA_PAGE_LOGGED_OUT;
       return;
     }
 
     // Use cached values while we wait for the up-to-date values
-    let cachedComputerName;
-    try {
-      cachedComputerName = Services.prefs.getCharPref("services.sync.client.name");
-    } catch (e) {
-      cachedComputerName = "";
-    }
+    let cachedComputerName = Services.prefs.getCharPref("services.sync.client.name", "");
     document.getElementById("fxaEmailAddress1").textContent = username;
     this._populateComputerName(cachedComputerName);
     this.page = FXA_PAGE_LOGGED_IN;
@@ -251,10 +243,7 @@ var gSyncPane = {
     fxaEmailAddress1Label.hidden = false;
     displayNameLabel.hidden = true;
 
-    let profileInfoEnabled;
-    try {
-      profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled");
-    } catch (ex) {}
+    let profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled", false);
 
     // determine the fxa status...
     this._showLoadPage(service);

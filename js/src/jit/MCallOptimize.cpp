@@ -986,20 +986,30 @@ IonBuilder::inlineMathFloor(CallInfo& callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (IsFloatingPointType(argType) && returnType == MIRType::Int32) {
-        callInfo.setImplicitlyUsedUnchecked();
-        MFloor* ins = MFloor::New(alloc(), callInfo.getArg(0));
-        current->add(ins);
-        current->push(ins);
-        return InliningStatus_Inlined;
-    }
+    if (IsFloatingPointType(argType)) {
+        if (returnType == MIRType::Int32) {
+            callInfo.setImplicitlyUsedUnchecked();
+            MFloor* ins = MFloor::New(alloc(), callInfo.getArg(0));
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
 
-    if (IsFloatingPointType(argType) && returnType == MIRType::Double) {
-        callInfo.setImplicitlyUsedUnchecked();
-        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor, nullptr);
-        current->add(ins);
-        current->push(ins);
-        return InliningStatus_Inlined;
+        if (returnType == MIRType::Double) {
+            callInfo.setImplicitlyUsedUnchecked();
+
+            MInstruction* ins = nullptr;
+            if (MNearbyInt::HasAssemblerSupport(RoundingMode::Down)) {
+                ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType, RoundingMode::Down);
+            } else {
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor,
+                                         /* cache */ nullptr);
+            }
+
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
     }
 
     return InliningStatus_NotInlined;
@@ -1030,20 +1040,30 @@ IonBuilder::inlineMathCeil(CallInfo& callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (IsFloatingPointType(argType) && returnType == MIRType::Int32) {
-        callInfo.setImplicitlyUsedUnchecked();
-        MCeil* ins = MCeil::New(alloc(), callInfo.getArg(0));
-        current->add(ins);
-        current->push(ins);
-        return InliningStatus_Inlined;
-    }
+    if (IsFloatingPointType(argType)) {
+        if (returnType == MIRType::Int32) {
+            callInfo.setImplicitlyUsedUnchecked();
+            MCeil* ins = MCeil::New(alloc(), callInfo.getArg(0));
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
 
-    if (IsFloatingPointType(argType) && returnType == MIRType::Double) {
-        callInfo.setImplicitlyUsedUnchecked();
-        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil, nullptr);
-        current->add(ins);
-        current->push(ins);
-        return InliningStatus_Inlined;
+        if (returnType == MIRType::Double) {
+            callInfo.setImplicitlyUsedUnchecked();
+
+            MInstruction* ins = nullptr;
+            if (MNearbyInt::HasAssemblerSupport(RoundingMode::Up)) {
+                ins = MNearbyInt::New(alloc(), callInfo.getArg(0), argType, RoundingMode::Up);
+            } else {
+                ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil,
+                                         /* cache */ nullptr);
+            }
+
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
     }
 
     return InliningStatus_NotInlined;
@@ -1108,7 +1128,8 @@ IonBuilder::inlineMathRound(CallInfo& callInfo)
 
     if (IsFloatingPointType(argType) && returnType == MIRType::Double) {
         callInfo.setImplicitlyUsedUnchecked();
-        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Round, nullptr);
+        MMathFunction* ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Round,
+                                                /* cache */ nullptr);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
