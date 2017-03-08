@@ -141,6 +141,7 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email", "element": {}},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel", "element": {}},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "organization", "element": null},
     ],
     profileData: {
       "guid": "123",
@@ -175,7 +176,7 @@ for (let tc of TESTCASES) {
       handler.fieldDetails = testcase.fieldDetails;
       handler.fieldDetails.forEach((field, index) => {
         let element = doc.querySelectorAll("input")[index];
-        field.element = element;
+        field.elementWeakRef = Cu.getWeakReference(element);
         if (!testcase.profileData[field.fieldName]) {
           // Avoid waiting for `change` event of a input with a blank value to
           // be filled.
