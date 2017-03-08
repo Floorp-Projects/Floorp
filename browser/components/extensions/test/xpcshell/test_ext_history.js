@@ -422,6 +422,13 @@ add_task(function* test_on_visited() {
         {date: new Date(visitDate += 1000)},
       ],
     },
+    {
+      url: SINGLE_VISIT_URL,
+      title: "Title Changed",
+      visits: [
+        {date: new Date(visitDate)},
+      ],
+    },
   ];
 
   function background() {
@@ -432,9 +439,14 @@ add_task(function* test_on_visited() {
         return;
       }
       onVisitedData.push(data);
-      if (onVisitedData.length == 3) {
+      if (onVisitedData.length == 4) {
         browser.test.sendMessage("on-visited-data", onVisitedData);
       }
+    });
+
+    // Verifying onTitleChange Event along with onVisited event
+    browser.history.onTitleChanged.addListener(data => {
+      browser.test.sendMessage("on-title-changed-data", data);
     });
 
     browser.test.sendMessage("ready");
@@ -482,6 +494,15 @@ add_task(function* test_on_visited() {
   expected.time = PAGE_INFOS[1].visits[1].date.getTime();
   expected.visitCount = 2;
   checkOnVisitedData(2, expected);
+
+  expected.url = PAGE_INFOS[2].url;
+  expected.title = PAGE_INFOS[2].title;
+  expected.time = PAGE_INFOS[2].visits[0].date.getTime();
+  expected.visitCount = 2;
+  checkOnVisitedData(3, expected);
+
+  let onTitleChangedData = yield extension.awaitMessage("on-title-changed-data");
+  equal(onTitleChangedData.title, "Title Changed", "ontitleChanged received the expected title.");
 
   yield extension.unload();
 });

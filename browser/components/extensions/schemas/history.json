@@ -310,6 +310,27 @@
             }
           }
         ]
+      },
+      {
+        "name": "onTitleChanged",
+        "type": "function",
+        "description": "Fired when the title of a URL is changed in the browser history.",
+        "parameters": [
+          {
+            "name": "changed",
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL for which the title has changed"
+              },
+              "title": {
+                "type": "string",
+                "description": "The new title for the URL."
+              }
+            }
+          }
+        ]
       }
     ]
   }
