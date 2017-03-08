@@ -734,13 +734,6 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
     if (!range || age >= 0) {
       let tags = ph.getPluginTags();
       for (let tag of tags) {
-        let refObj = {};
-        let probe = "";
-        if (/\bFlash\b/.test(tag.name)) {
-          probe = tag.loaded ? "FX_SANITIZE_LOADED_FLASH"
-                             : "FX_SANITIZE_UNLOADED_FLASH";
-          TelemetryStopwatch.start(probe, refObj);
-        }
         try {
           let rv = yield new Promise(resolve =>
             ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, age, resolve)
@@ -751,14 +744,8 @@ Sanitizer.clearPluginData = Task.async(function* (range) {
               ph.clearSiteData(tag, null, FLAG_CLEAR_ALL, -1, resolve)
             );
           }
-          if (probe) {
-            TelemetryStopwatch.finish(probe, refObj);
-          }
         } catch (ex) {
           // Ignore errors from plug-ins
-          if (probe) {
-            TelemetryStopwatch.cancel(probe, refObj);
-          }
         }
       }
     }

@@ -57,19 +57,17 @@ var userTreeView;
 var orphanTreeView;
 
 var smartCardObserver = {
-  observe: function() {
+  observe() {
     onSmartCardChange();
   }
 };
 
-function DeregisterSmartCardObservers()
-{
+function DeregisterSmartCardObservers() {
   Services.obs.removeObserver(smartCardObserver, "smartcard-insert");
   Services.obs.removeObserver(smartCardObserver, "smartcard-remove");
 }
 
-function LoadCerts()
-{
+function LoadCerts() {
   Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
   Services.obs.addObserver(smartCardObserver, "smartcard-remove", false);
 
@@ -104,14 +102,12 @@ function LoadCerts()
   enableBackupAllButton();
 }
 
-function enableBackupAllButton()
-{
+function enableBackupAllButton() {
   let backupAllButton = document.getElementById("mine_backupAllButton");
   backupAllButton.disabled = userTreeView.rowCount < 1;
 }
 
-function getSelectedCerts()
-{
+function getSelectedCerts() {
   var ca_tab = document.getElementById("ca_tab");
   var mine_tab = document.getElementById("mine_tab");
   var others_tab = document.getElementById("others_tab");
@@ -162,8 +158,7 @@ function getSelectedCerts()
   }
 }
 
-function getSelectedTreeItems()
-{
+function getSelectedTreeItems() {
   var ca_tab = document.getElementById("ca_tab");
   var mine_tab = document.getElementById("mine_tab");
   var others_tab = document.getElementById("others_tab");
@@ -223,8 +218,7 @@ function getSelectedTreeItems()
  * @param {nsICertTree} certTree
  * @returns {Boolean}
  */
-function nothingOrContainerSelected(certTree)
-{
+function nothingOrContainerSelected(certTree) {
   var certTreeSelection = certTree.selection;
   var numSelectionRanges = certTreeSelection.getRangeCount();
 
@@ -256,8 +250,7 @@ function nothingOrContainerSelected(certTree)
  * @param {Array} idList A list of string identifiers for button elements to
  *    enable or disable.
  */
-function enableButtonsForCertTree(certTree, idList)
-{
+function enableButtonsForCertTree(certTree, idList) {
   let disableButtons = nothingOrContainerSelected(certTree);
 
   for (let id of idList) {
@@ -265,8 +258,7 @@ function enableButtonsForCertTree(certTree, idList)
   }
 }
 
-function ca_enableButtons()
-{
+function ca_enableButtons() {
   let idList = [
     "ca_viewButton",
     "ca_editButton",
@@ -276,8 +268,7 @@ function ca_enableButtons()
   enableButtonsForCertTree(caTreeView, idList);
 }
 
-function mine_enableButtons()
-{
+function mine_enableButtons() {
   let idList = [
     "mine_viewButton",
     "mine_backupButton",
@@ -286,8 +277,7 @@ function mine_enableButtons()
   enableButtonsForCertTree(userTreeView, idList);
 }
 
-function websites_enableButtons()
-{
+function websites_enableButtons() {
   let idList = [
     "websites_viewButton",
     "websites_exportButton",
@@ -296,8 +286,7 @@ function websites_enableButtons()
   enableButtonsForCertTree(serverTreeView, idList);
 }
 
-function email_enableButtons()
-{
+function email_enableButtons() {
   let idList = [
     "email_viewButton",
     "email_exportButton",
@@ -306,8 +295,7 @@ function email_enableButtons()
   enableButtonsForCertTree(emailTreeView, idList);
 }
 
-function orphan_enableButtons()
-{
+function orphan_enableButtons() {
   let idList = [
     "orphan_viewButton",
     "orphan_exportButton",
@@ -316,8 +304,7 @@ function orphan_enableButtons()
   enableButtonsForCertTree(orphanTreeView, idList);
 }
 
-function backupCerts()
-{
+function backupCerts() {
   getSelectedCerts();
   var numcerts = selected_certs.length;
   if (numcerts == 0) {
@@ -339,15 +326,13 @@ function backupCerts()
   });
 }
 
-function backupAllCerts()
-{
+function backupAllCerts() {
   // Select all rows, then call doBackup()
-  var items = userTreeView.selection.selectAll();
+  userTreeView.selection.selectAll();
   backupCerts();
 }
 
-function editCerts()
-{
+function editCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
@@ -356,8 +341,7 @@ function editCerts()
   }
 }
 
-function restoreCerts()
-{
+function restoreCerts() {
   var bundle = document.getElementById("pippki_bundle");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -396,7 +380,7 @@ function restoreCerts()
       fstream.close();
       let prompter = Services.ww.getNewPrompter(window);
       let interfaceRequestor = {
-        getInterface: function() {
+        getInterface() {
           return prompter;
         }
       };
@@ -415,8 +399,7 @@ function restoreCerts()
   });
 }
 
-function exportCerts()
-{
+function exportCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
@@ -471,8 +454,7 @@ function deleteCerts() {
   }
 }
 
-function viewCerts()
-{
+function viewCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
@@ -480,8 +462,7 @@ function viewCerts()
   }
 }
 
-function addCACerts()
-{
+function addCACerts() {
   var bundle = document.getElementById("pippki_bundle");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -499,8 +480,7 @@ function addCACerts()
   });
 }
 
-function onSmartCardChange()
-{
+function onSmartCardChange() {
   var certcache = certdb.getCerts();
   // We've change the state of the smart cards inserted or removed
   // that means the available certs may have changed. Update the display
@@ -516,8 +496,7 @@ function onSmartCardChange()
   orphanTreeView.selection.clearSelection();
 }
 
-function addEmailCert()
-{
+function addEmailCert() {
   var bundle = document.getElementById("pippki_bundle");
   var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
   fp.init(window,
@@ -538,8 +517,7 @@ function addEmailCert()
   });
 }
 
-function addException()
-{
+function addException() {
   window.openDialog("chrome://pippki/content/exceptionDialog.xul", "",
                     "chrome,centerscreen,modal");
   var certcache = certdb.getCerts();

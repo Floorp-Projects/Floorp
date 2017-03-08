@@ -170,9 +170,11 @@ function loadCertificates(certFile, currentWhitelist) {
       invalidCerts.push(cert);
     }
   }
-  return { certs: certs,
-           lastValidTime: latestNotAfter,
-           invalidCerts: invalidCerts };
+  return {
+    certs,
+    lastValidTime: latestNotAfter,
+    invalidCerts
+  };
 }
 
 // Expects something like "00:11:22:...", returns a string of bytes.
@@ -246,9 +248,7 @@ function readCurrentWhitelist(currentWhitelistFile) {
   return currentWhitelist;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+// ----------------------------------------------------------------------------
 
 if (arguments.length != 3) {
   throw new Error("Usage: makeCNNICHashes.js <PEM intermediates file> " +

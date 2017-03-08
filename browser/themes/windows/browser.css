@@ -109,10 +109,9 @@ toolbar:-moz-lwtheme {
   margin-top: var(--space-above-tabbar);
 }
 
-#navigator-toolbox {
+#navigator-toolbox,
+#navigator-toolbox > toolbar {
   -moz-appearance: none;
-  background-color: transparent;
-  border-top: none;
 }
 
 #navigator-toolbox::after {
@@ -139,11 +138,6 @@ toolbar:-moz-lwtheme {
 
 #navigator-toolbox:-moz-lwtheme::after {
   border-bottom-color: rgba(0,0,0,.3);
-}
-
-#navigator-toolbox > toolbar {
-  -moz-appearance: none;
-  border-style: none;
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {

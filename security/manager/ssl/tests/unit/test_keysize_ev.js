@@ -41,8 +41,7 @@ function loadCert(certName, trustString) {
  */
 function addKeySizeTestForEV(expectedNamesForOCSP,
                              rootCertFileName, intCertFileNames,
-                             endEntityCertFileName, expectedResult)
-{
+                             endEntityCertFileName, expectedResult) {
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = getOCSPResponder(expectedNamesForOCSP);
