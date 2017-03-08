@@ -199,6 +199,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters):
             return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
+
 @_target_task('mozilla_beta_tasks')
 def target_tasks_mozilla_beta(full_task_graph, parameters):
     """Select the set of tasks required for a promotable beta or release build
