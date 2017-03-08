@@ -1833,12 +1833,9 @@ nsINode::Remove()
   if (!parent) {
     return;
   }
-  int32_t index = parent->IndexOf(this);
-  if (index < 0) {
-    NS_WARNING("Ignoring call to nsINode::Remove on anonymous child.");
-    return;
-  }
-  parent->RemoveChildAt(uint32_t(index), true);
+
+  IgnoredErrorResult err;
+  parent->RemoveChild(*this, err);
 }
 
 Element*
