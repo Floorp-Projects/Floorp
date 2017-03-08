@@ -233,6 +233,11 @@ public:
     nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning);
 
+  // Do a bunch of stuff that we should avoid doing during the parallel
+  // traversal (e.g. changing member variables) for all elements that we expect
+  // to restyle on the next traversal.
+  void PreTraverse();
+
 private:
   ~EffectCompositor() = default;
 

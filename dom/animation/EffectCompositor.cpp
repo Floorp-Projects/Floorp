@@ -940,6 +940,40 @@ EffectCompositor::SetPerformanceWarning(
   }
 }
 
+void
+EffectCompositor::PreTraverse()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+
+  for (auto& elementsToRestyle : mElementsToRestyle) {
+    for (auto iter = elementsToRestyle.Iter(); !iter.Done(); iter.Next()) {
+      bool postedRestyle = iter.Data();
+      // Ignore throttled restyle.
+      if (!postedRestyle) {
+        continue;
+      }
+
+      NonOwningAnimationTarget target = iter.Key();
+      EffectSet* effects =
+        EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+      if (!effects) {
+        // Drop the EffectSets that have been destroyed.
+        iter.Remove();
+        continue;
+      }
+
+      for (KeyframeEffectReadOnly* effect : *effects) {
+        effect->GetAnimation()->WillComposeStyle();
+      }
+
+      // Remove the element from the list of elements to restyle since we are
+      // about to restyle it.
+      iter.Remove();
+    }
+  }
+}
+
 // ---------------------------------------------------------
 //
 // Nested class: AnimationStyleRuleProcessor
