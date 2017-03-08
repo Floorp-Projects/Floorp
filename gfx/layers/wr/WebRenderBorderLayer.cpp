@@ -17,6 +17,36 @@ namespace layers {
 
 using namespace mozilla::gfx;
 
+/* static */void
+WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                              WebRenderLayer* aLayer,
+                                              BorderColors& aColors,
+                                              BorderCorners& aCorners,
+                                              BorderWidths& aWidths,
+                                              BorderStyles& aBorderStyles,
+                                              Rect aRect,
+                                              Rect aClipRect,
+                                              Rect aRelBounds,
+                                              Rect aOverflow)
+{
+  aBuilder.PushStackingContext(wr::ToWrRect(aRelBounds),
+                               wr::ToWrRect(aOverflow),
+                               nullptr,
+                               1.0f,
+                               aLayer->GetLayer()->GetTransform(),
+                               WrMixBlendMode::Normal);
+
+  aBuilder.PushBorder(wr::ToWrRect(aRect), wr::ToWrRect(aClipRect),
+                      wr::ToWrBorderSide(aWidths[0], aColors[0], aBorderStyles[0]),
+                      wr::ToWrBorderSide(aWidths[1], aColors[1], aBorderStyles[1]),
+                      wr::ToWrBorderSide(aWidths[2], aColors[2], aBorderStyles[2]),
+                      wr::ToWrBorderSide(aWidths[3], aColors[3], aBorderStyles[3]),
+                      wr::ToWrBorderRadius(aCorners[0], aCorners[1],
+                                           aCorners[3], aCorners[2]));
+
+  aBuilder.PopStackingContext();
+}
+
 void
 WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
