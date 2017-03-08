@@ -286,8 +286,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DeviceStorage", desktop: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorageChangeEvent", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "Directory",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Document",
