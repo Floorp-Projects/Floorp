@@ -324,7 +324,9 @@ public:
     mDepthFar = aDepthFar;
   }
 
-  already_AddRefed<Promise> RequestPresent(const nsTArray<VRLayer>& aLayers, ErrorResult& aRv);
+  already_AddRefed<Promise> RequestPresent(const nsTArray<VRLayer>& aLayers,
+                                           CallerType aCallerType,
+                                           ErrorResult& aRv);
   already_AddRefed<Promise> ExitPresent(ErrorResult& aRv);
   void GetLayers(nsTArray<VRLayer>& result);
   void SubmitFrame();
