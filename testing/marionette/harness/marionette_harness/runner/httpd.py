@@ -19,10 +19,10 @@ import urlparse
 from wptserve import server, handlers, routes as default_routes
 
 
-here = os.path.abspath(os.path.dirname(__file__))
-default_doc_root = os.path.join(os.path.dirname(here), "www")
-default_ssl_cert = os.path.join(here, "test.cert")
-default_ssl_key = os.path.join(here, "test.key")
+root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+default_doc_root = os.path.join(root, "www")
+default_ssl_cert = os.path.join(root, "certificates", "test.cert")
+default_ssl_key = os.path.join(root, "certificates", "test.key")
 
 
 @handlers.handler
