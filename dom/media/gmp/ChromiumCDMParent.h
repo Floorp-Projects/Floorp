@@ -35,7 +35,17 @@ public:
             bool aAllowDistinctiveIdentifier,
             bool aAllowPersistentState);
 
-  // TODO: Add functions for clients to send data to CDM, and
+  void SetServerCertificate(uint32_t aPromiseId,
+                            const nsTArray<uint8_t>& aCert);
+
+  void UpdateSession(const nsCString& aSessionId,
+                     uint32_t aPromiseId,
+                     const nsTArray<uint8_t>& aResponse);
+
+  void CloseSession(const nsCString& aSessionId, uint32_t aPromiseId);
+
+  void RemoveSession(const nsCString& aSessionId, uint32_t aPromiseId);
+
   // a Close() function.
 
 protected:
@@ -70,6 +80,10 @@ protected:
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
   ipc::IPCResult RecvShutdown() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  void RejectPromise(uint32_t aPromiseId,
+                     nsresult aError,
+                     const nsCString& aErrorMessage);
 
   const uint32_t mPluginId;
   GMPContentParent* mContentParent;
