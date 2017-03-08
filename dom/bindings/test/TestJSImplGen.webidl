@@ -801,6 +801,10 @@ interface TestJSImplInterface {
   [CanOOM] attribute boolean canOOMAttr;
   [GetterCanOOM] attribute boolean canOOMGetterAttr;
   [SetterCanOOM] attribute boolean canOOMSetterAttr;
+  [CEReactions] void ceReactionsMethod();
+  [CEReactions] void ceReactionsMethodOverload();
+  [CEReactions] void ceReactionsMethodOverload(DOMString bar);
+  [CEReactions] attribute boolean ceReactionsAttr;
   // NeedsSubjectPrincipal not supported on JS-implemented things for
   // now, because we always pass in the caller principal anyway.
   //  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
