@@ -303,7 +303,8 @@ var FormAutofillContent = {
   getInputDetails(element) {
     let formDetails = this.getFormDetails(element);
     for (let detail of formDetails) {
-      if (element == detail.element) {
+      let detailElement = detail.elementWeakRef.get();
+      if (detailElement && element == detailElement) {
         return detail;
       }
     }
@@ -376,11 +377,17 @@ var FormAutofillContent = {
 
       this._formsDetails.set(form.rootElement, formHandler);
       this.log.debug("Adding form handler to _formsDetails:", formHandler);
-      formHandler.fieldDetails.forEach(detail => this._markAsAutofillField(detail.element));
+      formHandler.fieldDetails.forEach(detail =>
+        this._markAsAutofillField(detail.elementWeakRef.get())
+      );
     });
   },
 
   _markAsAutofillField(field) {
+    if (!field) {
+      return;
+    }
+
     formFillController.markAsAutofillField(field);
   },
 };
