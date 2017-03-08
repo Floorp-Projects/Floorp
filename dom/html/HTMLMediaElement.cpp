@@ -1527,6 +1527,26 @@ HTMLMediaElement::SetVisible(bool aVisible)
   mDecoder->SetForcedHidden(!aVisible);
 }
 
+layers::Image*
+HTMLMediaElement::GetCurrentImage()
+{
+  // Mark the decoder owned by the element as tainted so that the
+  // suspend-vide-decoder is suspended.
+  mHasSuspendTaint = true;
+  if (mDecoder) {
+    mDecoder->SetSuspendTaint(true);
+  }
+
+  // TODO: In bug 1345404, handle case when video decoder is already suspended.
+  ImageContainer* container = GetImageContainer();
+  if (!container) {
+    return nullptr;
+  }
+
+  AutoLockImage lockImage(container);
+  return lockImage.GetImage();
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {
@@ -3692,6 +3712,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
     mIsAudioTrackAudible(false),
+    mHasSuspendTaint(false),
     mVisibilityState(Visibility::APPROXIMATELY_NONVISIBLE),
     mErrorSink(new ErrorSink(this)),
     mAudioChannelWrapper(new AudioChannelAgentCallback(this, mAudioChannel))
@@ -4689,6 +4710,8 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   if (mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
     mDecoder->SetMinimizePrerollUntilPlaybackStarts();
   }
+  // Notify the decoder of suspend taint.
+  mDecoder->SetSuspendTaint(mHasSuspendTaint);
 
   // Update decoder principal before we start decoding, since it
   // can affect how we feed data to MediaStreams

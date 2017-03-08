@@ -7337,13 +7337,8 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   if (!principal)
     return result;
 
-  ImageContainer* container = aElement->GetImageContainer();
-  if (!container)
-    return result;
+  result.mLayersImage = aElement->GetCurrentImage();
 
-  AutoLockImage lockImage(container);
-
-  result.mLayersImage = lockImage.GetImage();
   if (!result.mLayersImage)
     return result;
 
