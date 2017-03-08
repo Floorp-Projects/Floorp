@@ -427,12 +427,8 @@ setUpdateTrackingId();
       return;
     }
     // Gaia setting has not been set; set the gaia setting to default.
-    let prefValue = AppConstants.MOZ_TELEMETRY_ON_BY_DEFAULT;
-    try {
-      prefValue = Services.prefs.getBoolPref(geckoPrefName);
-    } catch (e) {
-      // Pref not set; use default value.
-    }
+    let prefValue = Services.prefs.getBoolPref(geckoPrefName,
+                                               AppConstants.MOZ_TELEMETRY_ON_BY_DEFAULT);
     let setting = {};
     setting[gaiaSettingName] = prefValue;
     window.navigator.mozSettings.createLock().set(setting);

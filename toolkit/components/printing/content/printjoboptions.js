@@ -32,14 +32,7 @@ function checkDouble(element, maxVal) {
 
 // ---------------------------------------------------
 function isListOfPrinterFeaturesAvailable() {
-  var has_printerfeatures = false;
-
-  try {
-    has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
-  } catch (ex) {
-  }
-
-  return has_printerfeatures;
+  return gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures", false);
 }
 
 // ---------------------------------------------------

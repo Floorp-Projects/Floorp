@@ -6,7 +6,7 @@
 package org.mozilla.gecko.dlc;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -119,7 +119,7 @@ public class DownloadContentService extends IntentService {
                     @Override
                     public void onContentDownloaded(DownloadContent content) {
                         if (content.isFont()) {
-                            GeckoAppShell.notifyObservers("Fonts:Reload", "");
+                            EventDispatcher.getInstance().dispatch("Fonts:Reload", null);
                         }
                     }
                 });

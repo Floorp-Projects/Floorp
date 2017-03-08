@@ -42,7 +42,7 @@ StackBaseShape::StackBaseShape(JSContext* cx, const Class* clasp, uint32_t objec
     clasp(clasp)
 {}
 
-inline Shape*
+MOZ_ALWAYS_INLINE Shape*
 Shape::search(JSContext* cx, jsid id)
 {
     return search(cx, this, id);
@@ -85,7 +85,7 @@ Shape::search(JSContext* cx, Shape* start, jsid id, const AutoKeepShapeTables& k
 }
 
 template<MaybeAdding Adding>
-/* static */ inline Shape*
+/* static */ MOZ_ALWAYS_INLINE Shape*
 Shape::search(JSContext* cx, Shape* start, jsid id)
 {
     if (start->maybeCreateTableForLookup(cx)) {
@@ -203,6 +203,133 @@ GetPropertyAttributes(JSObject* obj, PropertyResult prop)
     }
 
     return prop.shape()->attributes();
+}
+
+/*
+ * Double hashing needs the second hash code to be relatively prime to table
+ * size, so we simply make hash2 odd.
+ */
+MOZ_ALWAYS_INLINE HashNumber
+Hash1(HashNumber hash0, uint32_t shift)
+{
+    return hash0 >> shift;
+}
+
+MOZ_ALWAYS_INLINE HashNumber
+Hash2(HashNumber hash0, uint32_t log2, uint32_t shift)
+{
+    return ((hash0 << log2) >> shift) | 1;
+}
+
+template<MaybeAdding Adding>
+MOZ_ALWAYS_INLINE ShapeTable::Entry&
+ShapeTable::searchUnchecked(jsid id)
+{
+    MOZ_ASSERT(entries_);
+    MOZ_ASSERT(!JSID_IS_EMPTY(id));
+
+    /* Compute the primary hash address. */
+    HashNumber hash0 = HashId(id);
+    HashNumber hash1 = Hash1(hash0, hashShift_);
+    Entry* entry = &getEntry(hash1);
+
+    /* Miss: return space for a new entry. */
+    if (entry->isFree())
+        return *entry;
+
+    /* Hit: return entry. */
+    Shape* shape = entry->shape();
+    if (shape && shape->propidRaw() == id)
+        return *entry;
+
+    /* Collision: double hash. */
+    uint32_t sizeLog2 = HASH_BITS - hashShift_;
+    HashNumber hash2 = Hash2(hash0, sizeLog2, hashShift_);
+    uint32_t sizeMask = JS_BITMASK(sizeLog2);
+
+    /* Save the first removed entry pointer so we can recycle it if adding. */
+    Entry* firstRemoved;
+    if (Adding == MaybeAdding::Adding) {
+        if (entry->isRemoved()) {
+            firstRemoved = entry;
+        } else {
+            firstRemoved = nullptr;
+            if (!entry->hadCollision())
+                entry->flagCollision();
+        }
+    }
+
+#ifdef DEBUG
+    bool collisionFlag = true;
+    if (!entry->isRemoved())
+        collisionFlag = entry->hadCollision();
+#endif
+
+    while (true) {
+        hash1 -= hash2;
+        hash1 &= sizeMask;
+        entry = &getEntry(hash1);
+
+        if (entry->isFree())
+            return (Adding == MaybeAdding::Adding && firstRemoved) ? *firstRemoved : *entry;
+
+        shape = entry->shape();
+        if (shape && shape->propidRaw() == id) {
+            MOZ_ASSERT(collisionFlag);
+            return *entry;
+        }
+
+        if (Adding == MaybeAdding::Adding) {
+            if (entry->isRemoved()) {
+                if (!firstRemoved)
+                    firstRemoved = entry;
+            } else {
+                if (!entry->hadCollision())
+                    entry->flagCollision();
+            }
+        }
+
+#ifdef DEBUG
+        if (!entry->isRemoved())
+            collisionFlag &= entry->hadCollision();
+#endif
+    }
+
+    MOZ_CRASH("Shape::search failed to find an expected entry.");
+}
+
+template<MaybeAdding Adding>
+MOZ_ALWAYS_INLINE ShapeTable::Entry&
+ShapeTable::search(jsid id, const AutoKeepShapeTables&)
+{
+    return searchUnchecked<Adding>(id);
+}
+
+template<MaybeAdding Adding>
+MOZ_ALWAYS_INLINE ShapeTable::Entry&
+ShapeTable::search(jsid id, const JS::AutoCheckCannotGC&)
+{
+    return searchUnchecked<Adding>(id);
+}
+
+/*
+ * Keep this function in sync with search. It neither hashifies the start
+ * shape nor increments linear search count.
+ */
+MOZ_ALWAYS_INLINE Shape*
+Shape::searchNoHashify(Shape* start, jsid id)
+{
+    /*
+     * If we have a table, search in the shape table, else do a linear
+     * search. We never hashify into a table in parallel.
+     */
+    JS::AutoCheckCannotGC nogc;
+    if (ShapeTable* table = start->maybeTable(nogc)) {
+        ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(id, nogc);
+        return entry.shape();
+    }
+
+    return start->searchLinear(id);
 }
 
 } /* namespace js */

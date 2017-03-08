@@ -46,10 +46,7 @@ const kWidePanelItemClass = "panel-wide-item";
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
-  let debug;
-  try {
-    debug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-  } catch (ex) {}
+  let debug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
     maxLogLevel: debug ? "all" : "log",
     prefix: "CustomizableWidgets",

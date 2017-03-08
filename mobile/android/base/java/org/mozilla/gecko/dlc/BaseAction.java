@@ -94,19 +94,21 @@ public abstract class BaseAction {
 
     protected File getDestinationFile(Context context, DownloadContent content)
             throws UnrecoverableDownloadContentException, RecoverableDownloadContentException {
+        File destinationDirectory;
         if (content.isFont()) {
-            File destinationDirectory = new File(context.getApplicationInfo().dataDir, "fonts");
-
-            if (!destinationDirectory.exists() && !destinationDirectory.mkdirs()) {
-                throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO,
-                        "Destination directory does not exist and cannot be created");
-            }
-
-            return new File(destinationDirectory, content.getFilename());
+            destinationDirectory = new File(context.getApplicationInfo().dataDir, "fonts");
+        } else if (content.isHyphenationDictionary()) {
+            destinationDirectory = new File(context.getApplicationInfo().dataDir, "hyphenation");
+        } else {
+            throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind());
         }
 
-        // Unrecoverable: We downloaded a file and we don't know what to do with it (Should not happen)
-        throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind());
+        if (!destinationDirectory.exists() && !destinationDirectory.mkdirs()) {
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO,
+                    "Destination directory does not exist and cannot be created");
+        }
+
+        return new File(destinationDirectory, content.getFilename());
     }
 
     protected boolean verify(File file, String expectedChecksum)

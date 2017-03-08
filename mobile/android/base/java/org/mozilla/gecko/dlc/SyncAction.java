@@ -130,7 +130,7 @@ public class SyncAction extends BaseAction {
             }
             // Only select the fields we are actually going to read.
             builder.appendQueryParameter(KINTO_PARAMETER_FIELDS,
-                    "attachment.location,attachment.original.filename,attachment.original.hash,attachment.hash,type,kind,attachment.original.size,match");
+                    "type,kind,attachment.location,attachment.hash,attachment.original.size,attachment.original.filename,attachment.original.hash,match");
 
             // We want to process items in the order they have been modified. This is to ensure that
             // our last_modified values are correct if we processing is interrupted and not all items

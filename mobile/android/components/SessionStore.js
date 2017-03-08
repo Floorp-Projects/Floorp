@@ -160,10 +160,88 @@ SessionStore.prototype = {
     this._lastClosedTabIndex = -1;
   },
 
+  onEvent: function ss_onEvent(event, data, callback) {
+    switch (event) {
+      case "ClosedTabs:StartNotifications":
+        this._notifyClosedTabs = true;
+        log("ClosedTabs:StartNotifications");
+        this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
+        break;
+
+      case "ClosedTabs:StopNotifications":
+        this._notifyClosedTabs = false;
+        log("ClosedTabs:StopNotifications");
+        break;
+
+      case "Session:Restore": {
+        EventDispatcher.instance.unregisterListener(this, "Session:Restore");
+        if (data) {
+          // Be ready to handle any restore failures by making sure we have a valid tab opened
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          let restoreCleanup = (function (aSubject, aTopic, aData) {
+              Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+
+              if (window.BrowserApp.tabs.length == 0) {
+                window.BrowserApp.addTab("about:home", {
+                  selected: true
+                });
+              }
+              // Normally, _restoreWindow() will have set this to true already,
+              // but we want to make sure it's set even in case of a restore failure.
+              this._startupRestoreFinished = true;
+              log("startupRestoreFinished = true (through notification)");
+          }).bind(this);
+          Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+
+          // Do a restore, triggered by Java
+          this.restoreLastSession(data.sessionString);
+        } else {
+          // Not doing a restore; just send restore message
+          this._startupRestoreFinished = true;
+          log("startupRestoreFinished = true");
+          Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
+        }
+        break;
+      }
+
+      case "Session:RestoreRecentTabs":
+        this._restoreTabs(data);
+        break;
+
+      case "Tab:KeepZombified": {
+        if (data.nextSelectedTabId >= 0) {
+          this._keepAsZombieTabId = data.nextSelectedTabId;
+          log("Tab:KeepZombified " + data.nextSelectedTabId);
+        }
+        break;
+      }
+
+      case "Tabs:OpenMultiple": {
+        this._openTabs(data);
+
+        if (data.shouldNotifyTabsOpenedToJava) {
+          let window = Services.wm.getMostRecentWindow("navigator:browser");
+          window.WindowEventDispatcher.sendRequest({
+            type: "Tabs:TabsOpened"
+          });
+        }
+        break;
+      }
+    }
+  },
+
   observe: function ss_observe(aSubject, aTopic, aData) {
     let observerService = Services.obs;
     switch (aTopic) {
       case "app-startup":
+        EventDispatcher.instance.registerListener(this, [
+          "ClosedTabs:StartNotifications",
+          "ClosedTabs:StopNotifications",
+          "Session:Restore",
+          "Session:RestoreRecentTabs",
+          "Tab:KeepZombified",
+          "Tabs:OpenMultiple",
+        ]);
         observerService.addObserver(this, "final-ui-startup", true);
         observerService.addObserver(this, "domwindowopened", true);
         observerService.addObserver(this, "domwindowclosed", true);
@@ -172,17 +250,11 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application-requested", true);
         observerService.addObserver(this, "quit-application-proceeding", true);
         observerService.addObserver(this, "quit-application", true);
-        observerService.addObserver(this, "Session:Restore", true);
         observerService.addObserver(this, "Session:NotifyLocationChange", true);
         observerService.addObserver(this, "Content:HistoryChange", true);
-        observerService.addObserver(this, "Tab:KeepZombified", true);
         observerService.addObserver(this, "application-background", true);
         observerService.addObserver(this, "application-foreground", true);
-        observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
-        observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
         observerService.addObserver(this, "last-pb-context-exited", true);
-        observerService.addObserver(this, "Session:RestoreRecentTabs", true);
-        observerService.addObserver(this, "Tabs:OpenMultiple", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -274,39 +346,6 @@ SessionStore.prototype = {
           }
         }
         break;
-      case "Session:Restore": {
-        Services.obs.removeObserver(this, "Session:Restore");
-        if (aData) {
-          // Be ready to handle any restore failures by making sure we have a valid tab opened
-          let window = Services.wm.getMostRecentWindow("navigator:browser");
-          let restoreCleanup = {
-            observe: function (aSubject, aTopic, aData) {
-              Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
-
-              if (window.BrowserApp.tabs.length == 0) {
-                window.BrowserApp.addTab("about:home", {
-                  selected: true
-                });
-              }
-              // Normally, _restoreWindow() will have set this to true already,
-              // but we want to make sure it's set even in case of a restore failure.
-              this._startupRestoreFinished = true;
-              log("startupRestoreFinished = true (through notification)");
-            }.bind(this)
-          };
-          Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
-
-          // Do a restore, triggered by Java
-          let data = JSON.parse(aData);
-          this.restoreLastSession(data.sessionString);
-        } else {
-          // Not doing a restore; just send restore message
-          this._startupRestoreFinished = true;
-          log("startupRestoreFinished = true");
-          Services.obs.notifyObservers(null, "sessionstore-windows-restored", "");
-        }
-        break;
-      }
       case "Session:NotifyLocationChange": {
         let browser = aSubject;
 
@@ -342,26 +381,6 @@ SessionStore.prototype = {
         }
         break;
       }
-      case "Tabs:OpenMultiple": {
-        let data = JSON.parse(aData);
-
-        this._openTabs(data);
-
-        if (data.shouldNotifyTabsOpenedToJava) {
-          let window = Services.wm.getMostRecentWindow("navigator:browser");
-          window.WindowEventDispatcher.sendRequest({
-            type: "Tabs:TabsOpened"
-          });
-        }
-        break;
-      }
-      case "Tab:KeepZombified": {
-        if (aData >= 0) {
-          this._keepAsZombieTabId = aData;
-          log("Tab:KeepZombified " + aData);
-        }
-        break;
-      }
       case "application-background":
         // We receive this notification when Android's onPause callback is
         // executed. After onPause, the application may be terminated at any
@@ -390,15 +409,6 @@ SessionStore.prototype = {
           this.restoreZombieTab(tab);
         }
         break;
-      case "ClosedTabs:StartNotifications":
-        this._notifyClosedTabs = true;
-        log("ClosedTabs:StartNotifications");
-        this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
-        break;
-      case "ClosedTabs:StopNotifications":
-        this._notifyClosedTabs = false;
-        log("ClosedTabs:StopNotifications");
-        break;
       case "last-pb-context-exited":
         // Clear private closed tab data when we leave private browsing.
         for (let window of Object.values(this._windows)) {
@@ -406,11 +416,6 @@ SessionStore.prototype = {
         }
         this._lastClosedTabIndex = -1;
         break;
-      case "Session:RestoreRecentTabs": {
-        let data = JSON.parse(aData);
-        this._restoreTabs(data);
-        break;
-      }
     }
   },
 

@@ -413,11 +413,7 @@ this.DownloadIntegration = {
 #ifdef MOZ_WIDGET_GONK
     directoryPath = this._getDefaultDownloadDirectory();
 #else
-    let prefValue = 1;
-
-    try {
-      prefValue = Services.prefs.getIntPref("browser.download.folderList");
-    } catch(e) {}
+    let prefValue = Services.prefs.getIntPref("browser.download.folderList", 1);
 
     switch(prefValue) {
       case 0: // Desktop

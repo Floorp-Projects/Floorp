@@ -381,6 +381,31 @@ FuncCast(F* pf, ABIFunctionType type)
     return pv;
 }
 
+bool
+wasm::IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode)
+{
+    switch (callee) {
+      case SymbolicAddress::FloorD:
+      case SymbolicAddress::FloorF:
+        *mode = jit::RoundingMode::Down;
+        return true;
+      case SymbolicAddress::CeilD:
+      case SymbolicAddress::CeilF:
+        *mode = jit::RoundingMode::Up;
+        return true;
+      case SymbolicAddress::TruncD:
+      case SymbolicAddress::TruncF:
+        *mode = jit::RoundingMode::TowardsZero;
+        return true;
+      case SymbolicAddress::NearbyIntD:
+      case SymbolicAddress::NearbyIntF:
+        *mode = jit::RoundingMode::NearestTiesToEven;
+        return true;
+      default:
+        return false;
+    }
+}
+
 void*
 wasm::AddressOf(SymbolicAddress imm, JSContext* cx)
 {

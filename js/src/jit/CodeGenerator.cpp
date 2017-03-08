@@ -12005,9 +12005,32 @@ CodeGenerator::visitWasmTrap(LWasmTrap* lir)
 void
 CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
 {
+#ifdef WASM_HUGE_MEMORY
+    MOZ_CRASH("No wasm bounds check for huge memory");
+#else
     const MWasmBoundsCheck* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
-    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(mir, wasm::Trap::OutOfBounds));
+    Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
+    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
+                         trap(mir, wasm::Trap::OutOfBounds));
+#endif
+}
+
+void
+CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins)
+{
+    switch (ins->mir()->type()) {
+      case MIRType::Pointer:
+        masm.loadPtr(Address(ToRegister(ins->tlsPtr()), ins->mir()->offset()),
+                     ToRegister(ins->output()));
+        break;
+      case MIRType::Int32:
+        masm.load32(Address(ToRegister(ins->tlsPtr()), ins->mir()->offset()),
+                    ToRegister(ins->output()));
+        break;
+      default:
+        MOZ_CRASH("MIRType not supported in WasmLoadTls");
+    }
 }
 
 typedef bool (*RecompileFn)(JSContext*);

@@ -64,28 +64,31 @@ using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 // Read a token. Report an error and return null() if that token doesn't match
 // to the condition.  Do not use MUST_MATCH_TOKEN_INTERNAL directly.
-#define MUST_MATCH_TOKEN_INTERNAL(cond, modifier, errorNumber)                              \
+#define MUST_MATCH_TOKEN_INTERNAL(cond, modifier, errorReport)                              \
     JS_BEGIN_MACRO                                                                          \
         TokenKind token;                                                                    \
         if (!tokenStream.getToken(&token, modifier))                                        \
             return null();                                                                  \
         if (!(cond)) {                                                                      \
-            error(errorNumber);                                                             \
+            errorReport;                                                                    \
             return null();                                                                  \
         }                                                                                   \
     JS_END_MACRO
 
 #define MUST_MATCH_TOKEN_MOD(tt, modifier, errorNumber) \
-    MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, errorNumber)
+    MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, error(errorNumber))
 
 #define MUST_MATCH_TOKEN(tt, errorNumber) \
     MUST_MATCH_TOKEN_MOD(tt, TokenStream::None, errorNumber)
 
 #define MUST_MATCH_TOKEN_FUNC_MOD(func, modifier, errorNumber) \
-    MUST_MATCH_TOKEN_INTERNAL((func)(token), modifier, errorNumber)
+    MUST_MATCH_TOKEN_INTERNAL((func)(token), modifier, error(errorNumber))
 
 #define MUST_MATCH_TOKEN_FUNC(func, errorNumber) \
     MUST_MATCH_TOKEN_FUNC_MOD(func, TokenStream::None, errorNumber)
+
+#define MUST_MATCH_TOKEN_MOD_WITH_REPORT(tt, modifier, errorReport) \
+    MUST_MATCH_TOKEN_INTERNAL(token == tt, modifier, errorReport)
 
 template <class T, class U>
 static inline void
@@ -1003,6 +1006,35 @@ Parser<ParseHandler>::hasValidSimpleStrictParameterNames()
 
 template <typename ParseHandler>
 void
+Parser<ParseHandler>::reportMissingClosing(unsigned errorNumber, unsigned noteNumber,
+                                           uint32_t openedPos)
+{
+    auto notes = MakeUnique<JSErrorNotes>();
+    if (!notes)
+        return;
+
+    uint32_t line, column;
+    tokenStream.srcCoords.lineNumAndColumnIndex(openedPos, &line, &column);
+
+    const size_t MaxWidth = sizeof("4294967295");
+    char columnNumber[MaxWidth];
+    SprintfLiteral(columnNumber, "%" PRIu32, column);
+    char lineNumber[MaxWidth];
+    SprintfLiteral(lineNumber, "%" PRIu32, line);
+
+    if (!notes->addNoteASCII(pc->sc()->context,
+                             getFilename(), line, column,
+                             GetErrorMessage, nullptr,
+                             noteNumber, lineNumber, columnNumber))
+    {
+        return;
+    }
+
+    errorWithNotes(Move(notes), errorNumber);
+}
+
+template <typename ParseHandler>
+void
 Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKind prevKind,
                                           TokenPos pos, uint32_t prevPos)
 {
@@ -1028,11 +1060,11 @@ Parser<ParseHandler>::reportRedeclaration(HandlePropertyName name, DeclarationKi
     char lineNumber[MaxWidth];
     SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-    if (!notes->addNoteLatin1(pc->sc()->context,
-                              getFilename(), line, column,
-                              GetErrorMessage, nullptr,
-                              JSMSG_REDECLARED_PREV,
-                              lineNumber, columnNumber))
+    if (!notes->addNoteASCII(pc->sc()->context,
+                             getFilename(), line, column,
+                             GetErrorMessage, nullptr,
+                             JSMSG_REDECLARED_PREV,
+                             lineNumber, columnNumber))
     {
         return;
     }
@@ -3607,6 +3639,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
+    uint32_t openedPos = 0;
     if (tt != TOK_LC) {
         if (funbox->isStarGenerator() || kind == Method ||
             kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
@@ -3629,6 +3662,8 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
         funbox->setIsExprBody();
+    } else {
+        openedPos = pos().begin;
     }
 
     // Arrow function parameters inherit yieldHandling from the enclosing
@@ -3666,13 +3701,9 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
     }
 
     if (bodyType == StatementListBody) {
-        bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_RC, TokenStream::Operand))
-            return false;
-        if (!matched) {
-            error(JSMSG_CURLY_AFTER_BODY);
-            return false;
-        }
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+                                         reportMissingClosing(JSMSG_CURLY_AFTER_BODY,
+                                                              JSMSG_CURLY_OPENED, openedPos));
         funbox->bufEnd = pos().end;
     } else {
 #if !JS_HAS_EXPR_CLOSURES
@@ -4446,6 +4477,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling, unsigned errorNumber)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
+    uint32_t openedPos = pos().begin;
 
     ParseContext::Statement stmt(pc, StatementKind::Block);
     ParseContext::Scope scope(this);
@@ -4456,7 +4488,9 @@ Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling, unsigned error
     if (!list)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, errorNumber);
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+                                     reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED,
+                                                          openedPos));
 
     return finishLexicalScope(scope, list);
 }
@@ -6705,6 +6739,8 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
     {
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
 
+        uint32_t openedPos = pos().begin;
+
         ParseContext::Statement stmt(pc, StatementKind::Try);
         ParseContext::Scope scope(this);
         if (!scope.init(pc))
@@ -6718,7 +6754,9 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
         if (!innerBlock)
             return null();
 
-        MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_TRY);
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+                                         reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
+                                                              JSMSG_CURLY_OPENED, openedPos));
     }
 
     bool hasUnconditionalCatch = false;
@@ -6834,6 +6872,8 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
     if (tt == TOK_FINALLY) {
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
 
+        uint32_t openedPos = pos().begin;
+
         ParseContext::Statement stmt(pc, StatementKind::Finally);
         ParseContext::Scope scope(this);
         if (!scope.init(pc))
@@ -6847,7 +6887,9 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
         if (!finallyBlock)
             return null();
 
-        MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_FINALLY);
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+                                         reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
+                                                              JSMSG_CURLY_OPENED, openedPos));
     } else {
         tokenStream.ungetToken();
     }
@@ -6864,6 +6906,8 @@ typename ParseHandler::Node
 Parser<ParseHandler>::catchBlockStatement(YieldHandling yieldHandling,
                                           ParseContext::Scope& catchParamScope)
 {
+    uint32_t openedPos = pos().begin;
+
     ParseContext::Statement stmt(pc, StatementKind::Block);
 
     // ES 13.15.7 CatchClauseEvaluation
@@ -6883,7 +6927,9 @@ Parser<ParseHandler>::catchBlockStatement(YieldHandling yieldHandling,
     if (!list)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_CATCH);
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+                                     reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
+                                                          JSMSG_CURLY_OPENED, openedPos));
 
     // The catch parameter names are not bound in the body scope, so remove
     // them before generating bindings.
@@ -9219,7 +9265,9 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling, PossibleErro
             }
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_RB, modifier, JSMSG_BRACKET_AFTER_LIST);
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, modifier,
+                                         reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                                              JSMSG_BRACKET_OPENED, begin));
     }
     handler.setEndPosition(literal, pos().end);
     return literal;
@@ -9440,6 +9488,8 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
 
+    uint32_t openedPos = pos().begin;
+
     Node literal = handler.newObjectLiteral(pos().begin);
     if (!literal)
         return null();
@@ -9602,7 +9652,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
         if (tt == TOK_RC)
             break;
         if (tt != TOK_COMMA) {
-            error(JSMSG_CURLY_AFTER_LIST);
+            reportMissingClosing(JSMSG_CURLY_AFTER_LIST, JSMSG_CURLY_OPENED, openedPos);
             return null();
         }
     }

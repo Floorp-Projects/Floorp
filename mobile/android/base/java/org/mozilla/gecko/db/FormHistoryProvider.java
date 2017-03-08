@@ -7,7 +7,7 @@ package org.mozilla.gecko.db;
 import java.lang.IllegalArgumentException;
 import java.util.HashMap;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.db.BrowserContract.FormHistory;
 import org.mozilla.gecko.db.BrowserContract.DeletedFormHistory;
 import org.mozilla.gecko.db.BrowserContract;
@@ -124,7 +124,7 @@ public class FormHistoryProvider extends SQLiteBridgeContentProvider {
 
     @Override
     public void initGecko() {
-        GeckoAppShell.notifyObservers("FormHistory:Init", null);
+        EventDispatcher.getInstance().dispatch("FormHistory:Init", null);
     }
 
     @Override

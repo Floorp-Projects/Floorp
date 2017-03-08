@@ -149,10 +149,7 @@ TokenServerClientServerError.prototype._toStringFields = function() {
  */
 this.TokenServerClient = function TokenServerClient() {
   this._log = Log.repository.getLogger("Common.TokenServerClient");
-  let level = "Debug";
-  try {
-    level = Services.prefs.getCharPref(PREF_LOG_LEVEL);
-  } catch (ex) {}
+  let level = Services.prefs.getCharPref(PREF_LOG_LEVEL, "Debug");
   this._log.level = Log.Level[level];
 }
 TokenServerClient.prototype = {

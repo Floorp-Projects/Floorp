@@ -338,10 +338,7 @@ this.BootstrapMonitor = {
 AddonTestUtils.on("addon-manager-shutdown", () => BootstrapMonitor.shutdownCheck());
 
 function isNightlyChannel() {
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  } catch (e) { }
+  var channel = Services.prefs.getCharPref("app.update.channel", "default");
 
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }

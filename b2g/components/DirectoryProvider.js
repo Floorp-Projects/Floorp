@@ -113,13 +113,7 @@ DirectoryProvider.prototype = {
     // path from the parent, and it is then used to build
     // jar:remoteopenfile:// uris.
     if (prop == "coreAppsDir") {
-      let coreAppsDirPref;
-      try {
-        coreAppsDirPref = Services.prefs.getCharPref(COREAPPSDIR_PREF);
-      } catch (e) {
-        // coreAppsDirPref may not exist if we're on an older version
-        // of gaia, so just fail silently.
-      }
+      let coreAppsDirPref = Services.prefs.getCharPref(COREAPPSDIR_PREF, "");
       let appsDir;
       // If pref doesn't exist or isn't set, default to old value
       if (!coreAppsDirPref || coreAppsDirPref == "") {

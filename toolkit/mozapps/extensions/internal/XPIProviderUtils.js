@@ -1429,10 +1429,7 @@ this.XPIDatabase = {
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
 
-    let dssEnabled = false;
-    try {
-      dssEnabled = Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED);
-    } catch (e) {}
+    let dssEnabled = Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED, false);
 
     let themes = [];
     if (dssEnabled) {

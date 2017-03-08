@@ -2129,7 +2129,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     }
     masm.bind(&done);
 
-    masm.append(wasm::BoundsCheck(bo.getOffset()));
+    MOZ_CRASH("NYI - patching is no longer an option");
 }
 
 void
@@ -2208,7 +2208,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     }
 
     masm.bind(&outOfRange);
-    masm.append(wasm::BoundsCheck(bo.getOffset()));
+    MOZ_CRASH("NYI - patching is no longer an option");
 }
 
 void
