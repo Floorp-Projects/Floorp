@@ -15,7 +15,6 @@ include protocol PCrashReporter;
 include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
-include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
 include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
@@ -128,120 +127,6 @@ struct FontListEntry {
 struct FontFamilyListEntry {
     nsString familyName;
     uint8_t  entryType;
-};
-
-struct DeviceStorageFreeSpaceParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageUsedSpaceParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageAvailableParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageStatusParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageFormatParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageMountParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageUnmountParams
-{
-  nsString type;
-  nsString storageName;
-};
-
-struct DeviceStorageAddParams
-{
-  nsString type;
-  nsString storageName;
-  nsString relpath;
-  PBlob blob;
-};
-
-struct DeviceStorageAppendParams
-{
-  nsString type;
-  nsString storageName;
-  nsString relpath;
-  PBlob blob;
-};
-
-struct DeviceStorageCreateFdParams
-{
-  nsString type;
-  nsString storageName;
-  nsString relpath;
-};
-
-struct DeviceStorageGetParams
-{
-  nsString type;
-  nsString storageName;
-  nsString rootDir;
-  nsString relpath;
-};
-
-struct DeviceStorageDeleteParams
-{
-  nsString type;
-  nsString storageName;
-  nsString relpath;
-};
-
-struct DeviceStorageEnumerationParams
-{
-  nsString type;
-  nsString storageName;
-  nsString rootdir;
-  uint64_t since;
-};
-
-union DeviceStorageParams
-{
-  DeviceStorageAddParams;
-  DeviceStorageAppendParams;
-  DeviceStorageCreateFdParams;
-  DeviceStorageGetParams;
-  DeviceStorageDeleteParams;
-  DeviceStorageEnumerationParams;
-  DeviceStorageFreeSpaceParams;
-  DeviceStorageUsedSpaceParams;
-  DeviceStorageAvailableParams;
-  DeviceStorageStatusParams;
-  DeviceStorageFormatParams;
-  DeviceStorageMountParams;
-  DeviceStorageUnmountParams;
-};
-
-struct DeviceStorageLocationInfo {
-  nsString music;
-  nsString pictures;
-  nsString videos;
-  nsString sdcard;
-  nsString apps;
-  nsString crashes;
 };
 
 union PrefValue {
@@ -369,7 +254,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PContentPermissionRequest;
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
-    manages PDeviceStorageRequest;
     manages PPSMContentDownloader;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
@@ -542,9 +426,6 @@ child:
 
     // Notify child that last-pb-context-exited notification was observed
     async LastPrivateDocShellDestroyed();
-
-    async FilePathUpdate(nsString storageType, nsString storageName, nsString filepath,
-                         nsCString reasons);
 
     async NotifyProcessPriorityChanged(ProcessPriority priority);
     async MinimizeMemoryUsage();
@@ -731,7 +612,6 @@ parent:
     async PJavaScript();
 
     async PRemoteSpellcheckEngine();
-    async PDeviceStorageRequest(DeviceStorageParams params);
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
@@ -912,11 +792,6 @@ parent:
                                     bool aAnyActiveChannel);
 
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
-
-    async FilePathUpdateNotify(nsString aType,
-                               nsString aStorageName,
-                               nsString aFilepath,
-                               nsCString aReason);
 
     sync KeywordToURI(nsCString keyword)
         returns (nsString providerName, OptionalInputStreamParams postData, OptionalURIParams uri);
@@ -1100,12 +975,6 @@ parent:
       nsCString aBaseURI,
       OriginAttributes aOpenerOriginAttributes,
       float aFullZoom);
-
-    sync GetDeviceStorageLocation(nsString type)
-        returns (nsString path);
-
-    sync GetDeviceStorageLocations()
-	returns (DeviceStorageLocationInfo info);
 
     sync GetAndroidSystemInfo()
         returns (AndroidSystemInfo info);
