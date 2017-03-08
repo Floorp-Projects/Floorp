@@ -311,19 +311,17 @@ class Sampler;
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// Each thread gets its own PseudoStack on thread creation, which is then
-// destroyed on thread destruction. (GeckoProfilerInitRAII handles this for the
-// main thread and AutoProfileRegister handles it for others threads.)
-// tlsPseudoStack is the owning reference. Other non-owning references to it
-// are handed out as follows.
+// Each thread gets its own PseudoStack on thread creation. tlsPseudoStack is
+// the owning reference; ThreadInfo has a non-owning reference. On thread
+// destruction, either (a) the PseudoStack and the ThreadInfo are both
+// destroyed, or (b) neither is destroyed and ownership of PseudoStack is
+// transferred to the ThreadInfo. Either way, tlsPseudoStack is cleared.
 //
-// - ThreadInfo has a long-lived one, which we must ensure is nulled or
-//   destroyed before the PseudoStack is destroyed.
-//
-// - profiler_call_{enter,exit}() call pairs temporarily get one. RAII classes
-//   ensure these calls are balanced, and they occur on the thread itself,
-//   which means they are necessarily bounded by the lifetime of the thread,
-//   which ensures they can't be used after the PseudoStack is destroyed.
+// Non-owning PseudoStack references are also temporarily used by
+// profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are
+// balanced, and they occur on the thread itself, which means they are
+// necessarily bounded by the lifetime of the thread, which ensures they can't
+// be used after the PseudoStack is destroyed.
 //
 extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
 

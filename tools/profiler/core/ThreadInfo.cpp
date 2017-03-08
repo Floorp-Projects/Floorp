@@ -12,8 +12,8 @@
 #include <pthread.h>
 #endif
 
-ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
-                       bool aIsMainThread, PseudoStack* aPseudoStack,
+ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
+                       mozilla::NotNull<PseudoStack*> aPseudoStack,
                        void* aStackTop)
   : mName(strdup(aName))
   , mThreadId(aThreadId)
@@ -39,16 +39,19 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   MOZ_ASSERT(aThreadId <= INT32_MAX, "native thread ID is > INT32_MAX");
 }
 
-ThreadInfo::~ThreadInfo() {
+ThreadInfo::~ThreadInfo()
+{
   MOZ_COUNT_DTOR(ThreadInfo);
+
+  if (mPendingDelete) {
+    delete mPseudoStack;
+  }
 }
 
 void
 ThreadInfo::SetPendingDelete()
 {
   mPendingDelete = true;
-  // We don't own the pseudostack so disconnect it.
-  mPseudoStack = nullptr;
 }
 
 bool
@@ -247,6 +250,9 @@ ThreadInfo::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   size_t n = aMallocSizeOf(this);
 
   n += aMallocSizeOf(mName.get());
+
+  // We measure the PseudoStack whether mPendingDelete is set or not, because
+  // the memory reporter doesn't measure through tlsPseudoStack.
   n += mPseudoStack->SizeOfIncludingThis(aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
