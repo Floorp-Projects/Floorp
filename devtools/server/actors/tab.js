@@ -152,7 +152,7 @@ function getInnerId(window) {
  *  - navigate
  *    This event is fired once the document's readyState is "complete".
  *  - window-ready
- *    This event is fired on three distinct scenarios:
+ *    This event is fired in various distinct scenarios:
  *     * When a new Window object is crafted, equivalent of `DOMWindowCreated`.
  *       It is dispatched before any page script is executed.
  *     * We will have already received a window-ready event for this window
@@ -161,6 +161,8 @@ function getInnerId(window) {
  *       this page, so it's now live again and we should resume handling it.
  *     * For each existing document, when an `attach` request is received.
  *       At this point scripts in the page will be already loaded.
+ *     * When `swapFrameLoaders` is used, such as with moving tabs between
+ *       windows or toggling Responsive Design Mode.
  *  - window-destroyed
  *    This event is fired in two cases:
  *     * When the window object is destroyed, i.e. when the related document
