@@ -1369,10 +1369,11 @@ class ObjectType extends Type {
     let parseProperty = (schema, extraProps = []) => {
       return {
         type: Schemas.parseSchema(schema, path,
-                                  DEBUG && ["unsupported", "onError", "permissions", ...extraProps]),
+                                  DEBUG && ["unsupported", "onError", "permissions", "default", ...extraProps]),
         optional: schema.optional || false,
         unsupported: schema.unsupported || false,
         onError: schema.onError || null,
+        default: schema.default === undefined ? null : schema.default,
       };
     };
 
@@ -1492,7 +1493,7 @@ class ObjectType extends Type {
       }
     } else if (prop in properties) {
       if (optional && (properties[prop] === null || properties[prop] === undefined)) {
-        result[prop] = null;
+        result[prop] = propType.default;
       } else {
         let r = context.withPath(prop, () => type.normalize(properties[prop], context));
         if (r.error) {
@@ -1507,7 +1508,7 @@ class ObjectType extends Type {
       error = context.error(`Property "${prop}" is required`,
                             `contain the required "${prop}" property`);
     } else if (optional !== "omit-key-if-missing") {
-      result[prop] = null;
+      result[prop] = propType.default;
     }
 
     if (error) {
@@ -1517,7 +1518,7 @@ class ObjectType extends Type {
         throw error;
       }
 
-      result[prop] = null;
+      result[prop] = propType.default;
     }
   }
 
