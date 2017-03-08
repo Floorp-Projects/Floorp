@@ -16,7 +16,8 @@ SOURCES += [
 
 EXPORTS += [
     'WidevineDecryptor.h',
-    'WidevineUtils.h'
+    'WidevineUtils.h',
+    'WidevineVideoFrame.h'
 ]
 
 FINAL_LIBRARY = 'xul'

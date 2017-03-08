@@ -8,6 +8,7 @@
 
 #include "mozilla/gmp/PChromiumCDMChild.h"
 #include "content_decryption_module.h"
+#include "SimpleMap.h"
 
 namespace mozilla {
 namespace gmp {
@@ -107,6 +108,9 @@ protected:
 
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_8* mCDM = nullptr;
+
+  typedef SimpleMap<uint64_t> DurationMap;
+  DurationMap mFrameDurations;
 
   bool mDecoderInitialized = false;
 };
