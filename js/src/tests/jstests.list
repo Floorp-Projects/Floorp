@@ -380,14 +380,6 @@ skip script test262/built-ins/DataView/prototype/byteLength/detached-buffer.js
 skip script test262/language/statements/class/subclass/class-definition-null-proto-missing-return-override.js
 skip script test262/language/statements/class/subclass/class-definition-null-proto-this.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1108941
-skip script test262/language/expressions/tagged-template/cache-differing-expressions.js
-skip script test262/language/expressions/tagged-template/cache-differing-expressions-eval.js
-skip script test262/language/expressions/tagged-template/cache-differing-expressions-new-function.js
-skip script test262/language/expressions/tagged-template/cache-identical-source.js
-skip script test262/language/expressions/tagged-template/cache-identical-source-new-function.js
-skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js
-
 # We're still waiting for a final decision on https://github.com/tc39/ecma402/pull/84.
 skip script test262/intl402/Collator/10.1.1_1.js
 skip script test262/intl402/NumberFormat/11.1.1_1.js
