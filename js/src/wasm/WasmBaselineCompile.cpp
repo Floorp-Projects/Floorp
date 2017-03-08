@@ -5398,6 +5398,7 @@ BaseCompiler::emitLoop()
     bceSafe_ = 0;
 
     if (!deadCode_) {
+        masm.nopAlign(CodeAlignment);
         masm.bind(&controlItem(0).label);
         addInterruptCheck();
     }
