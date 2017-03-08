@@ -15,7 +15,6 @@
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"         // for gfxWindowsPlatform
 #include "mozilla/layers/TextureD3D11.h"
-#include "mozilla/layers/TextureD3D9.h"
 #endif
 #include "gfxUtils.h"
 #include "IPDLActor.h"
