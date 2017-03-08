@@ -12,10 +12,15 @@
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FileSystemDirectoryReaderBinding.h"
 #include "mozilla/dom/FileSystemFileEntry.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
 #include "nsIGlobalObject.h"
+#include "nsIFile.h"
 #include "nsPIDOMWindow.h"
+
+#include "../GetFileOrDirectoryTask.h"
+#include "../FileSystemPermissionRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -95,18 +100,71 @@ GetEntryHelper::GetEntryHelper(FileSystemDirectoryEntry* aParentEntry,
 GetEntryHelper::~GetEntryHelper()
 {}
 
+namespace {
+
+nsresult
+DOMPathToRealPath(Directory* aDirectory, const nsAString& aPath,
+                  nsIFile** aFile)
+{
+  nsString relativePath;
+  relativePath = aPath;
+
+  // Trim white spaces.
+  static const char kWhitespace[] = "\b\t\r\n ";
+  relativePath.Trim(kWhitespace);
+
+  nsTArray<nsString> parts;
+  if (!FileSystemUtils::IsValidRelativeDOMPath(relativePath, parts)) {
+    return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+  }
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDirectory->GetInternalNsIFile()->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < parts.Length(); ++i) {
+    rv = file->AppendRelativePath(parts[i]);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  file.forget(aFile);
+  return NS_OK;
+}
+
+} // anonymous
+
 void
 GetEntryHelper::Run()
 {
   MOZ_ASSERT(!mParts.IsEmpty());
 
+  nsCOMPtr<nsIFile> realPath;
+  nsresult error = DOMPathToRealPath(mDirectory, mParts[0],
+                                     getter_AddRefs(realPath));
+
   ErrorResult rv;
-  RefPtr<Promise> promise = mDirectory->Get(mParts[0], rv);
+  RefPtr<FileSystemBase> fs = mDirectory->GetFileSystem(rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
     Error(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+
+  RefPtr<GetFileOrDirectoryTaskChild> task =
+    GetFileOrDirectoryTaskChild::Create(fs, realPath, false, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.SuppressException();
+    Error(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  task->SetError(error);
+  FileSystemPermissionRequest::RequestForTask(task);
+  RefPtr<Promise> promise = task->GetPromise();
 
   mParts.RemoveElementAt(0);
   promise->AppendNativeHandler(this);
