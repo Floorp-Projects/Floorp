@@ -70,6 +70,9 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             toolbarTitle = AppConstants.MOZ_APP_BASENAME;
         }
 
+        // Translucent color does not make sense for toolbar color. Ensure it is 0xFF.
+        toolbarColor = 0xFF000000 | toolbarColor;
+
         setThemeFromToolbarColor();
 
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
