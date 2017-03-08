@@ -368,8 +368,7 @@ GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
 
   NS_ASSERTION(count <= INT32_MAX, "Too many style rules!");
 
-  nsresult rv =
-    sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex);
+  nsresult rv = sheet->InsertRuleIntoGroup(aRule, this, aIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return 0;
@@ -402,7 +401,7 @@ GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv)
 
   NS_ASSERTION(count <= INT32_MAX, "Too many style rules!");
 
-  nsresult rv = sheet->AsGecko()->DeleteRuleFromGroup(this, aIndex);
+  nsresult rv = sheet->DeleteRuleFromGroup(this, aIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
