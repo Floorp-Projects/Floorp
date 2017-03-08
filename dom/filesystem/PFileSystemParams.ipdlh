@@ -7,12 +7,6 @@ include protocol PBlob;
 namespace mozilla {
 namespace dom {
 
-union FileSystemFileDataValue
-{
-  uint8_t[];
-  PBlob;
-};
-
 struct FileSystemGetDirectoryListingParams
 {
   nsString filesystem;
