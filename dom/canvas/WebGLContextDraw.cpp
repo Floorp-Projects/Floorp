@@ -738,12 +738,21 @@ WebGLContext::DrawElements_check(const char* funcName, GLenum mode, GLsizei vert
         return false;
 
     if (!mMaxFetchedVertices ||
-        !elemArrayBuffer.ValidateIndexedFetch(type, mMaxFetchedVertices, first, vertCount))
+        !elemArrayBuffer.Validate(type, mMaxFetchedVertices - 1, first, vertCount))
     {
         ErrorInvalidOperation("%s: bound vertex attribute buffers do not have sufficient "
                               "size for given indices from the bound element array",
                               funcName);
         return false;
+    }
+
+    // Bug 1008310 - Check if buffer has been used with a different previous type
+    if (elemArrayBuffer.IsElementArrayUsedWithMultipleTypes()) {
+        nsCString typeName;
+        WebGLContext::EnumName(type, &typeName);
+        GenerateWarning("%s: bound element array buffer previously used with a type other than "
+                        "%s, this will affect performance.",
+                        funcName, typeName.BeginReading());
     }
 
     return true;
@@ -985,8 +994,8 @@ WebGLContext::ValidateBufferFetching(const char* info)
             maxInstances = 0;
             break;
         }
-        availBytes -= vd.BytesPerVertex(); // Snip off the tail.
-        const size_t vertCapacity = availBytes / vd.ExplicitStride() + 1; // Add +1 for the snipped tail.
+        availBytes -= vd.BytesPerVertex();
+        const size_t vertCapacity = 1 + availBytes / vd.ExplicitStride();
 
         if (vd.mDivisor == 0) {
             if (vertCapacity < maxVertices) {

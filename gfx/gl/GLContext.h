@@ -121,7 +121,6 @@ enum class GLFeature {
     read_buffer,
     renderbuffer_color_float,
     renderbuffer_color_half_float,
-    robust_buffer_access_behavior,
     robustness,
     sRGB_framebuffer,
     sRGB_texture,
@@ -199,6 +198,10 @@ class GLContext
 {
 public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLContext)
+
+// -----------------------------------------------------------------------------
+// basic enums
+public:
 
 // -----------------------------------------------------------------------------
 // basic getters
@@ -431,7 +434,6 @@ public:
         ARB_map_buffer_range,
         ARB_occlusion_query2,
         ARB_pixel_buffer_object,
-        ARB_robust_buffer_access_behavior,
         ARB_robustness,
         ARB_sampler_objects,
         ARB_seamless_cube_map,
@@ -486,8 +488,6 @@ public:
         IMG_texture_compression_pvrtc,
         IMG_texture_npot,
         KHR_debug,
-        KHR_robust_buffer_access_behavior,
-        KHR_robustness,
         KHR_texture_compression_astc_hdr,
         KHR_texture_compression_astc_ldr,
         NV_draw_instanced,
@@ -570,6 +570,15 @@ private:
      * Is this feature supported using the core (unsuffixed) symbols?
      */
     bool IsFeatureProvidedByCoreSymbols(GLFeature feature);
+
+// -----------------------------------------------------------------------------
+// Robustness handling
+private:
+    /**
+     * The derived class is expected to provide information on whether or not it
+     * supports robustness.
+     */
+    virtual bool SupportsRobustness() const = 0;
 
 public:
 // -----------------------------------------------------------------------------

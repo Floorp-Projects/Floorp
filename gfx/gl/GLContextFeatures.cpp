@@ -533,17 +533,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "robust_buffer_access_behavior",
-        GLVersion::NONE,
-        GLESVersion::NONE,
-        GLContext::Extension_None,
-        {
-            GLContext::ARB_robust_buffer_access_behavior,
-            GLContext::KHR_robust_buffer_access_behavior,
-            GLContext::Extensions_End
-        }
-    },
-    {
         "robustness",
         GLVersion::NONE,
         GLESVersion::NONE,
@@ -551,7 +540,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
         {
             GLContext::ARB_robustness,
             GLContext::EXT_robustness,
-            GLContext::KHR_robustness,
             GLContext::Extensions_End
         }
     },
