@@ -19,12 +19,6 @@ fhs.observe(null, "profile-after-change", null);
 // An app is going to have some prefs set which xpcshell tests don't.
 Services.prefs.setCharPref("identity.sync.tokenserver.uri", "http://token-server");
 
-// Set the validation prefs to attempt bookmark validation every time to avoid non-determinism.
-Services.prefs.setIntPref("services.sync.engine.bookmarks.validation.interval", 0);
-Services.prefs.setIntPref("services.sync.engine.bookmarks.validation.percentageChance", 100);
-Services.prefs.setIntPref("services.sync.engine.bookmarks.validation.maxRecords", -1);
-Services.prefs.setBoolPref("services.sync.engine.bookmarks.validation.enabled", true);
-
 // Make sure to provide the right OS so crypto loads the right binaries
 function getOS() {
   switch (mozinfo.os) {

@@ -46,7 +46,8 @@ void
 MediaDrmCDMProxy::Init(PromiseId aPromiseId,
                        const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
-                       const nsAString& aName)
+                       const nsAString& aName,
+                       nsIEventTarget* aMainThread)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
@@ -55,6 +56,8 @@ MediaDrmCDMProxy::Init(PromiseId aPromiseId,
           NS_ConvertUTF16toUTF8(aOrigin).get(),
           NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
           NS_ConvertUTF16toUTF8(aName).get());
+
+  mMainThread = aMainThread;
 
   // Create a thread to work with cdm.
   if (!mOwnerThread) {
@@ -308,7 +311,7 @@ MediaDrmCDMProxy::RejectPromise(PromiseId aId, nsresult aCode,
   } else {
     nsCOMPtr<nsIRunnable> task(new RejectPromiseTask(this, aId, aCode,
                                                      aReason));
-    NS_DispatchToMainThread(task);
+    mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
@@ -326,7 +329,7 @@ MediaDrmCDMProxy::ResolvePromise(PromiseId aId)
     task = NewRunnableMethod<PromiseId>(this,
                                         &MediaDrmCDMProxy::ResolvePromise,
                                         aId);
-    NS_DispatchToMainThread(task);
+    mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   }
 }
 
@@ -408,7 +411,7 @@ MediaDrmCDMProxy::md_Init(uint32_t aPromiseId)
     NewRunnableMethod<uint32_t>(this,
                                 &MediaDrmCDMProxy::OnCDMCreated,
                                 aPromiseId));
-  NS_DispatchToMainThread(task);
+  mMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
 }
 
 void

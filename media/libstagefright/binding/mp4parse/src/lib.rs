@@ -416,9 +416,9 @@ pub struct TrackScaledTime(pub u64, pub usize);
 #[derive(Debug, Default)]
 pub struct EmptySampleTableBoxes {
     // TODO: Track has stts, stsc and stco, this structure can be discarded.
-    pub empty_stts : bool,
-    pub empty_stsc : bool,
-    pub empty_stco : bool,
+    pub empty_stts: bool,
+    pub empty_stsc: bool,
+    pub empty_stco: bool,
 }
 
 /// Check boxes contain data.

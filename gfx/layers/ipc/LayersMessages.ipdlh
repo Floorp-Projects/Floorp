@@ -102,10 +102,15 @@ struct StepFunction {
   int type;
 };
 
+struct FramesFunction {
+  int frames;
+};
+
 union TimingFunction {
   null_t;
   CubicBezierFunction;
   StepFunction;
+  FramesFunction;
 };
 
 // Send the angle with units rather than sending all angles in radians
@@ -233,6 +238,13 @@ struct Animation {
   Animatable baseStyle;
 };
 
+struct CompositorAnimations {
+  Animation[] animations;
+  // This id is used to map the layer animations between content
+  // and compositor side
+  uint64_t id;
+};
+
 // Change a layer's attributes
 struct CommonLayerAttributes {
   LayerIntRegion visibleRegion;
@@ -242,7 +254,7 @@ struct CommonLayerAttributes {
   LayerHandle maskLayer;
   LayerHandle[] ancestorMaskLayers;
   // Animated colors will only honored for ColorLayers.
-  Animation[] animations;
+  CompositorAnimations compositorAnimations;
   nsIntRegion invalidRegion;
   ScrollMetadata[] scrollMetadata;
   nsCString displayListLog;

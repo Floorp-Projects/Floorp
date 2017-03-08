@@ -6,6 +6,7 @@
 #define nsPrintObject_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 // Interfaces
 #include "nsCOMPtr.h"
@@ -49,9 +50,9 @@ public:
 
   nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;
-  
-  nsTArray<nsPrintObject*> mKids;
-  nsPrintObject*   mParent;
+
+  nsTArray<mozilla::UniquePtr<nsPrintObject>> mKids;
+  nsPrintObject*   mParent; // This is a non-owning pointer.
   bool             mHasBeenPrinted;
   bool             mDontPrint;
   bool             mPrintAsIs;

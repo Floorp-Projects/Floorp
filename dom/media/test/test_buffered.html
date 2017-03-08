@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462957
 
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -25,8 +25,7 @@ var manager = new MediaTestManager;
 
 function testBuffered(e) {
   var v = e.target;
-  v.removeEventListener('timeupdate', testBuffered);
-  
+
   // The whole media should be buffered...
   var b = v.buffered;
   is(b.length, 1, v._name + ": Should be buffered in one range");
@@ -41,7 +40,7 @@ function testBuffered(e) {
     caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on under start bounds range");
-  
+
   caught = false;
   try {
     b.end(-1);
@@ -57,7 +56,7 @@ function testBuffered(e) {
     caught = e.name == "IndexSizeError" && e.code == DOMException.INDEX_SIZE_ERR;
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over start bounds range");
-  
+
   caught = false;
   try {
     b.end(b.length);
@@ -77,11 +76,12 @@ function fetch(url, fetched_callback) {
 
   var loaded = function (event) {
     if (xhr.status == 200 || xhr.status == 206) {
+      ok(true, `${url}: Fetch succeeded, status=${xhr.status}`);
       // Request fulfilled. Note sometimes we get 206... Presumably because either
       // httpd.js or Necko cached the result.
       fetched_callback(window.URL.createObjectURL(xhr.response));
     } else {
-      ok(false, "Fetch failed headers=" + xhr.getAllResponseHeaders());
+      ok(false, `${url}: Fetch failed, headers=${xhr.getAllResponseHeaders()}`);
     }
   };
 
@@ -95,12 +95,11 @@ function startTest(test, token) {
   // we have deterministic behaviour.
   var onfetched = function(uri) {
     var v = document.createElement('video');
-    v.autoplay = true;
     v._token = token;
     v.src = uri;
     v._name = test.name;
     v._test = test;
-    v.addEventListener("timeupdate", testBuffered);
+    v.addEventListener("loadeddata", testBuffered, {once: true});
     document.body.appendChild(v);
   };
 
@@ -110,7 +109,6 @@ function startTest(test, token) {
 
 // Note: No need to set media test prefs, since we're using XHR to fetch
 // media data.
-SimpleTest.waitForExplicitFinish();
 manager.runTests(gSeekTests, startTest);
 
 </script>
