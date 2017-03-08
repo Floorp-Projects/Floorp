@@ -304,6 +304,32 @@ function refuseTrigo() {
 }
 test(refuseTrigo);
 
+function acceptCeil() {
+    // Specialize for floating-point output.
+    f32[0] = NaN;
+    f32[1] = Infinity;
+    f32[2] = -0;
+    f32[3] = 0.5;
+
+    var res = Math.ceil(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+}
+test(acceptCeil);
+
+function acceptFloor() {
+    // Specialize for floating-point output.
+    f32[0] = NaN;
+    f32[1] = Infinity;
+    f32[2] = -0;
+    f32[3] = 0.5;
+
+    var res = Math.floor(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+}
+test(acceptFloor);
+
 function refuseMath() {
     var res = Math.log10(f32[0]);
     f32[0] = res;
