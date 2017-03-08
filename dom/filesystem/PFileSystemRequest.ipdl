@@ -52,14 +52,8 @@ struct FileSystemErrorResponse
   nsresult error;
 };
 
-struct FileSystemBooleanResponse
-{
-  bool success;
-};
-
 union FileSystemResponseValue
 {
-  FileSystemBooleanResponse;
   FileSystemDirectoryResponse;
   FileSystemDirectoryListingResponse;
   FileSystemFileResponse;

@@ -32,9 +32,6 @@ public:
   static bool
   WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
 
-  static already_AddRefed<Promise>
-  GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
-
   static already_AddRefed<Directory>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aRealPath,
