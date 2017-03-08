@@ -9,7 +9,6 @@
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
-#include "mozilla/dom/MediaKeySession.h"
 
 namespace mozilla {
 
@@ -474,8 +473,10 @@ ChromiumCDMProxy::Capabilites()
 RefPtr<DecryptPromise>
 ChromiumCDMProxy::Decrypt(MediaRawData* aSample)
 {
-  return DecryptPromise::CreateAndReject(DecryptResult(GenericErr, nullptr),
-                                         __func__);
+  RefPtr<gmp::ChromiumCDMParent> cdm = mCDM;
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(
+    mGMPThread, __func__, [cdm, sample]() { return cdm->Decrypt(sample); });
 }
 
 void

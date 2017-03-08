@@ -12,9 +12,11 @@
 #include "mozilla/gmp/PChromiumCDMParent.h"
 #include "mozilla/RefPtr.h"
 #include "nsDataHashtable.h"
+#include "DecryptJob.h"
 
 namespace mozilla {
 
+class MediaRawData;
 class ChromiumCDMProxy;
 
 namespace gmp {
@@ -53,6 +55,8 @@ public:
 
   void RemoveSession(const nsCString& aSessionId, uint32_t aPromiseId);
 
+  RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
+
   // TODO: Add functions for clients to send data to CDM, and
   // a Close() function.
 
@@ -82,7 +86,8 @@ protected:
                                           const uint32_t& aError,
                                           const uint32_t& aSystemCode,
                                           const nsCString& aMessage) override;
-  ipc::IPCResult RecvDecrypted(const uint32_t& aStatus,
+  ipc::IPCResult RecvDecrypted(const uint32_t& aId,
+                               const uint32_t& aStatus,
                                nsTArray<uint8_t>&& aData) override;
   ipc::IPCResult RecvDecoded(const CDMVideoFrame& aFrame) override;
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
@@ -102,6 +107,7 @@ protected:
   // ChromiumCDMParent.
   ChromiumCDMProxy* mProxy = nullptr;
   nsDataHashtable<nsUint32HashKey, uint32_t> mPromiseToCreateSessionToken;
+  nsTArray<RefPtr<DecryptJob>> mDecrypts;
 };
 
 } // namespace gmp
