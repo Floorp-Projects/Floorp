@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/DeviceStorageFileSystem.h"
 
-#include "DeviceStorage.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
@@ -15,7 +14,6 @@
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsDeviceStorage.h"
 #include "nsIFile.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
@@ -41,34 +39,6 @@ DeviceStorageFileSystem::DeviceStorageFileSystem(const nsAString& aStorageType,
     }
   } else {
     AssertIsOnBackgroundThread();
-  }
-
-  // Get the permission name required to access the file system.
-  DebugOnly<nsresult> rv =
-    DeviceStorageTypeChecker::GetPermissionForType(mStorageType, mPermission);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetPermissionForType failed");
-
-  // Get the local path of the file system root.
-  nsCOMPtr<nsIFile> rootFile;
-  DeviceStorageFile::GetRootDirectoryForType(aStorageType,
-                                             aStorageName,
-                                             getter_AddRefs(rootFile));
-
-  Unused <<
-    NS_WARN_IF(!rootFile ||
-               NS_FAILED(rootFile->GetPath(mLocalOrDeviceStorageRootPath)));
-
-  if (!XRE_IsParentProcess()) {
-    return;
-  }
-
-  // DeviceStorageTypeChecker is a singleton object and must be initialized on
-  // the main thread. We initialize it here so that we can use it on the worker
-  // thread.
-  if (NS_IsMainThread()) {
-    DebugOnly<DeviceStorageTypeChecker*> typeChecker =
-      DeviceStorageTypeChecker::CreateOrGet();
-    MOZ_ASSERT(typeChecker);
   }
 }
 

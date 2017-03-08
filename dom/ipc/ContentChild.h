@@ -196,12 +196,6 @@ public:
 
   virtual bool DeallocPBrowserChild(PBrowserChild*) override;
 
-  virtual PDeviceStorageRequestChild*
-  AllocPDeviceStorageRequestChild(const DeviceStorageParams&) override;
-
-  virtual bool
-  DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild*) override;
-
   virtual PBlobChild*
   AllocPBlobChild(const BlobConstructorParams& aParams) override;
 
@@ -434,11 +428,6 @@ public:
   RecvInitBlobURLs(nsTArray<BlobURLRegistrationData>&& aRegistations) override;
 
   virtual mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed() override;
-
-  virtual mozilla::ipc::IPCResult RecvFilePathUpdate(const nsString& aStorageType,
-                                                     const nsString& aStorageName,
-                                                     const nsString& aPath,
-                                                     const nsCString& aReason) override;
 
   virtual mozilla::ipc::IPCResult
   RecvNotifyProcessPriorityChanged(const hal::ProcessPriority& aPriority) override;
