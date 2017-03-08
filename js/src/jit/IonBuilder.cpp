@@ -2185,9 +2185,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_regexp(info().getRegExp(pc));
 
       case JSOP_CALLSITEOBJ:
-        // TODO this is wrong, need threadsafe way to get unique template obj
-        pushConstant(ObjectValue(*(info().getObject(pc))));
+      {
+        JSObject* raw = script()->getObject(GET_UINT32_INDEX(pc) + 1);
+        JSObject* obj = script()->compartment()->getExistingTemplateLiteralObject(raw);
+        pushConstant(ObjectValue(*obj));
         return Ok();
+      }
 
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
