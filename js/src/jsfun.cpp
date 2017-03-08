@@ -1055,6 +1055,14 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
             if (!out.append(")"))
                 return nullptr;
         }
+    } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
+        if (!AppendPrelude() ||
+            !out.append("() {\n    ") ||
+            !out.append("[sourceless code]") ||
+            !out.append("\n}"))
+        {
+            return nullptr;
+        }
     } else {
         bool derived = fun->infallibleIsDefaultClassConstructor(cx);
         if (derived && fun->isDerivedClassConstructor()) {
