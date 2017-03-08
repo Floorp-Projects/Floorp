@@ -2121,20 +2121,6 @@ nsWindow::GetInputContext()
     return top->mEditableSupport->GetInputContext();
 }
 
-nsIMEUpdatePreference
-nsWindow::GetIMEUpdatePreference()
-{
-    nsWindow* top = FindTopLevel();
-    MOZ_ASSERT(top);
-
-    if (!top->mEditableSupport) {
-        // Non-GeckoView windows don't support IME operations.
-        return nsIMEUpdatePreference();
-    }
-
-    return top->mEditableSupport->GetIMEUpdatePreference();
-}
-
 nsresult
 nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,

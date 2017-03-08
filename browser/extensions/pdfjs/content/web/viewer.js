@@ -3898,7 +3898,7 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
    this.attachments = null;
    var container = this.container;
    while (container.firstChild) {
-    container.removeChild(container.firstChild);
+    container.firstChild.remove();
    }
    if (!keepRenderedCapability) {
     this._renderedCapability = pdfjsLib.createPromiseCapability();
@@ -4598,7 +4598,7 @@ var PDFOutlineViewer = function PDFOutlineViewerClosure() {
    this.lastToggleIsShow = true;
    var container = this.container;
    while (container.firstChild) {
-    container.removeChild(container.firstChild);
+    container.firstChild.remove();
    }
   },
   _dispatchEvent: function PDFOutlineViewer_dispatchEvent(outlineCount) {

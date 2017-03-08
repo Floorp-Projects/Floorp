@@ -30,11 +30,8 @@ void
 CreateDummyChannel(nsIURI* aHostURI, OriginAttributes& aAttrs, bool aIsPrivate,
                    nsIChannel** aChannel)
 {
-  OriginAttributes attrs;
-  attrs.Inherit(aAttrs);
-
   nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aHostURI, attrs);
+    BasePrincipal::CreateCodebasePrincipal(aHostURI, aAttrs);
   if (!principal) {
     return;
   }

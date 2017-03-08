@@ -2460,6 +2460,8 @@ public:
 
     static const int32_t NOTIFY_IME_OF_FOCUS = 1;
 
+    static const int32_t NOTIFY_IME_OF_TOKEN = -3;
+
     static const int32_t NOTIFY_IME_OPEN_VKB = -2;
 
     static const int32_t NOTIFY_IME_REPLY_EVENT = -1;
@@ -2586,6 +2588,25 @@ public:
     };
 
     static auto CheckAndSetState(mozilla::jni::Object::Param, mozilla::jni::Object::Param) -> bool;
+
+    struct IsChildProcess_t {
+        typedef GeckoThread Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "isChildProcess";
+        static constexpr char signature[] =
+                "()Z";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto IsChildProcess() -> bool;
 
     struct CreateServices_t {
         typedef GeckoThread Owner;
@@ -5001,6 +5022,71 @@ public:
             mozilla::jni::CallingThread::ANY;
 
     template<class Impl> class Natives;
+};
+
+class GeckoProcessManager : public mozilla::jni::ObjectBase<GeckoProcessManager>
+{
+public:
+    static const char name[];
+
+    explicit GeckoProcessManager(const Context& ctx) : ObjectBase<GeckoProcessManager>(ctx) {}
+
+    struct GetEditableParent_t {
+        typedef GeckoProcessManager Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<
+                int64_t,
+                int64_t> Args;
+        static constexpr char name[] = "nativeGetEditableParent";
+        static constexpr char signature[] =
+                "(JJ)Lorg/mozilla/gecko/IGeckoEditableParent;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::ANY;
+
+    template<class Impl> class Natives;
+};
+
+class GeckoServiceChildProcess : public mozilla::jni::ObjectBase<GeckoServiceChildProcess>
+{
+public:
+    static const char name[];
+
+    explicit GeckoServiceChildProcess(const Context& ctx) : ObjectBase<GeckoServiceChildProcess>(ctx) {}
+
+    struct GetEditableParent_t {
+        typedef GeckoServiceChildProcess Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<
+                int64_t,
+                int64_t> Args;
+        static constexpr char name[] = "getEditableParent";
+        static constexpr char signature[] =
+                "(JJ)Lorg/mozilla/gecko/IGeckoEditableParent;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto GetEditableParent(int64_t, int64_t) -> mozilla::jni::Object::LocalRef;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::GECKO;
+
 };
 
 class Clipboard : public mozilla::jni::ObjectBase<Clipboard>

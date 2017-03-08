@@ -246,7 +246,7 @@ function testChildList() {
       m = null;
     });
   m.observe(div, { childList: true});
-  div.removeChild(div.firstChild);
+  div.firstChild.remove();
 }
 
 function testChildList2() {

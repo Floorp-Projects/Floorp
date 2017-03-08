@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1339722</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /**
+   * Test for Bug 1339722
+   * 1. Wait for "http-on-useragent-request" for the iframe load.
+   * 2. In the observer, access it's window proxy to trigger DOMWindowCreated.
+   * 3. In the event handler, delete the iframe so that the frameloader would be
+   *    destoryed in the middle of ReallyStartLoading.
+   * 4. Verify that it doesn't crash.
+  **/
+
+  const {interfaces: Ci, utils: Cu} = Components;
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  const TOPIC = 'http-on-useragent-request';
+  Services.obs.addObserver({
+    observe(subject, topic, data) {
+      info('Got ' + topic);
+      Services.obs.removeObserver(this, TOPIC);
+
+      // Query window proxy so it triggers DOMWindowCreated.
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      let win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
+    }
+  }, TOPIC, false);
+
+  let docShell = SpecialPowers.wrap(window)
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell);
+  docShell.chromeEventHandler.addEventListener('DOMWindowCreated', function handler(e) {
+    docShell.chromeEventHandler.removeEventListener('DOMWindowCreated', handler);
+    let iframe = document.getElementById('testFrame');
+    is(e.target, iframe.contentDocument, 'verify event target');
+
+    // Remove the iframe to cause frameloader destroy.
+    iframe.remove();
+    setTimeout($ => {
+      ok(!document.getElementById('testFrame'), 'verify iframe removed');
+      SimpleTest.finish();
+    }, 0);
+  });
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1339722">Mozilla Bug 1339722</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+  <div id="frameContainer">
+    <iframe id="testFrame" src="http://www.example.com"></iframe>
+  </div>
+</pre>
+</body>
+</html>

@@ -206,7 +206,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ServiceWorkerRegistration",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "StorageManager", nightly: true},
+    {name: "StorageManager", nightly: true, android: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SubtleCrypto",
 // IMPORTANT: Do not change this list without review from a DOM peer!

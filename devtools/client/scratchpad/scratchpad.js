@@ -1367,7 +1367,7 @@ var Scratchpad = {
 
     recentFilesMenu.setAttribute("disabled", true);
     while (recentFilesPopup.hasChildNodes()) {
-      recentFilesPopup.removeChild(recentFilesPopup.firstChild);
+      recentFilesPopup.firstChild.remove();
     }
 
     if (filePaths.length > 0) {

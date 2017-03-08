@@ -67,6 +67,10 @@ private:
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
 
+  bool IsSeekable() const;
+  bool IsIPCSerializable() const;
+  bool IsCloneable() const;
+
   Mutex mLock; // Protects access to all data members.
   nsTArray<nsCOMPtr<nsIInputStream>> mStreams;
   uint32_t mCurrentStream;
@@ -80,12 +84,18 @@ NS_IMPL_RELEASE(nsMultiplexInputStream)
 NS_IMPL_CLASSINFO(nsMultiplexInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_MULTIPLEXINPUTSTREAM_CID)
 
-NS_IMPL_QUERY_INTERFACE_CI(nsMultiplexInputStream,
-                           nsIMultiplexInputStream,
-                           nsIInputStream,
-                           nsISeekableStream,
-                           nsIIPCSerializableInputStream,
-                           nsICloneableInputStream)
+NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIMultiplexInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekable())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
+                                     IsIPCSerializable())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
+                                     IsCloneable())
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMultiplexInputStream)
+  NS_IMPL_QUERY_CLASSINFO(nsMultiplexInputStream)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CI_INTERFACE_GETTER(nsMultiplexInputStream,
                             nsIMultiplexInputStream,
                             nsIInputStream,
@@ -832,4 +842,40 @@ nsMultiplexInputStream::Clone(nsIInputStream** aClone)
 
   clone.forget(aClone);
   return NS_OK;
+}
+
+bool
+nsMultiplexInputStream::IsSeekable() const
+{
+  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
+    nsCOMPtr<nsISeekableStream> substream = do_QueryInterface(mStreams[i]);
+    if (!substream) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+nsMultiplexInputStream::IsIPCSerializable() const
+{
+  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
+    nsCOMPtr<nsIIPCSerializableInputStream> substream = do_QueryInterface(mStreams[i]);
+    if (!substream) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+nsMultiplexInputStream::IsCloneable() const
+{
+  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
+    nsCOMPtr<nsICloneableInputStream> substream = do_QueryInterface(mStreams[i]);
+    if (!substream) {
+      return false;
+    }
+  }
+  return true;
 }

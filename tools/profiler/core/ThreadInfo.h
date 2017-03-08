@@ -7,14 +7,16 @@
 #ifndef MOZ_THREAD_INFO_H
 #define MOZ_THREAD_INFO_H
 
+#include "mozilla/NotNull.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "ProfileBuffer.h"
 #include "platform.h"
 
 class ThreadInfo {
- public:
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop);
+public:
+  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
+             mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
 
   virtual ~ThreadInfo();
 
@@ -22,7 +24,7 @@ class ThreadInfo {
   int ThreadId() const { return mThreadId; }
 
   bool IsMainThread() const { return mIsMainThread; }
-  PseudoStack* Stack() const { return mPseudoStack; }
+  mozilla::NotNull<PseudoStack*> Stack() const { return mPseudoStack; }
 
   void SetHasProfile() { mHasProfile = true; }
 
@@ -40,13 +42,20 @@ class ThreadInfo {
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   const bool mIsMainThread;
-  PseudoStack* mPseudoStack;
+
+  // The thread's PseudoStack. This is an owning pointer iff mIsPendingDelete
+  // is set.
+  mozilla::NotNull<PseudoStack*> mPseudoStack;
+
   UniquePlatformData mPlatformData;
   void* mStackTop;
 
   // May be null for the main thread if the profiler was started during startup.
   nsCOMPtr<nsIThread> mThread;
 
+  // When a thread dies while the profiler is active we keep its ThreadInfo
+  // (and its PseudoStack) around for a while, and put it in a "pending delete"
+  // state. In this state, mPseudoStack is an owning pointer.
   bool mPendingDelete;
 
   //
@@ -57,7 +66,6 @@ class ThreadInfo {
 public:
   bool HasProfile() { return mHasProfile; }
 
-  mozilla::Mutex& GetMutex();
   void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aStartTime, double aSinceTime);
 
@@ -95,7 +103,6 @@ private:
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
-  mozilla::UniquePtr<mozilla::Mutex> mMutex;
   ThreadResponsiveness mRespInfo;
 };
 

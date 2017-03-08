@@ -1554,7 +1554,7 @@ Cell.prototype = {
       this.label.removeAttribute("value");
 
       while (this.label.firstChild) {
-        this.label.removeChild(this.label.firstChild);
+        this.label.firstChild.remove();
       }
 
       this.label.appendChild(value);

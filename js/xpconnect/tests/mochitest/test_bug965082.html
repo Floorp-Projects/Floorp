@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=965082
 
   function checkThrows(f, msg) {
     try { f(); ok(false, "Should have thrown: " + msg); }
-    catch (e) { ok(/denied|insecure/.test(e), "Should throw security exception: " + e + " (" + msg + ")"); }
+    catch (e) { ok(/denied|insecure|can't set prototype/.test(e), "Should throw security exception: " + e + " (" + msg + ")"); }
   }
 
   function go() {

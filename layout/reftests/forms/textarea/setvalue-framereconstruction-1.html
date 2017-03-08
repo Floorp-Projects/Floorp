@@ -22,7 +22,7 @@ function boom()
   document.getElementById("div").style.MozBinding = "url('#foo')";
 
   var opt1 = document.getElementById("opt1");
-  opt1.removeChild(opt1.firstChild);
+  opt1.firstChild.remove();
 
   document.getElementById("textarea").value += " y";
 
