@@ -19,43 +19,7 @@ source "$cwd"/coreconf/sanitizers.sh
 # Usage info
 show_help()
 {
-    cat << EOF
-Usage: ${0##*/} [-hcv] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
-                [--test] [--pprof] [--scan-build[=output]] [--ct-verif]
-                [--asan] [--ubsan] [--msan] [--sancov[=edge|bb|func|...]]
-                [--disable-tests] [--fuzz[=tls|oss]]
-
-This script builds NSS with gyp and ninja.
-
-This build system is still under development.  It does not yet support all
-the features or platforms that NSS supports.
-
-NSS build tool options:
-
-    -h               display this help and exit
-    -c               clean before build
-    -v               verbose build
-    -j <n>           run at most <n> concurrent jobs
-    --nspr           force a rebuild of NSPR
-    --gyp|-g         force a rerun of gyp
-    --opt|-o         do an opt build
-    -m32             do a 32-bit build on a 64-bit system
-    --test           ignore map files and export everything we have
-    --fuzz           build fuzzing targets (this always enables test builds)
-                     --fuzz=tls to enable TLS fuzzing mode
-                     --fuzz=oss to build for OSS-Fuzz
-    --pprof          build with gperftool support
-    --ct-verif       build with valgrind for ct-verif
-    --scan-build     run the build with scan-build (scan-build has to be in the path)
-                     --scan-build=/out/path sets the output path for scan-build
-    --asan           do an asan build
-    --ubsan          do an ubsan build
-                     --ubsan=bool,shift,... sets specific UB sanitizers
-    --msan           do an msan build
-    --sancov         do sanitize coverage builds
-                     --sancov=func sets coverage to function level for example
-    --disable-tests  don't build tests and corresponding cmdline utils
-EOF
+    cat "$cwd"/help.txt
 }
 
 run_verbose()
@@ -84,6 +48,7 @@ verbose=0
 fuzz=0
 fuzz_tls=0
 fuzz_oss=0
+no_local_nspr=0
 
 gyp_params=(--depth="$cwd" --generator-output=".")
 nspr_params=()
@@ -121,6 +86,9 @@ while [ $# -gt 0 ]; do
         --ct-verif) gyp_params+=(-Dct_verif=1) ;;
         --disable-tests) gyp_params+=(-Ddisable_tests=1) ;;
         --no-zdefs) gyp_params+=(-Dno_zdefs=1) ;;
+        --system-sqlite) gyp_params+=(-Duse_system_sqlite=1) ;;
+        --with-nspr=?*) set_nspr_path "${1#*=}"; no_local_nspr=1 ;;
+        --system-nspr) set_nspr_path "/usr/include/nspr/:"; no_local_nspr=1 ;;
         *) show_help; exit 2 ;;
     esac
     shift
@@ -207,7 +175,7 @@ fi
 mkdir -p "$dist_dir"
 echo $target > "$dist_dir"/latest
 
-if [ "$rebuild_nspr" = 1 ]; then
+if [[ "$rebuild_nspr" = 1 && "$no_local_nspr" = 0 ]]; then
     nspr_build "${nspr_params[@]}"
     mv -f "$nspr_config".new "$nspr_config"
 fi
@@ -216,8 +184,9 @@ if [ "$rebuild_gyp" = 1 ]; then
     # These extra arguments aren't used in determining whether to rebuild.
     obj_dir="$dist_dir"/$target
     gyp_params+=(-Dnss_dist_obj_dir=$obj_dir)
-    gyp_params+=(-Dnspr_lib_dir=$obj_dir/lib)
-    gyp_params+=(-Dnspr_include_dir=$obj_dir/include/nspr)
+    if [ "$no_local_nspr" = 0 ]; then
+        set_nspr_path "$obj_dir/include/nspr:$obj_dir/lib"
+    fi
 
     run_verbose run_scanbuild gyp -f ninja "${gyp_params[@]}" "$cwd"/nss.gyp
 
