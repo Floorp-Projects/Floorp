@@ -12,7 +12,6 @@ DIRS += ['compat']
 TEST_DIRS += ['tests']
 
 EXPORTS.mozilla.dom += [
-    'DeviceStorageFileSystem.h',
     'Directory.h',
     'FileSystemBase.h',
     'FileSystemRequestParent.h',
@@ -23,10 +22,8 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'DeviceStorageFileSystem.cpp',
     'Directory.cpp',
     'FileSystemBase.cpp',
-    'FileSystemPermissionRequest.cpp',
     'FileSystemRequestParent.cpp',
     'FileSystemTaskBase.cpp',
     'FileSystemUtils.cpp',
