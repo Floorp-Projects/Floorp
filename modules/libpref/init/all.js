@@ -364,7 +364,7 @@ pref("media.opus.enabled", true);
 pref("media.wave.enabled", true);
 pref("media.webm.enabled", true);
 
-pref("media.eme.chromium-api.enabled", false);
+pref("media.eme.chromium-api.enabled", true);
 pref("media.eme.chromium-api.video-shmems", 3);
 
 #ifdef MOZ_APPLEMEDIA
