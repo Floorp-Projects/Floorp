@@ -192,37 +192,13 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   // this layer, we need to make sure the image display item has coordinates
   // relative to the visible region.
   Rect rect(0, 0, size.width, size.height);
-  Rect clip;
-  if (GetClipRect().isSome()) {
-      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
-  } else {
-      clip = rect;
-  }
-
+  Rect clip = GetWrClipRect(rect);
   Maybe<WrImageMask> mask = buildMaskLayer();
-  Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
-
+  Rect relBounds = GetWrRelBounds();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("PaintedLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(rect).c_str(),
-                  Stringify(clip).c_str(),
-                  Stringify(mixBlendMode).c_str());
-  }
+  DumpLayerInfo("PaintedLayer", rect);
 
   WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
