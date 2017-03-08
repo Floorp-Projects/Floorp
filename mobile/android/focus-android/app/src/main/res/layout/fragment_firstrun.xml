@@ -47,8 +47,9 @@
 
     <TextView
         android:id="@+id/firstrun_footer"
-        android:layout_width="300dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:lineSpacingExtra="5sp"
         android:paddingLeft="24dp"
         android:paddingRight="24dp"
         android:text="@string/firstrun_footer"
