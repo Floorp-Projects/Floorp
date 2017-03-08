@@ -490,10 +490,15 @@ add_task(function*() {
     version: "2.0"
   }), tempdir, "bootstrap1@tests.mozilla.org");
 
+  const onShutdown = waitForBootstrapEvent("shutdown", ID);
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   yield AddonManager.installTemporaryAddon(unpackedAddon);
+
+  const shutdown = yield onShutdown;
+  equal(shutdown.data.version, "1.0");
+  equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
   const uninstall = yield onUninstall;
   equal(uninstall.data.version, "1.0");
@@ -535,10 +540,15 @@ add_task(function*() {
     version: "0.8"
   }), tempdir, "bootstrap1@tests.mozilla.org");
 
+  const onShutdown = waitForBootstrapEvent("shutdown", ID);
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   yield AddonManager.installTemporaryAddon(unpackedAddon);
+
+  const shutdown = yield onShutdown;
+  equal(shutdown.data.version, "1.0");
+  equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
   const uninstall = yield onUninstall;
   equal(uninstall.data.version, "1.0");
@@ -588,10 +598,15 @@ add_task(function*() {
   do_check_eq(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
   // Install it again.
+  const onShutdown = waitForBootstrapEvent("shutdown", ID);
   const onUninstall = waitForBootstrapEvent("uninstall", ID);
   const onInstall = waitForBootstrapEvent("install", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   yield AddonManager.installTemporaryAddon(unpackedAddon);
+
+  const shutdown = yield onShutdown;
+  equal(shutdown.data.version, "1.0");
+  equal(shutdown.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
   const uninstall = yield onUninstall;
   equal(uninstall.data.version, "1.0");
