@@ -525,3 +525,19 @@ pub extern "C" fn rusturl_relative_spec(urlptr1: Option<&Url>, urlptr2: Option<&
 pub extern "C" fn sizeof_rusturl() -> size_t {
   mem::size_of::<Url>()
 }
+
+#[no_mangle]
+pub extern "C" fn rusturl_parse_ipv6addr(input: &nsACString, cont: &mut nsACString) -> i32 {
+  let ip6 = match str::from_utf8(input) {
+    Ok(content) => content,
+    Err(_) => return ParseError::InvalidDomainCharacter.error_code()
+  };
+
+  let h = match url::Host::parse(ip6) {
+    Ok(host) => host,
+    Err(e) => return e.error_code()
+  };
+
+  cont.assign(&h.to_string());
+  NSError::OK.error_code()
+}
