@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadIntegration",
                                   "resource://gre/modules/DownloadIntegration.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
                                   "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 function dump(a) {
   Services.console.logStringMessage(a);
@@ -50,6 +52,9 @@ Sanitizer.prototype = {
       clear: function ()
       {
         return new Promise(function(resolve, reject) {
+          let refObj = {};
+          TelemetryStopwatch.start("FX_SANITIZE_CACHE", refObj);
+
           var cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
           try {
             cache.clear();
@@ -61,6 +66,7 @@ Sanitizer.prototype = {
             imageCache.clearCache(false); // true=chrome, false=content
           } catch(er) {}
 
+          TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
           resolve();
         });
       },
@@ -75,7 +81,12 @@ Sanitizer.prototype = {
       clear: function ()
       {
         return new Promise(function(resolve, reject) {
+          let refObj = {};
+          TelemetryStopwatch.start("FX_SANITIZE_COOKIES_2", refObj);
+
           Services.cookies.removeAll();
+
+          TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
           resolve();
         });
       },
@@ -88,6 +99,9 @@ Sanitizer.prototype = {
 
     siteSettings: {
       clear: Task.async(function* () {
+        let refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_SITESETTINGS", refObj);
+
         // Clear site-specific permissions like "Allow this site to open popups"
         Services.perms.removeAll();
 
@@ -114,6 +128,7 @@ Sanitizer.prototype = {
             }
           });
         });
+        TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       }),
 
       get canClear()
@@ -145,9 +160,13 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
+        let refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_HISTORY", refObj);
+
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:ClearHistory" })
           .catch(e => Cu.reportError("Java-side history clearing failed: " + e))
           .then(function() {
+            TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
             try {
               Services.obs.notifyObservers(null, "browser:purge-session-history", "");
             }
@@ -171,6 +190,9 @@ Sanitizer.prototype = {
     openTabs: {
       clear: function ()
       {
+        let refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_OPENWINDOWS", refObj);
+
         return EventDispatcher.instance.sendRequestForResult({ type: "Sanitize:OpenTabs" })
           .catch(e => Cu.reportError("Java-side tab clearing failed: " + e))
           .then(function() {
@@ -179,6 +201,7 @@ Sanitizer.prototype = {
               Services.obs.notifyObservers(null, "browser:purge-session-tabs", "");
             }
             catch (e) { }
+            TelemetryStopwatch.finish("FX_SANITIZE_OPENWINDOWS", refObj);
           });
       },
 
@@ -205,7 +228,12 @@ Sanitizer.prototype = {
       clear: function ()
       {
         return new Promise(function(resolve, reject) {
+          let refObj = {};
+          TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
+
           FormHistory.update({ op: "remove" });
+
+          TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
           resolve();
         });
       },
@@ -224,6 +252,9 @@ Sanitizer.prototype = {
 
     downloadFiles: {
       clear: Task.async(function* () {
+        let refObj = {};
+        TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
+
         let list = yield Downloads.getList(Downloads.ALL);
         let downloads = yield list.getAll();
         var finalizePromises = [];
@@ -256,6 +287,7 @@ Sanitizer.prototype = {
 
         yield Promise.all(finalizePromises);
         yield DownloadIntegration.forceSave();
+        TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
       }),
 
       get canClear()
@@ -284,6 +316,9 @@ Sanitizer.prototype = {
       clear: function ()
       {
         return new Promise(function(resolve, reject) {
+          let refObj = {};
+          TelemetryStopwatch.start("FX_SANITIZE_SESSIONS", refObj);
+
           // clear all auth tokens
           var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
           sdr.logoutAndTeardown();
@@ -291,6 +326,7 @@ Sanitizer.prototype = {
           // clear FTP and plain HTTP auth sessions
           Services.obs.notifyObservers(null, "net:clear-active-logins", null);
 
+          TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
           resolve();
         });
       },
