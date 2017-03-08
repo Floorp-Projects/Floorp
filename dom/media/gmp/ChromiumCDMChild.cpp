@@ -9,6 +9,7 @@
 #include "GMPLog.h"
 #include "GMPPlatform.h"
 #include "mozilla/Unused.h"
+#include "nsPrintfCString.h"
 #include "base/time.h"
 
 namespace mozilla {
@@ -29,6 +30,7 @@ ChromiumCDMChild::Init(cdm::ContentDecryptionModule_8* aCDM)
 void
 ChromiumCDMChild::TimerExpired(void* aContext)
 {
+  GMP_LOG("ChromiumCDMChild::TimerExpired(context=0x%p)", aContext);
   if (mCDM) {
     mCDM->TimerExpired(aContext);
   }
@@ -37,12 +39,16 @@ ChromiumCDMChild::TimerExpired(void* aContext)
 cdm::Buffer*
 ChromiumCDMChild::Allocate(uint32_t aCapacity)
 {
+  GMP_LOG("ChromiumCDMChild::Allocate(capacity=%" PRIu32 ")", aCapacity);
   return new WidevineBuffer(aCapacity);
 }
 
 void
 ChromiumCDMChild::SetTimer(int64_t aDelayMs, void* aContext)
 {
+  GMP_LOG("ChromiumCDMChild::SetTimer(delay=%" PRId64 ", context=0x%p)",
+          aDelayMs,
+          aContext);
   RefPtr<ChromiumCDMChild> self(this);
   SetTimerOnMainThread(NewGMPTask([self, aContext]() {
     self->TimerExpired(aContext);
@@ -60,12 +66,17 @@ ChromiumCDMChild::OnResolveNewSessionPromise(uint32_t aPromiseId,
                                              const char* aSessionId,
                                              uint32_t aSessionIdSize)
 {
+  GMP_LOG("ChromiumCDMChild::OnResolveNewSessionPromise(pid=%" PRIu32
+          ", sid=%s)",
+          aPromiseId,
+          aSessionId);
   Unused << SendOnResolveNewSessionPromise(aPromiseId,
                                            nsCString(aSessionId, aSessionIdSize));
 }
 
 void ChromiumCDMChild::OnResolvePromise(uint32_t aPromiseId)
 {
+  GMP_LOG("ChromiumCDMChild::OnResolvePromise(pid=%" PRIu32 ")", aPromiseId);
   Unused << SendOnResolvePromise(aPromiseId);
 }
 
@@ -76,8 +87,14 @@ ChromiumCDMChild::OnRejectPromise(uint32_t aPromiseId,
                                   const char* aErrorMessage,
                                   uint32_t aErrorMessageSize)
 {
+  GMP_LOG("ChromiumCDMChild::OnRejectPromise(pid=%" PRIu32 ", err=%" PRIu32
+          " code=%" PRIu32 ", msg='%s')",
+          aPromiseId,
+          aError,
+          aSystemCode,
+          aErrorMessage);
   Unused << SendOnRejectPromise(aPromiseId,
-                                aError,
+                                static_cast<uint32_t>(aError),
                                 aSystemCode,
                                 nsCString(aErrorMessage, aErrorMessageSize));
 }
@@ -91,11 +108,36 @@ ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
                                    const char* aLegacyDestinationUrl,
                                    uint32_t aLegacyDestinationUrlLength)
 {
+  GMP_LOG("ChromiumCDMChild::OnSessionMessage(sid=%s, type=%" PRIu32
+          " size=%" PRIu32 ")",
+          aSessionId,
+          aMessageType,
+          aMessageSize);
   nsTArray<uint8_t> message;
   message.AppendElements(aMessage, aMessageSize);
   Unused << SendOnSessionMessage(nsCString(aSessionId, aSessionIdSize),
-                                 aMessageType,
+                                 static_cast<uint32_t>(aMessageType),
                                  message);
+}
+
+static nsCString
+ToString(const cdm::KeyInformation* aKeysInfo, uint32_t aKeysInfoCount)
+{
+  nsCString str;
+  for (uint32_t i = 0; i < aKeysInfoCount; i++) {
+    nsCString keyId;
+    const cdm::KeyInformation& key = aKeysInfo[i];
+    for (size_t k = 0; k < key.key_id_size; k++) {
+      keyId.Append(nsPrintfCString("%hhX", key.key_id[k]));
+    }
+    if (!str.IsEmpty()) {
+      str.AppendLiteral(",");
+    }
+    str.Append(keyId);
+    str.AppendLiteral("=");
+    str.AppendInt(key.status);
+  }
+  return str;
 }
 
 void
@@ -105,6 +147,10 @@ ChromiumCDMChild::OnSessionKeysChange(const char *aSessionId,
                                       const cdm::KeyInformation* aKeysInfo,
                                       uint32_t aKeysInfoCount)
 {
+  GMP_LOG("ChromiumCDMChild::OnSessionKeysChange(sid=%s) keys={%s}",
+          aSessionId,
+          ToString(aKeysInfo, aKeysInfoCount).get());
+
   nsTArray<CDMKeyInformation> keys;
   keys.SetCapacity(aKeysInfoCount);
   for (uint32_t i = 0; i < aKeysInfoCount; i++) {
@@ -122,6 +168,9 @@ ChromiumCDMChild::OnExpirationChange(const char* aSessionId,
                                      uint32_t aSessionIdSize,
                                      cdm::Time aNewExpiryTime)
 {
+  GMP_LOG("ChromiumCDMChild::OnExpirationChange(sid=%s, time=%lf)",
+          aSessionId,
+          aNewExpiryTime);
   Unused << SendOnExpirationChange(nsCString(aSessionId, aSessionIdSize),
                                    aNewExpiryTime);
 }
@@ -130,6 +179,7 @@ void
 ChromiumCDMChild::OnSessionClosed(const char* aSessionId,
                                   uint32_t aSessionIdSize)
 {
+  GMP_LOG("ChromiumCDMChild::OnSessionClosed(sid=%s)", aSessionId);
   Unused << SendOnSessionClosed(nsCString(aSessionId, aSessionIdSize));
 }
 
@@ -141,15 +191,22 @@ ChromiumCDMChild::OnLegacySessionError(const char* aSessionId,
                                        const char* aErrorMessage,
                                        uint32_t aErrorMessageLength)
 {
-  Unused << SendOnLegacySessionError(nsCString(aSessionId, aSessionIdLength),
-                                     aError,
-                                     aSystemCode,
-                                     nsCString(aErrorMessage, aErrorMessageLength));
+  GMP_LOG("ChromiumCDMChild::OnLegacySessionError(sid=%s, error=%" PRIu32
+          " msg='%s')",
+          aSessionId,
+          aError,
+          aErrorMessage);
+  Unused << SendOnLegacySessionError(
+    nsCString(aSessionId, aSessionIdLength),
+    static_cast<uint32_t>(aError),
+    aSystemCode,
+    nsCString(aErrorMessage, aErrorMessageLength));
 }
 
 cdm::FileIO*
 ChromiumCDMChild::CreateFileIO(cdm::FileIOClient * aClient)
 {
+  GMP_LOG("ChromiumCDMChild::CreateFileIO()");
   return nullptr;
 }
 
@@ -157,6 +214,9 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvInit(const bool& aAllowDistinctiveIdentifier,
                            const bool& aAllowPersistentState)
 {
+  GMP_LOG("ChromiumCDMChild::RecvInit(distinctiveId=%d, persistentState=%d)",
+          aAllowDistinctiveIdentifier,
+          aAllowPersistentState);
   if (mCDM) {
     mCDM->Initialize(aAllowDistinctiveIdentifier, aAllowPersistentState);
   }
@@ -168,6 +228,8 @@ ChromiumCDMChild::RecvSetServerCertificate(const uint32_t& aPromiseId,
                                            nsTArray<uint8_t>&& aServerCert)
 
 {
+  GMP_LOG("ChromiumCDMChild::RecvSetServerCertificate() certlen=%zu",
+          aServerCert.Length());
   if (mCDM) {
     mCDM->SetServerCertificate(aPromiseId,
                                aServerCert.Elements(),
@@ -183,6 +245,13 @@ ChromiumCDMChild::RecvCreateSessionAndGenerateRequest(
   const uint32_t& aInitDataType,
   nsTArray<uint8_t>&& aInitData)
 {
+  GMP_LOG("ChromiumCDMChild::RecvCreateSessionAndGenerateRequest("
+          "pid=%" PRIu32 ", sessionType=%" PRIu32 ", initDataType=%" PRIu32
+          ") initDataLen=%zu",
+          aPromiseId,
+          aSessionType,
+          aInitDataType,
+          aInitData.Length());
   MOZ_ASSERT(aSessionType <= cdm::SessionType::kPersistentKeyRelease);
   MOZ_ASSERT(aInitDataType <= cdm::InitDataType::kWebM);
   if (mCDM) {
@@ -200,6 +269,11 @@ ChromiumCDMChild::RecvUpdateSession(const uint32_t& aPromiseId,
                                     const nsCString& aSessionId,
                                     nsTArray<uint8_t>&& aResponse)
 {
+  GMP_LOG("ChromiumCDMChild::RecvUpdateSession(pid=%" PRIu32
+          ", sid=%s) responseLen=%zu",
+          aPromiseId,
+          aSessionId.get(),
+          aResponse.Length());
   if (mCDM) {
     mCDM->UpdateSession(aPromiseId,
                         aSessionId.get(),
@@ -214,6 +288,9 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvCloseSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId)
 {
+  GMP_LOG("ChromiumCDMChild::RecvCloseSession(pid=%" PRIu32 ", sid=%s)",
+          aPromiseId,
+          aSessionId.get());
   if (mCDM) {
     mCDM->CloseSession(aPromiseId, aSessionId.get(), aSessionId.Length());
   }
@@ -224,6 +301,9 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvRemoveSession(const uint32_t& aPromiseId,
                                     const nsCString& aSessionId)
 {
+  GMP_LOG("ChromiumCDMChild::RecvRemoveSession(pid=%" PRIu32 ", sid=%s)",
+          aPromiseId,
+          aSessionId.get());
   if (mCDM) {
     mCDM->RemoveSession(aPromiseId, aSessionId.get(), aSessionId.Length());
   }
@@ -233,6 +313,7 @@ ChromiumCDMChild::RecvRemoveSession(const uint32_t& aPromiseId,
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDecrypt(const CDMInputBuffer& aBuffer)
 {
+  GMP_LOG("ChromiumCDMChild::RecvDecrypt()");
   return IPC_OK();
 }
 
@@ -240,30 +321,36 @@ mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvInitializeVideoDecoder(
   const CDMVideoDecoderConfig& aConfig)
 {
+  GMP_LOG("ChromiumCDMChild::RecvInitializeVideoDecoder()");
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDeinitializeVideoDecoder()
 {
+  GMP_LOG("ChromiumCDMChild::RecvDeinitializeVideoDecoder()");
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvResetVideoDecoder()
 {
+  GMP_LOG("ChromiumCDMChild::RecvResetVideoDecoder()");
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
 {
+  GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame()");
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ChromiumCDMChild::RecvDestroy()
 {
+  GMP_LOG("ChromiumCDMChild::RecvDestroy()");
+
   if (mCDM) {
     mCDM->Destroy();
     mCDM = nullptr;
