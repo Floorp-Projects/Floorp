@@ -18,6 +18,10 @@
 class nsIInputStream;
 class nsIOutputStream;
 
+namespace mozilla{
+class OriginAttributes;
+}
+
 namespace mozilla {
 namespace net {
 
@@ -165,6 +169,7 @@ public:
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
                                 const nsCString &hostHeader,
+                                const mozilla::OriginAttributes &originAttributes,
                                 uint64_t serial,
                                 const nsCSubstring &pathInfo,
                                 nsCString &outOrigin,
@@ -221,6 +226,9 @@ protected:
   virtual void AdjustInitialWindow();
   MOZ_MUST_USE nsresult TransmitFrame(const char *, uint32_t *, bool forceCommitment);
 
+  // The underlying socket transport object is needed to propogate some events
+  nsISocketTransport         *mSocketTransport;
+
 private:
   friend class nsAutoPtr<Http2Stream>;
 
@@ -237,9 +245,6 @@ private:
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
   RefPtr<nsAHttpTransaction> mTransaction;
-
-  // The underlying socket transport object is needed to propogate some events
-  nsISocketTransport         *mSocketTransport;
 
   // The quanta upstream data frames are chopped into
   uint32_t                    mChunkSize;
