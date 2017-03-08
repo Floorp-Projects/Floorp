@@ -36,6 +36,7 @@ footer = """
 } // namespace Telemetry
 #endif // mozilla_TelemetryHistogramEnums_h"""
 
+
 def main(output, *filenames):
     # Print header.
     print(banner, file=output)
