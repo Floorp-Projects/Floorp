@@ -199,7 +199,6 @@ def target_tasks_nightly_linux(full_task_graph, parameters):
             return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
-
 @_target_task('mozilla_beta_tasks')
 def target_tasks_mozilla_beta(full_task_graph, parameters):
     """Select the set of tasks required for a promotable beta or release build
@@ -207,9 +206,15 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
     of builds and signing, but does not include beetmover or balrog jobs."""
     def filter(task):
         platform = task.attributes.get('build_platform')
-        if platform in ('android-api-15', 'android-x86'):
+        if platform in ('android-api-15', 'android-x86', 'linux64-asan',
+                        'linux64-pgo', 'linux64-add-on-devel'):
             return True
+        if platform in ('linux64', 'linux'):
+            if task.attributes['build_type'] == 'debug':
+                return True
         if platform in ('linux64-nightly', 'linux-nightly'):
+            if task.kind in ["test"]:
+                return True
             if task.kind not in [
                 'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
                 'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing'
