@@ -3440,6 +3440,10 @@ public:
     }
   }
 
+  static void CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    WebRenderDisplayItemLayer* aLayer,
+                                                    nsIFrame* aFrame,
+                                                    const nsRect aBorderRect);
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;

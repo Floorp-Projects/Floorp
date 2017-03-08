@@ -207,6 +207,7 @@ EXPORTS.mozilla.layers += [
     'SourceSurfaceVolatileData.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
+    'wr/WebRenderBorderLayer.h',
     'wr/WebRenderBridgeChild.h',
     'wr/WebRenderBridgeParent.h',
     'wr/WebRenderCompositableHolder.h',

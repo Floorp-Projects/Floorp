@@ -4989,24 +4989,23 @@ nsDisplayBoxShadowInner::BuildLayer(nsDisplayListBuilder* aBuilder,
   return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
-void
-nsDisplayBoxShadowInner::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                                 nsTArray<WebRenderParentCommand>& aParentCommands,
-                                                 WebRenderDisplayItemLayer* aLayer)
+/* static */ void
+nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                               WebRenderDisplayItemLayer* aLayer,
+                                                               nsIFrame* aFrame,
+                                                               const nsRect aBorderRect)
 {
-  if (!nsCSSRendering::CanPaintBoxShadowInner(mFrame)) {
+  if (!nsCSSRendering::CanPaintBoxShadowInner(aFrame)) {
     return;
   }
 
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsPoint offset = ToReferenceFrame();
-  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
   AutoTArray<nsRect,10> rects;
   nsRegion visible = aLayer->GetVisibleRegion().ToAppUnits(appUnitsPerDevPixel);
   ComputeDisjointRectangles(visible, &rects);
 
-  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  nsCSSShadowArray* shadows = aFrame->StyleEffects()->mBoxShadow;
 
   for (uint32_t i = 0; i < rects.Length(); ++i) {
     Rect clipRect = NSRectToRect(rects[i], appUnitsPerDevPixel);
@@ -5018,14 +5017,14 @@ nsDisplayBoxShadowInner::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
       }
 
       nsRect shadowRect =
-        nsCSSRendering::GetBoxShadowInnerPaddingRect(mFrame, borderRect);
+        nsCSSRendering::GetBoxShadowInnerPaddingRect(aFrame, aBorderRect);
       RectCornerRadii innerRadii;
-      nsCSSRendering::GetShadowInnerRadii(mFrame, borderRect, innerRadii);
+      nsCSSRendering::GetShadowInnerRadii(aFrame, aBorderRect, innerRadii);
 
       // Now translate everything to device pixels.
       Rect deviceBoxRect = NSRectToRect(shadowRect, appUnitsPerDevPixel);
       Rect deviceClipRect = aLayer->RelativeToParent(clipRect);
-      Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, mFrame, 1.0);
+      Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
       Point shadowOffset;
       shadowOffset.x = (shadowItem->mXOffset / appUnitsPerDevPixel);
@@ -5045,9 +5044,21 @@ nsDisplayBoxShadowInner::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilde
                              blurRadius,
                              spreadRadius,
                              borderRadius,
-                             WrBoxShadowClipMode::Inset);
+                             WrBoxShadowClipMode::Inset
+                             );
     }
   }
+}
+
+void
+nsDisplayBoxShadowInner::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                 nsTArray<WebRenderParentCommand>& aCommands,
+                                                 WebRenderDisplayItemLayer* aLayer)
+{
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+
+  nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(aBuilder, aLayer, mFrame, borderRect);
 }
 
 bool
