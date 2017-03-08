@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
 DEFINES['ANDROID_SMP'] = 0
 DEFINES['LOG_NDEBUG'] = 1
 
@@ -154,7 +157,8 @@ if CONFIG['_MSC_VER']:
 elif CONFIG['GNU_CXX']:
     CFLAGS += [
         '-Wno-comment',
-        '-Wno-sign-compare'
+        '-Wno-sign-compare',
+        '-Wno-unused-function',
     ]
     CXXFLAGS += [
         '-Wno-format',

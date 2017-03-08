@@ -447,12 +447,7 @@ this.ExtensionData = class {
         // Errors are handled by the type checks above.
       }
 
-      let containersEnabled = true;
-      try {
-        containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
-      } catch (e) {
-        // If we fail here, we are in some xpcshell test.
-      }
+      let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled", true);
 
       let permissions = this.manifest.permissions || [];
 

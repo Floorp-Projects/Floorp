@@ -6,11 +6,9 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONObject;
-import org.json.JSONException;
-
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.CastRemoteDisplayLocalService;
@@ -44,19 +42,16 @@ public class ChromeCastDisplay implements GeckoPresentationDisplay {
         this.castDevice = CastDevice.getFromBundle(route.getExtras());
     }
 
-    public JSONObject toJSON() {
-        final JSONObject obj = new JSONObject();
-        try {
-            if (castDevice == null) {
-                return null;
-            }
-            obj.put("uuid", route.getId());
-            obj.put("friendlyName", castDevice.getFriendlyName());
-            obj.put("type", "chromecast");
-        } catch (JSONException ex) {
-            Log.d(LOGTAG, "Error building route", ex);
+    @Override // GeckoPresentationDisplay
+    public GeckoBundle toBundle() {
+        if (castDevice == null) {
+            return null;
         }
 
+        final GeckoBundle obj = new GeckoBundle(3);
+        obj.putString("uuid", route.getId());
+        obj.putString("friendlyName", castDevice.getFriendlyName());
+        obj.putString("type", "chromecast");
         return obj;
     }
 

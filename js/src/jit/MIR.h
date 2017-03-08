@@ -385,11 +385,13 @@ class AliasSet {
         FrameArgument     = 1 << 6, // An argument kept on the stack frame
         WasmGlobalVar     = 1 << 7, // An asm.js/wasm global var
         WasmHeap          = 1 << 8, // An asm.js/wasm heap load
-        TypedArrayLength  = 1 << 9,// A typed array's length
+        WasmHeapMeta      = 1 << 9, // The asm.js/wasm heap base pointer and
+                                    // bounds check limit, in Tls.
+        TypedArrayLength  = 1 << 10,// A typed array's length
         Last              = TypedArrayLength,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 10,
+        NumCategories     = 11,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -12190,7 +12192,7 @@ class MStringLength
     ALLOW_CLONE(MStringLength)
 };
 
-// Inlined version of Math.floor().
+// Inlined assembly for Math.floor(double | float32) -> int32.
 class MFloor
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
@@ -12231,7 +12233,7 @@ class MFloor
     ALLOW_CLONE(MFloor)
 };
 
-// Inlined version of Math.ceil().
+// Inlined assembly version for Math.ceil(double | float32) -> int32.
 class MCeil
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
@@ -12272,7 +12274,7 @@ class MCeil
     ALLOW_CLONE(MCeil)
 };
 
-// Inlined version of Math.round().
+// Inlined version of Math.round(double | float32) -> int32.
 class MRound
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>::Data
@@ -12312,6 +12314,61 @@ class MRound
     }
 
     ALLOW_CLONE(MRound)
+};
+
+// NearbyInt rounds the floating-point input to the nearest integer, according
+// to the RoundingMode.
+class MNearbyInt
+  : public MUnaryInstruction,
+    public FloatingPointPolicy<0>::Data
+{
+    RoundingMode roundingMode_;
+
+    explicit MNearbyInt(MDefinition* num, MIRType resultType, RoundingMode roundingMode)
+      : MUnaryInstruction(num),
+        roundingMode_(roundingMode)
+    {
+        MOZ_ASSERT(HasAssemblerSupport(roundingMode));
+
+        MOZ_ASSERT(IsFloatingPointType(resultType));
+        setResultType(resultType);
+        specialization_ = resultType;
+
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(NearbyInt)
+    TRIVIAL_NEW_WRAPPERS
+
+    static bool HasAssemblerSupport(RoundingMode mode) {
+        return Assembler::HasRoundInstruction(mode);
+    }
+
+    RoundingMode roundingMode() const { return roundingMode_; }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    bool isFloat32Commutative() const override {
+        return true;
+    }
+    void trySpecializeFloat32(TempAllocator& alloc) override;
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse* use) const override {
+        return true;
+    }
+#endif
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins) &&
+               ins->toNearbyInt()->roundingMode() == roundingMode_;
+    }
+
+    void printOpcode(GenericPrinter& out) const override;
+
+    ALLOW_CLONE(MNearbyInt)
 };
 
 class MIteratorStart
@@ -13617,15 +13674,62 @@ class MAsmJSNeg
     TRIVIAL_NEW_WRAPPERS
 };
 
-class MWasmBoundsCheck
+class MWasmLoadTls
   : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+    uint32_t offset_;
+    AliasSet aliases_;
+
+    explicit MWasmLoadTls(MDefinition* tlsPointer, uint32_t offset, MIRType type, AliasSet aliases)
+      : MUnaryInstruction(tlsPointer),
+        offset_(offset),
+        aliases_(aliases)
+    {
+        // Different Tls data have different alias classes and only those classes are allowed.
+        MOZ_ASSERT(aliases_.flags() == AliasSet::Load(AliasSet::WasmHeapMeta).flags() ||
+                   aliases_.flags() == AliasSet::None().flags());
+
+        // The only types supported at the moment.
+        MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32);
+
+        setMovable();
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(WasmLoadTls)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, tlsPtr))
+
+    uint32_t offset() const {
+        return offset_;
+    }
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return op() == ins->op() &&
+               offset() == ins->toWasmLoadTls()->offset() &&
+               type() == ins->type();
+    }
+
+    HashNumber valueHash() const override {
+        return op() + offset();
+    }
+
+    AliasSet getAliasSet() const override {
+        return aliases_;
+    }
+};
+
+class MWasmBoundsCheck
+  : public MBinaryInstruction,
     public NoTypePolicy::Data
 {
     bool redundant_;
     wasm::TrapOffset trapOffset_;
 
-    explicit MWasmBoundsCheck(MDefinition* index, wasm::TrapOffset trapOffset)
-      : MUnaryInstruction(index),
+    explicit MWasmBoundsCheck(MDefinition* index, MDefinition* boundsCheckLimit, wasm::TrapOffset trapOffset)
+      : MBinaryInstruction(index, boundsCheckLimit),
         redundant_(false),
         trapOffset_(trapOffset)
     {
@@ -13635,6 +13739,7 @@ class MWasmBoundsCheck
   public:
     INSTRUCTION_HEADER(WasmBoundsCheck)
     TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, index), (1, boundsCheckLimit))
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -13689,14 +13794,13 @@ class MWasmAddOffset
 };
 
 class MWasmLoad
-  : public MUnaryInstruction,
+  : public MVariadicInstruction, // memoryBase is nullptr on some platforms
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
 
-    MWasmLoad(MDefinition* base, const wasm::MemoryAccessDesc& access, MIRType resultType)
-      : MUnaryInstruction(base),
-        access_(access)
+    explicit MWasmLoad(const wasm::MemoryAccessDesc& access, MIRType resultType)
+      : access_(access)
     {
         setGuard();
         setResultType(resultType);
@@ -13704,8 +13808,24 @@ class MWasmLoad
 
   public:
     INSTRUCTION_HEADER(WasmLoad)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, base))
+    NAMED_OPERANDS((0, base), (1, memoryBase));
+
+    static MWasmLoad* New(TempAllocator& alloc,
+                          MDefinition* memoryBase,
+                          MDefinition* base,
+                          const wasm::MemoryAccessDesc& access,
+                          MIRType resultType)
+    {
+        MWasmLoad* load = new(alloc) MWasmLoad(access, resultType);
+        if (!load->init(alloc, 1 + !!memoryBase))
+            return nullptr;
+
+        load->initOperand(0, base);
+        if (memoryBase)
+            load->initOperand(1, memoryBase);
+
+        return load;
+    }
 
     const wasm::MemoryAccessDesc& access() const {
         return access_;
@@ -13721,22 +13841,38 @@ class MWasmLoad
 };
 
 class MWasmStore
-  : public MBinaryInstruction,
+  : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
 
-    MWasmStore(MDefinition* base, const wasm::MemoryAccessDesc& access, MDefinition* value)
-      : MBinaryInstruction(base, value),
-        access_(access)
+    explicit MWasmStore(const wasm::MemoryAccessDesc& access)
+      : access_(access)
     {
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(WasmStore)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, base), (1, value))
+    NAMED_OPERANDS((0, base), (1, value), (2, memoryBase))
+
+    static MWasmStore* New(TempAllocator& alloc,
+                           MDefinition* memoryBase,
+                           MDefinition* base,
+                           const wasm::MemoryAccessDesc& access,
+                           MDefinition* value)
+    {
+        MWasmStore* store = new(alloc) MWasmStore(access);
+        if (!store->init(alloc, 2 + !!memoryBase))
+            return nullptr;
+
+        store->initOperand(0, base);
+        store->initOperand(1, value);
+        if (memoryBase)
+            store->initOperand(2, memoryBase);
+
+        return store;
+    }
 
     const wasm::MemoryAccessDesc& access() const {
         return access_;
@@ -13779,23 +13915,53 @@ class MAsmJSMemoryAccess
 };
 
 class MAsmJSLoadHeap
-  : public MUnaryInstruction,
+  : public MVariadicInstruction, // 1 plus optional memoryBase and boundsCheckLimit
     public MAsmJSMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSLoadHeap(MDefinition* base, Scalar::Type accessType)
-      : MUnaryInstruction(base),
-        MAsmJSMemoryAccess(accessType)
+    uint32_t memoryBaseIndex_;
+    uint32_t boundsCheckIndex_;
+
+    explicit MAsmJSLoadHeap(uint32_t memoryBaseIndex, uint32_t boundsCheckIndex,
+                            Scalar::Type accessType)
+      : MAsmJSMemoryAccess(accessType),
+        memoryBaseIndex_(memoryBaseIndex),
+        boundsCheckIndex_(boundsCheckIndex)
     {
         setResultType(ScalarTypeToMIRType(accessType));
     }
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadHeap)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MAsmJSLoadHeap* New(TempAllocator& alloc,
+                               MDefinition* memoryBase,
+                               MDefinition* base,
+                               MDefinition* boundsCheckLimit,
+                               Scalar::Type accessType)
+    {
+        uint32_t nextIndex = 1;
+        uint32_t memoryBaseIndex = memoryBase ? nextIndex++ : UINT32_MAX;
+        uint32_t boundsCheckIndex = boundsCheckLimit ? nextIndex++ : UINT32_MAX;
+
+        MAsmJSLoadHeap* load = new(alloc) MAsmJSLoadHeap(memoryBaseIndex, boundsCheckIndex,
+                                                         accessType);
+        if (!load->init(alloc, nextIndex))
+            return nullptr;
+
+        load->initOperand(0, base);
+        if (memoryBase)
+            load->initOperand(memoryBaseIndex, memoryBase);
+        if (boundsCheckLimit)
+            load->initOperand(boundsCheckIndex, boundsCheckLimit);
+
+        return load;
+    }
 
     MDefinition* base() const { return getOperand(0); }
     void replaceBase(MDefinition* newBase) { replaceOperand(0, newBase); }
+    MDefinition* memoryBase() const { return getOperand(memoryBaseIndex_); }
+    MDefinition* boundsCheckLimit() const { return getOperand(boundsCheckIndex_); }
 
     bool congruentTo(const MDefinition* ins) const override;
     AliasSet getAliasSet() const override {
@@ -13805,22 +13971,55 @@ class MAsmJSLoadHeap
 };
 
 class MAsmJSStoreHeap
-  : public MBinaryInstruction,
+  : public MVariadicInstruction, // 2 plus optional memoryBase and boundsCheckLimit
     public MAsmJSMemoryAccess,
     public NoTypePolicy::Data
 {
-    MAsmJSStoreHeap(MDefinition* base, Scalar::Type accessType, MDefinition* v)
-      : MBinaryInstruction(base, v),
-        MAsmJSMemoryAccess(accessType)
-    {}
+    uint32_t memoryBaseIndex_;
+    uint32_t boundsCheckIndex_;
+
+    explicit MAsmJSStoreHeap(uint32_t memoryBaseIndex, uint32_t boundsCheckIndex,
+                             Scalar::Type accessType)
+      : MAsmJSMemoryAccess(accessType),
+        memoryBaseIndex_(memoryBaseIndex),
+        boundsCheckIndex_(boundsCheckIndex)
+    {
+    }
 
   public:
     INSTRUCTION_HEADER(AsmJSStoreHeap)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MAsmJSStoreHeap* New(TempAllocator& alloc,
+                                MDefinition* memoryBase,
+                                MDefinition* base,
+                                MDefinition* boundsCheckLimit,
+                                Scalar::Type accessType,
+                                MDefinition* v)
+    {
+        uint32_t nextIndex = 2;
+        uint32_t memoryBaseIndex = memoryBase ? nextIndex++ : UINT32_MAX;
+        uint32_t boundsCheckIndex = boundsCheckLimit ? nextIndex++ : UINT32_MAX;
+
+        MAsmJSStoreHeap* store = new(alloc) MAsmJSStoreHeap(memoryBaseIndex, boundsCheckIndex,
+                                                            accessType);
+        if (!store->init(alloc, nextIndex))
+            return nullptr;
+
+        store->initOperand(0, base);
+        store->initOperand(1, v);
+        if (memoryBase)
+            store->initOperand(memoryBaseIndex, memoryBase);
+        if (boundsCheckLimit)
+            store->initOperand(boundsCheckIndex, boundsCheckLimit);
+
+        return store;
+    }
 
     MDefinition* base() const { return getOperand(0); }
     void replaceBase(MDefinition* newBase) { replaceOperand(0, newBase); }
     MDefinition* value() const { return getOperand(1); }
+    MDefinition* memoryBase() const { return getOperand(memoryBaseIndex_); }
+    MDefinition* boundsCheckLimit() const { return getOperand(boundsCheckIndex_); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::WasmHeap);
@@ -13828,15 +14027,13 @@ class MAsmJSStoreHeap
 };
 
 class MAsmJSCompareExchangeHeap
-  : public MQuaternaryInstruction,
+  : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
 
-    MAsmJSCompareExchangeHeap(MDefinition* base, const wasm::MemoryAccessDesc& access,
-                              MDefinition* oldv, MDefinition* newv, MDefinition* tls)
-        : MQuaternaryInstruction(base, oldv, newv, tls),
-          access_(access)
+    explicit MAsmJSCompareExchangeHeap(const wasm::MemoryAccessDesc& access)
+      : access_(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13844,7 +14041,28 @@ class MAsmJSCompareExchangeHeap
 
   public:
     INSTRUCTION_HEADER(AsmJSCompareExchangeHeap)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MAsmJSCompareExchangeHeap* New(TempAllocator& alloc,
+                                          MDefinition* memoryBase,
+                                          MDefinition* base,
+                                          const wasm::MemoryAccessDesc& access,
+                                          MDefinition* oldv,
+                                          MDefinition* newv,
+                                          MDefinition* tls)
+    {
+        MAsmJSCompareExchangeHeap* cas = new(alloc) MAsmJSCompareExchangeHeap(access);
+        if (!cas->init(alloc, 4 + !!memoryBase))
+            return nullptr;
+
+        cas->initOperand(0, base);
+        cas->initOperand(1, oldv);
+        cas->initOperand(2, newv);
+        cas->initOperand(3, tls);
+        if (memoryBase)
+            cas->initOperand(4, memoryBase);
+
+        return cas;
+    }
 
     const wasm::MemoryAccessDesc& access() const { return access_; }
 
@@ -13852,6 +14070,7 @@ class MAsmJSCompareExchangeHeap
     MDefinition* oldValue() const { return getOperand(1); }
     MDefinition* newValue() const { return getOperand(2); }
     MDefinition* tls() const { return getOperand(3); }
+    MDefinition* memoryBase() const { return getOperand(4); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::WasmHeap);
@@ -13859,15 +14078,13 @@ class MAsmJSCompareExchangeHeap
 };
 
 class MAsmJSAtomicExchangeHeap
-  : public MTernaryInstruction,
+  : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
     wasm::MemoryAccessDesc access_;
 
-    MAsmJSAtomicExchangeHeap(MDefinition* base, const wasm::MemoryAccessDesc& access,
-                             MDefinition* value, MDefinition* tls)
-        : MTernaryInstruction(base, value, tls),
-          access_(access)
+    explicit MAsmJSAtomicExchangeHeap(const wasm::MemoryAccessDesc& access)
+        : access_(access)
     {
         setGuard();             // Not removable
         setResultType(MIRType::Int32);
@@ -13875,13 +14092,33 @@ class MAsmJSAtomicExchangeHeap
 
   public:
     INSTRUCTION_HEADER(AsmJSAtomicExchangeHeap)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MAsmJSAtomicExchangeHeap* New(TempAllocator& alloc,
+                                         MDefinition* memoryBase,
+                                         MDefinition* base,
+                                         const wasm::MemoryAccessDesc& access,
+                                         MDefinition* value,
+                                         MDefinition* tls)
+    {
+        MAsmJSAtomicExchangeHeap* xchg = new(alloc) MAsmJSAtomicExchangeHeap(access);
+        if (!xchg->init(alloc, 3 + !!memoryBase))
+            return nullptr;
+
+        xchg->initOperand(0, base);
+        xchg->initOperand(1, value);
+        xchg->initOperand(2, tls);
+        if (memoryBase)
+            xchg->initOperand(3, memoryBase);
+
+        return xchg;
+    }
 
     const wasm::MemoryAccessDesc& access() const { return access_; }
 
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
     MDefinition* tls() const { return getOperand(2); }
+    MDefinition* memoryBase() const { return getOperand(3); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::WasmHeap);
@@ -13889,16 +14126,14 @@ class MAsmJSAtomicExchangeHeap
 };
 
 class MAsmJSAtomicBinopHeap
-  : public MTernaryInstruction,
+  : public MVariadicInstruction,
     public NoTypePolicy::Data
 {
     AtomicOp op_;
     wasm::MemoryAccessDesc access_;
 
-    MAsmJSAtomicBinopHeap(AtomicOp op, MDefinition* base, const wasm::MemoryAccessDesc& access,
-                          MDefinition* v, MDefinition* tls)
-        : MTernaryInstruction(base, v, tls),
-          op_(op),
+    explicit MAsmJSAtomicBinopHeap(AtomicOp op, const wasm::MemoryAccessDesc& access)
+        : op_(op),
           access_(access)
     {
         setGuard();         // Not removable
@@ -13907,7 +14142,27 @@ class MAsmJSAtomicBinopHeap
 
   public:
     INSTRUCTION_HEADER(AsmJSAtomicBinopHeap)
-    TRIVIAL_NEW_WRAPPERS
+
+    static MAsmJSAtomicBinopHeap* New(TempAllocator& alloc,
+                                      AtomicOp op,
+                                      MDefinition* memoryBase,
+                                      MDefinition* base,
+                                      const wasm::MemoryAccessDesc& access,
+                                      MDefinition* v,
+                                      MDefinition* tls)
+    {
+        MAsmJSAtomicBinopHeap* binop = new(alloc) MAsmJSAtomicBinopHeap(op, access);
+        if (!binop->init(alloc, 3 + !!memoryBase))
+            return nullptr;
+
+        binop->initOperand(0, base);
+        binop->initOperand(1, v);
+        binop->initOperand(2, tls);
+        if (memoryBase)
+            binop->initOperand(3, memoryBase);
+
+        return binop;
+    }
 
     AtomicOp operation() const { return op_; }
     const wasm::MemoryAccessDesc& access() const { return access_; }
@@ -13915,6 +14170,7 @@ class MAsmJSAtomicBinopHeap
     MDefinition* base() const { return getOperand(0); }
     MDefinition* value() const { return getOperand(1); }
     MDefinition* tls() const { return getOperand(2); }
+    MDefinition* memoryBase() const { return getOperand(3); }
 
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::WasmHeap);

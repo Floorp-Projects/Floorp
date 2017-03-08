@@ -253,10 +253,7 @@ nsUnknownContentTypeDialog.prototype = {
       if (!aForcePrompt) {
         // Check to see if the user wishes to auto save to the default download
         // folder without prompting. Note that preference might not be set.
-        let autodownload = false;
-        try {
-          autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
-        } catch (e) { }
+        let autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR, false);
 
         if (autodownload) {
           // Retrieve the user's default download directory

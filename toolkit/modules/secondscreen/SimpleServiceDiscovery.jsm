@@ -186,10 +186,7 @@ var SimpleServiceDiscovery = {
   },
 
   _searchFixedDevices: function _searchFixedDevices() {
-    let fixedDevices = null;
-    try {
-      fixedDevices = Services.prefs.getCharPref("browser.casting.fixedDevices");
-    } catch (e) {}
+    let fixedDevices = Services.prefs.getCharPref("browser.casting.fixedDevices", "");
 
     if (!fixedDevices) {
       return;

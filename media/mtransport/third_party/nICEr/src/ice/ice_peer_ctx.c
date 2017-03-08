@@ -70,12 +70,8 @@ int nr_ice_peer_ctx_create(nr_ice_ctx *ctx, nr_ice_handler *handler,char *label,
     /* Decide controlling vs. controlled */
     if(ctx->flags & NR_ICE_CTX_FLAGS_LITE){
       pctx->controlling=0;
-    }
-    else{
-      if(ctx->flags & NR_ICE_CTX_FLAGS_OFFERER)
-        pctx->controlling=1;
-      else if(ctx->flags & NR_ICE_CTX_FLAGS_ANSWERER)
-        pctx->controlling=0;
+    } else {
+      pctx->controlling=1;
     }
     if(r=nr_crypto_random_bytes((UCHAR *)&pctx->tiebreaker,8))
       ABORT(r);

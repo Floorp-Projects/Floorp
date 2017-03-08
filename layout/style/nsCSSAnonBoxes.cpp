@@ -25,9 +25,19 @@ using namespace mozilla;
 #undef CSS_ANON_BOX
 
 static const nsStaticAtom CSSAnonBoxes_info[] = {
-#define CSS_ANON_BOX(name_, value_) \
+  // Put the non-inheriting anon boxes first, so we can index into them easily.
+#define CSS_ANON_BOX(name_, value_) /* nothing */
+#define CSS_NON_INHERITING_ANON_BOX(name_, value_) \
   NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSAnonBoxes::name_),
 #include "nsCSSAnonBoxList.h"
+#undef CSS_NON_INHERITING_ANON_BOX
+#undef CSS_ANON_BOX
+
+#define CSS_ANON_BOX(name_, value_)                                   \
+  NS_STATIC_ATOM(name_##_buffer, (nsIAtom**)&nsCSSAnonBoxes::name_),
+#define CSS_NON_INHERITING_ANON_BOX(name_, value_) /* nothing */
+#include "nsCSSAnonBoxList.h"
+#undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX
 };
 
@@ -50,3 +60,10 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
                           NS_LITERAL_STRING(":-moz-tree-"));
 }
 #endif
+
+/* static */ nsIAtom*
+nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
+{
+  MOZ_ASSERT(aBoxType < NonInheriting::_Count);
+  return *CSSAnonBoxes_info[static_cast<NonInheritingBase>(aBoxType)].mAtom;
+}

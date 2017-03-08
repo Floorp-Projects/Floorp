@@ -55,17 +55,17 @@ var Reader = {
     return { handled: (listener ? listener() : false) };
   },
 
-  observe: function Reader_observe(aMessage, aTopic, aData) {
-    switch (aTopic) {
+  onEvent: function Reader_onEvent(event, data, callback) {
+    switch (event) {
       case "Reader:RemoveFromCache": {
-        ReaderMode.removeArticleFromCache(aData).catch(e => Cu.reportError("Error removing article from cache: " + e));
+        ReaderMode.removeArticleFromCache(data.url).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
 
       case "Reader:AddToCache": {
-        let tab = BrowserApp.getTabForId(aData);
+        let tab = BrowserApp.getTabForId(data.tabID);
         if (!tab) {
-          throw new Error("No tab for tabID = " + aData + " when trying to save reader view article");
+          throw new Error("No tab for tabID = " + data.tabID + " when trying to save reader view article");
         }
 
         // If the article is coming from reader mode, we must have fetched it already.
@@ -120,7 +120,7 @@ var Reader = {
           type: "Reader:FaviconRequest",
           url: message.data.url
         }).then(data => {
-          message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", JSON.parse(data));
+          message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", data);
         });
         break;
       }

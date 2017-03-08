@@ -189,8 +189,14 @@ private:
   // Disallow copy constructor
   nsUrlClassifierDBServiceWorker(nsUrlClassifierDBServiceWorker&);
 
-  // Applies the current transaction and resets the update/working times.
-  nsresult ApplyUpdate();
+  // Perform update in the background. Can be run on/off the worker thread.
+  nsresult ApplyUpdatesBackground(nsACString& aFailedTableName);
+
+  // Perform update for the foreground part. MUST be run on the worker thread.
+  nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
+                                 const nsACString& aFailedTableName);
+
+  nsresult NotifyUpdateObserver(nsresult aUpdateStatus);
 
   // Reset the in-progress update stream
   void ResetStream();

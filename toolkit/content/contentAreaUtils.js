@@ -724,6 +724,7 @@ function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRel
     // The index of the selected filter is only preserved and restored if there's
     // more than one filter in addition to "All Files".
     if (aFpP.saveMode != SAVEMODE_FILEONLY) {
+      // eslint-disable-next-line mozilla/use-default-preference-values
       try {
         fp.filterIndex = prefBranch.getIntPref("save_converter_index");
       } catch (e) {

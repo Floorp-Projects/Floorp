@@ -193,12 +193,7 @@ DevTools.prototype = {
       return tool;
     }
 
-    let enabled;
-    try {
-      enabled = Services.prefs.getBoolPref(tool.visibilityswitch);
-    } catch (e) {
-      enabled = true;
-    }
+    let enabled = Services.prefs.getBoolPref(tool.visibilityswitch, true);
 
     return enabled ? tool : null;
   },

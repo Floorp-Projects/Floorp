@@ -9,8 +9,8 @@
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h" // for dom::IterationComposite
 #include "mozilla/dom/KeyframeEffectReadOnly.h" // for dom::KeyFrameEffectReadOnly
+#include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
-#include "mozilla/layers/LayersMessages.h" // for TransformFunction, etc
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 
 namespace mozilla {
@@ -20,6 +20,58 @@ struct StyleAnimationValueCompositePair {
   StyleAnimationValue mValue;
   dom::CompositeOperation mComposite;
 };
+
+void
+CompositorAnimationStorage::Clear()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  mAnimatedValues.Clear();
+  mAnimations.Clear();
+
+}
+
+AnimatedValue*
+CompositorAnimationStorage::GetAnimatedValue(const uint64_t& aId) const
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mAnimatedValues.Get(aId);
+}
+
+void
+CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
+                                             gfx::Matrix4x4&& aTransformInDevSpace,
+                                             gfx::Matrix4x4&& aFrameTransform,
+                                             const TransformData& aData)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AnimatedValue* value = new AnimatedValue(Move(aTransformInDevSpace), Move(aFrameTransform), aData);
+  mAnimatedValues.Put(aId, value);
+}
+
+void
+CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
+                                             const float& aOpacity)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AnimatedValue* value = new AnimatedValue(aOpacity);
+  mAnimatedValues.Put(aId, value);
+}
+
+AnimationArray*
+CompositorAnimationStorage::GetAnimations(const uint64_t& aId) const
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  return mAnimations.Get(aId);
+}
+
+void
+CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aValue)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AnimationArray* value = new AnimationArray(aValue);
+  mAnimations.Put(aId, value);
+}
 
 static StyleAnimationValue
 SampleValue(float aPortion, const layers::Animation& aAnimation,
@@ -412,6 +464,18 @@ AnimationHelper::SetAnimations(AnimationArray& aAnimations,
       endValues.AppendElement(ToStyleAnimationValue(segment.endState()));
     }
   }
+}
+
+uint64_t
+AnimationHelper::GetNextCompositorAnimationsId()
+{
+  static uint32_t sNextId = 0;
+  ++sNextId;
+
+  uint32_t procId = static_cast<uint32_t>(base::GetCurrentProcId());
+  uint64_t nextId = procId;
+  nextId = nextId << 32 | sNextId;
+  return nextId;
 }
 
 } // namespace layers

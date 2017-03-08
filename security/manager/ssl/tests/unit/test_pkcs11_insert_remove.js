@@ -22,7 +22,7 @@ function SmartcardObserver(type) {
 }
 
 SmartcardObserver.prototype = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     equal(topic, this.type, "Observed and expected types should match");
     equal(gExpectedTokenLabel, data,
           "Expected and observed token labels should match");

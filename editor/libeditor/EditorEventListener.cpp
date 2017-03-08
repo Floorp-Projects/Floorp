@@ -7,6 +7,7 @@
 #include "EditorEventListener.h"
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/ContentEvents.h"      // for InternalFocusEvent
 #include "mozilla/EditorBase.h"         // for EditorBase, etc.
 #include "mozilla/EventListenerManager.h" // for EventListenerManager
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
@@ -188,8 +189,11 @@ EditorEventListener::InstallToEditor()
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("click"),
                                TrustedEventsAtCapture());
-// Focus event doesn't bubble so adding the listener to capturing phase.
-// Make sure this works after bug 235441 gets fixed.
+  // Focus event doesn't bubble so adding the listener to capturing phase.
+  // XXX Should we listen focus/blur events of system group too? Or should
+  //     editor notified focus/blur of the element from nsFocusManager
+  //     directly?  Because if the event propagation is stopped by JS,
+  //     editor cannot initialize selection as expected.
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("blur"),
                                TrustedEventsAtCapture());
@@ -466,10 +470,10 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     }
     // focus
     case eFocus:
-      return Focus(internalEvent);
+      return Focus(internalEvent->AsFocusEvent());
     // blur
     case eBlur:
-      return Blur(internalEvent);
+      return Blur(internalEvent->AsFocusEvent());
     // text
     case eCompositionChange:
       return HandleChangeComposition(internalEvent->AsCompositionEvent());
@@ -484,17 +488,9 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       break;
   }
 
+#ifdef DEBUG
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  // We should accept "focus" and "blur" event even if it's synthesized with
-  // wrong interface for compatibility with older Gecko.
-  if (eventType.EqualsLiteral("focus")) {
-    return Focus(internalEvent);
-  }
-  if (eventType.EqualsLiteral("blur")) {
-    return Blur(internalEvent);
-  }
-#ifdef DEBUG
   nsPrintfCString assertMessage("Editor doesn't handle \"%s\" event "
     "because its internal event doesn't have proper message",
     NS_ConvertUTF16toUTF8(eventType).get());
@@ -1078,17 +1074,11 @@ EditorEventListener::HandleEndComposition(
 }
 
 nsresult
-EditorEventListener::Focus(WidgetEvent* aFocusEvent)
+EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
 {
   if (NS_WARN_IF(!aFocusEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
-
-  // XXX If aFocusEvent was created by chrome script, its defaultPrevented
-  //     may be true, though.  We shouldn't handle such event but we don't
-  //     have a way to distinguish if coming event is created by chrome script.
-  NS_WARNING_ASSERTION(!aFocusEvent->DefaultPrevented(),
-                       "eFocus event shouldn't be cancelable");
 
   // Don't turn on selection and caret when the editor is disabled.
   RefPtr<EditorBase> editorBase(mEditorBase);
@@ -1167,17 +1157,11 @@ EditorEventListener::Focus(WidgetEvent* aFocusEvent)
 }
 
 nsresult
-EditorEventListener::Blur(WidgetEvent* aBlurEvent)
+EditorEventListener::Blur(InternalFocusEvent* aBlurEvent)
 {
   if (NS_WARN_IF(!aBlurEvent) || DetachedFromEditor()) {
     return NS_OK;
   }
-
-  // XXX If aBlurEvent was created by chrome script, its defaultPrevented
-  //     may be true, though.  We shouldn't handle such event but we don't
-  //     have a way to distinguish if coming event is created by chrome script.
-  NS_WARNING_ASSERTION(!aBlurEvent->DefaultPrevented(),
-                       "eBlur event shouldn't be cancelable");
 
   // check if something else is focused. If another element is focused, then
   // we should not change the selection.

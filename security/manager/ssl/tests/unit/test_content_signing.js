@@ -53,9 +53,6 @@ function run_test() {
   let oneCRLBadKeyChain = loadChain(TEST_DATA_DIR + "content_signing",
                                     ["onecrl_wrong_key_ee", "int", "root"]);
 
-  let oneCRLRSAKeyChain = loadChain(TEST_DATA_DIR + "content_signing",
-                                    ["onecrl_RSA_ee", "int", "root"]);
-
   let noSANChain = loadChain(TEST_DATA_DIR + "content_signing",
                              ["onecrl_no_SAN_ee", "int", "root"]);
 

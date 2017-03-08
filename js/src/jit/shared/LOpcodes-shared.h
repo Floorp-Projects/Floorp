@@ -371,6 +371,8 @@
     _(CeilF)                        \
     _(Round)                        \
     _(RoundF)                       \
+    _(NearbyInt)                    \
+    _(NearbyIntF)                   \
     _(In)                           \
     _(InArray)                      \
     _(InstanceOfO)                  \
@@ -422,6 +424,7 @@
     _(WasmSelect)                   \
     _(WasmSelectI64)                \
     _(WasmBoundsCheck)              \
+    _(WasmLoadTls)                  \
     _(WasmAddOffset)                \
     _(WasmLoad)                     \
     _(WasmLoadI64)                  \

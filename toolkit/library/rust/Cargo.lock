@@ -92,7 +92,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bitreader"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -381,7 +381,7 @@ name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
  "geckoservo 0.0.1",
- "mp4parse_capi 0.7.0",
+ "mp4parse_capi 0.7.1",
  "nsstring 0.1.0",
  "rust_url_capi 0.0.1",
  "webrender_bindings 0.1.0",
@@ -499,18 +499,18 @@ dependencies = [
 
 [[package]]
 name = "mp4parse"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
- "bitreader 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "mp4parse_capi"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mp4parse 0.7.0",
+ "mp4parse 0.7.1",
 ]
 
 [[package]]
@@ -1227,7 +1227,7 @@ dependencies = [
 "checksum bit-set 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d9bf6104718e80d7b26a68fdbacff3481cfc05df670821affc7e9cbc1884400c"
 "checksum bit-vec 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "5b97c2c8e8bbb4251754f559df8af22fb264853c7d009084a576cdf12565089d"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
-"checksum bitreader 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8319aa6588c40cce19a135009ec70dc730a34ed9d27bab2409298b948546da7a"
+"checksum bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "80b13e2ab064ff3aa0bdbf1eff533f9822dc37899821f5f98c67f263eab51707"
 "checksum byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c40977b0ee6b9885c9013cd41d9feffdd22deb3bb4dc3a71d901cc7a77de18c8"
 "checksum cexpr 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "393a5f0088efbe41f9d1fcd062f24e83c278608420e62109feb2c8abee07de7d"
 "checksum cfg-if 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "de1e760d7b6535af4241fca8bd8adf68e2e7edacc6b29f5d399050c5e48cf88c"

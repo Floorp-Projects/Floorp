@@ -1,6 +1,6 @@
 [package]
 name = "bitreader"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ilkka Rauta <ilkka.rauta@gmail.com>"]
 
 description = """
@@ -16,4 +16,4 @@ repository = "https://github.com/irauta/bitreader"
 
 keywords = ["bit", "bits", "bitstream"]
 
-license = "Apache-2.0"
+license = "MIT OR Apache-2.0"

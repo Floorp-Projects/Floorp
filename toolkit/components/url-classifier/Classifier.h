@@ -71,6 +71,28 @@ public:
   nsresult ApplyUpdates(nsTArray<TableUpdate*>* aUpdates);
 
   /**
+   * The "background" part of ApplyUpdates. Once the background update
+   * is called, the foreground update has to be called along with the
+   * background result no matter whether the background update is
+   * successful or not.
+   */
+  nsresult ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
+                                  nsACString& aFailedTableName);
+
+  /**
+   * The "foreground" part of ApplyUpdates. The in-use data (in-memory and
+   * on-disk) will be touched so this MUST be mutually exclusive to other
+   * member functions.
+   *
+   * If |aBackgroundRv| is successful, the return value is the result of
+   * bringing stuff to the foreground. Otherwise, the foreground table may
+   * be reset according to the background update failed reason and
+   * |aBackgroundRv| will be returned to forward the background update result.
+   */
+  nsresult ApplyUpdatesForeground(nsresult aBackgroundRv,
+                                  const nsACString& aFailedTableName);
+
+  /**
    * Apply full hashes retrived from gethash to cache.
    */
   nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
@@ -119,7 +141,6 @@ public:
 private:
   void DropStores();
   void DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables);
-  void AbortUpdateAndReset(const nsCString& aTable);
 
   nsresult CreateStoreDirectory();
   nsresult SetupPathNames();

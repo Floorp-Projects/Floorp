@@ -19,7 +19,7 @@ function run_test() {
 function getOrCreateCert(nickname) {
   return new Promise((resolve, reject) => {
     certService.getOrCreateCert(nickname, {
-      handleCert: function(c, rv) {
+      handleCert(c, rv) {
         if (rv) {
           reject(rv);
           return;
@@ -33,7 +33,7 @@ function getOrCreateCert(nickname) {
 function removeCert(nickname) {
   return new Promise((resolve, reject) => {
     certService.removeCert(nickname, {
-      handleResult: function(rv) {
+      handleResult(rv) {
         if (rv) {
           reject(rv);
           return;

@@ -135,6 +135,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitFloor(MFloor* ins);
     void visitCeil(MCeil* ins);
     void visitRound(MRound* ins);
+    void visitNearbyInt(MNearbyInt* ins);
     void visitMinMax(MMinMax* ins);
     void visitAbs(MAbs* ins);
     void visitClz(MClz* ins);
@@ -292,6 +293,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
     void visitWasmAddOffset(MWasmAddOffset* ins);
+    void visitWasmLoadTls(MWasmLoadTls* ins);
     void visitWasmBoundsCheck(MWasmBoundsCheck* ins);
     void visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins);
     void visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins);

@@ -49,8 +49,7 @@ function download() {
   req.open("GET", SOURCE, false); // doing the request synchronously
   try {
     req.send();
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error(`ERROR: problem downloading '${SOURCE}': ${e}`);
   }
 
@@ -62,8 +61,7 @@ function download() {
   var resultDecoded;
   try {
     resultDecoded = atob(req.responseText);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error("ERROR: could not decode data as base64 from '" + SOURCE +
                     "': " + e);
   }
@@ -73,8 +71,7 @@ function download() {
   var data = null;
   try {
     data = JSON.parse(result);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error(`ERROR: could not parse data from '${SOURCE}': ${e}`);
   }
   return data;
@@ -121,8 +118,7 @@ function processStsHeader(host, header, status, securityInfo) {
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                                uri, header, sslStatus, 0, {}, maxAge,
                                includeSubdomains);
-    }
-    catch (e) {
+    } catch (e) {
       dump("ERROR: could not process header '" + header + "' from " +
            host.name + ": " + e + "\n");
       error = e;
@@ -142,9 +138,9 @@ function processStsHeader(host, header, status, securityInfo) {
   return { name: host.name,
            maxAge: maxAge.value,
            includeSubdomains: includeSubdomains.value,
-           error: error,
+           error,
            retries: host.retries - 1,
-           forceInclude: forceInclude,
+           forceInclude,
            originalIncludeSubdomains: host.originalIncludeSubdomains };
 }
 
@@ -153,20 +149,20 @@ function RedirectAndAuthStopper() {}
 
 RedirectAndAuthStopper.prototype = {
   // nsIChannelEventSink
-  asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
+  asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
     throw new Error(Cr.NS_ERROR_ENTITY_CHANGED);
   },
 
   // nsIAuthPrompt2
-  promptAuth: function(channel, level, authInfo) {
+  promptAuth(channel, level, authInfo) {
     return false;
   },
 
-  asyncPromptAuth: function(channel, callback, context, level, authInfo) {
+  asyncPromptAuth(channel, callback, context, level, authInfo) {
     throw new Error(Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  getInterface: function(iid) {
+  getInterface(iid) {
     return this.QueryInterface(iid);
   },
 
@@ -206,8 +202,7 @@ function getHSTSStatus(host, resultList) {
   try {
     req.channel.notificationCallbacks = new RedirectAndAuthStopper();
     req.send();
-  }
-  catch (e) {
+  } catch (e) {
     dump("ERROR: exception making request to " + host.name + ": " + e + "\n");
   }
 }
@@ -345,8 +340,7 @@ function output(sortedStatuses, currentList) {
     writeTo(POSTFIX, fos);
     FileUtils.closeSafeFileOutputStream(fos);
     FileUtils.closeSafeFileOutputStream(eos);
-  }
-  catch (e) {
+  } catch (e) {
     dump("ERROR: problem writing output to '" + OUTPUT + "': " + e + "\n");
   }
 }
@@ -410,8 +404,8 @@ function readCurrentList(filename) {
   // for details), we still need to be able to read entries in the version 1
   // format for bootstrapping a version 2 preload list from a version 1
   // preload list.  Hence these two regexes.
-  var v1EntryRegex = /  { "([^"]*)", (true|false) },/;
-  var v2EntryRegex = /  \/\* "([^"]*)", (true|false) \*\//;
+  var v1EntryRegex = / {2}{ "([^"]*)", (true|false) },/;
+  var v2EntryRegex = / {2}\/\* "([^"]*)", (true|false) \*\//;
   while (fis.readLine(line)) {
     var match = v1EntryRegex.exec(line.value);
     if (!match) {

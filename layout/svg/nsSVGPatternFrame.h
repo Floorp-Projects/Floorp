@@ -142,7 +142,7 @@ private:
   // this is a *temporary* reference to the frame of the element currently
   // referencing our pattern.  This must be temporary because different
   // referencing frames will all reference this one frame
-  SVGGeometryFrame                 *mSource;
+  mozilla::SVGGeometryFrame        *mSource;
   nsAutoPtr<gfxMatrix>              mCTM;
 
 protected:

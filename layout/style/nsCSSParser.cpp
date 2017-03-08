@@ -1069,6 +1069,7 @@ protected:
                                                      char aStop,
                                                      bool aIsXPoint);
   bool ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue);
+  bool ParseTransitionFramesTimingFunctionValues(nsCSSValue& aValue);
   enum ParseAnimationOrTransitionShorthandResult {
     eParseAnimationOrTransitionShorthand_Values,
     eParseAnimationOrTransitionShorthand_Inherit,
@@ -7938,6 +7939,13 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
     if (tk->mIdent.LowerCaseEqualsLiteral("steps")) {
       if (!ParseTransitionStepTimingFunctionValues(aValue)) {
+        SkipUntil(')');
+        return CSSParseResult::Error;
+      }
+      return CSSParseResult::Ok;
+    }
+    if (tk->mIdent.LowerCaseEqualsLiteral("frames")) {
+      if (!ParseTransitionFramesTimingFunctionValues(aValue)) {
         SkipUntil(')');
         return CSSParseResult::Error;
       }
@@ -16798,6 +16806,39 @@ CSSParserImpl::ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue)
   }
 
   aValue.SetArrayValue(val, eCSSUnit_Steps);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTransitionFramesTimingFunctionValues(nsCSSValue& aValue)
+{
+  NS_ASSERTION(!mHavePushBack &&
+               mToken.mType == eCSSToken_Function &&
+               mToken.mIdent.LowerCaseEqualsLiteral("frames"),
+               "unexpected initial state");
+
+  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  MOZ_ASSERT(functionName == eCSSKeyword_frames);
+
+  nsCSSValue frameNumber;
+  if (!ParseSingleTokenOneOrLargerVariant(frameNumber, VARIANT_INTEGER,
+                                          nullptr)) {
+    return false;
+  }
+  MOZ_ASSERT(frameNumber.GetIntValue() >= 1,
+             "Parsing function should've enforced OneOrLarger, per its name");
+
+  // The number of frames must be a positive integer greater than one.
+  if (frameNumber.GetIntValue() == 1) {
+    return false;
+  }
+
+  if (!ExpectSymbol(')', true)) {
+    return false;
+  }
+
+  RefPtr<nsCSSValue::Array> val = aValue.InitFunction(functionName, 1);
+  val->Item(1) = frameNumber;
   return true;
 }
 

@@ -20,6 +20,9 @@ const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVer
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerformance.url";
 const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
+const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
+const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
+const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
@@ -335,10 +338,7 @@ this.BootstrapMonitor = {
 AddonTestUtils.on("addon-manager-shutdown", () => BootstrapMonitor.shutdownCheck());
 
 function isNightlyChannel() {
-  var channel = "default";
-  try {
-    channel = Services.prefs.getCharPref("app.update.channel");
-  } catch (e) { }
+  var channel = Services.prefs.getCharPref("app.update.channel", "default");
 
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
@@ -1363,4 +1363,271 @@ function* buildSystemAddonUpdates(addons, root) {
   xml += `</updates>\n`;
 
   return xml;
+}
+
+function initSystemAddonDirs() {
+  let hiddenSystemAddonDir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden"], true);
+  do_get_file("data/system_addons/system1_1.xpi").copyTo(hiddenSystemAddonDir, "system1@tests.mozilla.org.xpi");
+  do_get_file("data/system_addons/system2_1.xpi").copyTo(hiddenSystemAddonDir, "system2@tests.mozilla.org.xpi");
+
+  let prefilledSystemAddonDir = FileUtils.getDir("ProfD", ["sysfeatures", "prefilled"], true);
+  do_get_file("data/system_addons/system2_2.xpi").copyTo(prefilledSystemAddonDir, "system2@tests.mozilla.org.xpi");
+  do_get_file("data/system_addons/system3_2.xpi").copyTo(prefilledSystemAddonDir, "system3@tests.mozilla.org.xpi");
+}
+
+/**
+ * Returns current system add-on update directory (stored in pref).
+ */
+function getCurrentSystemAddonUpdatesDir() {
+  const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
+  let dir = updatesDir.clone();
+  let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
+  dir.append(set.directory);
+  return dir;
+}
+
+/**
+ * Removes all files from system add-on update directory.
+ */
+function clearSystemAddonUpdatesDir() {
+  const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
+  // Delete any existing directories
+  if (updatesDir.exists())
+    updatesDir.remove(true);
+
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+}
+
+/**
+ * Installs a known set of add-ons into the system add-on update directory.
+ */
+function buildPrefilledUpdatesDir() {
+  clearSystemAddonUpdatesDir();
+
+  // Build the test set
+  let dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
+
+  do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
+  do_get_file("data/system_addons/system3_2.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
+
+  // Mark these in the past so the startup file scan notices when files have changed properly
+  FileUtils.getFile("ProfD", ["features", "prefilled", "system2@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+  FileUtils.getFile("ProfD", ["features", "prefilled", "system3@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+
+  Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify({
+    schema: 1,
+    directory: dir.leafName,
+    addons: {
+      "system2@tests.mozilla.org": {
+        version: "2.0"
+      },
+      "system3@tests.mozilla.org": {
+        version: "2.0"
+      },
+    }
+  }));
+}
+
+/**
+ * Check currently installed ssystem add-ons against a set of conditions.
+ *
+ * @param {Array<Object>} conditions - an array of objects of the form { isUpgrade: false, version: null}
+ * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
+ */
+function* checkInstalledSystemAddons(conditions, distroDir) {
+  for (let i = 0; i < conditions.length; i++) {
+    let condition = conditions[i];
+    let id = "system" + (i + 1) + "@tests.mozilla.org";
+    let addon = yield promiseAddonByID(id);
+
+    if (!("isUpgrade" in condition) || !("version" in condition)) {
+      throw Error("condition must contain isUpgrade and version");
+    }
+    let isUpgrade = conditions[i].isUpgrade;
+    let version = conditions[i].version;
+
+    let expectedDir = isUpgrade ? getCurrentSystemAddonUpdatesDir() : distroDir;
+
+    if (version) {
+      do_print(`Checking state of add-on ${id}, expecting version ${version}`);
+
+      // Add-on should be installed
+      do_check_neq(addon, null);
+      do_check_eq(addon.version, version);
+      do_check_true(addon.isActive);
+      do_check_false(addon.foreignInstall);
+      do_check_true(addon.hidden);
+      do_check_true(addon.isSystem);
+
+      // Verify the add-ons file is in the right place
+      let file = expectedDir.clone();
+      file.append(id + ".xpi");
+      do_check_true(file.exists());
+      do_check_true(file.isFile());
+
+      let uri = addon.getResourceURI(null);
+      do_check_true(uri instanceof AM_Ci.nsIFileURL);
+      do_check_eq(uri.file.path, file.path);
+
+      if (isUpgrade) {
+        do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+      }
+
+      // Verify the add-on actually started
+      BootstrapMonitor.checkAddonStarted(id, version);
+    } else {
+      do_print(`Checking state of add-on ${id}, expecting it to be missing`);
+
+      if (isUpgrade) {
+        // Add-on should not be installed
+        do_check_eq(addon, null);
+      }
+
+      BootstrapMonitor.checkAddonNotStarted(id);
+
+      if (addon)
+        BootstrapMonitor.checkAddonInstalled(id);
+      else
+        BootstrapMonitor.checkAddonNotInstalled(id);
+    }
+  }
+}
+
+/**
+ * Returns all system add-on updates directories.
+ */
+function* getSystemAddonDirectories() {
+  const updatesDir = FileUtils.getDir("ProfD", ["features"], false);
+  let subdirs = [];
+
+  if (yield OS.File.exists(updatesDir.path)) {
+    let iterator = new OS.File.DirectoryIterator(updatesDir.path);
+    yield iterator.forEach(entry => {
+      if (entry.isDir) {
+        subdirs.push(entry);
+      }
+    });
+    iterator.close();
+  }
+
+  return subdirs;
+}
+
+/**
+ * Sets up initial system add-on update conditions.
+ *
+ * @param {Object<function, Array<Object>} setup - an object containing a setup function and an array of objects
+ *  of the form {isUpgrade: false, version: null}
+ *
+ * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
+ */
+function* setupSystemAddonConditions(setup, distroDir) {
+  do_print("Clearing existing database.");
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+  distroDir.leafName = "empty";
+  startupManager(false);
+  yield promiseShutdownManager();
+
+  do_print("Setting up conditions.");
+  yield setup.setup();
+
+  startupManager(false);
+
+  // Make sure the initial state is correct
+  do_print("Checking initial state.");
+  yield checkInstalledSystemAddons(setup.initialState, distroDir);
+}
+
+/**
+ * Verify state of system add-ons after installation.
+ *
+ * @param {Array<Object>} initialState - an array of objects of the form {isUpgrade: false, version: null}
+ * @param {Array<Object>} finalState - an array of objects of the form {isUpgrade: false, version: null}
+ * @param {Boolean} alreadyUpgraded - whether a restartless upgrade has already been performed.
+ * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
+ */
+function* verifySystemAddonState(initialState, finalState = undefined, alreadyUpgraded = false, distroDir) {
+  let expectedDirs = 0;
+
+  // If the initial state was using the profile set then that directory will
+  // still exist.
+
+  if (initialState.some(a => a.isUpgrade)) {
+    expectedDirs++;
+  }
+
+  if (finalState == undefined) {
+    finalState = initialState;
+  } else if (finalState.some(a => a.isUpgrade)) {
+    // If the new state is using the profile then that directory will exist.
+    expectedDirs++;
+  }
+
+  // Since upgrades are restartless now, the previous update dir hasn't been removed.
+  if (alreadyUpgraded) {
+    expectedDirs++;
+  }
+
+  do_print("Checking final state.");
+
+  let dirs = yield getSystemAddonDirectories();
+  do_check_eq(dirs.length, expectedDirs);
+
+  yield checkInstalledSystemAddons(...finalState, distroDir);
+
+  // Check that the new state is active after a restart
+  yield promiseRestartManager();
+  yield checkInstalledSystemAddons(finalState, distroDir);
+}
+
+/**
+ * Run system add-on tests and compare the results against a set of expected conditions.
+ *
+ * @param {String} setupName - name of the current setup conditions.
+ * @param {Object<function, Array<Object>} setup -  Defines the set of initial conditions to run each test against. Each should
+ *                                                  define the following properties:
+ *    setup:        A task to setup the profile into the initial state.
+ *    initialState: The initial expected system add-on state after setup has run.
+ * @param {Array<Object>} test -  The test to run. Each test must define an updateList or test. The following
+ *                                properties are used:
+ *    updateList: The set of add-ons the server should respond with.
+ *    test:       A function to run to perform the update check (replaces
+ *                updateList)
+ *    fails:      An optional property, if true the update check is expected to
+ *                fail.
+ *    finalState: An optional property, the expected final state of system add-ons,
+ *                if missing the test condition's initialState is used.
+ * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
+ * @param {String} root - HTTP URL to the test server
+ * @param {HttpServer} testserver - existing HTTP test server to use
+ */
+
+function* execSystemAddonTest(setupName, setup, test, distroDir, root, testserver) {
+  yield setupSystemAddonConditions(setup, distroDir);
+
+  try {
+    if ("test" in test) {
+      yield test.test();
+    } else {
+      yield installSystemAddons(yield buildSystemAddonUpdates(test.updateList, root), testserver);
+    }
+
+    if (test.fails) {
+      do_throw("Expected this test to fail");
+    }
+  } catch (e) {
+    if (!test.fails) {
+      do_throw(e);
+    }
+  }
+
+  // some tests have a different expected combination of default
+  // and updated add-ons.
+  if (test.finalState && setupName in test.finalState) {
+    yield verifySystemAddonState(setup.initialState, test.finalState[setupName], false, distroDir);
+  } else {
+    yield verifySystemAddonState(setup.initialState, undefined, false, distroDir);
+  }
+
+  yield promiseShutdownManager();
 }

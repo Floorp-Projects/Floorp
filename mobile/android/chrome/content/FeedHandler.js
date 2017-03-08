@@ -57,9 +57,8 @@ var FeedHandler = {
     }
   },
 
-  observe: function fh_observe(aSubject, aTopic, aData) {
-    if (aTopic === "Feeds:Subscribe") {
-      let args = JSON.parse(aData);
+  onEvent: function fh_onEvent(event, args, callback) {
+    if (event === "Feeds:Subscribe") {
       let tab = BrowserApp.getTabForId(args.tabId);
       if (!tab)
         return;
