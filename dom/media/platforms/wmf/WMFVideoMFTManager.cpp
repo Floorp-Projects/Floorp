@@ -464,8 +464,8 @@ WMFVideoMFTManager::InitializeDXVA(bool aForceD3D9)
     event->Run();
   } else {
     // This logic needs to run on the main thread
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    mozilla::SyncRunnable::DispatchToThread(mainThread, event);
+    mozilla::SyncRunnable::DispatchToThread(
+      SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), event);
   }
   mDXVA2Manager = event->mDXVA2Manager;
 
@@ -714,8 +714,8 @@ WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType)
     event->Run();
   } else {
     // This logic needs to run on the main thread
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    mozilla::SyncRunnable::DispatchToThread(mainThread, event);
+    mozilla::SyncRunnable::DispatchToThread(
+      SystemGroup::EventTargetFor(mozilla::TaskCategory::Other), event);
   }
 
   return event->mSupportsConfig;
