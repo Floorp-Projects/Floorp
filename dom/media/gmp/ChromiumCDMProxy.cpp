@@ -46,9 +46,12 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
-  EME_LOG("ChromiumCDMProxy::Init(%s, %s)",
-          NS_ConvertUTF16toUTF8(aOrigin).get(),
-          NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
+  EME_LOG(
+    "ChromiumCDMProxy::Init (pid=%u, origin=%s, topLevelOrigin=%s, gmp=%s)",
+    aPromiseId,
+    NS_ConvertUTF16toUTF8(aOrigin).get(),
+    NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
+    NS_ConvertUTF16toUTF8(aGMPName).get());
 
   if (!mGMPThread) {
     RejectPromise(
@@ -178,6 +181,12 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
                                 nsTArray<uint8_t>& aInitData)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::CreateSession(token=%u, type=%d, pid=%u) "
+          "initDataLen=%zu",
+          aCreateSessionToken,
+          (int)aSessionType,
+          aPromiseId,
+          aInitData.Length());
 
   uint32_t sessionType = ToCDMSessionType(aSessionType);
   uint32_t initDataType = ToCDMInitDataType(aInitDataType);
@@ -211,6 +220,9 @@ ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
                                        nsTArray<uint8_t>& aCert)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::SetServerCertificate(pid=%u) certLen=%zu",
+          aPromiseId,
+          aCert.Length());
 
   mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsTArray<uint8_t>>(
     mCDM,
@@ -225,6 +237,10 @@ ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
                                 nsTArray<uint8_t>& aResponse)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::UpdateSession(sid='%s', pid=%u) responseLen=%zu",
+          NS_ConvertUTF16toUTF8(aSessionId).get(),
+          aPromiseId,
+          aResponse.Length());
 
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t, nsTArray<uint8_t>>(
       mCDM,
@@ -238,6 +254,11 @@ void
 ChromiumCDMProxy::CloseSession(const nsAString& aSessionId,
                                PromiseId aPromiseId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::CloseSession(sid='%s', pid=%u)",
+          NS_ConvertUTF16toUTF8(aSessionId).get(),
+          aPromiseId);
+
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
     mCDM,
     &gmp::ChromiumCDMParent::CloseSession,
@@ -249,6 +270,11 @@ void
 ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
                                 PromiseId aPromiseId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::RemoveSession(sid='%s', pid=%u)",
+          NS_ConvertUTF16toUTF8(aSessionId).get(),
+          aPromiseId);
+
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
     mCDM,
     &gmp::ChromiumCDMParent::RemoveSession,
@@ -259,6 +285,7 @@ ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
 void
 ChromiumCDMProxy::Shutdown()
 {
+  EME_LOG("ChromiumCDMProxy::Shutdown()");
 }
 
 void
@@ -273,6 +300,10 @@ ChromiumCDMProxy::RejectPromise(PromiseId aId,
     NS_DispatchToMainThread(task);
     return;
   }
+  EME_LOG("ChromiumCDMProxy::RejectPromise(pid=%u, code=0x%x, reason='%s')",
+          aId,
+          static_cast<uint32_t>(aCode),
+          aReason.get());
   if (!mKeys.IsNull()) {
     mKeys->RejectPromise(aId, aCode, aReason);
   }
@@ -289,6 +320,7 @@ ChromiumCDMProxy::ResolvePromise(PromiseId aId)
     return;
   }
 
+  EME_LOG("ChromiumCDMProxy::ResolvePromise(pid=%u)", aId);
   if (!mKeys.IsNull()) {
     mKeys->ResolvePromise(aId);
   } else {
@@ -307,6 +339,10 @@ ChromiumCDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
                                  const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  EME_LOG("ChromiumCDMProxy::OnSetSessionId(token=%u, sid='%s')",
+          aCreateSessionToken,
+          NS_ConvertUTF16toUTF8(aSessionId).get());
+
   if (mKeys.IsNull()) {
     return;
   }
