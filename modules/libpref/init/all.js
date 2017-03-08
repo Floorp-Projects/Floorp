@@ -5033,6 +5033,11 @@ pref("dom.vr.openvr.enabled", false);
 // Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
 // frame uniformity issues with e10s.
 pref("dom.vr.poseprediction.enabled", false);
+// Starting VR presentation is only allowed within a user gesture or event such
+// as VRDisplayActivate triggered by the system.  dom.vr.require-gesture allows
+// this requirement to be disabled for special cases such as during automated
+// tests or in a headless kiosk system.
+pref("dom.vr.require-gesture", true);
 // path to openvr DLL
 pref("gfx.vr.openvr-runtime", "");
 // path to OSVR DLLs
