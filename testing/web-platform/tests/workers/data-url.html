@@ -41,9 +41,12 @@ assert_worker_sends_pass('empty MIME allowed', '', 'self.postMessage("PASS")');
 // Communications goes both ways
 assert_worker_sends_pass('communication goes both ways', 'application/javascript', 'onmessage = function(e) { self.postMessage("PASS"); }');
 
-// 'data:' workers are cross-origin
+// test access to storage APIs
+// once https://github.com/w3c/IndexedDB/pull/150 lands, this is spec conforming
 assert_worker_throws('indexedDB inaccessible', 'self.indexedDB.open("someDBName")');
-assert_worker_throws('localStorage inaccessible', 'self.localStorage.testItem');
+assert_worker_throws('Web SQL Database inaccessible', 'self.openDatabase("someDBName", "1.0", "someDBName", 1);');
+
+// 'data:' workers are cross-origin
 assert_worker_sends_pass('cross-origin worker', '', 'fetch("/").then(() => self.postMessage("FAIL"), () => self.postMessage("PASS"))');
 
 // 'data:' workers have opaque origin
