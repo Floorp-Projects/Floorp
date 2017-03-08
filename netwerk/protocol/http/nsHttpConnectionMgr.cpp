@@ -44,34 +44,31 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(nsHttpConnectionMgr, nsIObserver)
 
-void
-nsHttpConnectionMgr::InsertTransactionSorted(nsTArray<RefPtr<nsHttpConnectionMgr::PendingTransactionInfo> > &pendingQ,
-                                             nsHttpConnectionMgr::PendingTransactionInfo *pendingTransInfo)
+static void
+InsertTransactionSorted(nsTArray<RefPtr<nsHttpTransaction> > &pendingQ, nsHttpTransaction *trans)
 {
     // insert into queue with smallest valued number first.  search in reverse
     // order under the assumption that many of the existing transactions will
     // have the same priority (usually 0).
 
-    nsHttpTransaction *trans = pendingTransInfo->mTransaction;
-
     for (int32_t i = pendingQ.Length() - 1; i >= 0; --i) {
-        nsHttpTransaction *t = pendingQ[i]->mTransaction;
+        nsHttpTransaction *t = pendingQ[i];
         if (trans->Priority() >= t->Priority()) {
             if (ChaosMode::isActive(ChaosFeature::NetworkScheduling)) {
                 int32_t samePriorityCount;
                 for (samePriorityCount = 0; i - samePriorityCount >= 0; ++samePriorityCount) {
-                    if (pendingQ[i - samePriorityCount]->mTransaction->Priority() != trans->Priority()) {
+                    if (pendingQ[i - samePriorityCount]->Priority() != trans->Priority()) {
                         break;
                     }
                 }
                 // skip over 0...all of the elements with the same priority.
                 i -= ChaosMode::randomUint32LessThan(samePriorityCount + 1);
             }
-            pendingQ.InsertElementAt(i+1, pendingTransInfo);
+            pendingQ.InsertElementAt(i+1, trans);
             return;
         }
     }
-    pendingQ.InsertElementAt(0, pendingTransInfo);
+    pendingQ.InsertElementAt(0, trans);
 }
 
 //-----------------------------------------------------------------------------
@@ -630,8 +627,7 @@ nsHttpConnectionMgr::LookupConnectionEntry(nsHttpConnectionInfo *ci,
             return preferred;
     }
 
-    if (trans &&
-        preferred->mPendingQ.Contains(trans, PendingComparator()))
+    if (trans && preferred->mPendingQ.Contains(trans))
         return preferred;
 
     // Neither conn nor trans found in preferred, use the default entry
@@ -885,7 +881,7 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
 
     ProcessSpdyPendingQ(ent);
 
-    PendingTransactionInfo *pendingTransInfo;
+    nsHttpTransaction *trans;
     nsresult rv;
     bool dispatchedSuccessfully = false;
 
@@ -893,58 +889,24 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     // Keep iterating afterwards only until a transaction fails to dispatch.
     // if considerAll == true then try and dispatch all items.
     for (uint32_t i = 0; i < ent->mPendingQ.Length(); ) {
-        pendingTransInfo = ent->mPendingQ[i];
-        LOG(("nsHttpConnectionMgr::ProcessPendingQForEntry "
-             "[trans=%p, halfOpen=%p, activeConn=%p]\n",
-             pendingTransInfo->mTransaction.get(),
-             pendingTransInfo->mHalfOpen.get(),
-             pendingTransInfo->mActiveConn.get()));
+        trans = ent->mPendingQ[i];
 
         // When this transaction has already established a half-open
         // connection, we want to prevent any duplicate half-open
         // connections from being established and bound to this
         // transaction. Allow only use of an idle persistent connection
         // (if found) for transactions referred by a half-open connection.
-        bool alreadyHalfOpenOrWaitingForTLS = false;
-        if (pendingTransInfo->mHalfOpen) {
-            MOZ_ASSERT(!pendingTransInfo->mActiveConn);
-            RefPtr<nsHalfOpenSocket> halfOpen =
-                do_QueryReferent(pendingTransInfo->mHalfOpen);
-            if (halfOpen) {
-                // The half open socket was made for this transaction, in
-                // that case ent->mHalfOpens[j]->Transaction() == trans or
-                // the half open socket was opened speculatively and this
-                // transaction took it (in this case it must be:
-                // ent->mHalfOpens[j]->Transaction().IsNullTransaction())
-                MOZ_ASSERT(halfOpen->Transaction()->IsNullTransaction() ||
-                           halfOpen->Transaction() == pendingTransInfo->mTransaction);
-                alreadyHalfOpenOrWaitingForTLS = true;
-            } else {
-                // If we have not found the halfOpen socket, remove the pointer.
-                pendingTransInfo->mHalfOpen = nullptr;
-            }
-        }  else if (pendingTransInfo->mActiveConn) {
-            MOZ_ASSERT(!pendingTransInfo->mHalfOpen);
-            RefPtr<nsHttpConnection> activeConn =
-                do_QueryReferent(pendingTransInfo->mActiveConn);
-            // Check if this transaction claimed a connection that is still
-            // performing tls handshake with a NullHttpTransaction or it is between
-            // finishing tls and relaiming (When nullTrans finishes tls handshake,
-            // httpConnection does not have a transaction any more and a
-            // ReclaimConnection is dispatched).
-            if (activeConn &&
-                (!activeConn->Transaction() ||
-                 activeConn->Transaction()->IsNullTransaction())) {
-                alreadyHalfOpenOrWaitingForTLS = true;
-            } else {
-                // If we have not found the connection, remove the pointer.
-                pendingTransInfo->mActiveConn = nullptr;
+        bool alreadyHalfOpen = false;
+        for (int32_t j = 0; j < ((int32_t) ent->mHalfOpens.Length()); ++j) {
+            if (ent->mHalfOpens[j]->Transaction() == trans) {
+                alreadyHalfOpen = true;
+                break;
             }
         }
 
         rv = TryDispatchTransaction(ent,
-                                    alreadyHalfOpenOrWaitingForTLS || !!pendingTransInfo->mTransaction->TunnelProvider(),
-                                    pendingTransInfo);
+                                    alreadyHalfOpen || !!trans->TunnelProvider(),
+                                    trans);
         if (NS_SUCCEEDED(rv) || (rv != NS_ERROR_NOT_AVAILABLE)) {
             if (NS_SUCCEEDED(rv))
                 LOG(("  dispatching pending transaction...\n"));
@@ -953,9 +915,8 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
                      "TryDispatchTransaction returning hard error %" PRIx32 "\n",
                      static_cast<uint32_t>(rv)));
 
-            ReleaseClaimedSockets(ent, pendingTransInfo);
-            if (ent->mPendingQ.RemoveElement(pendingTransInfo)) {
-                // pendingTransInfo is now potentially destroyed
+            if (ent->mPendingQ.RemoveElement(trans)) {
+                // trans is now potentially destroyed
                 dispatchedSuccessfully = true;
                 continue; // dont ++i as we just made the array shorter
             }
@@ -1101,10 +1062,8 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
 // returns other NS_ERROR on hard failure conditions
 nsresult
 nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
-                                       PendingTransactionInfo *pendingTransInfo)
+                                       nsHttpTransaction *trans)
 {
-    nsHttpTransaction *trans = pendingTransInfo->mTransaction;
-
     LOG(("nsHttpConnectionMgr::MakeNewConnection %p ent=%p trans=%p",
          this, ent, trans));
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
@@ -1123,8 +1082,6 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
 
             uint32_t flags;
             ent->mHalfOpens[i]->SetSpeculative(false);
-            pendingTransInfo->mHalfOpen =
-                do_GetWeakReference(static_cast<nsISupportsWeakReference*>(ent->mHalfOpens[i]));
             nsISocketTransport *transport = ent->mHalfOpens[i]->SocketTransport();
             if (transport && NS_SUCCEEDED(transport->GetConnectionFlags(&flags))) {
                 flags &= ~nsISocketTransport::DISABLE_RFC1918;
@@ -1156,8 +1113,6 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
                 LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s] "
                      "Claiming a null transaction for later use\n",
                      ent->mConnInfo->HashKey().get()));
-                pendingTransInfo->mActiveConn =
-                    do_GetWeakReference(static_cast<nsISupportsWeakReference*>(ent->mActiveConns[i]));
                 return NS_OK;
             }
         }
@@ -1234,8 +1189,7 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
     if (AtActiveConnectionLimit(ent, trans->Caps()))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsresult rv = CreateTransport(ent, trans, trans->Caps(), false, false,
-                                  true, pendingTransInfo);
+    nsresult rv = CreateTransport(ent, trans, trans->Caps(), false, false, true);
     if (NS_FAILED(rv)) {
         /* hard failure */
         LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s trans = %p] "
@@ -1259,18 +1213,13 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
 nsresult
 nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
                                             bool onlyReusedConnection,
-                                            PendingTransactionInfo *pendingTransInfo)
+                                            nsHttpTransaction *trans)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-
-    nsHttpTransaction *trans = pendingTransInfo->mTransaction;
-
     LOG(("nsHttpConnectionMgr::TryDispatchTransaction without conn "
-         "[trans=%p halfOpen=%p conn=%p ci=%p ci=%s caps=%x tunnelprovider=%p "
-         "onlyreused=%d active=%" PRIuSIZE " idle=%" PRIuSIZE "]\n", trans,
-         pendingTransInfo->mHalfOpen.get(),
-         pendingTransInfo->mActiveConn.get(), ent->mConnInfo.get(),
-         ent->mConnInfo->HashKey().get(),
+         "[trans=%p ci=%p ci=%s caps=%x tunnelprovider=%p onlyreused=%d "
+         "active=%" PRIuSIZE " idle=%" PRIuSIZE "]\n", trans,
+         ent->mConnInfo.get(), ent->mConnInfo->HashKey().get(),
          uint32_t(trans->Caps()), trans->TunnelProvider(),
          onlyReusedConnection, ent->mActiveConns.Length(),
          ent->mIdleConns.Length()));
@@ -1406,7 +1355,7 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
 
     // step 4
     if (!onlyReusedConnection) {
-        nsresult rv = MakeNewConnection(ent, pendingTransInfo);
+        nsresult rv = MakeNewConnection(ent, trans);
         if (NS_SUCCEEDED(rv)) {
             // this function returns NOT_AVAILABLE for asynchronous connects
             LOG(("   dispatched step 4 (async new conn) trans=%p\n", trans));
@@ -1635,7 +1584,6 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
     nsAHttpConnection *wrappedConnection = trans->Connection();
     RefPtr<nsHttpConnection> conn;
-    RefPtr<PendingTransactionInfo> pendingTransInfo;
     if (wrappedConnection)
         conn = wrappedConnection->TakeHttpConnection();
 
@@ -1659,8 +1607,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         trans->SetConnection(nullptr);
         rv = DispatchTransaction(ent, trans, conn);
     } else {
-        pendingTransInfo = new PendingTransactionInfo(trans);
-        rv = TryDispatchTransaction(ent, !!trans->TunnelProvider(), pendingTransInfo);
+        rv = TryDispatchTransaction(ent, !!trans->TunnelProvider(), trans);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -1673,10 +1620,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
              "[trans=%p pending-count=%" PRIuSIZE "]\n",
              trans, ent->mPendingQ.Length()+1));
         // put this transaction on the pending queue...
-        if (!pendingTransInfo) {
-            pendingTransInfo = new PendingTransactionInfo(trans);
-        }
-        InsertTransactionSorted(ent->mPendingQ, pendingTransInfo);
+        InsertTransactionSorted(ent->mPendingQ, trans);
         return NS_OK;
     }
 
@@ -1717,43 +1661,13 @@ nsHttpConnectionMgr::RecvdConnect()
     ConditionallyStopTimeoutTick();
 }
 
-void
-nsHttpConnectionMgr::ReleaseClaimedSockets(nsConnectionEntry *ent,
-                                           PendingTransactionInfo * pendingTransInfo)
-{
-    if (pendingTransInfo->mHalfOpen) {
-        RefPtr<nsHalfOpenSocket> halfOpen =
-            do_QueryReferent(pendingTransInfo->mHalfOpen);
-        if (halfOpen) {
-            if (halfOpen->Transaction() &&
-                halfOpen->Transaction()->IsNullTransaction()) {
-                LOG(("nsHttpConnectionMgr::ReleaseClaimedSockets - mark halfOpne %p "
-                    "speculative again.", halfOpen.get()));
-                halfOpen->SetSpeculative(true);
-            }
-        }
-        pendingTransInfo->mHalfOpen = nullptr;
-    } else if (pendingTransInfo->mActiveConn) {
-        RefPtr<nsHttpConnection> activeConn =
-            do_QueryReferent(pendingTransInfo->mActiveConn);
-        if (activeConn && activeConn->Transaction() &&
-            activeConn->Transaction()->IsNullTransaction()) {
-            NullHttpTransaction *nullTrans = activeConn->Transaction()->QueryNullTransaction();
-            nullTrans->Unclaim();
-            LOG(("nsHttpConnectionMgr::ReleaseClaimedSockets - mark %p unclaimed.",
-                 activeConn.get()));
-        }
-    }
-}
-
 nsresult
 nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
                                      nsAHttpTransaction *trans,
                                      uint32_t caps,
                                      bool speculative,
                                      bool isFromPredictor,
-                                     bool allow1918,
-                                     PendingTransactionInfo *pendingTransInfo)
+                                     bool allow1918)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1777,11 +1691,6 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
     nsresult rv = sock->SetupPrimaryStreams();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (pendingTransInfo) {
-        pendingTransInfo->mHalfOpen =
-            do_GetWeakReference(static_cast<nsISupportsWeakReference*>(sock));
-    }
-
     ent->mHalfOpens.AppendElement(sock);
     mNumHalfOpenConns++;
     return NS_OK;
@@ -1800,39 +1709,37 @@ nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
     if (!conn || !conn->CanDirectlyActivate())
         return;
 
-    nsTArray<RefPtr<PendingTransactionInfo> > leftovers;
+    nsTArray<RefPtr<nsHttpTransaction> > leftovers;
     uint32_t index;
 
     // Dispatch all the transactions we can
     for (index = 0;
          index < ent->mPendingQ.Length() && conn->CanDirectlyActivate();
          ++index) {
-        PendingTransactionInfo *pendingTransInfo = ent->mPendingQ[index];
+        nsHttpTransaction *trans = ent->mPendingQ[index];
 
-        if (!(pendingTransInfo->mTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) ||
-            pendingTransInfo->mTransaction->Caps() & NS_HTTP_DISALLOW_SPDY) {
-            leftovers.AppendElement(pendingTransInfo);
+        if (!(trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) ||
+            trans->Caps() & NS_HTTP_DISALLOW_SPDY) {
+            leftovers.AppendElement(trans);
             continue;
         }
 
-        nsresult rv = DispatchTransaction(ent, pendingTransInfo->mTransaction,
-                                          conn);
+        nsresult rv = DispatchTransaction(ent, trans, conn);
         if (NS_FAILED(rv)) {
             // this cannot happen, but if due to some bug it does then
             // close the transaction
             MOZ_ASSERT(false, "Dispatch SPDY Transaction");
             LOG(("ProcessSpdyPendingQ Dispatch Transaction failed trans=%p\n",
-                 pendingTransInfo->mTransaction.get()));
-            pendingTransInfo->mTransaction->Close(rv);
+                    trans));
+            trans->Close(rv);
         }
-        ReleaseClaimedSockets(ent, pendingTransInfo);
     }
 
     // Slurp up the rest of the pending queue into our leftovers bucket (we
     // might have some left if conn->CanDirectlyActivate returned false)
     for (; index < ent->mPendingQ.Length(); ++index) {
-        PendingTransactionInfo *pendingTransInfo = ent->mPendingQ[index];
-        leftovers.AppendElement(pendingTransInfo);
+        nsHttpTransaction *trans = ent->mPendingQ[index];
+        leftovers.AppendElement(trans);
     }
 
     // Put the leftovers back in the pending queue and get rid of the
@@ -1947,8 +1854,8 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
 
         // Close all pending transactions.
         while (ent->mPendingQ.Length()) {
-            PendingTransactionInfo *pendingTransInfo = ent->mPendingQ[0];
-            pendingTransInfo->mTransaction->Close(NS_ERROR_ABORT);
+            nsHttpTransaction *trans = ent->mPendingQ[0];
+            trans->Close(NS_ERROR_ABORT);
             ent->mPendingQ.RemoveElementAt(0);
         }
 
@@ -2016,11 +1923,10 @@ nsHttpConnectionMgr::OnMsgReschedTransaction(int32_t priority, ARefBase *param)
                                                    nullptr, trans);
 
     if (ent) {
-        int32_t index = ent->mPendingQ.IndexOf(trans, 0, PendingComparator());
+        int32_t index = ent->mPendingQ.IndexOf(trans);
         if (index >= 0) {
-            RefPtr<PendingTransactionInfo> pendingTransInfo = ent->mPendingQ[index];
             ent->mPendingQ.RemoveElementAt(index);
-            InsertTransactionSorted(ent->mPendingQ, pendingTransInfo);
+            InsertTransactionSorted(ent->mPendingQ, trans);
         }
     }
 }
@@ -2049,29 +1955,23 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, ARefBase *param)
             LookupConnectionEntry(trans->ConnectionInfo(), nullptr, trans);
 
         if (ent) {
-            int32_t transIndex = ent->mPendingQ.IndexOf(trans, 0, PendingComparator());
-            // We will abandon all half-open sockets belonging to the given
-            // transaction.
-            RefPtr<PendingTransactionInfo> pendingTransInfo;
+            int32_t transIndex = ent->mPendingQ.IndexOf(trans);
             if (transIndex >= 0) {
                 LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]"
                      " found in pending queue\n", trans));
-                pendingTransInfo = ent->mPendingQ[transIndex];
-                // We do not need to ReleaseClaimedSockets while we are going
-                // to close them all any way!
                 ent->mPendingQ.RemoveElementAt(transIndex);
             }
 
             // Abandon all half-open sockets belonging to the given transaction.
-            if (pendingTransInfo) {
-                RefPtr<nsHalfOpenSocket> half =
-                    do_QueryReferent(pendingTransInfo->mHalfOpen);
-                if (half) {
-                    MOZ_ASSERT(trans == half->Transaction() ||
-                               half->Transaction()->IsNullTransaction());
+            for (uint32_t index = 0;
+                 index < ent->mHalfOpens.Length();
+                 ++index) {
+                nsHalfOpenSocket *half = ent->mHalfOpens[index];
+                if (trans == half->Transaction()) {
                     half->Abandon();
+                    // there is only one, and now mHalfOpens[] has been changed.
+                    break;
                 }
-                pendingTransInfo->mHalfOpen = nullptr;
             }
         }
 
@@ -2151,10 +2051,10 @@ nsHttpConnectionMgr::OnMsgCancelTransactions(int32_t code, ARefBase *param)
     }
 
     for (int32_t i = ent->mPendingQ.Length() - 1; i >= 0; --i) {
-        PendingTransactionInfo *pendingTransInfo = ent->mPendingQ[i];
+        nsHttpTransaction *trans = ent->mPendingQ[i];
         LOG(("nsHttpConnectionMgr::OnMsgCancelTransactions %s %p %p\n",
-             ci->HashKey().get(), ent, pendingTransInfo->mTransaction.get()));
-        pendingTransInfo->mTransaction->Close(reason);
+             ci->HashKey().get(), ent, trans));
+        trans->Close(reason);
         ent->mPendingQ.RemoveElementAt(i);
     }
 }
@@ -2705,8 +2605,7 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase *param)
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
         DebugOnly<nsresult> rv = CreateTransport(ent, args->mTrans,
                                                  args->mTrans->Caps(), true,
-                                                 isFromPredictor, allow1918,
-                                                 nullptr);
+                                                 isFromPredictor, allow1918);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
         LOG(("OnMsgSpeculativeConnect Transport "
@@ -2740,22 +2639,12 @@ ConnectionHandle::PushBack(const char *buf, uint32_t bufLen)
 
 
 //////////////////////// nsHalfOpenSocket
-NS_IMPL_ADDREF(nsHttpConnectionMgr::nsHalfOpenSocket)
-NS_IMPL_RELEASE(nsHttpConnectionMgr::nsHalfOpenSocket)
 
-NS_INTERFACE_MAP_BEGIN(nsHttpConnectionMgr::nsHalfOpenSocket)
-    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-    NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
-    NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
-    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-    // we have no macro that covers this case.
-    if (aIID.Equals(NS_GET_IID(nsHttpConnectionMgr::nsHalfOpenSocket)) ) {
-        AddRef();
-        *aInstancePtr = this;
-        return NS_OK;
-    } else
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsHttpConnectionMgr::nsHalfOpenSocket,
+                  nsIOutputStreamCallback,
+                  nsITransportEventSink,
+                  nsIInterfaceRequestor,
+                  nsITimerCallback)
 
 nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
@@ -3162,16 +3051,14 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     mHasConnected = true;
 
     // if this is still in the pending list, remove it and dispatch it
-    index = mEnt->mPendingQ.IndexOf(mTransaction, 0, PendingComparator());
+    index = mEnt->mPendingQ.IndexOf(mTransaction);
     if (index != -1) {
         MOZ_ASSERT(!mSpeculative,
                    "Speculative Half Open found mTransaction");
-        RefPtr<PendingTransactionInfo> temp = mEnt->mPendingQ[index];
+        RefPtr<nsHttpTransaction> temp = mEnt->mPendingQ[index];
         mEnt->mPendingQ.RemoveElementAt(index);
         gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);
-        rv = gHttpHandler->ConnMgr()->DispatchTransaction(mEnt,
-                                                          temp->mTransaction,
-                                                          conn);
+        rv = gHttpHandler->ConnMgr()->DispatchTransaction(mEnt, temp, conn);
     } else {
         // this transaction was dispatched off the pending q before all the
         // sockets established themselves.
@@ -3224,21 +3111,8 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-    if (mTransaction) {
-        if ((trans == mSocketTransport) ||
-            ((trans == mBackupTransport) && (status == NS_NET_STATUS_CONNECTED_TO) &&
-            mEnt->mPendingQ.Contains(mTransaction, PendingComparator()))) {
-            // Send this status event only if the transaction is still panding,
-            // i.e. it has not found a free already connected socket.
-            // Sockets in halfOpen state can only get following events:
-            // NS_NET_STATUS_RESOLVING_HOST, NS_NET_STATUS_RESOLVED_HOST,
-            // NS_NET_STATUS_CONNECTING_TO and NS_NET_STATUS_CONNECTED_TO.
-            // mBackupTransport is only started after
-            // NS_NET_STATUS_CONNECTING_TO of mSocketTransport, so ignore all
-            // mBackupTransport events until NS_NET_STATUS_CONNECTED_TO.
-            mTransaction->OnTransportStatus(trans, status, progress);
-        }
-    }
+    if (mTransaction)
+        mTransaction->OnTransportStatus(trans, status, progress);
 
     MOZ_ASSERT(trans == mSocketTransport || trans == mBackupTransport);
     if (status == NS_NET_STATUS_CONNECTED_TO) {
