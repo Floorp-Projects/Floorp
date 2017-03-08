@@ -1226,6 +1226,14 @@ TEST_F(JsepTrackTest, SimulcastOfferer)
   ASSERT_EQ("bar", mSendOff->GetNegotiatedDetails()->GetEncoding(1).mRid);
   ASSERT_EQ(10000U,
       mSendOff->GetNegotiatedDetails()->GetEncoding(1).mConstraints.maxBr);
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=simulcast: send rid=foo;bar"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=simulcast: recv rid=foo;bar"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:foo send"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:bar send"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:foo recv"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:bar recv"));
 }
 
 TEST_F(JsepTrackTest, SimulcastAnswerer)
@@ -1248,6 +1256,14 @@ TEST_F(JsepTrackTest, SimulcastAnswerer)
   ASSERT_EQ("bar", mSendAns->GetNegotiatedDetails()->GetEncoding(1).mRid);
   ASSERT_EQ(10000U,
       mSendAns->GetNegotiatedDetails()->GetEncoding(1).mConstraints.maxBr);
+  ASSERT_NE(std::string::npos,
+            mOffer->ToString().find("a=simulcast: recv rid=foo;bar"));
+  ASSERT_NE(std::string::npos,
+            mAnswer->ToString().find("a=simulcast: send rid=foo;bar"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:foo recv"));
+  ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:bar recv"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:foo send"));
+  ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:bar send"));
 }
 
 #define VERIFY_OPUS_MAX_PLAYBACK_RATE(track, expectedRate)  \
