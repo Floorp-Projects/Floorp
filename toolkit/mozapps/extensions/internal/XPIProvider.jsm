@@ -963,7 +963,7 @@ var loadManifestFromWebManifest = Task.async(function*(aUri) {
 
   let extension = new ExtensionData(uri);
 
-  let manifest = yield extension.readManifest();
+  let manifest = yield extension.loadManifest();
   let theme = !!manifest.theme;
 
   // Read the list of available locales, and pre-load messages for

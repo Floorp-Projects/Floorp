@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   DefaultMap,
   DefaultWeakMap,
+  StartupCache,
   instanceOf,
 } = ExtensionUtils;
 
@@ -2583,7 +2584,7 @@ this.Schemas = {
 
   load(url) {
     if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
-      return readJSON(url).then(json => {
+      return StartupCache.schemas.get(url, readJSON).then(json => {
         this.schemaJSON.set(url, json);
 
         let data = Services.ppmm.initialProcessData;

@@ -32,7 +32,10 @@ add_task(function* test_implicit_id() {
   equal(addon, null, "Add-on is not installed");
 
   let xpifile = do_get_file(IMPLICIT_ID_XPI);
-  yield promiseInstallAllFiles([xpifile]);
+  yield Promise.all([
+    promiseInstallAllFiles([xpifile]),
+    promiseWebExtensionStartup(),
+  ]);
 
   addon = yield promiseAddonByID(IMPLICIT_ID_ID);
   notEqual(addon, null, "Add-on is installed");
@@ -52,7 +55,10 @@ add_task(function* test_implicit_id_temp() {
   equal(addon, null, "Add-on is not installed");
 
   let xpifile = do_get_file(IMPLICIT_ID_XPI);
-  yield AddonManager.installTemporaryAddon(xpifile);
+  yield Promise.all([
+    AddonManager.installTemporaryAddon(xpifile),
+    promiseWebExtensionStartup(),
+  ]);
 
   addon = yield promiseAddonByID(IMPLICIT_ID_ID);
   notEqual(addon, null, "Add-on is installed");
@@ -80,7 +86,11 @@ add_task(function* test_unsigned_no_id_temp_install() {
   const addonDir = yield promiseWriteWebManifestForExtension(manifest, gTmpD,
                                                 "the-addon-sub-dir");
   const testDate = new Date();
-  const addon = yield AddonManager.installTemporaryAddon(addonDir);
+  const [addon] = yield Promise.all([
+    AddonManager.installTemporaryAddon(addonDir),
+    promiseWebExtensionStartup(),
+  ]);
+
   ok(addon.id, "ID should have been auto-generated");
   ok(Math.abs(addon.installDate - testDate) < 10000, "addon has an expected installDate");
   ok(Math.abs(addon.updateDate - testDate) < 10000, "addon has an expected updateDate");
@@ -92,7 +102,10 @@ add_task(function* test_unsigned_no_id_temp_install() {
         "SourceURI of the add-on has the expected value");
 
   // Install the same directory again, as if re-installing or reloading.
-  const secondAddon = yield AddonManager.installTemporaryAddon(addonDir);
+  const [secondAddon] = yield Promise.all([
+    AddonManager.installTemporaryAddon(addonDir),
+    promiseWebExtensionStartup(),
+  ]);
   // The IDs should be the same.
   equal(secondAddon.id, addon.id, "Reinstalled add-on has the expected ID");
 
@@ -480,7 +493,7 @@ add_task(function* test_strict_min_max() {
 });
 
 // Check permissions prompt
-add_task(function* test_permissions() {
+add_task(function* test_permissions_prompt() {
   const manifest = {
     name: "permissions test",
     description: "permissions test",
@@ -518,7 +531,7 @@ add_task(function* test_permissions() {
 });
 
 // Check permissions prompt cancellation
-add_task(function* test_permissions() {
+add_task(function* test_permissions_prompt_cancel() {
   const manifest = {
     name: "permissions test",
     description: "permissions test",
