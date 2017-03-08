@@ -541,7 +541,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
   syncEnabledPref();
 
   loadPrefs();
-  prefs.observe("", store);
+  Services.prefs.addObserver(PREF_BRANCH, store, false);
   Services.prefs.addObserver("keyword.enabled", store, true);
 
   return Object.seal(store);
