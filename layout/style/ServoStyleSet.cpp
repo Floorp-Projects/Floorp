@@ -247,10 +247,24 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+ServoStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
-  // The parent context can be null if the non-element share a style context
-  // with the root of an anonymous subtree.
+  const ServoComputedValues* parent = aParentContext->StyleSource().AsServoComputedValues();
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ComputedValues_Inherit(mRawSet.get(), parent).Consume();
+  MOZ_ASSERT(computedValues);
+
+  return GetContext(computedValues.forget(), aParentContext,
+                    nsCSSAnonBoxes::firstLetterContinuation,
+                    CSSPseudoElementType::AnonBox,
+                    nullptr);
+}
+
+already_AddRefed<nsStyleContext>
+ServoStyleSet::ResolveStyleForPlaceholder(nsStyleContext* aParentContext)
+{
+  // The parent context can be null if the placeholder's element is a root
+  // element.
   const ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
   RefPtr<ServoComputedValues> computedValues =
@@ -258,7 +272,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
-                    nsCSSAnonBoxes::mozOtherNonElement,
+                    nsCSSAnonBoxes::oofPlaceholder,
                     CSSPseudoElementType::AnonBox,
                     nullptr);
 }

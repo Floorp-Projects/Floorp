@@ -2095,9 +2095,11 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
     // ancestor).
     nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
     if (parentPseudoTag &&
-        parentPseudoTag != nsCSSAnonBoxes::mozOtherNonElement) {
+        parentPseudoTag != nsCSSAnonBoxes::firstLetterContinuation) {
       MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::mozText,
                  "Style of text node should not be parent of anything");
+      MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::oofPlaceholder,
+                 "Style of placeholder should not be parent of anything");
       LOG_RESTYLE_CONTINUE("the old style context's parent is for a pseudo");
       aRestyleResult = RestyleResult::eContinue;
       // Parent style context pseudo-ness doesn't affect whether we can
@@ -2466,8 +2468,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     MOZ_ASSERT(aSelf->GetType() == nsGkAtoms::textFrame);
     newContext =
       styleSet->ResolveStyleForText(aSelf->GetContent(), parentContext);
-  } else if (nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
-    newContext = styleSet->ResolveStyleForOtherNonElement(parentContext);
+  } else if (pseudoTag == nsCSSAnonBoxes::firstLetterContinuation) {
+    newContext = styleSet->ResolveStyleForFirstLetterContinuation(parentContext);
+  } else if (pseudoTag == nsCSSAnonBoxes::oofPlaceholder) {
+    newContext = styleSet->ResolveStyleForPlaceholder(parentContext);
   }
   else {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);

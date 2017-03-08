@@ -24,7 +24,10 @@ public:
   static bool IsTreePseudoElement(nsIAtom* aPseudo);
 #endif
   static bool IsNonElement(nsIAtom* aPseudo)
-    { return aPseudo == mozText || aPseudo == mozOtherNonElement; }
+  {
+    return aPseudo == mozText || aPseudo == oofPlaceholder ||
+           aPseudo == firstLetterContinuation;
+  }
 
 #define CSS_ANON_BOX(_name, _value) static nsICSSAnonBoxPseudo* _name;
 #include "nsCSSAnonBoxList.h"

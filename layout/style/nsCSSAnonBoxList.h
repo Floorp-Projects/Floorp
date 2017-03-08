@@ -19,13 +19,15 @@
 // OUTPUT_CLASS=nsCSSAnonBoxes
 // MACRO_NAME=CSS_ANON_BOX
 
-// ::-moz-text and ::-moz-other-non-element are non-elements which no
-// rule will match.
+// ::-moz-text, ::-moz-oof-placeholder, and ::-moz-first-letter-continuation are
+// non-elements which no rule will match.
 CSS_ANON_BOX(mozText, ":-moz-text")
-// This anonymous box has two uses:
-// 1. placeholder frames,
-// 2. nsFirstLetterFrames for content outside the ::first-letter.
-CSS_ANON_BOX(mozOtherNonElement, ":-moz-other-non-element")
+// placeholder frames for out of flows.  Note that :-moz-placeholder is used for
+// the pseudo-element that represents the placeholder text in <input
+// placeholder="foo">, so we need a different string here.
+CSS_ANON_BOX(oofPlaceholder, ":-moz-oof-placeholder")
+// nsFirstLetterFrames for content outside the ::first-letter.
+CSS_ANON_BOX(firstLetterContinuation, ":-moz-first-letter-continuation")
 
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
 CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")

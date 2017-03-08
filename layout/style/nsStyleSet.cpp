@@ -1830,10 +1830,18 @@ nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+nsStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
-                    nsCSSAnonBoxes::mozOtherNonElement,
+                    nsCSSAnonBoxes::firstLetterContinuation,
+                    CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForPlaceholder(nsStyleContext* aParentContext)
+{
+  return GetContext(aParentContext, mRuleTree, nullptr,
+                    nsCSSAnonBoxes::oofPlaceholder,
                     CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
 }
 
