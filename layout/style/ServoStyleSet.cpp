@@ -268,20 +268,27 @@ ServoStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentCon
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleForPlaceholder(nsStyleContext* aParentContext)
+ServoStyleSet::ResolveStyleForPlaceholder()
 {
-  // The parent context can be null if the placeholder's element is a root
-  // element.
-  const ServoComputedValues* parent =
-    aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
+  RefPtr<nsStyleContext>& cache =
+    mNonInheritingStyleContexts[
+      static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::oofPlaceholder)];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(mRawSet.get(), parent).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(), nullptr).Consume();
   MOZ_ASSERT(computedValues);
 
-  return GetContext(computedValues.forget(), aParentContext,
-                    nsCSSAnonBoxes::oofPlaceholder,
-                    CSSPseudoElementType::AnonBox,
-                    nullptr);
+  RefPtr<nsStyleContext> retval =
+    GetContext(computedValues.forget(), nullptr,
+               nsCSSAnonBoxes::oofPlaceholder,
+               CSSPseudoElementType::AnonBox,
+               nullptr);
+  cache = retval;
+  return retval.forget();
 }
 
 already_AddRefed<nsStyleContext>
