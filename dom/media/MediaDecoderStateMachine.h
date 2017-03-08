@@ -738,6 +738,9 @@ private:
   // IsVisible, mirrored from the media decoder.
   Mirror<bool> mIsVisible;
 
+  // HasSuspendTaint, mirrored from the media decoder.
+  Mirror<bool> mHasSuspendTaint;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;
