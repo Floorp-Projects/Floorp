@@ -3159,6 +3159,11 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                     newKey->AppendLiteral("~.:");
                 }
                 newKey->AppendInt(mEnt->mConnInfo->OriginPort());
+                newKey->AppendLiteral("/[");
+                nsAutoCString suffix;
+                mEnt->mConnInfo->GetOriginAttributes().CreateSuffix(suffix);
+                newKey->Append(suffix);
+                newKey->Append(']');
                 LOG(("nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus "
                      "STATUS_CONNECTING_TO Established New Coalescing Key # %d for host "
                      "%s [%s]", i, mEnt->mConnInfo->Origin(), newKey->get()));
