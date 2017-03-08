@@ -243,7 +243,7 @@ GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE)
 PChromiumCDMParent*
 GMPContentParent::AllocPChromiumCDMParent()
 {
-  ChromiumCDMParent* parent = new ChromiumCDMParent(this);
+  ChromiumCDMParent* parent = new ChromiumCDMParent(this, GetPluginId());
   NS_ADDREF(parent);
   return parent;
 }
