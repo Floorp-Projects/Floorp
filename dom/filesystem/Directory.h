@@ -14,13 +14,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-// Resolve the name collision of Microsoft's API name with macros defined in
-// Windows header files. Undefine the macro of CreateDirectory to avoid
-// Directory#CreateDirectory being replaced by Directory#CreateDirectoryW.
-#ifdef CreateDirectory
-#undef CreateDirectory
-#endif
-
 namespace mozilla {
 namespace dom {
 
@@ -64,9 +57,6 @@ public:
 
   void
   GetName(nsAString& aRetval, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  CreateDirectory(const nsAString& aPath, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   Get(const nsAString& aPath, ErrorResult& aRv);

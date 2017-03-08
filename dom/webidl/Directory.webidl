@@ -27,18 +27,6 @@ interface Directory {
   readonly attribute DOMString name;
 
   /*
-   * Creates a descendent directory. This method will create any intermediate
-   * directories specified by the path segments.
-   *
-   * @param path The relative path of the new directory to current directory.
-   * If path exists, createDirectory must fail.
-   * @return If succeeds, the promise is resolved with the new created
-   * Directory object. Otherwise, rejected with a DOM error.
-   */
-  [Func="mozilla::dom::Directory::DeviceStorageEnabled", NewObject]
-  Promise<Directory> createDirectory(DOMString path);
-
-  /*
    * Gets a descendent file or directory with the given path.
    *
    * @param path The descendent entry's relative path to current directory.
