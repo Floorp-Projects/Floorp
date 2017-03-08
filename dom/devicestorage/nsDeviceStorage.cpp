@@ -2780,9 +2780,6 @@ void nsDOMDeviceStorage::InvalidateVolumeCaches()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Currently there is only the one volume cache. DeviceStorageAreaListener
-  // calls this function any time it detects a volume was added or removed.
-
   sVolumeNameCache = nullptr;
 }
 

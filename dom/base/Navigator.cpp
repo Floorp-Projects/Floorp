@@ -33,7 +33,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
-#include "mozilla/dom/DeviceStorageAreaListener.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/PowerManager.h"
 #include "mozilla/dom/WakeLock.h"
@@ -219,7 +218,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageAreaListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGamepadServiceTest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRGetDisplaysPromises)
@@ -303,10 +301,6 @@ Navigator::Invalidate()
   if (mMediaKeySystemAccessManager) {
     mMediaKeySystemAccessManager->Shutdown();
     mMediaKeySystemAccessManager = nullptr;
-  }
-
-  if (mDeviceStorageAreaListener) {
-    mDeviceStorageAreaListener = nullptr;
   }
 
   if (mGamepadServiceTest) {
@@ -1036,20 +1030,6 @@ Navigator::RegisterProtocolHandler(const nsAString& aProtocol,
 
   aRv = registrar->RegisterProtocolHandler(aProtocol, aURI, aTitle,
                                            mWindow->GetOuterWindow());
-}
-
-DeviceStorageAreaListener*
-Navigator::GetDeviceStorageAreaListener(ErrorResult& aRv)
-{
-  if (!mDeviceStorageAreaListener) {
-    if (!mWindow || !mWindow->GetOuterWindow() || !mWindow->GetDocShell()) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-    mDeviceStorageAreaListener = new DeviceStorageAreaListener(mWindow);
-  }
-
-  return mDeviceStorageAreaListener;
 }
 
 already_AddRefed<nsDOMDeviceStorage>
