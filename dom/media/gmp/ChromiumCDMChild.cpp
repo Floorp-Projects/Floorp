@@ -310,10 +310,78 @@ ChromiumCDMChild::RecvRemoveSession(const uint32_t& aPromiseId,
   return IPC_OK();
 }
 
+void
+ChromiumCDMChild::DecryptFailed(uint32_t aId, cdm::Status aStatus)
+{
+  Unused << SendDecrypted(aId, aStatus, nsTArray<uint8_t>());
+}
+
+static void
+InitInputBuffer(const CDMInputBuffer& aBuffer,
+                nsTArray<cdm::SubsampleEntry>& aSubSamples,
+                cdm::InputBuffer& aInputBuffer)
+{
+  aInputBuffer.data = aBuffer.mData().Elements();
+  aInputBuffer.data_size = aBuffer.mData().Length();
+
+  if (aBuffer.mIsEncrypted()) {
+    aInputBuffer.key_id = aBuffer.mKeyId().Elements();
+    aInputBuffer.key_id_size = aBuffer.mKeyId().Length();
+
+    aInputBuffer.iv = aBuffer.mIV().Elements();
+    aInputBuffer.iv_size = aBuffer.mIV().Length();
+
+    aSubSamples.SetCapacity(aBuffer.mClearBytes().Length());
+    for (size_t i = 0; i < aBuffer.mCipherBytes().Length(); i++) {
+      aSubSamples.AppendElement(cdm::SubsampleEntry(aBuffer.mClearBytes()[i],
+                                                    aBuffer.mCipherBytes()[i]));
+    }
+    aInputBuffer.subsamples = aSubSamples.Elements();
+    aInputBuffer.num_subsamples = aSubSamples.Length();
+  }
+  aInputBuffer.timestamp = aBuffer.mTimestamp();
+}
+
 mozilla::ipc::IPCResult
-ChromiumCDMChild::RecvDecrypt(const CDMInputBuffer& aBuffer)
+ChromiumCDMChild::RecvDecrypt(const uint32_t& aId,
+                              const CDMInputBuffer& aBuffer)
 {
   GMP_LOG("ChromiumCDMChild::RecvDecrypt()");
+  if (!mCDM) {
+    GMP_LOG("ChromiumCDMChild::RecvDecrypt() no CDM");
+    DecryptFailed(aId, cdm::kDecryptError);
+    return IPC_OK();
+  }
+  if (aBuffer.mClearBytes().Length() != aBuffer.mCipherBytes().Length()) {
+    GMP_LOG("ChromiumCDMChild::RecvDecrypt() clear/cipher bytes length doesn't "
+            "match");
+    DecryptFailed(aId, cdm::kDecryptError);
+    return IPC_OK();
+  }
+
+  cdm::InputBuffer input;
+  nsTArray<cdm::SubsampleEntry> subsamples;
+  InitInputBuffer(aBuffer, subsamples, input);
+
+  WidevineDecryptedBlock output;
+  cdm::Status status = mCDM->Decrypt(input, &output);
+
+  if (status != cdm::kSuccess) {
+    DecryptFailed(aId, status);
+    return IPC_OK();
+  }
+
+  if (!output.DecryptedBuffer() ||
+      output.DecryptedBuffer()->Size() != aBuffer.mData().Length()) {
+    // The sizes of the input and output should exactly match.
+    DecryptFailed(aId, cdm::kDecryptError);
+    return IPC_OK();
+  }
+
+  nsTArray<uint8_t> buf =
+    static_cast<WidevineBuffer*>(output.DecryptedBuffer())->ExtractBuffer();
+  Unused << SendDecrypted(aId, cdm::kSuccess, buf);
+
   return IPC_OK();
 }
 
