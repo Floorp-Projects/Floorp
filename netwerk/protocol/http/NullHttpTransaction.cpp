@@ -142,6 +142,12 @@ NullHttpTransaction::Claim()
 }
 
 void
+NullHttpTransaction::Unclaim()
+{
+  mClaimed = false;
+}
+
+void
 NullHttpTransaction::SetConnection(nsAHttpConnection *conn)
 {
   mConnection = conn;
