@@ -15,13 +15,12 @@ interface nsIKeyObject;
 interface nsICryptoHMAC : nsISupports
 {
     /**
-     * Hashing Algorithms.  These values are to be used by the
-     * |init| method to indicate which hashing function to
-     * use.  These values map onto the values defined in
-     * mozilla/security/nss/lib/softoken/pkcs11t.h and are 
-     * switched to CKM_*_HMAC constant.
+     * Hashing Algorithms. These values are to be used by the |init| method to
+     * indicate which hashing function to use. These values map onto the values
+     * defined in mozilla/security/nss/lib/softoken/pkcs11t.h and are switched
+     * to a CKM_*_HMAC constant.
      */
-    const short MD2    = 1;
+    // 1 used to mean MD2.
     const short MD5    = 2;
     const short SHA1   = 3;
     const short SHA256 = 4;

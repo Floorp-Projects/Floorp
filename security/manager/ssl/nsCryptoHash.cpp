@@ -269,23 +269,20 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
     mHMACContext = nullptr;
   }
 
-  CK_MECHANISM_TYPE HMACMechType;
-  switch (aAlgorithm)
-  {
-  case nsCryptoHMAC::MD2:
-    HMACMechType = CKM_MD2_HMAC; break;
-  case nsCryptoHMAC::MD5:
-    HMACMechType = CKM_MD5_HMAC; break;
-  case nsCryptoHMAC::SHA1:
-    HMACMechType = CKM_SHA_1_HMAC; break;
-  case nsCryptoHMAC::SHA256:
-    HMACMechType = CKM_SHA256_HMAC; break;
-  case nsCryptoHMAC::SHA384:
-    HMACMechType = CKM_SHA384_HMAC; break;
-  case nsCryptoHMAC::SHA512:
-    HMACMechType = CKM_SHA512_HMAC; break;
-  default:
-    return NS_ERROR_INVALID_ARG;
+  CK_MECHANISM_TYPE mechType;
+  switch (aAlgorithm) {
+    case nsICryptoHMAC::MD5:
+      mechType = CKM_MD5_HMAC; break;
+    case nsICryptoHMAC::SHA1:
+      mechType = CKM_SHA_1_HMAC; break;
+    case nsICryptoHMAC::SHA256:
+      mechType = CKM_SHA256_HMAC; break;
+    case nsICryptoHMAC::SHA384:
+      mechType = CKM_SHA384_HMAC; break;
+    case nsICryptoHMAC::SHA512:
+      mechType = CKM_SHA512_HMAC; break;
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
 
   NS_ENSURE_ARG_POINTER(aKeyObject);
@@ -306,8 +303,7 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
   SECItem rawData;
   rawData.data = 0;
   rawData.len = 0;
-  mHMACContext = PK11_CreateContextBySymKey(
-      HMACMechType, CKA_SIGN, key, &rawData);
+  mHMACContext = PK11_CreateContextBySymKey(mechType, CKA_SIGN, key, &rawData);
   NS_ENSURE_TRUE(mHMACContext, NS_ERROR_FAILURE);
 
   SECStatus ss = PK11_DigestBegin(mHMACContext);
