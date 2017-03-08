@@ -49,6 +49,10 @@ public:
   gfx::Point GetOffsetToParent();
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
+  gfx::Rect GetWrBoundsRect();
+  gfx::Rect GetWrRelBounds();
+  gfx::Rect GetWrClipRect(gfx::Rect& aRect);
+  void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
   Maybe<WrImageMask> buildMaskLayer();
 
 };

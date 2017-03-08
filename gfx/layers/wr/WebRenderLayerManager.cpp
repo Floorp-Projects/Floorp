@@ -145,8 +145,70 @@ WebRenderLayer::buildMaskLayer() {
   return mask;
 }
 
+gfx::Rect
+WebRenderLayer::GetWrBoundsRect()
+{
+  LayerIntRect bounds = GetLayer()->GetVisibleRegion().GetBounds();
+  return Rect(0, 0, bounds.width, bounds.height);
+}
 
+gfx::Rect
+WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
+{
+  gfx::Rect clip;
+  Layer* layer = GetLayer();
+  Matrix4x4 transform = layer->GetTransform();
+  if (layer->GetClipRect().isSome()) {
+    clip = RelativeToVisible(transform.Inverse().TransformBounds(
+             IntRectToRect(layer->GetClipRect().ref().ToUnknownRect()))
+           );
+  } else {
+    clip = aRect;
+  }
 
+  return clip;
+}
+
+gfx::Rect
+WebRenderLayer::GetWrRelBounds()
+{
+  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
+  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
+  return relBounds;
+}
+
+void
+WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
+{
+  if (!gfxPrefs::LayersDump()) {
+    return;
+  }
+
+  Matrix4x4 transform = GetLayer()->GetTransform();
+  Rect clip = GetWrClipRect(aRect);
+  Rect relBounds = GetWrRelBounds();
+  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
+
+  printf_stderr("%s %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
+                aLayerType,
+                GetLayer(),
+                Stringify(relBounds).c_str(),
+                Stringify(overflow).c_str(),
+                Stringify(transform).c_str(),
+                Stringify(aRect).c_str(),
+                Stringify(clip).c_str(),
+                Stringify(mixBlendMode).c_str());
+}
 
 WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
         WebRenderLayer* aLayer)

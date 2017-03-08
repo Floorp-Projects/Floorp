@@ -52,44 +52,19 @@ WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   WrScrollFrameStackingContextGenerator scrollFrames(this);
 
-  LayerIntRect bounds = GetVisibleRegion().GetBounds();
-  Rect rect(0, 0, bounds.width, bounds.height);
-  Rect clip;
-  Matrix4x4 transform = GetTransform();
-  if (GetClipRect().isSome()) {
-    clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
-  } else {
-    clip = rect;
-  }
-
-  Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
-
+  Rect rect = GetWrBoundsRect();
+  Rect clip = GetWrClipRect(rect);
+  Rect relBounds = GetWrRelBounds();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("BorderLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(rect).c_str(),
-                  Stringify(clip).c_str());
-  }
+  DumpLayerInfo("BorderLayer", rect);
 
   aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
                                wr::ToWrRect(overflow),
                                nullptr,
                                1.0f,
                                //GetAnimations(),
-                               transform,
+                               GetTransform(),
                                WrMixBlendMode::Normal);
   aBuilder.PushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
                       wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
