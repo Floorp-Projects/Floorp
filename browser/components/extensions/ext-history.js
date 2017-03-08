@@ -113,7 +113,9 @@ function getObserver() {
       },
       onBeginUpdateBatch: function() {},
       onEndUpdateBatch: function() {},
-      onTitleChanged: function() {},
+      onTitleChanged: function(uri, title) {
+        this.emit("titleChanged", {url: uri.spec, title: title});
+      },
       onClearHistory: function() {
         this.emit("visitRemoved", {allHistory: true, urls: []});
       },
@@ -239,6 +241,17 @@ extensions.registerSchemaAPI("history", "addon_parent", context => {
         getObserver().on("visitRemoved", listener);
         return () => {
           getObserver().off("visitRemoved", listener);
+        };
+      }).api(),
+
+      onTitleChanged: new SingletonEventManager(context, "history.onTitleChanged", fire => {
+        let listener = (event, data) => {
+          fire.sync(data);
+        };
+
+        getObserver().on("titleChanged", listener);
+        return () => {
+          getObserver().off("titleChanged", listener);
         };
       }).api(),
     },
