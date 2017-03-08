@@ -63,6 +63,7 @@ function PeerConnectionTest(options) {
   options.bundle = "bundle" in options ? options.bundle : true;
   options.rtcpmux = "rtcpmux" in options ? options.rtcpmux : true;
   options.opus = "opus" in options ? options.opus : true;
+  options.ssrc = "ssrc" in options ? options.ssrc : true;
 
   if (iceServersArray.length) {
     if (!options.turn_disabled_local) {
@@ -450,6 +451,14 @@ PeerConnectionTest.prototype.updateChainSteps = function() {
     this.chain.insertAfterEach(
       'PC_LOCAL_CREATE_OFFER',
       [PC_LOCAL_REMOVE_RTCPMUX_FROM_OFFER]);
+  }
+  if (!this.testOptions.ssrc) {
+    this.chain.insertAfterEach(
+      'PC_LOCAL_CREATE_OFFER',
+      [PC_LOCAL_REMOVE_SSRC_FROM_OFFER]);
+    this.chain.insertAfterEach(
+      'PC_REMOTE_CREATE_ANSWER',
+      [PC_REMOTE_REMOVE_SSRC_FROM_ANSWER]);
   }
   if (!this.testOptions.is_local) {
     this.chain.filterOut(/^PC_LOCAL/);

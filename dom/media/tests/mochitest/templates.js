@@ -509,6 +509,16 @@ function PC_LOCAL_REMOVE_RTCPMUX_FROM_OFFER(test) {
   info("Updated no RTCP-Mux offer: " + JSON.stringify(test.originalOffer));
 };
 
+function PC_LOCAL_REMOVE_SSRC_FROM_OFFER(test) {
+  test.originalOffer.sdp = sdputils.removeSSRCs(test.originalOffer.sdp);
+  info("Updated no SSRCs offer: " + JSON.stringify(test.originalOffer));
+};
+
+function PC_REMOTE_REMOVE_SSRC_FROM_ANSWER(test) {
+  test.originalAnswer.sdp = sdputils.removeSSRCs(test.originalAnswer.sdp);
+  info("Updated no SSRCs answer: " + JSON.stringify(test.originalAnswerr));
+};
+
 var addRenegotiation = (chain, commands, checks) => {
   chain.append(commands);
   chain.append(commandsPeerConnectionOfferAnswer);
