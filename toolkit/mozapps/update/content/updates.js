@@ -805,7 +805,7 @@ var gDownloadingPage = {
     if (this._downloadStatus.textContent == status)
       return;
     while (this._downloadStatus.hasChildNodes())
-      this._downloadStatus.removeChild(this._downloadStatus.firstChild);
+      this._downloadStatus.firstChild.remove();
     this._downloadStatus.appendChild(document.createTextNode(status));
   },
 

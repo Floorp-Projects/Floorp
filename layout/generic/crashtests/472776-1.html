@@ -9,7 +9,7 @@ function boom()
   v.childNodes[1].firstChild.data = "";
   document.documentElement.offsetHeight;
   v.appendChild(document.createTextNode("D"));
-  v.removeChild(v.firstChild);
+  v.firstChild.remove();
 }
 
 </script>

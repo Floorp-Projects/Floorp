@@ -13,7 +13,7 @@ function showpageshowcount()
 	var div1 = document.getElementById("div1");
 	while (div1.firstChild)
 	{
-		div1.removeChild(div1.firstChild);
+		div1.firstChild.remove();
 	}
 	div1.appendChild(document.createTextNode(
 	  "pageshowcount: " + pageshowcount));

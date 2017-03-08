@@ -16,7 +16,7 @@ function setText(id, value) {
     return;
   }
   if (element.hasChildNodes()) {
-    element.removeChild(element.firstChild);
+    element.firstChild.remove();
   }
   element.appendChild(document.createTextNode(value));
 }

@@ -44,7 +44,7 @@ SimpleTest.waitForFocus(function() {
   var beforeB = snapshotWindow(win, true);
   is(b.textContent, "X", "Typing should work");
   while (b.firstChild) {
-    b.removeChild(b.firstChild);
+    b.firstChild.remove();
   }
   ok(editorCommandsEnabled(), "The editor commands should work");
 
@@ -58,7 +58,7 @@ SimpleTest.waitForFocus(function() {
   var afterB = snapshotWindow(win, true);
   is(b.textContent, "X", "Typing should work");
   while (b.firstChild) {
-    b.removeChild(b.firstChild);
+    b.firstChild.remove();
   }
   ok(editorCommandsEnabled(), "The editor commands should work");
 

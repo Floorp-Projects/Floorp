@@ -56,7 +56,7 @@ addAccessibleTask('<select id="select"></select>', function*(browser, accDoc) {
   // Remove grouping from combobox
   yield ContentTask.spawn(browser, {}, () => {
     let contentSelect = content.document.getElementById('select');
-    contentSelect.removeChild(contentSelect.firstChild);
+    contentSelect.firstChild.remove();
   });
   yield onEvent;
 

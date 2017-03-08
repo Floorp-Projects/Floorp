@@ -77,7 +77,7 @@ XPInstallConfirm.init = function() {
   var textNode = document.createTextNode(introString);
   var introNode = document.getElementById("itemWarningIntro");
   while (introNode.hasChildNodes())
-    introNode.removeChild(introNode.firstChild);
+    introNode.firstChild.remove();
   introNode.appendChild(textNode);
 
   var okButton = document.documentElement.getButton("accept");

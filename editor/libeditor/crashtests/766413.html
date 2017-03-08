@@ -7,7 +7,7 @@ function boom()
 {
   var root = document.documentElement;
   while (root.firstChild) {
-    root.removeChild(root.firstChild);
+    root.firstChild.remove();
   }
 
   var space = document.createTextNode(" ");
