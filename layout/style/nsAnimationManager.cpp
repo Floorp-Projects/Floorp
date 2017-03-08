@@ -475,17 +475,11 @@ private:
     nsCSSPropertyIDSet aPropertiesSetAtEnd,
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes);
-  void AppendProperty(nsPresContext* aPresContext,
-                      nsCSSPropertyID aProperty,
-                      nsTArray<PropertyValuePair>& aPropertyValues);
-  nsCSSValue GetComputedValue(nsPresContext* aPresContext,
-                              nsCSSPropertyID aProperty);
 
   RefPtr<nsStyleContext> mStyleContext;
   NonOwningAnimationTarget mTarget;
 
   ResolvedStyleCache mResolvedStyles;
-  RefPtr<nsStyleContext> mStyleWithoutAnimation;
 };
 
 static Maybe<ComputedTimingFunction>
@@ -992,53 +986,6 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
       endKeyframe->mPropertyValues.AppendElement(Move(propertyValue));
     }
   }
-}
-
-void
-GeckoCSSAnimationBuilder::AppendProperty(
-    nsPresContext* aPresContext,
-    nsCSSPropertyID aProperty,
-    nsTArray<PropertyValuePair>& aPropertyValues)
-{
-  PropertyValuePair propertyValue;
-  propertyValue.mProperty = aProperty;
-  propertyValue.mValue = GetComputedValue(aPresContext, aProperty);
-
-  aPropertyValues.AppendElement(Move(propertyValue));
-}
-
-nsCSSValue
-GeckoCSSAnimationBuilder::GetComputedValue(nsPresContext* aPresContext,
-                                           nsCSSPropertyID aProperty)
-{
-  nsCSSValue result;
-  StyleAnimationValue computedValue;
-
-  if (!mStyleWithoutAnimation) {
-    MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
-               "ServoStyleSet should not use nsAnimationManager for "
-               "animations");
-    mStyleWithoutAnimation = aPresContext->StyleSet()->AsGecko()->
-      ResolveStyleByRemovingAnimation(mTarget.mElement, mStyleContext,
-                                      eRestyle_AllHintsWithAnimations);
-  }
-
-  if (StyleAnimationValue::ExtractComputedValue(aProperty,
-                                                mStyleWithoutAnimation,
-                                                computedValue)) {
-    DebugOnly<bool> uncomputeResult =
-      StyleAnimationValue::UncomputeValue(aProperty, Move(computedValue),
-                                          result);
-    MOZ_ASSERT(uncomputeResult,
-               "Unable to get specified value from computed value");
-  }
-
-  // If we hit this assertion, it probably means we are fetching a value from
-  // the computed style that we don't know how to represent as
-  // a StyleAnimationValue.
-  MOZ_ASSERT(result.GetUnit() != eCSSUnit_Null, "Got null computed value");
-
-  return result;
 }
 
 template<class BuilderType>
