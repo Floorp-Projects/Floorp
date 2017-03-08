@@ -1547,6 +1547,13 @@ HTMLMediaElement::GetCurrentImage()
   return lockImage.GetImage();
 }
 
+bool
+HTMLMediaElement::HasSuspendTaint() const
+{
+  MOZ_ASSERT(!mDecoder || (mDecoder->HasSuspendTaint() == mHasSuspendTaint));
+  return mHasSuspendTaint;
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {
