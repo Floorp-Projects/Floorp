@@ -316,7 +316,17 @@ function getAPILevelForWindow(window, addonId) {
   return FULL_PRIVILEGES;
 }
 
+let cacheInvalidated = 0;
+function onCacheInvalidate() {
+  cacheInvalidated++;
+}
+Services.obs.addObserver(onCacheInvalidate, "startupcache-invalidate", false);
+
 ExtensionManagement = {
+  get cacheInvalidated() {
+    return cacheInvalidated;
+  },
+
   get isExtensionProcess() {
     if (this.useRemoteWebExtensions) {
       return Services.appinfo.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE;

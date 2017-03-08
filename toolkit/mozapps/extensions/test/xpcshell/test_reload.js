@@ -80,7 +80,10 @@ add_task(function* test_reloading_a_temp_addon() {
     AddonManager.addAddonListener(listener);
   });
 
-  yield addon.reload();
+  yield Promise.all([
+    addon.reload(),
+    promiseAddonStartup(),
+  ]);
   yield onReload;
 
   // Make sure reload() doesn't trigger uninstall events.
@@ -111,7 +114,10 @@ add_task(function* test_can_reload_permanent_addon() {
     }
   })
 
-  yield addon.reload();
+  yield Promise.all([
+    addon.reload(),
+    promiseAddonStartup(),
+  ]);
 
   do_check_true(disabledCalled);
   do_check_true(enabledCalled);
