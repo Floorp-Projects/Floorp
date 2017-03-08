@@ -10571,15 +10571,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
-  "IPC_SYNC_LATENCY_MS": {
+  "IPC_SYNC_MAIN_LATENCY_MS": {
     "alert_emails": ["cpearce@mozilla.com"],
     "bug_numbers": [1333489],
     "expires_in_version": "60",
     "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 10,
+    "low": 32,
+    "high": 750,
+    "n_buckets": 40,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds are included in this probe."
+    "description": "Measures the number of milliseconds we spend waiting for sync IPC messages to finish sending, keyed by message name. Note: only messages that wait for more than 500 microseconds and block the main thread are included in this probe."
   },
   "MESSAGE_MANAGER_MESSAGE_SIZE2": {
     "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
