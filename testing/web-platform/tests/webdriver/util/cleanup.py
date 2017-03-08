@@ -21,7 +21,7 @@ def restore_windows(session):
 
     for window in _windows(session, exclude=[current_window]):
         session.window_handle = window
-        if len(session.window_handles) > 1:
+        if len(session.handles) > 1:
             session.close()
 
     session.window_handle = current_window
