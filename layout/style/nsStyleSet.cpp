@@ -310,6 +310,9 @@ nsStyleSet::BeginReconstruct()
   // held on to after the rule tree has been reconstructed.
   PresContext()->PresShell()->ClearArenaRefPtrs(eArenaObjectID_nsStyleContext);
 
+  // Clear our cached style contexts for non-inheriting anonymous boxes.
+  ClearNonInheritingStyleContexts();
+
 #ifdef DEBUG
   MOZ_ASSERT(!mOldRootNode);
   mOldRootNode = mRuleTree;
@@ -2272,6 +2275,9 @@ nsStyleSet::BeginShutdown()
 void
 nsStyleSet::Shutdown()
 {
+  // Make sure we drop our cached style contexts before the presshell arena
+  // starts going away.
+  ClearNonInheritingStyleContexts();
   mRuleTree = nullptr;
   GCRuleTrees();
   MOZ_ASSERT(mUnusedRuleNodeList.isEmpty());
@@ -2615,4 +2621,12 @@ nsStyleSet::ClearSelectors()
              "stylo: the style set and restyle manager must have the same "
              "StyleBackendType");
   PresContext()->RestyleManager()->AsGecko()->ClearSelectors();
+}
+
+void
+nsStyleSet::ClearNonInheritingStyleContexts()
+{
+  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+    ptr = nullptr;
+  }
 }
