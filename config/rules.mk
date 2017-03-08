@@ -167,7 +167,7 @@ ifndef GNU_CC
 ifdef SIMPLE_PROGRAMS
 COMPILE_PDB_FLAG ?= -Fd$(basename $(@F)).pdb
 else
-COMPILE_PDB_FLAG ?= -Fdgenerated.pdb
+COMPILE_PDB_FLAG ?= -Fdgenerated.pdb -FS
 endif
 COMPILE_CFLAGS += $(COMPILE_PDB_FLAG)
 COMPILE_CXXFLAGS += $(COMPILE_PDB_FLAG)

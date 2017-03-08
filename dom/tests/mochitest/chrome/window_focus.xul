@@ -1344,9 +1344,8 @@ function switchWindowTest(otherWindow, framesetWindow)
 
   fm.clearFocus(otherWindow);
 
-  // test to ensure that a synthetic event works
-  var synevent = document.createEvent("Event");
-  synevent.initEvent("focus", false, false);
+  // test to ensure that a synthetic event won't move focus
+  var synevent = new FocusEvent("focus", {});
   otherTextbox.inputField.dispatchEvent(synevent);
   is(synevent.type, "focus", "event.type after synthetic focus event");
   is(synevent.target, otherTextbox, "event.target after synthetic focus event");

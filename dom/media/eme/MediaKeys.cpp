@@ -429,7 +429,8 @@ MediaKeys::Init(ErrorResult& aRv)
   mProxy->Init(mCreatePromiseId,
                NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
-               KeySystemToGMPName(mKeySystem));
+               KeySystemToGMPName(mKeySystem),
+               top->GetExtantDoc()->EventTargetFor(TaskCategory::Other));
 
   return promise.forget();
 }

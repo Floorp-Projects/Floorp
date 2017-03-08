@@ -68,8 +68,8 @@ protected:
   virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent);
   virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent);
-  nsresult Focus(WidgetEvent* aFocusEvent);
-  nsresult Blur(WidgetEvent* aBlurEvent);
+  nsresult Focus(InternalFocusEvent* aFocusEvent);
+  nsresult Blur(InternalFocusEvent* aBlurEvent);
   nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
   nsresult DragExit(nsIDOMDragEvent* aDragEvent);

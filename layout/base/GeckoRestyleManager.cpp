@@ -866,13 +866,6 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     newParentContext = providerFrame->StyleContext();
     providerChild = providerFrame;
   }
-  NS_ASSERTION(newParentContext, "Reparenting something that has no usable"
-               " parent? Shouldn't happen!");
-  // XXX need to do something here to produce the correct style context for
-  // an IB split whose first inline part is inside a first-line frame.
-  // Currently the first IB anonymous block's style context takes the first
-  // part's style context as parent, which is wrong since first-line style
-  // should not apply to the anonymous block.
 
 #ifdef DEBUG
   {
@@ -897,6 +890,28 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     }
   }
 #endif
+
+  if (!newParentContext && !oldContext->GetParent()) {
+    // No need to do anything here.
+#ifdef DEBUG
+    // Make sure we have no children, so we really know there is nothing to do.
+    nsIFrame::ChildListIterator lists(aFrame);
+    for (; !lists.IsDone(); lists.Next()) {
+      MOZ_ASSERT(lists.CurrentList().IsEmpty(),
+                 "Failing to reparent style context for child of "
+                 "non-inheriting anon box");
+    }
+#endif // DEBUG
+    return NS_OK;
+  }
+
+  NS_ASSERTION(newParentContext, "Reparenting something that has no usable"
+               " parent? Shouldn't happen!");
+  // XXX need to do something here to produce the correct style context for
+  // an IB split whose first inline part is inside a first-line frame.
+  // Currently the first IB anonymous block's style context takes the first
+  // part's style context as parent, which is wrong since first-line style
+  // should not apply to the anonymous block.
 
   nsIFrame* prevContinuation =
     GetPrevContinuationWithPossiblySameStyle(aFrame);
@@ -2095,9 +2110,11 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
     // ancestor).
     nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
     if (parentPseudoTag &&
-        parentPseudoTag != nsCSSAnonBoxes::mozOtherNonElement) {
+        parentPseudoTag != nsCSSAnonBoxes::firstLetterContinuation) {
       MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::mozText,
                  "Style of text node should not be parent of anything");
+      MOZ_ASSERT(parentPseudoTag != nsCSSAnonBoxes::oofPlaceholder,
+                 "Style of placeholder should not be parent of anything");
       LOG_RESTYLE_CONTINUE("the old style context's parent is for a pseudo");
       aRestyleResult = RestyleResult::eContinue;
       // Parent style context pseudo-ness doesn't affect whether we can
@@ -2466,8 +2483,13 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     MOZ_ASSERT(aSelf->GetType() == nsGkAtoms::textFrame);
     newContext =
       styleSet->ResolveStyleForText(aSelf->GetContent(), parentContext);
-  } else if (nsCSSAnonBoxes::IsNonElement(pseudoTag)) {
-    newContext = styleSet->ResolveStyleForOtherNonElement(parentContext);
+  } else if (pseudoTag == nsCSSAnonBoxes::firstLetterContinuation) {
+    newContext = styleSet->ResolveStyleForFirstLetterContinuation(parentContext);
+  } else if (pseudoTag == nsCSSAnonBoxes::oofPlaceholder) {
+    // We still need to ResolveStyleForPlaceholder() here, because we may be
+    // doing a ruletree reconstruct and hence actually changing our style
+    // context.
+    newContext = styleSet->ResolveStyleForPlaceholder();
   }
   else {
     Element* element = ElementForStyleContext(mParentContent, aSelf, pseudoType);
@@ -3472,7 +3494,7 @@ GeckoRestyleManager::ComputeAndProcessStyleChange(
     const RestyleHintData& aRestyleHintData)
 {
   MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
-  nsStyleChangeList changeList;
+  nsStyleChangeList changeList(StyleBackendType::Gecko);
   nsTArray<ElementRestyler::ContextToClear> contextsToClear;
 
   // swappedStructOwners needs to be kept alive until after
@@ -3517,7 +3539,7 @@ GeckoRestyleManager::ComputeAndProcessStyleChange(
   // ProcessRestyledFrames and ClearCachedInheritedStyleDataOnDescendants
   // calls; see comment in ElementRestyler::Restyle.
   nsTArray<RefPtr<nsStyleContext>> swappedStructOwners;
-  nsStyleChangeList changeList;
+  nsStyleChangeList changeList(StyleBackendType::Gecko);
   ElementRestyler r(frame->PresContext(), aElement, &changeList, aMinChange,
                     aRestyleTracker, selectorsForDescendants, treeMatchContext,
                     visibleKidsOfHiddenElement, contextsToClear,

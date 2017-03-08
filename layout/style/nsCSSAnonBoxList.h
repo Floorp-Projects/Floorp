@@ -8,24 +8,39 @@
 /*
  * This file contains the list of nsIAtoms and their values for CSS
  * pseudo-element-ish things used internally for anonymous boxes.  It is
- * designed to be used as inline input to nsCSSAnonBoxes.cpp *only*
- * through the magic of C preprocessing.  All entries must be enclosed
- * in the macro CSS_ANON_BOX which will have cruel and unusual things
- * done to it.  The entries should be kept in some sort of logical
- * order.  The first argument to CSS_ANON_BOX is the C++ identifier of
- * the atom.  The second argument is the string value of the atom.
+ * designed to be used as inline input to nsCSSAnonBoxes.cpp *only* through the
+ * magic of C preprocessing.  All entries must be enclosed in the macros
+ * CSS_ANON_BOX and CSS_NON_INHERITING_ANON_BOX which will have cruel and
+ * unusual things done to it.  The entries should be kept in some sort of
+ * logical order.  The first argument to
+ * CSS_ANON_BOX/CSS_NON_INHERITING_ANON_BOX is the C++ identifier of the atom.
+ * The second argument is the string value of the atom.
+ *
+ * CSS_NON_INHERITING_ANON_BOX is used for anon boxes that never inherit style
+ * from anything.  This means all their property values are the initial values
+ * of those properties.
  */
 
 // OUTPUT_CLASS=nsCSSAnonBoxes
-// MACRO_NAME=CSS_ANON_BOX
+// MACRO_NAME=CSS_ANON_BOX/CSS_NON_INHERITING_ANON_BOX
 
-// ::-moz-text and ::-moz-other-non-element are non-elements which no
-// rule will match.
+#ifndef CSS_NON_INHERITING_ANON_BOX
+#  ifdef DEFINED_CSS_NON_INHERITING_ANON_BOX
+#    error "Recursive includes of nsCSSAnonBoxList.h?"
+#  endif /* DEFINED_CSS_NON_INHERITING_ANON_BOX */
+#  define CSS_NON_INHERITING_ANON_BOX CSS_ANON_BOX
+#  define DEFINED_CSS_NON_INHERITING_ANON_BOX
+#endif /* CSS_NON_INHERITING_ANON_BOX */
+
+// ::-moz-text, ::-moz-oof-placeholder, and ::-moz-first-letter-continuation are
+// non-elements which no rule will match.
 CSS_ANON_BOX(mozText, ":-moz-text")
-// This anonymous box has two uses:
-// 1. placeholder frames,
-// 2. nsFirstLetterFrames for content outside the ::first-letter.
-CSS_ANON_BOX(mozOtherNonElement, ":-moz-other-non-element")
+// placeholder frames for out of flows.  Note that :-moz-placeholder is used for
+// the pseudo-element that represents the placeholder text in <input
+// placeholder="foo">, so we need a different string here.
+CSS_NON_INHERITING_ANON_BOX(oofPlaceholder, ":-moz-oof-placeholder")
+// nsFirstLetterFrames for content outside the ::first-letter.
+CSS_ANON_BOX(firstLetterContinuation, ":-moz-first-letter-continuation")
 
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
 CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
@@ -100,3 +115,8 @@ CSS_ANON_BOX(mozSVGMarkerAnonChild, ":-moz-svg-marker-anon-child")
 CSS_ANON_BOX(mozSVGOuterSVGAnonChild, ":-moz-svg-outer-svg-anon-child")
 CSS_ANON_BOX(mozSVGForeignContent, ":-moz-svg-foreign-content")
 CSS_ANON_BOX(mozSVGText, ":-moz-svg-text")
+
+#ifdef DEFINED_CSS_NON_INHERITING_ANON_BOX
+#  undef DEFINED_CSS_NON_INHERITING_ANON_BOX
+#  undef CSS_NON_INHERITING_ANON_BOX
+#endif /* DEFINED_CSS_NON_INHERITING_ANON_BOX */

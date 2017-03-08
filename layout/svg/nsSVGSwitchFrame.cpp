@@ -11,6 +11,7 @@
 #include "nsSVGUtils.h"
 
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 class nsSVGSwitchFrame : public nsSVGGFrame
 {

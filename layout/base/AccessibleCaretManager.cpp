@@ -68,23 +68,23 @@ std::ostream& operator<<(std::ostream& aStream,
 }
 #undef AC_PROCESS_ENUM_TO_STREAM
 
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sSelectionBarEnabled = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = true;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sHapticFeedback = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sExtendSelectionForPhoneNumber = false;
-/*static*/ bool
+/* static */ bool
 AccessibleCaretManager::sHideCaretsForMouseInput = true;
 
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
@@ -811,6 +811,14 @@ AccessibleCaretManager::GetFrameSelection() const
   }
 }
 
+nsAutoString
+AccessibleCaretManager::StringifiedSelection() const
+{
+  nsAutoString str;
+  GetSelection()->Stringify(str);
+  return str;
+}
+
 Element*
 AccessibleCaretManager::GetEditingHostForFrame(nsIFrame* aFrame) const
 {
@@ -919,16 +927,29 @@ AccessibleCaretManager::SetSelectionDragState(bool aState) const
   #endif
 }
 
+bool
+AccessibleCaretManager::IsPhoneNumber(nsAString& aCandidate) const
+{
+  RefPtr<nsIDocument> doc = mPresShell->GetDocument();
+  nsAutoString phoneNumberRegex(
+    NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
+  return nsContentUtils::IsPatternMatching(aCandidate, phoneNumberRegex, doc);
+}
+
 void
 AccessibleCaretManager::SelectMoreIfPhoneNumber() const
 {
-  SetSelectionDirection(eDirNext);
-  ExtendPhoneNumberSelection(NS_LITERAL_STRING("forward"));
+  nsAutoString selectedText = StringifiedSelection();
 
-  SetSelectionDirection(eDirPrevious);
-  ExtendPhoneNumberSelection(NS_LITERAL_STRING("backward"));
+  if (IsPhoneNumber(selectedText)) {
+    SetSelectionDirection(eDirNext);
+    ExtendPhoneNumberSelection(NS_LITERAL_STRING("forward"));
 
-  SetSelectionDirection(eDirNext);
+    SetSelectionDirection(eDirPrevious);
+    ExtendPhoneNumberSelection(NS_LITERAL_STRING("backward"));
+
+    SetSelectionDirection(eDirNext);
+  }
 }
 
 void
@@ -937,8 +958,6 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
   if (!mPresShell) {
     return;
   }
-
-  RefPtr<nsIDocument> doc = mPresShell->GetDocument();
 
   // Extend the phone number selection until we find a boundary.
   RefPtr<Selection> selection = GetSelection();
@@ -957,8 +976,7 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     // we can compare them with the modified ones later.
     nsINode* oldFocusNode = selection->GetFocusNode();
     uint32_t oldFocusOffset = selection->FocusOffset();
-    nsAutoString oldSelectedText;
-    selection->Stringify(oldSelectedText);
+    nsAutoString oldSelectedText = StringifiedSelection();
 
     // Extend the selection by one char.
     selection->Modify(NS_LITERAL_STRING("extend"),
@@ -979,12 +997,9 @@ AccessibleCaretManager::ExtendPhoneNumberSelection(const nsAString& aDirection) 
     // returned by stringify() won't have a new line at the beginning or the
     // end of the string. Therefore, if either focus node or offset is
     // changed, but selected text is not changed, we're done, too.
-    nsAutoString selectedText;
-    selection->Stringify(selectedText);
-    nsAutoString phoneRegex(NS_LITERAL_STRING("(^\\+)?[0-9 ,\\-.()*#pw]{1,30}$"));
+    nsAutoString selectedText = StringifiedSelection();
 
-    if (!nsContentUtils::IsPatternMatching(selectedText, phoneRegex, doc) ||
-        oldSelectedText == selectedText) {
+    if (!IsPhoneNumber(selectedText) || oldSelectedText == selectedText) {
       // Backout the undesired selection extend, restore the old anchor focus
       // range before exit.
       selection->SetAnchorFocusToRange(oldAnchorFocusRange);

@@ -30,13 +30,23 @@ public:
   }
   nsTimingFunction::Type GetType() const { return mType; }
   bool HasSpline() const { return nsTimingFunction::IsSplineType(mType); }
-  uint32_t GetSteps() const { return mSteps; }
+  uint32_t GetSteps() const
+  {
+    MOZ_ASSERT(mType == nsTimingFunction::Type::StepStart ||
+               mType == nsTimingFunction::Type::StepEnd);
+    return mStepsOrFrames;
+  }
+  uint32_t GetFrames() const
+  {
+    MOZ_ASSERT(mType == nsTimingFunction::Type::Frames);
+    return mStepsOrFrames;
+  }
   bool operator==(const ComputedTimingFunction& aOther) const
   {
     return mType == aOther.mType &&
            (HasSpline() ?
             mTimingFunction == aOther.mTimingFunction :
-            mSteps == aOther.mSteps);
+            mStepsOrFrames == aOther.mStepsOrFrames);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const
   {
@@ -57,7 +67,7 @@ public:
 private:
   nsTimingFunction::Type mType;
   nsSMILKeySpline mTimingFunction;
-  uint32_t mSteps;
+  uint32_t mStepsOrFrames;
 };
 
 } // namespace mozilla

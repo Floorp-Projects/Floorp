@@ -3640,9 +3640,10 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
         if (forwarder && forwarder->HasShadowManager()) {
           float value;
           bool hadAnimatedOpacity;
-          forwarder->GetShadowManager()->SendGetAnimationOpacity(
-            layer->AsShadowableLayer()->GetShadow(),
-            &value, &hadAnimatedOpacity);
+          forwarder->GetShadowManager()->
+            SendGetAnimationOpacity(layer->GetCompositorAnimationsId(),
+                                    &value,
+                                    &hadAnimatedOpacity);
 
           if (hadAnimatedOpacity) {
             cssValue = new nsROCSSPrimitiveValue;
@@ -3658,8 +3659,8 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
           MaybeTransform transform;
-          forwarder->GetShadowManager()->SendGetAnimationTransform(
-            layer->AsShadowableLayer()->GetShadow(), &transform);
+          forwarder->GetShadowManager()->
+            SendGetAnimationTransform(layer->GetCompositorAnimationsId(), &transform);
           if (transform.type() == MaybeTransform::TMatrix4x4) {
             Matrix4x4 matrix = transform.get_Matrix4x4();
             cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);

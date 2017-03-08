@@ -25,13 +25,13 @@ static mozilla::LazyLogModule gPrintingLog("printing");
 //-- nsPrintData Class Impl
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
-  mType(aType), mDebugFilePtr(nullptr), mPrintObject(nullptr), mSelectedPO(nullptr),
+  mType(aType), mDebugFilePtr(nullptr), mSelectedPO(nullptr),
   mPrintDocList(0), mIsIFrameSelected(false),
   mIsParentAFrameSet(false), mOnStartSent(false),
   mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
-  mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
+  mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs),
   mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(nullptr), 
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(nullptr),
   mBrandName(nullptr)
 {
   MOZ_COUNT_CTOR(nsPrintData);
@@ -76,15 +76,13 @@ nsPrintData::~nsPrintData()
       if (!isCancelled && !mIsAborted) {
         rv = mPrintDC->EndDocument();
       } else {
-        rv = mPrintDC->AbortDocument();  
+        rv = mPrintDC->AbortDocument();
       }
       if (NS_FAILED(rv)) {
         // XXX nsPrintData::ShowPrintErrorDialog(rv);
       }
     }
   }
-
-  delete mPrintObject;
 
   if (mBrandName) {
     free(mBrandName);

@@ -387,7 +387,7 @@ ServoRestyleManager::ProcessPendingRestyles()
 
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
-    nsStyleChangeList currentChanges;
+    nsStyleChangeList currentChanges(StyleBackendType::Servo);
     DocumentStyleRootIterator iter(doc);
     while (Element* root = iter.GetNextStyleRoot()) {
       ProcessPostTraversal(root, nullptr, styleSet, currentChanges);
