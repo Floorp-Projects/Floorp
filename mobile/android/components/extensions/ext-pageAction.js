@@ -41,7 +41,7 @@ function PageAction(options, extension) {
           parentId: win.BrowserApp.selectedTab.id,
         });
       } else {
-        this.emit("click");
+        this.emit("click", tabTracker.activeTab);
       }
     },
   };
@@ -127,12 +127,14 @@ extensions.on("shutdown", (type, extension) => {
 /* eslint-enable mozilla/balanced-listeners */
 
 extensions.registerSchemaAPI("pageAction", "addon_parent", context => {
-  let {extension} = context;
+  const {extension} = context;
+  const {tabManager} = extension;
+
   return {
     pageAction: {
       onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
-        let listener = (event) => {
-          fire.async();
+        let listener = (event, tab) => {
+          fire.async(tabManager.convert(tab));
         };
         pageActionMap.get(extension).on("click", listener);
         return () => {
