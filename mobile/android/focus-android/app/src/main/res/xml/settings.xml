@@ -54,6 +54,16 @@
             android:key="@string/pref_key_telemetry"
             android:defaultValue="true"
             android:summary="@string/preference_mozilla_telemetry_summary" />
+
+        <Preference
+            android:title="@string/menu_about" />
+
+        <Preference
+            android:title="@string/menu_help" />
+
+        <Preference
+            android:title="@string/menu_rights" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

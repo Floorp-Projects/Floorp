@@ -5,13 +5,18 @@
 
 package org.mozilla.focus.settings;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
+import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.activity.AboutActivity;
+import org.mozilla.focus.activity.HelpActivity;
+import org.mozilla.focus.activity.RightsActivity;
 import org.mozilla.focus.widget.DefaultBrowserPreference;
 
 public class SettingsFragment extends PreferenceFragment {
@@ -38,5 +43,24 @@ public class SettingsFragment extends PreferenceFragment {
                 i--;
             }
         }
+    }
+
+    @Override
+    public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+        // We could use preference keys (instead of titles) here, but the only places those would
+        // be used are in the menu XML, and here - so we might as well use the already
+        // existing preference titles:
+        if (preference.getTitle().equals(getResources().getString(R.string.menu_about))) {
+            final Intent intent = new Intent(getActivity(), AboutActivity.class);
+            startActivity(intent);
+        } else if (preference.getTitle().equals(getResources().getString(R.string.menu_help))) {
+            final Intent intent = new Intent(getActivity(), RightsActivity.class);
+            startActivity(intent);
+        } else if (preference.getTitle().equals(getResources().getString(R.string.menu_rights))) {
+            final Intent intent = new Intent(getActivity(), HelpActivity.class);
+            startActivity(intent);
+        }
+
+        return super.onPreferenceTreeClick(preferenceScreen, preference);
     }
 }

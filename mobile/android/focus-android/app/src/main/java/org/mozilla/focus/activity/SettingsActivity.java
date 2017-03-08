@@ -22,32 +22,4 @@ public class SettingsActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_settings, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        final int id = item.getItemId();
-
-        if (id == android.R.id.home) {
-            finish();
-            return true;
-        } else if (id == R.id.about) {
-            Intent intent = new Intent(this, AboutActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.rights) {
-            Intent intent = new Intent(this, RightsActivity.class);
-            startActivity(intent);
-        } else if (id == R.id.help) {
-            Intent intent = new Intent(this, HelpActivity.class);
-            startActivity(intent);
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
