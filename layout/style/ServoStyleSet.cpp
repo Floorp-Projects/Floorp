@@ -140,8 +140,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   ResolveMappedAttrDeclarationBlocks();
   RefPtr<ServoComputedValues> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
-    computedValues =
-      Servo_ResolveStyleLazily(element, nullptr, mRawSet.get()).Consume();
+    computedValues = ResolveStyleLazily(element, nullptr);
   } else {
     computedValues = ResolveServoStyle(element);
   }
@@ -336,7 +335,7 @@ ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aTy
   }
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolveStyleLazily(aElement, pseudoTag, mRawSet.get()).Consume();
+    ResolveStyleLazily(aElement, pseudoTag);
 
   return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
                     nullptr);
@@ -703,6 +702,12 @@ ServoStyleSet::ClearNonInheritingStyleContexts()
   for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
     ptr = nullptr;
   }  
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
+{
+  return Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;
