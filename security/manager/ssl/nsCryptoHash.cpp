@@ -48,14 +48,12 @@ nsCryptoHash::virtualDestroyNSSReference()
 void
 nsCryptoHash::destructorSafeDestroyNSSReference()
 {
-  if (mHashContext)
-    HASH_Destroy(mHashContext);
   mHashContext = nullptr;
 }
 
 NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsCryptoHash::Init(uint32_t algorithm)
 {
   nsNSSShutDownPreventionLock locker;
@@ -64,28 +62,27 @@ nsCryptoHash::Init(uint32_t algorithm)
   }
 
   HASH_HashType hashType = (HASH_HashType)algorithm;
-  if (mHashContext)
-  {
-    if ((!mInitialized) && (HASH_GetType(mHashContext) == hashType))
-    {
+  if (mHashContext) {
+    if (!mInitialized && HASH_GetType(mHashContext.get()) == hashType) {
       mInitialized = true;
-      HASH_Begin(mHashContext);
+      HASH_Begin(mHashContext.get());
       return NS_OK;
     }
 
     // Destroy current hash context if the type was different
     // or Finish method wasn't called.
-    HASH_Destroy(mHashContext);
+    mHashContext = nullptr;
     mInitialized = false;
   }
 
-  mHashContext = HASH_Create(hashType);
-  if (!mHashContext)
+  mHashContext.reset(HASH_Create(hashType));
+  if (!mHashContext) {
     return NS_ERROR_INVALID_ARG;
+  }
 
-  HASH_Begin(mHashContext);
+  HASH_Begin(mHashContext.get());
   mInitialized = true;
-  return NS_OK; 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -124,12 +121,13 @@ nsCryptoHash::Update(const uint8_t *data, uint32_t len)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
 
-  HASH_Update(mHashContext, data, len);
-  return NS_OK; 
+  if (!mInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  HASH_Update(mHashContext.get(), data, len);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -201,7 +199,7 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
   unsigned char buffer[HASH_LENGTH_MAX];
   unsigned char* pbuffer = buffer;
 
-  HASH_End(mHashContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
+  HASH_End(mHashContext.get(), pbuffer, &hashLen, HASH_LENGTH_MAX);
 
   mInitialized = false;
 
@@ -227,8 +225,8 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 NS_IMPL_ISUPPORTS(nsCryptoHMAC, nsICryptoHMAC)
 
 nsCryptoHMAC::nsCryptoHMAC()
+  : mHMACContext(nullptr)
 {
-  mHMACContext = nullptr;
 }
 
 nsCryptoHMAC::~nsCryptoHMAC()
@@ -250,8 +248,6 @@ nsCryptoHMAC::virtualDestroyNSSReference()
 void
 nsCryptoHMAC::destructorSafeDestroyNSSReference()
 {
-  if (mHMACContext)
-    PK11_DestroyContext(mHMACContext, true);
   mHMACContext = nullptr;
 }
 
@@ -263,9 +259,7 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mHMACContext)
-  {
-    PK11_DestroyContext(mHMACContext, true);
+  if (mHMACContext) {
     mHMACContext = nullptr;
   }
 
@@ -303,11 +297,13 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
   SECItem rawData;
   rawData.data = 0;
   rawData.len = 0;
-  mHMACContext = PK11_CreateContextBySymKey(mechType, CKA_SIGN, key, &rawData);
+  mHMACContext.reset(PK11_CreateContextBySymKey(mechType, CKA_SIGN, key,
+                                                &rawData));
   NS_ENSURE_TRUE(mHMACContext, NS_ERROR_FAILURE);
 
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
+  if (PK11_DigestBegin(mHMACContext.get()) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -326,9 +322,10 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
   if (!aData)
     return NS_ERROR_INVALID_ARG;
 
-  SECStatus ss = PK11_DigestOp(mHMACContext, aData, aLen);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
-  
+  if (PK11_DigestOp(mHMACContext.get(), aData, aLen) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -403,7 +400,7 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
   unsigned char buffer[HASH_LENGTH_MAX];
   unsigned char* pbuffer = buffer;
 
-  PK11_DigestFinal(mHMACContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
+  PK11_DigestFinal(mHMACContext.get(), pbuffer, &hashLen, HASH_LENGTH_MAX);
   if (aASCII)
   {
     UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
@@ -427,8 +424,9 @@ nsCryptoHMAC::Reset()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
+  if (PK11_DigestBegin(mHMACContext.get()) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
