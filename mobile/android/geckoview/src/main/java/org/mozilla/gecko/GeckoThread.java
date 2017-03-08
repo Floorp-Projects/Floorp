@@ -141,15 +141,16 @@ public class GeckoThread extends Thread {
     private boolean mDebugging;
 
     // Child process parameters
-    private int mCrashFileDescriptor;
-    private int mIPCFileDescriptor;
+    private int mCrashFileDescriptor = -1;
+    private int mIPCFileDescriptor = -1;
 
     GeckoThread() {
         setName("Gecko");
     }
 
-    private boolean isChildProcess() {
-        return mIPCFileDescriptor != -1;
+    @WrapForJNI
+    private static boolean isChildProcess() {
+        return INSTANCE.mIPCFileDescriptor != -1;
     }
 
     private synchronized boolean init(final GeckoProfile profile, final String[] args,

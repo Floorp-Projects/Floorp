@@ -308,7 +308,7 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
     if (Services.appinfo.OS == "Android") {
       let doc = gContainingWindow.document.getElementById('main-window');
       while (doc.hasChildNodes()) {
-        doc.removeChild(doc.firstChild);
+        doc.firstChild.remove();
       }
       doc.appendChild(gBrowser);
     } else {

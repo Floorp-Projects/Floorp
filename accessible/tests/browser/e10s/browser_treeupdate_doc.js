@@ -157,7 +157,7 @@ addAccessibleTask(`
   yield ContentTask.spawn(browser, {}, () => {
     // Remove HTML element.
     let docNode = content.document.getElementById('iframe').contentDocument;
-    docNode.removeChild(docNode.firstChild);
+    docNode.firstChild.remove();
   });
   let event = yield reorderEventPromise;
 
@@ -235,7 +235,7 @@ addAccessibleTask(`
     let docEl =
       content.document.getElementById('iframe').contentDocument.documentElement;
     // Remove aftermath of this test before next test starts.
-    docEl.removeChild(docEl.firstChild);
+    docEl.firstChild.remove();
   });
   // Make sure reorder event was fired and that the input was removed.
   yield reorderEventPromise;

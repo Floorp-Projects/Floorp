@@ -282,7 +282,7 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIBufferedInputStream)
     NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
-    NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream, IsIPCSerializable())
     NS_IMPL_QUERY_CLASSINFO(nsBufferedInputStream)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
@@ -608,6 +608,17 @@ nsBufferedInputStream::ExpectedSerializedLength()
         return stream->ExpectedSerializedLength();
     }
     return Nothing();
+}
+
+bool
+nsBufferedInputStream::IsIPCSerializable() const
+{
+    if (!mStream) {
+      return true;
+    }
+
+    nsCOMPtr<nsIIPCSerializableInputStream> stream = do_QueryInterface(mStream);
+    return !!stream;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

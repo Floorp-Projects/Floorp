@@ -5,6 +5,7 @@
 #include "DriverCrashGuard.h"
 #include "gfxEnv.h"
 #include "gfxPrefs.h"
+#include "gfxConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #ifdef MOZ_CRASHREPORTER
@@ -456,10 +457,7 @@ D3D11LayersCrashGuard::UpdateEnvironment()
                     (!gfxPrefs::Direct2DDisabled() && FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT2D));
   changed |= CheckAndUpdateBoolPref("feature-d2d", d2dEnabled);
 
-  bool d3d11Enabled = !gfxPrefs::LayersPreferD3D9();
-  if (!FeatureEnabled(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)) {
-    d3d11Enabled = false;
-  }
+  bool d3d11Enabled = gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING);
   changed |= CheckAndUpdateBoolPref("feature-d3d11", d3d11Enabled);
 #endif
 

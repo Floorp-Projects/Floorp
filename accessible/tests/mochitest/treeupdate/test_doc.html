@@ -266,7 +266,7 @@
 
         // Remove HTML element.
         var docNode = getDocNode(aID);
-        docNode.removeChild(docNode.firstChild);
+        docNode.firstChild.remove();
       }
 
       this.getID = function removeHTMLFromIFrameDoc_getID()

@@ -4609,6 +4609,7 @@ pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN)
 pref("layers.gpu-process.enabled", true);
+pref("layers.gpu-process.max_restarts", 3);
 pref("media.gpu-process-decoder", true);
 #endif
 
@@ -5033,6 +5034,11 @@ pref("dom.vr.openvr.enabled", false);
 // Oculus Rift on SDK 0.8 or greater.  It is disabled by default for now due to
 // frame uniformity issues with e10s.
 pref("dom.vr.poseprediction.enabled", false);
+// Starting VR presentation is only allowed within a user gesture or event such
+// as VRDisplayActivate triggered by the system.  dom.vr.require-gesture allows
+// this requirement to be disabled for special cases such as during automated
+// tests or in a headless kiosk system.
+pref("dom.vr.require-gesture", true);
 // path to openvr DLL
 pref("gfx.vr.openvr-runtime", "");
 // path to OSVR DLLs
@@ -5605,7 +5611,7 @@ pref ("security.mixed_content.hsts_priming_request_timeout", 3000);
 pref ("security.data_uri.inherit_security_context", true);
 
 // Disable Storage api in release builds.
-#ifdef NIGHTLY_BUILD
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_WIDGET_ANDROID)
 pref("dom.storageManager.enabled", true);
 #else
 pref("dom.storageManager.enabled", false);
