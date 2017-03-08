@@ -20,7 +20,7 @@ var gUpdateHistory = {
     var uc = um.updateCount;
     if (uc) {
       while (this._view.hasChildNodes())
-        this._view.removeChild(this._view.firstChild);
+        this._view.firstChild.remove();
 
       var bundle = document.getElementById("updateBundle");
 

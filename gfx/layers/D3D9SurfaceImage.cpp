@@ -5,7 +5,7 @@
 
 #include "D3D9SurfaceImage.h"
 #include "gfx2DGlue.h"
-#include "mozilla/layers/TextureD3D9.h"
+#include "gfxWindowsPlatform.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -14,6 +14,87 @@
 namespace mozilla {
 namespace layers {
 
+DXGID3D9TextureData::DXGID3D9TextureData(gfx::SurfaceFormat aFormat,
+                                         IDirect3DTexture9* aTexture, HANDLE aHandle,
+                                         IDirect3DDevice9* aDevice)
+: mDevice(aDevice)
+, mTexture(aTexture)
+, mFormat(aFormat)
+, mHandle(aHandle)
+{
+  MOZ_COUNT_CTOR(DXGID3D9TextureData);
+}
+
+DXGID3D9TextureData::~DXGID3D9TextureData()
+{
+  gfxWindowsPlatform::sD3D9SharedTextures -= mDesc.Width * mDesc.Height * 4;
+  MOZ_COUNT_DTOR(DXGID3D9TextureData);
+}
+
+// static
+DXGID3D9TextureData*
+DXGID3D9TextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                            TextureFlags aFlags,
+                            IDirect3DDevice9* aDevice)
+{
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+  MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8A8);
+  if (aFormat != gfx::SurfaceFormat::B8G8R8A8) {
+    return nullptr;
+  }
+
+  RefPtr<IDirect3DTexture9> texture;
+  HANDLE shareHandle = nullptr;
+  HRESULT hr = aDevice->CreateTexture(aSize.width, aSize.height,
+                                      1,
+                                      D3DUSAGE_RENDERTARGET,
+                                      D3DFMT_A8R8G8B8,
+                                      D3DPOOL_DEFAULT,
+                                      getter_AddRefs(texture),
+                                      &shareHandle);
+  if (FAILED(hr) || !shareHandle) {
+    return nullptr;
+  }
+
+  D3DSURFACE_DESC surfaceDesc;
+  hr = texture->GetLevelDesc(0, &surfaceDesc);
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+  DXGID3D9TextureData* data = new DXGID3D9TextureData(aFormat, texture, shareHandle, aDevice);
+  data->mDesc = surfaceDesc;
+
+  gfxWindowsPlatform::sD3D9SharedTextures += aSize.width * aSize.height * 4;
+  return data;
+}
+
+void
+DXGID3D9TextureData::FillInfo(TextureData::Info& aInfo) const
+{
+  aInfo.size = GetSize();
+  aInfo.format = mFormat;
+  aInfo.supportsMoz2D = false;
+  aInfo.canExposeMappedData = false;
+  aInfo.hasIntermediateBuffer = false;
+  aInfo.hasSynchronization = false;
+}
+
+already_AddRefed<IDirect3DSurface9>
+DXGID3D9TextureData::GetD3D9Surface() const
+{
+  RefPtr<IDirect3DSurface9> textureSurface;
+  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  return textureSurface.forget();
+}
+
+bool
+DXGID3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+{
+  aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat, GetSize());
+  return true;
+}
 
 D3D9SurfaceImage::D3D9SurfaceImage()
   : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)

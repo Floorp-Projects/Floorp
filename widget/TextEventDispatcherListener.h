@@ -7,6 +7,8 @@
 
 #include "nsWeakReference.h"
 
+struct nsIMEUpdatePreference;
+
 namespace mozilla {
 namespace widget {
 
@@ -29,6 +31,11 @@ public:
    */
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) = 0;
+
+  /**
+   * Returns preference for which IME notification are received by NotifyIME().
+   */
+  NS_IMETHOD_(nsIMEUpdatePreference) GetIMEUpdatePreference() = 0;
 
   /**
    * OnRemovedFrom() is called when the TextEventDispatcher stops working and

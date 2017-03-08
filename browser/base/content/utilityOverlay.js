@@ -490,7 +490,7 @@ function createUserContextMenu(event, {
                                         useAccessKeys = true
                                       } = {}) {
   while (event.target.hasChildNodes()) {
-    event.target.removeChild(event.target.firstChild);
+    event.target.firstChild.remove();
   }
 
   let bundle = document.getElementById("bundle_browser");

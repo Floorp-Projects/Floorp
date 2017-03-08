@@ -26,7 +26,7 @@ function runTest() {
   ok(attrs != null, "Element should have attributes!");
   var attr = testParent.firstChild.getAttributeNode("someattr");
   ok(attr.value == "foo", "The value of the attribute should be 'foo'!");
-  testParent.removeChild(testParent.firstChild);
+  testParent.firstChild.remove();
   SpecialPowers.gc();
   ok(true, "Browser should not crash!")
 

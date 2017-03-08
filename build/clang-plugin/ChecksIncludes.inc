@@ -11,6 +11,7 @@
 #include "ExplicitOperatorBoolChecker.h"
 #include "KungFuDeathGripChecker.h"
 #include "MustOverrideChecker.h"
+#include "MustReturnFromCallerChecker.h"
 #include "MustUseChecker.h"
 #include "NaNExprChecker.h"
 #include "NeedsNoVTableTypeChecker.h"

@@ -10,7 +10,7 @@
       doc.body.appendChild(doc.createTextNode("foo"));
       doc.designMode = "on";
       while (doc.body.firstChild) {
-        doc.body.removeChild(doc.body.firstChild);
+        doc.body.firstChild.remove();
       }
     };
   </script>

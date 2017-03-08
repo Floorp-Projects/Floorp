@@ -130,7 +130,9 @@ public:
             , mWindowLock(NativePtr<Impl>::sName)
         {
             MOZ_ASSERT(NS_IsMainThread());
-            mPtr->mPtr = this;
+            if (mPtr) {
+                mPtr->mPtr = this;
+            }
         }
 
         ~WindowPtr()
@@ -272,7 +274,6 @@ public:
     virtual void SetInputContext(const InputContext& aContext,
                                  const InputContextAction& aAction) override;
     virtual InputContext GetInputContext() override;
-    virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
     void SetSelectionDragState(bool aState);
     LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
@@ -314,6 +315,8 @@ public:
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
     void UserActivity();
+
+    mozilla::java::GeckoEditable::Ref& GetEditableParent() { return mEditable; }
 
 protected:
     void BringToFront();

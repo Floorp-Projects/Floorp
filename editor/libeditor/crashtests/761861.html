@@ -3,7 +3,7 @@
 function boom() {
   var r = document.documentElement;
   while (r.firstChild) {
-    r.removeChild(r.firstChild);
+    r.firstChild.remove();
   }
 
   document.documentElement.contentEditable = "true";

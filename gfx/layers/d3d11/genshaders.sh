@@ -36,12 +36,14 @@ makeShaderPS RGBShader
 makeShaderPS RGBAShader
 makeShaderPS ComponentAlphaShader
 makeShaderPS YCbCrShader
+makeShaderPS NV12Shader
 makeShaderVS LayerQuadMaskVS
 makeShaderVS LayerDynamicMaskVS
 makeShaderPS SolidColorShaderMask
 makeShaderPS RGBShaderMask
 makeShaderPS RGBAShaderMask
 makeShaderPS YCbCrShaderMask
+makeShaderPS NV12ShaderMask
 makeShaderPS ComponentAlphaShaderMask
 
 # Mix-blend shaders

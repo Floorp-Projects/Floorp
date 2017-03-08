@@ -59,22 +59,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS.mozilla.layers += [
         'TextureDIB.h',
     ]
-    if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
-        EXPORTS += [
-            'd3d9/DeviceManagerD3D9.h',
-        ]
-        EXPORTS.mozilla.layers += [
-            'd3d9/CompositorD3D9.h',
-            'd3d9/TextureD3D9.h',
-        ]
-        UNIFIED_SOURCES += [
-            'd3d9/TextureD3D9.cpp',
-        ]
-        SOURCES += [
-            'd3d9/CompositorD3D9.cpp',
-            'd3d9/DeviceManagerD3D9.cpp',
-            'd3d9/Nv3DVUtils.cpp',
-        ]
     if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
         EXPORTS.mozilla.layers += [
             'd3d11/CompositorD3D11.h',

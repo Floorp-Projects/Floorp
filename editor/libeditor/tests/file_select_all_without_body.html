@@ -16,7 +16,7 @@ function boom()
 {
   var root = document.documentElement;
   while(root.firstChild) {
-    root.removeChild(root.firstChild);
+    root.firstChild.remove();
   }
   root.appendChild(document.createTextNode("Mozilla"));
   root.focus();

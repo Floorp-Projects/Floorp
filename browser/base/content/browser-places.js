@@ -746,7 +746,7 @@ HistoryMenu.prototype = {
 
     // remove existing menu items
     while (undoPopup.hasChildNodes())
-      undoPopup.removeChild(undoPopup.firstChild);
+      undoPopup.firstChild.remove();
 
     // no restorable tabs, so make sure menu is disabled, and return
     if (this._getClosedTabCount() == 0) {
@@ -782,7 +782,7 @@ HistoryMenu.prototype = {
 
     // remove existing menu items
     while (undoPopup.hasChildNodes())
-      undoPopup.removeChild(undoPopup.firstChild);
+      undoPopup.firstChild.remove();
 
     // no restorable windows, so make sure menu is disabled, and return
     if (SessionStore.getClosedWindowCount() == 0) {

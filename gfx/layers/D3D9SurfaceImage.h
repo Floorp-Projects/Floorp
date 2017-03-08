@@ -40,6 +40,54 @@ protected:
   RefPtr<IDirect3DDevice9> mDevice;
 };
 
+/**
+ * Wraps a D3D9 texture, shared with the compositor though DXGI.
+ * At the moment it is only used with D3D11 compositing, and the corresponding
+ * TextureHost is DXGITextureHostD3D11.
+ */
+class DXGID3D9TextureData : public TextureData
+{
+public:
+  static DXGID3D9TextureData*
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureFlags aFlags, IDirect3DDevice9* aDevice);
+
+  ~DXGID3D9TextureData();
+
+  virtual void FillInfo(TextureData::Info& aInfo) const override;
+
+  virtual bool Lock(OpenMode) override { return true; }
+
+  virtual void Unlock() override {}
+
+  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+
+  virtual void Deallocate(LayersIPCChannel* aAllocator) override {}
+
+  IDirect3DDevice9* GetD3D9Device() { return mDevice; }
+  IDirect3DTexture9* GetD3D9Texture() { return mTexture; }
+  HANDLE GetShareHandle() const { return mHandle; }
+  already_AddRefed<IDirect3DSurface9> GetD3D9Surface() const;
+
+  const D3DSURFACE_DESC& GetDesc() const
+  {
+    return mDesc;
+  }
+
+  gfx::IntSize GetSize() const { return gfx::IntSize(mDesc.Width, mDesc.Height); }
+
+protected:
+  DXGID3D9TextureData(gfx::SurfaceFormat aFormat,
+                      IDirect3DTexture9* aTexture, HANDLE aHandle,
+                      IDirect3DDevice9* aDevice);
+
+  RefPtr<IDirect3DDevice9> mDevice;
+  RefPtr<IDirect3DTexture9> mTexture;
+  gfx::SurfaceFormat mFormat;
+  HANDLE mHandle;
+  D3DSURFACE_DESC mDesc;
+};
+
+
 // Image class that wraps a IDirect3DSurface9. This class copies the image
 // passed into SetData(), so that it can be accessed from other D3D devices.
 // This class also manages the synchronization of the copy, to ensure the
