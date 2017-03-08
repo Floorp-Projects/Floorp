@@ -82,6 +82,9 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
             fxOptions["binary"] = kwargs["binary"]
         if kwargs["binary_args"]:
             fxOptions["args"] = kwargs["binary_args"]
+        fxOptions["prefs"] = {
+            "network.dns.localDomains": ",".join(hostnames)
+        }
         capabilities = {"moz:firefoxOptions": fxOptions}
         executor_kwargs["capabilities"] = capabilities
     return executor_kwargs
