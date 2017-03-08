@@ -20,7 +20,6 @@
 #include "nsPIDOMWindow.h"
 
 #include "../GetFileOrDirectoryTask.h"
-#include "../FileSystemPermissionRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -163,7 +162,8 @@ GetEntryHelper::Run()
   }
 
   task->SetError(error);
-  FileSystemPermissionRequest::RequestForTask(task);
+  task->Start();
+
   RefPtr<Promise> promise = task->GetPromise();
 
   mParts.RemoveElementAt(0);
