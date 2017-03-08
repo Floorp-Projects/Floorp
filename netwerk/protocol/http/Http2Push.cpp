@@ -185,12 +185,14 @@ Http2PushedStream::ReadSegments(nsAHttpSegmentReader *reader,
   nsresult rv = NS_OK;
   *count = 0;
 
+  mozilla::OriginAttributes originAttributes;
   switch (mUpstreamState) {
   case GENERATING_HEADERS:
     // The request headers for this has been processed, so we need to verify
     // that :authority, :scheme, and :path MUST be present. :method MUST NOT be
     // present
-    CreatePushHashKey(mHeaderScheme, mHeaderHost,
+    mSocketTransport->GetOriginAttributes(&originAttributes);
+    CreatePushHashKey(mHeaderScheme, mHeaderHost, originAttributes,
                       mSession->Serial(), mHeaderPath,
                       mOrigin, mHashKey);
 
