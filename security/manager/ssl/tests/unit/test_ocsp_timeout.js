@@ -16,12 +16,12 @@
 // Otherwise, they will succeed.
 
 var gSocketListener = {
-  onSocketAccepted: function(serverSocket, socketTransport) {
+  onSocketAccepted(serverSocket, socketTransport) {
     socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 30);
     socketTransport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 30);
   },
 
-  onStopListening: function(serverSocket, status) {}
+  onStopListening(serverSocket, status) {}
 };
 
 function run_test() {

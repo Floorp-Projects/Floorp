@@ -386,9 +386,10 @@ class IceTestPeer : public sigslot::has_slots<> {
               bool allow_link_local = false,
               NrIceCtx::Policy ice_policy = NrIceCtx::ICE_POLICY_ALL) :
       name_(name),
-      ice_ctx_(NrIceCtxHandler::Create(name, offerer, allow_loopback,
+      ice_ctx_(NrIceCtxHandler::Create(name, allow_loopback,
                                        enable_tcp, allow_link_local,
                                        ice_policy)),
+      offerer_(offerer),
       candidates_(),
       shutting_down_(false),
       gathering_complete_(false),
@@ -791,8 +792,10 @@ class IceTestPeer : public sigslot::has_slots<> {
     }
 
     if (start) {
+      ice_ctx_->ctx()->SetControlling(
+          offerer_ ? NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED);
       // Now start checks
-      res = ice_ctx_->ctx()->StartChecks();
+      res = ice_ctx_->ctx()->StartChecks(offerer_);
       ASSERT_TRUE(NS_SUCCEEDED(res));
     }
   }
@@ -1002,9 +1005,15 @@ class IceTestPeer : public sigslot::has_slots<> {
   void StartChecks() {
     nsresult res;
 
+    test_utils_->sts_target()->Dispatch(
+        WrapRunnableRet(&res, ice_ctx_->ctx(), &NrIceCtx::SetControlling,
+                        offerer_ ?
+                          NrIceCtx::ICE_CONTROLLING : NrIceCtx::ICE_CONTROLLED),
+        NS_DISPATCH_SYNC);
     // Now start checks
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_->ctx(), &NrIceCtx::StartChecks),
+        WrapRunnableRet(&res, ice_ctx_->ctx(), &NrIceCtx::StartChecks,
+                        offerer_),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -1434,6 +1443,7 @@ class IceTestPeer : public sigslot::has_slots<> {
  private:
   std::string name_;
   RefPtr<NrIceCtxHandler> ice_ctx_;
+  bool offerer_;
   std::map<std::string, std::vector<std::string> > candidates_;
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >

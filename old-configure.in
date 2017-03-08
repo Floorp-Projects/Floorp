@@ -4280,7 +4280,9 @@ dnl ========================================================
 dnl = Enable using the clang plugin to build
 dnl ========================================================
 
+if test -n "$COMPILE_ENVIRONMENT"; then
 MOZ_CONFIG_CLANG_PLUGIN
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl = Enable stripping of libs & executables

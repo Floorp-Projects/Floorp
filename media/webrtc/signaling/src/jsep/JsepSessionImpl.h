@@ -168,7 +168,7 @@ public:
   }
 
   virtual bool
-  IsOfferer() const
+  IsOfferer() const override
   {
     return mIsOfferer;
   }
