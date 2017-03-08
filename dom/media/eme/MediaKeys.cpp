@@ -468,14 +468,7 @@ IsSessionTypeSupported(const MediaKeySessionType aSessionType,
     // No other session types supported.
     return false;
   }
-  using MediaKeySessionTypeValues::strings;
-  const char* sessionType = strings[static_cast<uint32_t>(aSessionType)].value;
-  for (const nsString& s : aConfig.mSessionTypes.Value()) {
-    if (s.EqualsASCII(sessionType)) {
-      return true;
-    }
-  }
-  return false;
+  return aConfig.mSessionTypes.Value().Contains(ToString(aSessionType));
 }
 
 already_AddRefed<MediaKeySession>
