@@ -37,7 +37,8 @@ public:
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName) override;
+            const nsAString& aGMPName,
+            nsIEventTarget* aMainThread) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
                      MediaKeySessionType aSessionType,

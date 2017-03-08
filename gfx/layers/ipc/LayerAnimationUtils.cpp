@@ -33,9 +33,16 @@ AnimationUtils::TimingFunctionToComputedTimingFunction(
       result.Init(nsTimingFunction(type, sf.steps()));
       return Some(result);
     }
+    case TimingFunction::TFramesFunction: {
+      FramesFunction ff = aTimingFunction.get_FramesFunction();
+      ComputedTimingFunction result;
+      result.Init(nsTimingFunction(nsTimingFunction::Type::Frames,
+                                   ff.frames()));
+      return Some(result);
+    }
     default:
       MOZ_ASSERT_UNREACHABLE(
-        "Function must be null, bezier or step");
+        "Function must be null, bezier, step or frames");
       break;
   }
   return Nothing();

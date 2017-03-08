@@ -14,6 +14,8 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Service.engineManager.register(TabEngine);
 
 add_task(async function v4_upgrade() {
+  enableValidationPrefs();
+
   let clients = new ServerCollection();
   let meta_global = new ServerWBO("global");
 
@@ -185,6 +187,8 @@ add_task(async function v4_upgrade() {
 });
 
 add_task(async function v5_upgrade() {
+  enableValidationPrefs();
+
   // Tracking info/collections.
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;

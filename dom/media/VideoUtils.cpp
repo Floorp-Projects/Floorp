@@ -397,7 +397,7 @@ LogToBrowserConsole(const nsAString& aMsg)
     nsString msg(aMsg);
     nsCOMPtr<nsIRunnable> task =
       NS_NewRunnableFunction([msg]() { LogToBrowserConsole(msg); });
-    NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);
+    SystemGroup::Dispatch("LogToBrowserConsole", TaskCategory::Other, task.forget());
     return;
   }
   nsCOMPtr<nsIConsoleService> console(

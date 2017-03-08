@@ -102,9 +102,15 @@ StyleSetHandle::Ptr::ResolveStyleForText(nsIContent* aTextNode,
 }
 
 already_AddRefed<nsStyleContext>
-StyleSetHandle::Ptr::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+StyleSetHandle::Ptr::ResolveStyleForPlaceholder()
 {
-  FORWARD(ResolveStyleForOtherNonElement, (aParentContext));
+  FORWARD(ResolveStyleForPlaceholder, ());
+}
+
+already_AddRefed<nsStyleContext>
+StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
+{
+  FORWARD(ResolveStyleForFirstLetterContinuation, (aParentContext));
 }
 
 already_AddRefed<nsStyleContext>

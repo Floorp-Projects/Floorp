@@ -192,7 +192,7 @@ nsPlaceholderFrame::CanContinueTextRun() const
 }
 
 nsStyleContext*
-nsPlaceholderFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
+nsPlaceholderFrame::GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame) const
 {
   NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
 

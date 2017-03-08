@@ -7,6 +7,7 @@
 #define nsPrintData_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 
 // Interfaces
 #include "nsDeviceContext.h"
@@ -23,16 +24,16 @@ class nsIWebProgressListener;
 //------------------------------------------------------------------------
 // nsPrintData Class
 //
-// mPreparingForPrint - indicates that we have started Printing but 
-//   have not gone to the timer to start printing the pages. It gets turned 
+// mPreparingForPrint - indicates that we have started Printing but
+//   have not gone to the timer to start printing the pages. It gets turned
 //   off right before we go to the timer.
 //
 // mDocWasToBeDestroyed - Gets set when "someone" tries to unload the document
-//   while we were prparing to Print. This typically happens if a user starts 
-//   to print while a page is still loading. If they start printing and pause 
-//   at the print dialog and then the page comes in, we then abort printing 
+//   while we were prparing to Print. This typically happens if a user starts
+//   to print while a page is still loading. If they start printing and pause
+//   at the print dialog and then the page comes in, we then abort printing
 //   because the document is no longer stable.
-// 
+//
 //------------------------------------------------------------------------
 class nsPrintData {
 public:
@@ -57,15 +58,19 @@ public:
   RefPtr<nsDeviceContext>   mPrintDC;
   FILE                        *mDebugFilePtr;    // a file where information can go to when printing
 
-  nsPrintObject *                mPrintObject;
-  nsPrintObject *                mSelectedPO;
+  mozilla::UniquePtr<nsPrintObject> mPrintObject;
+  nsPrintObject* mSelectedPO; // This is a non-owning pointer.
 
   nsCOMArray<nsIWebProgressListener> mPrintProgressListeners;
   nsCOMPtr<nsIPrintProgressParams> mPrintProgressParams;
 
   nsCOMPtr<nsPIDOMWindowOuter> mCurrentFocusWin; // cache a pointer to the currently focused window
 
+  // Array of non-owning pointers to all the nsPrintObjects owned by this
+  // nsPrintData. This includes this->mPrintObject, as well as all of its
+  // mKids (and their mKids, etc.)
   nsTArray<nsPrintObject*>    mPrintDocList;
+
   bool                        mIsIFrameSelected;
   bool                        mIsParentAFrameSet;
   bool                        mOnStartSent;
