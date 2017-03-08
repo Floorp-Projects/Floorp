@@ -126,7 +126,7 @@ JsepTrack::AddToAnswer(const SdpMediaSection& offer,
   AddToMsection(codecs.values, answer);
 
   if (mDirection == sdp::kSend) {
-    std::vector<JsConstraints> constraints;
+    std::vector<JsConstraints> constraints(mJsEncodeConstraints);
     std::vector<SdpRidAttributeList::Rid> rids;
     GetRids(offer, sdp::kRecv, &rids);
     NegotiateRids(rids, &constraints);
