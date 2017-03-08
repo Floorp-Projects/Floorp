@@ -1,0 +1,178 @@
+settings, line
+<link rel="help" href="https://w3c.github.io/webvtt/#collect-webvtt-cue-timings-and-settings">
+
+assert_equals(cues.length, 36);
+
+// Test starts with simple valid values
+var valid_values = [
+    -1,
+    0,
+    0,
+    1,
+    100,
+    101,
+    65536,
+    4294967296,
+    18446744073709552000,
+    10000000000000000000000000000000000,
+    1.5,
+];
+valid_values.forEach(function(valid, index) {
+    assert_equals(cues[index].line, valid, 'Failed with cue ' + index);
+    assert_true(cues[index].snapToLines, 'Failed with cue ' + index);
+});
+
+// Then a set of invalid ones
+var invalid_length = 18;
+for (var i = 0; i < invalid_length; i++) {
+    var index = valid_values.length + i;
+
+    assert_equals(cues[index].line, 'auto', 'Failed with cue ' + index);
+    assert_true(cues[index].snapToLines, 'Failed with cue ' + index);
+}
+
+// Then more specific tests
+var index = valid_values.length + invalid_length;
+
+assert_equals(cues[index].line, 0);
+assert_false(cues[index].snapToLines);
+
+assert_equals(cues[index + 1].line, 0);
+assert_false(cues[index + 1].snapToLines);
+
+assert_equals(cues[index + 2].line, 100);
+assert_false(cues[index + 2].snapToLines);
+assert_equals(cues[index + 2].lineAlign, 'start');
+
+assert_equals(cues[index + 3].line, 100);
+assert_false(cues[index + 3].snapToLines);
+assert_equals(cues[index + 3].lineAlign, 'start');
+
+assert_equals(cues[index + 4].line, 100);
+assert_false(cues[index + 4].snapToLines);
+assert_equals(cues[index + 4].lineAlign, 'center');
+
+assert_equals(cues[index + 5].line, 100);
+assert_false(cues[index + 5].snapToLines);
+assert_equals(cues[index + 5].lineAlign, 'end');
+
+assert_equals(cues[index + 6].line, 100);
+assert_false(cues[index + 6].snapToLines);
+assert_equals(cues[index + 6].lineAlign, 'start');
+
+===
+WEBVTT
+
+NOTE valid
+
+00:00:00.000 --> 00:00:01.000 line:-1
+valid0
+
+00:00:00.000 --> 00:00:01.000 line:0
+valid1
+
+00:00:00.000 --> 00:00:01.000 line:-0
+valid2
+
+00:00:00.000 --> 00:00:01.000 line:1
+valid3
+
+00:00:00.000 --> 00:00:01.000 line:100
+valid4
+
+00:00:00.000 --> 00:00:01.000 line:101
+valid5
+
+00:00:00.000 --> 00:00:01.000 line:65536
+valid6
+
+00:00:00.000 --> 00:00:01.000 line:4294967296
+valid7
+
+00:00:00.000 --> 00:00:01.000 line:18446744073709552000
+valid8
+
+00:00:00.000 --> 00:00:01.000 line:10000000000000000000000000000000000
+valid9
+
+00:00:00.000 --> 00:00:01.000 line:1.5
+valid10
+
+NOTE invalid
+
+00:00:00.000 --> 00:00:01.000 line:65536%
+invalid11
+
+00:00:00.000 --> 00:00:01.000 line:4294967296%
+invalid12
+
+00:00:00.000 --> 00:00:01.000 line:18446744073709552000%
+invalid13
+
+00:00:00.000 --> 00:00:01.000 line:10000000000000000000000000000000000%
+invalid14
+
+00:00:00.000 --> 00:00:01.000 line:-0%
+invalid15
+
+00:00:00.000 --> 00:00:01.000 line:101%
+invalid16
+
+00:00:00.000 --> 00:00:01.000 line:1%-
+invalid17
+
+00:00:00.000 --> 00:00:01.000 line:1-
+invalid18
+
+00:00:00.000 --> 00:00:01.000 line:%1
+invalid19
+
+00:00:00.000 --> 00:00:01.000 line:1%%
+invalid20
+
+00:00:00.000 --> 00:00:01.000 line:0%0
+invalid21
+
+00:00:00.000 --> 00:00:01.000 line: 0%
+invalid22
+
+00:00:00.000 --> 00:00:01.000 line:0%x
+invalid23
+
+00:00:00.000 --> 00:00:01.000 line:-
+invalid24
+
+00:00:00.000 --> 00:00:01.000 line:%
+invalid25
+
+00:00:00.000 --> 00:00:01.000 line:1..5
+invalid26
+
+00:00:00.000 --> 00:00:01.000 line:.5
+invalid27
+
+00:00:00.000 --> 00:00:01.000 line:5.
+invalid28
+
+NOTE extra
+
+00:00:00.000 --> 00:00:01.000 line:0%
+text29
+
+00:00:00.000 --> 00:00:01.000 line:00%
+text30
+
+00:00:00.000 --> 00:00:01.000 line:100%
+text31
+
+00:00:00.000 --> 00:00:01.000 line:100%,start
+text32
+
+00:00:00.000 --> 00:00:01.000 line:100%,center
+text33
+
+00:00:00.000 --> 00:00:01.000 line:100%,end
+text34
+
+00:00:00.000 --> 00:00:01.000 line:100%,middle
+text35

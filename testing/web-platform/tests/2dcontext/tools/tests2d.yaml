@@ -3486,11 +3486,11 @@
     - anim-gr.gif
   code: |
     deferTest();
-    setTimeout(function () {
+    step_timeout(function () {
         var pattern = ctx.createPattern(document.getElementById('anim-gr.gif'), 'repeat');
         ctx.fillStyle = pattern;
         ctx.fillRect(0, 0, 50, 50);
-        setTimeout(t.step_func_done(function () {
+        step_timeout(t.step_func_done(function () {
             ctx.fillRect(50, 0, 50, 50);
             @assert pixel 25,25 ==~ 0,255,0,255;
             @assert pixel 75,25 ==~ 0,255,0,255;
@@ -9033,7 +9033,7 @@
     - anim-gr.gif
   code: |
     deferTest();
-    setTimeout(t.step_func_done(function () {
+    step_timeout(t.step_func_done(function () {
         ctx.drawImage(document.getElementById('anim-gr.gif'), 0, 0);
         @assert pixel 50,25 ==~ 0,255,0,255;
     }), 500);
@@ -9047,7 +9047,7 @@
     - anim-gr.png
   code: |
     deferTest();
-    setTimeout(t.step_func_done(function () {
+    step_timeout(t.step_func_done(function () {
         ctx.drawImage(document.getElementById('anim-gr.png'), 0, 0);
         @assert pixel 50,25 ==~ 0,255,0,255;
     }), 500);
