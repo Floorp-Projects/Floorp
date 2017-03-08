@@ -29,6 +29,10 @@ ServoStyleSet::ServoStyleSet()
 {
 }
 
+ServoStyleSet::~ServoStyleSet()
+{
+}
+
 void
 ServoStyleSet::Init(nsPresContext* aPresContext)
 {
@@ -77,6 +81,9 @@ ServoStyleSet::BeginShutdown()
 void
 ServoStyleSet::Shutdown()
 {
+  // Make sure we drop our cached style contexts before the presshell arena
+  // starts going away.
+  ClearNonInheritingStyleContexts();
   mRawSet = nullptr;
 }
 
@@ -657,6 +664,7 @@ ServoStyleSet::FillKeyframesForName(const nsString& aName,
 void
 ServoStyleSet::RebuildData()
 {
+  ClearNonInheritingStyleContexts();
   Servo_StyleSet_RebuildData(mRawSet.get());
 }
 
@@ -664,6 +672,14 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
   return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
+}
+
+void
+ServoStyleSet::ClearNonInheritingStyleContexts()
+{
+  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+    ptr = nullptr;
+  }  
 }
 
 bool ServoStyleSet::sInServoTraversal = false;
