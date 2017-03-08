@@ -5191,10 +5191,14 @@ get_gtk_cursor(nsCursor aCursor)
             newType = MOZ_CURSOR_SPINNING;
         break;
     case eCursor_zoom_in:
-        newType = MOZ_CURSOR_ZOOM_IN;
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-in");
+        if (!gdkcursor)
+            newType = MOZ_CURSOR_ZOOM_IN;
         break;
     case eCursor_zoom_out:
-        newType = MOZ_CURSOR_ZOOM_OUT;
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-out");
+        if (!gdkcursor)
+            newType = MOZ_CURSOR_ZOOM_OUT;
         break;
     case eCursor_not_allowed:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "not-allowed");
