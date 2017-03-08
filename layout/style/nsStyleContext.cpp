@@ -865,7 +865,18 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // that the root element has its style reresolved later.  So do them
   // here if needed, by changing the style data, so that other code
   // doesn't get confused by looking at the style data.
-  if (!mParent) {
+  if (!mParent &&
+      // We don't want to blockify various anon boxes that just happen to not
+      // inherit from anything.  So restrict blockification only to actual
+      // elements, the viewport (which should be block anyway, but in SVG
+      // document's isn't because we lazy-load ua.css there), and the ::backdrop
+      // pseudo-element.  This last is explicitly allowed to have any specified
+      // display type in the spec, but computes to a blockified display type per
+      // various provisions of
+      // https://fullscreen.spec.whatwg.org/#new-stacking-layer
+      (!mPseudoTag ||
+       mPseudoTag == nsCSSAnonBoxes::viewport ||
+       mPseudoTag == nsCSSPseudoElements::backdrop)) {
     auto displayVal = disp->mDisplay;
     if (displayVal != mozilla::StyleDisplay::Contents) {
       nsRuleNode::EnsureBlockDisplay(displayVal, true);
