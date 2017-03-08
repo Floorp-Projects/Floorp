@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
 import android.support.annotation.VisibleForTesting;
@@ -48,25 +49,30 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private static final String LOGTAG = "CustomTabsActivity";
     private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
     private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
-    private static final int NO_COLOR = -1;
+
+    @ColorInt
+    private static final int DEFAULT_ACTION_BAR_COLOR = 0xFF363b40; // default color to match design
+
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private GeckoPopupMenu popupMenu;
     private int tabId = -1;
     private ActionBarPresenter actionBarPresenter;
-    private int toolbarColor;
     private String toolbarTitle;
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
+
+    @ColorInt
+    private int toolbarColor = DEFAULT_ACTION_BAR_COLOR;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (savedInstanceState != null) {
-            toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, NO_COLOR);
+            toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
             toolbarTitle = savedInstanceState.getString(SAVED_TOOLBAR_TITLE, AppConstants.MOZ_APP_BASENAME);
         } else {
-            toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, NO_COLOR);
+            toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
             toolbarTitle = AppConstants.MOZ_APP_BASENAME;
         }
 
@@ -89,14 +95,10 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     private void setThemeFromToolbarColor() {
-        // default theme, regardless AndroidManifest.
-        @StyleRes int styleRes = R.style.GeckoCustomTabs;
-
-        if (toolbarColor != NO_COLOR) {
-            styleRes = (ColorUtil.getReadableTextColor(toolbarColor) == Color.BLACK)
-                    ? R.style.GeckoCustomTabs_Light
-                    : R.style.GeckoCustomTabs;
-        }
+        @StyleRes
+        int styleRes = (ColorUtil.getReadableTextColor(toolbarColor) == Color.BLACK)
+                ? R.style.GeckoCustomTabs_Light
+                : R.style.GeckoCustomTabs;
 
         setTheme(styleRes);
     }
