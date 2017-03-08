@@ -4120,8 +4120,7 @@ this.XPIProvider = {
 
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
-    XPIProvider.callBootstrapMethod(addon, file, "startup",
-                                    BOOTSTRAP_REASONS.ADDON_INSTALL);
+    XPIProvider.callBootstrapMethod(addon, file, "startup", installReason);
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,
