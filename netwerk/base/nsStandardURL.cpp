@@ -744,13 +744,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         // #ref
 
         if (mRef.mLen >= 0) {
-            if (nsContentUtils::EncodeDecodeURLHash()) {
-                approxLen += 1 + encoder.EncodeSegmentCount(spec, mRef, esc_Ref,
-                                                            encRef, useEncRef);
-            } else {
-                approxLen += 1 + mRef.mLen;
-                useEncRef = false;
-            }
+            approxLen += 1 + encoder.EncodeSegmentCount(spec, mRef, esc_Ref,
+                                                        encRef, useEncRef);
         }
     }
 
@@ -2983,16 +2978,14 @@ nsStandardURL::SetRef(const nsACString &input)
     // If precent encoding is necessary, `ref` will point to `buf`'s content.
     // `buf` needs to outlive any use of the `ref` pointer.
     nsAutoCString buf;
-    if (nsContentUtils::EncodeDecodeURLHash()) {
-        // encode ref if necessary
-        bool encoded;
-        GET_SEGMENT_ENCODER(encoder);
-        encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
-                                   buf, encoded);
-        if (encoded) {
-            ref = buf.get();
-            refLen = buf.Length();
-        }
+    // encode ref if necessary
+    bool encoded;
+    GET_SEGMENT_ENCODER(encoder);
+    encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
+                               buf, encoded);
+    if (encoded) {
+        ref = buf.get();
+        refLen = buf.Length();
     }
 
     int32_t shift = ReplaceSegment(mRef.mPos, mRef.mLen, ref, refLen);
