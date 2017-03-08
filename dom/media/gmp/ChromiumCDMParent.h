@@ -13,6 +13,9 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+
+class ChromiumCDMProxy;
+
 namespace gmp {
 
 class GMPContentParent;
@@ -24,7 +27,13 @@ class ChromiumCDMParent final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMParent)
 
-  explicit ChromiumCDMParent(GMPContentParent* aContentParent);
+  ChromiumCDMParent(GMPContentParent* aContentParent, uint32_t aPluginId);
+
+  uint32_t PluginId() const { return mPluginId; }
+
+  bool Init(ChromiumCDMProxy* aProxy,
+            bool aAllowDistinctiveIdentifier,
+            bool aAllowPersistentState);
 
   // TODO: Add functions for clients to send data to CDM, and
   // a Close() function.
@@ -62,7 +71,12 @@ protected:
   ipc::IPCResult RecvShutdown() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  const uint32_t mPluginId;
   GMPContentParent* mContentParent;
+  // Note: this pointer is a weak reference because otherwise it would cause
+  // a cycle, as ChromiumCDMProxy has a strong reference to the
+  // ChromiumCDMParent.
+  ChromiumCDMProxy* mProxy = nullptr;
 };
 
 } // namespace gmp
