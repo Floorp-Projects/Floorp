@@ -26,6 +26,7 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
+#include "nsCSSAnonBoxes.h"
 
 class gfxFontFeatureValueSet;
 class nsCSSKeyframesRule;
@@ -570,6 +571,11 @@ private:
 
   nsPresContext* PresContext() { return mRuleTree->PresContext(); }
 
+  // Clear our cached mNonInheritingStyleContexts.  We do this when we want to
+  // make sure those style contexts won't live too long (e.g. at ruletree
+  // reconstruct or shutdown time).
+  void ClearNonInheritingStyleContexts();
+
   // The sheets in each array in mSheets are stored with the most significant
   // sheet last.
   // The arrays for ePresHintSheet, eStyleAttrSheet, eTransitionSheet,
@@ -633,6 +639,10 @@ private:
 
   // whether font feature values lookup object needs initialization
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
+
+  // Stores pointers to our cached style contexts for non-inheriting anonymous
+  // boxes.
+  RefPtr<nsStyleContext> mNonInheritingStyleContexts[static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::_Count)];
 };
 
 #ifdef MOZILLA_INTERNAL_API
