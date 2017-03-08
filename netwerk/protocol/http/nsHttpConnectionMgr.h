@@ -18,7 +18,6 @@
 #include "mozilla/Attributes.h"
 #include "AlternateServices.h"
 #include "ARefBase.h"
-#include "nsWeakReference.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -30,10 +29,6 @@ namespace net {
 class EventTokenBucket;
 class NullHttpTransaction;
 struct HttpRetParams;
-
-// 8d411b53-54bc-4a99-8b78-ff125eab1564
-#define NS_HALFOPENSOCKET_IID \
-{ 0x8d411b53, 0x54bc, 0x4a99, {0x8b, 0x78, 0xff, 0x12, 0x5e, 0xab, 0x15, 0x64 }}
 
 //-----------------------------------------------------------------------------
 
@@ -201,7 +196,6 @@ private:
     virtual ~nsHttpConnectionMgr();
 
     class nsHalfOpenSocket;
-    class PendingTransactionInfo;
 
     // nsConnectionEntry
     //
@@ -216,7 +210,7 @@ private:
         ~nsConnectionEntry();
 
         RefPtr<nsHttpConnectionInfo> mConnInfo;
-        nsTArray<RefPtr<PendingTransactionInfo> > mPendingQ;    // pending transaction queue
+        nsTArray<RefPtr<nsHttpTransaction> > mPendingQ;    // pending transaction queue
         nsTArray<RefPtr<nsHttpConnection> >  mActiveConns; // active connections
         nsTArray<RefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;   // half open connections
@@ -277,13 +271,11 @@ private:
     class nsHalfOpenSocket final : public nsIOutputStreamCallback,
                                    public nsITransportEventSink,
                                    public nsIInterfaceRequestor,
-                                   public nsITimerCallback,
-                                   public nsSupportsWeakReference
+                                   public nsITimerCallback
     {
         ~nsHalfOpenSocket();
 
     public:
-        NS_DECLARE_STATIC_IID_ACCESSOR(NS_HALFOPENSOCKET_IID)
         NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSIOUTPUTSTREAMCALLBACK
         NS_DECL_NSITRANSPORTEVENTSINK
@@ -364,35 +356,6 @@ private:
     };
     friend class nsHalfOpenSocket;
 
-    class PendingTransactionInfo : public ARefBase
-    {
-    public:
-        explicit PendingTransactionInfo(nsHttpTransaction * trans)
-            : mTransaction(trans)
-        {}
-
-        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PendingTransactionInfo)
-
-        void PrintDiagnostics(nsCString &log);
-    public: // meant to be public.
-        RefPtr<nsHttpTransaction> mTransaction;
-        nsWeakPtr mHalfOpen;
-        nsWeakPtr mActiveConn;
-
-    private:
-        virtual ~PendingTransactionInfo() {}
-    };
-    friend class PendingTransactionInfo;
-
-    class PendingComparator
-    {
-    public:
-        bool Equals(const PendingTransactionInfo *aPendingTrans,
-                    const nsAHttpTransaction *aTrans) const {
-            return aPendingTrans->mTransaction.get() == aTrans;
-        }
-    };
-
     //-------------------------------------------------------------------------
     // NOTE: these members may be accessed from any thread (use mReentrantMonitor)
     //-------------------------------------------------------------------------
@@ -416,7 +379,7 @@ private:
     bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
     MOZ_MUST_USE nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                                  bool onlyReusedConnection,
-                                                 PendingTransactionInfo *pendingTransInfo);
+                                                 nsHttpTransaction *trans);
     MOZ_MUST_USE nsresult DispatchTransaction(nsConnectionEntry *,
                                               nsHttpTransaction *,
                                               nsHttpConnection *);
@@ -432,27 +395,17 @@ private:
     void     ReportProxyTelemetry(nsConnectionEntry *ent);
     MOZ_MUST_USE nsresult CreateTransport(nsConnectionEntry *,
                                           nsAHttpTransaction *, uint32_t, bool,
-                                          bool, bool,
-                                          PendingTransactionInfo *pendingTransInfo);
+                                          bool, bool);
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     DecrementActiveConnCount(nsHttpConnection *);
     void     StartedConnect();
     void     RecvdConnect();
 
-    // This function will unclaim the claimed connection or set a halfOpen
-    // socket to the speculative state if the transaction claiming them ends up
-    // using another connection.
-    void ReleaseClaimedSockets(nsConnectionEntry *ent,
-                               PendingTransactionInfo * pendingTransInfo);
-
-    void InsertTransactionSorted(nsTArray<RefPtr<PendingTransactionInfo> > &pendingQ,
-                                 PendingTransactionInfo *pendingTransInfo);
-
     nsConnectionEntry *GetOrCreateConnectionEntry(nsHttpConnectionInfo *,
                                                   bool allowWildCard);
 
     MOZ_MUST_USE nsresult MakeNewConnection(nsConnectionEntry *ent,
-                                            PendingTransactionInfo *pendingTransInfo);
+                                            nsHttpTransaction *trans);
 
     // Manage the preferred spdy connection entry for this address
     nsConnectionEntry *GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry);
@@ -536,8 +489,6 @@ private:
 
     nsCString mLogData;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnectionMgr::nsHalfOpenSocket, NS_HALFOPENSOCKET_IID)
 
 } // namespace net
 } // namespace mozilla
