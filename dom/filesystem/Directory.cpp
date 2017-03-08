@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/Directory.h"
 
-#include "CreateDirectoryTask.h"
 #include "FileSystemPermissionRequest.h"
 #include "GetDirectoryListingTask.h"
 #include "GetFileOrDirectoryTask.h"
@@ -20,13 +19,6 @@
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
-
-// Resolve the name collision of Microsoft's API name with macros defined in
-// Windows header files. Undefine the macro of CreateDirectory to avoid
-// Directory#CreateDirectory being replaced by Directory#CreateDirectoryW.
-#ifdef CreateDirectory
-#undef CreateDirectory
-#endif
 
 namespace mozilla {
 namespace dom {
@@ -186,31 +178,6 @@ Directory::GetName(nsAString& aRetval, ErrorResult& aRv)
   }
 
   fs->GetDirectoryName(mFile, aRetval, aRv);
-}
-
-already_AddRefed<Promise>
-Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
-{
-  // Only exposed for DeviceStorage.
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIFile> realPath;
-  nsresult error = DOMPathToRealPath(aPath, getter_AddRefs(realPath));
-
-  RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<CreateDirectoryTaskChild> task =
-    CreateDirectoryTaskChild::Create(fs, realPath, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  task->SetError(error);
-  FileSystemPermissionRequest::RequestForTask(task);
-  return task->GetPromise();
 }
 
 already_AddRefed<Promise>
