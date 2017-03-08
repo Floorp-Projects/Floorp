@@ -2628,3 +2628,575 @@ js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
     return false;
 }
 
+bool
+js::unicode::CanUpperCaseSpecialCasing(char16_t ch)
+{
+    if (ch < 0x00DF || ch > 0xFB17)
+        return false;
+    if (ch <= 0x0587) {
+        return ch == 0x00DF || ch == 0x0149 || ch == 0x01F0 || ch == 0x0390 || ch == 0x03B0 ||
+               ch == 0x0587;
+    }
+    if (ch <= 0x1FFC) {
+        if (ch <= 0x1E9A)
+            return ch >= 0x1E96;
+        if (ch < 0x1F50)
+            return false;
+        return ch == 0x1F50 || ch == 0x1F52 || ch == 0x1F54 || ch == 0x1F56 ||
+               (ch >= 0x1F80 && ch <= 0x1FAF) || (ch >= 0x1FB2 && ch <= 0x1FB4) ||
+               (ch >= 0x1FB6 && ch <= 0x1FB7) || ch == 0x1FBC || (ch >= 0x1FC2 && ch <= 0x1FC4) ||
+               (ch >= 0x1FC6 && ch <= 0x1FC7) || ch == 0x1FCC || (ch >= 0x1FD2 && ch <= 0x1FD3) ||
+               (ch >= 0x1FD6 && ch <= 0x1FD7) || (ch >= 0x1FE2 && ch <= 0x1FE4) ||
+               (ch >= 0x1FE6 && ch <= 0x1FE7) || (ch >= 0x1FF2 && ch <= 0x1FF4) ||
+               (ch >= 0x1FF6 && ch <= 0x1FF7) || ch == 0x1FFC;
+    }
+    if (ch < 0xFB00)
+        return false;
+    return (ch >= 0xFB00 && ch <= 0xFB06) || (ch >= 0xFB13 && ch <= 0xFB17);
+}
+
+size_t
+js::unicode::LengthUpperCaseSpecialCasing(char16_t ch)
+{
+    switch(ch) {
+      case 0x00DF: return 2;
+      case 0x0149: return 2;
+      case 0x01F0: return 2;
+      case 0x0390: return 3;
+      case 0x03B0: return 3;
+      case 0x0587: return 2;
+      case 0x1E96: return 2;
+      case 0x1E97: return 2;
+      case 0x1E98: return 2;
+      case 0x1E99: return 2;
+      case 0x1E9A: return 2;
+      case 0x1F50: return 2;
+      case 0x1F52: return 3;
+      case 0x1F54: return 3;
+      case 0x1F56: return 3;
+      case 0x1F80: return 2;
+      case 0x1F81: return 2;
+      case 0x1F82: return 2;
+      case 0x1F83: return 2;
+      case 0x1F84: return 2;
+      case 0x1F85: return 2;
+      case 0x1F86: return 2;
+      case 0x1F87: return 2;
+      case 0x1F88: return 2;
+      case 0x1F89: return 2;
+      case 0x1F8A: return 2;
+      case 0x1F8B: return 2;
+      case 0x1F8C: return 2;
+      case 0x1F8D: return 2;
+      case 0x1F8E: return 2;
+      case 0x1F8F: return 2;
+      case 0x1F90: return 2;
+      case 0x1F91: return 2;
+      case 0x1F92: return 2;
+      case 0x1F93: return 2;
+      case 0x1F94: return 2;
+      case 0x1F95: return 2;
+      case 0x1F96: return 2;
+      case 0x1F97: return 2;
+      case 0x1F98: return 2;
+      case 0x1F99: return 2;
+      case 0x1F9A: return 2;
+      case 0x1F9B: return 2;
+      case 0x1F9C: return 2;
+      case 0x1F9D: return 2;
+      case 0x1F9E: return 2;
+      case 0x1F9F: return 2;
+      case 0x1FA0: return 2;
+      case 0x1FA1: return 2;
+      case 0x1FA2: return 2;
+      case 0x1FA3: return 2;
+      case 0x1FA4: return 2;
+      case 0x1FA5: return 2;
+      case 0x1FA6: return 2;
+      case 0x1FA7: return 2;
+      case 0x1FA8: return 2;
+      case 0x1FA9: return 2;
+      case 0x1FAA: return 2;
+      case 0x1FAB: return 2;
+      case 0x1FAC: return 2;
+      case 0x1FAD: return 2;
+      case 0x1FAE: return 2;
+      case 0x1FAF: return 2;
+      case 0x1FB2: return 2;
+      case 0x1FB3: return 2;
+      case 0x1FB4: return 2;
+      case 0x1FB6: return 2;
+      case 0x1FB7: return 3;
+      case 0x1FBC: return 2;
+      case 0x1FC2: return 2;
+      case 0x1FC3: return 2;
+      case 0x1FC4: return 2;
+      case 0x1FC6: return 2;
+      case 0x1FC7: return 3;
+      case 0x1FCC: return 2;
+      case 0x1FD2: return 3;
+      case 0x1FD3: return 3;
+      case 0x1FD6: return 2;
+      case 0x1FD7: return 3;
+      case 0x1FE2: return 3;
+      case 0x1FE3: return 3;
+      case 0x1FE4: return 2;
+      case 0x1FE6: return 2;
+      case 0x1FE7: return 3;
+      case 0x1FF2: return 2;
+      case 0x1FF3: return 2;
+      case 0x1FF4: return 2;
+      case 0x1FF6: return 2;
+      case 0x1FF7: return 3;
+      case 0x1FFC: return 2;
+      case 0xFB00: return 2;
+      case 0xFB01: return 2;
+      case 0xFB02: return 2;
+      case 0xFB03: return 3;
+      case 0xFB04: return 3;
+      case 0xFB05: return 2;
+      case 0xFB06: return 2;
+      case 0xFB13: return 2;
+      case 0xFB14: return 2;
+      case 0xFB15: return 2;
+      case 0xFB16: return 2;
+      case 0xFB17: return 2;
+    }
+
+    MOZ_ASSERT_UNREACHABLE("Bad character input.");
+    return 0;
+}
+
+void
+js::unicode::AppendUpperCaseSpecialCasing(char16_t ch, char16_t* elements, size_t* index)
+{
+    switch(ch) {
+      case 0x00DF:
+        elements[(*index)++] = 0x0053;
+        elements[(*index)++] = 0x0053;
+        return;
+      case 0x0149:
+        elements[(*index)++] = 0x02BC;
+        elements[(*index)++] = 0x004E;
+        return;
+      case 0x01F0:
+        elements[(*index)++] = 0x004A;
+        elements[(*index)++] = 0x030C;
+        return;
+      case 0x0390:
+        elements[(*index)++] = 0x0399;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0301;
+        return;
+      case 0x03B0:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0301;
+        return;
+      case 0x0587:
+        elements[(*index)++] = 0x0535;
+        elements[(*index)++] = 0x0552;
+        return;
+      case 0x1E96:
+        elements[(*index)++] = 0x0048;
+        elements[(*index)++] = 0x0331;
+        return;
+      case 0x1E97:
+        elements[(*index)++] = 0x0054;
+        elements[(*index)++] = 0x0308;
+        return;
+      case 0x1E98:
+        elements[(*index)++] = 0x0057;
+        elements[(*index)++] = 0x030A;
+        return;
+      case 0x1E99:
+        elements[(*index)++] = 0x0059;
+        elements[(*index)++] = 0x030A;
+        return;
+      case 0x1E9A:
+        elements[(*index)++] = 0x0041;
+        elements[(*index)++] = 0x02BE;
+        return;
+      case 0x1F50:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0313;
+        return;
+      case 0x1F52:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0313;
+        elements[(*index)++] = 0x0300;
+        return;
+      case 0x1F54:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0313;
+        elements[(*index)++] = 0x0301;
+        return;
+      case 0x1F56:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0313;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1F80:
+        elements[(*index)++] = 0x1F08;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F81:
+        elements[(*index)++] = 0x1F09;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F82:
+        elements[(*index)++] = 0x1F0A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F83:
+        elements[(*index)++] = 0x1F0B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F84:
+        elements[(*index)++] = 0x1F0C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F85:
+        elements[(*index)++] = 0x1F0D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F86:
+        elements[(*index)++] = 0x1F0E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F87:
+        elements[(*index)++] = 0x1F0F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F88:
+        elements[(*index)++] = 0x1F08;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F89:
+        elements[(*index)++] = 0x1F09;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8A:
+        elements[(*index)++] = 0x1F0A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8B:
+        elements[(*index)++] = 0x1F0B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8C:
+        elements[(*index)++] = 0x1F0C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8D:
+        elements[(*index)++] = 0x1F0D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8E:
+        elements[(*index)++] = 0x1F0E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F8F:
+        elements[(*index)++] = 0x1F0F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F90:
+        elements[(*index)++] = 0x1F28;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F91:
+        elements[(*index)++] = 0x1F29;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F92:
+        elements[(*index)++] = 0x1F2A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F93:
+        elements[(*index)++] = 0x1F2B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F94:
+        elements[(*index)++] = 0x1F2C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F95:
+        elements[(*index)++] = 0x1F2D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F96:
+        elements[(*index)++] = 0x1F2E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F97:
+        elements[(*index)++] = 0x1F2F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F98:
+        elements[(*index)++] = 0x1F28;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F99:
+        elements[(*index)++] = 0x1F29;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9A:
+        elements[(*index)++] = 0x1F2A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9B:
+        elements[(*index)++] = 0x1F2B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9C:
+        elements[(*index)++] = 0x1F2C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9D:
+        elements[(*index)++] = 0x1F2D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9E:
+        elements[(*index)++] = 0x1F2E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1F9F:
+        elements[(*index)++] = 0x1F2F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA0:
+        elements[(*index)++] = 0x1F68;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA1:
+        elements[(*index)++] = 0x1F69;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA2:
+        elements[(*index)++] = 0x1F6A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA3:
+        elements[(*index)++] = 0x1F6B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA4:
+        elements[(*index)++] = 0x1F6C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA5:
+        elements[(*index)++] = 0x1F6D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA6:
+        elements[(*index)++] = 0x1F6E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA7:
+        elements[(*index)++] = 0x1F6F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA8:
+        elements[(*index)++] = 0x1F68;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FA9:
+        elements[(*index)++] = 0x1F69;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAA:
+        elements[(*index)++] = 0x1F6A;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAB:
+        elements[(*index)++] = 0x1F6B;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAC:
+        elements[(*index)++] = 0x1F6C;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAD:
+        elements[(*index)++] = 0x1F6D;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAE:
+        elements[(*index)++] = 0x1F6E;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FAF:
+        elements[(*index)++] = 0x1F6F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FB2:
+        elements[(*index)++] = 0x1FBA;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FB3:
+        elements[(*index)++] = 0x0391;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FB4:
+        elements[(*index)++] = 0x0386;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FB6:
+        elements[(*index)++] = 0x0391;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FB7:
+        elements[(*index)++] = 0x0391;
+        elements[(*index)++] = 0x0342;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FBC:
+        elements[(*index)++] = 0x0391;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FC2:
+        elements[(*index)++] = 0x1FCA;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FC3:
+        elements[(*index)++] = 0x0397;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FC4:
+        elements[(*index)++] = 0x0389;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FC6:
+        elements[(*index)++] = 0x0397;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FC7:
+        elements[(*index)++] = 0x0397;
+        elements[(*index)++] = 0x0342;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FCC:
+        elements[(*index)++] = 0x0397;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FD2:
+        elements[(*index)++] = 0x0399;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0300;
+        return;
+      case 0x1FD3:
+        elements[(*index)++] = 0x0399;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0301;
+        return;
+      case 0x1FD6:
+        elements[(*index)++] = 0x0399;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FD7:
+        elements[(*index)++] = 0x0399;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FE2:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0300;
+        return;
+      case 0x1FE3:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0301;
+        return;
+      case 0x1FE4:
+        elements[(*index)++] = 0x03A1;
+        elements[(*index)++] = 0x0313;
+        return;
+      case 0x1FE6:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FE7:
+        elements[(*index)++] = 0x03A5;
+        elements[(*index)++] = 0x0308;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FF2:
+        elements[(*index)++] = 0x1FFA;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FF3:
+        elements[(*index)++] = 0x03A9;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FF4:
+        elements[(*index)++] = 0x038F;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FF6:
+        elements[(*index)++] = 0x03A9;
+        elements[(*index)++] = 0x0342;
+        return;
+      case 0x1FF7:
+        elements[(*index)++] = 0x03A9;
+        elements[(*index)++] = 0x0342;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0x1FFC:
+        elements[(*index)++] = 0x03A9;
+        elements[(*index)++] = 0x0399;
+        return;
+      case 0xFB00:
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x0046;
+        return;
+      case 0xFB01:
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x0049;
+        return;
+      case 0xFB02:
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x004C;
+        return;
+      case 0xFB03:
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x0049;
+        return;
+      case 0xFB04:
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x0046;
+        elements[(*index)++] = 0x004C;
+        return;
+      case 0xFB05:
+        elements[(*index)++] = 0x0053;
+        elements[(*index)++] = 0x0054;
+        return;
+      case 0xFB06:
+        elements[(*index)++] = 0x0053;
+        elements[(*index)++] = 0x0054;
+        return;
+      case 0xFB13:
+        elements[(*index)++] = 0x0544;
+        elements[(*index)++] = 0x0546;
+        return;
+      case 0xFB14:
+        elements[(*index)++] = 0x0544;
+        elements[(*index)++] = 0x0535;
+        return;
+      case 0xFB15:
+        elements[(*index)++] = 0x0544;
+        elements[(*index)++] = 0x053B;
+        return;
+      case 0xFB16:
+        elements[(*index)++] = 0x054E;
+        elements[(*index)++] = 0x0546;
+        return;
+      case 0xFB17:
+        elements[(*index)++] = 0x0544;
+        elements[(*index)++] = 0x053D;
+        return;
+    }
+
+    MOZ_ASSERT_UNREACHABLE("Bad character input.");
+    return;
+}
