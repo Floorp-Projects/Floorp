@@ -127,6 +127,9 @@ class Browser(object):
 
 
 class NullBrowser(Browser):
+    def __init__(self, logger, **kwargs):
+        super(NullBrowser, self).__init__(logger)
+
     def start(self):
         """No-op browser to use in scenarios where the TestRunnerManager shouldn't
         actually own the browser process (e.g. Servo where we start one browser
