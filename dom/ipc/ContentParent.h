@@ -801,7 +801,6 @@ private:
                                                                      bool* aIsCompatible) override;
 
   virtual mozilla::ipc::IPCResult RecvNSSU2FTokenIsRegistered(nsTArray<uint8_t>&& aKeyHandle,
-                                                              nsTArray<uint8_t>&& aApplication,
                                                               bool* aIsValidKeyHandle) override;
 
   virtual mozilla::ipc::IPCResult RecvNSSU2FTokenRegister(nsTArray<uint8_t>&& aApplication,
