@@ -91,6 +91,8 @@
 
 /* Toolbox tabs */
 .devtools-tab {
+  display: flex;
+  align-items: center;
   min-width: 32px;
   min-height: 24px;
   margin: 0;
@@ -101,21 +103,22 @@
   padding-inline-end: 10px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   background-color: transparent;
+}
+
+/* Hide tab icons when the viewport width is limited */
+@media (max-width: 700px) {
+  /* Hide the icons, reduce the margins to 5px and set the width to 0 */
+  .devtools-tab:not(.devtools-tab-icon-only) > img {
+    visibility: hidden;
+    margin-inline-start: 5px;
+    margin-inline-end: 0;
+    width: 0;
+  }
 }
 
 .devtools-tab-icon-only {
   padding-inline-end: 2px;
-}
-
-.devtools-tab span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-inline-end: 13px;
-  position: relative;
-  top: 1px;
 }
 
 /* Save space on the tab-strip in Firebug theme */
@@ -171,11 +174,12 @@
   border: none;
   margin: 0;
   margin-inline-start: 10px;
+  margin-inline-end: 5px;
   opacity: 0.8;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
   vertical-align: text-top;
-  margin-inline-end: 6px;
+  flex-shrink: 0;
 }
 
 /* Support invertable icon flags and make icon white when it's on a blue background */
