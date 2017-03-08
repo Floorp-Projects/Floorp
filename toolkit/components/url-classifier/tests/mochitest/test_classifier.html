@@ -140,7 +140,7 @@ function testService() {
       let prin = ssm.createCodebasePrincipal(uri, {});
       is(service.classifyLocal(uri, tables), test.table,
          `Successful synchronous classification of ${test.url} with TP=${test.trackingProtection}`);
-      let result = service.classify(prin, test.trackingProtection, function(errorCode) {
+      let result = SpecialPowers.doUrlClassify(prin, null, test.trackingProtection, function(errorCode) {
         is(errorCode, test.result,
            `Successful asynchronous classification of ${test.url} with TP=${test.trackingProtection}`);
 
