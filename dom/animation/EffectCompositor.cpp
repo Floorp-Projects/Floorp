@@ -497,16 +497,6 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
   return animRule.mServo;
 }
 
-void
-EffectCompositor::ClearElementsToRestyle()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  const auto iterEnd = mElementsToRestyle.end();
-  for (auto iter = mElementsToRestyle.begin(); iter != iterEnd; ++iter) {
-    iter->Clear();
-  }
-}
-
 /* static */ dom::Element*
 EffectCompositor::GetElementToRestyle(dom::Element* aElement,
                                       CSSPseudoElementType aPseudoType)
