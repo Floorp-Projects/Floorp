@@ -470,7 +470,6 @@ private:
     nsCSSKeyframeRule* aKeyframeRule,
     nsCSSPropertyIDSet& aAnimatedProperties);
   void FillInMissingKeyframeValues(
-    nsPresContext* aPresContext,
     nsCSSPropertyIDSet aAnimatedProperties,
     nsCSSPropertyIDSet aPropertiesSetAtStart,
     nsCSSPropertyIDSet aPropertiesSetAtEnd,
@@ -805,9 +804,9 @@ GeckoCSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
   // Finally, we need to look for any animated properties that have an
   // implicit 'to' or 'from' value and fill in the appropriate keyframe
   // with the current computed style.
-  FillInMissingKeyframeValues(aPresContext, animatedProperties,
-                              propertiesSetAtStart, propertiesSetAtEnd,
-                              inheritedTimingFunction, keyframes);
+  FillInMissingKeyframeValues(animatedProperties, propertiesSetAtStart,
+                              propertiesSetAtEnd, inheritedTimingFunction,
+                              keyframes);
 
   return keyframes;
 }
@@ -927,7 +926,6 @@ FindMatchingKeyframe(
 
 void
 GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
-    nsPresContext* aPresContext,
     nsCSSPropertyIDSet aAnimatedProperties,
     nsCSSPropertyIDSet aPropertiesSetAtStart,
     nsCSSPropertyIDSet aPropertiesSetAtEnd,
@@ -984,10 +982,14 @@ GeckoCSSAnimationBuilder::FillInMissingKeyframeValues(
     }
 
     if (startKeyframe && !aPropertiesSetAtStart.HasProperty(prop)) {
-      AppendProperty(aPresContext, prop, startKeyframe->mPropertyValues);
+      PropertyValuePair propertyValue;
+      propertyValue.mProperty = prop;
+      startKeyframe->mPropertyValues.AppendElement(Move(propertyValue));
     }
     if (endKeyframe && !aPropertiesSetAtEnd.HasProperty(prop)) {
-      AppendProperty(aPresContext, prop, endKeyframe->mPropertyValues);
+      PropertyValuePair propertyValue;
+      propertyValue.mProperty = prop;
+      endKeyframe->mPropertyValues.AppendElement(Move(propertyValue));
     }
   }
 }
