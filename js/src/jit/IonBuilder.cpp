@@ -2185,12 +2185,17 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_regexp(info().getRegExp(pc));
 
       case JSOP_CALLSITEOBJ:
-      {
-        JSObject* raw = script()->getObject(GET_UINT32_INDEX(pc) + 1);
-        JSObject* obj = script()->compartment()->getExistingTemplateLiteralObject(raw);
-        pushConstant(ObjectValue(*obj));
+        if (info().analysisMode() == Analysis_ArgumentsUsage) {
+            // When analyzing arguments usage, it is possible that the
+            // template object is not yet canonicalized. Push an incorrect
+            // object; it does not matter for arguments analysis.
+            pushConstant(ObjectValue(*info().getObject(pc)));
+        } else {
+            JSObject* raw = script()->getObject(GET_UINT32_INDEX(pc) + 1);
+            JSObject* obj = script()->compartment()->getExistingTemplateLiteralObject(raw);
+            pushConstant(ObjectValue(*obj));
+        }
         return Ok();
-      }
 
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
