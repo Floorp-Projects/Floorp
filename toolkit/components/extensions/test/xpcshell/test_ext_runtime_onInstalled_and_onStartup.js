@@ -8,6 +8,7 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
 });
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 const {
   createAppInfo,
@@ -26,19 +27,6 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
-
-function awaitEvent(eventName) {
-  return new Promise(resolve => {
-    let listener = (_eventName, ...args) => {
-      if (_eventName === eventName) {
-        Management.off(eventName, listener);
-        resolve(...args);
-      }
-    };
-
-    Management.on(eventName, listener);
-  });
-}
 
 function background() {
   let onInstalledDetails = null;
@@ -84,6 +72,10 @@ function* expectEvents(extension, {onStartupFired, onInstalledFired, onInstalled
 }
 
 add_task(function* test_should_fire_on_addon_update() {
+  Preferences.set("extensions.logging.enabled", false);
+
+  yield promiseStartupManager();
+
   const EXTENSION_ID = "test_runtime_on_installed_addon_update@tests.mozilla.org";
 
   const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
@@ -137,8 +129,6 @@ add_task(function* test_should_fire_on_addon_update() {
 
   testServer.registerFile("/addons/test_runtime_on_installed-2.0.xpi", webExtensionFile);
 
-  yield promiseStartupManager();
-
   yield extension.startup();
 
   yield expectEvents(extension, {
@@ -158,13 +148,10 @@ add_task(function* test_should_fire_on_addon_update() {
 
   yield extension.awaitMessage("reloading");
 
-  let startupPromise = awaitEvent("ready");
-
   let [updated_addon] = yield promiseInstalled;
   equal(updated_addon.version, "2.0", "The updated addon has the correct version");
 
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: false,
@@ -174,7 +161,6 @@ add_task(function* test_should_fire_on_addon_update() {
 
   yield extension.unload();
 
-  yield updated_addon.uninstall();
   yield promiseShutdownManager();
 });
 
@@ -204,10 +190,9 @@ add_task(function* test_should_fire_on_browser_update() {
     onInstalledReason: "install",
   });
 
-  let startupPromise = awaitEvent("ready");
   yield promiseRestartManager("1");
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: true,
@@ -215,10 +200,8 @@ add_task(function* test_should_fire_on_browser_update() {
   });
 
   // Update the browser.
-  startupPromise = awaitEvent("ready");
   yield promiseRestartManager("2");
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: true,
@@ -227,10 +210,8 @@ add_task(function* test_should_fire_on_browser_update() {
   });
 
   // Restart the browser.
-  startupPromise = awaitEvent("ready");
   yield promiseRestartManager("2");
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: true,
@@ -238,10 +219,8 @@ add_task(function* test_should_fire_on_browser_update() {
   });
 
   // Update the browser again.
-  startupPromise = awaitEvent("ready");
   yield promiseRestartManager("3");
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: true,
@@ -280,10 +259,9 @@ add_task(function* test_should_not_fire_on_reload() {
     onInstalledReason: "install",
   });
 
-  let startupPromise = awaitEvent("ready");
   extension.sendMessage("reload-extension");
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  extension.setRestarting();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: false,
@@ -323,10 +301,8 @@ add_task(function* test_should_not_fire_on_restart() {
   let addon = yield AddonManager.getAddonByID(EXTENSION_ID);
   addon.userDisabled = true;
 
-  let startupPromise = awaitEvent("ready");
   addon.userDisabled = false;
-  extension.extension = yield startupPromise;
-  extension.attachListeners();
+  yield extension.awaitStartup();
 
   yield expectEvents(extension, {
     onStartupFired: false,
