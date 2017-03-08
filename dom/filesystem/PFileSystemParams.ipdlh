@@ -45,20 +45,11 @@ struct FileSystemGetFileOrDirectoryParams
   nsString realPath;
 };
 
-struct FileSystemRemoveParams
-{
-  nsString filesystem;
-  nsString directory;
-  nsString targetDirectory;
-  bool recursive;
-};
-
 union FileSystemParams
 {
   FileSystemGetDirectoryListingParams;
   FileSystemGetFilesParams;
   FileSystemGetFileOrDirectoryParams;
-  FileSystemRemoveParams;
 };
 
 } // dom namespace
