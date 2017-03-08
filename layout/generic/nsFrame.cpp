@@ -9174,15 +9174,22 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
 {
   NS_PRECONDITION(aProspectiveParent, "Must have a prospective parent");
 
-  // Anon boxes are parented to their actual parent already, except
-  // for non-elements.  Those should not be treated as an anon box.
-  if (aChildPseudo && !nsCSSAnonBoxes::IsNonElement(aChildPseudo) &&
-      nsCSSAnonBoxes::IsAnonBox(aChildPseudo)) {
-    NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozAnonymousBlock &&
-                 aChildPseudo != nsCSSAnonBoxes::mozAnonymousPositionedBlock,
-                 "Should have dealt with kids that have "
-                 "NS_FRAME_PART_OF_IBSPLIT elsewhere");
-    return aProspectiveParent;
+  if (aChildPseudo) {
+    // Non-inheriting anon boxes have no style parent frame at all.
+    if (nsCSSAnonBoxes::IsNonInheritingAnonBox(aChildPseudo)) {
+      return nullptr;
+    }
+
+    // Other anon boxes are parented to their actual parent already, except
+    // for non-elements.  Those should not be treated as an anon box.
+    if (!nsCSSAnonBoxes::IsNonElement(aChildPseudo) &&
+        nsCSSAnonBoxes::IsAnonBox(aChildPseudo)) {
+      NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozAnonymousBlock &&
+                   aChildPseudo != nsCSSAnonBoxes::mozAnonymousPositionedBlock,
+                   "Should have dealt with kids that have "
+                   "NS_FRAME_PART_OF_IBSPLIT elsewhere");
+      return aProspectiveParent;
+    }
   }
 
   // Otherwise, walk up out of all anon boxes.  For placeholder frames, walk out
