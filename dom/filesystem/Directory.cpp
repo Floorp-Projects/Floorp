@@ -50,16 +50,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Directory)
 NS_INTERFACE_MAP_END
 
 /* static */ bool
-Directory::DeviceStorageEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (!NS_IsMainThread()) {
-    return false;
-  }
-
-  return Preferences::GetBool("device.storage.enabled", false);
-}
-
-/* static */ bool
 Directory::WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj)
 {
   if (NS_IsMainThread()) {
@@ -179,31 +169,6 @@ Directory::GetName(nsAString& aRetval, ErrorResult& aRv)
   fs->GetDirectoryName(mFile, aRetval, aRv);
 }
 
-already_AddRefed<Promise>
-Directory::Get(const nsAString& aPath, ErrorResult& aRv)
-{
-  // Only exposed for DeviceStorage.
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIFile> realPath;
-  nsresult error = DOMPathToRealPath(aPath, getter_AddRefs(realPath));
-
-  RefPtr<FileSystemBase> fs = GetFileSystem(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  RefPtr<GetFileOrDirectoryTaskChild> task =
-    GetFileOrDirectoryTaskChild::Create(fs, realPath, false, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  task->SetError(error);
-  FileSystemPermissionRequest::RequestForTask(task);
-  return task->GetPromise();
-}
-
 void
 Directory::GetPath(nsAString& aRetval, ErrorResult& aRv)
 {
@@ -298,37 +263,6 @@ Directory::GetFileSystem(ErrorResult& aRv)
   return mFileSystem;
 }
 
-nsresult
-Directory::DOMPathToRealPath(const nsAString& aPath, nsIFile** aFile) const
-{
-  nsString relativePath;
-  relativePath = aPath;
-
-  // Trim white spaces.
-  static const char kWhitespace[] = "\b\t\r\n ";
-  relativePath.Trim(kWhitespace);
-
-  nsTArray<nsString> parts;
-  if (!FileSystemUtils::IsValidRelativeDOMPath(relativePath, parts)) {
-    return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
-  }
-
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = mFile->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  for (uint32_t i = 0; i < parts.Length(); ++i) {
-    rv = file->AppendRelativePath(parts[i]);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  file.forget(aFile);
-  return NS_OK;
-}
 
 bool
 Directory::ClonableToDifferentThreadOrProcess() const
