@@ -282,8 +282,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DeviceProximityEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorageAreaChangedEvent", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DeviceStorageAreaListener", desktop: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "DeviceStorage", desktop: false},
