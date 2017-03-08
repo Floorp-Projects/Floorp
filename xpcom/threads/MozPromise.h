@@ -316,7 +316,7 @@ protected:
     static const uint32_t sMagic = 0xfadece11;
 
   public:
-    class ResolveOrRejectRunnable : public Runnable
+    class ResolveOrRejectRunnable : public CancelableRunnable
     {
     public:
       ResolveOrRejectRunnable(ThenValueBase* aThenValue, MozPromise* aPromise)
@@ -340,6 +340,11 @@ protected:
         mThenValue = nullptr;
         mPromise = nullptr;
         return NS_OK;
+      }
+
+      nsresult Cancel() override
+      {
+        return Run();
       }
 
     private:
@@ -1218,7 +1223,7 @@ private:
 
 template<typename PromiseType, typename MethodType, typename ThisType,
          typename... Storages>
-class ProxyRunnable : public Runnable
+class ProxyRunnable : public CancelableRunnable
 {
 public:
   ProxyRunnable(typename PromiseType::Private* aProxyPromise,
@@ -1231,6 +1236,11 @@ public:
     mMethodCall = nullptr;
     p->ChainTo(mProxyPromise.forget(), "<Proxy Promise>");
     return NS_OK;
+  }
+
+  nsresult Cancel() override
+  {
+    return Run();
   }
 
 private:
@@ -1324,7 +1334,7 @@ InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName
 namespace detail {
 
 template<typename Function, typename PromiseType>
-class ProxyFunctionRunnable : public Runnable
+class ProxyFunctionRunnable : public CancelableRunnable
 {
   typedef typename Decay<Function>::Type FunctionStorage;
 public:
@@ -1340,6 +1350,11 @@ public:
     mFunction = nullptr;
     p->ChainTo(mProxyPromise.forget(), "<Proxy Promise>");
     return NS_OK;
+  }
+
+  nsresult Cancel() override
+  {
+    return Run();
   }
 
 private:
