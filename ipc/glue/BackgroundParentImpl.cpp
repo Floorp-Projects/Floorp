@@ -540,81 +540,6 @@ private:
   nsCString mOrigin;
 };
 
-class CheckPermissionRunnable final : public Runnable
-{
-public:
-  CheckPermissionRunnable(already_AddRefed<ContentParent> aParent,
-                          FileSystemRequestParent* aActor,
-                          FileSystemBase::ePermissionCheckType aPermissionCheckType,
-                          const nsCString& aPermissionName)
-    : mContentParent(aParent)
-    , mActor(aActor)
-    , mPermissionCheckType(aPermissionCheckType)
-    , mPermissionName(aPermissionName)
-    , mBackgroundEventTarget(NS_GetCurrentThread())
-  {
-    AssertIsInMainProcess();
-    AssertIsOnBackgroundThread();
-
-    MOZ_ASSERT(mContentParent);
-    MOZ_ASSERT(mBackgroundEventTarget);
-    MOZ_ASSERT(mPermissionCheckType == FileSystemBase::ePermissionCheckRequired ||
-               mPermissionCheckType == FileSystemBase::ePermissionCheckByTestingPref);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    if (NS_IsMainThread()) {
-      NullifyContentParentRAII raii(mContentParent);
-
-      // If the permission is granted, we go back to the background thread to
-      // dispatch this task.
-      if (CheckPermission()) {
-        return mBackgroundEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-      }
-
-      return NS_OK;
-    }
-
-    AssertIsOnBackgroundThread();
-
-    // It can happen that this actor has been destroyed in the meantime we were
-    // on the main-thread.
-    if (!mActor->Destroyed()) {
-      mActor->Start();
-    }
-
-    return NS_OK;
-  }
-
-private:
-  ~CheckPermissionRunnable() override
-  {
-     NS_ProxyRelease(mBackgroundEventTarget, mActor.forget());
-  }
-
-  bool
-  CheckPermission()
-  {
-    if (mPermissionCheckType == FileSystemBase::ePermissionCheckByTestingPref &&
-        mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
-      return true;
-    }
-
-    return true;
-  }
-
-  RefPtr<ContentParent> mContentParent;
-
-  RefPtr<FileSystemRequestParent> mActor;
-
-  FileSystemBase::ePermissionCheckType mPermissionCheckType;
-  nsCString mPermissionName;
-
-  nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
-};
-
 } // namespace
 
 mozilla::ipc::IPCResult
@@ -846,46 +771,9 @@ BackgroundParentImpl::AllocPFileSystemRequestParent(
     return nullptr;
   }
 
+  result->Start();
+
   return result.forget().take();
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPFileSystemRequestConstructor(
-                                               PFileSystemRequestParent* aActor,
-                                               const FileSystemParams& aParams)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  RefPtr<FileSystemRequestParent> actor = static_cast<FileSystemRequestParent*>(aActor);
-
-  if (actor->PermissionCheckType() == FileSystemBase::ePermissionCheckNotRequired) {
-    actor->Start();
-    return IPC_OK();
-  }
-
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
-
-  // If the ContentParent is null we are dealing with a same-process actor.
-  if (!parent) {
-    actor->Start();
-    return IPC_OK();
-  }
-
-  const nsCString& permissionName = actor->PermissionName();
-  MOZ_ASSERT(!permissionName.IsEmpty());
-
-  // At this point we should have the right permission but we do the last check
-  // with this runnable. If the app doesn't have the permission, we kill the
-  // child process.
-  RefPtr<CheckPermissionRunnable> runnable =
-    new CheckPermissionRunnable(parent.forget(), actor,
-                                actor->PermissionCheckType(), permissionName);
-
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
-
-  return IPC_OK();
 }
 
 bool
