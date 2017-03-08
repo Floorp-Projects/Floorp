@@ -157,7 +157,8 @@ if CONFIG['_MSC_VER']:
 elif CONFIG['GNU_CXX']:
     CFLAGS += [
         '-Wno-comment',
-        '-Wno-sign-compare'
+        '-Wno-sign-compare',
+        '-Wno-unused-function',
     ]
     CXXFLAGS += [
         '-Wno-format',

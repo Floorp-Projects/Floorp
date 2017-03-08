@@ -24,7 +24,12 @@ var AboutNewTab = {
 
   pageListener: null,
 
+  isOverridden: false,
+
   init() {
+    if (this.isOverridden) {
+      return;
+    }
     this.pageListener = new RemotePages("about:newtab");
     this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
     this.pageListener.addMessageListener("NewTab:MaybeShowAutoMigrationUndoNotification",
@@ -37,7 +42,19 @@ var AboutNewTab = {
   },
 
   uninit() {
-    this.pageListener.destroy();
-    this.pageListener = null;
+    if (this.pageListener) {
+      this.pageListener.destroy();
+      this.pageListener = null;
+    }
   },
+
+  override() {
+    this.uninit();
+    this.isOverridden = true;
+  },
+
+  reset() {
+    this.isOverridden = false;
+    this.init();
+  }
 };

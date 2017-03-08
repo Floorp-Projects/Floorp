@@ -138,6 +138,7 @@ TimingParams::ParseEasing(const nsAString& aEasing,
           }
           MOZ_FALLTHROUGH;
         case eCSSUnit_Cubic_Bezier:
+        case eCSSUnit_Function:
         case eCSSUnit_Steps: {
           nsTimingFunction timingFunction;
           nsRuleNode::ComputeTimingFunction(list->mValue, timingFunction);

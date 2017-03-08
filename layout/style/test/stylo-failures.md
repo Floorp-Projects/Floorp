@@ -56,9 +56,11 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_animations_event_order.html [12]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
+  * CSS Timing Functions: Frames timing functions
+    * test_value_storage.html `frames` [30]
   * Property parsing and computation:
     * test_property_syntax_errors.html `animation` [404]
-    * test_value_storage.html `animation` [265]
+    * test_value_storage.html `animation` [280]
 * test_any_dynamic.html: -moz-any pseudo class [2]
 * CSSOM support:
   * @namespace ##easy##

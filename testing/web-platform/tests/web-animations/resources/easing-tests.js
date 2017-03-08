@@ -39,6 +39,11 @@ var gEasingTests = [
     serialization: 'steps(2)'
   },
   {
+    desc: 'frames function',
+    easing: 'frames(5)',
+    easingFunction: framesTiming(5)
+  },
+  {
     desc: 'linear function',
     easing: 'linear', // cubic-bezier(0, 0, 1.0, 1.0)
     easingFunction: cubicBezier(0, 0, 1.0, 1.0)
@@ -83,5 +88,13 @@ var gInvalidEasings = [
   'cubic-bezier(-0.1, 0, 1, 1)',
   'cubic-bezier(0, 0, -0.1, 1)',
   'steps(-1, start)',
-  'steps(0.1, start)'
+  'steps(0.1, start)',
+  'frames(1)',
+  'frames',
+  'frames()',
+  'frames(,)',
+  'frames(a)',
+  'frames(2.0)',
+  'frames(2.5)',
+  'frames(2 3)'
 ];

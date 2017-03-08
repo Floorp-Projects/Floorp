@@ -63,11 +63,10 @@
         <body>
         <![CDATA[
           let outerBoxRect = this.parentNode.getBoundingClientRect();
-          let value = this.getAttribute("ac-value");
-          let comment = this.getAttribute("ac-comment");
+          let {primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
 
-          this._comment.textContent = comment;
-          this._label.textContent = value;
+          this._label.textContent = primary;
+          this._comment.textContent = secondary;
 
           // Make item fit in popup as XUL box could not constrain
           // item's width

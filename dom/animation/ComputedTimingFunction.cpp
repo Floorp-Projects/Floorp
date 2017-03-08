@@ -18,7 +18,7 @@ ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
     mTimingFunction.Init(aFunction.mFunc.mX1, aFunction.mFunc.mY1,
                          aFunction.mFunc.mX2, aFunction.mFunc.mY2);
   } else {
-    mSteps = aFunction.mSteps;
+    mStepsOrFrames = aFunction.mStepsOrFrames;
   }
 }
 
@@ -58,7 +58,22 @@ StepTiming(uint32_t aSteps,
   if (result > 1.0 && aPortion <= 1.0) {
     return 1.0;
   }
+  return result;
+}
 
+static inline double
+FramesTiming(uint32_t aFrames, double aPortion)
+{
+  MOZ_ASSERT(aFrames > 1, "the number of frames must be greater than 1");
+  int32_t currentFrame = floor(aPortion * aFrames);
+  double result = double(currentFrame) / double(aFrames - 1);
+
+  // Don't overshoot the natural range of the animation (by producing an output
+  // progress greater than 1.0) when we are at the exact end of its interval
+  // (i.e. the input progress is 1.0).
+  if (result > 1.0 && aPortion <= 1.0) {
+    return 1.0;
+  }
   return result;
 }
 
@@ -113,7 +128,9 @@ ComputedTimingFunction::GetValue(
     return mTimingFunction.GetSplineValue(aPortion);
   }
 
-  return StepTiming(mSteps, aPortion, aBeforeFlag, mType);
+  return mType == nsTimingFunction::Type::Frames
+         ? FramesTiming(mStepsOrFrames, aPortion)
+         : StepTiming(mStepsOrFrames, aPortion, aBeforeFlag, mType);
 }
 
 int32_t
@@ -129,9 +146,10 @@ ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
       return order;
     }
   } else if (mType == nsTimingFunction::Type::StepStart ||
-             mType == nsTimingFunction::Type::StepEnd) {
-    if (mSteps != aRhs.mSteps) {
-      return int32_t(mSteps) - int32_t(aRhs.mSteps);
+             mType == nsTimingFunction::Type::StepEnd ||
+             mType == nsTimingFunction::Type::Frames) {
+    if (mStepsOrFrames != aRhs.mStepsOrFrames) {
+      return int32_t(mStepsOrFrames) - int32_t(aRhs.mStepsOrFrames);
     }
   }
 
@@ -151,7 +169,10 @@ ComputedTimingFunction::AppendToString(nsAString& aResult) const
       break;
     case nsTimingFunction::Type::StepStart:
     case nsTimingFunction::Type::StepEnd:
-      nsStyleUtil::AppendStepsTimingFunction(mType, mSteps, aResult);
+      nsStyleUtil::AppendStepsTimingFunction(mType, mStepsOrFrames, aResult);
+      break;
+    case nsTimingFunction::Type::Frames:
+      nsStyleUtil::AppendFramesTimingFunction(mStepsOrFrames, aResult);
       break;
     default:
       nsStyleUtil::AppendCubicBezierKeywordTimingFunction(mType, aResult);

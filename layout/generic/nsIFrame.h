@@ -798,6 +798,13 @@ public:
    * Accessor functions for geometric parent.
    */
   nsContainerFrame* GetParent() const { return mParent; }
+
+  /**
+   * Gets the parent of a frame, using the parent of the placeholder for
+   * out-of-flow frames.
+   */
+  inline nsContainerFrame* GetInFlowParent();
+
   /**
    * Set this frame's parent to aParent.
    * If the frame may have moved into or out of a scrollframe's

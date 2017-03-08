@@ -8,8 +8,10 @@
 #define nsIFrameInlines_h___
 
 #include "nsContainerFrame.h"
+#include "nsPlaceholderFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsFrameManager.h"
 
 bool
 nsIFrame::IsFlexItem() const
@@ -167,6 +169,17 @@ nsIFrame::PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM)
   for (auto f = this; f; f = f->GetParent()) {
     f->mWritingMode = aRootElemWM;
   }
+}
+
+nsContainerFrame*
+nsIFrame::GetInFlowParent()
+{
+  if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    nsFrameManager* fm = PresContext()->FrameManager();
+    return fm->GetPlaceholderFrameFor(FirstContinuation())->GetParent();
+  }
+
+  return GetParent();
 }
 
 #endif
