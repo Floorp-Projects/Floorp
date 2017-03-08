@@ -287,7 +287,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/VsyncSource.java',
     'InputConnectionListener.java',
     'InputMethods.java',
-    'NativeQueue.java',
     'NotificationListener.java',
     'NSSBridge.java',
     'permissions/PermissionBlock.java',
