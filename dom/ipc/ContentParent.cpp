@@ -5030,9 +5030,12 @@ ContentParent::TransmitPermissionsFor(nsIChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the key, and send it down to the content process.
-  nsAutoCString key;
-  nsPermissionManager::GetKeyForPrincipal(principal, key);
-  EnsurePermissionsByKey(key);
+  nsTArray<nsCString> keys =
+    nsPermissionManager::GetAllKeysForPrincipal(principal);
+  MOZ_ASSERT(keys.Length() >= 1);
+  for (auto& key : keys) {
+    EnsurePermissionsByKey(key);
+  }
 #endif
 
   return NS_OK;
