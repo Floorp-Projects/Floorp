@@ -2074,22 +2074,11 @@ nsHttpConnection::DisableTCPKeepalives()
 // nsHttpConnection::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ADDREF(nsHttpConnection)
-NS_IMPL_RELEASE(nsHttpConnection)
-
-NS_INTERFACE_MAP_BEGIN(nsHttpConnection)
-    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-    NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
-    NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
-    NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
-    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-    // we have no macro that covers this case.
-    if (aIID.Equals(NS_GET_IID(nsHttpConnection)) ) {
-        AddRef();
-        *aInstancePtr = this;
-        return NS_OK;
-    } else
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsHttpConnection,
+                  nsIInputStreamCallback,
+                  nsIOutputStreamCallback,
+                  nsITransportEventSink,
+                  nsIInterfaceRequestor)
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection::nsIInputStreamCallback
