@@ -5,6 +5,8 @@
 package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -25,12 +27,21 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.Map;
 
-public final class GeckoProcessManager {
+public final class GeckoProcessManager extends IProcessManager.Stub {
     private static final String LOGTAG = "GeckoProcessManager";
     private static final GeckoProcessManager INSTANCE = new GeckoProcessManager();
 
     public static GeckoProcessManager getInstance() {
         return INSTANCE;
+    }
+
+    @WrapForJNI(stubName = "GetEditableParent")
+    private static native IGeckoEditableParent nativeGetEditableParent(long contentId,
+                                                                       long tabId);
+
+    @Override // IProcessManager
+    public IGeckoEditableParent getEditableParent(final long contentId, final long tabId) {
+        return nativeGetEditableParent(contentId, tabId);
     }
 
     private static final class ChildConnection implements ServiceConnection, IBinder.DeathRecipient {
@@ -150,7 +161,7 @@ public final class GeckoProcessManager {
                 crashPfd = ParcelFileDescriptor.fromFd(crashFd);
             }
             ParcelFileDescriptor ipcPfd = ParcelFileDescriptor.fromFd(ipcFd);
-            connection.mChild.start(args, crashPfd, ipcPfd);
+            connection.mChild.start(this, args, crashPfd, ipcPfd);
             if (crashPfd != null) {
                 crashPfd.close();
             }

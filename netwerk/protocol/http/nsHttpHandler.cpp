@@ -2182,7 +2182,7 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     // principal. Otherwise, we use the originAttributes from the
     // loadContext.
     if (aPrincipal) {
-        originAttributes.Inherit(aPrincipal->OriginAttributesRef());
+        originAttributes = aPrincipal->OriginAttributesRef();
     } else if (loadContext) {
         loadContext->GetOriginAttributes(originAttributes);
     }

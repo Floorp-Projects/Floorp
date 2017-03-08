@@ -866,9 +866,9 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
   OriginAttributes originAttributes;
   if (principal) {
-    originAttributes.Inherit(principal->OriginAttributesRef());
+    originAttributes = principal->OriginAttributesRef();
   } else if (aRequestPrincipal) {
-    originAttributes.Inherit(aRequestPrincipal->OriginAttributesRef());
+    originAttributes = aRequestPrincipal->OriginAttributesRef();
   }
 
   bool doHSTSPriming = false;

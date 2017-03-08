@@ -156,7 +156,7 @@ exports.items = [
         onback: () => {
           // The back button clears and hides .csscoverage-report
           while (host.hasChildNodes()) {
-            host.removeChild(host.firstChild);
+            host.firstChild.remove();
           }
           host.hidden = true;
         }

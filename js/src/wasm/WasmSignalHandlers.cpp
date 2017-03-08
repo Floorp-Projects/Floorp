@@ -1233,6 +1233,10 @@ RedirectIonBackedgesToInterruptCheck(JSContext* cx)
 static bool
 RedirectJitCodeToInterruptCheck(JSContext* cx, CONTEXT* context)
 {
+    // Jitcode may only be modified on the runtime's active thread.
+    if (cx != cx->runtime()->activeContext())
+        return false;
+
     RedirectIonBackedgesToInterruptCheck(cx);
 
     if (WasmActivation* activation = cx->wasmActivationStack()) {

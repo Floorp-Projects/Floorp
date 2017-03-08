@@ -25,7 +25,7 @@ URLClassifierParent::StartClassify(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsIURIClassifier> uriClassifier =
     do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = uriClassifier->Classify(aPrincipal, aUseTrackingProtection,
+    rv = uriClassifier->Classify(aPrincipal, nullptr, aUseTrackingProtection,
                                  this, aSuccess);
   }
   if (NS_FAILED(rv) || !*aSuccess) {

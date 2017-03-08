@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <script>
 var root = document.documentElement;
-while(root.firstChild) { root.removeChild(root.firstChild); }
+while(root.firstChild) { root.firstChild.remove(); }
 var div = document.createElement("div");
 root.appendChild(div);
 

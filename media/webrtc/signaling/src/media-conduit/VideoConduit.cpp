@@ -828,6 +828,8 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
     int64_t rtt = mRecvStream->GetRtt();
     if (rtt >= 0) {
       *rttMs = rtt;
+    } else {
+      *rttMs = 0;
     }
   }
   return true;
@@ -1169,22 +1171,30 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 
       mRecvStreamConfig.rtp.remote_ssrc = ssrc;
     }
-    // FIXME(jesup) - Bug 1325447 -- SSRCs configured here are a problem.
-    // 0 isn't allowed.  Would be best to ask for a random SSRC from the RTP code.
-    // Would need to call rtp_sender.cc -- GenerateSSRC(), which isn't exposed.  It's called on
-    // collision, or when we decide to send.  it should be called on receiver creation.
-    // Here, we're generating the SSRC value - but this causes ssrc_forced in set in rtp_sender,
-    // which locks us into the SSRC - even a collision won't change it!!!
-    auto ssrc = mRecvStreamConfig.rtp.remote_ssrc;
-    do {
+    // 0 isn't allowed.  Would be best to ask for a random SSRC from the
+    // RTP code.  Would need to call rtp_sender.cc -- GenerateNewSSRC(),
+    // which isn't exposed.  It's called on collision, or when we decide to
+    // send.  it should be called on receiver creation.  Here, we're
+    // generating the SSRC value - but this causes ssrc_forced in set in
+    // rtp_sender, which locks us into the SSRC - even a collision won't
+    // change it!!!
+    MOZ_ASSERT(!mSendStreamConfig.rtp.ssrcs.empty());
+    auto ssrc = mSendStreamConfig.rtp.ssrcs.front();
+    Unused << NS_WARN_IF(ssrc == mRecvStreamConfig.rtp.remote_ssrc);
+
+    while (ssrc == mRecvStreamConfig.rtp.remote_ssrc || ssrc == 0) {
       SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
       if (rv != SECSuccess) {
         return kMediaConduitUnknownError;
       }
-    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc || ssrc == 0);
+    }
     // webrtc.org code has fits if you select an SSRC of 0
 
     mRecvStreamConfig.rtp.local_ssrc = ssrc;
+    CSFLogDebug(logTag, "%s (%p): Local SSRC 0x%08x (of %u), remote SSRC 0x%08x",
+                __FUNCTION__, (void*) this, ssrc,
+                (uint32_t) mSendStreamConfig.rtp.ssrcs.size(),
+                mRecvStreamConfig.rtp.remote_ssrc);
 
     // XXX Copy over those that are the same and don't rebuild them
     mRecvCodecList.SwapElements(recv_codecs);

@@ -81,7 +81,7 @@ paperListElement.prototype =
   {
     clearPaperList() {
           // remove the menupopup node child of the menulist.
-          this.paperListElement.removeChild(this.paperListElement.firstChild);
+          this.paperListElement.firstChild.remove();
         },
 
     appendPaperNames(aDataObject) {

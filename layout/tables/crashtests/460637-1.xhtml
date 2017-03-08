@@ -4,7 +4,7 @@
 
   function boom() {
     var HTML_NS = "http://www.w3.org/1999/xhtml";
-    var r = document.documentElement; while(r.firstChild) { r.removeChild(r.firstChild); }
+    var r = document.documentElement; while(r.firstChild) { r.firstChild.remove(); }
     var table = document.createElementNS(HTML_NS, "table");
     table.setAttribute("border", "1");
     var text = document.createTextNode("\n ");

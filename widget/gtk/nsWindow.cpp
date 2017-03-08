@@ -6095,15 +6095,6 @@ nsWindow::GetInputContext()
   return context;
 }
 
-nsIMEUpdatePreference
-nsWindow::GetIMEUpdatePreference()
-{
-    if (!mIMContext) {
-        return nsIMEUpdatePreference();
-    }
-    return mIMContext->GetIMEUpdatePreference();
-}
-
 TextEventDispatcherListener*
 nsWindow::GetNativeTextEventDispatcherListener()
 {
