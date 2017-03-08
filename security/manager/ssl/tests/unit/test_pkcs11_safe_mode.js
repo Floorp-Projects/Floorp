@@ -23,7 +23,7 @@ function run_test() {
   };
 
   let xulRuntimeFactory = {
-    createInstance: function (outer, iid) {
+    createInstance(outer, iid) {
       if (outer != null) {
         throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
       }

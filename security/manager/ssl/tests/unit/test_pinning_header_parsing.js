@@ -123,7 +123,7 @@ function run_test() {
   checkFailParseInvalidPin("thisisinvalidtest");
   checkFailParseInvalidPin("invalid" + GOOD_MAX_AGE + VALID_PIN1 + BACKUP_PIN1);
 
-  checkPassRemovingPin("max-age=0"); //test removal without terminating ';'
+  checkPassRemovingPin("max-age=0"); // test removal without terminating ';'
   checkPassRemovingPin(MAX_AGE_ZERO);
   checkPassRemovingPin(MAX_AGE_ZERO + VALID_PIN1);
 

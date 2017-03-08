@@ -8,9 +8,6 @@ Components.utils.import("resource://testing-common/httpd.js");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
-const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
-
 const IGNORE_ID = "system_delay_ignore@tests.mozilla.org";
 const COMPLETE_ID = "system_delay_complete@tests.mozilla.org";
 const DEFER_ID = "system_delay_defer@tests.mozilla.org";

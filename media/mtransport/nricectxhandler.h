@@ -9,7 +9,6 @@ class NrIceCtxHandler {
 public:
   // TODO(ekr@rtfm.com): Too many bools here. Bug 1193437.
   static RefPtr<NrIceCtxHandler> Create(const std::string& name,
-                                        bool offerer,
                                         bool allow_loopback = false,
                                         bool tcp_enabled = true,
                                         bool allow_link_local = false,
@@ -36,9 +35,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtxHandler)
 
 private:
-  NrIceCtxHandler(const std::string& name,
-                  bool offerer,
-                  NrIceCtx::Policy policy);
+  NrIceCtxHandler(const std::string& name, NrIceCtx::Policy policy);
   NrIceCtxHandler() = delete;
   ~NrIceCtxHandler();
   DISALLOW_COPY_ASSIGN(NrIceCtxHandler);

@@ -26,7 +26,7 @@ var gLockStrs = [];
 var gTypeStrs = [];
 
 const PREF_IS_DEFAULT_VALUE = 0;
-const PREF_IS_USER_SET = 1;
+const PREF_IS_MODIFIED = 1;
 const PREF_IS_LOCKED = 2;
 
 var gPrefHash = {};
@@ -279,7 +279,7 @@ function fetchPref(prefName, prefIndex) {
   if (gPrefBranch.prefIsLocked(prefName))
     pref.lockCol = PREF_IS_LOCKED;
   else if (gPrefBranch.prefHasUserValue(prefName))
-    pref.lockCol = PREF_IS_USER_SET;
+    pref.lockCol = PREF_IS_MODIFIED;
 
   try {
     switch (gPrefBranch.getPrefType(prefName)) {
@@ -313,7 +313,7 @@ function onConfigLoad() {
   gConfigBundle = document.getElementById("configBundle");
 
   gLockStrs[PREF_IS_DEFAULT_VALUE] = gConfigBundle.getString("default");
-  gLockStrs[PREF_IS_USER_SET] = gConfigBundle.getString("user");
+  gLockStrs[PREF_IS_MODIFIED] = gConfigBundle.getString("modified");
   gLockStrs[PREF_IS_LOCKED] = gConfigBundle.getString("locked");
 
   gTypeStrs[nsIPrefBranch.PREF_STRING] = gConfigBundle.getString("string");
@@ -492,7 +492,7 @@ function updateContextMenu() {
   copyValue.setAttribute("disabled", copyDisabled);
 
   var resetSelected = document.getElementById("resetSelected");
-  resetSelected.setAttribute("disabled", lockCol != PREF_IS_USER_SET);
+  resetSelected.setAttribute("disabled", lockCol != PREF_IS_MODIFIED);
 
   var canToggle = typeCol == nsIPrefBranch.PREF_BOOL && valueCol != "";
   // indicates that a pref is locked or no pref is selected at all

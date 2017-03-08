@@ -10,8 +10,7 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var dialogParams;
 
-function onLoad()
-{
+function onLoad() {
   dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   let selectElement = document.getElementById("tokens");
   let count = dialogParams.GetInt(0);
@@ -27,8 +26,7 @@ function onLoad()
   }
 }
 
-function doOK()
-{
+function doOK() {
   let tokenList = document.getElementById("tokens");
   // Signal that the user accepted.
   dialogParams.SetInt(0, 1);
@@ -37,8 +35,7 @@ function doOK()
   return true;
 }
 
-function doCancel()
-{
+function doCancel() {
   dialogParams.SetInt(0, 0); // Signal that the user cancelled.
   return true;
 }
