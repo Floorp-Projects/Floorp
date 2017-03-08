@@ -35,7 +35,6 @@ UNIFIED_SOURCES += [
     'GetFilesHelper.cpp',
     'GetFilesTask.cpp',
     'OSFileSystem.cpp',
-    'RemoveTask.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
