@@ -262,6 +262,7 @@ def render_actions_json(parameters):
         if task:
             assert is_json(task), 'task must be a JSON compatible object'
             result.append({
+                'kind': 'task',
                 'title': action.title,
                 'description': action.description,
                 'context': action.context,
