@@ -84,8 +84,8 @@ class TransformTask(base.Task):
     """
 
     def __init__(self, kind, task):
-        self.dependencies = task['dependencies']
-        self.when = task['when']
+        self.dependencies = task.get('dependencies', {})
+        self.when = task.get('when', {})
         super(TransformTask, self).__init__(kind, task['label'],
                                             task['attributes'], task['task'],
                                             index_paths=task.get('index-paths'))

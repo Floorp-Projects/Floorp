@@ -162,6 +162,7 @@ task_description_schema = Schema({
         Required('allow-ptrace', default=False): bool,
         Required('loopback-video', default=False): bool,
         Required('loopback-audio', default=False): bool,
+        Required('docker-in-docker', default=False): bool,  # (aka 'dind')
 
         # caches to set up for the task
         Optional('caches'): [{
@@ -375,6 +376,7 @@ GROUP_NAMES = {
     'tc-BMcs': 'Beetmover checksums, executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
+    'I': 'Docker Image Builds',
     'TL': 'Toolchain builds for Linux 64-bits',
     'TM': 'Toolchain builds for OSX',
     'TW32': 'Toolchain builds for Windows 32-bits',
@@ -460,6 +462,9 @@ def build_docker_worker_payload(config, task, task_def):
     if worker.get('chain-of-trust'):
         features['chainOfTrust'] = True
 
+    if worker.get('docker-in-docker'):
+        features['dind'] = True
+
     if task.get('needs-sccache'):
         features['taskclusterProxy'] = True
         task_def['scopes'].append(
@@ -480,10 +485,11 @@ def build_docker_worker_payload(config, task, task_def):
             task_def['scopes'].append('docker-worker:capability:device:' + capitalized)
 
     task_def['payload'] = payload = {
-        'command': worker['command'],
         'image': image,
         'env': worker['env'],
     }
+    if 'command' in worker:
+        payload['command'] = worker['command']
 
     if 'max-run-time' in worker:
         payload['maxRunTime'] = worker['max-run-time']
