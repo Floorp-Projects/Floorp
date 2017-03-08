@@ -37,7 +37,7 @@ function bounce()
     var docElemChildren = [];
     while (docElem.firstChild) {
         docElemChildren.push(docElem.firstChild);
-        docElem.removeChild(docElem.firstChild);
+        docElem.firstChild.remove();
     }
 
     for (var i = 0; i < docElemChildren.length; ++i)

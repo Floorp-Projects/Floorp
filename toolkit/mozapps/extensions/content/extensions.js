@@ -2505,7 +2505,7 @@ var gSearchView = {
       AddonRepository.cancelSearch();
 
     while (this._listBox.firstChild.localName == "richlistitem")
-      this._listBox.removeChild(this._listBox.firstChild);
+      this._listBox.firstChild.remove();
 
     gCachedAddons = {};
     this._pendingSearches = 2;
@@ -3820,7 +3820,7 @@ var gUpdatesView = {
         this._updateSelected.hidden = true;
 
         while (this._listBox.childNodes.length > 0)
-          this._listBox.removeChild(this._listBox.firstChild);
+          this._listBox.firstChild.remove();
       }
 
       var elements = [];

@@ -73,7 +73,7 @@
           this.setAttribute("status", val);
           var field = document.getAnonymousElementByAttribute(this, "class", "update-status-value");
           while (field.hasChildNodes())
-            field.removeChild(field.firstChild);
+            field.firstChild.remove();
           field.appendChild(document.createTextNode(val));
           return val;
         ]]></setter>

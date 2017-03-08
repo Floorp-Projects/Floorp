@@ -1604,7 +1604,7 @@ MarkupView.prototype = {
       // this container will do double duty as the container for the single
       // text child.
       while (container.children.firstChild) {
-        container.children.removeChild(container.children.firstChild);
+        container.children.firstChild.remove();
       }
 
       container.setInlineTextChild(container.node.inlineTextChild);
@@ -1616,7 +1616,7 @@ MarkupView.prototype = {
 
     if (!container.hasChildren) {
       while (container.children.firstChild) {
-        container.children.removeChild(container.children.firstChild);
+        container.children.firstChild.remove();
       }
       container.childrenDirty = false;
       container.setExpanded(false);
@@ -1659,7 +1659,7 @@ MarkupView.prototype = {
         }
 
         while (container.children.firstChild) {
-          container.children.removeChild(container.children.firstChild);
+          container.children.firstChild.remove();
         }
 
         if (!(children.hasFirst && children.hasLast)) {

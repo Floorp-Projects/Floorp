@@ -1,6 +1,6 @@
 <script>
 window.onload = function () {
-  var root = document.documentElement; while(root.firstChild) { root.removeChild(root.firstChild); }
+  var root = document.documentElement; while(root.firstChild) { root.firstChild.remove(); }
   var a = document.createElementNS("http://www.w3.org/1999/xhtml", "link");
   a.setAttributeNS(null, "href", "mailto:");
   root.appendChild(a);

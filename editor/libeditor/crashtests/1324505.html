@@ -4,7 +4,7 @@
 addEventListener("DOMContentLoaded", function(){
   let root = document.documentElement;
   while(root.firstChild) {
-    root.removeChild(root.firstChild);
+    root.firstChild.remove();
   }
   let o_0 = document.createElement("body");
   root.appendChild(o_0);
