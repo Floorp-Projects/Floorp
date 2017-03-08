@@ -211,11 +211,9 @@ U2FPrepTask::Execute()
 
 U2FIsRegisteredTask::U2FIsRegisteredTask(const Authenticator& aAuthenticator,
                                          const LocalRegisteredKey& aRegisteredKey,
-                                         const CryptoBuffer& aAppParam,
                                          AbstractThread* aMainThread)
   : U2FPrepTask(aAuthenticator, aMainThread)
   , mRegisteredKey(aRegisteredKey)
-  , mAppParam(aAppParam)
 {}
 
 U2FIsRegisteredTask::~U2FIsRegisteredTask()
@@ -250,7 +248,6 @@ U2FIsRegisteredTask::Run()
 
   bool isRegistered = false;
   rv = mAuthenticator->IsRegistered(keyHandle.Elements(), keyHandle.Length(),
-                                    mAppParam.Elements(), mAppParam.Length(),
                                     &isRegistered);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mPromise.Reject(ErrorCode::OTHER_ERROR, __func__);
@@ -381,7 +378,6 @@ U2FSignTask::Run()
 
   bool isRegistered = false;
   rv = mAuthenticator->IsRegistered(mKeyHandle.Elements(), mKeyHandle.Length(),
-                                    mAppParam.Elements(), mAppParam.Length(),
                                     &isRegistered);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mPromise.Reject(ErrorCode::OTHER_ERROR, __func__);
@@ -622,30 +618,13 @@ U2FRegisterRunnable::Run()
     status->Stop(appIdResult);
   }
 
-  // Produce the AppParam from the current AppID
-  nsCString cAppId = NS_ConvertUTF16toUTF8(mAppId);
-  CryptoBuffer appParam;
-  if (!appParam.SetLength(SHA256_LENGTH, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Note: This could use nsICryptoHash to avoid having to interact with NSS
-  // directly.
-  SECStatus srv;
-  srv = PK11_HashBuf(SEC_OID_SHA256, appParam.Elements(),
-                     reinterpret_cast<const uint8_t*>(cAppId.BeginReading()),
-                     cAppId.Length());
-  if (srv != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
   // First, we must determine if any of the RegisteredKeys are already
   // registered, e.g., in the whitelist.
   for (LocalRegisteredKey key : mRegisteredKeys) {
     nsTArray<RefPtr<U2FPrepPromise>> prepPromiseList;
     for (const Authenticator& token : mAuthenticators) {
       RefPtr<U2FIsRegisteredTask> compTask =
-        new U2FIsRegisteredTask(token, key, appParam, mAbstractMainThread);
+        new U2FIsRegisteredTask(token, key, mAbstractMainThread);
       prepPromiseList.AppendElement(compTask->Execute());
     }
 
@@ -687,6 +666,23 @@ U2FRegisterRunnable::Run()
     // Don't exit until the main thread runnable completes
     status->WaitGroupWait();
     return NS_OK;
+  }
+
+  // Since we're continuing, we hash the AppID into the AppParam
+  nsCString cAppId = NS_ConvertUTF16toUTF8(mAppId);
+  CryptoBuffer appParam;
+  if (!appParam.SetLength(SHA256_LENGTH, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Note: This could use nsICryptoHash to avoid having to interact with NSS
+  // directly.
+  SECStatus srv;
+  srv = PK11_HashBuf(SEC_OID_SHA256, appParam.Elements(),
+                     reinterpret_cast<const uint8_t*>(cAppId.BeginReading()),
+                     cAppId.Length());
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
   }
 
   // Now proceed to actually register a new key.
