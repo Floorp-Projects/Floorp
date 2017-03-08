@@ -8,6 +8,7 @@
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
 #include "GMPService.h"
+#include "mozilla/dom/MediaKeySession.h"
 
 namespace mozilla {
 
@@ -152,12 +153,24 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 void
 ChromiumCDMProxy::LoadSession(PromiseId aPromiseId, const nsAString& aSessionId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RejectPromise(aPromiseId,
+                NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                NS_LITERAL_CSTRING("loadSession is not supported"));
 }
 
 void
 ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
                                        nsTArray<uint8_t>& aCert)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsTArray<uint8_t>>(
+    mCDM,
+    &gmp::ChromiumCDMParent::SetServerCertificate,
+    aPromiseId,
+    Move(aCert)));
 }
 
 void
@@ -165,18 +178,36 @@ ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
                                 PromiseId aPromiseId,
                                 nsTArray<uint8_t>& aResponse)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t, nsTArray<uint8_t>>(
+      mCDM,
+      &gmp::ChromiumCDMParent::UpdateSession,
+      NS_ConvertUTF16toUTF8(aSessionId),
+      aPromiseId,
+      Move(aResponse)));
 }
 
 void
 ChromiumCDMProxy::CloseSession(const nsAString& aSessionId,
                                PromiseId aPromiseId)
 {
+  mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
+    mCDM,
+    &gmp::ChromiumCDMParent::CloseSession,
+    NS_ConvertUTF16toUTF8(aSessionId),
+    aPromiseId));
 }
 
 void
 ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
                                 PromiseId aPromiseId)
 {
+  mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
+    mCDM,
+    &gmp::ChromiumCDMParent::RemoveSession,
+    NS_ConvertUTF16toUTF8(aSessionId),
+    aPromiseId));
 }
 
 void
@@ -242,22 +273,66 @@ ChromiumCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
                                    nsTArray<uint8_t>& aMessage)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->DispatchKeyMessage(aMessageType, aMessage);
+  }
 }
 
 void
 ChromiumCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->DispatchKeyStatusesChange();
+  }
 }
 
 void
 ChromiumCDMProxy::OnExpirationChange(const nsAString& aSessionId,
                                      GMPTimestamp aExpiryTime)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    // Expiry of 0 is interpreted as "never expire". See bug 1345341.
+    double t = (aExpiryTime == 0) ? std::numeric_limits<double>::quiet_NaN()
+                                  : static_cast<double>(aExpiryTime);
+    session->SetExpiration(t);
+  }
 }
 
 void
 ChromiumCDMProxy::OnSessionClosed(const nsAString& aSessionId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool keyStatusesChange = false;
+  {
+    CDMCaps::AutoLock caps(Capabilites());
+    keyStatusesChange = caps.RemoveKeysForSession(nsString(aSessionId));
+  }
+  if (keyStatusesChange) {
+    OnKeyStatusesChange(aSessionId);
+  }
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->OnClosed();
+  }
 }
 
 void
@@ -273,6 +348,15 @@ ChromiumCDMProxy::OnSessionError(const nsAString& aSessionId,
                                  uint32_t aSystemCode,
                                  const nsAString& aMsg)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->DispatchKeyError(aSystemCode);
+  }
+  LogToConsole(aMsg);
 }
 
 void
@@ -307,11 +391,16 @@ void
 ChromiumCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
                                         nsTArray<nsCString>& aSessionIds)
 {
+  CDMCaps::AutoLock caps(Capabilites());
+  caps.GetSessionIdsForKeyId(aKeyId, aSessionIds);
 }
 
 void
 ChromiumCDMProxy::Terminated()
 {
+  if (!mKeys.IsNull()) {
+    mKeys->Terminated();
+  }
 }
 
 } // namespace mozilla
