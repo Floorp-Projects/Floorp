@@ -24,6 +24,7 @@ var currentZoom = 1;
 var closedWithEnter = false;
 var selectRect;
 var customStylingEnabled = Services.prefs.getBoolPref("dom.forms.select.customstyling");
+var usedSelectBackgroundColor;
 
 this.SelectParentHelper = {
   populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor,
@@ -55,6 +56,9 @@ this.SelectParentHelper = {
         selectBackgroundColor != "rgba(0, 0, 0, 0)" &&
         selectBackgroundColor != selectColor) {
       ruleBody = `background-color: ${selectBackgroundColor};`;
+      usedSelectBackgroundColor = selectBackgroundColor;
+    } else {
+      usedSelectBackgroundColor = uaSelectBackgroundColor;
     }
 
     if (customStylingEnabled &&
@@ -254,7 +258,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     if (customStylingEnabled &&
         option.backgroundColor &&
         option.backgroundColor != "rgba(0, 0, 0, 0)" &&
-        option.backgroundColor != uaBackgroundColor) {
+        option.backgroundColor != usedSelectBackgroundColor) {
       ruleBody = `background-color: ${option.backgroundColor};`;
     }
 

@@ -161,8 +161,13 @@ protected:
   nsresult SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) const;
   void SetSelectionDragState(bool aState) const;
 
-  // Called to extend a selection if possible that it's a phone number.
+  // Return true if the candidate string is a phone number.
+  bool IsPhoneNumber(nsAString& aCandidate) const;
+
+  // Extend the current selection forwards and backwards if it's already a
+  // phone number.
   void SelectMoreIfPhoneNumber() const;
+
   // Extend the current phone number selection in the requested direction.
   void ExtendPhoneNumberSelection(const nsAString& aDirection) const;
 
@@ -187,6 +192,7 @@ protected:
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
+  nsAutoString StringifiedSelection() const;
 
   // Get the union of all the child frame scrollable overflow rects for aFrame,
   // which is used as a helper function to restrict the area where the caret can

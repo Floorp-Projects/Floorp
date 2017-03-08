@@ -865,7 +865,18 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // that the root element has its style reresolved later.  So do them
   // here if needed, by changing the style data, so that other code
   // doesn't get confused by looking at the style data.
-  if (!mParent) {
+  if (!mParent &&
+      // We don't want to blockify various anon boxes that just happen to not
+      // inherit from anything.  So restrict blockification only to actual
+      // elements, the viewport (which should be block anyway, but in SVG
+      // document's isn't because we lazy-load ua.css there), and the ::backdrop
+      // pseudo-element.  This last is explicitly allowed to have any specified
+      // display type in the spec, but computes to a blockified display type per
+      // various provisions of
+      // https://fullscreen.spec.whatwg.org/#new-stacking-layer
+      (!mPseudoTag ||
+       mPseudoTag == nsCSSAnonBoxes::viewport ||
+       mPseudoTag == nsCSSPseudoElements::backdrop)) {
     auto displayVal = disp->mDisplay;
     if (displayVal != mozilla::StyleDisplay::Contents) {
       nsRuleNode::EnsureBlockDisplay(displayVal, true);
@@ -1215,12 +1226,12 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // |thisVis| (including this function if we skip one of these checks
     // due to change being true already or due to the old style context
     // not having a style-if-visited), but not the other way around.
-#define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_ ||
+#define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_
 #define STYLE_STRUCT(name_, fields_)                                    \
     if (!change && PeekStyle##name_()) {                                \
       const nsStyle##name_* thisVisStruct = thisVis->Style##name_();    \
       const nsStyle##name_* otherVisStruct = otherVis->Style##name_();  \
-      if (MOZ_FOR_EACH(STYLE_FIELD, (), fields_) false) {               \
+      if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {     \
         change = true;                                                  \
       }                                                                 \
     }

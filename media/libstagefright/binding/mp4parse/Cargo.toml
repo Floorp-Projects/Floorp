@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse"
-version = "0.7.0"
+version = "0.7.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -24,7 +24,7 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 
 [dependencies]
 byteorder = "1.0.0"
-bitreader = { version = "0.2.0" }
+bitreader = { version = "0.3.0" }
 
 [dev-dependencies]
 test-assembler = "0.1.2"

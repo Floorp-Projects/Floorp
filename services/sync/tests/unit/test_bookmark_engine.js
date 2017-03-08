@@ -117,6 +117,8 @@ add_task(async function test_change_during_sync() {
     _(`Bugzilla GUID: ${bz_guid}`);
 
   await PlacesTestUtils.markBookmarksAsSynced();
+  enableValidationPrefs();
+
   Svc.Obs.notify("weave:engine:start-tracking");
 
   try {

@@ -18,6 +18,8 @@ var hmacErrorCount = 0;
 })();
 
 function shared_setup() {
+  enableValidationPrefs();
+
   hmacErrorCount = 0;
 
   // Make sure RotaryEngine is the only one we sync.

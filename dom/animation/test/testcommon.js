@@ -55,6 +55,55 @@ function assert_matrix_equals(actual, expected, description) {
 }
 
 /**
+ * Compare given values which are same format of
+ * KeyframeEffectReadonly::GetProperties.
+ */
+function assert_properties_equal(actual, expected) {
+  assert_equals(actual.length, expected.length);
+
+  const compareProperties = (a, b) =>
+    a.property == b.property ? 0 : (a.property < b.property ? -1 : 1);
+
+  const sortedActual   = actual.sort(compareProperties);
+  const sortedExpected = expected.sort(compareProperties);
+
+  const serializeValues = values =>
+    values.map(value =>
+      '{ ' +
+          [ 'offset', 'value', 'easing', 'composite' ].map(
+            member => `${member}: ${value[member]}`
+          ).join(', ') +
+                      ' }')
+          .join(', ');
+
+  for (let i = 0; i < sortedActual.length; i++) {
+    assert_equals(sortedActual[i].property,
+                  sortedExpected[i].property,
+                  'CSS property name should match');
+    assert_equals(serializeValues(sortedActual[i].values),
+                  serializeValues(sortedExpected[i].values),
+                  `Values arrays do not match for `
+                  + `${sortedActual[i].property} property`);
+  }
+}
+
+/**
+ * Construct a object which is same to a value of
+ * KeyframeEffectReadonly::GetProperties().
+ * The method returns undefined as a value in case of missing keyframe.
+ * Therefor, we can use undefined for |value| and |easing| parameter.
+ * @param offset - keyframe offset. e.g. 0.1
+ * @param value - any keyframe value. e.g. undefined '1px', 'center', 0.5
+ * @param composite - 'replace', 'add', 'accumulate'
+ * @param easing - e.g. undefined, 'linear', 'ease' and so on
+ * @return Object -
+ *   e.g. { offset: 0.1, value: '1px', composite: 'replace', easing: 'ease'}
+ */
+function valueFormat(offset, value, composite, easing) {
+  return { offset: offset, value: value, easing: easing, composite: composite };
+}
+
+/**
  * Appends a div to the document body and creates an animation on the div.
  * NOTE: This function asserts when trying to create animations with durations
  * shorter than 100s because the shorter duration may cause intermittent

@@ -414,11 +414,7 @@ WidevineDecryptor::OnExpirationChange(const char* aSessionId,
     return;
   }
   CDM_LOG("Decryptor::OnExpirationChange(sid=%s) t=%lf", aSessionId, aNewExpiryTime);
-  GMPTimestamp expiry = ToGMPTime(aNewExpiryTime);
-  if (aNewExpiryTime == 0) {
-    return;
-  }
-  mCallback->ExpirationChange(aSessionId, aSessionIdSize, expiry);
+  mCallback->ExpirationChange(aSessionId, aSessionIdSize, ToGMPTime(aNewExpiryTime));
 }
 
 void

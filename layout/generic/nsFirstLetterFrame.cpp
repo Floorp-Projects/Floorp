@@ -69,7 +69,7 @@ nsFirstLetterFrame::Init(nsIContent*       aContent,
     nsStyleContext* parentStyleContext = mStyleContext->GetParent();
     if (parentStyleContext) {
       newSC = PresContext()->StyleSet()->
-        ResolveStyleForOtherNonElement(parentStyleContext);
+        ResolveStyleForFirstLetterContinuation(parentStyleContext);
       SetStyleContextWithoutNotification(newSC);
     }
   }
@@ -334,7 +334,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   nsStyleContext* parentSC = this->StyleContext()->GetParent();
   if (parentSC) {
     RefPtr<nsStyleContext> newSC;
-    newSC = presShell->StyleSet()->ResolveStyleForOtherNonElement(parentSC);
+    newSC = presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
     continuation->SetStyleContext(newSC);
     nsLayoutUtils::MarkDescendantsDirty(continuation);
   }
