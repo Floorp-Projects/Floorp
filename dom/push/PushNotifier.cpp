@@ -108,7 +108,11 @@ PushNotifier::Dispatch(PushDispatcher& aDispatcher)
       // At least one content process is active, so e10s must be enabled.
       // Broadcast a message to notify observers and service workers.
       for (uint32_t i = 0; i < contentActors.Length(); ++i) {
-        Unused << NS_WARN_IF(!aDispatcher.SendToChild(contentActors[i]));
+        if (aDispatcher.SendToChild(contentActors[i])) {
+          // Only send the push message to the first content process to avoid
+          // multiple SWs showing the same notification. See bug 1300112.
+          break;
+        }
       }
       return NS_OK;
     }
