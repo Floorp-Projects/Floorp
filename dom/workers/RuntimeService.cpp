@@ -17,6 +17,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIStreamTransportService.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
 #include "nsIURI.h"
@@ -145,6 +146,8 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_WORKERS_OPTIONS_PREFIX PREF_WORKERS_PREFIX "options."
 #define PREF_MEM_OPTIONS_PREFIX "mem."
 #define PREF_GCZEAL "gcZeal"
+
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 namespace {
 
@@ -1989,14 +1992,20 @@ RuntimeService::Init()
                            WORKER_DEFAULT_ALLOCATION_THRESHOLD);
   }
 
+  // nsIStreamTransportService is thread-safe but it must be initialized on the
+  // main-thread. FileReader needs it, so, let's initialize it now.
+  nsresult rv;
+  nsCOMPtr<nsIStreamTransportService> sts =
+    do_GetService(kStreamTransportServiceCID, &rv);
+  NS_ENSURE_TRUE(sts, NS_ERROR_FAILURE);
+
   mIdleThreadTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   NS_ENSURE_STATE(mIdleThreadTimer);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
 
-  nsresult rv =
-    obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
