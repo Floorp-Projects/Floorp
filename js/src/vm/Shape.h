@@ -201,7 +201,7 @@ class ShapeTable {
     Entry*          entries_;          /* table of ptrs to shared tree nodes */
 
     template<MaybeAdding Adding>
-    Entry& searchUnchecked(jsid id);
+    MOZ_ALWAYS_INLINE Entry& searchUnchecked(jsid id);
 
   public:
     explicit ShapeTable(uint32_t nentries)
@@ -238,14 +238,10 @@ class ShapeTable {
     bool change(JSContext* cx, int log2Delta);
 
     template<MaybeAdding Adding>
-    MOZ_ALWAYS_INLINE Entry& search(jsid id, const AutoKeepShapeTables&) {
-        return searchUnchecked<Adding>(id);
-    }
+    MOZ_ALWAYS_INLINE Entry& search(jsid id, const AutoKeepShapeTables&);
 
     template<MaybeAdding Adding>
-    MOZ_ALWAYS_INLINE Entry& search(jsid id, const JS::AutoCheckCannotGC&) {
-        return searchUnchecked<Adding>(id);
-    }
+    MOZ_ALWAYS_INLINE Entry& search(jsid id, const JS::AutoCheckCannotGC&);
 
     void trace(JSTracer* trc);
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -653,7 +649,7 @@ class Shape : public gc::TenuredCell
     };
 
     template<MaybeAdding Adding = MaybeAdding::NotAdding>
-    static inline Shape* search(JSContext* cx, Shape* start, jsid id);
+    static MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, Shape* start, jsid id);
 
     template<MaybeAdding Adding = MaybeAdding::NotAdding>
     static inline MOZ_MUST_USE bool search(JSContext* cx, Shape* start, jsid id,
@@ -1046,7 +1042,7 @@ class Shape : public gc::TenuredCell
 
     void traceChildren(JSTracer* trc);
 
-    inline Shape* search(JSContext* cx, jsid id);
+    MOZ_ALWAYS_INLINE Shape* search(JSContext* cx, jsid id);
     MOZ_ALWAYS_INLINE Shape* searchLinear(jsid id);
 
     void fixupAfterMovingGC();
@@ -1515,26 +1511,6 @@ Shape::searchLinear(jsid id)
     }
 
     return nullptr;
-}
-
-/*
- * Keep this function in sync with search. It neither hashifies the start
- * shape nor increments linear search count.
- */
-inline Shape*
-Shape::searchNoHashify(Shape* start, jsid id)
-{
-    /*
-     * If we have a table, search in the shape table, else do a linear
-     * search. We never hashify into a table in parallel.
-     */
-    JS::AutoCheckCannotGC nogc;
-    if (ShapeTable* table = start->maybeTable(nogc)) {
-        ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(id, nogc);
-        return entry.shape();
-    }
-
-    return start->searchLinear(id);
 }
 
 inline bool

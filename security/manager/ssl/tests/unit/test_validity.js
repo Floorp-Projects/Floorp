@@ -42,8 +42,7 @@ function loadCert(certFilename, trustString) {
  *        Whether the chain is expected to validate as EV.
  */
 function addEVTest(expectedNamesForOCSP, rootCertFileName, intCertFileNames,
-                   endEntityCertFileName, expectedResult)
-{
+                   endEntityCertFileName, expectedResult) {
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = getOCSPResponder(expectedNamesForOCSP);

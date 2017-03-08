@@ -795,12 +795,15 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         // because we found scripts on the line we started from,
         // which means there must be valid entry points somewhere
         // within those scripts.
-        assert(
-          actualLine <= maxLine,
-          "Could not find any entry points to set a breakpoint on, " +
-          "even though I was told a script existed on the line I started " +
-          "the search with."
-        );
+        if (actualLine > maxLine) {
+          return promise.reject({
+            error: "noCodeAtLineColumn",
+            message:
+              "Could not find any entry points to set a breakpoint on, " +
+              "even though I was told a script existed on the line I started " +
+              "the search with."
+          });
+        }
 
         // Update the actor to use the new location (reusing a
         // previous breakpoint if it already exists on that line).

@@ -297,10 +297,7 @@ var gSyncUI = {
   */
   maybeMoveSyncedTabsButton() {
     const prefName = "browser.migrated-sync-button";
-    let migrated = false;
-    try {
-      migrated = Services.prefs.getBoolPref(prefName);
-    } catch (_) {}
+    let migrated = Services.prefs.getBoolPref(prefName, false);
     if (migrated) {
       return;
     }

@@ -63,6 +63,8 @@ function setup() {
 }
 
 add_task(async function test_login_logout() {
+  enableValidationPrefs();
+
   let server = setup();
 
   try {
@@ -98,6 +100,8 @@ add_task(async function test_login_logout() {
 });
 
 add_task(async function test_login_on_sync() {
+  enableValidationPrefs();
+
   let server = setup();
   await configureIdentity({ username: "johndoe" }, server);
 

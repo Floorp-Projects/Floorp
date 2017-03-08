@@ -121,12 +121,7 @@ const testcases = [
 function run_test() {
     var pbi = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     var oldProfile = pbi.getCharPref("network.IDN.restriction_profile", "moderate");
-    var oldWhiteListCom;
-    try {
-        oldWhitelistCom = pbi.getBoolPref("network.IDN.whitelist.com");
-    } catch(e) {
-        oldWhitelistCom = false;
-    }
+    var oldWhitelistCom = pbi.getBoolPref("network.IDN.whitelist.com", false);
     var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
 
     pbi.setCharPref("network.IDN.restriction_profile", "moderate");

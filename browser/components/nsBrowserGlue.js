@@ -935,10 +935,7 @@ BrowserGlue.prototype = {
     // Offer to reset a user's profile if it hasn't been used for 60 days.
     const OFFER_PROFILE_RESET_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000;
     let lastUse = Services.appinfo.replacedLockTime;
-    let disableResetPrompt = false;
-    try {
-      disableResetPrompt = Services.prefs.getBoolPref("browser.disableResetPrompt");
-    } catch (e) {}
+    let disableResetPrompt = Services.prefs.getBoolPref("browser.disableResetPrompt", false);
 
     if (!disableResetPrompt && lastUse &&
         Date.now() - lastUse >= OFFER_PROFILE_RESET_INTERVAL_MS) {
@@ -1456,10 +1453,7 @@ BrowserGlue.prototype = {
     } catch (ex) {}
 
     // Support legacy bookmarks.html format for apps that depend on that format.
-    let autoExportHTML = false;
-    try {
-      autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
-    } catch (ex) {} // Do not export.
+    let autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML", false); // Do not export.
     if (autoExportHTML) {
       // Sqlite.jsm and Places shutdown happen at profile-before-change, thus,
       // to be on the safe side, this should run earlier.
@@ -1526,10 +1520,7 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         // Don't try to recreate smart bookmarks if autoExportHTML is true or
         // smart bookmarks are disabled.
-        let smartBookmarksVersion = 0;
-        try {
-          smartBookmarksVersion = Services.prefs.getIntPref("browser.places.smartBookmarksVersion");
-        } catch (ex) {}
+        let smartBookmarksVersion = Services.prefs.getIntPref("browser.places.smartBookmarksVersion", 0);
         if (!autoExportHTML && smartBookmarksVersion != -1)
           Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
 
@@ -1876,10 +1867,7 @@ BrowserGlue.prototype = {
       // Refactor urlbar suggestion preferences to make it extendable and
       // allow new suggestion types (e.g: search suggestions).
       let types = ["history", "bookmark", "openpage"];
-      let defaultBehavior = 0;
-      try {
-        defaultBehavior = Services.prefs.getIntPref("browser.urlbar.default.behavior");
-      } catch (ex) {}
+      let defaultBehavior = Services.prefs.getIntPref("browser.urlbar.default.behavior", 0);
       try {
         let autocompleteEnabled = Services.prefs.getBoolPref("browser.urlbar.autocomplete.enabled");
         if (!autocompleteEnabled) {
@@ -2018,10 +2006,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 43) {
-      let currentTheme = null;
-      try {
-        currentTheme = Services.prefs.getCharPref("lightweightThemes.selectedThemeID");
-      } catch (e) {}
+      let currentTheme = Services.prefs.getCharPref("lightweightThemes.selectedThemeID", "");
       if (currentTheme == "firefox-devedition@mozilla.org") {
         let newTheme = Services.prefs.getCharPref("devtools.theme") == "dark" ?
           "firefox-compact-dark@mozilla.org" : "firefox-compact-light@mozilla.org";
@@ -2099,10 +2084,7 @@ BrowserGlue.prototype = {
     const MAX_RESULTS = 10;
 
     // Get current smart bookmarks version.  If not set, create them.
-    let smartBookmarksCurrentVersion = 0;
-    try {
-      smartBookmarksCurrentVersion = Services.prefs.getIntPref(SMART_BOOKMARKS_PREF);
-    } catch (ex) {}
+    let smartBookmarksCurrentVersion = Services.prefs.getIntPref(SMART_BOOKMARKS_PREF, 0);
 
     // If version is current, or smart bookmarks are disabled, bail out.
     if (smartBookmarksCurrentVersion == -1 ||

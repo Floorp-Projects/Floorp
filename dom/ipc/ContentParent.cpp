@@ -506,6 +506,19 @@ ScriptableCPInfo::GetOpener(nsIContentProcessInfo** aInfo)
 }
 
 NS_IMETHODIMP
+ScriptableCPInfo::GetTabCount(int32_t* aTabCount)
+{
+  if (!mContentParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  *aTabCount = cpm->GetTabParentCountByProcessId(mContentParent->ChildID());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ScriptableCPInfo::GetMessageManager(nsIMessageSender** aMessenger)
 {
   *aMessenger = nullptr;
@@ -757,23 +770,28 @@ ContentParent::ReleaseCachedProcesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::RandomSelect(const nsTArray<ContentParent*>& aContentParents,
+ContentParent::MinTabSelect(const nsTArray<ContentParent*>& aContentParents,
                             ContentParent* aOpener, int32_t aMaxContentParents)
 {
   uint32_t maxSelectable = std::min(static_cast<uint32_t>(aContentParents.Length()),
                                     static_cast<uint32_t>(aMaxContentParents));
-  uint32_t startIdx = rand() % maxSelectable;
-  uint32_t currIdx = startIdx;
-  do {
-    RefPtr<ContentParent> p = aContentParents[currIdx];
+  uint32_t min = INT_MAX;
+  RefPtr<ContentParent> candidate;
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+
+  for (uint32_t i = 0; i < maxSelectable; i++) {
+    ContentParent* p = aContentParents[i];
     NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sBrowserContentParents?");
     if (p->mOpener == aOpener) {
-      return p.forget();
+      uint32_t tabCount = cpm->GetTabParentCountByProcessId(p->ChildID());
+      if (tabCount < min) {
+        candidate = p;
+        min = tabCount;
+      }
     }
-    currIdx = (currIdx + 1) % maxSelectable;
-  } while (currIdx != startIdx);
+  }
 
-  return nullptr;
+  return candidate.forget();
 }
 
 /*static*/ already_AddRefed<ContentParent>
@@ -816,7 +834,7 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
       NS_WARNING("nsIContentProcessProvider failed to return a process");
       RefPtr<ContentParent> random;
       if (contentParents.Length() >= maxContentParents &&
-          (random = RandomSelect(contentParents, aOpener, maxContentParents))) {
+          (random = MinTabSelect(contentParents, aOpener, maxContentParents))) {
         return random.forget();
       }
     }
@@ -2172,6 +2190,20 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
     SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());
   } else {
     SerializeURI(nullptr, xpcomInit.userContentSheetURL());
+  }
+
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  if (gfxInfo) {
+    for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
+      int32_t status = 0;
+      nsAutoCString failureId;
+      gfxInfo->GetFeatureStatus(i, failureId, &status);
+      dom::GfxInfoFeatureStatus gfxFeatureStatus;
+      gfxFeatureStatus.feature() = i;
+      gfxFeatureStatus.status() = status;
+      gfxFeatureStatus.failureId() = failureId;
+      xpcomInit.gfxFeatureStatus().AppendElement(gfxFeatureStatus);
+    }
   }
 
   Unused << SendSetXPCOMProcessAttributes(xpcomInit, initialData, lnfCache);
@@ -4014,25 +4046,6 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
   } else {
     NS_WARNING("Could not get the Observer service for ContentParent::RecvRecordingDeviceEvents.");
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS)
-{
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  if (!gfxInfo) {
-    return IPC_OK();
-  }
-
-  for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
-    int32_t status = 0;
-    nsAutoCString failureId;
-    gfxInfo->GetFeatureStatus(i, failureId, &status);
-    mozilla::dom::GfxInfoFeatureStatus fs(i, status, failureId);
-    aFS->AppendElement(Move(fs));
-  }
-
   return IPC_OK();
 }
 

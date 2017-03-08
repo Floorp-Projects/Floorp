@@ -356,7 +356,6 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
   mIceCtxHdlr = NrIceCtxHandler::Create("PC:" + mParentName,
-                                        true, // Offerer
                                         mParent->GetAllowIceLoopback(),
                                         ice_tcp,
                                         mParent->GetAllowIceLinkLocal(),
@@ -592,6 +591,7 @@ PeerConnectionMedia::StartIceChecks(const JsepSession& aSession)
         RefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::StartIceChecks_s,
         aSession.IsIceControlling(),
+        aSession.IsOfferer(),
         aSession.RemoteIsIceLite(),
         // Copy, just in case API changes to return a ref
         std::vector<std::string>(aSession.GetIceOptions())));
@@ -602,6 +602,7 @@ PeerConnectionMedia::StartIceChecks(const JsepSession& aSession)
 void
 PeerConnectionMedia::StartIceChecks_s(
     bool aIsControlling,
+    bool aIsOfferer,
     bool aIsIceLite,
     const std::vector<std::string>& aIceOptionsList) {
 
@@ -628,7 +629,7 @@ PeerConnectionMedia::StartIceChecks_s(
                                      NrIceCtx::ICE_CONTROLLING :
                                      NrIceCtx::ICE_CONTROLLED);
 
-  mIceCtxHdlr->ctx()->StartChecks();
+  mIceCtxHdlr->ctx()->StartChecks(aIsOfferer);
 }
 
 bool

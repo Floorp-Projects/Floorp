@@ -33,8 +33,7 @@ function viewCertHelper(parent, cert) {
   cd.viewCert(parent, cert);
 }
 
-function getDERString(cert)
-{
+function getDERString(cert) {
   var length = {};
   var derArray = cert.getRawDER(length);
   var derString = "";
@@ -44,8 +43,7 @@ function getDERString(cert)
   return derString;
 }
 
-function getPKCS7String(cert, chainMode)
-{
+function getPKCS7String(cert, chainMode) {
   var length = {};
   var pkcs7Array = cert.exportAsCMS(chainMode, length);
   var pkcs7String = "";
@@ -55,8 +53,7 @@ function getPKCS7String(cert, chainMode)
   return pkcs7String;
 }
 
-function getPEMString(cert)
-{
+function getPEMString(cert) {
   var derb64 = btoa(getDERString(cert));
   // Wrap the Base64 string into lines of 64 characters with CRLF line breaks
   // (as specified in RFC 1421).
@@ -66,8 +63,7 @@ function getPEMString(cert)
          + "\r\n-----END CERTIFICATE-----\r\n";
 }
 
-function alertPromptService(title, message)
-{
+function alertPromptService(title, message) {
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Components.interfaces.nsIPromptService);
   ps.alert(window, title, message);
@@ -100,8 +96,7 @@ function certToFilename(cert) {
   return `${filename}.${DEFAULT_CERT_EXTENSION}`;
 }
 
-function exportToFile(parent, cert)
-{
+function exportToFile(parent, cert) {
   var bundle = document.getElementById("pippki_bundle");
   if (!cert) {
     return;

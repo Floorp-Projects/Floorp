@@ -4,8 +4,7 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-function onLoad()
-{
+function onLoad() {
   let protectedAuthThread =
     window.arguments[0].QueryInterface(Components.interfaces.nsIProtectedAuthThread);
 
@@ -36,7 +35,6 @@ function onLoad()
   }
 }
 
-function onClose()
-{
+function onClose() {
   window.setCursor("auto");
 }

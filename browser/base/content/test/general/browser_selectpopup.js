@@ -116,6 +116,15 @@ const TRANSPARENT_SELECT =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const OPTION_COLOR_EQUAL_TO_UABACKGROUND_COLOR_SELECT =
+  "<html><head><style>" +
+  "  #one { background-color: black; color: white; }" +
+  "</style>" +
+  "<body><select id='one'>" +
+  '  <option value="One" style="background-color: white; color: black;">{"color": "rgb(0, 0, 0)", "backgroundColor": "rgb(255, 255, 255)"}</option>' +
+  '  <option value="Two" selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -927,6 +936,44 @@ add_task(function* test_blur_hides_popup() {
   yield popupHiddenPromise;
 
   ok(true, "Blur closed popup");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks when a <select> element has a background set, and the
+// options have their own background set which is equal to the default
+// user-agent background color, but should be used because the select
+// background color has been changed.
+add_task(function* test_options_inverted_from_select_background() {
+  const pageUrl = "data:text/html," + escape(OPTION_COLOR_EQUAL_TO_UABACKGROUND_COLOR_SELECT);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  is(selectPopup.parentNode.itemCount, 2, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+
+  // The popup has a black background and white text, but the
+  // options inside of it have flipped the colors.
+  is(getComputedStyle(selectPopup).color, "rgb(255, 255, 255)",
+    "popup has expected foreground color");
+  is(getComputedStyle(selectPopup).backgroundColor, "rgb(0, 0, 0)",
+    "popup has expected background color");
+
+  ok(!child.selected, "The first child should not be selected");
+  while (child) {
+    testOptionColors(idx, child, menulist);
+    idx++;
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
 
   yield BrowserTestUtils.removeTab(tab);
 });

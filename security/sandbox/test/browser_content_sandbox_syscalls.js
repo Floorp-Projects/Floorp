@@ -134,6 +134,7 @@ add_task(function*() {
   // If the pref isn't set and we're running on Linux on !isNightly(),
   // exit without failing. The Linux content sandbox is only enabled
   // on Nightly at this time.
+  // eslint-disable-next-line mozilla/use-default-preference-values
   try {
     level = prefs.getIntPref("security.sandbox.content.level");
   } catch (e) {

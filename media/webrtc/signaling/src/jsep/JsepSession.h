@@ -193,6 +193,7 @@ public:
 
   // ICE controlling or controlled
   virtual bool IsIceControlling() const = 0;
+  virtual bool IsOfferer() const = 0;
 
   virtual const std::string
   GetLastError() const

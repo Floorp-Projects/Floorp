@@ -126,7 +126,9 @@ public:
     ResolveStyleForText(nsIContent* aTextNode,
                         nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
-    ResolveStyleForOtherNonElement(nsStyleContext* aParentContext);
+    ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
+    inline already_AddRefed<nsStyleContext>
+    ResolveStyleForPlaceholder();
     inline already_AddRefed<nsStyleContext>
     ResolvePseudoElementStyle(dom::Element* aParentElement,
                               mozilla::CSSPseudoElementType aType,

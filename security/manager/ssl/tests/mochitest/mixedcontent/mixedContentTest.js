@@ -78,8 +78,7 @@ window.onload = function onLoad() {
   }
 };
 
-function onMessageReceived(event)
-{
+function onMessageReceived(event) {
   switch (event.data) {
     // Indication of all test parts finish (from any of the frames)
     case "done":
@@ -102,13 +101,11 @@ function onMessageReceived(event)
   }
 }
 
-function postMsg(message)
-{
+function postMsg(message) {
   opener.postMessage(message, "http://mochi.test:8888");
 }
 
-function finish()
-{
+function finish() {
   if (history.length == 1 && !bypassNavigationTest) {
     window.setTimeout(() => {
       window.location.assign(navigateToInsecure ?
@@ -121,8 +118,7 @@ function finish()
   }
 }
 
-function ok(a, message)
-{
+function ok(a, message) {
   if (!a) {
     postMsg("FAILURE: " + message);
   } else {
@@ -130,8 +126,7 @@ function ok(a, message)
   }
 }
 
-function is(a, b, message)
-{
+function is(a, b, message) {
   if (a != b) {
     postMsg(`FAILURE: ${message}, expected ${b} got ${a}`);
   } else {
@@ -139,8 +134,7 @@ function is(a, b, message)
   }
 }
 
-function isSecurityState(expectedState, message, test)
-{
+function isSecurityState(expectedState, message, test) {
   if (!test) {
     test = ok;
   }
@@ -187,8 +181,7 @@ function isSecurityState(expectedState, message, test)
   }
 }
 
-function waitForSecurityState(expectedState, callback)
-{
+function waitForSecurityState(expectedState, callback) {
   let roundsLeft = 200; // Wait for 20 seconds (=200*100ms)
   let interval = window.setInterval(() => {
     isSecurityState(expectedState, "", isok => {

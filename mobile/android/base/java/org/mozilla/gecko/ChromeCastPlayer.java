@@ -9,8 +9,6 @@ import java.io.IOException;
 
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.json.JSONObject;
-import org.json.JSONException;
 
 import com.google.android.gms.cast.Cast.MessageReceivedCallback;
 import com.google.android.gms.cast.ApplicationMetadata;
@@ -185,27 +183,22 @@ class ChromeCastPlayer implements GeckoMediaPlayer {
      *  easier to filter out duplicate devices from different sources in JS.
      *  Returns null if the device can't be found.
      */
-    @Override
-    public JSONObject toJSON() {
-        final JSONObject obj = new JSONObject();
-        try {
-            final CastDevice device = CastDevice.getFromBundle(route.getExtras());
-            if (device == null) {
-                return null;
-            }
-
-            obj.put("uuid", route.getId());
-            obj.put("version", device.getDeviceVersion());
-            obj.put("friendlyName", device.getFriendlyName());
-            obj.put("location", device.getIpAddress().toString());
-            obj.put("modelName", device.getModelName());
-            obj.put("mirror", canMirror);
-            // For now we just assume all of these are Google devices
-            obj.put("manufacturer", "Google Inc.");
-        } catch (JSONException ex) {
-            debug("Error building route", ex);
+    @Override // GeckoMediaPlayer
+    public GeckoBundle toBundle() {
+        final CastDevice device = CastDevice.getFromBundle(route.getExtras());
+        if (device == null) {
+            return null;
         }
 
+        final GeckoBundle obj = new GeckoBundle(7);
+        obj.putString("uuid", route.getId());
+        obj.putString("version", device.getDeviceVersion());
+        obj.putString("friendlyName", device.getFriendlyName());
+        obj.putString("location", device.getIpAddress().toString());
+        obj.putString("modelName", device.getModelName());
+        obj.putBoolean("mirror", canMirror);
+        // For now we just assume all of these are Google devices
+        obj.putString("manufacturer", "Google Inc.");
         return obj;
     }
 

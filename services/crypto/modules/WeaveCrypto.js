@@ -51,11 +51,7 @@ WeaveCrypto.prototype = {
         this.prefBranch = Services.prefs.getBranch("services.sync.log.");
         this.prefBranch.addObserver("cryptoDebug", this.observer, false);
         this.observer._self = this;
-        try {
-          this.debug = this.prefBranch.getBoolPref("cryptoDebug");
-        } catch (x) {
-          this.debug = false;
-        }
+        this.debug = this.prefBranch.getBoolPref("cryptoDebug", false);
         XPCOMUtils.defineLazyGetter(this, "encoder", () => new TextEncoder(UTF_LABEL));
         XPCOMUtils.defineLazyGetter(this, "decoder", () => new TextDecoder(UTF_LABEL, { fatal: true }));
     },

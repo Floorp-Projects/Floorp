@@ -434,17 +434,14 @@ namespace {
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
   TransportTestPeer(nsCOMPtr<nsIEventTarget> target, std::string name, MtransportTestUtils* utils)
-      : name_(name), target_(target),
+      : name_(name), offerer_(name == "P1"), target_(target),
         received_packets_(0),received_bytes_(0),flow_(new TransportFlow(name)),
         loopback_(new TransportLayerLoopback()),
         logging_(new TransportLayerLogging()),
         lossy_(new TransportLayerLossy()),
         dtls_(new TransportLayerDtls()),
         identity_(DtlsIdentity::Generate()),
-        ice_ctx_(NrIceCtxHandler::Create(name,
-                                         name == "P2" ?
-                                         TransportLayerDtls::CLIENT :
-                                         TransportLayerDtls::SERVER)),
+        ice_ctx_(NrIceCtxHandler::Create(name)),
         streams_(), candidates_(),
         peer_(nullptr),
         gathering_complete_(false),
@@ -459,9 +456,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
     EXPECT_TRUE(NS_SUCCEEDED(ice_ctx_->ctx()->SetStunServers(stun_servers)));
 
     dtls_->SetIdentity(identity_);
-    dtls_->SetRole(name == "P2" ?
-                   TransportLayerDtls::CLIENT :
-                   TransportLayerDtls::SERVER);
+    dtls_->SetRole(offerer_ ?
+                   TransportLayerDtls::SERVER :
+                   TransportLayerDtls::CLIENT);
 
     nsresult res = identity_->ComputeFingerprint("sha-1",
                                              fingerprint_,
@@ -698,7 +695,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start checks on the other peer.
     test_utils_->sts_target()->Dispatch(
-      WrapRunnableRet(&res, peer_->ice_ctx_->ctx(), &NrIceCtx::StartChecks),
+      WrapRunnableRet(&res, peer_->ice_ctx_->ctx(), &NrIceCtx::StartChecks,
+                      offerer_),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -802,6 +800,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
  private:
   std::string name_;
+  bool offerer_;
   nsCOMPtr<nsIEventTarget> target_;
   size_t received_packets_;
   size_t received_bytes_;

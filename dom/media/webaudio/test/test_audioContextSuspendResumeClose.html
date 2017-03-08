@@ -48,12 +48,10 @@ function tryToCreateNodeOnClosedContext(ctx) {
 }
 
 function loadFile(url, callback) {
-  todo(false, "loadFile: " + url);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
-    todo(false, "loadFile: " + url + " calling callback...");
     callback(xhr.response);
   };
   xhr.send();
@@ -393,13 +391,18 @@ function finish() {
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var tests = [
-    testAudioContext,
     testOfflineAudioContext,
     testScriptProcessNodeSuspended,
     testMultiContextOutput,
     testMultiContextInput,
     testSuspendResumeEventLoop
   ];
+
+  // See Bug 1305136, many intermittent failures on Linux
+  if (!navigator.platform.startsWith("Linux")) {
+    tests.push(testAudioContext);
+  }
+
   remaining = tests.length;
   tests.forEach(function(f) { f() });
 });

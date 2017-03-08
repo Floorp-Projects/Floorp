@@ -97,7 +97,7 @@ add_task(function* setup() {
 // the View Cert button launches the cert viewer for the provided cert.
 add_task(function* testTrustHeaderAndViewCertButton() {
   for (let testCase of TEST_CASES) {
-    let [win, retVals] = yield openCertDownloadDialog(testCase.cert);
+    let [win] = yield openCertDownloadDialog(testCase.cert);
     let expectedTrustHeaderString =
       `Do you want to trust \u201C${testCase.expectedDisplayString}\u201D ` +
       "for the following purposes?";

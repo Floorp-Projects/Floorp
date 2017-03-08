@@ -16,7 +16,7 @@ var gMockPrompter = {
   // This intentionally does not use arrow function syntax to avoid an issue
   // where in the context of the arrow function, |this != gMockPrompter| due to
   // how objects get wrapped when going across xpcom boundaries.
-  promptPassword: function(dialogTitle, text, password, checkMsg, checkValue) {
+  promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
     this.numPrompts++;
     if (this.numPrompts > 1) { // don't keep retrying a bad password
       return false;

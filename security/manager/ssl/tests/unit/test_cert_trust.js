@@ -100,7 +100,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
                         certificateUsageSSLServer);
 
-  //XXX(Bug 982340)
+  // XXX(Bug 982340)
   checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
                         certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_CA_CERT_INVALID,
@@ -157,7 +157,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
                         certificateUsageStatusResponder);
 
 
-  //inherited EMAIL Trust
+  // inherited EMAIL Trust
   setCertTrust(cert_to_modify_trust, "C,,C");
   checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
                         certificateUsageSSLServer);

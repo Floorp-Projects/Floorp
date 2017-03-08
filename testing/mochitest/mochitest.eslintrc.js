@@ -1,6 +1,6 @@
 // Parent config file for all mochitest files.
 module.exports = {
-  rules: {
+  "rules": {
     "mozilla/import-headjs-globals": "warn",
     "mozilla/mark-test-function-used": "warn",
     "no-shadow": "error",
