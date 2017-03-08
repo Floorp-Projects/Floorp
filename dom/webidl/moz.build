@@ -485,7 +485,6 @@ WEBIDL_FILES = [
     'DesktopNotification.webidl',
     'DeviceMotionEvent.webidl',
     'DeviceStorage.webidl',
-    'DeviceStorageAreaListener.webidl',
     'Directory.webidl',
     'Document.webidl',
     'DocumentFragment.webidl',
