@@ -288,14 +288,10 @@ function test() {
   Services.prefs.setBoolPref(PREF_ACTIVE, true);
   Services.prefs.setBoolPref(PREF_DISPLAY, true);
 
-  // TODO (Bug 1301015): This was forced into single process mode in
-  // bug 1301340, need to find a real fix.
-  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 1]]}, () => {
-    var newTab = gBrowser.addTab();
-    gBrowser.selectedTab = newTab;
-    gTestBrowser = gBrowser.selectedBrowser;
-    newTab.linkedBrowser.stop();
+  var newTab = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+  gTestBrowser = gBrowser.selectedBrowser;
+  newTab.linkedBrowser.stop();
 
-    executeSoon(test1);
-  });
+  executeSoon(test1);
 }
