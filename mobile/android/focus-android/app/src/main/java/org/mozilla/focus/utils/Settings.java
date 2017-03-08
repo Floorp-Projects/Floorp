@@ -32,6 +32,6 @@ public class Settings {
     }
 
     public boolean shouldShowFirstrun() {
-        return preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
+        return !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false);
     }
 }
