@@ -194,6 +194,7 @@ SET TIMEOUT: streams/writable-streams/byte-length-queuing-strategy.js
 SET TIMEOUT: user-timing/*
 SET TIMEOUT: webaudio/js/lodash.js
 SET TIMEOUT: webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/mediaElementAudioSourceToScriptProcessorTest.html
+SET TIMEOUT: webdriver/*
 SET TIMEOUT: webmessaging/*
 SET TIMEOUT: websockets/*
 SET TIMEOUT: webstorage/eventTestHarness.js
