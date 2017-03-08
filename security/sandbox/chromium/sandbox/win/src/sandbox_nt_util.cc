@@ -654,6 +654,11 @@ void* operator new(size_t size, sandbox::AllocationType type,
   return result;
 }
 
+void* operator new [](size_t size, sandbox::AllocationType type,
+		      void* near_to) {
+  return operator new(size, type, near_to);
+}
+
 void operator delete(void* memory, sandbox::AllocationType type) {
   if (type == sandbox::NT_ALLOC) {
     // Use default flags.
