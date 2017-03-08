@@ -323,8 +323,8 @@
     is(url.href, "http://[2001::1]/");
 
     url.hostname = "[::192.9.5.5]";
-    is(url.hostname, "[::192.9.5.5]", "IPv6 hostname");
-    is(url.href, "http://[::192.9.5.5]/");
+    is(url.hostname, "[::c009:505]", "IPv6 hostname");
+    is(url.href, "http://[::c009:505]/");
 
     url = new URL("http://localhost/");
     url.hostname = "[::]";
