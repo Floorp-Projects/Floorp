@@ -457,7 +457,7 @@ private:
   //Local database of currently applied receive codecs
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // protects mCurrSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams
+  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams
   Mutex mCodecMutex;
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
   bool mInReconfig;
