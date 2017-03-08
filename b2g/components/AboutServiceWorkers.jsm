@@ -47,10 +47,7 @@ this.AboutServiceWorkers = {
     if (this._enabled) {
       return this._enabled;
     }
-    this._enabled = false;
-    try {
-      this._enabled = Services.prefs.getBoolPref("dom.serviceWorkers.enabled");
-    } catch(e) {}
+    this._enabled = Services.prefs.getBoolPref("dom.serviceWorkers.enabled", false);
     return this._enabled;
   },
 

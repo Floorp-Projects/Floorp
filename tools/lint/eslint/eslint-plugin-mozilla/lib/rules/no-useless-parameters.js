@@ -39,8 +39,7 @@ module.exports = function(context) {
         }
       }
 
-      if ((["getCharPref", "getBoolPref", "getIntPref", "clearUserPref"]
-           .indexOf(callee.property.name) != -1) &&
+      if (callee.property.name == "clearUserPref" &&
           node.arguments.length > 1) {
         context.report(node, callee.property.name + " takes only 1 parameter.");
       }

@@ -81,31 +81,31 @@ exports['test adding non object or null item'] = function(assert) {
   assert.throws(() => {
     add(items, 'foo');
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, 0);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, undefined);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, null);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(items, true);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 };
 
@@ -115,31 +115,31 @@ exports['test adding to non object or null item'] = function(assert) {
   assert.throws(() => {
     add('foo', item);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(0, item);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(undefined, item);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(null, item);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 
   assert.throws(() => {
     add(true, item);
   },
-  /^\w+ is not a non-null object/,
+  TypeError,
   'only non-null object are allowed');
 };
 

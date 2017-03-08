@@ -39,12 +39,7 @@ var DEBUG = RIL.DEBUG_RIL;
 
 function updateDebugFlag() {
   // Read debug setting from pref
-  let debugPref;
-  try {
-    debugPref = Services.prefs.getBoolPref(PREF_RIL_DEBUG_ENABLED);
-  } catch (e) {
-    debugPref = false;
-  }
+  let debugPref = Services.prefs.getBoolPref(PREF_RIL_DEBUG_ENABLED, false);
   DEBUG = debugPref || RIL.DEBUG_RIL;
 }
 updateDebugFlag();
