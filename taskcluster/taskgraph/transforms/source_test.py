@@ -59,6 +59,13 @@ def validate(config, jobs):
 
 
 @transforms.add
+def set_job_try_name(config, jobs):
+    for job in jobs:
+        job.setdefault('attributes', {}).setdefault('job_try_name', job['name'])
+        yield job
+
+
+@transforms.add
 def expand_platforms(config, jobs):
     for job in jobs:
         if isinstance(job['platform'], basestring):
@@ -98,8 +105,7 @@ def handle_platform(config, jobs):
 
         build_platform, build_type = platform.split('/')
 
-        attributes = job.setdefault('attributes', {})
-        attributes.update({
+        job['attributes'].update({
             'build_platform': build_platform,
             'build_type': build_type,
         })
