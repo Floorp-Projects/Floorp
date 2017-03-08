@@ -124,6 +124,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/mo
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebsiteMetadata", "resource://gre/modules/WebsiteMetadata.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch", "resource://gre/modules/TelemetryStopwatch.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
   "@mozilla.org/gfx/fontenumerator;1",
   "nsIFontEnumerator");
@@ -1458,6 +1460,9 @@ var BrowserApp = {
   sanitize: function (aItems, callback, aShutdown) {
     let success = true;
     var promises = [];
+    let refObj = {};
+
+    TelemetryStopwatch.start("FX_SANITIZE_TOTAL", refObj);
 
     for (let key in aItems) {
       if (!aItems[key])
@@ -1482,6 +1487,7 @@ var BrowserApp = {
     }
 
     Promise.all(promises).then(function() {
+      TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
       GlobalEventDispatcher.sendRequest({
         type: "Sanitize:Finished",
         success: true,
@@ -1492,6 +1498,7 @@ var BrowserApp = {
         callback();
       }
     }).catch(function(err) {
+      TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
       GlobalEventDispatcher.sendRequest({
         type: "Sanitize:Finished",
         error: err,
