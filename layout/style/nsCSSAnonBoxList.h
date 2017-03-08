@@ -38,7 +38,7 @@ CSS_ANON_BOX(mozText, ":-moz-text")
 // placeholder frames for out of flows.  Note that :-moz-placeholder is used for
 // the pseudo-element that represents the placeholder text in <input
 // placeholder="foo">, so we need a different string here.
-CSS_ANON_BOX(oofPlaceholder, ":-moz-oof-placeholder")
+CSS_NON_INHERITING_ANON_BOX(oofPlaceholder, ":-moz-oof-placeholder")
 // nsFirstLetterFrames for content outside the ::first-letter.
 CSS_ANON_BOX(firstLetterContinuation, ":-moz-first-letter-continuation")
 

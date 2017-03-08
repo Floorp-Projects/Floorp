@@ -128,7 +128,7 @@ public:
     inline already_AddRefed<nsStyleContext>
     ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
-    ResolveStyleForPlaceholder(nsStyleContext* aParentContext);
+    ResolveStyleForPlaceholder();
     inline already_AddRefed<nsStyleContext>
     ResolvePseudoElementStyle(dom::Element* aParentElement,
                               mozilla::CSSPseudoElementType aType,
