@@ -13,9 +13,11 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/PFileSystemParams.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "nsIFile.h"
+#include "nsISimpleEnumerator.h"
 #include "nsStringGlue.h"
 
 namespace mozilla {
@@ -174,12 +176,6 @@ GetDirectoryListingTaskChild::HandlerCallback()
 
   mPromise->MaybeResolve(mTargetData);
   mPromise = nullptr;
-}
-
-void
-GetDirectoryListingTaskChild::GetPermissionAccessType(nsCString& aAccess) const
-{
-  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 /**
@@ -382,12 +378,6 @@ GetDirectoryListingTaskParent::IOWork()
     }
   }
   return NS_OK;
-}
-
-void
-GetDirectoryListingTaskParent::GetPermissionAccessType(nsCString& aAccess) const
-{
-  aAccess.AssignLiteral(DIRECTORY_READ_PERMISSION);
 }
 
 } // namespace dom
