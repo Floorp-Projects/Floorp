@@ -445,12 +445,67 @@ ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
 ipc::IPCResult
 ChromiumCDMParent::RecvDecoded(const CDMVideoFrame& aFrame)
 {
+  VideoData::YCbCrBuffer b;
+  nsTArray<uint8_t> data;
+  data = aFrame.mData();
+
+  if (data.IsEmpty()) {
+    mDecodePromise.ResolveIfExists(nsTArray<RefPtr<MediaData>>(), __func__);
+    return IPC_OK();
+  }
+
+  b.mPlanes[0].mData = data.Elements();
+  b.mPlanes[0].mWidth = aFrame.mImageWidth();
+  b.mPlanes[0].mHeight = aFrame.mImageHeight();
+  b.mPlanes[0].mStride = aFrame.mYPlane().mStride();
+  b.mPlanes[0].mOffset = aFrame.mYPlane().mPlaneOffset();
+  b.mPlanes[0].mSkip = 0;
+
+  b.mPlanes[1].mData = data.Elements();
+  b.mPlanes[1].mWidth = (aFrame.mImageWidth() + 1) / 2;
+  b.mPlanes[1].mHeight = (aFrame.mImageHeight() + 1) / 2;
+  b.mPlanes[1].mStride = aFrame.mUPlane().mStride();
+  b.mPlanes[1].mOffset = aFrame.mUPlane().mPlaneOffset();
+  b.mPlanes[1].mSkip = 0;
+
+  b.mPlanes[2].mData = data.Elements();
+  b.mPlanes[2].mWidth = (aFrame.mImageWidth() + 1) / 2;
+  b.mPlanes[2].mHeight = (aFrame.mImageHeight() + 1) / 2;
+  b.mPlanes[2].mStride = aFrame.mVPlane().mStride();
+  b.mPlanes[2].mOffset = aFrame.mVPlane().mPlaneOffset();
+  b.mPlanes[2].mSkip = 0;
+
+  gfx::IntRect pictureRegion(0, 0, aFrame.mImageWidth(), aFrame.mImageHeight());
+  RefPtr<VideoData> v = VideoData::CreateAndCopyData(mVideoInfo,
+                                                     mImageContainer,
+                                                     mLastStreamOffset,
+                                                     aFrame.mTimestamp(),
+                                                     aFrame.mDuration(),
+                                                     b,
+                                                     false,
+                                                     -1,
+                                                     pictureRegion);
+
+  RefPtr<ChromiumCDMParent> self = this;
+  if (v) {
+    mDecodePromise.ResolveIfExists({ Move(v) }, __func__);
+  } else {
+    mDecodePromise.RejectIfExists(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                  RESULT_DETAIL("CallBack::CreateAndCopyData")),
+      __func__);
+  }
+
   return IPC_OK();
 }
 
 ipc::IPCResult
 ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus)
 {
+  mDecodePromise.RejectIfExists(
+    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                RESULT_DETAIL("ChromiumCDMParent::RecvDecodeFailed")),
+    __func__);
   return IPC_OK();
 }
 
@@ -470,7 +525,9 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
 
 RefPtr<MediaDataDecoder::InitPromise>
 ChromiumCDMParent::InitializeVideoDecoder(
-  const gmp::CDMVideoDecoderConfig& aConfig)
+  const gmp::CDMVideoDecoderConfig& aConfig,
+  const VideoInfo& aInfo,
+  RefPtr<layers::ImageContainer> aImageContainer)
 {
   if (!SendInitializeVideoDecoder(aConfig)) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
@@ -478,6 +535,9 @@ ChromiumCDMParent::InitializeVideoDecoder(
                   RESULT_DETAIL("Failed to send init video decoder to CDM")),
       __func__);
   }
+
+  mImageContainer = aImageContainer;
+  mVideoInfo = aInfo;
 
   return mInitVideoDecoderPromise.Ensure(__func__);
 }
@@ -498,6 +558,32 @@ ChromiumCDMParent::RecvOnDecoderInitDone(const uint32_t& aStatus)
       __func__);
   }
   return IPC_OK();
+}
+
+RefPtr<MediaDataDecoder::DecodePromise>
+ChromiumCDMParent::DecryptAndDecodeFrame(MediaRawData* aSample)
+{
+  CDMInputBuffer buffer;
+
+  if (!InitCDMInputBuffer(buffer, aSample)) {
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, "Failed to init CDM buffer."),
+      __func__);
+  }
+
+  mLastStreamOffset = aSample->mOffset;
+
+  if (!SendDecryptAndDecodeFrame(buffer)) {
+    GMP_LOG(
+      "ChromiumCDMParent::Decrypt(this=%p) failed to send decrypt message.",
+      this);
+    return MediaDataDecoder::DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  "Failed to send decrypt to CDM process."),
+      __func__);
+  }
+
+  return mDecodePromise.Ensure(__func__);
 }
 
 } // namespace gmp

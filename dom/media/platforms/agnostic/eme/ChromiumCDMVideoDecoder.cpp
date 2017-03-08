@@ -68,6 +68,7 @@ ChromiumCDMVideoDecoder::Init()
     config.mProfile() =
       ToCDMH264Profile(mConfig.mExtraData->SafeElementAt(1, 0));
     config.mExtraData() = *mConfig.mExtraData;
+    mConvertToAnnexB = true;
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
     config.mCodec() = cdm::VideoDecoderConfig::kCodecVp8;
     config.mProfile() = cdm::VideoDecoderConfig::kProfileNotNeeded;
@@ -82,17 +83,35 @@ ChromiumCDMVideoDecoder::Init()
   config.mImageHeight() = mConfig.mImage.height;
 
   RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
-  return InvokeAsync(mGMPThread, __func__, [cdm, config]() {
-    return cdm->InitializeVideoDecoder(config);
-  });
+  VideoInfo info = mConfig;
+  RefPtr<layers::ImageContainer> imageContainer = mImageContainer;
+  return InvokeAsync(
+    mGMPThread, __func__, [cdm, config, info, imageContainer]() {
+      return cdm->InitializeVideoDecoder(config, info, imageContainer);
+    });
+}
+
+const char*
+ChromiumCDMVideoDecoder::GetDescriptionName() const
+{
+  return "Chromium CDM video decoder";
+}
+
+MediaDataDecoder::ConversionRequired
+ChromiumCDMVideoDecoder::NeedsConversion() const
+{
+  return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB
+                          : ConversionRequired::kNeedNone;
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
 ChromiumCDMVideoDecoder::Decode(MediaRawData* aSample)
 {
-  return DecodePromise::CreateAndReject(
-    MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, RESULT_DETAIL("Unimplemented")),
-    __func__);
+  RefPtr<gmp::ChromiumCDMParent> cdm = mCDMParent;
+  RefPtr<MediaRawData> sample = aSample;
+  return InvokeAsync(mGMPThread, __func__, [cdm, sample]() {
+    return cdm->DecryptAndDecodeFrame(sample);
+  });
 }
 
 RefPtr<MediaDataDecoder::FlushPromise>

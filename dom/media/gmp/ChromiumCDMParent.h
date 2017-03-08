@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsDataHashtable.h"
 #include "PlatformDecoderModule.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
 
@@ -61,7 +62,12 @@ public:
   // TODO: Add functions for clients to send data to CDM, and
   // a Close() function.
   RefPtr<MediaDataDecoder::InitPromise> InitializeVideoDecoder(
-    const gmp::CDMVideoDecoderConfig& aConfig);
+    const gmp::CDMVideoDecoderConfig& aConfig,
+    const VideoInfo& aInfo,
+    RefPtr<layers::ImageContainer> aImageContainer);
+
+  RefPtr<MediaDataDecoder::DecodePromise> DecryptAndDecodeFrame(
+    MediaRawData* aSample);
 
 protected:
   ~ChromiumCDMParent() {}
@@ -114,6 +120,11 @@ protected:
   nsTArray<RefPtr<DecryptJob>> mDecrypts;
 
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitVideoDecoderPromise;
+  MozPromiseHolder<MediaDataDecoder::DecodePromise> mDecodePromise;
+
+  RefPtr<layers::ImageContainer> mImageContainer;
+  VideoInfo mVideoInfo;
+  uint64_t mLastStreamOffset = 0;
 };
 
 } // namespace gmp
