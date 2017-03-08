@@ -194,6 +194,7 @@ var dataProviders = {
     if (AppConstants.MOZ_UPDATER)
       data.updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
 
+    // eslint-disable-next-line mozilla/use-default-preference-values
     try {
       data.vendor = Services.prefs.getCharPref("app.support.vendor");
     } catch (e) {}
@@ -527,6 +528,7 @@ var dataProviders = {
     data.isActive = Cc["@mozilla.org/xre/app-info;1"].
                     getService(Ci.nsIXULRuntime).
                     accessibilityEnabled;
+    // eslint-disable-next-line mozilla/use-default-preference-values
     try {
       data.forceDisabled =
         Services.prefs.getIntPref("accessibility.force_disabled");

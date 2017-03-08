@@ -310,6 +310,9 @@ nsStyleSet::BeginReconstruct()
   // held on to after the rule tree has been reconstructed.
   PresContext()->PresShell()->ClearArenaRefPtrs(eArenaObjectID_nsStyleContext);
 
+  // Clear our cached style contexts for non-inheriting anonymous boxes.
+  ClearNonInheritingStyleContexts();
+
 #ifdef DEBUG
   MOZ_ASSERT(!mOldRootNode);
   mOldRootNode = mRuleTree;
@@ -1830,11 +1833,30 @@ nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+nsStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
-                    nsCSSAnonBoxes::mozOtherNonElement,
+                    nsCSSAnonBoxes::firstLetterContinuation,
                     CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForPlaceholder()
+{
+  RefPtr<nsStyleContext>& cache =
+    mNonInheritingStyleContexts[
+      static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::oofPlaceholder)];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
+  RefPtr<nsStyleContext> retval =
+    GetContext(nullptr, mRuleTree, nullptr,
+               nsCSSAnonBoxes::oofPlaceholder,
+               CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+  cache = retval;
+  return retval.forget();
 }
 
 void
@@ -2264,6 +2286,9 @@ nsStyleSet::BeginShutdown()
 void
 nsStyleSet::Shutdown()
 {
+  // Make sure we drop our cached style contexts before the presshell arena
+  // starts going away.
+  ClearNonInheritingStyleContexts();
   mRuleTree = nullptr;
   GCRuleTrees();
   MOZ_ASSERT(mUnusedRuleNodeList.isEmpty());
@@ -2607,4 +2632,12 @@ nsStyleSet::ClearSelectors()
              "stylo: the style set and restyle manager must have the same "
              "StyleBackendType");
   PresContext()->RestyleManager()->AsGecko()->ClearSelectors();
+}
+
+void
+nsStyleSet::ClearNonInheritingStyleContexts()
+{
+  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+    ptr = nullptr;
+  }
 }

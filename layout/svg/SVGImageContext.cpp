@@ -10,6 +10,7 @@
 // Keep others in (case-insensitive) order:
 #include "gfxUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIFrame.h"
 #include "nsPresContext.h"
 
 namespace mozilla {

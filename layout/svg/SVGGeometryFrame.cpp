@@ -30,6 +30,7 @@
 #include "SVGGraphicsElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
@@ -707,7 +708,7 @@ SVGGeometryFrame::GetCanvasTM()
   NS_ASSERTION(GetParent(), "null parent");
 
   nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-  dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
+  SVGGraphicsElement *content = static_cast<SVGGraphicsElement*>(mContent);
 
   return content->PrependLocalTransformsTo(parent->GetCanvasTM());
 }

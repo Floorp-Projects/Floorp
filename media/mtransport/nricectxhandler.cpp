@@ -18,9 +18,8 @@ namespace mozilla {
 MOZ_MTLOG_MODULE("mtransport")
 
 NrIceCtxHandler::NrIceCtxHandler(const std::string& name,
-                                 bool offerer,
                                  NrIceCtx::Policy policy)
-  : current_ctx(new NrIceCtx(name, offerer, policy)),
+  : current_ctx(new NrIceCtx(name, policy)),
     old_ctx(nullptr),
     restart_count(0)
 {
@@ -28,7 +27,6 @@ NrIceCtxHandler::NrIceCtxHandler(const std::string& name,
 
 RefPtr<NrIceCtxHandler>
 NrIceCtxHandler::Create(const std::string& name,
-                        bool offerer,
                         bool allow_loopback,
                         bool tcp_enabled,
                         bool allow_link_local,
@@ -37,7 +35,7 @@ NrIceCtxHandler::Create(const std::string& name,
   // InitializeGlobals only executes once
   NrIceCtx::InitializeGlobals(allow_loopback, tcp_enabled, allow_link_local);
 
-  RefPtr<NrIceCtxHandler> ctx = new NrIceCtxHandler(name, offerer, policy);
+  RefPtr<NrIceCtxHandler> ctx = new NrIceCtxHandler(name, policy);
 
   if (ctx == nullptr ||
       ctx->current_ctx == nullptr ||
@@ -72,7 +70,6 @@ NrIceCtxHandler::CreateCtx(const std::string& ufrag,
                            const std::string& pwd) const
 {
   RefPtr<NrIceCtx> new_ctx = new NrIceCtx(this->current_ctx->name(),
-                                          true, // offerer (hardcoded per bwc)
                                           this->current_ctx->policy());
   if (new_ctx == nullptr) {
     return nullptr;

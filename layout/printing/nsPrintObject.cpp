@@ -31,10 +31,6 @@ nsPrintObject::nsPrintObject() :
 nsPrintObject::~nsPrintObject()
 {
   MOZ_COUNT_DTOR(nsPrintObject);
-  for (uint32_t i=0;i<mKids.Length();i++) {
-    nsPrintObject* po = mKids[i];
-    delete po;
-  }
 
   DestroyPresentation();
   if (mDidCreateDocShell && mDocShell) {
@@ -42,13 +38,13 @@ nsPrintObject::~nsPrintObject()
     if (baseWin) {
       baseWin->Destroy();
     }
-  }                            
+  }
   mDocShell = nullptr;
-  mTreeOwner = nullptr; // mTreeOwner must be released after mDocShell; 
+  mTreeOwner = nullptr; // mTreeOwner must be released after mDocShell;
 }
 
 //------------------------------------------------------------------
-nsresult 
+nsresult
 nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
                     bool aPrintPreview)
 {
@@ -97,7 +93,7 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
 
 //------------------------------------------------------------------
 // Resets PO by destroying the presentation
-void 
+void
 nsPrintObject::DestroyPresentation()
 {
   if (mPresShell) {

@@ -10385,10 +10385,13 @@ nsDocShell::InternalLoad(nsIURI* aURI,
        * call OnNewURI() so that, this traversal will be
        * recorded in session and global history.
        */
-      nsCOMPtr<nsIPrincipal> triggeringPrincipal, principalToInherit;
+      nsCOMPtr<nsIPrincipal> newURITriggeringPrincipal, newURIPrincipalToInherit;
       if (mOSHE) {
-        mOSHE->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
-        mOSHE->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
+        mOSHE->GetTriggeringPrincipal(getter_AddRefs(newURITriggeringPrincipal));
+        mOSHE->GetPrincipalToInherit(getter_AddRefs(newURIPrincipalToInherit));
+      } else {
+        newURITriggeringPrincipal = aTriggeringPrincipal;
+        newURIPrincipalToInherit = doc->NodePrincipal();
       }
       // Pass true for aCloneSHChildren, since we're not
       // changing documents here, so all of our subframes are
@@ -10398,7 +10401,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // flag on firing onLocationChange(...).
       // Anyway, aCloneSHChildren param is simply reflecting
       // doShortCircuitedLoad in this scope.
-      OnNewURI(aURI, nullptr, triggeringPrincipal, principalToInherit,
+      OnNewURI(aURI, nullptr, newURITriggeringPrincipal, newURIPrincipalToInherit,
                mLoadType, true, true, true);
 
       nsCOMPtr<nsIInputStream> postData;

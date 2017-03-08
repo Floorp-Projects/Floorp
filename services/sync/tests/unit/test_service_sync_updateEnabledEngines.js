@@ -91,6 +91,8 @@ function run_test() {
 }
 
 add_task(async function test_newAccount() {
+  enableValidationPrefs();
+
   _("Test: New account does not disable locally enabled engines.");
   let engine = Service.engineManager.get("steam");
   let server = sync_httpd_setup({
@@ -117,6 +119,8 @@ add_task(async function test_newAccount() {
 });
 
 add_task(async function test_enabledLocally() {
+  enableValidationPrefs();
+
   _("Test: Engine is disabled on remote clients and enabled locally");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -148,6 +152,8 @@ add_task(async function test_enabledLocally() {
 });
 
 add_task(async function test_disabledLocally() {
+  enableValidationPrefs();
+
   _("Test: Engine is enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -190,6 +196,8 @@ add_task(async function test_disabledLocally() {
 });
 
 add_task(async function test_disabledLocally_wipe503() {
+  enableValidationPrefs();
+
   _("Test: Engine is enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -231,6 +239,8 @@ add_task(async function test_disabledLocally_wipe503() {
 });
 
 add_task(async function test_enabledRemotely() {
+  enableValidationPrefs();
+
   _("Test: Engine is disabled locally and enabled on a remote client");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -275,6 +285,8 @@ add_task(async function test_enabledRemotely() {
 });
 
 add_task(async function test_disabledRemotelyTwoClients() {
+  enableValidationPrefs();
+
   _("Test: Engine is enabled locally and disabled on a remote client... with two clients.");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -319,6 +331,8 @@ add_task(async function test_disabledRemotelyTwoClients() {
 });
 
 add_task(async function test_disabledRemotely() {
+  enableValidationPrefs();
+
   _("Test: Engine is enabled locally and disabled on a remote client");
   Service.syncID = "abcdefghij";
   let engine = Service.engineManager.get("steam");
@@ -350,6 +364,8 @@ add_task(async function test_disabledRemotely() {
 });
 
 add_task(async function test_dependentEnginesEnabledLocally() {
+  enableValidationPrefs();
+
   _("Test: Engine is disabled on remote clients and enabled locally");
   Service.syncID = "abcdefghij";
   let steamEngine = Service.engineManager.get("steam");
@@ -385,6 +401,8 @@ add_task(async function test_dependentEnginesEnabledLocally() {
 });
 
 add_task(async function test_dependentEnginesDisabledLocally() {
+  enableValidationPrefs();
+
   _("Test: Two dependent engines are enabled on remote clients and disabled locally");
   Service.syncID = "abcdefghij";
   let steamEngine = Service.engineManager.get("steam");

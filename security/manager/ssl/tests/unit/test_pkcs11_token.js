@@ -101,7 +101,7 @@ function run_test() {
 
   let initialPW = "foo 1234567890`~!@#$%^&*()-_=+{[}]|\\:;'\",<.>/? 一二三";
   token.initPassword(initialPW);
-  token.login(/*force*/ false);
+  token.login(/* force */ false);
   ok(token.isLoggedIn(), "Token should now be logged into");
 
   checkPasswordFeaturesAndResetPassword(token, initialPW);

@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 /**
  * Wrapper for MediaRouter types supported by Android to use for
@@ -16,7 +16,7 @@ interface GeckoPresentationDisplay {
     /**
      * Can return null.
      */
-    JSONObject toJSON();
+    GeckoBundle toBundle();
     void start(EventCallback callback);
     void stop(EventCallback callback);
 }

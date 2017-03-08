@@ -118,18 +118,14 @@ LinksStorage.prototype = {
 
   get _storedVersion() {
     if (this.__storedVersion === undefined) {
-      try {
-        this.__storedVersion =
-          Services.prefs.getIntPref("browser.newtabpage.storageVersion");
-      } catch (ex) {
-        // The storage version is unknown, so either:
-        // - it's a new profile
-        // - it's a profile where versioning information got lost
-        // In this case we still run through all of the valid migrations,
-        // starting from 1, as if it was a downgrade.  As previously stated the
-        // migrations should already support running on an updated store.
-        this.__storedVersion = 1;
-      }
+      // When the pref is not set, the storage version is unknown, so either:
+      // - it's a new profile
+      // - it's a profile where versioning information got lost
+      // In this case we still run through all of the valid migrations,
+      // starting from 1, as if it was a downgrade.  As previously stated the
+      // migrations should already support running on an updated store.
+      this.__storedVersion =
+        Services.prefs.getIntPref("browser.newtabpage.storageVersion", 1);
     }
     return this.__storedVersion;
   },

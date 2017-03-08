@@ -483,8 +483,6 @@ public:
      */
     nsTArray<nsSVGMaskFrame*> GetMaskFrames();
 
-    bool MightHaveNoneSVGMask() const;
-
     /*
      * @return true if all effects we have are valid or we have no effect
      * at all.

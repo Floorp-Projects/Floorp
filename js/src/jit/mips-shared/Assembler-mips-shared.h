@@ -1238,6 +1238,10 @@ class AssemblerMIPSShared : public AssemblerShared
         return js::jit::SupportsSimd;
     }
 
+    static bool HasRoundInstruction(RoundingMode mode) {
+        return false;
+    }
+
   protected:
     InstImm invertBranch(InstImm branch, BOffImm16 skipOffset);
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {

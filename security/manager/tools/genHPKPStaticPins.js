@@ -121,8 +121,7 @@ function download(filename) {
   req.open("GET", filename, false); // doing the request synchronously
   try {
     req.send();
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error(`ERROR: problem downloading '${filename}': ${e}`);
   }
 
@@ -134,8 +133,7 @@ function download(filename) {
   let resultDecoded;
   try {
     resultDecoded = atob(req.responseText);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error("ERROR: could not decode data as base64 from '" + filename +
                     "': " + e);
   }
@@ -148,8 +146,7 @@ function downloadAsJson(filename) {
   let data = null;
   try {
     data = JSON.parse(result);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error("ERROR: could not parse data from '" + filename + "': " + e);
   }
   return data;
@@ -172,8 +169,7 @@ function sha256Base64(input) {
   let decodedValue;
   try {
     decodedValue = atob(input);
-  }
-  catch (e) {
+  } catch (e) {
     throw new Error(`ERROR: could not decode as base64: '${input}': ${e}`);
   }
 
@@ -229,7 +225,6 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
   let state = PRE_NAME;
 
   let lines = download(filename).split("\n");
-  let name = "";
   let pemCert = "";
   let pemPubKey = "";
   let hash = "";
@@ -456,7 +451,6 @@ function genExpirationTime() {
 }
 
 function writeFullPinset(certNameToSKD, certSKDToName, pinset) {
-  let prefix = "kPinset_" + pinset.name;
   if (!pinset.sha256_hashes || pinset.sha256_hashes.length == 0) {
     throw new Error(`ERROR: Pinset ${pinset.name} does not contain any hashes`);
   }

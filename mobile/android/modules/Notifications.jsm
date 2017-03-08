@@ -6,14 +6,9 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
 this.EXPORTED_SYMBOLS = ["Notifications"];
-
-function log(msg) {
-  // Services.console.logStringMessage(msg);
-}
 
 var _notificationsMap = {};
 var _handlersMap = {};
@@ -202,10 +197,7 @@ var Notifications = {
       notification.cancel();
   },
 
-  observe: function notif_observe(aSubject, aTopic, aData) {
-    Services.console.logStringMessage(aTopic + " " + aData);
-
-    let data = JSON.parse(aData);
+  onEvent: function notif_onEvent(event, data, callback) {
     let id = data.id;
     let handlerKey = data.handlerKey;
     let cookie = data.cookie ? JSON.parse(data.cookie) : undefined;
@@ -255,4 +247,4 @@ var Notifications = {
   }
 };
 
-Services.obs.addObserver(Notifications, "Notification:Event", false);
+EventDispatcher.instance.registerListener(Notifications, "Notification:Event");

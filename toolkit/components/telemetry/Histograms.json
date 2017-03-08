@@ -6626,22 +6626,6 @@
     "n_buckets": 50,
     "description": "Recorded once per session near startup: records the search plugin count, including both built-in plugins (including the ones the user has hidden) and user-installed plugins."
   },
-  "SEARCH_SERVICE_HAS_UPDATES": {
-    "alert_emails": ["florian@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "boolean",
-    "bug_numbers": [1259510],
-    "description": "Recorded once per session near startup: records true/false whether the search service has engines with update URLs.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "SEARCH_SERVICE_HAS_ICON_UPDATES": {
-    "alert_emails": ["florian@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "boolean",
-    "bug_numbers": [1259510],
-    "description": "Recorded once per session near startup: records true/false whether the search service has engines with icon update URLs.",
-    "releaseChannelCollection": "opt-out"
-  },
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
     "expires_in_version": "never",
@@ -7177,6 +7161,60 @@
     "high": 10000,
     "n_buckets": 20,
     "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
+  },
+  "WEBRTC_ICE_OFFERER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_OFFERER_ABORT_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_OFFERER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_ANSWERER_SUCCESS_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_ANSWERER_ABORT_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
+  },
+  "WEBRTC_ICE_ANSWERER_FAILURE_TIME": {
+    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1342523],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
   },
   "WEBRTC_ICE_SUCCESS_TIME": {
     "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
@@ -9538,24 +9576,6 @@
     "high": 30000,
     "n_buckets": 20,
     "description": "Sanitize: Time it takes to sanitize firefox cookies (ms). A subset of FX_SANITIZE_COOKIES."
-  },
-  "FX_SANITIZE_LOADED_FLASH": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1251469],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize Flash when it's already loaded (ms). A subset of FX_SANITIZE_PLUGINS."
-  },
-  "FX_SANITIZE_UNLOADED_FLASH": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "bug_numbers": [1251469],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 20,
-    "description": "Sanitize: Time it takes to sanitize Flash when it's not yet loaded (ms). A subset of FX_SANITIZE_PLUGINS."
   },
   "FX_SANITIZE_HISTORY": {
     "alert_emails": ["firefox-dev@mozilla.org"],

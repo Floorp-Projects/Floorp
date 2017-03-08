@@ -276,8 +276,6 @@ Sync11Service.prototype = {
    * Prepare to initialize the rest of Weave after waiting a little bit
    */
   onStartup: function onStartup() {
-    this._migratePrefs();
-
     this.status = Status;
     this.identity = Status._authManager;
     this.collectionKeys = new CollectionKeyManager();
@@ -346,39 +344,6 @@ Sync11Service.prototype = {
       return this.status.service = STATUS_DISABLED;
     }
     return this.status.checkSetup();
-  },
-
-  _migratePrefs: function _migratePrefs() {
-    // Migrate old debugLog prefs.
-    let logLevel = Svc.Prefs.get("log.appender.debugLog");
-    if (logLevel) {
-      Svc.Prefs.set("log.appender.file.level", logLevel);
-      Svc.Prefs.reset("log.appender.debugLog");
-    }
-    if (Svc.Prefs.get("log.appender.debugLog.enabled")) {
-      Svc.Prefs.set("log.appender.file.logOnSuccess", true);
-      Svc.Prefs.reset("log.appender.debugLog.enabled");
-    }
-
-    // Migrate old extensions.weave.* prefs if we haven't already tried.
-    if (Svc.Prefs.get("migrated", false))
-      return;
-
-    // Grab the list of old pref names
-    let oldPrefBranch = "extensions.weave.";
-    let oldPrefNames = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefService).
-                       getBranch(oldPrefBranch).
-                       getChildList("", {});
-
-    // Map each old pref to the current pref branch
-    let oldPref = new Preferences(oldPrefBranch);
-    for (let pref of oldPrefNames)
-      Svc.Prefs.set(pref, oldPref.get(pref));
-
-    // Remove all the old prefs and remember that we've migrated
-    oldPref.resetBranch("");
-    Svc.Prefs.set("migrated", true);
   },
 
   /**

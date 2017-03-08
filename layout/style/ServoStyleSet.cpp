@@ -29,6 +29,10 @@ ServoStyleSet::ServoStyleSet()
 {
 }
 
+ServoStyleSet::~ServoStyleSet()
+{
+}
+
 void
 ServoStyleSet::Init(nsPresContext* aPresContext)
 {
@@ -77,6 +81,9 @@ ServoStyleSet::BeginShutdown()
 void
 ServoStyleSet::Shutdown()
 {
+  // Make sure we drop our cached style contexts before the presshell arena
+  // starts going away.
+  ClearNonInheritingStyleContexts();
   mRawSet = nullptr;
 }
 
@@ -247,20 +254,41 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
 }
 
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
+ServoStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
-  // The parent context can be null if the non-element share a style context
-  // with the root of an anonymous subtree.
-  const ServoComputedValues* parent =
-    aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
+  const ServoComputedValues* parent = aParentContext->StyleSource().AsServoComputedValues();
   RefPtr<ServoComputedValues> computedValues =
     Servo_ComputedValues_Inherit(mRawSet.get(), parent).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
-                    nsCSSAnonBoxes::mozOtherNonElement,
+                    nsCSSAnonBoxes::firstLetterContinuation,
                     CSSPseudoElementType::AnonBox,
                     nullptr);
+}
+
+already_AddRefed<nsStyleContext>
+ServoStyleSet::ResolveStyleForPlaceholder()
+{
+  RefPtr<nsStyleContext>& cache =
+    mNonInheritingStyleContexts[
+      static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::oofPlaceholder)];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ComputedValues_Inherit(mRawSet.get(), nullptr).Consume();
+  MOZ_ASSERT(computedValues);
+
+  RefPtr<nsStyleContext> retval =
+    GetContext(computedValues.forget(), nullptr,
+               nsCSSAnonBoxes::oofPlaceholder,
+               CSSPseudoElementType::AnonBox,
+               nullptr);
+  cache = retval;
+  return retval.forget();
 }
 
 already_AddRefed<nsStyleContext>
@@ -643,6 +671,7 @@ ServoStyleSet::FillKeyframesForName(const nsString& aName,
 void
 ServoStyleSet::RebuildData()
 {
+  ClearNonInheritingStyleContexts();
   Servo_StyleSet_RebuildData(mRawSet.get());
 }
 
@@ -650,6 +679,14 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement)
 {
   return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
+}
+
+void
+ServoStyleSet::ClearNonInheritingStyleContexts()
+{
+  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+    ptr = nullptr;
+  }  
 }
 
 bool ServoStyleSet::sInServoTraversal = false;

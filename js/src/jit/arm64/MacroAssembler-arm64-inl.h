@@ -1708,13 +1708,14 @@ MacroAssembler::clampIntToUint8(Register reg)
 
 template <class L>
 void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, L label)
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
 {
     MOZ_CRASH("NYI");
 }
 
+template <class L>
 void
-MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
 {
     MOZ_CRASH("NYI");
 }
