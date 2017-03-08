@@ -582,8 +582,15 @@ nsAppShell::Observe(nsISupports* aSubject,
                     java::GeckoThread::State::PROFILE_READY(),
                     java::GeckoThread::State::RUNNING());
         }
-        removeObserver = true;
 
+        // Enable the window event dispatcher for the given GeckoView.
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
+        MOZ_ASSERT(doc);
+        nsCOMPtr<nsIWidget> widget =
+            WidgetUtils::DOMWindowToWidget(doc->GetWindow());
+        MOZ_ASSERT(widget);
+        const auto window = static_cast<nsWindow*>(widget.get());
+        window->EnableEventDispatcher();
     } else if (!strcmp(aTopic, "quit-application-granted")) {
         if (jni::IsAvailable()) {
             java::GeckoThread::SetState(
