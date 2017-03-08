@@ -798,18 +798,8 @@ menuitem.bookmark-item {
   font-weight: bold;
 }
 
-html|*.addon-webext-perm-list {
-  margin-block-end: 0;
-  padding-inline-start: 10px;
-}
-
-.addon-webext-perm-text {
-  margin-inline-start: 0;
-}
-
-.popup-notification-description[popupid="addon-webext-permissions"] {
-  margin: 0;
-  padding: 0;
+.addon-webext-perm-header {
+  font-size: 1.3em;
 }
 
 .addon-webext-name {
