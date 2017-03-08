@@ -393,7 +393,7 @@ mochitest:
             default: legacy # Bug 1281241: migrating to m3.large instances
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 32
+            android-4.3-arm7-api-15/debug: 48
             android.*: 20
             macosx.*: 5
             windows.*: 5
