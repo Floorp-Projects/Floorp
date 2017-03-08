@@ -263,6 +263,7 @@ namespace jit {
     _(Floor)                                                                \
     _(Ceil)                                                                 \
     _(Round)                                                                \
+    _(NearbyInt)                                                            \
     _(In)                                                                   \
     _(InstanceOf)                                                           \
     _(CallInstanceOf)                                                       \
@@ -297,6 +298,7 @@ namespace jit {
     _(AsmJSAtomicExchangeHeap)                                              \
     _(AsmJSAtomicBinopHeap)                                                 \
     _(WasmBoundsCheck)                                                      \
+    _(WasmLoadTls)                                                          \
     _(WasmAddOffset)                                                        \
     _(WasmLoad)                                                             \
     _(WasmStore)                                                            \

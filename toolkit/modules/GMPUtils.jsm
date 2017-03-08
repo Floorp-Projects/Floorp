@@ -149,13 +149,7 @@ this.GMPPrefs = {
   get(aKey, aDefaultValue, aPlugin) {
     if (aKey === this.KEY_APP_DISTRIBUTION ||
         aKey === this.KEY_APP_DISTRIBUTION_VERSION) {
-      let prefValue = "default";
-      try {
-        prefValue = Services.prefs.getDefaultBranch(null).getCharPref(aKey);
-      } catch (e) {
-        // use default when pref not found
-      }
-      return prefValue;
+      return Services.prefs.getDefaultBranch(null).getCharPref(aKey, "default");
     }
     return Preferences.get(this.getPrefKey(aKey, aPlugin), aDefaultValue);
   },

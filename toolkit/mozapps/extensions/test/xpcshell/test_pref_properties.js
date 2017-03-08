@@ -211,7 +211,7 @@ function run_test() {
   hotfixID = 99;
   Services.prefs.deleteBranch("extensions.hotfix.id");
   Services.prefs.setIntPref("extensions.hotfix.id", hotfixID);
-  do_check_eq(AddonManager.hotfixID, null);
+  do_check_eq(AddonManager.hotfixID, "");
   Services.prefs.clearUserPref("extensions.hotfix.id");
 
   // After removing the listener, ensure we get no further events.

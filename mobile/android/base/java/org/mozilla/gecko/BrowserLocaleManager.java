@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.BroadcastReceiver;
@@ -220,8 +221,9 @@ public class BrowserLocaleManager implements LocaleManager {
 
         // The value we send to Gecko should be a language tag, not
         // a Java locale string.
-        final String osLanguageTag = Locales.getLanguageTag(osLocale);
-        GeckoAppShell.notifyObservers("Locale:OS", osLanguageTag);
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putString("languageTag", Locales.getLanguageTag(osLocale));
+        EventDispatcher.getInstance().dispatch("Locale:OS", data);
     }
 
     @Override
@@ -265,7 +267,9 @@ public class BrowserLocaleManager implements LocaleManager {
         persistLocale(context, localeCode);
 
         // Tell Gecko.
-        GeckoAppShell.notifyObservers(EVENT_LOCALE_CHANGED, Locales.getLanguageTag(getCurrentLocale(context)));
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putString("languageTag", Locales.getLanguageTag(getCurrentLocale(context)));
+        EventDispatcher.getInstance().dispatch(EVENT_LOCALE_CHANGED, data);
 
         return resultant;
     }
@@ -280,7 +284,7 @@ public class BrowserLocaleManager implements LocaleManager {
         updateLocale(context, systemLocale);
 
         // Tell Gecko.
-        GeckoAppShell.notifyObservers(EVENT_LOCALE_CHANGED, "");
+        EventDispatcher.getInstance().dispatch(EVENT_LOCALE_CHANGED, null);
     }
 
     /**

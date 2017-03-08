@@ -56,14 +56,8 @@ var prefPrefix = "places.frecency.";
 function* task_initializeBucket(bucket) {
   let [cutoffName, weightName] = bucket;
   // get pref values
-  var weight = 0, cutoff = 0;
-  try {
-    weight = prefs.getIntPref(prefPrefix + weightName);
-  } catch (ex) {}
-  try {
-    cutoff = prefs.getIntPref(prefPrefix + cutoffName);
-  } catch (ex) {}
-
+  var weight = prefs.getIntPref(prefPrefix + weightName, 0);
+  var cutoff = prefs.getIntPref(prefPrefix + cutoffName, 0);
   if (cutoff < 1)
     return;
 

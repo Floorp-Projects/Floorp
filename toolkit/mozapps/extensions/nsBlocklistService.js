@@ -254,16 +254,7 @@ function getLocale() {
 
 /* Get the distribution pref values, from defaults only */
 function getDistributionPrefValue(aPrefName) {
-  var prefValue = "default";
-
-  var defaults = gPref.getDefaultBranch(null);
-  try {
-    prefValue = defaults.getCharPref(aPrefName);
-  } catch (e) {
-    // use default when pref not found
-  }
-
-  return prefValue;
+  return gPref.getDefaultBranch(null).getCharPref(aPrefName, "default");
 }
 
 /**

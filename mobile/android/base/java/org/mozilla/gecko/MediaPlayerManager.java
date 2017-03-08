@@ -162,11 +162,11 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
             } else if ("AndroidCastDevice:SyncDevice".equals(event)) {
                 for (Map.Entry<String, GeckoPresentationDisplay> entry : displays.entrySet()) {
                     GeckoPresentationDisplay display = entry.getValue();
-                    JSONObject json = display.toJSON();
-                    if (json == null) {
+                    final GeckoBundle data = display.toBundle();
+                    if (data == null) {
                         break;
                     }
-                    GeckoAppShell.notifyObservers("AndroidCastDevice:Added", json.toString());
+                    EventDispatcher.getInstance().dispatch("AndroidCastDevice:Added", data);
                 }
             }
         }
@@ -180,12 +180,15 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
 
                 // Remove from media player list.
                 players.remove(route.getId());
-                GeckoAppShell.notifyObservers("MediaPlayer:Removed", route.getId());
+
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putString("id", route.getId());
+                EventDispatcher.getInstance().dispatch("MediaPlayer:Removed", data);
                 updatePresentation();
 
                 // Remove from presentation display list.
                 if (displays.remove(route.getId()) != null) {
-                    GeckoAppShell.notifyObservers("AndroidCastDevice:Removed", route.getId());
+                    EventDispatcher.getInstance().dispatch("AndroidCastDevice:Removed", data);
                 }
             }
 
@@ -238,13 +241,13 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                     return;
                 }
 
-                final JSONObject json = player.toJSON();
-                if (json == null) {
+                final GeckoBundle data = player.toBundle();
+                if (data == null) {
                     return;
                 }
 
                 players.put(route.getId(), player);
-                GeckoAppShell.notifyObservers(eventName, json.toString());
+                EventDispatcher.getInstance().dispatch(eventName, data);
             }
 
             private void saveAndNotifyOfDisplay(final String eventName,
@@ -254,13 +257,13 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                     return;
                 }
 
-                final JSONObject json = display.toJSON();
-                if (json == null) {
+                final GeckoBundle data = display.toBundle();
+                if (data == null) {
                     return;
                 }
 
                 displays.put(route.getId(), display);
-                GeckoAppShell.notifyObservers(eventName, json.toString());
+                EventDispatcher.getInstance().dispatch(eventName, data);
             }
         };
 

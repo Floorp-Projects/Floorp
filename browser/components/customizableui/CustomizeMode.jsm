@@ -42,9 +42,7 @@ let gDebug;
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
-  try {
-    gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug);
-  } catch (ex) {}
+  gDebug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
     maxLogLevel: gDebug ? "all" : "log",
     prefix: "CustomizeMode",
@@ -624,11 +622,8 @@ CustomizeMode.prototype = {
   },
 
   maybeShowTip(aAnchor) {
-    let shown = false;
     const kShownPref = "browser.customizemode.tip0.shown";
-    try {
-      shown = Services.prefs.getBoolPref(kShownPref);
-    } catch (ex) {}
+    let shown = Services.prefs.getBoolPref(kShownPref, false);
     if (shown)
       return;
 
@@ -1502,10 +1497,7 @@ CustomizeMode.prototype = {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
-    let drawInTitlebar = true;
-    try {
-      drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref);
-    } catch (ex) { }
+    let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
     let button = this.document.getElementById("customization-titlebar-visibility-button");
     // Drawing in the titlebar means 'hiding' the titlebar:
     if (drawInTitlebar) {

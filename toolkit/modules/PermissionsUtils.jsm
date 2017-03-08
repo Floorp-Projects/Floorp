@@ -16,10 +16,7 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
   let list = Services.prefs.getChildList(aPrefBranch, {});
 
   for (let pref of list) {
-    let origins = "";
-    try {
-      origins = Services.prefs.getCharPref(pref);
-    } catch (e) {}
+    let origins = Services.prefs.getCharPref(pref, "");
 
     if (!origins)
       continue;

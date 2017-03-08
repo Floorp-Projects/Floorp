@@ -94,12 +94,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
 // There's no point in setting up an observer to monitor the pref, as b2g prefs
 // can only be overwritten when the profie is recreated.  So just get the value
 // on start-up.
-var kPersonaUri = "https://firefoxos.persona.org";
-try {
-  kPersonaUri = Services.prefs.getCharPref("toolkit.identity.uri");
-} catch(noSuchPref) {
-  // stick with the default value
-}
+var kPersonaUri = Services.prefs.getCharPref("toolkit.identity.uri",
+                                             "https://firefoxos.persona.org");
 
 // JS shim that contains the callback functions that
 // live within the identity UI provisioning frame.
