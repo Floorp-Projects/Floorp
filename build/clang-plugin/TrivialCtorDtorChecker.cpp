@@ -16,6 +16,10 @@ void TrivialCtorDtorChecker::check(
       "class %0 must have trivial constructors and destructors";
   const CXXRecordDecl *Node = Result.Nodes.getNodeAs<CXXRecordDecl>("node");
 
+  if (!Node->hasDefinition()) {
+    return;
+  }
+
   // We need to accept non-constexpr trivial constructors as well. This occurs
   // when a struct contains pod members, which will not be initialized. As
   // constexpr values are initialized, the constructor is non-constexpr.
