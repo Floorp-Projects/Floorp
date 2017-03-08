@@ -260,6 +260,10 @@ jittest:
                     - remove_executables.py
         extra-options:
             - --jittest-suite=jittest-chunked
+    when:
+        files-changed:
+            - js/src/**
+            - js/public/**
 
 jsreftest:
     description: "JS Reftest run"
