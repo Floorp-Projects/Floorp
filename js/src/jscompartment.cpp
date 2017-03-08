@@ -35,6 +35,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/UnboxedObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
