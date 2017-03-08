@@ -91,7 +91,8 @@ protected:
                                   const nsCString& aSessionId) override;
   ipc::IPCResult RecvRemoveSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId) override;
-  ipc::IPCResult RecvDecrypt(const CDMInputBuffer& aBuffer) override;
+  ipc::IPCResult RecvDecrypt(const uint32_t& aId,
+                             const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvInitializeVideoDecoder(
     const CDMVideoDecoderConfig& aConfig) override;
   ipc::IPCResult RecvDeinitializeVideoDecoder() override;
@@ -99,6 +100,8 @@ protected:
   ipc::IPCResult RecvDecryptAndDecodeFrame(
     const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvDestroy() override;
+
+  void DecryptFailed(uint32_t aId, cdm::Status aStatus);
 
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_8* mCDM = nullptr;

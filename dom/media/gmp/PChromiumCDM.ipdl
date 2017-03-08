@@ -36,7 +36,7 @@ child:
   async RemoveSession(uint32_t aPromiseId,
                       nsCString aSessionId);
 
-  async Decrypt(CDMInputBuffer aBuffer);
+  async Decrypt(uint32_t aId, CDMInputBuffer aBuffer);
 
   async InitializeVideoDecoder(CDMVideoDecoderConfig aConfig);
 
@@ -79,7 +79,7 @@ parent:
                              nsCString aMessage);
 
   // Return values of cdm::ContentDecryptionModule8::Decrypt
-  async Decrypted(uint32_t aStatus, uint8_t[] aData);
+  async Decrypted(uint32_t aId, uint32_t aStatus, uint8_t[] aData);
 
   // Return values of cdm::ContentDecryptionModule8::DecryptAndDecodeFrame
   async Decoded(CDMVideoFrame aFrame);

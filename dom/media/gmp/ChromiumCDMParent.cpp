@@ -109,6 +109,50 @@ ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
   }
 }
 
+static bool
+InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer, MediaRawData* aSample)
+{
+  const CryptoSample& crypto = aSample->mCrypto;
+  if (crypto.mEncryptedSizes.Length() != crypto.mPlainSizes.Length()) {
+    GMP_LOG("InitCDMInputBuffer clear/cipher subsamples don't match");
+    return false;
+  }
+
+  nsTArray<uint8_t> data;
+  data.AppendElements(aSample->Data(), aSample->Size());
+
+  aBuffer = gmp::CDMInputBuffer(data,
+                                crypto.mKeyId,
+                                crypto.mIV,
+                                aSample->mTime,
+                                aSample->mDuration,
+                                crypto.mPlainSizes,
+                                crypto.mEncryptedSizes,
+                                crypto.mValid);
+  return true;
+}
+
+RefPtr<DecryptPromise>
+ChromiumCDMParent::Decrypt(MediaRawData* aSample)
+{
+  CDMInputBuffer buffer;
+  if (!InitCDMInputBuffer(buffer, aSample)) {
+    return DecryptPromise::CreateAndReject(DecryptResult(GenericErr, aSample),
+                                           __func__);
+  }
+  RefPtr<DecryptJob> job = new DecryptJob(aSample);
+  if (!SendDecrypt(job->mId, buffer)) {
+    GMP_LOG(
+      "ChromiumCDMParent::Decrypt(this=%p) failed to send decrypt message",
+      this);
+    return DecryptPromise::CreateAndReject(DecryptResult(GenericErr, aSample),
+                                           __func__);
+  }
+  RefPtr<DecryptPromise> promise = job->Ensure();
+  mDecrypts.AppendElement(job);
+  return promise;
+}
+
 ipc::IPCResult
 ChromiumCDMParent::Recv__delete__()
 {
@@ -366,10 +410,35 @@ ChromiumCDMParent::RecvOnLegacySessionError(const nsCString& aSessionId,
   return IPC_OK();
 }
 
+DecryptStatus
+ToDecryptStatus(uint32_t aError)
+{
+  switch (static_cast<cdm::Status>(aError)) {
+    case cdm::kSuccess:
+      return DecryptStatus::Ok;
+    case cdm::kNoKey:
+      return DecryptStatus::NoKeyErr;
+    default:
+      return DecryptStatus::GenericErr;
+  }
+}
+
 ipc::IPCResult
-ChromiumCDMParent::RecvDecrypted(const uint32_t& aStatus,
+ChromiumCDMParent::RecvDecrypted(const uint32_t& aId,
+                                 const uint32_t& aStatus,
                                  nsTArray<uint8_t>&& aData)
 {
+  GMP_LOG("ChromiumCDMParent::RecvDecrypted(this=%p, id=%u, status=%u)",
+          this,
+          aId,
+          aStatus);
+  for (size_t i = 0; i < mDecrypts.Length(); i++) {
+    if (mDecrypts[i]->mId == aId) {
+      mDecrypts[i]->PostResult(ToDecryptStatus(aStatus), aData);
+      mDecrypts.RemoveElementAt(i);
+      break;
+    }
+  }
   return IPC_OK();
 }
 
