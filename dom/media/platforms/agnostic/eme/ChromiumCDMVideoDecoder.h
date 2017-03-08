@@ -26,10 +26,8 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<DecodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  const char* GetDescriptionName() const override
-  {
-    return "Chromium CDM video decoder";
-  }
+  const char* GetDescriptionName() const override;
+  ConversionRequired NeedsConversion() const override;
 
 private:
   ~ChromiumCDMVideoDecoder();
@@ -40,6 +38,7 @@ private:
   RefPtr<AbstractThread> mGMPThread;
   RefPtr<layers::ImageContainer> mImageContainer;
   MozPromiseHolder<InitPromise> mInitPromise;
+  bool mConvertToAnnexB = false;
 };
 
 } // mozilla

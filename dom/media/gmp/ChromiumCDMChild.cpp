@@ -6,6 +6,7 @@
 #include "ChromiumCDMChild.h"
 #include "GMPContentChild.h"
 #include "WidevineUtils.h"
+#include "WidevineVideoFrame.h"
 #include "GMPLog.h"
 #include "GMPPlatform.h"
 #include "mozilla/Unused.h"
@@ -467,6 +468,54 @@ ChromiumCDMChild::RecvDecryptAndDecodeFrame(const CDMInputBuffer& aBuffer)
   MOZ_ASSERT(IsOnMessageLoopThread());
   GMP_LOG("ChromiumCDMChild::RecvDecryptAndDecodeFrame()");
   MOZ_ASSERT(mDecoderInitialized);
+
+  // The output frame may not have the same timestamp as the frame we put in.
+  // We may need to input a number of frames before we receive output. The
+  // CDM's decoder reorders to ensure frames output are in presentation order.
+  // So we need to store the durations of the frames input, and retrieve them
+  // on output.
+  mFrameDurations.Insert(aBuffer.mTimestamp(), aBuffer.mDuration());
+
+  cdm::InputBuffer input;
+  nsTArray<cdm::SubsampleEntry> subsamples;
+  InitInputBuffer(aBuffer, subsamples, input);
+
+  WidevineVideoFrame frame;
+  cdm::Status rv = mCDM->DecryptAndDecodeFrame(input, &frame);
+  GMP_LOG("WidevineVideoDecoder::Decode(timestamp=%" PRId64 ") rv=%d",
+          input.timestamp,
+          rv);
+
+  if (rv == cdm::kSuccess) {
+    // TODO: WidevineBuffers should hold a shmem instead of a array, and we can
+    // send the handle instead of copying the array here.
+
+    gmp::CDMVideoFrame output;
+    output.mFormat() = static_cast<cdm::VideoFormat>(frame.Format());
+    output.mImageWidth() = frame.Size().width;
+    output.mImageHeight() = frame.Size().height;
+    output.mData() = Move(
+      reinterpret_cast<WidevineBuffer*>(frame.FrameBuffer())->ExtractBuffer());
+    output.mYPlane() = { frame.PlaneOffset(cdm::VideoFrame::kYPlane),
+                         frame.Stride(cdm::VideoFrame::kYPlane) };
+    output.mUPlane() = { frame.PlaneOffset(cdm::VideoFrame::kUPlane),
+                         frame.Stride(cdm::VideoFrame::kUPlane) };
+    output.mVPlane() = { frame.PlaneOffset(cdm::VideoFrame::kVPlane),
+                         frame.Stride(cdm::VideoFrame::kVPlane) };
+    output.mTimestamp() = frame.Timestamp();
+
+    uint64_t duration = 0;
+    if (mFrameDurations.Find(frame.Timestamp(), duration)) {
+      output.mDuration() = duration;
+    }
+
+    Unused << SendDecoded(output);
+  } else if (rv == cdm::kNeedMoreData) {
+    Unused << SendDecoded(gmp::CDMVideoFrame());
+  } else {
+    Unused << SendDecodeFailed(rv);
+  }
+
   return IPC_OK();
 }
 
