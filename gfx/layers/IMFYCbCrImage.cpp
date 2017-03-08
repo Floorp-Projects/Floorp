@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMFYCbCrImage.h"
-#include "DeviceManagerD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
@@ -133,91 +132,6 @@ FinishTextures(IDirect3DDevice9* aDevice,
   return true;
 }
 
-static bool UploadData(IDirect3DDevice9* aDevice,
-                       RefPtr<IDirect3DTexture9>& aTexture,
-                       HANDLE& aHandle,
-                       uint8_t* aSrc,
-                       const gfx::IntSize& aSrcSize,
-                       int32_t aSrcStride)
-{
-  RefPtr<IDirect3DSurface9> surf;
-  D3DLOCKED_RECT rect;
-  aTexture = InitTextures(aDevice, aSrcSize, D3DFMT_A8, surf, aHandle, rect);
-  if (!aTexture) {
-    return false;
-  }
-
-  if (aSrcStride == rect.Pitch) {
-    memcpy(rect.pBits, aSrc, rect.Pitch * aSrcSize.height);
-  } else {
-    for (int i = 0; i < aSrcSize.height; i++) {
-      memcpy((uint8_t*)rect.pBits + i * rect.Pitch,
-             aSrc + i * aSrcStride,
-             aSrcSize.width);
-    }
-  }
-
-  return FinishTextures(aDevice, aTexture, surf);
-}
-
-DXGIYCbCrTextureData*
-IMFYCbCrImage::GetD3D9TextureData(Data aData, gfx::IntSize aSize)
-{
-  RefPtr<IDirect3DDevice9> device = DeviceManagerD3D9::GetDevice();
-  if (!device) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DTexture9> textureY;
-  HANDLE shareHandleY = 0;
-  if (!UploadData(device, textureY, shareHandleY,
-                  aData.mYChannel, aData.mYSize, aData.mYStride)) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DTexture9> textureCb;
-  HANDLE shareHandleCb = 0;
-  if (!UploadData(device, textureCb, shareHandleCb,
-                  aData.mCbChannel, aData.mCbCrSize, aData.mCbCrStride)) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DTexture9> textureCr;
-  HANDLE shareHandleCr = 0;
-  if (!UploadData(device, textureCr, shareHandleCr,
-                  aData.mCrChannel, aData.mCbCrSize, aData.mCbCrStride)) {
-    return nullptr;
-  }
-
-  RefPtr<IDirect3DQuery9> query;
-  HRESULT hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
-  hr = query->Issue(D3DISSUE_END);
-
-  int iterations = 0;
-  bool valid = false;
-  while (iterations < 10) {
-    HRESULT hr = query->GetData(nullptr, 0, D3DGETDATA_FLUSH);
-    if (hr == S_FALSE) {
-      Sleep(1);
-      iterations++;
-      continue;
-    }
-    if (hr == S_OK) {
-      valid = true;
-    }
-    break;
-  }
-
-  if (!valid) {
-    return nullptr;
-  }
-
-  return DXGIYCbCrTextureData::Create(TextureFlags::DEFAULT, textureY,
-                                      textureCb, textureCr, shareHandleY,
-                                      shareHandleCb, shareHandleCr, aSize,
-                                      aData.mYSize, aData.mCbCrSize);
-}
-
 DXGIYCbCrTextureData*
 IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
 {
@@ -314,22 +228,6 @@ IMFYCbCrImage::GetD3D11TextureData(Data aData, gfx::IntSize aSize)
 }
 
 TextureClient*
-IMFYCbCrImage::GetD3D9TextureClient(KnowsCompositor* aForwarder)
-{
-  DXGIYCbCrTextureData* textureData = GetD3D9TextureData(mData, GetSize());
-  if (textureData == nullptr) {
-   return nullptr;
-  }
-
-  mTextureClient = TextureClient::CreateWithData(
-    textureData, TextureFlags::DEFAULT,
-    aForwarder->GetTextureForwarder()
-  );
-
-  return mTextureClient;
-}
-
-TextureClient*
 IMFYCbCrImage::GetD3D11TextureClient(KnowsCompositor* aForwarder)
 {
   DXGIYCbCrTextureData* textureData = GetD3D11TextureData(mData, GetSize());
@@ -362,10 +260,6 @@ IMFYCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
 
   LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (!device || backend != LayersBackend::LAYERS_D3D11) {
-    if (backend == LayersBackend::LAYERS_D3D9 ||
-        backend == LayersBackend::LAYERS_D3D11) {
-      return GetD3D9TextureClient(aForwarder);
-    }
     return nullptr;
   }
   return GetD3D11TextureClient(aForwarder);
