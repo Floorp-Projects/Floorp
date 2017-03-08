@@ -75,7 +75,6 @@ class Connection;
 } // namespace network
 
 class PowerManager;
-class DeviceStorageAreaListener;
 class Presentation;
 class LegacyMozTCPSocket;
 class VRDisplay;
@@ -196,7 +195,6 @@ public:
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   already_AddRefed<WakeLock> RequestWakeLock(const nsAString &aTopic,
                                              ErrorResult& aRv);
-  DeviceStorageAreaListener* GetDeviceStorageAreaListener(ErrorResult& aRv);
 
   already_AddRefed<nsDOMDeviceStorage> GetDeviceStorage(const nsAString& aType,
                                                         ErrorResult& aRv);
@@ -327,7 +325,6 @@ private:
   RefPtr<time::TimeManager> mTimeManager;
   RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  RefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
   RefPtr<Presentation> mPresentation;
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
   nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
