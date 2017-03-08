@@ -609,7 +609,10 @@ GMPCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
   RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
-    session->SetExpiration(static_cast<double>(aExpiryTime));
+    // Expiry of 0 is interpreted as "never expire". See bug 1345341.
+    double t = (aExpiryTime == 0) ? std::numeric_limits<double>::quiet_NaN()
+                                  : static_cast<double>(aExpiryTime);
+    session->SetExpiration(t);
   }
 }
 
