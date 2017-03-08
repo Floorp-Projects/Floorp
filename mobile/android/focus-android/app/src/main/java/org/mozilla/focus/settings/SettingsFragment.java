@@ -25,24 +25,6 @@ public class SettingsFragment extends PreferenceFragment {
         super.onCreate(savedInstanceState);
 
         addPreferencesFromResource(R.xml.settings);
-
-        setupPreferences(getPreferenceScreen());
-    }
-
-    private void setupPreferences(PreferenceGroup group) {
-        for (int i = 0; i < group.getPreferenceCount(); i++) {
-            final Preference preference = group.getPreference(i);
-
-            if (preference instanceof PreferenceGroup) {
-                setupPreferences((PreferenceGroup) preference);
-            }
-
-            if (preference instanceof DefaultBrowserPreference
-                    && !((DefaultBrowserPreference) preference).shouldBeVisible()) {
-                group.removePreference(preference);
-                i--;
-            }
-        }
     }
 
     @Override
