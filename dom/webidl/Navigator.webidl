@@ -245,11 +245,6 @@ partial interface Navigator {
   readonly attribute boolean cpuHasSSE2;
 };
 
-partial interface Navigator {
-  [Throws, Pref="device.storage.enabled"]
-  readonly attribute DeviceStorageAreaListener deviceStorageAreaListener;
-};
-
 // nsIDOMNavigatorDeviceStorage
 partial interface Navigator {
   [Throws, Pref="device.storage.enabled"]
