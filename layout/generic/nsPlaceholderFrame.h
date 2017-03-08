@@ -137,7 +137,7 @@ public:
   }
 #endif
 
-  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const override;
+  nsStyleContext* GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame) const;
 
   bool RenumberFrameAndDescendants(int32_t* aOrdinal,
                                    int32_t aDepth,

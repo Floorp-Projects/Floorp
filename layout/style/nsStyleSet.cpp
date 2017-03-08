@@ -1841,11 +1841,22 @@ nsStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContex
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForPlaceholder(nsStyleContext* aParentContext)
+nsStyleSet::ResolveStyleForPlaceholder()
 {
-  return GetContext(aParentContext, mRuleTree, nullptr,
-                    nsCSSAnonBoxes::oofPlaceholder,
-                    CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+  RefPtr<nsStyleContext>& cache =
+    mNonInheritingStyleContexts[
+      static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::oofPlaceholder)];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
+  RefPtr<nsStyleContext> retval =
+    GetContext(nullptr, mRuleTree, nullptr,
+               nsCSSAnonBoxes::oofPlaceholder,
+               CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+  cache = retval;
+  return retval.forget();
 }
 
 void

@@ -232,7 +232,7 @@ class nsStyleSet final
   // even create style contexts for placeholders.  However, not doing any rule
   // matching for them is a first step.)
   already_AddRefed<nsStyleContext>
-  ResolveStyleForPlaceholder(nsStyleContext* aParentContext);
+  ResolveStyleForPlaceholder();
 
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the CSSPseudoElementType for the
