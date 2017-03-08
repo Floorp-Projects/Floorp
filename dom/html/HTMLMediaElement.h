@@ -617,7 +617,11 @@ public:
 
   void MozDumpDebugInfo();
 
+  // For use by mochitests. Enabling pref "media.test.video-suspend"
   void SetVisible(bool aVisible);
+
+  // For use by mochitests. Enabling pref "media.test.video-suspend"
+  bool HasSuspendTaint() const;
 
   // Synchronously, return the next video frame and mark the element unable to
   // participate in decode suspending.
