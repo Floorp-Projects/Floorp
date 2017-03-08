@@ -4,7 +4,7 @@
 "use strict";
 
 const {DOM, createClass} = require("devtools/client/shared/vendor/react");
-const {img, button} = DOM;
+const {img, button, span} = DOM;
 
 module.exports = createClass({
   displayName: "ToolboxTab",
@@ -56,7 +56,9 @@ module.exports = createClass({
         onClick: () => selectTool(id),
       },
       ...this.renderIcon(panelDefinition, isHighlighted),
-      iconOnly ? null : label
+      iconOnly ? null : span({
+        className: "devtools-tab-label"
+      }, label)
     );
   }
 });
