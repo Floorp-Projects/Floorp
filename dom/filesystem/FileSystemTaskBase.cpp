@@ -13,7 +13,9 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Unused.h"
 #include "nsProxyRelease.h"
 
@@ -103,6 +105,8 @@ private:
 
 } // anonymous namespace
 
+NS_IMPL_ISUPPORTS(FileSystemTaskChildBase, nsIIPCBackgroundChildCreateCallback)
+
 /**
  * FileSystemTaskBase class
  */
@@ -132,6 +136,27 @@ FileSystemTaskChildBase::Start()
 {
   mFileSystem->AssertIsOnOwningThread();
 
+  mozilla::ipc::PBackgroundChild* actor =
+    mozilla::ipc::BackgroundChild::GetForCurrentThread();
+  if (actor) {
+    ActorCreated(actor);
+  } else {
+    if (NS_WARN_IF(
+        !mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread(this))) {
+      MOZ_CRASH();
+    }
+  }
+}
+
+void
+FileSystemTaskChildBase::ActorFailed()
+{
+  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+}
+
+void
+FileSystemTaskChildBase::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
+{
   if (HasError()) {
     // In this case we don't want to use IPC at all.
     RefPtr<ErrorRunnable> runnable = new ErrorRunnable(this);
@@ -159,10 +184,7 @@ FileSystemTaskChildBase::Start()
   // mozilla::ipc::BackgroundChildImpl::DeallocPFileSystemRequestChild.
   NS_ADDREF_THIS();
 
-  // If we are here, PBackground must be up and running, because Start() is
-  // called only by FileSystemPermissionRequest, and that class takes care of
-  // PBackground initialization.
-  PBackgroundChild* actor =
+  mozilla::ipc::PBackgroundChild* actor =
     mozilla::ipc::BackgroundChild::GetForCurrentThread();
   MOZ_ASSERT(actor);
 
