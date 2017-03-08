@@ -27,25 +27,6 @@ interface Directory {
   readonly attribute DOMString name;
 
   /*
-   * Creates a new file or replaces an existing file with given data. The file
-   * should be a descendent of current directory.
-   *
-   * @param path The relative path of the new file to current directory.
-   * @param options It has two optional properties, 'ifExists' and 'data'.
-   * If 'ifExists' is 'fail' and the path already exists, createFile must fail;
-   * If 'ifExists' is 'replace', the path already exists, and is a file, create
-   * a new file to replace the existing one;
-   * If 'ifExists' is 'replace', the path already exists, but is a directory,
-   * createFile must fail.
-   * Otherwise, if no other error occurs, createFile will create a new file.
-   * The 'data' property contains the new file's content.
-   * @return If succeeds, the promise is resolved with the new created
-   * File object. Otherwise, rejected with a DOM error.
-   */
-  [Func="mozilla::dom::Directory::DeviceStorageEnabled", NewObject]
-  Promise<File> createFile(DOMString path, optional CreateFileOptions options);
-
-  /*
    * Creates a descendent directory. This method will create any intermediate
    * directories specified by the path segments.
    *
@@ -120,11 +101,4 @@ partial interface Directory {
 
   [Throws]
   Promise<sequence<File>> getFiles(optional boolean recursiveFlag = false);
-};
-
-enum CreateIfExistsMode { "replace", "fail" };
-
-dictionary CreateFileOptions {
-  CreateIfExistsMode ifExists = "fail";
-  (DOMString or Blob or ArrayBuffer or ArrayBufferView) data;
 };
