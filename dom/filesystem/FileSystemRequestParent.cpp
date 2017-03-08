@@ -6,7 +6,6 @@
 #include "mozilla/dom/FileSystemRequestParent.h"
 
 #include "CreateDirectoryTask.h"
-#include "CreateFileTask.h"
 #include "GetDirectoryListingTask.h"
 #include "GetFileOrDirectoryTask.h"
 #include "RemoveTask.h"
@@ -50,7 +49,6 @@ FileSystemRequestParent::Initialize(const FileSystemParams& aParams)
   switch (aParams.type()) {
 
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(CreateDirectory)
-    FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(CreateFile)
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(GetDirectoryListing)
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(GetFileOrDirectory)
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(GetFiles)
