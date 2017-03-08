@@ -657,6 +657,14 @@ JSCompartment::getTemplateLiteralObject(JSContext* cx, HandleObject rawStrings,
     return true;
 }
 
+JSObject*
+JSCompartment::getExistingTemplateLiteralObject(JSObject* rawStrings)
+{
+    TemplateRegistry::Ptr p = templateLiteralMap_.lookup(rawStrings);
+    MOZ_ASSERT(p);
+    return p->value();
+}
+
 void
 JSCompartment::traceOutgoingCrossCompartmentWrappers(JSTracer* trc)
 {
