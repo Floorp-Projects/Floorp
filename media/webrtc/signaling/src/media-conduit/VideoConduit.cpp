@@ -271,9 +271,11 @@ bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
     return false;
   }
 
+  MutexAutoLock lock(mCodecMutex);
+  // On the next StartTransmitting() or ConfigureSendMediaCodec, force
+  // building a new SendStream to switch SSRCs.
+  DeleteSendStream();
   if (wasTransmitting) {
-    MutexAutoLock lock(mCodecMutex);
-    DeleteSendStream();
     if (StartTransmitting() != kMediaConduitNoError) {
       return false;
     }
