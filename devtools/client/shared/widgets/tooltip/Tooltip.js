@@ -201,7 +201,7 @@ Tooltip.prototype = {
    */
   empty: function () {
     while (this.panel.hasChildNodes()) {
-      this.panel.removeChild(this.panel.firstChild);
+      this.panel.firstChild.remove();
     }
   },
 

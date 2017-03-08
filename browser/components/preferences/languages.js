@@ -97,7 +97,7 @@ var gLanguagesDialog = {
   _buildAvailableLanguageList() {
     var availableLanguagesPopup = document.getElementById("availableLanguagesPopup");
     while (availableLanguagesPopup.hasChildNodes())
-      availableLanguagesPopup.removeChild(availableLanguagesPopup.firstChild);
+      availableLanguagesPopup.firstChild.remove();
 
     // Sort the list of languages by name
     this._availableLanguagesList.sort(function(a, b) {
@@ -119,7 +119,7 @@ var gLanguagesDialog = {
 
   readAcceptLanguages() {
     while (this._activeLanguages.hasChildNodes())
-      this._activeLanguages.removeChild(this._activeLanguages.firstChild);
+      this._activeLanguages.firstChild.remove();
 
     var selectedIndex = 0;
     var preference = document.getElementById("intl.accept_languages");

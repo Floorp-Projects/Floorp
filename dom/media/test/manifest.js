@@ -1545,7 +1545,7 @@ function removeNodeAndSource(n) {
   n.srcObject = null;
   n.src = "";
   while (n.firstChild) {
-    n.removeChild(n.firstChild);
+    n.firstChild.remove();
   }
 }
 

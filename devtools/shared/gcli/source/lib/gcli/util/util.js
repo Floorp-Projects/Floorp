@@ -388,7 +388,7 @@ exports.createElement = function(doc, tag) {
  */
 exports.clearElement = function(elem) {
   while (elem.hasChildNodes()) {
-    elem.removeChild(elem.firstChild);
+    elem.firstChild.remove();
   }
 };
 

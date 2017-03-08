@@ -241,7 +241,7 @@ var ctrlTab = {
     aPreview._tab = aTab;
 
     if (aPreview.firstChild)
-      aPreview.removeChild(aPreview.firstChild);
+      aPreview.firstChild.remove();
     if (aTab) {
       let canvasWidth = this.canvasWidth;
       let canvasHeight = this.canvasHeight;

@@ -306,7 +306,7 @@ function setText(id, value) {
     element.value = value;
   else {
     if (element.hasChildNodes())
-      element.removeChild(element.firstChild);
+      element.firstChild.remove();
     var textNode = document.createTextNode(value);
     element.appendChild(textNode);
   }

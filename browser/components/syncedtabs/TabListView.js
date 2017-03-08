@@ -169,7 +169,7 @@ TabListView.prototype = {
   _clearChilden(node) {
     let parent = node || this.container;
     while (parent.firstChild) {
-      parent.removeChild(parent.firstChild);
+      parent.firstChild.remove();
     }
   },
 

@@ -583,7 +583,7 @@ function populateAncestorList(directory) {
   var menu = document.getElementById("lookInMenu");
 
   while (menu.hasChildNodes()) {
-    menu.removeChild(menu.firstChild);
+    menu.firstChild.remove();
   }
 
   var menuItem = document.createElement("menuitem");
