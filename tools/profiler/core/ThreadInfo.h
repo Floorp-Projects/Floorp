@@ -14,7 +14,7 @@
 #include "platform.h"
 
 class ThreadInfo {
- public:
+public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
              mozilla::NotNull<PseudoStack*> aPseudoStack, void* aStackTop);
 
@@ -66,7 +66,6 @@ class ThreadInfo {
 public:
   bool HasProfile() { return mHasProfile; }
 
-  mozilla::Mutex& GetMutex();
   void StreamJSON(ProfileBuffer* aBuffer, SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aStartTime, double aSinceTime);
 
@@ -104,7 +103,6 @@ private:
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
-  mozilla::UniquePtr<mozilla::Mutex> mMutex;
   ThreadResponsiveness mRespInfo;
 };
 
