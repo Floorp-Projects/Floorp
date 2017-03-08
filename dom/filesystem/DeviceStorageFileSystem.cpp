@@ -11,6 +11,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -18,6 +19,8 @@
 #include "nsIFile.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
