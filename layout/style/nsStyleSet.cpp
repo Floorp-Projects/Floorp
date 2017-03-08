@@ -1728,10 +1728,10 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     // because at this point the parameter is more than just the element
     // for animation; it's also used for the SetBodyTextColor call when
     // it's the body element.
-    // However, we only want to set the flag to call CheckAnimationRule
+    // However, we only want to set the flag to call UpdateAnimations
     // if we're dealing with a replacement (such as style attribute
     // replacement) that could lead to the animation property changing,
-    // and we explicitly do NOT want to call CheckAnimationRule when
+    // and we explicitly do NOT want to call UpdateAnimations when
     // we're trying to do an animation-only update.
     if (aReplacements & ~(eRestyle_CSSTransitions | eRestyle_CSSAnimations)) {
       flags |= eDoAnimation;
