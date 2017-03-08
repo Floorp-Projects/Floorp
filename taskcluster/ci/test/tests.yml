@@ -1,7 +1,7 @@
 # Each stanza here describes a particular test suite or sub-suite.  These are
 # processed through the transformations described in kind.yml to produce a
-# bunch of tasks.  See the schema in `test-descriptions.py` for a description
-# of the fields used here.
+# bunch of tasks.  See the schema in `taskcluster/taskgraph/transforms/tests.py`
+# for a description of the fields used here.
 
 # Note that these are in lexical order
 
