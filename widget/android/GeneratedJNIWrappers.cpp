@@ -1000,6 +1000,33 @@ auto GeckoThread::State::RUNNING() -> State::LocalRef
 const char GeckoView::name[] =
         "org/mozilla/gecko/GeckoView";
 
+constexpr char GeckoView::SetState_t::name[];
+constexpr char GeckoView::SetState_t::signature[];
+
+auto GeckoView::SetState(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<SetState_t>::Call(GeckoView::mCtx, nullptr, a0);
+}
+
+const char GeckoView::State::name[] =
+        "org/mozilla/gecko/GeckoView$State";
+
+constexpr char GeckoView::State::INITIAL_t::name[];
+constexpr char GeckoView::State::INITIAL_t::signature[];
+
+auto GeckoView::State::INITIAL() -> State::LocalRef
+{
+    return mozilla::jni::Field<INITIAL_t>::Get(State::Context(), nullptr);
+}
+
+constexpr char GeckoView::State::READY_t::name[];
+constexpr char GeckoView::State::READY_t::signature[];
+
+auto GeckoView::State::READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<READY_t>::Get(State::Context(), nullptr);
+}
+
 const char GeckoView::Window::name[] =
         "org/mozilla/gecko/GeckoView$Window";
 
