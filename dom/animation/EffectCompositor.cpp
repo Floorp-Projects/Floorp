@@ -19,8 +19,10 @@
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
+#include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
+#include "nsIAtom.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"
@@ -971,6 +973,41 @@ EffectCompositor::PreTraverse()
       // about to restyle it.
       iter.Remove();
     }
+  }
+}
+
+void
+EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+
+  if (aPseudoTagOrNull &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+    return;
+  }
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+
+  PseudoElementHashEntry::KeyType key = { aElement, pseudoType };
+
+  for (auto& elementsToRestyle : mElementsToRestyle) {
+    if (!elementsToRestyle.Get(key)) {
+      // Ignore throttled restyle and no restyle request.
+      continue;
+    }
+
+    EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
+    if (effects) {
+      for (KeyframeEffectReadOnly* effect : *effects) {
+        effect->GetAnimation()->WillComposeStyle();
+      }
+    }
+
+    elementsToRestyle.Remove(key);
   }
 }
 

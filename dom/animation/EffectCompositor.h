@@ -19,6 +19,7 @@
 #include "nsTArray.h"
 
 class nsCSSPropertyIDSet;
+class nsIAtom;
 class nsIFrame;
 class nsIStyleRule;
 class nsPresContext;
@@ -237,6 +238,9 @@ public:
   // traversal (e.g. changing member variables) for all elements that we expect
   // to restyle on the next traversal.
   void PreTraverse();
+
+  // Similar to the above but only for the (pseudo-)element.
+  void PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull);
 
 private:
   ~EffectCompositor() = default;
