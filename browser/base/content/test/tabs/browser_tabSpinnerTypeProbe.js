@@ -35,9 +35,9 @@ add_task(function* setup() {
  *        Resolves once the hang is done.
  */
 function hangContentProcess(browser, aMs) {
-  return ContentTask.spawn(browser, aMs, function*(aMs) {
+  return ContentTask.spawn(browser, aMs, function*(ms) {
     let then = Date.now();
-    while (Date.now() - then < aMs) {
+    while (Date.now() - then < ms) {
       // Let's burn some CPU...
     }
   });
@@ -114,7 +114,7 @@ add_task(function* test_unseenOld_spinner_type_probe() {
     url: "http://example.com",
   }, function*(browser) {
     const NEWNESS_THRESHOLD = gBrowser._getSwitcher().NEWNESS_THRESHOLD;
-    let originalTab = gBrowser.getTabForBrowser(browser);
+
     // First, create a new background tab, ensuring that it's in the same process
     // as the current one.
     let bgTab = gBrowser.addTab("about:blank", {
@@ -157,7 +157,6 @@ add_task(function* test_unseenNew_spinner_type_probe() {
     gBrowser,
     url: "http://example.com",
   }, function*(browser) {
-    let originalTab = gBrowser.getTabForBrowser(browser);
     // First, create a new background tab, ensuring that it's in the same process
     // as the current one.
     let bgTab = gBrowser.addTab("about:blank", {
