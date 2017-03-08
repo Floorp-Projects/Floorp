@@ -11,7 +11,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES = [
-    'TestScalars.cpp',
+    'TestHistograms.cpp',
+    'TestScalars.cpp'
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
