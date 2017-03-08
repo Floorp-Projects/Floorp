@@ -14,6 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class BlobImpl;
+class FileSystemRemoveParams;
 class Promise;
 
 class RemoveTaskChild final : public FileSystemTaskChildBase
