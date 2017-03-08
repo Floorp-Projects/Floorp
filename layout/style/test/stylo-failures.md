@@ -490,7 +490,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `box-shadow'` [6]
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
-  * test_property_syntax_errors.html `(-1)`: factor value in filter functions servo/servo#15494 [42]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
