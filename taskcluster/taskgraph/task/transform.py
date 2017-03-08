@@ -84,14 +84,11 @@ class TransformTask(base.Task):
     """
 
     def __init__(self, kind, task):
-        self.dependencies = task.get('dependencies', {})
         self.when = task.get('when', {})
         super(TransformTask, self).__init__(kind, task['label'],
                                             task['attributes'], task['task'],
-                                            index_paths=task.get('index-paths'))
-
-    def get_dependencies(self, taskgraph):
-        return [(label, name) for name, label in self.dependencies.items()]
+                                            index_paths=task.get('index-paths'),
+                                            dependencies=task.get('dependencies'))
 
     def optimize(self, params):
         bbb_task = False

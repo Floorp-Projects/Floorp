@@ -198,7 +198,7 @@ class TaskGraphGenerator(object):
         logger.info("Generating full task graph")
         edges = set()
         for t in full_task_set:
-            for dep, depname in t.get_dependencies(full_task_set):
+            for depname, dep in t.dependencies.iteritems():
                 edges.add((t.label, dep, depname))
 
         full_task_graph = TaskGraph(all_tasks,
