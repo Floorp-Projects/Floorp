@@ -270,6 +270,9 @@ private:
    */
   void PreTraverse();
 
+  already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
+                                                           nsIAtom* aPseudoTag);
+
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
