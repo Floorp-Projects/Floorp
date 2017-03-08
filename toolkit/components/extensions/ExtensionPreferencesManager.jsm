@@ -22,6 +22,7 @@
 this.EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -33,6 +34,28 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
   return new Preferences({defaultBranch: true});
 });
+
+/* eslint-disable mozilla/balanced-listeners */
+Management.on("shutdown", (type, extension) => {
+  switch (extension.shutdownReason) {
+    case "ADDON_DISABLE":
+    case "ADDON_DOWNGRADE":
+    case "ADDON_UPGRADE":
+      this.ExtensionPreferencesManager.disableAll(extension);
+      break;
+
+    case "ADDON_UNINSTALL":
+      this.ExtensionPreferencesManager.removeAll(extension);
+      break;
+  }
+});
+
+Management.on("startup", (type, extension) => {
+  if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(extension.startupReason)) {
+    this.ExtensionPreferencesManager.enableAll(extension);
+  }
+});
+/* eslint-enable mozilla/balanced-listeners */
 
 const STORE_TYPE = "prefs";
 
