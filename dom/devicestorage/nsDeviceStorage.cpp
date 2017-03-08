@@ -3471,7 +3471,7 @@ nsDOMDeviceStorage::GetRoot(ErrorResult& aRv)
     mFileSystem = new DeviceStorageFileSystem(mStorageType, mStorageName);
     mFileSystem->Init(this);
   }
-  return mozilla::dom::Directory::GetRoot(mFileSystem, aRv);
+  return nullptr;
 }
 
 void

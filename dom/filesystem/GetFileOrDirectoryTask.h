@@ -23,7 +23,6 @@ public:
   static already_AddRefed<GetFileOrDirectoryTaskChild>
   Create(FileSystemBase* aFileSystem,
          nsIFile* aTargetPath,
-         bool aDirectoryOnly,
          ErrorResult& aRv);
 
   virtual
@@ -47,10 +46,8 @@ protected:
   HandlerCallback() override;
 
 private:
-  // If aDirectoryOnly is set, we should ensure that the target is a directory.
   GetFileOrDirectoryTaskChild(FileSystemBase* aFileSystem,
-                              nsIFile* aTargetPath,
-                              bool aDirectoryOnly);
+                              nsIFile* aTargetPath);
 
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIFile> mTargetPath;
