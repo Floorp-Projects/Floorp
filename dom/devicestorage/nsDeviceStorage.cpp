@@ -11,7 +11,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
-#include "mozilla/dom/DeviceStorageChangeEvent.h"
 #include "mozilla/dom/DeviceStorageFileSystem.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
 #include "mozilla/dom/Directory.h"
@@ -3542,25 +3541,6 @@ nsDOMDeviceStorage::OnWritableNameChanged()
   nsAdoptingString DefaultLocation;
   GetDefaultStorageName(mStorageType, DefaultLocation);
 
-  DeviceStorageChangeEventInit init;
-  init.mBubbles = true;
-  init.mCancelable = false;
-  init.mPath = DefaultLocation;
-
-  if (mIsDefaultLocation) {
-    init.mReason.AssignLiteral("default-location-changed");
-  } else {
-    init.mReason.AssignLiteral("became-default-location");
-  }
-
-  RefPtr<DeviceStorageChangeEvent> event =
-    DeviceStorageChangeEvent::Constructor(this,
-                                          NS_LITERAL_STRING(STORAGE_CHANGE_EVENT),
-                                          init);
-  event->SetTrusted(true);
-
-  bool ignore;
-  DispatchEvent(event, &ignore);
   mIsDefaultLocation = Default();
 }
 
@@ -3573,21 +3553,6 @@ nsDOMDeviceStorage::DispatchStatusChangeEvent(nsAString& aStatus)
     return;
   }
   mLastStatus = aStatus;
-
-  DeviceStorageChangeEventInit init;
-  init.mBubbles = true;
-  init.mCancelable = false;
-  init.mPath = mStorageName;
-  init.mReason = aStatus;
-
-  RefPtr<DeviceStorageChangeEvent> event =
-    DeviceStorageChangeEvent::Constructor(this,
-                                          NS_LITERAL_STRING(STORAGE_CHANGE_EVENT),
-                                          init);
-  event->SetTrusted(true);
-
-  bool ignore;
-  DispatchEvent(event, &ignore);
 }
 
 void
@@ -3598,20 +3563,6 @@ nsDOMDeviceStorage::DispatchStorageStatusChangeEvent(nsAString& aStorageStatus)
     return;
   }
   mLastStorageStatus = aStorageStatus;
-
-  DeviceStorageChangeEventInit init;
-  init.mBubbles = true;
-  init.mCancelable = false;
-  init.mPath = mStorageName;
-  init.mReason = aStorageStatus;
-
-  RefPtr<DeviceStorageChangeEvent> event =
-    DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("storage-state-change"),
-                                          init);
-  event->SetTrusted(true);
-
-  bool ignore;
-  DispatchEvent(event, &ignore);
 }
 #endif
 
@@ -3686,20 +3637,6 @@ nsDOMDeviceStorage::Notify(const char* aReason, DeviceStorageFile* aFile)
     return NS_OK;
   }
 
-  DeviceStorageChangeEventInit init;
-  init.mBubbles = true;
-  init.mCancelable = false;
-  aFile->GetFullPath(init.mPath);
-  init.mReason.AssignWithConversion(aReason);
-
-  RefPtr<DeviceStorageChangeEvent> event =
-    DeviceStorageChangeEvent::Constructor(this,
-                                          NS_LITERAL_STRING(STORAGE_CHANGE_EVENT),
-                                          init);
-  event->SetTrusted(true);
-
-  bool ignore;
-  DispatchEvent(event, &ignore);
   return NS_OK;
 }
 
