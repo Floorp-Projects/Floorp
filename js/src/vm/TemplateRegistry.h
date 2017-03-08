@@ -8,8 +8,8 @@
 #define vm_TemplateRegistry_h
 
 #include "jsobj.h"
-#include "js/GCHashTable.h"
 #include "gc/Marking.h"
+#include "js/GCHashTable.h"
 
 namespace js {
 
