@@ -16,14 +16,15 @@ class FakeTask(base.Task):
 
     def __init__(self, **kwargs):
         self.i = kwargs.pop('i')
-        super(FakeTask, self).__init__(**kwargs)
 
-    def get_dependencies(self, full_task_set):
         i = self.i
         if i > 0:
-            return [('{}-t-{}'.format(self.kind, i - 1), 'prev')]
+            dependencies = {'prev': '{}-t-{}'.format(kwargs['kind'], i - 1)}
         else:
-            return []
+            dependencies = {}
+        kwargs['dependencies'] = dependencies
+
+        super(FakeTask, self).__init__(**kwargs)
 
     def optimize(self, params):
         return False, None

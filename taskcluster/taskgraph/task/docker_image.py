@@ -40,8 +40,6 @@ def load_tasks(kind, path, config, params, loaded_tasks):
 
 
 class DockerImageTask(transform.TransformTask):
-    def get_dependencies(self, taskgraph):
-        return []
 
     def optimize(self, params):
         optimized, taskId = super(DockerImageTask, self).optimize(params)

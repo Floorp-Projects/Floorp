@@ -18,6 +18,9 @@ class Task(object):
     - label; the label for this task
     - attributes: a dictionary of attributes for this task (used for filtering)
     - task: the task definition (JSON-able dictionary)
+    - index_paths: index paths where equivalent tasks might be found for optimization
+    - dependencies: tasks this one depends on, in the form {name: label}, for example
+      {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
 
     And later, as the task-graph processing proceeds:
 
@@ -31,7 +34,8 @@ class Task(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, kind, label, attributes, task, index_paths=None):
+    def __init__(self, kind, label, attributes, task,
+                 index_paths=None, dependencies=None):
         self.kind = kind
         self.label = label
         self.attributes = attributes
@@ -43,6 +47,7 @@ class Task(object):
         self.attributes['kind'] = kind
 
         self.index_paths = index_paths or ()
+        self.dependencies = dependencies or {}
 
     def __eq__(self, other):
         return self.kind == other.kind and \
@@ -50,17 +55,8 @@ class Task(object):
             self.attributes == other.attributes and \
             self.task == other.task and \
             self.task_id == other.task_id and \
-            self.index_paths == other.index_paths
-
-    @abc.abstractmethod
-    def get_dependencies(self, taskgraph):
-        """
-        Get the set of task labels this task depends on, by querying the full
-        task set, given as `taskgraph`.
-
-        Returns a list of (task_label, dependency_name) pairs describing the
-        dependencies.
-        """
+            self.index_paths == other.index_paths and \
+            self.dependencies == other.dependencies
 
     def optimize(self, params):
         """
