@@ -172,4 +172,37 @@ var tests = [
       notification.remove();
     }
   },
+  // Test that focus is not moved out of a content element if autofocus is not set.
+  { id: "Test#6",
+    *run() {
+      let id = this.id;
+      yield BrowserTestUtils.withNewTab("data:text/html,<input id='test-input'/>", function*(browser) {
+        let notifyObj = new BasicNotification(id);
+        yield ContentTask.spawn(browser, {}, function() {
+          content.document.getElementById("test-input").focus();
+        });
+
+        let opened = waitForNotificationPanel();
+        let notification = showNotification(notifyObj);
+        yield opened;
+
+        // Check that the focused element in the chrome window
+        // is either the browser in case we're running on e10s
+        // or the input field in case of non-e10s.
+        if (gMultiProcessBrowser) {
+          is(Services.focus.focusedElement, browser);
+        } else {
+          is(Services.focus.focusedElement, browser.contentDocument.getElementById("test-input"));
+        }
+
+        // Check that the input field is still focused inside the browser.
+        yield ContentTask.spawn(browser, {}, function() {
+          is(content.document.activeElement, content.document.getElementById("test-input"));
+        });
+
+        notification.remove();
+        goNext();
+      });
+    },
+  },
 ];
