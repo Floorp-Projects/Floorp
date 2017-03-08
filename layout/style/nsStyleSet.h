@@ -209,18 +209,29 @@ class nsStyleSet final
   already_AddRefed<nsStyleContext>
   ResolveStyleForText(nsIContent* aTextNode, nsStyleContext* aParentContext);
 
-  // Get a style context for a non-element (which no rules will match)
-  // other than a text node, such as placeholder frames, and the
-  // nsFirstLetterFrame for everything after the first letter.
+  // Get a style context for a first-letter continuation (which no rules will
+  // match).
   //
-  // The returned style context will have nsCSSAnonBoxes::mozOtherNonElement as
+  // The returned style context will have
+  // nsCSSAnonBoxes::firstLetterContinuation as its pseudo.
+  //
+  // (Perhaps nsCSSAnonBoxes::firstLetterContinuation should go away and we
+  // shouldn't even create style contexts for such frames.  However, not doing
+  // any rule matching for them is a first step.  And right now we do use this
+  // style context for some things)
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
+
+  // Get a style context for a placeholder frame (which no rules will match).
+  //
+  // The returned style context will have nsCSSAnonBoxes::oofPlaceholder as
   // its pseudo.
   //
-  // (Perhaps mozOtherNonElement should go away and we shouldn't even
-  // create style contexts for such content nodes.  However, not doing
-  // any rule matching for them is a first step.)
+  // (Perhaps nsCSSAnonBoxes::oofPlaceholder should go away and we shouldn't
+  // even create style contexts for placeholders.  However, not doing any rule
+  // matching for them is a first step.)
   already_AddRefed<nsStyleContext>
-  ResolveStyleForOtherNonElement(nsStyleContext* aParentContext);
+  ResolveStyleForPlaceholder(nsStyleContext* aParentContext);
 
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the CSSPseudoElementType for the

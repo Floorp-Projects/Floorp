@@ -82,13 +82,46 @@ public:
                   LazyComputeBehavior aMayCompute,
                   TreeMatchContext& aTreeMatchContext);
 
+  // Get a style context for a text node (which no rules will match).
+  //
+  // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
+  //
+  // (Perhaps mozText should go away and we shouldn't even create style
+  // contexts for such content nodes, when text-combine-upright is not
+  // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<nsStyleContext>
   ResolveStyleForText(nsIContent* aTextNode,
                       nsStyleContext* aParentContext);
 
+  // Get a style context for a first-letter continuation (which no rules will
+  // match).
+  //
+  // The returned style context will have
+  // nsCSSAnonBoxes::firstLetterContinuation as its pseudo.
+  //
+  // (Perhaps nsCSSAnonBoxes::firstLetterContinuation should go away and we
+  // shouldn't even create style contexts for such frames.  However, not doing
+  // any rule matching for them is a first step.  And right now we do use this
+  // style context for some things)
   already_AddRefed<nsStyleContext>
-  ResolveStyleForOtherNonElement(nsStyleContext* aParentContext);
+  ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
 
+  // Get a style context for a placeholder frame (which no rules will match).
+  //
+  // The returned style context will have nsCSSAnonBoxes::oofPlaceholder as
+  // its pseudo.
+  //
+  // (Perhaps nsCSSAnonBoxes::oofPaceholder should go away and we shouldn't even
+  // create style contexts for placeholders.  However, not doing
+  // any rule matching for them is a first step.)
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForPlaceholder(nsStyleContext* aParentContext);
+
+  // Get a style context for a pseudo-element.  aParentElement must be
+  // non-null.  aPseudoID is the CSSPseudoElementType for the
+  // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
+  // type is one that allows user action pseudo-classes after it or allows
+  // style attributes; otherwise, it is ignored.
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             mozilla::CSSPseudoElementType aType,
