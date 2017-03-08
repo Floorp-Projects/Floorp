@@ -9,7 +9,7 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="scrollable" style="font-family:monospace; font-size: 18px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
+<div id="scrollable" style="font-family:'Courier New'; font-size: 18px; line-height: 1; overflow: auto; width: 200px; height: 200px;">
   <div id="scrolled" style="font-size: 64px; width: 5000px; height: 5000px;">
     Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
     Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text. Tere is a lot of text.<br>
@@ -44,6 +44,7 @@
 </div>
 <pre id="test">
 <script type="application/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
