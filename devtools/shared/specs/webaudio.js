@@ -14,9 +14,9 @@ const {
 exports.NODE_CREATION_METHODS = [
   "createBufferSource", "createMediaElementSource", "createMediaStreamSource",
   "createMediaStreamDestination", "createScriptProcessor", "createAnalyser",
-  "createGain", "createDelay", "createBiquadFilter", "createIIRFilter", "createWaveShaper",
+  "createGain", "createDelay", "createBiquadFilter", "createWaveShaper",
   "createPanner", "createConvolver", "createChannelSplitter", "createChannelMerger",
-  "createDynamicsCompressor", "createOscillator", "createStereoPanner", "createConstantSource"
+  "createDynamicsCompressor", "createOscillator", "createStereoPanner"
 ];
 
 exports.AUTOMATION_METHODS = [
