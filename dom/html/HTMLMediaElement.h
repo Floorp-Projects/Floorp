@@ -619,6 +619,14 @@ public:
 
   void SetVisible(bool aVisible);
 
+  // Synchronously, return the next video frame and mark the element unable to
+  // participate in decode suspending.
+  //
+  // This function is synchronous for cases where decoding has been suspended
+  // and JS needs a frame to use in, eg., nsLayoutUtils::SurfaceFromElement()
+  // via drawImage().
+  layers::Image* GetCurrentImage();
+
   already_AddRefed<DOMMediaStream> GetSrcObject() const;
   void SetSrcObject(DOMMediaStream& aValue);
   void SetSrcObject(DOMMediaStream* aValue);
@@ -1713,6 +1721,10 @@ private:
 
   // True if the audio track is not silent.
   bool mIsAudioTrackAudible;
+
+  // True if media element has been marked as 'tainted' and can't
+  // participate in video decoder suspending.
+  bool mHasSuspendTaint;
 
   Visibility mVisibilityState;
 
