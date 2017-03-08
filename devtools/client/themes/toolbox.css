@@ -91,6 +91,7 @@
 
 /* Toolbox tabs */
 .devtools-tab {
+  position: relative;
   display: flex;
   align-items: center;
   min-width: 32px;
@@ -100,25 +101,43 @@
   border-style: solid;
   border-width: 0;
   border-inline-start-width: 1px;
-  padding-inline-end: 10px;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   background-color: transparent;
+}
+
+
+.devtools-tab-label {
+  mask-image: linear-gradient(to left, transparent 0, black 6px);
+  /* Set the end padding on the label to make sure the label gets faded out properly */
+  padding-inline-end: 10px;
+  min-width: 1px;
+}
+
+.devtools-tab-label:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent 0, black 6px);
 }
 
 /* Hide tab icons when the viewport width is limited */
 @media (max-width: 700px) {
-  /* Hide the icons, reduce the margins to 5px and set the width to 0 */
+  .devtools-tab-label {
+    /* Set the end padding on the label to make sure the label gets faded out properly */
+    padding-inline-end: 5px;
+  }
+
+  .devtools-tab:not(.devtools-tab-icon-only) {
+    padding-inline-start: 5px !important;
+  }
+
+  /* Hide the icons */
   .devtools-tab:not(.devtools-tab-icon-only) > img {
-    visibility: hidden;
-    margin-inline-start: 5px;
-    margin-inline-end: 0;
-    width: 0;
+    display: none;
   }
 }
 
 .devtools-tab-icon-only {
-  padding-inline-end: 2px;
+  min-width: 24px;
 }
 
 /* Save space on the tab-strip in Firebug theme */
@@ -215,15 +234,10 @@
 }
 
 .toolbox-tabs .devtools-tab.selected,
-.toolbox-tabs .devtools-tab.highlighted {
-  border-width: 0;
-  padding-inline-start: 1px;
-}
-
+.toolbox-tabs .devtools-tab.highlighted,
 .toolbox-tabs .devtools-tab.selected + .devtools-tab,
 .toolbox-tabs .devtools-tab.highlighted + .devtools-tab {
-  border-inline-start-width: 0;
-  padding-inline-start: 1px;
+  border-inline-start-color: transparent;
 }
 
 .toolbox-tabs .devtools-tab:first-child {
@@ -248,8 +262,7 @@
   padding-inline-start: 1px;
 }
 #toolbox-option-container img {
-  margin-inline-end: 6px;
-  margin-inline-start: 6px;
+  margin: 0 3px;
 }
 
 /* Toolbox controls */
