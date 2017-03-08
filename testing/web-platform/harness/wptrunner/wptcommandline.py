@@ -119,7 +119,7 @@ scheme host and port.""")
                               type=abs_path, help="Binary to run tests against")
     config_group.add_argument('--binary-arg',
                               default=[], action="append", dest="binary_args",
-                              help="Extra argument for the binary (servo)")
+                              help="Extra argument for the binary")
     config_group.add_argument("--webdriver-binary", action="store", metavar="BINARY",
                               type=abs_path, help="WebDriver server binary to use")
 
@@ -180,9 +180,6 @@ scheme host and port.""")
     servo_group.add_argument("--user-stylesheet",
                              default=[], action="append", dest="user_stylesheets",
                              help="Inject a user CSS stylesheet into every test.")
-    servo_group.add_argument("--servo-backend",
-                             default="webrender", choices=["cpu", "webrender"],
-                             help="Rendering backend to use with Servo.")
 
 
     parser.add_argument("test_list", nargs="*",
