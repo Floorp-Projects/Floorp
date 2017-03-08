@@ -10870,22 +10870,16 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
     while (inheritFrame->GetContent()->IsNativeAnonymous()) {
       inheritFrame = inheritFrame->GetParent();
     }
-    nsIFrame* styleParentFrame =
-      nsFrame::CorrectStyleParentFrame(inheritFrame, pseudo);
-    // The only way we can not have a style parent now is if inheritFrame is the
-    // canvas frame and we're the NAC parent for all the things added via
-    // nsIDocument::InsertAnonymousContent.
-    MOZ_ASSERT_IF(!styleParentFrame,
-                  inheritFrame->GetType() == nsGkAtoms::canvasFrame);
-    // And that anonymous div has no pseudo.
-    MOZ_ASSERT_IF(!styleParentFrame, !pseudo);
+    if (inheritFrame->GetType() == nsGkAtoms::canvasFrame) {
+      // CorrectStyleParentFrame returns nullptr if the prospective parent is
+      // the canvas frame, so avoid calling it in that situation.
+    } else {
+      inheritFrame = nsFrame::CorrectStyleParentFrame(inheritFrame, pseudo);
+    }
+    Element* originating = pseudo ? inheritFrame->GetContent()->AsElement() : nullptr;
 
-    Element* originating =
-      pseudo ? styleParentFrame->GetContent()->AsElement() : nullptr;
-    nsStyleContext* parentStyle =
-      styleParentFrame ? styleParentFrame->StyleContext() : nullptr;
     styleContext =
-      ResolveStyleContext(parentStyle, content, &aState, originating);
+      ResolveStyleContext(inheritFrame->StyleContext(), content, &aState, originating);
 
     nsTArray<nsIAnonymousContentCreator::ContentInfo>* anonChildren = nullptr;
     if (!aAnonymousItems[i].mChildren.IsEmpty()) {
