@@ -161,8 +161,7 @@ elif CONFIG['GNU_CXX']:
         '-Wno-unused-function',
     ]
     CXXFLAGS += [
-        '-Wno-format',
-        '-Wno-format-security',
+        '-Werror=format',
         '-Wno-multichar',
         '-Wno-sign-compare',
         '-Wno-unused',
