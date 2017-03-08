@@ -206,8 +206,8 @@ components/FxAccountsPush.js
 crashreporter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib
 crashreporter.app/Contents/Resources/English.lproj/MainMenuRTL.nib/classes.nib
 # firefox/firefox-bin is bug 658850
-firefox
-firefox-bin
+@MOZ_APP_NAME@
+@MOZ_APP_NAME@-bin
 modules/FxAccountsPush.js
 modules/commonjs/index.js
 modules/commonjs/sdk/ui/button/view/events.js
