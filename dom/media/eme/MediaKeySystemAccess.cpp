@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/Preferences.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
@@ -448,16 +449,11 @@ CanDecryptAndDecode(const nsString& aKeySystem,
 static bool
 ToSessionType(const nsAString& aSessionType, MediaKeySessionType& aOutType)
 {
-  using MediaKeySessionTypeValues::strings;
-  const char* temporary =
-    strings[static_cast<uint32_t>(MediaKeySessionType::Temporary)].value;
-  if (aSessionType.EqualsASCII(temporary)) {
+  if (aSessionType.Equals(ToString(MediaKeySessionType::Temporary))) {
     aOutType = MediaKeySessionType::Temporary;
     return true;
   }
-  const char* persistentLicense =
-    strings[static_cast<uint32_t>(MediaKeySessionType::Persistent_license)].value;
-  if (aSessionType.EqualsASCII(persistentLicense)) {
+  if (aSessionType.Equals(ToString(MediaKeySessionType::Persistent_license))) {
     aOutType = MediaKeySessionType::Persistent_license;
     return true;
   }
@@ -822,10 +818,9 @@ UnboxSessionTypes(const Optional<Sequence<nsString>>& aSessionTypes)
   if (aSessionTypes.WasPassed()) {
     sessionTypes = aSessionTypes.Value();
   } else {
-    using MediaKeySessionTypeValues::strings;
-    const char* temporary = strings[static_cast<uint32_t>(MediaKeySessionType::Temporary)].value;
     // Note: fallible. Results in an empty array.
-    sessionTypes.AppendElement(NS_ConvertUTF8toUTF16(nsDependentCString(temporary)), mozilla::fallible);
+    sessionTypes.AppendElement(ToString(MediaKeySessionType::Temporary),
+                               mozilla::fallible);
   }
   return sessionTypes;
 }
