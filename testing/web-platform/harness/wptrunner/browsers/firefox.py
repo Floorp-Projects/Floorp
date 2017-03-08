@@ -58,7 +58,8 @@ def browser_kwargs(**kwargs):
             "certutil_binary": kwargs["certutil_binary"],
             "ca_certificate_path": kwargs["ssl_env"].ca_cert_path(),
             "e10s": kwargs["gecko_e10s"],
-            "stackfix_dir": kwargs["stackfix_dir"]}
+            "stackfix_dir": kwargs["stackfix_dir"],
+            "binary_args": kwargs["binary_args"]}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
@@ -76,6 +77,13 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
             executor_kwargs["timeout_multiplier"] = 3
     if test_type == "wdspec":
         executor_kwargs["webdriver_binary"] = kwargs.get("webdriver_binary")
+        fxOptions = {}
+        if kwargs["binary"]:
+            fxOptions["binary"] = kwargs["binary"]
+        if kwargs["binary_args"]:
+            fxOptions["args"] = kwargs["binary_args"]
+        capabilities = {"moz:firefoxOptions": fxOptions}
+        executor_kwargs["capabilities"] = capabilities
     return executor_kwargs
 
 
@@ -101,7 +109,8 @@ class FirefoxBrowser(Browser):
 
     def __init__(self, logger, binary, prefs_root, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
-                 ca_certificate_path=None, e10s=False, stackfix_dir=None):
+                 ca_certificate_path=None, e10s=False, stackfix_dir=None,
+                 binary_args=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -114,6 +123,7 @@ class FirefoxBrowser(Browser):
         self.ca_certificate_path = ca_certificate_path
         self.certutil_binary = certutil_binary
         self.e10s = e10s
+        self.binary_args = binary_args
         if self.symbols_path and stackfix_dir:
             self.stack_fixer = get_stack_fixer_function(stackfix_dir,
                                                         self.symbols_path)
@@ -150,7 +160,9 @@ class FirefoxBrowser(Browser):
         if self.ca_certificate_path is not None:
             self.setup_ssl()
 
-        debug_args, cmd = browser_command(self.binary, [cmd_arg("marionette"), "about:blank"],
+        debug_args, cmd = browser_command(self.binary,
+                                          self.binary_args if self.binary_args else [] +
+                                          [cmd_arg("marionette"), "about:blank"],
                                           self.debug_info)
 
         self.runner = FirefoxRunner(profile=self.profile,
