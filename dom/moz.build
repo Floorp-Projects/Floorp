@@ -50,7 +50,6 @@ DIRS += [
     'canvas',
     'commandhandler',
     'crypto',
-    'devicestorage',
     'encoding',
     'events',
     'fetch',
