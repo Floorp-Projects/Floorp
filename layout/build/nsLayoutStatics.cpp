@@ -128,7 +128,6 @@ using namespace mozilla::system;
 #include "TouchManager.h"
 #include "MediaDecoder.h"
 #include "MediaPrefs.h"
-#include "mozilla/dom/devicestorage/DeviceStorageStatics.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -307,8 +306,6 @@ nsLayoutStatics::Initialize()
   MediaDecoder::InitStatics();
 
   PromiseDebugging::Init();
-
-  mozilla::dom::devicestorage::DeviceStorageStatics::Initialize();
 
   mozilla::dom::WebCryptoThreadPool::Initialize();
 
