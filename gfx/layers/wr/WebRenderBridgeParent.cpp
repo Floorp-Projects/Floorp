@@ -240,7 +240,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
   ++mWrEpoch; // Update webrender epoch
-  ProcessWebrenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
+  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
                            dl, dlDesc, aux, auxDesc);
   HoldPendingTransactionId(mWrEpoch, aTransactionId);
 }
@@ -278,7 +278,7 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
 }
 
 void
-WebRenderBridgeParent::ProcessWebrenderCommands(const gfx::IntSize &aSize,
+WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
                                                 const ByteBuffer& dl,
                                                 const WrBuiltDisplayListDescriptor& dlDesc,
