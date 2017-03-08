@@ -851,6 +851,22 @@ waitForAllPaints(function() {
     yield ensureElementRemoval(div);
   });
 
+  add_task(function* no_restyling_while_computed_timing_is_not_changed() {
+    var div = addDiv(null);
+    var animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
+                                { duration: 100 * MS_PER_SEC,
+                                  easing: 'step-end' });
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+
+    is(markers.length, 0,
+       'Animation running on the main-thread while computed timing is not ' +
+       'changed should never cause restyles');
+    yield ensureElementRemoval(div);
+  });
+
 });
 
 </script>
