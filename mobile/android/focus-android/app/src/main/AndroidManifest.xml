@@ -50,6 +50,9 @@
 
         <activity android:name=".activity.RightsActivity" />
 
+        <activity android:name=".activity.InfoActivity"
+                  android:theme="@style/SettingsTheme"/>
+
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true">
