@@ -10,6 +10,7 @@
 #include "ChromiumCDMProxy.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "content_decryption_module.h"
+#include "GMPLog.h"
 
 namespace mozilla {
 namespace gmp {
@@ -19,6 +20,11 @@ ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent,
   : mPluginId(aPluginId)
   , mContentParent(aContentParent)
 {
+  GMP_LOG(
+    "ChromiumCDMParent::ChromiumCDMParent(this=%p, contentParent=%p, id=%u)",
+    this,
+    aContentParent,
+    aPluginId);
 }
 
 bool
@@ -26,6 +32,7 @@ ChromiumCDMParent::Init(ChromiumCDMProxy* aProxy,
                         bool aAllowDistinctiveIdentifier,
                         bool aAllowPersistentState)
 {
+  GMP_LOG("ChromiumCDMParent::Init(this=%p)", this);
   mProxy = aProxy;
   return SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState);
 }
@@ -37,6 +44,7 @@ ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
                                  uint32_t aPromiseId,
                                  const nsTArray<uint8_t>& aInitData)
 {
+  GMP_LOG("ChromiumCDMParent::CreateSession(this=%p)", this);
   if (!SendCreateSessionAndGenerateRequest(
         aPromiseId, aSessionType, aInitDataType, aInitData)) {
     RejectPromise(
@@ -52,6 +60,7 @@ void
 ChromiumCDMParent::SetServerCertificate(uint32_t aPromiseId,
                                         const nsTArray<uint8_t>& aCert)
 {
+  GMP_LOG("ChromiumCDMParent::SetServerCertificate(this=%p)", this);
   if (!SendSetServerCertificate(aPromiseId, aCert)) {
     RejectPromise(
       aPromiseId,
@@ -65,6 +74,7 @@ ChromiumCDMParent::UpdateSession(const nsCString& aSessionId,
                                  uint32_t aPromiseId,
                                  const nsTArray<uint8_t>& aResponse)
 {
+  GMP_LOG("ChromiumCDMParent::UpdateSession(this=%p)", this);
   if (!SendUpdateSession(aPromiseId, aSessionId, aResponse)) {
     RejectPromise(
       aPromiseId,
@@ -77,6 +87,7 @@ void
 ChromiumCDMParent::CloseSession(const nsCString& aSessionId,
                                 uint32_t aPromiseId)
 {
+  GMP_LOG("ChromiumCDMParent::CloseSession(this=%p)", this);
   if (!SendCloseSession(aPromiseId, aSessionId)) {
     RejectPromise(
       aPromiseId,
@@ -89,6 +100,7 @@ void
 ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
                                  uint32_t aPromiseId)
 {
+  GMP_LOG("ChromiumCDMParent::RemoveSession(this=%p)", this);
   if (!SendRemoveSession(aPromiseId, aSessionId)) {
     RejectPromise(
       aPromiseId,
@@ -100,6 +112,7 @@ ChromiumCDMParent::RemoveSession(const nsCString& aSessionId,
 ipc::IPCResult
 ChromiumCDMParent::Recv__delete__()
 {
+  GMP_LOG("ChromiumCDMParent::Recv__delete__(this=%p)", this);
   return IPC_OK();
 }
 
@@ -107,6 +120,11 @@ ipc::IPCResult
 ChromiumCDMParent::RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
                                                   const nsCString& aSessionId)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnResolveNewSessionPromise(this=%p, pid=%u, "
+          "sid=%s)",
+          this,
+          aPromiseId,
+          aSessionId.get());
   if (!mProxy) {
     return IPC_OK();
   }
@@ -134,6 +152,9 @@ ChromiumCDMParent::RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
 void
 ChromiumCDMParent::ResolvePromise(uint32_t aPromiseId)
 {
+  GMP_LOG(
+    "ChromiumCDMParent::ResolvePromise(this=%p, pid=%u)", this, aPromiseId);
+
   if (!mProxy) {
     return;
   }
@@ -180,6 +201,8 @@ ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
                                  nsresult aError,
                                  const nsCString& aErrorMessage)
 {
+  GMP_LOG(
+    "ChromiumCDMParent::RejectPromise(this=%p, pid=%u)", this, aPromiseId);
   if (!mProxy) {
     return;
   }
@@ -221,6 +244,9 @@ ChromiumCDMParent::RecvOnSessionMessage(const nsCString& aSessionId,
                                         const uint32_t& aMessageType,
                                         nsTArray<uint8_t>&& aMessage)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnSessionMessage(this=%p, sid=%s)",
+          this,
+          aSessionId.get());
   if (!mProxy) {
     return IPC_OK();
   }
@@ -263,6 +289,7 @@ ChromiumCDMParent::RecvOnSessionKeysChange(
   const nsCString& aSessionId,
   nsTArray<CDMKeyInformation>&& aKeysInfo)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnSessionKeysChange(this=%p)", this);
   if (!mProxy) {
     return IPC_OK();
   }
@@ -290,6 +317,9 @@ ipc::IPCResult
 ChromiumCDMParent::RecvOnExpirationChange(const nsCString& aSessionId,
                                           const double& aSecondsSinceEpoch)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnExpirationChange(this=%p) time=%lf",
+          this,
+          aSecondsSinceEpoch);
   if (!mProxy) {
     return IPC_OK();
   }
@@ -304,6 +334,7 @@ ChromiumCDMParent::RecvOnExpirationChange(const nsCString& aSessionId,
 ipc::IPCResult
 ChromiumCDMParent::RecvOnSessionClosed(const nsCString& aSessionId)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnSessionClosed(this=%p)", this);
   if (!mProxy) {
     return IPC_OK();
   }
@@ -320,6 +351,7 @@ ChromiumCDMParent::RecvOnLegacySessionError(const nsCString& aSessionId,
                                             const uint32_t& aSystemCode,
                                             const nsCString& aMessage)
 {
+  GMP_LOG("ChromiumCDMParent::RecvOnLegacySessionError(this=%p)", this);
   if (!mProxy) {
     return IPC_OK();
   }
@@ -356,6 +388,7 @@ ChromiumCDMParent::RecvDecodeFailed(const uint32_t& aStatus)
 ipc::IPCResult
 ChromiumCDMParent::RecvShutdown()
 {
+  GMP_LOG("ChromiumCDMParent::RecvShutdown(this=%p)", this);
   // TODO: SendDestroy(), call Terminated.
   return IPC_OK();
 }
@@ -363,6 +396,7 @@ ChromiumCDMParent::RecvShutdown()
 void
 ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  GMP_LOG("ChromiumCDMParent::ActorDestroy(this=%p, reason=%d)", this, aWhy);
 }
 
 } // namespace gmp
