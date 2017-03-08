@@ -19,13 +19,7 @@
             if (this.getAttribute("autoscroll") == "false")
               return false;
 
-            var enabled = true;
-            try {
-              enabled = this.mPrefs.getBoolPref("general.autoScroll");
-            } catch (ex) {
-            }
-
-            return enabled;
+            return this.mPrefs.getBoolPref("general.autoScroll", true);
           ]]>
         </getter>
       </property>
@@ -1526,18 +1520,8 @@
             return;
 
           // Toggle browse with caret mode
-          var browseWithCaretOn = false;
-          var warn = true;
-
-          try {
-            warn = this.mPrefs.getBoolPref(kPrefWarnOnEnable);
-          } catch (ex) {
-          }
-
-          try {
-            browseWithCaretOn = this.mPrefs.getBoolPref(kPrefCaretBrowsingOn);
-          } catch (ex) {
-          }
+          var browseWithCaretOn = this.mPrefs.getBoolPref(kPrefCaretBrowsingOn, false);
+          var warn = this.mPrefs.getBoolPref(kPrefWarnOnEnable, true);
           if (warn && !browseWithCaretOn) {
             var checkValue = {value:false};
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]

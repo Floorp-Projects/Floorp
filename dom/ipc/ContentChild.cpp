@@ -603,10 +603,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
   SetProcessName(NS_LITERAL_STRING("Web Content"), true);
 
-  nsTArray<mozilla::dom::GfxInfoFeatureStatus> featureStatus;
-  SendGetGfxInfoFeatureStatus(&featureStatus);
-  GfxInfoBase::SetFeatureStatus(featureStatus);
-
   return true;
 }
 
@@ -1033,6 +1029,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
 
   // This will register cross-process observer.
   mozilla::dom::time::InitializeDateCacheCleaner();
+
+  GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
 }
 
 mozilla::ipc::IPCResult

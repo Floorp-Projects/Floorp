@@ -415,6 +415,16 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition* nearbyInt(MDefinition* input, RoundingMode roundingMode)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        auto* ins = MNearbyInt::New(alloc(), input, input->type(), roundingMode);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* unarySimd(MDefinition* input, MSimdUnaryArith::Operation op, MIRType type)
     {
         if (inDeadCode())
@@ -701,6 +711,30 @@ class FunctionCompiler
     }
 
   private:
+    MWasmLoadTls* maybeLoadMemoryBase() {
+        MWasmLoadTls* load = nullptr;
+#ifdef JS_CODEGEN_X86
+        AliasSet aliases = env_.maxMemoryLength.isSome() ? AliasSet::None()
+                                                         : AliasSet::Load(AliasSet::WasmHeapMeta);
+        load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, memoryBase),
+                                 MIRType::Pointer, aliases);
+        curBlock_->add(load);
+#endif
+        return load;
+    }
+
+    MWasmLoadTls* maybeLoadBoundsCheckLimit() {
+        MWasmLoadTls* load = nullptr;
+#ifndef WASM_HUGE_MEMORY
+        AliasSet aliases = env_.maxMemoryLength.isSome() ? AliasSet::None()
+                                                         : AliasSet::Load(AliasSet::WasmHeapMeta);
+        load = MWasmLoadTls::New(alloc(), tlsPointer_, offsetof(wasm::TlsData, boundsCheckLimit),
+                                 MIRType::Int32, aliases);
+        curBlock_->add(load);
+#endif
+        return load;
+    }
+
     void checkOffsetAndBounds(MemoryAccessDesc* access, MDefinition** base)
     {
         // If the offset is bigger than the guard region, a separate instruction
@@ -713,9 +747,9 @@ class FunctionCompiler
             access->clearOffset();
         }
 
-#ifndef WASM_HUGE_MEMORY
-        curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, trapOffset()));
-#endif
+        MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
+        if (boundsCheckLimit)
+            curBlock_->add(MWasmBoundsCheck::New(alloc(), *base, boundsCheckLimit, trapOffset()));
     }
 
   public:
@@ -724,13 +758,15 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
 
+        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* load = nullptr;
         if (access->isPlainAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
-            load = MAsmJSLoadHeap::New(alloc(), base, access->type());
+            MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
+            load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type());
         } else {
             checkOffsetAndBounds(access, &base);
-            load = MWasmLoad::New(alloc(), base, *access, ToMIRType(result));
+            load = MWasmLoad::New(alloc(), memoryBase, base, *access, ToMIRType(result));
         }
 
         curBlock_->add(load);
@@ -742,13 +778,15 @@ class FunctionCompiler
         if (inDeadCode())
             return;
 
+        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
         MInstruction* store = nullptr;
         if (access->isPlainAsmJS()) {
             MOZ_ASSERT(access->offset() == 0);
-            store = MAsmJSStoreHeap::New(alloc(), base, access->type(), v);
+            MWasmLoadTls* boundsCheckLimit = maybeLoadBoundsCheckLimit();
+            store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit, access->type(), v);
         } else {
             checkOffsetAndBounds(access, &base);
-            store = MWasmStore::New(alloc(), base, *access, v);
+            store = MWasmStore::New(alloc(), memoryBase, base, *access, v);
         }
 
         curBlock_->add(store);
@@ -761,7 +799,8 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), base, *access, oldv, newv, tlsPointer_);
+        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+        auto* cas = MAsmJSCompareExchangeHeap::New(alloc(), memoryBase, base, *access, oldv, newv, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -773,7 +812,8 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), base, *access, value, tlsPointer_);
+        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+        auto* cas = MAsmJSAtomicExchangeHeap::New(alloc(), memoryBase, base, *access, value, tlsPointer_);
         curBlock_->add(cas);
         return cas;
     }
@@ -786,7 +826,8 @@ class FunctionCompiler
             return nullptr;
 
         checkOffsetAndBounds(access, &base);
-        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, base, *access, v, tlsPointer_);
+        MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+        auto* binop = MAsmJSAtomicBinopHeap::New(alloc(), op, memoryBase, base, *access, v, tlsPointer_);
         curBlock_->add(binop);
         return binop;
     }
@@ -2338,16 +2379,38 @@ EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType, Scalar::Type v
 }
 
 static bool
+TryInlineUnaryBuiltin(FunctionCompiler& f, SymbolicAddress callee, MDefinition* input)
+{
+    if (!input)
+        return false;
+
+    MOZ_ASSERT(IsFloatingPointType(input->type()));
+
+    RoundingMode mode;
+    if (!IsRoundingFunction(callee, &mode))
+        return false;
+
+    if (!MNearbyInt::HasAssemblerSupport(mode))
+        return false;
+
+    f.iter().setResult(f.nearbyInt(input, mode));
+    return true;
+}
+
+static bool
 EmitUnaryMathBuiltinCall(FunctionCompiler& f, SymbolicAddress callee, ValType operandType)
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-    CallCompileState call(f, lineOrBytecode);
-    if (!f.startCall(&call))
-        return false;
-
     MDefinition* input;
     if (!f.iter().readUnary(operandType, &input))
+        return false;
+
+    if (TryInlineUnaryBuiltin(f, callee, input))
+        return true;
+
+    CallCompileState call(f, lineOrBytecode);
+    if (!f.startCall(&call))
         return false;
 
     if (!f.passArg(input, operandType, &call))

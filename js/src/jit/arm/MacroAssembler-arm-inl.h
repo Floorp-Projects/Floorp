@@ -2127,31 +2127,21 @@ MacroAssembler::clampIntToUint8(Register reg)
 
 template <class L>
 void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, L label)
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
 {
-    BufferOffset bo = as_cmp(index, Imm8(0));
-    append(wasm::BoundsCheck(bo.getOffset()));
-
+    as_cmp(index, O2Reg(boundsCheckLimit));
     as_b(label, cond);
 }
 
+template <class L>
 void
-MacroAssembler::wasmPatchBoundsCheck(uint8_t* patchAt, uint32_t limit)
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
 {
-    Instruction* inst = (Instruction*) patchAt;
-    MOZ_ASSERT(inst->is<InstCMP>());
-    InstCMP* cmp = inst->as<InstCMP>();
-
-    Register index;
-    cmp->extractOp1(&index);
-
-    MOZ_ASSERT(cmp->extractOp2().isImm8());
-
-    Imm8 imm8 = Imm8(limit);
-    MOZ_RELEASE_ASSERT(!imm8.invalid());
-
-    *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCC, Always);
-    // Don't call Auto Flush Cache; the wasm caller has done this for us.
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(boundsCheckLimit.offset == offsetof(wasm::TlsData, boundsCheckLimit));
+    ma_ldr(DTRAddr(boundsCheckLimit.base, DtrOffImm(boundsCheckLimit.offset)), scratch);
+    as_cmp(index, O2Reg(scratch));
+    as_b(label, cond);
 }
 
 //}}} check_macroassembler_style

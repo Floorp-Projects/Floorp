@@ -75,6 +75,7 @@ this.Bootstraper = {
     return Promise.resolve();
 
     let oldManifestURL;
+    // eslint-disable-next-line mozilla/use-default-preference-values
     try{
       oldManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
     } catch(e) {

@@ -159,7 +159,7 @@ public:
    * Returns null if non available.
    */
   static already_AddRefed<ContentParent>
-  RandomSelect(const nsTArray<ContentParent*>& aContentParents,
+  MinTabSelect(const nsTArray<ContentParent*>& aContentParents,
                ContentParent* aOpener,
                int32_t maxContentParents);
 
@@ -468,8 +468,6 @@ public:
                                                             const nsString& aPageURL,
                                                             const bool& aIsAudio,
                                                             const bool& aIsVideo) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS) override;
 
   bool CycleCollectWithLogs(bool aDumpAllTraces,
                             nsICycleCollectorLogSink* aSink,

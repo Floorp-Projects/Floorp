@@ -54,11 +54,7 @@ XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
 Object.defineProperty(this, "_maxUsedThemes", {
   get() {
     delete this._maxUsedThemes;
-    try {
-      this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes");
-    } catch (e) {
-      this._maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
-    }
+    this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes", DEFAULT_MAX_USED_THEMES_COUNT);
     return this._maxUsedThemes;
   },
 
@@ -79,10 +75,7 @@ var _themeIDBeingDisabled = null;
 // was combined with isThemeSelected to determine which theme was selected)
 // to the new one (where a selectedThemeID determines which theme is selected).
 (function() {
-  let wasThemeSelected = false;
-  try {
-    wasThemeSelected = _prefs.getBoolPref("isThemeSelected");
-  } catch (e) { }
+  let wasThemeSelected = _prefs.getBoolPref("isThemeSelected", false);
 
   if (wasThemeSelected) {
     _prefs.clearUserPref("isThemeSelected");
@@ -119,10 +112,7 @@ this.LightweightThemeManager = {
   },
 
   get currentTheme() {
-    let selectedThemeID = null;
-    try {
-      selectedThemeID = _prefs.getCharPref("selectedThemeID");
-    } catch (e) {}
+    let selectedThemeID = _prefs.getCharPref("selectedThemeID", "");
 
     let data = null;
     if (selectedThemeID) {
@@ -809,11 +799,8 @@ var _previewTimerCallback = {
 function _prefObserver(aSubject, aTopic, aData) {
   switch (aData) {
     case "maxUsedThemes":
-      try {
-        _maxUsedThemes = _prefs.getIntPref(aData);
-      } catch (e) {
-        _maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
-      }
+      _maxUsedThemes = _prefs.getIntPref(aData, DEFAULT_MAX_USED_THEMES_COUNT);
+
       // Update the theme list to remove any themes over the number we keep
       _updateUsedThemes(LightweightThemeManager.usedThemes);
       break;

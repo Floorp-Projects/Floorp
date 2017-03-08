@@ -81,10 +81,7 @@ function test() {
         continue;
       }
       let pref = "browser.toolbarbuttons.introduced." + placements[i];
-      let introduced = false;
-      try {
-        introduced = Services.prefs.getBoolPref(pref);
-      } catch (ex) {}
+      let introduced = Services.prefs.getBoolPref(pref, false);
       if (!introduced) {
         i++;
         continue;

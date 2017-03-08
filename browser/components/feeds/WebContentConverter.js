@@ -183,12 +183,9 @@ const Utils = {
 
     // check if it is in the black list
     let pb = Services.prefs;
-    let allowed;
-    try {
-      allowed = pb.getBoolPref(PREF_HANDLER_EXTERNAL_PREFIX + "." + aProtocol);
-    } catch (e) {
-      allowed = pb.getBoolPref(PREF_HANDLER_EXTERNAL_PREFIX + "-default");
-    }
+    let allowed =
+      pb.getBoolPref(PREF_HANDLER_EXTERNAL_PREFIX + "." + aProtocol,
+                     pb.getBoolPref(PREF_HANDLER_EXTERNAL_PREFIX + "-default"));
     if (!allowed) {
       throw this.getSecurityError(
         `Not allowed to register a protocol handler for ${aProtocol}`,

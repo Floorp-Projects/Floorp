@@ -1887,6 +1887,7 @@ var gCategories = {
 
     AddonManager.addTypeListener(this);
 
+    // eslint-disable-next-line mozilla/use-default-preference-values
     try {
       this.node.value = Services.prefs.getCharPref(PREF_UI_LASTCATEGORY);
     } catch (e) { }
@@ -1977,12 +1978,7 @@ var gCategories = {
     var startHidden = false;
     if (aType.flags & AddonManager.TYPE_UI_HIDE_EMPTY) {
       var prefName = PREF_UI_TYPE_HIDDEN.replace("%TYPE%", aType.id);
-      try {
-        startHidden = Services.prefs.getBoolPref(prefName);
-      } catch (e) {
-        // Default to hidden
-        startHidden = true;
-      }
+      startHidden = Services.prefs.getBoolPref(prefName, true);
 
       gPendingInitializations++;
       getAddonsAndInstalls(aType.id, (aAddonsList, aInstallsList) => {
@@ -2563,10 +2559,7 @@ var gSearchView = {
       finishSearch();
     });
 
-    var maxRemoteResults = 0;
-    try {
-      maxRemoteResults = Services.prefs.getIntPref(PREF_MAXRESULTS);
-    } catch (e) {}
+    var maxRemoteResults = Services.prefs.getIntPref(PREF_MAXRESULTS, 0);
 
     if (maxRemoteResults <= 0) {
       finishSearch(0);

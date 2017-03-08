@@ -6,11 +6,12 @@
 package org.mozilla.gecko.tabqueue;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.NotificationManager;
@@ -29,7 +30,6 @@ import android.view.WindowManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -284,16 +284,16 @@ public class TabQueueHelper {
 
         JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
 
-        if (jsonArray.length() > 0) {
-            JSONObject data = new JSONObject();
-            try {
-                data.put("urls", jsonArray);
-                data.put("shouldNotifyTabsOpenedToJava", shouldPerformJavaScriptCallback);
-                GeckoAppShell.notifyObservers("Tabs:OpenMultiple", data.toString());
-            } catch (JSONException e) {
-                // Don't exit early as we perform cleanup at the end of this function.
-                Log.e(LOGTAG, "Error sending tab queue data", e);
+        final int len = jsonArray.length();
+        if (len > 0) {
+            final String[] urls = new String[len];
+            for (int i = 0; i < len; i++) {
+                urls[i] = jsonArray.optString(i);
             }
+            final GeckoBundle data = new GeckoBundle(2);
+            data.putStringArray("urls", urls);
+            data.putBoolean("shouldNotifyTabsOpenedToJava", shouldPerformJavaScriptCallback);
+            EventDispatcher.getInstance().dispatch("Tabs:OpenMultiple", data);
         }
 
         try {

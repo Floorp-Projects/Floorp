@@ -1010,12 +1010,7 @@ FxAccountsInternal.prototype = {
     // The purpose of this pref is to expedite any auth errors as the result of a
     // expired or revoked FxA session token, e.g., from resetting or changing the FxA
     // password.
-    let ignoreCachedAuthCredentials = false;
-    try {
-      ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials");
-    } catch (e) {
-      // Pref doesn't exist
-    }
+    let ignoreCachedAuthCredentials = Services.prefs.getBoolPref("services.sync.debug.ignoreCachedAuthCredentials", false);
     let mustBeValidUntil = this.now() + ASSERTION_USE_PERIOD;
     let accountData = yield currentState.getUserAccountData(["cert", "keyPair", "sessionToken"]);
 
@@ -1250,12 +1245,7 @@ FxAccountsInternal.prototype = {
   },
 
   requiresHttps() {
-    let allowHttp = false;
-    try {
-      allowHttp = Services.prefs.getBoolPref("identity.fxaccounts.allowHttp");
-    } catch (e) {
-      // Pref doesn't exist
-    }
+    let allowHttp = Services.prefs.getBoolPref("identity.fxaccounts.allowHttp", false);
     return allowHttp !== true;
   },
 
