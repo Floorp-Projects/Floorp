@@ -11,10 +11,8 @@ import android.net.NetworkInfo;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.IOUtils;
 
 import java.io.BufferedInputStream;
@@ -27,8 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -253,8 +249,6 @@ public class DownloadAction extends BaseAction {
     }
 
     protected String createDownloadURL(DownloadContent content) {
-        final String location = content.getLocation();
-
         return CDN_BASE_URL + content.getLocation();
     }
 

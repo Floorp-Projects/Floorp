@@ -60,6 +60,7 @@ function testObjectOutput(aAccOrElmOrID, aGenerator) {
   var context = new PivotContext(accessible);
   var output = aGenerator.genForObject(accessible, context);
   var outputOrder;
+  // eslint-disable-next-line mozilla/use-default-preference-values
   try {
     outputOrder = SpecialPowers.getIntPref(PREF_UTTERANCE_ORDER);
   } catch (ex) {

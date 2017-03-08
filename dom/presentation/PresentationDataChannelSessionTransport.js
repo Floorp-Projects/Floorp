@@ -109,13 +109,7 @@ PresentationTransportBuilder.prototype = {
 
     // TODO bug 1228235 we should have a way to let device providers customize
     // the time-out duration.
-    let timeout;
-    try {
-      timeout = Services.prefs.getIntPref("presentation.receiver.loading.timeout");
-    } catch (e) {
-      // This happens if the pref doesn't exist, so we have a default value.
-      timeout = 10000;
-    }
+    let timeout = Services.prefs.getIntPref("presentation.receiver.loading.timeout", 10000);
 
     // The timer is to check if the negotiation finishes on time.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

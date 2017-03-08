@@ -619,14 +619,7 @@ this.FxAccountsManager = {
   },
 
   getKeys() {
-    let syncEnabled = false;
-    try {
-      syncEnabled = Services.prefs.getBoolPref("services.sync.enabled");
-    } catch (e) {
-      dump("Sync is disabled, so you won't get the keys. " + e + "\n");
-    }
-
-    if (!syncEnabled) {
+    if (!Services.prefs.getBoolPref("services.sync.enabled", false)) {
       return Promise.reject(ERROR_SYNC_DISABLED);
     }
 

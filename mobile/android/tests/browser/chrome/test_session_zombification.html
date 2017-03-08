@@ -123,7 +123,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     is(tabTest.browser.currentURI.spec, "about:blank", "Test tab is zombified.");
 
     // Tell the session store that it shouldn't restore that tab on selecting
-    observerService.notifyObservers(null, "Tab:KeepZombified", tabTest.id);
+    EventDispatcher.instance.dispatch("Tab:KeepZombified", {nextSelectedTabId: tabTest.id});
 
     // Switch back to the test tab and check that it remains zombified
     BrowserApp.selectTab(tabTest);
@@ -154,7 +154,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     is(tabTest.browser.currentURI.spec, "about:blank", "Test tab is zombified.");
 
     // Tell the session store that it shouldn't restore that tab on selecting
-    observerService.notifyObservers(null, "Tab:KeepZombified", tabTest.id);
+    EventDispatcher.instance.dispatch("Tab:KeepZombified", {nextSelectedTabId: tabTest.id});
 
     // Switch back to the test tab and check that it remains zombified
     BrowserApp.selectTab(tabTest);

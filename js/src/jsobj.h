@@ -1339,6 +1339,39 @@ NonNullObject(JSContext* cx, const Value& v)
 }
 
 
+/*
+ * Report a TypeError: "N-th argument of FUN must be an object, got VALUE".
+ * Using NotNullObjectArg is usually less code.
+ */
+extern void
+ReportNotObjectArg(JSContext* cx, const char* nth, const char* fun, HandleValue v);
+
+inline JSObject*
+NonNullObjectArg(JSContext* cx, const char* nth, const char* fun, HandleValue v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    ReportNotObjectArg(cx, nth, fun, v);
+    return nullptr;
+}
+
+/*
+ * Report a TypeError: "SOMETHING must be an object, got VALUE".
+ * Using NotNullObjectWithName is usually less code.
+ */
+extern void
+ReportNotObjectWithName(JSContext* cx, const char* name, HandleValue v);
+
+inline JSObject*
+NonNullObjectWithName(JSContext* cx, const char* name, HandleValue v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    ReportNotObjectWithName(cx, name, v);
+    return nullptr;
+}
+
+
 extern bool
 GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* method,
                          MutableHandleObject objp);

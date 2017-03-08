@@ -714,7 +714,7 @@ EventDispatcher::DispatchOnGecko(ListenersList* list, const nsAString& aEvent,
         }
         const nsresult rv = list->listeners[i]->OnEvent(
                 aEvent, aData, aCallback);
-        NS_ENSURE_SUCCESS(rv, rv);
+        Unused << NS_WARN_IF(NS_FAILED(rv));
     }
     return NS_OK;
 }

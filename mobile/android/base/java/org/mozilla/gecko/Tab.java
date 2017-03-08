@@ -575,12 +575,12 @@ public class Tab {
         if (!canDoBack())
             return false;
 
-        GeckoAppShell.notifyObservers("Session:Back", "");
+        EventDispatcher.getInstance().dispatch("Session:Back", null);
         return true;
     }
 
     public void doStop() {
-        GeckoAppShell.notifyObservers("Session:Stop", "");
+        EventDispatcher.getInstance().dispatch("Session:Stop", null);
     }
 
     // Our version of nsSHistory::GetCanGoForward
@@ -592,7 +592,7 @@ public class Tab {
         if (!canDoForward())
             return false;
 
-        GeckoAppShell.notifyObservers("Session:Forward", "");
+        EventDispatcher.getInstance().dispatch("Session:Forward", null);
         return true;
     }
 
