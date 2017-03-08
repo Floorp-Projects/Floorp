@@ -763,22 +763,6 @@ add_task(function* test_datasets() {
   const RELEASE_CHANNEL_OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
   const RELEASE_CHANNEL_OPTIN  = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
 
-  // Histograms should default to the extended dataset
-  let h = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
-  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_FLAG");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
-
-  // Check test histograms with explicit dataset definitions
-  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTIN");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
-  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTOUT);
-  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTIN);
-  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
-  Assert.equal(h.dataset(), RELEASE_CHANNEL_OPTOUT);
-
   // Check that registeredHistogram works properly
   let registered = Telemetry.registeredHistograms(RELEASE_CHANNEL_OPTIN, []);
   registered = new Set(registered);

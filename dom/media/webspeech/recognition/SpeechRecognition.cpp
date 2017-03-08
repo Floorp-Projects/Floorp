@@ -187,6 +187,7 @@ SpeechRecognition::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   MOZ_ASSERT(win->IsInnerWindow());

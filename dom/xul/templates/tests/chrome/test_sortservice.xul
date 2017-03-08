@@ -56,7 +56,7 @@ function doTests()
     is(actual, test[2], "sorted step " + (t + 1));
 
     while(box.hasChildNodes())
-      box.removeChild(box.firstChild);
+      box.firstChild.remove();
     box.removeAttribute("sortDirection");
   }
 

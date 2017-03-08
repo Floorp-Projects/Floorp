@@ -100,7 +100,7 @@ SyncedTabsDeckView.prototype = {
 
   _clearChilden() {
     while (this.container.firstChild) {
-      this.container.removeChild(this.container.firstChild);
+      this.container.firstChild.remove();
     }
   },
 

@@ -250,9 +250,11 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                 break;
             }
 
-            if (!obj)
+            if (!obj) {
                 rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-            return JS::ObjectOrNullValue(obj);
+                return JS::NullValue();
+            }
+            return JS::ObjectValue(*obj);
         }
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:

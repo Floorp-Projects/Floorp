@@ -146,8 +146,6 @@ function setupTestData(datas) {
 
 function runTest() {
   return new Promise(resolve => {
-    let service = Cc["@mozilla.org/url-classifier/dbservice;1"].
-                getService(Ci.nsIURIClassifier);
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                 getService(Ci.nsIScriptSecurityManager);
     let ios = Cc["@mozilla.org/network/io-service;1"].
@@ -160,7 +158,7 @@ function runTest() {
       let test = testDatas.shift();
       let uri = ios.newURI(test.url, null, null);
       let prin = ssm.createCodebasePrincipal(uri, {});
-      service.classify(prin, false, function(errorCode, table, provider, prefix) {
+      SpecialPowers.doUrlClassify(prin, null, false, function(errorCode, table, provider, prefix) {
         is(errorCode, test.expect.error, `Test url ${test.url} correct error`);
         is(table, test.expect.table, `Test url ${test.url} correct table`);
         is(provider, test.expect.provider, `Test url ${test.url} correct provider`);

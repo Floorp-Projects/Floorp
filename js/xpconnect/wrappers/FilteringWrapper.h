@@ -80,6 +80,10 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
     virtual bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
                                        JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
+
+    virtual bool setPrototype(JSContext* cx, JS::HandleObject wrapper,
+                              JS::HandleObject proto,
+                              JS::ObjectOpResult& result) const override;
 };
 
 // Check whether the given jsid is a symbol whose value can be gotten

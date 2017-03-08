@@ -459,6 +459,21 @@ const JNINativeMethod VsyncSource::Natives<Impl>::methods[] = {
             ::template Wrap<&Impl::NotifyVsync>)
 };
 
+template<class Impl>
+class GeckoProcessManager::Natives : public mozilla::jni::NativeImpl<GeckoProcessManager, Impl>
+{
+public:
+    static const JNINativeMethod methods[1];
+};
+
+template<class Impl>
+const JNINativeMethod GeckoProcessManager::Natives<Impl>::methods[] = {
+
+    mozilla::jni::MakeNativeMethod<GeckoProcessManager::GetEditableParent_t>(
+            mozilla::jni::NativeStub<GeckoProcessManager::GetEditableParent_t, Impl>
+            ::template Wrap<&Impl::GetEditableParent>)
+};
+
 } /* java */
 } /* mozilla */
 #endif // GeneratedJNINatives_h

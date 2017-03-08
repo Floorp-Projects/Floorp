@@ -2472,7 +2472,6 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
     if (nobj->getElementsHeader()->isFrozen())
         return false;
 
-    uint32_t capacity = nobj->getDenseCapacity();
     uint32_t initLength = nobj->getDenseInitializedLength();
 
     // Optimize if we're adding an element at initLength or writing to a hole.
@@ -2483,12 +2482,13 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
     if (!isAdd && !isHoleInBounds)
         return false;
 
-    // Checking the capacity also checks for arrays with non-writable length,
-    // as the capacity is always less than or equal to the length in this case.
-    if (index >= capacity)
+    // Can't add new elements to arrays with non-writable length.
+    if (isAdd && nobj->is<ArrayObject>() && !nobj->as<ArrayObject>().lengthIsWritable())
         return false;
 
-    MOZ_ASSERT(!nobj->is<TypedArrayObject>());
+    // Typed arrays don't have dense elements.
+    if (nobj->is<TypedArrayObject>())
+        return false;
 
     // Check for other indexed properties or class hooks.
     if (!CanAttachAddElement(nobj, IsPropertyInitOp(op)))

@@ -192,9 +192,8 @@ HttpServer::AcceptWebSocket(InternalRequest* aConnectRequest,
     return provider.forget();
   }
 
-  aRv.Throw(NS_ERROR_UNEXPECTED);
   MOZ_ASSERT(false, "Unknown request");
-
+  aRv.Throw(NS_ERROR_UNEXPECTED);
   return nullptr;
 }
 

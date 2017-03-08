@@ -301,6 +301,20 @@ CrossOriginXrayWrapper::delete_(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return false;
 }
 
+bool
+CrossOriginXrayWrapper::setPrototype(JSContext* cx, JS::HandleObject wrapper,
+                                     JS::HandleObject proto,
+                                     JS::ObjectOpResult& result) const
+{
+    // https://html.spec.whatwg.org/multipage/browsers.html#windowproxy-setprototypeof
+    // and
+    // https://html.spec.whatwg.org/multipage/browsers.html#location-setprototypeof
+    // both say to return false.  In terms of ObjectOpResult that means
+    // calling one of the fail*() things on it, and it's got one that does just
+    // what we want.
+    return result.failCantSetProto();
+}
+
 #define XOW FilteringWrapper<CrossOriginXrayWrapper, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
