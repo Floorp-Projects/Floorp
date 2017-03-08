@@ -178,10 +178,11 @@
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',
+            'gtests/freebl_gtest/freebl_gtest.gyp:prng_gtest',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
             'gtests/util_gtest/util_gtest.gyp:util_gtest',
-            'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim'
+            'gtests/nss_bogo_shim/nss_bogo_shim.gyp:nss_bogo_shim',
           ],
           'conditions': [
             [ 'OS=="linux"', {
