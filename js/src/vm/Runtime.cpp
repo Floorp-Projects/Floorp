@@ -342,6 +342,13 @@ JSRuntime::destroyRuntime()
 static void
 CheckCanChangeActiveContext(JSRuntime* rt)
 {
+    // The runtime might not currently have an active context, in which case
+    // the accesses below to ActiveThreadData data would not normally be
+    // allowed. Suppress protected data checks so these accesses will be
+    // tolerated --- if the active context is null then we're about to set it
+    // to the current thread.
+    AutoNoteSingleThreadedRegion anstr;
+
     MOZ_RELEASE_ASSERT(!rt->activeContextChangeProhibited());
     MOZ_RELEASE_ASSERT(!rt->activeContext() || rt->gc.canChangeActiveContext(rt->activeContext()));
 
