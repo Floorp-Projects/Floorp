@@ -36,6 +36,7 @@ class SRIMetadata;
 } // namespace dom
 
 namespace css {
+class GroupRule;
 class ImportRule;
 class Rule;
 }
@@ -211,6 +212,10 @@ public:
   // WillDirty and then make no change and skip the DidDirty call.
   inline void WillDirty();
   inline void DidDirty();
+
+  nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule,
+                               css::GroupRule* aGroup, uint32_t aIndex);
 
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
