@@ -39,6 +39,7 @@ public:
                       uint32_t caps);
 
   MOZ_MUST_USE bool Claim();
+  void Unclaim();
 
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() override final { return true; }
