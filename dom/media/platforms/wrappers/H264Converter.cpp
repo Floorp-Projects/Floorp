@@ -277,7 +277,6 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     mDecodePromise.Resolve(DecodedData(), __func__);
     return;
   }
-  mNeedKeyframe = false;
 
   mNeedAVCC =
     Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
@@ -290,6 +289,9 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
       __func__);
     return;
   }
+
+  mNeedKeyframe = false;
+
   if (CanRecycleDecoder()) {
     mDecoder->ConfigurationChanged(mCurrentConfig);
   }
