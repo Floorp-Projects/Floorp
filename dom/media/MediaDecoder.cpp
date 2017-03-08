@@ -577,6 +577,11 @@ MediaDecoder::OnPlaybackEvent(MediaEventType aEvent)
     case MediaEventType::ExitVideoSuspend:
       GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozexitvideosuspend"));
       break;
+    case MediaEventType::StartVideoSuspendTimer:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozstartvideosuspendtimer"));
+      break;
+    case MediaEventType::CancelVideoSuspendTimer:
+      GetOwner()->DispatchAsyncEvent(NS_LITERAL_STRING("mozcancelvideosuspendtimer"));
   }
 }
 
