@@ -422,6 +422,71 @@ StyleSheet::DeleteRule(uint32_t aIndex,
   FORWARD_INTERNAL(DeleteRuleInternal, (aIndex, aRv))
 }
 
+nsresult
+StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
+{
+  NS_ENSURE_ARG_POINTER(aGroup);
+  NS_ASSERTION(IsComplete(), "No deleting from an incomplete sheet!");
+  RefPtr<css::Rule> rule = aGroup->GetStyleRuleAt(aIndex);
+  NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
+
+  // check that the rule actually belongs to this sheet!
+  if (this != rule->GetStyleSheet()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+
+  WillDirty();
+
+  nsresult result = aGroup->DeleteStyleRuleAt(aIndex);
+  NS_ENSURE_SUCCESS(result, result);
+
+  rule->SetStyleSheet(nullptr);
+
+  DidDirty();
+
+  if (mDocument) {
+    mDocument->StyleRuleRemoved(this, rule);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
+                                css::GroupRule* aGroup,
+                                uint32_t aIndex)
+{
+  NS_ASSERTION(IsComplete(), "No inserting into an incomplete sheet!");
+  // check that the group actually belongs to this sheet!
+  if (this != aGroup->GetStyleSheet()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // parse and grab the rule
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
+
+  WillDirty();
+
+  nsresult result;
+  if (IsGecko()) {
+    result = AsGecko()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
+  } else {
+    // TODO
+    result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_ENSURE_SUCCESS(result, result);
+
+  DidDirty();
+
+  if (mDocument) {
+    mDocument->StyleRuleAdded(this, aGroup->GetStyleRuleAt(aIndex));
+  }
+
+  return NS_OK;
+}
+
 void
 StyleSheet::EnabledStateChanged()
 {
