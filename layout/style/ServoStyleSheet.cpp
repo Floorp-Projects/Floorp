@@ -10,6 +10,7 @@
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSRuleList.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 
 #include "mozAutoDocUpdate.h"
@@ -200,6 +201,16 @@ ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
   if (!aRv.Failed() && mDocument) {
     mDocument->StyleRuleRemoved(this, rule);
   }
+}
+
+nsresult
+ServoStyleSheet::InsertRuleIntoGroupInternal(const nsAString& aRule,
+                                             css::GroupRule* aGroup,
+                                             uint32_t aIndex)
+{
+  auto rules = static_cast<ServoCSSRuleList*>(aGroup->CssRules());
+  MOZ_ASSERT(rules->GetParentRule() == aGroup);
+  return rules->InsertRule(aRule, aIndex);
 }
 
 } // namespace mozilla

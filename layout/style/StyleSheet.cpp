@@ -473,8 +473,7 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
   if (IsGecko()) {
     result = AsGecko()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   } else {
-    // TODO
-    result = NS_ERROR_NOT_IMPLEMENTED;
+    result = AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   }
   NS_ENSURE_SUCCESS(result, result);
 
