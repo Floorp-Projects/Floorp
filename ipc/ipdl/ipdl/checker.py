@@ -8,10 +8,8 @@ from ipdl.ast import Visitor, ASYNC
 
 class SyncMessageChecker(Visitor):
     def __init__(self, syncMsgList):
+        self.syncMsgList = syncMsgList
         self.errors = []
-        SyncMessageChecker.syncMsgList = syncMsgList
-        SyncMessageChecker.seenProtocols = []
-        SyncMessageChecker.seenSyncMessages = []
 
     def prettyMsgName(self, msg):
         return "%s::%s" % (self.currentProtocol, msg)
@@ -25,23 +23,15 @@ class SyncMessageChecker(Visitor):
                            (str(loc), msg))
 
     def visitProtocol(self, p):
-        self.errors = []
         self.currentProtocol = p.name
-        SyncMessageChecker.seenProtocols.append(p.name)
         Visitor.visitProtocol(self, p)
 
     def visitMessageDecl(self, md):
         pn = self.prettyMsgName(md.name)
-        if md.sendSemantics is not ASYNC:
-            if pn not in SyncMessageChecker.syncMsgList:
-                self.errorUnknownSyncMessage(md.loc, pn)
-            SyncMessageChecker.seenSyncMessages.append(pn)
-        elif pn in SyncMessageChecker.syncMsgList:
+        if md.sendSemantics is not ASYNC and pn not in self.syncMsgList:
+            self.errorUnknownSyncMessage(md.loc, pn)
+        if md.sendSemantics is ASYNC and pn in self.syncMsgList:
             self.errorAsyncMessageCanRemove(md.loc, pn)
-
-    @staticmethod
-    def getFixedSyncMessages():
-        return set(SyncMessageChecker.syncMsgList) - set(SyncMessageChecker.seenSyncMessages)
 
 def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
     checker = SyncMessageChecker(syncMsgList)
@@ -51,12 +41,3 @@ def checkSyncMessage(tu, syncMsgList, errout=sys.stderr):
             print >>errout, error
         return False
     return True
-
-def checkFixedSyncMessages(errout=sys.stderr):
-    fixed = SyncMessageChecker.getFixedSyncMessages()
-    for item in fixed:
-        protocol = item.split('::')[0]
-        # Ignore things like sync messages in test protocols we didn't compile.
-        if protocol in SyncMessageChecker.seenProtocols:
-            print >>errout, 'Error: Sync IPC message %s not found, it appears to be fixed.\n' \
-                            'Please remove it from sync-messages.ini.' % item
