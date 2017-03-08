@@ -52,6 +52,7 @@
 #include "chrome/common/child_process.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #include "chrome/common/ipc_channel.h"
+#include "mozilla/jni/Utils.h"
 #endif //  defined(MOZ_WIDGET_ANDROID)
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
@@ -239,8 +240,9 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 
 #if defined(MOZ_WIDGET_ANDROID)
 void
-XRE_SetAndroidChildFds (int crashFd, int ipcFd)
+XRE_SetAndroidChildFds (JNIEnv* env, int crashFd, int ipcFd)
 {
+  mozilla::jni::SetGeckoThreadEnv(env);
 #if defined(MOZ_CRASHREPORTER)
   CrashReporter::SetNotificationPipeForChild(crashFd);
 #endif // defined(MOZ_CRASHREPORTER)

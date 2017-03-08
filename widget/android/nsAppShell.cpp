@@ -24,6 +24,7 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "nsISpeculativeConnect.h"
+#include "nsITabChild.h"
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsCDefaultURIFixup.h"
@@ -35,6 +36,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Hal.h"
+#include "mozilla/dom/TabChild.h"
 #include "prenv.h"
 
 #include "AndroidBridge.h"
@@ -65,6 +67,7 @@
 #include "ANRReporter.h"
 #include "GeckoBatteryManager.h"
 #include "GeckoNetworkManager.h"
+#include "GeckoProcessManager.h"
 #include "GeckoScreenOrientation.h"
 #include "PrefsHelper.h"
 #include "fennec/MemoryMonitor.h"
@@ -384,6 +387,10 @@ nsAppShell::nsAppShell()
     }
 
     if (!XRE_IsParentProcess()) {
+        if (jni::IsAvailable()) {
+            // Set the corresponding state in GeckoThread.
+            java::GeckoThread::SetState(java::GeckoThread::State::RUNNING());
+        }
         return;
     }
 
@@ -394,6 +401,7 @@ nsAppShell::nsAppShell()
         GeckoThreadSupport::Init();
         mozilla::GeckoBatteryManager::Init();
         mozilla::GeckoNetworkManager::Init();
+        mozilla::GeckoProcessManager::Init();
         mozilla::GeckoScreenOrientation::Init();
         mozilla::PrefsHelper::Init();
         nsWindow::InitNatives();
@@ -437,7 +445,7 @@ nsAppShell::~nsAppShell()
         sWakeLockListener = nullptr;
     }
 
-    if (jni::IsAvailable()) {
+    if (jni::IsAvailable() && XRE_IsParentProcess()) {
         DestroyAndroidUiThread();
         AndroidBridge::DeconstructBridge();
     }
@@ -502,6 +510,7 @@ nsAppShell::Init()
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
         obsServ->AddObserver(this, "profile-after-change", false);
         obsServ->AddObserver(this, "chrome-document-loaded", false);
+        obsServ->AddObserver(this, "tab-child-created", false);
         obsServ->AddObserver(this, "quit-application-granted", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
@@ -595,6 +604,37 @@ nsAppShell::Observe(nsISupports* aSubject,
         if (jni::IsAvailable()) {
             mozilla::PrefsHelper::OnPrefChange(aData);
         }
+
+    } else if (!strcmp(aTopic, "tab-child-created")) {
+        // Associate the PuppetWidget of the newly-created TabChild with a
+        // GeckoEditableChild instance.
+        MOZ_ASSERT(!XRE_IsParentProcess());
+
+        dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+        nsCOMPtr<nsITabChild> ptabChild = do_QueryInterface(aSubject);
+        NS_ENSURE_TRUE(contentChild && ptabChild, NS_OK);
+
+        // Get the content/tab ID in order to get the correct
+        // IGeckoEditableParent object, which GeckoEditableChild uses to
+        // communicate with the parent process.
+        const auto tabChild = static_cast<dom::TabChild*>(ptabChild.get());
+        const uint64_t contentId = contentChild->GetID();
+        const uint64_t tabId = tabChild->GetTabId();
+        NS_ENSURE_TRUE(contentId && tabId, NS_OK);
+
+        auto editableParent = java::GeckoServiceChildProcess::GetEditableParent(
+                contentId, tabId);
+        NS_ENSURE_TRUE(editableParent, NS_OK);
+
+        RefPtr<widget::PuppetWidget> widget(tabChild->WebWidget());
+        auto editableChild = java::GeckoEditableChild::New(editableParent);
+        NS_ENSURE_TRUE(widget && editableChild, NS_OK);
+
+        RefPtr<GeckoEditableSupport> editableSupport =
+                new GeckoEditableSupport(editableChild);
+
+        // Tell PuppetWidget to use our listener for IME operations.
+        widget->SetNativeTextEventDispatcherListener(editableSupport);
     }
 
     if (removeObserver) {
@@ -626,7 +666,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             // (bug 750713). Looper messages effectively have the lowest
             // priority because we only process them before we're about to
             // wait for new events.
-            if (jni::IsAvailable() &&
+            if (jni::IsAvailable() && XRE_IsParentProcess() &&
                     AndroidBridge::Bridge()->PumpMessageLoop()) {
                 return true;
             }
