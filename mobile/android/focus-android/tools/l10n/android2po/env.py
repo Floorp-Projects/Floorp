@@ -29,11 +29,17 @@ class IncompleteEnvironment(EnvironmentError):
 
 ANDROID_LOCALE_MAPPING = {
     'from': {
+        'in': 'id',
+        'iw': 'he',
+        'ji': 'yi',
         'zh_CN': 'zh_Hans_CN',
         'zh_HK': 'zh_Hant_HK',
         'zh_TW': 'zh_Hant_TW'
     },
     'to': {
+        'id': 'in',
+        'he': 'iw',
+        'yi': 'ji',
         'zh_Hans_CN': 'zh_CN',
         'zh_Hant_HK': 'zh_HK',
         'zh_Hant_TW': 'zh_TW'
