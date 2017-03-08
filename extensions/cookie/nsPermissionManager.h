@@ -223,6 +223,23 @@ public:
    */
   static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, nsACString& aPermissionKey);
 
+  /**
+   * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
+   * permission keys.
+   *
+   * Get all permissions keys which could correspond to the given principal.
+   * This method, like GetKeyForPrincipal, is infallible and should always
+   * produce at least one key.
+   *
+   * Unlike GetKeyForPrincipal, this method also gets the keys for base domains
+   * of the given principal. All keys returned by this method must be avaliable
+   * in the content process for a given URL to successfully have its permissions
+   * checked in the `aExactHostMatch = false` situation.
+   *
+   * @param aPrincipal  The Principal which the key is to be extracted from.
+   */
+  static nsTArray<nsCString> GetAllKeysForPrincipal(nsIPrincipal* aPrincipal);
+
 private:
   virtual ~nsPermissionManager();
 
