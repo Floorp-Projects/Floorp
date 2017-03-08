@@ -951,26 +951,6 @@ public:
 
     static auto GetExtensionFromMimeType(mozilla::jni::String::Param) -> mozilla::jni::String::LocalRef;
 
-    struct GetExternalPublicDirectory_t {
-        typedef GeckoAppShell Owner;
-        typedef mozilla::jni::String::LocalRef ReturnType;
-        typedef mozilla::jni::String::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "getExternalPublicDirectory";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;)Ljava/lang/String;";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto GetExternalPublicDirectory(mozilla::jni::String::Param) -> mozilla::jni::String::LocalRef;
-
     struct GetHWDecoderCapability_t {
         typedef GeckoAppShell Owner;
         typedef bool ReturnType;

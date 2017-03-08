@@ -107,10 +107,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsDeviceStorage.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::ipc;
 
@@ -327,55 +323,6 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
                                          getter_AddRefs(dir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-#elif defined(MOZ_WIDGET_GONK)
-  // On Gonk, store the files on the sdcard in the downloads directory.
-  // We need to check with the volume manager which storage point is
-  // available.
-
-  // Pick the default storage in case multiple (internal and external) ones
-  // are available.
-  nsString storageName;
-  nsDOMDeviceStorage::GetDefaultStorageName(NS_LITERAL_STRING("sdcard"),
-                                            storageName);
-
-  RefPtr<DeviceStorageFile> dsf(
-    new DeviceStorageFile(NS_LITERAL_STRING("sdcard"),
-                          storageName,
-                          NS_LITERAL_STRING("downloads")));
-  NS_ENSURE_TRUE(dsf->mFile, NS_ERROR_FILE_ACCESS_DENIED);
-
-  // If we're not checking for availability we're done.
-  if (aSkipChecks) {
-    dsf->mFile.forget(_directory);
-    return NS_OK;
-  }
-
-  // Check device storage status before continuing.
-  nsString storageStatus;
-  dsf->GetStatus(storageStatus);
-
-  // If we get an "unavailable" status, it means the sd card is not present.
-  // We'll also catch internal errors by looking for an empty string and assume
-  // the SD card isn't present when this occurs.
-  if (storageStatus.EqualsLiteral("unavailable") ||
-      storageStatus.IsEmpty()) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-
-  // If we get a status other than 'available' here it means the card is busy
-  // because it's mounted via USB or it is being formatted.
-  if (!storageStatus.EqualsLiteral("available")) {
-    return NS_ERROR_FILE_ACCESS_DENIED;
-  }
-
-  bool alreadyThere;
-  nsresult rv = dsf->mFile->Exists(&alreadyThere);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!alreadyThere) {
-    rv = dsf->mFile->Create(nsIFile::DIRECTORY_TYPE, 0770);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  dir = dsf->mFile;
 #elif defined(ANDROID)
   // We ask Java for the temporary download directory. The directory will be
   // different depending on whether we have the permission to write to the

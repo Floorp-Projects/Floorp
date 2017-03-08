@@ -123,7 +123,6 @@ LOCAL_INCLUDES += [
     '/chrome',
     '/docshell/base',
     '/dom/base',
-    '/dom/devicestorage',
     '/dom/events',
     '/dom/filesystem',
     '/dom/geolocation',
