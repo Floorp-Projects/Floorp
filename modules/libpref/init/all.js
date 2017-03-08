@@ -4609,6 +4609,7 @@ pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN)
 pref("layers.gpu-process.enabled", true);
+pref("layers.gpu-process.max_restarts", 3);
 pref("media.gpu-process-decoder", true);
 #endif
 
