@@ -31,9 +31,6 @@ public:
   already_AddRefed<Promise>
   GetPromise();
 
-  virtual void
-  GetPermissionAccessType(nsCString& aAccess) const override;
-
 protected:
   virtual FileSystemParams
   GetRequestParams(const nsString& aSerializedDOMPath,
@@ -64,9 +61,6 @@ public:
          const FileSystemGetFileOrDirectoryParams& aParam,
          FileSystemRequestParent* aParent,
          ErrorResult& aRv);
-
-  virtual void
-  GetPermissionAccessType(nsCString& aAccess) const override;
 
 protected:
   virtual FileSystemResponseValue
