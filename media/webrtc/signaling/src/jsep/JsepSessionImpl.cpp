@@ -2059,6 +2059,53 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
                      " at level " << i);
       return NS_ERROR_INVALID_ARG;
     }
+
+    // Sanity check extmap
+    if (answerAttrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+      if (!offerAttrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+        JSEP_SET_ERROR("Answer adds extmap attributes to level " << i);
+        return NS_ERROR_INVALID_ARG;
+      }
+
+      for (const auto& ansExt : answerAttrs.GetExtmap().mExtmaps) {
+        bool found = false;
+        for (const auto& offExt : offerAttrs.GetExtmap().mExtmaps) {
+          if (ansExt.extensionname == offExt.extensionname) {
+            if ((ansExt.direction | ~offExt.direction) != ansExt.direction) {
+              JSEP_SET_ERROR("Answer has inconsistent direction on extmap "
+                             "attribute at level " << i << " ("
+                             << ansExt.extensionname << "). Offer had "
+                             << offExt.direction << ", answer had "
+                             << ansExt.direction << ".");
+              return NS_ERROR_INVALID_ARG;
+            }
+
+            if (offExt.entry < 4096 && (offExt.entry != ansExt.entry)) {
+              JSEP_SET_ERROR("Answer changed id for extmap attribute at level "
+                             << i << " (" << offExt.extensionname << ") from "
+                             << offExt.entry << " to " << ansExt.entry << ".");
+              return NS_ERROR_INVALID_ARG;
+            }
+
+            if (ansExt.entry >= 4096) {
+              JSEP_SET_ERROR("Answer used an invalid id (" << ansExt.entry
+                             << ") for extmap attribute at level " << i
+                             << " (" << ansExt.extensionname << ").");
+              return NS_ERROR_INVALID_ARG;
+            }
+
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          JSEP_SET_ERROR("Answer has extmap " << ansExt.extensionname << " at "
+                         "level " << i << " that was not present in offer.");
+          return NS_ERROR_INVALID_ARG;
+        }
+      }
+    }
   }
 
   return NS_OK;
