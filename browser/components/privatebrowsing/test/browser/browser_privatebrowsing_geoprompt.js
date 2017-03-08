@@ -6,7 +6,7 @@
 // control inside the private browsing mode.
 
 add_task(function* test() {
-  const testPageURL = "https://example.com/browser/" +
+  const testPageURL = "http://mochi.test:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_geoprompt_page.html";
 
   function checkGeolocation(aPrivateMode, aWindow) {
