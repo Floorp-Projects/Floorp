@@ -368,14 +368,13 @@ GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
 
   NS_ASSERTION(count <= INT32_MAX, "Too many style rules!");
 
-  uint32_t retval;
   nsresult rv =
-    sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex, &retval);
+    sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return 0;
   }
-  return retval;
+  return aIndex;
 }
 
 nsresult
