@@ -188,7 +188,7 @@ function testCurrentColorChange()
 
   // Clean up
   gCircle.removeAttribute("color");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testCurrentColorChangeUsingStyle()
@@ -209,7 +209,7 @@ function testCurrentColorChangeUsingStyle()
 
   // Clean up
   gCircle.removeAttribute("style");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function getFallbackColor(pServerStr)
@@ -236,7 +236,7 @@ function testCurrentColorChangeOnFallback()
      "Checking animated fallback fill=currentColor after updating context");
 
   gCircle.removeAttribute("style");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testInheritChange()
@@ -255,7 +255,7 @@ function testInheritChange()
      "Checking animated fill=inherit after updating context");
 
   gCircleParent.removeAttribute("fill");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testInheritChangeUsingStyle()
@@ -275,7 +275,7 @@ function testInheritChangeUsingStyle()
      + "(using style attr)");
 
   gCircleParent.removeAttribute("style");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testEmUnitChangeOnProp()
@@ -294,7 +294,7 @@ function testEmUnitChangeOnProp()
      "Checking animated font-size=2em after updating context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testEmUnitChangeOnPropBase()
@@ -319,7 +319,7 @@ function testEmUnitChangeOnPropBase()
      "Checking animated font-size=30px after updating context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testEmUnitChangeOnLength()
@@ -344,7 +344,7 @@ function testEmUnitChangeOnLength()
      "resampling");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testPercentUnitChangeOnProp()
@@ -363,7 +363,7 @@ function testPercentUnitChangeOnProp()
      "Checking animated font-size=150% after updating context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testPercentUnitChangeOnLength()
@@ -399,7 +399,7 @@ function testPercentUnitChangeOnLength()
      "Checking animated length=100% after updating context");
 
   gSvg.setAttribute("height", oldHeight);
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testRelativeFontSize()
@@ -421,7 +421,7 @@ function testRelativeFontSize()
   ok(fsize > 20, "Checking animated font-size > 20px after updating context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testRelativeFontWeight()
@@ -447,7 +447,7 @@ function testRelativeFontWeight()
      "Checking animated font-weight = 900 after updating context");
 
   gCircleParent.removeAttribute("font-weight");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testRelativeFont()
@@ -479,7 +479,7 @@ function testRelativeFont()
      "Checking size of shorthand 'font' > 20px after updating context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testCalcFontSize()
@@ -500,7 +500,7 @@ function testCalcFontSize()
                 "context");
 
   gCircleParent.removeAttribute("font-size");
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testDashArray()
@@ -529,7 +529,7 @@ function testDashArray()
 
   gSvg.setAttribute("height", oldHeight);
   gSvg.setAttribute("width",  oldWidth);
-  gCircle.removeChild(gCircle.firstChild);
+  gCircle.firstChild.remove();
 }
 
 function testClip()

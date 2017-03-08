@@ -173,7 +173,7 @@ FeedWriter.prototype = {
     let element = this._document.getElementById(id);
     let textNode = text.createDocumentFragment(element);
     while (element.hasChildNodes())
-      element.removeChild(element.firstChild);
+      element.firstChild.remove();
     element.appendChild(textNode);
     if (text.base) {
       element.setAttributeNS(XML_NS, "base", text.base.spec);

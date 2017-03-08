@@ -836,15 +836,15 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
 nsresult
 nsCacheService::DispatchToCacheIOThread(nsIRunnable* event)
 {
-    if (!gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
+    if (!gService || !gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
     return gService->mCacheIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 nsresult
 nsCacheService::SyncWithCacheIOThread()
 {
+    if (!gService || !gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
     gService->mLock.AssertCurrentThreadOwns();
-    if (!gService->mCacheIOThread) return NS_ERROR_NOT_AVAILABLE;
 
     nsCOMPtr<nsIRunnable> event = new nsBlockOnCacheThreadEvent();
 
@@ -1429,9 +1429,7 @@ nsCacheService::DoomEntry(nsCacheSession   *session,
 {
     CACHE_LOG_DEBUG(("Dooming entry for session %p, key %s\n",
                      session, PromiseFlatCString(key).get()));
-    NS_ASSERTION(gService, "nsCacheService::gService is null.");
-
-    if (!gService->mInitialized)
+    if (!gService || !gService->mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     return DispatchToCacheIOThread(new nsDoomEvent(session, key, listener));
@@ -1684,7 +1682,7 @@ public:
 void
 nsCacheService::MarkStartingFresh()
 {
-    if (!gService->mObserver->ShouldUseOldMaxSmartSize()) {
+    if (!gService || !gService->mObserver->ShouldUseOldMaxSmartSize()) {
         // Already using new max, nothing to do here
         return;
     }
@@ -2027,11 +2025,10 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     CACHE_LOG_DEBUG(("Opening entry for session %p, key %s, mode %d, blocking %d\n",
                      session, PromiseFlatCString(key).get(), accessRequested,
                      blockingMode));
-    NS_ASSERTION(gService, "nsCacheService::gService is null.");
     if (result)
         *result = nullptr;
 
-    if (!gService->mInitialized)
+    if (!gService || !gService->mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsCacheRequest * request = nullptr;
@@ -2354,12 +2351,12 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry,
 void
 nsCacheService::OnProfileShutdown()
 {
-    if (!gService)  return;
-    if (!gService->mInitialized) {
+    if (!gService || !gService->mInitialized) {
         // The cache service has been shut down, but someone is still holding
         // a reference to it. Ignore this call.
         return;
     }
+
     {
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ONPROFILESHUTDOWN));
         gService->mClearingEntries = true;

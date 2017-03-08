@@ -95,7 +95,7 @@ valueIs("abcdeTesth",
         "Modifying textnode text shouldn't affect value in edited textarea");
 defValueIs("abcdefghlmno", "Modified textnode text 3");
 
-t.removeChild(t.firstChild);
+t.firstChild.remove();
 valueIs("abcdeTesth",
         "Removing child textnode shouldn't affect value in edited textarea");
 defValueIs("defghlmno", "Removed textnode 3");

@@ -1011,7 +1011,7 @@ PlacesToolbar.prototype = {
 
     this._openedMenuButton = null;
     while (this._rootElt.hasChildNodes()) {
-      this._rootElt.removeChild(this._rootElt.firstChild);
+      this._rootElt.firstChild.remove();
     }
 
     let cc = this._resultNode.childCount;
@@ -1952,7 +1952,7 @@ PlacesPanelMenuView.prototype = {
 
     // Container is the toolbar itself.
     while (this._rootElt.hasChildNodes()) {
-      this._rootElt.removeChild(this._rootElt.firstChild);
+      this._rootElt.firstChild.remove();
     }
 
     for (let i = 0; i < this._resultNode.childCount; ++i) {

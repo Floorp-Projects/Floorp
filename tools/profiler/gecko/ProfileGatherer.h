@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/Promise.h"
 #include "nsIFile.h"
+#include "platform.h"
 
 namespace mozilla {
 
@@ -18,17 +19,18 @@ public:
 
   explicit ProfileGatherer();
   void WillGatherOOPProfile();
-  void GatheredOOPProfile();
-  void Start(double aSinceTime, mozilla::dom::Promise* aPromise);
-  void Start(double aSinceTime, const nsACString& aFileName);
+  void GatheredOOPProfile(PSLockRef aLock);
+  void Start(PSLockRef aLock, double aSinceTime,
+             mozilla::dom::Promise* aPromise);
+  void Start(PSLockRef aLock, double aSinceTime, const nsACString& aFileName);
   void Cancel();
   void OOPExitProfile(const nsCString& aProfile);
 
 private:
   ~ProfileGatherer() {};
-  void Finish();
+  void Finish(PSLockRef aLock);
   void Reset();
-  void Start2(double aSinceTime);
+  void Start2(PSLockRef aLock, double aSinceTime);
 
   nsTArray<nsCString> mExitProfiles;
   RefPtr<mozilla::dom::Promise> mPromise;

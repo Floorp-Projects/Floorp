@@ -95,9 +95,18 @@ private:
   }
 
 public:
-  explicit SamplerThread(double aInterval)
-    : mInterval(std::max(1, int(floor(aInterval + 0.5))))
+  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                double aInterval)
+    : mActivityGeneration(aActivityGeneration)
+    , mInterval(std::max(1, int(floor(aInterval + 0.5))))
   {
+    // By default we'll not adjust the timer resolution which tends to be
+    // around 16ms. However, if the requested interval is sufficiently low
+    // we'll try to adjust the resolution to match.
+    if (mInterval < 10) {
+      ::timeBeginPeriod(mInterval);
+    }
+
     // Create a new thread. It is important to use _beginthreadex() instead of
     // the Win32 function CreateThread(), because the CreateThread() does not
     // initialize thread-specific structures in the C runtime library.
@@ -120,71 +129,74 @@ public:
     }
   }
 
-  void Join() {
-    if (mThreadId != Thread::GetCurrentId()) {
-      WaitForSingleObject(mThread, INFINITE);
+  void Stop(PS::LockRef aLock) {
+    // Disable any timer resolution changes we've made. Do it now while
+    // gPSMutex is locked, i.e. before any other SamplerThread can be created
+    // and call ::timeBeginPeriod().
+    //
+    // It's safe to do this now even though this SamplerThread is still alive,
+    // because the next time the main loop of Run() iterates it won't get past
+    // the mActivityGeneration check, and so it won't make any more ::Sleep()
+    // calls.
+    if (mInterval < 10) {
+      ::timeEndPeriod(mInterval);
     }
   }
 
-  static void StartSampler(double aInterval) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    MOZ_RELEASE_ASSERT(!sInstance);
-
-    sInstance = new SamplerThread(aInterval);
-  }
-
-  static void StopSampler() {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    sInstance->Join();
-    delete sInstance;
-    sInstance = nullptr;
+  void Join() {
+    WaitForSingleObject(mThread, INFINITE);
   }
 
   void Run() {
     // This function runs on the sampler thread.
 
-    // By default we'll not adjust the timer resolution which tends to be around
-    // 16ms. However, if the requested interval is sufficiently low we'll try to
-    // adjust the resolution to match.
-    if (mInterval < 10)
-        ::timeBeginPeriod(mInterval);
+    while (true) {
+      // This scope is for |lock|. It ends before we sleep below.
+      {
+        PS::AutoLock lock(gPSMutex);
 
-    while (gIsActive) {
-      gBuffer->deleteExpiredStoredMarkers();
-
-      if (!gIsPaused) {
-        mozilla::StaticMutexAutoLock lock(gRegisteredThreadsMutex);
-
-        bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*gRegisteredThreads)[i];
-
-          // This will be null if we're not interested in profiling this thread.
-          if (!info->HasProfile() || info->IsPendingDelete()) {
-            continue;
-          }
-
-          if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
-              gBuffer->DuplicateLastSample(info->ThreadId(), gStartTime)) {
-            continue;
-          }
-
-          info->UpdateThreadResponsiveness();
-
-          SampleContext(info, isFirstProfiledThread);
-          isFirstProfiledThread = false;
+        // See the corresponding code in platform-linux-android.cpp for an
+        // explanation of what's happening here.
+        if (PS::ActivityGeneration(lock) != mActivityGeneration) {
+          return;
         }
+
+        gPS->Buffer(lock)->deleteExpiredStoredMarkers();
+
+        if (!gPS->IsPaused(lock)) {
+          bool isFirstProfiledThread = true;
+
+          const PS::ThreadVector& threads = gPS->Threads(lock);
+          for (uint32_t i = 0; i < threads.size(); i++) {
+            ThreadInfo* info = threads[i];
+
+            if (!info->HasProfile() || info->IsPendingDelete()) {
+              // We are not interested in profiling this thread.
+              continue;
+            }
+
+            if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
+                gPS->Buffer(lock)->DuplicateLastSample(info->ThreadId(),
+                                                       gPS->StartTime(lock))) {
+              continue;
+            }
+
+            info->UpdateThreadResponsiveness();
+
+            SampleContext(lock, info, isFirstProfiledThread);
+
+            isFirstProfiledThread = false;
+          }
+        }
+        // gPSMutex is unlocked here.
       }
+
       ::Sleep(mInterval);
     }
-
-    // disable any timer resolution changes we've made
-    if (mInterval < 10)
-        ::timeEndPeriod(mInterval);
   }
 
-  void SampleContext(ThreadInfo* aThreadInfo, bool isFirstProfiledThread)
+  void SampleContext(PS::LockRef aLock, ThreadInfo* aThreadInfo,
+                     bool isFirstProfiledThread)
   {
     uintptr_t thread = GetThreadHandle(aThreadInfo->GetPlatformData());
     HANDLE profiled_thread = reinterpret_cast<HANDLE>(thread);
@@ -201,18 +213,16 @@ public:
     sample.timestamp = mozilla::TimeStamp::Now();
     sample.threadInfo = aThreadInfo;
 
-    if (isFirstProfiledThread && gProfileMemory) {
-      sample.rssMemory = nsMemoryReporterManager::ResidentFast();
-    } else {
-      sample.rssMemory = 0;
-    }
-
     // Unique Set Size is not supported on Windows.
+    sample.rssMemory = (isFirstProfiledThread && gPS->FeatureMemory(aLock))
+                     ? nsMemoryReporterManager::ResidentFast()
+                     : 0;
     sample.ussMemory = 0;
 
     static const DWORD kSuspendFailed = static_cast<DWORD>(-1);
-    if (SuspendThread(profiled_thread) == kSuspendFailed)
+    if (SuspendThread(profiled_thread) == kSuspendFailed) {
       return;
+    }
 
     // SuspendThread is asynchronous, so the thread may still be running.
     // Call GetThreadContext first to ensure the thread is really suspended.
@@ -242,45 +252,29 @@ public:
 
     sample.context = &context;
 
-    Tick(gBuffer, &sample);
+    Tick(aLock, gPS->Buffer(aLock), &sample);
 
     ResumeThread(profiled_thread);
   }
 
 private:
+  // The activity generation, for detecting when the sampler thread must stop.
+  const uint32_t mActivityGeneration;
+
+  // The handle and Id for the sampler thread.
   HANDLE mThread;
   Thread::tid_t mThreadId;
 
   // The interval between samples, measured in milliseconds.
   const int mInterval;
 
-  static SamplerThread* sInstance;
-
   SamplerThread(const SamplerThread&) = delete;
   void operator=(const SamplerThread&) = delete;
 };
 
-SamplerThread* SamplerThread::sInstance = nullptr;
-
 static void
-PlatformInit()
+PlatformInit(PS::LockRef aLock)
 {
-}
-
-static void
-PlatformStart(double aInterval)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  SamplerThread::StartSampler(aInterval);
-}
-
-static void
-PlatformStop()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  SamplerThread::StopSampler();
 }
 
 /* static */ Thread::tid_t

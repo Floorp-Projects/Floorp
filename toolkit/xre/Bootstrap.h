@@ -113,7 +113,7 @@ public:
 #ifdef MOZ_WIDGET_ANDROID
   virtual void GeckoStart(JNIEnv* aEnv, char** argv, int argc, const StaticXREAppData& aAppData) = 0;
 
-  virtual void XRE_SetAndroidChildFds(int aCrashFd, int aIPCFd) = 0;
+  virtual void XRE_SetAndroidChildFds(JNIEnv* aEnv, int aCrashFd, int aIPCFd) = 0;
 #endif
 
 #ifdef LIBFUZZER

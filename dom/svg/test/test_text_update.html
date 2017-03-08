@@ -25,7 +25,7 @@ ok(length > 0, "text.getComputedTextLength() > 0");
 text.firstChild.nodeValue += "cd";
 ok(text.getComputedTextLength() > length, "text.getComputedTextLength() changes directly after DOM mutation");
 
-text.removeChild(text.firstChild);
+text.firstChild.remove();
 is(text.getComputedTextLength(), 0, "text.getComputedTextLength() == 0 after removing child");
 </script>
 </pre>

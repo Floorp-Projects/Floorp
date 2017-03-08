@@ -11,6 +11,7 @@ class nsCString;
 [ref] native StringArrayRef(nsTArray<nsCString>);
 
 interface nsIChannel;
+interface nsIEventTarget;
 interface nsIPrincipal;
 interface nsIURI;
 
@@ -54,6 +55,12 @@ interface nsIURIClassifier : nsISupports
    *
    * @param aPrincipal
    *        The principal that should be checked by the URI classifier.
+   *
+   * @param nsIEventTarget
+   *        Event target for constructing actor in content process.
+   *        The event target should be tied to Docgroup/Tabgroup by
+   *        using EventTargetFor
+   *
    * @param aTrackingProtectionEnabled
    *        Whether or not to classify the given URI against tracking
    *        protection lists
@@ -68,6 +75,7 @@ interface nsIURIClassifier : nsISupports
    *         callback will be called.
    */
   boolean classify(in nsIPrincipal aPrincipal,
+                   in nsIEventTarget aEventTarget,
                    in boolean aTrackingProtectionEnabled,
                    in nsIURIClassifierCallback aCallback);
 

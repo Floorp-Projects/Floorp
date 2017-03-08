@@ -774,6 +774,7 @@ public:
   // TextEventDispatcherListener methods
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) override;
+  NS_IMETHOD_(nsIMEUpdatePreference) GetIMEUpdatePreference() override;
   NS_IMETHOD_(void) OnRemovedFrom(
                       TextEventDispatcher* aTextEventDispatcher) override;
   NS_IMETHOD_(void) WillDispatchKeyboardEvent(

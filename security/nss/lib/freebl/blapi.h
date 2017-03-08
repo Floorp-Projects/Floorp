@@ -1469,6 +1469,12 @@ FIPS186Change_ReduceModQForDSA(const unsigned char *w,
                                const unsigned char *q,
                                unsigned char *xj);
 
+/* To allow NIST KAT tests */
+extern SECStatus
+PRNGTEST_Instantiate_Kat(const PRUint8 *entropy, unsigned int entropy_len,
+                         const PRUint8 *nonce, unsigned int nonce_len,
+                         const PRUint8 *personal_string, unsigned int ps_len);
+
 /*
  * The following functions are for FIPS poweron self test and FIPS algorithm
  * testing.

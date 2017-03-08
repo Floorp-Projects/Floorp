@@ -319,8 +319,9 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
   rv = mContent->SetAttr(ni->NamespaceID(), ni->NameAtom(),
                          ni->GetPrefixAtom(), value, true);
   if (NS_FAILED(rv)) {
-    aError.Throw(rv);
     DropAttribute(ni->NamespaceID(), ni->NameAtom());
+    aError.Throw(rv);
+    return nullptr;
   }
 
   return oldAttr.forget();
