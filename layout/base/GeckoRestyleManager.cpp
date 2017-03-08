@@ -866,13 +866,6 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     newParentContext = providerFrame->StyleContext();
     providerChild = providerFrame;
   }
-  NS_ASSERTION(newParentContext, "Reparenting something that has no usable"
-               " parent? Shouldn't happen!");
-  // XXX need to do something here to produce the correct style context for
-  // an IB split whose first inline part is inside a first-line frame.
-  // Currently the first IB anonymous block's style context takes the first
-  // part's style context as parent, which is wrong since first-line style
-  // should not apply to the anonymous block.
 
 #ifdef DEBUG
   {
@@ -897,6 +890,28 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     }
   }
 #endif
+
+  if (!newParentContext && !oldContext->GetParent()) {
+    // No need to do anything here.
+#ifdef DEBUG
+    // Make sure we have no children, so we really know there is nothing to do.
+    nsIFrame::ChildListIterator lists(aFrame);
+    for (; !lists.IsDone(); lists.Next()) {
+      MOZ_ASSERT(lists.CurrentList().IsEmpty(),
+                 "Failing to reparent style context for child of "
+                 "non-inheriting anon box");
+    }
+#endif // DEBUG
+    return NS_OK;
+  }
+
+  NS_ASSERTION(newParentContext, "Reparenting something that has no usable"
+               " parent? Shouldn't happen!");
+  // XXX need to do something here to produce the correct style context for
+  // an IB split whose first inline part is inside a first-line frame.
+  // Currently the first IB anonymous block's style context takes the first
+  // part's style context as parent, which is wrong since first-line style
+  // should not apply to the anonymous block.
 
   nsIFrame* prevContinuation =
     GetPrevContinuationWithPossiblySameStyle(aFrame);
