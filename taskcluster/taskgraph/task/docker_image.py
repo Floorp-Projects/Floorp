@@ -8,75 +8,38 @@ import logging
 import os
 import urllib2
 
-from . import base
-from .. import GECKO
-from taskgraph.util.docker import (
-    docker_image,
-    generate_context_hash,
-    INDEX_PREFIX,
-)
+from . import transform
+from taskgraph.util.docker import INDEX_PREFIX
+from taskgraph.transforms.base import TransformSequence, TransformConfig
 from taskgraph.util.taskcluster import get_artifact_url
-from taskgraph.util.templates import Templates
+from taskgraph.util.python_path import find_object
 
 logger = logging.getLogger(__name__)
 
 
-def load_tasks(kind, path, config, params, loaded_tasks):
-    parameters = {
-        'pushlog_id': params.get('pushlog_id', 0),
-        'pushdate': params['moz_build_date'],
-        'pushtime': params['moz_build_date'][8:],
-        'year': params['moz_build_date'][0:4],
-        'month': params['moz_build_date'][4:6],
-        'day': params['moz_build_date'][6:8],
-        'project': params['project'],
-        'docker_image': docker_image,
-        'base_repository': params['base_repository'] or params['head_repository'],
-        'head_repository': params['head_repository'],
-        'head_ref': params['head_ref'] or params['head_rev'],
-        'head_rev': params['head_rev'],
-        'owner': params['owner'],
-        'level': params['level'],
-        'source': '{repo}file/{rev}/taskcluster/ci/docker-image/image.yml'
-                  .format(repo=params['head_repository'], rev=params['head_rev']),
-        'index_image_prefix': INDEX_PREFIX,
-        'artifact_path': 'public/image.tar.zst',
-    }
+def transform_inputs(inputs, kind, path, config, params, loaded_tasks):
+    """
+    Transform a sequence of inputs according to the transform configuration.
+    """
+    transforms = TransformSequence()
+    for xform_path in config['transforms']:
+        transform = find_object(xform_path)
+        transforms.add(transform)
 
-    tasks = []
-    templates = Templates(path)
-    for image_name, image_symbol in config['images'].iteritems():
-        context_path = os.path.join('taskcluster', 'docker', image_name)
-        context_hash = generate_context_hash(GECKO, context_path, image_name)
-
-        image_parameters = dict(parameters)
-        image_parameters['image_name'] = image_name
-        image_parameters['context_hash'] = context_hash
-
-        image_task = templates.load('image.yml', image_parameters)
-        attributes = {'image_name': image_name}
-
-        # unique symbol for different docker image
-        if 'extra' in image_task['task']:
-            image_task['task']['extra']['treeherder']['symbol'] = image_symbol
-
-        # As an optimization, if the context hash exists for a high level, that image
-        # task ID will be used.  The reasoning behind this is that eventually everything ends
-        # up on level 3 at some point if most tasks use this as a common image
-        # for a given context hash, a worker within Taskcluster does not need to contain
-        # the same image per branch.
-        index_paths = ['{}.level-{}.{}.hash.{}'.format(
-            INDEX_PREFIX, level, image_name, context_hash)
-            for level in reversed(range(int(params['level']), 4))]
-
-        tasks.append(DockerImageTask(kind, 'build-docker-image-' + image_name,
-                                     task=image_task['task'], attributes=attributes,
-                                     index_paths=index_paths))
-
+    # perform the transformations
+    trans_config = TransformConfig(kind, path, config, params)
+    tasks = [DockerImageTask(kind, t)
+             for t in transforms(trans_config, inputs)]
     return tasks
 
 
-class DockerImageTask(base.Task):
+def load_tasks(kind, path, config, params, loaded_tasks):
+    return transform_inputs(
+        transform.get_inputs(kind, path, config, params, loaded_tasks),
+        kind, path, config, params, loaded_tasks)
+
+
+class DockerImageTask(transform.TransformTask):
     def get_dependencies(self, taskgraph):
         return []
 
@@ -108,9 +71,6 @@ class DockerImageTask(base.Task):
         index_paths = ['{}.level-{}.{}.hash.{}'.format(
             INDEX_PREFIX, level, image_name, context_hash)
             for level in reversed(range(int(imgMeta['level']), 4))]
-        docker_image_task = cls(kind='docker-image',
-                                label=task_dict['label'],
-                                attributes=task_dict['attributes'],
-                                task=task_dict['task'],
-                                index_paths=index_paths)
+        task_dict['index_paths'] = index_paths
+        docker_image_task = cls(kind='docker-image', task=task_dict)
         return docker_image_task

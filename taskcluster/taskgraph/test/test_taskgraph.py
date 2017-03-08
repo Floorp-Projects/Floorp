@@ -14,7 +14,7 @@ from mozunit import main
 from taskgraph.util.docker import INDEX_PREFIX
 
 
-class TestTargetTasks(unittest.TestCase):
+class TestTaskGraph(unittest.TestCase):
 
     def test_from_json(self):
         task = {
@@ -40,10 +40,12 @@ class TestTargetTasks(unittest.TestCase):
                     'task': {'task': 'def'},
                 }),
             'b': DockerImageTask(kind='docker-image',
-                                 label='b',
-                                 attributes={},
-                                 task=task,
-                                 index_paths=index_paths),
+                                 task={
+                                     'label': 'b',
+                                     'attributes': {},
+                                     'task': task,
+                                     'index_paths': index_paths,
+                                 }),
         }, graph=Graph(nodes={'a', 'b'}, edges=set()))
 
         tasks, new_graph = TaskGraph.from_json(graph.to_json())
