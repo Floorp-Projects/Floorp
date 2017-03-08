@@ -754,6 +754,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     ? effects->PropertiesForAnimationsLevel().Invert()
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
+    effect->GetAnimation()->WillComposeStyle();
     effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
   }
 
