@@ -108,6 +108,8 @@ public:
 #endif
 
 private:
+  void OnCDMCreated(uint32_t aPromiseId);
+
   ~ChromiumCDMProxy();
 
   GMPCrashHelper* mCrashHelper;

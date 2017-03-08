@@ -6,13 +6,26 @@
 #include "ChromiumCDMParent.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "GMPContentChild.h"
+#include "mozilla/Unused.h"
+#include "ChromiumCDMProxy.h"
 
 namespace mozilla {
 namespace gmp {
 
-ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent)
-  : mContentParent(aContentParent)
+ChromiumCDMParent::ChromiumCDMParent(GMPContentParent* aContentParent,
+                                     uint32_t aPluginId)
+  : mPluginId(aPluginId)
+  , mContentParent(aContentParent)
 {
+}
+
+bool
+ChromiumCDMParent::Init(ChromiumCDMProxy* aProxy,
+                        bool aAllowDistinctiveIdentifier,
+                        bool aAllowPersistentState)
+{
+  mProxy = aProxy;
+  return SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState);
 }
 
 ipc::IPCResult
