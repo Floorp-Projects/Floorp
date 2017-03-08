@@ -56,7 +56,6 @@ public:
   bool isActive();
   bool isDisabled();
 
-  void GetButtonRect(const nsRect& aRect, nsRect& aResult);
   void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
 
   nsStyleContext* GetStyleContext(int32_t aIndex) const;
