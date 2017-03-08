@@ -81,7 +81,7 @@ parent:
   // Returns the value of the opacity applied to the layer by animation.
   // |hasAnimationOpacity| is true if the layer has an opacity value
   // specified by animation. If it's false, |opacity| value is indefinite.
-  sync GetAnimationOpacity(LayerHandle layer) returns (float opacity,
+  sync GetAnimationOpacity(uint64_t aCompositorAnimationsId) returns (float opacity,
                                                   bool hasAnimationOpacity);
 
   // Returns the value of the transform applied to the layer by animation after
@@ -89,7 +89,7 @@ parent:
   // of the corresponding frame and transform origin and after converting to CSS
   // pixels. If the layer is not transformed by animation, the return value will
   // be void_t.
-  sync GetAnimationTransform(LayerHandle layer) returns (MaybeTransform transform);
+  sync GetAnimationTransform(uint64_t aCompositorAnimationId) returns (MaybeTransform transform);
 
   // The next time the layer tree is composited, add this async scroll offset in
   // CSS pixels for the given ViewID.

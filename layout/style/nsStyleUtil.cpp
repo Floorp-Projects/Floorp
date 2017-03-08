@@ -657,6 +657,15 @@ nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
 }
 
 /* static */ void
+nsStyleUtil::AppendFramesTimingFunction(uint32_t aFrames,
+                                        nsAString& aResult)
+{
+  aResult.AppendLiteral("frames(");
+  aResult.AppendInt(aFrames);
+  aResult.AppendLiteral(")");
+}
+
+/* static */ void
 nsStyleUtil::AppendCubicBezierTimingFunction(float aX1, float aY1,
                                              float aX2, float aY2,
                                              nsAString& aResult)

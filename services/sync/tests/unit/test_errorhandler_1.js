@@ -19,6 +19,7 @@ fakeServer.start();
 do_register_cleanup(function() {
   return new Promise(resolve => {
     fakeServer.stop(resolve);
+    Svc.Prefs.resetBranch("");
   });
 });
 
@@ -64,6 +65,8 @@ function clean() {
 }
 
 add_task(async function test_401_logout() {
+  enableValidationPrefs();
+
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
@@ -107,6 +110,8 @@ add_task(async function test_401_logout() {
 });
 
 add_task(async function test_credentials_changed_logout() {
+  enableValidationPrefs();
+
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
@@ -360,6 +365,8 @@ add_task(function test_shouldReportLoginFailureWithNoCluster() {
 });
 
 add_task(async function test_login_syncAndReportErrors_non_network_error() {
+  enableValidationPrefs();
+
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
@@ -378,6 +385,8 @@ add_task(async function test_login_syncAndReportErrors_non_network_error() {
 });
 
 add_task(async function test_sync_syncAndReportErrors_non_network_error() {
+  enableValidationPrefs();
+
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
@@ -409,6 +418,8 @@ add_task(async function test_sync_syncAndReportErrors_non_network_error() {
 });
 
 add_task(async function test_login_syncAndReportErrors_prolonged_non_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
@@ -427,6 +438,8 @@ add_task(async function test_login_syncAndReportErrors_prolonged_non_network_err
 });
 
 add_task(async function test_sync_syncAndReportErrors_prolonged_non_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
@@ -458,6 +471,8 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_non_network_erro
 });
 
 add_task(async function test_login_syncAndReportErrors_network_error() {
+  enableValidationPrefs();
+
   // Test network errors are reported when calling syncAndReportErrors.
   await configureIdentity({username: "broken.wipe"});
   Service.clusterURL = fakeServerUrl;
@@ -475,6 +490,8 @@ add_task(async function test_login_syncAndReportErrors_network_error() {
 
 
 add_test(function test_sync_syncAndReportErrors_network_error() {
+  enableValidationPrefs();
+
   // Test network errors are reported when calling syncAndReportErrors.
   Services.io.offline = true;
 
@@ -492,6 +509,8 @@ add_test(function test_sync_syncAndReportErrors_network_error() {
 });
 
 add_task(async function test_login_syncAndReportErrors_prolonged_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, network errors are reported
   // when calling syncAndReportErrors.
   await configureIdentity({username: "johndoe"});
@@ -509,6 +528,8 @@ add_task(async function test_login_syncAndReportErrors_prolonged_network_error()
 });
 
 add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, network errors are reported
   // when calling syncAndReportErrors.
   Services.io.offline = true;
@@ -527,6 +548,8 @@ add_test(function test_sync_syncAndReportErrors_prolonged_network_error() {
 });
 
 add_task(async function test_login_prolonged_non_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -545,6 +568,8 @@ add_task(async function test_login_prolonged_non_network_error() {
 });
 
 add_task(async function test_sync_prolonged_non_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -574,6 +599,8 @@ add_task(async function test_sync_prolonged_non_network_error() {
 });
 
 add_task(async function test_login_prolonged_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, network errors are reported
   await configureIdentity({username: "johndoe"});
   Service.clusterURL = fakeServerUrl;
@@ -590,6 +617,8 @@ add_task(async function test_login_prolonged_network_error() {
 });
 
 add_test(function test_sync_prolonged_network_error() {
+  enableValidationPrefs();
+
   // Test prolonged, network errors are reported
   Services.io.offline = true;
 
@@ -608,6 +637,8 @@ add_test(function test_sync_prolonged_network_error() {
 });
 
 add_task(async function test_login_non_network_error() {
+  enableValidationPrefs();
+
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -626,6 +657,8 @@ add_task(async function test_login_non_network_error() {
 });
 
 add_task(async function test_sync_non_network_error() {
+  enableValidationPrefs();
+
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -650,6 +683,8 @@ add_task(async function test_sync_non_network_error() {
 });
 
 add_task(async function test_login_network_error() {
+  enableValidationPrefs();
+
   await configureIdentity({username: "johndoe"});
   Service.clusterURL = fakeServerUrl;
 
@@ -667,6 +702,8 @@ add_task(async function test_login_network_error() {
 });
 
 add_test(function test_sync_network_error() {
+  enableValidationPrefs();
+
   // Test network errors are not reported.
   Services.io.offline = true;
 
@@ -685,6 +722,8 @@ add_test(function test_sync_network_error() {
 });
 
 add_task(async function test_sync_server_maintenance_error() {
+  enableValidationPrefs();
+
   // Test server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -719,6 +758,8 @@ add_task(async function test_sync_server_maintenance_error() {
 });
 
 add_task(async function test_info_collections_login_server_maintenance_error() {
+  enableValidationPrefs();
+
   // Test info/collections server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -757,6 +798,8 @@ add_task(async function test_info_collections_login_server_maintenance_error() {
 });
 
 add_task(async function test_meta_global_login_server_maintenance_error() {
+  enableValidationPrefs();
+
   // Test meta/global server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);

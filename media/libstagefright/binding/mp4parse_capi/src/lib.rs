@@ -65,6 +65,7 @@ use mp4parse::Track;
 use mp4parse_error::*;
 use mp4parse_track_type::*;
 
+#[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(PartialEq, Debug)]
 pub enum mp4parse_error {
@@ -76,6 +77,7 @@ pub enum mp4parse_error {
     MP4PARSE_ERROR_IO = 5,
 }
 
+#[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(PartialEq, Debug)]
 pub enum mp4parse_track_type {
@@ -87,6 +89,7 @@ impl Default for mp4parse_track_type {
     fn default() -> Self { mp4parse_track_type::MP4PARSE_TRACK_TYPE_VIDEO }
 }
 
+#[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(PartialEq, Debug)]
 pub enum mp4parse_codec {
@@ -119,9 +122,9 @@ pub struct mp4parse_track_info {
 pub struct mp4parse_indice {
     pub start_offset: u64,
     pub end_offset: u64,
-    pub start_composition: u64,
-    pub end_composition: u64,
-    pub start_decode: u64,
+    pub start_composition: i64,
+    pub end_composition: i64,
+    pub start_decode: i64,
     pub sync: bool,
 }
 
@@ -668,22 +671,29 @@ pub unsafe extern fn mp4parse_get_indice_table(parser: *mut mp4parse_parser, tra
         _ => {},
     }
 
+    let media_time = match (&track.media_time, &track.timescale) {
+        (&Some(t), &Some(s)) => {
+            track_time_to_us(t, s).map(|v| v as i64)
+        },
+        _ => None,
+    };
+
+    let empty_duration = match (&track.empty_duration, &context.timescale) {
+        (&Some(e), &Some(s)) => {
+            media_time_to_us(e, s).map(|v| v as i64)
+        },
+        _ => None
+    };
+
     // Find the track start offset time from 'elst'.
     // 'media_time' maps start time onward, 'empty_duration' adds time offset
     // before first frame is displayed.
-    let offset_time =
-        match (&track.empty_duration, &track.media_time, &context.timescale) {
-            (&Some(empty_duration), &Some(media_time), &Some(scale)) => {
-                (empty_duration.0 as i64 - media_time.0 as i64) * scale.0 as i64
-            },
-            (&Some(empty_duration), _, &Some(scale)) => {
-                empty_duration.0 as i64 * scale.0 as i64
-            },
-            (_, &Some(media_time), &Some(scale)) => {
-                (0 - media_time.0 as i64) * scale.0 as i64
-            },
-            _ => 0,
-        };
+    let offset_time = match (empty_duration, media_time) {
+        (Some(e), Some(m)) => e - m,
+        (Some(e), None) => e,
+        (None, Some(m)) => m,
+        _ => 0,
+    };
 
     match create_sample_table(track, offset_time) {
         Some(v) => {
@@ -962,10 +972,10 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
         // ctts_offset is the current sample offset time.
         let ctts_offset = PresentationTime::new(ctts_offset_iter.next_offset_time(), timescale);
 
-        let start_composition = (decode_time + ctts_offset.to_us() + track_offset_time) as u64;
-        let end_composition = (sum_delta.to_us() + ctts_offset.to_us() + track_offset_time) as u64;
+        let start_composition = decode_time + ctts_offset.to_us() + track_offset_time;
+        let end_composition = sum_delta.to_us() + ctts_offset.to_us() + track_offset_time;
 
-        sample.start_decode = decode_time as u64;
+        sample.start_decode = decode_time;
         sample.start_composition = start_composition;
         sample.end_composition = end_composition;
     }

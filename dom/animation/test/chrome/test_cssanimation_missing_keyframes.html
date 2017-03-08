@@ -1,0 +1,73 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Bug 1339332 - Test for missing keyframes in CSS Animation</title>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+</head>
+<body>
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1339332"
+   target="_blank">Mozilla Bug 1339332</a>
+<div id="log"></div>
+<style>
+@keyframes missingFrom {
+  to {
+    text-align: right;
+  }
+}
+@keyframes missingBoth {
+  50% {
+    text-align: right;
+  }
+}
+@keyframes missingTo {
+  from {
+    text-align: right;
+  }
+}
+</style>
+<script>
+'use strict';
+
+const gTests = [
+  { desc: 'missing "from" keyframe',
+    animationName: 'missingFrom',
+    expected: [{ property: 'text-align',
+                 values: [valueFormat(0, undefined, 'replace', 'ease'),
+                          valueFormat(1, 'right',   'replace')] } ]
+  },
+  { desc: 'missing "to" keyframe',
+    animationName: 'missingTo',
+    expected: [{ property: 'text-align',
+                 values: [valueFormat(0, 'right',   'replace', 'ease'),
+                          valueFormat(1, undefined, 'replace')] } ]
+  },
+  { desc: 'missing "from" and "to" keyframes',
+    animationName: 'missingBoth',
+    expected: [{ property: 'text-align',
+                 values: [valueFormat(0,  undefined, 'replace', 'ease'),
+                          valueFormat(.5, 'right',   'replace', 'ease'),
+                          valueFormat(1,  undefined, 'replace')] } ]
+  },
+];
+
+SpecialPowers.pushPrefEnv(
+  { set: [["dom.animations-api.core.enabled", true]] },
+  function() {
+    gTests.forEach(function(subtest) {
+      test(function(t) {
+        const div = addDiv(t);
+        div.style.animation = `${ subtest.animationName } 1000s`;
+        const animation = div.getAnimations()[0];
+        assert_properties_equal(animation.effect.getProperties(),
+                                subtest.expected);
+      }, subtest.desc);
+    });
+
+    done();
+  }
+);
+
+</script>
+</body>

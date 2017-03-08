@@ -51,9 +51,9 @@ typedef struct mp4parse_track_info {
 typedef struct mp4parse_indice {
 	uint64_t start_offset;
 	uint64_t end_offset;
-	uint64_t start_composition;
-	uint64_t end_composition;
-	uint64_t start_decode;
+	int64_t start_composition;
+	int64_t end_composition;
+	int64_t start_decode;
 	bool sync;
 } mp4parse_indice;
 

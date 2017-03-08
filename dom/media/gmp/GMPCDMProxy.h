@@ -31,7 +31,8 @@ public:
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName) override;
+            const nsAString& aGMPName,
+            nsIEventTarget* aMainThread) override;
 
   void OnSetDecryptorId(uint32_t aId) override;
 
