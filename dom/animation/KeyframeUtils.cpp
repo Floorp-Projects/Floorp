@@ -654,6 +654,12 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
             IsComputeValuesFailureKey(pair)) {
           continue;
         }
+      } else if (pair.mValue.GetUnit() == eCSSUnit_Null) {
+        // An uninitialized nsCSSValue represents the underlying value which
+        // we represent as an uninitialized AnimationValue so we just leave
+        // neutralPair->mValue as-is.
+        PropertyStyleAnimationValuePair* neutralPair = values.AppendElement();
+        neutralPair->mProperty = pair.mProperty;
       } else {
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
               CSSEnabledState::eForAllContent, aElement, aStyleContext,

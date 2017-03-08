@@ -378,15 +378,16 @@ KeyframeEffectReadOnly::CompositeValue(
   const StyleAnimationValue& aUnderlyingValue,
   CompositeOperation aCompositeOperation)
 {
+  // Just return the underlying value if |aValueToComposite| is null
+  // (i.e. missing keyframe).
+  if (aValueToComposite.IsNull()) {
+    return aUnderlyingValue;
+  }
+
   switch (aCompositeOperation) {
     case dom::CompositeOperation::Replace:
       return aValueToComposite;
     case dom::CompositeOperation::Add: {
-      // Just return the underlying value if |aValueToComposite| is null (i.e.
-      // missing keyframe).
-      if (aValueToComposite.IsNull()) {
-        return aUnderlyingValue;
-      }
       StyleAnimationValue result(aValueToComposite);
       return StyleAnimationValue::Add(aProperty,
                                       aUnderlyingValue,
@@ -463,29 +464,17 @@ KeyframeEffectReadOnly::CompositeValue(
 {
   MOZ_ASSERT(mTarget, "CompositeValue should be called with target element");
 
-  StyleAnimationValue result = aValueToComposite;
-
-  if (aCompositeOperation == CompositeOperation::Replace) {
-    MOZ_ASSERT(!aValueToComposite.IsNull(),
-      "Input value should be valid in case of replace composite");
-    // Just copy the input value in case of 'Replace'.
-    return result;
-  }
-
   // FIXME: Bug 1311257: Get the base value for the servo backend.
   if (mDocument->IsStyledByServo()) {
-    return result;
+    return aValueToComposite;
   }
 
-  MOZ_ASSERT(!aValueToComposite.IsNull() ||
-             aCompositeOperation == CompositeOperation::Add,
-             "InputValue should be null only if additive composite");
-
-  result = GetUnderlyingStyle(aProperty, aAnimationRule);
+  StyleAnimationValue underlyingValue =
+    GetUnderlyingStyle(aProperty, aAnimationRule);
 
   return CompositeValue(aProperty,
                         aValueToComposite,
-                        result,
+                        underlyingValue,
                         aCompositeOperation);
 }
 
@@ -502,8 +491,7 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
 
   for (const AnimationProperty& property : aProperties) {
     for (const AnimationPropertySegment& segment : property.mSegments) {
-      if (segment.mFromComposite == dom::CompositeOperation::Replace &&
-          segment.mToComposite == dom::CompositeOperation::Replace) {
+      if (segment.HasReplacableValues()) {
         continue;
       }
 
@@ -1231,16 +1219,33 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
         Servo_DeclarationBlock_SerializeOneValue(
           propertyValue.mServoDeclarationBlock,
           propertyValue.mProperty, &stringValue);
+      } else if (nsCSSProps::IsShorthand(propertyValue.mProperty)) {
+         // nsCSSValue::AppendToString does not accept shorthands properties but
+         // works with token stream values if we pass eCSSProperty_UNKNOWN as
+         // the property.
+         propertyValue.mValue.AppendToString(
+           eCSSProperty_UNKNOWN, stringValue, nsCSSValue::eNormalized);
       } else {
-        // nsCSSValue::AppendToString does not accept shorthands properties but
-        // works with token stream values if we pass eCSSProperty_UNKNOWN as
-        // the property.
-        nsCSSPropertyID propertyForSerializing =
-          nsCSSProps::IsShorthand(propertyValue.mProperty)
-          ? eCSSProperty_UNKNOWN
-          : propertyValue.mProperty;
-        propertyValue.mValue.AppendToString(
-          propertyForSerializing, stringValue, nsCSSValue::eNormalized);
+        nsCSSValue cssValue = propertyValue.mValue;
+        if (cssValue.GetUnit() == eCSSUnit_Null) {
+          // We use an uninitialized nsCSSValue to represent the
+          // "neutral value". We currently only do this for keyframes generated
+          // from CSS animations with missing 0%/100% keyframes. Furthermore,
+          // currently (at least until bug 1339334) keyframes generated from
+          // CSS animations only contain longhand properties so we only need to
+          // handle null nsCSSValues for longhand properties.
+          DebugOnly<bool> uncomputeResult =
+            StyleAnimationValue::UncomputeValue(
+              propertyValue.mProperty, Move(BaseStyle(propertyValue.mProperty)),
+              cssValue);
+
+          MOZ_ASSERT(uncomputeResult,
+                     "Unable to get specified value from computed value");
+          MOZ_ASSERT(cssValue.GetUnit() != eCSSUnit_Null,
+                     "Got null computed value");
+        }
+        cssValue.AppendToString(propertyValue.mProperty,
+                                stringValue, nsCSSValue::eNormalized);
       }
 
       const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
@@ -1625,12 +1630,11 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(
 
   for (const AnimationProperty& property : mProperties) {
     for (const AnimationPropertySegment& segment : property.mSegments) {
-      // In case composite operation is not 'replace', we can't throttle
-      // animations which will not cause any layout changes on invisible
-      // elements because we can't calculate the change hint for such properties
-      // until we compose it.
-      if (segment.mFromComposite != CompositeOperation::Replace ||
-          segment.mToComposite != CompositeOperation::Replace) {
+      // In case composite operation is not 'replace' or value is null,
+      // we can't throttle animations which will not cause any layout changes
+      // on invisible elements because we can't calculate the change hint for
+      // such properties until we compose it.
+      if (!segment.HasReplacableValues()) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
       }
