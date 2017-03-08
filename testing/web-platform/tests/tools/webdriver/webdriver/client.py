@@ -135,9 +135,8 @@ class ActionSequence(object):
         :param origin: Origin of coordinates, either "viewport", "pointer" or
                        an Element. If None, remote end defaults to "viewport".
         """
-        # TODO change to pointerMove once geckodriver > 0.14 is available on mozilla-central
         action = {
-            "type": "move",
+            "type": "pointerMove",
             "x": x,
             "y": y
         }
