@@ -318,7 +318,7 @@
   border: none !important;
   border-radius: 0 !important;
   position: relative;
-  min-width: 28px;
+  min-width: 24px;
 }
 
 #command-button-pick {
