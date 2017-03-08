@@ -2189,44 +2189,6 @@ public class GeckoAppShell
         return connection.getContentType();
     }
 
-    /**
-     * Retrieve the absolute path of an external storage directory.
-     *
-     * @param type The type of directory to return
-     * @return Absolute path of the specified directory or null on failure
-     */
-    @WrapForJNI(calledFrom = "gecko")
-    private static String getExternalPublicDirectory(final String type) {
-        final String state = Environment.getExternalStorageState();
-        if (!Environment.MEDIA_MOUNTED.equals(state) &&
-            !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            // External storage is not available.
-            return null;
-        }
-
-        if ("sdcard".equals(type)) {
-            // SD card has a separate path.
-            return Environment.getExternalStorageDirectory().getAbsolutePath();
-        }
-
-        final String systemType;
-        if ("downloads".equals(type)) {
-            systemType = Environment.DIRECTORY_DOWNLOADS;
-        } else if ("pictures".equals(type)) {
-            systemType = Environment.DIRECTORY_PICTURES;
-        } else if ("videos".equals(type)) {
-            systemType = Environment.DIRECTORY_MOVIES;
-        } else if ("music".equals(type)) {
-            systemType = Environment.DIRECTORY_MUSIC;
-        } else if ("apps".equals(type)) {
-            File appInternalStorageDirectory = getApplicationContext().getFilesDir();
-            return new File(appInternalStorageDirectory, "mozilla").getAbsolutePath();
-        } else {
-            return null;
-        }
-        return Environment.getExternalStoragePublicDirectory(systemType).getAbsolutePath();
-    }
-
     @WrapForJNI(calledFrom = "gecko")
     private static int getMaxTouchPoints() {
         PackageManager pm = getApplicationContext().getPackageManager();

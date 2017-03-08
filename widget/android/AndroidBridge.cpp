@@ -1130,37 +1130,3 @@ nsresult AndroidBridge::InputStreamRead(Object::Param obj, char *aBuf, uint32_t 
     *aRead = read;
     return NS_OK;
 }
-
-nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath) {
-    if (XRE_IsContentProcess()) {
-        nsString key(aType);
-        nsAutoString path;
-        if (AndroidBridge::sStoragePaths.Get(key, &path)) {
-            aPath = path;
-            return NS_OK;
-        }
-
-        // Lazily get the value from the parent.
-        dom::ContentChild* child = dom::ContentChild::GetSingleton();
-        if (child) {
-          nsAutoString type(aType);
-          child->SendGetDeviceStorageLocation(type, &path);
-          if (!path.IsEmpty()) {
-            AndroidBridge::sStoragePaths.Put(key, path);
-            aPath = path;
-            return NS_OK;
-          }
-        }
-
-        ALOG_BRIDGE("AndroidBridge::GetExternalPublicDirectory no cache for %s",
-              NS_ConvertUTF16toUTF8(aType).get());
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    auto path = GeckoAppShell::GetExternalPublicDirectory(aType);
-    if (!path) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-    aPath = path->ToString();
-    return NS_OK;
-}

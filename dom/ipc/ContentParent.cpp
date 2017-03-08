@@ -25,7 +25,6 @@
 
 #include "mozilla/a11y/PDocAccessible.h"
 #include "AudioChannelService.h"
-#include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -53,7 +52,6 @@
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/StorageIPC.h"
-#include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/PresentationParent.h"
@@ -270,7 +268,6 @@ using base::KillProcess;
 #ifdef MOZ_CRASHREPORTER
 using namespace CrashReporter;
 #endif
-using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::power;
 using namespace mozilla::media;
 using namespace mozilla::embedding;
@@ -2800,12 +2797,6 @@ ContentParent::Observe(nsISupports* aSubject,
   else if (!strcmp(aTopic, "last-pb-context-exited")) {
     Unused << SendLastPrivateDocShellDestroyed();
   }
-  else if (!strcmp(aTopic, "file-watcher-update")) {
-    nsCString creason;
-    CopyUTF16toUTF8(aData, creason);
-    DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
-    Unused << SendFilePathUpdate(file->mStorageType, file->mStorageName, file->mPath, creason);
-  }
 #ifdef ACCESSIBILITY
   else if (aData && !strcmp(aTopic, "a11y-init-or-shutdown")) {
     if (*aData == '1') {
@@ -2887,22 +2878,6 @@ bool
 ContentParent::DeallocPBrowserParent(PBrowserParent* frame)
 {
   return nsIContentParent::DeallocPBrowserParent(frame);
-}
-
-PDeviceStorageRequestParent*
-ContentParent::AllocPDeviceStorageRequestParent(const DeviceStorageParams& aParams)
-{
-  RefPtr<DeviceStorageRequestParent> result = new DeviceStorageRequestParent(aParams);
-  result->Dispatch();
-  return result.forget().take();
-}
-
-bool
-ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* doomed)
-{
-  DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
-  NS_RELEASE(parent);
-  return true;
 }
 
 PBlobParent*
@@ -3717,25 +3692,6 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
 {
   return nsIContentParent::RecvAsyncMessage(aMsg, Move(aCpows), aPrincipal,
                                             aData);
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvFilePathUpdateNotify(const nsString& aType,
-                                        const nsString& aStorageName,
-                                        const nsString& aFilePath,
-                                        const nsCString& aReason)
-{
-  RefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aType,
-                                                        aStorageName,
-                                                        aFilePath);
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  obs->NotifyObservers(dsf, "file-watcher-update",
-                       NS_ConvertASCIItoUTF16(aReason).get());
-  return IPC_OK();
 }
 
 static int32_t
@@ -4768,25 +4724,6 @@ ContentParent::RecvEndDriverCrashGuard(const uint32_t& aGuardType)
 {
   mDriverCrashGuard = nullptr;
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvGetDeviceStorageLocation(const nsString& aType,
-                                            nsString* aPath)
-{
-#ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::GetExternalPublicDirectory(aType, *aPath);
-  return IPC_OK();
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvGetDeviceStorageLocations(DeviceStorageLocationInfo* info)
-{
-    DeviceStorageStatics::GetDeviceStorageLocationsForIPC(info);
-    return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
