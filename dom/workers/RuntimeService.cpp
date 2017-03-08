@@ -26,6 +26,7 @@
 #include "BackgroundChild.h"
 #include "GeckoProfiler.h"
 #include "jsfriendapi.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Atomics.h"
@@ -2816,10 +2817,12 @@ WorkerThreadPrimaryRunnable::Run()
   {
     // Raw pointer: this class is on the stack.
     WorkerPrivate* mWorkerPrivate;
+    RefPtr<AbstractThread> mAbstractThread;
 
   public:
     SetThreadHelper(WorkerPrivate* aWorkerPrivate, WorkerThread* aThread)
       : mWorkerPrivate(aWorkerPrivate)
+      , mAbstractThread(AbstractThread::CreateXPCOMThreadWrapper(NS_GetCurrentThread(), false))
     {
       MOZ_ASSERT(aWorkerPrivate);
       MOZ_ASSERT(aThread);
