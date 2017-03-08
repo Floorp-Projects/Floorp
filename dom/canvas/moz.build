@@ -125,6 +125,7 @@ UNIFIED_SOURCES += [
     'WebGLContextValidate.cpp',
     'WebGLContextVertexArray.cpp',
     'WebGLContextVertices.cpp',
+    'WebGLElementArrayCache.cpp',
     'WebGLExtensionBase.cpp',
     'WebGLExtensionBlendMinMax.cpp',
     'WebGLExtensionColorBufferFloat.cpp',

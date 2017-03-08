@@ -6,15 +6,17 @@
 #ifndef WEBGL_BUFFER_H_
 #define WEBGL_BUFFER_H_
 
-#include <map>
-
 #include "GLDefs.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
 #include "nsWrapperCache.h"
+
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
+
+class WebGLElementArrayCache;
 
 class WebGLBuffer final
     : public nsWrapperCache
@@ -44,8 +46,15 @@ public:
     GLenum Usage() const { return mUsage; }
     size_t ByteLength() const { return mByteLength; }
 
-    bool ValidateIndexedFetch(GLenum type, uint32_t max_allowed, size_t first, size_t count) const;
+    bool ElementArrayCacheBufferData(const void* ptr, size_t bufferSizeInBytes);
+
+    void ElementArrayCacheBufferSubData(size_t pos, const void* ptr,
+                                        size_t updateSizeInBytes);
+
+    bool Validate(GLenum type, uint32_t max_allowed, size_t first, size_t count) const;
     bool ValidateRange(const char* funcName, size_t byteOffset, size_t byteLen) const;
+
+    bool IsElementArrayUsedWithMultipleTypes() const;
 
     WebGLContext* GetParentObject() const {
         return mContext;
@@ -55,8 +64,6 @@ public:
 
     bool ValidateCanBindToTarget(const char* funcName, GLenum target);
     void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
-    void BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
-                       const void* data) const;
 
     ////
 
@@ -95,32 +102,12 @@ public:
 protected:
     ~WebGLBuffer();
 
-    void InvalidateCacheRange(size_t offset, size_t length) const;
-
     Kind mContent;
     GLenum mUsage;
     size_t mByteLength;
+    UniquePtr<WebGLElementArrayCache> mCache;
     size_t mTFBindCount;
     size_t mNonTFBindCount;
-
-    struct IndexRange final {
-        GLenum type;
-        size_t first;
-        size_t count;
-
-        bool operator<(const IndexRange& x) const {
-            if (type != x.type)
-                return type < x.type;
-
-            if (first != x.first)
-                return first < x.first;
-
-            return count < x.count;
-        }
-    };
-
-    UniqueBuffer mIndexCache;
-    mutable std::map<IndexRange, size_t> mIndexRanges;
 };
 
 } // namespace mozilla
