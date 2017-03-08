@@ -100,6 +100,12 @@ talos_try_name
 
 This is the name used to refer to a talos job via try syntax.
 
+job_try_name
+============
+
+This is the name used to refer to a "job" via try syntax (``-j``).  Note that for
+some kinds, ``-j`` also matches against ``build_platform``.
+
 test_chunk
 ==========
 
