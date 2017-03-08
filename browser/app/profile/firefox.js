@@ -670,6 +670,11 @@ pref("browser.preferences.instantApply", false);
 #else
 pref("browser.preferences.instantApply", true);
 #endif
+// Once the Storage Management is completed.
+// (The Storage Management-related prefs are browser.storageManager.* )
+// The Offline(Appcache) Group section in about:preferences will be hidden.
+// And the task to clear appcache will be done by Storage Management.
+pref("browser.preferences.offlineGroup.enabled", true);
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
