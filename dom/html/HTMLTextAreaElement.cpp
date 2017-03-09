@@ -765,27 +765,7 @@ void
 HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection,
                                            ErrorResult& aError)
 {
-  if (mState.IsSelectionCached()) {
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
-    if (aDirection.EqualsLiteral("forward")) {
-      dir = nsITextControlFrame::eForward;
-    } else if (aDirection.EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-    mState.GetSelectionProperties().SetDirection(dir);
-    return;
-  }
-
-  int32_t start, end;
-  GetSelectionRange(&start, &end, aError);
-  if (aError.Failed()) {
-    return;
-  }
-
-  nsresult rv = SetSelectionRange(start, end, aDirection);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  mState.SetSelectionDirection(aDirection, aError);
 }
 
 NS_IMETHODIMP

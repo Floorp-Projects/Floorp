@@ -310,6 +310,12 @@ public:
   void SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
                        mozilla::ErrorResult& aRv);
 
+  // Set the selection direction.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
+  // setter.
+  void SetSelectionDirection(const nsAString& aDirection,
+                             mozilla::ErrorResult& aRv);
+
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
       mRootNode->UpdateEditableState(aNotify);
