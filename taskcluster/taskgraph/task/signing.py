@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from . import transform
 
-
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     Generate tasks implementing signing jobs.  These depend on nightly build
     jobs and sign the artifacts after a build has completed.
@@ -23,9 +21,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
         signing_task = {'dependent-task': task}
 
         yield signing_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)

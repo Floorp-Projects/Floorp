@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from . import transform
 
-
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     Generate inputs implementing beetmover jobs.  These depend on nightly build
     and signing jobs and transfer the artifacts to S3 after build and signing
@@ -24,9 +22,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
         beetmover_task = {'dependent-task': task}
 
         yield beetmover_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)

@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from . import transform
 
-
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     Load tasks implementing balrog submission jobs.  These depend on beetmover
     jobs and submit the update to balrog as available after the files are moved
@@ -24,9 +22,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
         beetmover_task['dependent-task'] = task
 
         yield beetmover_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)
