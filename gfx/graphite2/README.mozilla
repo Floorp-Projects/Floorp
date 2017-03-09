@@ -1,3 +1,6 @@
 This directory contains the Graphite2 library release 1.3.9 from
 https://github.com/silnrsi/graphite/releases/download/1.3.9/graphite2-minimal-1.3.9.tgz
 See gfx/graphite2/moz-gr-update.sh for update procedure.
+
+Cherry-picked post-1.3.9 commit 1ce331d5548b98ed8b818532b2556d6f2c7a3b83 to fix
+https://bugzilla.mozilla.org/show_bug.cgi?id=1345461.
