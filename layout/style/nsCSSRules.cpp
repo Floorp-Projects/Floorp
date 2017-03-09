@@ -36,7 +36,6 @@
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSNamespaceRuleBinding.h"
 #include "mozilla/dom/CSSImportRuleBinding.h"
-#include "mozilla/dom/CSSMediaRuleBinding.h"
 #include "mozilla/dom/CSSSupportsRuleBinding.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
 #include "mozilla/dom/CSSPageRuleBinding.h"
@@ -364,12 +363,12 @@ ImportRule::WrapObject(JSContext* aCx,
 // nsICSSMediaRule
 //
 MediaRule::MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-  : ConditionRule(aLineNumber, aColumnNumber)
+  : CSSMediaRule(aLineNumber, aColumnNumber)
 {
 }
 
 MediaRule::MediaRule(const MediaRule& aCopy)
-  : ConditionRule(aCopy)
+  : CSSMediaRule(aCopy)
 {
   if (aCopy.mMedia) {
     mMedia = aCopy.mMedia->Clone().downcast<nsMediaList>();
@@ -385,17 +384,14 @@ MediaRule::~MediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MediaRule, ConditionRule)
-NS_IMPL_RELEASE_INHERITED(MediaRule, ConditionRule)
+NS_IMPL_ADDREF_INHERITED(MediaRule, CSSMediaRule)
+NS_IMPL_RELEASE_INHERITED(MediaRule, CSSMediaRule)
 
 // QueryInterface implementation for MediaRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
-NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
+NS_INTERFACE_MAP_END_INHERITING(CSSMediaRule)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, ConditionRule,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, CSSMediaRule,
                                    mMedia)
 
 /* virtual */ void
@@ -439,12 +435,6 @@ MediaRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-MediaRule::GetType() const
-{
-  return Rule::MEDIA_RULE;
-}
-
 /* virtual */ already_AddRefed<Rule>
 MediaRule::Clone() const
 {
@@ -461,14 +451,8 @@ MediaRule::SetMedia(nsMediaList* aMedia)
   return NS_OK;
 }
 
-uint16_t
-MediaRule::Type() const
-{
-  return nsIDOMCSSRule::MEDIA_RULE;
-}
-
 MediaList*
-MediaRule::Media() const
+MediaRule::Media()
 {
   // In practice, if we end up being parsed at all, we have non-null mMedia.  So
   // it's OK to claim we don't return null here.
@@ -483,25 +467,6 @@ MediaRule::GetCssTextImpl(nsAString& aCssText) const
   GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSGroupingRule methods
-NS_IMETHODIMP
-MediaRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
-{
-  return GroupRule::GetCssRules(aRuleList);
-}
-
-NS_IMETHODIMP
-MediaRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
-{
-  return GroupRule::InsertRule(aRule, aIndex, _retval);
-}
-
-NS_IMETHODIMP
-MediaRule::DeleteRule(uint32_t aIndex)
-{
-  return GroupRule::DeleteRule(aIndex);
-}
-
 // nsIDOMCSSConditionRule methods
 NS_IMETHODIMP
 MediaRule::GetConditionText(nsAString& aConditionText)
@@ -514,40 +479,17 @@ MediaRule::GetConditionText(nsAString& aConditionText)
 NS_IMETHODIMP
 MediaRule::SetConditionText(const nsAString& aConditionText)
 {
-  ErrorResult rv;
-  SetConditionText(aConditionText, rv);
-  return rv.StealNSResult();
-}
-
-void
-MediaRule::SetConditionText(const nsAString& aConditionText,
-                            ErrorResult& aRv)
-{
   if (!mMedia) {
     RefPtr<nsMediaList> media = new nsMediaList();
     media->SetStyleSheet(GetStyleSheet());
     nsresult rv = media->SetMediaText(aConditionText);
     if (NS_SUCCEEDED(rv)) {
       mMedia = media;
-    } else {
-      aRv.Throw(rv);
     }
-    return;
+    return rv;
   }
 
-  nsresult rv = mMedia->SetMediaText(aConditionText);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-// nsIDOMCSSMediaRule methods
-NS_IMETHODIMP
-MediaRule::GetMedia(nsIDOMMediaList* *aMedia)
-{
-  NS_ENSURE_ARG_POINTER(aMedia);
-  NS_IF_ADDREF(*aMedia = mMedia);
-  return NS_OK;
+  return mMedia->SetMediaText(aConditionText);
 }
 
 // GroupRule interface
@@ -572,13 +514,6 @@ MediaRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mMedia
 
   return n;
-}
-
-/* virtual */ JSObject*
-MediaRule::WrapObject(JSContext* aCx,
-                      JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSMediaRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
