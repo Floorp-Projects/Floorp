@@ -61,6 +61,21 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsIAtom* aPseudo)
 }
 #endif
 
+/* static*/ nsCSSAnonBoxes::NonInheriting
+nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsIAtom* aPseudo)
+{
+  MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
+  for (NonInheritingBase i = 0;
+       i < ArrayLength(CSSAnonBoxes_info);
+       ++i) {
+    if (*CSSAnonBoxes_info[i].mAtom == aPseudo) {
+      return static_cast<NonInheriting>(i);
+    }
+  }
+
+  MOZ_CRASH("Bogus pseudo passed to NonInheritingTypeForPseudoTag");
+}
+
 /* static */ nsIAtom*
 nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
 {
