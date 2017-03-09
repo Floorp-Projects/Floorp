@@ -6434,34 +6434,30 @@ HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
     return Nullable<int32_t>();
   }
 
-  int32_t selStart;
-  nsresult rv = GetSelectionStart(&selStart);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  int32_t selStart = GetSelectionStartIgnoringType(aRv);
+  if (aRv.Failed()) {
+    return Nullable<int32_t>();
   }
 
   return Nullable<int32_t>(selStart);
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetSelectionStart(int32_t* aSelectionStart)
+int32_t
+HTMLInputElement::GetSelectionStartIgnoringType(ErrorResult& aRv)
 {
-  NS_ENSURE_ARG_POINTER(aSelectionStart);
-
   int32_t selEnd, selStart;
   nsresult rv = GetSelectionRange(&selStart, &selEnd);
 
   if (NS_FAILED(rv)) {
     nsTextEditorState* state = GetEditorState();
     if (state && state->IsSelectionCached()) {
-      *aSelectionStart = state->GetSelectionProperties().GetStart();
-      return NS_OK;
+      return state->GetSelectionProperties().GetStart();
     }
-    return rv;
+    aRv.Throw(rv);
+    return 0;
   }
 
-  *aSelectionStart = selStart;
-  return NS_OK;
+  return selStart;
 }
 
 void
@@ -6502,15 +6498,6 @@ HTMLInputElement::SetSelectionStart(const Nullable<int32_t>& aSelectionStart,
   }
 
   aRv = SetSelectionRange(start, end, direction);
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetSelectionStart(int32_t aSelectionStart)
-{
-  ErrorResult rv;
-  Nullable<int32_t> selStart(aSelectionStart);
-  SetSelectionStart(selStart, rv);
-  return rv.StealNSResult();
 }
 
 Nullable<int32_t>

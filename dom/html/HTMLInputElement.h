@@ -243,6 +243,10 @@ public:
   NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
                                int32_t* aSelectionEnd) override;
 
+  // Methods for nsFormFillController so it can do selection operations on input
+  // types the HTML spec doesn't support them on, like "email".
+  int32_t GetSelectionStartIgnoringType(ErrorResult& aRv);
+
   void GetDisplayFileName(nsAString& aFileName) const;
 
   const nsTArray<OwningFileOrDirectory>& GetFilesOrDirectoriesInternal() const
