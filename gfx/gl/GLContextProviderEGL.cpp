@@ -490,16 +490,18 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
     else
         contextAttribs.push_back(2);
 
-    if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
-        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
-        contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
-        contextAttribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
-        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
-    } else if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EXT_create_context_robustness)) {
-        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
-        contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
-        contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
-        contextAttribs.push_back(LOCAL_EGL_TRUE);
+    if (flags & CreateContextFlags::PREFER_ROBUSTNESS) {
+        if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_create_context)) {
+            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR);
+            contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_KHR);
+            contextAttribs.push_back(LOCAL_EGL_CONTEXT_FLAGS_KHR);
+            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR);
+        } else if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::EXT_create_context_robustness)) {
+            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_EXT);
+            contextAttribs.push_back(LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT);
+            contextAttribs.push_back(LOCAL_EGL_CONTEXT_OPENGL_ROBUST_ACCESS_EXT);
+            contextAttribs.push_back(LOCAL_EGL_TRUE);
+        }
     }
 
     for (const auto& cur : kTerminationAttribs) {

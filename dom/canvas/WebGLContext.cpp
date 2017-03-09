@@ -727,7 +727,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
     }
 
     const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
-    gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
+    gl::CreateContextFlags flags = (gl::CreateContextFlags::NO_VALIDATION |
+                                    gl::CreateContextFlags::PREFER_ROBUSTNESS);
     bool tryNativeGL = true;
     bool tryANGLE = false;
 
