@@ -173,7 +173,7 @@ interface nsITelemetry : nsISupports
    *   "captures": [["string-key", stack-index, count], ... ]
    * }
    *
-   * @param clear Whether to clear out the subsession histograms after taking a  snapshot.
+   * @param clear Whether to clear out the subsession histograms after taking a snapshot.
    *
    * @return A snapshot of captured stacks.
    */
@@ -181,7 +181,9 @@ interface nsITelemetry : nsISupports
   jsval snapshotCapturedStacks([optional] in boolean clear);
 
   /*
-   * Returns an array of the modules loaded in the process. The data has the following structure:
+   * Asynchronously get an array of the modules loaded in the process.
+   *
+   * The data has the following structure:
    *
    * [
    *   {
@@ -193,8 +195,9 @@ interface nsITelemetry : nsISupports
    *   ...
    * ]
    *
-   * @return An array of modules.
-   * @throws NS_ERROR_FAILURE on failure.
+   * @return A promise that resolves to an array of modules or rejects with
+             NS_ERROR_FAILURE on failure.
+   * @throws NS_ERROR_NOT_IMPLEMENTED if the Gecko profiler is not enabled.
    */
   [implicit_jscontext]
   nsISupports getLoadedModules();

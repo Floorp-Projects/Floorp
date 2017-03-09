@@ -1236,7 +1236,7 @@ this.UITour = {
       // Remove all the children of the notice (rating container
       // and the flex).
       while (notice.firstChild) {
-        notice.removeChild(notice.firstChild);
+        notice.firstChild.remove();
       }
 
       // Make sure that we have a valid URL. If we haven't, do not open the engagement page.

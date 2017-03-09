@@ -51,7 +51,7 @@
       this.invoke = function removeChildSpan_invoke()
       {
         // remove HTML span, a first child of the node
-        this.DOMNode.removeChild(this.DOMNode.firstChild);
+        this.DOMNode.firstChild.remove();
       }
 
       this.getID = function removeChildSpan_getID()
@@ -162,7 +162,7 @@
             this.DOMNode.removeChild(this.DOMNode.lastChild);
         } else {
           while (this.DOMNode.firstChild)
-            this.DOMNode.removeChild(this.DOMNode.firstChild);
+            this.DOMNode.firstChild.remove();
         }
       }
 

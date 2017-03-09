@@ -3,7 +3,7 @@
 function boom()
 {
   while (document.documentElement.firstChild)
-    document.documentElement.removeChild(document.documentElement.firstChild);
+    document.documentElement.firstChild.remove();
   document.documentElement.contentEditable = "true";
   document.execCommand("strikethrough", false, null);
   try { document.execCommand("justifyfull", false, null); } catch(e) { }

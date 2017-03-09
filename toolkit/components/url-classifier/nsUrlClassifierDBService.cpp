@@ -1687,6 +1687,7 @@ nsUrlClassifierDBService::BuildTables(bool aTrackingProtectionEnabled,
 // nsChannelClassifier is the only consumer of this interface.
 NS_IMETHODIMP
 nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
+                                   nsIEventTarget* aEventTarget,
                                    bool aTrackingProtectionEnabled,
                                    nsIURIClassifierCallback* c,
                                    bool* result)
@@ -1695,14 +1696,33 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
 
   if (XRE_IsContentProcess()) {
     using namespace mozilla::dom;
+
+    ContentChild* content = ContentChild::GetSingleton();
+    MOZ_ASSERT(content);
+
     auto actor = static_cast<URLClassifierChild*>
-      (ContentChild::GetSingleton()->
-         SendPURLClassifierConstructor(IPC::Principal(aPrincipal),
-                                       aTrackingProtectionEnabled,
-                                       result));
-    if (actor) {
-      actor->SetCallback(c);
+      (content->AllocPURLClassifierChild(IPC::Principal(aPrincipal),
+                                         aTrackingProtectionEnabled,
+                                         result));
+    MOZ_ASSERT(actor);
+
+    if (aEventTarget) {
+      content->SetEventTargetForActor(actor, aEventTarget);
+    } else {
+      // In the case null event target we should use systemgroup event target
+      NS_WARNING(("Null event target, we should use SystemGroup to do labelling"));
+      nsCOMPtr<nsIEventTarget> systemGroupEventTarget
+        = mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+      content->SetEventTargetForActor(actor, systemGroupEventTarget);
     }
+    if (!content->SendPURLClassifierConstructor(actor, IPC::Principal(aPrincipal),
+                  aTrackingProtectionEnabled,
+                  result)) {
+      *result = false;
+      return NS_ERROR_FAILURE;
+    }
+
+    actor->SetCallback(c);
     return NS_OK;
   }
 

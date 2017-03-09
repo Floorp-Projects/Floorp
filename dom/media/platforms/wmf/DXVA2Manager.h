@@ -31,7 +31,8 @@ public:
     nsACString& aFailureReason);
   static DXVA2Manager* CreateD3D11DXVA(
     layers::KnowsCompositor* aKnowsCompositor,
-    nsACString& aFailureReason);
+    nsACString& aFailureReason,
+    ID3D11Device* aDevice = nullptr);
 
   // Returns a pointer to the D3D device manager responsible for managing the
   // device we're using for hardware accelerated video decoding. If we're using
@@ -43,6 +44,14 @@ public:
   virtual HRESULT CopyToImage(IMFSample* aVideoSample,
                               const nsIntRect& aRegion,
                               layers::Image** aOutImage) = 0;
+
+  virtual HRESULT CopyToBGRATexture(ID3D11Texture2D *aInTexture,
+                                    ID3D11Texture2D** aOutTexture)
+  {
+    // Not implemented!
+    MOZ_CRASH("CopyToBGRATexture not implemented on this manager.");
+    return E_FAIL;
+  }
 
   virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   {

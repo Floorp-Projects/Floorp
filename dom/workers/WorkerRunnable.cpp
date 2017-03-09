@@ -587,14 +587,17 @@ WorkerMainThreadRunnable::Dispatch(Status aFailStatus, ErrorResult& aRv)
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Should only fail after xpcom-shutdown-threads and we're gone by then");
 
-  if (!syncLoop.Run()) {
-    aRv.ThrowUncatchableException();
-  }
+  bool success = syncLoop.Run();
 
   Telemetry::Accumulate(Telemetry::SYNC_WORKER_OPERATION, mTelemetryKey,
                         static_cast<uint32_t>((TimeStamp::NowLoRes() - startTime)
-                                                .ToMilliseconds()));
+                                              .ToMilliseconds()));
+
   Unused << startTime; // Shut the compiler up.
+
+  if (!success) {
+    aRv.ThrowUncatchableException();
+  }
 }
 
 NS_IMETHODIMP

@@ -492,7 +492,7 @@ const PanelUI = {
 
     // Remove all buttons from the view
     while (items.firstChild) {
-      items.removeChild(items.firstChild);
+      items.firstChild.remove();
     }
 
     // Add the current set of menuitems of the Help menu to this view

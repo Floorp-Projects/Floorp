@@ -18,39 +18,39 @@ let dataURI = "iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAC4klEQVRYhdWXLWzbQ
 let image = atob(dataURI);
 const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
 
-function background() {
+async function background() {
   browser.test.assertTrue("pageAction" in browser, "Namespace 'pageAction' exists in browser");
   browser.test.assertTrue("show" in browser.pageAction, "API method 'show' exists in browser.pageAction");
 
-  // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
-  let tabId = 1;
+  const tabs = await browser.tabs.query({active: true, currentWindow: true});
+
   browser.test.onMessage.addListener(msg => {
     if (msg === "pageAction-show") {
-      browser.pageAction.show(tabId).then(() => {
+      browser.pageAction.show(tabs[0].id).then(() => {
         browser.test.sendMessage("page-action-shown");
       });
     } else if (msg === "pageAction-hide") {
-      browser.pageAction.hide(tabId).then(() => {
+      browser.pageAction.hide(tabs[0].id).then(() => {
         browser.test.sendMessage("page-action-hidden");
       });
     }
   });
 
   browser.pageAction.onClicked.addListener(tab => {
-    // TODO: Make sure we get the correct tab once basic tabs support is added.
-    browser.test.sendMessage("page-action-clicked");
+    browser.test.sendMessage("page-action-clicked", tab);
   });
 
-  let extensionInfo = {
+  const extensionInfo = {
     // Extract the assigned uuid from the background page url.
     uuid: `{${window.location.hostname}}`,
+    tab: tabs[0],
   };
 
   browser.test.sendMessage("ready", extensionInfo);
 }
 
 add_task(function* test_pageAction() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
       "name": "PageAction Extension",
@@ -72,7 +72,7 @@ add_task(function* test_pageAction() {
   });
 
   yield extension.startup();
-  let {uuid} = yield extension.awaitMessage("ready");
+  const {uuid, tab} = yield extension.awaitMessage("ready");
 
   extension.sendMessage("pageAction-show");
   yield extension.awaitMessage("page-action-shown");
@@ -87,8 +87,9 @@ add_task(function* test_pageAction() {
   ok(isPageActionShown(uuid), "The PageAction should be shown");
 
   clickPageAction(uuid);
-  yield extension.awaitMessage("page-action-clicked");
+  const clickedTab = yield extension.awaitMessage("page-action-clicked");
   ok(isPageActionShown(uuid), "The PageAction should still be shown after being clicked");
+  is(clickedTab.id, tab.id, "Got the expected tab id in the pageAction.onClicked event");
 
   yield extension.unload();
   ok(!isPageActionShown(uuid), "The PageAction should be removed after unload");

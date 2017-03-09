@@ -36082,7 +36082,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function removeChildren(e) {
 	  for (var count = e.childNodes.length; count > 0; --count)
-	    { e.removeChild(e.firstChild) }
+	    { e.firstChild.remove() }
 	  return e
 	}
 	

@@ -418,7 +418,7 @@ function resetPageInfo(args) {
   /* Reset Feeds Tab */
   var feedListbox = document.getElementById("feedListbox");
   while (feedListbox.firstChild)
-    feedListbox.removeChild(feedListbox.firstChild);
+    feedListbox.firstChild.remove();
 
   /* Call registered overlay reset functions */
   onResetRegistry.forEach(function(func) { func(); });

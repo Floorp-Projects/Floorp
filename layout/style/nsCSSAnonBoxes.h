@@ -56,8 +56,12 @@ public:
 #include "nsCSSAnonBoxList.h"
 #undef CSS_NON_INHERITING_ANON_BOX
 #undef CSS_ANON_BOX
-      0;
+      false;
   }
+
+  // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must
+  // test true for IsNonInheritingAnonBox.
+  static NonInheriting NonInheritingTypeForPseudoTag(nsIAtom* aPseudo);
 
   // Get the atom for a given non-inheriting anon box type.  aBoxType must be <
   // NonInheriting::_Count.

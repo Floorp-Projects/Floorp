@@ -90,7 +90,7 @@ ok(firstDistNodes[0].id == "one" &&
    firstDistNodes[3].id == "four", "Reprojection through shadow should preserve node order.");
 
 // Remove a node from the host and make sure that it is removed from all insertion points.
-host.removeChild(host.firstChild);
+host.firstChild.remove();
 firstDistNodes = firstContent.getDistributedNodes();
 secondDistNodes = secondContent.getDistributedNodes();
 
@@ -115,7 +115,7 @@ firstShadow.appendChild(shadowChild);
 is(firstContent.getDistributedNodes()[0], shadowChild, "Elements in shadow insertioin point should be projected into content insertion points.");
 
 // Remove child of ShadowRoot and check that projected node is removed from insertion point.
-firstShadow.removeChild(firstShadow.firstChild);
+firstShadow.firstChild.remove();
 
 is(firstContent.getDistributedNodes().length, 0, "Reprojected element was removed from ShadowRoot, thus it should be removed from content insertion point.");
 
@@ -135,7 +135,7 @@ host.innerHTML = '<span></span>';
 is(firstContent.getDistributedNodes()[0], host.firstChild, "Child of host should be projected to insertion point.");
 
 // Remove node and make sure that it is removed from distributed nodes.
-host.removeChild(host.firstChild);
+host.firstChild.remove();
 
 is(firstContent.getDistributedNodes().length, 0, "Node removed from host should be removed from insertion point.");
 

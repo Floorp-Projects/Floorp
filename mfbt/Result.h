@@ -401,7 +401,7 @@ public:
 
 template <typename E>
 inline GenericErrorResult<E>
-MakeGenericErrorResult(E&& aErrorValue)
+Err(E&& aErrorValue)
 {
   return GenericErrorResult<E>(aErrorValue);
 }
@@ -418,7 +418,7 @@ MakeGenericErrorResult(E&& aErrorValue)
   do { \
     auto mozTryTempResult_ = (expr); \
     if (mozTryTempResult_.isErr()) { \
-      return ::mozilla::MakeGenericErrorResult(mozTryTempResult_.unwrapErr()); \
+      return ::mozilla::Err(mozTryTempResult_.unwrapErr()); \
     } \
   } while (0)
 
@@ -433,7 +433,7 @@ MakeGenericErrorResult(E&& aErrorValue)
   do { \
     auto mozTryVarTempResult_ = (expr); \
     if (mozTryVarTempResult_.isErr()) { \
-      return ::mozilla::MakeGenericErrorResult( \
+      return ::mozilla::Err( \
           mozTryVarTempResult_.unwrapErr()); \
     } \
     (target) = mozTryVarTempResult_.unwrap(); \

@@ -1117,8 +1117,6 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized();
     }
-
-    return;
 }
 
 void
@@ -1146,8 +1144,6 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     if (mIsTopLevel || mListenForResizes) {
         DispatchResized();
     }
-
-    return;
 }
 
 void
@@ -5195,10 +5191,14 @@ get_gtk_cursor(nsCursor aCursor)
             newType = MOZ_CURSOR_SPINNING;
         break;
     case eCursor_zoom_in:
-        newType = MOZ_CURSOR_ZOOM_IN;
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-in");
+        if (!gdkcursor)
+            newType = MOZ_CURSOR_ZOOM_IN;
         break;
     case eCursor_zoom_out:
-        newType = MOZ_CURSOR_ZOOM_OUT;
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-out");
+        if (!gdkcursor)
+            newType = MOZ_CURSOR_ZOOM_OUT;
         break;
     case eCursor_not_allowed:
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "not-allowed");
@@ -6097,15 +6097,6 @@ nsWindow::GetInputContext()
       context = mIMContext->GetInputContext();
   }
   return context;
-}
-
-nsIMEUpdatePreference
-nsWindow::GetIMEUpdatePreference()
-{
-    if (!mIMContext) {
-        return nsIMEUpdatePreference();
-    }
-    return mIMContext->GetIMEUpdatePreference();
 }
 
 TextEventDispatcherListener*

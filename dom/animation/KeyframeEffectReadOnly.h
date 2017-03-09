@@ -252,6 +252,12 @@ public:
   // Servo version of the above function.
   void UpdateProperties(const ServoComputedStyleValues& aServoValues);
 
+  // Update various bits of state related to running ComposeStyle().
+  // We need to update this outside ComposeStyle() because we should avoid
+  // mutating any state in ComposeStyle() since it might be called during
+  // parallel traversal.
+  void WillComposeStyle();
+
   // Updates |aStyleRule| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.

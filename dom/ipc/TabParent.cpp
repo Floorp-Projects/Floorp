@@ -2806,6 +2806,13 @@ TabParent::SetHasContentOpener(bool aHasContentOpener)
 }
 
 NS_IMETHODIMP
+TabParent::GetHasPresented(bool* aResult)
+{
+  *aResult = mHasPresented;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
 {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);

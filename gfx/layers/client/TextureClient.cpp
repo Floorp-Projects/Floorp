@@ -34,9 +34,7 @@
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 
 #ifdef XP_WIN
-#include "DeviceManagerD3D9.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureDIB.h"
 #include "gfxWindowsPlatform.h"
@@ -1051,15 +1049,6 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
   {
     data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
   }
-  if (aLayersBackend == LayersBackend::LAYERS_D3D9 &&
-      moz2DBackend == gfx::BackendType::CAIRO &&
-      aAllocator->IsSameProcess() &&
-      aSize.width <= aMaxTextureSize &&
-      aSize.height <= aMaxTextureSize &&
-      NS_IsMainThread() &&
-      DeviceManagerD3D9::GetDevice()) {
-    data = D3D9TextureData::Create(aSize, aFormat, aAllocFlags);
-  }
 
   if (aLayersBackend != LayersBackend::LAYERS_WR &&
       !data && aFormat == SurfaceFormat::B8G8R8X8 &&
@@ -1713,14 +1702,18 @@ UpdateYCbCrTextureClient(TextureClient* aTexture, const PlanarYCbCrData& aData)
 }
 
 already_AddRefed<SyncObject>
-SyncObject::CreateSyncObject(SyncHandle aHandle)
+SyncObject::CreateSyncObject(SyncHandle aHandle
+#ifdef XP_WIN
+                             , ID3D11Device* aDevice
+#endif
+                             )
 {
   if (!aHandle) {
     return nullptr;
   }
 
 #ifdef XP_WIN
-  return MakeAndAddRef<SyncObjectD3D11>(aHandle);
+  return MakeAndAddRef<SyncObjectD3D11>(aHandle, aDevice);
 #else
   MOZ_ASSERT_UNREACHABLE();
   return nullptr;

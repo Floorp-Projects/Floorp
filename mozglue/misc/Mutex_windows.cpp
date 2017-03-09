@@ -16,12 +16,18 @@ mozilla::detail::MutexImpl::MutexImpl()
 {
   // This number was adopted from NSPR.
   const static DWORD LockSpinCount = 1500;
+
+#if defined(RELEASE_OR_BETA)
   // Vista and later automatically allocate and subsequently leak a debug info
   // object for each critical section that we allocate unless we tell the
   // system not to do that.
+  DWORD flags = CRITICAL_SECTION_NO_DEBUG_INFO;
+#else
+  DWORD flags = 0;
+#endif // defined(RELEASE_OR_BETA)
+
   BOOL r = InitializeCriticalSectionEx(&platformData()->criticalSection,
-                                       LockSpinCount,
-                                       CRITICAL_SECTION_NO_DEBUG_INFO);
+                                       LockSpinCount, flags);
   MOZ_RELEASE_ASSERT(r);
 }
 

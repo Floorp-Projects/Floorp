@@ -7,6 +7,8 @@
 #ifndef mozilla_mscom_IHandlerPayload_h
 #define mozilla_mscom_IHandlerPayload_h
 
+#include "mozilla/mscom/Ptr.h"
+
 #include <objidl.h>
 
 namespace mozilla {
@@ -16,10 +18,10 @@ struct HandlerPayload
 {
   virtual STDMETHODIMP GetHandler(CLSID* aHandlerClsid) = 0;
   virtual STDMETHODIMP GetHandlerPayloadSize(REFIID aIid,
-                                             IUnknown* aTarget,
+                                             InterceptorTargetPtr<IUnknown> aTarget,
                                              DWORD* aOutPayloadSize) = 0;
   virtual STDMETHODIMP WriteHandlerPayload(IStream* aStream, REFIID aIid,
-                                           IUnknown* aTarget) = 0;
+                                           InterceptorTargetPtr<IUnknown> aTarget) = 0;
   virtual REFIID MarshalAs(REFIID aIid) = 0;
 };
 

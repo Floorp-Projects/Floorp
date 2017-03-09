@@ -2378,7 +2378,13 @@ Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader *reader,
   if (!stream) {
     LOG3(("Http2Session %p could not identify a stream to write; suspending.",
           this));
+    uint32_t availBeforeFlush = mOutputQueueUsed - mOutputQueueSent;
     FlushOutputQueue();
+    uint32_t availAfterFlush = mOutputQueueUsed - mOutputQueueSent;
+    if (availBeforeFlush != availAfterFlush) {
+      LOG3(("Http2Session %p ResumeRecv After early flush in ReadSegments", this));
+      Unused << ResumeRecv();
+    }
     SetWriteCallbacks();
     if (mAttemptingEarlyData) {
       // We can still try to send our preamble as early-data

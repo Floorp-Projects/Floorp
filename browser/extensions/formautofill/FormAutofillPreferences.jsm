@@ -15,6 +15,11 @@ const PREF_AUTOFILL_ENABLED = "browser.formautofill.enabled";
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
+this.log = null;
+FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
 function FormAutofillPreferences() {
   this.bundle = Services.strings.createBundle(BUNDLE_URI);
@@ -46,6 +51,26 @@ FormAutofillPreferences.prototype = {
    * @returns {XULElement}
    */
   init(document) {
+    this.createPreferenceGroup(document);
+    this.attachEventListeners();
+
+    return this.refs.formAutofillGroup;
+  },
+
+  /**
+   * Remove event listeners and the preference group.
+   */
+  uninit() {
+    this.detachEventListeners();
+    this.refs.formAutofillGroup.remove();
+  },
+
+  /**
+   * Create Form Autofill preference group
+   *
+   * @param  {XULDocument} document
+   */
+  createPreferenceGroup(document) {
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     let formAutofillGroup = document.createElementNS(XUL_NS, "groupbox");
@@ -85,18 +110,6 @@ FormAutofillPreferences.prototype = {
     hbox.appendChild(enabledCheckbox);
     hbox.appendChild(spacer);
     hbox.appendChild(savedProfilesBtn);
-
-    this.attachEventListeners();
-
-    return formAutofillGroup;
-  },
-
-  /**
-   * Remove event listeners and the preference group.
-   */
-  uninit() {
-    this.detachEventListeners();
-    this.refs.formAutofillGroup.remove();
   },
 
   /**

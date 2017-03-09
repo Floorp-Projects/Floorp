@@ -732,6 +732,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   res = Initialize(aObserver, &aWindow, converted, aThread);
   if (NS_FAILED(res)) {
     rv.Throw(res);
+    return;
   }
 
   if (!aConfiguration.mPeerIdentity.IsEmpty()) {

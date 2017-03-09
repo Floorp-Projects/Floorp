@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsCryptoHash_h_
-#define _nsCryptoHash_h_
+#ifndef nsCryptoHash_h
+#define nsCryptoHash_h
 
-#include "nsICryptoHash.h"
-#include "nsICryptoHMAC.h"
-#include "nsNSSShutDown.h"
+#include "ScopedNSSTypes.h"
 #include "hasht.h"
+#include "nsICryptoHMAC.h"
+#include "nsICryptoHash.h"
+#include "nsNSSShutDown.h"
 #include "secmodt.h"
 
 class nsIInputStream;
@@ -29,7 +30,7 @@ public:
 private:
   ~nsCryptoHash();
 
-  HASHContext* mHashContext;
+  mozilla::UniqueHASHContext mHashContext;
   bool mInitialized;
 
   virtual void virtualDestroyNSSReference() override;
@@ -46,11 +47,10 @@ public:
 
 private:
   ~nsCryptoHMAC();
-  PK11Context* mHMACContext;
+  mozilla::UniquePK11Context mHMACContext;
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
 };
 
-#endif // _nsCryptoHash_h_
-
+#endif // nsCryptoHash_h

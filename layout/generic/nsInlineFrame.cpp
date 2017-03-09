@@ -1057,7 +1057,7 @@ nsInlineFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
   // The anonymous block's style inherits from ours, and we already have our new
   // style context.
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveAnonymousBoxStyle(pseudo, StyleContext());
+    aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, StyleContext());
 
   // We're guaranteed that newContext only differs from the old style context on
   // the block in things they might inherit from us.  And changehint processing
@@ -1115,7 +1115,8 @@ nsFirstLineFrame::Init(nsIContent*       aContent,
     // of the parent frame.
     nsStyleContext* parentContext = aParent->StyleContext();
     RefPtr<nsStyleContext> newSC = PresContext()->StyleSet()->
-      ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame, parentContext);
+      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame,
+                                         parentContext);
     SetStyleContext(newSC);
   } else {
     MOZ_ASSERT(FirstInFlow() != aPrevInFlow);

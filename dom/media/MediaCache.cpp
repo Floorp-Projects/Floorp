@@ -1381,6 +1381,8 @@ MediaCache::Update()
 class UpdateEvent : public Runnable
 {
 public:
+  UpdateEvent() : Runnable("MediaCache::UpdateEvent") {}
+
   NS_IMETHOD Run() override
   {
     if (gMediaCache) {
@@ -1405,11 +1407,10 @@ MediaCache::QueueUpdate()
   // XXX MediaCache does updates when decoders are still running at
   // shutdown and get freed in the final cycle-collector cleanup.  So
   // don't leak a runnable in that case.
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  if (mainThread) {
-    nsCOMPtr<nsIRunnable> event = new UpdateEvent();
-    mainThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
-  }
+  nsCOMPtr<nsIRunnable> event = new UpdateEvent();
+  SystemGroup::Dispatch("MediaCache::UpdateEvent",
+                        TaskCategory::Other,
+                        event.forget());
 }
 
 void

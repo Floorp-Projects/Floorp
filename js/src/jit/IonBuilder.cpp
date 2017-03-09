@@ -2185,7 +2185,16 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_regexp(info().getRegExp(pc));
 
       case JSOP_CALLSITEOBJ:
-        pushConstant(ObjectValue(*(info().getObject(pc))));
+        if (info().analysisMode() == Analysis_ArgumentsUsage) {
+            // When analyzing arguments usage, it is possible that the
+            // template object is not yet canonicalized. Push an incorrect
+            // object; it does not matter for arguments analysis.
+            pushConstant(ObjectValue(*info().getObject(pc)));
+        } else {
+            JSObject* raw = script()->getObject(GET_UINT32_INDEX(pc) + 1);
+            JSObject* obj = script()->compartment()->getExistingTemplateLiteralObject(raw);
+            pushConstant(ObjectValue(*obj));
+        }
         return Ok();
 
       case JSOP_OBJECT:
@@ -9614,48 +9623,81 @@ IonBuilder::jsop_not()
     return Ok();
 }
 
-bool
-IonBuilder::objectsHaveCommonPrototype(TemporaryTypeSet* types, PropertyName* name,
-                                       bool isGetter, JSObject* foundProto, bool* guardGlobal)
+NativeObject*
+IonBuilder::commonPrototypeWithGetterSetter(TemporaryTypeSet* types, PropertyName* name,
+                                            bool isGetter, JSFunction* getterOrSetter,
+                                            bool* guardGlobal)
 {
-    // With foundProto a prototype with a getter or setter for name, return
-    // whether looking up name on any object in |types| will go through
-    // foundProto, i.e. all the objects have foundProto on their prototype
-    // chain and do not have a property for name before reaching foundProto.
+    // If there's a single object on the proto chain of all objects in |types|
+    // that contains a property |name| with |getterOrSetter| getter or setter
+    // function, return that object.
 
     // No sense looking if we don't know what's going on.
     if (!types || types->unknownObject())
-        return false;
+        return nullptr;
     *guardGlobal = false;
 
+    NativeObject* foundProto = nullptr;
     for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        if (types->getSingleton(i) == foundProto)
-            continue;
-
         TypeSet::ObjectKey* key = types->getObject(i);
         if (!key)
             continue;
 
         while (key) {
             if (key->unknownProperties())
-                return false;
+                return nullptr;
 
             const Class* clasp = key->clasp();
             if (!ClassHasEffectlessLookup(clasp))
-                return false;
+                return nullptr;
             JSObject* singleton = key->isSingleton() ? key->singleton() : nullptr;
             if (ObjectHasExtraOwnProperty(compartment, key, NameToId(name))) {
                 if (!singleton || !singleton->is<GlobalObject>())
-                    return false;
+                    return nullptr;
                 *guardGlobal = true;
             }
 
             // Look for a getter/setter on the class itself which may need
             // to be called.
             if (isGetter && clasp->getOpsGetProperty())
-                return false;
+                return nullptr;
             if (!isGetter && clasp->getOpsSetProperty())
-                return false;
+                return nullptr;
+
+            // If we have a singleton, check if it contains the getter or
+            // setter we're looking for. Note that we don't need to add any
+            // type constraints as the caller will add a Shape guard for the
+            // holder and type constraints for other objects on the proto
+            // chain.
+            //
+            // If the object is not a singleton, we fall back to the code below
+            // and check whether the property is missing. That's fine because
+            // we're looking for a getter or setter on the proto chain and
+            // these objects are singletons.
+            if (singleton) {
+                if (!singleton->is<NativeObject>())
+                    return nullptr;
+
+                NativeObject* singletonNative = &singleton->as<NativeObject>();
+                if (Shape* propShape = singletonNative->lookupPure(name)) {
+                    // We found a property. Check if it's the getter or setter
+                    // we're looking for.
+                    Value getterSetterVal = ObjectValue(*getterOrSetter);
+                    if (isGetter) {
+                        if (propShape->getterOrUndefined() != getterSetterVal)
+                            return nullptr;
+                    } else {
+                        if (propShape->setterOrUndefined() != getterSetterVal)
+                            return nullptr;
+                    }
+
+                    if (!foundProto)
+                        foundProto = singletonNative;
+                    else if (foundProto != singletonNative)
+                        return nullptr;
+                    break;
+                }
+            }
 
             // Test for isOwnProperty() without freezing. If we end up
             // optimizing, freezePropertiesForCommonPropFunc will freeze the
@@ -9663,7 +9705,7 @@ IonBuilder::objectsHaveCommonPrototype(TemporaryTypeSet* types, PropertyName* na
             HeapTypeSetKey property = key->property(NameToId(name));
             if (TypeSet* types = property.maybeTypes()) {
                 if (!types->empty() || types->nonDataProperty())
-                    return false;
+                    return nullptr;
             }
             if (singleton) {
                 if (CanHaveEmptyPropertyTypesForOwnProperty(singleton)) {
@@ -9673,19 +9715,22 @@ IonBuilder::objectsHaveCommonPrototype(TemporaryTypeSet* types, PropertyName* na
             }
 
             JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
-
-            if (proto == foundProto)
+            if (foundProto && proto == foundProto) {
+                // We found an object on the proto chain that's known to have
+                // the getter or setter property, so we can stop looking.
                 break;
+            }
+
             if (!proto) {
-                // The foundProto being searched for did not show up on the
-                // object's prototype chain.
-                return false;
+                // The getter or setter being searched for did not show up on
+                // the object's prototype chain.
+                return nullptr;
             }
             key = TypeSet::ObjectKey::get(proto);
         }
     }
 
-    return true;
+    return foundProto;
 }
 
 void
@@ -9719,20 +9764,19 @@ IonBuilder::freezePropertiesForCommonPrototype(TemporaryTypeSet* types, Property
 
 bool
 IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
-                                   bool isGetter, JSObject* foundProto, Shape* lastProperty,
-                                   JSFunction* getterOrSetter,
+                                   bool isGetter, JSFunction* getterOrSetter,
                                    MDefinition** guard,
                                    Shape* globalShape/* = nullptr*/,
                                    MDefinition** globalGuard/* = nullptr */)
 {
-    MOZ_ASSERT(foundProto);
+    MOZ_ASSERT(getterOrSetter);
     MOZ_ASSERT_IF(globalShape, globalGuard);
     bool guardGlobal;
 
     // Check if all objects being accessed will lookup the name through foundProto.
-    if (!objectsHaveCommonPrototype(types, name, isGetter, foundProto, &guardGlobal) ||
-        (guardGlobal && !globalShape))
-    {
+    NativeObject* foundProto =
+        commonPrototypeWithGetterSetter(types, name, isGetter, getterOrSetter, &guardGlobal);
+    if (!foundProto || (guardGlobal && !globalShape)) {
         trackOptimizationOutcome(TrackedOutcome::MultiProtoPaths);
         return false;
     }
@@ -9755,22 +9799,16 @@ IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
         *globalGuard = addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
     }
 
-    if (foundProto->isNative()) {
-        NativeObject& nativeProto = foundProto->as<NativeObject>();
-        if (nativeProto.lastProperty() == lastProperty) {
-            // The proto shape is the same as it was at the point when we
-            // created the baseline IC, so looking up the prop on the object as
-            // it is now should be safe.
-            Shape* propShape = nativeProto.lookupPure(name);
-            MOZ_ASSERT_IF(isGetter, propShape->getterObject() == getterOrSetter);
-            MOZ_ASSERT_IF(!isGetter, propShape->setterObject() == getterOrSetter);
-            if (propShape && !propShape->configurable())
-                return true;
-        }
-    }
+    // If the getter/setter is not configurable we don't have to guard on the
+    // proto's shape.
+    Shape* propShape = foundProto->lookupPure(name);
+    MOZ_ASSERT_IF(isGetter, propShape->getterObject() == getterOrSetter);
+    MOZ_ASSERT_IF(!isGetter, propShape->setterObject() == getterOrSetter);
+    if (propShape && !propShape->configurable())
+        return true;
 
     MInstruction* wrapper = constant(ObjectValue(*foundProto));
-    *guard = addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
+    *guard = addShapeGuard(wrapper, foundProto->lastProperty(), Bailout_ShapeGuard);
     return true;
 }
 
@@ -10719,39 +10757,44 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
 {
     MOZ_ASSERT(*emitted == false);
 
-    Shape* lastProperty = nullptr;
-    JSFunction* commonGetter = nullptr;
-    Shape* globalShape = nullptr;
-    JSObject* foundProto = nullptr;
-    bool isOwnProperty = false;
-    BaselineInspector::ReceiverVector receivers(alloc());
-    BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
-    if (!inspector->commonGetPropFunction(pc, innerized, &foundProto, &lastProperty, &commonGetter,
-                                          &globalShape, &isOwnProperty,
-                                          receivers, convertUnboxedGroups))
-    {
-        return Ok();
-    }
-
     TemporaryTypeSet* objTypes = obj->resultTypeSet();
+
+    JSFunction* commonGetter = nullptr;
     MDefinition* guard = nullptr;
     MDefinition* globalGuard = nullptr;
-    bool canUseTIForGetter = false;
-    if (!isOwnProperty) {
-        // If it's not an own property, try to use TI to avoid shape guards.
-        // For own properties we use the path below.
-        canUseTIForGetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                                                   foundProto, lastProperty, commonGetter, &guard,
-                                                   globalShape, &globalGuard);
-    }
-    if (!canUseTIForGetter) {
-        // If it's an own property or type information is bad, we can still
-        // optimize the getter if we shape guard.
-        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
-                                            receivers, convertUnboxedGroups,
-                                            isOwnProperty);
-        if (!obj)
-            return abort(AbortReason::Alloc);
+
+    {
+        Shape* lastProperty = nullptr;
+        Shape* globalShape = nullptr;
+        JSObject* foundProto = nullptr;
+        bool isOwnProperty = false;
+        BaselineInspector::ReceiverVector receivers(alloc());
+        BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
+        if (inspector->commonGetPropFunction(pc, innerized, &foundProto, &lastProperty, &commonGetter,
+                                              &globalShape, &isOwnProperty,
+                                              receivers, convertUnboxedGroups))
+        {
+            bool canUseTIForGetter = false;
+            if (!isOwnProperty) {
+                // If it's not an own property, try to use TI to avoid shape guards.
+                // For own properties we use the path below.
+                canUseTIForGetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
+                                                           commonGetter, &guard,
+                                                           globalShape, &globalGuard);
+            }
+            if (!canUseTIForGetter) {
+                // If it's an own property or type information is bad, we can still
+                // optimize the getter if we shape guard.
+                obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
+                                                    receivers, convertUnboxedGroups,
+                                                    isOwnProperty);
+                if (!obj)
+                    return abort(AbortReason::Alloc);
+            }
+        } else {
+            // The Baseline IC didn't have any information we can use.
+            return Ok();
+        }
     }
 
     bool isDOM = objTypes && objTypes->isDOMClass(constraints());
@@ -11274,37 +11317,40 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
 {
     MOZ_ASSERT(*emitted == false);
 
-    Shape* lastProperty = nullptr;
-    JSFunction* commonSetter = nullptr;
-    JSObject* foundProto = nullptr;
-    bool isOwnProperty;
-    BaselineInspector::ReceiverVector receivers(alloc());
-    BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
-    if (!inspector->commonSetPropFunction(pc, &foundProto, &lastProperty, &commonSetter,
-                                          &isOwnProperty,
-                                          receivers, convertUnboxedGroups))
-    {
-        trackOptimizationOutcome(TrackedOutcome::NoProtoFound);
-        return Ok();
-    }
-
     TemporaryTypeSet* objTypes = obj->resultTypeSet();
+    JSFunction* commonSetter = nullptr;
     MDefinition* guard = nullptr;
-    bool canUseTIForSetter = false;
-    if (!isOwnProperty) {
-        // If it's not an own property, try to use TI to avoid shape guards.
-        // For own properties we use the path below.
-        canUseTIForSetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                                                   foundProto, lastProperty, commonSetter, &guard);
-    }
-    if (!canUseTIForSetter) {
-        // If it's an own property or type information is bad, we can still
-        // optimize the setter if we shape guard.
-        obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
-                                            receivers, convertUnboxedGroups,
-                                            isOwnProperty);
-        if (!obj)
-            return abort(AbortReason::Alloc);
+
+    {
+        Shape* lastProperty = nullptr;
+        JSObject* foundProto = nullptr;
+        bool isOwnProperty;
+        BaselineInspector::ReceiverVector receivers(alloc());
+        BaselineInspector::ObjectGroupVector convertUnboxedGroups(alloc());
+        if (inspector->commonSetPropFunction(pc, &foundProto, &lastProperty, &commonSetter,
+                                              &isOwnProperty,
+                                              receivers, convertUnboxedGroups))
+        {
+            bool canUseTIForSetter = false;
+            if (!isOwnProperty) {
+                // If it's not an own property, try to use TI to avoid shape guards.
+                // For own properties we use the path below.
+                canUseTIForSetter = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
+                                                           commonSetter, &guard);
+            }
+            if (!canUseTIForSetter) {
+                // If it's an own property or type information is bad, we can still
+                // optimize the setter if we shape guard.
+                obj = addShapeGuardsForGetterSetter(obj, foundProto, lastProperty,
+                                                    receivers, convertUnboxedGroups,
+                                                    isOwnProperty);
+                if (!obj)
+                    return abort(AbortReason::Alloc);
+            }
+        } else {
+            // The Baseline IC didn't have any information we can use.
+            return Ok();
+        }
     }
 
     // Emit common setter.

@@ -22,6 +22,10 @@
 #include "XREChildData.h"
 #include "XREShellData.h"
 
+#if defined(MOZ_WIDGET_ANDROID)
+#include <jni.h>
+#endif
+
 /**
  * A directory service key which provides the platform-correct "application
  * data" directory as follows, where $name and $vendor are as defined above and
@@ -407,7 +411,7 @@ XRE_API(const char*,
 
 #if defined(MOZ_WIDGET_ANDROID)
 XRE_API(void,
-        XRE_SetAndroidChildFds, (int crashFd, int ipcFd))
+        XRE_SetAndroidChildFds, (JNIEnv* env, int crashFd, int ipcFd))
 #endif // defined(MOZ_WIDGET_ANDROID)
 
 XRE_API(void,

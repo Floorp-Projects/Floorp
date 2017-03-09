@@ -557,7 +557,7 @@ var gAdvancedPane = {
 
     var list = document.getElementById("offlineAppsList");
     while (list.firstChild) {
-      list.removeChild(list.firstChild);
+      list.firstChild.remove();
     }
 
     var groups;

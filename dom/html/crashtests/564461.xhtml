@@ -11,7 +11,7 @@
 
 function boom()
 {
-  while (document.documentElement.firstChild) document.documentElement.removeChild(document.documentElement.firstChild);
+  while (document.documentElement.firstChild) document.documentElement.firstChild.remove();
   
   document.addEventListener("DOMSubtreeModified", function(){});
   document.addEventListener("DOMNodeInsertedIntoDocument", function(){});

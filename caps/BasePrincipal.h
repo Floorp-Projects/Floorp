@@ -40,10 +40,6 @@ public:
     : OriginAttributesDictionary(aOther)
   {}
 
-  // This method 'clones' the OriginAttributes ignoring the addonId value becaue
-  // this is computed from the principal URI and never propagated.
-  void Inherit(const OriginAttributes& aAttrs);
-
   void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI);
 
   enum {

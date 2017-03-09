@@ -231,6 +231,11 @@ AST_MATCHER(CXXMethodDecl, isNonVirtual) {
   const CXXMethodDecl *Decl = Node.getCanonicalDecl();
   return Decl && !Decl->isVirtual();
 }
+
+AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
+  const FunctionDecl *Decl = Node.getCanonicalDecl();
+  return Decl && hasCustomAnnotation(Decl, "moz_must_return_from_caller");
+}
 }
 }
 

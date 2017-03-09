@@ -105,7 +105,8 @@ template<class T>
 class DeleteObjectTask: public Runnable {
 public:
   explicit DeleteObjectTask(nsAutoPtr<T>& aObject)
-    : mObject(aObject)
+    : Runnable("VideoUtils::DeleteObjectTask")
+    , mObject(aObject)
   {
   }
   NS_IMETHOD Run() override {
@@ -119,7 +120,8 @@ private:
 
 template<class T>
 void DeleteOnMainThread(nsAutoPtr<T>& aObject) {
-  NS_DispatchToMainThread(new DeleteObjectTask<T>(aObject));
+  nsCOMPtr<nsIRunnable> r = new DeleteObjectTask<T>(aObject);
+  SystemGroup::Dispatch("VideoUtils::DeleteObjectTask", TaskCategory::Other, r.forget());
 }
 
 class MediaResource;

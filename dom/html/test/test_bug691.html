@@ -23,7 +23,7 @@ function remove() {
   var stage = document.getElementById("stage");
   var body = document.getElementsByTagName("BODY")[0];
   while (stage.firstChild) {
-    stage.removeChild(stage.firstChild);
+    stage.firstChild.remove();
   }
 }
 

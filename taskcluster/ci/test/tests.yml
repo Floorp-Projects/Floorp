@@ -15,6 +15,7 @@ cppunit:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
     mozharness:
         by-test-platform:
@@ -53,6 +54,7 @@ crashtest:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['graphics', 'mozilla-central']
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
     chunks:
         by-test-platform:
@@ -258,6 +260,10 @@ jittest:
                     - remove_executables.py
         extra-options:
             - --jittest-suite=jittest-chunked
+    when:
+        files-changed:
+            - js/src/**
+            - js/public/**
 
 jsreftest:
     description: "JS Reftest run"
@@ -387,7 +393,7 @@ mochitest:
             default: legacy # Bug 1281241: migrating to m3.large instances
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 32
+            android-4.3-arm7-api-15/debug: 48
             android.*: 20
             macosx.*: 5
             windows.*: 5
@@ -893,6 +899,10 @@ mochitest-style:
     treeherder-symbol: tc-M(s)
     loopback-video: true
     e10s: false
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            default: ['all']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

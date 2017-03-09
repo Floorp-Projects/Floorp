@@ -192,9 +192,8 @@ private:
 // Stub eventMarker function for js-engine event generation.
 void ProfilerJSEventMarker(const char* aEvent);
 
-// Note that some of these fields (e.g. mSleep, mPrivacyMode) aren't really
-// part of the PseudoStack, but they are part of this class so they can be
-// stored in TLS.
+// Note that some of these fields (e.g. mSleep) aren't really part of the
+// PseudoStack, but they are part of this class so they can be stored in TLS.
 //
 // The PseudoStack members are read by signal handlers, so the mutation of them
 // needs to be signal-safe.
@@ -206,7 +205,6 @@ public:
     , mSleep(AWAKE)
     , mContext(nullptr)
     , mStartJSSampling(false)
-    , mPrivacyMode(false)
   {
     MOZ_COUNT_CTOR(PseudoStack);
   }
@@ -456,10 +454,6 @@ public:
 private:
   // Start JS Profiling when possible.
   bool mStartJSSampling;
-
-public:
-  // Is private browsing on?
-  bool mPrivacyMode;
 };
 
 #endif
