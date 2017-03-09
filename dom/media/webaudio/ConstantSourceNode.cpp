@@ -189,10 +189,6 @@ ConstantSourceNode::Constructor(const GlobalObject& aGlobal,
                                 const ConstantSourceOptions& aOptions,
                                 ErrorResult& aRv)
 {
-  if (aContext.CheckClosed(aRv)) {
-    return nullptr;
-  }
-
   RefPtr<ConstantSourceNode> object = new ConstantSourceNode(&aContext);
   object->mOffset->SetValue(aOptions.mOffset);
   return object.forget();
