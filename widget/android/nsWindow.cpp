@@ -237,12 +237,12 @@ public:
     Impl* operator->() const { return mImpl; }
 };
 
-
 class nsWindow::GeckoViewSupport final
     : public GeckoView::Window::Natives<GeckoViewSupport>
     , public SupportsWeakPtr<GeckoViewSupport>
 {
     nsWindow& window;
+    GeckoView::GlobalRef mView;
 
 public:
     typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
@@ -268,6 +268,7 @@ public:
                      const GeckoView::Window::LocalRef& aInstance,
                      GeckoView::Param aView)
         : window(*aWindow)
+        , mView(aView)
     {
         Base::AttachNative(aInstance, static_cast<SupportsWeakPtr*>(this));
     }
@@ -301,6 +302,8 @@ public:
                   jni::Object::Param aDispatcher);
 
     void LoadUri(jni::String::Param aUri, int32_t aFlags);
+
+    void EnableEventDispatcher();
 };
 
 /**
@@ -1536,6 +1539,15 @@ nsWindow::GetRootLayerId() const
 }
 
 void
+nsWindow::EnableEventDispatcher()
+{
+    if (!mGeckoViewSupport) {
+        return;
+    }
+    mGeckoViewSupport->EnableEventDispatcher();
+}
+
+void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
     if ((nsIWidget*)mParent == aNewParent)
@@ -2059,6 +2071,13 @@ nsWindow::GetEventTimeStamp(int64_t aEventTime)
     int64_t tick =
         BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aEventTime);
     return TimeStamp::FromSystemTime(tick);
+}
+
+void
+nsWindow::GeckoViewSupport::EnableEventDispatcher()
+{
+    MOZ_ASSERT(mView);
+    mView->SetState(GeckoView::State::READY());
 }
 
 void

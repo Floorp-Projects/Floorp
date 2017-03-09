@@ -593,10 +593,6 @@ GeckoRestyleManager::UpdateOnlyAnimationStyles()
   tracker.Init(this);
 
   if (doCSS) {
-    // FIXME:  We should have the transition manager and animation manager
-    // add only the elements for which animations are currently throttled
-    // (i.e., animating on the compositor with main-thread style updates
-    // suppressed).
     PresContext()->EffectCompositor()->AddStyleUpdatesTo(tracker);
   }
 
