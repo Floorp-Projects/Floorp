@@ -302,8 +302,15 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mMonitor("MediaSourceTrackDemuxer")
   , mReset(true)
   , mPreRoll(TimeUnit::FromMicroseconds(
-      OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType) ? 80000
-                                                                       : 0))
+      OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType)
+      ? 80000
+      : mParent->GetTrackInfo(mType)->mMimeType.EqualsLiteral("audio/mp4a-latm")
+        // AAC encoder delay is by default 2112 audio frames.
+        // See https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
+        // So we always seek 2112 frames
+        ? (2112 * 1000000ULL
+           / mParent->GetTrackInfo(mType)->GetAsAudioInfo()->mRate)
+        : 0))
 {
 }
 
