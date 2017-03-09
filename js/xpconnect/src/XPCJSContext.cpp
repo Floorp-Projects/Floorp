@@ -1620,8 +1620,7 @@ XPCJSContext::~XPCJSContext()
 
 #ifdef MOZ_GECKO_PROFILER
     // Tell the profiler that the context is gone
-    if (PseudoStack* stack = profiler_get_pseudo_stack())
-        stack->sampleContext(nullptr);
+    profiler_clear_js_context();
 #endif
 
     Preferences::UnregisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
@@ -3495,8 +3494,7 @@ XPCJSContext::Initialize()
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
 #ifdef MOZ_GECKO_PROFILER
-    if (PseudoStack* stack = profiler_get_pseudo_stack())
-        stack->sampleContext(cx);
+    profiler_set_js_context(cx);
 #endif
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);
     js::SetActivityCallback(cx, ActivityCallback, this);

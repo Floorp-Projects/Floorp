@@ -527,6 +527,9 @@ profiler_get_pseudo_stack(void)
   return tlsPseudoStack.get();
 }
 
+void profiler_set_js_context(JSContext* aCx);
+void profiler_clear_js_context();
+
 class GeckoProfilerReporter final : public nsIMemoryReporter
 {
 public:
