@@ -34,7 +34,7 @@ class StringTable:
     """Manages a string table and allows C style serialization to a file."""
 
     def __init__(self):
-        self.current_index = 0;
+        self.current_index = 0
         self.table = {}
 
     def c_strlen(self, string):
