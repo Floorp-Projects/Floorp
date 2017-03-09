@@ -75,8 +75,9 @@
 .theme-firebug .devtools-tab,
 .theme-firebug .devtools-sidebar-tabs tab {
   margin: 3px 0 -1px 0;
-  padding: 2px 4px 0 4px;
+  padding: 1px 4px !important;
   border: 1px solid transparent !important;
+  border-bottom: none !important;
   border-radius: 4px 4px 0 0;
   font-weight: bold;
   color: var(--theme-body-color);
@@ -84,19 +85,21 @@
   min-width: 0;
 }
 
+/* For toolbox tabs, the negative margin is applied on the container
+   instead of the tab to avoid triggering y-overflow on the container
+   that causes the overflow menu to display */
+
+.theme-firebug .devtools-tab {
+  margin-bottom: 0;
+}
+
+.theme-firebug .toolbox-tabs,
+.theme-firebug #toolbox-option-container {
+  margin-bottom: -1px;
+}
+
 .theme-firebug .devtools-tab span {
   padding-inline-end: 0;
-}
-
-/* Tweak the margin and padding values differently for sidebar and the main tab bar */
-.theme-firebug .devtools-tab,
-.theme-firebug .devtools-tab.selected {
-  padding: 2px 4px 0 4px;
-  margin: 3px 1px -1px;
-}
-
-.theme-firebug .devtools-sidebar-tabs tab {
-  margin: 3px 0 -1px 0;
 }
 
 /* In order to hide bottom-border of side panel tabs we need
@@ -108,14 +111,13 @@
 
 .theme-firebug .devtools-tab:hover,
 .theme-firebug .devtools-sidebar-tabs tab:hover {
-  border: 1px solid #C8C8C8 !important;
-  border-bottom: 1px solid transparent;
+  border-color: #C8C8C8 !important;
 }
 
 .theme-firebug .devtools-tab.selected,
 .theme-firebug .devtools-sidebar-tabs tab[selected] {
   background-color: var(--theme-toolbar-tab-selected-background);
-  border: 1px solid var(--theme-splitter-color) !important;
+  border-color: var(--theme-splitter-color) !important;
   border-bottom-width: 0 !important;
   padding-bottom: 2px;
   color: inherit;
@@ -124,10 +126,6 @@
 .theme-firebug .devtools-tabbar .devtools-separator,
 .theme-firebug .devtools-tab img {
   display: none;
-}
-
-.theme-firebug .toolbox-tab label {
-  margin: 0;
 }
 
 .theme-firebug .devtools-sidebar-tabs tab label {

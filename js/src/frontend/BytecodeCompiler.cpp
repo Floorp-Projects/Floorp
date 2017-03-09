@@ -397,6 +397,10 @@ BytecodeCompiler::compileScript(HandleObject environment, SharedContext* sc)
     if (!maybeCompleteCompressSource())
         return nullptr;
 
+    // We have just finished parsing the source. Inform the source so that we
+    // can compute statistics (e.g. how much time our functions remain lazy).
+    script->scriptSource()->recordParseEnded();
+
     MOZ_ASSERT_IF(!cx->helperThread(), !cx->isExceptionPending());
 
     return script;
@@ -667,6 +671,24 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
            .setColumn(lazy->column())
            .setNoScriptRval(false)
            .setSelfHostingMode(false);
+
+    // Update statistics to find out if we are delazifying just after having
+    // lazified. Note that we are interested in the delta between end of
+    // syntax parsing and start of full parsing, so we do this now rather than
+    // after parsing below.
+    if (!lazy->scriptSource()->parseEnded().IsNull()) {
+        const mozilla::TimeDuration delta = mozilla::TimeStamp::Now() -
+            lazy->scriptSource()->parseEnded();
+
+        // Differentiate between web-facing and privileged code, to aid
+        // with optimization. Due to the number of calls to this function,
+        // we use `cx->runningWithTrustedPrincipals`, which is fast but
+        // will classify addons alongside with web-facing code.
+        const int HISTOGRAM = cx->runningWithTrustedPrincipals()
+            ? JS_TELEMETRY_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS
+            : JS_TELEMETRY_WEB_PARSER_COMPILE_LAZY_AFTER_MS;
+        cx->runtime()->addTelemetry(HISTOGRAM, delta.ToMilliseconds());
+    }
 
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())

@@ -19,8 +19,10 @@
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
+#include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
+#include "nsIAtom.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"
@@ -495,16 +497,6 @@ EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
   return animRule.mServo;
 }
 
-void
-EffectCompositor::ClearElementsToRestyle()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  const auto iterEnd = mElementsToRestyle.end();
-  for (auto iter = mElementsToRestyle.begin(); iter != iterEnd; ++iter) {
-    iter->Clear();
-  }
-}
-
 /* static */ dom::Element*
 EffectCompositor::GetElementToRestyle(dom::Element* aElement,
                                       CSSPseudoElementType aPseudoType)
@@ -754,6 +746,7 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     ? effects->PropertiesForAnimationsLevel().Invert()
     : effects->PropertiesForAnimationsLevel();
   for (KeyframeEffectReadOnly* effect : sortedEffectList) {
+    effect->GetAnimation()->WillComposeStyle();
     effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
   }
 
@@ -936,6 +929,75 @@ EffectCompositor::SetPerformanceWarning(
 
   for (KeyframeEffectReadOnly* effect : *effects) {
     effect->SetPerformanceWarning(aProperty, aWarning);
+  }
+}
+
+void
+EffectCompositor::PreTraverse()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+
+  for (auto& elementsToRestyle : mElementsToRestyle) {
+    for (auto iter = elementsToRestyle.Iter(); !iter.Done(); iter.Next()) {
+      bool postedRestyle = iter.Data();
+      // Ignore throttled restyle.
+      if (!postedRestyle) {
+        continue;
+      }
+
+      NonOwningAnimationTarget target = iter.Key();
+      EffectSet* effects =
+        EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+      if (!effects) {
+        // Drop the EffectSets that have been destroyed.
+        iter.Remove();
+        continue;
+      }
+
+      for (KeyframeEffectReadOnly* effect : *effects) {
+        effect->GetAnimation()->WillComposeStyle();
+      }
+
+      // Remove the element from the list of elements to restyle since we are
+      // about to restyle it.
+      iter.Remove();
+    }
+  }
+}
+
+void
+EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
+
+  if (aPseudoTagOrNull &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+    return;
+  }
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+
+  PseudoElementHashEntry::KeyType key = { aElement, pseudoType };
+
+  for (auto& elementsToRestyle : mElementsToRestyle) {
+    if (!elementsToRestyle.Get(key)) {
+      // Ignore throttled restyle and no restyle request.
+      continue;
+    }
+
+    EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
+    if (effects) {
+      for (KeyframeEffectReadOnly* effect : *effects) {
+        effect->GetAnimation()->WillComposeStyle();
+      }
+    }
+
+    elementsToRestyle.Remove(key);
   }
 }
 
