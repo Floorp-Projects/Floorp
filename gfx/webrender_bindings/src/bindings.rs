@@ -50,75 +50,9 @@ check_ffi_type!(_epoch_repr struct Epoch as (u32));
 check_ffi_type!(_image_format_repr enum ImageFormat as u32);
 check_ffi_type!(_border_style_repr enum BorderStyle as u32);
 check_ffi_type!(_image_rendering_repr enum ImageRendering as u32);
+check_ffi_type!(_mix_blend_mode_repr enum MixBlendMode as u32);
+check_ffi_type!(_box_shadow_clip_mode_repr enum BoxShadowClipMode as u32);
 check_ffi_type!(_namespace_id_repr struct IdNamespace as (u32));
-
-#[repr(C)]
-pub enum WrBoxShadowClipMode
-{
-    None,
-    Outset,
-    Inset,
-}
-
-impl WrBoxShadowClipMode
-{
-   pub fn to_box_shadow_clip_mode(self) -> BoxShadowClipMode
-   {
-       match self
-       {
-           WrBoxShadowClipMode::None => BoxShadowClipMode::None,
-           WrBoxShadowClipMode::Outset => BoxShadowClipMode::Outset,
-           WrBoxShadowClipMode::Inset => BoxShadowClipMode::Inset,
-       }
-   }
-}
-
-#[repr(C)]
-pub enum WrMixBlendMode
-{
-    Normal,
-    Multiply,
-    Screen,
-    Overlay,
-    Darken,
-    Lighten,
-    ColorDodge,
-    ColorBurn,
-    HardLight,
-    SoftLight,
-    Difference,
-    Exclusion,
-    Hue,
-    Saturation,
-    Color,
-    Luminosity,
-}
-
-impl WrMixBlendMode
-{
-    pub fn to_mix_blend_mode(self) -> MixBlendMode
-    {
-        match self
-        {
-            WrMixBlendMode::Normal => MixBlendMode::Normal,
-            WrMixBlendMode::Multiply => MixBlendMode::Multiply,
-            WrMixBlendMode::Screen => MixBlendMode::Screen,
-            WrMixBlendMode::Overlay => MixBlendMode::Overlay,
-            WrMixBlendMode::Darken => MixBlendMode::Darken,
-            WrMixBlendMode::Lighten => MixBlendMode::Lighten,
-            WrMixBlendMode::ColorDodge => MixBlendMode::ColorDodge,
-            WrMixBlendMode::ColorBurn => MixBlendMode::ColorBurn,
-            WrMixBlendMode::HardLight => MixBlendMode::HardLight,
-            WrMixBlendMode::SoftLight => MixBlendMode::SoftLight,
-            WrMixBlendMode::Difference => MixBlendMode::Difference,
-            WrMixBlendMode::Exclusion => MixBlendMode::Exclusion,
-            WrMixBlendMode::Hue => MixBlendMode::Hue,
-            WrMixBlendMode::Saturation => MixBlendMode::Saturation,
-            WrMixBlendMode::Color => MixBlendMode::Color,
-            WrMixBlendMode::Luminosity => MixBlendMode::Luminosity,
-        }
-    }
-}
 
 #[repr(C)]
 pub enum WrGradientExtendMode
@@ -301,7 +235,6 @@ impl WrBorderRadius
                        bottom_right: self.bottom_right.to_size() }
     }
 }
-
 
 #[repr(C)]
 pub struct WrImageMask
@@ -975,14 +908,13 @@ pub extern fn wr_dp_new_clip_region(state: &mut WrState,
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
+pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, opacity: f32, transform: &LayoutTransform, mix_blend_mode: MixBlendMode)
 {
     assert!( unsafe { is_in_main_thread() });
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
-    let mix_blend_mode = mix_blend_mode.to_mix_blend_mode();
     //println!("stacking context: {:?} {:?} {:?} {:?} {:?}", state.pipeline_id, bounds, overflow, mask, transform);
     // convert from the C type to the Rust type
     let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
@@ -1170,7 +1102,7 @@ pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip
 pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
                                     box_bounds: WrRect, offset: WrPoint, color: WrColor,
                                     blur_radius: f32, spread_radius: f32, border_radius: f32,
-                                    clip_mode: WrBoxShadowClipMode) {
+                                    clip_mode: BoxShadowClipMode) {
     assert!( unsafe { is_in_main_thread() });
 
     state.frame_builder.dl_builder.push_box_shadow(rect.to_rect(),
@@ -1181,7 +1113,7 @@ pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrC
                                                    blur_radius,
                                                    spread_radius,
                                                    border_radius,
-                                                   clip_mode.to_box_shadow_clip_mode());
+                                                   clip_mode);
 }
 
 #[no_mangle]
