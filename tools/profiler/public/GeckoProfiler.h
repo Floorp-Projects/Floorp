@@ -286,9 +286,9 @@ PROFILER_FUNC_VOID(profiler_thread_sleep())
 PROFILER_FUNC_VOID(profiler_thread_wake())
 PROFILER_FUNC(bool profiler_thread_is_sleeping(), false)
 
-// Call by the JSRuntime's operation callback. This is used to enable
-// profiling on auxilerary threads.
-PROFILER_FUNC_VOID(profiler_js_operation_callback())
+// Called by the JSRuntime's interrupt callback. This is used to start and stop
+// profiling on auxiliary threads.
+PROFILER_FUNC_VOID(profiler_js_interrupt_callback())
 
 PROFILER_FUNC(double profiler_time(), 0)
 
