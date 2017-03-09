@@ -74,10 +74,8 @@ void FileBlockCache::Close()
     // opening more streams, while the media cache is shutting down and
     // releasing memory etc! Also note we close mFD in the destructor so
     // as to not disturb any IO that's currently running.
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    MOZ_ASSERT(mainThread);
     nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(mThread);
-    mainThread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+    SystemGroup::Dispatch("ShutdownThreadEvent", TaskCategory::Other, event.forget());
   }
 }
 
