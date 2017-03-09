@@ -6465,7 +6465,7 @@ RangeFront<ValueMap>(MacroAssembler& masm, Register range, Register i, Register 
     masm.loadPtr(Address(range, ValueMap::Range::offsetOfHashTable()), front);
     masm.loadPtr(Address(front, ValueMap::offsetOfImplData()), front);
 
-    static_assert(ValueMap::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    MOZ_ASSERT(ValueMap::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
     static_assert(ValueMap::sizeofImplData() == 24, "sizeof(Data) is 24");
     masm.mulBy3(i, i);
     masm.lshiftPtr(Imm32(3), i);
@@ -6479,7 +6479,7 @@ RangeFront<ValueSet>(MacroAssembler& masm, Register range, Register i, Register 
     masm.loadPtr(Address(range, ValueSet::Range::offsetOfHashTable()), front);
     masm.loadPtr(Address(front, ValueSet::offsetOfImplData()), front);
 
-    static_assert(ValueSet::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    MOZ_ASSERT(ValueSet::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
     static_assert(ValueSet::sizeofImplData() == 16, "sizeof(Data) is 16");
     masm.lshiftPtr(Imm32(4), i);
     masm.addPtr(i, front);
@@ -6503,7 +6503,7 @@ RangePopFront(MacroAssembler& masm, Register range, Register front, Register dat
 
     // We can add sizeof(Data) to |front| to select the next element, because
     // |front| and |range.ht.data[i]| point to the same location.
-    static_assert(OrderedHashTable::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
+    MOZ_ASSERT(OrderedHashTable::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
     masm.addPtr(Imm32(OrderedHashTable::sizeofImplData()), front);
 
     masm.branchTestMagic(Assembler::NotEqual, Address(front, OrderedHashTable::offsetOfEntryKey()),
