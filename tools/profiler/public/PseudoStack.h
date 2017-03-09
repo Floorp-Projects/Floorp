@@ -305,17 +305,6 @@ public:
     }
   }
 
-  void clearJSContext()
-  {
-    if (mContext) {
-      // On JS shut down, flush the current buffer as stringifying JIT samples
-      // requires a live JSContext.
-      flushSamplerOnJSShutdown();
-    }
-
-    mContext = nullptr;
-  }
-
   void enableJSSampling()
   {
     if (mContext) {
