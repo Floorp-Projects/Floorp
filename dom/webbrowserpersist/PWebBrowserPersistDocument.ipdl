@@ -6,8 +6,10 @@
 include protocol PContent;
 include protocol PWebBrowserPersistResources;
 include protocol PWebBrowserPersistSerialize;
+include protocol PFileDescriptorSet;
+include protocol PSendStream;
 
-include InputStreamParams;
+include IPCStream;
 
 namespace mozilla {
 
@@ -60,8 +62,7 @@ parent:
   // is either a response to the constructor (if it was parent->child)
   // or sent after it (if it was child->parent).
   async Attributes(WebBrowserPersistDocumentAttrs aAttrs,
-                   OptionalInputStreamParams postData,
-                   FileDescriptor[] postFiles);
+                   OptionalIPCStream stream);
   async InitFailure(nsresult aStatus);
 
 child:
