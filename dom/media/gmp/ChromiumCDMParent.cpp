@@ -67,6 +67,32 @@ ChromiumCDMParent::CreateSession(uint32_t aCreateSessionToken,
 }
 
 void
+ChromiumCDMParent::LoadSession(uint32_t aPromiseId,
+                               uint32_t aSessionType,
+                               nsString aSessionId)
+{
+  GMP_LOG("ChromiumCDMParent::LoadSession(this=%p, pid=%u, type=%u, sid=%s)",
+          this,
+          aPromiseId,
+          aSessionType,
+          NS_ConvertUTF16toUTF8(aSessionId).get());
+  if (mIsShutdown) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("CDM is shutdown."));
+    return;
+  }
+  if (!SendLoadSession(
+        aPromiseId, aSessionType, NS_ConvertUTF16toUTF8(aSessionId))) {
+    RejectPromise(
+      aPromiseId,
+      NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("Failed to send loadSession to CDM process."));
+    return;
+  }
+}
+
+void
 ChromiumCDMParent::SetServerCertificate(uint32_t aPromiseId,
                                         const nsTArray<uint8_t>& aCert)
 {
@@ -236,6 +262,26 @@ ChromiumCDMParent::RecvOnResolveNewSessionPromise(const uint32_t& aPromiseId,
   return IPC_OK();
 }
 
+ipc::IPCResult
+ChromiumCDMParent::RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
+                                                 const bool& aSuccessful)
+{
+  GMP_LOG("ChromiumCDMParent::RecvResolveLoadSessionPromise(this=%p, pid=%u, "
+          "successful=%d)",
+          this,
+          aPromiseId,
+          aSuccessful);
+  if (!mProxy || mIsShutdown) {
+    return IPC_OK();
+  }
+
+  NS_DispatchToMainThread(NewRunnableMethod<uint32_t, bool>(
+    mProxy,
+    &ChromiumCDMProxy::OnResolveLoadSessionPromise,
+    aPromiseId,
+    aSuccessful));
+  return IPC_OK();
+}
 void
 ChromiumCDMParent::ResolvePromise(uint32_t aPromiseId)
 {

@@ -26,6 +26,10 @@ child:
                                         uint32_t aInitDataType,
                                         uint8_t[] aInitData);
 
+  async LoadSession(uint32_t aPromiseId,
+                    uint32_t aSessionType,
+                    nsCString aSessionId);
+
   async UpdateSession(uint32_t aPromiseId,
                       nsCString aSessionId,
                       uint8_t[] aResponse);
@@ -79,6 +83,8 @@ parent:
                              uint32_t aError,
                              uint32_t aSystemCode,
                              nsCString aMessage);
+
+  async ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccessful);
 
   // Return values of cdm::ContentDecryptionModule8::Decrypt
   async Decrypted(uint32_t aId, uint32_t aStatus, uint8_t[] aData);
