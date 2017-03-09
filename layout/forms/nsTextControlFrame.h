@@ -142,8 +142,8 @@ public:
 //==== NSITEXTCONTROLFRAME
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) override;
-  NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,
-                                  int32_t aSelectionEnd,
+  NS_IMETHOD    SetSelectionRange(uint32_t aSelectionStart,
+                                  uint32_t aSelectionEnd,
                                   SelectionDirection aDirection = eNone) override;
   NS_IMETHOD    GetOwnedSelectionController(nsISelectionController** aSelCon) override;
   virtual nsFrameSelection* GetOwnedFrameSelection() override;
@@ -265,7 +265,7 @@ protected:
     nsTextControlFrame* mFrame;
   };
 
-  nsresult OffsetToDOMPoint(int32_t aOffset, nsIDOMNode** aResult, int32_t* aPosition);
+  nsresult OffsetToDOMPoint(uint32_t aOffset, nsIDOMNode** aResult, uint32_t* aPosition);
 
   /**
    * Update the textnode under our anonymous div to show the new
@@ -308,11 +308,11 @@ protected:
 
 private:
   //helper methods
-  nsresult SetSelectionInternal(nsIDOMNode *aStartNode, int32_t aStartOffset,
-                                nsIDOMNode *aEndNode, int32_t aEndOffset,
+  nsresult SetSelectionInternal(nsIDOMNode *aStartNode, uint32_t aStartOffset,
+                                nsIDOMNode *aEndNode, uint32_t aEndOffset,
                                 SelectionDirection aDirection = eNone);
   nsresult SelectAllOrCollapseToEndOfText(bool aSelect);
-  nsresult SetSelectionEndPoints(int32_t aSelStart, int32_t aSelEnd,
+  nsresult SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
                                  SelectionDirection aDirection = eNone);
 
   /**
