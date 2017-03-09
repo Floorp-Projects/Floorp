@@ -315,28 +315,39 @@ var GLOBAL = this + '';
 // Variables local to jstests harness.
 var jstestsOptions;
 
-window.onerror = function (msg, page, line)
-{
+window.onerror = function (msg, page, line, column, error) {
   // Restore options in case a test case used this common variable name.
   options = jstestsOptions;
 
   optionsPush();
 
-  if (typeof DESCRIPTION == 'undefined')
-  {
+  if (typeof DESCRIPTION == 'undefined') {
     DESCRIPTION = 'Unknown';
   }
-  if (typeof EXPECTED == 'undefined')
-  {
+  if (typeof EXPECTED == 'undefined') {
     EXPECTED = 'Unknown';
   }
 
   var testcase = new TestCase("unknown-test-name", DESCRIPTION, EXPECTED, "error");
 
-  if (document.location.href.indexOf('-n.js') != -1)
-  {
-    // negative test
+  var href = document.location.href;
+  if (href.indexOf('-n.js') !== -1) {
+    // Negative test without a specific error type.
     testcase.passed = true;
+  } else if (href.indexOf('error=') !== -1) {
+    // Negative test which expects a specific error type.
+    var startIndex = href.indexOf('error=');
+    var endIndex = href.indexOf(';', startIndex);
+    if (endIndex === -1)
+      endIndex = href.length;
+    var errorType = href.substring(startIndex + 'error='.length, endIndex);
+
+    // Check the error type when an actual error object is available.
+    if (Error.prototype.isPrototypeOf(error)) {
+      testcase.passed = error.constructor.name === errorType;
+    } else {
+      testcase.passed = true;
+    }
   }
 
   testcase.reason = page + ':' + line + ': ' + msg;
@@ -526,7 +537,7 @@ function jsTestDriverBrowserInit()
     gczeal(Number(properties.gczeal));
   }
 
-  var testpathparts = properties.test.split(/\//);
+  var testpathparts = properties.test.split("/");
 
   if (testpathparts.length < 2)
   {
@@ -536,56 +547,99 @@ function jsTestDriverBrowserInit()
 
   document.write('<title>' + properties.test + '<\/title>');
 
-  // XXX bc - the first document.written script is ignored if the protocol
-  // is file:. insert an empty script tag, to work around it.
-  document.write('<script></script>');
-
   // Output script tags for shell.js, then browser.js, at each level of the
   // test path hierarchy.
   var prepath = "";
-  var i = 0;
-  for (var end = testpathparts.length - 1; i < end; i++) {
+  var scripts = [];
+  var end = testpathparts.length - 1;
+  for (var i = 0; i < end; i++) {
     prepath += testpathparts[i] + "/";
-    outputscripttag(prepath + "shell.js", properties);
-    outputscripttag(prepath + "browser.js", properties);
+
+    scripts.push({src: prepath + "shell.js", module: false});
+    scripts.push({src: prepath + "browser.js", module: false});
   }
 
   // Output the test script itself.
-  outputscripttag(prepath + testpathparts[i], properties);
+  var moduleTest = !!properties.module;
+  scripts.push({src: prepath + testpathparts[end], module: moduleTest});
 
   // Finally output the driver-end script to advance to the next test.
-  outputscripttag('js-test-driver-end.js', properties);
-  return;
-}
+  scripts.push({src: "js-test-driver-end.js", module: false});
 
-function outputscripttag(src, properties)
-{
-  if (!src)
-  {
-    return;
-  }
+  if (!moduleTest) {
+    // XXX bc - the first document.written script is ignored if the protocol
+    // is file:. insert an empty script tag, to work around it.
+    document.write('<script></script>');
 
-  var s = '<script src="' +  src + '" charset="utf-8" ';
-
-  if (properties.language != 'type')
-  {
-    s += 'language="javascript';
-    if (properties.version)
-    {
-      s += properties.version;
+    var key, value;
+    if (properties.language !== "type") {
+      key = "language";
+      value = "javascript";
+      if (properties.version) {
+        value += properties.version;
+      }
+    } else {
+      key = "type";
+      value = properties.mimetype;
+      if (properties.version) {
+        value += ";version=" + properties.version;
+      }
     }
-  }
-  else
-  {
-    s += 'type="' + properties.mimetype;
-    if (properties.version)
-    {
-      s += ';version=' + properties.version;
-    }
-  }
-  s += '"><\/script>';
 
-  document.write(s);
+    for (var i = 0; i < scripts.length; i++) {
+      var src = scripts[i].src;
+      document.write(`<script src="${src}" charset="utf-8" ${key}="${value}"><\/script>`);
+    }
+  } else {
+    // Modules are loaded asynchronously by default, but for the test harness
+    // we need to execute all scripts and modules one after the other.
+
+    // Saved built-ins (TODO: Move this function into the IIFE).
+    var ReflectApply = Reflect.apply;
+    var NodePrototypeAppendChild = Node.prototype.appendChild;
+    var documentElement = document.documentElement;
+
+    // Appends the next script element to the DOM.
+    function appendScript(index) {
+      var script = scriptElements[index];
+      scriptElements[index] = null;
+      if (script !== null) {
+        ReflectApply(NodePrototypeAppendChild, documentElement, [script]);
+      }
+    }
+
+    // Create all script elements upfront, so we don't need to worry about
+    // modified built-ins.
+    var scriptElements = [];
+    for (var i = 0; i < scripts.length; i++) {
+      var spec = scripts[i];
+
+      var script = document.createElement("script");
+      script.charset = "utf-8";
+      if (spec.module) {
+        script.type = "module";
+      }
+      script.src = spec.src;
+
+      let nextScriptIndex = i + 1;
+      if (nextScriptIndex < scripts.length) {
+        var callNextAppend = () => appendScript(nextScriptIndex);
+        script.addEventListener("afterscriptexecute", callNextAppend, {once: true});
+
+        // Module scripts don't fire the "afterscriptexecute" event when there
+        // was an error, instead the "error" event is emitted. So listen for
+        // both events when creating module scripts.
+        if (spec.module) {
+          script.addEventListener("error", callNextAppend, {once: true});
+        }
+      }
+
+      scriptElements[i] = script;
+    }
+
+    // Append the first script.
+    appendScript(0);
+  }
 }
 
 function jsTestDriverEnd()

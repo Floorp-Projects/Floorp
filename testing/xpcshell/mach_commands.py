@@ -24,6 +24,7 @@ from mach.decorators import (
     Command,
 )
 
+from multiprocessing import cpu_count
 from xpcshellcommandline import parser_desktop, parser_remote
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -258,6 +259,9 @@ class MachCommands(MachCommandBase):
                                                              params,
                                                              {"mach": sys.stdout},
                                                              {"verbose": True})
+
+        if not params['threadCount']:
+            params['threadCount'] = int((cpu_count() * 3) / 2)
 
         if conditions.is_android(self):
             from mozrunner.devices.android_device import verify_android_device

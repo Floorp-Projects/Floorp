@@ -17,6 +17,7 @@ const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const RuleEditor = require("devtools/client/inspector/rules/views/rule-editor");
+const ClassListPreviewer = require("devtools/client/inspector/rules/views/class-list-previewer");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {
@@ -120,6 +121,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
+  this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
 
   let doc = this.styleDocument;
   this.element = doc.getElementById("ruleview-container-focusable");
@@ -128,6 +130,8 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.searchClearButton = doc.getElementById("ruleview-searchinput-clear");
   this.pseudoClassPanel = doc.getElementById("pseudo-class-panel");
   this.pseudoClassToggle = doc.getElementById("pseudo-class-panel-toggle");
+  this.classPanel = doc.getElementById("ruleview-class-panel");
+  this.classToggle = doc.getElementById("class-panel-toggle");
   this.hoverCheckbox = doc.getElementById("pseudo-hover-toggle");
   this.activeCheckbox = doc.getElementById("pseudo-active-toggle");
   this.focusCheckbox = doc.getElementById("pseudo-focus-toggle");
@@ -146,8 +150,8 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.searchField.addEventListener("input", this._onFilterStyles);
   this.searchField.addEventListener("contextmenu", this.inspector.onTextBoxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
-  this.pseudoClassToggle.addEventListener("click",
-                                          this._onTogglePseudoClassPanel);
+  this.pseudoClassToggle.addEventListener("click", this._onTogglePseudoClassPanel);
+  this.classToggle.addEventListener("click", this._onToggleClassPanel);
   this.hoverCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.activeCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
@@ -180,6 +184,8 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.tooltips.addToView();
 
   this.highlighters.addToView(this);
+
+  this.classListPreviewer = new ClassListPreviewer(this.inspector, this.classPanel);
 
   EventEmitter.decorate(this);
 }
@@ -673,6 +679,7 @@ CssRuleView.prototype = {
 
     this.tooltips.destroy();
     this.highlighters.removeFromView(this);
+    this.classListPreviewer.destroy();
 
     // Remove bound listeners
     this.shortcuts.destroy();
@@ -683,8 +690,8 @@ CssRuleView.prototype = {
     this.searchField.removeEventListener("contextmenu",
       this.inspector.onTextBoxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
-    this.pseudoClassToggle.removeEventListener("click",
-      this._onTogglePseudoClassPanel);
+    this.pseudoClassToggle.removeEventListener("click", this._onTogglePseudoClassPanel);
+    this.classToggle.removeEventListener("click", this._onToggleClassPanel);
     this.hoverCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.activeCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.focusCheckbox.removeEventListener("click", this._onTogglePseudoClass);
@@ -693,6 +700,8 @@ CssRuleView.prototype = {
     this.searchClearButton = null;
     this.pseudoClassPanel = null;
     this.pseudoClassToggle = null;
+    this.classPanel = null;
+    this.classToggle = null;
     this.hoverCheckbox = null;
     this.activeCheckbox = null;
     this.focusCheckbox = null;
@@ -1372,18 +1381,30 @@ CssRuleView.prototype = {
    */
   _onTogglePseudoClassPanel: function () {
     if (this.pseudoClassPanel.hidden) {
-      this.pseudoClassToggle.classList.add("checked");
-      this.hoverCheckbox.setAttribute("tabindex", "0");
-      this.activeCheckbox.setAttribute("tabindex", "0");
-      this.focusCheckbox.setAttribute("tabindex", "0");
+      this.showPseudoClassPanel();
     } else {
-      this.pseudoClassToggle.classList.remove("checked");
-      this.hoverCheckbox.setAttribute("tabindex", "-1");
-      this.activeCheckbox.setAttribute("tabindex", "-1");
-      this.focusCheckbox.setAttribute("tabindex", "-1");
+      this.hidePseudoClassPanel();
     }
+  },
 
-    this.pseudoClassPanel.hidden = !this.pseudoClassPanel.hidden;
+  showPseudoClassPanel: function () {
+    this.hideClassPanel();
+
+    this.pseudoClassToggle.classList.add("checked");
+    this.hoverCheckbox.setAttribute("tabindex", "0");
+    this.activeCheckbox.setAttribute("tabindex", "0");
+    this.focusCheckbox.setAttribute("tabindex", "0");
+
+    this.pseudoClassPanel.hidden = false;
+  },
+
+  hidePseudoClassPanel: function () {
+    this.pseudoClassToggle.classList.remove("checked");
+    this.hoverCheckbox.setAttribute("tabindex", "-1");
+    this.activeCheckbox.setAttribute("tabindex", "-1");
+    this.focusCheckbox.setAttribute("tabindex", "-1");
+
+    this.pseudoClassPanel.hidden = true;
   },
 
   /**
@@ -1393,6 +1414,32 @@ CssRuleView.prototype = {
   _onTogglePseudoClass: function (event) {
     let target = event.currentTarget;
     this.inspector.togglePseudoClass(target.value);
+  },
+
+  /**
+   * Called when the class panel button is clicked and toggles the display of the class
+   * panel.
+   */
+  _onToggleClassPanel: function () {
+    if (this.classPanel.hidden) {
+      this.showClassPanel();
+    } else {
+      this.hideClassPanel();
+    }
+  },
+
+  showClassPanel: function () {
+    this.hidePseudoClassPanel();
+
+    this.classToggle.classList.add("checked");
+    this.classPanel.hidden = false;
+
+    this.classListPreviewer.focusAddClassField();
+  },
+
+  hideClassPanel: function () {
+    this.classToggle.classList.remove("checked");
+    this.classPanel.hidden = true;
   },
 
   /**

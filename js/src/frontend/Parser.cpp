@@ -2495,7 +2495,7 @@ Parser<FullParseHandler>::standaloneFunction(HandleFunction fun,
     }
 
     // Skip function name, if present.
-    if (tt == TOK_NAME || tt == TOK_YIELD) {
+    if (TokenKindIsPossibleIdentifierName(tt)) {
         MOZ_ASSERT(tokenStream.currentName() == fun->explicitName());
     } else {
         MOZ_ASSERT(fun->explicitName() == nullptr);

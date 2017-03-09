@@ -62,6 +62,12 @@ function doTest() {
   is(subtreeModifiedCount, 1,
      "Removing a child node should have dispatched a DOMSubtreeModified event");
 
+  subtree.innerHTML = s;
+  subtreeModifiedCount = 0;
+  subtree.firstChild.firstChild.remove();
+  is(subtreeModifiedCount, 1,
+     "Removing a child node should have dispatched a DOMSubtreeModified event");
+
   subtreeModifiedCount = 0;
   subtree.firstChild.setAttribute("foo", "bar");
   is(subtreeModifiedCount, 1,

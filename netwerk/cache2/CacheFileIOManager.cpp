@@ -1777,11 +1777,18 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 
   // Delete the file if the entry was doomed or invalid and
   // filedesc properly closed
-  if ((aHandle->mIsDoomed || aHandle->mInvalid) && NS_SUCCEEDED(rv)) {
+  if ((aHandle->mIsDoomed || aHandle->mInvalid) && aHandle->mFileExists &&
+       NS_SUCCEEDED(rv)) {
     LOG(("CacheFileIOManager::CloseHandleInternal() - Removing file from "
          "disk"));
 
-    aHandle->mFile->Remove(false);
+    rv = aHandle->mFile->Remove(false);
+    if (NS_SUCCEEDED(rv)) {
+      aHandle->mFileExists = false;
+    } else {
+      LOG(("  failed to remove the file [rv=0x%08" PRIx32 "]",
+           static_cast<uint32_t>(rv)));
+    }
   }
 
   if (!aHandle->IsSpecialFile() && !aHandle->mIsDoomed &&
