@@ -30,6 +30,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   Maybe<WrImageMask> mask = buildMaskLayer();
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(clip));
 
   DumpLayerInfo("ColorLayer", rect);
 
@@ -40,7 +41,7 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                               //GetAnimations(),
                               transform,
                               mixBlendMode);
-  aBuilder.PushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), wr::ToWrColor(mColor));
+  aBuilder.PushRect(wr::ToWrRect(rect), clipRegion, wr::ToWrColor(mColor));
   aBuilder.PopStackingContext();
 }
 

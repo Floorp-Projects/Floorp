@@ -566,31 +566,31 @@ wr_dp_new_clip_region(WrState* wrState,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_rect(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_rect(WrState* wrState, WrRect bounds, WrClipRegion clip,
                 WrColor color)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_text(WrState* wrState, WrRect bounds, WrRect clip, WrColor color,
+wr_dp_push_text(WrState* wrState, WrRect bounds, WrClipRegion clip, WrColor color,
                 WrFontKey font_Key, const WrGlyphInstance* glyphs,
                 uint32_t glyph_count, float glyph_size)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_border(WrState* wrState, WrRect bounds, WrClipRegion clip,
                   WrBorderSide top, WrBorderSide right, WrBorderSide bottom, WrBorderSide left,
                   WrBorderRadius radius)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_linear_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
                            WrPoint startPoint, WrPoint endPoint,
                            const WrGradientStop* stops, size_t stopsCount,
                            WrGradientExtendMode extendMode)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
                            WrPoint startCenter, WrPoint endCenter,
                            float startRadius, float endRadius,
                            const WrGradientStop* stops, size_t stopsCount,
@@ -598,12 +598,12 @@ wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrRect clip,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_image(WrState* wrState, WrRect bounds, WrRect clip,
-                 const WrImageMask* mask, WrImageRendering filter, WrImageKey key)
+wr_dp_push_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                 WrImageRendering filter, WrImageKey key)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WrPipelineId layers_id)
+wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrClipRegion clip, WrPipelineId layers_id)
 WR_FUNC;
 
 // It is the responsibility of the caller to manage the dst_buffer memory
@@ -614,7 +614,7 @@ wr_renderer_readback(uint32_t width, uint32_t height,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrRect clip,
+wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrClipRegion clip,
                       WrRect box_bounds, WrPoint offset, WrColor color,
                       float blur_radius, float spread_radius, float border_radius,
                       WrBoxShadowClipMode clip_mode)
