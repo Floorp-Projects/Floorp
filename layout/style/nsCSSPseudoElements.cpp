@@ -99,7 +99,11 @@ nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom, EnabledState aEnabledState)
     }
 #endif
 
-    return Type::AnonBox;
+    if (nsCSSAnonBoxes::IsNonInheritingAnonBox(aAtom)) {
+      return Type::NonInheritingAnonBox;
+    }
+
+    return Type::InheritingAnonBox;
   }
 
   return Type::NotPseudo;

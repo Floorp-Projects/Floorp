@@ -468,14 +468,7 @@ IsSessionTypeSupported(const MediaKeySessionType aSessionType,
     // No other session types supported.
     return false;
   }
-  using MediaKeySessionTypeValues::strings;
-  const char* sessionType = strings[static_cast<uint32_t>(aSessionType)].value;
-  for (const nsString& s : aConfig.mSessionTypes.Value()) {
-    if (s.EqualsASCII(sessionType)) {
-      return true;
-    }
-  }
-  return false;
+  return aConfig.mSessionTypes.Value().Contains(ToString(aSessionType));
 }
 
 already_AddRefed<MediaKeySession>
@@ -587,17 +580,17 @@ MediaKeys::GetSessionsInfo(nsString& sessionsInfo)
     MediaKeySession* keySession = it.Data();
     nsString sessionID;
     keySession->GetSessionId(sessionID);
-    sessionsInfo.AppendLiteral("(sid:");
+    sessionsInfo.AppendLiteral("(sid=");
     sessionsInfo.Append(sessionID);
     MediaKeyStatusMap* keyStatusMap = keySession->KeyStatuses();
     for (uint32_t i = 0; i < keyStatusMap->GetIterableLength(); i++) {
       nsString keyID = keyStatusMap->GetKeyIDAsHexString(i);
-      sessionsInfo.AppendLiteral("(kid:");
+      sessionsInfo.AppendLiteral("(kid=");
       sessionsInfo.Append(keyID);
       using IntegerType = typename std::underlying_type<MediaKeyStatus>::type;
       auto idx = static_cast<IntegerType>(keyStatusMap->GetValueAtIndex(i));
       const char* keyStatus = MediaKeyStatusValues::strings[idx].value;
-      sessionsInfo.AppendLiteral(" status:");
+      sessionsInfo.AppendLiteral(" status=");
       sessionsInfo.Append(
         NS_ConvertUTF8toUTF16((nsDependentCString(keyStatus))));
       sessionsInfo.AppendLiteral(")");

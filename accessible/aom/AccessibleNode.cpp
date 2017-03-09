@@ -154,6 +154,7 @@ AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
 {
   if (!mIntl) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   nsCOMPtr<nsIPersistentProperties> attrs = mIntl->Attributes();
@@ -163,6 +164,7 @@ AccessibleNode::Get(JSContext* aCX, const nsAString& aAttribute,
   JS::Rooted<JS::Value> jsval(aCX);
   if (!ToJSValue(aCX, value, &jsval)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
 
   aValue.set(jsval);

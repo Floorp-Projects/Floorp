@@ -533,6 +533,8 @@ class OrderedHashTable
         return offsetof(OrderedHashTable, data);
     }
     static constexpr size_t offsetOfDataElement() {
+        static_assert(offsetof(Data, element) == 0,
+                      "RangeFront and RangePopFront depend on offsetof(Data, element) being 0");
         return offsetof(Data, element);
     }
     static constexpr size_t sizeofData() {

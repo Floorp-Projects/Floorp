@@ -1812,7 +1812,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             return;
           }
           while (aDescriptionElement.hasChildNodes())
-            aDescriptionElement.removeChild(aDescriptionElement.firstChild);
+            aDescriptionElement.firstChild.remove();
 
           // If aNoEmphasis is specified, don't add any emphasis
           if (aNoEmphasis) {

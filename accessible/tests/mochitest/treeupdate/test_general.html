@@ -64,7 +64,7 @@
 
       this.invoke = function removeRemove_invoke()
       {
-        getNode(aContainer).removeChild(getNode(aContainer).firstChild);
+        getNode(aContainer).firstChild.remove();
       }
 
       this.finalCheck = function removeRemove_finalCheck()

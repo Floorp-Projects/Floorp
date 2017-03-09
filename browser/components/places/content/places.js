@@ -419,7 +419,7 @@ var PlacesOrganizer = {
 
     // Remove existing menu items.  Last item is the restoreFromFile item.
     while (restorePopup.childNodes.length > 1)
-      restorePopup.removeChild(restorePopup.firstChild);
+      restorePopup.firstChild.remove();
 
     Task.spawn(function* () {
       let backupFiles = yield PlacesBackups.getBackupFiles();
@@ -1007,7 +1007,7 @@ var ViewMenu = {
       return endElement;
     }
     while (popup.hasChildNodes()) {
-      popup.removeChild(popup.firstChild);
+      popup.firstChild.remove();
     }
     return null;
   },

@@ -77,7 +77,7 @@
       this.invoke = function removeOptGroup_invoke()
       {
         this.option1Node = this.selectNode.firstChild.firstChild;
-        this.selectNode.removeChild(this.selectNode.firstChild);
+        this.selectNode.firstChild.remove();
       }
 
       this.eventSeq = [

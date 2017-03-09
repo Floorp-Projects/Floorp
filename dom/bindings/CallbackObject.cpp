@@ -334,7 +334,7 @@ CallbackObject::CallSetup::~CallSetup()
 
         // IsJSContextException shouldn't be true anymore because we will report
         // the exception on the JSContext ... so throw something else.
-        mErrorResult.Throw(NS_ERROR_UNEXPECTED);
+        mErrorResult.ThrowWithCustomCleanup(NS_ERROR_UNEXPECTED);
       }
     }
   }

@@ -288,7 +288,7 @@ public:
                             void* aCallbackData) override { return false; }
   bool                    ComputeShouldAccelerate();
   virtual bool            WidgetTypeSupportsAcceleration() { return true; }
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override { return nsIMEUpdatePreference(); }
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
   virtual MOZ_MUST_USE nsresult OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual already_AddRefed<nsIWidget>
   CreateChild(const LayoutDeviceIntRect& aRect,

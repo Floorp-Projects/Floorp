@@ -10074,10 +10074,12 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   // statically...  But this API is a bit nicer.
   nsIAtom* pseudo = aChildFrame->StyleContext()->GetPseudo();
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(pseudo), "Child is not an anon box?");
+  MOZ_ASSERT(!nsCSSAnonBoxes::IsNonInheritingAnonBox(pseudo),
+             "Why did the caller bother calling us?");
 
   // Anon boxes inherit from their parent; that's us.
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveAnonymousBoxStyle(pseudo, StyleContext());
+    aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, StyleContext());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:

@@ -13,9 +13,11 @@ var rule = require("../lib/rules/avoid-removeChild");
 // Tests
 //------------------------------------------------------------------------------
 
-function invalidCode(code) {
-  let message = "use element.remove() instead of " +
-                "element.parentNode.removeChild(element)";
+function invalidCode(code, message) {
+  if (!message) {
+    message = "use element.remove() instead of " +
+              "element.parentNode.removeChild(element)";
+  }
   return {code: code, errors: [{message: message, type: "CallExpression"}]};
 }
 
@@ -31,7 +33,10 @@ exports.runTest = function(ruleTester) {
       invalidCode("elt.parentNode.removeChild(elt);"),
       invalidCode("elt.parentNode.parentNode.removeChild(elt.parentNode);"),
       invalidCode("$(e).parentNode.removeChild($(e));"),
-      invalidCode("$('e').parentNode.removeChild($('e'));")
+      invalidCode("$('e').parentNode.removeChild($('e'));"),
+      invalidCode("elt.removeChild(elt.firstChild);",
+                  "use element.firstChild.remove() instead of " +
+                  "element.removeChild(element.firstChild)")
     ]
   });
 };

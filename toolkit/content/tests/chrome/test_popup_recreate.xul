@@ -38,7 +38,7 @@ function recreate()
   if (gState == "before") {
     var element = document.getElementById("menulist");
     while (element.hasChildNodes())
-      element.removeChild(element.firstChild);
+      element.firstChild.remove();
     element.appendItem("Cat");
     gState = "after";
     document.getElementById("menulist").open = true;

@@ -1084,6 +1084,26 @@
     "n_values": 10,
     "description": "Use of SpiderMonkey's deprecated language extensions in add-ons: ForEach=0, DestructuringForIn=1 (obsolete), LegacyGenerator=2, ExpressionClosure=3, LetBlock=4 (obsolete), LetExpression=5 (obsolete), NoSuchMethod=6 (obsolete), FlagsArgument=7 (obsolete), RegExpSourceProp=8 (obsolete), RestoredRegExpStatics=9 (obsolete), BlockScopeFunRedecl=10"
   },
+  "JS_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS": {
+    "alert_emails": ["dteller@mozilla.com"],
+    "expires_in_version": "70",
+    "bug_numbers": [1343483],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10000,
+    "n_buckets": 10,
+    "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for privileged code."
+  },
+  "JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS": {
+    "alert_emails": ["dteller@mozilla.com"],
+    "expires_in_version": "70",
+    "bug_numbers": [1343483],
+    "kind": "exponential",
+    "low": 10,
+    "high": 10000,
+    "n_buckets": 10,
+    "description": "Time elapsed between the moment a function is lazy-parsed (end of parsing of the ScriptSource) and the moment it is recompiled as non-lazy (start of compilation), in milliseconds, for web code."
+  },
   "XUL_CACHE_DISABLED": {
     "expires_in_version": "default",
     "kind": "flag",
@@ -5091,6 +5111,15 @@
     "alert_emails": ["mconley@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible. This probe is similar to FX_TAB_SWITCH_SPINNER_VISIBLE_MS, but is for truly degenerate cases."
+  },
+  "FX_TAB_SWITCH_SPINNER_TYPE": {
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "bug_numbers": [1301104],
+    "alert_emails": ["mconley@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
+    "description": "Firefox: If the spinner interstitial displays during tab switching, record if the tab being switched to has been seen (content was visible) before. If not, record if the tab is 'old' (> 1000ms since creation) or 'new'.",
+    "labels": ["seen", "unseenOld", "unseenNew"]
   },
   "FX_TAB_CLICK_MS": {
     "expires_in_version": "default",

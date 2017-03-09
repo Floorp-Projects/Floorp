@@ -196,8 +196,6 @@ public:
     static uint32_t InputStreamAvailable(jni::Object::Param obj);
     static nsresult InputStreamRead(jni::Object::Param obj, char *aBuf, uint32_t aCount, uint32_t *aRead);
 
-    static nsresult GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath);
-
 protected:
     static nsDataHashtable<nsStringHashKey, nsString> sStoragePaths;
 

@@ -424,7 +424,7 @@ for (var name of elementNames) {
   for (var func of functions) {
     // Clean-up.
     while (content.firstChild) {
-      content.removeChild(content.firstChild);
+      content.firstChild.remove();
     }
     for (form of forms) {
       content.appendChild(form);

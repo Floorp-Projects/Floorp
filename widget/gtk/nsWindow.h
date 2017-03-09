@@ -274,7 +274,6 @@ public:
     virtual void SetInputContext(const InputContext& aContext,
                                  const InputContextAction& aAction) override;
     virtual InputContext GetInputContext() override;
-    virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
     virtual TextEventDispatcherListener*
         GetNativeTextEventDispatcherListener() override;
     bool ExecuteNativeKeyBindingRemapped(

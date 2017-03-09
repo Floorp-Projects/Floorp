@@ -335,14 +335,6 @@ auto GeckoAppShell::GetExtensionFromMimeType(mozilla::jni::String::Param a0) -> 
     return mozilla::jni::Method<GetExtensionFromMimeType_t>::Call(GeckoAppShell::Context(), nullptr, a0);
 }
 
-constexpr char GeckoAppShell::GetExternalPublicDirectory_t::name[];
-constexpr char GeckoAppShell::GetExternalPublicDirectory_t::signature[];
-
-auto GeckoAppShell::GetExternalPublicDirectory(mozilla::jni::String::Param a0) -> mozilla::jni::String::LocalRef
-{
-    return mozilla::jni::Method<GetExternalPublicDirectory_t>::Call(GeckoAppShell::Context(), nullptr, a0);
-}
-
 constexpr char GeckoAppShell::GetHWDecoderCapability_t::name[];
 constexpr char GeckoAppShell::GetHWDecoderCapability_t::signature[];
 
@@ -859,6 +851,14 @@ auto GeckoThread::CheckAndSetState(mozilla::jni::Object::Param a0, mozilla::jni:
     return mozilla::jni::Method<CheckAndSetState_t>::Call(GeckoThread::Context(), nullptr, a0, a1);
 }
 
+constexpr char GeckoThread::IsChildProcess_t::name[];
+constexpr char GeckoThread::IsChildProcess_t::signature[];
+
+auto GeckoThread::IsChildProcess() -> bool
+{
+    return mozilla::jni::Method<IsChildProcess_t>::Call(GeckoThread::Context(), nullptr);
+}
+
 constexpr char GeckoThread::CreateServices_t::name[];
 constexpr char GeckoThread::CreateServices_t::signature[];
 
@@ -999,6 +999,33 @@ auto GeckoThread::State::RUNNING() -> State::LocalRef
 
 const char GeckoView::name[] =
         "org/mozilla/gecko/GeckoView";
+
+constexpr char GeckoView::SetState_t::name[];
+constexpr char GeckoView::SetState_t::signature[];
+
+auto GeckoView::SetState(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<SetState_t>::Call(GeckoView::mCtx, nullptr, a0);
+}
+
+const char GeckoView::State::name[] =
+        "org/mozilla/gecko/GeckoView$State";
+
+constexpr char GeckoView::State::INITIAL_t::name[];
+constexpr char GeckoView::State::INITIAL_t::signature[];
+
+auto GeckoView::State::INITIAL() -> State::LocalRef
+{
+    return mozilla::jni::Field<INITIAL_t>::Get(State::Context(), nullptr);
+}
+
+constexpr char GeckoView::State::READY_t::name[];
+constexpr char GeckoView::State::READY_t::signature[];
+
+auto GeckoView::State::READY() -> State::LocalRef
+{
+    return mozilla::jni::Field<READY_t>::Get(State::Context(), nullptr);
+}
 
 const char GeckoView::Window::name[] =
         "org/mozilla/gecko/GeckoView$Window";
@@ -1748,6 +1775,23 @@ constexpr char VsyncSource::INSTANCE_t::signature[];
 auto VsyncSource::INSTANCE() -> VsyncSource::LocalRef
 {
     return mozilla::jni::Field<INSTANCE_t>::Get(VsyncSource::Context(), nullptr);
+}
+
+const char GeckoProcessManager::name[] =
+        "org/mozilla/gecko/process/GeckoProcessManager";
+
+constexpr char GeckoProcessManager::GetEditableParent_t::name[];
+constexpr char GeckoProcessManager::GetEditableParent_t::signature[];
+
+const char GeckoServiceChildProcess::name[] =
+        "org/mozilla/gecko/process/GeckoServiceChildProcess";
+
+constexpr char GeckoServiceChildProcess::GetEditableParent_t::name[];
+constexpr char GeckoServiceChildProcess::GetEditableParent_t::signature[];
+
+auto GeckoServiceChildProcess::GetEditableParent(int64_t a0, int64_t a1) -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetEditableParent_t>::Call(GeckoServiceChildProcess::Context(), nullptr, a0, a1);
 }
 
 const char Clipboard::name[] =

@@ -97,8 +97,10 @@ private:
   }
 
 public:
-  explicit SamplerThread(double aInterval)
-    : mIntervalMicro(std::max(1, int(floor(aInterval * 1000 + 0.5))))
+  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                double aInterval)
+    : mActivityGeneration(aActivityGeneration)
+    , mIntervalMicro(std::max(1, int(floor(aInterval * 1000 + 0.5))))
   {
     pthread_attr_t* attr_ptr = nullptr;
     if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {
@@ -106,23 +108,10 @@ public:
     }
   }
 
+  void Stop(PS::LockRef aLock) {}
+
   void Join() {
     pthread_join(mThread, nullptr);
-  }
-
-  static void StartSampler(double aInterval) {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    MOZ_RELEASE_ASSERT(!sInstance);
-
-    sInstance = new SamplerThread(aInterval);
-  }
-
-  static void StopSampler() {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-    sInstance->Join();
-    delete sInstance;
-    sInstance = nullptr;
   }
 
   void Run() {
@@ -131,31 +120,45 @@ public:
     TimeDuration lastSleepOverhead = 0;
     TimeStamp sampleStart = TimeStamp::Now();
 
-    while (gIsActive) {
-      gBuffer->deleteExpiredStoredMarkers();
+    while (true) {
+      // This scope is for |lock|. It ends before we sleep below.
+      {
+        PS::AutoLock lock(gPSMutex);
 
-      if (!gIsPaused) {
-        StaticMutexAutoLock lock(gRegisteredThreadsMutex);
-
-        bool isFirstProfiledThread = true;
-        for (uint32_t i = 0; i < gRegisteredThreads->size(); i++) {
-          ThreadInfo* info = (*gRegisteredThreads)[i];
-
-          // This will be null if we're not interested in profiling this thread.
-          if (!info->HasProfile() || info->IsPendingDelete()) {
-            continue;
-          }
-
-          if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
-              gBuffer->DuplicateLastSample(info->ThreadId(), gStartTime)) {
-            continue;
-          }
-
-          info->UpdateThreadResponsiveness();
-
-          SampleContext(info, isFirstProfiledThread);
-          isFirstProfiledThread = false;
+        // See the corresponding code in platform-linux-android.cpp for an
+        // explanation of what's happening here.
+        if (PS::ActivityGeneration(lock) != mActivityGeneration) {
+          return;
         }
+
+        gPS->Buffer(lock)->deleteExpiredStoredMarkers();
+
+        if (!gPS->IsPaused(lock)) {
+          bool isFirstProfiledThread = true;
+
+          const PS::ThreadVector& threads = gPS->Threads(lock);
+          for (uint32_t i = 0; i < threads.size(); i++) {
+            ThreadInfo* info = threads[i];
+
+            if (!info->HasProfile() || info->IsPendingDelete()) {
+              // We are not interested in profiling this thread.
+              continue;
+            }
+
+            if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
+                gPS->Buffer(lock)->DuplicateLastSample(info->ThreadId(),
+                                                       gPS->StartTime(lock))) {
+              continue;
+            }
+
+            info->UpdateThreadResponsiveness();
+
+            SampleContext(lock, info, isFirstProfiledThread);
+
+            isFirstProfiledThread = false;
+          }
+        }
+        // gPSMutex is unlocked here.
       }
 
       TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(mIntervalMicro);
@@ -168,7 +171,8 @@ public:
     }
   }
 
-  void SampleContext(ThreadInfo* aThreadInfo, bool isFirstProfiledThread)
+  void SampleContext(PS::LockRef aLock, ThreadInfo* aThreadInfo,
+                     bool isFirstProfiledThread)
   {
     thread_act_t profiled_thread =
       aThreadInfo->GetPlatformData()->profiled_thread();
@@ -176,18 +180,18 @@ public:
     TickSample sample;
 
     // Unique Set Size is not supported on Mac.
+    sample.rssMemory = (isFirstProfiledThread && gPS->FeatureMemory(aLock))
+                     ? nsMemoryReporterManager::ResidentFast()
+                     : 0;
     sample.ussMemory = 0;
-    sample.rssMemory = 0;
-
-    if (isFirstProfiledThread && gProfileMemory) {
-      sample.rssMemory = nsMemoryReporterManager::ResidentFast();
-    }
 
     // We're using thread_suspend on OS X because pthread_kill (which is what
     // we're using on Linux) has less consistent performance and causes
     // strange crashes, see bug 1166778 and bug 1166808.
 
-    if (KERN_SUCCESS != thread_suspend(profiled_thread)) return;
+    if (KERN_SUCCESS != thread_suspend(profiled_thread)) {
+      return;
+    }
 
 #if defined(GP_ARCH_amd64)
     thread_state_flavor_t flavor = x86_THREAD_STATE64;
@@ -223,44 +227,28 @@ public:
 
 #undef REGISTER_FIELD
 
-      Tick(gBuffer, &sample);
+      Tick(aLock, gPS->Buffer(aLock), &sample);
     }
     thread_resume(profiled_thread);
   }
 
 private:
+  // The activity generation, for detecting when the sampler thread must stop.
+  const uint32_t mActivityGeneration;
+
+  // The pthread_t for the sampler thread.
   pthread_t mThread;
 
   // The interval between samples, measured in microseconds.
   const int mIntervalMicro;
 
-  static SamplerThread* sInstance;
-
   SamplerThread(const SamplerThread&) = delete;
   void operator=(const SamplerThread&) = delete;
 };
 
-SamplerThread* SamplerThread::sInstance = nullptr;
-
 static void
-PlatformInit()
+PlatformInit(PS::LockRef aLock)
 {
-}
-
-static void
-PlatformStart(double aInterval)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  SamplerThread::StartSampler(aInterval);
-}
-
-static void
-PlatformStop()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  SamplerThread::StopSampler();
 }
 
 /* static */ Thread::tid_t

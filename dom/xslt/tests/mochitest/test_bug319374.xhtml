@@ -45,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       while (res = result.iterateNext()) {
         ++counter; 
         var anon = getAnonymousNodes(res);
-        anon[0].removeChild(anon[0].firstChild); // Removing a child node
+        anon[0].firstChild.remove(); // Removing a child node
         anon[0].removeAttribute("attr1"); // Removing an attribute
         anon[1].firstChild.data = "anon text changed" // Modifying text data
       }

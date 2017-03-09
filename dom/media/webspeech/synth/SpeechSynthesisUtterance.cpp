@@ -69,6 +69,7 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
 
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
   MOZ_ASSERT(win->IsInnerWindow());

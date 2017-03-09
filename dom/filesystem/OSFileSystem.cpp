@@ -19,12 +19,7 @@ namespace dom {
 
 OSFileSystem::OSFileSystem(const nsAString& aRootDir)
 {
-  mLocalOrDeviceStorageRootPath = aRootDir;
-  mPermissionCheckType = ePermissionCheckNotRequired;
-
-#ifdef DEBUG
-  mPermission.AssignLiteral("never-used");
-#endif
+  mLocalRootPath = aRootDir;
 }
 
 already_AddRefed<FileSystemBase>
@@ -32,7 +27,7 @@ OSFileSystem::Clone()
 {
   AssertIsOnOwningThread();
 
-  RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalOrDeviceStorageRootPath);
+  RefPtr<OSFileSystem> fs = new OSFileSystem(mLocalRootPath);
   if (mParent) {
     fs->Init(mParent);
   }
@@ -102,7 +97,7 @@ void
 OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
 {
   AssertIsOnOwningThread();
-  aOutput = mLocalOrDeviceStorageRootPath;
+  aOutput = mLocalRootPath;
 }
 
 /**
@@ -111,12 +106,7 @@ OSFileSystem::SerializeDOMPath(nsAString& aOutput) const
 
 OSFileSystemParent::OSFileSystemParent(const nsAString& aRootDir)
 {
-  mLocalOrDeviceStorageRootPath = aRootDir;
-  mPermissionCheckType = ePermissionCheckNotRequired;
-
-#ifdef DEBUG
-  mPermission.AssignLiteral("never-used");
-#endif
+  mLocalRootPath = aRootDir;
 }
 
 } // namespace dom

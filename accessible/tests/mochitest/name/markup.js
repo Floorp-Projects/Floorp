@@ -316,7 +316,7 @@ function testNameForSubtreeRule(aElm, aRule)
   waitForEvent(EVENT_REORDER, aElm, gTestIterator.iterateNext, gTestIterator);
 
   while (aElm.firstChild)
-    aElm.removeChild(aElm.firstChild);
+    aElm.firstChild.remove();
 }
 
 /**

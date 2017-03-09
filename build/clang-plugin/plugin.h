@@ -5,6 +5,7 @@
 #ifndef plugin_h__
 #define plugin_h__
 
+#include "clang/Analysis/CFG.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"

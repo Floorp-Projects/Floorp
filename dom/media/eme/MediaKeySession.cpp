@@ -664,5 +664,19 @@ MediaKeySession::SetOnmessage(EventHandlerNonNull* aCallback)
   SetEventHandler(nsGkAtoms::onmessage, EmptyString(), aCallback);
 }
 
+nsCString
+ToCString(MediaKeySessionType aType)
+{
+  using IntegerType = typename std::underlying_type<MediaKeySessionType>::type;
+  auto idx = static_cast<IntegerType>(aType);
+  return nsDependentCString(MediaKeySessionTypeValues::strings[idx].value);
+}
+
+nsString
+ToString(MediaKeySessionType aType)
+{
+  return NS_ConvertUTF8toUTF16(ToCString(aType));
+}
+
 } // namespace dom
 } // namespace mozilla

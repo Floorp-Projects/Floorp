@@ -17,9 +17,44 @@
 interface mozILocaleService : nsISupports
 {
   /**
+   * List of language negotiation strategies to use.
+   * For an example list of requested and available locales:
+   *
+   *   Requested: ['es-MX', 'fr-FR']
+   *   Available: ['fr', 'fr-CA', 'es', 'es-MX', 'it']
+   *   DefaultLocale: ['en-US']
+   *
+   * each of those strategies will build a different result:
+   *
+   *
+   * filtering (default) -
+   *   Matches as many of the available locales as possible.
+   *
+   *   Result:
+   *     Supported: ['es-MX', 'es', 'fr', 'fr-CA', 'en-US']
+   *
+   * matching -
+   *   Matches the best match from the available locales for every requested
+   *   locale.
+   *
+   *   Result:
+   *     Supported: ['es-MX', 'fr', 'en-US']
+   *
+   * lookup -
+   *   Matches a single best locale. This strategy always returns a list
+   *   of the length 1 and requires a defaultLocale to be set.
+   *
+   *   Result:
+   *     Supported: ['es-MX']
+   */
+  const long langNegStrategyFiltering = 0;
+  const long langNegStrategyMatching  = 1;
+  const long langNegStrategyLookup    = 2;
+
+  /**
    * Returns a list of locales that the application should be localized to.
    *
-   * The result is a sorted list of valid locale IDs and it should be
+   * The result is a ordered list of valid locale IDs and it should be
    * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
    *
    * This API always returns at least one locale.
@@ -30,6 +65,34 @@ interface mozILocaleService : nsISupports
    */
   void getAppLocales([optional] out unsigned long aCount,
                      [retval, array, size_is(aCount)] out string aLocales);
+
+  /**
+   * Negotiates the best locales out of a ordered list of requested locales and
+   * a list of available locales.
+   *
+   * Internally it uses the following naming scheme:
+   *
+   *  Requested - locales requested by the user
+   *  Available - locales for which the data is available
+   *  Supported - locales negotiated by the algorithm
+   *
+   * Additionally, if defaultLocale is provided, it adds it to the end of the
+   * result list as a "last resort" locale.
+   *
+   * Strategy is one of the three strategies described at the top of this file.
+   *
+   * The result list is ordered according to the order of the requested locales.
+   *
+   * (See LocaleService.h for a more C++-friendly version of this.)
+   */
+  void negotiateLanguages([array, size_is(aRequestedCount)] in string aRequested,
+                          [array, size_is(aAvailableCount)] in string aAvailable,
+                          [optional] in string aDefaultLocale,
+                          [optional] in long langNegStrategy,
+                          [optional] in unsigned long aRequestedCount,
+                          [optional] in unsigned long aAvailableCount,
+                          [optional] out unsigned long aCount,
+                          [retval, array, size_is(aCount)] out string aLocales);
 
   /**
    * Returns the best locale that the application should be localized to.

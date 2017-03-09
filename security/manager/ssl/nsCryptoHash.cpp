@@ -4,20 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <algorithm>
-
 #include "nsCryptoHash.h"
 
+#include <algorithm>
+
+#include "base64.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "nsIInputStream.h"
 #include "nsIKeyModule.h"
-
 #include "nsString.h"
-
-#include "sechash.h"
 #include "pk11pub.h"
-#include "base64.h"
+#include "sechash.h"
 
-#define NS_CRYPTO_HASH_BUFFER_SIZE 4096
+using namespace mozilla;
+
+namespace {
+
+static const uint64_t STREAM_BUFFER_SIZE = 4096;
+
+} // namespace
 
 //---------------------------------------------
 // Implementing nsICryptoHash
@@ -48,14 +54,12 @@ nsCryptoHash::virtualDestroyNSSReference()
 void
 nsCryptoHash::destructorSafeDestroyNSSReference()
 {
-  if (mHashContext)
-    HASH_Destroy(mHashContext);
   mHashContext = nullptr;
 }
 
 NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsCryptoHash::Init(uint32_t algorithm)
 {
   nsNSSShutDownPreventionLock locker;
@@ -63,39 +67,50 @@ nsCryptoHash::Init(uint32_t algorithm)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  HASH_HashType hashType = (HASH_HashType)algorithm;
-  if (mHashContext)
-  {
-    if ((!mInitialized) && (HASH_GetType(mHashContext) == hashType))
-    {
+  HASH_HashType hashType;
+  switch (algorithm) {
+    case nsICryptoHash::MD2:
+      hashType = HASH_AlgMD2; break;
+    case nsICryptoHash::MD5:
+      hashType = HASH_AlgMD5; break;
+    case nsICryptoHash::SHA1:
+      hashType = HASH_AlgSHA1; break;
+    case nsICryptoHash::SHA256:
+      hashType = HASH_AlgSHA256; break;
+    case nsICryptoHash::SHA384:
+      hashType = HASH_AlgSHA384; break;
+    case nsICryptoHash::SHA512:
+      hashType = HASH_AlgSHA512; break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  if (mHashContext) {
+    if (!mInitialized && HASH_GetType(mHashContext.get()) == hashType) {
       mInitialized = true;
-      HASH_Begin(mHashContext);
+      HASH_Begin(mHashContext.get());
       return NS_OK;
     }
 
     // Destroy current hash context if the type was different
     // or Finish method wasn't called.
-    HASH_Destroy(mHashContext);
+    mHashContext = nullptr;
     mInitialized = false;
   }
 
-  mHashContext = HASH_Create(hashType);
-  if (!mHashContext)
+  mHashContext.reset(HASH_Create(hashType));
+  if (!mHashContext) {
     return NS_ERROR_INVALID_ARG;
+  }
 
-  HASH_Begin(mHashContext);
+  HASH_Begin(mHashContext.get());
   mInitialized = true;
-  return NS_OK; 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
 {
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (aAlgorithm.LowerCaseEqualsLiteral("md2"))
     return Init(nsICryptoHash::MD2);
 
@@ -124,12 +139,13 @@ nsCryptoHash::Update(const uint8_t *data, uint32_t len)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
 
-  HASH_Update(mHashContext, data, len);
-  return NS_OK; 
+  if (!mInitialized) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  HASH_Update(mHashContext.get(), data, len);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -165,25 +181,28 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
   // that there is not enough data in the stream to satisify
   // the request.
 
-  if (n == 0 || n < len)
+  if (n == 0 || n < len) {
     return NS_ERROR_NOT_AVAILABLE;
-  
-  char buffer[NS_CRYPTO_HASH_BUFFER_SIZE];
-  uint32_t read, readLimit;
-  
-  while(NS_SUCCEEDED(rv) && len>0)
-  {
-    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
-    
-    rv = data->Read(buffer, readLimit, &read);
-    
-    if (NS_SUCCEEDED(rv))
-      rv = Update((const uint8_t*)buffer, read);
-    
+  }
+
+  char buffer[STREAM_BUFFER_SIZE];
+  while (len > 0) {
+    uint64_t readLimit = std::min<uint64_t>(STREAM_BUFFER_SIZE, len);
+    uint32_t read;
+    rv = data->Read(buffer, AssertedCast<uint32_t>(readLimit), &read);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = Update(BitwiseCast<uint8_t*>(buffer), read);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     len -= read;
   }
-  
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -193,15 +212,14 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
-  if (!mInitialized)
+
+  if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
-  
+  }
+
   uint32_t hashLen = 0;
   unsigned char buffer[HASH_LENGTH_MAX];
-  unsigned char* pbuffer = buffer;
-
-  HASH_End(mHashContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
+  HASH_End(mHashContext.get(), buffer, &hashLen, HASH_LENGTH_MAX);
 
   mInitialized = false;
 
@@ -227,8 +245,8 @@ nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 NS_IMPL_ISUPPORTS(nsCryptoHMAC, nsICryptoHMAC)
 
 nsCryptoHMAC::nsCryptoHMAC()
+  : mHMACContext(nullptr)
 {
-  mHMACContext = nullptr;
 }
 
 nsCryptoHMAC::~nsCryptoHMAC()
@@ -250,8 +268,6 @@ nsCryptoHMAC::virtualDestroyNSSReference()
 void
 nsCryptoHMAC::destructorSafeDestroyNSSReference()
 {
-  if (mHMACContext)
-    PK11_DestroyContext(mHMACContext, true);
   mHMACContext = nullptr;
 }
 
@@ -263,29 +279,24 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mHMACContext)
-  {
-    PK11_DestroyContext(mHMACContext, true);
+  if (mHMACContext) {
     mHMACContext = nullptr;
   }
 
-  CK_MECHANISM_TYPE HMACMechType;
-  switch (aAlgorithm)
-  {
-  case nsCryptoHMAC::MD2:
-    HMACMechType = CKM_MD2_HMAC; break;
-  case nsCryptoHMAC::MD5:
-    HMACMechType = CKM_MD5_HMAC; break;
-  case nsCryptoHMAC::SHA1:
-    HMACMechType = CKM_SHA_1_HMAC; break;
-  case nsCryptoHMAC::SHA256:
-    HMACMechType = CKM_SHA256_HMAC; break;
-  case nsCryptoHMAC::SHA384:
-    HMACMechType = CKM_SHA384_HMAC; break;
-  case nsCryptoHMAC::SHA512:
-    HMACMechType = CKM_SHA512_HMAC; break;
-  default:
-    return NS_ERROR_INVALID_ARG;
+  CK_MECHANISM_TYPE mechType;
+  switch (aAlgorithm) {
+    case nsICryptoHMAC::MD5:
+      mechType = CKM_MD5_HMAC; break;
+    case nsICryptoHMAC::SHA1:
+      mechType = CKM_SHA_1_HMAC; break;
+    case nsICryptoHMAC::SHA256:
+      mechType = CKM_SHA256_HMAC; break;
+    case nsICryptoHMAC::SHA384:
+      mechType = CKM_SHA384_HMAC; break;
+    case nsICryptoHMAC::SHA512:
+      mechType = CKM_SHA512_HMAC; break;
+    default:
+      return NS_ERROR_INVALID_ARG;
   }
 
   NS_ENSURE_ARG_POINTER(aKeyObject);
@@ -306,12 +317,13 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
   SECItem rawData;
   rawData.data = 0;
   rawData.len = 0;
-  mHMACContext = PK11_CreateContextBySymKey(
-      HMACMechType, CKA_SIGN, key, &rawData);
+  mHMACContext.reset(PK11_CreateContextBySymKey(mechType, CKA_SIGN, key,
+                                                &rawData));
   NS_ENSURE_TRUE(mHMACContext, NS_ERROR_FAILURE);
 
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
+  if (PK11_DigestBegin(mHMACContext.get()) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -330,9 +342,10 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
   if (!aData)
     return NS_ERROR_INVALID_ARG;
 
-  SECStatus ss = PK11_DigestOp(mHMACContext, aData, aLen);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
-  
+  if (PK11_DigestOp(mHMACContext.get(), aData, aLen) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -371,25 +384,29 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 
   if (n == 0 || n < len)
     return NS_ERROR_NOT_AVAILABLE;
-  
-  char buffer[NS_CRYPTO_HASH_BUFFER_SIZE];
-  uint32_t read, readLimit;
-  
-  while(NS_SUCCEEDED(rv) && len > 0)
-  {
-    readLimit = (uint32_t)std::min<uint64_t>(NS_CRYPTO_HASH_BUFFER_SIZE, len);
-    
-    rv = aStream->Read(buffer, readLimit, &read);
-    if (read == 0)
+
+  char buffer[STREAM_BUFFER_SIZE];
+  while (len > 0) {
+    uint64_t readLimit = std::min<uint64_t>(STREAM_BUFFER_SIZE, len);
+    uint32_t read;
+    rv = aStream->Read(buffer, AssertedCast<uint32_t>(readLimit), &read);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (read == 0) {
       return NS_BASE_STREAM_CLOSED;
-    
-    if (NS_SUCCEEDED(rv))
-      rv = Update((const uint8_t*)buffer, read);
-    
+    }
+
+    rv = Update(BitwiseCast<uint8_t*>(buffer), read);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     len -= read;
   }
-  
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -405,9 +422,12 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 
   uint32_t hashLen = 0;
   unsigned char buffer[HASH_LENGTH_MAX];
-  unsigned char* pbuffer = buffer;
+  SECStatus srv = PK11_DigestFinal(mHMACContext.get(), buffer, &hashLen,
+                                   HASH_LENGTH_MAX);
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
-  PK11_DigestFinal(mHMACContext, pbuffer, &hashLen, HASH_LENGTH_MAX);
   if (aASCII)
   {
     UniquePORTString asciiData(BTOA_DataToAscii(buffer, hashLen));
@@ -431,8 +451,9 @@ nsCryptoHMAC::Reset()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  SECStatus ss = PK11_DigestBegin(mHMACContext);
-  NS_ENSURE_TRUE(ss == SECSuccess, NS_ERROR_FAILURE);
+  if (PK11_DigestBegin(mHMACContext.get()) != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }

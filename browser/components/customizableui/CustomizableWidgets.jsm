@@ -244,12 +244,12 @@ const CustomizableWidgets = [
 
       let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
       while (recentlyClosedTabs.firstChild) {
-        recentlyClosedTabs.removeChild(recentlyClosedTabs.firstChild);
+        recentlyClosedTabs.firstChild.remove();
       }
 
       let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
       while (recentlyClosedWindows.firstChild) {
-        recentlyClosedWindows.removeChild(recentlyClosedWindows.firstChild);
+        recentlyClosedWindows.firstChild.remove();
       }
 
       let utils = RecentlyClosedTabsAndWindowsMenuUtils;

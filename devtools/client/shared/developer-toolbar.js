@@ -1019,7 +1019,7 @@ OutputPanel.prototype._update = function () {
 
   // Empty this._div
   while (this._div.hasChildNodes()) {
-    this._div.removeChild(this._div.firstChild);
+    this._div.firstChild.remove();
   }
 
   if (this.displayedOutput.data != null) {
@@ -1030,7 +1030,7 @@ OutputPanel.prototype._update = function () {
       }
 
       while (this._div.hasChildNodes()) {
-        this._div.removeChild(this._div.firstChild);
+        this._div.firstChild.remove();
       }
 
       let links = node.querySelectorAll("*[href]");

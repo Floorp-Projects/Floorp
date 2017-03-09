@@ -4,7 +4,7 @@
   <script type="text/javascript" language="javascript">
     function doMore(data) {
       while(data.hasChildNodes()) 
-        data.removeChild(data.firstChild);
+        data.firstChild.remove();
       for (var i = 0; i < 10; i++) {
 	append(data);
       }

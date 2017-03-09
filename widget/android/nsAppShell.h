@@ -13,6 +13,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/jni/Natives.h"
@@ -146,6 +147,13 @@ public:
     static void SyncRunEvent(Event&& event,
                              mozilla::UniquePtr<Event>(*eventFactory)(
                                     mozilla::UniquePtr<Event>&&) = nullptr);
+
+    template<typename T> static
+    typename mozilla::EnableIf<!mozilla::IsBaseOf<Event, T>::value, void>::Type
+    SyncRunEvent(T&& lambda)
+    {
+        SyncRunEvent(LambdaEvent<T>(mozilla::Forward<T>(lambda)));
+    }
 
     static already_AddRefed<nsIURI> ResolveURI(const nsCString& aUriStr);
 

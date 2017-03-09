@@ -114,8 +114,8 @@ function test_tabbox()
   tabbox.selectedIndex = 0;
   test_tabpanels(tabpanels, tabbox);
 
-  tabs.removeChild(tabs.firstChild);
-  tabs.removeChild(tabs.firstChild);
+  tabs.firstChild.remove();
+  tabs.firstChild.remove();
 
   test_tabs(tabs);
 

@@ -48,11 +48,9 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
 {
-  OriginAttributes attrs;
-  attrs.Inherit(nsDocShell::Cast(aDocShell)->GetOriginAttributes());
-
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-  nsresult rv = nullPrin->Init(attrs);
+  nsresult rv =
+    nullPrin->Init(nsDocShell::Cast(aDocShell)->GetOriginAttributes());
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
   return nullPrin.forget();
 }

@@ -12,6 +12,15 @@
 // corecrt_memory.h.
 #include <string>
 
+// Because we wrap lz4.c in an anonymous namespace, all of its #includes
+// go in the anonymous namespace too. This would create conflicting
+// declarations for intrinsic functions that are internally defined
+// at top-level. Including intrin.h here prevents it from being included
+// later within the anonymous namespace.
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 using namespace mozilla::Compression;
 
 namespace {

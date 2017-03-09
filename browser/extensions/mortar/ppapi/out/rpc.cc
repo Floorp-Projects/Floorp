@@ -237,74 +237,6 @@ inline bool PP_ToBool(PP_Bool b) {
 
 #endif  /* __cplusplus */
 
-/* pp_point.idl */
-/**
- * @addtogroup Structs
- * @{
- */
-/**
- * The PP_Point structure defines the integer x and y coordinates of a point.
- */
-struct PP_Point {
-  /**
-   * This value represents the horizontal coordinate of a point, starting with 0
-   * as the left-most coordinate.
-   */
-  int32_t x;
-  /**
-   * This value represents the vertical coordinate of a point, starting with 0
-   * as the top-most coordinate.
-   */
-  int32_t y;
-};
-PP_COMPILE_ASSERT_STRUCT_SIZE_IN_BYTES(PP_Point, 8);
-
-/**
- * The PP_FloatPoint structure defines the floating-point x and y coordinates
- * of a point.
- */
-struct PP_FloatPoint {
-  float x;
-  float y;
-};
-PP_COMPILE_ASSERT_STRUCT_SIZE_IN_BYTES(PP_FloatPoint, 8);
-/**
- * @}
- */
-
-/**
- * @addtogroup Functions
- * @{
- */
-
-/**
- * PP_MakePoint() creates a <code>PP_Point</code> given the x and y coordinates
- * as int32_t values.
- *
- * @param[in] x An int32_t value representing a horizontal coordinate of a
- * point, starting with 0 as the left-most coordinate.
- * @param[in] y An int32_t value representing a vertical coordinate of a point,
- * starting with 0 as the top-most coordinate.
- *
- * @return A <code>PP_Point</code> structure.
- */
-PP_INLINE struct PP_Point PP_MakePoint(int32_t x, int32_t y) {
-  struct PP_Point ret;
-  ret.x = x;
-  ret.y = y;
-  return ret;
-}
-
-PP_INLINE struct PP_FloatPoint PP_MakeFloatPoint(float x, float y) {
-  struct PP_FloatPoint ret;
-  ret.x = x;
-  ret.y = y;
-  return ret;
-}
-/**
- * @}
- */
-
 /* pp_size.idl */
 /**
  * @addtogroup Structs
@@ -373,6 +305,74 @@ PP_INLINE struct PP_FloatSize PP_MakeFloatSize(float w, float h) {
 /**
  * @}
  */
+/* pp_point.idl */
+/**
+ * @addtogroup Structs
+ * @{
+ */
+/**
+ * The PP_Point structure defines the integer x and y coordinates of a point.
+ */
+struct PP_Point {
+  /**
+   * This value represents the horizontal coordinate of a point, starting with 0
+   * as the left-most coordinate.
+   */
+  int32_t x;
+  /**
+   * This value represents the vertical coordinate of a point, starting with 0
+   * as the top-most coordinate.
+   */
+  int32_t y;
+};
+PP_COMPILE_ASSERT_STRUCT_SIZE_IN_BYTES(PP_Point, 8);
+
+/**
+ * The PP_FloatPoint structure defines the floating-point x and y coordinates
+ * of a point.
+ */
+struct PP_FloatPoint {
+  float x;
+  float y;
+};
+PP_COMPILE_ASSERT_STRUCT_SIZE_IN_BYTES(PP_FloatPoint, 8);
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup Functions
+ * @{
+ */
+
+/**
+ * PP_MakePoint() creates a <code>PP_Point</code> given the x and y coordinates
+ * as int32_t values.
+ *
+ * @param[in] x An int32_t value representing a horizontal coordinate of a
+ * point, starting with 0 as the left-most coordinate.
+ * @param[in] y An int32_t value representing a vertical coordinate of a point,
+ * starting with 0 as the top-most coordinate.
+ *
+ * @return A <code>PP_Point</code> structure.
+ */
+PP_INLINE struct PP_Point PP_MakePoint(int32_t x, int32_t y) {
+  struct PP_Point ret;
+  ret.x = x;
+  ret.y = y;
+  return ret;
+}
+
+PP_INLINE struct PP_FloatPoint PP_MakeFloatPoint(float x, float y) {
+  struct PP_FloatPoint ret;
+  ret.x = x;
+  ret.y = y;
+  return ret;
+}
+/**
+ * @}
+ */
+
 /* pp_rect.idl */
 /**
  * @addtogroup Structs
@@ -49238,14 +49238,22 @@ char* Call_PPP_Printing_Dev_PrintPages(const PPP_Printing_Dev* _interface, JSONI
   PP_Instance instance;
   iterator.skip();
   FromJSON_PP_Instance(iterator, instance);
-  struct PP_PrintPageNumberRange_Dev page_ranges;
+  struct PP_PrintPageNumberRange_Dev *page_ranges;
   iterator.skip();
-  FromJSON_PP_PrintPageNumberRange_Dev(iterator, page_ranges);
+
+  {
+    size_t children = iterator.expectArrayAndGotoFirstItem();
+    page_ranges = new struct PP_PrintPageNumberRange_Dev[children];
+    for (uint32_t _n = 0; _n < children; ++_n) {
+      FromJSON_PP_PrintPageNumberRange_Dev(iterator, (page_ranges)[_n]);
+    }
+    // FIXME Null out remaining items?
+  }
   uint32_t page_range_count;
   iterator.skip();
   FromJSON_uint32_t(iterator, page_range_count);
   int32_t rval;
-  rval = _interface->PrintPages((PP_Instance )instance, (const struct PP_PrintPageNumberRange_Dev* )&page_ranges, (uint32_t )page_range_count);
+  rval = _interface->PrintPages((PP_Instance )instance, (const struct PP_PrintPageNumberRange_Dev* )page_ranges, (uint32_t )page_range_count);
   return strdup(ToString_PP_Resource(rval).c_str());
 }
 char* Call_PPP_Printing_Dev_End(const PPP_Printing_Dev* _interface, JSONIterator& iterator) {

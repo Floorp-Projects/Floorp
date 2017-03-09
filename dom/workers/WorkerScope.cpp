@@ -881,6 +881,7 @@ WorkerDebuggerGlobalScope::GetGlobal(JSContext* aCx,
   WorkerGlobalScope* scope = mWorkerPrivate->GetOrCreateGlobalScope(aCx);
   if (!scope) {
     aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   aGlobal.set(scope->GetWrapper());

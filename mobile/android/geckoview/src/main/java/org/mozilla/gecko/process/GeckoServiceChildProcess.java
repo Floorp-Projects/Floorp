@@ -6,7 +6,9 @@
 package org.mozilla.gecko.process;
 
 import org.mozilla.gecko.annotation.JNITarget;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -18,21 +20,33 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
+import android.os.RemoteException;
 import android.util.Log;
 
 public class GeckoServiceChildProcess extends Service {
 
     static private String LOGTAG = "GeckoServiceChildProcess";
 
-    private boolean serviceStarted;
+    private static IProcessManager sProcessManager;
 
     static private void stop() {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                Process.killProcess(Process.myPid());;
+                Process.killProcess(Process.myPid());
             }
         });
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    private static IGeckoEditableParent getEditableParent(final long contentId,
+                                                          final long tabId) {
+        try {
+            return sProcessManager.getEditableParent(contentId, tabId);
+        } catch (final RemoteException e) {
+            Log.e(LOGTAG, "Cannot get editable", e);
+            return null;
+        }
     }
 
     public void onCreate() {
@@ -59,14 +73,16 @@ public class GeckoServiceChildProcess extends Service {
         }
 
         @Override
-        public void start(final String[] args,
+        public void start(final IProcessManager procMan,
+                          final String[] args,
                           final ParcelFileDescriptor crashReporterPfd,
                           final ParcelFileDescriptor ipcPfd) {
-            if (serviceStarted) {
+            if (sProcessManager != null) {
                 Log.e(LOGTAG, "Attempting to start a service that has already been started.");
                 return;
             }
-            serviceStarted = true;
+            sProcessManager = procMan;
+
             final int crashReporterFd = crashReporterPfd != null ? crashReporterPfd.detachFd() : -1;
             final int ipcFd = ipcPfd != null ? ipcPfd.detachFd() : -1;
             ThreadUtils.postToUiThread(new Runnable() {

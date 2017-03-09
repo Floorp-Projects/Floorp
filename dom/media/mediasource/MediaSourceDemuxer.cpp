@@ -250,10 +250,12 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
 {
   MonitorAutoLock mon(mMonitor);
   nsAutoCString result;
-  result += nsPrintfCString("Dumping data for demuxer %p:\n", this);
+  result += nsPrintfCString("Dumping Data for Demuxer: %p\n", this);
   if (mAudioTrack) {
-    result += nsPrintfCString("\tDumping Audio Track Buffer(%s): - mLastAudioTime: %f\n"
-                              "\t\tNumSamples:%" PRIuSIZE " Size:%u Evictable:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
+    result += nsPrintfCString("\tDumping Audio Track Buffer(%s): mLastAudioTime=%f\n"
+                              "\t\tAudio Track Buffer Details: NumSamples=%"
+                              PRIuSIZE " Size=%u Evictable=%u "
+                              "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
                               mAudioTrack->mAudioTracks.mInfo->mMimeType.get(),
                               mAudioTrack->mAudioTracks.mNextSampleTime.ToSeconds(),
                               mAudioTrack->mAudioTracks.mBuffers[0].Length(),
@@ -262,12 +264,14 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
                               mAudioTrack->mAudioTracks.mNextGetSampleIndex.valueOr(-1),
                               mAudioTrack->mAudioTracks.mNextInsertionIndex.valueOr(-1));
 
-    result += nsPrintfCString("\t\tBuffered: ranges=%s\n",
+    result += nsPrintfCString("\t\tAudio Track Buffered: ranges=%s\n",
                               DumpTimeRanges(mAudioTrack->SafeBuffered(TrackInfo::kAudioTrack)).get());
   }
   if (mVideoTrack) {
-    result += nsPrintfCString("\tDumping Video Track Buffer(%s) - mLastVideoTime: %f\n"
-                              "\t\tNumSamples:%" PRIuSIZE " Size:%u Evictable:%u NextGetSampleIndex:%u NextInsertionIndex:%d\n",
+    result += nsPrintfCString("\tDumping Video Track Buffer(%s): mLastVideoTime=%f\n"
+                              "\t\tVideo Track Buffer Details: NumSamples=%"
+                              PRIuSIZE " Size=%u Evictable=%u "
+                              "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
                               mVideoTrack->mVideoTracks.mInfo->mMimeType.get(),
                               mVideoTrack->mVideoTracks.mNextSampleTime.ToSeconds(),
                               mVideoTrack->mVideoTracks.mBuffers[0].Length(),
@@ -276,7 +280,7 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
                               mVideoTrack->mVideoTracks.mNextGetSampleIndex.valueOr(-1),
                               mVideoTrack->mVideoTracks.mNextInsertionIndex.valueOr(-1));
 
-    result += nsPrintfCString("\t\tBuffered: ranges=%s\n",
+    result += nsPrintfCString("\t\tVideo Track Buffered: ranges=%s\n",
                               DumpTimeRanges(mVideoTrack->SafeBuffered(TrackInfo::kVideoTrack)).get());
   }
   aString += result;

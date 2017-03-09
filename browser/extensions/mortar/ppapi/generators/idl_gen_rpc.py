@@ -43,6 +43,7 @@ customAPIs = {
   ('PPB_PDF', 'SetAccessibilityPageInfo', 'text_runs'): { 'arraySize': 'page_info->text_run_count' },
   ('PPB_PDF', 'SetAccessibilityPageInfo', 'chars'): { 'arraySize': 'page_info->char_count' },
   ('PPB_TCPSocket_Private', 'Write', 'buffer'): { 'array': True, 'arrayType': 'uint8_t', 'arraySize': 'bytes_to_write' },
+  ('PPP_Printing_Dev', 'PrintPages', 'page_ranges'): { 'array': True, 'arraySize': None },
 }
 def getCustom(interface, member, param):
   def matches(pattern, value):
@@ -335,7 +336,10 @@ class RPCGen(object):
     for param in callnode.GetListOf('Param'):
       mode = self.cgen.GetParamMode(param)
       ptype, pname, parray, pspec = self.cgen.GetComponents(param, release, "store")
-      out += '  ' + self.cgen.Compose(ptype, pname, parray, pspec, '', func_as_ptr=True,
+      prefix = ''
+      if getCustom(iface.GetName(), node.GetName(), param.GetName()).get("array"):
+        prefix = '*'
+      out += '  ' + self.cgen.Compose(ptype, pname, parray, pspec, prefix, func_as_ptr=True,
               include_name=True, unsized_as_ptr=True) + ';\n'
       if mode == 'out':
         if len(parray) > 0:
@@ -359,7 +363,8 @@ class RPCGen(object):
       mode = self.cgen.GetParamMode(param)
       ntype, mode = self.cgen.GetRootTypeMode(param, release, mode)
       ptype, pname, parray, pspec = self.cgen.GetComponents(param, release, mode)
-      if mode == 'out' or ntype == 'Struct' or (mode == 'constptr_in' and ntype == 'TypeValue'):
+      isArray = getCustom(iface.GetName(), node.GetName(), param.GetName()).get("array")
+      if (mode == 'out' or ntype == 'Struct' or (mode == 'constptr_in' and ntype == 'TypeValue')) and not isArray:
         pname = '&' + pname
       pname = '(' + self.cgen.Compose(ptype, pname, parray, pspec, '', func_as_ptr=True,
               include_name=False, unsized_as_ptr=True) + ')' + pname

@@ -1893,15 +1893,6 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   return keyBindings->Execute(aEvent, aCallback, aCallbackData);
 }
 
-nsIMEUpdatePreference
-nsChildView::GetIMEUpdatePreference()
-{
-  // XXX Shouldn't we move floating window which shows composition string
-  //     when plugin has focus and its parent is scrolled or the window is
-  //     moved?
-  return nsIMEUpdatePreference();
-}
-
 NSView<mozView>* nsChildView::GetEditorView()
 {
   NSView<mozView>* editorView = mView;

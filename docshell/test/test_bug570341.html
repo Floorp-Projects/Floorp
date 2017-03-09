@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570341
 
   function showSequence(node){
     while(node.firstChild) {
-      node.removeChild(node.firstChild);
+      node.firstChild.remove();
     }
     var sequence = [];
     for (var p in moments) {

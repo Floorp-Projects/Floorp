@@ -172,7 +172,9 @@ public:
   }
 
   bool IsAnonBox() const {
-    return GetPseudoType() == mozilla::CSSPseudoElementType::AnonBox;
+    return
+      GetPseudoType() == mozilla::CSSPseudoElementType::InheritingAnonBox ||
+      GetPseudoType() == mozilla::CSSPseudoElementType::NonInheritingAnonBox;
   }
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 

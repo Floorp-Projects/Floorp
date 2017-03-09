@@ -54,7 +54,7 @@ function findCurrentProfile() {
 function refreshUI() {
   let parent = document.getElementById("profiles");
   while (parent.firstChild) {
-    parent.removeChild(parent.firstChild);
+    parent.firstChild.remove();
   }
 
   let defaultProfile;

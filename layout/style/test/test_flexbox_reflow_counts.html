@@ -60,7 +60,7 @@ function cleanup()
 {
   outerFlex.style = midFlex.style = innerBlock.style = "";
   while (innerBlock.firstChild) {
-    innerBlock.removeChild(innerBlock.firstChild);
+    innerBlock.firstChild.remove();
   }
 }
 

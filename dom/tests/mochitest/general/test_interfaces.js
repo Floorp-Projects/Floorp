@@ -282,14 +282,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DeviceProximityEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorageAreaChangedEvent", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorageAreaListener", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorage", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "DeviceStorageChangeEvent", desktop: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "Directory",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Document",
@@ -881,7 +873,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "StorageEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "StorageManager", nightly: true, isSecureContext: true},
+    {name: "StorageManager", nightly: true, isSecureContext: true, android: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "StyleSheet",
 // IMPORTANT: Do not change this list without review from a DOM peer!

@@ -27,11 +27,6 @@ struct OverlaySource {
   IntSize size;
 };
 
-struct SurfaceDescriptorD3D9 {
-  // IDirect3DTexture9*
-  uintptr_t texture;
-};
-
 struct SurfaceDescriptorFileMapping {
   WindowsHandle handle;
   SurfaceFormat format;
@@ -122,7 +117,6 @@ struct SurfaceDescriptorBuffer {
 
 union SurfaceDescriptor {
   SurfaceDescriptorBuffer;
-  SurfaceDescriptorD3D9;
   SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
   SurfaceDescriptorFileMapping;

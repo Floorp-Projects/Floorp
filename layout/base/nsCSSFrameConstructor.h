@@ -1371,7 +1371,6 @@ private:
                            nsIContent* aContent);
 
   void AddPageBreakItem(nsIContent* aContent,
-                        nsStyleContext* aMainStyleContext,
                         FrameConstructionItemList& aItems);
 
   // Function to find FrameConstructionData for aElement.  Will return

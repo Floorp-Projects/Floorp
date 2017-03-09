@@ -10,7 +10,7 @@ body:first-letter { float: right; }
 
 function boom()
 {
-  document.body.removeChild(document.body.firstChild);
+  document.body.firstChild.remove();
   document.body.appendChild(document.createTextNode('x'));  
 }
 
