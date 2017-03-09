@@ -3137,11 +3137,10 @@ ContentParent::DeallocPParentToChildStreamParent(PParentToChildStreamParent* aAc
 }
 
 PScreenManagerParent*
-ContentParent::AllocPScreenManagerParent(uint32_t* aNumberOfScreens,
-                                         float* aSystemDefaultScale,
+ContentParent::AllocPScreenManagerParent(float* aSystemDefaultScale,
                                          bool* aSuccess)
 {
-  return new ScreenManagerParent(aNumberOfScreens, aSystemDefaultScale, aSuccess);
+  return new ScreenManagerParent(aSystemDefaultScale, aSuccess);
 }
 
 bool

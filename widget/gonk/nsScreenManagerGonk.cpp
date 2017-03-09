@@ -886,13 +886,6 @@ nsScreenManagerGonk::ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerGonk::GetNumberOfScreens(uint32_t *aNumberOfScreens)
-{
-    *aNumberOfScreens = mScreens.Length();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;

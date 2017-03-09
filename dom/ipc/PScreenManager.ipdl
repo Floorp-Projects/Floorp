@@ -32,8 +32,7 @@ nested(upto inside_cpow) sync protocol PScreenManager
 
 parent:
     nested(inside_sync) sync Refresh()
-      returns (uint32_t numberOfScreens,
-               float systemDefaultScale,
+      returns (float systemDefaultScale,
                bool success);
 
     nested(inside_cpow) sync ScreenRefresh(uint32_t aId)

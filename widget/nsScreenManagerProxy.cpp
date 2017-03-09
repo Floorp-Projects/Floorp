@@ -23,15 +23,13 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS(nsScreenManagerProxy, nsIScreenManager)
 
 nsScreenManagerProxy::nsScreenManagerProxy()
-  : mNumberOfScreens(-1)
-  , mSystemDefaultScale(1.0)
+  : mSystemDefaultScale(1.0)
   , mCacheValid(true)
   , mCacheWillInvalidate(false)
 {
   bool success = false;
   Unused << ContentChild::GetSingleton()->SendPScreenManagerConstructor(
                                             this,
-                                            &mNumberOfScreens,
                                             &mSystemDefaultScale,
                                             &success);
 
@@ -147,17 +145,6 @@ nsScreenManagerProxy::ScreenForNativeWidget(void* aWidget,
 }
 
 NS_IMETHODIMP
-nsScreenManagerProxy::GetNumberOfScreens(uint32_t* aNumberOfScreens)
-{
-  if (!EnsureCacheIsValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aNumberOfScreens = mNumberOfScreens;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenManagerProxy::GetSystemDefaultScale(float *aSystemDefaultScale)
 {
   if (!EnsureCacheIsValid()) {
@@ -178,7 +165,7 @@ nsScreenManagerProxy::EnsureCacheIsValid()
   bool success = false;
   // Kick off a synchronous IPC call to the parent to get the
   // most up-to-date information.
-  Unused << SendRefresh(&mNumberOfScreens, &mSystemDefaultScale, &success);
+  Unused << SendRefresh(&mSystemDefaultScale, &success);
   if (!success) {
     NS_WARNING("Refreshing nsScreenManagerProxy failed in the parent process.");
     return false;

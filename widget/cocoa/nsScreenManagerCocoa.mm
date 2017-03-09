@@ -112,20 +112,6 @@ nsScreenManagerCocoa::GetPrimaryScreen (nsIScreen **outScreen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerCocoa::GetNumberOfScreens (uint32_t *aNumberOfScreens)
-{
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-    NSArray *ss = [NSScreen screens];
-
-    *aNumberOfScreens = [ss count];
-
-    return NS_OK;
-
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
 nsScreenManagerCocoa::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;

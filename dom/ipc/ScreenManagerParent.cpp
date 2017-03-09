@@ -17,8 +17,7 @@ namespace dom {
 
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
-ScreenManagerParent::ScreenManagerParent(uint32_t* aNumberOfScreens,
-                                         float* aSystemDefaultScale,
+ScreenManagerParent::ScreenManagerParent(float* aSystemDefaultScale,
                                          bool* aSuccess)
 {
   mScreenMgr = do_GetService(sScreenManagerContractID);
@@ -26,22 +25,16 @@ ScreenManagerParent::ScreenManagerParent(uint32_t* aNumberOfScreens,
     MOZ_CRASH("Couldn't get nsIScreenManager from ScreenManagerParent.");
   }
 
-  Unused << RecvRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
+  Unused << RecvRefresh(aSystemDefaultScale, aSuccess);
 }
 
 mozilla::ipc::IPCResult
-ScreenManagerParent::RecvRefresh(uint32_t* aNumberOfScreens,
-                                 float* aSystemDefaultScale,
+ScreenManagerParent::RecvRefresh(float* aSystemDefaultScale,
                                  bool* aSuccess)
 {
   *aSuccess = false;
 
-  nsresult rv = mScreenMgr->GetNumberOfScreens(aNumberOfScreens);
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
-  }
-
-  rv = mScreenMgr->GetSystemDefaultScale(aSystemDefaultScale);
+  nsresult rv = mScreenMgr->GetSystemDefaultScale(aSystemDefaultScale);
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
