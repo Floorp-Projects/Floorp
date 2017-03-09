@@ -2,7 +2,7 @@
 
 All notable changes to this program is documented in this file.
 
-## Unreleased
+## 0.15.0 (2017-03-08)
 
 ### Added
 - Added routing and parsing for the [Get Timeouts](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-get-timeouts) command
