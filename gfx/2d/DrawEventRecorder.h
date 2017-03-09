@@ -134,6 +134,14 @@ public:
    */
   void WipeRecording();
 
+  /**
+   * Gets a readable reference of the underlying stream, reset to the beginning.
+   */
+  std::istream& GetInputStream() {
+    mMemoryStream.seekg(0);
+    return mMemoryStream;
+  }
+
 private:
   ~DrawEventRecorderMemory() {};
 
