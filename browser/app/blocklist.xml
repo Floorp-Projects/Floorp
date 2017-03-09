@@ -662,6 +662,14 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="89a61123-79a2-45d1-aec2-97afca0863eb" id="InternetProtection@360safe.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="5.0.0.1002" severity="3">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="52.0a1"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
     <emItem blockID="i471" id="firefox@luckyleap.net">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -862,14 +870,6 @@
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i65" id="activity@facebook.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="i228" id="crossriderapp5060@crossrider.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i470" id="extension@FastFreeConverter.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
@@ -1527,6 +1527,14 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="08addad8-2f03-4cff-a791-e6f2a1b170ed" id="WebProtection@360safe.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3">
+        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+          <versionRange maxVersion="*" minVersion="52.0a1"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
     <emItem blockID="i838" id="{87b5a11e-3b54-42d2-9102-0a7cb1f79ebf}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -2040,6 +2048,14 @@
       <versionRange minVersion="102.0" maxVersion="102.0" severity="3"/>
     </emItem>
     <emItem blockID="i722" id="{9802047e-5a84-4da3-b103-c55995d147d1}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i228" id="crossriderapp5060@crossrider.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i470" id="extension@FastFreeConverter.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
