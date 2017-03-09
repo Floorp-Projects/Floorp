@@ -138,12 +138,7 @@ void
 AnimationCollection<AnimationType>::UpdateCheckGeneration(
   nsPresContext* aPresContext)
 {
-  if (aPresContext->RestyleManager()->IsServo()) {
-    // stylo: ServoRestyleManager does not support animations yet.
-    return;
-  }
-  mCheckGeneration =
-    aPresContext->RestyleManager()->AsGecko()->GetAnimationGeneration();
+  mCheckGeneration = aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
 template<class AnimationType>
