@@ -934,18 +934,20 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   let url = cmd.parameters.url;
 
   let get = this.listener.get({url: url, pageTimeout: this.timeouts.pageLoad});
-  // TODO(ato): Bug 1242595
-  let id = this.listener.activeMessageId;
 
   // If a remoteness update interrupts our page load, this will never return
   // We need to re-issue this request to correctly poll for readyState and
   // send errors.
   this.curBrowser.pendingCommands.push(() => {
-    cmd.parameters.command_id = id;
-    cmd.parameters.pageTimeout = this.timeouts.pageLoad;
+    let parameters = {
+      // TODO(ato): Bug 1242595
+      command_id: this.listener.activeMessageId,
+      pageTimeout: this.timeouts.pageLoad,
+      startTime: new Date().getTime(),
+    };
     this.mm.broadcastAsyncMessage(
         "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
-        cmd.parameters);
+        parameters);
   });
 
   yield get;
