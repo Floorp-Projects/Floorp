@@ -200,4 +200,20 @@ for (var data of elemData) {
   }, `selection location after defaultValue set to shorter than selectionStart of ${data.desc}`);
 }
 
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    el.defaultValue = sometext;
+    assert_true(sometext.length > 8,
+                "sometext too short, test won't work right");
+    el.selectionStart = 4;
+    el.selectionEnd = 6;
+    el.setRangeText("xyz");
+    el.defaultValue = "set range text";
+    assert_equals(el.value, sometext.slice(0, 4) + "xyz" + sometext.slice(6),
+                  "Calling setRangeText should set the value dirty flag");
+  }, `value dirty flag behavior after setRangeText on ${data.desc}`);
+}
+
 </script>
