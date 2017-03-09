@@ -32,6 +32,7 @@
 #include "nsThreadUtils.h"
 
 class gfxImageSurface;
+struct ID3D11Device;
 
 namespace mozilla {
 
@@ -103,7 +104,11 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SyncObject)
   virtual ~SyncObject() { }
 
-  static already_AddRefed<SyncObject> CreateSyncObject(SyncHandle aHandle);
+  static already_AddRefed<SyncObject> CreateSyncObject(SyncHandle aHandle
+#ifdef XP_WIN
+                                                       , ID3D11Device* aDevice = nullptr
+#endif
+                                                       );
 
   enum class SyncType {
     D3D11,

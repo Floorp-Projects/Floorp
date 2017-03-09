@@ -3702,6 +3702,7 @@
             // time elapses, we're free to put up the spinner and start
             // trying to load a different tab.
             TAB_SWITCH_TIMEOUT: 400 /* ms */,
+            NEWNESS_THRESHOLD: 1000 /* ms */,
 
             // When the user hasn't switched tabs for this long, we unload
             // layers for all tabs that aren't in use.
@@ -4434,11 +4435,33 @@
 
             spinnerDisplayed() {
               this.assert(!this.spinnerTab);
+              let browser = this.requestedTab.linkedBrowser;
+              this.assert(browser.isRemoteBrowser);
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               // We have a second, similar probe for capturing recordings of
               // when the spinner is displayed for very long periods.
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_LONG_MS", window);
               this.addMarker("AsyncTabSwitch:SpinnerShown");
+
+              // What kind of tab is about to display this spinner? We have three basic
+              // kinds:
+              //
+              // 1) A tab that we've presented before
+              // 2) A tab that we've never presented before, and it's quite new
+              // 3) A tab that we've never presented before, but it's not so new
+              //
+              // Being "new" in this sense means being a tab that was created less than
+              // NEWNESS_THRESHOLD ms ago.
+
+              let histogram = Services.telemetry.getHistogramById("FX_TAB_SWITCH_SPINNER_TYPE");
+              if (browser.frameLoader.tabParent.hasPresented) {
+                // We've presented this tab before.
+                histogram.add("seen");
+              } else if (Date.now() - this.requestedTab.creationTime < this.NEWNESS_THRESHOLD) {
+                histogram.add("unseenNew");
+              } else {
+                histogram.add("unseenOld");
+              }
             },
 
             spinnerHidden() {
@@ -7070,6 +7093,10 @@
         if (!("_lastAccessed" in this)) {
           this.updateLastAccessed();
         }
+
+        if (!("_creationTime" in this)) {
+          this._creationTime = Date.now();
+        }
       ]]></constructor>
 
       <property name="_visuallySelected">
@@ -7175,6 +7202,12 @@
       </method>
 
       <field name="cachePosition">Infinity</field>
+
+      <property name="creationTime">
+        <getter>
+          return this._creationTime;
+        </getter>
+      </property>
 
       <field name="mOverCloseButton">false</field>
       <property name="_overPlayingIcon" readonly="true">

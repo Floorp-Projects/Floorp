@@ -1305,9 +1305,37 @@ IonCacheIRCompiler::emitStoreDenseElementHole()
     masm.branch32(Assembler::Above, initLength, index, &inBounds);
     masm.branch32(Assembler::NotEqual, initLength, index, failure->label());
 
-    // Check the capacity.
+    // If index < capacity, we can add a dense element inline. If not we
+    // need to allocate more elements.
+    Label capacityOk;
     Address capacity(scratch, ObjectElements::offsetOfCapacity());
-    masm.branch32(Assembler::BelowOrEqual, capacity, index, failure->label());
+    masm.branch32(Assembler::Above, capacity, index, &capacityOk);
+
+    // Check for non-writable array length. We only have to do this if
+    // index >= capacity.
+    Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
+                      failure->label());
+
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    save.takeUnchecked(scratch);
+    masm.PushRegsInMask(save);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementDontReportOOM));
+    masm.mov(ReturnReg, scratch);
+
+    masm.PopRegsInMask(save);
+    masm.branchIfFalseBool(scratch, failure->label());
+
+    // Load the reallocated elements pointer.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    masm.bind(&capacityOk);
 
     // Increment initLength.
     masm.add32(Imm32(1), initLength);

@@ -2988,14 +2988,14 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
     videoName = mVideo.mDescription;
   }
 
-  result += nsPrintfCString("audio decoder: %s\n", audioName);
-  result += nsPrintfCString("audio frames decoded: %" PRIu64 "\n",
+  result += nsPrintfCString("Audio Decoder: %s\n", audioName);
+  result += nsPrintfCString("Audio Frames Decoded: %" PRIu64 "\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
     result += nsPrintfCString(
-      "audio state: ni=%d no=%d wp:%d demuxr:%d demuxq:%u decoder:%d tt:%.1f "
-      "tths:%d in:%" PRIu64 " out:%" PRIu64
-      " qs=%u pending:%u wfd:%d wfk:%d sid:%u\n",
+      "Audio State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
+      "tths=%d in=%" PRIu64 " out=%" PRIu64
+      " qs=%u pending=%u wfd=%d wfk=%d sid=%u\n",
       NeedInput(mAudio),
       mAudio.HasPromise(),
       !mAudio.mWaitingPromise.IsEmpty(),
@@ -3013,19 +3013,19 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
-  result += nsPrintfCString("video decoder: %s\n", videoName);
+  result += nsPrintfCString("Video Decoder: %s\n", videoName);
   result +=
-    nsPrintfCString("hardware video decoding: %s\n",
+    nsPrintfCString("Hardware Video Decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");
   result +=
-    nsPrintfCString("video frames decoded: %" PRIu64 " (skipped:%" PRIu64 ")\n",
+    nsPrintfCString("Video Frames Decoded: %" PRIu64 " (skipped=%" PRIu64 ")\n",
                     mVideo.mNumSamplesOutputTotal,
                     mVideo.mNumSamplesSkippedTotal);
   if (HasVideo()) {
     result += nsPrintfCString(
-      "video state: ni=%d no=%d wp:%d demuxr:%d demuxq:%u decoder:%d tt:%.1f "
-      "tths:%d in:%" PRIu64 " out:%" PRIu64
-      " qs=%u pending:%u wfd:%d wfk:%d sid:%u\n",
+      "Video State: ni=%d no=%d wp=%d demuxr=%d demuxq=%u decoder=%d tt=%.1f "
+      "tths=%d in=%" PRIu64 " out=%" PRIu64
+      " qs=%u pending:%u wfd=%d wfk=%d sid=%u\n",
       NeedInput(mVideo),
       mVideo.HasPromise(),
       !mVideo.mWaitingPromise.IsEmpty(),

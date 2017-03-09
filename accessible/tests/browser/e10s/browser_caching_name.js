@@ -392,7 +392,7 @@ function* testSubtreeRule(browser, target, rule, expected) {
   yield ContentTask.spawn(browser, target.id, id => {
     let elm = content.document.getElementById(id);
     while (elm.firstChild) {
-      elm.removeChild(elm.firstChild);
+      elm.firstChild.remove();
     }
   });
   yield updateAccessibleIfNeeded(onEvent, target);

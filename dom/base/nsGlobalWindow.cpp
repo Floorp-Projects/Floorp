@@ -3267,7 +3267,11 @@ nsGlobalWindow::DispatchDOMWindowCreated()
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  if (observerService) {
+
+  // The event dispatching could possibly cause docshell destory, and
+  // consequently cause mDoc to be set to nullptr by DropOuterWindowDocs(),
+  // so check it again here.
+  if (observerService && mDoc) {
     nsAutoString origin;
     nsIPrincipal* principal = mDoc->NodePrincipal();
     nsContentUtils::GetUTFOrigin(principal, origin);

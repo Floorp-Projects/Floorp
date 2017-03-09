@@ -2118,6 +2118,32 @@ SpecialPowersAPI.prototype = {
                .QueryInterface(Ci.nsIContentViewerEdit)
                .setCommandNode(node);
   },
+
+  /* Bug 1339006 Runnables of nsIURIClassifier.classify may be labeled by
+   * SystemGroup, but some test cases may run as web content. That would assert
+   * when trying to enter web content from a runnable labeled by the
+   * SystemGroup. To avoid that, we run classify from SpecialPowers which is
+   * chrome-privileged and allowed to run inside SystemGroup
+   */
+
+  doUrlClassify(principal, eventTarget, tpEnabled, callback) {
+    let classifierService =
+      Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIURIClassifier);
+
+    let wrapCallback = (...args) => {
+      Services.tm.mainThread.dispatch(() => {
+        if (typeof callback == 'function') {
+          callback.call(undefined, ...args);
+        } else {
+          callback.onClassifyComplete.call(undefined, ...args);
+        }
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    };
+
+    return classifierService.classify(unwrapIfWrapped(principal), eventTarget,
+                                      tpEnabled, wrapCallback);
+  },
+
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;

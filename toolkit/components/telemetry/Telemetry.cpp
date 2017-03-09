@@ -1813,6 +1813,7 @@ public:
 NS_IMETHODIMP
 TelemetryImpl::GetLoadedModules(JSContext *cx, nsISupports** aPromise)
 {
+#if defined(MOZ_GECKO_PROFILER)
   nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
   if (NS_WARN_IF(!global)) {
     return NS_ERROR_FAILURE;
@@ -1824,12 +1825,12 @@ TelemetryImpl::GetLoadedModules(JSContext *cx, nsISupports** aPromise)
     return result.StealNSResult();
   }
 
-#if defined(MOZ_GECKO_PROFILER)
   nsCOMPtr<nsIThreadManager> tm = do_GetService(NS_THREADMANAGER_CONTRACTID);
   nsCOMPtr<nsIThread> getModulesThread;
   nsresult rv = tm->NewThread(0, 0, getter_AddRefs(getModulesThread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    promise->MaybeReject(NS_ERROR_FAILURE);
+    return NS_OK;
   }
 
   nsMainThreadPtrHandle<Promise> mainThreadPromise(new nsMainThreadPtrHolder<Promise>(promise));

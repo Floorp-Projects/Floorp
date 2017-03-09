@@ -8,7 +8,7 @@ function boom()
   var legend = document.getElementById("legend");
   legend.appendChild(document.createTextNode("T"));
   document.documentElement.offsetHeight;
-  legend.removeChild(legend.firstChild);
+  legend.firstChild.remove();
   document.body.removeChild(legend);
 }
 

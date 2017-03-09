@@ -185,7 +185,7 @@ var MigrationWizard = { /* exported MigrationWizard */
 
     var profiles = document.getElementById("profiles");
     while (profiles.hasChildNodes())
-      profiles.removeChild(profiles.firstChild);
+      profiles.firstChild.remove();
 
     // Note that this block is still reached even if the user chose 'From File'
     // and we canceled the dialog.  When that happens, _migrator will be null.
@@ -225,7 +225,7 @@ var MigrationWizard = { /* exported MigrationWizard */
   onImportItemsPageShow() {
     var dataSources = document.getElementById("dataSources");
     while (dataSources.hasChildNodes())
-      dataSources.removeChild(dataSources.firstChild);
+      dataSources.firstChild.remove();
 
     var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
     for (var i = 0; i < 16; ++i) {
@@ -367,7 +367,7 @@ var MigrationWizard = { /* exported MigrationWizard */
   _listItems(aID) {
     var items = document.getElementById(aID);
     while (items.hasChildNodes())
-      items.removeChild(items.firstChild);
+      items.firstChild.remove();
 
     var itemID;
     for (var i = 0; i < 16; ++i) {

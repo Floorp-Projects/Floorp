@@ -6,7 +6,7 @@
 function boom()
 {
   var root = document.documentElement;
-  while(root.firstChild) { root.removeChild(root.firstChild); }
+  while(root.firstChild) { root.firstChild.remove(); }
   var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
   body.setAttributeNS(null, "contenteditable", "true");
   var img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");

@@ -447,6 +447,13 @@ ElementEditor.prototype = {
       this._editedAttributeObserver = null;
     }
 
+    let activeElement = this.markup.doc.activeElement;
+    if (!activeElement || !activeElement.inplaceEditor) {
+      // The focus was already removed from the current inplace editor, we should not
+      // refocus the editable attribute.
+      return;
+    }
+
     let container = this.markup.getContainer(this.node);
 
     let activeAttrs = [...this.attrList.childNodes]

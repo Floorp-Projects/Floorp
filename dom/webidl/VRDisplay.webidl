@@ -264,7 +264,7 @@ interface VRDisplay : EventTarget {
    * Begin presenting to the VRDisplay. Must be called in response to a user gesture.
    * Repeat calls while already presenting will update the VRLayers being displayed.
    */
-  [Throws] Promise<void> requestPresent(sequence<VRLayer> layers);
+  [Throws, NeedsCallerType] Promise<void> requestPresent(sequence<VRLayer> layers);
 
   /**
    * Stops presenting to the VRDisplay.

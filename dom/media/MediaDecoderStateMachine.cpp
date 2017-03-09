@@ -3784,11 +3784,12 @@ MediaDecoderStateMachine::GetDebugInfo()
 {
   MOZ_ASSERT(OnTaskQueue());
   return nsPrintfCString(
-           "GetMediaTime=%" PRId64 " GetClock=%" PRId64 " mMediaSink=%p "
-           "state=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
-           "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
-           " mDecodedVideoEndTime=%" PRId64
-           " mAudioCompleted=%d mVideoCompleted=%d ",
+           "MediaDecoderStateMachine State: GetMediaTime=%" PRId64 " GetClock="
+           "%" PRId64 " mMediaSink=%p state=%s mPlayState=%d "
+           "mSentFirstFrameLoadedEvent=%d IsPlaying=%d mAudioStatus=%s "
+           "mVideoStatus=%s mDecodedAudioEndTime=%" PRId64
+           " mDecodedVideoEndTime=%" PRId64 "mAudioCompleted=%d "
+           "mVideoCompleted=%d",
            GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1,
            mMediaSink.get(), ToStateStr(), mPlayState.Ref(),
            mSentFirstFrameLoadedEvent, IsPlaying(), AudioRequestStatus(),

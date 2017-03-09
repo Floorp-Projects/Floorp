@@ -30,7 +30,6 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                               const TimeStamp& aStartTime,
                               UniqueStacks& aUniqueStacks)
 {
-  mozilla::MutexAutoLock lock(mThreadInfo->GetMutex());
   mThreadInfo->StreamSamplesAndMarkers(mBuffer, aWriter, aStartTime,
                                        /* aSinceTime */ 0, aUniqueStacks);
 }

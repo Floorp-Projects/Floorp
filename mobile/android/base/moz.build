@@ -287,6 +287,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/VsyncSource.java',
     'InputConnectionListener.java',
     'InputMethods.java',
+    'NativeQueue.java',
     'NotificationListener.java',
     'NSSBridge.java',
     'permissions/PermissionBlock.java',
@@ -1191,4 +1192,5 @@ gvjar.sources += ['generated/org/mozilla/gecko/' + x for x in [
     'IGeckoEditableChild.java',
     'IGeckoEditableParent.java',
     'process/IChildProcess.java',
+    'process/IProcessManager.java',
 ]]

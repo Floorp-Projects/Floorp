@@ -693,6 +693,11 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 nsresult
 PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
+  if (mNativeTextEventDispatcherListener) {
+    // Use mNativeTextEventDispatcherListener for IME notifications.
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   switch (aIMENotification.mMessage) {
     case REQUEST_TO_COMMIT_COMPOSITION:
       return RequestIMEToCommitComposition(false);
@@ -857,6 +862,11 @@ PuppetWidget::NotifyIMEOfCompositionUpdate(
 nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
+  if (mNativeTextEventDispatcherListener) {
+    // Use mNativeTextEventDispatcherListener for IME preference.
+    return mNativeTextEventDispatcherListener->GetIMEUpdatePreference();
+  }
+
   // e10s requires IME content cache in in the TabParent for handling query
   // content event only with the parent process.  Therefore, this process
   // needs to receive a lot of information from the focused editor to sent

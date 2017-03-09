@@ -51,19 +51,6 @@ OriginAttributes::InitPrefs()
 }
 
 void
-OriginAttributes::Inherit(const OriginAttributes& aAttrs)
-{
-  mAppId = aAttrs.mAppId;
-  mInIsolatedMozBrowser = aAttrs.mInIsolatedMozBrowser;
-
-
-  mUserContextId = aAttrs.mUserContextId;
-
-  mPrivateBrowsingId = aAttrs.mPrivateBrowsingId;
-  mFirstPartyDomain = aAttrs.mFirstPartyDomain;
-}
-
-void
 OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
                                       nsIURI* aURI)
 {

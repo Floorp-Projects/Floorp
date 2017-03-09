@@ -71,7 +71,7 @@ CSS_ANON_BOX(tableRowGroup, ":-moz-table-row-group")
 CSS_ANON_BOX(tableRow, ":-moz-table-row")
 
 CSS_ANON_BOX(canvas, ":-moz-canvas")
-CSS_ANON_BOX(pageBreak, ":-moz-pagebreak")
+CSS_NON_INHERITING_ANON_BOX(pageBreak, ":-moz-pagebreak")
 CSS_ANON_BOX(page, ":-moz-page")
 CSS_ANON_BOX(pageContent, ":-moz-pagecontent")
 CSS_ANON_BOX(pageSequence, ":-moz-page-sequence")

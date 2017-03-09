@@ -27,7 +27,6 @@ struct DevicePrefs
 {
   FeatureStatus hwCompositing;
   FeatureStatus d3d11Compositing;
-  FeatureStatus d3d9Compositing;
   FeatureStatus oglCompositing;
   FeatureStatus useD2D1;
 };
@@ -63,7 +62,6 @@ union GPUDeviceStatus
 struct GPUDeviceData
 {
   FeatureChange d3d11Compositing;
-  FeatureChange d3d9Compositing;
   FeatureChange oglCompositing;
   GPUDeviceStatus gpuDevice;
 };

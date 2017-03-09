@@ -1487,7 +1487,7 @@
           <![CDATA[
             // We no longer cache the picker content, remove the old content.
             while (aPopup.childNodes.length > 2)
-              aPopup.removeChild(aPopup.firstChild);
+              aPopup.firstChild.remove();
 
             var refChild = aPopup.firstChild;
 

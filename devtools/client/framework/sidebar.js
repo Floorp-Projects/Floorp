@@ -576,7 +576,7 @@ ToolSidebar.prototype = {
     }
 
     while (this._tabbox.tabs && this._tabbox.tabs.hasChildNodes()) {
-      this._tabbox.tabs.removeChild(this._tabbox.tabs.firstChild);
+      this._tabbox.tabs.firstChild.remove();
     }
 
     if (this._currentTool && this._telemetry) {

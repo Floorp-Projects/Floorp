@@ -294,6 +294,10 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTValidity,
                                       CERTValidity,
                                       CERT_DestroyValidity)
 
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueHASHContext,
+                                      HASHContext,
+                                      HASH_Destroy)
+
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueNSSCMSMessage,
                                       NSSCMSMessage,
                                       NSS_CMSMessage_Destroy)

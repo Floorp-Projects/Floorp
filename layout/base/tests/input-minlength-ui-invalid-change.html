@@ -11,6 +11,7 @@
     <script>
       function runTest() {
         var input = document.getElementById('input');
+        input.setSelectionRange(input.value.length, input.value.length)
         input.focus();
         synthesizeKey('o', {});
         input.blur(); // to hide the caret
@@ -22,4 +23,3 @@
     <input id="input" minlength="4" value="fo">
   </body>
 </html>
-

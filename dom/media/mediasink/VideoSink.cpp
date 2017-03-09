@@ -479,11 +479,12 @@ VideoSink::GetDebugInfo()
 {
   AssertOwnerThread();
   return nsPrintfCString(
-    "IsStarted=%d IsPlaying=%d, VideoQueue: finished=%d size=%" PRIuSIZE ", "
-    "mVideoFrameEndTime=%" PRId64 " mHasVideo=%d mVideoSinkEndRequest.Exists()=%d "
-    "mEndPromiseHolder.IsEmpty()=%d\n",
-    IsStarted(), IsPlaying(), VideoQueue().IsFinished(), VideoQueue().GetSize(),
-    mVideoFrameEndTime, mHasVideo, mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty())
+    "VideoSink Status: IsStarted=%d IsPlaying=%d VideoQueue(finished=%d "
+    "size=%" PRIuSIZE ") mVideoFrameEndTime=%" PRId64 " mHasVideo=%d "
+    "mVideoSinkEndRequest.Exists()=%d mEndPromiseHolder.IsEmpty()=%d\n",
+    IsStarted(), IsPlaying(), VideoQueue().IsFinished(),
+    VideoQueue().GetSize(), mVideoFrameEndTime, mHasVideo,
+    mVideoSinkEndRequest.Exists(), mEndPromiseHolder.IsEmpty())
     + mAudioSink->GetDebugInfo();
 }
 

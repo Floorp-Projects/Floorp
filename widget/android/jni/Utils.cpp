@@ -124,6 +124,12 @@ void SetGeckoThreadEnv(JNIEnv* aEnv)
             "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     MOZ_ASSERT(sClassLoader && sClassLoaderLoadClass);
 
+    if (java::GeckoThread::IsChildProcess()) {
+        // Disallow Fennec-only classes from being used in child processes.
+        sIsFennec = false;
+        return;
+    }
+
     auto geckoAppClass = Class::LocalRef::Adopt(
             aEnv->FindClass("org/mozilla/gecko/GeckoApp"));
     aEnv->ExceptionClear();

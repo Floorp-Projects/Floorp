@@ -205,7 +205,7 @@ function enableButtons() {
 function ClearInfoList() {
   let infoList = document.getElementById("info_list");
   while (infoList.hasChildNodes()) {
-    infoList.removeChild(infoList.firstChild);
+    infoList.firstChild.remove();
   }
 }
 
@@ -221,7 +221,7 @@ function ClearDeviceList() {
   // module that just changed.
   let deviceList = document.getElementById("device_list");
   while (deviceList.hasChildNodes()) {
-    deviceList.removeChild(deviceList.firstChild);
+    deviceList.firstChild.remove();
   }
 }
 

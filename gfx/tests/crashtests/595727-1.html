@@ -6,7 +6,7 @@
 function doTest()
 {
   var r = document.documentElement;
-  while(r.firstChild) { r.removeChild(r.firstChild); }
+  while(r.firstChild) { r.firstChild.remove(); }
   var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body"); 
   r.appendChild(body); 
   body.contentEditable = "true"; 

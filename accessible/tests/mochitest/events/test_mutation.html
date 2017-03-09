@@ -414,8 +414,8 @@
         var l1 = doc.firstChild;
         this.target = l1.firstChild;
         var l2 = doc.lastChild;
-        l1.DOMNode.removeChild(l1.DOMNode.firstChild);
-        l2.DOMNode.removeChild(l2.DOMNode.firstChild);
+        l1.DOMNode.firstChild.remove();
+        l2.DOMNode.firstChild.remove();
       }
 
       this.check = function hideHideNDestroyDoc_check()

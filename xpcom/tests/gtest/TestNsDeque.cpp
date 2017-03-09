@@ -9,6 +9,10 @@
 #include "nsCRT.h"
 #include "mozilla/TypeTraits.h"
 #include <stdio.h>
+#include <functional>
+
+using mozilla::IsSame;
+using mozilla::DeclVal;
 
 /**************************************************************
   Now define the token deallocator class...

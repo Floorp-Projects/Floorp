@@ -547,11 +547,13 @@ IsNativeAnonymousImplementationOfPseudoElement(nsIContent* aContent)
   //   ":-moz-text", so we need to check for the anonymous box case here.
   // * The primary frame for table elements is an anonymous box that inherits
   //   from the table's style.
-  if (pseudoType == CSSPseudoElementType::AnonBox) {
+  if (pseudoType == CSSPseudoElementType::InheritingAnonBox) {
     MOZ_ASSERT(f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::mozText ||
                f->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableWrapper);
     return false;
   }
+
+  MOZ_ASSERT(pseudoType != CSSPseudoElementType::NonInheritingAnonBox);
 
   // Finally check the actual pseudo type.
   bool isImpl = pseudoType != CSSPseudoElementType::NotPseudo;

@@ -12,7 +12,7 @@ div { height: 1px; }
 function boom()
 {
   var a = document.getElementById("a"); 
-  a.removeChild(a.firstChild);
+  a.firstChild.remove();
   document.documentElement.style.outline = "none";
 }
 

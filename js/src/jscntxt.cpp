@@ -1118,7 +1118,7 @@ JSContext::alreadyReportedOOM()
         MOZ_ASSERT(isThrowingOutOfMemory());
     }
 #endif
-    return mozilla::MakeGenericErrorResult(reportedOOM);
+    return mozilla::Err(reportedOOM);
 }
 
 mozilla::GenericErrorResult<JS::Error&>
@@ -1128,7 +1128,7 @@ JSContext::alreadyReportedError()
     if (!helperThread())
         MOZ_ASSERT(isExceptionPending());
 #endif
-    return mozilla::MakeGenericErrorResult(reportedError);
+    return mozilla::Err(reportedError);
 }
 
 JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)

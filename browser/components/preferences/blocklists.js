@@ -81,7 +81,7 @@ var gBlocklistManager = {
 
     let blocklistsText = document.getElementById("blocklistsText");
     while (blocklistsText.hasChildNodes()) {
-      blocklistsText.removeChild(blocklistsText.firstChild);
+      blocklistsText.firstChild.remove();
     }
     blocklistsText.appendChild(document.createTextNode(params.introText));
 

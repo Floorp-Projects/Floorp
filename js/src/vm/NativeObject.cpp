@@ -480,6 +480,32 @@ NativeObject::growSlotsDontReportOOM(JSContext* cx, NativeObject* obj, uint32_t 
     return true;
 }
 
+/* static */ bool
+NativeObject::addDenseElementDontReportOOM(JSContext* cx, NativeObject* obj)
+{
+    // IC code calls this directly.
+    AutoCheckCannotGC nogc;
+
+    MOZ_ASSERT(obj->getDenseInitializedLength() == obj->getDenseCapacity());
+    MOZ_ASSERT(!obj->denseElementsAreCopyOnWrite());
+    MOZ_ASSERT(!obj->denseElementsAreFrozen());
+    MOZ_ASSERT(!obj->isIndexed());
+    MOZ_ASSERT(!obj->is<TypedArrayObject>());
+    MOZ_ASSERT_IF(obj->is<ArrayObject>(), obj->as<ArrayObject>().lengthIsWritable());
+
+    // growElements will report OOM also if the number of dense elements will
+    // exceed MAX_DENSE_ELEMENTS_COUNT. See goodElementsAllocationAmount.
+    uint32_t oldCapacity = obj->getDenseCapacity();
+    if (MOZ_UNLIKELY(!obj->growElements(cx, oldCapacity + 1))) {
+        cx->recoverFromOutOfMemory();
+        return false;
+    }
+
+    MOZ_ASSERT(obj->getDenseCapacity() > oldCapacity);
+    MOZ_ASSERT(obj->getDenseCapacity() <= MAX_DENSE_ELEMENTS_COUNT);
+    return true;
+}
+
 static void
 FreeSlots(JSContext* cx, HeapSlot* slots)
 {

@@ -312,6 +312,14 @@ public:
    * running on the compositor).
    */
   bool CanThrottle() const;
+
+  /**
+   * Updates various bits of state that we need to update as the result of
+   * running ComposeStyle().
+   * See the comment of KeyframeEffectReadOnly::WillComposeStyle for more detail.
+   */
+  void WillComposeStyle();
+
   /**
    * Updates |aStyleRule| with the animation values of this animation's effect,
    * if any.

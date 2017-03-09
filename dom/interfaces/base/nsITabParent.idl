@@ -56,4 +56,9 @@ interface nsITabParent : nsISupports
   void navigateByKey(in bool aForward, in bool aForDocumentNavigation);
 
   readonly attribute boolean hasContentOpener;
+  /**
+   * True if we've previously received layers for this tab when switching to
+   * it.
+   */
+  readonly attribute boolean hasPresented;
 };

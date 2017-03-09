@@ -342,6 +342,13 @@ JSRuntime::destroyRuntime()
 static void
 CheckCanChangeActiveContext(JSRuntime* rt)
 {
+    // The runtime might not currently have an active context, in which case
+    // the accesses below to ActiveThreadData data would not normally be
+    // allowed. Suppress protected data checks so these accesses will be
+    // tolerated --- if the active context is null then we're about to set it
+    // to the current thread.
+    AutoNoteSingleThreadedRegion anstr;
+
     MOZ_RELEASE_ASSERT(!rt->activeContextChangeProhibited());
     MOZ_RELEASE_ASSERT(!rt->activeContext() || rt->gc.canChangeActiveContext(rt->activeContext()));
 
@@ -907,4 +914,10 @@ JSRuntime::ionLazyLinkListAdd(jit::IonBuilder* builder)
                "Should only be mutated by the active thread.");
     ionLazyLinkList().insertFront(builder);
     ionLazyLinkListSize_++;
+}
+
+JS_PUBLIC_API(void)
+JS::shadow::RegisterWeakCache(JSRuntime* rt, WeakCache<void*>* cachep)
+{
+    rt->registerWeakCache(cachep);
 }

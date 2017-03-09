@@ -218,7 +218,7 @@ var gPermissionManager = {
 
     var permissionsText = document.getElementById("permissionsText");
     while (permissionsText.hasChildNodes())
-      permissionsText.removeChild(permissionsText.firstChild);
+      permissionsText.firstChild.remove();
     permissionsText.appendChild(document.createTextNode(aParams.introText));
 
     document.title = aParams.windowTitle;

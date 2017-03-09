@@ -165,9 +165,46 @@ public:
   operator ErrorResult&();
   operator OOMReporter&();
 
-  void Throw(nsresult rv) {
+  void MOZ_MUST_RETURN_FROM_CALLER Throw(nsresult rv) {
     MOZ_ASSERT(NS_FAILED(rv), "Please don't try throwing success");
     AssignErrorCode(rv);
+  }
+
+  // This method acts identically to the `Throw` method, however, it does not
+  // have the MOZ_MUST_RETURN_FROM_CALLER static analysis annotation. It is
+  // intended to be used in situations when additional work needs to be
+  // performed in the calling function after the Throw method is called.
+  //
+  // In general you should prefer using `Throw`, and returning after an error,
+  // for example:
+  //
+  //   if (condition) {
+  //     aRv.Throw(NS_ERROR_FAILURE);
+  //     return;
+  //   }
+  //
+  // or
+  //
+  //   if (condition) {
+  //     aRv.Throw(NS_ERROR_FAILURE);
+  //   }
+  //   return;
+  //
+  // However, if you need to do some other work after throwing, such as:
+  //
+  //   if (condition) {
+  //     aRv.ThrowWithCustomCleanup(NS_ERROR_FAILURE);
+  //   }
+  //   // Do some important clean-up work which couldn't happen earlier.
+  //   // We want to do this clean-up work in both the success and failure cases.
+  //   CleanUpImportantState();
+  //   return;
+  //
+  // Then you'll need to use ThrowWithCustomCleanup to get around the static
+  // analysis, which would complain that you are doing work after the call to
+  // `Throw()`.
+  void ThrowWithCustomCleanup(nsresult rv) {
+    Throw(rv);
   }
 
   // Duplicate our current state on the given TErrorResult object.  Any
@@ -307,7 +344,7 @@ public:
   }
 
   // Support for uncatchable exceptions.
-  void ThrowUncatchableException() {
+  void MOZ_MUST_RETURN_FROM_CALLER ThrowUncatchableException() {
     Throw(NS_ERROR_UNCATCHABLE_EXCEPTION);
   }
   bool IsUncatchableException() const {

@@ -1434,7 +1434,6 @@ internal_AccumulateChildKeyed(GeckoProcessType aProcessType, mozilla::Telemetry:
 //   internal_JSHistogram_Add
 //   internal_JSHistogram_Snapshot
 //   internal_JSHistogram_Clear
-//   internal_JSHistogram_Dataset
 //   internal_WrapAndReturnHistogram
 //
 // all run without protection from |gTelemetryHistogramMutex|.  If they
@@ -1576,26 +1575,6 @@ internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
-bool
-internal_JSHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
-    return false;
-  }
-
-  Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
-  mozilla::Telemetry::HistogramID id;
-  nsresult rv = internal_GetHistogramEnumId(h->histogram_name().c_str(), &id);
-  if (NS_SUCCEEDED(rv)) {
-    args.rval().setNumber(gHistograms[id].dataset);
-    return true;
-  }
-
-  return false;
-}
-
 // NOTE: Runs without protection from |gTelemetryHistogramMutex|.
 // See comment at the top of this section.
 nsresult
@@ -1610,14 +1589,12 @@ internal_WrapAndReturnHistogram(Histogram *h, JSContext *cx,
   JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
-  // The 4 functions that are wrapped up here are eventually called
+  // The 3 functions that are wrapped up here are eventually called
   // by the same thread that runs this function.
   if (!(JS_DefineFunction(cx, obj, "add", internal_JSHistogram_Add, 1, 0)
         && JS_DefineFunction(cx, obj, "snapshot",
                              internal_JSHistogram_Snapshot, 0, 0)
-        && JS_DefineFunction(cx, obj, "clear", internal_JSHistogram_Clear, 0, 0)
-        && JS_DefineFunction(cx, obj, "dataset",
-                             internal_JSHistogram_Dataset, 0, 0))) {
+        && JS_DefineFunction(cx, obj, "clear", internal_JSHistogram_Clear, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
   JS_SetPrivate(obj, h);
@@ -1642,7 +1619,6 @@ internal_WrapAndReturnHistogram(Histogram *h, JSContext *cx,
 //   internal_JSKeyedHistogram_SubsessionSnapshot
 //   internal_JSKeyedHistogram_SnapshotSubsessionAndClear
 //   internal_JSKeyedHistogram_Clear
-//   internal_JSKeyedHistogram_Dataset
 //   internal_WrapAndReturnKeyedHistogram
 //
 // Same comments as above, at the JSHistogram_* section, regarding
@@ -1853,30 +1829,6 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
-bool
-internal_JSKeyedHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
-{
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj) {
-    return false;
-  }
-
-  KeyedHistogram* keyed = static_cast<KeyedHistogram*>(JS_GetPrivate(obj));
-  if (!keyed) {
-    return false;
-  }
-
-  uint32_t dataset = nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN;
-  nsresult rv = keyed->GetDataset(&dataset);;
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  args.rval().setNumber(dataset);
-  return true;
-}
-
 // NOTE: Runs without protection from |gTelemetryHistogramMutex|.
 // See comment at the top of this section.
 nsresult
@@ -1891,7 +1843,7 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
   JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
-  // The 7 functions that are wrapped up here are eventually called
+  // The 6 functions that are wrapped up here are eventually called
   // by the same thread that runs this function.
   if (!(JS_DefineFunction(cx, obj, "add", internal_JSKeyedHistogram_Add, 2, 0)
         && JS_DefineFunction(cx, obj, "snapshot",
@@ -1905,9 +1857,7 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
         && JS_DefineFunction(cx, obj, "keys",
                              internal_JSKeyedHistogram_Keys, 0, 0)
         && JS_DefineFunction(cx, obj, "clear",
-                             internal_JSKeyedHistogram_Clear, 0, 0)
-        && JS_DefineFunction(cx, obj, "dataset",
-                             internal_JSKeyedHistogram_Dataset, 0, 0))) {
+                             internal_JSKeyedHistogram_Clear, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
 

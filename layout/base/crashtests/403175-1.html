@@ -9,7 +9,7 @@ function boom()
   ++i;
   
   while (document.body.firstChild)
-    document.body.removeChild(document.body.firstChild);
+    document.body.firstChild.remove();
 
   var table = document.createElement("table");
   document.body.appendChild(table);

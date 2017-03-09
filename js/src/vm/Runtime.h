@@ -340,11 +340,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
 
     // Count of AutoProhibitActiveContextChange instances on the active context.
-    mozilla::Atomic<size_t> activeContextChangeProhibited_;
+    js::ActiveThreadData<size_t> activeContextChangeProhibited_;
 
     // Count of beginSingleThreadedExecution() calls that have occurred with no
     // matching endSingleThreadedExecution().
-    mozilla::Atomic<size_t> singleThreadedExecutionRequired_;
+    js::ActiveThreadData<size_t> singleThreadedExecutionRequired_;
 
     // Whether some thread has called beginSingleThreadedExecution() and we are
     // in the associated callback (which may execute JS on other threads).
@@ -558,6 +558,15 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     }
     void setWindowProxyClass(const js::Class* clasp) {
         windowProxyClass_ = clasp;
+    }
+
+  private:
+    // List of non-ephemeron weak containers to sweep during beginSweepingZoneGroup.
+    js::ActiveThreadData<mozilla::LinkedList<JS::WeakCache<void*>>> weakCaches_;
+  public:
+    mozilla::LinkedList<JS::WeakCache<void*>>& weakCaches() { return weakCaches_.ref(); }
+    void registerWeakCache(JS::WeakCache<void*>* cachep) {
+        weakCaches().insertBack(cachep);
     }
 
   private:

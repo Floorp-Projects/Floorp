@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import android.os.IBinder;
 import android.view.KeyEvent;
 
 import org.mozilla.gecko.IGeckoEditableChild;
@@ -11,20 +12,21 @@ import org.mozilla.gecko.IGeckoEditableChild;
 // Interface for GeckoEditable calls from child to parent
 interface IGeckoEditableParent {
     // Notify an IME event of a type defined in GeckoEditableListener.
-    void notifyIME(int type);
+    void notifyIME(IGeckoEditableChild child, int type);
 
     // Notify a change in editor state or type.
     void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint);
 
     // Notify a change in editor selection.
-    void onSelectionChange(int start, int end);
+    void onSelectionChange(IBinder token, int start, int end);
 
     // Notify a change in editor text.
-    void onTextChange(in CharSequence text, int start, int unboundedOldEnd);
+    void onTextChange(IBinder token, in CharSequence text,
+                      int start, int unboundedOldEnd);
 
     // Perform the default action associated with a key event.
-    void onDefaultKeyEvent(in KeyEvent event);
+    void onDefaultKeyEvent(IBinder token, in KeyEvent event);
 
     // Update the screen location of current composition.
-    void updateCompositionRects(in RectF[] rects);
+    void updateCompositionRects(IBinder token, in RectF[] rects);
 }

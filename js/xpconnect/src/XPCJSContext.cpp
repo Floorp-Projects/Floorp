@@ -2338,6 +2338,10 @@ ReportCompartmentStats(const JS::CompartmentStats& cStats,
         cStats.nonSyntacticLexicalScopesTable,
         "The non-syntactic lexical scopes table.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("template-literal-map"),
+        cStats.templateLiteralMap,
+        "The template literal registry.");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jit-compartment"),
         cStats.jitCompartment,
         "The JIT compartment.");
@@ -3153,6 +3157,12 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
         break;
       case JS_TELEMETRY_AOT_USAGE:
         Telemetry::Accumulate(Telemetry::JS_AOT_USAGE, sample);
+        break;
+      case JS_TELEMETRY_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS:
+        Telemetry::Accumulate(Telemetry::JS_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS, sample);
+        break;
+      case JS_TELEMETRY_WEB_PARSER_COMPILE_LAZY_AFTER_MS:
+        Telemetry::Accumulate(Telemetry::JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS, sample);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unexpected JS_TELEMETRY id");

@@ -82,6 +82,8 @@ public:
 protected:
     virtual ~nsBufferedInputStream() {}
 
+    bool IsIPCSerializable() const;
+
     NS_IMETHOD Fill() override;
     NS_IMETHOD Flush() override { return NS_OK; } // no-op for input streams
 };

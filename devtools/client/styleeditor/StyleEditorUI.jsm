@@ -865,7 +865,7 @@ StyleEditorUI.prototype = {
       let list = details.querySelector(".stylesheet-media-list");
 
       while (list.firstChild) {
-        list.removeChild(list.firstChild);
+        list.firstChild.remove();
       }
 
       let rules = editor.mediaRules;

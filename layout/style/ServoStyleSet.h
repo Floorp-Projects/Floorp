@@ -137,10 +137,20 @@ public:
   ResolveTransientStyle(dom::Element* aElement,
                         mozilla::CSSPseudoElementType aPseudoType);
 
-  // aFlags is an nsStyleSet flags bitfield
+  // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
+  // use and must be non-null.  It must be an anon box, and must be one that
+  // inherits style from the given aParentContext.  aFlags is an nsStyleSet
+  // flags bitfield.
   already_AddRefed<nsStyleContext>
-  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext,
-                           uint32_t aFlags = 0);
+  ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+                                     nsStyleContext* aParentContext,
+                                     uint32_t aFlags = 0);
+
+  // Get a style context for an anonymous box that does not inherit style from
+  // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
+  // must be an anon box, and must be a non-inheriting one.
+  already_AddRefed<nsStyleContext>
+  ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
 
   // manage the set of style sheets in the style set
   nsresult AppendStyleSheet(SheetType aType, ServoStyleSheet* aSheet);
@@ -265,6 +275,14 @@ private:
    */
   void ClearNonInheritingStyleContexts();
 
+  /**
+   * Perform processes that we should do before traversing.
+   */
+  void PreTraverse();
+
+  already_AddRefed<ServoComputedValues> ResolveStyleLazily(dom::Element* aElement,
+                                                           nsIAtom* aPseudoTag);
+
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
@@ -273,7 +291,9 @@ private:
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
-  RefPtr<nsStyleContext> mNonInheritingStyleContexts[static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::_Count)];
+  EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
+                  nsCSSAnonBoxes::NonInheriting::_Count,
+                  RefPtr<nsStyleContext>> mNonInheritingStyleContexts;
 
   static bool sInServoTraversal;
 };

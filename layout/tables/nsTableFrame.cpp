@@ -516,30 +516,49 @@ nsTableFrame::ResetRowIndices(const nsFrameList::Slice& aRowGroupsToExclude)
 {
   // Iterate over the row groups and adjust the row indices of all rows
   // omit the rowgroups that will be inserted later
+  mDeletedRowIndexRanges.clear();
+
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
 
-  int32_t rowIndex = 0;
   nsTHashtable<nsPtrHashKey<nsTableRowGroupFrame> > excludeRowGroups;
   nsFrameList::Enumerator excludeRowGroupsEnumerator(aRowGroupsToExclude);
   while (!excludeRowGroupsEnumerator.AtEnd()) {
     excludeRowGroups.PutEntry(static_cast<nsTableRowGroupFrame*>(excludeRowGroupsEnumerator.get()));
+#ifdef DEBUG
+    {
+      // Check to make sure that the row indices of all rows in excluded row
+      // groups are '0' (i.e. the initial value since they haven't been added yet)
+      const nsFrameList& rowFrames =
+        excludeRowGroupsEnumerator.get()->PrincipalChildList();
+      for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd(); rows.Next()) {
+        nsTableRowFrame* row = static_cast<nsTableRowFrame*>(rows.get());
+        MOZ_ASSERT(row->GetRowIndex() == 0,
+                   "exclusions cannot be used for rows that were already added,"
+                   "because we'd need to process mDeletedRowIndexRanges");
+      }
+    }
+#endif
     excludeRowGroupsEnumerator.Next();
   }
 
+  int32_t rowIndex = 0;
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
     if (!excludeRowGroups.GetEntry(rgFrame)) {
       const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
       for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd(); rows.Next()) {
-        if (mozilla::StyleDisplay::TableRow == rows.get()->StyleDisplay()->mDisplay) {
-          ((nsTableRowFrame *)rows.get())->SetRowIndex(rowIndex);
+        if (mozilla::StyleDisplay::TableRow ==
+            rows.get()->StyleDisplay()->mDisplay) {
+          nsTableRowFrame* row = static_cast<nsTableRowFrame*>(rows.get());
+          row->SetRowIndex(rowIndex);
           rowIndex++;
         }
       }
     }
   }
 }
+
 void
 nsTableFrame::InsertColGroups(int32_t                   aStartColIndex,
                               const nsFrameList::Slice& aColGroups)
@@ -676,7 +695,8 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
 
   RefPtr<nsStyleContext> colGroupStyle;
   colGroupStyle = shell->StyleSet()->
-    ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup, mStyleContext);
+    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup,
+                                       mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
   ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
@@ -738,7 +758,8 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     iContent = aColGroupFrame->GetContent();
     parentStyleContext = aColGroupFrame->StyleContext();
     styleContext = shell->StyleSet()->
-      ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableCol, parentStyleContext);
+      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol,
+                                         parentStyleContext);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
@@ -918,13 +939,18 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame*       aRowGroupFrame,
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     TableArea damageArea(0, 0, 0, 0);
-    bool didRecalculate = RecalculateRowIndices();
+    bool shouldRecalculateIndex = !IsDeletedRowIndexRangesEmpty();
+    if (shouldRecalculateIndex) {
+      ResetRowIndices(nsFrameList::Slice(mFrames, nullptr, nullptr));
+    }
     int32_t origNumRows = cellMap->GetRowCount();
     int32_t numNewRows = aRowFrames.Length();
     cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
     MatchCellMapToColCache(cellMap);
 
-    if (!didRecalculate) {
+    // Perform row index adjustment only if row indices were not
+    // reset above
+    if (!shouldRecalculateIndex) {
       if (aRowIndex < origNumRows) {
         AdjustRowIndices(aRowIndex, numNewRows);
       }
@@ -948,32 +974,6 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame*       aRowGroupFrame,
 #endif
 
   return numColsToAdd;
-}
-
-bool
-nsTableFrame::RecalculateRowIndices()
-{
-  if (mDeletedRowIndexRanges.size() == 0) {
-    return false;
-  }
-  mDeletedRowIndexRanges.clear();
-
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
-
-  int32_t rowIndex = 0;
-  for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
-    nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
-    const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
-    for (nsFrameList::Enumerator rEnum(rowFrames); !rEnum.AtEnd(); rEnum.Next()) {
-      if (mozilla::StyleDisplay::TableRow == rEnum.get()->StyleDisplay()->mDisplay) {
-        nsTableRowFrame *row = static_cast<nsTableRowFrame*>(rEnum.get());
-        row->SetRowIndex(rowIndex);
-        rowIndex++;
-      }
-    }
-  }
-  return true;
 }
 
 void
@@ -7692,8 +7692,8 @@ nsTableFrame::DoUpdateStyleOfOwnedAnonBoxes(ServoStyleSet& aStyleSet,
              "What happened to our parent?");
 
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper,
-                                       StyleContext());
+    aStyleSet.ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableWrapper,
+                                                 StyleContext());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it

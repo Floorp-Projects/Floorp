@@ -855,3 +855,15 @@ function loadPKCS11TestModule(expectModuleUnloadToFail) {
   });
   pkcs11.addModule("PKCS11 Test Module", libraryFile.path, 0, 0);
 }
+
+/**
+ * @param {String} data
+ * @returns {String}
+ */
+function hexify(data) {
+  // |slice(-2)| chomps off the last two characters of a string.
+  // Therefore, if the Unicode value is < 0x10, we have a single-character hex
+  // string when we want one that's two characters, and unconditionally
+  // prepending a "0" solves the problem.
+  return Array.from(data, (c, i) => ("0" + data.charCodeAt(i).toString(16)).slice(-2)).join("");
+}

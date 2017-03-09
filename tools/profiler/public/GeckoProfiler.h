@@ -196,6 +196,23 @@ PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char *output,
 inline void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
 #endif
 
+// Is the profiler active? Note: the return value of this function can become
+// immediately out-of-date. E.g. the profile might be active but then
+// profiler_stop() is called immediately afterward. One common and reasonable
+// pattern of usage is the following:
+//
+//   if (profiler_is_active()) {
+//     ExpensiveData expensiveData = CreateExpensiveData();
+//     PROFILER_OPERATION(expensiveData);
+//   }
+//
+// where PROFILER_OPERATION is a no-op if the profiler is inactive. In this
+// case the profiler_is_active() check is just an optimization -- it prevents
+// us calling CreateExpensiveData() unnecessarily in most cases, but the
+// expensive data will end up being created but not used if another thread
+// stops the profiler between the CreateExpensiveData() and PROFILER_OPERATION
+// calls.
+//
 PROFILER_FUNC(bool profiler_is_active(), false)
 
 // Check if an external profiler feature is active.
@@ -283,7 +300,7 @@ PROFILER_FUNC_VOID(profiler_js_operation_callback())
 
 PROFILER_FUNC(double profiler_time(), 0)
 
-PROFILER_FUNC(bool profiler_in_privacy_mode(), false)
+PROFILER_FUNC(bool profiler_is_active_and_not_in_privacy_mode(), false)
 
 PROFILER_FUNC_VOID(profiler_log(const char *str))
 PROFILER_FUNC_VOID(profiler_log(const char *fmt, va_list args))
@@ -307,27 +324,30 @@ PROFILER_FUNC_VOID(profiler_log(const char *fmt, va_list args))
 #undef min
 #endif
 
-class Sampler;
 class nsISupports;
 class ProfilerMarkerPayload;
 
-// Each thread gets its own PseudoStack on thread creation, which is then
-// destroyed on thread destruction. (GeckoProfilerInitRAII handles this for the
-// main thread and AutoProfileRegister handles it for others threads.)
-// tlsPseudoStack is the owning reference. Other non-owning references to it
-// are handed out as follows.
+// Each thread gets its own PseudoStack on thread creation. tlsPseudoStack is
+// the owning reference; ThreadInfo has a non-owning reference. On thread
+// destruction, either (a) the PseudoStack and the ThreadInfo are both
+// destroyed, or (b) neither is destroyed and ownership of PseudoStack is
+// transferred to the ThreadInfo. Either way, tlsPseudoStack is cleared.
 //
-// - ThreadInfo has a long-lived one, which we must ensure is nulled or
-//   destroyed before the PseudoStack is destroyed.
-//
-// - profiler_call_{enter,exit}() call pairs temporarily get one. RAII classes
-//   ensure these calls are balanced, and they occur on the thread itself,
-//   which means they are necessarily bounded by the lifetime of the thread,
-//   which ensures they can't be used after the PseudoStack is destroyed.
+// Non-owning PseudoStack references are also temporarily used by
+// profiler_call_{enter,exit}() pairs. RAII classes ensure these calls are
+// balanced, and they occur on the thread itself, which means they are
+// necessarily bounded by the lifetime of the thread, which ensures they can't
+// be used after the PseudoStack is destroyed.
 //
 extern MOZ_THREAD_LOCAL(PseudoStack*) tlsPseudoStack;
 
-extern bool stack_key_initialized;
+class ProfilerState;
+
+// The core profiler state. Null at process startup, it is set to a non-null
+// value in profiler_init() and stays that way until profiler_shutdown() is
+// called. Therefore it can be checked to determine if the profiler has been
+// initialized but not yet shut down.
+extern ProfilerState* gPS;
 
 #ifndef SAMPLE_FUNCTION_NAME
 # if defined(__GNUC__) || defined(_MSC_VER)
@@ -346,26 +366,16 @@ profiler_call_enter(const char* aInfo,
 {
   // This function runs both on and off the main thread.
 
-  // check if we've been initialized to avoid calling pthread_getspecific
-  // with a null tlsStack which will return undefined results.
-  if (!stack_key_initialized)
-    return nullptr;
+  MOZ_RELEASE_ASSERT(gPS);
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  // we can't infer whether 'stack' has been initialized
-  // based on the value of stack_key_intiailized because
-  // 'stack' is only intialized when a thread is being
-  // profiled.
+  PseudoStack* stack = tlsPseudoStack.get();
   if (!stack) {
     return stack;
   }
   stack->push(aInfo, aCategory, aFrameAddress, aCopy, line);
 
-  // The handle is meant to support future changes
-  // but for now it is simply use to save a call to
-  // pthread_getspecific on exit. It also supports the
-  // case where the sampler is initialized between
-  // enter and exit.
+  // The handle is meant to support future changes but for now it is simply
+  // used to avoid having to call tlsPseudoStack.get() in profiler_call_exit().
   return stack;
 }
 
@@ -374,8 +384,11 @@ profiler_call_exit(void* aHandle)
 {
   // This function runs both on and off the main thread.
 
-  if (!aHandle)
+  MOZ_RELEASE_ASSERT(gPS);
+
+  if (!aHandle) {
     return;
+  }
 
   PseudoStack *stack = (PseudoStack*)aHandle;
   stack->pop();
@@ -388,6 +401,8 @@ MOZ_EXPORT  // XXX: should this be 'extern "C"' as well?
 void profiler_save_profile_to_file_async(double aSinceTime,
                                          const char* aFileName);
 
+// This function should only be called in response to the observation of a
+// "profiler-subprocess-gather" notification.
 void profiler_will_gather_OOP_profile();
 void profiler_gathered_OOP_profile();
 void profiler_OOP_exit_profile(const nsCString& aProfile);
@@ -485,13 +500,12 @@ public:
     js::ProfileEntry::Category aCategory, uint32_t line, const char *aFormat, ...)
     : mHandle(nullptr)
   {
-    if (profiler_is_active() && !profiler_in_privacy_mode()) {
+    if (profiler_is_active_and_not_in_privacy_mode()) {
       va_list args;
       va_start(args, aFormat);
       char buff[SAMPLER_MAX_STRING];
 
-      // We have to use seperate printf's because we're using
-      // the vargs.
+      // We have to use separate printfs because we're using the vargs.
       VsprintfLiteral(buff, aFormat, args);
       SprintfLiteral(mDest, "%s %s", aInfo, buff);
 
@@ -516,8 +530,8 @@ profiler_get_pseudo_stack(void)
 {
   // This function runs both on and off the main thread.
 
-  if (!stack_key_initialized)
-    return nullptr;
+  MOZ_RELEASE_ASSERT(gPS);
+
   return tlsPseudoStack.get();
 }
 

@@ -18,7 +18,4 @@ read_procmaps(lul::LUL* aLUL);
 void
 logging_sink_for_LUL(const char* str);
 
-// A singleton instance of the library.
-extern lul::LUL* gLUL;
-
 #endif /* ndef MOZ_PLATFORM_LINUX_LUL_H */

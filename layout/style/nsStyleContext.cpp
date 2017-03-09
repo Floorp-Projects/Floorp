@@ -666,7 +666,8 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   // some other frame with a ruby display value. Non-element pseudos
   // which represents text frames, as well as ruby pseudos are excluded
   // because we still want to set the flag for them.
-  if (aContext->GetPseudoType() == CSSPseudoElementType::AnonBox &&
+  if ((aContext->GetPseudoType() == CSSPseudoElementType::InheritingAnonBox ||
+       aContext->GetPseudoType() == CSSPseudoElementType::NonInheritingAnonBox) &&
       !nsCSSAnonBoxes::IsNonElement(aContext->GetPseudo()) &&
       !RubyUtils::IsRubyPseudo(aContext->GetPseudo())) {
     return false;
