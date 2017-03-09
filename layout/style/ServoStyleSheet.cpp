@@ -151,7 +151,8 @@ ServoStyleSheet::GetCssRulesInternal(ErrorResult& aRv)
   if (!mRuleList) {
     RefPtr<ServoCssRules> rawRules =
       Servo_StyleSheet_GetRules(Inner()->mSheet).Consume();
-    mRuleList = new ServoCSSRuleList(this, rawRules.forget());
+    mRuleList = new ServoCSSRuleList(rawRules.forget());
+    mRuleList->SetStyleSheet(this);
   }
   return mRuleList;
 }
