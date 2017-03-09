@@ -715,8 +715,8 @@ public:
   Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
   void SetSelectionStart(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
 
-  Nullable<int32_t> GetSelectionEnd(ErrorResult& aRv);
-  void SetSelectionEnd(const Nullable<int32_t>& aValue, ErrorResult& aRv);
+  Nullable<uint32_t> GetSelectionEnd(ErrorResult& aRv);
+  void SetSelectionEnd(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
 
   void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
   void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
