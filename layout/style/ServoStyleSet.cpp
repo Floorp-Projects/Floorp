@@ -140,8 +140,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   ResolveMappedAttrDeclarationBlocks();
   RefPtr<ServoComputedValues> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
-    computedValues =
-      Servo_ResolveStyleLazily(element, nullptr, mRawSet.get()).Consume();
+    computedValues = ResolveStyleLazily(element, nullptr);
   } else {
     computedValues = ResolveServoStyle(element);
   }
@@ -201,11 +200,20 @@ ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
   }
 }
 
-bool
-ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                         mozilla::TraversalRootBehavior aRootBehavior) {
+void
+ServoStyleSet::PreTraverse()
+{
   ResolveMappedAttrDeclarationBlocks();
 
+  // Process animation stuff that we should avoid doing during the parallel
+  // traversal.
+  mPresContext->EffectCompositor()->PreTraverse();
+}
+
+bool
+ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
+                                         mozilla::TraversalRootBehavior aRootBehavior)
+{
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
   // is necessary to avoid a data race when updating the cache.
@@ -327,7 +335,7 @@ ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aTy
   }
 
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolveStyleLazily(aElement, pseudoTag, mRawSet.get()).Consume();
+    ResolveStyleLazily(aElement, pseudoTag);
 
   return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
                     nullptr);
@@ -608,6 +616,8 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 bool
 ServoStyleSet::StyleDocument()
 {
+  PreTraverse();
+
   // Restyle the document from the root element and each of the document level
   // NAC subtree roots.
   bool postTraversalRequired = false;
@@ -624,6 +634,9 @@ void
 ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
   MOZ_ASSERT(!aRoot->HasServoData());
+
+  PreTraverse();
+
   DebugOnly<bool> postTraversalRequired =
     PrepareAndTraverseSubtree(aRoot, TraversalRootBehavior::Normal);
   MOZ_ASSERT(!postTraversalRequired);
@@ -632,6 +645,8 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 void
 ServoStyleSet::StyleNewChildren(Element* aParent)
 {
+  PreTraverse();
+
   PrepareAndTraverseSubtree(aParent, TraversalRootBehavior::UnstyledChildrenOnly);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
   // or some of its other children might have pending restyles.
@@ -687,6 +702,14 @@ ServoStyleSet::ClearNonInheritingStyleContexts()
   for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
     ptr = nullptr;
   }  
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
+{
+  mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
+
+  return Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;

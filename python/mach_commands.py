@@ -113,14 +113,14 @@ class MachCommands(MachCommandBase):
                 # Otherwise just run everything in PYTHON_UNITTEST_MANIFESTS
                 test_objects = resolver.resolve_tests(flavor='python')
 
-        if not test_objects:
+        mp = TestManifest()
+        mp.tests.extend(test_objects)
+
+        if not mp.tests:
             message = 'TEST-UNEXPECTED-FAIL | No tests collected ' + \
                       '(Not in PYTHON_UNITTEST_MANIFESTS?)'
             self.log(logging.WARN, 'python-test', {}, message)
             return 1
-
-        mp = TestManifest()
-        mp.tests.extend(test_objects)
 
         filters = []
         if subsuite == 'default':

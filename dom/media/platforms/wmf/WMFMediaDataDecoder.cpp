@@ -65,7 +65,10 @@ SendTelemetry(unsigned long hr)
     [sample] {
       Telemetry::Accumulate(Telemetry::MEDIA_WMF_DECODE_ERROR, sample);
     });
-  NS_DispatchToMainThread(runnable);
+
+  SystemGroup::Dispatch("WMFMediaDataDecoder::SendTelemetry",
+                        TaskCategory::Other,
+                        runnable.forget());
 }
 
 RefPtr<ShutdownPromise>
