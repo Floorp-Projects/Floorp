@@ -240,9 +240,6 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  virtual void GetSelectionRange(int32_t* aSelectionStart,
-                                 int32_t* aSelectionEnd,
-                                 ErrorResult& aRv) override;
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
@@ -1483,6 +1480,14 @@ protected:
    * decide whether to add this element into its dispatch-to-content region.
    */
   void UpdateApzAwareFlag();
+
+  /**
+   * A helper to get the current selection range.  Will throw on the ErrorResult
+   * if we have no editor state.
+   */
+  void GetSelectionRange(int32_t* aSelectionStart,
+                         int32_t* aSelectionEnd,
+                         ErrorResult& aRv);
 
   nsCOMPtr<nsIControllers> mControllers;
 

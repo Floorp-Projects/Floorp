@@ -109,9 +109,6 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  virtual void GetSelectionRange(int32_t* aSelectionStart,
-                                 int32_t* aSelectionEnd,
-                                 ErrorResult& aRv) override;
 
 
   // nsIContent
@@ -394,6 +391,13 @@ protected:
    */
   bool IsValueEmpty() const;
 
+  /**
+   * A helper to get the current selection range.  Will throw on the ErrorResult
+   * if we have no editor state.
+   */
+  void GetSelectionRange(int32_t* aSelectionStart,
+                         int32_t* aSelectionEnd,
+                         ErrorResult& aRv);
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);
