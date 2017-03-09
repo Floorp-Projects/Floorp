@@ -131,6 +131,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 
   Matrix4x4 transform = GetTransform();
   Rect rect(0, 0, size.width, size.height);
+  rect = RelativeToVisible(rect);
   Rect clip = GetWrClipRect(rect);
   Rect relBounds = GetWrRelBounds();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
