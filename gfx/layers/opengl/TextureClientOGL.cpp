@@ -81,6 +81,7 @@ EGLImageTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 already_AddRefed<TextureClient>
 AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTextureHandle aHandle,
                                                gfx::IntSize aSize,
+                                               bool aContinuous,
                                                gl::OriginPos aOriginPos,
                                                LayersIPCChannel* aAllocator,
                                                TextureFlags aFlags)
@@ -90,15 +91,16 @@ AndroidSurfaceTextureData::CreateTextureClient(AndroidSurfaceTextureHandle aHand
   }
 
   return TextureClient::CreateWithData(
-    new AndroidSurfaceTextureData(aHandle, aSize),
+    new AndroidSurfaceTextureData(aHandle, aSize, aContinuous),
     aFlags, aAllocator
   );
 }
 
 AndroidSurfaceTextureData::AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle,
-                                                     gfx::IntSize aSize)
+                                                     gfx::IntSize aSize, bool aContinuous)
   : mHandle(aHandle)
   , mSize(aSize)
+  , mContinuous(aContinuous)
 {
   MOZ_ASSERT(mHandle);
 }
@@ -120,7 +122,7 @@ AndroidSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const
 bool
 AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
-  aOutDescriptor = SurfaceTextureDescriptor(mHandle, mSize);
+  aOutDescriptor = SurfaceTextureDescriptor(mHandle, mSize, mContinuous);
   return true;
 }
 
