@@ -104,6 +104,8 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   , mHasLoadingFontFacesIsDirty(false)
   , mDelayedLoadCheck(false)
 {
+  MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
+
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
 
   // If the pref is not set, don't create the Promise (which the page wouldn't
@@ -1473,9 +1475,9 @@ FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
     if (!mDelayedLoadCheck) {
       mDelayedLoadCheck = true;
       nsCOMPtr<nsIRunnable> checkTask =
-        NewRunnableMethod("FontFaceSet::CheckLoadingFinishedAfterDelay",
-                          this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
-      NS_DispatchToMainThread(checkTask);
+        NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
+      mDocument->Dispatch("FontFaceSet::CheckLoadingFinishedAfterDelay",
+                          TaskCategory::Other, checkTask.forget());
     }
   }
 }
