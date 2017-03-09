@@ -58,6 +58,8 @@ using namespace mozilla::dom;
 #include "TexturePoolOGL.h"
 #include "SurfaceTypes.h"
 #include "EGLUtils.h"
+#include "GeneratedJNIWrappers.h"
+#include "GeneratedJNINatives.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -106,7 +108,7 @@ static bool EnsureGLContext()
 
 static std::map<NPP, nsNPAPIPluginInstance*> sPluginNPPMap;
 
-#endif
+#endif // MOZ_WIDGET_ANDROID
 
 using namespace mozilla;
 using namespace mozilla::plugins::parent;
@@ -202,14 +204,12 @@ nsNPAPIPluginInstance::Destroy()
   mAudioChannelAgent = nullptr;
 
 #if MOZ_WIDGET_ANDROID
-  if (mContentSurface)
-    mContentSurface->SetFrameAvailableCallback(nullptr);
-
-  mContentSurface = nullptr;
+  if (mContentSurface) {
+    java::SurfaceAllocator::DisposeSurface(mContentSurface);
+  }
 
   std::map<void*, VideoInfo*>::iterator it;
   for (it = mVideos.begin(); it != mVideos.end(); it++) {
-    it->second->mSurfaceTexture->SetFrameAvailableCallback(nullptr);
     delete it->second;
   }
   mVideos.clear();
@@ -858,24 +858,50 @@ GLContext* nsNPAPIPluginInstance::GLContext()
   return sPluginContext;
 }
 
-already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceTexture()
+class PluginTextureListener
+  : public java::SurfaceTextureListener::Natives<PluginTextureListener>
 {
-  if (!EnsureGLContext())
-    return nullptr;
+  using Base = java::SurfaceTextureListener::Natives<PluginTextureListener>;
 
-  GLuint texture = TexturePoolOGL::AcquireTexture();
-  if (!texture)
-    return nullptr;
+  const nsCOMPtr<nsIRunnable> mCallback;
+public:
+  using Base::AttachNative;
+  using Base::DisposeNative;
 
-  RefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
-                                                                        texture);
-  if (!surface) {
+  PluginTextureListener(nsIRunnable* aCallback) : mCallback(aCallback) {}
+
+  void OnFrameAvailable()
+  {
+    if (NS_IsMainThread()) {
+      mCallback->Run();
+      return;
+    }
+    NS_DispatchToMainThread(mCallback);
+  }
+};
+
+java::GeckoSurface::LocalRef nsNPAPIPluginInstance::CreateSurface()
+{
+  java::GeckoSurface::LocalRef surf = java::SurfaceAllocator::AcquireSurface(0, 0, false);
+  if (!surf) {
     return nullptr;
   }
 
   nsCOMPtr<nsIRunnable> frameCallback = NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
-  surface->SetFrameAvailableCallback(frameCallback);
-  return surface.forget();
+
+  java::SurfaceTextureListener::LocalRef listener = java::SurfaceTextureListener::New();
+
+  PluginTextureListener::AttachNative(listener, MakeUnique<PluginTextureListener>(frameCallback.get()));
+
+  java::GeckoSurfaceTexture::LocalRef gst = java::GeckoSurfaceTexture::Lookup(surf->GetHandle());
+  if (!gst) {
+    return nullptr;
+  }
+
+  const auto& st = java::sdk::SurfaceTexture::Ref::From(gst);
+  st->SetOnFrameAvailableListener(listener);
+
+  return surf;
 }
 
 void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
@@ -886,35 +912,29 @@ void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
 
 void* nsNPAPIPluginInstance::AcquireContentWindow()
 {
-  if (!mContentSurface) {
-    mContentSurface = CreateSurfaceTexture();
-
+  if (!mContentWindow.NativeWindow()) {
+    mContentSurface = CreateSurface();
     if (!mContentSurface)
       return nullptr;
+
+    mContentWindow = AndroidNativeWindow(mContentSurface);
   }
 
-  return mContentSurface->NativeWindow();
+  return mContentWindow.NativeWindow();
 }
 
-AndroidSurfaceTexture*
-nsNPAPIPluginInstance::AsSurfaceTexture()
+java::GeckoSurface::Param
+nsNPAPIPluginInstance::AsSurface()
 {
-  if (!mContentSurface)
-    return nullptr;
-
   return mContentSurface;
 }
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  RefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
-  if (!surface) {
-    return nullptr;
-  }
-
+  java::GeckoSurface::LocalRef surface = CreateSurface();
   VideoInfo* info = new VideoInfo(surface);
 
-  void* window = info->mSurfaceTexture->NativeWindow();
+  void* window = info->mNativeWindow.NativeWindow();
   mVideos.insert(std::pair<void*, VideoInfo*>(window, info));
 
   return window;
