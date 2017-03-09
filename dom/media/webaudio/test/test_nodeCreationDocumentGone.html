@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether we can create an AudioContext interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({
+  set: [
+    [ "dom.disable_open_during_load", false ]
+  ]
+}).then(function() {
+  var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
+                      "<html><script>"+
+                      "var context = new AudioContext();"+
+                      "setTimeout(function(){window.close();},1000);\x3C/script></html>");
+  window.onload = function(){
+    var a = window.open(sub);
+    a.onbeforeunload = function(){
+      setTimeout(function(){
+        try {
+          a.context.createScriptProcessor(512, 1, 1);
+        } catch(e) {
+          ok (true,"got exception");
+        }
+        setTimeout(function() {
+        ok (true,"no crash");
+          SimpleTest.finish();
+        }, 0);
+      }, 0);
+    };
+  };
+});
+
+
+</script>
+</pre>
+</body>
+</html>
