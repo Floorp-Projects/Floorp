@@ -160,7 +160,6 @@
 #endif
 #include "mozilla/dom/DataContainerEventBinding.h"
 #include "mozilla/dom/DataTransferBinding.h"
-#include "mozilla/dom/DeviceStorageBinding.h"
 #include "mozilla/dom/DOMCursorBinding.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/DOMParserBinding.h"

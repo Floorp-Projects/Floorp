@@ -1657,10 +1657,8 @@ BaselineCompiler::emit_JSOP_CALLSITEOBJ()
     RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
     if (!cso || !raw)
         return false;
-    RootedValue rawValue(cx);
-    rawValue.setObject(*raw);
 
-    if (!ProcessCallSiteObjOperation(cx, cso, raw, rawValue))
+    if (!cx->compartment()->getTemplateLiteralObject(cx, raw, &cso))
         return false;
 
     frame.push(ObjectValue(*cso));

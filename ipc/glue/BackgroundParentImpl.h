@@ -187,10 +187,6 @@ protected:
   virtual PFileSystemRequestParent*
   AllocPFileSystemRequestParent(const FileSystemParams&) override;
 
-  virtual mozilla::ipc::IPCResult
-  RecvPFileSystemRequestConstructor(PFileSystemRequestParent* aActor,
-                                    const FileSystemParams& aParams) override;
-
   virtual bool
   DeallocPFileSystemRequestParent(PFileSystemRequestParent*) override;
 

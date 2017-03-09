@@ -14,22 +14,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-// Resolve the name collision of Microsoft's API name with macros defined in
-// Windows header files. Undefine the macro of CreateDirectory to avoid
-// Directory#CreateDirectory being replaced by Directory#CreateDirectoryW.
-#ifdef CreateDirectory
-#undef CreateDirectory
-#endif
-// Undefine the macro of CreateFile to avoid Directory#CreateFile being replaced
-// by Directory#CreateFileW.
-#ifdef CreateFile
-#undef CreateFile
-#endif
-
 namespace mozilla {
 namespace dom {
 
-struct CreateFileOptions;
 class FileSystemBase;
 class Promise;
 class StringOrFileOrDirectory;
@@ -43,13 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Directory)
 
   static bool
-  DeviceStorageEnabled(JSContext* aCx, JSObject* aObj);
-
-  static bool
   WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj);
-
-  static already_AddRefed<Promise>
-  GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
 
   static already_AddRefed<Directory>
   Constructor(const GlobalObject& aGlobal,
@@ -70,22 +51,6 @@ public:
 
   void
   GetName(nsAString& aRetval, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
-             ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  CreateDirectory(const nsAString& aPath, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Get(const nsAString& aPath, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Remove(const StringOrFileOrDirectory& aPath, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  RemoveDeep(const StringOrFileOrDirectory& aPath, ErrorResult& aRv);
 
   // From https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface :
 
@@ -151,10 +116,6 @@ private:
    */
   nsresult
   DOMPathToRealPath(const nsAString& aPath, nsIFile** aFile) const;
-
-  already_AddRefed<Promise>
-  RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
-                 ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
   RefPtr<FileSystemBase> mFileSystem;

@@ -340,11 +340,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     js::ActiveThreadData<js::Vector<js::CooperatingContext, 4, js::SystemAllocPolicy>> cooperatingContexts_;
 
     // Count of AutoProhibitActiveContextChange instances on the active context.
-    mozilla::Atomic<size_t> activeContextChangeProhibited_;
+    js::ActiveThreadData<size_t> activeContextChangeProhibited_;
 
     // Count of beginSingleThreadedExecution() calls that have occurred with no
     // matching endSingleThreadedExecution().
-    mozilla::Atomic<size_t> singleThreadedExecutionRequired_;
+    js::ActiveThreadData<size_t> singleThreadedExecutionRequired_;
 
     // Whether some thread has called beginSingleThreadedExecution() and we are
     // in the associated callback (which may execute JS on other threads).

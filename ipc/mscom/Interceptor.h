@@ -37,7 +37,8 @@ DEFINE_GUID(IID_IInterceptor,
 
 struct IInterceptor : public IUnknown
 {
-  virtual STDMETHODIMP GetTargetForIID(REFIID aIid, InterceptorTargetPtr& aTarget) = 0;
+  virtual STDMETHODIMP GetTargetForIID(REFIID aIid,
+                                       InterceptorTargetPtr<IUnknown>& aTarget) = 0;
   virtual STDMETHODIMP GetInterceptorForIID(REFIID aIid,
                                             void** aOutInterceptor) = 0;
 };
@@ -93,7 +94,8 @@ public:
   STDMETHODIMP DisconnectObject(DWORD dwReserved) override;
 
   // IInterceptor
-  STDMETHODIMP GetTargetForIID(REFIID aIid, InterceptorTargetPtr& aTarget) override;
+  STDMETHODIMP GetTargetForIID(REFIID aIid,
+                               InterceptorTargetPtr<IUnknown>& aTarget) override;
   STDMETHODIMP GetInterceptorForIID(REFIID aIid, void** aOutInterceptor) override;
 
 private:
