@@ -86,6 +86,7 @@ load 1228484.html
 load 1304948.html
 load 1319486.html
 load 1291702.html
+test-pref(dom.disable_open_during_load,false) HTTP load 1343550.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
 load audiocontext-double-suspend.html
