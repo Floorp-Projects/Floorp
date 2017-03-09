@@ -27,7 +27,6 @@ include protocol PSendStream;
 include protocol PRtspController;
 include protocol PRtspChannel;
 include URIParams;
-include InputStreamParams;
 include NeckoChannelParams;
 include PBrowserOrId;
 include protocol PAltDataOutputStream;

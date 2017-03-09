@@ -19,7 +19,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIForcePendingChannel.h"
-#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
 #include "SerializedLoadContext.h"
@@ -117,7 +117,7 @@ bool
 FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                               const uint64_t& aStartPos,
                               const nsCString& aEntityID,
-                              const OptionalInputStreamParams& aUploadStream,
+                              const OptionalIPCStream& aUploadStream,
                               const OptionalLoadInfoArgs& aLoadInfoArgs)
 {
   nsresult rv;
@@ -170,8 +170,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  nsCOMPtr<nsIInputStream> upload = DeserializeInputStream(aUploadStream, fds);
+  nsCOMPtr<nsIInputStream> upload = DeserializeIPCStream(aUploadStream);
   if (upload) {
     // contentType and contentLength are ignored
     rv = ftpChan->SetUploadStream(upload, EmptyCString(), 0);
