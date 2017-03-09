@@ -642,7 +642,9 @@ private:
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.
-  RefPtr<nsStyleContext> mNonInheritingStyleContexts[static_cast<nsCSSAnonBoxes::NonInheritingBase>(nsCSSAnonBoxes::NonInheriting::_Count)];
+  mozilla::EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
+                           nsCSSAnonBoxes::NonInheriting::_Count,
+                           RefPtr<nsStyleContext>> mNonInheritingStyleContexts;
 };
 
 #ifdef MOZILLA_INTERNAL_API
