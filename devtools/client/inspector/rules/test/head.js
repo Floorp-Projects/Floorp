@@ -506,3 +506,40 @@ function focusAndSendKey(win, key) {
   win.document.documentElement.focus();
   EventUtils.sendKey(key, win);
 }
+
+/**
+ * Toggle one of the checkboxes inside the class-panel. Resolved after the DOM mutation
+ * has been recorded.
+ * @param {CssRuleView} view The rule-view instance.
+ * @param {String} name The class name to find the checkbox.
+ */
+function* toggleClassPanelCheckBox(view, name) {
+  info(`Clicking on checkbox for class ${name}`);
+  const checkBox = [...view.classPanel.querySelectorAll("[type=checkbox]")].find(box => {
+    return box.dataset.name === name;
+  });
+
+  const onMutation = view.inspector.once("markupmutation");
+  checkBox.click();
+  info("Waiting for a markupmutation as a result of toggling this class");
+  yield onMutation;
+}
+
+/**
+ * Verify the content of the class-panel.
+ * @param {CssRuleView} view The rule-view isntance
+ * @param {Array} classes The list of expected classes. Each item in this array is an
+ * object with the following properties: {name: {String}, state: {Boolean}}
+ */
+function checkClassPanelContent(view, classes) {
+  const checkBoxNodeList = view.classPanel.querySelectorAll("[type=checkbox]");
+  is(checkBoxNodeList.length, classes.length,
+     "The panel contains the expected number of checkboxes");
+
+  for (let i = 0; i < classes.length; i++) {
+    is(checkBoxNodeList[i].dataset.name, classes[i].name,
+       `Checkbox ${i} has the right class name`);
+    is(checkBoxNodeList[i].checked, classes[i].state,
+       `Checkbox ${i} has the right state`);
+  }
+}

@@ -271,9 +271,11 @@ bool WebrtcVideoConduit::SetLocalSSRCs(const std::vector<unsigned int> & aSSRCs)
     return false;
   }
 
+  MutexAutoLock lock(mCodecMutex);
+  // On the next StartTransmitting() or ConfigureSendMediaCodec, force
+  // building a new SendStream to switch SSRCs.
+  DeleteSendStream();
   if (wasTransmitting) {
-    MutexAutoLock lock(mCodecMutex);
-    DeleteSendStream();
     if (StartTransmitting() != kMediaConduitNoError) {
       return false;
     }
@@ -699,10 +701,11 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   }
   mRecvSSRCSet = true;
 
-  if (current_ssrc == ssrc || !mEngineReceiving) {
+  if (current_ssrc == ssrc) {
     return true;
   }
 
+  bool wasReceiving = mEngineReceiving;
   if (StopReceiving() != kMediaConduitNoError) {
     return false;
   }
@@ -713,7 +716,12 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   // All non-MainThread users must lock before reading/using
   {
     MutexAutoLock lock(mCodecMutex);
+    // On the next StartReceiving() or ConfigureRecvMediaCodec, force
+    // building a new RecvStream to switch SSRCs.
     DeleteRecvStream();
+    if (!wasReceiving) {
+      return true;
+    }
     MediaConduitErrorCode rval = CreateRecvStream();
     if (rval != kMediaConduitNoError) {
       CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);

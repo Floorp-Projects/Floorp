@@ -46,7 +46,6 @@ toolkit.jar:
    content/global/customizeToolbar.xul
 #endif
    content/global/datepicker.xhtml
-   content/global/devicestorage.properties
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
 *  content/global/editMenuOverlay.xul

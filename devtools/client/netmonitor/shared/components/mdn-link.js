@@ -37,7 +37,11 @@ function onLearnMoreClick(e, url) {
   e.preventDefault();
 
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  win.openUILinkIn(url, "tab");
+  if (e.button === 1) {
+    win.openUILinkIn(url, "tabshifted");
+  } else {
+    win.openUILinkIn(url, "tab");
+  }
 }
 
 module.exports = MDNLink;
