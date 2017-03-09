@@ -27,11 +27,30 @@
     return el;
   };
 
+  function createPrefocusedInputElement(value, append) {
+    var el = createInputElement(value, append);
+    el.focus();
+    el.blur();
+    return el;
+  }
+
+  function createPrefocusedTextareaElement(value, append) {
+    var el = createTextareaElement(value, append);
+    el.focus();
+    el.blur();
+    return el;
+  }
+
   function createTestElements(value) {
     return [ createInputElement(value, true),
              createInputElement(value, false),
+             createPrefocusedInputElement(value, true),
+             createPrefocusedInputElement(value, false),
              createTextareaElement(value, true),
-             createTextareaElement(value, false) ];
+             createTextareaElement(value, false),
+             createPrefocusedTextareaElement(value, true),
+             createPrefocusedTextareaElement(value, false),
+           ];
   }
 
   const testValue = "abcdefghij";
@@ -92,4 +111,38 @@
       el.remove();
     }
   }, "Setting selectionEnd to a value smaller than selectionStart should decrease selectionStart");
+
+  test(function() {
+    for (let el of createTestElements(testValue)) {
+      el.selectionStart = 0;
+      assert_equals(el.selectionStart, 0, `We just set it on ${el.id}`);
+      el.selectionStart = -1;
+      assert_equals(el.selectionStart, testValue.length,
+                    `selectionStart setter on ${el.id} should convert -1 to 2^32-1`);
+      el.selectionStart = Math.pow(2, 32);
+      assert_equals(el.selectionStart, 0,
+                    `selectionStart setter on ${el.id} should convert 2^32 to 0`);
+      el.selectionStart = Math.pow(2, 32) - 1;
+      assert_equals(el.selectionStart, testValue.length,
+                    `selectionStart setter on ${el.id} should leave 2^32-1 as-is`);
+      el.remove();
+    }
+  }, "selectionStart edge-case values");
+
+  test(function() {
+    for (let el of createTestElements(testValue)) {
+      el.selectionEnd = 0;
+      assert_equals(el.selectionEnd, 0, `We just set it on ${el.id}`);
+      el.selectionEnd = -1;
+      assert_equals(el.selectionEnd, testValue.length,
+                    `selectionEnd setter on ${el.id} should convert -1 to 2^32-1`);
+      el.selectionEnd = Math.pow(2, 32);
+      assert_equals(el.selectionEnd, 0,
+                    `selectionEnd setter on ${el.id} should convert 2^32 to 0`);
+      el.selectionEnd = Math.pow(2, 32) - 1;
+      assert_equals(el.selectionEnd, testValue.length,
+                    `selectionEnd setter on ${el.id} should leave 2^32-1 as-is`);
+      el.remove();
+    }
+  }, "selectionEnd edge-case values");
 </script>

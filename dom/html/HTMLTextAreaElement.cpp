@@ -701,7 +701,7 @@ HTMLTextAreaElement::GetTextLength(int32_t *aTextLength)
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
 {
-  int32_t selStart, selEnd;
+  uint32_t selStart, selEnd;
   GetSelectionRange(&selStart, &selEnd, aError);
   return Nullable<uint32_t>(selStart);
 }
@@ -716,7 +716,7 @@ HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
 {
-  int32_t selStart, selEnd;
+  uint32_t selStart, selEnd;
   GetSelectionRange(&selStart, &selEnd, aError);
   return Nullable<uint32_t>(selEnd);
 }
@@ -729,8 +729,8 @@ HTMLTextAreaElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
 }
 
 void
-HTMLTextAreaElement::GetSelectionRange(int32_t* aSelectionStart,
-                                       int32_t* aSelectionEnd,
+HTMLTextAreaElement::GetSelectionRange(uint32_t* aSelectionStart,
+                                       uint32_t* aSelectionEnd,
                                        ErrorResult& aRv)
 {
   return mState.GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);

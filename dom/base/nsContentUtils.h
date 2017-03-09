@@ -2417,8 +2417,8 @@ public:
    */
   static void GetSelectionInTextControl(mozilla::dom::Selection* aSelection,
                                         Element* aRoot,
-                                        int32_t& aOutStartOffset,
-                                        int32_t& aOutEndOffset);
+                                        uint32_t& aOutStartOffset,
+                                        uint32_t& aOutEndOffset);
 
   /**
    * Takes a frame for anonymous content within a text control (<input> or
