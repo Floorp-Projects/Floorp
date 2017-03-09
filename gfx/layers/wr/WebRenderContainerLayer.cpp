@@ -58,6 +58,8 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
 
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(relBounds));
+
   if (gfxPrefs::LayersDump()) {
     printf_stderr("RefLayer %p (%" PRIu64 ") using bounds/overflow=%s, transform=%s\n",
                   this->GetLayer(),
@@ -66,7 +68,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                   Stringify(transform).c_str());
   }
 
-  aBuilder.PushIFrame(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), wr::AsPipelineId(mId));
+  aBuilder.PushIFrame(wr::ToWrRect(relBounds), clipRegion, wr::AsPipelineId(mId));
 }
 
 } // namespace layers

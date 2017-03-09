@@ -465,6 +465,8 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
   Rect destRectTransformed = aLayer->RelativeToParent(destRect);
   IntRect dest = RoundedToInt(destRectTransformed);
 
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(dest));
+
   WrImageKey key;
   key.mNamespace = layer->WrBridge()->GetNamespace();
   key.mHandle = layer->WrBridge()->GetNextResourceId();
@@ -472,8 +474,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
                                 externalImageId,
                                 key));
   aBuilder.PushImage(wr::ToWrRect(dest),
-                     wr::ToWrRect(dest),
-                     nullptr,
+                     clipRegion,
                      WrImageRendering::Auto,
                      key);
 }

@@ -795,25 +795,24 @@ pub extern fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
 
 
 #[no_mangle]
-pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, color: WrColor) {
+pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrClipRegion, color: WrColor) {
     assert!( unsafe { is_in_main_thread() });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_rect(
                                     rect.to_rect(),
-                                    clip_region,
+                                    clip.to_clip_region(),
                                     color.to_color());
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrRect,
+pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
                                     box_bounds: WrRect, offset: WrPoint, color: WrColor,
                                     blur_radius: f32, spread_radius: f32, border_radius: f32,
                                     clip_mode: WrBoxShadowClipMode) {
     assert!( unsafe { is_in_main_thread() });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
     state.frame_builder.dl_builder.push_box_shadow(rect.to_rect(),
-                                                   clip_region,
+                                                   clip.to_clip_region(),
                                                    box_bounds.to_rect(),
                                                    offset.to_point(),
                                                    color.to_color(),
@@ -824,11 +823,11 @@ pub extern fn wr_dp_push_box_shadow(state: &mut WrState, rect: WrRect, clip: WrR
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
+pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
                                 top: WrBorderSide, right: WrBorderSide, bottom: WrBorderSide, left: WrBorderSide,
                                 radius: WrBorderRadius) {
     assert!( unsafe { is_in_main_thread() });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
     let border_widths = BorderWidths {
         left: left.width,
         top: top.width,
@@ -844,24 +843,23 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
     });
     state.frame_builder.dl_builder.push_border(
                                     rect.to_rect(),
-                                    clip_region,
+                                    clip.to_clip_region(),
                                     border_widths,
                                     border_details);
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_linear_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+pub extern fn wr_dp_push_linear_gradient(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
                                          start_point: WrPoint, end_point: WrPoint,
                                          stops: * const WrGradientStop, stops_count: usize,
                                          extend_mode: WrGradientExtendMode) {
     assert!( unsafe { is_in_main_thread() });
 
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_gradient(
                                     rect.to_rect(),
-                                    clip_region,
+                                    clip.to_clip_region(),
                                     start_point.to_point(),
                                     end_point.to_point(),
                                     stops,
@@ -870,7 +868,7 @@ pub extern fn wr_dp_push_linear_gradient(state: &mut WrState, rect: WrRect, clip
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip: WrRect,
+pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip: WrClipRegion,
                                          start_center: WrPoint, end_center: WrPoint,
                                          start_radius: f32, end_radius: f32,
                                          stops: * const WrGradientStop, stops_count: usize,
@@ -878,11 +876,10 @@ pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip
     assert!( unsafe { is_in_main_thread() });
 
     let stops = WrGradientStop::to_gradient_stops(unsafe { slice::from_raw_parts(stops, stops_count) });
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
     state.frame_builder.dl_builder.push_radial_gradient(
                                     rect.to_rect(),
-                                    clip_region,
+                                    clip.to_clip_region(),
                                     start_center.to_point(),
                                     start_radius,
                                     end_center.to_point(),
@@ -893,14 +890,11 @@ pub extern fn wr_dp_push_radial_gradient(state: &mut WrState, rect: WrRect, clip
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, pipeline_id: PipelineId) {
+pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrClipRegion, pipeline_id: PipelineId) {
     assert!( unsafe { is_in_main_thread() });
 
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
-                                                                     Vec::new(),
-                                                                     None);
     state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
-                                               clip_region,
+                                               clip.to_clip_region(),
                                                pipeline_id);
 }
 
@@ -1164,21 +1158,14 @@ impl From<ClipRegion> for WrClipRegion
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, filter: ImageRendering, key: ImageKey) {
+pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip: WrClipRegion, image_rendering: ImageRendering, key: ImageKey) {
     assert!( unsafe { is_in_main_thread() });
 
     let bounds = bounds.to_rect();
-    let clip = clip.to_rect();
 
-    //println!("push_image bounds {:?} clip {:?}", bounds, clip);
-    // convert from the C type to the Rust type, mapping NULL to None
-    let mask = unsafe { mask.as_ref().map(|m| m.to_image_mask()) };
-    let image_rendering = filter;
-
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip, Vec::new(), mask);
     state.frame_builder.dl_builder.push_image(
         bounds,
-        clip_region,
+        clip.to_clip_region(),
         bounds.size,
         bounds.size,
         image_rendering,
@@ -1212,7 +1199,7 @@ pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
 #[no_mangle]
 pub extern fn wr_dp_push_text(state: &mut WrState,
                               bounds: WrRect,
-                              clip: WrRect,
+                              clip: WrClipRegion,
                               color: WrColor,
                               font_key: FontKey,
                               glyphs: *mut GlyphInstance,
@@ -1229,11 +1216,9 @@ pub extern fn wr_dp_push_text(state: &mut WrState,
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
-
     let glyph_options = None; // TODO
     state.frame_builder.dl_builder.push_text(bounds.to_rect(),
-                                             clip_region,
+                                             clip.to_clip_region(),
                                              glyph_vector,
                                              font_key,
                                              colorf,
