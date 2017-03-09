@@ -6,6 +6,7 @@
 
 DIRS += [
     'aushelper',
+    'deployment-checker',
     'e10srollout',
     'pdfjs',
     'pocket',
