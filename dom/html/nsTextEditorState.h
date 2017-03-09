@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
 
 class nsTextInputListener;
@@ -329,6 +330,16 @@ public:
   // setter.
   void SetSelectionDirection(const nsAString& aDirection,
                              mozilla::ErrorResult& aRv);
+
+  // Set the range text.  This basically implements
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-setrangetext
+  void SetRangeText(const nsAString& aReplacement, mozilla::ErrorResult& aRv);
+  // The last two arguments are -1 if we don't know our selection range;
+  // otherwise they're the start and end of our selection range.
+  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
+                    uint32_t aEnd, mozilla::dom::SelectionMode aSelectMode,
+                    mozilla::ErrorResult& aRv, int32_t aSelectionStart = -1,
+                    int32_t aSelectionEnd = -1);
 
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {

@@ -239,6 +239,8 @@ public:
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
+  virtual void GetValueFromSetRangeText(nsAString& aValue) override;
+  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
 
   void GetDisplayFileName(nsAString& aFileName) const;
@@ -725,9 +727,8 @@ public:
   void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, const SelectionMode& aSelectMode,
-                    ErrorResult& aRv, int32_t aSelectionStart = -1,
-                    int32_t aSelectionEnd = -1);
+                    uint32_t aEnd, SelectionMode aSelectMode,
+                    ErrorResult& aRv);
 
   bool Allowdirs() const
   {
