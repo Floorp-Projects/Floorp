@@ -1645,6 +1645,69 @@ nsTextEditorState::GetSelectionDirection(ErrorResult& aRv)
   return nsITextControlFrame::eBackward;
 }
 
+void
+nsTextEditorState::SetSelectionRange(int32_t aStart, int32_t aEnd,
+                                     nsITextControlFrame::SelectionDirection aDirection,
+                                     ErrorResult& aRv)
+{
+  MOZ_ASSERT(IsSelectionCached() || mBoundFrame,
+             "How can we have a non-cached selection but no frame?");
+
+  if (aStart > aEnd) {
+    aStart = aEnd;
+  }
+
+  bool changed = false;
+  nsresult rv = NS_OK; // For the ScrollSelectionIntoView() return value.
+  if (IsSelectionCached()) {
+    nsAutoString value;
+    // XXXbz is "false" the right thing to pass here?  Hard to tell, given the
+    // various mismatches between our impl and the spec.
+    GetValue(value, false);
+    uint32_t length = value.Length();
+    if (uint32_t(aStart) > length) {
+      aStart = length;
+    }
+    if (uint32_t(aEnd) > length) {
+      aEnd = length;
+    }
+    SelectionProperties& props = GetSelectionProperties();
+    changed = props.GetStart() != aStart ||
+              props.GetEnd() != aEnd ||
+              props.GetDirection() != aDirection;
+    props.SetStart(aStart);
+    props.SetEnd(aEnd);
+    props.SetDirection(aDirection);
+  } else {
+    aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
+    if (aRv.Failed()) {
+      return;
+    }
+    rv = mBoundFrame->ScrollSelectionIntoView();
+    // Press on to firing the event even if that failed, like our old code did.
+    // But is that really what we want?  Firing the event _and_ throwing from
+    // here is weird.  Maybe we should just ignore ScrollSelectionIntoView
+    // failures?
+
+    // XXXbz This is preserving our current behavior of firing a "select" event
+    // on all mutations when we have an editor, but we should really consider
+    // fixing that...
+    changed = true;
+  }
+
+  if (changed) {
+    // It sure would be nice if we had an existing Element* or so to work with.
+    nsCOMPtr<nsINode> node = do_QueryInterface(mTextCtrlElement);
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(node, NS_LITERAL_STRING("select"), true, false);
+    asyncDispatcher->PostDOMEvent();
+  }
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
 HTMLInputElement*
 nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
 {

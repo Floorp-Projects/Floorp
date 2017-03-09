@@ -281,6 +281,22 @@ public:
   nsITextControlFrame::SelectionDirection
     GetSelectionDirection(mozilla::ErrorResult& aRv);
 
+  // Set the selection range (start, end, direction).  aEnd is allowed to be
+  // smaller than aStart; in that case aStart will be reset to the same value as
+  // aEnd.  This basically implements
+  // https://html.spec.whatwg.org/multipage/forms.html#set-the-selection-range
+  // but with the start/end already coerced to zero if null (and without the
+  // special infinity value), and the direction already converted to a
+  // SelectionDirection.
+  //
+  // If we have a frame, this method will scroll the selection into view.
+  //
+  // XXXbz This should really take uint32_t, but none of our guts (either the
+  // frame or our cached selection state) work with uint32_t at the moment...
+  void SetSelectionRange(int32_t aStart, int32_t aEnd,
+                         nsITextControlFrame::SelectionDirection aDirection,
+                         mozilla::ErrorResult& aRv);
+
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
       mRootNode->UpdateEditableState(aNotify);
