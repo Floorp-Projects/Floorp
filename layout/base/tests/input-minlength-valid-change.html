@@ -11,6 +11,7 @@
     <script>
       function runTest() {
         var input = document.getElementById('input');
+        input.setSelectionRange(input.value.length, input.value.length)
         input.focus();
         synthesizeKey('o', {}); // so that it becomes invalid first
         input.blur();
@@ -25,4 +26,3 @@
     <input id="input" minlength="3" value="f">
   </body>
 </html>
-

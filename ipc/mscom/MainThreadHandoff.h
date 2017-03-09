@@ -62,10 +62,10 @@ public:
   STDMETHODIMP SetInterceptor(IWeakReference* aInterceptor) override;
   STDMETHODIMP GetHandler(CLSID* aHandlerClsid) override;
   STDMETHODIMP GetHandlerPayloadSize(REFIID aIid,
-                                     IUnknown* aTarget,
+                                     InterceptorTargetPtr<IUnknown> aTarget,
                                      DWORD* aOutPayloadSize) override;
   STDMETHODIMP WriteHandlerPayload(IStream* aStream, REFIID aIid,
-                                   IUnknown* aTarget) override;
+                                   InterceptorTargetPtr<IUnknown> aTarget) override;
   REFIID MarshalAs(REFIID aIid) override;
 
   // ICallFrameWalker

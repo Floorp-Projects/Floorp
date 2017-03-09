@@ -3187,12 +3187,10 @@ END_CASE(JSOP_OBJECT)
 
 CASE(JSOP_CALLSITEOBJ)
 {
-
     ReservedRooted<JSObject*> cso(&rootObject0, script->getObject(REGS.pc));
     ReservedRooted<JSObject*> raw(&rootObject1, script->getObject(GET_UINT32_INDEX(REGS.pc) + 1));
-    ReservedRooted<Value> rawValue(&rootValue0, ObjectValue(*raw));
 
-    if (!ProcessCallSiteObjOperation(cx, cso, raw, rawValue))
+    if (!cx->compartment()->getTemplateLiteralObject(cx, raw, &cso))
         goto error;
 
     PUSH_OBJECT(*cso);

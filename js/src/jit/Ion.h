@@ -8,7 +8,6 @@
 #define jit_Ion_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
 #include "mozilla/Result.h"
 
 #include "jscntxt.h"
@@ -41,18 +40,8 @@ enum class AbortReason : uint8_t {
 
 template <typename V>
 using AbortReasonOr = mozilla::Result<V, AbortReason>;
+using mozilla::Err;
 using mozilla::Ok;
-
-// This is the equivalent of the following, except that these are functions and
-// not types, which makes this syntax invalid:
-//     using Err = mozilla::MakeGenericErrorResult;
-template <typename E>
-inline mozilla::GenericErrorResult<E>
-Err(E&& aErrorValue)
-{
-    return mozilla::MakeGenericErrorResult(mozilla::Forward<E>(aErrorValue));
-}
-
 
 static_assert(sizeof(AbortReasonOr<Ok>) <= sizeof(uintptr_t),
     "Unexpected size of AbortReasonOr<Ok>");
