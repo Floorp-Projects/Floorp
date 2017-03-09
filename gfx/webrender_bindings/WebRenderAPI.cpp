@@ -577,5 +577,26 @@ DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
                         aClipMode);
 }
 
+WrClipRegion
+DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
+                                    const WrImageMask* aMask)
+{
+  return wr_dp_new_clip_region(mWrState,
+                               aMain,
+                               nullptr, 0,
+                               aMask);
+}
+
+WrClipRegion
+DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
+                                    const nsTArray<WrComplexClipRegion>& aComplex,
+                                    const WrImageMask* aMask)
+{
+  return wr_dp_new_clip_region(mWrState,
+                               aMain,
+                               aComplex.Elements(), aComplex.Length(),
+                               aMask);
+}
+
 } // namespace wr
 } // namespace mozilla
