@@ -6,7 +6,7 @@
 #include "nsNativeThemeGTK.h"
 #include "nsThemeConstants.h"
 #include "gtkdrawing.h"
-#include "nsScreenGtk.h"
+#include "ScreenHelperGTK.h"
 
 #include "gfx2DGlue.h"
 #include "nsIObserverService.h"
@@ -1090,7 +1090,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
   default:
     return false;
   }
-  gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+  gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
   aExtra->top *= scale;
   aExtra->right *= scale;
   aExtra->bottom *= scale;
@@ -1118,7 +1118,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 
   gfxRect rect = presContext->AppUnitsToGfxUnits(aRect);
   gfxRect dirtyRect = presContext->AppUnitsToGfxUnits(aDirtyRect);
-  gint scaleFactor = nsScreenGtk::GetGtkMonitorScaleFactor();
+  gint scaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor();
 
   // Align to device pixels where sensible
   // to provide crisper and faster drawing.
@@ -1344,7 +1344,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
     }
   }
 
-  gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+  gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
   aResult->top *= scale;
   aResult->right *= scale;
   aResult->bottom *= scale;
@@ -1404,7 +1404,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         aResult->left += horizontal_padding;
         aResult->right += horizontal_padding;
 
-        gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+        gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
         aResult->top *= scale;
         aResult->right *= scale;
         aResult->bottom *= scale;
@@ -1681,7 +1681,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     break;
   }
 
-  *aResult = *aResult * nsScreenGtk::GetGtkMonitorScaleFactor();
+  *aResult = *aResult * ScreenHelperGTK::GetGTKMonitorScaleFactor();
 
   return NS_OK;
 }
