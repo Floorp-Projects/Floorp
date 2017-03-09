@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from . import transform
 
-
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     A task implementing a beetmover job specific for checksums.These depend on
     the checksums signing jobs and transfer the checksums files to S3 after
@@ -23,9 +21,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
         beetmover_checksums_task = {'dependent-task': task}
 
         yield beetmover_checksums_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)

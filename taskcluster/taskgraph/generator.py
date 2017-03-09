@@ -11,8 +11,10 @@ import copy
 from . import filter_tasks
 from .graph import Graph
 from .taskgraph import TaskGraph
+from .task.base import Task
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
+from .transforms.base import TransformSequence, TransformConfig
 from .util.verify import (
     verify_docs,
     verify_task_graph_symbol,
@@ -46,7 +48,23 @@ class Kind(object):
         else:
             config['args'] = None
 
-        return loader(self.name, self.path, config, parameters, loaded_tasks)
+        inputs = loader(self.name, self.path, config, parameters, loaded_tasks)
+
+        transforms = TransformSequence()
+        for xform_path in config['transforms']:
+            transform = find_object(xform_path)
+            transforms.add(transform)
+
+        # perform the transformations on the loaded inputs
+        trans_config = TransformConfig(self.name, self.path, config, parameters)
+        tasks = [Task(self.name,
+                      label=task_dict['label'],
+                      attributes=task_dict['attributes'],
+                      task=task_dict['task'],
+                      optimizations=task_dict.get('optimizations'),
+                      dependencies=task_dict.get('dependencies'))
+                 for task_dict in transforms(trans_config, inputs)]
+        return tasks
 
 
 class TaskGraphGenerator(object):
