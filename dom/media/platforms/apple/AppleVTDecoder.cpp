@@ -352,10 +352,6 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   // Bounds.
   VideoInfo info;
   info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
-  gfx::IntRect visible = gfx::IntRect(0,
-                                      0,
-                                      mPictureWidth,
-                                      mPictureHeight);
 
   if (useNullSample) {
     data = new NullData(aFrameRef.byte_offset,
@@ -405,6 +401,11 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     buffer.mPlanes[2].mOffset = 1;
     buffer.mPlanes[2].mSkip = 1;
 
+    gfx::IntRect visible = gfx::IntRect(0,
+                                        0,
+                                        mPictureWidth,
+                                        mPictureHeight);
+
     // Copy the image data into our own format.
     data =
       VideoData::CreateAndCopyData(info,
@@ -428,14 +429,13 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     RefPtr<layers::Image> image = new MacIOSurfaceImage(macSurface);
 
     data =
-      VideoData::CreateFromImage(info,
+      VideoData::CreateFromImage(info.mDisplay,
                                  aFrameRef.byte_offset,
                                  aFrameRef.composition_timestamp.ToMicroseconds(),
                                  aFrameRef.duration.ToMicroseconds(),
                                  image.forget(),
                                  aFrameRef.is_sync_point,
-                                 aFrameRef.decode_timestamp.ToMicroseconds(),
-                                 visible);
+                                 aFrameRef.decode_timestamp.ToMicroseconds());
 #else
     MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
 #endif

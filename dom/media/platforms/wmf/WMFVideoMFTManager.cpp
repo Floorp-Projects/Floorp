@@ -900,14 +900,13 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
                                  false);
 
   RefPtr<VideoData> v =
-    VideoData::CreateFromImage(mVideoInfo,
+    VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                aStreamOffset,
                                pts.ToMicroseconds(),
                                duration.ToMicroseconds(),
                                image.forget(),
                                false,
-                               -1,
-                               pictureRegion);
+                               -1);
 
   v.forget(aOutVideoData);
   return S_OK;
@@ -939,14 +938,13 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
   media::TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
-  RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo,
+  RefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo.mDisplay,
                                                    aStreamOffset,
                                                    pts.ToMicroseconds(),
                                                    duration.ToMicroseconds(),
                                                    image.forget(),
                                                    false,
-                                                   -1,
-                                                   pictureRegion);
+                                                   -1);
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);
