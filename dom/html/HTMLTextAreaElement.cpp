@@ -807,23 +807,12 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
 void
 HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aError)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  if (formControlFrame) {
-    nsITextControlFrame::SelectionDirection dir;
-    rv = mState.GetSelectionDirection(&dir);
-    if (NS_SUCCEEDED(rv)) {
-      DirectionToName(dir, aDirection);
-      return;
-    }
-  }
-
-  if (mState.IsSelectionCached()) {
-    DirectionToName(mState.GetSelectionProperties().GetDirection(), aDirection);
+  nsITextControlFrame::SelectionDirection dir =
+    mState.GetSelectionDirection(aError);
+  if (aError.Failed()) {
     return;
   }
-
-  aError.Throw(rv);
+  DirectionToName(dir, aDirection);
 }
 
 void
