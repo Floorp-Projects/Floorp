@@ -54,8 +54,6 @@ interface nsIDOMHTMLTextAreaElement : nsISupports
   void setCustomValidity(in DOMString error);
 
   void select();
-           attribute long                  selectionStart;
-           attribute long                  selectionEnd;
   void setSelectionRange(in long selectionStart, in long selectionEnd, [optional] in DOMString direction);
            attribute DOMString             selectionDirection;
 
