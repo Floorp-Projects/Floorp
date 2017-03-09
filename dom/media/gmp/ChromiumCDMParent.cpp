@@ -468,5 +468,37 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
   GMP_LOG("ChromiumCDMParent::ActorDestroy(this=%p, reason=%d)", this, aWhy);
 }
 
+RefPtr<MediaDataDecoder::InitPromise>
+ChromiumCDMParent::InitializeVideoDecoder(
+  const gmp::CDMVideoDecoderConfig& aConfig)
+{
+  if (!SendInitializeVideoDecoder(aConfig)) {
+    return MediaDataDecoder::InitPromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Failed to send init video decoder to CDM")),
+      __func__);
+  }
+
+  return mInitVideoDecoderPromise.Ensure(__func__);
+}
+
+ipc::IPCResult
+ChromiumCDMParent::RecvOnDecoderInitDone(const uint32_t& aStatus)
+{
+  GMP_LOG("ChromiumCDMParent::RecvOnDecoderInitDone(this=%p, status=%u)",
+          this,
+          aStatus);
+  if (aStatus == static_cast<uint32_t>(cdm::kSuccess)) {
+    mInitVideoDecoderPromise.ResolveIfExists(TrackInfo::kVideoTrack, __func__);
+  } else {
+    mInitVideoDecoderPromise.RejectIfExists(
+      MediaResult(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR,
+        RESULT_DETAIL("CDM init decode failed with %" PRIu32, aStatus)),
+      __func__);
+  }
+  return IPC_OK();
+}
+
 } // namespace gmp
 } // namespace mozilla
