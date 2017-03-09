@@ -923,8 +923,11 @@ nsTextControlFrame::SetSelectionStart(int32_t aSelectionStart)
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   MOZ_ASSERT(txtCtrl, "Content not a text control element");
-  rv = txtCtrl->GetSelectionRange(&selStart, &selEnd);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult controlResult;
+  txtCtrl->GetSelectionRange(&selStart, &selEnd, controlResult);
+  if (NS_WARN_IF(controlResult.Failed())) {
+    return controlResult.StealNSResult();
+  }
 
   if (aSelectionStart > selEnd) {
     // Collapse to the new start point.
@@ -946,8 +949,11 @@ nsTextControlFrame::SetSelectionEnd(int32_t aSelectionEnd)
 
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   MOZ_ASSERT(txtCtrl, "Content not a text control element");
-  rv = txtCtrl->GetSelectionRange(&selStart, &selEnd);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult controlResult;
+  txtCtrl->GetSelectionRange(&selStart, &selEnd, controlResult);
+  if (NS_WARN_IF(controlResult.Failed())) {
+    return controlResult.StealNSResult();
+  }
 
   if (aSelectionEnd < selStart) {
     // Collapse to the new end point.

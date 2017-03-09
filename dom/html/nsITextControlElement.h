@@ -17,6 +17,9 @@ class nsFrameSelection;
 class nsTextControlFrame;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 class Element;
 } // namespace dom
@@ -200,8 +203,9 @@ public:
   /**
    * Get the selection range start and end points.
    */
-  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
-                               int32_t* aSelectionEnd) = 0;
+  virtual void GetSelectionRange(int32_t* aSelectionStart,
+                                 int32_t* aSelectionEnd,
+                                 mozilla::ErrorResult& aRv) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,
