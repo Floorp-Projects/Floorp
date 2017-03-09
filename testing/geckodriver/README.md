@@ -16,6 +16,10 @@ for a record of all notable changes to the program.
 are made available on GitHub
 on [supported platforms](#supported-firefoxen).
 
+## Supported Clients
+
+[Selenium](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.3.0) version 3.3 or later is required to use geckodriver.
+
 ## Supported Firefoxen
 
 Marionette and geckodriver are not yet feature complete.
