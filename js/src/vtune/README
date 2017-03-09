@@ -7,5 +7,13 @@ To update these files, copy the following from a VTune install directory:
     include/jitprofiling.h
     include/legacy/ittnotify.h
 
+Additionally, the following changes should be propagated:
+
+    - Some static functions should be exported for use in VTuneWrapper.cpp.
+    - Per Bug 1339190, all instances of "__attribute__((weak))" must be removed,
+      or Ubuntu shell builds will randomly crash on startup.
+    - With weak attributes removed, DL_SYMBOLS and PTHREAD_SYMBOLS should
+      be defined as "(1)" to avoid -Waddress warnings.
+
 If the license has changed, update the "VTune License" section of
     toolkit/content/license.html
