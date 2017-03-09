@@ -73,7 +73,7 @@ class GMPParent final : public PGMPParent
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
 
-  GMPParent();
+  explicit GMPParent(AbstractThread* aMainThread);
 
   RefPtr<GenericPromise> Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
@@ -228,6 +228,8 @@ private:
 #ifdef MOZ_CRASHREPORTER
   UniquePtr<ipc::CrashReporterHost> mCrashReporter;
 #endif
+
+  const RefPtr<AbstractThread> mMainThread;
 };
 
 } // namespace gmp
