@@ -547,13 +547,10 @@ int main(int argc, char** argv)
     // no dump file specified, run the default UI
     UIShowDefaultUI();
   } else {
-#ifndef RELEASE_OR_BETA
-    // start by running minidump analyzer, this is currently enabled only in
-    // nightly and aurora
+    // Start by running minidump analyzer to gather stack traces.
     string empty;
     UIRunProgram(GetProgramPath(UI_MINIDUMP_ANALYZER_FILENAME),
                  gReporterDumpFile, empty, /* wait */ true);
-#endif
 
     // go ahead with the crash reporter
     gExtraFile = GetAdditionalFilename(gReporterDumpFile, kExtraDataExtension);
