@@ -80,6 +80,7 @@ public class AndroidFxAccount {
 
   public static final String ACCOUNT_KEY_DEVICE_ID = "deviceId";
   public static final String ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION = "deviceRegistrationVersion";
+  private static final String ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP = "deviceRegistrationTimestamp";
 
   // Account authentication token type for fetching account profile.
   public static final String PROFILE_OAUTH_TOKEN_TYPE = "oauth::profile";
@@ -402,6 +403,7 @@ public class AndroidFxAccount {
     }
     o.put("fxaDeviceId", getDeviceId());
     o.put("fxaDeviceRegistrationVersion", getDeviceRegistrationVersion());
+    o.put("fxaDeviceRegistrationTimestamp", getDeviceRegistrationTimestamp());
     return o;
   }
 
@@ -829,6 +831,23 @@ public class AndroidFxAccount {
     }
   }
 
+  public synchronized long getDeviceRegistrationTimestamp() {
+    final String timestampStr = accountManager.getUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP);
+
+    if (TextUtils.isEmpty(timestampStr)) {
+      return 0L;
+    }
+
+    // Long.valueOf might throw; while it's not expected that this might happen, let's not risk
+    // crashing here as this method will be called on startup.
+    try {
+      return Long.valueOf(timestampStr);
+    } catch (NumberFormatException e) {
+      Logger.warn(LOG_TAG, "Couldn't parse deviceRegistrationTimestamp; defaulting to 0L.", e);
+      return 0L;
+    }
+  }
+
   public synchronized void setDeviceId(String id) {
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_ID, id);
   }
@@ -838,14 +857,21 @@ public class AndroidFxAccount {
         Integer.toString(deviceRegistrationVersion));
   }
 
+  public synchronized void setDeviceRegistrationTimestamp(long timestamp) {
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP,
+            Long.toString(timestamp));
+  }
+
   public synchronized void resetDeviceRegistrationVersion() {
     setDeviceRegistrationVersion(0);
   }
 
-  public synchronized void setFxAUserData(String id, int deviceRegistrationVersion) {
+  public synchronized void setFxAUserData(String id, int deviceRegistrationVersion, long timestamp) {
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_ID, id);
     accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_VERSION,
-        Integer.toString(deviceRegistrationVersion));
+            Integer.toString(deviceRegistrationVersion));
+    accountManager.setUserData(account, ACCOUNT_KEY_DEVICE_REGISTRATION_TIMESTAMP,
+            Long.toString(timestamp));
   }
 
   @SuppressLint("ParcelCreator") // The CREATOR field is defined in the super class.
