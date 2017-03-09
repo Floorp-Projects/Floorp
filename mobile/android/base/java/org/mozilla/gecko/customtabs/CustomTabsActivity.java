@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -48,16 +47,13 @@ import static android.support.customtabs.CustomTabsIntent.EXTRA_TOOLBAR_COLOR;
 public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "CustomTabsActivity";
     private static final String SAVED_TOOLBAR_COLOR = "SavedToolbarColor";
-    private static final String SAVED_TOOLBAR_TITLE = "SavedToolbarTitle";
 
     @ColorInt
     private static final int DEFAULT_ACTION_BAR_COLOR = 0xFF363b40; // default color to match design
 
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private GeckoPopupMenu popupMenu;
-    private int tabId = -1;
     private ActionBarPresenter actionBarPresenter;
-    private String toolbarTitle;
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
 
@@ -70,10 +66,8 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         if (savedInstanceState != null) {
             toolbarColor = savedInstanceState.getInt(SAVED_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
-            toolbarTitle = savedInstanceState.getString(SAVED_TOOLBAR_TITLE, AppConstants.MOZ_APP_BASENAME);
         } else {
             toolbarColor = getIntent().getIntExtra(EXTRA_TOOLBAR_COLOR, DEFAULT_ACTION_BAR_COLOR);
-            toolbarTitle = AppConstants.MOZ_APP_BASENAME;
         }
 
         // Translucent color does not make sense for toolbar color. Ensure it is 0xFF.
@@ -84,12 +78,12 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
         bindNavigationCallback(toolbar);
 
-        actionBarPresenter = new ActionBarPresenter(actionBar, toolbar);
+        actionBarPresenter = new ActionBarPresenter(actionBar);
+        actionBarPresenter.displayUrlOnly(getIntent().getDataString());
         actionBarPresenter.setBackgroundColor(toolbarColor, getWindow());
-        actionBarPresenter.update(toolbarTitle);
+        actionBar.setDisplayHomeAsUpEnabled(true);
 
         Tabs.registerOnTabsChangedListener(this);
     }
@@ -152,27 +146,14 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
-        if (tab == null) {
+        if (!Tabs.getInstance().isSelectedTab(tab)) {
             return;
         }
 
-        if (tabId >= 0 && tab.getId() != tabId) {
-            return;
-        }
-
-        if (msg == Tabs.TabEvents.LOCATION_CHANGE) {
-            tabId = tab.getId();
-            final Uri uri = Uri.parse(tab.getURL());
-            String title = null;
-            if (uri != null) {
-                title = uri.getHost();
-            }
-            if (title == null || title.isEmpty()) {
-                toolbarTitle = AppConstants.MOZ_APP_BASENAME;
-            } else {
-                toolbarTitle = title;
-            }
-            actionBarPresenter.update(toolbarTitle);
+        if (msg == Tabs.TabEvents.LOCATION_CHANGE
+                || msg == Tabs.TabEvents.SECURITY_CHANGE
+                || msg == Tabs.TabEvents.TITLE) {
+            actionBarPresenter.update(tab);
         }
 
         updateMenuItemForward();
@@ -183,7 +164,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         super.onSaveInstanceState(outState);
 
         outState.putInt(SAVED_TOOLBAR_COLOR, toolbarColor);
-        outState.putString(SAVED_TOOLBAR_TITLE, toolbarTitle);
     }
 
     @Override
