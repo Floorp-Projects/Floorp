@@ -18,7 +18,9 @@ on [supported platforms](#supported-firefoxen).
 
 ## Supported Clients
 
-[Selenium](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.3.0) version 3.3 or later is required to use geckodriver.
+[Selenium](http://docs.seleniumhq.org/) users must update to [version 3.3](https://github.com/SeleniumHQ/selenium/releases/tag/selenium-3.3.0) or later to use geckodriver.
+
+Other clients that follow the [W3C WebDriver specification](https://w3c.github.io/webdriver/webdriver-spec.html) are also supported.
 
 ## Supported Firefoxen
 
