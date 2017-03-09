@@ -18,7 +18,7 @@ function a(){
 
 try
 {
-  expect = 'function a() {\n    return 1..toSource();\n}';
+  expect = 'function a(){\n  return 1..toSource();\n}';
   actual = a.toString();
   compareSource(expect, actual, summary + ': 1');
 }
@@ -30,7 +30,7 @@ catch(ex)
 
 try
 {
-  expect = 'function a() {return 1..toSource();}';
+  expect = 'function a(){\n  return 1..toSource();\n}';
   actual = a.toSource();
   compareSource(expect, actual, summary + ': 2');
 }
@@ -46,7 +46,7 @@ reportCompare(expect, actual, summary + ': 3');
 
 try
 {
-  expect = 'function a() {\n    return 1..toSource();\n}';
+  expect = 'function a(){\n  return 1..toSource();\n}';
   actual = "" + a;
   compareSource(expect, actual, summary + ': 4');
 }

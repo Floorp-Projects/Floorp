@@ -21,7 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = '( { get x() {} } )';
+  expect = '({get x(){}})';
   actual = uneval({get x(){}});
   compareSource(expect, actual, summary);
 
