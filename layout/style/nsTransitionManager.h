@@ -432,13 +432,6 @@ protected:
                                bool* aStartedAny,
                                nsCSSPropertyIDSet* aWhichStarted);
 
-  nsTArray<mozilla::Keyframe> GetTransitionKeyframes(
-    nsStyleContext* aStyleContext,
-    nsCSSPropertyID aProperty,
-    mozilla::StyleAnimationValue&& aStartValue,
-    mozilla::StyleAnimationValue&& aEndValue,
-    const nsTimingFunction& aTimingFunction);
-
   bool mInAnimationOnlyStyleUpdate;
 
   mozilla::DelayedEventDispatcher<mozilla::TransitionEventInfo>
