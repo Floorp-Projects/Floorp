@@ -278,7 +278,8 @@ public:
                          mozilla::ErrorResult& aRv);
 
   // Get the selection direction
-  nsresult GetSelectionDirection(nsITextControlFrame::SelectionDirection* aDirection);
+  nsITextControlFrame::SelectionDirection
+    GetSelectionDirection(mozilla::ErrorResult& aRv);
 
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
