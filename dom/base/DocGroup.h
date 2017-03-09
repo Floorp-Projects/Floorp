@@ -13,7 +13,6 @@
 #include "nsString.h"
 
 #include "mozilla/dom/TabGroup.h"
-#include "mozilla/Dispatcher.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 
