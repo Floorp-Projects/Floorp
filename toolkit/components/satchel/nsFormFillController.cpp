@@ -602,9 +602,14 @@ nsFormFillController::SetTextValueWithReason(const nsAString & aTextValue,
 NS_IMETHODIMP
 nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
 {
-  if (mFocusedInput)
-    mFocusedInput->GetSelectionStart(aSelectionStart);
-  return NS_OK;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+  if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  *aSelectionStart =
+    HTMLInputElement::FromContent(content)->GetSelectionStartIgnoringType(rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
