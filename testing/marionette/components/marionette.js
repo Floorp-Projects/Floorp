@@ -148,12 +148,15 @@ MarionetteComponent.prototype = {
   classDescription: "Marionette component",
   classID: MARIONETTE_CID,
   contractID: MARIONETTE_CONTRACT_ID,
-  QueryInterface: XPCOMUtils.generateQI(
-      [Ci.nsICommandLineHandler, Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsICommandLineHandler,
+    Ci.nsIObserver,
+  ]),
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
     {category: "profile-after-change", service: true},
   ],
+  helpInfo: "  --marionette       Enable remote control server.\n",
 };
 
 MarionetteComponent.prototype.onSocketAccepted = function (socket, transport) {
