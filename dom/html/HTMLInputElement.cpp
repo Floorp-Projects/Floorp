@@ -6497,20 +6497,6 @@ HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
   state->GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);
 }
 
-static void
-DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirection)
-{
-  if (dir == nsITextControlFrame::eNone) {
-    aDirection.AssignLiteral("none");
-  } else if (dir == nsITextControlFrame::eForward) {
-    aDirection.AssignLiteral("forward");
-  } else if (dir == nsITextControlFrame::eBackward) {
-    aDirection.AssignLiteral("backward");
-  } else {
-    NS_NOTREACHED("Invalid SelectionDirection value");
-  }
-}
-
 void
 HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
 {
@@ -6521,13 +6507,7 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
 
   nsTextEditorState* state = GetEditorState();
   MOZ_ASSERT(state, "SupportsTextSelection came back true!");
-  nsITextControlFrame::SelectionDirection dir =
-    state->GetSelectionDirection(aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-  
-  DirectionToName(dir, aDirection);
+  state->GetSelectionDirectionString(aDirection, aRv);
 }
 
 void
