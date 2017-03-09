@@ -1,14 +1,14 @@
-load 41276-1.html
-load 48856-1.html
-load 110650-1.html
-skip-if(!haveTestPlugin) script 539897-1.html
-asserts-if(winWidget&&browserIsRemote,0-1) skip-if(!haveTestPlugin) script 540114-1.html
-load 570884.html
+HTTP load 41276-1.html
+HTTP load 48856-1.html
+HTTP load 110650-1.html
+skip-if(!haveTestPlugin) HTTP script 539897-1.html
+asserts-if(winWidget&&browserIsRemote,0-1) skip-if(!haveTestPlugin) HTTP script 540114-1.html
+HTTP load 570884.html
 # This test relies on the reading of screenX/Y forcing a round trip to
 # the X server, which is a bad assumption for <browser remote>.
 # Plugin arch is going to change anyway with OOP content so skipping
 # this test for now is OK.
-skip-if(!haveTestPlugin||http.platform!="X11") load 598862.html
-skip-if(Android) load 626602-1.html # bug 908363
-load 752340.html
-load 843086.xhtml
+skip-if(!haveTestPlugin||http.platform!="X11") HTTP load 598862.html
+skip-if(Android) HTTP load 626602-1.html # bug 908363
+HTTP load 752340.html
+HTTP load 843086.xhtml
