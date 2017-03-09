@@ -76,6 +76,7 @@ FormAutofillParent.prototype = {
     this._profileStore.initialize();
 
     Services.obs.addObserver(this, "advanced-pane-loaded", false);
+    Services.ppmm.addMessageListener("FormAutofill:SaveProfile", this);
 
     // Observing the pref and storage changes
     Services.prefs.addObserver(ENABLED_PREF, this, false);
@@ -178,9 +179,18 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
-      case "FormAutofill:GetProfiles":
+      case "FormAutofill:GetProfiles": {
         this._getProfiles(data, target);
         break;
+      }
+      case "FormAutofill:SaveProfile": {
+        if (data.guid) {
+          this.getProfileStore().update(data.guid, data.profile);
+        } else {
+          this.getProfileStore().add(data.profile);
+        }
+        break;
+      }
     }
   },
 
@@ -207,6 +217,7 @@ FormAutofillParent.prototype = {
     }
 
     Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
+    Services.ppmm.removeMessageListener("FormAutofill:SaveProfile", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
   },

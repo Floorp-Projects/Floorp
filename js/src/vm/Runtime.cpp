@@ -915,3 +915,9 @@ JSRuntime::ionLazyLinkListAdd(jit::IonBuilder* builder)
     ionLazyLinkList().insertFront(builder);
     ionLazyLinkListSize_++;
 }
+
+JS_PUBLIC_API(void)
+JS::shadow::RegisterWeakCache(JSRuntime* rt, WeakCache<void*>* cachep)
+{
+    rt->registerWeakCache(cachep);
+}

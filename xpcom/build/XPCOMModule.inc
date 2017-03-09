@@ -16,7 +16,6 @@
 
     COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create)
 
-    COMPONENT(SUPPORTSARRAY, nsSupportsArray::Create)
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor)
