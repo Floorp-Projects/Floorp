@@ -345,16 +345,6 @@ task_description_schema = Schema({
             Required('paths'): [basestring],
         }],
     }),
-
-    # The "when" section contains descriptions of the circumstances
-    # under which this task should be included in the task graph.  This
-    # will be converted into an element in the `optimizations` list.
-    Optional('when'): Any({
-        # This task only needs to be run if a file matching one of the given
-        # patterns has changed in the push.  The patterns use the mozpack
-        # match function (python/mozbuild/mozpack/path.py).
-        Optional('files-changed'): [basestring],
-    }),
 })
 
 GROUP_NAMES = {
@@ -773,34 +763,6 @@ def add_index_routes(config, tasks):
 
 
 @transforms.add
-def add_files_changed(config, tasks):
-    for task in tasks:
-        if 'files-changed' not in task.get('when', {}):
-            yield task
-            continue
-
-        task['when']['files-changed'].extend([
-            '{}/**'.format(config.path),
-            'taskcluster/taskgraph/**',
-        ])
-
-        if 'in-tree' in task['worker'].get('docker-image', {}):
-            task['when']['files-changed'].append('taskcluster/docker/{}/**'.format(
-                task['worker']['docker-image']['in-tree']))
-
-        yield task
-
-
-@transforms.add
-def setup_optimizations(config, tasks):
-    for task in tasks:
-        optimizations = task.setdefault('optimizations', [])
-        if 'when' in task and 'files-changed' in task['when']:
-            optimizations.append(['files-changed', task['when']['files-changed']])
-        yield task
-
-
-@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         worker_type = task['worker-type'].format(level=str(config.params['level']))
@@ -893,7 +855,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
-            'optimizations': task['optimizations'],
+            'optimizations': task.get('optimizations', []),
         }
 
 
