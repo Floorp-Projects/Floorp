@@ -306,7 +306,8 @@ fails == 280708-1b.html 280708-1b.html
 == 283686-2.html 283686-2.html
 == 283686-3.html 283686-3.html
 fails == 289384-1.xhtml 289384-1.xhtml
-skip-if(stylo) == 289480.html#top 289480.html#top # Bug 1341705
+fails == 289480.html#top 289480-ref.html
+fails == 289480-ref.html 289480-ref.html
 fails == 290129-1.html 290129-1.html
 fails == 291078-1.html 291078-1.html
 == 291078-2.html 291078-2.html
@@ -1475,7 +1476,7 @@ fails == 538909-1.html 538909-1.html
 == 539323-3.html 539323-3.html
 fails == 539880-1.html 539880-1.html
 fails == 539880-1-dynamic.html 539880-1-dynamic.html
-skip-if(stylo) == 539949-1.html#test2 539949-1.html#test2 # load fails???
+fails == 539949-1.html#test2 539949-1-ref.html#test2
 fails == 541382-1.html 541382-1.html
 == 541406-1.html 541406-1.html
 fails needs-focus == 542116-1.html 542116-1.html

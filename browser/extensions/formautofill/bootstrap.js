@@ -31,8 +31,8 @@ function insertStyleSheet(domWindow, url) {
 }
 
 let windowListener = {
-  onOpenWindow(aWindow) {
-    let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+  onOpenWindow(window) {
+    let domWindow = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
 
     domWindow.addEventListener("load", function onWindowLoaded() {
       insertStyleSheet(domWindow, STYLESHEET_URI);
