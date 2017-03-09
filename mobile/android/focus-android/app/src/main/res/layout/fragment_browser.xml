@@ -31,7 +31,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:animateLayoutChanges="true"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="16dp">
 
                 <ImageView
                     android:id="@+id/lock"
@@ -39,8 +40,8 @@
                     android:layout_height="24dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginBottom="8dp"
-                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="10dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_lock"
                     android:visibility="gone"
@@ -51,12 +52,13 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_margin="8dp"
                     android:layout_weight="1"
-                    android:ellipsize="end"
+                    android:ellipsize="none"
+                    android:requiresFadingEdge="horizontal"
                     android:gravity="center_vertical"
                     android:lines="1"
-                    android:padding="6dp"
+                    android:maxLines="1"
+                    android:singleLine="true"
                     android:textColor="#ffffff"
                     android:textSize="15sp" />
 
