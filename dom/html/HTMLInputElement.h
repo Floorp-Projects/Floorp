@@ -246,6 +246,7 @@ public:
   // Methods for nsFormFillController so it can do selection operations on input
   // types the HTML spec doesn't support them on, like "email".
   int32_t GetSelectionStartIgnoringType(ErrorResult& aRv);
+  int32_t GetSelectionEndIgnoringType(ErrorResult& aRv);
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
