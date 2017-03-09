@@ -628,10 +628,7 @@
     source = String(source);
     source = StringReplace(source, /([(){},.:\[\]])/mg, (_, punctuator) => ` ${punctuator} `);
     source = StringReplace(source, /(\w+)/mg, (_, word) => ` ${word} `);
-    source = StringReplace(source, /<(\/)? (\w+) (\/)?>/mg,
-                           (_, left = "", tagName, right = "") => `<${left}${tagName}${right}>`);
     source = StringReplace(source, /\s+/mg, _ => ' ');
-    source = StringReplace(source, /new (\w+)\s*\(\s*\)/mg, (_, name) => `new ${name}`);
 
     return source;
   }
