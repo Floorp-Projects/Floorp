@@ -5209,6 +5209,12 @@ AnimationValue::operator==(const AnimationValue& aOther) const
          mGecko == aOther.mGecko;
 }
 
+bool
+AnimationValue::operator!=(const AnimationValue& aOther) const
+{
+  return !operator==(aOther);
+}
+
 float
 AnimationValue::GetOpacity() const
 {
