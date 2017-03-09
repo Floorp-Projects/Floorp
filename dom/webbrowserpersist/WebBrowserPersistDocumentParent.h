@@ -47,8 +47,7 @@ public:
     // IPDL methods:
     virtual mozilla::ipc::IPCResult
     RecvAttributes(const Attrs& aAttrs,
-                   const OptionalInputStreamParams& aPostData,
-                   nsTArray<FileDescriptor>&& aPostFiles) override;
+                   const OptionalIPCStream& aPostStream) override;
     virtual mozilla::ipc::IPCResult
     RecvInitFailure(const nsresult& aFailure) override;
 

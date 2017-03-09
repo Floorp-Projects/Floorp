@@ -6,7 +6,7 @@
 
 #include "WebBrowserPersistDocumentParent.h"
 
-#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/dom/PContentParent.h"
 #include "nsIInputStream.h"
 #include "nsThreadUtils.h"
@@ -60,12 +60,10 @@ WebBrowserPersistDocumentParent::~WebBrowserPersistDocumentParent()
 
 mozilla::ipc::IPCResult
 WebBrowserPersistDocumentParent::RecvAttributes(const Attrs& aAttrs,
-                                                const OptionalInputStreamParams& aPostData,
-                                                nsTArray<FileDescriptor>&& aPostFiles)
+                                                const OptionalIPCStream& aPostStream)
 {
     // Deserialize the postData unconditionally so that fds aren't leaked.
-    nsCOMPtr<nsIInputStream> postData =
-        ipc::DeserializeInputStream(aPostData, aPostFiles);
+    nsCOMPtr<nsIInputStream> postData = mozilla::ipc::DeserializeIPCStream(aPostStream);
     if (!mOnReady || mReflection) {
         return IPC_FAIL_NO_REASON(this);
     }
