@@ -1762,6 +1762,38 @@ nsTextEditorState::SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
   SetSelectionRange(start, end, dir, aRv);
 }
 
+static nsITextControlFrame::SelectionDirection
+DirectionStringToSelectionDirection(const nsAString& aDirection)
+{
+  if (aDirection.EqualsLiteral("backward")) {
+    return nsITextControlFrame::eBackward;
+  }
+
+  // We don't support directionless selections.
+  return nsITextControlFrame::eForward;
+}
+
+void
+nsTextEditorState::SetSelectionDirection(const nsAString& aDirection,
+                                         ErrorResult& aRv)
+{
+  nsITextControlFrame::SelectionDirection dir =
+    DirectionStringToSelectionDirection(aDirection);
+
+  if (IsSelectionCached()) {
+    GetSelectionProperties().SetDirection(dir);
+    return;
+  }
+
+  int32_t start, end;
+  GetSelectionRange(&start, &end, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  SetSelectionRange(start, end, dir, aRv);
+}
+
 HTMLInputElement*
 nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
 {
