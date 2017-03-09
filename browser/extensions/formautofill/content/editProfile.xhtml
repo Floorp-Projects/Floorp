@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Profile Autofill - Edit Profile</title>
+  <link rel="stylesheet" href="chrome://formautofill/content/editProfile.css" />
+  <script src="chrome://formautofill/content/editProfile.js"></script>
+</head>
+<body>
+  <form>
+    <label id="first-name-container">
+      <span>First Name</span>
+      <input id="first-name" type="text"/>
+    </label>
+    <label id="middle-name-container">
+      <span>Middle Name</span>
+      <input id="middle-name" type="text"/>
+    </label>
+    <label id="last-name-container">
+      <span>Last Name</span>
+      <input id="last-name" type="text"/>
+    </label>
+    <label id="organization-container">
+      <span>Company</span>
+      <input id="organization" type="text"/>
+    </label>
+    <label id="street-address-container">
+      <span>Street Address</span>
+      <textarea id="street-address"/>
+    </label>
+    <label id="address-level2-container">
+      <span>City/Town</span>
+      <input id="address-level2" type="text"/>
+    </label>
+    <label id="address-level1-container">
+      <span>State/Province</span>
+      <input id="address-level1" type="text"/>
+    </label>
+    <label id="postal-code-container">
+      <span>Zip/Postal</span>
+      <input id="postal-code" type="text"/>
+    </label>
+    <label id="country-container">
+      <span>Country</span>
+      <select id="country">
+        <option/>
+        <option value="US">United States</option>
+      </select>
+    </label>
+    <label id="email-container">
+      <span>Email</span>
+      <input id="email" type="email"/>
+    </label>
+    <label id="tel-container">
+      <span>Phone</span>
+      <input id="tel" type="tel"/>
+    </label>
+  </form>
+  <div id="controls-container">
+    <button id="cancel">Cancel</button>
+    <button id="save" disabled="disabled">Save</button>
+  </div>
+</body>
+</html>
