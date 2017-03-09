@@ -261,6 +261,10 @@ public:
   void SetSelectionProperties(SelectionProperties& aProps);
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
+  // Sync up our selection properties with our editor prior to being destroyed.
+  // This will invoke UnbindFromFrame() to ensure that we grab whatever
+  // selection state may be at the moment.
+  void SyncUpSelectionPropertiesBeforeDestruction();
 
   // Get the selection range start and end points in our text.
   nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
