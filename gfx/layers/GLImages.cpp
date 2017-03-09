@@ -100,10 +100,12 @@ GLImage::GetAsSourceSurface()
 #ifdef MOZ_WIDGET_ANDROID
 SurfaceTextureImage::SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                                          const gfx::IntSize& aSize,
+                                         bool aContinuous,
                                          gl::OriginPos aOriginPos)
  : GLImage(ImageFormat::SURFACE_TEXTURE),
    mHandle(aHandle),
    mSize(aSize),
+   mContinuous(aContinuous),
    mOriginPos(aOriginPos)
 {
   MOZ_ASSERT(mHandle);
