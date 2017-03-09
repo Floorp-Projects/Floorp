@@ -2949,6 +2949,36 @@ profiler_tracing(const char* aCategory, const char* aInfo,
   locked_profiler_add_marker(lock, aInfo, marker);
 }
 
+void
+profiler_set_js_context(JSContext* aCx)
+{
+  // This function runs both on and off the main thread.
+
+  MOZ_ASSERT(aCx);
+
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  stack->sampleContext(aCx);
+}
+
+void
+profiler_clear_js_context()
+{
+  // This function runs both on and off the main thread.
+
+  MOZ_RELEASE_ASSERT(gPS);
+
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  stack->sampleContext(nullptr);
+}
+
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
 
