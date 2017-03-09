@@ -1,27 +1,27 @@
 # basic sanity checking
-random-if(!haveTestPlugin) != plugin-sanity.html about:blank
-fails-if(!haveTestPlugin) == plugin-sanity.html div-sanity.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) == plugin-alpha-zindex.html div-alpha-zindex.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,164000) == plugin-alpha-opacity.html div-alpha-opacity.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
+random-if(!haveTestPlugin) HTTP != plugin-sanity.html about:blank
+fails-if(!haveTestPlugin) HTTP == plugin-sanity.html div-sanity.html
+fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) HTTP == plugin-alpha-zindex.html div-alpha-zindex.html
+fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,164000) HTTP == plugin-alpha-opacity.html div-alpha-opacity.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) HTTP == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
 # fuzzy because of anti-aliasing in dashed border
-fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1-ref.html # bug 629430
-fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html # bug 629430
-skip-if(!webrender) pref(layers.advanced.border-layers,1) fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2-ref.html
-fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!haveTestPlugin||Android) == border-padding-3.html border-padding-3-ref.html # bug 629430 # bug 773482
+fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) HTTP == border-padding-1.html border-padding-1-ref.html # bug 629430
+fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) HTTP == border-padding-2.html border-padding-2-ref.html # bug 629430
+skip-if(!webrender) pref(layers.advanced.border-layers,1) fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) HTTP == border-padding-2.html border-padding-2-ref.html
+fuzzy(16,256) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!haveTestPlugin||Android) HTTP == border-padding-3.html border-padding-3-ref.html # bug 629430 # bug 773482
 # The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
-#random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html # bug 567367
-#random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-2.html pluginproblemui-direction-2-ref.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) == plugin-canvas-alpha-zindex.html div-alpha-zindex.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) == plugin-transform-alpha-zindex.html div-alpha-zindex.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) == plugin-busy-alpha-zindex.html div-alpha-zindex.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) == plugin-background.html plugin-background-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) == plugin-background-1-step.html plugin-background-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) == plugin-background-2-step.html plugin-background-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) == plugin-background-5-step.html plugin-background-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) == plugin-background-10-step.html plugin-background-ref.html
-random-if(!haveTestPlugin) == plugin-transform-1.html plugin-transform-1-ref.html
-fails-if(!haveTestPlugin) == plugin-transform-2.html plugin-transform-2-ref.html
-skip-if(!haveTestPlugin) == shrink-1.html shrink-1-ref.html
-skip-if(!haveTestPlugin) == update-1.html update-1-ref.html
-skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers-ref.html
+#random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) HTTP == pluginproblemui-direction-1.html pluginproblemui-direction-1-ref.html # bug 567367
+#random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) HTTP == pluginproblemui-direction-2.html pluginproblemui-direction-2-ref.html
+fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) HTTP == plugin-canvas-alpha-zindex.html div-alpha-zindex.html
+fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) HTTP == plugin-transform-alpha-zindex.html div-alpha-zindex.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,160000) HTTP == plugin-busy-alpha-zindex.html div-alpha-zindex.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) HTTP == plugin-background.html plugin-background-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) HTTP == plugin-background-1-step.html plugin-background-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) HTTP == plugin-background-2-step.html plugin-background-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) HTTP == plugin-background-5-step.html plugin-background-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) fuzzy-if(skiaContent&&haveTestPlugin,1,32400) HTTP == plugin-background-10-step.html plugin-background-ref.html
+random-if(!haveTestPlugin) HTTP == plugin-transform-1.html plugin-transform-1-ref.html
+fails-if(!haveTestPlugin) HTTP == plugin-transform-2.html plugin-transform-2-ref.html
+skip-if(!haveTestPlugin) HTTP == shrink-1.html shrink-1-ref.html
+skip-if(!haveTestPlugin) HTTP == update-1.html update-1-ref.html
+skip-if(!haveTestPlugin) HTTP == windowless-layers.html windowless-layers-ref.html
