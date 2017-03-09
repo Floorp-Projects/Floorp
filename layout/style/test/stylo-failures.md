@@ -451,7 +451,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * ... `got "--`: CSS-wide keywords in custom properties servo/servo#15401 [3]
-  * test_priority_preservation.html `text-decoration`: not serialize style if it has the initial value servo/servo#15790 [6]
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
