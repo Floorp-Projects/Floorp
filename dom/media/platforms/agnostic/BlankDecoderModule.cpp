@@ -35,10 +35,10 @@ public:
   {
     // Create a fake YUV buffer in a 420 format. That is, an 8bpp Y plane,
     // with a U and V plane that are half the size of the Y plane, i.e 8 bit,
-    // 2x2 subsampled.
-    const int sizeY = mFrameWidth * mFrameHeight;
-    const int sizeCbCr = ((mFrameWidth + 1) / 2) * ((mFrameHeight + 1) / 2);
-    auto frame = MakeUnique<uint8_t[]>(sizeY + sizeCbCr);
+    // 2x2 subsampled. Have the data pointer of each frame point to the
+    // first plane, they'll always be zero'd memory anyway.
+    auto frame = MakeUnique<uint8_t[]>(mFrameWidth * mFrameHeight);
+    memset(frame.get(), 0, mFrameWidth * mFrameHeight);
     VideoData::YCbCrBuffer buffer;
 
     // Y plane.
@@ -50,7 +50,7 @@ public:
     buffer.mPlanes[0].mSkip = 0;
 
     // Cb plane.
-    buffer.mPlanes[1].mData = frame.get() + sizeY;
+    buffer.mPlanes[1].mData = frame.get();
     buffer.mPlanes[1].mStride = (mFrameWidth + 1) / 2;
     buffer.mPlanes[1].mHeight = (mFrameHeight + 1) / 2;
     buffer.mPlanes[1].mWidth = (mFrameWidth + 1) / 2;
@@ -58,16 +58,12 @@ public:
     buffer.mPlanes[1].mSkip = 0;
 
     // Cr plane.
-    buffer.mPlanes[2].mData = frame.get() + sizeY;
+    buffer.mPlanes[2].mData = frame.get();
     buffer.mPlanes[2].mStride = (mFrameWidth + 1) / 2;
     buffer.mPlanes[2].mHeight = (mFrameHeight + 1) / 2;
     buffer.mPlanes[2].mWidth = (mFrameWidth + 1) / 2;
     buffer.mPlanes[2].mOffset = 0;
     buffer.mPlanes[2].mSkip = 0;
-
-    // Set to color white.
-    memset(buffer.mPlanes[0].mData, 255, sizeY);
-    memset(buffer.mPlanes[1].mData, 128, sizeCbCr);
 
     return VideoData::CreateAndCopyData(mInfo,
                                         mImageContainer,
