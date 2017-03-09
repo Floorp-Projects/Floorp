@@ -130,11 +130,3 @@ nsScreenManagerWin::GetSystemDefaultScale(float *aDefaultScale)
   *aDefaultScale = float(widget::WinUtils::LogToPhysFactor(primary));
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsScreenManagerWin::ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
-{
-  HMONITOR mon = MonitorFromWindow((HWND) aWidget, MONITOR_DEFAULTTOPRIMARY);
-  *outScreen = CreateNewScreenObject(mon);
-  return NS_OK;
-}

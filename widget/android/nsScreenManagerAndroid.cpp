@@ -211,13 +211,6 @@ nsScreenManagerAndroid::ScreenForRect(int32_t inLeft,
 }
 
 NS_IMETHODIMP
-nsScreenManagerAndroid::ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
-{
-    // Not support to query non-primary screen with native widget.
-    return GetPrimaryScreen(outScreen);
-}
-
-NS_IMETHODIMP
 nsScreenManagerAndroid::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;

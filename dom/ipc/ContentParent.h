@@ -446,13 +446,6 @@ public:
   virtual bool
   DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor) override;
 
-  virtual PScreenManagerParent*
-  AllocPScreenManagerParent(float* aSystemDefaultScale,
-                            bool* aSuccess) override;
-
-  virtual bool
-  DeallocPScreenManagerParent(PScreenManagerParent* aActor) override;
-
   virtual PHalParent* AllocPHalParent() override;
 
   virtual mozilla::ipc::IPCResult RecvPHalConstructor(PHalParent* aActor) override

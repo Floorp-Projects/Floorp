@@ -7,6 +7,7 @@
 #include "ScreenManager.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPtr.h"
 
@@ -53,26 +54,63 @@ ScreenManager::SetHelper(UniquePtr<Helper> aHelper)
 void
 ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens)
 {
+  MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens"));
+
   mScreenList = Move(aScreens);
+
+  CopyScreensToAllRemotesIfIsParent();
 }
 
-NS_IMETHODIMP
-ScreenManager::ScreenForId(uint32_t aId, nsIScreen** aOutScreen)
+void
+ScreenManager::Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens)
 {
-  *aOutScreen = nullptr;
+  MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens from IPC"));
 
-  nsresult rv;
-  for (auto& screen : mScreenList) {
-    uint32_t id;
-    rv = screen->GetId(&id);
-    if (NS_SUCCEEDED(rv) && id == aId) {
-      RefPtr<Screen> ret = screen;
-      ret.forget(aOutScreen);
-      return NS_OK;
-    }
+  mScreenList.Clear();
+  for (auto& screen : aScreens) {
+    mScreenList.AppendElement(new Screen(screen));
   }
 
-  return NS_ERROR_FAILURE;
+  CopyScreensToAllRemotesIfIsParent();
+}
+
+template<class Range>
+void
+ScreenManager::CopyScreensToRemoteRange(Range aRemoteRange)
+{
+  AutoTArray<ScreenDetails, 4> screens;
+  for (auto& screen : mScreenList) {
+    screens.AppendElement(screen->ToScreenDetails());
+  }
+  for (auto cp : aRemoteRange) {
+    MOZ_LOG(sScreenLog, LogLevel::Debug, ("Send screens to [Pid %d]", cp->Pid()));
+    if (!cp->SendRefreshScreens(screens)) {
+      MOZ_LOG(sScreenLog, LogLevel::Error,
+              ("SendRefreshScreens to [Pid %d] failed", cp->Pid()));
+    }
+  }
+}
+
+void
+ScreenManager::CopyScreensToRemote(ContentParent* aContentParent)
+{
+  MOZ_ASSERT(aContentParent);
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  auto range = { aContentParent };
+  CopyScreensToRemoteRange(range);
+}
+
+void
+ScreenManager::CopyScreensToAllRemotesIfIsParent()
+{
+  if (XRE_IsContentProcess()) {
+    return;
+  }
+
+  MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing all ContentParents"));
+
+  CopyScreensToRemoteRange(ContentParent::AllProcesses(ContentParent::eLive));
 }
 
 // Returns the screen that contains the rectangle. If the rect overlaps
@@ -159,12 +197,6 @@ ScreenManager::GetSystemDefaultScale(float* aDefaultScale)
   }
   *aDefaultScale = 1;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-ScreenManager::ScreenForNativeWidget(void* aWidget, nsIScreen** aOutScreen)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 } // namespace widget

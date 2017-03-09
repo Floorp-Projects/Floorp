@@ -15,6 +15,13 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+namespace dom {
+class ContentParent;
+class ScreenDetails;
+}
+}
+
+namespace mozilla {
 namespace widget {
 
 class ScreenManager final : public nsIScreenManager
@@ -36,10 +43,16 @@ public:
 
   void SetHelper(UniquePtr<Helper> aHelper);
   void Refresh(nsTArray<RefPtr<Screen>>&& aScreens);
+  void Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens);
+  void CopyScreensToRemote(mozilla::dom::ContentParent* aContentParent);
 
 private:
   ScreenManager();
   virtual ~ScreenManager();
+
+  template<class Range>
+  void CopyScreensToRemoteRange(Range aRemoteRange);
+  void CopyScreensToAllRemotesIfIsParent();
 
   AutoTArray<RefPtr<Screen>, 4> mScreenList;
   UniquePtr<Helper> mHelper;
