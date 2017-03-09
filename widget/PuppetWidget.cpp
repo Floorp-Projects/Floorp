@@ -1397,20 +1397,6 @@ PuppetScreen::GetColorDepth(int32_t *aColorDepth)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PuppetScreen::GetRotation(uint32_t* aRotation)
-{
-  NS_WARNING("Attempt to get screen rotation through nsIScreen::GetRotation().  Nothing should know or care this in sandboxed contexts.  If you want *orientation*, use hal.");
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-PuppetScreen::SetRotation(uint32_t aRotation)
-{
-  NS_WARNING("Attempt to set screen rotation through nsIScreen::GetRotation().  Nothing should know or care this in sandboxed contexts.  If you want *orientation*, use hal.");
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
 NS_IMPL_ISUPPORTS(PuppetScreenManager, nsIScreenManager)
 
 PuppetScreenManager::PuppetScreenManager()
