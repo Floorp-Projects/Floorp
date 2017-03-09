@@ -1702,26 +1702,6 @@ public:
 
     static auto SetFullScreen(bool) -> void;
 
-    struct SetKeepScreenOn_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                bool> Args;
-        static constexpr char name[] = "setKeepScreenOn";
-        static constexpr char signature[] =
-                "(Z)V";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::GECKO;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto SetKeepScreenOn(bool) -> void;
-
     struct SetScreenDepthOverride_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
