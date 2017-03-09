@@ -123,47 +123,6 @@ nsScreenManagerWin::GetPrimaryScreen(nsIScreen** aPrimaryScreen)
   
 } // GetPrimaryScreen
 
-
-//
-// CountMonitors
-//
-// Will be called once for every monitor in the system. Just 
-// increments the parameter, which holds a ptr to a PRUin32 holding the
-// count up to this point.
-//
-BOOL CALLBACK
-CountMonitors(HMONITOR, HDC, LPRECT, LPARAM ioParam)
-{
-  uint32_t* countPtr = reinterpret_cast<uint32_t*>(ioParam);
-  ++(*countPtr);
-
-  return TRUE; // continue the enumeration
-
-} // CountMonitors
-
-
-//
-// GetNumberOfScreens
-//
-// Returns how many physical screens are available.
-//
-NS_IMETHODIMP
-nsScreenManagerWin::GetNumberOfScreens(uint32_t *aNumberOfScreens)
-{
-  if (mNumberOfScreens)
-    *aNumberOfScreens = mNumberOfScreens;
-  else {
-    uint32_t count = 0;
-    BOOL result = ::EnumDisplayMonitors(nullptr, nullptr, (MONITORENUMPROC)CountMonitors, (LPARAM)&count);
-    if (!result)
-      return NS_ERROR_FAILURE;
-    *aNumberOfScreens = mNumberOfScreens = count;
-  }
-
-  return NS_OK;
-  
-} // GetNumberOfScreens
-
 NS_IMETHODIMP
 nsScreenManagerWin::GetSystemDefaultScale(float *aDefaultScale)
 {

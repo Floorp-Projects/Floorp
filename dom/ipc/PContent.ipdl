@@ -712,8 +712,7 @@ parent:
     async PChildToParentStream();
 
     nested(inside_sync) sync PScreenManager()
-        returns (uint32_t numberOfScreens,
-                 float systemDefaultScale,
+        returns (float systemDefaultScale,
                  bool success);
 
     async PSpeechSynthesis();

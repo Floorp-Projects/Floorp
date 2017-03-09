@@ -243,8 +243,7 @@ public:
   virtual bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*) override;
 
   virtual PScreenManagerChild*
-  AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
-                           float* aSystemDefaultScale,
+  AllocPScreenManagerChild(float* aSystemDefaultScale,
                            bool* aSuccess) override;
 
   virtual bool DeallocPScreenManagerChild(PScreenManagerChild*) override;

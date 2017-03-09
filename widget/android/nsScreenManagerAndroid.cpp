@@ -228,13 +228,6 @@ nsScreenManagerAndroid::ScreenForNativeWidget(void *aWidget, nsIScreen **outScre
 }
 
 NS_IMETHODIMP
-nsScreenManagerAndroid::GetNumberOfScreens(uint32_t *aNumberOfScreens)
-{
-    *aNumberOfScreens = mScreens.Length();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenManagerAndroid::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;
