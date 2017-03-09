@@ -19,8 +19,6 @@ function debug(aMsg) {
 
 class GeckoViewContent extends GeckoViewModule {
   init() {
-    this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
-
     this.messageManager.loadFrameScript("chrome://browser/content/GeckoViewContent.js", true);
     this.messageManager.addMessageListener("GeckoView:DOMTitleChanged", this);
   }
