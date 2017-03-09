@@ -1737,6 +1737,31 @@ nsTextEditorState::SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aSt
   SetSelectionRange(start, end, dir, aRv);
 }
 
+void
+nsTextEditorState::SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
+                                   ErrorResult& aRv)
+{
+  int32_t end = 0;
+  if (!aEnd.IsNull()) {
+    // XXXbz This will do the wrong thing for input values that are out of the
+    // int32_t range...
+    end = aEnd.Value();
+  }
+
+  int32_t start, ignored;
+  GetSelectionRange(&start, &ignored, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  nsITextControlFrame::SelectionDirection dir = GetSelectionDirection(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  SetSelectionRange(start, end, dir, aRv);
+}
+
 HTMLInputElement*
 nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
 {
