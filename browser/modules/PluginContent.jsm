@@ -163,7 +163,6 @@ PluginContent.prototype = {
       return;
     }
 
-    this._finishRecordingFlashPluginTelemetry();
     this.clearPluginCaches();
     this.haveShownNotification = false;
   },
@@ -548,10 +547,6 @@ PluginContent.prototype = {
         break;
     }
 
-    if (this._getPluginInfo(plugin).mimetype === FLASH_MIME_TYPE) {
-      this._recordFlashPluginTelemetry(eventType, plugin);
-    }
-
     // Show the in-content UI if it's not too big. The crashed plugin handler already did this.
     let overlay = this.getPluginUI(plugin, "main");
     if (eventType != "PluginCrashed") {
@@ -580,49 +575,6 @@ PluginContent.prototype = {
 
     if (shouldShowNotification) {
       this._showClickToPlayNotification(plugin, false);
-    }
-  },
-
-  _recordFlashPluginTelemetry(eventType, plugin) {
-    if (!Services.telemetry.canRecordExtended) {
-      return;
-    }
-
-    if (!this.flashPluginStats) {
-      this.flashPluginStats = {
-        instancesCount: 0,
-        plugins: new WeakSet()
-      };
-    }
-
-    if (!this.flashPluginStats.plugins.has(plugin)) {
-      // Reporting plugin instance and its dimensions only once.
-      this.flashPluginStats.plugins.add(plugin);
-
-      this.flashPluginStats.instancesCount++;
-
-      let pluginRect = plugin.getBoundingClientRect();
-      Services.telemetry.getHistogramById("FLASH_PLUGIN_WIDTH")
-                       .add(pluginRect.width);
-      Services.telemetry.getHistogramById("FLASH_PLUGIN_HEIGHT")
-                       .add(pluginRect.height);
-      Services.telemetry.getHistogramById("FLASH_PLUGIN_AREA")
-                       .add(pluginRect.width * pluginRect.height);
-
-      let state = this._getPluginInfo(plugin).fallbackType;
-      if (state === null) {
-        state = Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED;
-      }
-      Services.telemetry.getHistogramById("FLASH_PLUGIN_STATES")
-                       .add(state);
-    }
-  },
-
-  _finishRecordingFlashPluginTelemetry() {
-    if (this.flashPluginStats) {
-      Services.telemetry.getHistogramById("FLASH_PLUGIN_INSTANCES_ON_PAGE")
-                        .add(this.flashPluginStats.instancesCount);
-    delete this.flashPluginStats;
     }
   },
 
