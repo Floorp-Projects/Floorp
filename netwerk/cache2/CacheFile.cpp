@@ -885,6 +885,8 @@ CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputS
     // Remove alt-data
     rv = Truncate(mAltDataOffset);
     if (NS_FAILED(rv)) {
+      LOG(("CacheFile::OpenOutputStream() - Truncating alt-data failed "
+           "[rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
       return rv;
     }
     mMetadata->SetElement(CacheFileUtils::kAltDataKey, nullptr);
@@ -943,6 +945,8 @@ CacheFile::OpenAlternativeOutputStream(CacheOutputCloseListener *aCloseListener,
     // Truncate old alt-data
     rv = Truncate(mAltDataOffset);
     if (NS_FAILED(rv)) {
+      LOG(("CacheFile::OpenAlternativeOutputStream() - Truncating old alt-data "
+           "failed [rv=0x%08" PRIx32 "]", static_cast<uint32_t>(rv)));
       return rv;
     }
   } else {
@@ -1798,56 +1802,98 @@ CacheFile::Truncate(int64_t aOffset)
 {
   AssertOwnsLock();
 
+  LOG(("CacheFile::Truncate() [this=%p, offset=%" PRId64 "]", this, aOffset));
+
   nsresult rv;
 
   MOZ_ASSERT(aOffset <= mDataSize);
   MOZ_ASSERT(mReady);
 
   uint32_t lastChunk = 0;
-
-  if (aOffset > 0) {
+  if (mDataSize > 0) {
     lastChunk = (mDataSize - 1) / kChunkSize;
   }
 
-  uint32_t bytesInLastChunk = aOffset - lastChunk * kChunkSize;
+  uint32_t newLastChunk = 0;
+  if (aOffset > 0) {
+    newLastChunk = (aOffset - 1) / kChunkSize;
+  }
 
+  uint32_t bytesInNewLastChunk = aOffset - newLastChunk * kChunkSize;
+
+  // Remove all truncated chunks from mCachedChunks
   for (auto iter = mCachedChunks.Iter(); !iter.Done(); iter.Next()) {
     uint32_t idx = iter.Key();
 
-    if (idx > lastChunk) {
+    if (idx > newLastChunk) {
       // This is unused chunk, simply remove it.
+      LOG(("CacheFile::Truncate() - removing cached chunk [idx=%u]", idx));
       iter.Remove();
-      continue;
-    }
-
-    if (idx == lastChunk) {
-      RefPtr<CacheFileChunk>& chunk = iter.Data();
-
-      rv = chunk->Truncate(bytesInLastChunk);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
     }
   }
 
+  // Discard all truncated chunks in mChunks
   for (auto iter = mChunks.Iter(); !iter.Done(); iter.Next()) {
     uint32_t idx = iter.Key();
-    RefPtr<CacheFileChunk>& chunk = iter.Data();
 
-    if (idx > lastChunk) {
+    if (idx > newLastChunk) {
+      RefPtr<CacheFileChunk>& chunk = iter.Data();
+      LOG(("CacheFile::Truncate() - discarding chunk [idx=%u, chunk=%p]",
+           idx, chunk.get()));
       chunk->mDiscardedChunk = true;
       mDiscardedChunks.AppendElement(chunk);
       iter.Remove();
-      continue;
     }
+  }
 
-    if (idx == lastChunk) {
-      RefPtr<CacheFileChunk>& chunk = iter.Data();
+  // Remove hashes of all removed chunks from the metadata
+  for (uint32_t i = lastChunk; i > newLastChunk; --i) {
+    mMetadata->RemoveHash(i);
+  }
 
-      rv = chunk->Truncate(bytesInLastChunk);
+  // Truncate new last chunk
+  if (bytesInNewLastChunk == kChunkSize) {
+    LOG(("CacheFile::Truncate() - not truncating last chunk."));
+  } else {
+    RefPtr<CacheFileChunk> chunk;
+    if (mChunks.Get(newLastChunk, getter_AddRefs(chunk))) {
+      LOG(("CacheFile::Truncate() - New last chunk %p got from mChunks.",
+           chunk.get()));
+    } else if (mCachedChunks.Get(newLastChunk, getter_AddRefs(chunk))) {
+      LOG(("CacheFile::Truncate() - New last chunk %p got from mCachedChunks.",
+           chunk.get()));
+    } else {
+      // New last chunk isn't loaded but we need to update the hash.
+      MOZ_ASSERT(!mMemoryOnly);
+      MOZ_ASSERT(mHandle);
+
+      rv = GetChunkLocked(newLastChunk, PRELOADER, nullptr,
+                          getter_AddRefs(chunk));
       if (NS_FAILED(rv)) {
         return rv;
       }
+      // We've checked that we don't have this chunk, so no chunk must be
+      // returned.
+      MOZ_ASSERT(!chunk);
+
+      if (!mChunks.Get(newLastChunk, getter_AddRefs(chunk))) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      LOG(("CacheFile::Truncate() - New last chunk %p got from preloader.",
+           chunk.get()));
+    }
+
+    rv = chunk->Truncate(bytesInNewLastChunk);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // If the chunk is ready set the new hash now. If it's still being loaded
+    // CacheChunk::Truncate() made the chunk dirty and the hash will be updated
+    // in OnChunkWritten().
+    if (chunk->IsReady()) {
+      mMetadata->SetHash(newLastChunk, chunk->Hash());
     }
   }
 
