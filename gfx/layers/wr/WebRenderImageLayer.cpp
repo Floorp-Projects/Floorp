@@ -127,19 +127,18 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
     return;
   }
 
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
+  gfx::Matrix4x4 transform = GetTransform();
+  gfx::Rect relBounds = GetWrRelBounds();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Matrix4x4 transform = GetTransform();
-  Rect rect(0, 0, size.width, size.height);
-  rect = RelativeToVisible(rect);
-  Rect clip = GetWrClipRect(rect);
-  Rect relBounds = GetWrRelBounds();
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  gfx::Rect rect = RelativeToVisible(Rect(0, 0, size.width, size.height));
+  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  Maybe<WrImageMask> mask = buildMaskLayer();
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(clip));
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   DumpLayerInfo("Image Layer", rect);
   if (gfxPrefs::LayersDump()) {
@@ -160,7 +159,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                             //GetAnimations(),
                             transform,
                             mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clipRegion, filter, key);
+  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
   aBuilder.PopStackingContext();
 
   //mContainer->SetImageFactory(originalIF);
