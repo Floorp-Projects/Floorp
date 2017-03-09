@@ -7063,11 +7063,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 {
   MOZ_ASSERT(aSelection && aRoot);
 
-  // We don't care which end of this selection is anchor and which is focus.  In
-  // fact, we explicitly want to know which is the _start_ and which is the
-  // _end_, not anchor vs focus.
-  const nsRange* range = aSelection->GetAnchorFocusRange();
-  if (!range) {
+  if (!aSelection->RangeCount()) {
     // Nothing selected
     aOutStartOffset = aOutEndOffset = 0;
     return;
@@ -7075,10 +7071,10 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 
   // All the node pointers here are raw pointers for performance.  We shouldn't
   // be doing anything in this function that invalidates the node tree.
-  nsINode* startParent = range->GetStartParent();
-  uint32_t startOffset = range->StartOffset();
-  nsINode* endParent = range->GetEndParent();
-  uint32_t endOffset = range->EndOffset();
+  nsINode* anchorNode = aSelection->GetAnchorNode();
+  uint32_t anchorOffset = aSelection->AnchorOffset();
+  nsINode* focusNode = aSelection->GetFocusNode();
+  uint32_t focusOffset = aSelection->FocusOffset();
 
   // We have at most two children, consisting of an optional text node followed
   // by an optional <br>.
@@ -7086,10 +7082,10 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   nsIContent* firstChild = aRoot->GetFirstChild();
 #ifdef DEBUG
   nsCOMPtr<nsIContent> lastChild = aRoot->GetLastChild();
-  NS_ASSERTION(startParent == aRoot || startParent == firstChild ||
-               startParent == lastChild, "Unexpected startParent");
-  NS_ASSERTION(endParent == aRoot || endParent == firstChild ||
-               endParent == lastChild, "Unexpected endParent");
+  NS_ASSERTION(anchorNode == aRoot || anchorNode == firstChild ||
+               anchorNode == lastChild, "Unexpected anchorNode");
+  NS_ASSERTION(focusNode == aRoot || focusNode == firstChild ||
+               focusNode == lastChild, "Unexpected focusNode");
   // firstChild is either text or a <br> (hence an element).
   MOZ_ASSERT_IF(firstChild,
                 firstChild->IsNodeOfType(nsINode::eTEXT) || firstChild->IsElement());
@@ -7098,25 +7094,25 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // non-virtual.
   if (!firstChild || firstChild->IsElement()) {
     // No text node, so everything is 0
-    startOffset = endOffset = 0;
+    anchorOffset = focusOffset = 0;
   } else {
-    // First child is text.  If the start/end is already in the text node,
+    // First child is text.  If the anchor/focus is already in the text node,
     // or the start of the root node, no change needed.  If it's in the root
     // node but not the start, or in the trailing <br>, we need to set the
     // offset to the end.
-    if ((startParent == aRoot && startOffset != 0) ||
-        (startParent != aRoot && startParent != firstChild)) {
-      startOffset = firstChild->Length();
+    if ((anchorNode == aRoot && anchorOffset != 0) ||
+        (anchorNode != aRoot && anchorNode != firstChild)) {
+      anchorOffset = firstChild->Length();
     }
-    if ((endParent == aRoot && endOffset != 0) ||
-        (endParent != aRoot && endParent != firstChild)) {
-      endOffset = firstChild->Length();
+    if ((focusNode == aRoot && focusOffset != 0) ||
+        (focusNode != aRoot && focusNode != firstChild)) {
+      focusOffset = firstChild->Length();
     }
   }
 
-  MOZ_ASSERT(startOffset <= endOffset);
-  aOutStartOffset = startOffset;
-  aOutEndOffset = endOffset;
+  // Make sure aOutStartOffset <= aOutEndOffset.
+  aOutStartOffset = std::min(anchorOffset, focusOffset);
+  aOutEndOffset = std::max(anchorOffset, focusOffset);
 }
 
 
