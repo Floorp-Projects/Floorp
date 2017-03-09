@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from . import transform
 
-
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     Generate tasks implementing l10n repack jobs.  These may depend on build
     jobs and do a repack of them
@@ -32,9 +30,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
             repack_task.update(config.get('job-template'))
 
         yield repack_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)

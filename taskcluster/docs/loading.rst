@@ -6,7 +6,7 @@ are ordered to satisfy ``kind-dependencies``, and then the ``loader`` specified
 in ``kind.yml`` is used to load the tasks for that kind. It should point to
 a Python function like::
 
-    def load_tasks(cls, kind, path, config, parameters, loaded_tasks):
+    def loader(cls, kind, path, config, parameters, loaded_tasks):
         pass
 
 The ``kind`` is the name of the kind; the configuration for that kind
@@ -23,29 +23,15 @@ At the time this method is called, all kinds on which this kind depends
 have already loaded their tasks, and those tasks are available in
 the list ``loaded_tasks``.
 
-The return value is a list of Task instances.
+The return value is a list of inputs to the transforms listed in the kind's
+``transforms`` property. The specific format for the input depends on the first
+transform - whatever it expects. The final transform should be
+``taskgraph.transform.task:transforms``, which produces the output format the
+task-graph generation infrastructure expects.
 
-TransformTask
--------------
-
-Most kinds generate their tasks by starting with a set of items describing the
-jobs that should be performed and transforming them into task definitions.
-This is the familiar ``transforms`` key in ``kind.yml`` and is further
-documented in :doc:`transforms`.
-
-Such kinds generally specify their tasks in a common format: either based on a
-``jobs`` property in ``kind.yml``, or on YAML files listed in ``jobs-from``.
-This is handled by the ``TransformTask`` class in
-``taskcluster/taskgraph/task/transform.py``.
-
-For kinds producing tasks that depend on other tasks -- for example, signing
-tasks depend on build tasks -- ``TransformTask`` has a ``get_inputs`` method
-that can be overridden in subclasses and written to return a set of items based
-on tasks that already exist.  You can see a nice example of this behavior in
-``taskcluster/taskgraph/task/post_build.py``.
-
-For more information on how all of this works, consult the docstrings and
-comments in the source code itself.
+The ``transforms`` key in ``kind.yml`` is further documented in
+:doc:`transforms`.  For more information on how all of this works, consult the
+docstrings and comments in the source code itself.
 
 Try option syntax
 -----------------

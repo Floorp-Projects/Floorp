@@ -7,13 +7,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import logging
 
-from . import transform
 from ..util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
 
-def get_inputs(kind, path, config, params, loaded_tasks):
+def loader(kind, path, config, params, loaded_tasks):
     """
     Generate tasks implementing post-build jobs.  These depend on builds and perform
     various followup tasks after a that build has completed.
@@ -49,9 +48,3 @@ def get_inputs(kind, path, config, params, loaded_tasks):
         post_task['build-platform'] = platform
         post_task['build-task'] = task
         yield post_task
-
-
-def load_tasks(kind, path, config, params, loaded_tasks):
-    return transform.transform_inputs(
-            get_inputs(kind, path, config, params, loaded_tasks),
-            kind, path, config, params, loaded_tasks)

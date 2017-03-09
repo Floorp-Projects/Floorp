@@ -8,35 +8,19 @@ import unittest
 
 from taskgraph.generator import TaskGraphGenerator, Kind
 from taskgraph import graph, target_tasks as target_tasks_mod
-from taskgraph.task import base
 from mozunit import main
 
 
-class FakeTask(base.Task):
-
-    def __init__(self, **kwargs):
-        self.i = kwargs.pop('i')
-
-        i = self.i
-        if i > 0:
-            dependencies = {'prev': '{}-t-{}'.format(kwargs['kind'], i - 1)}
-        else:
-            dependencies = {}
-        kwargs['dependencies'] = dependencies
-
-        super(FakeTask, self).__init__(**kwargs)
-
-    def optimize(self, params):
-        return False, None
-
-
 def fake_loader(kind, path, config, parameters, loaded_tasks):
-    return [FakeTask(kind=kind,
-                     label='{}-t-{}'.format(kind, i),
-                     attributes={'_tasknum': str(i)},
-                     task={},
-                     i=i)
-            for i in range(3)]
+    for i in range(3):
+        dependencies = {}
+        if i >= 1:
+            dependencies['prev'] = '{}-t-{}'.format(kind, i-1)
+        yield {'kind': kind,
+               'label': '{}-t-{}'.format(kind, i),
+               'attributes': {'_tasknum': str(i)},
+               'task': {'i': i},
+               'dependencies': dependencies}
 
 
 class FakeKind(Kind):
@@ -53,9 +37,12 @@ class WithFakeKind(TaskGraphGenerator):
 
     def _load_kinds(self):
         for kind_name, deps in self.parameters['_kinds']:
-            yield FakeKind(
-                kind_name, '/fake',
-                {'kind-dependencies': deps} if deps else {})
+            config = {
+                'transforms': [],
+            }
+            if deps:
+                config['kind-dependencies'] = deps
+            yield FakeKind(kind_name, '/fake', config)
 
 
 class TestGenerator(unittest.TestCase):
