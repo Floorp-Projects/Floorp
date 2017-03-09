@@ -1,0 +1,68 @@
+<!doctype html>
+<meta charset=utf-8>
+<title></title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+  function createInputElement(value, append) {
+    var el = document.createElement("input");
+    el.type = "text";
+    el.value = value;
+    el.id = "input" + (append ? "-appended" : "-not-appended");
+    if (append) {
+      document.body.appendChild(el);
+    }
+    return el;
+  };
+
+  function createTextareaElement(value, append) {
+    var el = document.createElement("textarea");
+    el.value = value;
+
+    el.id = "textarea" + (append ? "-appended" : "-not-appended");
+    if (append) {
+      document.body.appendChild(el);
+    }
+    return el;
+  };
+
+  function createTestElements(value) {
+    return [ createInputElement(value, true),
+             createInputElement(value, false),
+             createTextareaElement(value, true),
+             createTextareaElement(value, false) ];
+  }
+
+  const testValue = "abcdefghij";
+
+  test(function() {
+    assert_equals(testValue.length, 10);
+  }, "Sanity check for testValue length; if this fails, variou absolute offsets in the test below need to be adjusted to be less than testValue.length");
+
+  test(function() {
+    for (let el of createTestElements(testValue)) {
+      assert_equals(el.selectionStart, testValue.length,
+                    `Initial .value set on ${el.id} should set selectionStart to end of value`);
+      var t = async_test(`onselect should fire when selectionStart is changed on ${el.id}`);
+      el.onselect = t.step_func_done(function(e) {
+        assert_equals(e.type, "select");
+        el.remove();
+      });
+      el.selectionStart = 2;
+    }
+  }, "onselect should fire when selectionStart is changed");
+
+  test(function() {
+    for (let el of createTestElements(testValue)) {
+      assert_equals(el.selectionStart, testValue.length,
+                    `Initial .value set on ${el.id} should set selectionStart to end of value`);
+      el.selectionStart = 0;
+      el.selectionEnd = 5;
+      el.selectionStart = 8;
+      assert_equals(el.selectionStart, 8, `selectionStart on ${el.id}`);
+      assert_equals(el.selectionEnd, 8, `selectionEnd on ${el.id}`);
+      el.remove();
+    }
+  }, "Setting selectionStart to a value larger than selectionEnd should increase selectionEnd");
+</script>

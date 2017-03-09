@@ -117,8 +117,7 @@ interface HTMLInputElement : HTMLElement {
   void select();
 
   [Throws]
-           // TODO: unsigned vs signed
-           attribute long? selectionStart;
+           attribute unsigned long? selectionStart;
   [Throws]
            attribute long? selectionEnd;
   [Throws]
