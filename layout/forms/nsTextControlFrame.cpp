@@ -913,58 +913,6 @@ nsTextControlFrame::SetSelectionRange(int32_t aSelStart, int32_t aSelEnd,
 }
 
 
-NS_IMETHODIMP
-nsTextControlFrame::SetSelectionStart(int32_t aSelectionStart)
-{
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t selStart = 0, selEnd = 0;
-
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  MOZ_ASSERT(txtCtrl, "Content not a text control element");
-  ErrorResult controlResult;
-  txtCtrl->GetSelectionRange(&selStart, &selEnd, controlResult);
-  if (NS_WARN_IF(controlResult.Failed())) {
-    return controlResult.StealNSResult();
-  }
-
-  if (aSelectionStart > selEnd) {
-    // Collapse to the new start point.
-    selEnd = aSelectionStart;
-  }
-
-  selStart = aSelectionStart;
-
-  return SetSelectionEndPoints(selStart, selEnd);
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::SetSelectionEnd(int32_t aSelectionEnd)
-{
-  nsresult rv = EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t selStart = 0, selEnd = 0;
-
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  MOZ_ASSERT(txtCtrl, "Content not a text control element");
-  ErrorResult controlResult;
-  txtCtrl->GetSelectionRange(&selStart, &selEnd, controlResult);
-  if (NS_WARN_IF(controlResult.Failed())) {
-    return controlResult.StealNSResult();
-  }
-
-  if (aSelectionEnd < selStart) {
-    // Collapse to the new end point.
-    selStart = aSelectionEnd;
-  }
-
-  selEnd = aSelectionEnd;
-
-  return SetSelectionEndPoints(selStart, selEnd);
-}
-
 nsresult
 nsTextControlFrame::OffsetToDOMPoint(int32_t aOffset,
                                      nsIDOMNode** aResult,
