@@ -7,9 +7,9 @@
 #ifndef MediaMIMETypes_h_
 #define MediaMIMETypes_h_
 
+#include "VideoUtils.h"
 #include "mozilla/Maybe.h"
 #include "nsString.h"
-#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -52,7 +52,8 @@ public:
   // Implicit so MEDIAMIMETYPE can be used wherever a MediaMIMEType is expected.
   MOZ_IMPLICIT MediaMIMEType(const DependentMediaMIMEType& aType)
     : mMIMEType(aType.AsDependentString())
-  {}
+  {
+  }
 
   // MIME "type/subtype", always lowercase.
   const nsACString& AsString() const { return mMIMEType; }
@@ -106,16 +107,15 @@ Maybe<MediaMIMEType> MakeMediaMIMEType(const char* aType);
 class MediaCodecs
 {
 public:
-  MediaCodecs() {}
+  MediaCodecs() { }
   // Construction from a comma-separated list of codecs. Unchecked.
-  explicit MediaCodecs(const nsAString& aCodecs)
-    : mCodecs(aCodecs)
-  {}
+  explicit MediaCodecs(const nsAString& aCodecs) : mCodecs(aCodecs) { }
   // Construction from a literal comma-separated list of codecs. Unchecked.
   template <size_t N>
   explicit MediaCodecs(const char (&aCodecs)[N])
     : mCodecs(NS_ConvertUTF8toUTF16(aCodecs, N - 1))
-  {}
+  {
+  }
 
   bool IsEmpty() const { return mCodecs.IsEmpty(); }
   const nsAString& AsString() const { return mCodecs; }
