@@ -28,11 +28,13 @@ GMPCDMProxy::GMPCDMProxy(dom::MediaKeys* aKeys,
                          const nsAString& aKeySystem,
                          GMPCrashHelper* aCrashHelper,
                          bool aDistinctiveIdentifierRequired,
-                         bool aPersistentStateRequired)
+                         bool aPersistentStateRequired,
+                         nsIEventTarget* aMainThread)
   : CDMProxy(aKeys,
              aKeySystem,
              aDistinctiveIdentifierRequired,
-             aPersistentStateRequired)
+             aPersistentStateRequired,
+             aMainThread)
   , mCrashHelper(aCrashHelper)
   , mCDM(nullptr)
   , mShutdownCalled(false)
@@ -52,8 +54,7 @@ void
 GMPCDMProxy::Init(PromiseId aPromiseId,
                   const nsAString& aOrigin,
                   const nsAString& aTopLevelOrigin,
-                  const nsAString& aGMPName,
-                  nsIEventTarget* aMainThread)
+                  const nsAString& aGMPName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
@@ -61,8 +62,6 @@ GMPCDMProxy::Init(PromiseId aPromiseId,
   EME_LOG("GMPCDMProxy::Init (%s, %s)",
           NS_ConvertUTF16toUTF8(aOrigin).get(),
           NS_ConvertUTF16toUTF8(aTopLevelOrigin).get());
-
-  mMainThread = aMainThread;
 
   nsCString pluginVersion;
   if (!mOwnerThread) {
