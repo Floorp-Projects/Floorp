@@ -24,8 +24,8 @@ function test()
   var f = function () {
     try { } catch(x if true) { } catch(y) { } finally { this.a.b; } };
 
-  expect = 'function () { try { } catch(x if true) { } catch(y) { } ' +
-    'finally { this.a.b; } }';
+  expect = 'function () {\n\
+    try { } catch(x if true) { } catch(y) { } finally { this.a.b; } }';
 
   actual = f + '';
   compareSource(expect, actual, summary);

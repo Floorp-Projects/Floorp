@@ -21,9 +21,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = '({ ' +
-    'get in () { return this.for; }, ' + 
-    'set in (value) { this.for = value; } ' + 
+  expect = '({' +
+    'get in() { return this.for; }, ' +
+    'set in(value) { this.for = value; }' +
     '})';
   try
   {

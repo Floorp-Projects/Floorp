@@ -19,9 +19,9 @@ var func = function ff() {
 
 actual = uneval(func);
 
-expect = '(function ff() {\
-  obj = { get foo() { return "foo"; }};\
-  return 1;\
+expect = '(function ff() {\n\
+  obj = { get foo() { return "foo"; }};\n\
+  return 1;\n\
 })';
 
 compareSource(expect, actual, summary);

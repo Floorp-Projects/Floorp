@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = '({a: (void 0)})'
+  expect = '({a:(void 0)})'
   actual = uneval({a: undefined})
   compareSource(expect, actual, summary + ': uneval');
 
