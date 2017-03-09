@@ -18,11 +18,10 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace css {
 
-// TODO The other branch should be changed to Servo rule.
 #define CALL_INNER(inner_, call_)               \
   ((inner_).is<GeckoGroupRuleRules>()           \
     ? (inner_).as<GeckoGroupRuleRules>().call_  \
-    : (inner_).as<GeckoGroupRuleRules>().call_)
+    : (inner_).as<ServoGroupRuleRules>().call_)
 
 // -------------------------------
 // Style Rule List for group rules
@@ -193,6 +192,25 @@ GeckoGroupRuleRules::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   // worthwhile:
   // - mRuleCollection
   return n;
+}
+
+// -------------------------------
+// ServoGroupRuleRules
+//
+
+#ifdef DEBUG
+void
+ServoGroupRuleRules::List(FILE* out, int32_t aIndent) const
+{
+  // TODO list something reasonable?
+}
+#endif
+
+size_t
+ServoGroupRuleRules::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // TODO how to implement?
+  return 0;
 }
 
 // -------------------------------
