@@ -73,8 +73,7 @@ public:
                               uint64_t aHandle);
 
   void AddExternalImageBuffer(ImageKey key,
-                              gfx::IntSize aSize,
-                              gfx::SurfaceFormat aFormat,
+                              const ImageDescriptor& aDescriptor,
                               uint64_t aHandle);
 
   void UpdateImageBuffer(wr::ImageKey aKey,

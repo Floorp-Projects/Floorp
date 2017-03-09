@@ -292,12 +292,12 @@ WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 }
 
 void
-WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescritptor,
+WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                        Range<uint8_t> aBytes)
 {
   wr_api_add_image(mWrApi,
                    key,
-                   &aDescritptor,
+                   &aDescriptor,
                    &aBytes[0], aBytes.length());
 }
 
@@ -316,25 +316,23 @@ WebRenderAPI::AddExternalImageHandle(ImageKey key,
 
 void
 WebRenderAPI::AddExternalImageBuffer(ImageKey key,
-                                     gfx::IntSize aSize,
-                                     gfx::SurfaceFormat aFormat,
+                                     const ImageDescriptor& aDescriptor,
                                      uint64_t aHandle)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_add_external_image_buffer(mWrApi,
                                    key,
-                                   aSize.width, aSize.height, format,
+                                   &aDescriptor,
                                    aHandle);
 }
 
 void
 WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
-                                const ImageDescriptor& aDescritptor,
+                                const ImageDescriptor& aDescriptor,
                                 Range<uint8_t> aBytes)
 {
   wr_api_update_image(mWrApi,
                       aKey,
-                      &aDescritptor,
+                      &aDescriptor,
                       &aBytes[0], aBytes.length());
 }
 
