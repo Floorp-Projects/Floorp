@@ -115,12 +115,27 @@ const prefs = {
 };
 
 function MarionetteComponent() {
+  // keeps track of whether Marionette is available,
+  // either as a result of the marionette.enabled pref
+  // or by use of the --marionette flag
   this.enabled = prefs.enabled;
-  this.loaded = false;
-  this.logger = this.setupLogger(prefs.logLevel);
+
+  // guards against this component
+  // being initialised multiple times
+  this.running = false;
+
+  // holds a reference to server.TCPListener
   this.server = null;
+
+  // holds reference to ChromeWindow
+  // used to run GFX sanity tests on Windows
   this.gfxWindow = null;
+
+  // indicates that all pending window checks have been completed
+  // and that we are ready to start the Marionette server
   this.finalUIStartup = false;
+
+  this.logger = this.setupLogger(prefs.logLevel);
 }
 
 MarionetteComponent.prototype = {
@@ -131,7 +146,7 @@ MarionetteComponent.prototype = {
       [Ci.nsICommandLineHandler, Ci.nsIObserver]),
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
-    {category: "profile-after-change", service: true}
+    {category: "profile-after-change", service: true},
   ],
 };
 
@@ -144,7 +159,7 @@ MarionetteComponent.prototype.onStopListening = function (socket, status) {
   socket.close();
 };
 
-/** Checks |cmdLine| for the --marionette flag. */
+// Handle --marionette flag
 MarionetteComponent.prototype.handle = function (cmdLine) {
   if (cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
@@ -163,8 +178,6 @@ MarionetteComponent.prototype.observe = function (subject, topic, data) {
       prefs.readFromEnvironment(ENV_PREF_VAR);
 
       if (this.enabled) {
-        this.logger.debug("Marionette is enabled");
-
         // We want to suppress the modal dialog that's shown
         // when starting up in safe-mode to enable testing.
         if (Services.appinfo.inSafeMode) {
@@ -227,11 +240,10 @@ MarionetteComponent.prototype.setupLogger = function (level) {
   return logger;
 };
 
-/** Wait for the modal dialogue to finish loading. */
 MarionetteComponent.prototype.suppressSafeModeDialog = function (win) {
-  win.addEventListener("load", function() {
+  win.addEventListener("load", () => {
     if (win.document.getElementById("safeModeDialog")) {
-      // Accept the dialog to start in safe-mode
+      // accept the dialog to start in safe-mode
       win.setTimeout(() => {
         win.document.documentElement.getButton("accept").click();
       });
@@ -240,11 +252,11 @@ MarionetteComponent.prototype.suppressSafeModeDialog = function (win) {
 };
 
 MarionetteComponent.prototype.init = function () {
-  if (this.loaded || !this.enabled || !this.finalUIStartup) {
+  if (this.running || !this.enabled || !this.finalUIStartup) {
     return;
   }
 
-  this.loaded = true;
+  this.running = true;
 
   if (!prefs.forceLocal) {
     // See bug 800138.  Because the first socket that opens with
@@ -257,28 +269,28 @@ MarionetteComponent.prototype.init = function () {
     insaneSacrificialGoat.asyncListen(this);
   }
 
-  let so;
+  let s;
   try {
     Cu.import("chrome://marionette/content/server.js");
-    so = new server.TCPListener(prefs.port, prefs.forceLocal);
-    so.start();
-    this.logger.info(`Listening on port ${so.port}`);
+    s = new server.TCPListener(prefs.port, prefs.forceLocal);
+    s.start();
+    this.logger.info(`Listening on port ${s.port}`);
   } catch (e) {
     this.logger.error(`Error on starting server: ${e}`);
-    dump(e.toString() + "\n" + e.stack + "\n");
+    dump(`${e.toString()}\n${e.stack}\n`);
   } finally {
-    if (so) {
-      this.server = so;
+    if (s) {
+      this.server = s;
     }
   }
 };
 
 MarionetteComponent.prototype.uninit = function () {
-  if (!this.loaded) {
+  if (!this.running) {
     return;
   }
   this.server.stop();
-  this.loaded = false;
+  this.running = false;
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);
