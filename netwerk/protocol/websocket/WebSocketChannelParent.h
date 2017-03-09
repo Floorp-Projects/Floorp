@@ -52,7 +52,7 @@ class WebSocketChannelParent : public PWebSocketParent,
   mozilla::ipc::IPCResult RecvClose(const uint16_t & code, const nsCString & reason) override;
   mozilla::ipc::IPCResult RecvSendMsg(const nsCString& aMsg) override;
   mozilla::ipc::IPCResult RecvSendBinaryMsg(const nsCString& aMsg) override;
-  mozilla::ipc::IPCResult RecvSendBinaryStream(const InputStreamParams& aStream,
+  mozilla::ipc::IPCResult RecvSendBinaryStream(const IPCStream& aStream,
                                                const uint32_t& aLength) override;
   mozilla::ipc::IPCResult RecvDeleteSelf() override;
 

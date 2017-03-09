@@ -187,13 +187,12 @@ WebSocketChannelParent::RecvSendBinaryMsg(const nsCString& aMsg)
 }
 
 mozilla::ipc::IPCResult
-WebSocketChannelParent::RecvSendBinaryStream(const InputStreamParams& aStream,
+WebSocketChannelParent::RecvSendBinaryStream(const IPCStream& aStream,
                                              const uint32_t& aLength)
 {
   LOG(("WebSocketChannelParent::RecvSendBinaryStream() %p\n", this));
   if (mChannel) {
-    nsTArray<mozilla::ipc::FileDescriptor> fds;
-    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream, fds);
+    nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
     if (!stream) {
       return IPC_FAIL_NO_REASON(this);
     }
