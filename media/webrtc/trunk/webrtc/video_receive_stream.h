@@ -179,6 +179,10 @@ class VideoReceiveStream : public ReceiveStream {
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
   virtual int64_t GetRtt() const = 0;
+
+  virtual bool
+  GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const = 0;
+
   virtual void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) = 0;
 };
 
