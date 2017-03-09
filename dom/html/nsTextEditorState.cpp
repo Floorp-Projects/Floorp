@@ -1577,8 +1577,8 @@ nsTextEditorState::SetSelectionProperties(nsTextEditorState::SelectionProperties
 }
 
 void
-nsTextEditorState::GetSelectionRange(int32_t* aSelectionStart,
-                                     int32_t* aSelectionEnd,
+nsTextEditorState::GetSelectionRange(uint32_t* aSelectionStart,
+                                     uint32_t* aSelectionEnd,
                                      ErrorResult& aRv)
 {
   MOZ_ASSERT(aSelectionStart);
@@ -1640,7 +1640,7 @@ nsTextEditorState::GetSelectionDirection(ErrorResult& aRv)
 }
 
 void
-nsTextEditorState::SetSelectionRange(int32_t aStart, int32_t aEnd,
+nsTextEditorState::SetSelectionRange(uint32_t aStart, uint32_t aEnd,
                                      nsITextControlFrame::SelectionDirection aDirection,
                                      ErrorResult& aRv)
 {
@@ -1659,10 +1659,10 @@ nsTextEditorState::SetSelectionRange(int32_t aStart, int32_t aEnd,
     // various mismatches between our impl and the spec.
     GetValue(value, false);
     uint32_t length = value.Length();
-    if (uint32_t(aStart) > length) {
+    if (aStart > length) {
       aStart = length;
     }
-    if (uint32_t(aEnd) > length) {
+    if (aEnd > length) {
       aEnd = length;
     }
     SelectionProperties& props = GetSelectionProperties();
@@ -1703,17 +1703,15 @@ nsTextEditorState::SetSelectionRange(int32_t aStart, int32_t aEnd,
 }
 
 void
-nsTextEditorState::SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aStart,
+nsTextEditorState::SetSelectionStart(const Nullable<uint32_t>& aStart,
                                      ErrorResult& aRv)
 {
-  int32_t start = 0;
+  uint32_t start = 0;
   if (!aStart.IsNull()) {
-    // XXXbz This will do the wrong thing for input values that are out of the
-    // int32_t range...
     start = aStart.Value();
   }
 
-  int32_t ignored, end;
+  uint32_t ignored, end;
   GetSelectionRange(&ignored, &end, aRv);
   if (aRv.Failed()) {
     return;
@@ -1732,17 +1730,15 @@ nsTextEditorState::SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aSt
 }
 
 void
-nsTextEditorState::SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
+nsTextEditorState::SetSelectionEnd(const Nullable<uint32_t>& aEnd,
                                    ErrorResult& aRv)
 {
-  int32_t end = 0;
+  uint32_t end = 0;
   if (!aEnd.IsNull()) {
-    // XXXbz This will do the wrong thing for input values that are out of the
-    // int32_t range...
     end = aEnd.Value();
   }
 
-  int32_t start, ignored;
+  uint32_t start, ignored;
   GetSelectionRange(&start, &ignored, aRv);
   if (aRv.Failed()) {
     return;
@@ -1805,7 +1801,7 @@ nsTextEditorState::SetSelectionDirection(const nsAString& aDirection,
     return;
   }
 
-  int32_t start, end;
+  uint32_t start, end;
   GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
     return;
@@ -1826,8 +1822,8 @@ DirectionStringToSelectionDirection(const Optional<nsAString>& aDirection)
 }
 
 void
-nsTextEditorState::SetSelectionRange(int32_t aSelectionStart,
-                                     int32_t aSelectionEnd,
+nsTextEditorState::SetSelectionRange(uint32_t aSelectionStart,
+                                     uint32_t aSelectionEnd,
                                      const Optional<nsAString>& aDirection,
                                      ErrorResult& aRv)
 {
@@ -1841,21 +1837,22 @@ void
 nsTextEditorState::SetRangeText(const nsAString& aReplacement,
                                 ErrorResult& aRv)
 {
-  int32_t start, end;
+  uint32_t start, end;
   GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
     return;
   }
 
   SetRangeText(aReplacement, start, end, SelectionMode::Preserve,
-               aRv, start, end);
+               aRv, Some(start), Some(end));
 }
 
 void
 nsTextEditorState::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
                                 uint32_t aEnd, SelectionMode aSelectMode,
-                                ErrorResult& aRv, int32_t aSelectionStart,
-                                int32_t aSelectionEnd)
+                                ErrorResult& aRv,
+                                const Maybe<uint32_t>& aSelectionStart,
+                                const Maybe<uint32_t>& aSelectionEnd)
 {
   if (aStart > aEnd) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -1874,11 +1871,17 @@ nsTextEditorState::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
     aEnd = inputValueLength;
   }
 
-  if (aSelectionStart == -1 && aSelectionEnd == -1) {
-    GetSelectionRange(&aSelectionStart, &aSelectionEnd, aRv);
+  uint32_t selectionStart, selectionEnd;
+  if (!aSelectionStart) {
+    MOZ_ASSERT(!aSelectionEnd);
+    GetSelectionRange(&selectionStart, &selectionEnd, aRv);
     if (aRv.Failed()) {
       return;
     }
+  } else {
+    MOZ_ASSERT(aSelectionEnd);
+    selectionStart = *aSelectionStart;
+    selectionEnd = *aSelectionEnd;
   }
 
   MOZ_ASSERT(aStart <= aEnd);
@@ -1895,32 +1898,32 @@ nsTextEditorState::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
   switch (aSelectMode) {
     case mozilla::dom::SelectionMode::Select:
     {
-      aSelectionStart = aStart;
-      aSelectionEnd = newEnd;
+      selectionStart = aStart;
+      selectionEnd = newEnd;
     }
     break;
     case mozilla::dom::SelectionMode::Start:
     {
-      aSelectionStart = aSelectionEnd = aStart;
+      selectionStart = selectionEnd = aStart;
     }
     break;
     case mozilla::dom::SelectionMode::End:
     {
-      aSelectionStart = aSelectionEnd = newEnd;
+      selectionStart = selectionEnd = newEnd;
     }
     break;
     case mozilla::dom::SelectionMode::Preserve:
     {
-      if ((uint32_t)aSelectionStart > aEnd) {
-        aSelectionStart += delta;
-      } else if ((uint32_t)aSelectionStart > aStart) {
-        aSelectionStart = aStart;
+      if (selectionStart > aEnd) {
+        selectionStart += delta;
+      } else if (selectionStart > aStart) {
+        selectionStart = aStart;
       }
 
-      if ((uint32_t)aSelectionEnd > aEnd) {
-        aSelectionEnd += delta;
-      } else if ((uint32_t)aSelectionEnd > aStart) {
-        aSelectionEnd = newEnd;
+      if (selectionEnd > aEnd) {
+        selectionEnd += delta;
+      } else if (selectionEnd > aStart) {
+        selectionEnd = newEnd;
       }
     }
     break;
@@ -1928,7 +1931,7 @@ nsTextEditorState::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
       MOZ_CRASH("Unknown mode!");
   }
 
-  SetSelectionRange(aSelectionStart, aSelectionEnd, Optional<nsAString>(), aRv);
+  SetSelectionRange(selectionStart, selectionEnd, Optional<nsAString>(), aRv);
 }
 
 HTMLInputElement*
@@ -2008,7 +2011,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // controller, and so forth.
   if (!IsSelectionCached()) {
     // Go ahead and cache it now.
-    int32_t start = 0, end = 0;
+    uint32_t start = 0, end = 0;
     IgnoredErrorResult rangeRv;
     GetSelectionRange(&start, &end, rangeRv);
 
@@ -2575,8 +2578,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
         props.SetEnd(value.Length());
       } else {
         // Make sure our cached selection position is not outside the new value.
-        props.SetStart(std::min(uint32_t(props.GetStart()), value.Length()));
-        props.SetEnd(std::min(uint32_t(props.GetEnd()), value.Length()));
+        props.SetStart(std::min(props.GetStart(), value.Length()));
+        props.SetEnd(std::min(props.GetEnd(), value.Length()));
       }
     }
 
