@@ -131,6 +131,7 @@ struct HttpChannelOpenArgs
   nsCString                   channelId;
   uint64_t                    contentWindowId;
   nsCString                   preferredAlternativeType;
+  uint64_t                    topLevelOuterContentWindowId;
 };
 
 struct HttpChannelConnectArgs
