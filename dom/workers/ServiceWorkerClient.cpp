@@ -10,6 +10,8 @@
 
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/ServiceWorkerMessageEvent.h"
+#include "mozilla/dom/ServiceWorkerMessageEventBinding.h"
 #include "nsGlobalWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocument.h"
@@ -180,7 +182,7 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    RootedDictionary<MessageEventInit> init(aCx);
+    RootedDictionary<ServiceWorkerMessageEventInit> init(aCx);
 
     nsCOMPtr<nsIPrincipal> principal = aTargetContainer->GetParentObject()->PrincipalOrNull();
     NS_WARNING_ASSERTION(principal, "Why is the principal null here?");
@@ -210,9 +212,10 @@ private:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    RefPtr<MessageEvent> event =
-      MessageEvent::Constructor(aTargetContainer, NS_LITERAL_STRING("message"),
-                                init);
+    RefPtr<ServiceWorkerMessageEvent> event =
+      ServiceWorkerMessageEvent::Constructor(aTargetContainer,
+                                             NS_LITERAL_STRING("message"),
+                                             init);
 
     event->SetTrusted(true);
     bool status = false;
