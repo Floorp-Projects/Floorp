@@ -6571,29 +6571,15 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
     return;
   }
 
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
   nsTextEditorState* state = GetEditorState();
-  if (!state) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  MOZ_ASSERT(state, "SupportsTextSelection came back true!");
+  nsITextControlFrame::SelectionDirection dir =
+    state->GetSelectionDirection(aRv);
+  if (aRv.Failed()) {
     return;
-  }
-
-  nsresult rv = NS_ERROR_FAILURE;
-  if (formControlFrame) {
-    nsITextControlFrame::SelectionDirection dir;
-    rv = state->GetSelectionDirection(&dir);
-    if (NS_SUCCEEDED(rv)) {
-      DirectionToName(dir, aDirection);
-      return;
-    }
   }
   
-  if (state->IsSelectionCached()) {
-    DirectionToName(state->GetSelectionProperties().GetDirection(), aDirection);
-    return;
-  }
-
-  aRv.Throw(rv);
+  DirectionToName(dir, aDirection);
 }
 
 void
