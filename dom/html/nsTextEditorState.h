@@ -304,6 +304,12 @@ public:
   void SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aStart,
                          mozilla::ErrorResult& aRv);
 
+  // Set the selection end.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionend
+  // setter.
+  void SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
+                       mozilla::ErrorResult& aRv);
+
   void UpdateEditableState(bool aNotify) {
     if (mRootNode) {
       mRootNode->UpdateEditableState(aNotify);
