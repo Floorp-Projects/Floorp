@@ -161,6 +161,7 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
 
   // XXXbholley: Figure out the correct thing to pass here. Does this fixup
   // duplicate something that servo already does?
+  // See bug 1344914.
   bool skipFixup = false;
 
   RefPtr<nsStyleContext> result =
@@ -257,7 +258,8 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
     Servo_ComputedValues_Inherit(mRawSet.get(), parentComputedValues).Consume();
 
   return GetContext(computedValues.forget(), aParentContext,
-                    nsCSSAnonBoxes::mozText, CSSPseudoElementType::AnonBox,
+                    nsCSSAnonBoxes::mozText,
+                    CSSPseudoElementType::InheritingAnonBox,
                     nullptr);
 }
 
@@ -271,7 +273,7 @@ ServoStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentCon
 
   return GetContext(computedValues.forget(), aParentContext,
                     nsCSSAnonBoxes::firstLetterContinuation,
-                    CSSPseudoElementType::AnonBox,
+                    CSSPseudoElementType::InheritingAnonBox,
                     nullptr);
 }
 
@@ -292,7 +294,7 @@ ServoStyleSet::ResolveStyleForPlaceholder()
   RefPtr<nsStyleContext> retval =
     GetContext(computedValues.forget(), nullptr,
                nsCSSAnonBoxes::oofPlaceholder,
-               CSSPseudoElementType::AnonBox,
+               CSSPseudoElementType::NonInheritingAnonBox,
                nullptr);
   cache = retval;
   return retval.forget();
@@ -346,7 +348,8 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                         nsStyleContext* aParentContext,
                                         uint32_t aFlags)
 {
-  MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag));
+  MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
+             !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
 
   MOZ_ASSERT(aFlags == 0 ||
              aFlags == nsStyleSet::eSkipParentDisplayBasedStyleFixup);
@@ -368,9 +371,50 @@ ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 #endif
 
+  // FIXME(bz, bug 1344914) We should really GetContext here and make skipFixup
+  // work there.
   return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                            CSSPseudoElementType::AnonBox,
+                            CSSPseudoElementType::InheritingAnonBox,
                             computedValues.forget(), skipFixup);
+}
+
+already_AddRefed<nsStyleContext>
+ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
+{
+  MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
+             nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
+  MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent,
+             "If nsCSSAnonBoxes::pageContent ends up non-inheriting, check "
+             "whether we need to do anything to move the "
+             "@page handling from ResolveAnonymousBoxStyle to "
+             "ResolveNonInheritingAnonymousBoxStyle");
+
+  nsCSSAnonBoxes::NonInheriting type =
+    nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(aPseudoTag);
+  RefPtr<nsStyleContext>& cache = mNonInheritingStyleContexts[type];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ComputedValues_GetForAnonymousBox(nullptr, aPseudoTag,
+                                            mRawSet.get()).Consume();
+#ifdef DEBUG
+  if (!computedValues) {
+    nsString pseudo;
+    aPseudoTag->ToString(pseudo);
+    NS_ERROR(nsPrintfCString("stylo: could not get anon-box: %s",
+             NS_ConvertUTF16toUTF8(pseudo).get()).get());
+    MOZ_CRASH();
+  }
+#endif
+
+  RefPtr<nsStyleContext> retval =
+    GetContext(computedValues.forget(), nullptr, aPseudoTag,
+               CSSPseudoElementType::NonInheritingAnonBox, nullptr);
+  cache = retval;
+  return retval.forget();
 }
 
 // manage the set of style sheets in the style set

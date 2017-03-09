@@ -3320,7 +3320,8 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
     NS_ASSERTION(aRuleInfo->mSelector->mNext->mOperator == ':',
                  "Unexpected mNext combinator");
     ruleHash->AppendRule(*aRuleInfo);
-  } else if (pseudoType == CSSPseudoElementType::AnonBox) {
+  } else if (pseudoType == CSSPseudoElementType::InheritingAnonBox ||
+             pseudoType == CSSPseudoElementType::NonInheritingAnonBox) {
     NS_ASSERTION(!aRuleInfo->mSelector->mCasedTag &&
                  !aRuleInfo->mSelector->mIDList &&
                  !aRuleInfo->mSelector->mClassList &&
