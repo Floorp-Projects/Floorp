@@ -16,6 +16,8 @@ else:
     DIRS += ['unix']
     if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         DIRS += ['gtk']
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+        DIRS += ['android']
 
 XPIDL_SOURCES += [
     'mozILocaleService.idl',
