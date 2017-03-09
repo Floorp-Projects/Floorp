@@ -2976,41 +2976,34 @@ profiler_clear_js_context()
     return;
   }
 
-  stack->clearJSContext();
+  if (!stack->mContext) {
+    return;
+  }
+
+  // On JS shut down, flush the current buffer as stringifying JIT samples
+  // requires a live JSContext.
+
+  PS::AutoLock lock(gPSMutex);
+
+  if (gPS->IsActive(lock)) {
+    gPS->SetIsPaused(lock, true);
+
+    // Find the ThreadInfo corresponding to this thread, if there is one, and
+    // flush it.
+    const PS::ThreadVector& threads = gPS->Threads(lock);
+    for (size_t i = 0; i < threads.size(); i++) {
+      ThreadInfo* info = threads.at(i);
+      if (info->HasProfile() && !info->IsPendingDelete() &&
+          info->Stack() == stack) {
+        info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
+      }
+    }
+
+    gPS->SetIsPaused(lock, false);
+  }
+
+  stack->mContext = nullptr;
 }
 
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
-
-void PseudoStack::flushSamplerOnJSShutdown()
-{
-  MOZ_RELEASE_ASSERT(gPS);
-  MOZ_ASSERT(mContext);
-
-  PS::AutoLock lock(gPSMutex);
-
-  if (!gPS->IsActive(lock)) {
-    return;
-  }
-
-  gPS->SetIsPaused(lock, true);
-
-  const PS::ThreadVector& threads = gPS->Threads(lock);
-  for (size_t i = 0; i < threads.size(); i++) {
-    // Thread not being profiled, skip it.
-    ThreadInfo* info = threads.at(i);
-    if (!info->HasProfile() || info->IsPendingDelete()) {
-      continue;
-    }
-
-    // Thread not profiling the context that's going away, skip it.
-    if (info->Stack()->mContext != mContext) {
-      continue;
-    }
-
-    info->FlushSamplesAndMarkers(gPS->Buffer(lock), gPS->StartTime(lock));
-  }
-
-  gPS->SetIsPaused(lock, false);
-}
-
