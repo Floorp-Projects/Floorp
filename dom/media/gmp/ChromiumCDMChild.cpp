@@ -79,6 +79,23 @@ ChromiumCDMChild::OnResolveNewSessionPromise(uint32_t aPromiseId,
           ", sid=%s)",
           aPromiseId,
           aSessionId);
+
+  if (mLoadSessionPromiseIds.Contains(aPromiseId)) {
+    // As laid out in the Chromium CDM API, if the CDM fails to load
+    // a session it calls OnResolveNewSessionPromise with nullptr as the sessionId.
+    // We can safely assume this means that we have failed to load a session
+    // as the other methods specify calling 'OnRejectPromise' when they fail.
+    bool loadSuccessful = aSessionId != nullptr;
+    GMP_LOG("ChromiumCDMChild::OnResolveNewSessionPromise(pid=%u, sid=%s) "
+            "resolving %s load session ",
+            aPromiseId,
+            aSessionId,
+            (loadSuccessful ? "successful" : "failed"));
+    Unused << SendResolveLoadSessionPromise(aPromiseId, loadSuccessful);
+    mLoadSessionPromiseIds.RemoveElement(aPromiseId);
+    return;
+  }
+
   Unused << SendOnResolveNewSessionPromise(aPromiseId,
                                            nsCString(aSessionId, aSessionIdSize));
 }
@@ -290,6 +307,25 @@ ChromiumCDMChild::RecvCreateSessionAndGenerateRequest(
                                           static_cast<cdm::InitDataType>(aInitDataType),
                                           aInitData.Elements(),
                                           aInitData.Length());
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ChromiumCDMChild::RecvLoadSession(const uint32_t& aPromiseId,
+                                  const uint32_t& aSessionType,
+                                  const nsCString& aSessionId)
+{
+  GMP_LOG("ChromiumCDMChild::RecvLoadSession(pid=%u, type=%u, sessionId=%s)",
+          aPromiseId,
+          aSessionType,
+          aSessionId.get());
+  if (mCDM) {
+    mLoadSessionPromiseIds.AppendElement(aPromiseId);
+    mCDM->LoadSession(aPromiseId,
+                      static_cast<cdm::SessionType>(aSessionType),
+                      aSessionId.get(),
+                      aSessionId.Length());
   }
   return IPC_OK();
 }

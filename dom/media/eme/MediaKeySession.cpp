@@ -396,7 +396,7 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
   SetSessionId(aSessionId);
 
   PromiseId pid = mKeys->StorePromise(promise);
-  mKeys->GetCDMProxy()->LoadSession(pid, aSessionId);
+  mKeys->GetCDMProxy()->LoadSession(pid, mSessionType, aSessionId);
 
   EME_LOG("MediaKeySession[%p,'%s'] Load() sent to CDM, promiseId=%d",
     this, NS_ConvertUTF16toUTF8(mSessionId).get(), pid);

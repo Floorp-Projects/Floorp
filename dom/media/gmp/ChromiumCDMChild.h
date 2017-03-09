@@ -88,6 +88,9 @@ protected:
     const uint32_t& aSessionType,
     const uint32_t& aInitDataType,
     nsTArray<uint8_t>&& aInitData) override;
+  ipc::IPCResult RecvLoadSession(const uint32_t& aPromiseId,
+                                 const uint32_t& aSessionType,
+                                 const nsCString& aSessionId) override;
   ipc::IPCResult RecvUpdateSession(const uint32_t& aPromiseId,
                                    const nsCString& aSessionId,
                                    nsTArray<uint8_t>&& aResponse) override;
@@ -114,6 +117,7 @@ protected:
 
   typedef SimpleMap<uint64_t> DurationMap;
   DurationMap mFrameDurations;
+  nsTArray<uint32_t> mLoadSessionPromiseIds;
 
   bool mDecoderInitialized = false;
   bool mPersistentStateAllowed = false;
