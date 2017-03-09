@@ -371,8 +371,8 @@ UDPSocketParent::RecvOutgoingData(const UDPData& aData,
     case UDPData::TArrayOfuint8_t:
       Send(aData.get_ArrayOfuint8_t(), aAddr);
       break;
-    case UDPData::TInputStreamParams:
-      Send(aData.get_InputStreamParams(), aAddr);
+    case UDPData::TIPCStream:
+      Send(aData.get_IPCStream(), aAddr);
       break;
     default:
       MOZ_ASSERT(false, "Invalid data type!");
@@ -412,11 +412,10 @@ UDPSocketParent::Send(const InfallibleTArray<uint8_t>& aData,
 }
 
 void
-UDPSocketParent::Send(const InputStreamParams& aStream,
+UDPSocketParent::Send(const IPCStream& aStream,
                       const UDPSocketAddr& aAddr)
 {
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream, fds);
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aStream);
 
   if (NS_WARN_IF(!stream)) {
     return;
