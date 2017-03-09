@@ -389,7 +389,8 @@ class SurfaceTextureHost : public TextureHost
 public:
   SurfaceTextureHost(TextureFlags aFlags,
                      mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
-                     gfx::IntSize aSize);
+                     gfx::IntSize aSize,
+                     bool aContinuousUpdate);
 
   virtual ~SurfaceTextureHost();
 
@@ -425,6 +426,7 @@ public:
 protected:
   mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
+  bool mContinuousUpdate;
   RefPtr<CompositorOGL> mCompositor;
   RefPtr<SurfaceTextureSource> mTextureSource;
 };

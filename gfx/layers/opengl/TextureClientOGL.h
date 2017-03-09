@@ -56,6 +56,7 @@ public:
   static already_AddRefed<TextureClient>
   CreateTextureClient(AndroidSurfaceTextureHandle aHandle,
                       gfx::IntSize aSize,
+                      bool aContinuous,
                       gl::OriginPos aOriginPos,
                       LayersIPCChannel* aAllocator,
                       TextureFlags aFlags);
@@ -75,10 +76,11 @@ public:
   virtual void Deallocate(LayersIPCChannel*) override {}
 
 protected:
-  AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize);
+  AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous);
 
   const AndroidSurfaceTextureHandle mHandle;
   const gfx::IntSize mSize;
+  const bool mContinuous;
 };
 
 #endif // MOZ_WIDGET_ANDROID
