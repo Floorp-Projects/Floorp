@@ -2010,8 +2010,7 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
 
       nsresult rv =
         SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify |
-                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
+                                 nsTextEditorState::eSetValue_Notify);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2023,8 +2022,7 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
     } else {
       nsresult rv =
         SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify |
-                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
+                                 nsTextEditorState::eSetValue_Notify);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2868,10 +2866,8 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
     return rv.StealNSResult();
   } else {
     nsresult rv =
-      SetValueInternal(aValue,
-                       nsTextEditorState::eSetValue_BySetUserInput |
-                       nsTextEditorState::eSetValue_Notify|
-                       nsTextEditorState::eSetValue_MoveCursorToEnd);
+      SetValueInternal(aValue, nsTextEditorState::eSetValue_BySetUserInput |
+                               nsTextEditorState::eSetValue_Notify);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5140,7 +5136,6 @@ HTMLInputElement::HandleTypeChange(uint8_t aNewType)
   nsTextEditorState::SelectionProperties sp;
 
   if (GetEditorState()) {
-    mInputData.mState->SyncUpSelectionPropertiesBeforeDestruction();
     sp = mInputData.mState->GetSelectionProperties();
   }
 
@@ -6268,8 +6263,8 @@ HTMLInputElement::InputTextLength(CallerType aCallerType)
 }
 
 void
-HTMLInputElement::SetSelectionRange(uint32_t aSelectionStart,
-                                    uint32_t aSelectionEnd,
+HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
+                                    int32_t aSelectionEnd,
                                     const Optional<nsAString>& aDirection,
                                     ErrorResult& aRv)
 {
@@ -6278,9 +6273,42 @@ HTMLInputElement::SetSelectionRange(uint32_t aSelectionStart,
     return;
   }
 
-  nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
-  state->SetSelectionRange(aSelectionStart, aSelectionEnd, aDirection, aRv);
+  nsresult rv = SetSelectionRange(aSelectionStart, aSelectionEnd,
+    aDirection.WasPassed() ? aDirection.Value() : NullString());
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
+NS_IMETHODIMP
+HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
+                                    int32_t aSelectionEnd,
+                                    const nsAString& aDirection)
+{
+  nsresult rv = NS_OK;
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    // Default to forward, even if not specified.
+    // Note that we don't currently support directionless selections, so
+    // "none" is treated like "forward".
+    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
+    if (!aDirection.IsEmpty() && aDirection.EqualsLiteral("backward")) {
+      dir = nsITextControlFrame::eBackward;
+    }
+
+    rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
+    if (NS_SUCCEEDED(rv)) {
+      rv = textControlFrame->ScrollSelectionIntoView();
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
+                                 true, false);
+      asyncDispatcher->PostDOMEvent();
+    }
+  }
+
+  return rv;
 }
 
 void
@@ -6291,52 +6319,153 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
     return;
   }
 
-  nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
-  state->SetRangeText(aReplacement, aRv);
+  int32_t start, end;
+  aRv = GetSelectionRange(&start, &end);
+  if (aRv.Failed()) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      start = state->GetSelectionProperties().GetStart();
+      end = state->GetSelectionProperties().GetEnd();
+      aRv = NS_OK;
+    }
+  }
+
+  SetRangeText(aReplacement, start, end, mozilla::dom::SelectionMode::Preserve,
+               aRv, start, end);
 }
 
 void
 HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                               uint32_t aEnd, SelectionMode aSelectMode,
-                               ErrorResult& aRv)
+                               uint32_t aEnd, const SelectionMode& aSelectMode,
+                               ErrorResult& aRv, int32_t aSelectionStart,
+                               int32_t aSelectionEnd)
 {
   if (!SupportsTextSelection()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
-  state->SetRangeText(aReplacement, aStart, aEnd, aSelectMode, aRv);
+  if (aStart > aEnd) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  nsAutoString value;
+  GetNonFileValueInternal(value);
+  uint32_t inputValueLength = value.Length();
+
+  if (aStart > inputValueLength) {
+    aStart = inputValueLength;
+  }
+
+  if (aEnd > inputValueLength) {
+    aEnd = inputValueLength;
+  }
+
+  if (aSelectionStart == -1 && aSelectionEnd == -1) {
+    aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
+    if (aRv.Failed()) {
+      nsTextEditorState* state = GetEditorState();
+      if (state && state->IsSelectionCached()) {
+        aSelectionStart = state->GetSelectionProperties().GetStart();
+        aSelectionEnd = state->GetSelectionProperties().GetEnd();
+        aRv = NS_OK;
+      }
+    }
+  }
+
+  if (aStart <= aEnd) {
+    value.Replace(aStart, aEnd - aStart, aReplacement);
+    nsresult rv =
+      SetValueInternal(value, nsTextEditorState::eSetValue_ByContent);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+  }
+
+  uint32_t newEnd = aStart + aReplacement.Length();
+  int32_t delta =  aReplacement.Length() - (aEnd - aStart);
+
+  switch (aSelectMode) {
+    case mozilla::dom::SelectionMode::Select:
+    {
+      aSelectionStart = aStart;
+      aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Start:
+    {
+      aSelectionStart = aSelectionEnd = aStart;
+    }
+    break;
+    case mozilla::dom::SelectionMode::End:
+    {
+      aSelectionStart = aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Preserve:
+    {
+      if ((uint32_t)aSelectionStart > aEnd) {
+        aSelectionStart += delta;
+      } else if ((uint32_t)aSelectionStart > aStart) {
+        aSelectionStart = aStart;
+      }
+
+      if ((uint32_t)aSelectionEnd > aEnd) {
+        aSelectionEnd += delta;
+      } else if ((uint32_t)aSelectionEnd > aStart) {
+        aSelectionEnd = newEnd;
+      }
+    }
+    break;
+    default:
+      MOZ_CRASH("Unknown mode!");
+  }
+
+  Optional<nsAString> direction;
+  SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
 }
 
-void
-HTMLInputElement::GetValueFromSetRangeText(nsAString& aValue)
-{
-  GetNonFileValueInternal(aValue);
-}
-
-nsresult
-HTMLInputElement::SetValueFromSetRangeText(const nsAString& aValue)
-{
-  return SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent);
-}
-
-Nullable<uint32_t>
+Nullable<int32_t>
 HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
 {
   if (!SupportsTextSelection()) {
-    return Nullable<uint32_t>();
+    return Nullable<int32_t>();
   }
 
+  int32_t selStart;
+  nsresult rv = GetSelectionStart(&selStart);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  return Nullable<int32_t>(selStart);
+}
+
+NS_IMETHODIMP
+HTMLInputElement::GetSelectionStart(int32_t* aSelectionStart)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionStart);
+
   int32_t selEnd, selStart;
-  GetSelectionRange(&selStart, &selEnd, aRv);
-  return Nullable<uint32_t>(selStart);
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionStart = state->GetSelectionProperties().GetStart();
+      return NS_OK;
+    }
+    return rv;
+  }
+
+  *aSelectionStart = selStart;
+  return NS_OK;
 }
 
 void
-HTMLInputElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart,
+HTMLInputElement::SetSelectionStart(const Nullable<int32_t>& aSelectionStart,
                                     ErrorResult& aRv)
 {
   if (!SupportsTextSelection()) {
@@ -6344,25 +6473,85 @@ HTMLInputElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart,
     return;
   }
 
+  int32_t selStart = 0;
+  if (!aSelectionStart.IsNull()) {
+    selStart = aSelectionStart.Value();
+  }
+
   nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
-  state->SetSelectionStart(aSelectionStart, aRv);
+  if (state && state->IsSelectionCached()) {
+    state->GetSelectionProperties().SetStart(selStart);
+    return;
+  }
+
+  nsAutoString direction;
+  aRv = GetSelectionDirection(direction);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  int32_t start, end;
+  aRv = GetSelectionRange(&start, &end);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  start = selStart;
+  if (end < start) {
+    end = start;
+  }
+
+  aRv = SetSelectionRange(start, end, direction);
 }
 
-Nullable<uint32_t>
+NS_IMETHODIMP
+HTMLInputElement::SetSelectionStart(int32_t aSelectionStart)
+{
+  ErrorResult rv;
+  Nullable<int32_t> selStart(aSelectionStart);
+  SetSelectionStart(selStart, rv);
+  return rv.StealNSResult();
+}
+
+Nullable<int32_t>
 HTMLInputElement::GetSelectionEnd(ErrorResult& aRv)
 {
   if (!SupportsTextSelection()) {
-    return Nullable<uint32_t>();
+    return Nullable<int32_t>();
   }
 
+  int32_t selEnd;
+  nsresult rv = GetSelectionEnd(&selEnd);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+
+  return Nullable<int32_t>(selEnd);
+}
+
+NS_IMETHODIMP
+HTMLInputElement::GetSelectionEnd(int32_t* aSelectionEnd)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionEnd);
+
   int32_t selEnd, selStart;
-  GetSelectionRange(&selStart, &selEnd, aRv);
-  return Nullable<uint32_t>(selEnd);
+  nsresult rv = GetSelectionRange(&selStart, &selEnd);
+
+  if (NS_FAILED(rv)) {
+    nsTextEditorState* state = GetEditorState();
+    if (state && state->IsSelectionCached()) {
+      *aSelectionEnd = state->GetSelectionProperties().GetEnd();
+      return NS_OK;
+    }
+    return rv;
+  }
+
+  *aSelectionEnd = selEnd;
+  return NS_OK;
 }
 
 void
-HTMLInputElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
+HTMLInputElement::SetSelectionEnd(const Nullable<int32_t>& aSelectionEnd,
                                   ErrorResult& aRv)
 {
   if (!SupportsTextSelection()) {
@@ -6370,9 +6559,44 @@ HTMLInputElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
     return;
   }
 
+  int32_t selEnd = 0;
+  if (!aSelectionEnd.IsNull()) {
+    selEnd = aSelectionEnd.Value();
+  }
+
   nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
-  state->SetSelectionEnd(aSelectionEnd, aRv);
+  if (state && state->IsSelectionCached()) {
+    state->GetSelectionProperties().SetEnd(selEnd);
+    return;
+  }
+
+  nsAutoString direction;
+  aRv = GetSelectionDirection(direction);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  int32_t start, end;
+  aRv = GetSelectionRange(&start, &end);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  end = selEnd;
+  if (start > end) {
+    start = end;
+  }
+
+  aRv = SetSelectionRange(start, end, direction);
+}
+
+NS_IMETHODIMP
+HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
+{
+  ErrorResult rv;
+  Nullable<int32_t> selEnd(aSelectionEnd);
+  SetSelectionEnd(selEnd, rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -6383,19 +6607,36 @@ HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
-                                    int32_t* aSelectionEnd,
-                                    ErrorResult& aRv)
+                                    int32_t* aSelectionEnd)
 {
+  // Flush frames, because our editor state will want to work with the frame.
+  if (IsInComposedDoc()) {
+    GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
+  }
+
   nsTextEditorState* state = GetEditorState();
   if (!state) {
     // Not a text control.
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
+    return NS_ERROR_FAILURE;
   }
 
-  state->GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);
+  return state->GetSelectionRange(aSelectionStart, aSelectionEnd);
+}
+
+static void
+DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirection)
+{
+  if (dir == nsITextControlFrame::eNone) {
+    aDirection.AssignLiteral("none");
+  } else if (dir == nsITextControlFrame::eForward) {
+    aDirection.AssignLiteral("forward");
+  } else if (dir == nsITextControlFrame::eBackward) {
+    aDirection.AssignLiteral("backward");
+  } else {
+    NS_NOTREACHED("Invalid SelectionDirection value");
+  }
 }
 
 void
@@ -6406,9 +6647,37 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
     return;
   }
 
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
   nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection came back true!");
-  state->GetSelectionDirectionString(aDirection, aRv);
+  if (!state) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsresult rv = NS_ERROR_FAILURE;
+  if (formControlFrame) {
+    nsITextControlFrame::SelectionDirection dir;
+    rv = state->GetSelectionDirection(&dir);
+    if (NS_SUCCEEDED(rv)) {
+      DirectionToName(dir, aDirection);
+      return;
+    }
+  }
+  
+  if (state->IsSelectionCached()) {
+    DirectionToName(state->GetSelectionProperties().GetDirection(), aDirection);
+    return;
+  }
+
+  aRv.Throw(rv);
+}
+
+NS_IMETHODIMP
+HTMLInputElement::GetSelectionDirection(nsAString& aDirection)
+{
+  ErrorResult rv;
+  GetSelectionDirection(aDirection, rv);
+  return rv.StealNSResult();
 }
 
 void
@@ -6420,8 +6689,30 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
   }
 
   nsTextEditorState* state = GetEditorState();
-  MOZ_ASSERT(state, "SupportsTextSelection came back true!");
-  state->SetSelectionDirection(aDirection, aRv);
+  if (state && state->IsSelectionCached()) {
+    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
+    if (aDirection.EqualsLiteral("forward")) {
+      dir = nsITextControlFrame::eForward;
+    } else if (aDirection.EqualsLiteral("backward")) {
+      dir = nsITextControlFrame::eBackward;
+    }
+    state->GetSelectionProperties().SetDirection(dir);
+    return;
+  }
+
+  int32_t start, end;
+  aRv = GetSelectionRange(&start, &end);
+  if (!aRv.Failed()) {
+    aRv = SetSelectionRange(start, end, aDirection);
+  }
+}
+
+NS_IMETHODIMP
+HTMLInputElement::SetSelectionDirection(const nsAString& aDirection)
+{
+  ErrorResult rv;
+  SetSelectionDirection(aDirection, rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -8274,8 +8565,7 @@ HTMLInputElement::HasCachedSelection()
   if (state) {
     isCached = state->IsSelectionCached() &&
                state->HasNeverInitializedBefore() &&
-               state->GetSelectionProperties().GetStart() !=
-                 state->GetSelectionProperties().GetEnd();
+               !state->GetSelectionProperties().IsDefault();
     if (isCached) {
       state->WillInitEagerly();
     }
