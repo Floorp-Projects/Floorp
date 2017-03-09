@@ -736,29 +736,10 @@ HTMLTextAreaElement::GetSelectionRange(int32_t* aSelectionStart,
   return mState.GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);
 }
 
-static void
-DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirection)
-{
-  if (dir == nsITextControlFrame::eNone) {
-    aDirection.AssignLiteral("none");
-  } else if (dir == nsITextControlFrame::eForward) {
-    aDirection.AssignLiteral("forward");
-  } else if (dir == nsITextControlFrame::eBackward) {
-    aDirection.AssignLiteral("backward");
-  } else {
-    NS_NOTREACHED("Invalid SelectionDirection value");
-  }
-}
-
 void
 HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aError)
 {
-  nsITextControlFrame::SelectionDirection dir =
-    mState.GetSelectionDirection(aError);
-  if (aError.Failed()) {
-    return;
-  }
-  DirectionToName(dir, aDirection);
+  mState.GetSelectionDirectionString(aDirection, aError);
 }
 
 void
