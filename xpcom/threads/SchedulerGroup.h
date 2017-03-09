@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_Dispatcher_h
-#define mozilla_Dispatcher_h
+#ifndef mozilla_SchedulerGroup_h
+#define mozilla_SchedulerGroup_h
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TaskCategory.h"
@@ -31,10 +31,10 @@ class TabGroup;
 // only functionality offered by a Dispatcher is the ability to dispatch
 // runnables to the group. TabGroup, DocGroup, and SystemGroup are the concrete
 // implementations of Dispatcher.
-class ValidatingDispatcher
+class SchedulerGroup
 {
 public:
-  ValidatingDispatcher();
+  SchedulerGroup();
 
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
@@ -44,7 +44,7 @@ public:
     ~AutoProcessEvent();
 
   private:
-    ValidatingDispatcher* mPrevRunningDispatcher;
+    SchedulerGroup* mPrevRunningDispatcher;
   };
 
   // Ensure that it's valid to access the TabGroup at this time.
@@ -87,7 +87,7 @@ protected:
 
   // Given an event target returned by |dispatcher->CreateEventTargetFor|, this
   // function returns |dispatcher|.
-  static ValidatingDispatcher* FromEventTarget(nsIEventTarget* aEventTarget);
+  static SchedulerGroup* FromEventTarget(nsIEventTarget* aEventTarget);
 
   nsresult LabeledDispatch(const char* aName,
                            TaskCategory aCategory,
@@ -105,7 +105,7 @@ protected:
   };
   void SetValidatingAccess(ValidationType aType);
 
-  static ValidatingDispatcher* sRunningDispatcher;
+  static SchedulerGroup* sRunningDispatcher;
   bool mAccessValid;
 
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
@@ -114,4 +114,4 @@ protected:
 
 } // namespace mozilla
 
-#endif // mozilla_dom_Dispatcher_h
+#endif // mozilla_SchedulerGroup_h
