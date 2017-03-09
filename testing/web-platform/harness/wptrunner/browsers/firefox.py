@@ -133,8 +133,8 @@ class FirefoxBrowser(Browser):
 
         self.profile = FirefoxProfile(locations=locations,
                                       preferences=preferences)
-        self.profile.set_preferences({"marionette.defaultPrefs.enabled": True,
-                                      "marionette.defaultPrefs.port": self.marionette_port,
+        self.profile.set_preferences({"marionette.enabled": True,
+                                      "marionette.port": self.marionette_port,
                                       "dom.disable_open_during_load": False,
                                       "network.dns.localDomains": ",".join(hostnames),
                                       "network.proxy.type": 0,
