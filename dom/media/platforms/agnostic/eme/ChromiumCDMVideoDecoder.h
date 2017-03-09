@@ -8,6 +8,7 @@
 #define ChromiumCDMVideoDecoder_h_
 
 #include "PlatformDecoderModule.h"
+#include "ChromiumCDMParent.h"
 
 namespace mozilla {
 
@@ -33,6 +34,7 @@ public:
 private:
   ~ChromiumCDMVideoDecoder();
 
+  RefPtr<gmp::ChromiumCDMParent> mCDMParent;
   const VideoInfo mConfig;
   RefPtr<GMPCrashHelper> mCrashHelper;
   RefPtr<AbstractThread> mGMPThread;

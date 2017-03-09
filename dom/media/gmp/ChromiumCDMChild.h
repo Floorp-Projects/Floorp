@@ -74,6 +74,8 @@ public:
 protected:
   ~ChromiumCDMChild() {}
 
+  bool IsOnMessageLoopThread();
+
   ipc::IPCResult RecvInit(const bool& aAllowDistinctiveIdentifier,
                           const bool& aAllowPersistentState) override;
   ipc::IPCResult RecvSetServerCertificate(
@@ -105,6 +107,8 @@ protected:
 
   GMPContentChild* mPlugin = nullptr;
   cdm::ContentDecryptionModule_8* mCDM = nullptr;
+
+  bool mDecoderInitialized = false;
 };
 
 } // namespace gmp

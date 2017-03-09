@@ -81,6 +81,8 @@ parent:
   // Return values of cdm::ContentDecryptionModule8::Decrypt
   async Decrypted(uint32_t aId, uint32_t aStatus, uint8_t[] aData);
 
+  async OnDecoderInitDone(uint32_t aStatus);
+
   // Return values of cdm::ContentDecryptionModule8::DecryptAndDecodeFrame
   async Decoded(CDMVideoFrame aFrame);
   async DecodeFailed(uint32_t aStatus);
