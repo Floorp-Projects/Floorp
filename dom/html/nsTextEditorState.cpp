@@ -1762,6 +1762,32 @@ nsTextEditorState::SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
   SetSelectionRange(start, end, dir, aRv);
 }
 
+static void
+DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirection)
+{
+  if (dir == nsITextControlFrame::eNone) {
+    NS_WARNING("We don't actually support this... how did we get it?");
+    aDirection.AssignLiteral("none");
+  } else if (dir == nsITextControlFrame::eForward) {
+    aDirection.AssignLiteral("forward");
+  } else if (dir == nsITextControlFrame::eBackward) {
+    aDirection.AssignLiteral("backward");
+  } else {
+    NS_NOTREACHED("Invalid SelectionDirection value");
+  }
+}
+
+void
+nsTextEditorState::GetSelectionDirectionString(nsAString& aDirection,
+                                               ErrorResult& aRv)
+{
+  nsITextControlFrame::SelectionDirection dir = GetSelectionDirection(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  DirectionToName(dir, aDirection);
+}
+
 static nsITextControlFrame::SelectionDirection
 DirectionStringToSelectionDirection(const nsAString& aDirection)
 {
