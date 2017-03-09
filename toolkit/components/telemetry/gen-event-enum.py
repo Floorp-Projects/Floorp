@@ -47,7 +47,7 @@ def main(output, *filenames):
 
     # Write the enum file.
     print(banner, file=output)
-    print(file_header, file=output);
+    print(file_header, file=output)
 
     for category,indexed in grouped.iteritems():
         category_cpp = indexed[0][1].category_cpp
