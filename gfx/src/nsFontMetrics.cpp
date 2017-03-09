@@ -84,7 +84,7 @@ private:
 class StubPropertyProvider : public gfxTextRun::PropertyProvider {
 public:
     virtual void GetHyphenationBreaks(gfxTextRun::Range aRange,
-                                      bool* aBreakBefore) {
+                                      gfxTextRun::HyphenType* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
     virtual mozilla::StyleHyphens GetHyphensOption() {
