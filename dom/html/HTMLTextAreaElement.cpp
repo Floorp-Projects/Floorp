@@ -690,21 +690,6 @@ HTMLTextAreaElement::GetTextLength(int32_t *aTextLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::GetSelectionStart(int32_t *aSelectionStart)
-{
-  NS_ENSURE_ARG_POINTER(aSelectionStart);
-
-  ErrorResult error;
-  Nullable<uint32_t> selStart(GetSelectionStart(error));
-  if (error.Failed()) {
-    return error.StealNSResult();
-  }
-
-  *aSelectionStart = int32_t(selStart.Value());
-  return error.StealNSResult();
-}
-
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
 {
@@ -718,15 +703,6 @@ HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
     aError.Throw(rv);
   }
   return Nullable<uint32_t>(selStart);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionStart(int32_t aSelectionStart)
-{
-  ErrorResult error;
-  Nullable<uint32_t> selStart(aSelectionStart);
-  SetSelectionStart(selStart, error);
-  return error.StealNSResult();
 }
 
 void
@@ -765,21 +741,6 @@ HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart
   }
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::GetSelectionEnd(int32_t *aSelectionEnd)
-{
-  NS_ENSURE_ARG_POINTER(aSelectionEnd);
-
-  ErrorResult error;
-  Nullable<uint32_t> selEnd(GetSelectionEnd(error));
-  if (error.Failed()) {
-    return error.StealNSResult();
-  }
-
-  *aSelectionEnd = int32_t(selEnd.Value());
-  return NS_OK;
-}
-
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
 {
@@ -793,15 +754,6 @@ HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
     aError.Throw(rv);
   }
   return Nullable<uint32_t>(selEnd);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionEnd(int32_t aSelectionEnd)
-{
-  ErrorResult error;
-  Nullable<uint32_t> selEnd(aSelectionEnd);
-  SetSelectionEnd(selEnd, error);
-  return error.StealNSResult();
 }
 
 void
