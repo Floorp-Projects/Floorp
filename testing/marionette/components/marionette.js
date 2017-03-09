@@ -51,12 +51,8 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
 // This shim can be removed when Firefox 55 ships.
 const prefs = {
   get enabled () {
-#ifdef ENABLE_MARIONETTE
     let fallback = Preferences.get("marionette.defaultPrefs.enabled", false);
     return Preferences.get("marionette.enabled", fallback);
-#else
-    return false;
-#endif
   },
 
   get port () {
