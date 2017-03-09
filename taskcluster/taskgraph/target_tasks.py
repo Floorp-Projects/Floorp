@@ -216,7 +216,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
     def filter(task):
         platform = task.attributes.get('build_platform')
         if platform in ('android-api-15', 'android-x86', 'linux64-asan',
-                        'linux64-pgo', 'linux64-add-on-devel'):
+                        'linux64-add-on-devel'):
             return True
         if platform in ('linux64', 'linux'):
             if task.attributes['build_type'] == 'debug':
