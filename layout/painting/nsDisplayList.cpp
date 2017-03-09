@@ -4156,22 +4156,7 @@ nsDisplayOutline::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                           WebRenderDisplayItemLayer* aLayer)
 {
   MOZ_ASSERT(mBorderRenderer.isSome());
-
-  Rect outlineTransformedRect = aLayer->RelativeToParent(mBorderRenderer->mOuterRect);
-
-  nsCSSBorderRenderer* br = mBorderRenderer.ptr();
-  WrBorderSide side[4];
-  NS_FOR_CSS_SIDES(i) {
-    side[i] = wr::ToWrBorderSide(br->mBorderWidths[i], ToDeviceColor(br->mBorderColors[i]), br->mBorderStyles[i]);
-  }
-  WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(br->mBorderRadii[0].width, br->mBorderRadii[0].height),
-                                                     LayerSize(br->mBorderRadii[1].width, br->mBorderRadii[1].height),
-                                                     LayerSize(br->mBorderRadii[3].width, br->mBorderRadii[3].height),
-                                                     LayerSize(br->mBorderRadii[2].width, br->mBorderRadii[2].height));
-  aBuilder.PushBorder(wr::ToWrRect(outlineTransformedRect),
-                      wr::ToWrRect(outlineTransformedRect),
-                      side[0], side[1], side[2], side[3],
-                      borderRadius);
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
 }
 
 bool
