@@ -6,6 +6,7 @@
 
 #include "nsFormFillController.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
@@ -44,6 +45,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
                          mController, mLoginManager, mFocusedPopup, mDocShells,
@@ -609,7 +611,7 @@ nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
   ErrorResult rv;
   Nullable<int32_t> start =
     HTMLInputElement::FromContent(content)->GetSelectionStart(rv);
-  if (NS_FAILED(rv)) {
+  if (rv.Failed()) {
     return rv.StealNSResult();
   }
   if (start.IsNull()) {
@@ -622,8 +624,20 @@ nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
 NS_IMETHODIMP
 nsFormFillController::GetSelectionEnd(int32_t *aSelectionEnd)
 {
-  if (mFocusedInput)
-    mFocusedInput->GetSelectionEnd(aSelectionEnd);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+  if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  Nullable<int32_t> end =
+    HTMLInputElement::FromContent(content)->GetSelectionEnd(rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+  if (end.IsNull()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *aSelectionEnd = end.Value();
   return NS_OK;
 }
 
