@@ -55,7 +55,7 @@
   "dbg-server.jsm": ["DebuggerServer", "ActorPool", "OriginalLocation"],
   "debug.js": ["NS_ASSERT"],
   "declined.js": ["DeclinedEngines"],
-  "dispatcher.js": ["Dispatcher"],
+  "dispatcher.js": ["dispatcher"],
   "distribution.js": ["DistributionCustomizer"],
   "DNSTypes.jsm": ["DNS_QUERY_RESPONSE_CODES", "DNS_AUTHORITATIVE_ANSWER_CODES", "DNS_CLASS_CODES", "DNS_RECORD_TYPES"],
   "doctor.js": ["Doctor"],
