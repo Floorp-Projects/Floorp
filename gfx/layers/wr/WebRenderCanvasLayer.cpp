@@ -61,17 +61,18 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   if (needsYFlip) {
     transform.PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1);
   }
-  gfx::Rect rect(0, 0, mBounds.width, mBounds.height);
-  rect = RelativeToVisible(rect);
-  gfx::Rect clip = GetWrClipRect(rect);
 
   gfx::Rect relBounds = GetWrRelBounds();
-
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-  Maybe<WrImageMask> mask = buildMaskLayer();
-  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(clip));
+
+  gfx::Rect rect = RelativeToVisible(gfx::Rect(0, 0, mBounds.width, mBounds.height));
+  gfx::Rect clipRect = GetWrClipRect(rect);
+
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
+
   wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   DumpLayerInfo("CanvasLayer", rect);
   if (gfxPrefs::LayersDump()) {
@@ -92,7 +93,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                //GetAnimations(),
                                transform,
                                mixBlendMode);
-  aBuilder.PushImage(wr::ToWrRect(rect), clipRegion, filter, key);
+  aBuilder.PushImage(wr::ToWrRect(rect), clip, filter, key);
   aBuilder.PopStackingContext();
 }
 

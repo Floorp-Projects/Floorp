@@ -53,17 +53,8 @@ protected:
   gfx::Rect GetWrRelBounds();
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
-  Maybe<WrImageMask> buildMaskLayer();
+  Maybe<WrImageMask> BuildWrMaskLayer();
 
-};
-
-class MOZ_RAII WrScrollFrameStackingContextGenerator
-{
-public:
-  explicit WrScrollFrameStackingContextGenerator(WebRenderLayer* aLayer);
-  ~WrScrollFrameStackingContextGenerator();
-private:
-  WebRenderLayer* mLayer;
 };
 
 class WebRenderLayerManager final : public LayerManager

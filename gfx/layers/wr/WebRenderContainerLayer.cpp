@@ -17,14 +17,15 @@ namespace layers {
 void
 WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
-
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
+
   gfx::Matrix4x4 transform = GetTransform();
   gfx::Rect relBounds = GetWrRelBounds();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
-  Maybe<WrImageMask> mask = buildMaskLayer();
+
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   if (gfxPrefs::LayersDump()) {
     printf_stderr("ContainerLayer %p using bounds=%s, overflow=%s, transform=%s, mix-blend-mode=%s\n",
@@ -53,10 +54,8 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 void
 WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
-
-  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
+  gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
 
   WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(relBounds));
 

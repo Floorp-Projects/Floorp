@@ -109,7 +109,7 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::buildMaskLayer() {
+WebRenderLayer::BuildWrMaskLayer() {
   Maybe<WrImageMask> mask = Nothing();
   WrImageMask imageMask;
   Layer* maskLayer = GetLayer()->GetMaskLayer();
@@ -209,54 +209,6 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
                 Stringify(clip).c_str(),
                 Stringify(mixBlendMode).c_str());
 }
-
-WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
-        WebRenderLayer* aLayer)
-  : mLayer(aLayer)
-{
-  Matrix4x4 identity;
-  Layer* layer = mLayer->GetLayer();
-  for (size_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    Rect bounds = fm.GetCompositionBounds().ToUnknownRect();
-    Rect overflow = (fm.GetExpandedScrollableRect() * fm.LayersPixelsPerCSSPixel()).ToUnknownRect();
-    Point scrollPos = (fm.GetScrollOffset() * fm.LayersPixelsPerCSSPixel()).ToUnknownPoint();
-    Rect parentBounds = mLayer->ParentStackingContextBounds(i);
-    bounds.MoveBy(-parentBounds.x, -parentBounds.y);
-    // Subtract the MT scroll position from the overflow here so that the WR
-    // scroll offset (which is the APZ async scroll component) always fits in
-    // the available overflow. If we didn't do this and WR did bounds checking
-    // on the scroll offset, we'd fail those checks.
-    overflow.MoveBy(bounds.x - scrollPos.x, bounds.y - scrollPos.y);
-    if (gfxPrefs::LayersDump()) {
-      printf_stderr("Pushing stacking context id %" PRIu64 " with bounds=%s, overflow=%s\n",
-        fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
-    }
-
-/*    mLayer->WrBridge()->AddWebRenderCommand(
-      OpDPPushScrollLayer(wr::ToWrRect(bounds),
-                          wr::ToWrRect(overflow),
-                          Nothing(),
-                          fm.GetScrollId()));*/
-  }
-}
-
-WrScrollFrameStackingContextGenerator::~WrScrollFrameStackingContextGenerator()
-{
-  Layer* layer = mLayer->GetLayer();
-  for (size_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i);
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
-//    mLayer->WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
-  }
-}
-
 
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
