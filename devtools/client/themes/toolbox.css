@@ -52,12 +52,6 @@
   display: flex;
 }
 
-.toolbox-tabs {
-  margin: 0;
-  flex: 1;
-  overflow: hidden;
-}
-
 .toolbox-tabs-wrapper {
   position: relative;
   display: flex;
@@ -77,6 +71,9 @@
   right: 0;
   bottom: 0;
   display: flex;
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Set flex attribute to Toolbox buttons and Picker container so,

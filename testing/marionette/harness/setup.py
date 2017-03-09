@@ -41,12 +41,6 @@ setup(name='marionette-harness',
       url='https://wiki.mozilla.org/Auto-tools/Projects/Marionette',
       license='Mozilla Public License 2.0 (MPL 2.0)',
       packages=find_packages(),
-      package_data={
-          'marionette_harness': [
-              'runner/test.cert',
-              'runner/test.key'
-          ],
-      },
       # Needed to include package data as specified in MANIFEST.in
       include_package_data=True,
       install_requires=read('requirements.txt').splitlines(),

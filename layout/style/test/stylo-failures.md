@@ -417,9 +417,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_inherit_storage.html `for property 'border-image-` [5]
     * test_initial_storage.html `for property 'border-image-` [10]
     * test_value_storage.html `(for 'border-image-` [60]
-  * whitespace should be required around '+'/'-' servo/servo#15486
-    * test_property_syntax_errors.html `calc(2em+` [6]
-    * ... `calc(50%+` [8]
   * accepts rubbish for second part of value:
     * test_property_syntax_errors.html `'text-overflow'`: servo/servo#15491 [8]
   * -moz-alt-content parsing is wrong: servo/servo#15726
@@ -490,7 +487,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `box-shadow'` [6]
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
-  * test_property_syntax_errors.html `(-1)`: factor value in filter functions servo/servo#15494 [42]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]

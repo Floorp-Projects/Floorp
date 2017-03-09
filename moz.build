@@ -65,6 +65,11 @@ DIRS += [
 ]
 
 if not CONFIG['JS_STANDALONE']:
+    # These python manifests are included here so they get picked up without an objdir
+    PYTHON_UNITTEST_MANIFESTS += [
+        'testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
+    ]
+
     CONFIGURE_SUBST_FILES += [
         'tools/update-packaging/Makefile',
     ]
@@ -123,12 +128,6 @@ else:
 if not CONFIG['JS_STANDALONE'] and CONFIG['MOZ_BUILD_APP']:
     # Bring in the configuration for the configured application.
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
-
-if not CONFIG['JS_STANDALONE']:
-    # These python manifests are included here so they get picked up without an objdir
-    PYTHON_UNITTEST_MANIFESTS += [
-        'testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
-    ]
 
 CONFIGURE_SUBST_FILES += ['.cargo/config']
 
