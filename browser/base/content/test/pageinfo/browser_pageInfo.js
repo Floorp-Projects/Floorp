@@ -9,7 +9,7 @@ function test() {
     pageInfo = BrowserPageInfo();
   }, {capture: true, once: true});
   content.location =
-    "https://example.com/browser/browser/base/content/test/general/feed_tab.html";
+    "https://example.com/browser/browser/base/content/test/pageinfo/feed_tab.html";
 
   function observer(win, topic, data) {
     Services.obs.removeObserver(observer, "page-info-dialog-loaded");
