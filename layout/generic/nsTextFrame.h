@@ -94,6 +94,9 @@ public:
     mNextContinuation = aNextContinuation;
     if (aNextContinuation)
       aNextContinuation->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    // Setting a non-fluid continuation might affect our flow length (they're
+    // quite rare so we assume it always does) so we delete our cached value:
+    GetContent()->DeleteProperty(nsGkAtoms::flowlength);
   }
   virtual nsIFrame* GetNextInFlowVirtual() const override { return GetNextInFlow(); }
   nsIFrame* GetNextInFlow() const {
@@ -106,8 +109,15 @@ public:
     NS_ASSERTION (!nsSplittableFrame::IsInNextContinuationChain(aNextInFlow, this),
                   "creating a loop in continuation chain!");
     mNextContinuation = aNextInFlow;
-    if (aNextInFlow)
+    if (mNextContinuation &&
+        !mNextContinuation->HasAnyStateBits(NS_FRAME_IS_FLUID_CONTINUATION)) {
+      // Changing from non-fluid to fluid continuation might affect our flow
+      // length, so we delete our cached value:
+      GetContent()->DeleteProperty(nsGkAtoms::flowlength);
+    }
+    if (aNextInFlow) {
       aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+    }
   }
   virtual nsIFrame* LastInFlow() const override;
   virtual nsIFrame* LastContinuation() const override;
