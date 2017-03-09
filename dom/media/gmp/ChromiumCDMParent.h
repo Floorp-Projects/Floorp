@@ -6,13 +6,14 @@
 #ifndef ChromiumCDMParent_h_
 #define ChromiumCDMParent_h_
 
+#include "DecryptJob.h"
 #include "GMPCrashHelper.h"
 #include "GMPCrashHelperHolder.h"
 #include "GMPMessageUtils.h"
 #include "mozilla/gmp/PChromiumCDMParent.h"
 #include "mozilla/RefPtr.h"
 #include "nsDataHashtable.h"
-#include "DecryptJob.h"
+#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -59,6 +60,8 @@ public:
 
   // TODO: Add functions for clients to send data to CDM, and
   // a Close() function.
+  RefPtr<MediaDataDecoder::InitPromise> InitializeVideoDecoder(
+    const gmp::CDMVideoDecoderConfig& aConfig);
 
 protected:
   ~ChromiumCDMParent() {}
@@ -89,6 +92,7 @@ protected:
   ipc::IPCResult RecvDecrypted(const uint32_t& aId,
                                const uint32_t& aStatus,
                                nsTArray<uint8_t>&& aData) override;
+  ipc::IPCResult RecvOnDecoderInitDone(const uint32_t& aStatus) override;
   ipc::IPCResult RecvDecoded(const CDMVideoFrame& aFrame) override;
   ipc::IPCResult RecvDecodeFailed(const uint32_t& aStatus) override;
   ipc::IPCResult RecvShutdown() override;
@@ -108,6 +112,8 @@ protected:
   ChromiumCDMProxy* mProxy = nullptr;
   nsDataHashtable<nsUint32HashKey, uint32_t> mPromiseToCreateSessionToken;
   nsTArray<RefPtr<DecryptJob>> mDecrypts;
+
+  MozPromiseHolder<MediaDataDecoder::InitPromise> mInitVideoDecoderPromise;
 };
 
 } // namespace gmp
