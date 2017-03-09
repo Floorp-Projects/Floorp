@@ -1486,8 +1486,8 @@ protected:
    * A helper to get the current selection range.  Will throw on the ErrorResult
    * if we have no editor state.
    */
-  void GetSelectionRange(int32_t* aSelectionStart,
-                         int32_t* aSelectionEnd,
+  void GetSelectionRange(uint32_t* aSelectionStart,
+                         uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
 
   nsCOMPtr<nsIControllers> mControllers;
