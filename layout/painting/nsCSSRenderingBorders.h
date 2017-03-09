@@ -84,6 +84,7 @@ class nsCSSBorderRenderer final
   friend class nsDisplayBorder;
   friend class nsDisplayOutline;
   friend class nsDisplayButtonBorder;
+  friend class nsDisplayButtonForeground;
 
 public:
 
