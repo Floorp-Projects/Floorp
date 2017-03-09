@@ -5,24 +5,29 @@
 
 package org.mozilla.gecko.customtabs;
 
+import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.ActionBar;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.SiteIdentity;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.toolbar.SecurityModeUtil;
 import org.mozilla.gecko.util.ColorUtil;
-
-import java.lang.reflect.Field;
 
 /**
  * This class is used to maintain appearance of ActionBar of CustomTabsActivity, includes background
@@ -30,43 +35,63 @@ import java.lang.reflect.Field;
  */
 public class ActionBarPresenter {
 
-    private static final String LOGTAG = "CustomTabsActionBar";
+    @ColorInt
+    private static final int DEFAULT_TEXT_PRIMARY_COLOR = 0xFFFFFFFF;
+    private static final long CUSTOM_VIEW_UPDATE_DELAY = 1000;
+
     private final ActionBar mActionBar;
-    private boolean useDomainTitle = true;
+    private final ImageButton mIconView;
+    private final TextView mTitleView;
+    private final TextView mUrlView;
+    private final Handler mHandler = new Handler();
 
-    ActionBarPresenter(@NonNull final ActionBar actionBar, @NonNull Toolbar toolbar) {
+    private Runnable mUpdateAction;
+
+    @ColorInt
+    private int mTextPrimaryColor = DEFAULT_TEXT_PRIMARY_COLOR;
+
+    ActionBarPresenter(@NonNull final ActionBar actionBar) {
         mActionBar = actionBar;
-        initActionBar(toolbar);
-    }
+        mActionBar.setDisplayShowCustomEnabled(true);
+        mActionBar.setDisplayShowTitleEnabled(false);
 
-    private void initActionBar(@NonNull final Toolbar toolbar) {
-        try {
-            // Since we don't create the Toolbar's TextView ourselves, this seems
-            // to be the only way of changing the ellipsize setting.
-            final Field f = toolbar.getClass().getDeclaredField("mTitleTextView");
-            f.setAccessible(true);
-            final TextView textView = (TextView) f.get(toolbar);
-            textView.setEllipsize(TextUtils.TruncateAt.START);
-        } catch (Exception e) {
-            // If we can't ellipsize at the start of the title, we shouldn't display the host
-            // so as to avoid displaying a misleadingly truncated host.
-            Log.w(LOGTAG, "Failed to get Toolbar TextView, using default title.");
-            useDomainTitle = false;
-        }
+        mActionBar.setCustomView(R.layout.customtabs_action_bar_custom_view);
+        final View customView = mActionBar.getCustomView();
+        mIconView = (ImageButton) customView.findViewById(R.id.custom_tabs_action_bar_icon);
+        mTitleView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_title);
+        mUrlView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_url);
+
+        onThemeChanged(mActionBar.getThemedContext().getTheme());
     }
 
     /**
-     * Update appearance of ActionBar, includes its Title.
+     * To display Url in CustomView only and immediately.
      *
-     * @param title A string to be used as Title in Actionbar
+     * @param url Url String to display
      */
-    @UiThread
-    public void update(@Nullable final String title) {
-        if (useDomainTitle || TextUtils.isEmpty(title)) {
-            mActionBar.setTitle(AppConstants.MOZ_APP_BASENAME);
-        } else {
-            mActionBar.setTitle(title);
-        }
+    public void displayUrlOnly(@NonNull final String url) {
+        updateCustomView(null, null, url);
+    }
+
+    /**
+     * Update appearance of CustomView of ActionBar.
+     *
+     * @param tab a Tab instance of current web page to provide information to render ActionBar.
+     */
+    public void update(@NonNull final Tab tab) {
+        final String title = tab.getTitle();
+        final String url = tab.getBaseDomain();
+
+        // Do not update CustomView immediately. If this method be invoked rapidly several times,
+        // only apply last one.
+        mHandler.removeCallbacks(mUpdateAction);
+        mUpdateAction = new Runnable() {
+            @Override
+            public void run() {
+                updateCustomView(tab.getSiteIdentity(), title, url);
+            }
+        };
+        mHandler.postDelayed(mUpdateAction, CUSTOM_VIEW_UPDATE_DELAY);
     }
 
     /**
@@ -86,5 +111,54 @@ public class ActionBarPresenter {
                 window.setStatusBarColor(ColorUtil.darken(color, 0.25));
             }
         }
+    }
+
+    /**
+     * To update appearance of CustomView of ActionBar, includes its icon, title and url text.
+     *
+     * @param identity SiteIdentity for current website. Could be null if don't want to show icon.
+     * @param title    Title for current website. Could be null if don't want to show title.
+     * @param url      URL for current website. At least Custom will show this url.
+     */
+    @UiThread
+    private void updateCustomView(@Nullable SiteIdentity identity,
+                                  @Nullable String title,
+                                  @NonNull String url) {
+        // update site-info icon
+        if (identity == null) {
+            mIconView.setVisibility(View.INVISIBLE);
+        } else {
+            final SecurityModeUtil.Mode mode = SecurityModeUtil.resolve(identity);
+            mIconView.setVisibility(View.VISIBLE);
+            mIconView.setImageLevel(mode.ordinal());
+
+            if (mode == SecurityModeUtil.Mode.LOCK_SECURE) {
+                // Lock-Secure is special case. Keep its original green color.
+                DrawableCompat.setTintList(mIconView.getDrawable(), null);
+            } else {
+                // Icon use same color as TextView.
+                DrawableCompat.setTint(mIconView.getDrawable(), mTextPrimaryColor);
+            }
+        }
+
+        // If no title to use, use Url as title
+        if (TextUtils.isEmpty(title)) {
+            mTitleView.setText(url);
+            mUrlView.setText(null);
+            mUrlView.setVisibility(View.GONE);
+        } else {
+            mTitleView.setText(title);
+            mUrlView.setText(url);
+            mUrlView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void onThemeChanged(@NonNull final Resources.Theme currentTheme) {
+        // Theme might be light or dark. To get text color for custom-view.
+        final TypedArray themeArray = currentTheme.obtainStyledAttributes(
+                new int[]{android.R.attr.textColorPrimary});
+
+        mTextPrimaryColor = themeArray.getColor(0, DEFAULT_TEXT_PRIMARY_COLOR);
+        themeArray.recycle();
     }
 }
