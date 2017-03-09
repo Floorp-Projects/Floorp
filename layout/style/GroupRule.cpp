@@ -223,6 +223,13 @@ GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
 {
 }
 
+GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules)
+  : Rule(0, 0) // TODO
+  , mInner(ServoGroupRuleRules(Move(aRules)))
+{
+  mInner.as<ServoGroupRuleRules>().SetParentRule(this);
+}
+
 GroupRule::GroupRule(const GroupRule& aCopy)
   : Rule(aCopy)
   , mInner(aCopy.mInner)

@@ -10,6 +10,7 @@
 
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleRule.h"
+#include "mozilla/ServoMediaRule.h"
 
 namespace mozilla {
 
@@ -74,7 +75,11 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
           Servo_CssRules_GetStyleRuleAt(mRawRules, aIndex).Consume());
         break;
       }
-      case nsIDOMCSSRule::MEDIA_RULE:
+      case nsIDOMCSSRule::MEDIA_RULE: {
+        ruleObj = new ServoMediaRule(
+          Servo_CssRules_GetMediaRuleAt(mRawRules, aIndex).Consume());
+        break;
+      }
       case nsIDOMCSSRule::FONT_FACE_RULE:
       case nsIDOMCSSRule::KEYFRAMES_RULE:
       case nsIDOMCSSRule::NAMESPACE_RULE:
