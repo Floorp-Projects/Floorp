@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.push;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,7 +24,11 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.FxAccountDeviceRegistrator;
 import org.mozilla.gecko.fxa.FxAccountPushHandler;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.gcm.GcmTokenClient;
 import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.util.BundleEventListener;
@@ -102,7 +108,14 @@ public class PushService implements BundleEventListener {
     private boolean isReadyFxAccountsPush = false;
     private final List<JSONObject> pendingPushMessages;
 
+    // NB, on context use in AccountManager and AndroidFxAccount:
+    // We are not going to register any listeners, or surface any UI out of AccountManager.
+    // It should be fine to use a potentially short-lived context then, as opposed to a long-lived
+    // application context, contrary to what AndroidFxAccount docs ask for.
+    private final Context context;
+
     public PushService(Context context) {
+        this.context = context;
         pushManager = new PushManager(new PushState(context, "GeckoPushState.json"), new GcmTokenClient(context), new PushManager.PushClientFactory() {
             @Override
             public PushClient getPushClient(String autopushEndpoint, boolean debug) {
@@ -119,6 +132,48 @@ public class PushService implements BundleEventListener {
 
         try {
             pushManager.startup(System.currentTimeMillis());
+
+            // Determine if we need to renew our FxA Push Subscription. Unused subscriptions expire
+            // once a month, and so we do a simple check on startup to determine if it's time to get
+            // a new one. Note that this is sub-optimal, as we might have a perfectly valid (but old)
+            // subscription which we'll nevertheless unsubscribe in lieu of a new one. Improvements
+            // to this will be addressed as part of a larger Bug 1345651.
+
+            // From the Android permission docs:
+            // Prior to API 23, GET_ACCOUNTS permission was necessary to get access to information
+            // about any account. Beginning with API 23, if an app shares the signature of the
+            // authenticator that manages an account, it does not need "GET_ACCOUNTS" permission to
+            // read information about that account.
+            // We list GET_ACCOUNTS in our manifest for pre-23 devices.
+            final AccountManager accountManager = AccountManager.get(context);
+            final Account[] fxAccounts = accountManager.getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
+
+            // Nothing to renew if there isn't an account.
+            if (fxAccounts.length == 0) {
+                return;
+            }
+
+            // Defensively obtain account state. We are in a startup situation: try to not crash.
+            final AndroidFxAccount fxAccount = new AndroidFxAccount(context, fxAccounts[0]);
+            final State fxAccountState;
+            try {
+                fxAccountState = fxAccount.getState();
+            } catch (IllegalStateException e) {
+                Log.e(LOG_TAG, "Failed to obtain FxA account state while renewing registration", e);
+                return;
+            }
+
+            // This decision will be re-addressed as part of Bug 1346061.
+            if (!State.StateLabel.Married.equals(fxAccountState.getStateLabel())) {
+                Log.i(LOG_TAG, "FxA account not in Married state, not proceeding with registration renewal");
+                return;
+            }
+
+            // We'll obtain a new subscription as part of device registration.
+            if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
+                Log.i(LOG_TAG, "FxA device needs registration renewal");
+                FxAccountDeviceRegistrator.renewRegistration(context);
+            }
         } catch (Exception e) {
             Log.e(LOG_TAG, "Got exception during startup; ignoring.", e);
             return;
