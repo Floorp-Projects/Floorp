@@ -132,7 +132,7 @@ ImageClient::CreateTextureClientForImage(Image* aImage, KnowsCompositor* aForwar
     } else if (aImage->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
       SurfaceTextureImage* typedImage = aImage->AsSurfaceTextureImage();
       texture = AndroidSurfaceTextureData::CreateTextureClient(
-        typedImage->GetHandle(), size, typedImage->GetOriginPos(),
+        typedImage->GetHandle(), size, typedImage->GetContinuous(), typedImage->GetOriginPos(),
         aForwarder->GetTextureForwarder(), TextureFlags::DEFAULT);
 #endif
     } else {
