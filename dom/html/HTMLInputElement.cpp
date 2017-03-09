@@ -6291,102 +6291,36 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
     return;
   }
 
-  int32_t start, end;
-  GetSelectionRange(&start, &end, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  SetRangeText(aReplacement, start, end, mozilla::dom::SelectionMode::Preserve,
-               aRv, start, end);
+  nsTextEditorState* state = GetEditorState();
+  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
+  state->SetRangeText(aReplacement, aRv);
 }
 
 void
 HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                               uint32_t aEnd, const SelectionMode& aSelectMode,
-                               ErrorResult& aRv, int32_t aSelectionStart,
-                               int32_t aSelectionEnd)
+                               uint32_t aEnd, SelectionMode aSelectMode,
+                               ErrorResult& aRv)
 {
   if (!SupportsTextSelection()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  if (aStart > aEnd) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return;
-  }
+  nsTextEditorState* state = GetEditorState();
+  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
+  state->SetRangeText(aReplacement, aStart, aEnd, aSelectMode, aRv);
+}
 
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-  uint32_t inputValueLength = value.Length();
+void
+HTMLInputElement::GetValueFromSetRangeText(nsAString& aValue)
+{
+  GetNonFileValueInternal(aValue);
+}
 
-  if (aStart > inputValueLength) {
-    aStart = inputValueLength;
-  }
-
-  if (aEnd > inputValueLength) {
-    aEnd = inputValueLength;
-  }
-
-  if (aSelectionStart == -1 && aSelectionEnd == -1) {
-    GetSelectionRange(&aSelectionStart, &aSelectionEnd, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-  }
-
-  if (aStart <= aEnd) {
-    value.Replace(aStart, aEnd - aStart, aReplacement);
-    nsresult rv =
-      SetValueInternal(value, nsTextEditorState::eSetValue_ByContent);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-  }
-
-  uint32_t newEnd = aStart + aReplacement.Length();
-  int32_t delta =  aReplacement.Length() - (aEnd - aStart);
-
-  switch (aSelectMode) {
-    case mozilla::dom::SelectionMode::Select:
-    {
-      aSelectionStart = aStart;
-      aSelectionEnd = newEnd;
-    }
-    break;
-    case mozilla::dom::SelectionMode::Start:
-    {
-      aSelectionStart = aSelectionEnd = aStart;
-    }
-    break;
-    case mozilla::dom::SelectionMode::End:
-    {
-      aSelectionStart = aSelectionEnd = newEnd;
-    }
-    break;
-    case mozilla::dom::SelectionMode::Preserve:
-    {
-      if ((uint32_t)aSelectionStart > aEnd) {
-        aSelectionStart += delta;
-      } else if ((uint32_t)aSelectionStart > aStart) {
-        aSelectionStart = aStart;
-      }
-
-      if ((uint32_t)aSelectionEnd > aEnd) {
-        aSelectionEnd += delta;
-      } else if ((uint32_t)aSelectionEnd > aStart) {
-        aSelectionEnd = newEnd;
-      }
-    }
-    break;
-    default:
-      MOZ_CRASH("Unknown mode!");
-  }
-
-  Optional<nsAString> direction;
-  SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
+nsresult
+HTMLInputElement::SetValueFromSetRangeText(const nsAString& aValue)
+{
+  return SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent);
 }
 
 Nullable<uint32_t>
