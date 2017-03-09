@@ -28,6 +28,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -3528,4 +3529,24 @@ nsCSSBorderRenderer::DrawBorders()
       PrintAsStringNewline("---------------- (*)");
     }
   }
+}
+
+void
+nsCSSBorderRenderer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                             layers::WebRenderDisplayItemLayer* aLayer)
+{
+  Rect outlineTransformedRect = aLayer->RelativeToParent(mOuterRect);
+  WrBorderSide side[4];
+  NS_FOR_CSS_SIDES(i) {
+    side[i] = wr::ToWrBorderSide(mBorderWidths[i], ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
+  }
+
+  WrBorderRadius borderRadius = wr::ToWrBorderRadius(LayerSize(mBorderRadii[0].width, mBorderRadii[0].height),
+                                                     LayerSize(mBorderRadii[1].width, mBorderRadii[1].height),
+                                                     LayerSize(mBorderRadii[3].width, mBorderRadii[3].height),
+                                                     LayerSize(mBorderRadii[2].width, mBorderRadii[2].height));
+  aBuilder.PushBorder(wr::ToWrRect(outlineTransformedRect),
+                      wr::ToWrRect(outlineTransformedRect),
+                      side[0], side[1], side[2], side[3],
+                      borderRadius);
 }
