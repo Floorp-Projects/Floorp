@@ -1820,6 +1820,29 @@ nsTextEditorState::SetSelectionDirection(const nsAString& aDirection,
   SetSelectionRange(start, end, dir, aRv);
 }
 
+static nsITextControlFrame::SelectionDirection
+DirectionStringToSelectionDirection(const Optional<nsAString>& aDirection)
+{
+  if (!aDirection.WasPassed()) {
+    // We don't support directionless selections.
+    return nsITextControlFrame::eForward;
+  }
+
+  return DirectionStringToSelectionDirection(aDirection.Value());
+}
+
+void
+nsTextEditorState::SetSelectionRange(int32_t aSelectionStart,
+                                     int32_t aSelectionEnd,
+                                     const Optional<nsAString>& aDirection,
+                                     ErrorResult& aRv)
+{
+  nsITextControlFrame::SelectionDirection dir =
+    DirectionStringToSelectionDirection(aDirection);
+
+  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, aRv);
+}
+
 HTMLInputElement*
 nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
 {
