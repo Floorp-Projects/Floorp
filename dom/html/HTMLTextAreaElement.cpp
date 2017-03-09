@@ -710,34 +710,7 @@ void
 HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart,
                                        ErrorResult& aError)
 {
-  int32_t selStart = 0;
-  if (!aSelectionStart.IsNull()) {
-    selStart = aSelectionStart.Value();
-  }
-
-  if (mState.IsSelectionCached()) {
-    mState.GetSelectionProperties().SetStart(selStart);
-    return;
-  }
-
-  nsAutoString direction;
-  GetSelectionDirection(direction, aError);
-  if (aError.Failed()) {
-    return;
-  }
-  int32_t start, end;
-  GetSelectionRange(&start, &end, aError);
-  if (aError.Failed()) {
-    return;
-  }
-  start = selStart;
-  if (end < start) {
-    end = start;
-  }
-  nsresult rv = SetSelectionRange(start, end, direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  mState.SetSelectionStart(aSelectionStart, aError);
 }
 
 Nullable<uint32_t>

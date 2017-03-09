@@ -246,7 +246,7 @@ public:
 
   // Methods for nsFormFillController so it can do selection operations on input
   // types the HTML spec doesn't support them on, like "email".
-  int32_t GetSelectionStartIgnoringType(ErrorResult& aRv);
+  uint32_t GetSelectionStartIgnoringType(ErrorResult& aRv);
   int32_t GetSelectionEndIgnoringType(ErrorResult& aRv);
 
   void GetDisplayFileName(nsAString& aFileName) const;
@@ -717,8 +717,8 @@ public:
 
   // XPCOM Select() is OK
 
-  Nullable<int32_t> GetSelectionStart(ErrorResult& aRv);
-  void SetSelectionStart(const Nullable<int32_t>& aValue, ErrorResult& aRv);
+  Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
+  void SetSelectionStart(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
 
   Nullable<int32_t> GetSelectionEnd(ErrorResult& aRv);
   void SetSelectionEnd(const Nullable<int32_t>& aValue, ErrorResult& aRv);
