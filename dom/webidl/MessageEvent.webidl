@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * For more information on this interface, please see
- * https://html.spec.whatwg.org/#messageevent
+ * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
 
 [Constructor(DOMString type, optional MessageEventInit eventInitDict),
@@ -22,7 +22,7 @@ interface MessageEvent : Event {
    * host, and if the port is not the default for the given scheme,
    * ":" followed by that port.  This value does not have a trailing slash.
    */
-  readonly attribute USVString origin;
+  readonly attribute DOMString origin;
 
   /**
    * The last event ID string of the event source, for server-sent DOM events; this
@@ -33,7 +33,7 @@ interface MessageEvent : Event {
   /**
    * The window or port which originated this event.
    */
-  readonly attribute MessageEventSource? source;
+  readonly attribute (WindowProxy or MessagePort)? source;
 
   /**
    * Initializes this event with the given data, in a manner analogous to
@@ -45,7 +45,7 @@ interface MessageEvent : Event {
 
   void initMessageEvent(DOMString type, boolean bubbles, boolean cancelable,
                         any data, DOMString origin, DOMString lastEventId,
-                        MessageEventSource? source,
+                        (WindowProxy or MessagePort)? source,
                         sequence<MessagePort> ports);
 };
 
@@ -53,8 +53,6 @@ dictionary MessageEventInit : EventInit {
   any data = null;
   DOMString origin = "";
   DOMString lastEventId = "";
-  MessageEventSource? source = null;
+  (Window or MessagePort)? source = null;
   sequence<MessagePort> ports = [];
 };
-
-typedef (WindowProxy or MessagePort or ServiceWorker) MessageEventSource;

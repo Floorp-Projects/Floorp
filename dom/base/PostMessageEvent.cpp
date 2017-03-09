@@ -145,7 +145,7 @@ PostMessageEvent::Run()
     new MessageEvent(eventTarget, nullptr, nullptr);
 
 
-  Nullable<WindowProxyOrMessagePortOrServiceWorker> source;
+  Nullable<WindowProxyOrMessagePort> source;
   source.SetValue().SetAsWindowProxy() = mSource ? mSource->AsOuter() : nullptr;
 
   Sequence<OwningNonNull<MessagePort>> ports;
