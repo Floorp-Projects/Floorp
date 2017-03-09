@@ -795,7 +795,6 @@ def add_files_changed(config, tasks):
 def setup_optimizations(config, tasks):
     for task in tasks:
         optimizations = task.setdefault('optimizations', [])
-        optimizations.append(['seta'])
         if 'when' in task and 'files-changed' in task['when']:
             optimizations.append(['files-changed', task['when']['files-changed']])
         yield task
