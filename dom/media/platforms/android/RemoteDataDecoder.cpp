@@ -182,7 +182,7 @@ public:
         MutexAutoLock lock(mDecoder->mMutex);
 
         RefPtr<layers::Image> img = new SurfaceTextureImage(
-          mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mDisplay,
+          mDecoder->mSurfaceTexture.get(), mDecoder->mConfig.mImage,
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
