@@ -310,6 +310,12 @@ public:
   void SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
                        mozilla::ErrorResult& aRv);
 
+  // Get the selection direction as a string.  This implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
+  // getter.
+  void GetSelectionDirectionString(nsAString& aDirection,
+                                   mozilla::ErrorResult& aRv);
+
   // Set the selection direction.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
   // setter.
