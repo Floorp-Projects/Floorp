@@ -84,7 +84,6 @@ interface nsIDOMHTMLInputElement : nsISupports
   void setCustomValidity(in DOMString error);
 
   void select();
-  void setSelectionRange(in long selectionStart, in long selectionEnd, [optional] in DOMString direction);
 
            attribute DOMString             useMap;
   readonly attribute nsIControllers        controllers;	

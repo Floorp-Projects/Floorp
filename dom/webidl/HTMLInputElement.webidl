@@ -127,6 +127,8 @@ interface HTMLInputElement : HTMLElement {
   [Throws]
   void setRangeText(DOMString replacement, unsigned long start,
     unsigned long end, optional SelectionMode selectionMode = "preserve");
+  [Throws]
+  void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
   // also has obsolete members
 };
@@ -141,9 +143,6 @@ partial interface HTMLInputElement {
 // Mozilla extensions
 
 partial interface HTMLInputElement {
-  [Throws]
-  void setSelectionRange(long start, long end, optional DOMString direction);
-
   [GetterThrows, ChromeOnly]
   readonly attribute nsIControllers        controllers;
   // Binaryname because we have a FragmentOrElement function named "TextLength()".
