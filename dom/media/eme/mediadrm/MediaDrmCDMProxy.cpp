@@ -25,11 +25,13 @@ ToMediaDrmSessionType(dom::MediaKeySessionType aSessionType)
 MediaDrmCDMProxy::MediaDrmCDMProxy(dom::MediaKeys* aKeys,
                                    const nsAString& aKeySystem,
                                    bool aDistinctiveIdentifierRequired,
-                                   bool aPersistentStateRequired)
+                                   bool aPersistentStateRequired,
+                                   nsIEventTarget* aMainThread)
   : CDMProxy(aKeys,
              aKeySystem,
              aDistinctiveIdentifierRequired,
-             aPersistentStateRequired)
+             aPersistentStateRequired,
+             aMainThread)
   , mCDM(nullptr)
   , mShutdownCalled(false)
 {
@@ -46,8 +48,7 @@ void
 MediaDrmCDMProxy::Init(PromiseId aPromiseId,
                        const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
-                       const nsAString& aName,
-                       nsIEventTarget* aMainThread)
+                       const nsAString& aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
@@ -56,8 +57,6 @@ MediaDrmCDMProxy::Init(PromiseId aPromiseId,
           NS_ConvertUTF16toUTF8(aOrigin).get(),
           NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
           NS_ConvertUTF16toUTF8(aName).get());
-
-  mMainThread = aMainThread;
 
   // Create a thread to work with cdm.
   if (!mOwnerThread) {

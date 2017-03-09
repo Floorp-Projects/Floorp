@@ -32,13 +32,13 @@ public:
   MediaDrmCDMProxy(dom::MediaKeys* aKeys,
                    const nsAString& aKeySystem,
                    bool aDistinctiveIdentifierRequired,
-                   bool aPersistentStateRequired);
+                   bool aPersistentStateRequired,
+                   nsIEventTarget* aMainThread);
 
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName,
-            nsIEventTarget* aMainThread) override;
+            const nsAString& aGMPName) override;
 
   void CreateSession(uint32_t aCreateSessionToken,
                      MediaKeySessionType aSessionType,
