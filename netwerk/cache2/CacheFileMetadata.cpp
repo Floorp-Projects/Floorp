@@ -534,6 +534,23 @@ CacheFileMetadata::SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash)
 }
 
 nsresult
+CacheFileMetadata::RemoveHash(uint32_t aIndex)
+{
+  LOG(("CacheFileMetadata::RemoveHash() [this=%p, idx=%d]", this, aIndex));
+
+  MarkDirty();
+
+  MOZ_ASSERT((aIndex + 1) == mHashCount, "Can remove only last hash!");
+
+  if (aIndex + 1 != mHashCount) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mHashCount--;
+  return NS_OK;
+}
+
+nsresult
 CacheFileMetadata::AddFlags(uint32_t aFlags)
 {
   MarkDirty(false);
