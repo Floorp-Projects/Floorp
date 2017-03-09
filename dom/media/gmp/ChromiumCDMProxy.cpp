@@ -202,6 +202,13 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   uint32_t initDataType = ToCDMInitDataType(aInitDataType);
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in CreateSession"));
+    return;
+  }
+
   mGMPThread->Dispatch(
     NewRunnableMethod<uint32_t,
                       uint32_t,
@@ -236,6 +243,13 @@ ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
           aCert.Length());
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in SetServerCertificate"));
+    return;
+  }
+
   mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsTArray<uint8_t>>(
     cdm,
     &gmp::ChromiumCDMParent::SetServerCertificate,
@@ -255,6 +269,12 @@ ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
           aResponse.Length());
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in UpdateSession"));
+    return;
+  }
   mGMPThread->Dispatch(
     NewRunnableMethod<nsCString, uint32_t, nsTArray<uint8_t>>(
       cdm,
@@ -274,6 +294,12 @@ ChromiumCDMProxy::CloseSession(const nsAString& aSessionId,
           aPromiseId);
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in CloseSession"));
+    return;
+  }
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
     cdm,
     &gmp::ChromiumCDMParent::CloseSession,
@@ -291,6 +317,12 @@ ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
           aPromiseId);
 
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in RemoveSession"));
+    return;
+  }
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
     cdm,
     &gmp::ChromiumCDMParent::RemoveSession,
@@ -301,7 +333,19 @@ ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
 void
 ChromiumCDMProxy::Shutdown()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   EME_LOG("ChromiumCDMProxy::Shutdown()");
+  mKeys.Clear();
+  RefPtr<gmp::ChromiumCDMParent> cdm;
+  {
+    MutexAutoLock lock(mCDMMutex);
+    cdm.swap(mCDM);
+  }
+  if (cdm) {
+    nsCOMPtr<nsIRunnable> task =
+      NewRunnableMethod(mCDM, &gmp::ChromiumCDMParent::Shutdown);
+    mGMPThread->Dispatch(task.forget());
+  }
 }
 
 void
@@ -491,6 +535,10 @@ RefPtr<DecryptPromise>
 ChromiumCDMProxy::Decrypt(MediaRawData* aSample)
 {
   RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    return DecryptPromise::CreateAndReject(DecryptResult(AbortedErr, aSample),
+                                           __func__);
+  }
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(
     mGMPThread, __func__, [cdm, sample]() { return cdm->Decrypt(sample); });
