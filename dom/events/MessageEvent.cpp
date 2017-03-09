@@ -8,6 +8,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"
@@ -22,12 +23,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessageEvent, Event)
   tmp->mData.setUndefined();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPortSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServiceWorkerSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPorts)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessageEvent, Event)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPortSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPorts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -84,12 +87,14 @@ MessageEvent::GetLastEventId(nsAString& aLastEventId) const
 }
 
 void
-MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const
+MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const
 {
   if (mWindowSource) {
-    aValue.SetValue().SetAsWindowProxy() = mWindowSource->GetOuterWindow();
+    aValue.SetValue().SetAsWindowProxy() = mWindowSource;
   } else if (mPortSource) {
     aValue.SetValue().SetAsMessagePort() = mPortSource;
+  } else if (mServiceWorkerSource) {
+    aValue.SetValue().SetAsServiceWorker() = mServiceWorkerSource;
   }
 }
 
@@ -123,13 +128,15 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   event->mLastEventId = aParam.mLastEventId;
 
   if (!aParam.mSource.IsNull()) {
-    if (aParam.mSource.Value().IsWindow()) {
-      event->mWindowSource = aParam.mSource.Value().GetAsWindow()->AsInner();
-    } else {
+    if (aParam.mSource.Value().IsWindowProxy()) {
+      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy();
+    } else if (aParam.mSource.Value().IsMessagePort()) {
       event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
+    } else {
+      event->mServiceWorkerSource = aParam.mSource.Value().GetAsServiceWorker();
     }
 
-    MOZ_ASSERT(event->mWindowSource || event->mPortSource);
+    MOZ_ASSERT(event->mWindowSource || event->mPortSource || event->mServiceWorkerSource);
   }
 
   event->mPorts.AppendElements(aParam.mPorts);
@@ -143,7 +150,7 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
                                JS::Handle<JS::Value> aData,
                                const nsAString& aOrigin,
                                const nsAString& aLastEventId,
-                               const Nullable<WindowProxyOrMessagePort>& aSource,
+                               const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
                                const Sequence<OwningNonNull<MessagePort>>& aPorts)
 {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
@@ -156,13 +163,15 @@ MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
 
   mWindowSource = nullptr;
   mPortSource = nullptr;
+  mServiceWorkerSource = nullptr;
 
   if (!aSource.IsNull()) {
     if (aSource.Value().IsWindowProxy()) {
-      auto* windowProxy = aSource.Value().GetAsWindowProxy();
-      mWindowSource = windowProxy ? windowProxy->GetCurrentInnerWindow() : nullptr;
-    } else {
+      mWindowSource = aSource.Value().GetAsWindowProxy();
+    } else if (aSource.Value().IsMessagePort()) {
       mPortSource = &aSource.Value().GetAsMessagePort();
+    } else {
+      mServiceWorkerSource = &aSource.Value().GetAsServiceWorker();
     }
   }
 
