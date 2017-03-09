@@ -585,8 +585,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // We don't have to update transitions if display:none, although we will
   // cancel them after restyling.
   if (!afterChangeStyle->IsInDisplayNoneSubtree()) {
-    startedAny = UpdateTransitions(disp, aElement, collection,
-                                   aOldStyleContext, afterChangeStyle);
+    startedAny = UpdateTransitions(disp,
+                                   aElement,
+                                   afterChangeStyle->GetPseudoType(),
+                                   collection,
+                                   aOldStyleContext,
+                                   afterChangeStyle.get());
   }
 
   MOZ_ASSERT(!startedAny || collection,
@@ -616,13 +620,15 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 }
 
+template<typename StyleType>
 bool
 nsTransitionManager::UpdateTransitions(
   const nsStyleDisplay* aDisp,
   dom::Element* aElement,
+  CSSPseudoElementType aPseudoType,
   CSSTransitionCollection*& aElementTransitions,
-  nsStyleContext* aOldStyleContext,
-  nsStyleContext* aNewStyleContext)
+  StyleType aOldStyle,
+  StyleType aNewStyle)
 {
   MOZ_ASSERT(aDisp, "Null nsStyleDisplay");
   MOZ_ASSERT(!aElementTransitions ||
@@ -653,22 +659,24 @@ nsTransitionManager::UpdateTransitions(
         for (nsCSSPropertyID p = nsCSSPropertyID(0);
              p < eCSSProperty_COUNT_no_shorthands;
              p = nsCSSPropertyID(p + 1)) {
-          ConsiderInitiatingTransition(p, t, aElement, aElementTransitions,
-                                       aOldStyleContext, aNewStyleContext,
+          ConsiderInitiatingTransition(p, t, aElement, aPseudoType,
+                                       aElementTransitions,
+                                       aOldStyle, aNewStyle,
                                        &startedAny, &whichStarted);
         }
       } else if (nsCSSProps::IsShorthand(property)) {
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
                                              CSSEnabledState::eForAllContent)
         {
-          ConsiderInitiatingTransition(*subprop, t, aElement,
+          ConsiderInitiatingTransition(*subprop, t, aElement, aPseudoType,
                                        aElementTransitions,
-                                       aOldStyleContext, aNewStyleContext,
+                                       aOldStyle, aNewStyle,
                                        &startedAny, &whichStarted);
         }
       } else {
-        ConsiderInitiatingTransition(property, t, aElement, aElementTransitions,
-                                     aOldStyleContext, aNewStyleContext,
+        ConsiderInitiatingTransition(property, t, aElement, aPseudoType,
+                                     aElementTransitions,
+                                     aOldStyle, aNewStyle,
                                      &startedAny, &whichStarted);
       }
     }
@@ -730,13 +738,12 @@ nsTransitionManager::UpdateTransitions(
           // interpolable); a new transition would have anim->ToValue()
           // matching currentValue
           !ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
-                                           aNewStyleContext, currentValue) ||
+                                           aNewStyle, currentValue) ||
           currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
           EffectSet* effectSet =
-            EffectSet::GetEffectSet(aElement,
-                                    aNewStyleContext->GetPseudoType());
+            EffectSet::GetEffectSet(aElement, aPseudoType);
           if (effectSet) {
             effectSet->UpdateAnimationGeneration(mPresContext);
           }
@@ -799,14 +806,16 @@ GetTransitionKeyframes(nsCSSPropertyID aProperty,
   return keyframes;
 }
 
+template<typename StyleType>
 void
 nsTransitionManager::ConsiderInitiatingTransition(
   nsCSSPropertyID aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,
+  CSSPseudoElementType aPseudoType,
   CSSTransitionCollection*& aElementTransitions,
-  nsStyleContext* aOldStyleContext,
-  nsStyleContext* aNewStyleContext,
+  StyleType aOldStyle,
+  StyleType aNewStyle,
   bool* aStartedAny,
   nsCSSPropertyIDSet* aWhichStarted)
 {
@@ -839,8 +848,8 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   AnimationValue startValue, endValue;
   bool haveValues =
-    ExtractNonDiscreteComputedValue(aProperty, aOldStyleContext, startValue) &&
-    ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext, endValue);
+    ExtractNonDiscreteComputedValue(aProperty, aOldStyle, startValue) &&
+    ExtractNonDiscreteComputedValue(aProperty, aNewStyle, endValue);
 
   bool haveChange = startValue != endValue;
 
@@ -899,8 +908,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
       animations[currentIndex]->CancelFromStyle();
       oldPT = nullptr; // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
-      EffectSet* effectSet =
-        EffectSet::GetEffectSet(aElement, aNewStyleContext->GetPseudoType());
+      EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
       if (effectSet) {
         effectSet->UpdateAnimationGeneration(mPresContext);
       }
@@ -977,7 +985,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   // aElement is non-null here, so we emplace it directly.
   Maybe<OwningAnimationTarget> target;
-  target.emplace(aElement, aNewStyleContext->GetPseudoType());
+  target.emplace(aElement, aPseudoType);
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
@@ -986,16 +994,11 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty,
                                           Move(startValue), Move(endValue), tf),
-                   aNewStyleContext);
-
-  MOZ_ASSERT(mPresContext->RestyleManager()->IsGecko(),
-             "ServoRestyleManager should not use nsTransitionManager "
-             "for transitions");
+                   aNewStyle);
 
   RefPtr<CSSTransition> animation =
     new CSSTransition(mPresContext->Document()->GetScopeObject());
-  animation->SetOwningElement(
-    OwningElementRef(*aElement, aNewStyleContext->GetPseudoType()));
+  animation->SetOwningElement(OwningElementRef(*aElement, aPseudoType));
   animation->SetTimelineNoUpdate(timeline);
   animation->SetCreationSequence(
     mPresContext->RestyleManager()->GetAnimationGeneration());
@@ -1006,7 +1009,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     bool createdCollection = false;
     aElementTransitions =
       CSSTransitionCollection::GetOrCreateAnimationCollection(
-        aElement, aNewStyleContext->GetPseudoType(), &createdCollection);
+        aElement, aPseudoType, &createdCollection);
     if (!aElementTransitions) {
       MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
       NS_WARNING("allocating collection failed");
@@ -1061,8 +1064,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     }
   }
 
-  EffectSet* effectSet =
-    EffectSet::GetEffectSet(aElement, aNewStyleContext->GetPseudoType());
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (effectSet) {
     effectSet->UpdateAnimationGeneration(mPresContext);
   }
