@@ -142,6 +142,8 @@ public:
     return GetOwner();
   }
 
+  virtual void DisconnectFromOwner() override;
+
   void Shutdown(); // idempotent
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

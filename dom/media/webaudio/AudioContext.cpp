@@ -260,7 +260,8 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
 
 bool AudioContext::CheckClosed(ErrorResult& aRv)
 {
-  if (mAudioContextState == AudioContextState::Closed) {
+  if (mAudioContextState == AudioContextState::Closed ||
+      mIsShutDown) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return true;
   }
@@ -638,6 +639,12 @@ AudioContext::CurrentTime() const
 {
   MediaStream* stream = Destination()->Stream();
   return stream->StreamTimeToSeconds(stream->GetCurrentTime());
+}
+
+void AudioContext::DisconnectFromOwner()
+{
+  Shutdown();
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 void
