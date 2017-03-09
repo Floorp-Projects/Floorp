@@ -538,12 +538,6 @@ public:
   }
 
   virtual mozilla::ipc::IPCResult
-  RecvGetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) override {
-    hal::GetCurrentScreenConfiguration(aScreenConfiguration);
-    return IPC_OK();
-  }
-
-  virtual mozilla::ipc::IPCResult
   RecvLockScreenOrientation(const dom::ScreenOrientationInternal& aOrientation, bool* aAllowed) override
   {
     // FIXME/bug 777980: unprivileged content may only lock
