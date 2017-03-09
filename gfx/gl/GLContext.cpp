@@ -1153,8 +1153,13 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
     if (IsSupported(GLFeature::robustness)) {
         const auto resetStrategy = GetIntAs<GLuint>(LOCAL_GL_RESET_NOTIFICATION_STRATEGY);
         if (resetStrategy != LOCAL_GL_LOSE_CONTEXT_ON_RESET) {
-            MOZ_ASSERT(resetStrategy == LOCAL_GL_NO_RESET_NOTIFICATION);
-            NS_WARNING("Robustness supported, but not active!");
+            NS_WARNING("Robustness supported, strategy is not LOSE_CONTEXT_ON_RESET!");
+            if (ShouldSpew()) {
+                const bool isDisabled = (resetStrategy == LOCAL_GL_NO_RESET_NOTIFICATION);
+                printf_stderr("Strategy: %s (0x%04x)",
+                              (isDisabled ? "disabled" : "unrecognized"),
+                              resetStrategy);
+            }
             MarkUnsupported(GLFeature::robustness);
         }
     }
