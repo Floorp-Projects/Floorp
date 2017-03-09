@@ -6320,9 +6320,7 @@ HTMLInputElement::GetValueFromSetRangeText(nsAString& aValue)
 nsresult
 HTMLInputElement::SetValueFromSetRangeText(const nsAString& aValue)
 {
-  return SetValueInternal(aValue,
-                          nsTextEditorState::eSetValue_ByContent |
-                          nsTextEditorState::eSetValue_Notify);
+  return SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent);
 }
 
 Nullable<uint32_t>
