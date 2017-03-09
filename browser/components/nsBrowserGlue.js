@@ -109,6 +109,8 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle("chrome://browser/locale/browser.properties");
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
+
 // Seconds of idle before trying to create a bookmarks backup.
 const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
 // Minimum interval between backups.  We try to not create more than one backup
@@ -2302,11 +2304,11 @@ BrowserGlue.prototype = {
     let body = accountsBundle.formatStringFromName("deviceConnectedBody" +
                                                    (deviceName ? "" : ".noDeviceName"),
                                                    [deviceName], 1);
-    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.devices.uri");
 
-    function clickCallback(subject, topic, data) {
+    async function clickCallback(subject, topic, data) {
       if (topic != "alertclickcallback")
         return;
+      let url = await fxAccounts.promiseAccountsManageDevicesURI("device-connected-notification");
       let win = RecentWindow.getMostRecentBrowserWindow({private: false});
       if (!win) {
         Services.appShell.hiddenDOMWindow.open(url);
@@ -2316,7 +2318,7 @@ BrowserGlue.prototype = {
     }
 
     try {
-      AlertsService.showAlertNotification(null, title, body, true, url, clickCallback);
+      AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
     } catch (ex) {
       Cu.reportError("Error notifying of a new Sync device: " + ex);
     }
