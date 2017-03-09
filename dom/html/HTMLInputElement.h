@@ -721,7 +721,7 @@ public:
   void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
   void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
 
-  void SetSelectionRange(int32_t aStart, int32_t aEnd,
+  void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
                          const Optional< nsAString >& direction,
                          ErrorResult& aRv);
 
