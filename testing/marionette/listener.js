@@ -886,46 +886,60 @@ function multiAction(args, maxLen) {
   setDispatch(concurrentEvent, pendingTouches);
 }
 
-/*
+/**
  * This implements the latter part of a get request (for the case we need to resume one
  * when a remoteness update happens in the middle of a navigate request). This is most of
  * of the work of a navigate request, but doesn't assume DOMContentLoaded is yet to fire.
+ *
+ * @param {function=} cleanupCallback
+ *     Callback to execute when registered event handlers or observer notifications
+ *     have to be cleaned-up.
+ * @param {number} command_id
+ *     ID of the currently handled message between the driver and listener.
+ * @param {number} pageTimeout
+ *     Timeout in seconds the method has to wait for the page being finished loading.
+ * @param {number} startTime
+ *     Unix timestap when the navitation request got triggred.
  */
-function pollForReadyState(msg, start = undefined, callback = undefined) {
-  let {pageTimeout, url, command_id} = msg.json;
-  if (!start) {
-    start = new Date().getTime();
+function pollForReadyState(msg) {
+  let {cleanupCallback, command_id, pageTimeout, startTime} = msg.json;
+
+  if (typeof startTime == "undefined") {
+    startTime = new Date().getTime();
   }
-  if (!callback) {
-    callback = () => {};
+
+  if (typeof cleanupCallback == "undefined") {
+    cleanupCallback = () => {};
   }
+
+  let endTime = startTime + pageTimeout;
 
   let checkLoad = () => {
     navTimer.cancel();
 
     let doc = curContainer.frame.document;
-    let now = new Date().getTime();
-    if (pageTimeout == null || (now - start) <= pageTimeout) {
+
+    if (pageTimeout === null || new Date().getTime() <= endTime) {
       // document fully loaded
-      if (doc.readyState == "complete") {
-        callback();
+      if (doc.readyState === "complete") {
+        cleanupCallback();
         sendOk(command_id);
 
       // document with an insecure cert
-      } else if (doc.readyState == "interactive" &&
+      } else if (doc.readyState === "interactive" &&
           doc.baseURI.startsWith("about:certerror")) {
-        callback();
+        cleanupCallback();
         sendError(new InsecureCertificateError(), command_id);
 
       // we have reached an error url without requesting it
-      } else if (doc.readyState == "interactive" &&
+      } else if (doc.readyState === "interactive" &&
           /about:.+(error)\?/.exec(doc.baseURI)) {
-        callback();
+        cleanupCallback();
         sendError(new UnknownError("Reached error page: " + doc.baseURI), command_id);
 
       // return early for about: urls
-      } else if (doc.readyState == "interactive" && doc.baseURI.startsWith("about:")) {
-        callback();
+      } else if (doc.readyState === "interactive" && doc.baseURI.startsWith("about:")) {
+        cleanupCallback();
         sendOk(command_id);
 
       // document not fully loaded
@@ -934,10 +948,11 @@ function pollForReadyState(msg, start = undefined, callback = undefined) {
       }
 
     } else {
-      callback();
+      cleanupCallback();
       sendError(new TimeoutError("Error loading page, timed out (checkLoad)"), command_id);
     }
   };
+
   checkLoad();
 }
 
@@ -948,8 +963,9 @@ function pollForReadyState(msg, start = undefined, callback = undefined) {
  * driver (in chrome space).
  */
 function get(msg) {
-  let start = new Date().getTime();
   let {pageTimeout, url, command_id} = msg.json;
+
+  let startTime = new Date().getTime();
 
   // We need to move to the top frame before navigating
   sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
@@ -1018,9 +1034,15 @@ function get(msg) {
       // not triggered, which is the case for image documents.
       else if (state & Ci.nsIWebProgressListener.STATE_STOP &&
           content.document instanceof content.ImageDocument) {
-        pollForReadyState(msg, start, () => {
-          removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-        });
+        pollForReadyState({json: {
+          command_id: command_id,
+          pageTimeout: pageTimeout,
+          startTime: startTime,
+          cleanupCallback: () => {
+            webProgress.removeProgressListener(loadListener);
+            removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+          }
+        }});
       }
     },
 
@@ -1056,10 +1078,15 @@ function get(msg) {
         docShell.hasLoadedNonBlankURI;
 
     if (correctFrame && sawLoad && loadedRequestedURI) {
-      pollForReadyState(msg, start, () => {
-        webProgress.removeProgressListener(loadListener);
-        removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-      });
+      pollForReadyState({json: {
+        command_id: command_id,
+        pageTimeout: pageTimeout,
+        startTime: startTime,
+        cleanupCallback: () => {
+          webProgress.removeProgressListener(loadListener);
+          removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+        }
+      }});
     }
   };
 
