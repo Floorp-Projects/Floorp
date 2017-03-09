@@ -55,7 +55,6 @@ interface nsIDOMHTMLTextAreaElement : nsISupports
 
   void select();
   void setSelectionRange(in long selectionStart, in long selectionEnd, [optional] in DOMString direction);
-           attribute DOMString             selectionDirection;
 
 
   // Mozilla extensions
