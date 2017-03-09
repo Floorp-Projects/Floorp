@@ -313,9 +313,9 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
           // XXX handling YUV
           gfx::SurfaceFormat format =
             wrTexture->GetFormat() == SurfaceFormat::YUV ? SurfaceFormat::B8G8R8A8 : wrTexture->GetFormat();
+          wr::ImageDescriptor descriptor(wrTexture->GetSize(), wrTexture->GetRGBStride(), format);
           mApi->AddExternalImageBuffer(key,
-                                       wrTexture->GetSize(),
-                                       format,
+                                       descriptor,
                                        wrTexture->GetExternalImageKey());
           mCompositableHolder->HoldExternalImage(aEpoch, texture->AsWebRenderTextureHost());
           keysToDelete.push_back(key);

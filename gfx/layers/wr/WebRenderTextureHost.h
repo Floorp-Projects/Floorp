@@ -45,6 +45,8 @@ public:
   virtual WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
   uint64_t GetExternalImageKey() { return mExternalImageId; }
+
+  int32_t GetRGBStride();
 protected:
   RefPtr<TextureHost> mWrappedTextureHost;
   uint64_t mExternalImageId;
