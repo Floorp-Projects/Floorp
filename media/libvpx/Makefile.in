@@ -4,6 +4,8 @@
 
 # Set up the libvpx assembler config.
 
+include $(topsrcdir)/config/rules.mk
+
 ifdef VPX_ARM_ASM
 
 ifdef VPX_AS_CONVERSION
@@ -15,8 +17,9 @@ ifdef VPX_AS_CONVERSION
 # one directory with arm assembly currently so enumerate it manually.
 GENERATED_DIRS += libvpx/vpx_dsp/arm
 
-%.asm.S: %.asm $(ASM_OFFSETS)
+%.asm.S: %.asm $(ASM_OFFSETS) $(call mkdir_deps,libvpx/vpx_dsp/arm)
 	$(VPX_AS_CONVERSION) < $< > $@
 
+$(addsuffix .$(OBJ_SUFFIX), idct4x4_add_neon.asm idct8x8_add_neon.asm idct16x16_add_neon.asm): libvpx/vpx_dsp/arm/idct_neon.asm.S
 endif
 endif
