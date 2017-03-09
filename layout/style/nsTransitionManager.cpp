@@ -108,27 +108,43 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
       ComputedTimingFunction::GetPortion(mReplacedTransition->mTimingFunction,
                                          computedTiming.mProgress.Value(),
                                          computedTiming.mBeforeFlag);
-    StyleAnimationValue startValue;
-    if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
-                                         mReplacedTransition->mFromValue,
-                                         mReplacedTransition->mToValue,
-                                         valuePosition, startValue)) {
-      MOZ_ASSERT(mProperties.Length() == 1 &&
-                 mProperties[0].mSegments.Length() == 1,
-                 "The transition should have one property and one segment");
+
+    MOZ_ASSERT(mProperties.Length() == 1 &&
+               mProperties[0].mSegments.Length() == 1,
+               "The transition should have one property and one segment");
+    MOZ_ASSERT(mKeyframes.Length() == 2,
+               "Transitions should have exactly two animation keyframes");
+    MOZ_ASSERT(mKeyframes[0].mPropertyValues.Length() == 1,
+               "Transitions should have exactly one property in their first "
+               "frame");
+
+    const AnimationValue& replacedFrom = mReplacedTransition->mFromValue;
+    const AnimationValue& replacedTo = mReplacedTransition->mToValue;
+    AnimationValue startValue;
+    if (mDocument->IsStyledByServo()) {
+      startValue.mServo =
+        Servo_AnimationValues_Interpolate(replacedFrom.mServo,
+                                          replacedTo.mServo,
+                                          valuePosition).Consume();
+      if (startValue.mServo) {
+        mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
+          Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
+        mProperties[0].mSegments[0].mFromValue = Move(startValue);
+      }
+    } else if (StyleAnimationValue::Interpolate(mProperties[0].mProperty,
+                                                replacedFrom.mGecko,
+                                                replacedTo.mGecko,
+                                                valuePosition,
+                                                startValue.mGecko)) {
       nsCSSValue cssValue;
       DebugOnly<bool> uncomputeResult =
         StyleAnimationValue::UncomputeValue(mProperties[0].mProperty,
-                                            startValue,
+                                            startValue.mGecko,
                                             cssValue);
-      mProperties[0].mSegments[0].mFromValue.mGecko = Move(startValue);
       MOZ_ASSERT(uncomputeResult, "UncomputeValue should not fail");
-      MOZ_ASSERT(mKeyframes.Length() == 2,
-          "Transitions should have exactly two animation keyframes");
-      MOZ_ASSERT(mKeyframes[0].mPropertyValues.Length() == 1,
-          "Transitions should have exactly one property in their first "
-          "frame");
       mKeyframes[0].mPropertyValues[0].mValue = cssValue;
+
+      mProperties[0].mSegments[0].mFromValue = Move(startValue);
     }
   }
 
@@ -343,7 +359,7 @@ CSSTransition::TransitionProperty() const
   return mTransitionProperty;
 }
 
-StyleAnimationValue
+AnimationValue
 CSSTransition::ToValue() const
 {
   MOZ_ASSERT(!mTransitionToValue.IsNull(),
@@ -698,7 +714,7 @@ nsTransitionManager::UpdateTransitions(
           // matching currentValue
           !ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
                                            aNewStyleContext, currentValue) ||
-          currentValue != anim->ToValue()) {
+          currentValue != anim->ToValue().mGecko) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
           EffectSet* effectSet =
@@ -811,7 +827,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     ExtractNonDiscreteComputedValue(aProperty, aNewStyleContext,
                                     endValue.mGecko);
 
-  bool haveChange = startValue.mGecko != endValue.mGecko;
+  bool haveChange = startValue != endValue;
 
   bool shouldAnimate =
     haveValues &&
@@ -857,8 +873,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   // a new transition for the reasons described in
   // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
   if (haveCurrentTransition && haveValues &&
-      aElementTransitions->mAnimations[currentIndex]->ToValue() ==
-        endValue.mGecko) {
+      aElementTransitions->mAnimations[currentIndex]->ToValue() == endValue) {
     // GetAnimationRule already called RestyleForAnimation.
     return;
   }
@@ -911,7 +926,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   if (haveCurrentTransition &&
       aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
       oldPT &&
-      oldPT->mStartForReversingTest == endValue.mGecko) {
+      oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
@@ -942,7 +957,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
     duration *= valuePortion;
 
-    startForReversingTest.mGecko = oldPT->ToValue();
+    startForReversingTest = oldPT->ToValue();
     reversePortion = valuePortion;
   }
 
@@ -958,7 +973,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
   KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
-                                  startForReversingTest.mGecko, reversePortion,
+                                  startForReversingTest, reversePortion,
                                   effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aProperty,
@@ -1023,8 +1038,8 @@ nsTransitionManager::ConsiderInitiatingTransition(
           oldPT->GetAnimation()->PlaybackRate(),
           oldPT->SpecifiedTiming(),
           segment.mTimingFunction,
-          segment.mFromValue.mGecko,
-          segment.mToValue.mGecko
+          segment.mFromValue,
+          segment.mToValue
         })
       );
     }
@@ -1078,9 +1093,10 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
 
     // Since effect is a finished transition, we know it didn't
     // influence style.
-    StyleAnimationValue currentValue;
+    AnimationValue currentValue;
     if (!ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
-                                         aNewStyleContext, currentValue) ||
+                                         aNewStyleContext,
+                                         currentValue.mGecko) ||
         currentValue != anim->ToValue()) {
       anim->CancelFromStyle();
       animations.RemoveElementAt(i);
