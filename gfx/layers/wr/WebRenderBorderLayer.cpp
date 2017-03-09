@@ -34,8 +34,7 @@ WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                nullptr,
                                1.0f,
                                aLayer->GetLayer()->GetTransform(),
-                               WrMixBlendMode::Normal);
-
+                               wr::MixBlendMode::Normal);
   aBuilder.PushBorder(wr::ToWrRect(aRect), aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect)),
                       wr::ToWrBorderSide(aWidths[0], aColors[0], aBorderStyles[0]),
                       wr::ToWrBorderSide(aWidths[1], aColors[1], aBorderStyles[1]),
@@ -43,19 +42,17 @@ WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                       wr::ToWrBorderSide(aWidths[3], aColors[3], aBorderStyles[3]),
                       wr::ToWrBorderRadius(aCorners[0], aCorners[1],
                                            aCorners[3], aCorners[2]));
-
   aBuilder.PopStackingContext();
 }
 
 void
 WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
+  gfx::Rect relBounds = GetWrRelBounds();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Rect rect = GetWrBoundsRect();
-  Rect clip = GetWrClipRect(rect);
-  Rect relBounds = GetWrRelBounds();
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  gfx::Rect rect = GetWrBoundsRect();
+  gfx::Rect clipRect = GetWrClipRect(rect);
 
   DumpLayerInfo("BorderLayer", rect);
 
@@ -65,8 +62,8 @@ WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                1.0f,
                                //GetAnimations(),
                                GetTransform(),
-                               WrMixBlendMode::Normal);
-  aBuilder.PushBorder(wr::ToWrRect(rect), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
+                               wr::MixBlendMode::Normal);
+  aBuilder.PushBorder(wr::ToWrRect(rect), aBuilder.BuildClipRegion(wr::ToWrRect(clipRect)),
                       wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
                       wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
                       wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
