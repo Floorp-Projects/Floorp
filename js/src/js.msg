@@ -126,6 +126,7 @@ MSG_DEF(JSMSG_CANT_DECLARE_GLOBAL_BINDING, 2, JSEXN_TYPEERR, "cannot declare glo
 // Date
 MSG_DEF(JSMSG_INVALID_DATE,            0, JSEXN_RANGEERR, "invalid date")
 MSG_DEF(JSMSG_BAD_TOISOSTRING_PROP,    0, JSEXN_TYPEERR, "toISOString property is not callable")
+MSG_DEF(JSMSG_DEPRECATED_TOLOCALEFORMAT, 0, JSEXN_WARN, "Date.prototype.toLocaleFormat is deprecated; consider using Intl.DateTimeFormat instead")
 
 // String
 MSG_DEF(JSMSG_BAD_URI,                 0, JSEXN_URIERR, "malformed URI sequence")

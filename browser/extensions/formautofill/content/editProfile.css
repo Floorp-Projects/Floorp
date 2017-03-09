@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  font-size: 1rem;
+}
+
+form,
+label,
+div {
+  display: flex;
+}
+
+form {
+  flex-wrap: wrap;
+}
+
+label {
+  margin: 0 0 0.5em;
+}
+
+label > span {
+  flex: 0 0 8em;
+  padding-inline-end: 0.5em;
+  align-self: center;
+  text-align: end;
+}
+
+input,
+select {
+  flex: 1 0 auto;
+  width: 9em;
+}
+
+option {
+  padding: 6px;
+}
+
+textarea {
+  resize: none;
+}
+
+button {
+  padding: 3px 2em;
+}
+
+#country-container {
+  width: 15em;
+}
+
+#first-name-container,
+#middle-name-container,
+#address-level1-container,
+#postal-code-container,
+#country-container {
+  flex: 0 1 50%;
+}
+
+#last-name-container,
+#organization-container,
+#street-address-container,
+#address-level2-container,
+#email-container,
+#tel-container,
+#controls-container {
+  flex: 0 1 100%;
+}
+
+#controls-container {
+  justify-content: end;
+}
+
+#last-name,
+#organization,
+#address-level2,
+#tel{
+  flex: 0 0 auto;
+  width: calc(50% - 10em);
+}
+
+#street-address,
+#email {
+  flex: 1 0 auto;
+}
+
+#first-name-container,
+#middle-name-container,
+#last-name-container {
+  /* Hide until we support names */
+  display: none;
+}
