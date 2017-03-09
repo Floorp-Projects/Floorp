@@ -132,8 +132,6 @@ parent:
 
     async EnableScreenConfigurationNotifications();
     async DisableScreenConfigurationNotifications();
-    nested(inside_cpow) sync GetCurrentScreenConfiguration()
-      returns (ScreenConfiguration aScreenConfiguration);
     sync LockScreenOrientation(ScreenOrientationInternal aOrientation)
       returns (bool allowed);
     async UnlockScreenOrientation();
