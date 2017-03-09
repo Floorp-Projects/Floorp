@@ -117,22 +117,3 @@ nsScreenManagerCocoa::GetSystemDefaultScale(float *aDefaultScale)
     *aDefaultScale = 1.0f;
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsScreenManagerCocoa::ScreenForNativeWidget (void *nativeWidget, nsIScreen **outScreen)
-{
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-    NSWindow *window = static_cast<NSWindow*>(nativeWidget);
-    if (window) {
-        nsIScreen *screen = ScreenForCocoaScreen([window screen]);
-        *outScreen = screen;
-        NS_ADDREF(*outScreen);
-        return NS_OK;
-    }
-
-    *outScreen = nullptr;
-    return NS_OK;
-
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}

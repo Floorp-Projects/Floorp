@@ -832,20 +832,6 @@ nsScreenManagerGonk::ScreenForRect(int32_t inLeft,
 }
 
 NS_IMETHODIMP
-nsScreenManagerGonk::ScreenForNativeWidget(void *aWidget, nsIScreen **outScreen)
-{
-    for (size_t i = 0; i < mScreens.Length(); i++) {
-        if (aWidget == mScreens[i]->GetNativeWindow()) {
-            NS_IF_ADDREF(*outScreen = mScreens[i].get());
-            return NS_OK;
-        }
-    }
-
-    *outScreen = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;

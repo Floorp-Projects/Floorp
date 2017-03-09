@@ -609,21 +609,8 @@ nsDeviceContext::FindScreen(nsIScreen** outScreen)
 
     CheckDPIChange();
 
-    if (mWidget->GetOwningTabChild()) {
-        mScreenManager->ScreenForNativeWidget((void *)mWidget->GetOwningTabChild(),
-                                              outScreen);
-    }
-    else if (mWidget->GetNativeData(NS_NATIVE_WINDOW)) {
-        mScreenManager->ScreenForNativeWidget(mWidget->GetNativeData(NS_NATIVE_WINDOW),
-                                              outScreen);
-    }
-
-#ifdef MOZ_WIDGET_ANDROID
-    if (!(*outScreen)) {
-        nsCOMPtr<nsIScreen> screen = mWidget->GetWidgetScreen();
-        screen.forget(outScreen);
-    }
-#endif
+    nsCOMPtr<nsIScreen> screen = mWidget->GetWidgetScreen();
+    screen.forget(outScreen);
 
     if (!(*outScreen)) {
         mScreenManager->GetPrimaryScreen(outScreen);
