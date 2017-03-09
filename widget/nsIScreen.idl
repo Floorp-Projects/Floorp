@@ -21,12 +21,6 @@ enum class DisplayType: int32_t {
 interface nsIScreen : nsISupports
 {
   /**
-   * A unique identifier for this device, useful for requerying
-   * for it via nsIScreenManager.
-   */
-  readonly attribute unsigned long id;
-
-  /**
    * These report screen dimensions in (screen-specific) device pixels
    */
   void GetRect(out long left, out long top, out long width, out long height);

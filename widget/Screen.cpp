@@ -6,12 +6,12 @@
 
 #include "Screen.h"
 
+#include "mozilla/dom/DOMTypes.h"
+
 namespace mozilla {
 namespace widget {
 
 NS_IMPL_ISUPPORTS(Screen, nsIScreen)
-
-static uint32_t sScreenId = 0;
 
 Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aPixelDepth, uint32_t aColorDepth,
@@ -25,7 +25,18 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
   , mColorDepth(aColorDepth)
   , mContentsScale(aContentsScale)
   , mDefaultCssScale(aDefaultCssScale)
-  , mId(++sScreenId)
+{
+}
+
+Screen::Screen(const mozilla::dom::ScreenDetails& aScreen)
+  : mRect(aScreen.rect())
+  , mAvailRect(aScreen.availRect())
+  , mRectDisplayPix(aScreen.rectDisplayPix())
+  , mAvailRectDisplayPix(aScreen.availRectDisplayPix())
+  , mPixelDepth(aScreen.pixelDepth())
+  , mColorDepth(aScreen.colorDepth())
+  , mContentsScale(aScreen.contentsScaleFactor())
+  , mDefaultCssScale(aScreen.defaultCSSScaleFactor())
 {
 }
 
@@ -38,15 +49,15 @@ Screen::Screen(const Screen& aOther)
   , mColorDepth(aOther.mColorDepth)
   , mContentsScale(aOther.mContentsScale)
   , mDefaultCssScale(aOther.mDefaultCssScale)
-  , mId(aOther.mId)
 {
 }
 
-NS_IMETHODIMP
-Screen::GetId(uint32_t* aOutId)
+mozilla::dom::ScreenDetails
+Screen::ToScreenDetails()
 {
-  *aOutId = mId;
-  return NS_OK;
+  return mozilla::dom::ScreenDetails(
+    mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix,
+    mPixelDepth, mColorDepth, mContentsScale, mDefaultCssScale);
 }
 
 NS_IMETHODIMP

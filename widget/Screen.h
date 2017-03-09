@@ -12,6 +12,12 @@
 #include "Units.h"
 
 namespace mozilla {
+namespace dom {
+class ScreenDetails;
+} // namespace dom
+} // namespace mozilla
+
+namespace mozilla {
 namespace widget {
 
 class Screen final : public nsIScreen
@@ -24,7 +30,10 @@ public:
          uint32_t aPixelDepth, uint32_t aColorDepth,
          DesktopToLayoutDeviceScale aContentsScale,
          CSSToLayoutDeviceScale aDefaultCssScale);
+  explicit Screen(const mozilla::dom::ScreenDetails& aScreenDetails);
   Screen(const Screen& aOther);
+
+  mozilla::dom::ScreenDetails ToScreenDetails();
 
 private:
   virtual ~Screen() {}
@@ -37,7 +46,6 @@ private:
   uint32_t mColorDepth;
   DesktopToLayoutDeviceScale mContentsScale;
   CSSToLayoutDeviceScale mDefaultCssScale;
-  uint32_t mId;
 };
 
 } // namespace widget
