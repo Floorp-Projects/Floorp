@@ -39,7 +39,7 @@ public:
     /**
      * Compute a DOM key name index from aGdkKeyEvent.
      */
-    KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
+    static KeyNameIndex ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent);
 
     /**
      * Compute a DOM code name index from aGdkKeyEvent.
