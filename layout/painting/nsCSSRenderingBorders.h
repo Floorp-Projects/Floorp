@@ -18,6 +18,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
+#include "gfxUtils.h"
 
 struct nsBorderColors;
 class nsDisplayBorder;
@@ -26,6 +27,9 @@ namespace mozilla {
 namespace gfx {
 class GradientStops;
 } // namespace gfx
+namespace layers {
+class WebRenderDisplayItemLayer;
+} // namespace layers
 } // namespace mozilla
 
 // define this to enable a bunch of debug dump info
@@ -97,6 +101,9 @@ public:
 
   // draw the entire border
   void DrawBorders();
+
+  void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::layers::WebRenderDisplayItemLayer* aLayer);
 
   // utility function used for background painting as well as borders
   static void ComputeInnerRadii(const RectCornerRadii& aRadii,
