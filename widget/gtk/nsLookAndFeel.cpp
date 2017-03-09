@@ -18,7 +18,7 @@
 
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
-#include "nsScreenGtk.h"
+#include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -925,7 +925,7 @@ GetSystemFontInfo(GtkWidget *aWidget,
     // Scale fonts up on HiDPI displays.
     // This would be done automatically with cairo, but we manually manage
     // the display scale for platform consistency.
-    size *= nsScreenGtk::GetGtkMonitorScaleFactor();
+    size *= ScreenHelperGTK::GetGTKMonitorScaleFactor();
 
     // |size| is now pixels
 
