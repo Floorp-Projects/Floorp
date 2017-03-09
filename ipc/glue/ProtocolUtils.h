@@ -489,6 +489,9 @@ UnionTypeReadError(const char* aUnionName);
 MOZ_NEVER_INLINE void
 ArrayLengthReadError(const char* aElementName);
 
+MOZ_NEVER_INLINE void
+SentinelReadError(const char* aElementName);
+
 struct PrivateIPDLInterface {};
 
 nsresult
