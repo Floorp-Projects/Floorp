@@ -57,6 +57,9 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
         </service>
+
+        <meta-data android:name="android.webkit.WebView.MetricsOptOut"
+                   android:value="true" />
     </application>
 
 </manifest>
