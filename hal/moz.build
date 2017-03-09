@@ -23,6 +23,10 @@ EXPORTS.mozilla += [
     'HalWakeLock.h',
 ]
 
+EXPORTS.mozilla.fallback += [
+    'fallback/FallbackScreenConfiguration.h',
+]
+
 UNIFIED_SOURCES += [
     'HalWakeLock.cpp',
     'sandbox/SandboxHal.cpp',
