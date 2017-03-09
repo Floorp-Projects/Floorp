@@ -2524,8 +2524,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                                                 rshint);
       }
     } else if (pseudoType == CSSPseudoElementType::InheritingAnonBox) {
-      newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
-                                                      parentContext);
+      newContext = styleSet->ResolveInheritingAnonymousBoxStyle(pseudoTag,
+                                                                parentContext);
     }
     else {
       if (pseudoTag) {
@@ -2873,8 +2873,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                                                 nsRestyleHint(0));
       }
     } else if (extraPseudoType == CSSPseudoElementType::InheritingAnonBox) {
-      newExtraContext = styleSet->ResolveAnonymousBoxStyle(extraPseudoTag,
-                                                           newContext);
+      newExtraContext = styleSet->
+        ResolveInheritingAnonymousBoxStyle(extraPseudoTag, newContext);
     } else {
       // Don't expect XUL tree stuff here, since it needs a comparator and
       // all.

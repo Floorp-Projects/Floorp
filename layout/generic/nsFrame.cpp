@@ -10077,7 +10077,7 @@ nsFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Anon boxes inherit from their parent; that's us.
   RefPtr<nsStyleContext> newContext =
-    aStyleSet.ResolveAnonymousBoxStyle(pseudo, StyleContext());
+    aStyleSet.ResolveInheritingAnonymousBoxStyle(pseudo, StyleContext());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:

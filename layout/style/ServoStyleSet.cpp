@@ -344,9 +344,9 @@ ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aTy
 
 // aFlags is an nsStyleSet flags bitfield
 already_AddRefed<nsStyleContext>
-ServoStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                        nsStyleContext* aParentContext,
-                                        uint32_t aFlags)
+ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+                                                  nsStyleContext* aParentContext,
+                                                  uint32_t aFlags)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
@@ -386,7 +386,7 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
   MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent,
              "If nsCSSAnonBoxes::pageContent ends up non-inheriting, check "
              "whether we need to do anything to move the "
-             "@page handling from ResolveAnonymousBoxStyle to "
+             "@page handling from ResolveInheritingAnonymousBoxStyle to "
              "ResolveNonInheritingAnonymousBoxStyle");
 
   nsCSSAnonBoxes::NonInheriting type =

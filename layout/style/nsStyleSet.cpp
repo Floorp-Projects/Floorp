@@ -2056,9 +2056,9 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                     nsStyleContext* aParentContext,
-                                     uint32_t aFlags)
+nsStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+                                               nsStyleContext* aParentContext,
+                                               uint32_t aFlags)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -2132,7 +2132,7 @@ nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 
   MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent,
              "If nsCSSAnonBoxes::pageContent ends up non-inheriting, move the "
-             "@page handling from ResolveAnonymousBoxStyle to "
+             "@page handling from ResolveInheritingAnonymousBoxStyle to "
              "ResolveNonInheritingAnonymousBoxStyle");
 
   RefPtr<nsStyleContext> retval =
