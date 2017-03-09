@@ -370,6 +370,14 @@ def set_treeherder_machine_platform(config, tests):
 
 
 @transforms.add
+def set_mochitest_test_type(config, tests):
+    for test in tests:
+        if type(test['suite']) == str and test['suite'].startswith('mochitest'):
+            test.setdefault('tags', {})['test-type'] = 'mochitest'
+        yield test
+
+
+@transforms.add
 def set_asan_docker_image(config, tests):
     """Set the appropriate task.extra.treeherder.docker-image"""
     # Linux64-asan has many leaks with running mochitest-media jobs
