@@ -142,8 +142,6 @@ public:
 //==== NSITEXTCONTROLFRAME
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) override;
-  NS_IMETHOD    SetSelectionStart(int32_t aSelectionStart) override;
-  NS_IMETHOD    SetSelectionEnd(int32_t aSelectionEnd) override;
   NS_IMETHOD    SetSelectionRange(int32_t aSelectionStart,
                                   int32_t aSelectionEnd,
                                   SelectionDirection aDirection = eNone) override;
