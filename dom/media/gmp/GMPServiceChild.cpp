@@ -359,9 +359,6 @@ GMPServiceChild::GetBridgedGMPContentParent(ProcessId aOtherPid,
 
   MOZ_ASSERT(aOtherPid == endpoint.OtherPid());
 
-  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-  MOZ_ASSERT(mainThread);
-
   parent = new GMPContentParent();
 
   DebugOnly<bool> ok = endpoint.Bind(parent);
