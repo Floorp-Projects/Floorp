@@ -2989,13 +2989,84 @@ public:
 
     explicit GeckoView(const Context& ctx) : ObjectBase<GeckoView>(ctx) {}
 
+    class State;
     class Window;
+
+    struct SetState_t {
+        typedef GeckoView Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "setState";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView$State;)V";
+        static const bool isStatic = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::GECKO;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    auto SetState(mozilla::jni::Object::Param) const -> void;
 
     static const int32_t LOAD_DEFAULT = 0;
 
     static const int32_t LOAD_NEW_TAB = 1;
 
     static const int32_t LOAD_SWITCH_TAB = 2;
+
+    static const mozilla::jni::CallingThread callingThread =
+            mozilla::jni::CallingThread::GECKO;
+
+};
+
+class GeckoView::State : public mozilla::jni::ObjectBase<State>
+{
+public:
+    static const char name[];
+
+    explicit State(const Context& ctx) : ObjectBase<State>(ctx) {}
+
+    struct INITIAL_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "INITIAL";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoView$State;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto INITIAL() -> State::LocalRef;
+
+    struct READY_t {
+        typedef State Owner;
+        typedef State::LocalRef ReturnType;
+        typedef State::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "READY";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/GeckoView$State;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto READY() -> State::LocalRef;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;

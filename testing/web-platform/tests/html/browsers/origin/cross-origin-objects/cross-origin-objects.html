@@ -149,7 +149,7 @@ addTest(function(exception_t) {
   if (Reflect.setPrototypeOf) {
     assert_false(Reflect.setPrototypeOf(C, new Object()),
                  "Reflect.setPrototypeOf on cross-origin Window");
-    assert_false(Reflect.setPrototypeOf(C, new Object()),
+    assert_false(Reflect.setPrototypeOf(C.location, new Object()),
                 "Reflect.setPrototypeOf on cross-origin Location");
   }
 }, "[[SetPrototypeOf]] should return false");
