@@ -6,7 +6,6 @@ var { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/FileUtils.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/httpd.js", this);
@@ -96,14 +95,14 @@ const PingServer = {
     return this.promiseNextRequest().then(request => decodeRequestPayload(request));
   },
 
-  promiseNextRequests: Task.async(function*(count) {
+  async promiseNextRequests(count) {
     let results = [];
     for (let i = 0; i < count; ++i) {
-      results.push(yield this.promiseNextRequest());
+      results.push(await this.promiseNextRequest());
     }
 
     return results;
-  }),
+  },
 
   promiseNextPings(count) {
     return this.promiseNextRequests(count).then(requests => {
