@@ -298,6 +298,14 @@ public:
                          nsITextControlFrame::SelectionDirection aDirection,
                          mozilla::ErrorResult& aRv);
 
+  // Set the selection range, but with an optional string for the direction.
+  // This will convert aDirection to an nsITextControlFrame::SelectionDirection
+  // and then call our other SetSelectionRange overload.
+  void SetSelectionRange(int32_t aSelectionStart,
+                         int32_t aSelectionEnd,
+                         const mozilla::dom::Optional<nsAString>& aDirection,
+                         mozilla::ErrorResult& aRv);
+
   // Set the selection start.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart
   // setter.

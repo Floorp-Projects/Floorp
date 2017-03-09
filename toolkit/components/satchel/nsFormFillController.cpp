@@ -644,9 +644,14 @@ nsFormFillController::GetSelectionEnd(int32_t *aSelectionEnd)
 NS_IMETHODIMP
 nsFormFillController::SelectTextRange(int32_t aStartIndex, int32_t aEndIndex)
 {
- if (mFocusedInput)
-    mFocusedInput->SetSelectionRange(aStartIndex, aEndIndex, EmptyString());
-  return NS_OK;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
+    if (!content) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  ErrorResult rv;
+  HTMLInputElement::FromContent(content)->
+    SetSelectionRange(aStartIndex, aEndIndex, Optional<nsAString>(), rv);
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
