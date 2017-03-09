@@ -1608,39 +1608,41 @@ nsTextEditorState::GetSelectionRange(int32_t* aSelectionStart,
                                             *aSelectionStart, *aSelectionEnd);
 }
 
-nsresult
-nsTextEditorState::GetSelectionDirection(nsITextControlFrame::SelectionDirection* aDirection)
+nsITextControlFrame::SelectionDirection
+nsTextEditorState::GetSelectionDirection(ErrorResult& aRv)
 {
-  MOZ_ASSERT(mBoundFrame,
-             "Caller didn't flush out frames and check for a frame?");
-  MOZ_ASSERT(aDirection);
+  MOZ_ASSERT(IsSelectionCached() || GetSelectionController(),
+             "How can we not have a cached selection if we have no selection "
+             "controller?");
 
-  // It's not clear that all the checks here are needed, but the previous
-  // version of this code in nsTextControlFrame was doing them, so we keep them
-  // for now.
-
-  nsresult rv = mBoundFrame->EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Note that we may have both IsSelectionCached() _and_
+  // GetSelectionController() if we haven't initialized our editor yet.
+  if (IsSelectionCached()) {
+    return GetSelectionProperties().GetDirection();
+  }
 
   nsISelectionController* selCon = GetSelectionController();
-  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                            getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                     getter_AddRefs(selection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nsITextControlFrame::eForward; // Doesn't really matter
+  }
+  if (NS_WARN_IF(!selection)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nsITextControlFrame::eForward; // Doesn't really matter
+  }
 
   dom::Selection* sel = selection->AsSelection();
   nsDirection direction = sel->GetSelectionDirection();
   if (direction == eDirNext) {
-    *aDirection = nsITextControlFrame::eForward;
-  } else if (direction == eDirPrevious) {
-    *aDirection = nsITextControlFrame::eBackward;
-  } else {
-    NS_NOTREACHED("Invalid nsDirection enum value");
+    return nsITextControlFrame::eForward;
   }
-  return NS_OK;
+
+  MOZ_ASSERT(direction == eDirPrevious);
+  return nsITextControlFrame::eBackward;
 }
 
 HTMLInputElement*
@@ -1721,11 +1723,13 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   if (!IsSelectionCached()) {
     // Go ahead and cache it now.
     int32_t start = 0, end = 0;
-    nsITextControlFrame::SelectionDirection direction =
-      nsITextControlFrame::eForward;
     IgnoredErrorResult rangeRv;
     GetSelectionRange(&start, &end, rangeRv);
-    GetSelectionDirection(&direction);
+
+    IgnoredErrorResult dirRv;
+    nsITextControlFrame::SelectionDirection direction =
+      GetSelectionDirection(dirRv);
+
     MOZ_ASSERT(aFrame == mBoundFrame);
     SelectionProperties& props = GetSelectionProperties();
     props.SetStart(start);
