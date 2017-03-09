@@ -27,6 +27,9 @@ class nsITextControlElement;
 class nsFrame;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 class HTMLInputElement;
 } // namespace dom
@@ -153,7 +156,11 @@ public:
     // something like setRangeText().
     eSetValue_ByContent             = 1 << 1,
     // Whether the value change should be notified to the frame/contet nor not.
-    eSetValue_Notify                = 1 << 2
+    eSetValue_Notify                = 1 << 2,
+    // Whether to move the cursor to end of the value (in the case when we have
+    // cached selection offsets).  If this is not set, the cached selection
+    // offsets will simply be clamped to be within the length of the new value.
+    eSetValue_MoveCursorToEnd       = 1 << 3,
   };
   MOZ_MUST_USE bool SetValue(const nsAString& aValue, uint32_t aFlags);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
@@ -267,7 +274,8 @@ public:
   void SyncUpSelectionPropertiesBeforeDestruction();
 
   // Get the selection range start and end points in our text.
-  nsresult GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd);
+  void GetSelectionRange(int32_t* aSelectionStart, int32_t* aSelectionEnd,
+                         mozilla::ErrorResult& aRv);
 
   // Get the selection direction
   nsresult GetSelectionDirection(nsITextControlFrame::SelectionDirection* aDirection);
@@ -330,6 +338,7 @@ private:
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
   nsITextControlElement* const MOZ_NON_OWNING_REF mTextCtrlElement;
+  // mSelCon is non-null while we have an mBoundFrame.
   RefPtr<nsTextInputSelectionImpl> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
   nsCOMPtr<nsIEditor> mEditor;
