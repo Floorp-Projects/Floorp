@@ -44,7 +44,7 @@ include protocol PVideoDecoderManager;
 include protocol PFlyWebPublishedServer;
 include DOMTypes;
 include JavaScriptTypes;
-include InputStreamParams;
+include IPCStream;
 include PTabContext;
 include URIParams;
 include PluginTypes;
@@ -817,7 +817,7 @@ parent:
     async AudioChannelChangeDefVolChannel(int32_t aChannel, bool aHidden);
 
     sync KeywordToURI(nsCString keyword)
-        returns (nsString providerName, OptionalInputStreamParams postData, OptionalURIParams uri);
+        returns (nsString providerName, OptionalIPCStream postData, OptionalURIParams uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
