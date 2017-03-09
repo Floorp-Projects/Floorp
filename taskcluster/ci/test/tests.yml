@@ -383,8 +383,6 @@ mochitest:
             linux64-jsdcov/opt: mochitest/plain-chunked-coverage
             default: mochitest/plain-chunked
     treeherder-symbol: tc-M()
-    tags:
-        test-type: mochitest
     loopback-video: true
     instance-size:
         by-test-platform:
