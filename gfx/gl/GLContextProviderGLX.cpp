@@ -511,11 +511,9 @@ GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
         if (glx.HasCreateContextAttribs()) {
             AutoTArray<int, 11> attrib_list;
             if (glx.HasRobustness()) {
-                const int robust_attribs[] = {
-                    LOCAL_GLX_CONTEXT_FLAGS_ARB,
-                    LOCAL_GLX_CONTEXT_ROBUST_ACCESS_BIT_ARB,
-                    LOCAL_GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB,
-                    LOCAL_GLX_LOSE_CONTEXT_ON_RESET_ARB,
+                int robust_attribs[] = {
+                    LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+                    LOCAL_GL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_GL_LOSE_CONTEXT_ON_RESET_ARB,
                 };
                 attrib_list.AppendElements(robust_attribs, MOZ_ARRAY_LENGTH(robust_attribs));
             }
@@ -662,6 +660,12 @@ bool
 GLContextGLX::IsDoubleBuffered() const
 {
     return mDoubleBuffered;
+}
+
+bool
+GLContextGLX::SupportsRobustness() const
+{
+    return mGLX->HasRobustness();
 }
 
 bool

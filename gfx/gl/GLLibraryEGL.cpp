@@ -52,8 +52,7 @@ static const char* sEGLExtensionNames[] = {
     "EGL_ANDROID_image_crop",
     "EGL_ANGLE_platform_angle",
     "EGL_ANGLE_platform_angle_d3d",
-    "EGL_ANGLE_d3d_share_handle_client_buffer",
-    "EGL_KHR_create_context",
+    "EGL_ANGLE_d3d_share_handle_client_buffer"
 };
 
 #if defined(ANDROID)
