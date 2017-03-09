@@ -8,6 +8,7 @@
 
 #include "imgIContainer.h"
 #include "nsMargin.h"
+#include "nsCSSRenderingBorders.h"
 
 class nsIFrame;
 class nsFrame;
@@ -42,6 +43,12 @@ public:
                                    nsRenderingContext& aRenderingContext,
                                    const nsRect& aDirtyRect,
                                    const nsRect& aRect);
+
+  mozilla::Maybe<nsCSSBorderRenderer> CreateInnerFocusBorderRenderer(nsDisplayListBuilder* aBuilder,
+                                                                     nsPresContext* aPresContext,
+                                                                     nsRenderingContext* aRenderingContext,
+                                                                     const nsRect& aDirtyRect,
+                                                                     const nsRect& aRect);
 
   DrawResult PaintBorder(nsDisplayListBuilder* aBuilder,
                          nsPresContext* aPresContext,
