@@ -70,7 +70,7 @@ class VideoSendStream : public webrtc::VideoSendStream,
   typedef std::map<uint32_t, RtpState> RtpStateMap;
   RtpStateMap GetRtpStates() const;
 
-  int64_t GetRtt() const;
+  int64_t GetRtt() const override;
   int GetPaddingNeededBps() const;
 
  private:
