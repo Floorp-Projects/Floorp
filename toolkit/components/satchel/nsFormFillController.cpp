@@ -609,7 +609,7 @@ nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
     return NS_ERROR_UNEXPECTED;
   }
   ErrorResult rv;
-  Nullable<int32_t> start =
+  Nullable<uint32_t> start =
     HTMLInputElement::FromContent(content)->GetSelectionStart(rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
