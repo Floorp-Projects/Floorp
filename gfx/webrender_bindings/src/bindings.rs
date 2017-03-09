@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius, BorderWidths, BorderDetails, NormalBorder};
-use webrender_traits::{PipelineId, ClipRegion, PropertyBinding};
+use webrender_traits::{PipelineId, ComplexClipRegion, ClipRegion, PropertyBinding};
 use webrender_traits::{Epoch, ExtendMode, ColorF, GlyphInstance, GradientStop, ImageDescriptor};
 use webrender_traits::{FilterOp, ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
@@ -12,7 +12,7 @@ use webrender_traits::{DeviceUintSize, DeviceUintRect, DeviceUintPoint, External
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender_traits::{BoxShadowClipMode, LayerPixel, ServoScrollRootId, IdNamespace};
 use webrender_traits::{BuiltDisplayListDescriptor, AuxiliaryListsDescriptor};
-use webrender_traits::{BuiltDisplayList, AuxiliaryLists};
+use webrender_traits::{BuiltDisplayList, AuxiliaryLists, ItemRange};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
@@ -401,6 +401,24 @@ pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
 pub extern fn wr_dp_end(state: &mut WrState) {
     assert!( unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_stacking_context();
+}
+
+#[no_mangle]
+pub extern fn wr_dp_new_clip_region(state: &mut WrState,
+                                    main: WrRect,
+                                    complex: *const WrComplexClipRegion, complex_count: usize,
+                                    image_mask: *const WrImageMask) -> WrClipRegion {
+    assert!( unsafe { is_in_main_thread() });
+
+    let main = main.to_rect();
+    let complex = WrComplexClipRegion::to_complex_clip_regions(unsafe {
+        slice::from_raw_parts(complex, complex_count)
+    });
+    let mask = unsafe { image_mask.as_ref().map(|x| x.to_image_mask()) };
+
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&main, complex, mask);
+
+    clip_region.into()
 }
 
 #[no_mangle]
@@ -887,6 +905,33 @@ pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect,
 }
 
 #[repr(C)]
+struct WrItemRange
+{
+    start: usize,
+    length: usize,
+}
+impl WrItemRange
+{
+    fn to_item_range(&self) -> ItemRange
+    {
+        ItemRange {
+            start: self.start,
+            length: self.length,
+        }
+    }
+}
+impl From<ItemRange> for WrItemRange
+{
+    fn from(item_range: ItemRange) -> Self
+    {
+        WrItemRange {
+            start: item_range.start,
+            length: item_range.length,
+        }
+    }
+}
+
+#[repr(C)]
 pub struct WrColor
 {
     r: f32,
@@ -992,6 +1037,18 @@ impl WrRect
         LayoutRect::new(LayoutPoint::new(self.x, self.y), LayoutSize::new(self.width, self.height))
     }
 }
+impl From<LayoutRect> for WrRect
+{
+    fn from(rect: LayoutRect) -> Self
+    {
+        WrRect {
+            x: rect.origin.x,
+            y: rect.origin.y,
+            width: rect.size.width,
+            height: rect.size.height,
+        }
+    }
+}
 
 #[repr(C)]
 pub struct WrPoint
@@ -1021,6 +1078,88 @@ impl WrImageMask
     pub fn to_image_mask(&self) -> ImageMask
     {
         ImageMask { image: self.image, rect: self.rect.to_rect(), repeat: self.repeat }
+    }
+}
+impl From<ImageMask> for WrImageMask
+{
+    fn from(image_mask: ImageMask) -> Self
+    {
+        WrImageMask {
+            image: image_mask.image,
+            rect: image_mask.rect.into(),
+            repeat: image_mask.repeat,
+        }
+    }
+}
+
+#[repr(C)]
+pub struct WrComplexClipRegion
+{
+  rect: WrRect,
+  radii: WrBorderRadius,
+}
+impl WrComplexClipRegion
+{
+    pub fn to_complex_clip_region(&self) -> ComplexClipRegion
+    {
+        ComplexClipRegion {
+            rect: self.rect.to_rect(),
+            radii: self.radii.to_border_radius(),
+        }
+    }
+    pub fn to_complex_clip_regions(complex_clips: &[WrComplexClipRegion]) -> Vec<ComplexClipRegion>
+    {
+        complex_clips.iter().map(|x| x.to_complex_clip_region()).collect()
+    }
+}
+
+#[repr(C)]
+pub struct WrClipRegion
+{
+  main: WrRect,
+  complex: WrItemRange,
+  image_mask: WrImageMask,
+  has_image_mask: bool,
+}
+impl WrClipRegion
+{
+    pub fn to_clip_region(&self) -> ClipRegion
+    {
+        ClipRegion {
+            main: self.main.to_rect(),
+            complex: self.complex.to_item_range(),
+            image_mask: if self.has_image_mask {
+                Some(self.image_mask.to_image_mask())
+            } else {
+                None
+            }
+        }
+    }
+}
+impl From<ClipRegion> for WrClipRegion
+{
+    fn from(clip_region: ClipRegion) -> Self {
+        if let Some(image_mask) = clip_region.image_mask {
+            WrClipRegion {
+                main: clip_region.main.into(),
+                complex: clip_region.complex.into(),
+                image_mask: image_mask.into(),
+                has_image_mask: true,
+            }
+        } else {
+            let blank = WrImageMask {
+                image: ImageKey(0, 0),
+                rect: WrRect { x: 0f32, y: 0f32, width: 0f32, height: 0f32, },
+                repeat: false,
+            };
+
+            WrClipRegion {
+                main: clip_region.main.into(),
+                complex: clip_region.complex.into(),
+                image_mask: blank,
+                has_image_mask: false,
+            }
+        }
     }
 }
 

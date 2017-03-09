@@ -166,6 +166,23 @@ typedef uint64_t WrImageIdType;
 // Structs used in C++ code with corresponding types in Rust code
 // -----
 
+struct WrItemRange
+{
+  size_t start;
+  size_t length;
+};
+
+struct WrBuiltDisplayListDescriptor {
+    size_t display_list_items_size;
+};
+
+struct WrAuxiliaryListsDescriptor {
+    size_t gradient_stops_size;
+    size_t complex_clip_regions_size;
+    size_t filters_size;
+    size_t glyph_instances_size;
+};
+
 struct WrColor
 {
   float r;
@@ -304,6 +321,20 @@ struct WrImageMask
   }
 };
 
+struct WrComplexClipRegion
+{
+  WrRect rect;
+  WrBorderRadius radii;
+};
+
+struct WrClipRegion
+{
+  WrRect main;
+  WrItemRange complex;
+  WrImageMask image_mask;
+  bool has_image_mask;
+};
+
 struct WrExternalImageId
 {
   WrImageIdType id;
@@ -343,17 +374,6 @@ struct WrImageDescriptor {
     uint32_t height;
     uint32_t stride;
     bool is_opaque;
-};
-
-struct WrBuiltDisplayListDescriptor {
-    size_t display_list_items_size;
-};
-
-struct WrAuxiliaryListsDescriptor {
-    size_t gradient_stops_size;
-    size_t complex_clip_regions_size;
-    size_t filters_size;
-    size_t glyph_instances_size;
 };
 
 struct WrVecU8 {
@@ -536,6 +556,13 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_end(WrState* wrState)
+WR_FUNC;
+
+WR_INLINE WrClipRegion
+wr_dp_new_clip_region(WrState* wrState,
+                      WrRect main,
+                      const WrComplexClipRegion* complex, size_t complexCount,
+                      const WrImageMask* image_mask)
 WR_FUNC;
 
 WR_INLINE void
