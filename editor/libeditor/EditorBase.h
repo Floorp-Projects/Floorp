@@ -113,6 +113,7 @@ class DeleteNodeTransaction;
 class DeleteTextTransaction;
 class EditAggregateTransaction;
 class ErrorResult;
+class HTMLEditor;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
@@ -167,6 +168,8 @@ public:
 
   virtual TextEditor* AsTextEditor() = 0;
   virtual const TextEditor* AsTextEditor() const = 0;
+  virtual HTMLEditor* AsHTMLEditor() = 0;
+  virtual const HTMLEditor* AsHTMLEditor() const = 0;
 
 protected:
   /**
