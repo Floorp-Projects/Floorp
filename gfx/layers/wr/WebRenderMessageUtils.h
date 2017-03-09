@@ -99,17 +99,17 @@ struct ParamTraits<WrImageFormat>
 };
 
 template<>
-struct ParamTraits<WrLayoutSize>
+struct ParamTraits<WrSize>
 {
   static void
-  Write(Message* aMsg, const WrLayoutSize& aParam)
+  Write(Message* aMsg, const WrSize& aParam)
   {
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.height);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WrLayoutSize* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrSize* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->width)
         && ReadParam(aMsg, aIter, &aResult->height);
