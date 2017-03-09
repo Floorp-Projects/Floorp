@@ -142,8 +142,9 @@ public:
   // inherits style from the given aParentContext.  aFlags is an nsStyleSet
   // flags bitfield.
   already_AddRefed<nsStyleContext>
-  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext,
-                           uint32_t aFlags = 0);
+  ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
+                                     nsStyleContext* aParentContext,
+                                     uint32_t aFlags = 0);
 
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
