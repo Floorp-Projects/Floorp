@@ -78,6 +78,8 @@ SERVO_BINDING_FUNC(Servo_CssRules_ListTypes, void,
                    nsTArrayBorrowed_uintptr_t result)
 SERVO_BINDING_FUNC(Servo_CssRules_GetStyleRuleAt, RawServoStyleRuleStrong,
                    ServoCssRulesBorrowed rules, uint32_t index)
+SERVO_BINDING_FUNC(Servo_CssRules_GetMediaRuleAt, RawServoMediaRuleStrong,
+                   ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_CssRules_InsertRule, nsresult,
                    ServoCssRulesBorrowed rules,
                    RawServoStyleSheetBorrowed sheet, const nsACString* rule,
@@ -97,6 +99,14 @@ SERVO_BINDING_FUNC(Servo_StyleRule_GetCssText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetSelectorText, void,
                    RawServoStyleRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_MediaRule_Debug, void,
+                   RawServoMediaRuleBorrowed rule, nsACString* result)
+SERVO_BINDING_FUNC(Servo_MediaRule_GetMedia, RawServoMediaListStrong,
+                   RawServoMediaRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_MediaRule_GetRules, ServoCssRulesStrong,
+                   RawServoMediaRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_MediaRule_GetCssText, void,
+                   RawServoMediaRuleBorrowed rule, nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
