@@ -4368,9 +4368,10 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
     if (!range->Collapsed()) {
-      RefPtr<DeleteRangeTransaction> transaction = new DeleteRangeTransaction();
-      transaction->Init(this, range, &mRangeUpdater);
-      aggregateTransaction->AppendChild(transaction);
+      RefPtr<DeleteRangeTransaction> deleteRangeTransaction =
+        new DeleteRangeTransaction(*this, *range, &mRangeUpdater);
+      // XXX Oh, not checking if deleteRangeTransaction can modify the range...
+      aggregateTransaction->AppendChild(deleteRangeTransaction);
     } else if (aAction != eNone) {
       // we have an insertion point.  delete the thing in front of it or
       // behind it, depending on aAction
