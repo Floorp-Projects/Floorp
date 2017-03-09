@@ -480,7 +480,6 @@ Any line which doesn't follow the format above would be ignored like comment.
 * Negative value should be rejected
   * test_property_syntax_errors.html `'-10%' not accepted for 'border-image-slice'`: negative percentage servo/servo#15339 [2]
   * ... `transition-duration`: servo/servo#15343 [20]
-  * ... `-radius'`: servo/servo#15345 [30]
   * ... `perspective'`: servo/servo#15337 [20]
   * third length of shadow servo/servo#15490
     * test_property_syntax_errors.html `box-shadow'` [6]
