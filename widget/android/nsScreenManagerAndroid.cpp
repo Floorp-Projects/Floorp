@@ -117,16 +117,6 @@ nsScreenAndroid::GetColorDepth(int32_t *aColorDepth)
     return GetPixelDepth(aColorDepth);
 }
 
-
-void
-nsScreenAndroid::ApplyMinimumBrightness(uint32_t aBrightness)
-{
-    if (mDisplayType == DisplayType::DISPLAY_PRIMARY &&
-        mozilla::jni::IsAvailable()) {
-        java::GeckoAppShell::SetKeepScreenOn(aBrightness == BRIGHTNESS_FULL);
-    }
-}
-
 class nsScreenManagerAndroid::ScreenManagerHelperSupport final
     : public ScreenManagerHelper::Natives<ScreenManagerHelperSupport>
 {
