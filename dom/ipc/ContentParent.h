@@ -447,8 +447,7 @@ public:
   DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor) override;
 
   virtual PScreenManagerParent*
-  AllocPScreenManagerParent(uint32_t* aNumberOfScreens,
-                            float* aSystemDefaultScale,
+  AllocPScreenManagerParent(float* aSystemDefaultScale,
                             bool* aSuccess) override;
 
   virtual bool

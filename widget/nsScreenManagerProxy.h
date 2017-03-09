@@ -39,7 +39,6 @@ private:
   void InvalidateCacheOnNextTick();
   void InvalidateCache();
 
-  uint32_t mNumberOfScreens;
   float mSystemDefaultScale;
   bool mCacheValid;
   bool mCacheWillInvalidate;

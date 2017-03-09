@@ -131,14 +131,6 @@ UIKitScreenManager::ScreenForNativeWidget(void* aWidget, nsIScreen** outScreen)
 }
 
 NS_IMETHODIMP
-UIKitScreenManager::GetNumberOfScreens(uint32_t* aNumberOfScreens)
-{
-  //TODO: support multiple screens
-  *aNumberOfScreens = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 UIKitScreenManager::GetSystemDefaultScale(float* aScale)
 {
     *aScale = [UIScreen mainScreen].scale;

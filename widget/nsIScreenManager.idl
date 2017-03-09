@@ -29,9 +29,6 @@ interface nsIScreenManager : nsISupports
     // often.
   readonly attribute nsIScreen primaryScreen;
 
-    // Holds the number of screens that are available
-  readonly attribute unsigned long numberOfScreens;
-
     // The default DPI scaling factor of the screen environment (number of
     // screen pixels corresponding to 1 CSS px, at the default zoom level).
     //

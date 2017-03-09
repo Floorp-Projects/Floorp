@@ -16,13 +16,11 @@ namespace dom {
 class ScreenManagerParent : public PScreenManagerParent
 {
  public:
-  ScreenManagerParent(uint32_t* aNumberOfScreens,
-                      float* aSystemDefaultScale,
+  ScreenManagerParent(float* aSystemDefaultScale,
                       bool* aSuccess);
   ~ScreenManagerParent() {};
 
-  virtual mozilla::ipc::IPCResult RecvRefresh(uint32_t* aNumberOfScreens,
-                                              float* aSystemDefaultScale,
+  virtual mozilla::ipc::IPCResult RecvRefresh(float* aSystemDefaultScale,
                                               bool* aSuccess) override;
 
   virtual mozilla::ipc::IPCResult RecvScreenRefresh(const uint32_t& aId,
