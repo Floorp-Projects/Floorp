@@ -99,6 +99,9 @@ public:
 
   HTMLEditor();
 
+  virtual HTMLEditor* AsHTMLEditor() override { return this; }
+  virtual const HTMLEditor* AsHTMLEditor() const override { return this; }
+
   bool GetReturnInParagraphCreatesNewParagraph();
   Element* GetSelectionContainer();
 
