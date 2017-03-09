@@ -108,17 +108,10 @@ DispatcherEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
   return NS_OK;
 }
 
-AbstractThread*
-Dispatcher::AbstractMainThreadFor(TaskCategory aCategory)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return AbstractMainThreadForImpl(aCategory);
-}
-
 /* static */ nsresult
-Dispatcher::UnlabeledDispatch(const char* aName,
-                              TaskCategory aCategory,
-                              already_AddRefed<nsIRunnable>&& aRunnable)
+ValidatingDispatcher::UnlabeledDispatch(const char* aName,
+                                        TaskCategory aCategory,
+                                        already_AddRefed<nsIRunnable>&& aRunnable)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (aName) {
@@ -154,6 +147,13 @@ ValidatingDispatcher::EventTargetFor(TaskCategory aCategory) const
   MOZ_ASSERT(aCategory != TaskCategory::Count);
   MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
   return mEventTargets[size_t(aCategory)];
+}
+
+AbstractThread*
+ValidatingDispatcher::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  return AbstractMainThreadForImpl(aCategory);
 }
 
 AbstractThread*
