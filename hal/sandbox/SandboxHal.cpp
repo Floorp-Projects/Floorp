@@ -15,6 +15,7 @@
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/fallback/FallbackScreenConfiguration.h"
 #include "mozilla/Observer.h"
 #include "mozilla/Unused.h"
 #include "nsAutoPtr.h"
@@ -118,7 +119,7 @@ DisableScreenConfigurationNotifications()
 void
 GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 {
-  Hal()->SendGetCurrentScreenConfiguration(aScreenConfiguration);
+  fallback::GetCurrentScreenConfiguration(aScreenConfiguration);
 }
 
 bool
