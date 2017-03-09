@@ -509,10 +509,13 @@ nsAppShell::Init()
     if (obsServ) {
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
         obsServ->AddObserver(this, "profile-after-change", false);
-        obsServ->AddObserver(this, "chrome-document-loaded", false);
         obsServ->AddObserver(this, "tab-child-created", false);
         obsServ->AddObserver(this, "quit-application-granted", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
+
+        if (XRE_IsParentProcess()) {
+            obsServ->AddObserver(this, "chrome-document-loaded", false);
+        }
     }
 
     if (sPowerManagerService)
@@ -582,8 +585,18 @@ nsAppShell::Observe(nsISupports* aSubject,
                     java::GeckoThread::State::PROFILE_READY(),
                     java::GeckoThread::State::RUNNING());
         }
-        removeObserver = true;
 
+        // Enable the window event dispatcher for the given GeckoView.
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
+        MOZ_ASSERT(doc);
+        nsCOMPtr<nsIWidget> widget =
+            WidgetUtils::DOMWindowToWidget(doc->GetWindow());
+        MOZ_ASSERT(widget);
+        if (widget->WindowType() == nsWindowType::eWindowType_toplevel) {
+            // Make sure to call this only on top level nsWindow.
+            const auto window = static_cast<nsWindow*>(widget.get());
+            window->EnableEventDispatcher();
+        }
     } else if (!strcmp(aTopic, "quit-application-granted")) {
         if (jni::IsAvailable()) {
             java::GeckoThread::SetState(

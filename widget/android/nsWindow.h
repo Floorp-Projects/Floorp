@@ -50,6 +50,7 @@ public:
 
     static void InitNatives();
     void SetScreenId(uint32_t aScreenId) { mScreenId = aScreenId; }
+    void EnableEventDispatcher();
 
 private:
     uint32_t mScreenId;

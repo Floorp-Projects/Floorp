@@ -899,6 +899,8 @@ class TestInfoCommand(MachCommandBase):
     @CommandArgument('--end',
         default=date.today().strftime("%Y-%m-%d"),
         help='End date (YYYY-MM-DD)')
+    @CommandArgument('--verbose', action='store_true',
+        help='Enable debug logging.')
 
     def test_info(self, **params):
 
@@ -909,6 +911,7 @@ class TestInfoCommand(MachCommandBase):
         self.branches = params['branches']
         self.start = params['start']
         self.end = params['end']
+        self.verbose = params['verbose']
 
         if len(self.test_name) < 6:
             print("'%s' is too short for a test name!" % self.test_name)
@@ -1055,9 +1058,16 @@ class TestInfoCommand(MachCommandBase):
 
     def submit(self, query):
         import requests
+        import datetime
+        if self.verbose:
+            print(datetime.datetime.now())
+            print(json.dumps(query))
         response = requests.post("http://activedata.allizom.org/query",
                                  data=json.dumps(query),
                                  stream=True)
+        if self.verbose:
+            print(datetime.datetime.now())
+            print(response)
         response.raise_for_status()
         data = response.json()["data"]
         return data
@@ -1092,12 +1102,29 @@ class TestInfoCommand(MachCommandBase):
         data = self.submit(query)
         if data and len(data) > 0:
             data.sort(key=self.get_platform)
+            worst_rate = 0.0
+            worst_platform = None
+            total_runs = 0
+            total_failures = 0
             for record in data:
                 platform = self.get_platform(record)
                 runs = record['count']
+                total_runs = total_runs + runs
                 failures = record['failures']
+                total_failures = total_failures + failures
+                rate = (float)(failures) / runs
+                if rate >= worst_rate:
+                    worst_rate = rate
+                    worst_platform = platform
+                    worst_failures = failures
+                    worst_runs = runs
                 print("%-30s %6d failures in %6d runs" % (
                     platform, failures, runs))
+            print("\nTotal: %d failures in %d runs or %.3f failures/run" %
+                (total_failures, total_runs, (float)(total_failures) / total_runs))
+            if worst_failures > 0:
+                print("Worst rate on %s %d failures in %d runs or %.3f failures/run" %
+                    (worst_platform, worst_failures, worst_runs, worst_rate))
         else:
             print("No test result data found.")
 
