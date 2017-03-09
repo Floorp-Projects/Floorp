@@ -15,6 +15,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/Variant.h"
 #include "mozilla/css/Rule.h"
 #include "nsCycleCollectionParticipant.h"
@@ -75,8 +76,62 @@ struct GeckoGroupRuleRules
   RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
 
-#define REDIRECT_TO_INNER(call_) \
-  return mInner.as<GeckoGroupRuleRules>().call_;
+struct ServoGroupRuleRules
+{
+  explicit ServoGroupRuleRules(already_AddRefed<ServoCssRules> aRawRules)
+    : mRuleList(new ServoCSSRuleList(Move(aRawRules))) {}
+  ServoGroupRuleRules(const ServoGroupRuleRules& aCopy) {
+    // Do we ever clone Servo rules?
+    MOZ_ASSERT_UNREACHABLE("stylo: Cloning GroupRule not implemented");
+  }
+
+  void SetParentRule(GroupRule* aParentRule) {
+    if (mRuleList) {
+      mRuleList->SetParentRule(aParentRule);
+    }
+  }
+  void SetStyleSheet(StyleSheet* aSheet) {
+    if (mRuleList) {
+      mRuleList->SetStyleSheet(aSheet);
+    }
+  }
+
+  void Clear() {
+    mRuleList->DropReference();
+    mRuleList = nullptr;
+  }
+  void Traverse(nsCycleCollectionTraversalCallback& cb) {
+    ImplCycleCollectionTraverse(cb, mRuleList, "mRuleList");
+  }
+
+#ifdef DEBUG
+  void List(FILE* out, int32_t aIndent) const;
+#endif
+
+  int32_t StyleRuleCount() const { return mRuleList->Length(); }
+  Rule* GetStyleRuleAt(int32_t aIndex) const {
+    return mRuleList->GetRule(aIndex);
+  }
+
+  nsresult DeleteStyleRuleAt(uint32_t aIndex) {
+    return mRuleList->DeleteRule(aIndex);
+  }
+
+  dom::CSSRuleList* CssRules(GroupRule* aParentRule) {
+    return mRuleList;
+  }
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+  RefPtr<ServoCSSRuleList> mRuleList;
+};
+
+#define REDIRECT_TO_INNER(call_)                   \
+  if (mInner.is<GeckoGroupRuleRules>()) {          \
+    return mInner.as<GeckoGroupRuleRules>().call_; \
+  } else {                                         \
+    return mInner.as<ServoGroupRuleRules>().call_; \
+  }                                                \
 
 // inherits from Rule so it can be shared between
 // MediaRule and DocumentRule
@@ -157,7 +212,7 @@ protected:
   }
 
 private:
-  Variant<GeckoGroupRuleRules> mInner;
+  Variant<GeckoGroupRuleRules, ServoGroupRuleRules> mInner;
 };
 
 #undef REDIRECT_TO_INNER
