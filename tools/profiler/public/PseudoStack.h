@@ -290,27 +290,30 @@ public:
                     mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
   }
 
-  void sampleContext(JSContext* context)
+  void setJSContext(JSContext* aContext)
   {
-    if (mContext && !context) {
-      // On JS shut down, flush the current buffer as stringifying JIT samples
-      // requires a live JSContext.
-      flushSamplerOnJSShutdown();
-    }
+    MOZ_ASSERT(aContext && !mContext);
 
-    mContext = context;
+    mContext = aContext;
 
-    if (!context) {
-      return;
-    }
-
-    js::SetContextProfilingStack(context,
+    js::SetContextProfilingStack(aContext,
                                  (js::ProfileEntry*) mStack,
                                  (uint32_t*) &mStackPointer,
                                  (uint32_t) mozilla::ArrayLength(mStack));
     if (mStartJSSampling) {
       enableJSSampling();
     }
+  }
+
+  void clearJSContext()
+  {
+    if (mContext) {
+      // On JS shut down, flush the current buffer as stringifying JIT samples
+      // requires a live JSContext.
+      flushSamplerOnJSShutdown();
+    }
+
+    mContext = nullptr;
   }
 
   void enableJSSampling()
