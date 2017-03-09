@@ -10,7 +10,6 @@ import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +22,7 @@ import org.mozilla.focus.activity.SettingsActivity;
 import org.mozilla.focus.menu.BrowserMenu;
 import org.mozilla.focus.open.OpenWithFragment;
 import org.mozilla.focus.utils.Browsers;
+import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.IWebView;
 
 /**
@@ -142,7 +142,8 @@ public class BrowserFragment extends Fragment implements View.OnClickListener {
                         .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
                         .commit();
 
-                Snackbar.make(getActivity().findViewById(android.R.id.content), R.string.feedback_erase, Snackbar.LENGTH_LONG).show();
+                ViewUtils.showBrandedSnackbar(getActivity().findViewById(android.R.id.content),
+                        R.string.feedback_erase);
 
                 break;
 
