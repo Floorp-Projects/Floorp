@@ -17,9 +17,6 @@ class nsFrameSelection;
 class nsTextControlFrame;
 
 namespace mozilla {
-
-class ErrorResult;
-
 namespace dom {
 class Element;
 } // namespace dom
@@ -174,12 +171,6 @@ public:
    */
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) = 0;
 
-  /**
-   * Helpers for value manipulation from SetRangeText.
-   */
-  virtual void GetValueFromSetRangeText(nsAString& aValue) = 0;
-  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) = 0;
-
   static const int32_t DEFAULT_COLS = 20;
   static const int32_t DEFAULT_ROWS = 1;
   static const int32_t DEFAULT_ROWS_TEXTAREA = 2;
@@ -205,6 +196,12 @@ public:
 
   static already_AddRefed<nsITextControlElement>
   GetTextControlElementFromEditingHost(nsIContent* aHost);
+
+  /**
+   * Get the selection range start and end points.
+   */
+  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
+                               int32_t* aSelectionEnd) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,

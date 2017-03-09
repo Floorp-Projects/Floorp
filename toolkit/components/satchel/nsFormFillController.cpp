@@ -6,7 +6,6 @@
 
 #include "nsFormFillController.h"
 
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
@@ -45,7 +44,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::ErrorResult;
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController,
                          mController, mLoginManager, mFocusedPopup, mDocShells,
@@ -604,54 +602,25 @@ nsFormFillController::SetTextValueWithReason(const nsAString & aTextValue,
 NS_IMETHODIMP
 nsFormFillController::GetSelectionStart(int32_t *aSelectionStart)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
-  if (!content) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  ErrorResult rv;
-  Nullable<uint32_t> start =
-    HTMLInputElement::FromContent(content)->GetSelectionStart(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-  if (start.IsNull()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  *aSelectionStart = start.Value();
+  if (mFocusedInput)
+    mFocusedInput->GetSelectionStart(aSelectionStart);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormFillController::GetSelectionEnd(int32_t *aSelectionEnd)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
-  if (!content) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  ErrorResult rv;
-  Nullable<uint32_t> end =
-    HTMLInputElement::FromContent(content)->GetSelectionEnd(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-  if (end.IsNull()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  *aSelectionEnd = end.Value();
+  if (mFocusedInput)
+    mFocusedInput->GetSelectionEnd(aSelectionEnd);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormFillController::SelectTextRange(int32_t aStartIndex, int32_t aEndIndex)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mFocusedInput);
-    if (!content) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  ErrorResult rv;
-  HTMLInputElement::FromContent(content)->
-    SetSelectionRange(aStartIndex, aEndIndex, Optional<nsAString>(), rv);
-  return rv.StealNSResult();
+ if (mFocusedInput)
+    mFocusedInput->SetSelectionRange(aStartIndex, aEndIndex, EmptyString());
+  return NS_OK;
 }
 
 NS_IMETHODIMP
