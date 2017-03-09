@@ -206,10 +206,6 @@ def opt_index_search(task, params, index_path):
 def opt_seta(task, params):
     bbb_task = False
 
-    # no need to call SETA for build jobs
-    if task.task.get('extra', {}).get('treeherder', {}).get('jobKind', '') == 'build':
-        return False, None
-
     # for bbb tasks we need to send in the buildbot buildername
     if task.task.get('provisionerId', '') == 'buildbot-bridge':
         label = task.task.get('payload').get('buildername')
