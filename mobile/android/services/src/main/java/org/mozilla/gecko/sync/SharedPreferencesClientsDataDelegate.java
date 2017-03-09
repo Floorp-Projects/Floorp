@@ -63,6 +63,7 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
     if (account != null) {
       final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
       fxAccount.resetDeviceRegistrationVersion();
+      fxAccount.setDeviceRegistrationTimestamp(0L);
     }
   }
 
