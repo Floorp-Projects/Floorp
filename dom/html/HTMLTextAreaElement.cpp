@@ -784,9 +784,7 @@ HTMLTextAreaElement::GetValueFromSetRangeText(nsAString& aValue)
 nsresult
 HTMLTextAreaElement::SetValueFromSetRangeText(const nsAString& aValue)
 {
-  return SetValueInternal(aValue,
-                          nsTextEditorState::eSetValue_ByContent |
-                          nsTextEditorState::eSetValue_Notify);
+  return SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent);
 }
 
 nsresult
