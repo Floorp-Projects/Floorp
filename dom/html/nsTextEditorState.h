@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/Nullable.h"
 
 class nsTextInputListener;
 class nsTextControlFrame;
@@ -295,6 +296,12 @@ public:
   // frame or our cached selection state) work with uint32_t at the moment...
   void SetSelectionRange(int32_t aStart, int32_t aEnd,
                          nsITextControlFrame::SelectionDirection aDirection,
+                         mozilla::ErrorResult& aRv);
+
+  // Set the selection start.  This basically implements the
+  // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart
+  // setter.
+  void SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aStart,
                          mozilla::ErrorResult& aRv);
 
   void UpdateEditableState(bool aNotify) {
