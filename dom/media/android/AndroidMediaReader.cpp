@@ -172,26 +172,13 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
     RefPtr<VideoData> v;
     if (currentImage) {
-      gfx::IntSize frameSize = currentImage->GetSize();
-      if (frameSize.width != mInitialFrame.width ||
-          frameSize.height != mInitialFrame.height) {
-        // Frame size is different from what the container reports. This is legal,
-        // and we will preserve the ratio of the crop rectangle as it
-        // was reported relative to the picture size reported by the container.
-        picture.x = (mPicture.x * frameSize.width) / mInitialFrame.width;
-        picture.y = (mPicture.y * frameSize.height) / mInitialFrame.height;
-        picture.width = (frameSize.width * mPicture.width) / mInitialFrame.width;
-        picture.height = (frameSize.height * mPicture.height) / mInitialFrame.height;
-      }
-
-      v = VideoData::CreateFromImage(mInfo.mVideo,
+      v = VideoData::CreateFromImage(mInfo.mVideo.mDisplay,
                                      pos,
                                      frame.mTimeUs,
                                      1, // We don't know the duration yet.
                                      currentImage,
                                      frame.mKeyFrame,
-                                     -1,
-                                     picture);
+                                     -1);
     } else {
       // Assume YUV
       VideoData::YCbCrBuffer b;
