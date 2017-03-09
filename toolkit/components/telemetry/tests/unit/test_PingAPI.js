@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
@@ -37,15 +36,15 @@ function fakeStorageQuota(aArchiveQuota) {
  *                    type: <string>,
  *                    size: <integer> }
  */
-var getArchivedPingsInfo = Task.async(function*() {
+var getArchivedPingsInfo = async function() {
   let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
-  let subdirs = (yield dirIterator.nextBatch()).filter(e => e.isDir);
+  let subdirs = (await dirIterator.nextBatch()).filter(e => e.isDir);
   let archivedPings = [];
 
   // Iterate through the subdirs of |gPingsArchivePath|.
   for (let dir of subdirs) {
     let fileIterator = new OS.File.DirectoryIterator(dir.path);
-    let files = (yield fileIterator.nextBatch()).filter(e => !e.isDir);
+    let files = (await fileIterator.nextBatch()).filter(e => !e.isDir);
 
     // Then get a list of the files for the current subdir.
     for (let f of files) {
@@ -55,7 +54,7 @@ var getArchivedPingsInfo = Task.async(function*() {
         continue;
       }
       // Find the size of the ping and then add the info to the array.
-      pingInfo.size = (yield OS.File.stat(f.path)).size;
+      pingInfo.size = (await OS.File.stat(f.path)).size;
       archivedPings.push(pingInfo);
     }
   }
@@ -63,7 +62,7 @@ var getArchivedPingsInfo = Task.async(function*() {
   // Sort the list by creation date and then return it.
   archivedPings.sort((a, b) => b.timestamp - a.timestamp);
   return archivedPings;
-});
+};
 
 add_task(function* test_setup() {
   do_get_profile(true);
@@ -106,15 +105,15 @@ add_task(function* test_archivedPings() {
   }
 
   // Check loading the archived pings.
-  let checkLoadingPings = Task.async(function*() {
+  let checkLoadingPings = async function() {
     for (let data of PINGS) {
-      let ping = yield TelemetryArchive.promiseArchivedPingById(data.id);
+      let ping = await TelemetryArchive.promiseArchivedPingById(data.id);
       Assert.equal(ping.id, data.id, "Archived ping should have matching id");
       Assert.equal(ping.type, data.type, "Archived ping should have matching type");
       Assert.equal(ping.creationDate, data.dateCreated.toISOString(),
                    "Archived ping should have matching creation date");
     }
-  });
+  };
 
   yield checkLoadingPings();
 
@@ -127,16 +126,16 @@ add_task(function* test_archivedPings() {
   yield checkLoadingPings();
 
   // Write invalid pings into the archive with both valid and invalid names.
-  let writeToArchivedDir = Task.async(function*(dirname, filename, content, compressed) {
+  let writeToArchivedDir = async function(dirname, filename, content, compressed) {
     const dirPath = OS.Path.join(gPingsArchivePath, dirname);
-    yield OS.File.makeDir(dirPath, { ignoreExisting: true });
+    await OS.File.makeDir(dirPath, { ignoreExisting: true });
     const filePath = OS.Path.join(dirPath, filename);
     const options = { tmpPath: filePath + ".tmp", noOverwrite: false };
     if (compressed) {
       options.compression = "lz4";
     }
-    yield OS.File.writeAtomic(filePath, content, options);
-  });
+    await OS.File.writeAtomic(filePath, content, options);
+  };
 
   const FAKE_ID1 = "10000000-0123-0123-0123-0123456789a1";
   const FAKE_ID2 = "20000000-0123-0123-0123-0123456789a2";
@@ -214,22 +213,22 @@ add_task(function* test_archiveCleanup() {
   let expectedPrunedInfo = [];
   let expectedNotPrunedInfo = [];
 
-  let checkArchive = Task.async(function*() {
+  let checkArchive = async function() {
     // Check that the pruned pings are not on disk anymore.
     for (let prunedInfo of expectedPrunedInfo) {
-      yield Assert.rejects(TelemetryArchive.promiseArchivedPingById(prunedInfo.id),
+      await Assert.rejects(TelemetryArchive.promiseArchivedPingById(prunedInfo.id),
                            "Ping " + prunedInfo.id + " should have been pruned.");
       const pingPath =
         TelemetryStorage._testGetArchivedPingPath(prunedInfo.id, prunedInfo.creationDate, PING_TYPE);
-      Assert.ok(!(yield OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
+      Assert.ok(!(await OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
     }
 
     // Check that the expected pings are there.
     for (let expectedInfo of expectedNotPrunedInfo) {
-      Assert.ok((yield TelemetryArchive.promiseArchivedPingById(expectedInfo.id)),
+      Assert.ok((await TelemetryArchive.promiseArchivedPingById(expectedInfo.id)),
                 "Ping" + expectedInfo.id + " should be in the archive.");
     }
-  });
+  };
 
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SESSION_PING_COUNT").clear();
 
