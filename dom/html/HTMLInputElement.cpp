@@ -6466,7 +6466,7 @@ HTMLInputElement::SetSelectionStart(const Nullable<int32_t>& aSelectionStart,
   }
 
   nsAutoString direction;
-  aRv = GetSelectionDirection(direction);
+  GetSelectionDirection(direction, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -6529,7 +6529,7 @@ HTMLInputElement::SetSelectionEnd(const Nullable<int32_t>& aSelectionEnd,
   }
 
   nsAutoString direction;
-  aRv = GetSelectionDirection(direction);
+  GetSelectionDirection(direction, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -6618,14 +6618,6 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
   aRv.Throw(rv);
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetSelectionDirection(nsAString& aDirection)
-{
-  ErrorResult rv;
-  GetSelectionDirection(aDirection, rv);
-  return rv.StealNSResult();
-}
-
 void
 HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult& aRv)
 {
@@ -6651,14 +6643,6 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
   if (!aRv.Failed()) {
     aRv = SetSelectionRange(start, end, aDirection);
   }
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetSelectionDirection(const nsAString& aDirection)
-{
-  ErrorResult rv;
-  SetSelectionDirection(aDirection, rv);
-  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
