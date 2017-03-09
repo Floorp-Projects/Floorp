@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'agnostic/AgnosticDecoderModule.h',
+    'agnostic/DummyMediaDataDecoder.h',
     'agnostic/OpusDecoder.h',
     'agnostic/TheoraDecoder.h',
     'agnostic/VorbisDecoder.h',
@@ -22,6 +23,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'agnostic/AgnosticDecoderModule.cpp',
     'agnostic/BlankDecoderModule.cpp',
+    'agnostic/DummyMediaDataDecoder.cpp',
     'agnostic/OpusDecoder.cpp',
     'agnostic/TheoraDecoder.cpp',
     'agnostic/VorbisDecoder.cpp',
