@@ -6539,22 +6539,8 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
   }
 
   nsTextEditorState* state = GetEditorState();
-  if (state && state->IsSelectionCached()) {
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
-    if (aDirection.EqualsLiteral("forward")) {
-      dir = nsITextControlFrame::eForward;
-    } else if (aDirection.EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-    state->GetSelectionProperties().SetDirection(dir);
-    return;
-  }
-
-  int32_t start, end;
-  GetSelectionRange(&start, &end, aRv);
-  if (!aRv.Failed()) {
-    aRv = SetSelectionRange(start, end, aDirection);
-  }
+  MOZ_ASSERT(state, "SupportsTextSelection came back true!");
+  state->SetSelectionDirection(aDirection, aRv);
 }
 
 NS_IMETHODIMP
