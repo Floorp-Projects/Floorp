@@ -259,22 +259,22 @@ struct WrBorderSide {
   }
 };
 
-struct WrLayoutSize
+struct WrSize
 {
   float width;
   float height;
 
-  bool operator==(const WrLayoutSize& aRhs) const
+  bool operator==(const WrSize& aRhs) const
   {
     return width == aRhs.width && height == aRhs.height;
   }
 };
 
 struct WrBorderRadius {
-  WrLayoutSize top_left;
-  WrLayoutSize top_right;
-  WrLayoutSize bottom_left;
-  WrLayoutSize bottom_right;
+  WrSize top_left;
+  WrSize top_right;
+  WrSize bottom_left;
+  WrSize bottom_right;
 
   bool operator==(const WrBorderRadius& aRhs) const
   {

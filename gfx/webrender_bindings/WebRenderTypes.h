@@ -194,9 +194,9 @@ static inline WrPoint ToWrPoint(const LayerPoint point)
   return lp;
 }
 
-static inline WrLayoutSize ToWrLayoutSize(const LayerSize size)
+static inline WrSize ToWrSize(const LayerSize size)
 {
-  WrLayoutSize ls;
+  WrSize ls;
   ls.width = size.width;
   ls.height = size.height;
   return ls;
@@ -206,10 +206,10 @@ static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const La
                                               const LayerSize& bottomLeft, const LayerSize& bottomRight)
 {
   WrBorderRadius br;
-  br.top_left = ToWrLayoutSize(topLeft);
-  br.top_right = ToWrLayoutSize(topRight);
-  br.bottom_left = ToWrLayoutSize(bottomLeft);
-  br.bottom_right = ToWrLayoutSize(bottomRight);
+  br.top_left = ToWrSize(topLeft);
+  br.top_right = ToWrSize(topRight);
+  br.bottom_left = ToWrSize(bottomLeft);
+  br.bottom_right = ToWrSize(bottomRight);
   return br;
 }
 
