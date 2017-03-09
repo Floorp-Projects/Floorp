@@ -6035,7 +6035,8 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
   // anonymous boxes are only allowed if they're the tree boxes or we have
   // enabled agent rules
   bool isAnonBox = isTreePseudo ||
-    (pseudoElementType == CSSPseudoElementType::AnonBox &&
+    ((pseudoElementType == CSSPseudoElementType::InheritingAnonBox ||
+      pseudoElementType == CSSPseudoElementType::NonInheritingAnonBox) &&
      AgentRulesEnabled());
   bool isPseudoClass =
     (pseudoClassType != CSSPseudoClassType::NotPseudo);
@@ -6558,7 +6559,8 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
                                           getter_Transfers(pseudoElementArgs),
                                           &pseudoElementType);
       if (pseudoElement &&
-          pseudoElementType != CSSPseudoElementType::AnonBox) {
+          pseudoElementType != CSSPseudoElementType::InheritingAnonBox &&
+          pseudoElementType != CSSPseudoElementType::NonInheritingAnonBox) {
         // Pseudo-elements other than anonymous boxes are represented with
         // a special ':' combinator.
 
@@ -6617,7 +6619,8 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
     return false;
   }
 
-  if (pseudoElementType == CSSPseudoElementType::AnonBox) {
+  if (pseudoElementType == CSSPseudoElementType::InheritingAnonBox ||
+      pseudoElementType == CSSPseudoElementType::NonInheritingAnonBox) {
     // We got an anonymous box pseudo-element; it must be the only
     // thing in this selector group.
     if (selector->mNext || !IsUniversalSelector(*selector)) {

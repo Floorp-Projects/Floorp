@@ -132,6 +132,12 @@ StyleSetHandle::Ptr::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   FORWARD(ResolveAnonymousBoxStyle, (aPseudoTag, aParentContext, aFlags));
 }
 
+already_AddRefed<nsStyleContext>
+StyleSetHandle::Ptr::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
+{
+  FORWARD(ResolveNonInheritingAnonymousBoxStyle, (aPseudoTag));
+}
+
 // manage the set of style sheets in the style set
 nsresult
 StyleSetHandle::Ptr::AppendStyleSheet(SheetType aType, StyleSheet* aSheet)
