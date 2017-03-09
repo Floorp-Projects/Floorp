@@ -85,7 +85,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<GMPCrashHelper> mCrashHelper;
-  bool mUseBlankDecoder = false;
+  bool mUseNullDecoder = false;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
   OptionSet mOptions = OptionSet(Option::Default);
@@ -102,7 +102,7 @@ private:
   }
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
-  void Set(bool aUseBlankDecoder) { mUseBlankDecoder = aUseBlankDecoder; }
+  void Set(bool aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
   void Set(OptionSet aOptions) { mOptions = aOptions; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
   {
