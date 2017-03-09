@@ -1092,7 +1092,8 @@ class XPCShellTests(object):
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
                  test_tags=None, dump_tests=None, utility_path=None,
-                 rerun_failures=False, failure_manifest=None, jscovdir=None, **otherOptions):
+                 rerun_failures=False, threadCount=NUM_THREADS,
+                 failure_manifest=None, jscovdir=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1193,6 +1194,7 @@ class XPCShellTests(object):
         self.pluginsPath = pluginsPath
         self.sequential = sequential
         self.failure_manifest = failure_manifest
+        self.threadCount = threadCount or NUM_THREADS
         self.jscovdir = jscovdir
 
         self.testCount = 0
@@ -1347,10 +1349,10 @@ class XPCShellTests(object):
         if self.sequential:
             self.log.info("Running tests sequentially.")
         else:
-            self.log.info("Using at most %d threads." % NUM_THREADS)
+            self.log.info("Using at most %d threads." % self.threadCount)
 
-        # keep a set of NUM_THREADS running tests and start running the
-        # tests in the queue at most NUM_THREADS at a time
+        # keep a set of threadCount running tests and start running the
+        # tests in the queue at most threadCount at a time
         running_tests = set()
         keep_going = True
         exceptions = []
@@ -1368,7 +1370,7 @@ class XPCShellTests(object):
                 break
 
             # if there's room to run more tests, start running them
-            while keep_going and tests_queue and (len(running_tests) < NUM_THREADS):
+            while keep_going and tests_queue and (len(running_tests) < self.threadCount):
                 test = tests_queue.popleft()
                 running_tests.add(test)
                 test.start()

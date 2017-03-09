@@ -357,6 +357,7 @@ StatsCompartmentCallback(JSContext* cx, void* data, JSCompartment* compartment)
                                         &cStats.savedStacksSet,
                                         &cStats.varNamesSet,
                                         &cStats.nonSyntacticLexicalScopesTable,
+                                        &cStats.templateLiteralMap,
                                         &cStats.jitCompartment,
                                         &cStats.privateData);
 }

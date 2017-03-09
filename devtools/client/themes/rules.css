@@ -50,22 +50,69 @@
   display: flex;
 }
 
-#pseudo-class-panel {
+.ruleview-reveal-panel {
   display: flex;
-  height: 24px;
   overflow: hidden;
   transition: height 150ms ease;
 }
 
-#pseudo-class-panel[hidden] {
+.ruleview-reveal-panel[hidden] {
   height: 0px;
 }
 
-#pseudo-class-panel > label {
+#pseudo-class-panel:not([hidden]) {
+  height: 24px;
+}
+
+.ruleview-reveal-panel label {
   -moz-user-select: none;
   flex-grow: 1;
   display: flex;
   align-items: center;
+}
+
+/* Class toggle panel */
+#ruleview-class-panel:not([hidden]) {
+  /* The class panel can contain 0 to N classes, so we can't hardcode a height here like
+     we do for the pseudo-class panel. Unfortunately, that means we don't get the height
+     transition when toggling the panel */
+  flex-direction: column;
+}
+
+#ruleview-class-panel .add-class {
+  margin: 0;
+  border-width: 0 0 1px 0;
+  padding: 2px 6px;
+  border-radius: 0;
+}
+
+#ruleview-class-panel .classes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+#ruleview-class-panel .classes {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+#ruleview-class-panel .classes label {
+  flex: 0 0;
+  max-width: 50%;
+}
+
+#ruleview-class-panel .classes label span {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#ruleview-class-panel .no-classes {
+  flex: 1;
+  color: var(--theme-body-color-inactive);
+  margin: 0;
+  text-align: center;
 }
 
 /* Rule View Container */
@@ -557,6 +604,12 @@
 #pseudo-class-panel-toggle::before {
   background-image: url("chrome://devtools/skin/images/pseudo-class.svg");
   background-size: cover;
+}
+
+#class-panel-toggle::before {
+  content: ".cls";
+  direction: ltr;
+  font-size: 11px;
 }
 
 .ruleview-overridden-rule-filter {

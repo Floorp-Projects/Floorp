@@ -20,10 +20,6 @@ class FileSystemBase
 public:
   NS_INLINE_DECL_REFCOUNTING(FileSystemBase)
 
-  // Create file system object from its string representation.
-  static already_AddRefed<FileSystemBase>
-  DeserializeDOMPath(const nsAString& aString);
-
   FileSystemBase();
 
   virtual void
@@ -56,9 +52,9 @@ public:
    * directory of the exposed root Directory (per type).
    */
   const nsAString&
-  LocalOrDeviceStorageRootPath() const
+  LocalRootPath() const
   {
-    return mLocalOrDeviceStorageRootPath;
+    return mLocalRootPath;
   }
 
   bool
@@ -75,46 +71,6 @@ public:
 
   bool
   GetRealPath(BlobImpl* aFile, nsIFile** aPath) const;
-
-  /*
-   * Get the permission name required to access this file system.
-   */
-  const nsCString&
-  GetPermission() const
-  {
-    return mPermission;
-  }
-
-  // The decision about doing or not doing the permission check cannot be done
-  // everywhere because, for some FileSystemBase implementation, this depends on
-  // a preference.
-  // This enum describes all the possible decisions. The implementation will do
-  // the check on the main-thread in the child and in the parent process when
-  // needed.
-  // Note: the permission check should not fail in PBackground because that
-  // means that the child has been compromised. If this happens the child
-  // process is killed.
-  enum ePermissionCheckType {
-    // When on the main-thread, we must check if we have
-    // device.storage.prompt.testing set to true.
-    ePermissionCheckByTestingPref,
-
-    // No permission check must be done.
-    ePermissionCheckNotRequired,
-
-    // Permission check is required.
-    ePermissionCheckRequired,
-
-    // This is the default value. We crash if this is let like this.
-    eNotSet
-  };
-
-  ePermissionCheckType
-  PermissionCheckType() const
-  {
-    MOZ_ASSERT(mPermissionCheckType != eNotSet);
-    return mPermissionCheckType;
-  }
 
   // IPC initialization
   // See how these 2 methods are used in FileSystemTaskChildBase.
@@ -147,17 +103,9 @@ protected:
   // Directory object can have different OS 'root' path.
   // To be more clear, any path managed by this FileSystem implementation must
   // be discendant of this local root path.
-  // The reason why it's not just called 'localRootPath' is because for
-  // DeviceStorage this contains the path of the device storage SDCard, that is
-  // the parent directory of the exposed root path.
-  nsString mLocalOrDeviceStorageRootPath;
+  nsString mLocalRootPath;
 
   bool mShutdown;
-
-  // The permission name required to access the file system.
-  nsCString mPermission;
-
-  ePermissionCheckType mPermissionCheckType;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
