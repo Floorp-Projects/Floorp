@@ -174,6 +174,12 @@ public:
    */
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) = 0;
 
+  /**
+   * Helpers for value manipulation from SetRangeText.
+   */
+  virtual void GetValueFromSetRangeText(nsAString& aValue) = 0;
+  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) = 0;
+
   static const int32_t DEFAULT_COLS = 20;
   static const int32_t DEFAULT_ROWS = 1;
   static const int32_t DEFAULT_ROWS_TEXTAREA = 2;

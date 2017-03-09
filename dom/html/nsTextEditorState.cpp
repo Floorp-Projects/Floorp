@@ -1843,6 +1843,100 @@ nsTextEditorState::SetSelectionRange(int32_t aSelectionStart,
   SetSelectionRange(aSelectionStart, aSelectionEnd, dir, aRv);
 }
 
+void
+nsTextEditorState::SetRangeText(const nsAString& aReplacement,
+                                ErrorResult& aRv)
+{
+  int32_t start, end;
+  GetSelectionRange(&start, &end, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  SetRangeText(aReplacement, start, end, SelectionMode::Preserve,
+               aRv, start, end);
+}
+
+void
+nsTextEditorState::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
+                                uint32_t aEnd, SelectionMode aSelectMode,
+                                ErrorResult& aRv, int32_t aSelectionStart,
+                                int32_t aSelectionEnd)
+{
+  if (aStart > aEnd) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  nsAutoString value;
+  mTextCtrlElement->GetValueFromSetRangeText(value);
+  uint32_t inputValueLength = value.Length();
+
+  if (aStart > inputValueLength) {
+    aStart = inputValueLength;
+  }
+
+  if (aEnd > inputValueLength) {
+    aEnd = inputValueLength;
+  }
+
+  if (aSelectionStart == -1 && aSelectionEnd == -1) {
+    GetSelectionRange(&aSelectionStart, &aSelectionEnd, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
+  MOZ_ASSERT(aStart <= aEnd);
+  value.Replace(aStart, aEnd - aStart, aReplacement);
+  nsresult rv = mTextCtrlElement->SetValueFromSetRangeText(value);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  uint32_t newEnd = aStart + aReplacement.Length();
+  int32_t delta =  aReplacement.Length() - (aEnd - aStart);
+
+  switch (aSelectMode) {
+    case mozilla::dom::SelectionMode::Select:
+    {
+      aSelectionStart = aStart;
+      aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Start:
+    {
+      aSelectionStart = aSelectionEnd = aStart;
+    }
+    break;
+    case mozilla::dom::SelectionMode::End:
+    {
+      aSelectionStart = aSelectionEnd = newEnd;
+    }
+    break;
+    case mozilla::dom::SelectionMode::Preserve:
+    {
+      if ((uint32_t)aSelectionStart > aEnd) {
+        aSelectionStart += delta;
+      } else if ((uint32_t)aSelectionStart > aStart) {
+        aSelectionStart = aStart;
+      }
+
+      if ((uint32_t)aSelectionEnd > aEnd) {
+        aSelectionEnd += delta;
+      } else if ((uint32_t)aSelectionEnd > aStart) {
+        aSelectionEnd = newEnd;
+      }
+    }
+    break;
+    default:
+      MOZ_CRASH("Unknown mode!");
+  }
+
+  SetSelectionRange(aSelectionStart, aSelectionEnd, Optional<nsAString>(), aRv);
+}
+
 HTMLInputElement*
 nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
 {
