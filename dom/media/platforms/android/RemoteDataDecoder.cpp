@@ -186,11 +186,9 @@ public:
           gl::OriginPos::BottomLeft);
 
         RefPtr<VideoData> v = VideoData::CreateFromImage(
-          mDecoder->mConfig, offset, presentationTimeUs, durationUs,
+          mDecoder->mConfig.mDisplay, offset, presentationTimeUs, durationUs,
           img, !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
-          presentationTimeUs,
-          gfx::IntRect(0, 0, mDecoder->mConfig.mDisplay.width,
-                       mDecoder->mConfig.mDisplay.height));
+          presentationTimeUs);
 
         v->SetListener(Move(releaseSample));
 
