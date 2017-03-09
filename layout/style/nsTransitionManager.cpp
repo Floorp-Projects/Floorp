@@ -722,6 +722,44 @@ nsTransitionManager::UpdateTransitions(
   return startedAny;
 }
 
+static Keyframe&
+AppendKeyframe(double aOffset,
+               nsCSSPropertyID aProperty,
+               StyleAnimationValue&& aValue,
+               nsTArray<Keyframe>& aKeyframes)
+{
+  Keyframe& frame = *aKeyframes.AppendElement();
+  frame.mOffset.emplace(aOffset);
+  PropertyValuePair& pv = *frame.mPropertyValues.AppendElement();
+  pv.mProperty = aProperty;
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::UncomputeValue(aProperty, Move(aValue), pv.mValue);
+  MOZ_ASSERT(uncomputeResult,
+             "Unable to get specified value from computed value");
+  return frame;
+}
+
+static nsTArray<Keyframe>
+GetTransitionKeyframes(nsCSSPropertyID aProperty,
+                       nsStyleContext* aStyleContext,
+                       StyleAnimationValue&& aStartValue,
+                       StyleAnimationValue&& aEndValue,
+                       const nsTimingFunction& aTimingFunction)
+{
+  nsTArray<Keyframe> keyframes(2);
+
+  Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, Move(aStartValue),
+                                       keyframes);
+  if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
+    fromFrame.mTimingFunction.emplace();
+    fromFrame.mTimingFunction->Init(aTimingFunction);
+  }
+
+  AppendKeyframe(1.0, aProperty, Move(aEndValue), keyframes);
+
+  return keyframes;
+}
+
 void
 nsTransitionManager::ConsiderInitiatingTransition(
   nsCSSPropertyID aProperty,
@@ -996,43 +1034,6 @@ nsTransitionManager::ConsiderInitiatingTransition(
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);
-}
-
-static Keyframe&
-AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
-               StyleAnimationValue&& aValue, nsTArray<Keyframe>& aKeyframes)
-{
-  Keyframe& frame = *aKeyframes.AppendElement();
-  frame.mOffset.emplace(aOffset);
-  PropertyValuePair& pv = *frame.mPropertyValues.AppendElement();
-  pv.mProperty = aProperty;
-  DebugOnly<bool> uncomputeResult =
-    StyleAnimationValue::UncomputeValue(aProperty, Move(aValue), pv.mValue);
-  MOZ_ASSERT(uncomputeResult,
-              "Unable to get specified value from computed value");
-  return frame;
-}
-
-nsTArray<Keyframe>
-nsTransitionManager::GetTransitionKeyframes(
-    nsStyleContext* aStyleContext,
-    nsCSSPropertyID aProperty,
-    StyleAnimationValue&& aStartValue,
-    StyleAnimationValue&& aEndValue,
-    const nsTimingFunction& aTimingFunction)
-{
-  nsTArray<Keyframe> keyframes(2);
-
-  Keyframe& fromFrame = AppendKeyframe(0.0, aProperty, Move(aStartValue),
-                                       keyframes);
-  if (aTimingFunction.mType != nsTimingFunction::Type::Linear) {
-    fromFrame.mTimingFunction.emplace();
-    fromFrame.mTimingFunction->Init(aTimingFunction);
-  }
-
-  AppendKeyframe(1.0, aProperty, Move(aEndValue), keyframes);
-
-  return keyframes;
 }
 
 void
