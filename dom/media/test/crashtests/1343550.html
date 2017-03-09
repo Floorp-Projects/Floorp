@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<head>
+<meta charset="UTF-8">
+<script>
+var sub = encodeURI("data:text/html,<!DOCTYPE html>\n"+
+                    "<html><script>"+
+                    "var context = new AudioContext();"+
+                    "setTimeout(function(){window.close();},1000);\x3C/script></html>");
+window.onload = function(){
+  var a = window.open(sub);
+  a.onbeforeunload = function(){
+    setTimeout(function(){
+      a.context.createScriptProcessor(512, 1, 1);
+      setTimeout(function() {
+        document.documentElement.removeAttribute("class");}, 0);
+    }, 0);
+  };
+};
+</script>
+</head>
+</html>
