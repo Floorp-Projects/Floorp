@@ -31,7 +31,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_bug1089417.html [1]
   * test_bug418986-2.html: matchMedia support [3]
   * test_bug453896_deck.html: &lt;style media&gt; support [8]
-  * test_media_queries.html [1]
+  * test_media_queries.html [684]
   * test_media_queries_dynamic.html [17]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
@@ -115,7 +115,7 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [0]
 * auto value for min-{width,height} servo/servo#15045
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
-* test_condition_text.html: @-moz-document, CSSOM support of @media, @support [2]
+* test_condition_text.html: @-moz-document, CSSOM support of @media, @support [7]
 * @counter-style support:
   * test_counter_descriptor_storage.html [1]
   * test_counter_style.html [1]
@@ -475,7 +475,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_units_length.html [5]
   * test_units_time.html [1]
 * insertRule / deleteRule don't work bug 1336863
-  * test_rule_insertion.html [16]
+  * test_rule_insertion.html [7]
 * @-moz-document support
   * test_rule_serialization.html [2]
   * test_moz_document_rules.html [13]
