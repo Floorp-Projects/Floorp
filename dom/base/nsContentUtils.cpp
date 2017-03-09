@@ -7058,8 +7058,8 @@ nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
 void
 nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
                                           Element* aRoot,
-                                          int32_t& aOutStartOffset,
-                                          int32_t& aOutEndOffset)
+                                          uint32_t& aOutStartOffset,
+                                          uint32_t& aOutEndOffset)
 {
   MOZ_ASSERT(aSelection && aRoot);
 

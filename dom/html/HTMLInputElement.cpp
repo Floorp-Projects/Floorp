@@ -6332,7 +6332,7 @@ HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
     return Nullable<uint32_t>();
   }
 
-  int32_t selEnd, selStart;
+  uint32_t selEnd, selStart;
   GetSelectionRange(&selStart, &selEnd, aRv);
   return Nullable<uint32_t>(selStart);
 }
@@ -6358,7 +6358,7 @@ HTMLInputElement::GetSelectionEnd(ErrorResult& aRv)
     return Nullable<uint32_t>();
   }
 
-  int32_t selEnd, selStart;
+  uint32_t selEnd, selStart;
   GetSelectionRange(&selStart, &selEnd, aRv);
   return Nullable<uint32_t>(selEnd);
 }
@@ -6386,8 +6386,8 @@ HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
 }
 
 void
-HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
-                                    int32_t* aSelectionEnd,
+HTMLInputElement::GetSelectionRange(uint32_t* aSelectionStart,
+                                    uint32_t* aSelectionEnd,
                                     ErrorResult& aRv)
 {
   nsTextEditorState* state = GetEditorState();

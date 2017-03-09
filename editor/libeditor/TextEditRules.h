@@ -199,7 +199,7 @@ protected:
   /**
    * Remove IME composition text from password buffer.
    */
-  void RemoveIMETextFromPWBuf(int32_t& aStart, nsAString* aIMEString);
+  void RemoveIMETextFromPWBuf(uint32_t& aStart, nsAString* aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode* inParent, int32_t inOffset,
                        nsIDOMNode** outBRNode = nullptr);
