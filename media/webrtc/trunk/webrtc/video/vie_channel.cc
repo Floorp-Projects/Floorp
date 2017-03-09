@@ -891,21 +891,15 @@ int32_t ViEChannel::GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh,
   return 0;
 }
 
-//->@@NG // int32_t ViEChannel::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
-//->@@NG //   // Get the sender info from the latest received RTCP Sender Report.
-//->@@NG //   RTCPSenderInfo rtcp_sender_info;
-//->@@NG //   if (rtp_rtcp_->RemoteRTCPStat(&rtcp_sender_info) != 0) {
-//->@@NG //     LOG_F(LS_ERROR) << "failed to read RTCP SR sender info";
-//->@@NG //     return -1;
-//->@@NG //   }
-//->@@NG //
-//->@@NG //   sender_info->NTP_timestamp_high = rtcp_sender_info.NTPseconds;
-//->@@NG //   sender_info->NTP_timestamp_low = rtcp_sender_info.NTPfraction;
-//->@@NG //   sender_info->RTP_timestamp = rtcp_sender_info.RTPtimeStamp;
-//->@@NG //   sender_info->sender_packet_count = rtcp_sender_info.sendPacketCount;
-//->@@NG //   sender_info->sender_octet_count = rtcp_sender_info.sendOctetCount;
-//->@@NG //   return 0;
-//->@@NG // }
+int32_t ViEChannel::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
+  // Get the sender info from the latest received RTCP Sender Report.
+  if (rtp_rtcp_modules_[0] &&
+    rtp_rtcp_modules_[0]->RemoteRTCPStat(sender_info) != 0) {
+    LOG_F(LS_ERROR) << "failed to read RTCP SR sender info";
+    return -1;
+  }
+  return 0;
+}
 
 void ViEChannel::RegisterSendChannelRtcpStatisticsCallback(
     RtcpStatisticsCallback* callback) {
