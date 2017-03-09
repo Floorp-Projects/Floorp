@@ -12,7 +12,7 @@ include protocol PTexture;
 using WrBorderRadius from "mozilla/webrender/webrender_ffi.h";
 using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
 using WrColor from "mozilla/webrender/webrender_ffi.h";
-using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
+using WrSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
 using WrPoint from "mozilla/webrender/webrender_ffi.h";
 using WrGradientStop from "mozilla/webrender/webrender_ffi.h";

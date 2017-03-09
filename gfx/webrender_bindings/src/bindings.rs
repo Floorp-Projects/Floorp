@@ -944,20 +944,20 @@ impl WrColor
 
 #[repr(C)]
 pub struct WrBorderRadius {
-    pub top_left: WrLayoutSize,
-    pub top_right: WrLayoutSize,
-    pub bottom_left: WrLayoutSize,
-    pub bottom_right: WrLayoutSize,
+    pub top_left: WrSize,
+    pub top_right: WrSize,
+    pub bottom_left: WrSize,
+    pub bottom_right: WrSize,
 }
 
 impl WrBorderRadius
 {
     pub fn to_border_radius(&self) -> BorderRadius
     {
-        BorderRadius { top_left: self.top_left.to_layout_size(),
-                       top_right: self.top_right.to_layout_size(),
-                       bottom_left: self.bottom_left.to_layout_size(),
-                       bottom_right: self.bottom_right.to_layout_size() }
+        BorderRadius { top_left: self.top_left.to_size(),
+                       top_right: self.top_right.to_size(),
+                       bottom_left: self.bottom_left.to_size(),
+                       bottom_right: self.bottom_right.to_size() }
     }
 }
 
@@ -1000,15 +1000,15 @@ impl WrGradientStop
 }
 
 #[repr(C)]
-pub struct WrLayoutSize
+pub struct WrSize
 {
     width: f32,
     height: f32
 }
 
-impl WrLayoutSize
+impl WrSize
 {
-    pub fn to_layout_size(&self) -> LayoutSize
+    pub fn to_size(&self) -> LayoutSize
     {
         LayoutSize::new(self.width, self.height)
     }
