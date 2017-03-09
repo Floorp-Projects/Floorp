@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* representation of CSSMediaRule for stylo */
+
+#ifndef mozilla_ServoMediaRule_h
+#define mozilla_ServoMediaRule_h
+
+#include "mozilla/dom/CSSMediaRule.h"
+#include "mozilla/ServoBindingTypes.h"
+
+namespace mozilla {
+
+class ServoMediaList;
+
+class ServoMediaRule final : public dom::CSSMediaRule
+{
+public:
+  explicit ServoMediaRule(RefPtr<RawServoMediaRule> aRawRule);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoMediaRule, dom::CSSMediaRule)
+
+  already_AddRefed<css::Rule> Clone() const override;
+  bool UseForPresentation(nsPresContext* aPresContext,
+                          nsMediaQueryResultCacheKey& aKey) final;
+  void SetStyleSheet(StyleSheet* aSheet) override;
+#ifdef DEBUG
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+#endif
+
+  RawServoMediaRule* Raw() const { return mRawRule; }
+
+  // nsIDOMCSSConditionRule interface
+  NS_DECL_NSIDOMCSSCONDITIONRULE
+
+  // WebIDL interface
+  void GetCssTextImpl(nsAString& aCssText) const override;
+  using CSSMediaRule::SetConditionText;
+  dom::MediaList* Media() override;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const override;
+
+private:
+  virtual ~ServoMediaRule();
+
+  RefPtr<RawServoMediaRule> mRawRule;
+  RefPtr<ServoMediaList> mMediaList;
+};
+
+} // namespace mozilla
+
+#endif // mozilla_ServoMediaRule_h

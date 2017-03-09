@@ -80,6 +80,8 @@ struct ServoGroupRuleRules
 {
   explicit ServoGroupRuleRules(already_AddRefed<ServoCssRules> aRawRules)
     : mRuleList(new ServoCSSRuleList(Move(aRawRules))) {}
+  ServoGroupRuleRules(ServoGroupRuleRules&& aOther)
+    : mRuleList(Move(aOther.mRuleList)) {}
   ServoGroupRuleRules(const ServoGroupRuleRules& aCopy) {
     // Do we ever clone Servo rules?
     MOZ_ASSERT_UNREACHABLE("stylo: Cloning GroupRule not implemented");
@@ -139,6 +141,7 @@ class GroupRule : public Rule
 {
 protected:
   GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber);
+  explicit GroupRule(already_AddRefed<ServoCssRules> aRules);
   GroupRule(const GroupRule& aCopy);
   virtual ~GroupRule();
 public:
