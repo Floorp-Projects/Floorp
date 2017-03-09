@@ -39,21 +39,19 @@ mozilla::ipc::IPCResult
 VideoDecoderChild::RecvOutput(const VideoDataIPDL& aData)
 {
   AssertOnManagerThread();
-  VideoInfo info(aData.display().width, aData.display().height);
 
   // The Image here creates a TextureData object that takes ownership
   // of the SurfaceDescriptor, and is responsible for making sure that
   // it gets deallocated.
   RefPtr<Image> image = new GPUVideoImage(GetManager(), aData.sd(), aData.frameSize());
 
-  RefPtr<VideoData> video = VideoData::CreateFromImage(info,
+  RefPtr<VideoData> video = VideoData::CreateFromImage(aData.display(),
                                                        aData.base().offset(),
                                                        aData.base().time(),
                                                        aData.base().duration(),
                                                        image,
                                                        aData.base().keyframe(),
-                                                       aData.base().timecode(),
-                                                       IntRect());
+                                                       aData.base().timecode());
   mDecodedData.AppendElement(Move(video));
   return IPC_OK();
 }

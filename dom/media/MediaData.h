@@ -518,14 +518,13 @@ public:
     const IntRect& aPicture);
 
   static already_AddRefed<VideoData> CreateFromImage(
-    const VideoInfo& aInfo,
+    const IntSize& aDisplay,
     int64_t aOffset,
     int64_t aTime,
     int64_t aDuration,
     const RefPtr<Image>& aImage,
     bool aKeyframe,
-    int64_t aTimecode,
-    const IntRect& aPicture);
+    int64_t aTimecode);
 
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
