@@ -15,6 +15,7 @@ cppunit:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
             linux64-qr/.*: ['graphics']
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
     mozharness:
         by-test-platform:
@@ -53,6 +54,7 @@ crashtest:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['graphics', 'mozilla-central']
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
     chunks:
         by-test-platform:
@@ -893,6 +895,10 @@ mochitest-style:
     treeherder-symbol: tc-M(s)
     loopback-video: true
     e10s: false
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            default: ['all']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
