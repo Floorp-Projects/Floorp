@@ -12,7 +12,6 @@ include protocol PSendStream;
 include BlobTypes;
 include URIParams;
 include IPCStream;
-include InputStreamParams;
 include PBackgroundSharedTypes;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -155,7 +154,7 @@ struct FTPChannelOpenArgs
   URIParams                 uri;
   uint64_t                  startPos;
   nsCString                 entityID;
-  OptionalInputStreamParams uploadStream;
+  OptionalIPCStream         uploadStream;
   OptionalLoadInfoArgs      loadInfo;
 };
 
