@@ -165,13 +165,7 @@ FillRectWithMask(DrawTarget* aDT,
     SourceSurfaceRecording* ss = static_cast<SourceSurfaceRecording*>(aSurface);
     DrawEventRecorderMemory* mr = static_cast<DrawEventRecorderMemory*>(ss->mRecorder.get());
 
-    size_t size = mr->RecordingSize();
-    char* buffer = new char[size];
-    mr->CopyRecording(buffer, size);
-    std::istringstream recording(std::string(buffer, size));
-
-    delete [] buffer;
-    translator->TranslateRecording(recording);
+    translator->TranslateRecording(mr->GetInputStream());
 
     aDT->SetTransform(oldTransform);
     aDT->PopClip();
