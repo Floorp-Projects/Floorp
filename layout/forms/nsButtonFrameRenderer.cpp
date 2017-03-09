@@ -309,9 +309,19 @@ public:
                                  nsRegion *aInvalidRegion) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
+   virtual void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                        nsTArray<WebRenderParentCommand>& aParentCommands,
+                                        WebRenderDisplayItemLayer* aLayer) override;
   NS_DISPLAY_DECL_NAME("ButtonForeground", TYPE_BUTTON_FOREGROUND)
 private:
   nsButtonFrameRenderer* mBFR;
+  Maybe<nsCSSBorderRenderer> mBorderRenderer;
 };
 
 nsDisplayItemGeometry*
@@ -353,6 +363,49 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
+}
+
+LayerState
+nsDisplayButtonForeground::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                         LayerManager* aManager,
+                                         const ContainerLayerParameters& aParameters)
+{
+  Maybe<nsCSSBorderRenderer> br;
+
+  if (gfxPrefs::LayersAllowButtonForegroundLayers()) {
+    nsPresContext *presContext = mFrame->PresContext();
+    const nsStyleDisplay *disp = mFrame->StyleDisplay();
+    if (!mFrame->IsThemed(disp) ||
+        !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+      nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
+      br = mBFR->CreateInnerFocusBorderRenderer(aBuilder, presContext, nullptr, mVisibleRect, r);
+    }
+  }
+
+  if (!br) {
+    return LAYER_NONE;
+  }
+
+  mBorderRenderer = br;
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<mozilla::layers::Layer>
+nsDisplayButtonForeground::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                      LayerManager* aManager,
+                                      const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+void
+nsDisplayButtonForeground::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                                   nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                   mozilla::layers::WebRenderDisplayItemLayer* aLayer)
+{
+  MOZ_ASSERT(mBorderRenderer.isSome());
+  mBorderRenderer->CreateWebRenderCommands(aBuilder, aLayer);
 }
 
 nsresult
@@ -423,6 +476,30 @@ nsButtonFrameRenderer::PaintInnerFocusBorder(
   }
 
   return result;
+}
+
+Maybe<nsCSSBorderRenderer>
+nsButtonFrameRenderer::CreateInnerFocusBorderRenderer(
+  nsDisplayListBuilder* aBuilder,
+  nsPresContext* aPresContext,
+  nsRenderingContext* aRenderingContext,
+  const nsRect& aDirtyRect,
+  const nsRect& aRect)
+{
+  if (mInnerFocusStyle) {
+    nsRect rect;
+    GetButtonInnerFocusRect(aRect, rect);
+
+    gfx::DrawTarget* dt = aRenderingContext ? aRenderingContext->GetDrawTarget() : nullptr;
+    return nsCSSRendering::CreateBorderRenderer(aPresContext,
+                                                dt,
+                                                mFrame,
+                                                aDirtyRect,
+                                                rect,
+                                                mInnerFocusStyle);
+  }
+
+  return Nothing();
 }
 
 DrawResult
