@@ -224,13 +224,26 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 }
 
 void
-ChromiumCDMProxy::LoadSession(PromiseId aPromiseId, const nsAString& aSessionId)
+ChromiumCDMProxy::LoadSession(PromiseId aPromiseId,
+                              dom::MediaKeySessionType aSessionType,
+                              const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RejectPromise(aPromiseId,
-                NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-                NS_LITERAL_CSTRING("loadSession is not supported"));
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  if (!cdm) {
+    RejectPromise(aPromiseId,
+                  NS_ERROR_DOM_INVALID_STATE_ERR,
+                  NS_LITERAL_CSTRING("Null CDM in LoadSession"));
+    return;
+  }
+
+  mGMPThread->Dispatch(NewRunnableMethod<uint32_t, uint32_t, nsString>(
+    cdm,
+    &gmp::ChromiumCDMParent::LoadSession,
+    aPromiseId,
+    ToCDMSessionType(aSessionType),
+    aSessionId));
 }
 
 void
@@ -417,6 +430,11 @@ void
 ChromiumCDMProxy::OnResolveLoadSessionPromise(uint32_t aPromiseId,
                                               bool aSuccess)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  mKeys->OnSessionLoaded(aPromiseId, aSuccess);
 }
 
 void

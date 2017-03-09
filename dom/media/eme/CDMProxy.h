@@ -115,6 +115,7 @@ public:
   // Uses the CDM to load a presistent session stored on disk.
   // Calls MediaKeys::OnSessionActivated() when session is loaded.
   virtual void LoadSession(PromiseId aPromiseId,
+                           dom::MediaKeySessionType aSessionType,
                            const nsAString& aSessionId) = 0;
 
   // Main thread only.

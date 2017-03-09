@@ -46,6 +46,10 @@ public:
                      uint32_t aPromiseId,
                      const nsTArray<uint8_t>& aInitData);
 
+  void LoadSession(uint32_t aPromiseId,
+                   uint32_t aSessionType,
+                   nsString aSessionId);
+
   void SetServerCertificate(uint32_t aPromiseId,
                             const nsTArray<uint8_t>& aCert);
 
@@ -84,6 +88,9 @@ protected:
   ipc::IPCResult RecvOnResolveNewSessionPromise(
     const uint32_t& aPromiseId,
     const nsCString& aSessionId) override;
+  ipc::IPCResult RecvResolveLoadSessionPromise(
+    const uint32_t& aPromiseId,
+    const bool& aSuccessful) override;
   ipc::IPCResult RecvOnResolvePromise(const uint32_t& aPromiseId) override;
   ipc::IPCResult RecvOnRejectPromise(const uint32_t& aPromiseId,
                                      const uint32_t& aError,

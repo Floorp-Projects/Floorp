@@ -39,7 +39,9 @@ public:
                      const nsAString& aInitDataType,
                      nsTArray<uint8_t>& aInitData) override;
 
-  void LoadSession(PromiseId aPromiseId, const nsAString& aSessionId) override;
+  void LoadSession(PromiseId aPromiseId,
+                   dom::MediaKeySessionType aSessionType,
+                   const nsAString& aSessionId) override;
 
   void SetServerCertificate(PromiseId aPromiseId,
                             nsTArray<uint8_t>& aCert) override;
