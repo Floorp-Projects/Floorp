@@ -627,7 +627,6 @@
   function normalizeSource(source) {
     source = String(source);
     source = StringReplace(source, /([(){},.:\[\]])/mg, (_, punctuator) => ` ${punctuator} `);
-    source = StringReplace(source, /(\w+)/mg, (_, word) => ` ${word} `);
     source = StringReplace(source, /\s+/mg, _ => ' ');
 
     return source;
