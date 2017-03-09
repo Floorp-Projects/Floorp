@@ -71,7 +71,7 @@
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/PSendStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
-#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -3903,7 +3903,7 @@ ContentParent::SendPBrowserConstructor(PBrowserParent* aActor,
 mozilla::ipc::IPCResult
 ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
                                 nsString* aProviderName,
-                                OptionalInputStreamParams* aPostData,
+                                OptionalIPCStream* aPostData,
                                 OptionalURIParams* aURI)
 {
   *aPostData = void_t();
@@ -3923,9 +3923,9 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
   }
   info->GetKeywordProviderName(*aProviderName);
 
-  nsTArray<mozilla::ipc::FileDescriptor> fds;
-  SerializeInputStream(postData, *aPostData, fds);
-  MOZ_ASSERT(fds.IsEmpty());
+  AutoIPCStream autoStream;
+  autoStream.Serialize(postData, this);
+  *aPostData = autoStream.TakeOptionalValue();
 
   nsCOMPtr<nsIURI> uri;
   info->GetPreferredURI(getter_AddRefs(uri));
