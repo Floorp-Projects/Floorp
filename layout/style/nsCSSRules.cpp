@@ -1998,8 +1998,8 @@ nsCSSKeyframesRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.Append(mName);
   aCssText.AppendLiteral(" {\n");
   nsAutoString tmp;
-  for (uint32_t i = 0, i_end = mRules.Count(); i != i_end; ++i) {
-    static_cast<nsCSSKeyframeRule*>(mRules[i])->GetCssText(tmp);
+  for (const Rule* rule : GeckoRules()) {
+    static_cast<const nsCSSKeyframeRule*>(rule)->GetCssText(tmp);
     aCssText.Append(tmp);
     aCssText.Append('\n');
   }
@@ -2079,13 +2079,14 @@ nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
   InfallibleTArray<float> keys;
   // FIXME: pass filename and line number
   if (parser.ParseKeyframeSelectorString(aKey, nullptr, 0, keys)) {
+    IncrementalClearCOMRuleArray& rules = GeckoRules();
     // The spec isn't clear, but we'll match on the key list, which
     // mostly matches what WebKit does, except we'll do last-match
     // instead of first-match, and handling parsing differences better.
     // http://lists.w3.org/Archives/Public/www-style/2011Apr/0036.html
     // http://lists.w3.org/Archives/Public/www-style/2011Apr/0037.html
-    for (uint32_t i = mRules.Count(); i-- != 0; ) {
-      if (static_cast<nsCSSKeyframeRule*>(mRules[i])->GetKeys() == keys) {
+    for (uint32_t i = rules.Count(); i-- != 0; ) {
+      if (static_cast<nsCSSKeyframeRule*>(rules[i])->GetKeys() == keys) {
         return i;
       }
     }
@@ -2130,7 +2131,7 @@ nsCSSKeyframesRule::FindRule(const nsAString& aKey)
   if (index == RULE_NOT_FOUND) {
     return nullptr;
   }
-  return static_cast<nsCSSKeyframeRule*>(mRules[index]);
+  return static_cast<nsCSSKeyframeRule*>(GeckoRules()[index]);
 }
 
 // GroupRule interface
