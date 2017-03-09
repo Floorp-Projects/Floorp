@@ -306,7 +306,7 @@ nsTextControlFrame::EnsureEditorInitialized()
     mEditorHasBeenInitialized = true;
 
     if (weakFrame.IsAlive()) {
-      uint32_t position = 0;
+      int32_t position = 0;
 
       // Set the selection to the end of the text field (bug 1287655),
       // but only if the contents has changed (bug 1337392).
@@ -744,9 +744,9 @@ nsTextControlFrame::GetEditor(nsIEditor **aEditor)
 
 nsresult
 nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
-                                         uint32_t aStartOffset,
+                                         int32_t aStartOffset,
                                          nsIDOMNode *aEndNode,
-                                         uint32_t aEndOffset,
+                                         int32_t aEndOffset,
                                          nsITextControlFrame::SelectionDirection aDirection)
 {
   // Create a new range to represent the new selection.
@@ -758,11 +758,6 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   // we have access to the node.
   nsCOMPtr<nsINode> start = do_QueryInterface(aStartNode);
   nsCOMPtr<nsINode> end = do_QueryInterface(aEndNode);
-  // XXXbz nsRange::Set takes int32_t (and ranges generally work on int32_t),
-  // but we're passing uint32_t.  The good news is that at this point our
-  // endpoints should really be within our length, so not really that big.  And
-  // if they _are_ that big, Set() will simply error out, which is not too bad
-  // for a case we don't expect to happen.
   nsresult rv = range->Set(start, aStartOffset, end, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -866,7 +861,7 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
 }
 
 nsresult
-nsTextControlFrame::SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
+nsTextControlFrame::SetSelectionEndPoints(int32_t aSelStart, int32_t aSelEnd,
                                           nsITextControlFrame::SelectionDirection aDirection)
 {
   NS_ASSERTION(aSelStart <= aSelEnd, "Invalid selection offsets!");
@@ -875,7 +870,7 @@ nsTextControlFrame::SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
-  uint32_t startOffset, endOffset;
+  int32_t startOffset, endOffset;
 
   // Calculate the selection start point.
 
@@ -901,7 +896,7 @@ nsTextControlFrame::SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::SetSelectionRange(uint32_t aSelStart, uint32_t aSelEnd,
+nsTextControlFrame::SetSelectionRange(int32_t aSelStart, int32_t aSelEnd,
                                       nsITextControlFrame::SelectionDirection aDirection)
 {
   nsresult rv = EnsureEditorInitialized();
@@ -919,9 +914,9 @@ nsTextControlFrame::SetSelectionRange(uint32_t aSelStart, uint32_t aSelEnd,
 
 
 nsresult
-nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
+nsTextControlFrame::OffsetToDOMPoint(int32_t aOffset,
                                      nsIDOMNode** aResult,
-                                     uint32_t* aPosition)
+                                     int32_t* aPosition)
 {
   NS_ENSURE_ARG_POINTER(aResult && aPosition);
 
@@ -953,13 +948,13 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
 
-  if (length == 0) {
+  if (length == 0 || aOffset < 0) {
     NS_IF_ADDREF(*aResult = rootNode);
     *aPosition = 0;
   } else if (textNode) {
     uint32_t textLength = 0;
     textNode->GetLength(&textLength);
-    if (length == 2 && aOffset == textLength) {
+    if (length == 2 && uint32_t(aOffset) == textLength) {
       // If we're at the end of the text node and we have a trailing BR node,
       // set the selection on the BR node.
       NS_IF_ADDREF(*aResult = rootNode);
@@ -967,7 +962,7 @@ nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
     } else {
       // Otherwise, set the selection on the textnode itself.
       NS_IF_ADDREF(*aResult = firstNode);
-      *aPosition = std::min(aOffset, textLength);
+      *aPosition = std::min(aOffset, int32_t(textLength));
     }
   } else {
     NS_IF_ADDREF(*aResult = rootNode);
