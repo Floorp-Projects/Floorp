@@ -1299,6 +1299,9 @@ XPCJSContext::InterruptCallback(JSContext* cx)
 {
     XPCJSContext* self = XPCJSContext::Get();
 
+    // Now is a good time to turn on profiling if it's pending.
+    profiler_js_interrupt_callback();
+
     // Normally we record mSlowScriptCheckpoint when we start to process an
     // event. However, we can run JS outside of event handlers. This code takes
     // care of that case.
