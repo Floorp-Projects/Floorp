@@ -1,4 +1,4 @@
-// |reftest| skip -- not a test file, jstests don't yet support module tests
+// |reftest| skip -- not a test file
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -15,5 +15,3 @@ export { t as s } from './instn-iee-iee-cycle.js';
 export { v as u } from './instn-iee-iee-cycle.js';
 export { x as w } from './instn-iee-iee-cycle.js';
 export { z as y } from './instn-iee-iee-cycle.js';
-
-reportCompare(0, 0);

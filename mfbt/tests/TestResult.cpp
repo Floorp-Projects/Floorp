@@ -7,8 +7,8 @@
 #include <string.h>
 #include "mozilla/Result.h"
 
+using mozilla::Err;
 using mozilla::GenericErrorResult;
-using mozilla::MakeGenericErrorResult;
 using mozilla::Ok;
 using mozilla::Result;
 
@@ -52,7 +52,7 @@ static GenericErrorResult<Failed&>
 Fail()
 {
   static Failed failed;
-  return MakeGenericErrorResult<Failed&>(failed);
+  return Err<Failed&>(failed);
 }
 
 static Result<Ok, Failed&>
@@ -131,7 +131,7 @@ BasicTests()
     MOZ_RELEASE_ASSERT(res.isOk());
     MOZ_RELEASE_ASSERT(*res.unwrap() == 123);
 
-    res = MakeGenericErrorResult(d);
+    res = Err(d);
     MOZ_RELEASE_ASSERT(res.isErr());
     MOZ_RELEASE_ASSERT(&res.unwrapErr() == &d);
     MOZ_RELEASE_ASSERT(res.unwrapErr() == 3.14);
@@ -147,7 +147,7 @@ static Result<Ok, Snafu*>
 Explode()
 {
   static Snafu snafu;
-  return MakeGenericErrorResult(&snafu);
+  return Err(&snafu);
 }
 
 static Result<Ok, Failed*>

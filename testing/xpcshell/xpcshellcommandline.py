@@ -112,6 +112,11 @@ def add_common_arguments(parser):
                         action="store",
                         help="Path to a manifest file from which to rerun failures "
                         "(with --rerun-failure) or in which to record failed tests")
+    parser.add_argument("--threads",
+                        type=int, dest="threadCount", default=0,
+                        help="override the number of jobs (threads) when running tests in parallel, "
+                             "the default is CPU x 1.5 when running via mach and CPU x 4 when running "
+                             "in automation")
     parser.add_argument("testPaths", nargs="*", default=None,
                         help="Paths of tests to run.")
 

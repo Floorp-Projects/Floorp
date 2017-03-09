@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('SIMD')) -- needs SIMD
 // Copyright (C) 2016 ecmascript_simd authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

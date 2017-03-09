@@ -2405,8 +2405,10 @@ public abstract class GeckoApp
             "Update:Install",
             null);
 
-        if (mPromptService != null)
+        if (mPromptService != null) {
             mPromptService.destroy();
+            mPromptService = null;
+        }
 
         final HealthRecorder rec = mHealthRecorder;
         mHealthRecorder = null;

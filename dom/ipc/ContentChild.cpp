@@ -175,7 +175,6 @@
 #endif
 
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -188,7 +187,6 @@
 #include "URIUtils.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
-#include "nsDeviceStorage.h"
 #include "DomainPolicy.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
@@ -211,7 +209,6 @@
 
 using namespace mozilla;
 using namespace mozilla::docshell;
-using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::workers;
 using namespace mozilla::media;
@@ -1679,19 +1676,6 @@ ContentChild::RecvPTestShellConstructor(PTestShellChild* actor)
   return IPC_OK();
 }
 
-PDeviceStorageRequestChild*
-ContentChild::AllocPDeviceStorageRequestChild(const DeviceStorageParams& aParams)
-{
-  return new DeviceStorageRequestChild();
-}
-
-bool
-ContentChild::DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild* aDeviceStorage)
-{
-  delete aDeviceStorage;
-  return true;
-}
-
 PNeckoChild*
 ContentChild::AllocPNeckoChild()
 {
@@ -2368,28 +2352,6 @@ ContentChild::RecvLastPrivateDocShellDestroyed()
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
-                                 const nsString& aStorageName,
-                                 const nsString& aPath,
-                                 const nsCString& aReason)
-{
-  if (nsDOMDeviceStorage::InstanceCount() == 0) {
-    // No device storage instances in this process. Don't try and
-    // and create a DeviceStorageFile since it will fail.
-
-    return IPC_OK();
-  }
-
-  RefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType, aStorageName, aPath);
-
-  nsString reason;
-  CopyASCIItoUTF16(aReason, reason);
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->NotifyObservers(dsf, "file-watcher-update", reason.get());
   return IPC_OK();
 }
 

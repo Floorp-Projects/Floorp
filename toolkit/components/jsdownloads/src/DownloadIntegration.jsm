@@ -273,43 +273,6 @@ this.DownloadIntegration = {
     yield new DownloadAutoSaveView(list, this._store).initialize();
   }),
 
-#ifdef MOZ_WIDGET_GONK
-  /**
-    * Finds the default download directory which can be either in the
-    * internal storage or on the sdcard.
-    *
-    * @return {Promise}
-    * @resolves The downloads directory string path.
-    */
-  _getDefaultDownloadDirectory: Task.async(function* () {
-    let directoryPath;
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    let storages = win.navigator.getDeviceStorages("sdcard");
-    let preferredStorageName;
-    // Use the first one or the default storage.
-    storages.forEach((aStorage) => {
-      if (aStorage.default || !preferredStorageName) {
-        preferredStorageName = aStorage.storageName;
-      }
-    });
-
-    // Now get the path for this storage area.
-    if (preferredStorageName) {
-      let volume = volumeService.getVolumeByName(preferredStorageName);
-      if (volume && volume.state === Ci.nsIVolume.STATE_MOUNTED){
-        directoryPath = OS.Path.join(volume.mountPoint, "downloads");
-        yield OS.File.makeDir(directoryPath, { ignoreExisting: true });
-      }
-    }
-    if (directoryPath) {
-      return directoryPath;
-    } else {
-      throw new Components.Exception("No suitable storage for downloads.",
-                                     Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
-    }
-  }),
-#endif
-
   /**
    * Determines if a Download object from the list of persistent downloads
    * should be saved into a file, so that it can be restored across sessions.
@@ -382,8 +345,6 @@ this.DownloadIntegration = {
       throw new Components.Exception("DOWNLOADS_DIRECTORY is not set.",
                                      Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH);
     }
-#elifdef MOZ_WIDGET_GONK
-    directoryPath = this._getDefaultDownloadDirectory();
 #else
     // For Linux, use XDG download dir, with a fallback to Home/Downloads
     // if the XDG user dirs are disabled.
@@ -410,9 +371,6 @@ this.DownloadIntegration = {
    */
   getPreferredDownloadsDirectory: Task.async(function* () {
     let directoryPath = null;
-#ifdef MOZ_WIDGET_GONK
-    directoryPath = this._getDefaultDownloadDirectory();
-#else
     let prefValue = Services.prefs.getIntPref("browser.download.folderList", 1);
 
     switch(prefValue) {
@@ -436,7 +394,6 @@ this.DownloadIntegration = {
       default:
         directoryPath = yield this.getSystemDownloadsDirectory();
     }
-#endif
     return directoryPath;
   }),
 

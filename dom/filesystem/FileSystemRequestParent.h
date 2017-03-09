@@ -23,19 +23,6 @@ class FileSystemRequestParent final : public PFileSystemRequestParent
 public:
   FileSystemRequestParent();
 
-  const nsCString&
-  PermissionName() const
-  {
-    return mPermissionName;
-  }
-
-  FileSystemBase::ePermissionCheckType
-  PermissionCheckType() const
-  {
-    return mFileSystem ? mFileSystem->PermissionCheckType()
-                       : FileSystemBase::eNotSet;
-  }
-
   bool
   Initialize(const FileSystemParams& aParams);
 
@@ -55,8 +42,6 @@ private:
 
   RefPtr<FileSystemBase> mFileSystem;
   RefPtr<FileSystemTaskParentBase> mTask;
-
-  nsCString mPermissionName;
 
   bool mDestroyed;
 };
