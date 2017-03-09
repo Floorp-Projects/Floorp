@@ -173,14 +173,51 @@ struct WrItemRange
 };
 
 struct WrBuiltDisplayListDescriptor {
-    size_t display_list_items_size;
+  size_t display_list_items_size;
 };
 
 struct WrAuxiliaryListsDescriptor {
-    size_t gradient_stops_size;
-    size_t complex_clip_regions_size;
-    size_t filters_size;
-    size_t glyph_instances_size;
+  size_t gradient_stops_size;
+  size_t complex_clip_regions_size;
+  size_t filters_size;
+  size_t glyph_instances_size;
+};
+
+struct WrPoint
+{
+  float x;
+  float y;
+
+  bool operator==(const WrPoint& aRhs) const {
+    return x == aRhs.x && y == aRhs.y;
+  }
+
+  operator mozilla::gfx::Point() const { return mozilla::gfx::Point(x, y); }
+};
+
+struct WrSize
+{
+  float width;
+  float height;
+
+  bool operator==(const WrSize& aRhs) const
+  {
+    return width == aRhs.width && height == aRhs.height;
+  }
+};
+
+struct WrRect
+{
+  float x;
+  float y;
+  float width;
+  float height;
+
+  bool operator==(const WrRect& aRhs) const
+  {
+    return x == aRhs.x && y == aRhs.y &&
+           width == aRhs.width && height == aRhs.height;
+  }
 };
 
 struct WrColor
@@ -259,17 +296,6 @@ struct WrBorderSide {
   }
 };
 
-struct WrSize
-{
-  float width;
-  float height;
-
-  bool operator==(const WrSize& aRhs) const
-  {
-    return width == aRhs.width && height == aRhs.height;
-  }
-};
-
 struct WrBorderRadius {
   WrSize top_left;
   WrSize top_right;
@@ -281,32 +307,6 @@ struct WrBorderRadius {
     return top_left == aRhs.top_left && top_right == aRhs.top_right &&
            bottom_left == aRhs.bottom_left && bottom_right == aRhs.bottom_right;
   }
-};
-
-struct WrRect
-{
-  float x;
-  float y;
-  float width;
-  float height;
-
-  bool operator==(const WrRect& aRhs) const
-  {
-    return x == aRhs.x && y == aRhs.y &&
-           width == aRhs.width && height == aRhs.height;
-  }
-};
-
-struct WrPoint
-{
-  float x;
-  float y;
-
-  bool operator==(const WrPoint& aRhs) const {
-    return x == aRhs.x && y == aRhs.y;
-  }
-
-  operator mozilla::gfx::Point() const { return mozilla::gfx::Point(x, y); }
 };
 
 struct WrImageMask
@@ -422,6 +422,13 @@ WR_INLINE void
 wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height)
 WR_FUNC;
 
+// It is the responsibility of the caller to manage the dst_buffer memory
+// and also free it at the proper time.
+WR_INLINE const uint8_t*
+wr_renderer_readback(uint32_t width, uint32_t height,
+                     uint8_t* dst_buffer, size_t buffer_length)
+WR_FUNC;
+
 WR_INLINE void
 wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled)
 WR_FUNC;
@@ -520,6 +527,10 @@ WR_INLINE void
 wr_api_add_raw_font(WrAPI* api, WrFontKey key, uint8_t* font_buffer, size_t buffer_size)
 WR_FUNC;
 
+WR_INLINE WrIdNamespace
+wr_api_get_namespace(WrAPI* api)
+WR_FUNC;
+
 WR_INLINE WrState*
 wr_state_new(WrPipelineId pipeline_id)
 WR_FUNC;
@@ -527,6 +538,21 @@ WR_FUNC;
 WR_INLINE void
 wr_state_delete(WrState* state)
 WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE void
+wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_end(WrState* wrState)
+WR_FUNC;
+
+WR_INLINE WrClipRegion
+wr_dp_new_clip_region(WrState* wrState,
+                      WrRect main,
+                      const WrComplexClipRegion* complex, size_t complexCount,
+                      const WrImageMask* image_mask)
+WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
@@ -549,25 +575,18 @@ WR_INLINE void
 wr_dp_pop_scroll_layer(WrState *wrState)
 WR_FUNC;
 
-
 WR_INLINE void
-wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
-WR_FUNC;
-
-WR_INLINE void
-wr_dp_end(WrState* wrState)
-WR_FUNC;
-
-WR_INLINE WrClipRegion
-wr_dp_new_clip_region(WrState* wrState,
-                      WrRect main,
-                      const WrComplexClipRegion* complex, size_t complexCount,
-                      const WrImageMask* image_mask)
+wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrClipRegion clip, WrPipelineId layers_id)
 WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_rect(WrState* wrState, WrRect bounds, WrClipRegion clip,
                 WrColor color)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
+                 WrImageRendering filter, WrImageKey key)
 WR_FUNC;
 
 WR_INLINE void
@@ -598,30 +617,10 @@ wr_dp_push_radial_gradient(WrState* wrState, WrRect bounds, WrClipRegion clip,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_image(WrState* wrState, WrRect bounds, WrClipRegion clip,
-                 WrImageRendering filter, WrImageKey key)
-WR_FUNC;
-
-WR_INLINE void
-wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrClipRegion clip, WrPipelineId layers_id)
-WR_FUNC;
-
-// It is the responsibility of the caller to manage the dst_buffer memory
-// and also free it at the proper time.
-WR_INLINE const uint8_t*
-wr_renderer_readback(uint32_t width, uint32_t height,
-                     uint8_t* dst_buffer, size_t buffer_length)
-WR_FUNC;
-
-WR_INLINE void
 wr_dp_push_box_shadow(WrState* wrState, WrRect rect, WrClipRegion clip,
                       WrRect box_bounds, WrPoint offset, WrColor color,
                       float blur_radius, float spread_radius, float border_radius,
                       WrBoxShadowClipMode clip_mode)
-WR_FUNC;
-
-WR_INLINE WrIdNamespace
-wr_api_get_namespace(WrAPI* api)
 WR_FUNC;
 
 WR_INLINE void
