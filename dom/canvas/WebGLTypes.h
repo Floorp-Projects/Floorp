@@ -173,50 +173,6 @@ enum class WebGLExtensionID : uint8_t {
     Unknown
 };
 
-class UniqueBuffer
-{
-    // Like UniquePtr<>, but for void* and malloc/calloc/free.
-    void* mBuffer;
-
-public:
-    UniqueBuffer()
-        : mBuffer(nullptr)
-    { }
-
-    MOZ_IMPLICIT UniqueBuffer(void* buffer)
-        : mBuffer(buffer)
-    { }
-
-    ~UniqueBuffer() {
-        free(mBuffer);
-    }
-
-    UniqueBuffer(UniqueBuffer&& other) {
-        this->mBuffer = other.mBuffer;
-        other.mBuffer = nullptr;
-    }
-
-    UniqueBuffer& operator =(UniqueBuffer&& other) {
-        free(this->mBuffer);
-        this->mBuffer = other.mBuffer;
-        other.mBuffer = nullptr;
-        return *this;
-    }
-
-    UniqueBuffer& operator =(void* newBuffer) {
-        free(this->mBuffer);
-        this->mBuffer = newBuffer;
-        return *this;
-    }
-
-    explicit operator bool() const { return bool(mBuffer); }
-
-    void* get() const { return mBuffer; }
-
-    UniqueBuffer(const UniqueBuffer& other) = delete; // construct using Move()!
-    void operator =(const UniqueBuffer& other) = delete; // assign using Move()!
-};
-
 } // namespace mozilla
 
 #endif
