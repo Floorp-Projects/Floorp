@@ -721,9 +721,8 @@ HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart
   }
 
   nsAutoString direction;
-  nsresult rv = GetSelectionDirection(direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
+  GetSelectionDirection(direction, aError);
+  if (aError.Failed()) {
     return;
   }
   int32_t start, end;
@@ -735,7 +734,7 @@ HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart
   if (end < start) {
     end = start;
   }
-  rv = SetSelectionRange(start, end, direction);
+  nsresult rv = SetSelectionRange(start, end, direction);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
   }
@@ -764,9 +763,8 @@ HTMLTextAreaElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
   }
 
   nsAutoString direction;
-  nsresult rv = GetSelectionDirection(direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
+  GetSelectionDirection(direction, aError);
+  if (aError.Failed()) {
     return;
   }
   int32_t start, end;
@@ -778,7 +776,7 @@ HTMLTextAreaElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
   if (start > end) {
     start = end;
   }
-  rv = SetSelectionRange(start, end, direction);
+  nsresult rv = SetSelectionRange(start, end, direction);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
   }
@@ -806,14 +804,6 @@ DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirecti
   }
 }
 
-nsresult
-HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
-{
-  ErrorResult error;
-  GetSelectionDirection(aDirection, error);
-  return error.StealNSResult();
-}
-
 void
 HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aError)
 {
@@ -834,14 +824,6 @@ HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& a
   }
 
   aError.Throw(rv);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection)
-{
-  ErrorResult error;
-  SetSelectionDirection(aDirection, error);
-  return error.StealNSResult();
 }
 
 void
