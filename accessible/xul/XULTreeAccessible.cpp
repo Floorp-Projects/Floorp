@@ -865,6 +865,7 @@ XULTreeItemAccessibleBase::Shutdown()
   mTree = nullptr;
   mTreeView = nullptr;
   mRow = -1;
+  mParent = nullptr; // null-out to prevent base class's shutdown ops
 
   AccessibleWrap::Shutdown();
 }
