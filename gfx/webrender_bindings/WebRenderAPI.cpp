@@ -474,7 +474,7 @@ DisplayListBuilder::PopScrollLayer()
 
 void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
-                             const WrRect& aClip,
+                             const WrClipRegion& aClip,
                              const WrColor& aColor)
 {
   wr_dp_push_rect(mWrState, aBounds, aClip, aColor);
@@ -482,7 +482,7 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
-                                       const WrRect& aClip,
+                                       const WrClipRegion& aClip,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
                                        const nsTArray<WrGradientStop>& aStops,
@@ -497,7 +497,7 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
-                                       const WrRect& aClip,
+                                       const WrClipRegion& aClip,
                                        const WrPoint& aStartCenter,
                                        const WrPoint& aEndCenter,
                                        float aStartRadius,
@@ -515,17 +515,16 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
-                              const WrRect& aClip,
-                              const WrImageMask* aMask,
+                              const WrClipRegion& aClip,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage);
+  wr_dp_push_image(mWrState, aBounds, aClip, aFilter, aImage);
 }
 
 void
 DisplayListBuilder::PushIFrame(const WrRect& aBounds,
-                               const WrRect& aClip,
+                               const WrClipRegion& aClip,
                                PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWrState, aBounds, aClip, aPipeline);
@@ -533,7 +532,7 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
-                               const WrRect& aClip,
+                               const WrClipRegion& aClip,
                                const WrBorderSide& aTop,
                                const WrBorderSide& aRight,
                                const WrBorderSide& aBottom,
@@ -547,7 +546,7 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushText(const WrRect& aBounds,
-                             const WrRect& aClip,
+                             const WrClipRegion& aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
                              Range<const WrGlyphInstance> aGlyphBuffer,
@@ -562,7 +561,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
-                                  const WrRect& aClip,
+                                  const WrClipRegion& aClip,
                                   const WrRect& aBoxBounds,
                                   const WrPoint& aOffset,
                                   const WrColor& aColor,

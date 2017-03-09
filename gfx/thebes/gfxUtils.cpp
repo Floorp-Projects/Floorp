@@ -1482,6 +1482,8 @@ WebRenderGlyphHelper::BuildWebRenderCommands(WebRenderBridgeChild* aBridge,
 
   aBridge->SendAddRawFont(key, fontBuffer, mIndex);
 
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClip));
+
   for (size_t i = 0; i < aGlyphs.Length(); i++) {
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
@@ -1495,7 +1497,7 @@ WebRenderGlyphHelper::BuildWebRenderCommands(WebRenderBridgeChild* aBridge,
       wr_glyph_instances[j].y = glyphs[j].mPosition.y - aOffset.y;
     }
     aBuilder.PushText(wr::ToWrRect(aBounds),
-                      wr::ToWrRect(aClip),
+                      clipRegion,
                       glyph_array.color().value(),
                       key,
                       Range<const WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),

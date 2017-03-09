@@ -36,7 +36,7 @@ WebRenderBorderLayer::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                                aLayer->GetLayer()->GetTransform(),
                                WrMixBlendMode::Normal);
 
-  aBuilder.PushBorder(wr::ToWrRect(aRect), wr::ToWrRect(aClipRect),
+  aBuilder.PushBorder(wr::ToWrRect(aRect), aBuilder.BuildClipRegion(wr::ToWrRect(aClipRect)),
                       wr::ToWrBorderSide(aWidths[0], aColors[0], aBorderStyles[0]),
                       wr::ToWrBorderSide(aWidths[1], aColors[1], aBorderStyles[1]),
                       wr::ToWrBorderSide(aWidths[2], aColors[2], aBorderStyles[2]),
@@ -66,7 +66,7 @@ WebRenderBorderLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                                //GetAnimations(),
                                GetTransform(),
                                WrMixBlendMode::Normal);
-  aBuilder.PushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
+  aBuilder.PushBorder(wr::ToWrRect(rect), aBuilder.BuildClipRegion(wr::ToWrRect(clip)),
                       wr::ToWrBorderSide(mWidths[0], mColors[0], mBorderStyles[0]),
                       wr::ToWrBorderSide(mWidths[1], mColors[1], mBorderStyles[1]),
                       wr::ToWrBorderSide(mWidths[2], mColors[2], mBorderStyles[2]),
