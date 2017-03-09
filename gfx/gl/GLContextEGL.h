@@ -58,6 +58,10 @@ public:
         mIsDoubleBuffered = aIsDB;
     }
 
+    virtual bool SupportsRobustness() const override {
+        return sEGLLibrary.HasRobustness();
+    }
+
     virtual bool IsANGLE() const override {
         return sEGLLibrary.IsANGLE();
     }
