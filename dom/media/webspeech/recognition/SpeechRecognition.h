@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
 
+#include "DOMMediaStream.h"
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsITimer.h"
 #include "MediaStreamGraph.h"
