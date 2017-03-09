@@ -8,7 +8,9 @@
     android:layout_height="48dp"
     android:background="?android:attr/selectableItemBackground"
     android:focusable="true"
-    android:clickable="true">
+    android:clickable="true"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
     <ImageView
         android:id="@+id/icon"
@@ -22,7 +24,7 @@
         android:layout_height="48dp"
         android:layout_weight="1"
         android:layout_marginStart="32dp"
-        android:textColor="#ffdedede"
+        android:textColor="#ff212121"
         android:textSize="16sp"
         android:gravity="center_vertical" />
 

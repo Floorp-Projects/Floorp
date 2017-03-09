@@ -14,7 +14,7 @@
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:textColor="#ff8a8a8a"
+        android:textColor="#ff868686"
         android:textSize="16sp" />
 
     <android.support.v7.widget.RecyclerView
@@ -22,8 +22,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
-        android:paddingStart="18dp"
-        android:paddingEnd="16dp"
         android:paddingBottom="8dp" />
 
 </LinearLayout>
