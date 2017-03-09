@@ -15,6 +15,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Variant.h"
 #include "mozilla/css/Rule.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -31,7 +32,51 @@ class CSSRuleList;
 
 namespace css {
 
+class GroupRule;
 class GroupRuleRuleList;
+
+struct GeckoGroupRuleRules
+{
+  GeckoGroupRuleRules();
+  GeckoGroupRuleRules(GeckoGroupRuleRules&& aOther);
+  GeckoGroupRuleRules(const GeckoGroupRuleRules& aCopy);
+  ~GeckoGroupRuleRules();
+
+  void SetParentRule(GroupRule* aParentRule) {
+    for (Rule* rule : mRules) {
+      rule->SetParentRule(aParentRule);
+    }
+  }
+  void SetStyleSheet(StyleSheet* aSheet) {
+    for (Rule* rule : mRules) {
+      rule->SetStyleSheet(aSheet);
+    }
+  }
+
+  void Clear();
+  void Traverse(nsCycleCollectionTraversalCallback& cb);
+
+#ifdef DEBUG
+  void List(FILE* out, int32_t aIndent) const;
+#endif
+
+  int32_t StyleRuleCount() const { return mRules.Count(); }
+  Rule* GetStyleRuleAt(int32_t aIndex) const {
+    return mRules.SafeObjectAt(aIndex);
+  }
+
+  nsresult DeleteStyleRuleAt(uint32_t aIndex);
+
+  dom::CSSRuleList* CssRules(GroupRule* aParentRule);
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
+  IncrementalClearCOMRuleArray mRules;
+  RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
+};
+
+#define REDIRECT_TO_INNER(call_) \
+  return mInner.as<GeckoGroupRuleRules>().call_;
 
 // inherits from Rule so it can be shared between
 // MediaRule and DocumentRule
@@ -48,32 +93,42 @@ public:
   virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const override {
+    REDIRECT_TO_INNER(List(out, aIndent))
+  }
 #endif
   virtual void SetStyleSheet(StyleSheet* aSheet) override;
 
 public:
   void AppendStyleRule(Rule* aRule);
 
-  int32_t StyleRuleCount() const { return mRules.Count(); }
-  Rule* GetStyleRuleAt(int32_t aIndex) const;
+  int32_t StyleRuleCount() const {
+    REDIRECT_TO_INNER(StyleRuleCount())
+  }
+  Rule* GetStyleRuleAt(uint32_t aIndex) const {
+    REDIRECT_TO_INNER(GetStyleRuleAt(aIndex))
+  }
 
   typedef bool (*RuleEnumFunc)(Rule* aElement, void* aData);
   bool EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
 
   /*
-   * The next three methods should never be called unless you have first
+   * The next two methods should never be called unless you have first
    * called WillDirty() on the parent stylesheet.  After they are
    * called, DidDirty() needs to be called on the sheet.
    */
-  nsresult DeleteStyleRuleAt(uint32_t aIndex);
+  nsresult DeleteStyleRuleAt(uint32_t aIndex) {
+    REDIRECT_TO_INNER(DeleteStyleRuleAt(aIndex));
+  }
   nsresult InsertStyleRuleAt(uint32_t aIndex, Rule* aRule);
 
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) = 0;
 
   // non-virtual -- it is only called by subclasses
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    REDIRECT_TO_INNER(SizeOfExcludingThis(aMallocSizeOf))
+  }
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override = 0;
 
   // WebIDL API
@@ -93,9 +148,19 @@ protected:
                       uint32_t* _retval);
   nsresult DeleteRule(uint32_t aIndex);
 
-  IncrementalClearCOMRuleArray mRules;
-  RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
+  // Must only be called if this is a Gecko GroupRule.
+  IncrementalClearCOMRuleArray& GeckoRules() {
+    return mInner.as<GeckoGroupRuleRules>().mRules;
+  }
+  const IncrementalClearCOMRuleArray& GeckoRules() const {
+    return mInner.as<GeckoGroupRuleRules>().mRules;
+  }
+
+private:
+  Variant<GeckoGroupRuleRules> mInner;
 };
+
+#undef REDIRECT_TO_INNER
 
 // Implementation of WebIDL CSSConditionRule.
 class ConditionRule : public GroupRule
