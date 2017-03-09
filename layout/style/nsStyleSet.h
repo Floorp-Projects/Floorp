@@ -277,12 +277,19 @@ class nsStyleSet final
     eSkipParentDisplayBasedStyleFixup = 1 << 3
   };
 
-  // Get a style context for an anonymous box.  aPseudoTag is the
-  // pseudo-tag to use and must be non-null.  aFlags will be forwarded
-  // to a GetContext call internally.
+  // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
+  // use and must be non-null.  It must be an anon box, and must be one that
+  // inherits style from the given aParentContext.  aFlags will be forwarded to
+  // a GetContext call internally.
   already_AddRefed<nsStyleContext>
   ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext,
                            uint32_t aFlags = eNoFlags);
+
+  // Get a style context for an anonymous box that does not inherit style from
+  // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
+  // must be an anon box, and must be a non-inheriting one.
+  already_AddRefed<nsStyleContext>
+  ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
 
 #ifdef MOZ_XUL
   // Get a style context for a XUL tree pseudo.  aPseudoTag is the

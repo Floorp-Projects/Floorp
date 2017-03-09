@@ -1829,7 +1829,7 @@ nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   MOZ_ASSERT(aTextNode && aTextNode->IsNodeOfType(nsINode::eTEXT));
   return GetContext(aParentContext, mRuleTree, nullptr,
                     nsCSSAnonBoxes::mozText,
-                    CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+                    CSSPseudoElementType::InheritingAnonBox, nullptr, eNoFlags);
 }
 
 already_AddRefed<nsStyleContext>
@@ -1837,7 +1837,7 @@ nsStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContex
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
                     nsCSSAnonBoxes::firstLetterContinuation,
-                    CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+                    CSSPseudoElementType::InheritingAnonBox, nullptr, eNoFlags);
 }
 
 already_AddRefed<nsStyleContext>
@@ -1853,7 +1853,7 @@ nsStyleSet::ResolveStyleForPlaceholder()
   RefPtr<nsStyleContext> retval =
     GetContext(nullptr, mRuleTree, nullptr,
                nsCSSAnonBoxes::oofPlaceholder,
-               CSSPseudoElementType::AnonBox, nullptr, eNoFlags);
+               CSSPseudoElementType::NonInheritingAnonBox, nullptr, eNoFlags);
   cache = retval;
   return retval.forget();
 }
@@ -2063,7 +2063,8 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
 #ifdef DEBUG
-    bool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag)
+    bool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
+                     !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag)
 #ifdef MOZ_XUL
                  && !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag)
 #endif
@@ -2097,8 +2098,49 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 
   return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
-                    aPseudoTag, CSSPseudoElementType::AnonBox,
+                    aPseudoTag, CSSPseudoElementType::InheritingAnonBox,
                     nullptr, aFlags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
+{
+  NS_ENSURE_FALSE(mInShutdown, nullptr);
+
+#ifdef DEBUG
+    bool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
+                     nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag)
+#ifdef MOZ_XUL
+                 && !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag)
+#endif
+      ;
+    NS_PRECONDITION(isAnonBox, "Unexpected pseudo");
+#endif
+
+  nsCSSAnonBoxes::NonInheriting type =
+    nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(aPseudoTag);
+  RefPtr<nsStyleContext>& cache = mNonInheritingStyleContexts[type];
+  if (cache) {
+    RefPtr<nsStyleContext> retval = cache;
+    return retval.forget();
+  }
+
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
+  AnonBoxRuleProcessorData data(PresContext(), aPseudoTag, &ruleWalker);
+  FileRules(EnumRulesMatching<AnonBoxRuleProcessorData>, &data, nullptr,
+            &ruleWalker);
+
+  MOZ_ASSERT(aPseudoTag != nsCSSAnonBoxes::pageContent,
+             "If nsCSSAnonBoxes::pageContent ends up non-inheriting, move the "
+             "@page handling from ResolveAnonymousBoxStyle to "
+             "ResolveNonInheritingAnonymousBoxStyle");
+
+  RefPtr<nsStyleContext> retval =
+    GetContext(nullptr, ruleWalker.CurrentNode(), nullptr,
+               aPseudoTag, CSSPseudoElementType::NonInheritingAnonBox,
+               nullptr, eNoFlags);
+  cache = retval;
+  return retval.forget();
 }
 
 #ifdef MOZ_XUL
