@@ -14,6 +14,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const MARIONETTE_CONTRACT_ID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
 
+const PREF_ENABLED = "marionette.enabled";
+const PREF_ENABLED_FALLBACK = "marionette.defaultPrefs.enabled";
+const PREF_PORT = "marionette.port";
+const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
+const PREF_LOG_LEVEL = "marionette.log.level";
+const PREF_LOG_LEVEL_FALLBACK = "marionette.logging";
+const PREF_FORCE_LOCAL = "marionette.forcelocal";
+const PREF_FORCE_LOCAL_FALLBACK = "marionette.force-local";
+
 const DEFAULT_PORT = 2828;
 const DEFAULT_LOG_LEVEL = "info";
 const LOG_LEVELS = new Map([
@@ -50,20 +59,15 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
 //
 // This shim can be removed when Firefox 55 ships.
 const prefs = {
-  get enabled () {
-    let fallback = Preferences.get("marionette.defaultPrefs.enabled", false);
-    return Preferences.get("marionette.enabled", fallback);
-  },
-
   get port () {
-    let fallback = Preferences.get("marionette.defaultPrefs.port", DEFAULT_PORT);
-    return Preferences.get("marionette.port", fallback);
+    let fallback = Preferences.get(PREF_PORT_FALLBACK, DEFAULT_PORT);
+    return Preferences.get(PREF_PORT, fallback);
   },
 
   get logLevel () {
     let level = DEFAULT_LOG_LEVEL;
-    let fallback = Preferences.get("marionette.logging", level);
-    let p = Preferences.get("marionette.log.level", fallback);
+    let fallback = Preferences.get(PREF_LOG_LEVEL_FALLBACK, level);
+    let p = Preferences.get(PREF_LOG_LEVEL, fallback);
 
     switch (typeof p) {
       // Gecko >= 46
@@ -86,8 +90,8 @@ const prefs = {
   },
 
   get forceLocal () {
-    let fallback = Preferences.get("marionette.force-local", true);
-    return Preferences.get("marionette.forcelocal", fallback);
+    let fallback = Preferences.get(PREF_FORCE_LOCAL_FALLBACK, true);
+    return Preferences.get(PREF_FORCE_LOCAL, fallback);
   },
 
   readFromEnvironment (key) {
@@ -115,11 +119,6 @@ const prefs = {
 };
 
 function MarionetteComponent() {
-  // keeps track of whether Marionette is available,
-  // either as a result of the marionette.enabled pref
-  // or by use of the --marionette flag
-  this.enabled = prefs.enabled;
-
   // guards against this component
   // being initialised multiple times
   this.running = false;
@@ -136,6 +135,13 @@ function MarionetteComponent() {
   this.finalUIStartup = false;
 
   this.logger = this.setupLogger(prefs.logLevel);
+  Services.prefs.addObserver(PREF_ENABLED, this, false);
+
+  if (Preferences.isSet(PREF_ENABLED_FALLBACK)) {
+    this.logger.warn(`Deprecated preference ${PREF_ENABLED_FALLBACK} detected, ` +
+        `please use ${PREF_ENABLED}`);
+    Preferences.set(PREF_ENABLED, Preferences.get(PREF_ENABLED_FALLBACK));
+  }
 }
 
 MarionetteComponent.prototype = {
@@ -163,13 +169,29 @@ MarionetteComponent.prototype.onStopListening = function (socket, status) {
 MarionetteComponent.prototype.handle = function (cmdLine) {
   if (cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
-    this.logger.debug("Marionette enabled via command-line flag");
-    this.init();
   }
 };
 
+Object.defineProperty(MarionetteComponent.prototype, "enabled", {
+  set (value) {
+    Preferences.set(PREF_ENABLED, value);
+  },
+
+  get () {
+    return Preferences.get(PREF_ENABLED);
+  },
+});
+
 MarionetteComponent.prototype.observe = function (subject, topic, data) {
   switch (topic) {
+    case "nsPref:changed":
+      if (Preferences.get(PREF_ENABLED)) {
+        this.init();
+      } else {
+        this.uninit();
+      }
+      break;
+
     case "profile-after-change":
       // Using sessionstore-windows-restored as the xpcom category doesn't
       // seem to work, so we wait for that by adding an observer here.
@@ -256,8 +278,6 @@ MarionetteComponent.prototype.init = function () {
     return;
   }
 
-  this.running = true;
-
   if (!prefs.forceLocal) {
     // See bug 800138.  Because the first socket that opens with
     // force-local=false fails, we open a dummy socket that will fail.
@@ -281,6 +301,7 @@ MarionetteComponent.prototype.init = function () {
   } finally {
     if (s) {
       this.server = s;
+      this.running = true;
     }
   }
 };
@@ -290,6 +311,7 @@ MarionetteComponent.prototype.uninit = function () {
     return;
   }
   this.server.stop();
+  this.logger.info("Ceased listening");
   this.running = false;
 };
 
