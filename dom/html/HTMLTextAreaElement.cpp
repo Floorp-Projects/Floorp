@@ -749,49 +749,14 @@ HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection,
   mState.SetSelectionDirection(aDirection, aError);
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionRange(int32_t aSelectionStart,
-                                       int32_t aSelectionEnd,
-                                       const nsAString& aDirection)
-{
-  ErrorResult error;
-  Optional<nsAString> dir;
-  dir = &aDirection;
-  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, error);
-  return error.StealNSResult();
-}
-
 void
 HTMLTextAreaElement::SetSelectionRange(uint32_t aSelectionStart,
                                        uint32_t aSelectionEnd,
                                        const Optional<nsAString>& aDirection,
                                        ErrorResult& aError)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-  if (textControlFrame) {
-    // Default to forward, even if not specified.
-    // Note that we don't currently support directionless selections, so
-    // "none" is treated like "forward".
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-    if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-
-    rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
-    if (NS_SUCCEEDED(rv)) {
-      rv = textControlFrame->ScrollSelectionIntoView();
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
-                                 true, false);
-      asyncDispatcher->PostDOMEvent();
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  mState.SetSelectionRange(aSelectionStart, aSelectionEnd,
+                           aDirection, aError);
 }
 
 void

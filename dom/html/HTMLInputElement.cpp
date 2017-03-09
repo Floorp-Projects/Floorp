@@ -6268,8 +6268,8 @@ HTMLInputElement::InputTextLength(CallerType aCallerType)
 }
 
 void
-HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
-                                    int32_t aSelectionEnd,
+HTMLInputElement::SetSelectionRange(uint32_t aSelectionStart,
+                                    uint32_t aSelectionEnd,
                                     const Optional<nsAString>& aDirection,
                                     ErrorResult& aRv)
 {
@@ -6278,42 +6278,9 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
     return;
   }
 
-  nsresult rv = SetSelectionRange(aSelectionStart, aSelectionEnd,
-    aDirection.WasPassed() ? aDirection.Value() : NullString());
-
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
-                                    int32_t aSelectionEnd,
-                                    const nsAString& aDirection)
-{
-  nsresult rv = NS_OK;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-  if (textControlFrame) {
-    // Default to forward, even if not specified.
-    // Note that we don't currently support directionless selections, so
-    // "none" is treated like "forward".
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-    if (!aDirection.IsEmpty() && aDirection.EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-
-    rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
-    if (NS_SUCCEEDED(rv)) {
-      rv = textControlFrame->ScrollSelectionIntoView();
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
-                                 true, false);
-      asyncDispatcher->PostDOMEvent();
-    }
-  }
-
-  return rv;
+  nsTextEditorState* state = GetEditorState();
+  MOZ_ASSERT(state, "SupportsTextSelection() returned true!");
+  state->SetSelectionRange(aSelectionStart, aSelectionEnd, aDirection, aRv);
 }
 
 void
