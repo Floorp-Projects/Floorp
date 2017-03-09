@@ -95,28 +95,6 @@
     return ReflectApply(StringPrototypeEndsWith, str, [needle]);
   }
 
-  function StringReplace(str, regexp, replacement) {
-    assertEq(typeof str === "string" && typeof regexp === "object" &&
-             typeof replacement === "function", true,
-             "StringReplace must be called with a string, a RegExp object and a function");
-
-    regexp.lastIndex = 0;
-
-    var result = "";
-    var last = 0;
-    while (true) {
-      var match = ReflectApply(RegExpPrototypeExec, regexp, [str]);
-      if (!match) {
-        result += ReflectApply(StringPrototypeSubstring, str, [last]);
-        return result;
-      }
-
-      result += ReflectApply(StringPrototypeSubstring, str, [last, match.index]);
-      result += ReflectApply(replacement, null, match);
-      last = match.index + match[0].length;
-    }
-  }
-
   function StringSplit(str, delimiter) {
     assertEq(typeof str === "string" && typeof delimiter === "string", true,
              "StringSplit must be called with two string arguments");
@@ -624,18 +602,10 @@
   }
   global.reportMatch = reportMatch;
 
-  function normalizeSource(source) {
-    source = String(source);
-    source = StringReplace(source, /([(){},.:\[\]])/mg, (_, punctuator) => ` ${punctuator} `);
-    source = StringReplace(source, /\s+/mg, _ => ' ');
-
-    return source;
-  }
-
   function compareSource(expect, actual, summary) {
     // compare source
-    var expectP = normalizeSource(expect);
-    var actualP = normalizeSource(actual);
+    var expectP = String(expect);
+    var actualP = String(actual);
 
     print('expect:\n' + expectP);
     print('actual:\n' + actualP);
