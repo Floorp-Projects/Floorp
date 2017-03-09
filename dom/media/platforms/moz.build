@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     'agnostic/AgnosticDecoderModule.cpp',
     'agnostic/BlankDecoderModule.cpp',
     'agnostic/DummyMediaDataDecoder.cpp',
+    'agnostic/NullDecoderModule.cpp',
     'agnostic/OpusDecoder.cpp',
     'agnostic/TheoraDecoder.cpp',
     'agnostic/VorbisDecoder.cpp',
