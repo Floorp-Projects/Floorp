@@ -18,7 +18,7 @@ DispatcherTrait::Dispatch(const char* aName,
                           TaskCategory aCategory,
                           already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return Dispatcher::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
+  return ValidatingDispatcher::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
 }
 
 nsIEventTarget*

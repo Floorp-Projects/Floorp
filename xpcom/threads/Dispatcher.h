@@ -31,42 +31,12 @@ class TabGroup;
 // only functionality offered by a Dispatcher is the ability to dispatch
 // runnables to the group. TabGroup, DocGroup, and SystemGroup are the concrete
 // implementations of Dispatcher.
-class Dispatcher
-{
-public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-  // Implementations of this method must be safe to call off the main thread.
-  virtual nsresult Dispatch(const char* aName,
-                            TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) = 0;
-
-  // Implementations of this method must be safe to call off the main thread.
-  // The returned nsIEventTarget must also be usable from any thread.
-  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const = 0;
-
-  // Must always be called on the main thread. The returned AbstractThread can
-  // always be used off the main thread.
-  AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
-
-  // This method performs a safe cast. It returns null if |this| is not of the
-  // requested type.
-  virtual dom::TabGroup* AsTabGroup() { return nullptr; }
-
-  static nsresult UnlabeledDispatch(const char* aName,
-                                    TaskCategory aCategory,
-                                    already_AddRefed<nsIRunnable>&& aRunnable);
-
-protected:
-  // Implementations are guaranteed that this method is called on the main
-  // thread.
-  virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) = 0;
-};
-
-class ValidatingDispatcher : public Dispatcher
+class ValidatingDispatcher
 {
 public:
   ValidatingDispatcher();
+
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   class MOZ_STACK_CLASS AutoProcessEvent final {
   public:
@@ -88,16 +58,28 @@ public:
 
   bool* GetValidAccessPtr() { return &mAccessValid; }
 
-  nsresult Dispatch(const char* aName,
-                    TaskCategory aCategory,
-                    already_AddRefed<nsIRunnable>&& aRunnable) override;
+  virtual nsresult Dispatch(const char* aName,
+                            TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable);
 
-  nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+  virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+
+  // Must always be called on the main thread. The returned AbstractThread can
+  // always be used off the main thread.
+  AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
+
+  // This method performs a safe cast. It returns null if |this| is not of the
+  // requested type.
+  virtual dom::TabGroup* AsTabGroup() { return nullptr; }
+
+  static nsresult UnlabeledDispatch(const char* aName,
+                                    TaskCategory aCategory,
+                                    already_AddRefed<nsIRunnable>&& aRunnable);
 
 protected:
   // Implementations are guaranteed that this method is called on the main
   // thread.
-  AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory) override;
+  virtual AbstractThread* AbstractMainThreadForImpl(TaskCategory aCategory);
 
   // Helper method to create an event target specific to a particular TaskCategory.
   virtual already_AddRefed<nsIEventTarget>
