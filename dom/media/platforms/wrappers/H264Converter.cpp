@@ -6,12 +6,14 @@
 
 #include "mozilla/TaskQueue.h"
 
+#include "DecoderDoctorDiagnostics.h"
 #include "H264Converter.h"
 #include "ImageContainer.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
+#include "PDMFactory.h"
 
 namespace mozilla
 {
@@ -268,6 +270,14 @@ H264Converter::OnDecoderInitFailed(const MediaResult& aError)
     MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                 RESULT_DETAIL("Unable to initialize H264 decoder")),
     __func__);
+}
+
+bool
+H264Converter::CanRecycleDecoder() const
+{
+  MOZ_ASSERT(mDecoder);
+  return MediaPrefs::MediaDecoderCheckRecycling()
+         && mDecoder->SupportDecoderRecycling();
 }
 
 void
