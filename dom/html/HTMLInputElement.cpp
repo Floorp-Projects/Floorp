@@ -2010,7 +2010,8 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
 
       nsresult rv =
         SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify);
+                                 nsTextEditorState::eSetValue_Notify |
+                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2022,7 +2023,8 @@ HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
     } else {
       nsresult rv =
         SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                 nsTextEditorState::eSetValue_Notify);
+                                 nsTextEditorState::eSetValue_Notify |
+                                 nsTextEditorState::eSetValue_MoveCursorToEnd);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2866,8 +2868,10 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
     return rv.StealNSResult();
   } else {
     nsresult rv =
-      SetValueInternal(aValue, nsTextEditorState::eSetValue_BySetUserInput |
-                               nsTextEditorState::eSetValue_Notify);
+      SetValueInternal(aValue,
+                       nsTextEditorState::eSetValue_BySetUserInput |
+                       nsTextEditorState::eSetValue_Notify|
+                       nsTextEditorState::eSetValue_MoveCursorToEnd);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -6321,14 +6325,9 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, ErrorResult& aRv)
   }
 
   int32_t start, end;
-  aRv = GetSelectionRange(&start, &end);
+  GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
-    nsTextEditorState* state = GetEditorState();
-    if (state && state->IsSelectionCached()) {
-      start = state->GetSelectionProperties().GetStart();
-      end = state->GetSelectionProperties().GetEnd();
-      aRv = NS_OK;
-    }
+    return;
   }
 
   SetRangeText(aReplacement, start, end, mozilla::dom::SelectionMode::Preserve,
@@ -6364,14 +6363,9 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
   }
 
   if (aSelectionStart == -1 && aSelectionEnd == -1) {
-    aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
+    GetSelectionRange(&aSelectionStart, &aSelectionEnd, aRv);
     if (aRv.Failed()) {
-      nsTextEditorState* state = GetEditorState();
-      if (state && state->IsSelectionCached()) {
-        aSelectionStart = state->GetSelectionProperties().GetStart();
-        aSelectionEnd = state->GetSelectionProperties().GetEnd();
-        aRv = NS_OK;
-      }
+      return;
     }
   }
 
@@ -6436,17 +6430,7 @@ HTMLInputElement::GetSelectionStart(ErrorResult& aRv)
   }
 
   int32_t selEnd, selStart;
-  nsresult rv = GetSelectionRange(&selStart, &selEnd);
-
-  if (NS_FAILED(rv)) {
-    nsTextEditorState* state = GetEditorState();
-    if (state && state->IsSelectionCached()) {
-      return Nullable<int32_t>(state->GetSelectionProperties().GetStart());
-    }
-    aRv.Throw(rv);
-    return Nullable<int32_t>();
-  }
-
+  GetSelectionRange(&selStart, &selEnd, aRv);
   return Nullable<int32_t>(selStart);
 }
 
@@ -6477,7 +6461,7 @@ HTMLInputElement::SetSelectionStart(const Nullable<int32_t>& aSelectionStart,
   }
 
   int32_t start, end;
-  aRv = GetSelectionRange(&start, &end);
+  GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -6498,17 +6482,7 @@ HTMLInputElement::GetSelectionEnd(ErrorResult& aRv)
   }
 
   int32_t selEnd, selStart;
-  nsresult rv = GetSelectionRange(&selStart, &selEnd);
-
-  if (NS_FAILED(rv)) {
-    nsTextEditorState* state = GetEditorState();
-    if (state && state->IsSelectionCached()) {
-      return Nullable<int32_t>(state->GetSelectionProperties().GetEnd());
-    }
-    aRv.Throw(rv);
-    return Nullable<int32_t>();
-  }
-
+  GetSelectionRange(&selStart, &selEnd, aRv);
   return Nullable<int32_t>(selEnd);
 }
 
@@ -6539,7 +6513,7 @@ HTMLInputElement::SetSelectionEnd(const Nullable<int32_t>& aSelectionEnd,
   }
 
   int32_t start, end;
-  aRv = GetSelectionRange(&start, &end);
+  GetSelectionRange(&start, &end, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -6560,22 +6534,19 @@ HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
-                                    int32_t* aSelectionEnd)
+                                    int32_t* aSelectionEnd,
+                                    ErrorResult& aRv)
 {
-  // Flush frames, because our editor state will want to work with the frame.
-  if (IsInComposedDoc()) {
-    GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
-  }
-
   nsTextEditorState* state = GetEditorState();
   if (!state) {
     // Not a text control.
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
 
-  return state->GetSelectionRange(aSelectionStart, aSelectionEnd);
+  state->GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);
 }
 
 static void
@@ -6654,7 +6625,7 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection, ErrorResult
   }
 
   int32_t start, end;
-  aRv = GetSelectionRange(&start, &end);
+  GetSelectionRange(&start, &end, aRv);
   if (!aRv.Failed()) {
     aRv = SetSelectionRange(start, end, aDirection);
   }
@@ -8518,7 +8489,8 @@ HTMLInputElement::HasCachedSelection()
   if (state) {
     isCached = state->IsSelectionCached() &&
                state->HasNeverInitializedBefore() &&
-               !state->GetSelectionProperties().IsDefault();
+               state->GetSelectionProperties().GetStart() !=
+                 state->GetSelectionProperties().GetEnd();
     if (isCached) {
       state->WillInitEagerly();
     }

@@ -46,6 +46,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/layers/ScrollInputMethods.h"
 
@@ -1497,7 +1498,13 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     }
   }
 
-  // The selection cache is no longer going to be valid
+  // The selection cache is no longer going to be valid.
+  //
+  // XXXbz Shouldn't we do this at the point when we're actually about to
+  // restore the properties or something?  As things stand, if UnbindFromFrame
+  // happens before our RestoreSelectionState runs, it looks like we'll lose our
+  // selection info, because we will think we don't have it cached and try to
+  // read it from the selection controller, which will not have it yet.
   if (number) {
     number->ClearSelectionCached();
   } else {
@@ -1557,39 +1564,48 @@ nsTextEditorState::SetSelectionProperties(nsTextEditorState::SelectionProperties
   }
 }
 
-nsresult
+void
 nsTextEditorState::GetSelectionRange(int32_t* aSelectionStart,
-                                     int32_t* aSelectionEnd)
+                                     int32_t* aSelectionEnd,
+                                     ErrorResult& aRv)
 {
   MOZ_ASSERT(aSelectionStart);
   MOZ_ASSERT(aSelectionEnd);
+  MOZ_ASSERT(IsSelectionCached() || GetSelectionController(),
+             "How can we not have a cached selection if we have no selection "
+             "controller?");
 
-  if (!mBoundFrame) {
-    return NS_ERROR_FAILURE;
+  // Note that we may have both IsSelectionCached() _and_
+  // GetSelectionController() if we haven't initialized our editor yet.
+  if (IsSelectionCached()) {
+    const SelectionProperties& props = GetSelectionProperties();
+    *aSelectionStart = props.GetStart();
+    *aSelectionEnd = props.GetEnd();
+    return;
   }
 
-  // It's not clear that all the checks here are needed, but the previous
-  // version of this code in nsTextControlFrame was doing them, so we keep them
-  // for now.
-
-  nsresult rv = mBoundFrame->EnsureEditorInitialized();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsISelectionController* selCon = GetSelectionController();
-  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                            getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                     getter_AddRefs(selection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  if (NS_WARN_IF(!selection)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   dom::Selection* sel = selection->AsSelection();
   mozilla::dom::Element* root = GetRootNode();
-  NS_ENSURE_STATE(root);
+  if (NS_WARN_IF(!root)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
   nsContentUtils::GetSelectionInTextControl(sel, root,
                                             *aSelectionStart, *aSelectionEnd);
-  return NS_OK;
 }
 
 nsresult
@@ -1698,33 +1714,30 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   }
 
   // Save our selection state if needed.
-  // Note that GetSelectionRange attempts to initialize the
-  // editor before grabbing the range, and because this is not an acceptable
-  // side effect for unbinding from a text control frame, we need to call
-  // GetSelectionRange before calling DestroyEditor, and only if
-  // mEditorInitialized indicates that we actually have an editor available.
-  int32_t start = 0, end = 0;
-  nsITextControlFrame::SelectionDirection direction =
-    nsITextControlFrame::eForward;
-  if (mEditorInitialized) {
+  // Note that GetSelectionRange will attempt to work with our selection
+  // controller, so we should make sure we do it before we start doing things
+  // like destroying our editor (if we have one), tearing down the selection
+  // controller, and so forth.
+  if (!IsSelectionCached()) {
+    // Go ahead and cache it now.
+    int32_t start = 0, end = 0;
+    nsITextControlFrame::SelectionDirection direction =
+      nsITextControlFrame::eForward;
+    IgnoredErrorResult rangeRv;
+    GetSelectionRange(&start, &end, rangeRv);
+    GetSelectionDirection(&direction);
+    MOZ_ASSERT(aFrame == mBoundFrame);
+    SelectionProperties& props = GetSelectionProperties();
+    props.SetStart(start);
+    props.SetEnd(end);
+    props.SetDirection(direction);
     HTMLInputElement* number = GetParentNumberControl(aFrame);
     if (number) {
       // If we are inside a number control, cache the selection on the
       // parent control, because this text editor state will be destroyed
       // together with the native anonymous text control.
-      SelectionProperties props;
-      GetSelectionRange(&start, &end);
-      GetSelectionDirection(&direction);
-      props.SetStart(start);
-      props.SetEnd(end);
-      props.SetDirection(direction);
-      number->SetSelectionProperties(props);
+      number->SetSelectionCached();
     } else {
-      GetSelectionRange(&start, &end);
-      GetSelectionDirection(&direction);
-      mSelectionProperties.SetStart(start);
-      mSelectionProperties.SetEnd(end);
-      mSelectionProperties.SetDirection(direction);
       mSelectionCached = true;
     }
   }
@@ -2262,6 +2275,19 @@ nsTextEditorState::SetValue(const nsAString& aValue, uint32_t aFlags)
     }
     if (!mValue->Assign(value, fallible)) {
       return false;
+    }
+
+    // Since we have no editor we presumably have cached selection state.
+    if (IsSelectionCached()) {
+      SelectionProperties& props = GetSelectionProperties();
+      if (aFlags & eSetValue_MoveCursorToEnd) {
+        props.SetStart(value.Length());
+        props.SetEnd(value.Length());
+      } else {
+        // Make sure our cached selection position is not outside the new value.
+        props.SetStart(std::min(uint32_t(props.GetStart()), value.Length()));
+        props.SetEnd(std::min(uint32_t(props.GetEnd()), value.Length()));
+      }
     }
 
     // Update the frame display if needed

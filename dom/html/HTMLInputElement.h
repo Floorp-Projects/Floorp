@@ -240,8 +240,9 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
-                               int32_t* aSelectionEnd) override;
+  virtual void GetSelectionRange(int32_t* aSelectionStart,
+                                 int32_t* aSelectionEnd,
+                                 ErrorResult& aRv) override;
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
@@ -293,11 +294,10 @@ public:
 
   void MaybeLoadImage();
 
-  void SetSelectionProperties(const nsTextEditorState::SelectionProperties& aProps)
+  void SetSelectionCached()
   {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     mSelectionCached = true;
-    mSelectionProperties = aProps;
   }
   bool IsSelectionCached() const
   {
