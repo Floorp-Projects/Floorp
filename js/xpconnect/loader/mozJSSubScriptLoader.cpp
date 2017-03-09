@@ -410,12 +410,12 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
 
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(globalObject))) {
-      return NS_ERROR_UNEXPECTED;
+        return NS_ERROR_UNEXPECTED;
     }
 
     RefPtr<Promise> promise = Promise::Create(globalObject, result);
     if (result.Failed()) {
-      promise = nullptr;
+        return result.StealNSResult();
     }
 
     DebugOnly<bool> asJS = ToJSValue(jsapi.cx(), promise, retval);
