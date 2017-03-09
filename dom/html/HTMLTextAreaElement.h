@@ -109,8 +109,9 @@ public:
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
-                               int32_t* aSelectionEnd) override;
+  virtual void GetSelectionRange(int32_t* aSelectionStart,
+                                 int32_t* aSelectionEnd,
+                                 ErrorResult& aRv) override;
 
 
   // nsIContent
