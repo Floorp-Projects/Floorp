@@ -46,6 +46,7 @@ add_task(function* () {
     let menu_cut_disabled, menu_copy_disabled;
 
     yield BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");
+    yield BrowserTestUtils.browserLoaded(browser);
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
@@ -56,6 +57,7 @@ add_task(function* () {
     yield new Promise(closeMenu);
 
     yield BrowserTestUtils.loadURI(browser, "data:text/html,<div contentEditable='true'>hello!</div>");
+    yield BrowserTestUtils.browserLoaded(browser);
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
@@ -66,6 +68,7 @@ add_task(function* () {
     yield new Promise(closeMenu);
 
     yield BrowserTestUtils.loadURI(browser, "about:preferences");
+    yield BrowserTestUtils.browserLoaded(browser);
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
