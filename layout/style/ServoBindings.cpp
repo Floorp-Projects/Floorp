@@ -424,6 +424,13 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
   return rule->GetValues();
 }
 
+bool
+Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
+                            RawGeckoStyleAnimationListBorrowed aB)
+{
+  return *aA == *aB;
+}
+
 void
 Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {

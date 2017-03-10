@@ -191,6 +191,8 @@ RawServoDeclarationBlockStrong
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTag,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel);
+bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
+                                 RawGeckoStyleAnimationListBorrowed);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
