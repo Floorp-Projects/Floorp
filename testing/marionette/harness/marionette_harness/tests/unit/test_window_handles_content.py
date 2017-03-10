@@ -58,7 +58,9 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
         # Check that the new tab has the correct page loaded
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
-        self.assertEqual(self.marionette.get_url(), self.empty_page)
+        Wait(self.marionette, self.marionette.timeout.page_load).until(
+            lambda _: self.marionette.get_url() == self.empty_page,
+            message="The expected page '{}' has not been loaded".format(self.empty_page))
 
         # Ensure navigate works in our current window
         other_page = self.marionette.absolute_url("test.html")
@@ -87,4 +89,6 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
 
         self.marionette.switch_to_window(new_tab)
         self.assertEqual(self.marionette.current_window_handle, new_tab)
-        self.assertEqual(self.marionette.get_url(), self.empty_page)
+        Wait(self.marionette, self.marionette.timeout.page_load).until(
+            lambda _: self.marionette.get_url() == self.empty_page,
+            message="The expected page '{}' has not been loaded".format(self.empty_page))
