@@ -50,6 +50,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -72,6 +73,7 @@ using namespace mozilla::layers;
 MOZ_MTLOG_MODULE("mediapipeline")
 
 namespace mozilla {
+extern mozilla::LogModule* AudioLogModule();
 
 class VideoConverterListener
 {
@@ -1839,6 +1841,7 @@ class GenericReceiveListener : public MediaStreamListener
     : source_(source),
       track_id_(track_id),
       played_ticks_(0),
+      last_log_(0),
       principal_handle_(PRINCIPAL_HANDLE_NONE) {}
 
   virtual ~GenericReceiveListener() {}
@@ -1888,6 +1891,7 @@ class GenericReceiveListener : public MediaStreamListener
   SourceMediaStream *source_;
   const TrackID track_id_;
   TrackTicks played_ticks_;
+  TrackTicks last_log_; // played_ticks_ when we last logged
   PrincipalHandle principal_handle_;
 };
 
@@ -2014,6 +2018,14 @@ public:
       // Handle track not actually added yet or removed/finished
       if (source_->AppendToTrack(track_id_, &segment)) {
         played_ticks_ += frames;
+        if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
+          if (played_ticks_ > last_log_ + WEBRTC_DEFAULT_SAMPLE_RATE) { // ~ 1 second
+            MOZ_LOG(AudioLogModule(), LogLevel::Debug,
+                    ("%p: Inserting %" PRIuSIZE " samples into track %d, total = %" PRIu64,
+                     (void*) this, frames, track_id_, played_ticks_));
+            last_log_ = played_ticks_;
+          }
+        }
       } else {
         MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
         // we can't un-read the data, but that's ok since we don't want to
