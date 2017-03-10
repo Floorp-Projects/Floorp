@@ -57,8 +57,8 @@ fails == flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-v
 == flexbox-baseline-single-item-001b.html flexbox-baseline-single-item-001b.html
 
 # Basic tests with with blocks as flex items
-fails == flexbox-basic-block-horiz-001.xhtml flexbox-basic-block-horiz-001.xhtml
-fails == flexbox-basic-block-vert-001.xhtml flexbox-basic-block-vert-001.xhtml
+== flexbox-basic-block-horiz-001.xhtml flexbox-basic-block-horiz-001.xhtml
+== flexbox-basic-block-vert-001.xhtml flexbox-basic-block-vert-001.xhtml
 
 # Tests for basic handling of <canvas>/<img>/etc as a flex item
 fails == flexbox-basic-canvas-horiz-001.xhtml flexbox-basic-canvas-horiz-001.xhtml
@@ -103,10 +103,10 @@ fails == flexbox-basic-video-vert-001.xhtml flexbox-basic-video-vert-001.xhtml
 # Tests for intrinsic ratio interactions on flex items.
 # (Note that tests 001 and 002 share a reference case; they render the same,
 # because they don't do any direction-specific stretching/flexing.)
-fails == flexbox-intrinsic-ratio-001.html flexbox-intrinsic-ratio-001.html
-fails == flexbox-intrinsic-ratio-002.html flexbox-intrinsic-ratio-002.html
-fails == flexbox-intrinsic-ratio-003.html flexbox-intrinsic-ratio-003.html
-fails == flexbox-intrinsic-ratio-004.html flexbox-intrinsic-ratio-004.html
+== flexbox-intrinsic-ratio-001.html flexbox-intrinsic-ratio-001.html
+== flexbox-intrinsic-ratio-002.html flexbox-intrinsic-ratio-002.html
+== flexbox-intrinsic-ratio-003.html flexbox-intrinsic-ratio-003.html
+== flexbox-intrinsic-ratio-004.html flexbox-intrinsic-ratio-004.html
 == flexbox-intrinsic-ratio-005.html flexbox-intrinsic-ratio-005.html
 == flexbox-intrinsic-ratio-006.html flexbox-intrinsic-ratio-006.html
 
@@ -127,19 +127,19 @@ fails == flexbox-justify-content-vert-001b.xhtml flexbox-justify-content-vert-00
 fails == flexbox-justify-content-vert-002.xhtml flexbox-justify-content-vert-002.xhtml
 fails == flexbox-justify-content-vert-003.xhtml flexbox-justify-content-vert-003.xhtml
 fails == flexbox-justify-content-vert-004.xhtml flexbox-justify-content-vert-004.xhtml
-fails == flexbox-justify-content-vert-005.xhtml flexbox-justify-content-vert-005.xhtml
+== flexbox-justify-content-vert-005.xhtml flexbox-justify-content-vert-005.xhtml
 
 # Tests for flexbox with margin, border, and/or padding on flex items
 == flexbox-margin-auto-horiz-001.xhtml flexbox-margin-auto-horiz-001.xhtml
 == flexbox-margin-auto-horiz-002.xhtml flexbox-margin-auto-horiz-002.xhtml
-fails == flexbox-mbp-horiz-001.xhtml flexbox-mbp-horiz-001.xhtml
-fails == flexbox-mbp-horiz-001-reverse.xhtml flexbox-mbp-horiz-001-reverse.xhtml
-fails == flexbox-mbp-horiz-001-rtl.xhtml flexbox-mbp-horiz-001-rtl.xhtml
-fails == flexbox-mbp-horiz-001-rtl-reverse.xhtml flexbox-mbp-horiz-001-rtl-reverse.xhtml
-fails == flexbox-mbp-horiz-002a.xhtml flexbox-mbp-horiz-002a.xhtml
-fails == flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
-fails == flexbox-mbp-horiz-003.xhtml flexbox-mbp-horiz-003.xhtml
-fails == flexbox-mbp-horiz-003-reverse.xhtml flexbox-mbp-horiz-003-reverse.xhtml
+== flexbox-mbp-horiz-001.xhtml flexbox-mbp-horiz-001.xhtml
+== flexbox-mbp-horiz-001-reverse.xhtml flexbox-mbp-horiz-001-reverse.xhtml
+== flexbox-mbp-horiz-001-rtl.xhtml flexbox-mbp-horiz-001-rtl.xhtml
+== flexbox-mbp-horiz-001-rtl-reverse.xhtml flexbox-mbp-horiz-001-rtl-reverse.xhtml
+== flexbox-mbp-horiz-002a.xhtml flexbox-mbp-horiz-002a.xhtml
+== flexbox-mbp-horiz-002b.xhtml flexbox-mbp-horiz-002b.xhtml
+== flexbox-mbp-horiz-003.xhtml flexbox-mbp-horiz-003.xhtml
+== flexbox-mbp-horiz-003-reverse.xhtml flexbox-mbp-horiz-003-reverse.xhtml
 == flexbox-mbp-horiz-004.xhtml flexbox-mbp-horiz-004.xhtml
 
 # Tests for min-height:auto / min-width:auto on flex items
@@ -177,9 +177,9 @@ fails == flexbox-overflow-vert-005.html flexbox-overflow-vert-005.html
 == flexbox-root-node-001b.html flexbox-root-node-001b.html
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
-fails == flexbox-sizing-horiz-001.xhtml flexbox-sizing-horiz-001.xhtml
+== flexbox-sizing-horiz-001.xhtml flexbox-sizing-horiz-001.xhtml
 == flexbox-sizing-horiz-002.xhtml flexbox-sizing-horiz-002.xhtml
-fails == flexbox-sizing-vert-001.xhtml flexbox-sizing-vert-001.xhtml
+== flexbox-sizing-vert-001.xhtml flexbox-sizing-vert-001.xhtml
 == flexbox-sizing-vert-002.xhtml flexbox-sizing-vert-002.xhtml
 
 # Tests for table-fixup *not happening* on direct children of a flex container

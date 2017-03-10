@@ -134,12 +134,8 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [966]
-* flex-basis glue not implemented bug 1331529
-  * test_flexbox_flex_shorthand.html `flex-basis` [28]
-  * test_flexbox_layout.html [355]
-  * test_compute_data_with_start_struct.html `flex-basis` [2]
-  * test_inherit_computation.html `flex-basis` [4]
-  * test_initial_computation.html `flex-basis` [8]
+* test_flexbox_flex_shorthand.html `flex-basis`: **need investigation** [12]
+* test_flexbox_layout.html: **need investigation** [5]
 * test_font_feature_values_parsing.html: @font-feature-values support [107]
 * Grid support:
   * test_grid_computed_values.html [4]
@@ -461,6 +457,7 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_property_syntax_errors.html `box-shadow'` [6]
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
+  * test_property_syntax_errors.html `flex-basis`: servo/servo#15902 [6]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
