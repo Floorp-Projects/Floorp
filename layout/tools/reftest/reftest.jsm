@@ -701,7 +701,7 @@ function BuildConditionSandbox(aURL) {
     // see if we have the test plugin available,
     // and set a sandox prop accordingly
     var navigator = gContainingWindow.navigator;
-    var testPlugin = getTestPlugin("Test Plug-in");
+    var testPlugin = navigator.plugins["Test Plug-in"];
     sandbox.haveTestPlugin = !!testPlugin;
 
     // Set a flag on sandbox if the windows default theme is active
