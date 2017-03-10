@@ -9289,14 +9289,29 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
     }
 
     if (ltok == TOK_ASYNC) {
-        TokenKind tt;
-        if (!tokenStream.getToken(&tt))
+        // AsyncMethod[Yield, Await]:
+        //   async [no LineTerminator here] PropertyName[?Yield, ?Await] ...
+        //
+        // PropertyName:
+        //   LiteralPropertyName
+        //   ComputedPropertyName[?Yield, ?Await]
+        //
+        // LiteralPropertyName:
+        //   IdentifierName
+        //   StringLiteral
+        //   NumericLiteral
+        //
+        // ComputedPropertyName[Yield, Await]:
+        //   [ ...
+        TokenKind tt = TOK_EOF;
+        if (!tokenStream.peekTokenSameLine(&tt))
             return null();
-        if (tt != TOK_LP && tt != TOK_COLON && tt != TOK_RC && tt != TOK_ASSIGN) {
+        if (tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_LB ||
+            TokenKindIsPossibleIdentifierName(tt))
+        {
             isAsync = true;
+            tokenStream.consumeKnownToken(tt);
             ltok = tt;
-        } else {
-            tokenStream.ungetToken();
         }
     }
 
