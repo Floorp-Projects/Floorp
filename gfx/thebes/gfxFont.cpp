@@ -3642,7 +3642,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
 // usual font tables (which can happen in the case of a legacy bitmap or Type1
 // font for which the platform-specific backend used platform APIs instead of
 // sfnt tables to create the horizontal metrics).
-const gfxFont::Metrics*
+UniquePtr<const gfxFont::Metrics>
 gfxFont::CreateVerticalMetrics()
 {
     const uint32_t kHheaTableTag = TRUETYPE_TAG('h','h','e','a');
@@ -3651,8 +3651,8 @@ gfxFont::CreateVerticalMetrics()
     const uint32_t kOS_2TableTag = TRUETYPE_TAG('O','S','/','2');
     uint32_t len;
 
-    Metrics* metrics = new Metrics;
-    ::memset(metrics, 0, sizeof(Metrics));
+    UniquePtr<Metrics> metrics = MakeUnique<Metrics>();
+    ::memset(metrics.get(), 0, sizeof(Metrics));
 
     // Some basic defaults, in case the font lacks any real metrics tables.
     // TODO: consider what rounding (if any) we should apply to these.
@@ -3797,7 +3797,7 @@ gfxFont::CreateVerticalMetrics()
     metrics->xHeight = metrics->emHeight / 2;
     metrics->capHeight = metrics->maxAscent;
 
-    return metrics;
+    return Move(metrics);
 }
 
 gfxFloat
