@@ -19,6 +19,13 @@ wasmFullPass(`(module
     (func) (func) (func)
 (export "run" 0))`, 43);
 
+wasmFullPass(`
+(module
+  (import "env" "a" (global $a i32))
+  (import "env" "b" (func $b (param i32) (result i32)))
+  (func (export "run") (param $0 i32) (result i32) get_local 0 call $b)
+)`, 43, { env: { a: 1337, b: x => x+1 } }, 42);
+
 // Global section.
 wasmFullPass(`(module
  (import $imported "globals" "x" (global i32))
