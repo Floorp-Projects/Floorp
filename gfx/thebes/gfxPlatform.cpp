@@ -137,6 +137,7 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "SoftwareVsyncSource.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "gfxVR.h"
 #include "VRManagerChild.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -2642,6 +2643,12 @@ gfxPlatform::ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData)
   MOZ_ASSERT(XRE_IsParentProcess());
 
   gfxConfig::ImportChange(Feature::OPENGL_COMPOSITING, aData.oglCompositing());
+}
+
+bool
+gfxPlatform::SupportsApzTouchInput() const
+{
+  return dom::TouchEvent::PrefEnabled(nullptr);
 }
 
 bool
