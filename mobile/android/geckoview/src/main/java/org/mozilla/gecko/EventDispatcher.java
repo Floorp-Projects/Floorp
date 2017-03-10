@@ -78,7 +78,7 @@ public final class EventDispatcher extends JNIObject {
         return mStateHolder.isReady();
     }
 
-    @WrapForJNI(dispatchTo = "gecko_priority") @Override // JNIObject
+    @WrapForJNI(dispatchTo = "gecko") @Override // JNIObject
     protected native void disposeNative();
 
     @WrapForJNI private static final int DETACHED = 0;
@@ -361,7 +361,7 @@ public final class EventDispatcher extends JNIObject {
         @WrapForJNI(dispatchTo = "proxy") @Override // EventCallback
         public native void sendError(Object response);
 
-        @WrapForJNI(dispatchTo = "gecko_priority") @Override // Object
+        @WrapForJNI(dispatchTo = "gecko") @Override // Object
         protected native void finalize();
     }
 

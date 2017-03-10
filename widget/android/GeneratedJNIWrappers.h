@@ -66,7 +66,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct OnButtonChange_t {
@@ -87,7 +87,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct OnGamepadAdded_t {
@@ -127,7 +127,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct Start_t {
@@ -239,7 +239,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct GetInstance_t {
@@ -351,7 +351,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct SendError_t {
@@ -1500,7 +1500,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO;
+                mozilla::jni::DispatchTarget::PROXY;
     };
 
     struct NotifyAlertListener_t {
@@ -3856,7 +3856,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct CreateCompositor_t {
@@ -3912,7 +3912,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct OnSizeChanged_t {
@@ -3933,7 +3933,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct Reattach_t {
@@ -4074,7 +4074,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::UI;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::GECKO_PRIORITY;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     struct HandleMotionEvent_t {
