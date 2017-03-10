@@ -64,7 +64,7 @@ CanvasLayerComposite::SetLayerManager(HostLayerManager* aManager)
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;
   if (mCompositableHost && mCompositor) {
-    mCompositableHost->SetCompositor(mCompositor);
+    mCompositableHost->SetTextureSourceProvider(mCompositor);
   }
 }
 
