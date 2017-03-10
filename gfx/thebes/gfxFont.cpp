@@ -3848,8 +3848,8 @@ void
 gfxFont::AddGlyphChangeObserver(GlyphChangeObserver *aObserver)
 {
     if (!mGlyphChangeObservers) {
-        mGlyphChangeObservers =
-            MakeUnique<nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>>();
+        mGlyphChangeObservers.reset(
+            new nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>);
     }
     mGlyphChangeObservers->PutEntry(aObserver);
 }
