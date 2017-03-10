@@ -109,40 +109,14 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::BuildWrMaskLayer() {
-  Maybe<WrImageMask> mask = Nothing();
-  WrImageMask imageMask;
-  Layer* maskLayer = GetLayer()->GetMaskLayer();
-
-  if (maskLayer) {
-    RefPtr<SourceSurface> surface = WebRenderLayer::ToWebRenderLayer(maskLayer)->GetAsSourceSurface();
-    if (surface) {
-      Matrix transform;
-      Matrix4x4 effectiveTransform = maskLayer->GetEffectiveTransform();
-      DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
-      NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-      //XXX: let's assert that the mask transform is the same as the layer transform
-      //transform.PostTranslate(-aDeviceOffset.x, -aDeviceOffset.y);
-      {
-          RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-          DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::MapType::READ);
-          gfx::IntSize size = surface->GetSize();
-          MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
-          wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-          WrImageKey maskKey;
-          maskKey.mNamespace = WrBridge()->GetNamespace();
-          maskKey.mHandle = WrBridge()->GetNextResourceId();
-          WrBridge()->SendAddImage(maskKey, size, map.GetStride(), SurfaceFormat::A8, buf);
-
-          imageMask.image = maskKey;
-          imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
-          imageMask.repeat = false;
-          WrManager()->AddImageKeyForDiscard(maskKey);
-          mask = Some(imageMask);
-      }
-    }
+WebRenderLayer::BuildWrMaskLayer()
+{
+  if (GetLayer()->GetMaskLayer()) {
+    WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
+    return maskLayer->RenderMaskLayer();
   }
-  return mask;
+
+  return Nothing();
 }
 
 gfx::Rect

@@ -30,6 +30,11 @@ class WebRenderLayer
 public:
   virtual Layer* GetLayer() = 0;
   virtual void RenderLayer(wr::DisplayListBuilder& aBuilder) = 0;
+  virtual Maybe<WrImageMask> RenderMaskLayer()
+  {
+    MOZ_ASSERT(false);
+    return Nothing();
+  }
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; }
   static inline WebRenderLayer*
@@ -54,7 +59,6 @@ protected:
   gfx::Rect GetWrClipRect(gfx::Rect& aRect);
   void DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect);
   Maybe<WrImageMask> BuildWrMaskLayer();
-
 };
 
 class WebRenderLayerManager final : public LayerManager
