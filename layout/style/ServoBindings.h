@@ -193,6 +193,10 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
+void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
+                            nsIAtom* aPseudoTagOrNull,
+                            ServoComputedValuesBorrowed aComputedValues,
+                            ServoComputedValuesBorrowedOrNull aParentComputedValues);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
