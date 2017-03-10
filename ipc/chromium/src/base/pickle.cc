@@ -24,7 +24,14 @@
 static_assert(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
               "Insufficient alignment");
 
+#ifndef MOZ_TASK_TRACER
 static const uint32_t kHeaderSegmentCapacity = 64;
+#else
+// TaskTracer would add extra fields to the header to carry task ID and
+// other information.
+// \see class Message::HeaderTaskTracer
+static const uint32_t kHeaderSegmentCapacity = 128;
+#endif
 
 static const uint32_t kDefaultSegmentCapacity = 4096;
 
