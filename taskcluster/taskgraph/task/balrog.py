@@ -7,22 +7,26 @@ from __future__ import absolute_import, print_function, unicode_literals
 from . import transform
 
 
-class BalrogTask(transform.TransformTask):
+def get_inputs(kind, path, config, params, loaded_tasks):
     """
-    A task implementing a balrog submission job.  These depend on beetmover jobs
-    and submits the update to balrog as available after the files are moved into place
+    Load tasks implementing balrog submission jobs.  These depend on beetmover
+    jobs and submit the update to balrog as available after the files are moved
+    into place
     """
+    if config.get('kind-dependencies', []) != ["beetmover", "beetmover-l10n"]:
+        raise Exception("Balrog kinds must depend on beetmover kinds")
+    for task in loaded_tasks:
+        if not task.attributes.get('nightly'):
+            continue
+        if task.kind not in config.get('kind-dependencies', []):
+            continue
+        beetmover_task = {}
+        beetmover_task['dependent-task'] = task
 
-    @classmethod
-    def get_inputs(cls, kind, path, config, params, loaded_tasks):
-        if config.get('kind-dependencies', []) != ["beetmover", "beetmover-l10n"]:
-            raise Exception("Balrog kinds must depend on beetmover kinds")
-        for task in loaded_tasks:
-            if not task.attributes.get('nightly'):
-                continue
-            if task.kind not in config.get('kind-dependencies', []):
-                continue
-            beetmover_task = {}
-            beetmover_task['dependent-task'] = task
+        yield beetmover_task
 
-            yield beetmover_task
+
+def load_tasks(kind, path, config, params, loaded_tasks):
+    return transform.transform_inputs(
+            get_inputs(kind, path, config, params, loaded_tasks),
+            kind, path, config, params, loaded_tasks)

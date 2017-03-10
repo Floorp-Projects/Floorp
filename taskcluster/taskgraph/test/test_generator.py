@@ -6,9 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from ..generator import TaskGraphGenerator, Kind
-from .. import graph, target_tasks as target_tasks_mod
-from ..task import base
+from taskgraph.generator import TaskGraphGenerator, Kind
+from taskgraph import graph, target_tasks as target_tasks_mod
+from taskgraph.task import base
 from mozunit import main
 
 
@@ -17,15 +17,6 @@ class FakeTask(base.Task):
     def __init__(self, **kwargs):
         self.i = kwargs.pop('i')
         super(FakeTask, self).__init__(**kwargs)
-
-    @classmethod
-    def load_tasks(cls, kind, path, config, parameters, loaded_tasks):
-        return [cls(kind=kind,
-                    label='{}-t-{}'.format(kind, i),
-                    attributes={'_tasknum': str(i)},
-                    task={},
-                    i=i)
-                for i in range(3)]
 
     def get_dependencies(self, full_task_set):
         i = self.i
@@ -38,10 +29,19 @@ class FakeTask(base.Task):
         return False, None
 
 
+def fake_loader(kind, path, config, parameters, loaded_tasks):
+    return [FakeTask(kind=kind,
+                     label='{}-t-{}'.format(kind, i),
+                     attributes={'_tasknum': str(i)},
+                     task={},
+                     i=i)
+            for i in range(3)]
+
+
 class FakeKind(Kind):
 
-    def _get_impl_class(self):
-        return FakeTask
+    def _get_loader(self):
+        return fake_loader
 
     def load_tasks(self, parameters, loaded_tasks):
         FakeKind.loaded_kinds.append(self.name)
@@ -132,6 +132,7 @@ class TestGenerator(unittest.TestCase):
                 (tid['_fake-t-1'], tid['_fake-t-0'], 'prev'),
                 (tid['_fake-t-2'], tid['_fake-t-1'], 'prev'),
             }))
+
 
 if __name__ == '__main__':
     main()

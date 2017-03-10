@@ -6,7 +6,7 @@
 # a temporary place to generate these tasks in Bug 1286075 until they are
 # rewritten in a better way.
 
-implementation: taskgraph.task.transform:TransformTask
+loader: taskgraph.task.transform:load_tasks
 
 transforms:
    - taskgraph.transforms.android_stuff:transforms
