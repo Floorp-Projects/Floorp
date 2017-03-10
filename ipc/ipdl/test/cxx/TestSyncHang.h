@@ -23,11 +23,11 @@ public:
 
     void Main();
 
-protected:    
+protected:
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
-            fail("unexpected destruction!");  
+            fail("unexpected destruction!");
         passed("ok");
         QuitParent();
     }
@@ -42,6 +42,8 @@ public:
     virtual ~TestSyncHangChild();
 
 protected:
+    virtual mozilla::ipc::IPCResult RecvUnusedMessage() override;
+
     virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
