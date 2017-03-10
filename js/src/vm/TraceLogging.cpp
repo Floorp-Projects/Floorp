@@ -831,11 +831,8 @@ TraceLoggerThreadState::init()
 
     if (ContainsFlag(env, "Frontend")) {
         enabledTextIds[TraceLogger_Frontend] = true;
-        enabledTextIds[TraceLogger_FrontendNameAnalysis] = true;
-        enabledTextIds[TraceLogger_FrontendTDZAnalysis] = true;
         enabledTextIds[TraceLogger_ParsingFull] = true;
         enabledTextIds[TraceLogger_ParsingSyntax] = true;
-        enabledTextIds[TraceLogger_Tokenizing] = true;
         enabledTextIds[TraceLogger_BytecodeEmission] = true;
         enabledTextIds[TraceLogger_BytecodeFoldConstants] = true;
         enabledTextIds[TraceLogger_BytecodeNameFunctions] = true;
