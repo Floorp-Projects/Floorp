@@ -54,7 +54,6 @@ void CubebLogCallback(const char* aFmt, ...)
   va_list arglist;
   va_start(arglist, aFmt);
   VsprintfLiteral (buffer, aFmt, arglist);
-  printf("%s\n", buffer);
   MOZ_LOG(gCubebLog, LogLevel::Error, ("%s", buffer));
   va_end(arglist);
 }
@@ -334,10 +333,8 @@ cubeb* GetCubebContextUnlocked()
   sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
 
   if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
-    printf("Setting callback, verbose\n");
     cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
   } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
-    printf("Setting callback, error\n");
     cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
   }
 
