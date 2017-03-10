@@ -10,6 +10,8 @@ import platform
 import shutil
 import subprocess
 
+from mozbuild.util import ensureParentDir
+
 is_linux = platform.system() == 'Linux'
 
 
@@ -94,6 +96,10 @@ def create_dmg_from_staged(stagedir, output_dmg, tmpdir, volume_name):
                                '-imagekey', 'bzip2-level=9',
                                '-ov', hybrid, '-o', output_dmg])
     else:
+        # The dmg tool doesn't create the destination directories, and silently
+        # returns success if the parent directory doesn't exist.
+        ensureParentDir(output_dmg)
+
         hfs = os.path.join(tmpdir, 'staged.hfs')
         subprocess.check_call([
             buildconfig.substs['HFS_TOOL'], hfs, 'addall', stagedir])
