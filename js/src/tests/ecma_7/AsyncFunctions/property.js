@@ -35,5 +35,15 @@ print(BUGNUMBER + ": " + summary);
   assertEq(a, 14);
 }
 
+{
+  let { async, other } = { async: 15, other: 16 };
+  assertEq(async, 15);
+  assertEq(other, 16);
+
+  let a = { async, other };
+  assertEq(a.async, 15);
+  assertEq(a.other, 16);
+}
+
 if (typeof reportCompare === "function")
     reportCompare(true, true);
