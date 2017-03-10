@@ -1302,10 +1302,6 @@ static_assert(LastCharKind < (1 << (sizeof(firstCharKinds[0]) * 8)),
 bool
 TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
 {
-    // The assumption is that the cost of other tokenizer code is dwarfed by
-    // this one.
-    AutoTraceLog tokenizerLog(TraceLoggerForCurrentThread(cx), TraceLogger_Tokenizing);
-
     int c;
     uint32_t qc;
     Token* tp;
