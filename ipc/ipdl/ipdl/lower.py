@@ -1833,6 +1833,16 @@ def _generateCxxStruct(sd):
     opeqeq.addstmt(StmtReturn.TRUE)
     struct.addstmts([ opeqeq, Whitespace.NL ])
 
+    # bool operator!=(const Struct& _o)
+    opneq = MethodDefn(MethodDecl(
+        'operator!=',
+        params=[ Decl(constreftype, ovar.name) ],
+        ret=Type.BOOL,
+        const=1))
+    opneq.addstmt(StmtReturn(ExprNot(ExprCall(ExprVar('operator=='),
+                                              args=[ ovar ]))))
+    struct.addstmts([ opneq, Whitespace.NL ])
+
     # field1& f1()
     # const field1& f1() const
     for f in sd.fields:
