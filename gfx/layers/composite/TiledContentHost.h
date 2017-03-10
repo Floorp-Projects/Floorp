@@ -136,7 +136,7 @@ public:
   // by the sum of the resolutions of all parent layers' FrameMetrics.
   const CSSToParentLayerScale2D& GetFrameResolution() { return mFrameResolution; }
 
-  void SetCompositor(Compositor* aCompositor);
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider);
 
   void AddAnimationInvalidation(nsIntRegion& aRegion);
 protected:
@@ -194,12 +194,11 @@ public:
     return mTiledBuffer.GetValidRegion();
   }
 
-  virtual void SetCompositor(Compositor* aCompositor) override
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override
   {
-    MOZ_ASSERT(aCompositor);
-    CompositableHost::SetCompositor(aCompositor);
-    mTiledBuffer.SetCompositor(aCompositor);
-    mLowPrecisionTiledBuffer.SetCompositor(aCompositor);
+    CompositableHost::SetTextureSourceProvider(aProvider);
+    mTiledBuffer.SetTextureSourceProvider(aProvider);
+    mLowPrecisionTiledBuffer.SetTextureSourceProvider(aProvider);
   }
 
   bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
@@ -220,7 +219,7 @@ public:
   virtual TiledContentHost* AsTiledContentHost() override { return this; }
 
   virtual void Attach(Layer* aLayer,
-                      Compositor* aCompositor,
+                      TextureSourceProvider* aProvider,
                       AttachFlags aFlags = NO_FLAGS) override;
 
   virtual void Detach(Layer* aLayer = nullptr,

@@ -127,7 +127,7 @@ public:
                          const nsIntRegion* aVisibleRegion = nullptr,
                          const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider);
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
