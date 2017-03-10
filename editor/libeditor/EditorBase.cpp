@@ -40,7 +40,7 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc.
-#include "nsAString.h"                  // for nsAString_internal::Length, etc.
+#include "nsAString.h"                  // for nsAString::Length, etc.
 #include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
 #include "nsCaret.h"                    // for nsCaret
 #include "nsCaseTreatment.h"

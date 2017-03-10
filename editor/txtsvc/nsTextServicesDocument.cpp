@@ -8,7 +8,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAString.h"                  // for nsAString_internal::Length, etc
+#include "nsAString.h"                  // for nsAString::Length, etc
 #include "nsContentUtils.h"             // for nsContentUtils
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
 #include "nsDependentSubstring.h"       // for Substring
