@@ -72,10 +72,7 @@ class TbplFormatter(BaseFormatter):
 
     @output_subtests
     def process_output(self, data):
-        pid = data['process']
-        if pid.isdigit():
-            pid = 'PID %s' % pid
-        return "%s | %s\n" % (pid, data['data'])
+        return "PROCESS | %(process)s | %(data)s\n" % data
 
     @output_subtests
     def process_start(self, data):
