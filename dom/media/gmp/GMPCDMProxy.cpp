@@ -126,7 +126,7 @@ GMPCDMProxy::gmp_InitDone(GMPDecryptorProxy* aCDM, UniquePtr<InitData>&& aData)
   }
 
   mCDM = aCDM;
-  mCallback.reset(new GMPCDMCallbackProxy(this));
+  mCallback.reset(new GMPCDMCallbackProxy(this, mMainThread));
   mCDM->Init(mCallback.get(),
              mDistinctiveIdentifierRequired,
              mPersistentStateRequired);
