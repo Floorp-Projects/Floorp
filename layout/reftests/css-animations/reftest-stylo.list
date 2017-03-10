@@ -1,14 +1,14 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(stylo) == screen-animations.html screen-animations.html # Too intermittent.
-skip-if(stylo) == screen-animations.html screen-animations.html # Too intermittent.
+== screen-animations.html screen-animations.html
+== screen-animations.html screen-animations.html
 == print-no-animations.html print-no-animations.html
 == print-no-animations.html print-no-animations.html
-skip-if(stylo) == animate-opacity.html animate-opacity.html # Too intermittent.
-skip-if(stylo) == animate-preserves3d.html animate-preserves3d.html # bug 1324620
+== animate-opacity.html animate-opacity.html
+== animate-preserves3d.html animate-preserves3d.html
 == in-visibility-hidden-animation.html in-visibility-hidden-animation.html
-fails == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element.html # Bug 1331047
+skip-if(stylo) == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element.html # Bug 1331047
 == partially-out-of-view-animation.html partially-out-of-view-animation.html
-skip-if(stylo) == animate-display-table-opacity.html animate-display-table-opacity.html # Too intermittent.
+== animate-display-table-opacity.html animate-display-table-opacity.html
 # We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
 pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-opacity-1-animation.html
 # We need to run transform:none test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
