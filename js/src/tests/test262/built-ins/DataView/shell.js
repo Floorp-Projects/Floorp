@@ -1,9 +1,9 @@
 // file: detachArrayBuffer.js
 function $DETACHBUFFER(buffer) {
-  if (!$ || typeof $.detachArrayBuffer !== "function") {
+  if (!$262 || typeof $262.detachArrayBuffer !== "function") {
     throw new Test262Error("No method available to detach an ArrayBuffer");
   }
-  $.detachArrayBuffer(buffer);
+  $262.detachArrayBuffer(buffer);
 }
 
 // file: byteConversionValues.js

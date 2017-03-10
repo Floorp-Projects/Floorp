@@ -1,10 +1,10 @@
-// |reftest| skip -- has YAML errors
+// |reftest| error:SyntaxError
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-with-statement-static-semantics-early-errors
 es6id: 13.11.1
-description:
+description: >
   A labelled function declaration is never permitted in the Statement position
 info: |
   WithStatementa: with ( Expression ) Statement
@@ -23,5 +23,3 @@ negative:
 ---*/
 
 with ({}) label1: label2: function test262() {}
-
-reportCompare(0, 0);

@@ -17,7 +17,7 @@ testWithTypedArrayConstructors(TA => {
   var i = 0;
   assert.throws(TypeError, () => {
     for (let key of typedArray.keys()) {
-      $.detachArrayBuffer(typedArray.buffer);
+      $262.detachArrayBuffer(typedArray.buffer);
       i++;
     }
   });

@@ -10,7 +10,7 @@ info: >
     initialized as a new empty List.
 ---*/
 
-var OSymbol = $.createRealm().global.Symbol;
+var OSymbol = $262.createRealm().global.Symbol;
 var parent = Symbol.for('parent');
 var child = OSymbol.for('child');
 

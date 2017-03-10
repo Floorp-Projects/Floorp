@@ -30,7 +30,7 @@ features: [Reflect]
 ---*/
 
 var GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var OtherGeneratorFunction = Object.getPrototypeOf(
     other.eval('(0, function* () {})')
 ).constructor;

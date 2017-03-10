@@ -13,7 +13,7 @@ info: |
 features: [class]
 ---*/
 
-var C = $.createRealm().global.eval('0, class {}');
+var C = $262.createRealm().global.eval('0, class {}');
 
 assert.throws(TypeError, function() {
   C();
