@@ -56,9 +56,7 @@ public:
   MacIOSurfaceTextureHostBasic(TextureFlags aFlags,
                                const SurfaceDescriptorMacIOSurface& aDescriptor);
 
-  virtual void SetCompositor(Compositor* aCompositor) override;
-
-  virtual Compositor* GetCompositor() override { return mCompositor; }
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   virtual bool Lock() override;
 
@@ -82,7 +80,6 @@ public:
 #endif
 
 protected:
-  RefPtr<BasicCompositor> mCompositor;
   RefPtr<MacIOSurfaceTextureSourceBasic> mTextureSource;
   RefPtr<MacIOSurface> mSurface;
 };
