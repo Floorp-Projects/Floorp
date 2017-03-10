@@ -21,7 +21,7 @@ def get_inputs(kind, path, config, params, loaded_tasks):
     # the kind on which this one depends
     if len(config.get('kind-dependencies', [])) != 1:
         raise Exception(
-            "TestTask kinds must have exactly one item in kind-dependencies")
+            "Test kinds must have exactly one item in kind-dependencies")
     dep_kind = config['kind-dependencies'][0]
 
     # get build tasks, keyed by build platform

@@ -10,7 +10,7 @@ from ..optimize import optimize_task_graph, resolve_task_references, optimizatio
 from ..optimize import annotate_task_graph, get_subgraph
 from ..taskgraph import TaskGraph
 from .. import graph
-from .util import TestTask
+from ..task.base import Task
 
 
 class TestResolveTaskReferences(unittest.TestCase):
@@ -67,7 +67,7 @@ class TestOptimize(unittest.TestCase):
 
     def make_task(self, label, optimization=None, task_def=None, optimized=None, task_id=None):
         task_def = task_def or {'sample': 'task-def'}
-        task = TestTask(label=label, task=task_def)
+        task = Task(kind='test', label=label, attributes={}, task=task_def)
         task.optimized = optimized
         if optimization:
             task.optimizations = [optimization]
@@ -77,8 +77,8 @@ class TestOptimize(unittest.TestCase):
         return task
 
     def make_graph(self, *tasks_and_edges):
-        tasks = {t.label: t for t in tasks_and_edges if isinstance(t, TestTask)}
-        edges = {e for e in tasks_and_edges if not isinstance(e, TestTask)}
+        tasks = {t.label: t for t in tasks_and_edges if isinstance(t, Task)}
+        edges = {e for e in tasks_and_edges if not isinstance(e, Task)}
         return TaskGraph(tasks, graph.Graph(set(tasks), edges))
 
     def assert_annotations(self, graph, **annotations):
