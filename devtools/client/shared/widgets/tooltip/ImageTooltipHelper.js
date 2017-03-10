@@ -85,7 +85,9 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
                 align-items: center;
                 justify-content: center;
                 min-height: 1px;">
-      <img style="height: ${imgHeight}px; max-height: 100%;" src="${imageUrl}"/>
+      <img class="devtools-tooltip-tiles"
+           style="height: ${imgHeight}px; max-height: 100%;"
+           src="${imageUrl}"/>
     </div>`;
 
   if (!hideDimensionLabel) {
