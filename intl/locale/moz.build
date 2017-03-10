@@ -45,7 +45,6 @@ EXPORTS.mozilla.intl += [
 ]
 
 UNIFIED_SOURCES += [
-    'DateTimeFormat.cpp',
     'LocaleService.cpp',
     'nsCollation.cpp',
     'nsLanguageAtomService.cpp',
@@ -55,6 +54,15 @@ UNIFIED_SOURCES += [
     'nsUConvPropertySearch.cpp',
     'OSPreferences.cpp',
 ]
+
+if CONFIG['ENABLE_INTL_API']:
+    UNIFIED_SOURCES += [
+        'DateTimeFormat.cpp',
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'DateTimeFormatAndroid.cpp',
+    ]
 
 EXTRA_JS_MODULES += [
     'PluralForm.jsm',
