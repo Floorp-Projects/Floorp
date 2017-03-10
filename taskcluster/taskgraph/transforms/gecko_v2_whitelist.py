@@ -84,6 +84,8 @@ JOB_NAME_WHITELIST = set([
     'win64-st-an-opt',
     'win64-qr-debug',
     'win64-qr-opt',
+    'win64-asan-debug',
+    'win64-asan-opt',
 ])
 
 JOB_NAME_WHITELIST_ERROR = """\

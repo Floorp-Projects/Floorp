@@ -150,6 +150,11 @@ windows10-64-vm/opt:
 #    test-sets:
 #        - windows-gpu-tests
 
+windows10-64-asan/opt:
+    build-platform: win64-asan/opt
+    test-sets:
+        - common-tests
+
 ##
 # MacOS X platforms (matching /macosx.*/)
 
