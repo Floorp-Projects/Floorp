@@ -85,12 +85,13 @@
             android:padding="16dp"
             android:lines="1"
             android:ellipsize="end"
+            android:textSize="14sp"
             android:background="?android:attr/selectableItemBackground" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#30ffffff"
+            android:background="#33ffffff"
             android:layout_gravity="bottom" />
 
     </FrameLayout>
@@ -100,7 +101,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_dismiss_input" />
 
 </LinearLayout>
