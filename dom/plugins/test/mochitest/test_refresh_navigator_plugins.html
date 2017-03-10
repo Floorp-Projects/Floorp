@@ -4,31 +4,65 @@
   <head>
     <meta><charset="utf-8"/>
     <title>Test Refreshing navigator.plugins (bug 820708)</title>
-    <script type="text/javascript"
-	    src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="plugin-utils.js"></script>
-    <link rel="stylesheet" type="text/css"
-	  href="/tests/SimpleTest/test.css">
   </head>
   <body>
-    <p id="display"></p>
     <script class="testbody" type="application/javascript">
       "use strict";
 
       SimpleTest.waitForExplicitFinish();
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-      ok("Test Plug-in" in navigator.plugins, "testplugin should be present");
-      ok("application/x-test" in navigator.mimeTypes, "testplugin MIME should be present");
+      var pluginHost = Components.classes["@mozilla.org/plugin/host;1"]
+                       .getService(Components.interfaces.nsIPluginHost);
+      var pluginTags = pluginHost.getPluginTags();
+      var nextTest = null;
+      var obsService = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+      var observer = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "plugin-info-updated") {
+            SimpleTest.executeSoon(nextTest);
+          }
+        }
+      };
+      obsService.addObserver(observer, "plugin-info-updated", false);
 
-      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_DISABLED);
-      ok(!("Test Plug-in" in navigator.plugins), "testplugin should not be present");
-      ok(!("application/x-test" in navigator.mimeTypes), "testplugin MIME should not be present");
+      var navTestPlugin1 = navigator.plugins.namedItem("Test Plug-in");
+      ok(navTestPlugin1, "navigator.plugins should have Test Plug-in");
+      var tagTestPlugin = null;
+      for (var plugin of pluginTags) {
+        if (plugin.name == navTestPlugin1.name) {
+          tagTestPlugin = plugin;
+          break;
+        }
+      }
+      ok(tagTestPlugin, "plugin tags should have Test Plug-in");
+      var mimeType = tagTestPlugin.getMimeTypes()[0];
+      ok(mimeType, "should have a MIME type for Test Plug-in");
+      ok(navigator.mimeTypes[mimeType], "navigator.mimeTypes should have an entry for '" + mimeType + "'");
+      ok(!tagTestPlugin.disabled, "test plugin should not be disabled");
 
-      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
-      ok("Test Plug-in" in navigator.plugins, "testplugin should be present again");
-      ok("application/x-test" in navigator.mimeTypes, "testplugin MIME should be present again");
-      SimpleTest.finish();
+      nextTest = testPart2;
+      tagTestPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_DISABLED;
+
+      function testPart2() {
+        var navTestPlugin2 = navigator.plugins.namedItem("Test Plug-in");
+        ok(!navTestPlugin2, "now navigator.plugins should not have Test Plug-in");
+        ok(!navigator.mimeTypes[mimeType], "now navigator.mimeTypes should not have an entry for '" + mimeType + "'");
+
+        nextTest = testPart3;
+        tagTestPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
+      }
+
+      function testPart3() {
+        var navTestPlugin3 = navigator.plugins.namedItem("Test Plug-in");
+        ok(navTestPlugin3, "now navigator.plugins should have Test Plug-in again");
+        ok(navigator.mimeTypes[mimeType], "now navigator.mimeTypes should have an entry for '" + mimeType + "' again");
+        obsService.removeObserver(observer, "plugin-info-updated");
+        SimpleTest.finish();
+      }
     </script>
   </body>
 </html>
