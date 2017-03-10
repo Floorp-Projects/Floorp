@@ -133,7 +133,7 @@ public:
    */
   virtual BigImageIterator* AsBigImageIterator() { return nullptr; }
 
-  virtual void SetCompositor(Compositor* aCompositor) {}
+  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
 
   virtual void Unbind() {}
 
