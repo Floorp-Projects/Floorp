@@ -13,10 +13,10 @@ from ..util.yaml import load_yaml
 logger = logging.getLogger(__name__)
 
 
-class PostBuildTask(transform.TransformTask):
+def get_inputs(kind, path, config, params, loaded_tasks):
     """
-    A task implementing a post-build job.  These depend on jobs and perform
-    various followup tasks after a build has completed.
+    Generate tasks implementing post-build jobs.  These depend on builds and perform
+    various followup tasks after a that build has completed.
 
     The `only-for-build-platforms` kind configuration, if specified, will limit
     the build platforms for which a post-build task will be created.
@@ -26,29 +26,32 @@ class PostBuildTask(transform.TransformTask):
     keys `build-label`, the label for the build task, and `build-platform`, its
     platform.
     """
+    if config.get('kind-dependencies', []) != ["build"]:
+        raise Exception("PostBuildTask kinds must depend on builds")
 
-    @classmethod
-    def get_inputs(cls, kind, path, config, params, loaded_tasks):
-        if config.get('kind-dependencies', []) != ["build"]:
-            raise Exception("PostBuildTask kinds must depend on builds")
+    only_platforms = config.get('only-for-build-platforms')
+    prototype = load_yaml(path, config.get('job-template'))
 
-        only_platforms = config.get('only-for-build-platforms')
-        prototype = load_yaml(path, config.get('job-template'))
+    for task in loaded_tasks:
+        if task.kind != 'build':
+            continue
 
-        for task in loaded_tasks:
-            if task.kind != 'build':
-                continue
+        build_platform = task.attributes.get('build_platform')
+        build_type = task.attributes.get('build_type')
+        if not build_platform or not build_type:
+            continue
+        platform = "{}/{}".format(build_platform, build_type)
+        if only_platforms and platform not in only_platforms:
+            continue
 
-            build_platform = task.attributes.get('build_platform')
-            build_type = task.attributes.get('build_type')
-            if not build_platform or not build_type:
-                continue
-            platform = "{}/{}".format(build_platform, build_type)
-            if only_platforms and platform not in only_platforms:
-                continue
+        post_task = copy.deepcopy(prototype)
+        post_task['build-label'] = task.label
+        post_task['build-platform'] = platform
+        post_task['build-task'] = task
+        yield post_task
 
-            post_task = copy.deepcopy(prototype)
-            post_task['build-label'] = task.label
-            post_task['build-platform'] = platform
-            post_task['build-task'] = task
-            yield post_task
+
+def load_tasks(kind, path, config, params, loaded_tasks):
+    return transform.transform_inputs(
+            get_inputs(kind, path, config, params, loaded_tasks),
+            kind, path, config, params, loaded_tasks)
