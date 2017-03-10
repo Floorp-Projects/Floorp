@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-Control" content="public" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+    <title>Site Data Test</title>
+
+  </head>
+
+  <body>
+    <h1>Site Data Test</h1>
+    <script type="text/javascript">
+      let request = indexedDB.open("TestDatabase", 1);
+      request.onupgradeneeded = function(e) {
+        let db = e.target.result;
+        db.createObjectStore("TestStore", { keyPath: "id" });
+      };
+      request.onsuccess = function(e) {
+        let db = e.target.result;
+        let tx = db.transaction("TestStore", "readwrite");
+        let store = tx.objectStore("TestStore");
+        tx.oncomplete = () => window.dispatchEvent(new Event("test-indexedDB-done"));
+        store.put({ id: "test_id", description: "Site Data Test"});
+      }
+    </script>
+  </body>
+</html>
