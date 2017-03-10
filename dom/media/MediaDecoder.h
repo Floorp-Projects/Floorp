@@ -383,6 +383,8 @@ private:
   // Returns true if the decoder can't participate in suspend-video-decoder.
   bool HasSuspendTaint() const;
 
+  void UpdateVideoDecodeMode();
+
   /******
    * The following methods must only be called on the main
    * thread.
