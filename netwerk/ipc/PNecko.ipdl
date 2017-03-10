@@ -123,6 +123,8 @@ parent:
   async IncreaseThrottlePressure();
   async DecreaseThrottlePressure();
 
+  prio(high) async NotifyCurrentTopLevelOuterContentWindowId(uint64_t windowId);
+
 child:
   /*
    * Bring up the http auth prompt for a nested remote mozbrowser.
