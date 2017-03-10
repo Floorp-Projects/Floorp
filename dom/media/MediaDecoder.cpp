@@ -1310,7 +1310,7 @@ MediaDecoder::SetElementVisibility(bool aIsVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mElementVisible = aIsVisible;
-  mIsVisible = !mForcedHidden && mElementVisible;
+  UpdateVideoDecodeMode();
 }
 
 void
@@ -1318,7 +1318,7 @@ MediaDecoder::SetForcedHidden(bool aForcedHidden)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mForcedHidden = aForcedHidden;
-  SetElementVisibility(mElementVisible);
+  UpdateVideoDecodeMode();
 }
 
 void
@@ -1326,6 +1326,30 @@ MediaDecoder::SetSuspendTaint(bool aTainted)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mHasSuspendTaint = aTainted;
+  UpdateVideoDecodeMode();
+}
+
+void
+MediaDecoder::UpdateVideoDecodeMode()
+{
+  // The MDSM may yet be set.
+  if (!mDecoderStateMachine) {
+    return;
+  }
+
+  // If mHasSuspendTaint is set, never suspend the video decoder.
+  if (mHasSuspendTaint) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+    return;
+  }
+
+  // If mForcedHidden is set, suspend the video decoder anyway.
+  // Otherwise, depends on the owner's visibility state.
+  if (!mForcedHidden && mElementVisible) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+  } else {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+  }
 }
 
 bool
@@ -1504,6 +1528,7 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
   mDecoderStateMachine = aStateMachine;
   if (aStateMachine) {
     ConnectMirrors(aStateMachine);
+    UpdateVideoDecodeMode();
   } else {
     DisconnectMirrors();
   }
