@@ -909,11 +909,4 @@ gfxPlatformGtk::CreateHardwareVsyncSource()
   return gfxPlatform::CreateHardwareVsyncSource();
 }
 
-bool
-gfxPlatformGtk::SupportsApzTouchInput() const
-{
-  int value = gfxPrefs::TouchEventsEnabled();
-  return value == 1 || value == 2;
-}
-
 #endif
