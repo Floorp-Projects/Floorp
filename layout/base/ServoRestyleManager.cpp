@@ -79,6 +79,13 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
   PostRestyleEventInternal(false);
 }
 
+/* static */ void
+ServoRestyleManager::PostRestyleEventForAnimations(Element* aElement,
+                                                   nsRestyleHint aRestyleHint)
+{
+  Servo_NoteExplicitHints(aElement, aRestyleHint, nsChangeHint(0));
+}
+
 void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
