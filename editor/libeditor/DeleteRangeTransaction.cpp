@@ -160,22 +160,24 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(nsINode* aNode,
   }
 
   nsCOMPtr<nsIContent> child = aNode->GetChildAt(aStartOffset);
-  NS_ENSURE_STATE(child);
-
-  // XXX This looks odd.  Only when the last transaction causes error at
-  //     calling Init(), the result becomes error.  Otherwise, always NS_OK.
-  nsresult rv = NS_OK;
   for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
-    RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    rv = transaction->Init(mEditorBase, child, mRangeUpdater);
-    if (NS_SUCCEEDED(rv)) {
-      AppendChild(transaction);
+    // Even if we detect invalid range, we should ignore it for removing
+    // specified range's nodes as far as possible.
+    if (NS_WARN_IF(!child)) {
+      break;
     }
-
+    RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+      new DeleteNodeTransaction(*mEditorBase, *child, mRangeUpdater);
+    // XXX This is odd handling.  Even if some children are not editable,
+    //     editor should append transactions because they could be editable
+    //     at undoing/redoing.  Additionally, if the transaction needs to
+    //     delete/restore all nodes, it should at undoing/redoing.
+    if (deleteNodeTransaction->CanDoIt()) {
+      AppendChild(deleteNodeTransaction);
+    }
     child = child->GetNextSibling();
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
@@ -223,12 +225,20 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween()
 
   while (!iter->IsDone()) {
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
-    NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+    if (NS_WARN_IF(!node)) {
+      return NS_ERROR_NULL_POINTER;
+    }
 
-    RefPtr<DeleteNodeTransaction> transaction = new DeleteNodeTransaction();
-    rv = transaction->Init(mEditorBase, node, mRangeUpdater);
-    NS_ENSURE_SUCCESS(rv, rv);
-    AppendChild(transaction);
+    RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
+      new DeleteNodeTransaction(*mEditorBase, *node, mRangeUpdater);
+    // XXX This is odd handling.  Even if some nodes in the range are not
+    //     editable, editor should append transactions because they could
+    //     at undoing/redoing.  Additionally, if the transaction needs to
+    //     delete/restore all nodes, it should at undoing/redoing.
+    if (NS_WARN_IF(!deleteNodeTransaction->CanDoIt())) {
+      return NS_ERROR_FAILURE;
+    }
+    AppendChild(deleteNodeTransaction);
 
     iter->Next();
   }
