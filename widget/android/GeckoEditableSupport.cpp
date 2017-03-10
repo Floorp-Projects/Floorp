@@ -811,7 +811,7 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                 } else {
                     mDispatcher->MaybeDispatchKeypressEvents(*event, status);
                 }
-                if (widget->Destroyed()) {
+                if (!mDispatcher || widget->Destroyed()) {
                     break;
                 }
             }
@@ -825,7 +825,7 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
                     true, eContentCommandDelete, widget);
             event.mTime = PR_Now() / 1000;
             widget->DispatchEvent(&event, status);
-            if (widget->Destroyed()) {
+            if (!mDispatcher || widget->Destroyed()) {
                 return;
             }
         }
@@ -842,7 +842,7 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 
     if (mInputContext.mMayBeIMEUnaware) {
         SendIMEDummyKeyEvent(widget, eKeyDown);
-        if (widget->Destroyed()) {
+        if (!mDispatcher || widget->Destroyed()) {
             return;
         }
     }
@@ -855,7 +855,7 @@ GeckoEditableSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     } else if (!string.IsEmpty() || mDispatcher->IsComposing()) {
         mDispatcher->CommitComposition(status, &string);
     }
-    if (widget->Destroyed()) {
+    if (!mDispatcher || widget->Destroyed()) {
         return;
     }
 
