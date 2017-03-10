@@ -1551,7 +1551,7 @@ public:
             return GetHorizontalMetrics();
         }
         if (!mVerticalMetrics) {
-            mVerticalMetrics = CreateVerticalMetrics();
+            mVerticalMetrics.reset(CreateVerticalMetrics());
         }
         return *mVerticalMetrics;
     }
@@ -1868,7 +1868,7 @@ public:
 protected:
     virtual const Metrics& GetHorizontalMetrics() = 0;
 
-    mozilla::UniquePtr<const Metrics> CreateVerticalMetrics();
+    const Metrics* CreateVerticalMetrics();
 
     // Output a single glyph at *aPt, which is updated by the glyph's advance.
     // Normal glyphs are simply accumulated in aBuffer until it is full and
