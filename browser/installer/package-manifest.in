@@ -796,9 +796,9 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/components/nsTerminatorTelemetry.js
 @RESPATH@/components/terminator.manifest
 
-#if defined(CLANG_CXX)
+#if defined(CLANG_CXX) || defined(CLANG_CL)
 #if defined(MOZ_ASAN) || defined(MOZ_TSAN)
-@BINPATH@/llvm-symbolizer
+@BINPATH@/llvm-symbolizer@BIN_SUFFIX@
 #endif
 #endif
 
