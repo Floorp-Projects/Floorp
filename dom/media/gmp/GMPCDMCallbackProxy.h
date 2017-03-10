@@ -59,12 +59,14 @@ public:
 
 private:
   friend class GMPCDMProxy;
-  explicit GMPCDMCallbackProxy(CDMProxy* aProxy);
+  GMPCDMCallbackProxy(CDMProxy* aProxy, nsIEventTarget* aMainThread);
 
   void BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
                                        const nsTArray<CDMKeyInfo>& aKeyInfos);
   // Warning: Weak ref.
   CDMProxy* mProxy;
+
+  const nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
 } // namespace mozilla
