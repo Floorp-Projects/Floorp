@@ -19,7 +19,7 @@ info: |
         ...
 ---*/
 
-var OProxy = $.createRealm().global.Proxy;
+var OProxy = $262.createRealm().global.Proxy;
 var p = new OProxy({}, {
   defineProperty: {}
 });

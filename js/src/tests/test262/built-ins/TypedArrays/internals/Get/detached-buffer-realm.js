@@ -17,7 +17,7 @@ info: >
 includes: [testTypedArray.js, detachArrayBuffer.js]
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 
 testWithTypedArrayConstructors(function(TA) {
   var OtherTA = other[TA.name];

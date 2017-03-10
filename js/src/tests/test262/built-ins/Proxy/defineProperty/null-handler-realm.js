@@ -12,7 +12,7 @@ info: |
   3. If handler is null, throw a TypeError exception.
 ---*/
 
-var OProxy = $.createRealm().global.Proxy;
+var OProxy = $262.createRealm().global.Proxy;
 var p = OProxy.revocable(Object.create(null), {});
 
 p.revoke();

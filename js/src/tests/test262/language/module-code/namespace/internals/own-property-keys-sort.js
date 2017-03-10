@@ -56,7 +56,7 @@ assert.sameValue(stringKeys[15], '\u03c0', 'stringKeys[15] === "\u03c0"');
 
 var allKeys = Reflect.ownKeys(ns);
 assert(
-  allKeys.length > 17,
+  allKeys.length >= 17,
   'at least as many keys as defined by the module and the specification'
 );
 assert.sameValue(allKeys[0], '$', 'allKeys[0] === "$"');

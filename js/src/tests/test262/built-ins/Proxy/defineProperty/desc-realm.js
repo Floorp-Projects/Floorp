@@ -23,7 +23,7 @@ info: |
   11. Return obj.
 ---*/
 
-var OProxy = $.createRealm().global.Proxy;
+var OProxy = $262.createRealm().global.Proxy;
 var desc;
 var p = new OProxy({}, {
   defineProperty: function(_, __, _desc) {

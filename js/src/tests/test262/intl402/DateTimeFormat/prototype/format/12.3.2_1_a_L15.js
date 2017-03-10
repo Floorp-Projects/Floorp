@@ -12,6 +12,6 @@ author: Norbert Lindenberg
 includes: [testBuiltInObject.js]
 ---*/
 
-testBuiltInObject(new Intl.DateTimeFormat().format, true, false, [], 0);
+testBuiltInObject(new Intl.DateTimeFormat().format, true, false, [], 1);
 
 reportCompare(0, 0);
