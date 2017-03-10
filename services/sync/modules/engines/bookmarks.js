@@ -74,6 +74,7 @@ function isSyncedRootNode(node) {
 function getTypeObject(type) {
   switch (type) {
     case "bookmark":
+    case "microsummary":
       return Bookmark;
     case "query":
       return BookmarkQuery;
@@ -383,6 +384,7 @@ BookmarksEngine.prototype = {
         }
         // No queryID? Fall through to the regular bookmark case.
       case "bookmark":
+      case "microsummary":
         key = "b" + item.bmkUri + ":" + (item.title || "");
         break;
       case "folder":
