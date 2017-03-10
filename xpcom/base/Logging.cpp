@@ -282,8 +282,6 @@ public:
     detail::LogFile* newFile = OpenFile(false, 0);
     detail::LogFile* oldFile = mOutFile.exchange(newFile);
 
-    printf("old: %p, new %p\n", newFile, oldFile);
-
     // Since we don't allow changing the logfile if MOZ_LOG_FILE is already set,
     // and we don't allow log rotation when setting it at runtime, mToReleaseFile
     // will be null, so we're not leaking.
