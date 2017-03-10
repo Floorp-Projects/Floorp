@@ -182,7 +182,7 @@ void ImageHost::Attach(Layer* aLayer,
 {
   CompositableHost::Attach(aLayer, aCompositor, aFlags);
   for (auto& img : mImages) {
-    img.mTextureHost->SetCompositor(aCompositor);
+    img.mTextureHost->SetTextureSourceProvider(aCompositor);
     img.mTextureHost->Updated();
   }
 }
@@ -212,7 +212,7 @@ ImageHost::Composite(LayerComposite* aLayer,
   }
 
   TimedImage* img = &mImages[imageIndex];
-  img->mTextureHost->SetCompositor(GetCompositor());
+  img->mTextureHost->SetTextureSourceProvider(GetCompositor());
   SetCurrentTextureHost(img->mTextureHost);
 
   {
@@ -346,7 +346,7 @@ ImageHost::SetCompositor(Compositor* aCompositor)
 {
   if (mCompositor != aCompositor) {
     for (auto& img : mImages) {
-      img.mTextureHost->SetCompositor(aCompositor);
+      img.mTextureHost->SetTextureSourceProvider(aCompositor);
     }
   }
   CompositableHost::SetCompositor(aCompositor);

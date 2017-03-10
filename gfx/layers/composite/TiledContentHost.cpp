@@ -62,9 +62,9 @@ TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
   MOZ_ASSERT(aCompositor);
   for (TileHost& tile : mRetainedTiles) {
     if (tile.IsPlaceholderTile()) continue;
-    tile.mTextureHost->SetCompositor(aCompositor);
+    tile.mTextureHost->SetTextureSourceProvider(aCompositor);
     if (tile.mTextureHostOnWhite) {
-      tile.mTextureHostOnWhite->SetCompositor(aCompositor);
+      tile.mTextureHostOnWhite->SetTextureSourceProvider(aCompositor);
     }
   }
 }
@@ -168,7 +168,7 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
   }
 
   if (aCompositor) {
-    aTexture->SetCompositor(aCompositor);
+    aTexture->SetTextureSourceProvider(aCompositor);
   }
 
   if (!aUpdateRect.IsEmpty()) {
@@ -299,7 +299,7 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
     const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
 
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
-    tile.mTextureHost->SetCompositor(aLayerManager->GetCompositor());
+    tile.mTextureHost->SetTextureSourceProvider(aLayerManager->GetCompositor());
     tile.mTextureHost->DeserializeReadLock(texturedDesc.sharedLock(), aAllocator);
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
