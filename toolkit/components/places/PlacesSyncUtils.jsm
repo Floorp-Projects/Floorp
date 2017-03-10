@@ -87,10 +87,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 
   KINDS: {
     BOOKMARK: "bookmark",
-    // Microsummaries were removed from Places in bug 524091. For now, Sync
-    // treats them identically to bookmarks. Bug 745410 tracks removing them
-    // entirely.
-    MICROSUMMARY: "microsummary",
     QUERY: "query",
     FOLDER: "folder",
     LIVEMARK: "livemark",
@@ -686,7 +682,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     let item;
     switch (kind) {
       case BookmarkSyncUtils.KINDS.BOOKMARK:
-      case BookmarkSyncUtils.KINDS.MICROSUMMARY:
         item = yield fetchBookmarkItem(bookmarkItem);
         break;
 
@@ -1110,7 +1105,6 @@ var getKindForItem = Task.async(function* (item) {
 function getTypeForKind(kind) {
   switch (kind) {
     case BookmarkSyncUtils.KINDS.BOOKMARK:
-    case BookmarkSyncUtils.KINDS.MICROSUMMARY:
     case BookmarkSyncUtils.KINDS.QUERY:
       return PlacesUtils.bookmarks.TYPE_BOOKMARK;
 
@@ -1337,32 +1331,25 @@ function validateNewBookmark(info) {
     { kind: { required: true }
     , syncId: { required: true }
     , url: { requiredIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                              , BookmarkSyncUtils.KINDS.MICROSUMMARY
                               , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind)
            , validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                           , BookmarkSyncUtils.KINDS.MICROSUMMARY
                            , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
     , parentSyncId: { required: true }
     , title: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                             , BookmarkSyncUtils.KINDS.MICROSUMMARY
                              , BookmarkSyncUtils.KINDS.QUERY
                              , BookmarkSyncUtils.KINDS.FOLDER
                              , BookmarkSyncUtils.KINDS.LIVEMARK ].includes(b.kind) }
     , query: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.QUERY }
     , folder: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.QUERY }
     , tags: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                            , BookmarkSyncUtils.KINDS.MICROSUMMARY
                             , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
     , keyword: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                               , BookmarkSyncUtils.KINDS.MICROSUMMARY
                                , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
     , description: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                                   , BookmarkSyncUtils.KINDS.MICROSUMMARY
                                    , BookmarkSyncUtils.KINDS.QUERY
                                    , BookmarkSyncUtils.KINDS.FOLDER
                                    , BookmarkSyncUtils.KINDS.LIVEMARK ].includes(b.kind) }
     , loadInSidebar: { validIf: b => [ BookmarkSyncUtils.KINDS.BOOKMARK
-                                     , BookmarkSyncUtils.KINDS.MICROSUMMARY
                                      , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
     , feed: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
     , site: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
