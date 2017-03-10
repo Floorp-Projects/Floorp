@@ -24,21 +24,24 @@ add_task(function* checkReturnToPreviousPage() {
   info("Loading and waiting for the net error");
   yield pageLoaded;
 
-  Assert.ok(content.document.getElementById("prefResetButton").getBoundingClientRect().left >= 0,
-    "Should have a visible button");
+  // NB: This code assumes that the error page and the test page load in the
+  // same process. If this test starts to fail, it could be because they load
+  // in different processes.
+  yield ContentTask.spawn(browser, LOW_TLS_VERSION, function* (LOW_TLS_VERSION_) {
+    ok(content.document.getElementById("prefResetButton").getBoundingClientRect().left >= 0,
+      "Should have a visible button");
 
-  Assert.ok(content.document.documentURI.startsWith("about:neterror"), "Should be showing error page");
+    ok(content.document.documentURI.startsWith("about:neterror"), "Should be showing error page");
 
-  let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
-  yield ContentTask.spawn(browser, null, function* () {
     let doc = content.document;
     let prefResetButton = doc.getElementById("prefResetButton");
-    Assert.equal(prefResetButton.getAttribute("autofocus"), "true", "prefResetButton has autofocus");
+    is(prefResetButton.getAttribute("autofocus"), "true", "prefResetButton has autofocus");
     prefResetButton.click();
-  });
-  yield pageshowPromise;
 
-  Assert.equal(content.document.documentURI, LOW_TLS_VERSION, "Should not be showing page");
+    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
+
+    is(content.document.documentURI, LOW_TLS_VERSION_, "Should not be showing page");
+  });
 
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
