@@ -116,7 +116,6 @@ public:
   virtual void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget,
                                               const gfx::IntRect& aRect) = 0;
   virtual Compositor* GetCompositor() const = 0;
-  virtual TextureSourceProvider* GetTextureSourceProvider() const = 0;
   virtual void EndTransaction(const TimeStamp& aTimeStamp,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
   virtual void UpdateRenderBounds(const gfx::IntRect& aRect) {}
@@ -358,10 +357,8 @@ public:
     return mVisibleRegions.Get(aGuid);
   }
 
-  Compositor* GetCompositor() const override {
-    return mCompositor;
-  }
-  TextureSourceProvider* GetTextureSourceProvider() const override {
+  Compositor* GetCompositor() const override
+  {
     return mCompositor;
   }
 

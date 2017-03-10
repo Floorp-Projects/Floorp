@@ -208,16 +208,15 @@ public:
   /// Constructor allowing the texture to perform texture uploads.
   ///
   /// The texture can be used as an actual DataTextureSource.
-  DataTextureSourceD3D11(ID3D11Device* aDevice, gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
+                         TextureFlags aFlags);
 
   /// Constructor for textures created around DXGI shared handles, disallowing
   /// texture uploads.
   ///
   /// The texture CANNOT be used as a DataTextureSource.
-  DataTextureSourceD3D11(ID3D11Device* aDevice, gfx::SurfaceFormat aFormat, ID3D11Texture2D* aTexture);
-
-  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, TextureSourceProvider* aProvider, ID3D11Texture2D* aTexture);
-  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, TextureSourceProvider* aProvider, TextureFlags aFlags);
+  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
+                         ID3D11Texture2D* aTexture);
 
   virtual ~DataTextureSourceD3D11();
 
@@ -246,7 +245,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
   // BigImageIterator
 
@@ -273,7 +272,7 @@ protected:
 
   std::vector< RefPtr<ID3D11Texture2D> > mTileTextures;
   std::vector< RefPtr<ID3D11ShaderResourceView> > mTileSRVs;
-  RefPtr<ID3D11Device> mDevice;
+  RefPtr<CompositorD3D11> mCompositor;
   gfx::SurfaceFormat mFormat;
   TextureFlags mFlags;
   uint32_t mCurrentTile;
@@ -308,7 +307,9 @@ public:
 
   virtual void DeallocateDeviceData() override {}
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
@@ -335,6 +336,7 @@ protected:
 
   RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<DataTextureSourceD3D11> mTextureSource;
+  RefPtr<CompositorD3D11> mCompositor;
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
@@ -351,7 +353,9 @@ public:
 
   virtual void DeallocateDeviceData() override{}
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override{ return gfx::SurfaceFormat::YUV; }
 
@@ -377,6 +381,7 @@ protected:
   RefPtr<ID3D11Texture2D> mTextures[3];
   RefPtr<DataTextureSourceD3D11> mTextureSources[3];
 
+  RefPtr<CompositorD3D11> mCompositor;
   gfx::IntSize mSize;
   WindowsHandle mHandles[3];
   bool mIsLocked;
@@ -448,9 +453,7 @@ inline uint32_t GetMaxTextureSizeForFeatureLevel(D3D_FEATURE_LEVEL aFeatureLevel
   return maxTextureSize;
 }
 
-uint32_t GetMaxTextureSizeFromDevice(ID3D11Device* aDevice);
-
-} // namespace layers
-} // namespace mozilla
+}
+}
 
 #endif /* MOZILLA_GFX_TEXTURED3D11_H */

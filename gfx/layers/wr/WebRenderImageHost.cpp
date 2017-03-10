@@ -107,15 +107,14 @@ WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect)
 }
 
 void WebRenderImageHost::Attach(Layer* aLayer,
-                       TextureSourceProvider* aProvider,
+                       Compositor* aCompositor,
                        AttachFlags aFlags)
 {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
 }
 
 void
-WebRenderImageHost::Composite(Compositor* aCompositor,
-                     LayerComposite* aLayer,
+WebRenderImageHost::Composite(LayerComposite* aLayer,
                      EffectChain& aEffectChain,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,
@@ -128,14 +127,14 @@ WebRenderImageHost::Composite(Compositor* aCompositor,
 }
 
 void
-WebRenderImageHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+WebRenderImageHost::SetCompositor(Compositor* aCompositor)
 {
-  if (mTextureSourceProvider != aProvider) {
+  if (mCompositor != aCompositor) {
     for (auto& img : mImages) {
-      img.mTextureHost->SetTextureSourceProvider(aProvider);
+      img.mTextureHost->SetCompositor(aCompositor);
     }
   }
-  CompositableHost::SetTextureSourceProvider(aProvider);
+  CompositableHost::SetCompositor(aCompositor);
 }
 
 void

@@ -15,7 +15,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 X11TextureSourceOGL::X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurface* aSurface)
-  : mGL(aCompositor->gl())
+  : mCompositor(aCompositor)
   , mSurface(aSurface)
   , mTexture(0)
   , mUpdated(false)
@@ -75,13 +75,22 @@ X11TextureSourceOGL::GetFormat() const {
 }
 
 void
-X11TextureSourceOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+X11TextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
-  gl::GLContext* newGL = aProvider ? aProvider->GetGLContext() : nullptr;
-  if (mGL != newGL) {
-    DeallocateDeviceData();
+  CompositorOGL* glCompositor = AssertGLCompositor(aCompositor);
+  if (mCompositor == glCompositor) {
+    return;
   }
-  mGL = newGL;
+  DeallocateDeviceData();
+  if (glCompositor) {
+    mCompositor = glCompositor;
+  }
+}
+
+gl::GLContext*
+X11TextureSourceOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
 }
 
 SurfaceFormat
