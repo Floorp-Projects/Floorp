@@ -47,8 +47,7 @@ function test() {
         let innerDomain = null;
         try {
           innerDomain = iframes[0].document.domain;
-        }
-        catch (ex) { /* throws for chrome: documents */ }
+        } catch (ex) { /* throws for chrome: documents */ }
         is(innerDomain, "mochi.test", "XSS exploit prevented!");
 
         // clean up

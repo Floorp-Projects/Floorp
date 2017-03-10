@@ -154,7 +154,7 @@ let setupTest = Task.async(function*(options, testFunction) {
  *        The browser window to load the tabs in
  */
 function injectTestTabs(win) {
-  TEST_URLS.forEach(function (url) {
+  TEST_URLS.forEach(function(url) {
     win.gBrowser.addTab(url);
   });
 }

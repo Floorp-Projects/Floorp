@@ -12,10 +12,10 @@ function test() {
 
   // Load a private window, then close it
   // and verify it doesn't get remembered for restoring
-  whenNewWindowLoaded({private: true}, function (win) {
+  whenNewWindowLoaded({private: true}, function(win) {
     info("The private window got loaded");
     win.addEventListener("SSWindowClosing", function() {
-      executeSoon(function () {
+      executeSoon(function() {
         is(ss.getClosedWindowCount(), 0,
             "The private window should not have been stored");
       });

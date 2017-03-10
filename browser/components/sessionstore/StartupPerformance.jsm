@@ -57,7 +57,7 @@ this.StartupPerformance = {
   _totalNumberOfTabs: 0,
   _totalNumberOfWindows: 0,
 
-  init: function() {
+  init() {
     for (let topic of OBSERVED_TOPICS) {
       Services.obs.addObserver(this, topic, false);
     }
@@ -83,7 +83,7 @@ this.StartupPerformance = {
   // Called when restoration starts.
   // Record the start timestamp, setup the timer and `this._promiseFinished`.
   // Behavior is unspecified if there was already an ongoing measure.
-  _onRestorationStarts: function(isAutoRestore) {
+  _onRestorationStarts(isAutoRestore) {
     this._latestRestoredTimeStamp = this._startTimeStamp = Date.now();
     this._totalNumberOfEagerTabs = 0;
     this._totalNumberOfTabs = 0;
@@ -131,7 +131,7 @@ this.StartupPerformance = {
     });
   },
 
-  _startTimer: function() {
+  _startTimer() {
     if (this._hasFired) {
       return;
     }
@@ -153,7 +153,7 @@ this.StartupPerformance = {
     }, COLLECT_RESULTS_AFTER_MS);
   },
 
-  observe: function(subject, topic, details) {
+  observe(subject, topic, details) {
     try {
       switch (topic) {
         case "sessionstore-restoring-on-startup":

@@ -12,8 +12,7 @@ add_task(function* () {
   function test(aLambda) {
     try {
       return aLambda() || true;
-    }
-    catch (ex) { }
+    } catch (ex) { }
     return false;
   }
 

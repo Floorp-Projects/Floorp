@@ -80,7 +80,7 @@ FrameTreeInternal.prototype = {
    *
    * @param obs (object)
    */
-  addObserver: function (obs) {
+  addObserver(obs) {
     this._observers.add(obs);
   },
 
@@ -89,7 +89,7 @@ FrameTreeInternal.prototype = {
    *
    * @param method (string)
    */
-  notifyObservers: function (method) {
+  notifyObservers(method) {
     for (let obs of this._observers) {
       if (obs.hasOwnProperty(method)) {
         obs[method]();
@@ -104,7 +104,7 @@ FrameTreeInternal.prototype = {
    * @param frame (nsIDOMWindow)
    * @return bool
    */
-  contains: function (frame) {
+  contains(frame) {
     return this._frames.has(frame);
   },
 
@@ -124,7 +124,7 @@ FrameTreeInternal.prototype = {
    * @param cb (function)
    * @return object
    */
-  map: function (cb) {
+  map(cb) {
     let frames = this._frames;
 
     function walk(frame) {
@@ -169,7 +169,7 @@ FrameTreeInternal.prototype = {
    * @param cb (function)
    *        This callback receives the current frame as the only argument.
    */
-  forEach: function (cb) {
+  forEach(cb) {
     let frames = this._frames;
 
     function walk(frame) {
@@ -196,7 +196,7 @@ FrameTreeInternal.prototype = {
    * @param index (int)
    *        The index in the given frame's parent's child list.
    */
-  collect: function (frame, index = 0) {
+  collect(frame, index = 0) {
     // Mark the given frame as contained in the frame tree.
     this._frames.set(frame, index);
 
@@ -211,7 +211,7 @@ FrameTreeInternal.prototype = {
    *  - new documents that start loading to clear the current frame tree;
    *  - completed document loads to recollect reachable frames.
    */
-  onStateChange: function (webProgress, request, stateFlags, status) {
+  onStateChange(webProgress, request, stateFlags, status) {
     // Ignore state changes for subframes because we're only interested in the
     // top-document starting or stopping its load. We thus only care about any
     // changes to the root of the frame tree, not to any of its nodes/leafs.
@@ -244,10 +244,10 @@ FrameTreeInternal.prototype = {
   },
 
   // Unused nsIWebProgressListener methods.
-  onLocationChange: function () {},
-  onProgressChange: function () {},
-  onSecurityChange: function () {},
-  onStatusChange: function () {},
+  onLocationChange() {},
+  onProgressChange() {},
+  onSecurityChange() {},
+  onStatusChange() {},
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference])

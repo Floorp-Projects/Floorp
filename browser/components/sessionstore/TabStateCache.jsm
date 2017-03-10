@@ -26,7 +26,7 @@ this.TabStateCache = Object.freeze({
    *         The cached data stored for the given |tab|
    *         or associated |browser|.
    */
-  get: function (browserOrTab) {
+  get(browserOrTab) {
     return TabStateCacheInternal.get(browserOrTab);
   },
 
@@ -39,7 +39,7 @@ this.TabStateCache = Object.freeze({
    *        The new data to be stored for the given |tab|
    *        or associated |browser|.
    */
-  update: function (browserOrTab, newData) {
+  update(browserOrTab, newData) {
     TabStateCacheInternal.update(browserOrTab, newData);
   }
 });
@@ -56,7 +56,7 @@ var TabStateCacheInternal = {
    *         The cached data stored for the given |tab|
    *         or associated |browser|.
    */
-  get: function (browserOrTab) {
+  get(browserOrTab) {
     return this._data.get(browserOrTab.permanentKey);
   },
 
@@ -70,7 +70,7 @@ var TabStateCacheInternal = {
    * @param change (object)
    *        The actual changed values per domain.
    */
-  updatePartialStorageChange: function (data, change) {
+  updatePartialStorageChange(data, change) {
     if (!data.storage) {
       data.storage = {};
     }
@@ -105,7 +105,7 @@ var TabStateCacheInternal = {
    *        Object containing the tail of the history array, and
    *        some additional metadata.
    */
-  updatePartialHistoryChange: function (data, change) {
+  updatePartialHistoryChange(data, change) {
     const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 
     if (!data.history) {
@@ -140,7 +140,7 @@ var TabStateCacheInternal = {
    *        The new data to be stored for the given |tab|
    *        or associated |browser|.
    */
-  update: function (browserOrTab, newData) {
+  update(browserOrTab, newData) {
     let data = this._data.get(browserOrTab.permanentKey) || {};
 
     for (let key of Object.keys(newData)) {

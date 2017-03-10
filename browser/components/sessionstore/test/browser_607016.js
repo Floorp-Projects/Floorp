@@ -27,8 +27,7 @@ add_task(function* () {
       if (tabState.extData) {
         is(tabCurState.extData["uniq"], tabState.extData["uniq"],
            "sanity check that tab has correct extData");
-      }
-      else {
+      } else {
         // We aren't expecting there to be any data on extData, but panorama
         // may be setting something, so we need to make sure that if we do have
         // data, we just don't have anything for "uniq".
@@ -64,8 +63,7 @@ add_task(function* () {
     if ("extData" in tabState) {
       ok(!("uniq" in tabState.extData),
          "(deleting) uniq not in existing extData");
-    }
-    else {
+    } else {
       ok(true, "(deleting) no data is stored in extData");
     }
 

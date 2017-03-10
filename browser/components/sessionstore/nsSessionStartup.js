@@ -65,7 +65,7 @@ consoleMsg.init(aMsg, aException.fileName, null, aException.lineNumber, 0, Ci.ns
   Services.console.logMessage(consoleMsg);
 }
 
-var gOnceInitializedDeferred = (function () {
+var gOnceInitializedDeferred = (function() {
   let deferred = {};
 
   deferred.promise = new Promise((resolve, reject) => {
@@ -127,7 +127,7 @@ SessionStartup.prototype = {
    * @param source The Session State string read from disk.
    * @param parsed The object obtained by parsing |source| as JSON.
    */
-  _onSessionFileRead: function ({source, parsed, noFilesFound}) {
+  _onSessionFileRead({source, parsed, noFilesFound}) {
     this._initialized = true;
 
     // Let observers modify the state before it is used
@@ -288,7 +288,7 @@ SessionStartup.prototype = {
    * crash, this method returns false.
    * @returns bool
    */
-  isAutomaticRestoreEnabled: function () {
+  isAutomaticRestoreEnabled() {
     return Services.prefs.getBoolPref("browser.sessionstore.resume_session_once") ||
            Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION;
   },
@@ -297,7 +297,7 @@ SessionStartup.prototype = {
    * Determines whether there is a pending session restore.
    * @returns bool
    */
-  _willRestore: function () {
+  _willRestore() {
     return this._sessionType == Ci.nsISessionStartup.RECOVER_SESSION ||
            this._sessionType == Ci.nsISessionStartup.RESUME_SESSION;
   },

@@ -74,8 +74,7 @@ function runNextTest() {
       info("prepping for " + currentTest.name);
       waitForBrowserState(testState, currentTest);
     });
-  }
-  else {
+  } else {
     waitForBrowserState(stateBackup, finish);
   }
 }

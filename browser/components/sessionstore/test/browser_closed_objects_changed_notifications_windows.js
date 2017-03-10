@@ -75,7 +75,7 @@ add_task(function* test_closedObjectsChangedNotifications() {
   assertNotificationCount(4);
 
   info(`Changing the ${MAX_WINDOWS_UNDO_PREF} pref.`);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_WINDOWS_UNDO_PREF);
   });
   yield awaitNotification(() => Services.prefs.setIntPref(MAX_WINDOWS_UNDO_PREF, 1));
