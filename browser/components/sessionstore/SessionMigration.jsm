@@ -15,12 +15,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
 
 // An encoder to UTF-8.
-XPCOMUtils.defineLazyGetter(this, "gEncoder", function () {
+XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
   return new TextEncoder();
 });
 
 // A decoder.
-XPCOMUtils.defineLazyGetter(this, "gDecoder", function () {
+XPCOMUtils.defineLazyGetter(this, "gDecoder", function() {
   return new TextDecoder();
 });
 
@@ -39,7 +39,7 @@ var SessionMigrationInternal = {
    * The complete state is then wrapped into the "about:welcomeback" page as
    * form field info to be restored when restoring the state.
    */
-  convertState: function(aStateObj) {
+  convertState(aStateObj) {
     let state = {
       selectedWindow: aStateObj.selectedWindow,
       _closedWindows: []
@@ -71,7 +71,7 @@ var SessionMigrationInternal = {
   /**
    * Asynchronously read session restore state (JSON) from a path
    */
-  readState: function(aPath) {
+  readState(aPath) {
     return Task.spawn(function*() {
       let bytes = yield OS.File.read(aPath);
       let text = gDecoder.decode(bytes);
@@ -82,7 +82,7 @@ var SessionMigrationInternal = {
   /**
    * Asynchronously write session restore state as JSON to a path
    */
-  writeState: function(aPath, aState) {
+  writeState(aPath, aState) {
     let bytes = gEncoder.encode(JSON.stringify(aState));
     return OS.File.writeAtomic(aPath, bytes, {tmpPath: aPath + ".tmp"});
   }
@@ -92,7 +92,7 @@ var SessionMigration = {
   /**
    * Migrate a limited set of session data from one path to another.
    */
-  migrate: function(aFromPath, aToPath) {
+  migrate(aFromPath, aToPath) {
     return Task.spawn(function*() {
       let inState = yield SessionMigrationInternal.readState(aFromPath);
       let outState = SessionMigrationInternal.convertState(inState);

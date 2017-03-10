@@ -16,13 +16,13 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
   });
 
   // First stage: restoreHiddenTabs = true
   // Second stage: restoreHiddenTabs = false
-  test_loadTabs(true, function () {
+  test_loadTabs(true, function() {
     test_loadTabs(false, finish);
   });
 }
@@ -33,7 +33,7 @@ function test_loadTabs(restoreHiddenTabs, callback) {
   let expectedTabs = restoreHiddenTabs ? 8 : 4;
   let firstProgress = true;
 
-  newWindowWithState(state, function (win, needsRestore, isRestoring) {
+  newWindowWithState(state, function(win, needsRestore, isRestoring) {
     if (firstProgress) {
       firstProgress = false;
       is(isRestoring, 3, "restoring 3 tabs concurrently");
@@ -56,32 +56,32 @@ function test_loadTabs(restoreHiddenTabs, callback) {
 }
 
 var TabsProgressListener = {
-  init: function (win) {
+  init(win) {
     this.window = win;
     Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
   },
 
-  uninit: function () {
+  uninit() {
     Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
 
     delete this.window;
     delete this.callback;
   },
 
-  setCallback: function (callback) {
+  setCallback(callback) {
     this.callback = callback;
   },
 
-  observe: function (browser) {
+  observe(browser) {
     TabsProgressListener.onRestored(browser);
   },
 
-  onRestored: function (browser) {
+  onRestored(browser) {
     if (this.callback && browser.__SS_restoreState == TAB_STATE_RESTORING)
       this.callback.apply(null, [this.window].concat(this.countTabs()));
   },
 
-  countTabs: function () {
+  countTabs() {
     let needsRestore = 0, isRestoring = 0;
 
     for (let i = 0; i < this.window.gBrowser.tabs.length; i++) {

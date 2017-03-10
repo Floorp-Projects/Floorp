@@ -19,7 +19,7 @@ add_task(function* () {
         ]
       }
     ],
-    global: global
+    global
   };
 
   function testRestoredState() {

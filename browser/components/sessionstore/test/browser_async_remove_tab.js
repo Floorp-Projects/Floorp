@@ -21,7 +21,7 @@ function isValueInClosedData(rval) {
 
 function restoreClosedTabWithValue(rval) {
   let closedTabData = JSON.parse(ss.getClosedTabData(window));
-  let index = closedTabData.findIndex(function (data) {
+  let index = closedTabData.findIndex(function(data) {
     return (data.state.extData && data.state.extData.foobar) == rval;
   });
 
@@ -56,7 +56,7 @@ function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
       shistory.addSHistoryListener(listener);
 
       /* Keep the weak shistory listener alive. */
-      addEventListener("unload", function () {
+      addEventListener("unload", function() {
         try {
           shistory.removeSHistoryListener(listener);
         } catch (e) { /* Will most likely fail. */ }

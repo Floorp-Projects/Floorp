@@ -17,7 +17,7 @@ var state = {windows:[{tabs:[
 function test() {
   waitForExplicitFinish();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     TabsProgressListener.uninit();
     ss.setBrowserState(stateBackup);
   });
@@ -28,7 +28,7 @@ function test() {
   window.addEventListener("SSWindowStateReady", function() {
     let firstProgress = true;
 
-    TabsProgressListener.setCallback(function (needsRestore, isRestoring) {
+    TabsProgressListener.setCallback(function(needsRestore, isRestoring) {
       if (firstProgress) {
         firstProgress = false;
         is(isRestoring, 3, "restoring 3 tabs concurrently");
@@ -70,28 +70,28 @@ function countTabs() {
 }
 
 var TabsProgressListener = {
-  init: function () {
+  init() {
     Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
   },
 
-  uninit: function () {
+  uninit() {
     Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     this.unsetCallback();
  },
 
-  setCallback: function (callback) {
+  setCallback(callback) {
     this.callback = callback;
   },
 
-  unsetCallback: function () {
+  unsetCallback() {
     delete this.callback;
   },
 
-  observe: function (browser, topic, data) {
+  observe(browser, topic, data) {
     TabsProgressListener.onRestored(browser);
   },
 
-  onRestored: function (browser) {
+  onRestored(browser) {
     if (this.callback && browser.__SS_restoreState == TAB_STATE_RESTORING) {
       this.callback.apply(null, countTabs());
     }

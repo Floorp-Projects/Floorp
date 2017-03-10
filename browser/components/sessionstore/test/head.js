@@ -41,13 +41,13 @@ const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionSto
 // the user to bring them to the foreground. We ensure this by resetting the
 // related preference (see the "firefox.js" defaults file for details).
 Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", false);
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
 });
 
 // Obtain access to internals
 Services.prefs.setBoolPref("browser.sessionstore.debug", true);
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.sessionstore.debug");
 });
 
@@ -95,8 +95,8 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let restoreHiddenTabs = Services.prefs.getBoolPref(
                           "browser.sessionstore.restore_hidden_tabs");
 
-  aState.windows.forEach(function (winState) {
-    winState.tabs.forEach(function (tabState) {
+  aState.windows.forEach(function(winState) {
+    winState.tabs.forEach(function(tabState) {
       if (restoreHiddenTabs || !tabState.hidden)
         expectedTabsRestored++;
     });
@@ -211,7 +211,7 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
     observing = false;
   }
 
-  let timeout = setTimeout(function () {
+  let timeout = setTimeout(function() {
     removeObserver();
     aCallback(false);
   }, aTimeout);
@@ -316,21 +316,21 @@ function* BrowserWindowIterator() {
 var gWebProgressListener = {
   _callback: null,
 
-  setCallback: function (aCallback) {
+  setCallback(aCallback) {
     if (!this._callback) {
       window.gBrowser.addTabsProgressListener(this);
     }
     this._callback = aCallback;
   },
 
-  unsetCallback: function () {
+  unsetCallback() {
     if (this._callback) {
       this._callback = null;
       window.gBrowser.removeTabsProgressListener(this);
     }
   },
 
-  onStateChange: function (aBrowser, aWebProgress, aRequest,
+  onStateChange(aBrowser, aWebProgress, aRequest,
                            aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
@@ -340,37 +340,37 @@ var gWebProgressListener = {
   }
 };
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gWebProgressListener.unsetCallback();
 });
 
 var gProgressListener = {
   _callback: null,
 
-  setCallback: function (callback) {
+  setCallback(callback) {
     Services.obs.addObserver(this, "sessionstore-debug-tab-restored", false);
     this._callback = callback;
   },
 
-  unsetCallback: function () {
+  unsetCallback() {
     if (this._callback) {
       this._callback = null;
     Services.obs.removeObserver(this, "sessionstore-debug-tab-restored");
     }
   },
 
-  observe: function (browser, topic, data) {
+  observe(browser, topic, data) {
     gProgressListener.onRestored(browser);
   },
 
-  onRestored: function (browser) {
+  onRestored(browser) {
     if (browser.__SS_restoreState == TAB_STATE_RESTORING) {
       let args = [browser].concat(gProgressListener._countTabs());
       gProgressListener._callback.apply(gProgressListener, args);
     }
   },
 
-  _countTabs: function () {
+  _countTabs() {
     let needsRestore = 0, isRestoring = 0, wasRestored = 0;
 
     for (let win of BrowserWindowIterator()) {
@@ -388,7 +388,7 @@ var gProgressListener = {
   }
 };
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   gProgressListener.unsetCallback();
 });
 

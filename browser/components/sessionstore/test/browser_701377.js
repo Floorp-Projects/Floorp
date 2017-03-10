@@ -9,7 +9,7 @@ var state = {windows:[{tabs:[
 function test() {
   waitForExplicitFinish();
 
-  newWindowWithState(state, function (aWindow) {
+  newWindowWithState(state, function(aWindow) {
     let tab = aWindow.gBrowser.tabs[1];
     ok(tab.hidden, "the second tab is hidden");
 

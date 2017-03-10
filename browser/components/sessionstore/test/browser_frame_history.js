@@ -118,7 +118,7 @@ add_task(function*() {
   let doc = tab.linkedBrowser.contentDocument;
   let iframe = doc.createElement("iframe");
   iframe.id = "iframe";
-  iframe.src="browser_frame_history_index.html";
+  iframe.src = "browser_frame_history_index.html";
   doc.body.appendChild(iframe);
   yield waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
