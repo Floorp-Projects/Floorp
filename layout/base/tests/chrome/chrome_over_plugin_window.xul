@@ -7,7 +7,11 @@
        b) translucent content elements do NOT cause the plugin to be clipped away -->
   <stack style="height:100px; width:150px;">
     <iframe type="content" style="border:none;" id="f"
-            src="http://example.org/chrome/layout/base/tests/chrome/chrome_over_plugin_window_frame.html"/>
+            src="data:text/html,&lt;embed id='e' type='application/x-test' wmode='window'
+                                style='position:absolute;left:0;top:0;width:100px;height:100px'&gt;&lt;/embed&gt;
+                                &lt;div style='position:absolute;left:0;top:80px;width:100px;height:10px;background:rgba(0,0,128,0.5)'&gt;&lt;/div&gt;
+                                &lt;div style='position:absolute;left:0;top:90px;width:100px;height:10px;background:blue'&gt;&lt;/div&gt;
+                                "/>
     <vbox>
       <vbox style="height:25px; background:yellow;"/> <!-- plugin should be covered here -->
       <vbox style="height:25px; background:rgba(0,128,0,0.5);"/> <!-- plugin should be covered here -->
