@@ -10,11 +10,8 @@
 namespace mozilla {
 namespace layers {
 
-MacIOSurfaceTextureSourceBasic::MacIOSurfaceTextureSourceBasic(
-                                BasicCompositor* aCompositor,
-                                MacIOSurface* aSurface)
-  : mCompositor(aCompositor)
-  , mSurface(aSurface)
+MacIOSurfaceTextureSourceBasic::MacIOSurfaceTextureSourceBasic(MacIOSurface* aSurface)
+  : mSurface(aSurface)
 {
   MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceBasic);
 }
@@ -59,12 +56,6 @@ MacIOSurfaceTextureSourceBasic::GetSurface(gfx::DrawTarget* aTarget)
   return mSourceSurface;
 }
 
-void
-MacIOSurfaceTextureSourceBasic::SetCompositor(Compositor* aCompositor)
-{
-  mCompositor = AssertBasicCompositor(aCompositor);
-}
-
 bool
 MacIOSurfaceTextureHostBasic::Lock()
 {
@@ -73,7 +64,7 @@ MacIOSurfaceTextureHostBasic::Lock()
   }
 
   if (!mTextureSource) {
-    mTextureSource = new MacIOSurfaceTextureSourceBasic(mCompositor, mSurface);
+    mTextureSource = new MacIOSurfaceTextureSourceBasic(mSurface);
   }
   return true;
 }
@@ -88,7 +79,7 @@ MacIOSurfaceTextureHostBasic::SetCompositor(Compositor* aCompositor)
   }
   mCompositor = compositor;
   if (mTextureSource) {
-    mTextureSource->SetCompositor(compositor);
+    mTextureSource->SetTextureSourceProvider(compositor);
   }
 }
 

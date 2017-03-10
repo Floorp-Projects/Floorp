@@ -13,8 +13,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 X11TextureSourceBasic::X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface)
-  : mCompositor(aCompositor),
-    mSurface(aSurface)
+ : mSurface(aSurface)
 {
 }
 
@@ -40,12 +39,6 @@ X11TextureSourceBasic::GetSurface(DrawTarget* aTarget)
                                                     GetSize(), GetFormat());
   }
   return mSourceSurface;
-}
-
-void
-X11TextureSourceBasic::SetCompositor(Compositor* aCompositor)
-{
-  mCompositor = AssertBasicCompositor(aCompositor);
 }
 
 SurfaceFormat

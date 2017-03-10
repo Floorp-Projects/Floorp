@@ -154,11 +154,16 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit,
 }
 
 void
-MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
+MacIOSurfaceTextureSourceOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  mCompositor = AssertGLCompositor(aCompositor);
+  CompositorOGL* ogl = nullptr;
+  if (Compositor* compositor = aProvider->AsCompositor()) {
+    ogl = compositor->AsCompositorOGL();
+  }
+
+  mCompositor = ogl;
   if (mCompositor && mNextSibling) {
-    mNextSibling->SetCompositor(aCompositor);
+    mNextSibling->SetTextureSourceProvider(aProvider);
   }
 }
 
