@@ -30,11 +30,8 @@
     _(IrregexpExecute)                                \
     _(MinorGC)                                        \
     _(Frontend)                                       \
-    _(FrontendNameAnalysis)                           \
-    _(FrontendTDZAnalysis)                            \
     _(ParsingFull)                                    \
     _(ParsingSyntax)                                  \
-    _(Tokenizing)                                     \
     _(BytecodeEmission)                               \
     _(BytecodeFoldConstants)                          \
     _(BytecodeNameFunctions)                          \
