@@ -190,6 +190,7 @@ http://exception.flashallow.example.com:80
 http://flashblock.example.com:80
 http://exception.flashblock.example.com:80
 http://subdocument.example.com:80
+https://subdocument.example.com:443
 http://exception.subdocument.example.com:80
 
 #

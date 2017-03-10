@@ -27,7 +27,8 @@ Documents with an Unknown classification will have Flash set to Click To Activat
 
 If the document is at the top level (its address is in the URL bar), then the Deny List is checked first followed by the Allow List to determine its classification.
 
-If the document is not at the top level, it will receive a Deny classification if the classification of the parent document is Deny or if the document is on the Deny List or the Sub-Document Deny List.
+If the document is not at the top level, it will receive a Deny classification if the classification of the parent document is Deny or if the document is on the Deny List.
+It will also receive a Deny classification if the sub-document is not same-origin and the document is on the Sub-Document Deny List.
 If the document did not receive a Deny classification, it can receive an Allow classification if it is on the Allow List or if the parent document received an Allow classification.
 
 If for any reason, the document has a null principal, it will receive a Deny classification.
