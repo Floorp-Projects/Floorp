@@ -414,6 +414,23 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
   return base.forget();
 }
 
+already_AddRefed<nsIURI>
+nsIContent::GetBaseURIForStyleAttr() const
+{
+  if (!nsLayoutUtils::StyleAttrWithXMLBaseDisabled()) {
+    return GetBaseURI();
+  }
+  if (IsInAnonymousSubtree() && IsAnonymousContentInSVGUseSubtree()) {
+    nsIContent* bindingParent = GetBindingParent();
+    MOZ_ASSERT(bindingParent);
+    SVGUseElement* useElement = static_cast<SVGUseElement*>(bindingParent);
+    return do_AddRef(useElement->GetContentBaseURI());
+  }
+  // This also ignores the case that SVG inside XBL binding.
+  // But it is probably fine.
+  return do_AddRef(OwnerDoc()->GetDocBaseURI());
+}
+
 //----------------------------------------------------------------------
 
 static inline JSObject*
