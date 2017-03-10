@@ -1,4 +1,4 @@
-loader: taskgraph.task.test:loader
+loader: taskgraph.loader.test:loader
 
 kind-dependencies:
     - build
