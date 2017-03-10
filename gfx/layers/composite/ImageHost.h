@@ -45,8 +45,7 @@ public:
 
   virtual CompositableType GetType() override { return mTextureInfo.mCompositableType; }
 
-  virtual void Composite(Compositor* aCompositor,
-                         LayerComposite* aLayer,
+  virtual void Composite(LayerComposite* aLayer,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
@@ -62,10 +61,10 @@ public:
   virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
 
   virtual void Attach(Layer* aLayer,
-                      TextureSourceProvider* aProvider,
+                      Compositor* aCompositor,
                       AttachFlags aFlags = NO_FLAGS) override;
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
   gfx::IntSize GetImageSize() const override;
 

@@ -32,8 +32,7 @@ ContentHostBase::~ContentHostBase()
 }
 
 void
-ContentHostTexture::Composite(Compositor* aCompositor,
-                              LayerComposite* aLayer,
+ContentHostTexture::Composite(LayerComposite* aLayer,
                               EffectChain& aEffectChain,
                               float aOpacity,
                               const gfx::Matrix4x4& aTransform,
@@ -182,16 +181,16 @@ ContentHostTexture::Composite(Compositor* aCompositor,
                                         Float(tileRegionRect.width) / texRect.width,
                                         Float(tileRegionRect.height) / texRect.height);
 
-          aCompositor->DrawGeometry(rect, aClipRect, aEffectChain,
-                                    aOpacity, aTransform, aGeometry);
+          GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
+                                        aOpacity, aTransform, aGeometry);
 
           if (usingTiles) {
             DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
             if (iterOnWhite) {
               diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
             }
-            aCompositor->DrawDiagnostics(diagnostics, rect, aClipRect,
-                                         aTransform, mFlashCounter);
+            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
+                                             aTransform, mFlashCounter);
           }
         }
       }
@@ -213,8 +212,8 @@ ContentHostTexture::Composite(Compositor* aCompositor,
   if (iterOnWhite) {
     diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
   }
-  aCompositor->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
-                               aTransform, mFlashCounter);
+  GetCompositor()->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
+                                   aTransform, mFlashCounter);
 }
 
 void
@@ -255,14 +254,14 @@ ContentHostTexture::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
 }
 
 void
-ContentHostTexture::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+ContentHostTexture::SetCompositor(Compositor* aCompositor)
 {
-  ContentHostBase::SetTextureSourceProvider(aProvider);
+  ContentHostBase::SetCompositor(aCompositor);
   if (mTextureHost) {
-    mTextureHost->SetTextureSourceProvider(aProvider);
+    mTextureHost->SetCompositor(aCompositor);
   }
   if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->SetTextureSourceProvider(aProvider);
+    mTextureHostOnWhite->SetCompositor(aCompositor);
   }
 }
 

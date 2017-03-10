@@ -69,10 +69,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   if (!compositable) {
     return false;
   }
-  if (TextureSourceProvider* provider = compositable->GetTextureSourceProvider()) {
-    if (!provider->IsValid()) {
-      return false;
-    }
+  if (compositable->GetCompositor() && !compositable->GetCompositor()->IsValid()) {
+    return true;
   }
 
   switch (aEdit.detail().type()) {

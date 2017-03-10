@@ -29,7 +29,7 @@ GLTextureSource*
 MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
 {
   GLuint textureHandle;
-  gl::GLContext* gl = mProvider->GetGLContext();
+  gl::GLContext* gl = mCompositor->gl();
   gl->fGenTextures(1, &textureHandle);
   gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, textureHandle);
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
@@ -37,7 +37,7 @@ MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
 
   mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext(), aPlane);
 
-  return new GLTextureSource(mProvider, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+  return new GLTextureSource(mCompositor, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                              gfx::IntSize(mSurface->GetDevicePixelWidth(aPlane),
                                           mSurface->GetDevicePixelHeight(aPlane)),
                              // XXX: This isn't really correct (but isn't used), we should be using the
@@ -66,20 +66,20 @@ MacIOSurfaceTextureHostOGL::Lock()
 }
 
 void
-MacIOSurfaceTextureHostOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
-  if (!aProvider || !aProvider->GetGLContext()) {
+  CompositorOGL* glCompositor = AssertGLCompositor(aCompositor);
+  if (!glCompositor) {
     mTextureSource = nullptr;
-    mProvider = nullptr;
+    mCompositor = nullptr;
     return;
   }
 
-  if (mProvider != aProvider) {
+  if (mCompositor != glCompositor) {
     // Cannot share GL texture identifiers across compositors.
     mTextureSource = nullptr;
   }
-
-  mProvider = aProvider;
+  mCompositor = glCompositor;
 }
 
 gfx::SurfaceFormat
@@ -104,7 +104,7 @@ MacIOSurfaceTextureHostOGL::GetSize() const {
 gl::GLContext*
 MacIOSurfaceTextureHostOGL::gl() const
 {
-  return mProvider ? mProvider->GetGLContext() : nullptr;
+  return mCompositor ? mCompositor->gl() : nullptr;
 }
 
 MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
@@ -154,16 +154,11 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit,
 }
 
 void
-MacIOSurfaceTextureSourceOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
-  CompositorOGL* ogl = nullptr;
-  if (Compositor* compositor = aProvider->AsCompositor()) {
-    ogl = compositor->AsCompositorOGL();
-  }
-
-  mCompositor = ogl;
+  mCompositor = AssertGLCompositor(aCompositor);
   if (mCompositor && mNextSibling) {
-    mNextSibling->SetTextureSourceProvider(aProvider);
+    mNextSibling->SetCompositor(aCompositor);
   }
 }
 
