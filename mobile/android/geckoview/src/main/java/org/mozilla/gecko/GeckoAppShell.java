@@ -254,7 +254,7 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     public static native void syncNotifyObservers(String topic, String data);
 
-    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "proxy")
+    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
 
     @RobocopTarget

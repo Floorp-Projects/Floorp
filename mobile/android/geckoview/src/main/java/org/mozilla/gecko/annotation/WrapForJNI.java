@@ -30,8 +30,11 @@ public @interface WrapForJNI {
 
     /**
      * Action to take if member access returns an exception.
-     * One of "abort", "ignore", or "nsresult". "nsresult" is not supported for native
-     * methods.
+     * - "abort" will cause a crash if there is a pending exception.
+     * - "ignore" will not handle any pending exceptions; it is then the caller's
+     *   responsibility to handle exceptions.
+     * - "nsresult" will clear any pending exceptions and return an error code; not
+     *   supported for native methods.
      */
     String exceptionMode() default "abort";
 
@@ -43,9 +46,15 @@ public @interface WrapForJNI {
 
     /**
      * The thread that the method call will be dispatched to.
-     * One of "current", "gecko", or "proxy". Not supported for non-native methods,
-     * fields, and constructors. Only void-return methods are supported for anything other
-     * than current thread.
+     * - "current" indicates no dispatching; only supported value for fields,
+     *   constructors, non-native methods, and non-void native methods.
+     * - "gecko" indicates dispatching to the Gecko XPCOM (nsThread) event queue.
+     * - "gecko_priority" indicates dispatching to the Gecko widget
+     *   (nsAppShell) event queue; in most cases, events in the widget event
+     *   queue (aka native event queue) are favored over events in the XPCOM
+     *   event queue.
+     * - "proxy" indicates dispatching to a proxy function as a function object; see
+     *   widget/jni/Natives.h.
      */
     String dispatchTo() default "current";
 }
