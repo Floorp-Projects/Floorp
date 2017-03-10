@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/EditorBase.h"         // for EditorBase
 #include "mozilla/dom/Element.h"        // for Element, nsINode
-#include "nsAString.h"                  // for nsAString_internal::IsEmpty
+#include "nsAString.h"                  // for nsAString::IsEmpty
 #include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc.
 #include "nsCaseTreatment.h"
 #include "nsDebug.h"                    // for NS_PRECONDITION, etc.

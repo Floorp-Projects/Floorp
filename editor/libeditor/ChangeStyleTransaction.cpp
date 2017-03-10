@@ -6,7 +6,7 @@
 #include "mozilla/ChangeStyleTransaction.h"
 
 #include "mozilla/dom/Element.h"        // for Element
-#include "nsAString.h"                  // for nsAString_internal::Append, etc.
+#include "nsAString.h"                  // for nsAString::Append, etc.
 #include "nsCRT.h"                      // for nsCRT::IsAsciiSpace
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc.
 #include "nsError.h"                    // for NS_ERROR_NULL_POINTER, etc.

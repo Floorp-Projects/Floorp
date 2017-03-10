@@ -141,7 +141,7 @@ DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
   }
   nsAutoCString
     hostname(url + authorityPos + hostnamePos,
-             static_cast<nsACString_internal::size_type>(hostnameLen));
+             static_cast<nsACString::size_type>(hostnameLen));
 
   nsNSSHttpServerSession* serverSessionPtr = nullptr;
   Result rv = nsNSSHttpInterface::createSessionFcn(
