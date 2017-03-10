@@ -2718,13 +2718,15 @@ EditorBase::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
                                    uint32_t aOffset,
                                    uint32_t aLength)
 {
-  RefPtr<DeleteTextTransaction> transaction =
+  RefPtr<DeleteTextTransaction> deleteTextTransaction =
     new DeleteTextTransaction(*this, aCharData, aOffset, aLength,
                               &mRangeUpdater);
-  nsresult rv = transaction->Init();
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return transaction.forget();
+  // If it's not editable, the transaction shouldn't be recorded since it
+  // should never be undone/redone.
+  if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
+    return nullptr;
+  }
+  return deleteTextTransaction.forget();
 }
 
 already_AddRefed<SplitNodeTransaction>
