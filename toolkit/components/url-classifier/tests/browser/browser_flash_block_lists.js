@@ -185,6 +185,24 @@ var testCases = [
     expectedFlashClassification: "denied"
   },
   {
+    name: "Sub-document blocked domain in non-Third-Party context",
+    domains: ["http://subdocument.example.com", "http://subdocument.example.com"],
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+    expectedActivated: false,
+    expectedHasRunningPlugin: false,
+    pluginListed: true,
+    expectedFlashClassification: "unknown"
+  },
+  {
+    name: "Sub-document blocked domain differing only by scheme",
+    domains: ["http://subdocument.example.com", "https://subdocument.example.com"],
+    expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
+    expectedActivated: false,
+    expectedHasRunningPlugin: false,
+    pluginListed: false,
+    expectedFlashClassification: "denied"
+  },
+  {
     name: "Sub-document blocked subdocument of an allowed domain",
     domains: ["http://flashallow.example.com", "http://subdocument.example.com"],
     expectedPluginFallbackType: Ci.nsIObjectLoadingContent.PLUGIN_USER_DISABLED,
