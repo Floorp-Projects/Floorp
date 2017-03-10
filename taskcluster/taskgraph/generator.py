@@ -29,16 +29,15 @@ class Kind(object):
         self.path = path
         self.config = config
 
-    def _get_impl_class(self):
-        # load the class defined by implementation
+    def _get_loader(self):
         try:
-            impl = self.config['implementation']
+            loader = self.config['loader']
         except KeyError:
-            raise KeyError("{!r} does not define implementation".format(self.path))
-        return find_object(impl)
+            raise KeyError("{!r} does not define `loader`".format(self.path))
+        return find_object(loader)
 
     def load_tasks(self, parameters, loaded_tasks):
-        impl_class = self._get_impl_class()
+        loader = self._get_loader()
         config = copy.deepcopy(self.config)
 
         if 'parse-commit' in self.config:
@@ -47,8 +46,7 @@ class Kind(object):
         else:
             config['args'] = None
 
-        return impl_class.load_tasks(self.name, self.path, config,
-                                     parameters, loaded_tasks)
+        return loader(self.name, self.path, config, parameters, loaded_tasks)
 
 
 class TaskGraphGenerator(object):
