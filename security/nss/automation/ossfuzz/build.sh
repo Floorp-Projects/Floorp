@@ -30,7 +30,7 @@ copy_fuzzer()
 }
 
 # Copy libFuzzer options
-cp fuzz/*.options $OUT/
+cp fuzz/options/*.options $OUT/
 
 # Build the library (non-TLS fuzzing mode).
 CXX="$CXX -stdlib=libc++" LDFLAGS="$CFLAGS" \
