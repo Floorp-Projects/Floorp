@@ -8064,11 +8064,13 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
 
-            if (nextSameLine == TOK_ARROW) {
-                tokenStream.ungetToken();
-            } else {
+            // The AsyncArrowFunction production are
+            //   async [no LineTerminator here] AsyncArrowBindingIdentifier ...
+            //   async [no LineTerminator here] ArrowFormalParameters ...
+            if (TokenKindIsPossibleIdentifier(nextSameLine) || nextSameLine == TOK_LP)
                 asyncKind = AsyncFunction;
-            }
+            else
+                tokenStream.ungetToken();
         }
 
         Node pn = handler.newArrowFunction();
