@@ -258,13 +258,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `shape-outside` [4]
     * test_initial_storage.html `shape-outside` [4]
     * test_value_storage.html `shape-outside` [121]
-  * text-justify property
-    * test_compute_data_with_start_struct.html `text-justify` [2]
-    * test_inherit_computation.html `text-justify` [4]
-    * test_inherit_storage.html `text-justify` [4]
-    * test_initial_computation.html `text-justify` [2]
-    * test_initial_storage.html `text-justify` [2]
-    * test_value_storage.html `text-justify` [10]
   * touch-action property
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
