@@ -40,7 +40,7 @@ AnimationCollection<AnimationType>::PropertyDtor(void* aObject,
 template <class AnimationType>
 /* static */ AnimationCollection<AnimationType>*
 AnimationCollection<AnimationType>::GetAnimationCollection(
-  dom::Element *aElement,
+  const dom::Element *aElement,
   CSSPseudoElementType aPseudoType)
 {
   if (!aElement->MayHaveAnimations()) {
