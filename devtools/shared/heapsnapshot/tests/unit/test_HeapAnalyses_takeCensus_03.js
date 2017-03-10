@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that the HeapAnalyses{Client,Worker} bubbles errors properly when things
 // go wrong.
@@ -27,7 +28,8 @@ add_task(function* () {
   } catch (e) {
     failed = true;
   }
-  ok(failed, "should not be able to read a file that is not a heap snapshot as a heap snapshot");
+  ok(failed, "should not be able to read a file "
+    + "that is not a heap snapshot as a heap snapshot");
 
   const snapshotFilePath = saveNewHeapSnapshot();
   yield client.readHeapSnapshot(snapshotFilePath);

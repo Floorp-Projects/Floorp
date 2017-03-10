@@ -12,70 +12,70 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
 </head>
 <body>
     <script type="application/javascript">
-     window.onerror = function (msg, url, line, col, err) {
-         ok(false, "@" + url + ":" + line + ":" + col + ": " + msg + "\n" + err.stack);
-     };
+    "use strict";
+    window.onerror = function (msg, url, line, col, err) {
+      ok(false, "@" + url + ":" + line + ":" + col + ": " + msg + "\n" + err.stack);
+    };
 
-     SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForExplicitFinish();
 
-     var childFrameURL = "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+    var childFrameURL = "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
 
-     // This function is stringified and loaded in the child process as a frame
-     // script.
-     function childFrameScript() {
-         try {
-             ChromeUtils.saveHeapSnapshot({ runtime: true });
-         } catch (err) {
-             sendAsyncMessage("testSaveHeapSnapshot:error",
-                              { error: err.toString() });
-             return;
-         }
+    // This function is stringified and loaded in the child process as a frame
+    // script.
+    function childFrameScript() {
+      try {
+        ChromeUtils.saveHeapSnapshot({ runtime: true });
+      } catch (err) {
+        sendAsyncMessage("testSaveHeapSnapshot:error",
+                          { error: err.toString() });
+        return;
+      }
 
-         sendAsyncMessage("testSaveHeapSnapshot:done", {});
-     }
+      sendAsyncMessage("testSaveHeapSnapshot:done", {});
+    }
 
-     // Kick everything off on load.
-     window.onload = function () {
-         info("window.onload fired");
-         SpecialPowers.addPermission("browser", true, document);
-         SpecialPowers.pushPrefEnv({
-             "set": [
-                 ["dom.ipc.browser_frames.oop_by_default", true],
-                 ["dom.mozBrowserFramesEnabled", true],
-                 ["browser.pagethumbnails.capturing_disabled", true]
-             ]
-         }, function () {
-             var iframe = document.createElement("iframe");
-             SpecialPowers.wrap(iframe).mozbrowser = true;
-             iframe.id = "iframe";
-             iframe.src = childFrameURL;
+    // Kick everything off on load.
+    window.onload = function () {
+      info("window.onload fired");
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+         "set": [
+             ["dom.ipc.browser_frames.oop_by_default", true],
+             ["dom.mozBrowserFramesEnabled", true],
+             ["browser.pagethumbnails.capturing_disabled", true]
+         ]
+      }, function () {
+        let iframe = document.createElement("iframe");
+        SpecialPowers.wrap(iframe).mozbrowser = true;
+        iframe.id = "iframe";
+        iframe.src = childFrameURL;
 
+        iframe.addEventListener("mozbrowserloadend", function () {
+          info("iframe done loading");
 
-             iframe.addEventListener("mozbrowserloadend", function () {
-                 info("iframe done loading");
+          let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
 
-                 var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+          function onError(e) {
+            ok(false, e.data.error);
+          }
+          mm.addMessageListener("testSaveHeapSnapshot:error", onError);
 
-                 function onError(e) {
-                     ok(false, e.data.error);
-                 }
-                 mm.addMessageListener("testSaveHeapSnapshot:error", onError);
+          mm.addMessageListener("testSaveHeapSnapshot:done", function onMsg() {
+            mm.removeMessageListener("testSaveHeapSnapshot:done", onMsg);
+            mm.removeMessageListener("testSaveHeapSnapshot:error", onError);
+            ok(true, "Saved heap snapshot in child process");
+            SimpleTest.finish();
+          });
 
-                 mm.addMessageListener("testSaveHeapSnapshot:done", function onMsg() {
-                     mm.removeMessageListener("testSaveHeapSnapshot:done", onMsg);
-                     mm.removeMessageListener("testSaveHeapSnapshot:error", onError);
-                     ok(true, "Saved heap snapshot in child process");
-                     SimpleTest.finish();
-                 });
+          info("Loading frame script to save heap snapshot");
+          mm.loadFrameScript("data:,(" + encodeURI(childFrameScript.toString()) + ")();",
+                            false);
+        }, {once: true});
 
-                 info("Loading frame script to save heap snapshot");
-                 mm.loadFrameScript("data:,(" + encodeURI(childFrameScript.toString()) + ")();",
-                                    false);
-             }, {once: true});
-
-             info("Loading iframe");
-             document.body.appendChild(iframe);
-         });
-     };
-    </script>
+        info("Loading iframe");
+        document.body.appendChild(iframe);
+      });
+    };
+  </script>
 </window>

@@ -8,6 +8,8 @@
 // HeapAnalysesWorker is owned and communicated with by a HeapAnalysesClient
 // instance. See HeapAnalysesClient.js.
 
+/* global importScripts, workerHelper, self */
+
 "use strict";
 
 importScripts("resource://gre/modules/workers/require.js");
@@ -70,7 +72,8 @@ workerHelper.createTask(self, "deleteHeapSnapshot", ({ snapshotFilePath }) => {
 /**
  * @see HeapAnalysesClient.prototype.takeCensus
  */
-workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, requestOptions }) => {
+workerHelper.createTask(self, "takeCensus", (
+{ snapshotFilePath, censusOptions, requestOptions }) => {
   if (!snapshots[snapshotFilePath]) {
     throw new Error(`No known heap snapshot for '${snapshotFilePath}'`);
   }
@@ -206,7 +209,7 @@ workerHelper.createTask(self, "getDominatorTree", request => {
     maxRetainingPaths,
   } = request;
 
-  if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
+  if (!(dominatorTreeId >= 0 && dominatorTreeId < dominatorTrees.length)) {
     throw new Error(
       `There does not exist a DominatorTree with the id ${dominatorTreeId}`);
   }
@@ -252,7 +255,7 @@ workerHelper.createTask(self, "getImmediatelyDominated", request => {
     maxRetainingPaths,
   } = request;
 
-  if (!(0 <= dominatorTreeId && dominatorTreeId < dominatorTrees.length)) {
+  if (!(dominatorTreeId >= 0 && dominatorTreeId < dominatorTrees.length)) {
     throw new Error(
       `There does not exist a DominatorTree with the id ${dominatorTreeId}`);
   }

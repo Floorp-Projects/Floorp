@@ -12,8 +12,10 @@ Bug 1024774 - Sanity test that we can take a heap snapshot in a web window.
 <body>
 <pre id="test">
 <script>
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
-window.onload = function() {
+window.onload = function () {
   ok(ChromeUtils, "The ChromeUtils interface should be exposed in chrome windows.");
   ChromeUtils.saveHeapSnapshot({ runtime: true });
   ok(true, "Should save a heap snapshot and shouldn't throw.");

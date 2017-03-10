@@ -12,8 +12,11 @@ Sanity test that we can compute dominator trees from a heap snapshot in a web wi
 <body>
 <pre id="test">
 <script>
+"use strict";
+/* global window, ChromeUtils, DominatorTree */
+
 SimpleTest.waitForExplicitFinish();
-window.onload = function() {
+window.onload = function () {
   const path = ChromeUtils.saveHeapSnapshot({ runtime: true });
   const snapshot = ChromeUtils.readHeapSnapshot(path);
 

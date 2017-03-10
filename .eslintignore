@@ -130,7 +130,6 @@ devtools/server/tests/browser/storage-*.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
-devtools/shared/heapsnapshot/**
 devtools/shared/platform/content/test/test_clipboard.html
 devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
