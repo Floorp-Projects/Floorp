@@ -244,7 +244,10 @@ class TaskGraphGenerator(object):
         yield 'target_task_set', target_task_set
 
         logger.info("Generating target task graph")
-        target_graph = full_task_graph.graph.transitive_closure(target_tasks)
+        # include all docker-image build tasks here, in case they are needed for a graph morph
+        docker_image_tasks = set(t.label for t in full_task_graph.tasks.itervalues()
+                                 if t.attributes['kind'] == 'docker-image')
+        target_graph = full_task_graph.graph.transitive_closure(target_tasks | docker_image_tasks)
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes},
             target_graph)
@@ -252,7 +255,6 @@ class TaskGraphGenerator(object):
 
         logger.info("Generating optimized task graph")
         do_not_optimize = set()
-
         if not self.parameters.get('optimize_target_tasks', True):
             do_not_optimize = target_task_set.graph.nodes
         optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
