@@ -183,7 +183,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
   // This is really a combination of paint box shadow inner +
   // paint border.
   nsRect buttonRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  nsRect dirtyRect = mVisibleRect;
+  //nsRect dirtyRect = mVisibleRect;
 
   // TODO: Figure out what to do with sync decode images
   /*
@@ -212,42 +212,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
     return;
   }
 
-  BorderColors colors;
-  BorderCorners corners;
-  BorderWidths widths;
-  BorderStyles borderStyles;
-
-  NS_FOR_CSS_SIDES(i) {
-    colors[i] = gfx::ToDeviceColor(br->mBorderColors[i]);
-    widths[i] = br->mBorderWidths[i];
-    borderStyles[i] = br->mBorderStyles[i];
-  }
-  NS_FOR_CSS_FULL_CORNERS(corner) {
-      corners[corner] = LayerSize(br->mBorderRadii[corner].width,
-                                  br->mBorderRadii[corner].height);
-  }
-
-  gfx::Rect relBounds = aLayer->VisibleBoundsRelativeToParent();
-  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
-
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  gfx::Rect gfxDirtyRect = aLayer->RelativeToParent(NSRectToRect(dirtyRect, appUnitsPerDevPixel));
-
-  // The bounds rect starts from 0 here because the stacking context
-  // is created with the proper relative bounds.
-  LayerIntRect bounds = aLayer->GetVisibleRegion().GetBounds();
-  gfx::Rect boundsRect(0, 0, bounds.width, bounds.height);
-
-  WebRenderBorderLayer::CreateWebRenderCommands(aBuilder,
-                                                aLayer,
-                                                colors,
-                                                corners,
-                                                widths,
-                                                borderStyles,
-                                                boundsRect,
-                                                gfxDirtyRect,
-                                                relBounds,
-                                                overflow);
+  br->CreateWebRenderCommands(aBuilder, aLayer);
 }
 
 void
