@@ -435,12 +435,11 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
 void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTagOrNull,
-                       ServoComputedValuesBorrowed aComputedValues,
+                       ServoComputedValuesBorrowedOrNull aComputedValues,
                        ServoComputedValuesBorrowedOrNull aParentComputedValues)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aComputedValues);
 
   nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
   if (!presContext) {

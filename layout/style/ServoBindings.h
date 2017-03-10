@@ -195,7 +195,7 @@ bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             nsIAtom* aPseudoTagOrNull,
-                            ServoComputedValuesBorrowed aComputedValues,
+                            ServoComputedValuesBorrowedOrNull aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
                                    nsIAtom* aPseudoTagOrNull);
