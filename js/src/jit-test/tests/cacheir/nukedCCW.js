@@ -1,6 +1,6 @@
-var wrapper = evaluate("({a: 15, b: {c: 42}})", {global: newGlobal({sameZoneAs: this})});
+function testNuke() {
+    var wrapper = evaluate("({a: 15, b: {c: 42}})", {global: newGlobal({sameZoneAs: this})});
 
-function test() {
     var i, error;
     try {
         for (i = 0; i < 150; i++) {
@@ -20,4 +20,19 @@ function test() {
     assertEq(i, 143);
 }
 
-test();
+function testSweep() {
+    var wrapper = evaluate("({a: 15, b: {c: 42}})", {global: newGlobal({})});
+    var error;
+    nukeCCW(wrapper);
+    gczeal(8, 1); // Sweep zones separately
+    try {
+      // Next access to wrapper.b should throw.
+      wrapper.x = 4;
+    } catch (e) {
+        error = e;
+    }
+    assertEq(error.message.includes("dead object"), true);
+}
+
+testNuke();
+testSweep();
