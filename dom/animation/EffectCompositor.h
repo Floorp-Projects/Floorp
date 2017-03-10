@@ -229,7 +229,8 @@ public:
   // Do a bunch of stuff that we should avoid doing during the parallel
   // traversal (e.g. changing member variables) for all elements that we expect
   // to restyle on the next traversal.
-  void PreTraverse();
+  // Returns true if there are elements needing a restyle for animation.
+  bool PreTraverse();
 
   // Similar to the above but only for the (pseudo-)element.
   void PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull);

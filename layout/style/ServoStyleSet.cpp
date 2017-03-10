@@ -226,6 +226,14 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   sInServoTraversal = true;
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior);
+
+  // If there are still animation restyles needed, trigger a second traversal to
+  // update CSS animations' styles.
+  if (mPresContext->EffectCompositor()->PreTraverse() &&
+      Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior)) {
+    postTraversalRequired = true;
+  }
+
   sInServoTraversal = false;
   return postTraversalRequired;
 }
