@@ -27,6 +27,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.toolbar.SecurityModeUtil;
+import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 import org.mozilla.gecko.util.ColorUtil;
 
 /**
@@ -40,6 +41,7 @@ public class ActionBarPresenter {
     private static final long CUSTOM_VIEW_UPDATE_DELAY = 1000;
 
     private final ActionBar mActionBar;
+    private final SiteIdentityPopup mIdentityPopup;
     private final ImageButton mIconView;
     private final TextView mTitleView;
     private final TextView mUrlView;
@@ -62,6 +64,15 @@ public class ActionBarPresenter {
         mUrlView = (TextView) customView.findViewById(R.id.custom_tabs_action_bar_url);
 
         onThemeChanged(mActionBar.getThemedContext().getTheme());
+
+        mIdentityPopup = new SiteIdentityPopup(mActionBar.getThemedContext());
+        mIdentityPopup.setAnchor(customView);
+        mIconView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mIdentityPopup.show();
+            }
+        });
     }
 
     /**
@@ -131,6 +142,7 @@ public class ActionBarPresenter {
             final SecurityModeUtil.Mode mode = SecurityModeUtil.resolve(identity);
             mIconView.setVisibility(View.VISIBLE);
             mIconView.setImageLevel(mode.ordinal());
+            mIdentityPopup.setSiteIdentity(identity);
 
             if (mode == SecurityModeUtil.Mode.LOCK_SECURE) {
                 // Lock-Secure is special case. Keep its original green color.
