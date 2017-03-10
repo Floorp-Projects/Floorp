@@ -39,41 +39,50 @@ PER_PROJECT_PARAMETERS = {
         # pushes to run a task that would otherwise be optimized, but is a
         # compromise to avoid essentially disabling optimization in try.
         'optimize_target_tasks': True,
+        'include_nightly': False,
     },
 
     'ash': {
         'target_tasks_method': 'ash_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': False,
     },
 
     'cedar': {
         'target_tasks_method': 'cedar_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': False,
     },
 
     'graphics': {
         'target_tasks_method': 'graphics_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': False,
     },
 
     'mozilla-beta': {
         'target_tasks_method': 'mozilla_beta_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': True,
     },
+
     'mozilla-release': {
         'target_tasks_method': 'mozilla_release_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': True,
     },
 
     'pine': {
         'target_tasks_method': 'pine_tasks',
         'optimize_target_tasks': True,
+        'include_nightly': False,
     },
 
     # the default parameters are used for projects that do not match above.
     'default': {
         'target_tasks_method': 'default',
         'optimize_target_tasks': True,
+        'include_nightly': False,
     }
 }
 

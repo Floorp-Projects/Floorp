@@ -418,7 +418,9 @@ def set_tier(config, tests):
         if 'tier' not in test or test['tier'] == 'default':
             if test['test-platform'] in ['linux32/opt',
                                          'linux32/debug',
+                                         'linux32-nightly/opt',
                                          'linux64/opt',
+                                         'linux64-nightly/opt',
                                          'linux64/debug',
                                          'linux64-pgo/opt',
                                          'linux64-asan/opt',

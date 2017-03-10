@@ -53,6 +53,7 @@ def alias_matches(pattern):
     pattern = re.compile(pattern)
     return lambda name: pattern.match(name)
 
+
 UNITTEST_ALIASES = {
     # Aliases specify shorthands that can be used in try syntax.  The shorthand
     # is the dictionary key, with the value representing a pattern for matching
@@ -233,6 +234,7 @@ def parse_message(message):
     parser.add_argument('--spsProfile', dest='profile', action='store_true')
     parser.add_argument('--tag', dest='tag', action='store', default=None)
     parser.add_argument('--no-retry', dest='no_retry', action='store_true')
+    parser.add_argument('--include-nightly', dest='include_nightly', action='store_true')
 
     # While we are transitioning from BB to TC, we want to push jobs to tc-worker
     # machines but not overload machines with every try push. Therefore, we add
@@ -313,6 +315,7 @@ class TryOptionSyntax(object):
         self.profile = args.profile
         self.tag = args.tag
         self.no_retry = args.no_retry
+        self.include_nightly = args.include_nightly
 
     def parse_jobs(self, jobs_arg):
         if not jobs_arg or jobs_arg == ['all']:
@@ -536,6 +539,8 @@ class TryOptionSyntax(object):
         attr = attributes.get
 
         def check_run_on_projects():
+            if attr('nightly') and not self.include_nightly:
+                return False
             return set(['try', 'all']) & set(attr('run_on_projects', []))
 
         def match_test(try_spec, attr_name):
