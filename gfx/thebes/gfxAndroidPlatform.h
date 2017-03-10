@@ -66,10 +66,6 @@ public:
 
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 
-    virtual bool SupportsApzTouchInput() const override {
-      return true;
-    }
-
 protected:
     bool AccelerateLayersByDefault() override {
       return true;
