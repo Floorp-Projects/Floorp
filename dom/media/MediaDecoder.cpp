@@ -303,18 +303,7 @@ MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   SetElementVisibility(aIsVisible);
 
-  MediaDecoderOwner* owner = GetOwner();
-  NS_ENSURE_TRUE_VOID(owner);
-
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE_VOID(element);
-
-  RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  if (layerManager) {
-    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
-    mCompositorUpdatedEvent.Notify(knowsCompositor);
-  }
+  NotifyCompositor();
 }
 
 void
@@ -1296,6 +1285,23 @@ MediaDecoder::DurationChanged()
 
   if (CurrentPosition() > TimeUnit::FromSeconds(mDuration).ToMicroseconds()) {
     Seek(mDuration, SeekTarget::Accurate);
+  }
+}
+
+void
+MediaDecoder::NotifyCompositor()
+{
+  MediaDecoderOwner* owner = GetOwner();
+  NS_ENSURE_TRUE_VOID(owner);
+
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE_VOID(element);
+
+  RefPtr<LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+  if (layerManager) {
+    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+    mCompositorUpdatedEvent.Notify(knowsCompositor);
   }
 }
 
