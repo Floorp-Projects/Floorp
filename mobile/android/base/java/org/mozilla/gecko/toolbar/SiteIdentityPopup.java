@@ -171,6 +171,12 @@ public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListe
 
         } else if ("Permissions:CheckResult".equals(event)) {
             final boolean hasPermissions = geckoObject.getBoolean("hasPermissions", false);
+
+            // ensure initialization completed, in case of receiving event too early
+            if (!mInflated) {
+                init();
+            }
+
             if (hasPermissions) {
                 mSiteSettingsLink.setOnClickListener(new View.OnClickListener() {
                     @Override
