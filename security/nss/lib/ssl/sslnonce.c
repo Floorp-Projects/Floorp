@@ -19,7 +19,6 @@
 #include <time.h>
 #endif
 
-PRUint32 ssl_sid_timeout = 100;
 PRUint32 ssl3_sid_timeout = 86400L; /* 24 hours */
 
 static sslSessionID *cache = NULL;
@@ -471,7 +470,7 @@ ssl_TicketTimeValid(const NewSessionTicket *ticket)
     }
 
     endTime = ticket->received_timestamp +
-              (PRTime)(ticket->ticket_lifetime_hint * PR_USEC_PER_MSEC);
+              (PRTime)(ticket->ticket_lifetime_hint * PR_USEC_PER_SEC);
     return endTime > PR_Now();
 }
 

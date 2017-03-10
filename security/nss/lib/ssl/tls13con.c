@@ -2860,6 +2860,9 @@ tls13_DestroyKeyShares(PRCList *list)
 {
     PRCList *cur_p;
 
+    /* The list must be initialized. */
+    PORT_Assert(PR_LIST_HEAD(list));
+
     while (!PR_CLIST_IS_EMPTY(list)) {
         cur_p = PR_LIST_TAIL(list);
         PR_REMOVE_LINK(cur_p);
@@ -3807,7 +3810,7 @@ tls13_SendNewSessionTicket(sslSocket *ss)
         ticket.flags |= ticket_allow_early_data;
         max_early_data_size_len = 8; /* type + len + value. */
     }
-    ticket.ticket_lifetime_hint = TLS_EX_SESS_TICKET_LIFETIME_HINT;
+    ticket.ticket_lifetime_hint = ssl_ticket_lifetime;
 
     rv = ssl3_EncodeSessionTicket(ss, &ticket, &ticket_data);
     if (rv != SECSuccess)
@@ -3826,7 +3829,7 @@ tls13_SendNewSessionTicket(sslSocket *ss)
         goto loser;
 
     /* This is a fixed value. */
-    rv = ssl3_AppendHandshakeNumber(ss, TLS_EX_SESS_TICKET_LIFETIME_HINT, 4);
+    rv = ssl3_AppendHandshakeNumber(ss, ssl_ticket_lifetime, 4);
     if (rv != SECSuccess)
         goto loser;
 
