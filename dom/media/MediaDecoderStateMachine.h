@@ -127,6 +127,12 @@ enum class MediaEventType : int8_t
   CancelVideoSuspendTimer
 };
 
+enum class VideoDecodeMode : uint8_t
+{
+  Normal,
+  Suspend
+};
+
 /*
   The state machine class. This manages the decoding and seeking in the
   MediaDecoderReader on the decode task queue, and A/V sync on the shared
@@ -226,6 +232,9 @@ public:
 
   size_t SizeOfAudioQueue() const;
 
+  // Sets the video decode mode. Used by the suspend-video-decoder feature.
+  void SetVideoDecodeMode(VideoDecodeMode aMode);
+
 private:
   class StateObject;
   class DecodeMetadataState;
@@ -306,6 +315,8 @@ private:
   // to the decoders.
   void ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                TrackInfo::kVideoTrack));
+
+  void SetVideoDecodeModeInternal(VideoDecodeMode aMode);
 
 protected:
   virtual ~MediaDecoderStateMachine();
@@ -675,6 +686,9 @@ private:
 
   // Media data resource from the decoder.
   RefPtr<MediaResource> mResource;
+
+  // Track the current video decode mode.
+  VideoDecodeMode mVideoDecodeMode;
 
   // Track the complete & error for audio/video separately
   MozPromiseRequestHolder<GenericPromise> mMediaSinkAudioPromise;
