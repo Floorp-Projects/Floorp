@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import abc
-
 
 class Task(object):
     """
@@ -24,13 +22,9 @@ class Task(object):
     - task_id -- TaskCluster taskId under which this task will be created
     - optimized -- true if this task need not be performed
 
-    A kind represents a collection of tasks that share common characteristics.
-    For example, all build jobs.  Each instance of a kind is intialized with a
-    path from which it draws its task configuration.  The instance is free to
-    store as much local state as it needs.
+    This class is just a convenience wraper for the data type and managing
+    display, comparison, serialization, etc. It has no functionality of its own.
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, kind, label, attributes, task,
                  optimizations=None, dependencies=None):
         self.kind = kind
@@ -55,6 +49,24 @@ class Task(object):
             self.optimizations == other.optimizations and \
             self.dependencies == other.dependencies
 
+    def __repr__(self):
+        return ('Task({kind!r}, {label!r}, {attributes!r}, {task!r}, '
+                'optimizations={optimizations!r}, '
+                'dependencies={dependencies!r})'.format(**self.__dict__))
+
+    def to_json(self):
+        rv = {
+            'kind': self.kind,
+            'label': self.label,
+            'attributes': self.attributes,
+            'dependencies': self.dependencies,
+            'optimizations': self.optimizations,
+            'task': self.task,
+        }
+        if self.task_id:
+            rv['task_id'] = self.task_id
+        return rv
+
     @classmethod
     def from_json(cls, task_dict):
         """
@@ -62,8 +74,13 @@ class Task(object):
         the original Task object.  This is used to "resume" the task-graph
         generation process, for example in Action tasks.
         """
-        return cls(
-            kind=task_dict['attributes']['kind'],
+        rv = cls(
+            kind=task_dict['kind'],
             label=task_dict['label'],
             attributes=task_dict['attributes'],
-            task=task_dict['task'])
+            task=task_dict['task'],
+            optimizations=task_dict['optimizations'],
+            dependencies=task_dict.get('dependencies'))
+        if 'task_id' in task_dict:
+            rv.task_id = task_dict['task_id']
+        return rv

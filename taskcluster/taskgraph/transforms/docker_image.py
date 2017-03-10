@@ -67,14 +67,6 @@ def fill_template(config, tasks):
 
         # include some information that is useful in reconstructing this task
         # from JSON
-        extra = {
-            'imageMeta': {
-                'level': config.params['level'],
-                'contextHash': context_hash,
-                'imageName': image_name,
-            },
-        }
-
         taskdesc = {
             'label': 'build-docker-image-' + image_name,
             'description': description,
@@ -83,7 +75,6 @@ def fill_template(config, tasks):
             'routes': routes,
             'optimizations': optimizations,
             'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
-            'extra': extra,
             'treeherder': {
                 'symbol': job_symbol,
                 'platform': 'taskcluster-images/opt',

@@ -208,6 +208,9 @@ represented as a JSON object.
 
 Each task has the following properties:
 
+``kind``
+   The name of this task's kind
+
 ``task_id``
    The task's taskId (only for optimized task graphs)
 
@@ -221,12 +224,11 @@ Each task has the following properties:
    The task's in-graph dependencies, represented as an object mapping
    dependency name to label (or to taskId for optimized task graphs)
 
+``optimizations``
+   The optimizations to be applied to this task
+
 ``task``
    The task's TaskCluster task definition.
-
-``kind_implementation``
-   The module and the class name which was used to implement this particular task.
-   It is always of the form ``<module-path>:<object-path>``
 
 The results from each command are in the same format, but with some differences
 in the content:

@@ -12,40 +12,10 @@ import unittest
 import tempfile
 
 from .. import decision
-from ..graph import Graph
-from ..taskgraph import TaskGraph
-from .util import TestTask
 from mozunit import main
 
 
 class TestDecision(unittest.TestCase):
-
-    def test_taskgraph_to_json(self):
-        tasks = {
-            'a': TestTask(label='a', attributes={'attr': 'a-task'}),
-            'b': TestTask(label='b', task={'task': 'def'}),
-        }
-        graph = Graph(nodes=set('ab'), edges={('a', 'b', 'edgelabel')})
-        taskgraph = TaskGraph(tasks, graph)
-
-        res = taskgraph.to_json()
-
-        self.assertEqual(res, {
-            'a': {
-                'label': 'a',
-                'attributes': {'attr': 'a-task', 'kind': 'test'},
-                'task': {},
-                'dependencies': {'edgelabel': 'b'},
-                'kind_implementation': 'taskgraph.test.util:TestTask',
-            },
-            'b': {
-                'label': 'b',
-                'attributes': {'kind': 'test'},
-                'task': {'task': 'def'},
-                'dependencies': {},
-                'kind_implementation': 'taskgraph.test.util:TestTask',
-            }
-        })
 
     def test_write_artifact_json(self):
         data = [{'some': 'data'}]
