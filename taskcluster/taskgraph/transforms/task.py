@@ -52,10 +52,6 @@ task_description_schema = Schema({
     # automatically
     Optional('routes'): [basestring],
 
-    # The index paths where this task may be cached. Transforms are expected to
-    # fill these automatically when wanted.
-    Optional('index-paths'): [basestring],
-
     # custom scopes for this task; any scopes required for the worker will be
     # added automatically
     Optional('scopes'): [basestring],
@@ -799,7 +795,6 @@ def add_files_changed(config, tasks):
 def setup_optimizations(config, tasks):
     for task in tasks:
         optimizations = task.setdefault('optimizations', [])
-        optimizations.extend([['index-search', idx] for idx in task.get('index-paths', [])])
         optimizations.append(['seta'])
         if 'when' in task and 'files-changed' in task['when']:
             optimizations.append(['files-changed', task['when']['files-changed']])
