@@ -762,7 +762,18 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
 
-  return Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+  MOZ_ASSERT(!sInServoTraversal);
+  sInServoTraversal = true;
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+
+  if (mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag)) {
+    computedValues =
+      Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+  }
+  sInServoTraversal = false;
+
+  return computedValues.forget();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;
