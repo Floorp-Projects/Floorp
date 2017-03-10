@@ -838,10 +838,10 @@ public class AndroidFxAccount {
       return 0L;
     }
 
-    // Long.valueOf might throw; while it's not expected that this might happen, let's not risk
+    // Long.parseLong might throw; while it's not expected that this might happen, let's not risk
     // crashing here as this method will be called on startup.
     try {
-      return Long.valueOf(timestampStr);
+      return Long.parseLong(timestampStr);
     } catch (NumberFormatException e) {
       Logger.warn(LOG_TAG, "Couldn't parse deviceRegistrationTimestamp; defaulting to 0L.", e);
       return 0L;
