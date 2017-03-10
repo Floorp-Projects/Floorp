@@ -109,6 +109,7 @@ class ContentPage {
                                             .QueryInterface(Ci.nsIWebNavigation);
 
     chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.useGlobalHistory = false;
     chromeShell.loadURI(XUL_URL, 0, null, null, null);
 
     await promiseObserved("chrome-document-global-created",
@@ -118,6 +119,7 @@ class ContentPage {
 
     let browser = chromeDoc.createElement("browser");
     browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
 
     let awaitFrameLoader = Promise.resolve();
     if (this.remote) {
