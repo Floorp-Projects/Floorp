@@ -45,7 +45,7 @@
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
-    <string name="preference_performance_block_images">Block Images</string>
+    <string name="preference_performance_block_images">Block images</string>
 
     <!-- This preference does not set Focus as the default browser but instead links to Android's
      "default apps" screen or if not supported by this Android version to a SUMO page describing
