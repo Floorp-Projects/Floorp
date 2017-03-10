@@ -99,6 +99,17 @@ public:
   ThreadSafePrincipalHolder* mPrincipal;
 };
 
+class GeckoParserExtraData
+{
+public:
+  GeckoParserExtraData(nsIURI* aBaseURI,
+                       nsIURI* aReferrer,
+                       nsIPrincipal* aPrincipal);
+  RefPtr<ThreadSafeURIHolder> mBaseURI;
+  RefPtr<ThreadSafeURIHolder> mReferrer;
+  RefPtr<ThreadSafePrincipalHolder> mPrincipal;
+};
+
 // DOM Traversal.
 uint32_t Gecko_ChildrenCount(RawGeckoNodeBorrowed node);
 bool Gecko_NodeIsElement(RawGeckoNodeBorrowed node);
@@ -180,6 +191,14 @@ RawServoDeclarationBlockStrong
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
                        nsIAtom* aPseudoTag,
                        mozilla::EffectCompositor::CascadeLevel aCascadeLevel);
+bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
+                                 RawGeckoStyleAnimationListBorrowed);
+void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
+                            nsIAtom* aPseudoTagOrNull,
+                            ServoComputedValuesBorrowedOrNull aComputedValues,
+                            ServoComputedValuesBorrowedOrNull aParentComputedValues);
+bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
+                                   nsIAtom* aPseudoTagOrNull);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);

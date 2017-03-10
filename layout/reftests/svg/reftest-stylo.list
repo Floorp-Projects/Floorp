@@ -27,7 +27,7 @@ include moz-only/reftest-stylo.list
 include svg-integration/reftest-stylo.list
 
 == baseline-middle-01.svg baseline-middle-01.svg
-fails == border-radius-01.html border-radius-01.html
+== border-radius-01.html border-radius-01.html
 == clip-01.svg clip-01.svg
 == clip-02a.svg clip-02a.svg
 == clip-02b.svg clip-02b.svg
@@ -103,7 +103,7 @@ fails == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox.html
 == dynamic-rect-01.svg dynamic-rect-01.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-02.svg
 == dynamic-rect-03.svg dynamic-rect-03.svg
-fails == dynamic-rect-04.xhtml dynamic-rect-04.xhtml
+== dynamic-rect-04.xhtml dynamic-rect-04.xhtml
 == dynamic-rect-05.svg dynamic-rect-05.svg
 == dynamic-reflow-01.svg dynamic-reflow-01.svg
 == dynamic-small-object-scaled-up-01.svg dynamic-small-object-scaled-up-01.svg
@@ -192,7 +192,7 @@ fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg g
 fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01c.svg
 fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01d.svg
 == gradient-transform-01.svg gradient-transform-01.svg
-fails == import-svg-01.html import-svg-01.html
+== import-svg-01.html import-svg-01.html
 == invalid-text-01.svg invalid-text-01.svg
 == lang-attribute-01.svg lang-attribute-01.svg
 == lang-attribute-02.svg lang-attribute-02.svg
@@ -248,11 +248,11 @@ fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transf
 fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01.svg
 fails == outline.html outline.html
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01.svg
-fails == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02a.xhtml
-fails == overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02b.xhtml
-fails == overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02c.xhtml
+== overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02a.xhtml
+== overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02b.xhtml
+== overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02c.xhtml
 fails == overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02d.xhtml
-fails == overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03a.xhtml
+== overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03a.xhtml
 fails == overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02.svg
@@ -307,8 +307,8 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg rect-01.svg
 == stroke-width-percentage-03.xhtml stroke-width-percentage-03.xhtml
 == style-property-on-script-element-01.svg style-property-on-script-element-01.svg
 == style-without-type-attribute.svg style-without-type-attribute.svg
-fails == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01.xhtml
-fails == svg-in-foreignObject-02.xhtml svg-in-foreignObject-02.xhtml
+== svg-in-foreignObject-01.xhtml svg-in-foreignObject-01.xhtml
+== svg-in-foreignObject-02.xhtml svg-in-foreignObject-02.xhtml
 == switch-01.svg switch-01.svg
 == suspend-01.svg suspend-01.svg
 == suspend-02.svg suspend-02.svg
@@ -360,7 +360,7 @@ fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg stroke-dasharray-03.svg
 == textPath-02.svg textPath-02.svg
 fuzzy-if(skiaContent,1,610) == textPath-03.svg textPath-03.svg
 == textPath-04.svg textPath-04.svg
-fails == textPath-05.html textPath-05.html
+== textPath-05.html textPath-05.html
 == text-style-01a.svg text-style-01a.svg
 == text-style-01b.svg text-style-01b.svg
 == text-style-01c.svg text-style-01c.svg
@@ -402,7 +402,7 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-01
 == viewBox-invalid-01.svg viewBox-invalid-01.svg
 == viewBox-invalid-02.svg viewBox-invalid-02.svg
 == viewBox-valid-01.svg viewBox-valid-01.svg
-fails == viewBox-valid-02.xhtml viewBox-valid-02.xhtml
+== viewBox-valid-02.xhtml viewBox-valid-02.xhtml
 == viewport-percent-graphic-user-01.svg viewport-percent-graphic-user-01.svg
 == winding-01.svg winding-01.svg
 

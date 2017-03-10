@@ -38,7 +38,7 @@ fails == gradient-html-04.html gradient-html-04.html
 fails == gradient-html-05.html gradient-html-05.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06a.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06b.html
-fails == gradient-html-06c.html gradient-html-06c.html
+== gradient-html-06c.html gradient-html-06c.html
 fails == gradient-html-06d.html gradient-html-06d.html
 random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html gradient-html-07a.html
 fails == gradient-html-07c.html gradient-html-07c.html

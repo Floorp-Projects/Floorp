@@ -92,6 +92,17 @@ public:
    */
   static void ClearServoDataFromSubtree(Element* aElement);
 
+  /**
+   * Posts restyle hints for animations.
+   * This is only called for the second traversal for CSS animations during
+   * updating CSS animations in a SequentialTask.
+   * This function does neither register a refresh observer nor flag that a
+   * style flush is needed since this function is supposed to be called during
+   * restyling process and this restyle event will be processed in the second
+   * traversal of the same restyling process.
+   */
+  static void PostRestyleEventForAnimations(dom::Element* aElement,
+                                            nsRestyleHint aRestyleHint);
 protected:
   ~ServoRestyleManager() override
   {

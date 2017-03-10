@@ -175,6 +175,21 @@ public:
     virtual bool SetPotentialLineBreaks(Range aRange,
                                         const uint8_t* aBreakBefore);
 
+    enum class HyphenType : uint8_t {
+      None,
+      Explicit,
+      Soft,
+      AutoWithManualInSameWord,
+      AutoWithoutManualInSameWord
+    };
+
+    struct HyphenationState {
+      uint32_t mostRecentBoundary = 0;
+      bool     hasManualHyphen = false;
+      bool     hasExplicitHyphen = false;
+      bool     hasAutoHyphen = false;
+    };
+
     /**
      * Layout provides PropertyProvider objects. These allow detection of
      * potential line break points and computation of spacing. We pass the data
@@ -189,7 +204,8 @@ public:
     public:
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
-        virtual void GetHyphenationBreaks(Range aRange, bool *aBreakBefore) = 0;
+        virtual void GetHyphenationBreaks(Range aRange,
+                                          HyphenType *aBreakBefore) = 0;
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
@@ -336,6 +352,10 @@ public:
       // Measure the range of text as if it contains no break
       eSuppressAllBreaks
     };
+
+    void ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
+                                  nsTArray<HyphenType>& aHyphenBuffer,
+                                  HyphenationState* aWordState);
 
     /**
      * Finds the longest substring that will fit into the given width.
