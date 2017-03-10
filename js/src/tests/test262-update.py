@@ -231,6 +231,9 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
         unsupported = UNSUPPORTED_FEATURES.intersection(testRec["features"])
         if unsupported:
             refTestSkip.append("%s is not supported" % ",".join(list(unsupported)))
+        elif "SharedArrayBuffer" in testRec["features"]:
+            refTestSkipIf.append(("!this.hasOwnProperty('SharedArrayBuffer')",
+                                  "SharedArrayBuffer not yet riding the trains"))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
@@ -355,6 +358,7 @@ def update_test262(args):
     if not os.path.isabs(outDir):
         outDir = os.path.join(os.getcwd(), outDir)
     strictTests = args.strict
+    localTestsOutDir = os.path.join(outDir, "local");
 
     # Download the requested branch in a temporary directory.
     with TemporaryDirectory() as inDir:
@@ -363,6 +367,13 @@ def update_test262(args):
         else:
             subprocess.check_call(["git", "clone", "--single-branch", "--branch=%s" % branch, url, inDir])
             subprocess.check_call(["git", "-C", inDir, "reset", "--hard", revision])
+
+        # Stash test262/local. Currently the test262 repo does not have any
+        # top-level subdirectory named "local".
+        restoreLocalTestsDir = False
+        if os.path.isdir(localTestsOutDir):
+            shutil.move(localTestsOutDir, inDir)
+            restoreLocalTestsDir = True
 
         # Create the output directory from scratch.
         if os.path.isdir(outDir):
@@ -378,6 +389,10 @@ def update_test262(args):
 
         # Copy the test files.
         process_test262(inDir, outDir, strictTests)
+
+        # Move test262/local back.
+        if restoreLocalTestsDir:
+            shutil.move(os.path.join(inDir, "local"), outDir)
 
 if __name__ == "__main__":
     import argparse
