@@ -53,6 +53,7 @@
 #include "nsIOService.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIThrottlingService.h"
+#include "nsISupportsPrimitives.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -385,6 +386,9 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, "browser:purge-session-history", true);
         obsService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
         obsService->AddObserver(this, "application-background", true);
+        obsService->AddObserver(this,
+                                "net:current-toplevel-outer-content-windowid",
+                                true);
 
         // disabled as its a nop right now
         // obsService->AddObserver(this, "net:failed-to-process-uri-content", true);
@@ -2124,6 +2128,29 @@ nsHttpHandler::Observe(nsISupports *subject,
             if (NS_FAILED(rv)) {
                 LOG(("    DoShiftReloadConnectionCleanup failed (%08x)\n",
                      static_cast<uint32_t>(rv)));
+            }
+        }
+    } else if (!strcmp(topic, "net:current-toplevel-outer-content-windowid")) {
+        nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(subject);
+        MOZ_RELEASE_ASSERT(wrapper);
+
+        uint64_t windowId = 0;
+        wrapper->GetData(&windowId);
+        MOZ_ASSERT(windowId);
+
+        if (IsNeckoChild()) {
+            if (gNeckoChild) {
+                gNeckoChild->SendNotifyCurrentTopLevelOuterContentWindowId(
+                    windowId);
+            }
+        } else {
+            static uint64_t sCurrentTopLevelOuterContentWindowId = 0;
+            if (sCurrentTopLevelOuterContentWindowId != windowId) {
+                sCurrentTopLevelOuterContentWindowId = windowId;
+                if (mConnMgr) {
+                    mConnMgr->UpdateCurrentTopLevelOuterContentWindowId(
+                        sCurrentTopLevelOuterContentWindowId);
+                }
             }
         }
     }
