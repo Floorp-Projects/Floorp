@@ -31,8 +31,8 @@ add_task(function* () {
     let filePid = yield ContentTask.spawn(fileBrowser, null, () => {
       return Services.appinfo.processID;
     });
-    yield ContentTask.spawn(httpTab.linkedBrowser, filePid, (filePid) => {
-      is(Services.appinfo.processID, filePid,
+    yield ContentTask.spawn(httpTab.linkedBrowser, filePid, (expectedPid) => {
+      is(Services.appinfo.processID, expectedPid,
          "Check that new http page opened from file loaded in file content process.");
     });
   });
