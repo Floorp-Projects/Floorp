@@ -266,12 +266,6 @@ ToInteger(JSContext* cx, HandleValue v, double* dp)
     return true;
 }
 
-/* ES6 7.1.15 ToLength, but clamped to the [0,2^32-2] range.  If the
- * return value is false then *overflow will be true iff the value was
- * not clampable to uint32_t range.
- */
-MOZ_MUST_USE bool ToLengthClamped(JSContext* cx, HandleValue v, uint32_t* out, bool* overflow);
-
 /* Non-standard convert and range check an index value as for SIMD, and Atomics
  * operations, eg ES7 24.2.1.1, DataView's GetViewValue():
  *
