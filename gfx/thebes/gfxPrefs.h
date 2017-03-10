@@ -466,6 +466,7 @@ private:
   DECL_GFX_PREF(Live, "layers.advanced.boxshadow-outer-layers", LayersAllowOuterBoxShadow, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.boxshadow-inset-layers", LayersAllowInsetBoxShadow, bool, false);
   DECL_GFX_PREF(Live, "layers.advanced.outline-layers",        LayersAllowOutlineLayers, bool, false);
+  DECL_GFX_PREF(Live, "layers.advanced.image-layers",          LayersAllowImageLayers, bool, false);
   DECL_GFX_PREF(Once, "layers.amd-switchable-gfx.enabled",     LayersAMDSwitchableGfxEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.enabled",         AsyncPanZoomEnabledDoNotUseDirectly, bool, true);
   DECL_GFX_PREF(Once, "layers.async-pan-zoom.separate-event-thread", AsyncPanZoomSeparateEventThread, bool, false);
@@ -628,6 +629,7 @@ private:
   DECL_GFX_PREF(Live, "webgl.enable-webgl2",                   WebGL2Enabled, bool, true);
   DECL_GFX_PREF(Live, "webgl.force-enabled",                   WebGLForceEnabled, bool, false);
   DECL_GFX_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, bool, false);
+  DECL_GFX_PREF(Live, "webgl.force-index-validation",          WebGLForceIndexValidation, bool, false);
   DECL_GFX_PREF(Live, "webgl.lose-context-on-memory-pressure", WebGLLoseContextOnMemoryPressure, bool, false);
   DECL_GFX_PREF(Live, "webgl.max-warnings-per-context",        WebGLMaxWarningsPerContext, uint32_t, 32);
   DECL_GFX_PREF(Live, "webgl.min_capability_mode",             WebGLMinCapabilityMode, bool, false);

@@ -7,12 +7,8 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Canvas: 2D')
 
-with Files('*WebGL*'):
-    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
-
 UNIFIED_SOURCES += [
     'TestImageBitmapColorUtils.cpp',
-    'TestWebGLElementArrayCache.cpp',
 ]
 
 LOCAL_INCLUDES += [

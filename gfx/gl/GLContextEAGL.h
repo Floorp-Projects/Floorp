@@ -51,8 +51,6 @@ public:
 
     virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const override { return false; }
-
     virtual bool SwapBuffers() override;
 
     virtual void GetWSIInfo(nsCString* const out) const override;
