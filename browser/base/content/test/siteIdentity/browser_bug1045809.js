@@ -35,8 +35,10 @@ add_task(function* () {
 function* test1(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
-  is(x, null, "Mixed Content is NOT to be found in Test1");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    is(x, null, "Mixed Content is NOT to be found in Test1");
+  });
 
   // Disable Mixed Content Protection for the page (and reload)
   gIdentityHandler.disableMixedContentProtection();
@@ -45,8 +47,10 @@ function* test1(gTestBrowser) {
 function* test2(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
 
-  var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
-  isnot(x, null, "Mixed Content is to be found in Test2");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    isnot(x, null, "Mixed Content is to be found in Test2");
+  });
 
   // Re-enable Mixed Content Protection for the page (and reload)
   gIdentityHandler.enableMixedContentProtection();
@@ -55,6 +59,8 @@ function* test2(gTestBrowser) {
 function* test3(gTestBrowser) {
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
-  is(x, null, "Mixed Content is NOT to be found in Test3");
+  yield ContentTask.spawn(gTestBrowser, null, function() {
+    var x = content.document.getElementsByTagName("iframe")[0].contentDocument.getElementById("mixedContentContainer");
+    is(x, null, "Mixed Content is NOT to be found in Test3");
+  });
 }
