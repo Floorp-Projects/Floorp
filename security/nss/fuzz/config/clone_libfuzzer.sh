@@ -1,13 +1,13 @@
 #!/bin/sh
 
 d=$(dirname $0)
-$d/git-copy.sh https://chromium.googlesource.com/chromium/llvm-project/llvm/lib/Fuzzer b96a41ac6bbc3824fc7c7977662bebacac8f0983 $d/libFuzzer
+$d/git-copy.sh https://chromium.googlesource.com/chromium/llvm-project/llvm/lib/Fuzzer b96a41ac6bbc3824fc7c7977662bebacac8f0983 $d/../libFuzzer
 
 # [https://llvm.org/bugs/show_bug.cgi?id=31318]
 # This prevents a known buffer overrun that won't be fixed as the affected code
 # will go away in the near future. Until that is we have to patch it as we seem
 # to constantly run into it.
-cat <<EOF | patch -p0 -d $d
+cat <<EOF | patch -p0 -d $d/..
 diff --git libFuzzer/FuzzerLoop.cpp libFuzzer/FuzzerLoop.cpp
 --- libFuzzer/FuzzerLoop.cpp
 +++ libFuzzer/FuzzerLoop.cpp
@@ -26,7 +26,7 @@ EOF
 # Latest Libfuzzer uses __sanitizer_dump_coverage(), a symbol to be introduced
 # with LLVM 4.0. To keep our code working with LLVM 3.x to simplify development
 # of fuzzers we'll just provide it ourselves.
-cat <<EOF | patch -p0 -d $d
+cat <<EOF | patch -p0 -d $d/..
 diff --git libFuzzer/FuzzerTracePC.cpp libFuzzer/FuzzerTracePC.cpp
 --- libFuzzer/FuzzerTracePC.cpp
 +++ libFuzzer/FuzzerTracePC.cpp
