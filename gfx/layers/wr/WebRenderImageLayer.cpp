@@ -132,6 +132,11 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
   gfx::Rect rect = RelativeToVisible(Rect(0, 0, size.width, size.height));
+  if (mScaleMode != ScaleMode::SCALE_NONE) {
+    NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
+                 "No other scalemodes than stretch and none supported yet.");
+    rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
+  }
   gfx::Rect clipRect = GetWrClipRect(rect);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer();
