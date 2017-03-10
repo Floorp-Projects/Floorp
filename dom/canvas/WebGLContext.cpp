@@ -2364,7 +2364,9 @@ WebGLContext::StartVRPresentation()
             vrmc->GetBackendType(),
             TextureFlags::ORIGIN_BOTTOM_LEFT);
 
-    screen->Morph(Move(factory));
+    if (factory) {
+        screen->Morph(Move(factory));
+    }
     return true;
 }
 
