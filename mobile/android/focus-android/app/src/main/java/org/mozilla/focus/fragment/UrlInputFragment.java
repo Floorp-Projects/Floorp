@@ -56,7 +56,12 @@ public class UrlInputFragment extends Fragment implements View.OnClickListener, 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_urlinput, container, false);
 
-        view.findViewById(R.id.background).setOnClickListener(this);
+        final ViewGroup backgroundView = (ViewGroup) view.findViewById(R.id.background);
+        ViewUtils.setupLayoutTransition(backgroundView);
+        backgroundView.setOnClickListener(this);
+
+        ViewUtils.setupLayoutTransition((ViewGroup) view.findViewById(R.id.urlbar_background));
+
         view.findViewById(R.id.dismiss).setOnClickListener(this);
 
         clearView = view.findViewById(R.id.clear);
