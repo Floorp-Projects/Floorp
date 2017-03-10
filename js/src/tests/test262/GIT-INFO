@@ -1,5 +1,8 @@
-commit 8a0563dd5eb9c6ee1df8a17cf8f626c35fa56a46
-Author: Corey Frang <gnarf@gnarf.net>
-Date:   Tue Jan 31 10:50:39 2017 -0500
+commit 1327925dafa2fffea089131f71e3d455a1064999
+Merge: 0cc55bb e54c471
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Thu Mar 9 10:30:58 2017 -0500
 
-    Remove old test file (now using the named version)
+    Merge pull request #892 from leobalter/generator-spread
+    
+    Add tests for object spread on yield value

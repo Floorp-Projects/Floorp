@@ -12,7 +12,7 @@ info: |
      a. Return ? ArraySetLength(A, Desc).
 ---*/
 
-var OArray = $.createRealm().global.Array;
+var OArray = $262.createRealm().global.Array;
 var array = new OArray();
 
 assert.throws(RangeError, function() {

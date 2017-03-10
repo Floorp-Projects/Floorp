@@ -17,7 +17,7 @@ var x = 'outside';
 var result;
 
 (function() {
-  var eval = $.createRealm().global.eval;
+  var eval = $262.createRealm().global.eval;
 
   eval('var x = "inside";');
 

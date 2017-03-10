@@ -10,7 +10,7 @@ info: >
 features: [Symbol.match]
 ---*/
 
-var OSymbol = $.createRealm().global.Symbol;
+var OSymbol = $262.createRealm().global.Symbol;
 
 assert.sameValue(Symbol.match, OSymbol.match);
 

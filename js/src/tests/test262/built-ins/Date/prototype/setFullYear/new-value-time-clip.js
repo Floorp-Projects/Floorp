@@ -44,7 +44,7 @@ assert.sameValue(returnValue, NaN, 'overflow due to month');
 
 date = new Date(maxMs);
 
-returnValue = date.setFullYear(maxYear, maxMonth, maxDate + 1);
+returnValue = date.setFullYear(maxYear, maxMonth, maxDate + 2);
 
 assert.sameValue(returnValue, NaN, 'overflow due to date');
 
