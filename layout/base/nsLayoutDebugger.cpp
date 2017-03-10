@@ -169,13 +169,15 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << nsPrintfCString(" (opaque %d,%d,%d,%d)", r.x, r.y, r.width, r.height);
   }
 
-  if (aItem->Frame()->StyleDisplay()->mWillChange.Length() > 0) {
+  const auto& willChange = aItem->Frame()->StyleDisplay()->mWillChange;
+  if (!willChange.IsEmpty()) {
     aStream << " (will-change=";
-    for (size_t i = 0; i < aItem->Frame()->StyleDisplay()->mWillChange.Length(); i++) {
+    for (size_t i = 0; i < willChange.Length(); i++) {
       if (i > 0) {
         aStream << ",";
       }
-      aStream << NS_LossyConvertUTF16toASCII(aItem->Frame()->StyleDisplay()->mWillChange[i]).get();
+      nsDependentAtomString buffer(willChange[i]);
+      aStream << NS_LossyConvertUTF16toASCII(buffer).get();
     }
     aStream << ")";
   }

@@ -16101,14 +16101,13 @@ bool CSSParserImpl::ParseWillChange()
       }
     }
 
-    nsString str;
-    value.GetStringValue(str);
-    if (str.LowerCaseEqualsLiteral("default") ||
-        str.LowerCaseEqualsLiteral("will-change")) {
+    value.AtomizeIdentValue();
+    nsIAtom* atom = value.GetAtomValue();
+    if (atom == nsGkAtoms::_default || atom == nsGkAtoms::willChange) {
       return false;
     }
 
-    currentListValue->mValue = value;
+    currentListValue->mValue = Move(value);
 
     if (!ExpectSymbol(',', true)) {
       break;
