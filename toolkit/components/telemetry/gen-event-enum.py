@@ -29,6 +29,7 @@ file_footer = """\
 #endif // mozilla_TelemetryEventEnums_h
 """
 
+
 def main(output, *filenames):
     # Load the events first.
     if len(filenames) > 1:

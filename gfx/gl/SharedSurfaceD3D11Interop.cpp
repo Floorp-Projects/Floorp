@@ -6,6 +6,7 @@
 #include "SharedSurfaceD3D11Interop.h"
 
 #include <d3d11.h>
+#include <d3d11_1.h>
 #include "gfxPrefs.h"
 #include "GLContext.h"
 #include "WGLLibrary.h"
@@ -114,6 +115,33 @@ while (!done) {
 ////////////////////////////////////////////////////////////////////////////////
 // DXInterop2Device
 
+class ScopedContextState final
+{
+    ID3D11DeviceContext1* const mD3DContext;
+    RefPtr<ID3DDeviceContextState> mOldContextState;
+
+public:
+    ScopedContextState(ID3D11DeviceContext1* d3dContext,
+                       ID3DDeviceContextState* newContextState)
+        : mD3DContext(d3dContext)
+        , mOldContextState(nullptr)
+    {
+        if (!mD3DContext)
+            return;
+
+        mD3DContext->SwapDeviceContextState(newContextState,
+                                            getter_AddRefs(mOldContextState));
+    }
+
+    ~ScopedContextState()
+    {
+        if (!mD3DContext)
+            return;
+
+        mD3DContext->SwapDeviceContextState(mOldContextState, nullptr);
+    }
+};
+
 class DXInterop2Device : public RefCounted<DXInterop2Device>
 {
 public:
@@ -123,6 +151,10 @@ public:
     const RefPtr<ID3D11Device> mD3D; // Only needed for lifetime guarantee.
     const HANDLE mInteropDevice;
     GLContext* const mGL;
+
+    // AMD workaround.
+    const RefPtr<ID3D11DeviceContext1> mD3DContext;
+    const RefPtr<ID3DDeviceContextState> mContextState;
 
     static already_AddRefed<DXInterop2Device> Open(WGLLibrary* wgl, GLContext* gl)
     {
@@ -137,21 +169,47 @@ public:
         if (!gl->MakeCurrent())
             return nullptr;
 
+        RefPtr<ID3D11DeviceContext1> d3dContext;
+        RefPtr<ID3DDeviceContextState> contextState;
+        if (gl->WorkAroundDriverBugs() && gl->Vendor() == GLVendor::ATI) {
+            // AMD calls ID3D10Device::Flush, so we need to be in ID3D10Device mode.
+            RefPtr<ID3D11Device1> d3d11_1;
+            auto hr = d3d->QueryInterface(__uuidof(ID3D11Device1),
+                                          getter_AddRefs(d3d11_1));
+            if (!SUCCEEDED(hr))
+                return nullptr;
+
+            d3d11_1->GetImmediateContext1(getter_AddRefs(d3dContext));
+            MOZ_ASSERT(d3dContext);
+
+            const D3D_FEATURE_LEVEL featureLevel10_0 = D3D_FEATURE_LEVEL_10_0;
+            hr = d3d11_1->CreateDeviceContextState(0, &featureLevel10_0, 1,
+                                                   D3D11_SDK_VERSION,
+                                                   __uuidof(ID3D10Device), nullptr,
+                                                   getter_AddRefs(contextState));
+            if (!SUCCEEDED(hr))
+                return nullptr;
+        }
+
         const auto interopDevice = wgl->mSymbols.fDXOpenDeviceNV(d3d);
         if (!interopDevice) {
             gfxCriticalNote << "DXInterop2Device::Open: DXOpenDevice failed.";
             return nullptr;
         }
 
-        return MakeAndAddRef<DXInterop2Device>(wgl, d3d, interopDevice, gl);
+        return MakeAndAddRef<DXInterop2Device>(wgl, d3d, interopDevice, gl, d3dContext,
+                                               contextState);
     }
 
     DXInterop2Device(WGLLibrary* wgl, ID3D11Device* d3d, HANDLE interopDevice,
-                     GLContext* gl)
+                     GLContext* gl, ID3D11DeviceContext1* d3dContext,
+                     ID3DDeviceContextState* contextState)
         : mWGL(wgl)
         , mD3D(d3d)
         , mInteropDevice(interopDevice)
         , mGL(gl)
+        , mD3DContext(d3dContext)
+        , mContextState(contextState)
     { }
 
     ~DXInterop2Device() {
@@ -176,8 +234,9 @@ public:
         if (!mGL->MakeCurrent())
             return nullptr;
 
-        const auto& ret = mWGL->mSymbols.fDXRegisterObjectNV(mInteropDevice, d3dObject,
-                                                             name, type, access);
+        const ScopedContextState autoCS(mD3DContext, mContextState);
+        const auto ret = mWGL->mSymbols.fDXRegisterObjectNV(mInteropDevice, d3dObject,
+                                                            name, type, access);
         if (ret)
             return ret;
 
@@ -193,6 +252,7 @@ public:
     bool UnregisterObject(HANDLE lockHandle) const {
         const auto isCurrent = mGL->MakeCurrent();
 
+        const ScopedContextState autoCS(mD3DContext, mContextState);
         if (mWGL->mSymbols.fDXUnregisterObjectNV(mInteropDevice, lockHandle))
             return true;
 

@@ -87,6 +87,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
     , mPruningNoTraffic(false)
     , mTimeoutTickArmed(false)
     , mTimeoutTickNext(1)
+    , mCurrentTopLevelOuterContentWindowId(0)
 {
     LOG(("Creating nsHttpConnectionMgr @%p\n", this));
 }
@@ -2428,6 +2429,44 @@ nsHttpConnectionMgr::ActivateTimeoutTick()
     mTimeoutTick->Init(this, 1000, nsITimer::TYPE_REPEATING_SLACK);
 }
 
+class UINT64Wrapper : public ARefBase
+{
+public:
+    explicit UINT64Wrapper(uint64_t aUint64) : mUint64(aUint64) {}
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UINT64Wrapper)
+
+    uint64_t GetValue()
+    {
+        return mUint64;
+    }
+private:
+    uint64_t mUint64;
+    virtual ~UINT64Wrapper() = default;
+};
+
+nsresult
+nsHttpConnectionMgr::UpdateCurrentTopLevelOuterContentWindowId(
+    uint64_t aWindowId)
+{
+    RefPtr<UINT64Wrapper> windowIdWrapper = new UINT64Wrapper(aWindowId);
+    return PostEvent(
+        &nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId,
+        0,
+        windowIdWrapper);
+}
+
+void
+nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
+    int32_t, ARefBase *param)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    mCurrentTopLevelOuterContentWindowId =
+        static_cast<UINT64Wrapper*>(param)->GetValue();
+    LOG(("nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId"
+         " id=%" PRIu64 "\n",
+         mCurrentTopLevelOuterContentWindowId));
+}
+
 void
 nsHttpConnectionMgr::TimeoutTick()
 {
@@ -3159,6 +3198,11 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                     newKey->AppendLiteral("~.:");
                 }
                 newKey->AppendInt(mEnt->mConnInfo->OriginPort());
+                newKey->AppendLiteral("/[");
+                nsAutoCString suffix;
+                mEnt->mConnInfo->GetOriginAttributes().CreateSuffix(suffix);
+                newKey->Append(suffix);
+                newKey->Append(']');
                 LOG(("nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus "
                      "STATUS_CONNECTING_TO Established New Coalescing Key # %d for host "
                      "%s [%s]", i, mEnt->mConnInfo->Origin(), newKey->get()));

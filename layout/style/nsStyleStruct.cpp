@@ -716,6 +716,17 @@ nsStyleList::CalcDifference(const nsStyleList& aNewData) const
   return NS_STYLE_HINT_REFLOW;
 }
 
+already_AddRefed<nsIURI>
+nsStyleList::GetListStyleImageURI() const
+{
+  if (!mListStyleImage) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri = mListStyleImage->GetImageURI();
+  return uri.forget();
+}
+
 StaticRefPtr<nsStyleQuoteValues>
 nsStyleList::sInitialQuotes;
 
@@ -2245,6 +2256,28 @@ ConvertToPixelCoord(const nsStyleCoord& aCoord, int32_t aPercentScale)
   return NS_lround(pixelValue);
 }
 
+already_AddRefed<nsIURI>
+nsStyleImageRequest::GetImageURI() const
+{
+  nsCOMPtr<nsIURI> uri;
+
+  if (mRequestProxy) {
+    mRequestProxy->GetURI(getter_AddRefs(uri));
+    if (uri) {
+      return uri.forget();
+    }
+  }
+
+  // If we had some problem resolving the mRequestProxy, use the URL stored
+  // in the mImageValue.
+  if (!mImageValue) {
+    return nullptr;
+  }
+
+  uri = mImageValue->GetURI();
+  return uri.forget();
+}
+
 bool
 nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
                                     bool* aIsEntireImage) const
@@ -2441,6 +2474,17 @@ nsStyleImage::PurgeCacheForViewportChange(
     mCachedBIData->PurgeCachedImages();
     mCachedBIData->SetCachedSVGViewportSize(aSVGViewportSize);
   }
+}
+
+already_AddRefed<nsIURI>
+nsStyleImage::GetImageURI() const
+{
+  if (mType != eStyleImageType_Image) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> uri = mImage->GetImageURI();
+  return uri.forget();
 }
 
 // --------------------
@@ -2935,21 +2979,11 @@ nsStyleImageLayers::Layer::CalcDifference(const nsStyleImageLayers::Layer& aNewL
     // not, it "must" not link to a SVG mask.
     bool maybeSVGMask = false;
     if (mSourceURI) {
-      if (mSourceURI->IsLocalRef()) {
-        maybeSVGMask = true;
-      } else if (mSourceURI->GetURI()) {
-        mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
-      }
+      maybeSVGMask = mSourceURI->HasRef();
     }
 
-    if (!maybeSVGMask) {
-      if (aNewLayer.mSourceURI) {
-        if (aNewLayer.mSourceURI->IsLocalRef()) {
-          maybeSVGMask = true;
-        } else if (aNewLayer.mSourceURI->GetURI()) {
-          aNewLayer.mSourceURI->GetURI()->GetHasRef(&maybeSVGMask);
-        }
-      }
+    if (!maybeSVGMask && aNewLayer.mSourceURI) {
+      maybeSVGMask = aNewLayer.mSourceURI->HasRef();
     }
 
     // Return nsChangeHint_UpdateOverflow if either URI might link to an SVG

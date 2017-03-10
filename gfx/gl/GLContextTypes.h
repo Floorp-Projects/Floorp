@@ -56,6 +56,7 @@ enum class CreateContextFlags : int8_t {
     PREFER_ES3 = 1 << 3,
 
     NO_VALIDATION = 1 << 4,
+    PREFER_ROBUSTNESS = 1 << 5,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

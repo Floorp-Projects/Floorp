@@ -23,8 +23,9 @@ abstract class TabsGridLayout extends TabsLayout {
 
         setItemAnimator(new TabsGridLayoutAnimator());
 
-        // A TouchHelper handler for swipe to close.
-        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this) {
+        final int dragDirections = ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END;
+        // A TouchHelper handler for drag and drop and swipe to close.
+        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this, dragDirections, this) {
             @Override
             protected float alphaForItemSwipeDx(float dX, int distanceToAlphaMin) {
                 return 1f - 2f * Math.abs(dX) / distanceToAlphaMin;

@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+
+<head>
+</head>
+<body>
+
+Loading the below iframe should not crash Firefox in Stylo mode.
+<svg height="100" width="100" id="svgElement">
+    <circle cx="50" cy="50" r="40" stroke="yellow" stroke-width="2" fill="green"/>
+</svg>
+
+<iframe src="" id="myFrame"></iframe>
+<div style="display: none" id="triggerRestyle"></div>
+<script type="text/javascript">
+let frame = document.getElementById("myFrame");
+frame.onload = function() {
+    let baz = frame.contentDocument.adoptNode(document.getElementById("svgElement"));
+    frame.contentDocument.body.appendChild(baz);
+    baz = null;
+    frame.remove();
+    frame = null;
+    SpecialPowers.gc();
+    let color = getComputedStyle(document.getElementById('triggerRestyle')).color;
+    document.documentElement.className = "";
+}
+</script>
+</body>
+</html>

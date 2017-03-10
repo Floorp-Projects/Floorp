@@ -874,7 +874,6 @@ public:
   nsresult GetHistogram(const nsCString& name, Histogram** histogram, bool subsession);
   Histogram* GetHistogram(const nsCString& name, bool subsession);
   uint32_t GetHistogramType() const { return mHistogramType; }
-  nsresult GetDataset(uint32_t* dataset) const;
   nsresult GetJSKeys(JSContext* cx, JS::CallArgs& args);
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                          bool subsession, bool clearSubsession);
@@ -982,14 +981,6 @@ KeyedHistogram::GetHistogram(const nsCString& key, bool subsession)
     return nullptr;
   }
   return h;
-}
-
-nsresult
-KeyedHistogram::GetDataset(uint32_t* dataset) const
-{
-  MOZ_ASSERT(dataset);
-  *dataset = mDataset;
-  return NS_OK;
 }
 
 nsresult

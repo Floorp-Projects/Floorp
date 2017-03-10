@@ -109,5 +109,13 @@
     "properties": {
       "pan": { "param": true }
     }
+  },
+  "ConstantSourceNode": {
+    "source": true,
+    "properties": {
+      "offset": { "param": true }
+    }
+  },
+  "IIRFilterNode": {
   }
 }

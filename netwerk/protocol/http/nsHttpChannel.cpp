@@ -992,10 +992,13 @@ nsHttpChannel::SetupTransaction()
         mCaps |= NS_HTTP_ONPUSH_LISTENER;
     }
 
+    EnsureTopLevelOuterContentWindowId();
+
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
                             mUploadStream, mUploadStreamHasHeaders,
                             NS_GetCurrentThread(), callbacks, this,
+                            mTopLevelOuterContentWindowId,
                             getter_AddRefs(responseStream));
     if (NS_FAILED(rv)) {
         mTransaction = nullptr;

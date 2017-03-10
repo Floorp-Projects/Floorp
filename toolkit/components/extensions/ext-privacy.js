@@ -13,28 +13,6 @@ const {
   ExtensionError,
 } = ExtensionUtils;
 
-/* eslint-disable mozilla/balanced-listeners */
-extensions.on("startup", async (type, extension) => {
-  if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"].includes(extension.startupReason)) {
-    await ExtensionPreferencesManager.enableAll(extension);
-  }
-});
-
-extensions.on("shutdown", async (type, extension) => {
-  switch (extension.shutdownReason) {
-    case "ADDON_DISABLE":
-    case "ADDON_DOWNGRADE":
-    case "ADDON_UPGRADE":
-      await ExtensionPreferencesManager.disableAll(extension);
-      break;
-
-    case "ADDON_UNINSTALL":
-      await ExtensionPreferencesManager.removeAll(extension);
-      break;
-  }
-});
-/* eslint-enable mozilla/balanced-listeners */
-
 function checkScope(scope) {
   if (scope && scope !== "regular") {
     throw new ExtensionError(

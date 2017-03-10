@@ -453,6 +453,12 @@ SessionStore.prototype = {
         this.onTabSelect(window, browser);
         break;
       }
+      case "TabMove": {
+        let browser = aEvent.target;
+        log("TabMove for tab " + window.BrowserApp.getTabForBrowser(browser).id);
+        this.onTabMove();
+        break;
+      }
       case "DOMTitleChanged": {
         // Use DOMTitleChanged to detect page loads over alternatives.
         // onLocationChange happens too early, so we don't have the page title
@@ -570,6 +576,7 @@ SessionStore.prototype = {
     browsers.addEventListener("TabOpen", this, true);
     browsers.addEventListener("TabClose", this, true);
     browsers.addEventListener("TabSelect", this, true);
+    browsers.addEventListener("TabMove", this, true);
     browsers.addEventListener("TabPreZombify", this, true);
     browsers.addEventListener("TabPostZombify", this, true);
   },
@@ -584,6 +591,7 @@ SessionStore.prototype = {
     browsers.removeEventListener("TabOpen", this, true);
     browsers.removeEventListener("TabClose", this, true);
     browsers.removeEventListener("TabSelect", this, true);
+    browsers.removeEventListener("TabMove", this, true);
     browsers.removeEventListener("TabPreZombify", this, true);
     browsers.removeEventListener("TabPostZombify", this, true);
 
@@ -784,8 +792,7 @@ SessionStore.prototype = {
       return;
     }
 
-    let browsers = aWindow.document.getElementById("browsers");
-    let index = browsers.selectedIndex;
+    let index = aWindow.BrowserApp.selectedTabIndex;
     this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
 
     let tab = aWindow.BrowserApp.getTabForBrowser(aBrowser);
@@ -824,6 +831,17 @@ SessionStore.prototype = {
     delete browser.__SS_restore;
     browser.removeAttribute("pending");
     log("restoring zombie tab " + aTab.id);
+  },
+
+  onTabMove: function ss_onTabMove() {
+    if (this._loadState != STATE_RUNNING) {
+      return;
+    }
+
+    // The long press that initiated the move canceled any close undo option that may have been
+    // present.
+    this._lastClosedTabIndex = -1;
+    this.saveStateDelayed();
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {
@@ -1111,8 +1129,7 @@ SessionStore.prototype = {
     let winData = this._windows[aWindow.__SSID];
     winData.tabs = [];
 
-    let browsers = aWindow.document.getElementById("browsers");
-    let index = browsers.selectedIndex;
+    let index = aWindow.BrowserApp.selectedTabIndex;
     winData.selected = parseInt(index) + 1; // 1-based
 
     let tabs = aWindow.BrowserApp.tabs;

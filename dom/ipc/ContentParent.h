@@ -996,7 +996,7 @@ private:
 
   virtual mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                                    nsString* aProviderName,
-                                                   OptionalInputStreamParams* aPostData,
+                                                   OptionalIPCStream* aPostData,
                                                    OptionalURIParams* aURI) override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyKeywordSearchLoading(const nsString &aProvider,

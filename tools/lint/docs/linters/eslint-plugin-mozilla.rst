@@ -234,9 +234,6 @@ Example configuration::
 
    "rules": {
      "mozilla/balanced-listeners": 2,
-     "mozilla/components-imports": 1,
-     "mozilla/import-globals-from": 1,
-     "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
      "mozilla/var-only-at-top-level": 1,
      "mozilla/no-cpows-in-tests": 1,

@@ -5,7 +5,7 @@
 implementation: taskgraph.task.transform:TransformTask
 
 transforms:
-   - taskgraph.transforms.build_attrs:transforms
+   - taskgraph.transforms.source_test:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 

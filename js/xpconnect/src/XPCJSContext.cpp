@@ -3541,6 +3541,10 @@ XPCJSContext::Initialize()
     ReloadPrefsCallback(nullptr, this);
     Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
 
+#ifdef FUZZING
+    Preferences::RegisterCallback(ReloadPrefsCallback, "fuzzing.enabled", this);
+#endif
+
     return NS_OK;
 }
 

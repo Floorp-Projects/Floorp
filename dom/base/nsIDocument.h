@@ -93,6 +93,7 @@ class nsPresContext;
 class nsRange;
 class nsScriptLoader;
 class nsSMILAnimationController;
+class nsSVGElement;
 class nsTextNode;
 class nsWindowSizes;
 class nsDOMCaretPosition;
@@ -1008,6 +1009,20 @@ public:
   }
 
   virtual void NotifyLayerManagerRecreated() = 0;
+
+  /**
+   * Add an SVG element to the list of elements that need
+   * their mapped attributes resolved to a Servo declaration block.
+   *
+   * These are weak pointers, please manually unschedule them when an element
+   * is removed.
+   */
+  virtual void ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) = 0;
+  // Unschedule an element scheduled by ScheduleFrameRequestCallback (e.g. for when it is destroyed)
+  virtual void UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) = 0;
+
+  // Resolve all SVG pres attrs scheduled in ScheduleSVGForPresAttrEvaluation
+  virtual void ResolveScheduledSVGPresAttrs() = 0;
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;

@@ -348,7 +348,11 @@ function useHttpServer() {
   httpServer.start(-1);
   httpServer.registerDirectory("/", do_get_cwd());
   gDataUrl = "http://localhost:" + httpServer.identity.primaryPort + "/data/";
-  do_register_cleanup(() => httpServer.stop(() => {}));
+  do_register_cleanup(function* cleanup_httpServer() {
+    yield new Promise(resolve => {
+      httpServer.stop(resolve);
+    });
+  });
   return httpServer;
 }
 

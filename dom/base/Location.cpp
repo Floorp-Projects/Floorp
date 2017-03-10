@@ -308,35 +308,9 @@ Location::GetHash(nsAString& aHash)
 
   rv = uri->GetRef(ref);
 
-  if (nsContentUtils::GettersDecodeURLHash()) {
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsITextToSubURI> textToSubURI(
-          do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
-
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString charset;
-        uri->GetOriginCharset(charset);
-
-        rv = textToSubURI->UnEscapeURIForUI(charset, ref, unicodeRef);
-      }
-
-      if (NS_FAILED(rv)) {
-        // Oh, well.  No intl here!
-        NS_UnescapeURL(ref);
-        CopyASCIItoUTF16(ref, unicodeRef);
-        rv = NS_OK;
-      }
-    }
-
-    if (NS_SUCCEEDED(rv) && !unicodeRef.IsEmpty()) {
-      aHash.Assign(char16_t('#'));
-      aHash.Append(unicodeRef);
-    }
-  } else { // URL Hash should simply return the value of the Ref segment
-    if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
-      aHash.Assign(char16_t('#'));
-      AppendUTF8toUTF16(ref, aHash);
-    }
+  if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+    aHash.Assign(char16_t('#'));
+    AppendUTF8toUTF16(ref, aHash);
   }
 
   if (aHash == mCachedHash) {

@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -10,9 +10,13 @@
     "firefox"
   ],
   "bugs": {
-    "url": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox&component=Developer%20Tools"
+    "url": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Lint"
   },
-  "homepage": "https://bugzilla.mozilla.org/show_bug.cgi?id=1203520",
+  "homepage": "http://gecko.readthedocs.io/en/latest/tools/lint/linters/eslint-plugin-mozilla.html",
+  "repository": {
+    "type": "hg",
+    "url": "https://hg.mozilla.org/mozilla-central/"
+  },
   "author": "Mike Ratcliffe",
   "main": "lib/index.js",
   "dependencies": {
@@ -24,7 +28,7 @@
     "sax": "^1.1.4"
   },
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4.2.0"
   },
   "scripts": {
     "test": "node tests/test-run-all.js"

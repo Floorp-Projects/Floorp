@@ -2848,6 +2848,27 @@ css::URLValueData::GetURI() const
   return mURI;
 }
 
+bool
+css::URLValueData::HasRef() const
+{
+  if (IsLocalRef()) {
+    return true;
+  }
+
+  nsIURI* uri = GetURI();
+  if (!uri) {
+    return false;
+  }
+
+  nsAutoCString ref;
+  nsresult rv = uri->GetRef(ref);
+  if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+    return true;
+  }
+
+  return false;
+}
+
 already_AddRefed<nsIURI>
 css::URLValueData::ResolveLocalRef(nsIURI* aURI) const
 {
