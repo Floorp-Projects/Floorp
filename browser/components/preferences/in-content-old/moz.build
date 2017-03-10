@@ -4,16 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'in-content-old',
-    'in-content',
-]
-
-BROWSER_CHROME_MANIFESTS += [
-    'in-content-old/tests/browser.ini',
-    'in-content/tests/browser.ini',
-]
-
 for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):
     DEFINES[var] = CONFIG[var]
 
@@ -21,10 +11,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
     DEFINES['HAVE_SHELL_SERVICE'] = 1
 
 JAR_MANIFESTS += ['jar.mn']
-
-EXTRA_JS_MODULES += [
-    'SiteDataManager.jsm'
-]
-
-with Files('**'):
-    BUG_COMPONENT = ('Firefox', 'Preferences')
