@@ -6,6 +6,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_layout"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -46,5 +47,15 @@
         </RelativeLayout>
 
     </view>
+
+    <ProgressBar
+        android:id="@id/page_progress"
+        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_alignTop="@id/main_layout"
+        android:background="@drawable/url_bar_bg"
+        android:progressDrawable="@drawable/progressbar"
+        tools:progress="70"/>
 
 </RelativeLayout>

@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
@@ -54,6 +55,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private final SparseArrayCompat<PendingIntent> menuItemsIntent = new SparseArrayCompat<>();
     private GeckoPopupMenu popupMenu;
     private ActionBarPresenter actionBarPresenter;
+    private ProgressBar mProgressView;
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
 
@@ -75,6 +77,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         setThemeFromToolbarColor();
 
+        mProgressView = (ProgressBar) findViewById(R.id.page_progress);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
         final ActionBar actionBar = getSupportActionBar();
@@ -148,6 +151,17 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
         if (!Tabs.getInstance().isSelectedTab(tab)) {
             return;
+        }
+
+        if (msg == Tabs.TabEvents.START
+                || msg == Tabs.TabEvents.STOP
+                || msg == Tabs.TabEvents.ADDED
+                || msg == Tabs.TabEvents.LOAD_ERROR
+                || msg == Tabs.TabEvents.LOADED
+                || msg == Tabs.TabEvents.LOCATION_CHANGE) {
+
+            updateProgress((tab.getState() == Tab.STATE_LOADING),
+                    tab.getLoadProgress());
         }
 
         if (msg == Tabs.TabEvents.LOCATION_CHANGE
@@ -361,6 +375,21 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         final Tab tab = Tabs.getInstance().getSelectedTab();
         final boolean enabled = (tab != null && tab.canDoForward());
         forwardMenuItem.setEnabled(enabled);
+    }
+
+    /**
+     * Update loading progress of current page
+     *
+     * @param isLoading to indicate whether ProgressBar should be visible or not
+     * @param progress  value of loading progress in percent, should be 0 - 100.
+     */
+    private void updateProgress(final boolean isLoading, final int progress) {
+        if (isLoading) {
+            mProgressView.setVisibility(View.VISIBLE);
+            mProgressView.setProgress(progress);
+        } else {
+            mProgressView.setVisibility(View.GONE);
+        }
     }
 
     private void onReloadClicked() {
