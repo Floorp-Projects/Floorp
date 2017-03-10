@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 /**
  * Tests CensusTreeNode with `allocationStack` => `objectClass` breakdown.
@@ -29,11 +30,11 @@ function run_test() {
   }());
 
   const REPORT = new Map([
-    [stack, { Foo:   { bytes: 10, count: 1 },
-                  Bar:   { bytes: 20, count: 2 },
-                  Baz:   { bytes: 30, count: 3 },
-                  other: { bytes: 40, count: 4 }
-                }],
+    [stack, { Foo: { bytes: 10, count: 1 },
+              Bar: { bytes: 20, count: 2 },
+              Baz: { bytes: 30, count: 3 },
+              other: { bytes: 40, count: 4 }
+    }],
     ["noStack", { bytes: 50, count: 5 }],
   ]);
 

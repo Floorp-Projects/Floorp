@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Check byte counts produced by takeCensus.
 //
@@ -25,7 +26,7 @@ function run_test() {
            for (let i = 0; i < 10; i++)     // 5
              objs.push(allocationMarker()); // 6
          }                                  // 7
-         `);                                // 8
+         `);
 
   dbg.memory.allocationSamplingProbability = 1;
   dbg.memory.trackingAllocationSites = true;
@@ -35,7 +36,7 @@ function run_test() {
   census = saveHeapSnapshotAndTakeCensus(dbg, {
     breakdown: { by: "objectClass",
                  then: { by: "allocationStack" }
-               }
+    }
   });
 
   let seen = 0;

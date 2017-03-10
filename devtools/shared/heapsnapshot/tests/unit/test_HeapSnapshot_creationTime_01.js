@@ -1,11 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // HeapSnapshot.prototype.creationTime returns the expected time.
 
 function waitForThirtyMilliseconds() {
   const start = Date.now();
-  while (Date.now() - start < 30) ;
+  while (Date.now() - start < 30) {
+    // do nothing
+  }
 }
 
 function run_test() {
