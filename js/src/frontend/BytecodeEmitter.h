@@ -470,6 +470,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // JS stack, as measured from the top.
     MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop);
 
+    // Helper to emit JSOP_POP or JSOP_POPN.
+    MOZ_MUST_USE bool emitPopN(unsigned n);
+
     // Helper to emit JSOP_CHECKISOBJ.
     MOZ_MUST_USE bool emitCheckIsObj(CheckIsObjectKind kind);
 

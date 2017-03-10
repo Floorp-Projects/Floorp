@@ -317,6 +317,7 @@ mod bindings {
             "FontFamilyType",
             "FragmentOrURL",
             "FrameRequestCallback",
+            "GeckoParserExtraData",
             "gfxAlternateValue",
             "gfxFontFeature",
             "gfxFontVariation",
@@ -538,6 +539,8 @@ mod bindings {
             "RawServoDeclarationBlock",
             "RawGeckoPresContext",
             "RawGeckoPresContextOwned",
+            "RawGeckoStyleAnimationList",
+            "GeckoParserExtraData",
             "RefPtr",
             "ThreadSafeURIHolder",
             "ThreadSafePrincipalHolder",
@@ -634,6 +637,7 @@ mod bindings {
             "RawGeckoDocument",
             "RawServoDeclarationBlockStrong",
             "RawGeckoPresContext",
+            "RawGeckoStyleAnimationList",
         ];
         let servo_borrow_types = [
             "nsCSSValue",

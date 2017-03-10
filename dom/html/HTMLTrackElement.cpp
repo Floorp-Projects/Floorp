@@ -433,12 +433,17 @@ HTMLTrackElement::SetReadyState(uint16_t aReadyState)
 void
 HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
 {
+  nsIDocument* doc = OwnerDoc();
+  if (!doc) {
+    return;
+  }
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod
       <const nsString>(this,
                        &HTMLTrackElement::DispatchTrustedEvent,
                        aEventName);
-  NS_DispatchToMainThread(runnable);
+  doc->Dispatch("HTMLTrackElement::DispatchTrackRunnable",
+                TaskCategory::Other, runnable.forget());
 }
 
 void

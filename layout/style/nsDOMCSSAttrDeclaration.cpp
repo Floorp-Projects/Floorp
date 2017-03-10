@@ -168,7 +168,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aC
 
   nsIDocument* doc = mElement->OwnerDoc();
   aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
-  aCSSParseEnv.mBaseURI = mElement->GetBaseURI();
+  aCSSParseEnv.mBaseURI = mElement->GetBaseURIForStyleAttr();
   aCSSParseEnv.mPrincipal = mElement->NodePrincipal();
   aCSSParseEnv.mCSSLoader = doc->CSSLoader();
 }

@@ -831,11 +831,8 @@ TraceLoggerThreadState::init()
 
     if (ContainsFlag(env, "Frontend")) {
         enabledTextIds[TraceLogger_Frontend] = true;
-        enabledTextIds[TraceLogger_FrontendNameAnalysis] = true;
-        enabledTextIds[TraceLogger_FrontendTDZAnalysis] = true;
         enabledTextIds[TraceLogger_ParsingFull] = true;
         enabledTextIds[TraceLogger_ParsingSyntax] = true;
-        enabledTextIds[TraceLogger_Tokenizing] = true;
         enabledTextIds[TraceLogger_BytecodeEmission] = true;
         enabledTextIds[TraceLogger_BytecodeFoldConstants] = true;
         enabledTextIds[TraceLogger_BytecodeNameFunctions] = true;
@@ -855,7 +852,7 @@ TraceLoggerThreadState::init()
                 "\n"
                 "usage: TLOPTIONS=option,option,option,... where options can be:\n"
                 "\n"
-                "  EnableCooperatingThread Start logging cooperating threads immediately.\n"
+                "  EnableActiveThread      Start logging cooperating threads immediately.\n"
                 "  EnableOffThread         Start logging helper threads immediately.\n"
                 "  EnableGraph             Enable spewing the tracelogging graph to a file.\n"
                 "  Errors                  Report errors during tracing to stderr.\n"

@@ -283,7 +283,7 @@ dependencies = [
  "num-traits 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "offscreen_gl_context 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "servo_config 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -297,7 +297,7 @@ dependencies = [
  "ipc-channel 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -418,8 +418,8 @@ dependencies = [
  "servo_url 0.0.1",
  "style_traits 0.0.1",
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.22.1 (git+https://github.com/servo/webrender)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender 0.23.0 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -452,18 +452,8 @@ dependencies = [
  "servo_remutex 0.0.1",
  "servo_url 0.0.1",
  "style_traits 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "webvr_traits 0.0.1",
-]
-
-[[package]]
-name = "content-blocker"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "regex 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -707,7 +697,7 @@ dependencies = [
  "servo_geometry 0.0.1",
  "servo_url 0.0.1",
  "style_traits 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "x11 2.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -994,7 +984,7 @@ dependencies = [
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
  "truetype 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-script 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "xi-unicode 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1073,7 +1063,7 @@ dependencies = [
  "servo_url 0.0.1",
  "style_traits 0.0.1",
  "user32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "x11 2.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1375,7 +1365,7 @@ dependencies = [
  "style_traits 0.0.1",
  "unicode-bidi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-script 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -1415,7 +1405,7 @@ dependencies = [
  "servo_geometry 0.0.1",
  "servo_url 0.0.1",
  "style 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -1429,7 +1419,7 @@ dependencies = [
  "profile_traits 0.0.1",
  "script_traits 0.0.1",
  "servo_url 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -1514,8 +1504,8 @@ dependencies = [
  "style 0.0.1",
  "style_traits 0.0.1",
  "webdriver_server 0.0.1",
- "webrender 0.22.1 (git+https://github.com/servo/webrender)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender 0.23.0 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "webvr 0.0.1",
  "webvr_traits 0.0.1",
 ]
@@ -1663,8 +1653,13 @@ dependencies = [
  "heapsize_derive 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
+
+[[package]]
+name = "multistr"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "net"
@@ -1700,7 +1695,7 @@ dependencies = [
  "unicase 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -1719,7 +1714,6 @@ dependencies = [
 name = "net_tests"
 version = "0.0.1"
 dependencies = [
- "content-blocker 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cookie 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "devtools_traits 0.0.1",
  "flate2 0.2.17 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1752,6 +1746,7 @@ dependencies = [
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "msg 0.0.1",
  "num-traits 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parse-hosts 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 0.9.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "servo-websocket 0.18.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1759,7 +1754,7 @@ dependencies = [
  "servo_url 0.0.1",
  "url 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
@@ -1971,6 +1966,14 @@ dependencies = [
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "parse-hosts"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "multistr 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2297,7 +2300,7 @@ dependencies = [
  "tinyfiledialogs 2.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "webvr 0.0.1",
  "webvr_traits 0.0.1",
  "xml5ever 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3174,8 +3177,8 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.22.1"
-source = "git+https://github.com/servo/webrender#ec377923dd3ccc67b26ae5dfeb04c87af42ede06"
+version = "0.23.0"
+source = "git+https://github.com/servo/webrender#bfef6dbb9fe69a8c408568c85b392186d3853477"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0-alpha2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3197,13 +3200,13 @@ dependencies = [
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadpool 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
 ]
 
 [[package]]
 name = "webrender_traits"
-version = "0.23.1"
-source = "git+https://github.com/servo/webrender#ec377923dd3ccc67b26ae5dfeb04c87af42ede06"
+version = "0.24.0"
+source = "git+https://github.com/servo/webrender#bfef6dbb9fe69a8c408568c85b392186d3853477"
 dependencies = [
  "app_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3227,7 +3230,7 @@ dependencies = [
  "msg 0.0.1",
  "script_traits 0.0.1",
  "servo_config 0.0.1",
- "webrender_traits 0.23.1 (git+https://github.com/servo/webrender)",
+ "webrender_traits 0.24.0 (git+https://github.com/servo/webrender)",
  "webvr_traits 0.0.1",
 ]
 
@@ -3357,7 +3360,6 @@ dependencies = [
 "checksum cocoa 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d55b620aff4da7d4b9d85f2974cc62a097146623b75e3f36734fe68d8cef493e"
 "checksum color_quant 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a475fc4af42d83d28adf72968d9bcfaf035a1a9381642d8e85d8a04957767b0d"
 "checksum compiletest_rs 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "f3f344389765ad7bec166f64c1b39ed6dd2b54d81c4c5dd8af789169351d380c"
-"checksum content-blocker 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "44dfb2f06e219a5bdec05c5811dde4d893c34c49ffed384c9d0a2e9caca9c154"
 "checksum cookie 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0e3d6405328b6edb412158b3b7710e2634e23f3614b9bb1c412df7952489a626"
 "checksum core-foundation 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f51ce3b8ebe311c56de14231eb57572c15abebd2d32b3bcb99bcdb9c101f5ac3"
 "checksum core-foundation-sys 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "41115a6aa5d3e1e5ef98148373f25971d1fad53818553f216495f9e67e90a624"
@@ -3452,6 +3454,7 @@ dependencies = [
 "checksum mozjs_sys 0.0.0 (git+https://github.com/servo/mozjs)" = "<none>"
 "checksum mp3-metadata 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2f61cf32f7fc3cec83a15a255ac60bceb6cac59a7ce190cb824ca25c0fce0feb"
 "checksum mp4parse 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7b81651f9ede53d59281b54c7eb51ae50a868ac4765dd3bdfbbc79ce3d8aca7a"
+"checksum multistr 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "948d1285dd39981f6a5b1a72624c323312d29e2121682a742a87a773dd723bef"
 "checksum net2 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)" = "5edf9cb6be97212423aed9413dd4729d62b370b5e1c571750e882cebbbc1e3e2"
 "checksum nodrop 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "0dbbadd3f4c98dea0bd3d9b4be4c0cdaf1ab57035cb2e41fce3983db5add7cc5"
 "checksum nom 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b8c256fd9471521bcb84c3cdba98921497f1a331cbc15b8030fc63b82050ce"
@@ -3476,6 +3479,7 @@ dependencies = [
 "checksum owning_ref 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "9d52571ddcb42e9c900c901a18d8d67e393df723fcd51dd59c5b1a85d0acb6cc"
 "checksum parking_lot 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "fa12d706797d42551663426a45e2db2e0364bd1dbf6aeada87e89c5f981f43e9"
 "checksum parking_lot_core 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fb1b97670a2ffadce7c397fb80a3d687c4f3060140b885621ef1653d0e5d5068"
+"checksum parse-hosts 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7626e29ef8f479f10d9a753f1fca914506663ecc9ec2dedb8cffc610a3d1f705"
 "checksum pdqsort 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ceca1642c89148ca05611cc775a0c383abef355fc4907c4e95f49f7b09d6287c"
 "checksum phf 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "cb325642290f28ee14d8c6201159949a872f220c62af6e110a56ea914fbe42fc"
 "checksum phf_codegen 0.7.21 (registry+https://github.com/rust-lang/crates.io-index)" = "d62594c0bb54c464f633175d502038177e90309daf2e0158be42ed5f023ce88f"
@@ -3567,8 +3571,8 @@ dependencies = [
 "checksum void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 "checksum walkdir 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)" = "bb08f9e670fab86099470b97cd2b252d6527f0b3cc1401acdb595ffc9dd288ff"
 "checksum webdriver 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cdc28802daddee94267a657ffeac2593a33881fb7a3a44fedd320b1319efcaf6"
-"checksum webrender 0.22.1 (git+https://github.com/servo/webrender)" = "<none>"
-"checksum webrender_traits 0.23.1 (git+https://github.com/servo/webrender)" = "<none>"
+"checksum webrender 0.23.0 (git+https://github.com/servo/webrender)" = "<none>"
+"checksum webrender_traits 0.24.0 (git+https://github.com/servo/webrender)" = "<none>"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2d315eee3b34aca4797b2da6b13ed88266e6d612562a0c46390af8299fc699bc"
 "checksum ws 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "04614a58714f3fd4a8b1da4bcae9f031c532d35988c3d39627619248113f8be8"

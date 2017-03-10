@@ -1639,7 +1639,7 @@ public:
   bool HasPointerLock() const { return GetBoolFlag(ElementHasPointerLock); }
   void SetPointerLock() { SetBoolFlag(ElementHasPointerLock); }
   void ClearPointerLock() { ClearBoolFlag(ElementHasPointerLock); }
-  bool MayHaveAnimations() { return GetBoolFlag(ElementHasAnimations); }
+  bool MayHaveAnimations() const { return GetBoolFlag(ElementHasAnimations); }
   void SetMayHaveAnimations() { SetBoolFlag(ElementHasAnimations); }
   void SetHasValidDir() { SetBoolFlag(NodeHasValidDirAttribute); }
   void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }

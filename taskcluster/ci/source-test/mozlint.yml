@@ -1,10 +1,10 @@
-mozlint-eslint/opt:
+mozlint-eslint:
     description: JS lint check
+    platform: lint/opt
     treeherder:
         symbol: ES
         kind: test
         tier: 1
-        platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker
@@ -41,13 +41,13 @@ mozlint-eslint/opt:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
-mozlint-flake8/opt:
+mozlint-flake8:
     description: flake8 run over the gecko codebase
+    platform: lint/opt
     treeherder:
         symbol: f8
         kind: test
         tier: 1
-        platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker
@@ -66,13 +66,13 @@ mozlint-flake8/opt:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
-wptlint-gecko/opt:
+wptlint-gecko:
     description: web-platform-tests linter
+    platform: lint/opt
     treeherder:
         symbol: W
         kind: test
         tier: 1
-        platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker

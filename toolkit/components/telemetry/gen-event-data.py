@@ -29,6 +29,7 @@ file_footer = """\
 #endif // mozilla_TelemetryEventData_h
 """
 
+
 def write_extra_table(events, output, string_table):
     table_name = "gExtraKeysTable"
     extra_table = []
@@ -61,6 +62,7 @@ def write_extra_table(events, output, string_table):
 
     return extra_table
 
+
 def write_common_event_table(events, output, string_table, extra_table):
     table_name = "gCommonEventInfo"
     extra_count = 0
@@ -87,6 +89,7 @@ def write_common_event_table(events, output, string_table, extra_table):
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
                   "index overflow")
 
+
 def write_event_table(events, output, string_table):
     table_name = "gEventInfo"
     print("const EventInfo %s[] = {" % table_name, file=output)
@@ -106,6 +109,7 @@ def write_event_table(events, output, string_table):
     print("};", file=output)
     static_assert(output, "sizeof(%s) <= UINT32_MAX" % table_name,
                   "index overflow")
+
 
 def main(output, *filenames):
     # Load the event data.

@@ -18,13 +18,16 @@ MAX_EXTRA_KEY_NAME_LENGTH = 15
 IDENTIFIER_PATTERN = r'^[a-zA-Z][a-zA-Z0-9_.]+[a-zA-Z0-9]$'
 DATE_PATTERN = r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 
+
 def nice_type_name(t):
     if isinstance(t, basestring):
         return "string"
     return t.__name__
 
+
 def convert_to_cpp_identifier(s, sep):
     return string.capwords(s, sep).replace(sep, "")
+
 
 class OneOf:
     """This is a placeholder type for the TypeChecker below.
@@ -32,6 +35,7 @@ class OneOf:
     passed to the TypeChecker constructor.
     """
     pass
+
 
 class TypeChecker:
     """This implements a convenience type TypeChecker to make the validation code more readable."""
@@ -92,6 +96,7 @@ class TypeChecker:
                                        k,
                                        nice_type_name(type(x)))
 
+
 def type_check_event_fields(identifier, name, definition):
     """Perform a type/schema check on the event definition."""
     REQUIRED_FIELDS = {
@@ -125,6 +130,7 @@ def type_check_event_fields(identifier, name, definition):
     for k,v in definition.iteritems():
         ALL_FIELDS[k].check(identifier, k, v)
 
+
 def string_check(identifier, field, value, min_length=1, max_length=None, regex=None):
     # Length check.
     if len(value) < min_length:
@@ -137,6 +143,7 @@ def string_check(identifier, field, value, min_length=1, max_length=None, regex=
     if regex and not re.match(regex, value):
         raise ValueError, '%s: string value "%s" for %s is not matching pattern "%s"' % \
                           (identifier, value, field, regex)
+
 
 class EventData:
     """A class representing one event."""
@@ -274,6 +281,7 @@ class EventData:
     @property
     def extra_keys(self):
         return self._definition.get('extra_keys', {}).keys()
+
 
 def load_events(filename):
     """Parses a YAML file containing the event definitions.

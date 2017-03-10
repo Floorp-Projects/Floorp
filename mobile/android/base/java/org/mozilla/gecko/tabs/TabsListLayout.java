@@ -31,8 +31,9 @@ public class TabsListLayout extends TabsLayout {
 
         setLayoutManager(new LinearLayoutManager(context));
 
-        // A TouchHelper handler for swipe to close.
-        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this) {
+        final int dragDirections = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+        // A TouchHelper handler for drag and drop and swipe to close.
+        final TabsTouchHelperCallback callback = new TabsTouchHelperCallback(this, dragDirections, this) {
             @Override
             protected float alphaForItemSwipeDx(float dX, int distanceToAlphaMin) {
                 return Math.max(0.1f,

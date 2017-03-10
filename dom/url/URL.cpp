@@ -561,9 +561,6 @@ URLMainThread::GetHash(nsAString& aHash, ErrorResult& aRv) const
   nsresult rv = mURI->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
     aHash.Assign(char16_t('#'));
-    if (nsContentUtils::GettersDecodeURLHash()) {
-      NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
-    }
     AppendUTF8toUTF16(ref, aHash);
   }
 }

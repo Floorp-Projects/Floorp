@@ -101,29 +101,6 @@ private:
   nsCOMPtr<nsIThread> mThread;
 };
 
-template<class T>
-class DeleteObjectTask: public Runnable {
-public:
-  explicit DeleteObjectTask(nsAutoPtr<T>& aObject)
-    : Runnable("VideoUtils::DeleteObjectTask")
-    , mObject(aObject)
-  {
-  }
-  NS_IMETHOD Run() override {
-    NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
-    mObject = nullptr;
-    return NS_OK;
-  }
-private:
-  nsAutoPtr<T> mObject;
-};
-
-template<class T>
-void DeleteOnMainThread(nsAutoPtr<T>& aObject) {
-  nsCOMPtr<nsIRunnable> r = new DeleteObjectTask<T>(aObject);
-  SystemGroup::Dispatch("VideoUtils::DeleteObjectTask", TaskCategory::Other, r.forget());
-}
-
 class MediaResource;
 
 // Estimates the buffered ranges of a MediaResource using a simple

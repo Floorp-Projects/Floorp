@@ -710,7 +710,7 @@ HTMLImageElement::IntrinsicState() const
 }
 
 void
-HTMLImageElement::NodeInfoChanged()
+HTMLImageElement::NodeInfoChanged(nsIDocument* aOldDoc)
 {
   // Resetting the last selected source if adoption steps are run.
   mLastSelectedSource = nullptr;

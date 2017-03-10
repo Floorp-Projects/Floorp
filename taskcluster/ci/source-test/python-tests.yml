@@ -1,10 +1,10 @@
-taskgraph-tests/opt:
+taskgraph-tests:
     description: taskcluster/taskgraph unit tests
+    platform: linux64/opt
     treeherder:
         symbol: py(tg)
         kind: test
         tier: 2
-        platform: linux64/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker
@@ -22,10 +22,9 @@ taskgraph-tests/opt:
             - 'config/mozunit.py'
             - 'python/mach/**/*.py'
 
-marionette-harness/opt:
+marionette-harness:
     description: testing/marionette/harness unit tests
-    platforms:
-        - linux64/opt
+    platform: linux64/opt
     treeherder:
         symbol: py(mnh)
         kind: test
@@ -51,9 +50,9 @@ marionette-harness/opt:
           - 'testing/mozbase/mozlog/mozlog/pytest_mozlog/**'
           - 'python/mach_commands.py'
 
-mozbase/opt:
+mozbase:
     description: testing/mozbase unit tests
-    platforms:
+    platform:
         - linux64/opt
     treeherder:
         symbol: py(mb)
@@ -80,13 +79,13 @@ mozbase/opt:
             - 'config/mozunit.py'
             - 'python/mach_commands.py'
 
-mozharness/opt:
+mozharness:
     description: mozharness integration tests
+    platform: lint/opt
     treeherder:
         symbol: py(MH)
         kind: test
         tier: 2
-        platform: lint/opt
     worker-type: aws-provisioner-v1/b2gtest
     worker:
         implementation: docker-worker
@@ -106,10 +105,9 @@ mozharness/opt:
         files-changed:
             - 'testing/mozharness/**'
 
-mozlint/opt:
+mozlint:
     description: python/mozlint unit tests
-    platforms:
-        - linux64/opt
+    platform: linux64/opt
     treeherder:
         symbol: py(ml)
         kind: test

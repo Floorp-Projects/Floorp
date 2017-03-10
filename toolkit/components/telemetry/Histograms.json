@@ -10540,6 +10540,14 @@
     "n_values": 12,
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   },
+  "DOM_SCRIPT_SRC_ENCODING": {
+    "alert_emails": ["dteller@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "bug_numbers": [1344152],
+    "description": "Encoding used in a <script src>."
+  },
   "WEB_NOTIFICATION_REQUEST_PERMISSION_CALLBACK": {
     "alert_emails": ["push@mozilla.com"],
     "expires_in_version": "55",

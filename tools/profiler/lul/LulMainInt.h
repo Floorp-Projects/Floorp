@@ -87,7 +87,7 @@ struct PfxInstr {
     : mOpcode(opcode)
     , mOperand(0)
   {}
-  bool operator==(const PfxInstr& other) {
+  bool operator==(const PfxInstr& other) const {
     return mOpcode == other.mOpcode && mOperand == other.mOperand;
   }
   PfxExprOp mOpcode;

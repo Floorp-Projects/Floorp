@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 from voluptuous import Schema, Required
 from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.transforms.job import run_job_using
@@ -11,7 +13,7 @@ from taskgraph.transforms.tests import (
     normpath
 )
 from taskgraph.transforms.job.common import (
-    docker_worker_support_vcs_checkout,
+    support_vcs_checkout,
 )
 import os
 import re
@@ -26,6 +28,7 @@ ARTIFACTS = [
 BUILDER_NAME_PREFIX = {
     'linux64-pgo': 'Ubuntu VM 12.04 x64',
     'linux64': 'Ubuntu VM 12.04 x64',
+    'linux64-nightly': 'Ubuntu VM 12.04 x64',
     'linux64-asan': 'Ubuntu ASAN VM 12.04 x64',
     'linux64-ccov': 'Ubuntu Code Coverage VM 12.04 x64',
     'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',
@@ -83,7 +86,11 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
+        'ENABLE_E10S': str(bool(test.get('e10s'))).lower(),
     }
+
+    if mozharness.get('mochitest-flavor'):
+        env['MOCHITEST_FLAVOR'] = mozharness['mochitest-flavor']
 
     if mozharness['set-moz-node-path']:
         env['MOZ_NODE_PATH'] = '/usr/local/bin/node'
@@ -117,7 +124,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     # Support vcs checkouts regardless of whether the task runs from
     # source or not in case it is needed on an interactive loaner.
-    docker_worker_support_vcs_checkout(config, test, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.

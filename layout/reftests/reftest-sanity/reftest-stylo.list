@@ -37,8 +37,8 @@ HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 == blank.html blank.html
 HTTP == blank.html blank.html
 
-fails HTTP(..) == filter-1.xhtml filter-1.xhtml
-fails HTTP(..) == filter-2.xhtml filter-2.xhtml
+HTTP(..) == filter-1.xhtml filter-1.xhtml
+HTTP(..) == filter-2.xhtml filter-2.xhtml
 
 # test that the MozReftestInvalidate event fires
 == invalidation.html invalidation.html

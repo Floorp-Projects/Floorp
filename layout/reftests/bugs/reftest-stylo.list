@@ -1380,7 +1380,7 @@ fails == 495354-1b.xhtml 495354-1b.xhtml
 == 495385-2c.html 495385-2c.html
 == 495385-2d.html 495385-2d.html
 == 495385-2e.html 495385-2e.html
-fails pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2f.xhtml
+pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2f.xhtml
 == 495385-2g.html 495385-2g.html
 == 495385-2h.html 495385-2h.html
 == 495385-2i.html 495385-2i.html
@@ -1831,9 +1831,9 @@ fails == 1012640-1.html 1012640-1.html
 == 1013054-1.html 1013054-1.html
 fails == 1018522-1.html 1018522-1.html
 == 1021564-1.html 1021564-1.html
-fails == 1021564-2.html 1021564-2.html
+== 1021564-2.html 1021564-2.html
 == 1021564-3.html 1021564-3.html
-fails == 1021564-4.html 1021564-4.html
+== 1021564-4.html 1021564-4.html
 fails pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
 == 1024473-1.html 1024473-1.html
@@ -1847,9 +1847,9 @@ fails == 1042104-1.html 1042104-1.html
 fails == 1053035-1-flex.html 1053035-1-flex.html
 fails pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.html
 == 1059167-1.html 1059167-1.html
-fails == 1059498-1.html 1059498-1.html
-fails == 1059498-2.html 1059498-2.html
-fails == 1059498-3.html 1059498-3.html
+== 1059498-1.html 1059498-1.html
+== 1059498-2.html 1059498-2.html
+== 1059498-3.html 1059498-3.html
 == 1062108-1.html 1062108-1.html
 fails == 1062792-1.html 1062792-1.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html

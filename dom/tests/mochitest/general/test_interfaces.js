@@ -835,8 +835,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ServiceWorkerContainer",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "ServiceWorkerMessageEvent",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "ServiceWorkerRegistration",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ScopedCredential", disabled: true},

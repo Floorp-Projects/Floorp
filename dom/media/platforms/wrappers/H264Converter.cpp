@@ -6,12 +6,14 @@
 
 #include "mozilla/TaskQueue.h"
 
+#include "DecoderDoctorDiagnostics.h"
 #include "H264Converter.h"
 #include "ImageContainer.h"
 #include "MediaInfo.h"
 #include "MediaPrefs.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
+#include "PDMFactory.h"
 
 namespace mozilla
 {
@@ -270,6 +272,14 @@ H264Converter::OnDecoderInitFailed(const MediaResult& aError)
     __func__);
 }
 
+bool
+H264Converter::CanRecycleDecoder() const
+{
+  MOZ_ASSERT(mDecoder);
+  return MediaPrefs::MediaDecoderCheckRecycling()
+         && mDecoder->SupportDecoderRecycling();
+}
+
 void
 H264Converter::DecodeFirstSample(MediaRawData* aSample)
 {
@@ -277,7 +287,6 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
     mDecodePromise.Resolve(DecodedData(), __func__);
     return;
   }
-  mNeedKeyframe = false;
 
   mNeedAVCC =
     Some(mDecoder->NeedsConversion() == ConversionRequired::kNeedAVCC);
@@ -290,6 +299,9 @@ H264Converter::DecodeFirstSample(MediaRawData* aSample)
       __func__);
     return;
   }
+
+  mNeedKeyframe = false;
+
   if (CanRecycleDecoder()) {
     mDecoder->ConfigurationChanged(mCurrentConfig);
   }

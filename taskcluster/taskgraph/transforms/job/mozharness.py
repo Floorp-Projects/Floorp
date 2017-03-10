@@ -18,7 +18,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_public_artifacts,
-    docker_worker_support_vcs_checkout,
+    support_vcs_checkout,
 )
 
 COALESCE_KEY = 'builds.{project}.{name}'
@@ -91,7 +91,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_workspace_cache(config, job, taskdesc)
-    docker_worker_support_vcs_checkout(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
     env.update({

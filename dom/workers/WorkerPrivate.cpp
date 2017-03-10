@@ -3875,19 +3875,6 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
   }
 
   if (NS_SUCCEEDED(aBaseURI->GetRef(temp)) && !temp.IsEmpty()) {
-    nsCOMPtr<nsITextToSubURI> converter =
-      do_GetService(NS_ITEXTTOSUBURI_CONTRACTID);
-    if (converter && nsContentUtils::GettersDecodeURLHash()) {
-      nsCString charset;
-      nsAutoString unicodeRef;
-      if (NS_SUCCEEDED(aBaseURI->GetOriginCharset(charset)) &&
-          NS_SUCCEEDED(converter->UnEscapeURIForUI(charset, temp,
-                                                   unicodeRef))) {
-        mLocationInfo.mHash.Assign('#');
-        mLocationInfo.mHash.Append(NS_ConvertUTF16toUTF8(unicodeRef));
-      }
-    }
-
     if (mLocationInfo.mHash.IsEmpty()) {
       mLocationInfo.mHash.Assign('#');
       mLocationInfo.mHash.Append(temp);

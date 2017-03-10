@@ -11,7 +11,6 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "nsAnimationManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLStyleSheet.h"
@@ -164,33 +163,8 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   // See bug 1344914.
   bool skipFixup = false;
 
-  RefPtr<nsStyleContext> result =
-    NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                       aPseudoType, Move(aComputedValues), skipFixup);
-
-  // Ignore animations for print or print preview, and for elements
-  // that are not attached to the document tree.
-  if (mPresContext->IsDynamic() &&
-      aElementForAnimation &&
-      aElementForAnimation->IsInComposedDoc()) {
-    // Update/build CSS animations in the case where animation properties are
-    // changed.
-    // FIXME: Bug 1341985: This isn't right place to update CSS animations.
-    // We should do it in a SequentialTask and trigger the second traversal for
-    // the animation's restyle after the SequentialTask.
-    const ServoComputedValues* currentStyle =
-      result->StyleSource().AsServoComputedValues();
-    const ServoComputedValues* parentStyle =
-      result->GetParent()
-        ? result->GetParent()->StyleSource().AsServoComputedValues()
-        : nullptr;
-    mPresContext->AnimationManager()->UpdateAnimations(aElementForAnimation,
-                                                       aPseudoTag,
-                                                       currentStyle,
-                                                       parentStyle);
-  }
-
-  return result.forget();
+  return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
+                            aPseudoType, Move(aComputedValues), skipFixup);
 }
 
 void
@@ -199,6 +173,8 @@ ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
   if (nsHTMLStyleSheet* sheet = mPresContext->Document()->GetAttributeStyleSheet()) {
     sheet->CalculateMappedServoDeclarations();
   }
+
+  mPresContext->Document()->ResolveScheduledSVGPresAttrs();
 }
 
 void
@@ -224,6 +200,14 @@ ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
   sInServoTraversal = true;
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior);
+
+  // If there are still animation restyles needed, trigger a second traversal to
+  // update CSS animations' styles.
+  if (mPresContext->EffectCompositor()->PreTraverse() &&
+      Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior)) {
+    postTraversalRequired = true;
+  }
+
   sInServoTraversal = false;
   return postTraversalRequired;
 }
@@ -752,7 +736,18 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement, nsIAtom* aPseudoTag)
 {
   mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag);
 
-  return Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+  MOZ_ASSERT(!sInServoTraversal);
+  sInServoTraversal = true;
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+
+  if (mPresContext->EffectCompositor()->PreTraverse(aElement, aPseudoTag)) {
+    computedValues =
+      Servo_ResolveStyleLazily(aElement, aPseudoTag, mRawSet.get()).Consume();
+  }
+  sInServoTraversal = false;
+
+  return computedValues.forget();
 }
 
 bool ServoStyleSet::sInServoTraversal = false;

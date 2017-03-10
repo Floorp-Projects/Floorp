@@ -35,7 +35,7 @@ and try again.
 """.strip()
 
 NODE_NOT_FOUND_MESSAGE = """
-nodejs v4.2.3 is either not installed or is installed to a non-standard path.
+nodejs v6.9.1 is either not installed or is installed to a non-standard path.
 Please install nodejs from https://nodejs.org and try again.
 
 Valid installation paths:
@@ -264,8 +264,8 @@ def lint(paths, binary=None, fix=None, setup=None, **lintargs):
 
     module_path = get_eslint_module_path()
 
-    # eslint requires at least node 4.2.3
-    node_path = get_node_or_npm_path("node", LooseVersion("4.2.3"))
+    # eslint requires at least node 6.9.1
+    node_path = get_node_or_npm_path("node", LooseVersion("6.9.1"))
     if not node_path:
         return 1
 

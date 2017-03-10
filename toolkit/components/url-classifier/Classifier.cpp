@@ -1423,10 +1423,23 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
     return NS_ERROR_FAILURE;
   }
 
+  // We do not want to simply pick random prefixes, because this would allow
+  // averaging out the noise by analysing the traffic from Firefox users.
+  // Instead, we ensure the 'noise' is the same for the same prefix by seeding
+  // the random number generator with the prefix. We prefer not to use rand()
+  // which isn't thread safe, and the reseeding of which could trip up other
+  // parts othe code that expect actual random numbers.
+  // Here we use a simple LCG (Linear Congruential Generator) to generate
+  // random numbers. We seed the LCG with the prefix we are generating noise
+  // for.
+  // http://en.wikipedia.org/wiki/Linear_congruential_generator
+
+  uint32_t m = prefixes.Length();
+  uint32_t a = aCount % m;
+  uint32_t idx = aPrefix.ToUint32() % m;
+
   for (size_t i = 0; i < aCount; i++) {
-    // Pick some prefixes from cache as noise
-    // We pick a random prefix index from 0 to prefixes.Length() - 1;
-    uint32_t idx = rand() % prefixes.Length();
+    idx = (a * idx + a) % m;
 
     Prefix newPrefix;
     uint32_t hash = prefixes[idx];

@@ -371,6 +371,9 @@ var BrowserApp = {
     return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
   },
 
+  // Note that the deck list order does not necessarily reflect the user visible tab order (see
+  // bug 1331154 for the reason), so deck.selectedIndex should not be used (though
+  // deck.selectedPanel is still valid) - use selectedTabIndex instead.
   deck: null,
 
   startup: function startup() {
@@ -390,6 +393,7 @@ var BrowserApp = {
       "Tab:Load",
       "Tab:Selected",
       "Tab:Closed",
+      "Tab:Move",
       "Browser:LoadManifest",
       "Browser:Quit",
       "Fonts:Reload",
@@ -1173,6 +1177,11 @@ var BrowserApp = {
     return null;
   },
 
+  // Use this instead of deck.selectedIndex (which is invalid for this purpose).
+  get selectedTabIndex() {
+    return this._tabs.indexOf(this._selectedTab);
+  },
+
   loadURI: function loadURI(aURI, aBrowser, aParams) {
     aBrowser = aBrowser || this.selectedBrowser;
     if (!aBrowser)
@@ -1306,6 +1315,25 @@ var BrowserApp = {
 
     aTab.destroy();
     this._tabs.splice(tabIndex, 1);
+  },
+
+  _handleTabMove(fromTabId, fromPosition, toTabId, toPosition) {
+    let movedTab = this._tabs[fromPosition];
+    if (movedTab.id != fromTabId || this._tabs[toPosition].id != toTabId) {
+      // The gecko and/or java Tabs tabs lists changed sometime between when the Tabs list was
+      // updated and when news of the update arrived here.
+      throw "Moved tab mismatch: (" + fromTabId + ", " + movedTab.id + "), " +
+            "(" + toTabId + ", " + this._tabs[toPosition].id + ")";
+    }
+
+    let step = (fromPosition < toPosition) ? 1 : -1;
+    for (let i = fromPosition; i != toPosition; i += step) {
+      this._tabs[i] = this._tabs[i + step];
+    }
+    this._tabs[toPosition] = movedTab;
+
+    let evt = new UIEvent("TabMove", {"bubbles":true, "cancellable":false, "view":window, "detail":fromPosition});
+    this.tabs[toPosition].browser.dispatchEvent(evt);
   },
 
   // Use this method to select a tab from JS. This method sends a message
@@ -1890,6 +1918,10 @@ var BrowserApp = {
         this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
         break;
       }
+
+      case "Tab:Move":
+        this._handleTabMove(data.fromTabId, data.fromPosition, data.toTabId, data.toPosition);
+        break;
     }
   },
 
@@ -3505,7 +3537,7 @@ Tab.prototype = {
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are added.
     let selectedPanel = BrowserApp.deck.selectedPanel;
-    BrowserApp.deck.insertBefore(this.browser, aParams.sibling || null);
+    BrowserApp.deck.appendChild(this.browser);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     let attrs = {};
@@ -3777,14 +3809,13 @@ Tab.prototype = {
     let evt = new UIEvent("TabPreZombify", {"bubbles":true, "cancelable":false, "view":window});
     browser.dispatchEvent(evt);
 
-    // We need this data to correctly create and position the new browser
+    // We need this data to correctly create the new browser
     // If this browser is already a zombie, fallback to the session data
     let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
-    let sibling = browser.nextSibling;
     let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
 
     this.destroy();
-    this.create(currentURL, { sibling: sibling, zombifying: true, delayLoad: true, isPrivate: isPrivate });
+    this.create(currentURL, { zombifying: true, delayLoad: true, isPrivate: isPrivate });
 
     // Reattach session store data and flag this browser so it is restored on select
     browser = this.browser;

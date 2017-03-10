@@ -81,7 +81,7 @@ def run_and_prefix_output(prefix, args, extra_env=None):
 
 
 def vcs_checkout(source_repo, dest, store_path,
-                 base_repo=None, revision=None, branch=None):
+                 base_repo=None, revision=None, branch=None, fetch_hgfingerprint=False):
     # Specify method to checkout a revision. This defaults to revisions as
     # SHA-1 strings, but also supports symbolic revisions like `tip` via the
     # branch flag.
@@ -95,33 +95,37 @@ def vcs_checkout(source_repo, dest, store_path,
         print('revision is not specified for checkout')
         sys.exit(1)
 
-    # Obtain certificate fingerprints.
-    try:
-        print_line(b'vcs', 'fetching hg.mozilla.org fingerprint from %s\n' %
-                   FINGERPRINT_URL)
-        res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
-        secret = res.read()
-        try:
-            secret = json.loads(secret, encoding='utf-8')
-        except ValueError:
-            print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
-            sys.exit(1)
-    except (urllib2.URLError, socket.timeout):
-        print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
-                           'using the secret service, using fallback instead.')
-        # XXX This fingerprint will not be accurate if running on an old
-        #     revision after the server fingerprint has changed.
-        secret = {'secret': FALLBACK_FINGERPRINT}
-
-    hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
-
     args = [
-        b'/usr/bin/hg',
-        b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
+        b'hg',
         b'robustcheckout',
         b'--sharebase', store_path,
         b'--purge',
     ]
+
+    # Obtain certificate fingerprints.  Without this, the checkout will use the fingerprint
+    # on the system, which is managed some other way (such as puppet)
+    if fetch_hgfingerprint:
+        try:
+            print_line(b'vcs', 'fetching hg.mozilla.org fingerprint from %s\n' %
+                       FINGERPRINT_URL)
+            res = urllib2.urlopen(FINGERPRINT_URL, timeout=10)
+            secret = res.read()
+            try:
+                secret = json.loads(secret, encoding='utf-8')
+            except ValueError:
+                print_line(b'vcs', 'invalid JSON in hg fingerprint secret')
+                sys.exit(1)
+        except (urllib2.URLError, socket.timeout):
+            print_line(b'vcs', 'Unable to retrieve current hg.mozilla.org fingerprint'
+                               'using the secret service, using fallback instead.')
+            # XXX This fingerprint will not be accurate if running on an old
+            #     revision after the server fingerprint has changed.
+            secret = {'secret': FALLBACK_FINGERPRINT}
+
+        hgmo_fingerprint = secret['secret']['fingerprints'].encode('ascii')
+        args.extend([
+            b'--config', b'hostsecurity.hg.mozilla.org:fingerprints=%s' % hgmo_fingerprint,
+        ])
 
     if base_repo:
         args.extend([b'--upstream', base_repo])
@@ -138,7 +142,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
     # Update the current revision hash and ensure that it is well formed.
     revision = subprocess.check_output(
-        [b'/usr/bin/hg', b'log',
+        [b'hg', b'log',
          b'--rev', b'.',
          b'--template', b'{node}'],
         cwd=dest)
@@ -149,10 +153,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
 def main(args):
     print_line(b'setup', b'run-task started\n')
-
-    if os.getuid() != 0:
-        print('assertion failed: not running as root')
-        return 1
+    running_as_root = os.getuid() == 0
 
     # Arguments up to '--' are ours. After are for the main task
     # to be executed.
@@ -178,27 +179,45 @@ def main(args):
                         help='Directory where Gecko checkout should be created')
     parser.add_argument('--tools-checkout',
                         help='Directory where build/tools checkout should be created')
+    parser.add_argument('--fetch-hgfingerprint', action='store_true',
+                        help='Fetch the latest hgfingerprint from the secrets store, '
+                        'using the taskclsuerProxy')
 
     args = parser.parse_args(our_args)
 
-    try:
-        user = pwd.getpwnam(args.user)
-    except KeyError:
-        print('could not find user %s; specify --user to a known user' %
-              args.user)
-        return 1
-    try:
-        group = grp.getgrnam(args.group)
-    except KeyError:
-        print('could not find group %s; specify --group to a known group' %
-              args.group)
-        return 1
+    # expand ~ in some paths
+    if args.vcs_checkout:
+        args.vcs_checkout = os.path.expanduser(args.vcs_checkout)
+    if args.tools_checkout:
+        args.tools_checkout = os.path.expanduser(args.tools_checkout)
+    if args.chown:
+        args.chown = [os.path.expanduser(p) for p in args.chown]
+    if args.chown_recursive:
+        args.chown_recursive = [os.path.expanduser(p) for p in args.chown_recursive]
+    if 'HG_STORE_PATH' in os.environ:
+        os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
-    uid = user.pw_uid
-    gid = group.gr_gid
+    if running_as_root:
+        try:
+            user = pwd.getpwnam(args.user)
+        except KeyError:
+            print('could not find user %s; specify --user to a known user' %
+                  args.user)
+            return 1
+        try:
+            group = grp.getgrnam(args.group)
+        except KeyError:
+            print('could not find group %s; specify --group to a known group' %
+                  args.group)
+            return 1
 
-    # Find all groups to which this user is a member.
-    gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
+        # Find all groups to which this user is a member.
+        gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
+
+        uid = user.pw_uid
+        gid = group.gr_gid
+    else:
+        uid = gid = gids = None
 
     wanted_dir_mode = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
 
@@ -217,11 +236,19 @@ def main(args):
     # FUTURE: parse argument values for user/group if we don't want to
     # use --user/--group.
     for path in args.chown or []:
+        if not running_as_root:
+            print_line(b'set_dir_permissions', b'--chown not allowed when not running as root')
+            return 1
+
         print_line(b'chown', b'changing ownership of %s to %s:%s\n' % (
                    path, user.pw_name, group.gr_name))
         set_dir_permissions(path, uid, gid)
 
     for path in args.chown_recursive or []:
+        if not running_as_root:
+            print_line(b'set_dir_permissions', b'--chown-recursive not allowed when not running as root')
+            return 1
+
         print_line(b'chown', b'recursively changing ownership of %s to %s:%s\n' %
                    (path, user.pw_name, group.gr_name))
 
@@ -251,8 +278,10 @@ def main(args):
                 raise
 
         # And that it is owned by the appropriate user/group.
-        os.chown(os.path.dirname(checkout), uid, gid)
+        if running_as_root:
+            os.chown(os.path.dirname(checkout), uid, gid)
 
+    def prepare_hg_store_path():
         # And ensure the shared store path exists and has proper permissions.
         if 'HG_STORE_PATH' not in os.environ:
             print('error: HG_STORE_PATH environment variable not set')
@@ -265,20 +294,23 @@ def main(args):
             if e.errno != errno.EEXIST:
                 raise
 
-        os.chown(store_path, uid, gid)
+        if running_as_root:
+            os.chown(store_path, uid, gid)
 
     prepare_checkout_dir(args.vcs_checkout)
     prepare_checkout_dir(args.tools_checkout)
+    prepare_hg_store_path()
 
-    # Drop permissions to requested user.
-    # This code is modeled after what `sudo` was observed to do in a Docker
-    # container. We do not bother calling setrlimit() because containers have
-    # their own limits.
-    print_line(b'setup', b'running as %s:%s\n' % (args.user, args.group))
-    os.setgroups(gids)
-    os.umask(022)
-    os.setresgid(gid, gid, gid)
-    os.setresuid(uid, uid, uid)
+    if running_as_root:
+        # Drop permissions to requested user.
+        # This code is modeled after what `sudo` was observed to do in a Docker
+        # container. We do not bother calling setrlimit() because containers have
+        # their own limits.
+        print_line(b'setup', b'running as %s:%s\n' % (args.user, args.group))
+        os.setgroups(gids)
+        os.umask(022)
+        os.setresgid(gid, gid, gid)
+        os.setresuid(uid, uid, uid)
 
     # Checkout the repository, setting the GECKO_HEAD_REV to the current
     # revision hash. Revision hashes have priority over symbolic revisions. We

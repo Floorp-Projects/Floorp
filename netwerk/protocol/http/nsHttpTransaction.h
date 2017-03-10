@@ -74,6 +74,9 @@ public:
     //        the dispatch target were notifications should be sent.
     // @param callbacks
     //        the notification callbacks to be given to PSM.
+    // @param topLevelOuterContentWindowId
+    //        indicate the top level outer content window in which
+    //        this transaction is being loaded.
     // @param responseBody
     //        the input stream that will contain the response data.  async
     //        wait on this input stream for data.  on first notification,
@@ -87,6 +90,7 @@ public:
                                nsIEventTarget        *consumerTarget,
                                nsIInterfaceRequestor *callbacks,
                                nsITransportEventSink *eventsink,
+                               uint64_t               topLevelOuterContentWindowId,
                                nsIAsyncInputStream  **responseBody);
 
     // attributes
@@ -166,6 +170,11 @@ public:
 
     MOZ_MUST_USE bool Do0RTT() override;
     MOZ_MUST_USE nsresult Finish0RTT(bool aRestart, bool aAlpnChanged /* ignored */) override;
+
+    uint64_t TopLevelOuterContentWindowId()
+    {
+        return mTopLevelOuterContentWindowId;
+    }
 private:
     friend class DeleteHttpTransaction;
     virtual ~nsHttpTransaction();
@@ -332,6 +341,8 @@ private:
 
     // The time when the transaction was submitted to the Connection Manager
     TimeStamp                       mPendingTime;
+
+    uint64_t                        mTopLevelOuterContentWindowId;
 
 // For Rate Pacing via an EventTokenBucket
 public:

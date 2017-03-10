@@ -28,8 +28,10 @@ let reducers = {
 
   [UPDATE_GRID_HIGHLIGHTED](grids, { nodeFront, highlighted }) {
     return grids.map(g => {
+      let isUpdatedNode = g.nodeFront === nodeFront;
+
       return Object.assign({}, g, {
-        highlighted: g.nodeFront === nodeFront ? highlighted : false
+        highlighted: isUpdatedNode && highlighted
       });
     });
   },

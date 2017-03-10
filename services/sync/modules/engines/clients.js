@@ -80,6 +80,7 @@ this.ClientEngine = function ClientEngine(service) {
 
   // Reset the last sync timestamp on every startup so that we fetch all clients
   this.resetLastSync();
+  this.fxAccounts = fxAccounts;
 }
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -87,6 +88,7 @@ ClientEngine.prototype = {
   _recordObj: ClientsRec,
   _trackerObj: ClientsTracker,
   allowSkippedRecord: false,
+  _knownStaleFxADeviceIds: null,
 
   // Always sync client data as it controls other sync behavior
   get enabled() {
@@ -189,7 +191,7 @@ ClientEngine.prototype = {
   set localName(value) {
     Svc.Prefs.set("client.name", value);
     // Update the registration in the background.
-    fxAccounts.updateDeviceRegistration().catch(error => {
+    this.fxAccounts.updateDeviceRegistration().catch(error => {
       this._log.warn("failed to update fxa device registration", error);
     });
   },
@@ -291,7 +293,25 @@ ClientEngine.prototype = {
     this._saveCommands(allCommands);
   },
 
-  _syncStartup: function _syncStartup() {
+  // We assume that clients not present in the FxA Device Manager list have been
+  // disconnected and so are stale
+  _refreshKnownStaleClients() {
+    this._log.debug('Refreshing the known stale clients list');
+    let localClients = Object.values(this._store._remoteClients)
+                             .filter(client => client.fxaDeviceId) // iOS client records don't have fxaDeviceId
+                             .map(client => client.fxaDeviceId);
+    let fxaClients;
+    try {
+      fxaClients = Async.promiseSpinningly(this.fxAccounts.getDeviceList()).map(device => device.id);
+    } catch (ex) {
+      this._log.error('Could not retrieve the FxA device list', ex);
+      this._knownStaleFxADeviceIds = [];
+      return;
+    }
+    this._knownStaleFxADeviceIds = Utils.arraySub(localClients, fxaClients);
+  },
+
+  _syncStartup() {
     // Reupload new client record periodically.
     if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
       this._tracker.addChangedID(this.localID);
@@ -306,6 +326,10 @@ ClientEngine.prototype = {
     this._incomingClients = {};
     try {
       SyncEngine.prototype._processIncoming.call(this);
+      // Refresh the known stale clients list once per browser restart
+      if (!this._knownStaleFxADeviceIds) {
+        this._refreshKnownStaleClients();
+      }
       // Since clients are synced unconditionally, any records in the local store
       // that don't exist on the server must be for disconnected clients. Remove
       // them, so that we don't upload records with commands for clients that will
@@ -328,6 +352,10 @@ ClientEngine.prototype = {
         let record = this._store._remoteClients[id];
         // stash the server last-modified time on the record.
         record.serverLastModified = serverLastModified;
+        if (record.fxaDeviceId && this._knownStaleFxADeviceIds.includes(record.fxaDeviceId)) {
+          this._log.info(`Hiding stale client ${id} - in known stale clients list`);
+          record.stale = true;
+        }
         if (!names.has(record.name)) {
           names.add(record.name);
           continue;
@@ -416,7 +444,7 @@ ClientEngine.prototype = {
         collections: ["clients"]
       }
     };
-    fxAccounts.notifyDevices(ids, message, NOTIFY_TAB_SENT_TTL_SECS);
+    this.fxAccounts.notifyDevices(ids, message, NOTIFY_TAB_SENT_TTL_SECS);
   },
 
   _syncFinish() {
@@ -471,6 +499,7 @@ ClientEngine.prototype = {
 
   _wipeClient: function _wipeClient() {
     SyncEngine.prototype._resetClient.call(this);
+    this._knownStaleFxADeviceIds = null;
     delete this.localCommands;
     this._store.wipe();
     const logRemoveError = err => this._log.warn("Could not delete json file", err);
@@ -808,7 +837,7 @@ ClientStore.prototype = {
     // Package the individual components into a record for the local client
     if (id == this.engine.localID) {
       let cb = Async.makeSpinningCallback();
-      fxAccounts.getDeviceId().then(id => cb(null, id), cb);
+      this.engine.fxAccounts.getDeviceId().then(id => cb(null, id), cb);
       try {
         record.fxaDeviceId = cb.wait();
       } catch (error) {

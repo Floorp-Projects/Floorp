@@ -89,6 +89,11 @@ mm.addMessageListener("ppapi.js:frameLoaded", ({ target }) => {
     let fullscreen = (containerWindow.document.fullscreenElement == pluginElement);
     mm.sendAsyncMessage("ppapi.js:fullscreenchange", { fullscreen });
   });
+
+  containerWindow.addEventListener("hashchange", () => {
+    let url = containerWindow.location.href;
+    mm.sendAsyncMessage("ppapipdf.js:hashchange", { url });
+  })
 });
 
 mm.addMessageListener("ppapi.js:setFullscreen", ({ data }) => {
@@ -96,6 +101,12 @@ mm.addMessageListener("ppapi.js:setFullscreen", ({ data }) => {
     pluginElement.requestFullscreen();
   } else {
     containerWindow.document.exitFullscreen();
+  }
+});
+
+mm.addMessageListener("ppapipdf.js:setHash", ({ data }) => {
+  if (data) {
+    containerWindow.location.hash = data;
   }
 });
 

@@ -798,6 +798,9 @@ public:
 
   virtual void NotifyLayerManagerRecreated() override;
 
+  virtual void ScheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
+  virtual void UnscheduleSVGForPresAttrEvaluation(nsSVGElement* aSVG) override;
+  virtual void ResolveScheduledSVGPresAttrs() override;
 
 private:
   void AddOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet);
@@ -1641,6 +1644,11 @@ private:
   // Set to true when the document is possibly controlled by the ServiceWorker.
   // Used to prevent multiple requests to ServiceWorkerManager.
   bool mMaybeServiceWorkerControlled;
+
+  // We lazily calculate declaration blocks for SVG elements
+  // with mapped attributes in Servo mode. This list contains all elements which
+  // need lazy resolution
+  nsTHashtable<nsPtrHashKey<nsSVGElement>> mLazySVGPresElements;
 
 #ifdef DEBUG
 public:

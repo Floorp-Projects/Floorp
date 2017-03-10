@@ -2263,17 +2263,11 @@ nsComputedDOMStyle::SetValueToStyleImage(const nsStyleImage& aStyleImage,
   switch (aStyleImage.GetType()) {
     case eStyleImageType_Image:
     {
-      imgIRequest* req = aStyleImage.GetImageData();
-      if (!req) {
-        // XXXheycam If we had some problem resolving the imgRequestProxy,
-        // maybe we should just use the URL stored in the nsStyleImage's
-        // mImageValue?  (Similarly in DoGetListStyleImage.)
+      nsCOMPtr<nsIURI> uri = aStyleImage.GetImageURI();
+      if (!uri) {
         aValue->SetIdent(eCSSKeyword_none);
         break;
       }
-
-      nsCOMPtr<nsIURI> uri;
-      req->GetURI(getter_AddRefs(uri));
 
       const UniquePtr<nsStyleSides>& cropRect = aStyleImage.GetCropRect();
       if (cropRect) {
@@ -3692,18 +3686,10 @@ nsComputedDOMStyle::DoGetListStyleImage()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  const nsStyleList* list = StyleList();
-
-  // XXXheycam As in SetValueToStyleImage, we might want to use the
-  // URL stored in the nsStyleImageRequest's mImageValue if we
-  // failed to resolve the imgRequestProxy.
-
-  imgRequestProxy* image = list->GetListStyleImage();
-  if (!image) {
+  nsCOMPtr<nsIURI> uri = StyleList()->GetListStyleImageURI();
+  if (!uri) {
     val->SetIdent(eCSSKeyword_none);
   } else {
-    nsCOMPtr<nsIURI> uri;
-    image->GetURI(getter_AddRefs(uri));
     val->SetURI(uri);
   }
 

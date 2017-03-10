@@ -6,7 +6,8 @@
 
 #include "WebBrowserPersistDocumentChild.h"
 
-#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsIDocument.h"
 #include "nsIInputStream.h"
 #include "WebBrowserPersistLocalDocument.h"
@@ -42,8 +43,6 @@ WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
 
     WebBrowserPersistDocumentAttrs attrs;
     nsCOMPtr<nsIInputStream> postDataStream;
-    OptionalInputStreamParams postData;
-    nsTArray<FileDescriptor> postFiles;
 #define ENSURE(e) do {           \
         nsresult rv = (e);       \
         if (NS_FAILED(rv)) {     \
@@ -62,12 +61,14 @@ WebBrowserPersistDocumentChild::Start(nsIWebBrowserPersistDocument* aDocument)
     ENSURE(aDocument->GetCacheKey(&(attrs.cacheKey())));
     ENSURE(aDocument->GetPersistFlags(&(attrs.persistFlags())));
     ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
-    ipc::SerializeInputStream(postDataStream,
-                              postData,
-                              postFiles);
 #undef ENSURE
+
+    mozilla::ipc::AutoIPCStream autoStream;
+    autoStream.Serialize(postDataStream,
+                         static_cast<mozilla::dom::ContentChild*>(Manager()));
+
     mDocument = aDocument;
-    SendAttributes(attrs, postData, postFiles);
+    SendAttributes(attrs, autoStream.TakeOptionalValue());
 }
 
 mozilla::ipc::IPCResult

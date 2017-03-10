@@ -186,3 +186,9 @@ if ! $TASKCLUSTER_INTERACTIVE; then
   # arguments in from our own invocation
   ${mozharness_bin};
 fi
+
+# Run a custom mach command (this is typically used by action tasks to run
+# harnesses in a particular way)
+if [ "$CUSTOM_MACH_COMMAND" ]; then
+    eval "/home/worker/workspace/build/tests/mach ${CUSTOM_MACH_COMMAND}"
+fi
