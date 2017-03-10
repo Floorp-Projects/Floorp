@@ -58,11 +58,16 @@ X11TextureHost::Lock()
 }
 
 void
-X11TextureHost::SetCompositor(Compositor* aCompositor)
+X11TextureHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  mCompositor = aCompositor;
+  mProvider = aProvider;
+  if (mProvider) {
+    mCompositor = mProvider->AsCompositor();
+  } else {
+    mCompositor = nullptr;
+  }
   if (mTextureSource) {
-    mTextureSource->SetTextureSourceProvider(aCompositor);
+    mTextureSource->SetTextureSourceProvider(aProvider);
   }
 }
 

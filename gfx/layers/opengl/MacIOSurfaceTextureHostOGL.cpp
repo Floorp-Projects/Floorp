@@ -29,7 +29,7 @@ GLTextureSource*
 MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
 {
   GLuint textureHandle;
-  gl::GLContext* gl = mCompositor->gl();
+  gl::GLContext* gl = mProvider->GetGLContext();
   gl->fGenTextures(1, &textureHandle);
   gl->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, textureHandle);
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
@@ -37,7 +37,7 @@ MacIOSurfaceTextureHostOGL::CreateTextureSourceForPlane(size_t aPlane)
 
   mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl)->GetCGLContext(), aPlane);
 
-  return new GLTextureSource(mCompositor, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+  return new GLTextureSource(mProvider, textureHandle, LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                              gfx::IntSize(mSurface->GetDevicePixelWidth(aPlane),
                                           mSurface->GetDevicePixelHeight(aPlane)),
                              // XXX: This isn't really correct (but isn't used), we should be using the
@@ -66,20 +66,20 @@ MacIOSurfaceTextureHostOGL::Lock()
 }
 
 void
-MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
+MacIOSurfaceTextureHostOGL::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  CompositorOGL* glCompositor = AssertGLCompositor(aCompositor);
-  if (!glCompositor) {
+  if (!aProvider || !aProvider->GetGLContext()) {
     mTextureSource = nullptr;
-    mCompositor = nullptr;
+    mProvider = nullptr;
     return;
   }
 
-  if (mCompositor != glCompositor) {
+  if (mProvider != aProvider) {
     // Cannot share GL texture identifiers across compositors.
     mTextureSource = nullptr;
   }
-  mCompositor = glCompositor;
+
+  mProvider = aProvider;
 }
 
 gfx::SurfaceFormat
@@ -104,7 +104,7 @@ MacIOSurfaceTextureHostOGL::GetSize() const {
 gl::GLContext*
 MacIOSurfaceTextureHostOGL::gl() const
 {
-  return mCompositor ? mCompositor->gl() : nullptr;
+  return mProvider ? mProvider->GetGLContext() : nullptr;
 }
 
 MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
