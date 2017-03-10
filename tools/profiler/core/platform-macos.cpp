@@ -34,222 +34,7 @@
 // Memory profile
 #include "nsMemoryReporterManager.h"
 
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
-
 // this port is based off of v8 svn revision 9837
-
-class PlatformData {
- public:
-  PlatformData() : profiled_thread_(mach_thread_self())
-  {
-  }
-
-  ~PlatformData() {
-    // Deallocate Mach port for thread.
-    mach_port_deallocate(mach_task_self(), profiled_thread_);
-  }
-
-  thread_act_t profiled_thread() { return profiled_thread_; }
-
- private:
-  // Note: for profiled_thread_ Mach primitives are used instead of PThread's
-  // because the latter doesn't provide thread manipulation primitives required.
-  // For details, consult "Mac OS X Internals" book, Section 7.3.
-  thread_act_t profiled_thread_;
-};
-
-UniquePlatformData
-AllocPlatformData(int aThreadId)
-{
-  return UniquePlatformData(new PlatformData);
-}
-
-void
-PlatformDataDestructor::operator()(PlatformData* aData)
-{
-  delete aData;
-}
-
-// The sampler thread controls sampling and runs whenever the profiler is
-// active. It periodically runs through all registered threads, finds those
-// that should be sampled, then pauses and samples them.
-class SamplerThread
-{
-private:
-  static void SetThreadName() {
-    // pthread_setname_np is only available in 10.6 or later, so test
-    // for it at runtime.
-    int (*dynamic_pthread_setname_np)(const char*);
-    *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
-      dlsym(RTLD_DEFAULT, "pthread_setname_np");
-    if (!dynamic_pthread_setname_np)
-      return;
-
-    dynamic_pthread_setname_np("SamplerThread");
-  }
-
-  static void* ThreadEntry(void* aArg) {
-    auto thread = static_cast<SamplerThread*>(aArg);
-    SetThreadName();
-    thread->Run();
-    return nullptr;
-  }
-
-public:
-  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
-                double aInterval)
-    : mActivityGeneration(aActivityGeneration)
-    , mIntervalMicro(std::max(1, int(floor(aInterval * 1000 + 0.5))))
-  {
-    pthread_attr_t* attr_ptr = nullptr;
-    if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {
-      MOZ_CRASH("pthread_create failed");
-    }
-  }
-
-  ~SamplerThread() {
-    pthread_join(mThread, nullptr);
-  }
-
-  void Stop(PS::LockRef aLock) {}
-
-  void Run() {
-    // This function runs on the sampler thread.
-
-    TimeDuration lastSleepOverhead = 0;
-    TimeStamp sampleStart = TimeStamp::Now();
-
-    while (true) {
-      // This scope is for |lock|. It ends before we sleep below.
-      {
-        PS::AutoLock lock(gPSMutex);
-
-        // See the corresponding code in platform-linux-android.cpp for an
-        // explanation of what's happening here.
-        if (PS::ActivityGeneration(lock) != mActivityGeneration) {
-          return;
-        }
-
-        gPS->Buffer(lock)->deleteExpiredStoredMarkers();
-
-        if (!gPS->IsPaused(lock)) {
-          bool isFirstProfiledThread = true;
-
-          const PS::ThreadVector& threads = gPS->Threads(lock);
-          for (uint32_t i = 0; i < threads.size(); i++) {
-            ThreadInfo* info = threads[i];
-
-            if (!info->HasProfile() || info->IsPendingDelete()) {
-              // We are not interested in profiling this thread.
-              continue;
-            }
-
-            if (info->Stack()->CanDuplicateLastSampleDueToSleep() &&
-                gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
-                                                       info->LastSample())) {
-              continue;
-            }
-
-            info->UpdateThreadResponsiveness();
-
-            SampleContext(lock, info, isFirstProfiledThread);
-
-            isFirstProfiledThread = false;
-          }
-        }
-        // gPSMutex is unlocked here.
-      }
-
-      TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(mIntervalMicro);
-      TimeStamp beforeSleep = TimeStamp::Now();
-      TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
-      double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
-      usleep(sleepTime);
-      sampleStart = TimeStamp::Now();
-      lastSleepOverhead = sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
-    }
-  }
-
-  void SampleContext(PS::LockRef aLock, ThreadInfo* aThreadInfo,
-                     bool isFirstProfiledThread)
-  {
-    thread_act_t profiled_thread =
-      aThreadInfo->GetPlatformData()->profiled_thread();
-
-    TickSample sample;
-
-    // Unique Set Size is not supported on Mac.
-    sample.rssMemory = (isFirstProfiledThread && gPS->FeatureMemory(aLock))
-                     ? nsMemoryReporterManager::ResidentFast()
-                     : 0;
-    sample.ussMemory = 0;
-
-    // We're using thread_suspend on OS X because pthread_kill (which is what
-    // we're using on Linux) has less consistent performance and causes
-    // strange crashes, see bug 1166778 and bug 1166808.
-
-    if (KERN_SUCCESS != thread_suspend(profiled_thread)) {
-      return;
-    }
-
-#if defined(GP_ARCH_amd64)
-    thread_state_flavor_t flavor = x86_THREAD_STATE64;
-    x86_thread_state64_t state;
-    mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
-#if __DARWIN_UNIX03
-#define REGISTER_FIELD(name) __r ## name
-#else
-#define REGISTER_FIELD(name) r ## name
-#endif  // __DARWIN_UNIX03
-#elif defined(GP_ARCH_x86)
-    thread_state_flavor_t flavor = i386_THREAD_STATE;
-    i386_thread_state_t state;
-    mach_msg_type_number_t count = i386_THREAD_STATE_COUNT;
-#if __DARWIN_UNIX03
-#define REGISTER_FIELD(name) __e ## name
-#else
-#define REGISTER_FIELD(name) e ## name
-#endif  // __DARWIN_UNIX03
-#else
-#error Unsupported Mac OS X host architecture.
-#endif  // GP_ARCH_*
-
-    if (thread_get_state(profiled_thread,
-                         flavor,
-                         reinterpret_cast<natural_t*>(&state),
-                         &count) == KERN_SUCCESS) {
-      sample.pc = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
-      sample.sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
-      sample.fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
-      sample.timestamp = mozilla::TimeStamp::Now();
-      sample.threadInfo = aThreadInfo;
-
-#undef REGISTER_FIELD
-
-      Tick(aLock, gPS->Buffer(aLock), &sample);
-    }
-    thread_resume(profiled_thread);
-  }
-
-private:
-  // The activity generation, for detecting when the sampler thread must stop.
-  const uint32_t mActivityGeneration;
-
-  // The pthread_t for the sampler thread.
-  pthread_t mThread;
-
-  // The interval between samples, measured in microseconds.
-  const int mIntervalMicro;
-
-  SamplerThread(const SamplerThread&) = delete;
-  void operator=(const SamplerThread&) = delete;
-};
-
-static void
-PlatformInit(PS::LockRef aLock)
-{
-}
 
 /* static */ Thread::tid_t
 Thread::GetCurrentId()
@@ -257,8 +42,194 @@ Thread::GetCurrentId()
   return gettid();
 }
 
-void TickSample::PopulateContext(void* aContext)
+static void
+SleepMicro(int aMicroseconds)
 {
+  aMicroseconds = std::max(0, aMicroseconds);
+
+  usleep(aMicroseconds);
+  // FIXME: the OSX 10.12 page for usleep says "The usleep() function is
+  // obsolescent.  Use nanosleep(2) instead."  This implementation could be
+  // merged with the linux-android version.  Also, this doesn't handle the
+  // case where the usleep call is interrupted by a signal.
+}
+
+class PlatformData
+{
+public:
+  explicit PlatformData(int aThreadId) : profiled_thread_(mach_thread_self())
+  {
+    MOZ_COUNT_CTOR(PlatformData);
+  }
+
+  ~PlatformData() {
+    // Deallocate Mach port for thread.
+    mach_port_deallocate(mach_task_self(), profiled_thread_);
+
+    MOZ_COUNT_DTOR(PlatformData);
+  }
+
+  thread_act_t profiled_thread() { return profiled_thread_; }
+
+private:
+  // Note: for profiled_thread_ Mach primitives are used instead of PThread's
+  // because the latter doesn't provide thread manipulation primitives required.
+  // For details, consult "Mac OS X Internals" book, Section 7.3.
+  thread_act_t profiled_thread_;
+};
+
+////////////////////////////////////////////////////////////////////////
+// BEGIN SamplerThread target specifics
+
+static void
+SetThreadName()
+{
+  // pthread_setname_np is only available in 10.6 or later, so test
+  // for it at runtime.
+  int (*dynamic_pthread_setname_np)(const char*);
+  *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
+    dlsym(RTLD_DEFAULT, "pthread_setname_np");
+  if (!dynamic_pthread_setname_np)
+    return;
+
+  dynamic_pthread_setname_np("SamplerThread");
+}
+
+static void*
+ThreadEntry(void* aArg)
+{
+  auto thread = static_cast<SamplerThread*>(aArg);
+  SetThreadName();
+  thread->Run();
+  return nullptr;
+}
+
+SamplerThread::SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                             double aIntervalMilliseconds)
+  : mActivityGeneration(aActivityGeneration)
+  , mIntervalMicroseconds(
+      std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5))))
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  pthread_attr_t* attr_ptr = nullptr;
+  if (pthread_create(&mThread, attr_ptr, ThreadEntry, this) != 0) {
+    MOZ_CRASH("pthread_create failed");
+  }
+}
+
+SamplerThread::~SamplerThread()
+{
+  pthread_join(mThread, nullptr);
+}
+
+void
+SamplerThread::Stop(PS::LockRef aLock)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+}
+
+void
+SamplerThread::SuspendAndSampleAndResumeThread(
+  PS::LockRef aLock, ThreadInfo* aThreadInfo, bool aIsFirstProfiledThread)
+{
+  thread_act_t samplee_thread =
+    aThreadInfo->GetPlatformData()->profiled_thread();
+
+  //----------------------------------------------------------------//
+  // Collect auxiliary information whilst the samplee thread is still
+  // running.
+
+  TickSample sample;
+  sample.threadInfo = aThreadInfo;
+  sample.timestamp = mozilla::TimeStamp::Now();
+
+  // Unique Set Size is not supported on Mac.
+  sample.rssMemory = (aIsFirstProfiledThread && gPS->FeatureMemory(aLock))
+                   ? nsMemoryReporterManager::ResidentFast()
+                   : 0;
+  sample.ussMemory = 0;
+
+  //----------------------------------------------------------------//
+  // Suspend the samplee thread and get its context.
+
+  // We're using thread_suspend on OS X because pthread_kill (which is what we
+  // at one time used on Linux) has less consistent performance and causes
+  // strange crashes, see bug 1166778 and bug 1166808.  thread_suspend
+  // is also just a lot simpler to use.
+
+  if (KERN_SUCCESS != thread_suspend(samplee_thread)) {
+    return;
+  }
+
+  //----------------------------------------------------------------//
+  // Sample the target thread.
+
+  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+  //
+  // The profiler's "critical section" begins here.  We must be very careful
+  // what we do here, or risk deadlock.  See the corresponding comment in
+  // platform-linux-android.cpp for details.
+
+#if defined(GP_ARCH_amd64)
+  thread_state_flavor_t flavor = x86_THREAD_STATE64;
+  x86_thread_state64_t state;
+  mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
+# if __DARWIN_UNIX03
+#  define REGISTER_FIELD(name) __r ## name
+# else
+#  define REGISTER_FIELD(name) r ## name
+# endif  // __DARWIN_UNIX03
+
+#elif defined(GP_ARCH_x86)
+  thread_state_flavor_t flavor = i386_THREAD_STATE;
+  i386_thread_state_t state;
+  mach_msg_type_number_t count = i386_THREAD_STATE_COUNT;
+# if __DARWIN_UNIX03
+#  define REGISTER_FIELD(name) __e ## name
+# else
+#  define REGISTER_FIELD(name) e ## name
+# endif  // __DARWIN_UNIX03
+
+#else
+# error Unsupported Mac OS X host architecture.
+#endif  // GP_ARCH_*
+
+  if (thread_get_state(samplee_thread,
+                       flavor,
+                       reinterpret_cast<natural_t*>(&state),
+                       &count) == KERN_SUCCESS) {
+    sample.pc = reinterpret_cast<Address>(state.REGISTER_FIELD(ip));
+    sample.sp = reinterpret_cast<Address>(state.REGISTER_FIELD(sp));
+    sample.fp = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
+
+    Tick(aLock, gPS->Buffer(aLock), &sample);
+  }
+
+#undef REGISTER_FIELD
+
+  //----------------------------------------------------------------//
+  // Resume the target thread.
+
+  thread_resume(samplee_thread);
+
+  // The profiler's critical section ends here.
+  //
+  // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+}
+
+// END SamplerThread target specifics
+////////////////////////////////////////////////////////////////////////
+
+static void
+PlatformInit(PS::LockRef aLock)
+{
+}
+
+void
+TickSample::PopulateContext(void* aContext)
+{
+  MOZ_ASSERT(!aContext);
   // Note that this asm changes if PopulateContext's parameter list is altered
 #if defined(GP_ARCH_amd64)
   asm (
