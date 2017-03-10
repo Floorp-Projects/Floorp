@@ -335,6 +335,8 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
       // FIXME: stylo only supports Self and Subtree hints now, so we override
       // it for stylo if we are not in process of restyling.
       hint = eRestyle_Self | eRestyle_Subtree;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Should not request restyle");
     }
   }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);
@@ -996,16 +998,17 @@ EffectCompositor::PreTraverse()
   return foundElementsNeedingRestyle;
 }
 
-void
+bool
 EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  bool found = false;
   if (aPseudoTagOrNull &&
       aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
       aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
-    return;
+    return found;
   }
 
   CSSPseudoElementType pseudoType =
@@ -1020,6 +1023,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
       continue;
     }
 
+    mPresContext->RestyleManager()->AsServo()->
+      PostRestyleEventForAnimations(aElement, eRestyle_Self);
+
     EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
     if (effects) {
       for (KeyframeEffectReadOnly* effect : *effects) {
@@ -1028,7 +1034,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
     }
 
     elementsToRestyle.Remove(key);
+    found = true;
   }
+  return found;
 }
 
 // ---------------------------------------------------------
