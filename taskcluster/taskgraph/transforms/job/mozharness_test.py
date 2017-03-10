@@ -26,6 +26,7 @@ ARTIFACTS = [
 BUILDER_NAME_PREFIX = {
     'linux64-pgo': 'Ubuntu VM 12.04 x64',
     'linux64': 'Ubuntu VM 12.04 x64',
+    'linux64-nightly': 'Ubuntu VM 12.04 x64',
     'linux64-asan': 'Ubuntu ASAN VM 12.04 x64',
     'linux64-ccov': 'Ubuntu Code Coverage VM 12.04 x64',
     'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',

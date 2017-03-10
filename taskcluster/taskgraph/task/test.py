@@ -48,6 +48,8 @@ class TestTask(transform.TransformTask):
                 test['test-platform'] = test_platform_name
                 test['build-label'] = test_platform['build-label']
                 test['test-name'] = test_name
+                if test_platform['nightly']:
+                    test.setdefault('attributes', {})['nightly'] = True
 
                 logger.debug("Generating tasks for test {} on platform {}".format(
                     test_name, test['test-platform']))
@@ -56,8 +58,7 @@ class TestTask(transform.TransformTask):
     @classmethod
     def get_builds_by_platform(cls, dep_kind, loaded_tasks):
         """Find the build tasks on which tests will depend, keyed by
-        platform/type.  Returns a dictionary mapping build platform to task
-        label."""
+        platform/type.  Returns a dictionary mapping build platform to task."""
         builds_by_platform = {}
         for task in loaded_tasks:
             if task.kind != dep_kind:
@@ -70,7 +71,7 @@ class TestTask(transform.TransformTask):
             platform = "{}/{}".format(build_platform, build_type)
             if platform in builds_by_platform:
                 raise Exception("multiple build jobs for " + platform)
-            builds_by_platform[platform] = task.label
+            builds_by_platform[platform] = task
         return builds_by_platform
 
     @classmethod
@@ -87,8 +88,9 @@ class TestTask(transform.TransformTask):
                         build_platform, test_platform))
                 continue
             test_platforms[test_platform] = {
+                'nightly': builds_by_platform[build_platform].attributes.get('nightly', False),
                 'build-platform': build_platform,
-                'build-label': builds_by_platform[build_platform],
+                'build-label': builds_by_platform[build_platform].label,
             }
             test_platforms[test_platform].update(cfg)
         return test_platforms
