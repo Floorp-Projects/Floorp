@@ -10912,24 +10912,6 @@
     "n_buckets": 30,
     "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
   },
-  "HANDLE_UNLOAD_MS": {
-    "alert_emails": ["kchen@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "bug_numbers": [1301346],
-    "description": "The time spent handling unload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
-  },
-  "HANDLE_BEFOREUNLOAD_MS": {
-    "alert_emails": ["kchen@mozilla.com"],
-    "expires_in_version": "55",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 50,
-    "bug_numbers": [1301346],
-    "description": "The time spent handling beforeunload event in milliseconds. It measures all documents and subframes separately. If there are multiple handlers for the unload event in a document, this will record a single value across all handlers in the document."
-  },
   "TABCHILD_PAINT_TIME": {
     "alert_emails": ["mconley@mozilla.com"],
     "bug_numbers": [1313686],
