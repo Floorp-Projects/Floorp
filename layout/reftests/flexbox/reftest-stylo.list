@@ -22,12 +22,12 @@ fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) == flexbox-align-self-
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4.xhtml
 
 # Tests for box-sizing on flex containers and flex items.
-fails == flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1.html
-fails == flexbox-box-sizing-on-container-vert-1.html flexbox-box-sizing-on-container-vert-1.html
+== flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1.html
+== flexbox-box-sizing-on-container-vert-1.html flexbox-box-sizing-on-container-vert-1.html
 == flexbox-box-sizing-on-items-horiz-1a.html flexbox-box-sizing-on-items-horiz-1a.html
-fails == flexbox-box-sizing-on-items-horiz-1b.html flexbox-box-sizing-on-items-horiz-1b.html
+== flexbox-box-sizing-on-items-horiz-1b.html flexbox-box-sizing-on-items-horiz-1b.html
 == flexbox-box-sizing-on-items-vert-1a.html flexbox-box-sizing-on-items-vert-1a.html
-fails == flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1b.html
+== flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1b.html
 
 # Tests for dynamic modifications of content inside/around a flex container
 == flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1.xhtml
@@ -75,18 +75,17 @@ fails == flexbox-float-2b.xhtml flexbox-float-2b.xhtml
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 fails == flexbox-position-absolute-1.xhtml flexbox-position-absolute-1.xhtml
 fails == flexbox-position-absolute-2.xhtml flexbox-position-absolute-2.xhtml
-fails == flexbox-position-absolute-3.xhtml flexbox-position-absolute-3.xhtml
+== flexbox-position-absolute-3.xhtml flexbox-position-absolute-3.xhtml
 == flexbox-position-absolute-4.xhtml flexbox-position-absolute-4.xhtml
-fails == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
 fails == flexbox-position-fixed-1.xhtml flexbox-position-fixed-1.xhtml
 fails == flexbox-position-fixed-2.xhtml flexbox-position-fixed-2.xhtml
-fails == flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
+== flexbox-position-fixed-3.xhtml flexbox-position-fixed-3.xhtml
 == flexbox-position-fixed-4.xhtml flexbox-position-fixed-4.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
 fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1a.xhtml
 fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1b.xhtml
-fails == flexbox-inlinecontent-horiz-2.xhtml flexbox-inlinecontent-horiz-2.xhtml
+== flexbox-inlinecontent-horiz-2.xhtml flexbox-inlinecontent-horiz-2.xhtml
 fails == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3a.xhtml
 fails == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3b.xhtml
 fails == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3c.xhtml
