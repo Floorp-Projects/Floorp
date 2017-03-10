@@ -458,7 +458,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListe
     /*
      * @param identityData An object that holds the current tab's identity data.
      */
-    void setSiteIdentity(SiteIdentity siteIdentity) {
+    public void setSiteIdentity(SiteIdentity siteIdentity) {
         mSiteIdentity = siteIdentity;
     }
 
