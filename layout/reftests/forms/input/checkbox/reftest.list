@@ -14,3 +14,4 @@ fails-if(Android) == indeterminate-unchecked.html about:blank
 skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html
 skip-if(Android) == checkbox-baseline.html checkbox-baseline-ref.html # skip-if(Android) because Android use appearance:none by default for checkbox/radio.
 skip-if(Android) == checkbox-radio-color.html checkbox-radio-color-ref.html # skip-if(Android) because Android use appearance:none by default for checkbox/radio.
+skip-if(!Android) == checkbox-radio-auto-sized.html checkbox-radio-auto-sized-ref.html
