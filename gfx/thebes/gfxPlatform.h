@@ -626,9 +626,7 @@ public:
     virtual bool SupportsApzWheelInput() const {
       return false;
     }
-    virtual bool SupportsApzTouchInput() const {
-      return false;
-    }
+    bool SupportsApzTouchInput() const;
     bool SupportsApzDragInput() const;
 
     virtual void FlushContentDrawing() {}

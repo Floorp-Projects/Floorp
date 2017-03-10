@@ -249,6 +249,7 @@ GENERATED_FILES = [
 GENERATED_FILES['DeprecatedPremultiplyTables.h'].script = 'genTables.py:generate'
 
 LOCAL_INCLUDES += [
+    '/dom/base',
     '/dom/workers',
     '/dom/xml',
 ]
