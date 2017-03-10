@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that the HeapAnalyses{Client,Worker} can send SavedFrame stacks from
 // by-allocation-stack reports from the worker.
@@ -20,7 +21,7 @@ add_task(function* test() {
          function f() { this.log.push(allocationMarker()); } // 3
          function g() { this.log.push(allocationMarker()); } // 4
          function h() { this.log.push(allocationMarker()); } // 5
-         `);                                                 // 6
+         `);
 
   // Create one allocationMarker with tracking turned off,
   // so it will have no associated stack.
@@ -49,20 +50,26 @@ add_task(function* test() {
   // Run a census broken down by class name -> allocation stack so we can grab
   // only the AllocationMarker objects we have complete control over.
 
-  const { report } = yield client.takeCensus(snapshotFilePath, {
-    breakdown: { by: "objectClass",
-                 then: { by: "allocationStack",
-                         then: { by: "count",
-                                 bytes: true,
-                                 count: true
-                               },
-                         noStack: { by: "count",
-                                    bytes: true,
-                                    count: true
-                                  }
-                       }
-               }
-  });
+  const { report } = yield client.takeCensus(
+    snapshotFilePath,
+    {
+      breakdown: {
+        by: "objectClass",
+        then: {
+          by: "allocationStack",
+          then: {
+            by: "count",
+            bytes: true,
+            count: true
+          },
+          noStack: {
+            by: "count",
+            bytes: true,
+            count: true
+          }
+        }
+      }
+    });
 
   // Test the generated report.
 
@@ -72,7 +79,7 @@ add_task(function* test() {
   ok(map, "Should get AllocationMarkers in the report.");
   // From a module with a different global, and therefore a different Map
   // constructor, so we can't use instanceof.
-  equal(map.__proto__.constructor.name, "Map");
+  equal(Object.getPrototypeOf(map).constructor.name, "Map");
 
   equal(map.size, 4, "Should have 4 allocation stacks (including the lack of a stack)");
 

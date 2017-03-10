@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // HeapSnapshot.prototype.takeCensus behaves plausibly as we allocate objects.
 //
@@ -15,12 +16,12 @@
 
 function run_test() {
   // A Debugger with no debuggees had better not find anything.
-  var dbg = new Debugger;
-  var census0 = saveHeapSnapshotAndTakeCensus(dbg);
+  let dbg = new Debugger();
+  let census0 = saveHeapSnapshotAndTakeCensus(dbg);
   Census.walkCensus(census0, "census0", Census.assertAllZeros);
 
   function newGlobalWithDefs() {
-    var g = newGlobal();
+    let g = newGlobal();
     g.eval(`
            function times(n, fn) {
              var a=[];
@@ -34,7 +35,7 @@ function run_test() {
 
   // Allocate a large number of various types of objects, and check that census
   // finds them.
-  var g = newGlobalWithDefs();
+  let g = newGlobalWithDefs();
   dbg.addDebuggee(g);
 
   g.eval("var objs = times(100, () => ({}));");
@@ -42,16 +43,16 @@ function run_test() {
   g.eval("var ars  = times(400, () => []);");
   g.eval("var fns  = times(800, () => () => {});");
 
-  var census1 = dbg.memory.takeCensus(dbg);
+  let census1 = dbg.memory.takeCensus(dbg);
   Census.walkCensus(census1, "census1",
-                    Census.assertAllNotLessThan(
-                      { "objects":
-                        { "Object":   { count: 100 },
-                          "RegExp":   { count: 200 },
-                          "Array":    { count: 400 },
-                          "Function": { count: 800 }
-                        }
-                      }));
+                    Census.assertAllNotLessThan({
+                      "objects": {
+                        "Object": { count: 100 },
+                        "RegExp": { count: 200 },
+                        "Array": { count: 400 },
+                        "Function": { count: 800 }
+                      }
+                    }));
 
   do_test_finished();
 }

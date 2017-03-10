@@ -1,5 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
 // Test that we can insert new children into an existing DominatorTreeNode tree.
 
@@ -108,5 +109,6 @@ const expected = {
 };
 
 function run_test() {
-  assertDominatorTreeNodeInsertion(tree, path, newChildren, moreChildrenAvailable, expected);
+  assertDominatorTreeNodeInsertion(tree, path, newChildren,
+    moreChildrenAvailable, expected);
 }
