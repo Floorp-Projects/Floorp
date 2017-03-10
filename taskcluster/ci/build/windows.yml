@@ -235,3 +235,43 @@ win32-qr/opt:
         config:
             - builds/taskcluster_firefox_win32_qr_opt.py
     run-on-projects: [ 'graphics' ]
+
+win64-asan/debug:
+    description: "Win64 Debug ASAN"
+    index:
+        product: firefox
+        job-name: win64-asan-debug
+    treeherder:
+        platform: windows2012-64/asan
+        symbol: tc(Bd)
+        tier: 3
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_asan_debug.py
+    run-on-projects: []
+
+win64-asan/opt:
+    description: "Win64 Opt ASAN"
+    index:
+        product: firefox
+        job-name: win64-asan-opt
+    treeherder:
+        platform: windows2012-64/asan
+        symbol: tc(Bo)
+        tier: 3
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        implementation: generic-worker
+        max-run-time: 7200
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_win64_asan_opt.py
+    run-on-projects: []
