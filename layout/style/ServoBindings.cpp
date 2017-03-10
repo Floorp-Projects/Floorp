@@ -454,6 +454,26 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
   }
 }
 
+bool
+Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
+                              nsIAtom* aPseudoTagOrNull)
+{
+  if (aPseudoTagOrNull &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+    return false;
+  }
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+  nsAnimationManager::CSSAnimationCollection* collection =
+    nsAnimationManager::CSSAnimationCollection
+                      ::GetAnimationCollection(aElement, pseudoType);
+
+  return collection && !collection->mAnimations.IsEmpty();
+}
+
 void
 Gecko_FillAllBackgroundLists(nsStyleImageLayers* aLayers, uint32_t aMaxLen)
 {

@@ -197,6 +197,8 @@ void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
                             nsIAtom* aPseudoTagOrNull,
                             ServoComputedValuesBorrowed aComputedValues,
                             ServoComputedValuesBorrowedOrNull aParentComputedValues);
+bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
+                                   nsIAtom* aPseudoTagOrNull);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
