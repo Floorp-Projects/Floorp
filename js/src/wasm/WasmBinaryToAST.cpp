@@ -302,8 +302,7 @@ AstDecodeCall(AstDecodeContext& c)
 
     AstRef funcRef;
     if (funcIndex < c.module().numFuncImports()) {
-        AstImport* import = c.module().imports()[funcIndex];
-        funcRef = AstRef(import->name());
+        funcRef = AstRef(c.module().funcImportNames()[funcIndex]);
     } else {
         if (!GenerateRef(c, AstName(u"func"), funcIndex, &funcRef))
             return false;
@@ -1545,6 +1544,7 @@ AstCreateImports(AstDecodeContext& c)
         AstName moduleName;
         if (!ToAstName(c, import.module.get(), &moduleName))
             return false;
+
         AstName fieldName;
         if (!ToAstName(c, import.field.get(), &fieldName))
             return false;
