@@ -158,10 +158,17 @@ class PostReleaseVersionBump(MercurialScript, BuildbotMixin,
         """Bump version"""
         dirs = self.query_abs_dirs()
         for f in self.config["version_files"]:
-            curr_version = ".".join(
-                self.get_version(dirs['abs_gecko_dir'], f["file"]))
-            self.replace(os.path.join(dirs['abs_gecko_dir'], f["file"]),
-                         curr_version, self.config["next_version"])
+            curr_version = self.get_version(dirs['abs_gecko_dir'], f["file"])
+            next_version = self.config['next_version'].split('.')
+
+            if next_version <= curr_version:
+                self.warning("Version bumping skipped due to conflicting values")
+                continue
+            else:
+                curr_version = ".".join(curr_version)
+                next_version = ".".join(next_version)
+                self.replace(os.path.join(dirs['abs_gecko_dir'], f["file"]),
+                             curr_version, self.config["next_version"])
 
     def tag(self):
         dirs = self.query_abs_dirs()
