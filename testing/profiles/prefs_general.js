@@ -56,7 +56,6 @@ user_pref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager
 user_pref("media.gmp-manager.updateEnabled", false);
 user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("layout.accessiblecaret.enabled_on_touch", false);
-user_pref("test.force_register_touch_windows", true);
 user_pref("dom.webcomponents.enabled", true);
 user_pref("dom.webcomponents.customelements.enabled", true);
 user_pref("dom.htmlimports.enabled", true);
