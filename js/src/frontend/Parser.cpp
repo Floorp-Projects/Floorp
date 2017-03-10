@@ -8921,14 +8921,30 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
     }
 
     if (ltok == TOK_NAME && tokenStream.currentName() == context->names().async) {
-        TokenKind tt;
-        if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
+        // AsyncMethod[Yield, Await]:
+        //   async [no LineTerminator here] PropertyName[?Yield, ?Await] ...
+        //
+        // PropertyName:
+        //   LiteralPropertyName
+        //   ComputedPropertyName[?Yield, ?Await]
+        //
+        // LiteralPropertyName:
+        //   IdentifierName
+        //   StringLiteral
+        //   NumericLiteral
+        //
+        // ComputedPropertyName[Yield, Await]:
+        //   [ ...
+        TokenKind tt = TOK_EOF;
+        if (!tokenStream.peekTokenSameLine(&tt, TokenStream::KeywordIsName))
             return null();
-        if (tt != TOK_LP && tt != TOK_COLON && tt != TOK_RC && tt != TOK_ASSIGN) {
+        if (tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_LB ||
+            tt == TOK_NAME || tt == TOK_YIELD)
+        {
             isAsync = true;
+            tokenStream.consumeKnownToken(tt, TokenStream::KeywordIsName);
             ltok = tt;
         } else {
-            tokenStream.ungetToken();
             tokenStream.addModifierException(TokenStream::NoneIsKeywordIsName);
         }
     }
