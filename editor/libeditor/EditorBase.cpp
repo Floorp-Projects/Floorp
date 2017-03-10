@@ -2742,12 +2742,14 @@ already_AddRefed<JoinNodeTransaction>
 EditorBase::CreateTxnForJoinNode(nsINode& aLeftNode,
                                  nsINode& aRightNode)
 {
-  RefPtr<JoinNodeTransaction> transaction =
+  RefPtr<JoinNodeTransaction> joinNodeTransaction =
     new JoinNodeTransaction(*this, aLeftNode, aRightNode);
-
-  NS_ENSURE_SUCCESS(transaction->CheckValidity(), nullptr);
-
-  return transaction.forget();
+  // If it's not editable, the transaction shouldn't be recorded since it
+  // should never be undone/redone.
+  if (NS_WARN_IF(!joinNodeTransaction->CanDoIt())) {
+    return nullptr;
+  }
+  return joinNodeTransaction.forget();
 }
 
 struct SavedRange final
