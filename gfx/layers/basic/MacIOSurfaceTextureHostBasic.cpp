@@ -10,8 +10,11 @@
 namespace mozilla {
 namespace layers {
 
-MacIOSurfaceTextureSourceBasic::MacIOSurfaceTextureSourceBasic(MacIOSurface* aSurface)
-  : mSurface(aSurface)
+MacIOSurfaceTextureSourceBasic::MacIOSurfaceTextureSourceBasic(
+                                BasicCompositor* aCompositor,
+                                MacIOSurface* aSurface)
+  : mCompositor(aCompositor)
+  , mSurface(aSurface)
 {
   MOZ_COUNT_CTOR(MacIOSurfaceTextureSourceBasic);
 }
@@ -56,31 +59,36 @@ MacIOSurfaceTextureSourceBasic::GetSurface(gfx::DrawTarget* aTarget)
   return mSourceSurface;
 }
 
+void
+MacIOSurfaceTextureSourceBasic::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = AssertBasicCompositor(aCompositor);
+}
+
 bool
 MacIOSurfaceTextureHostBasic::Lock()
 {
-  if (!mProvider) {
+  if (!mCompositor) {
     return false;
   }
 
   if (!mTextureSource) {
-    mTextureSource = new MacIOSurfaceTextureSourceBasic(mSurface);
+    mTextureSource = new MacIOSurfaceTextureSourceBasic(mCompositor, mSurface);
   }
   return true;
 }
 
 void
-MacIOSurfaceTextureHostBasic::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+MacIOSurfaceTextureHostBasic::SetCompositor(Compositor* aCompositor)
 {
-  if (!aProvider->AsCompositor() || !aProvider->AsCompositor()->AsBasicCompositor()) {
+  BasicCompositor* compositor = AssertBasicCompositor(aCompositor);
+  if (!compositor) {
     mTextureSource = nullptr;
     return;
   }
-
-  mProvider = aProvider;
-
+  mCompositor = compositor;
   if (mTextureSource) {
-    mTextureSource->SetTextureSourceProvider(aProvider);
+    mTextureSource->SetCompositor(compositor);
   }
 }
 

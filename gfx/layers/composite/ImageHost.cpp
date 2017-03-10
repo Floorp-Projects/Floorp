@@ -177,19 +177,20 @@ ImageHost::GetAsTextureHost(IntRect* aPictureRect)
 }
 
 void ImageHost::Attach(Layer* aLayer,
-                       TextureSourceProvider* aProvider,
+                       Compositor* aCompositor,
                        AttachFlags aFlags)
 {
-  CompositableHost::Attach(aLayer, aProvider, aFlags);
+  CompositableHost::Attach(aLayer, aCompositor, aFlags);
   for (auto& img : mImages) {
-    img.mTextureHost->SetTextureSourceProvider(aProvider);
+    if (GetCompositor()) {
+      img.mTextureHost->SetCompositor(GetCompositor());
+    }
     img.mTextureHost->Updated();
   }
 }
 
 void
-ImageHost::Composite(Compositor* aCompositor,
-                     LayerComposite* aLayer,
+ImageHost::Composite(LayerComposite* aLayer,
                      EffectChain& aEffectChain,
                      float aOpacity,
                      const gfx::Matrix4x4& aTransform,
@@ -213,7 +214,7 @@ ImageHost::Composite(Compositor* aCompositor,
   }
 
   TimedImage* img = &mImages[imageIndex];
-  img->mTextureHost->SetTextureSourceProvider(aCompositor);
+  img->mTextureHost->SetCompositor(GetCompositor());
   SetCurrentTextureHost(img->mTextureHost);
 
   {
@@ -242,7 +243,7 @@ ImageHost::Composite(Compositor* aCompositor,
       return;
     }
 
-    if (!aCompositor->SupportsEffect(effect->mType)) {
+    if (!GetCompositor()->SupportsEffect(effect->mType)) {
       return;
     }
 
@@ -301,15 +302,15 @@ ImageHost::Composite(Compositor* aCompositor,
           effect->mTextureCoords.y = effect->mTextureCoords.YMost();
           effect->mTextureCoords.height = -effect->mTextureCoords.height;
         }
-        aCompositor->DrawGeometry(rect, aClipRect, aEffectChain,
-                                  aOpacity, aTransform, aGeometry);
-        aCompositor->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
-                                     rect, aClipRect, aTransform, mFlashCounter);
+        GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
+                                      aOpacity, aTransform, aGeometry);
+        GetCompositor()->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
+                                         rect, aClipRect, aTransform, mFlashCounter);
       } while (it->NextTile());
       it->EndBigImageIteration();
       // layer border
-      aCompositor->DrawDiagnostics(diagnosticFlags, pictureRect,
-                                   aClipRect, aTransform, mFlashCounter);
+      GetCompositor()->DrawDiagnostics(diagnosticFlags, pictureRect,
+                                       aClipRect, aTransform, mFlashCounter);
     } else {
       IntSize textureSize = mCurrentTextureSource->GetSize();
       effect->mTextureCoords = Rect(Float(img->mPictureRect.x) / textureSize.width,
@@ -322,11 +323,11 @@ ImageHost::Composite(Compositor* aCompositor,
         effect->mTextureCoords.height = -effect->mTextureCoords.height;
       }
 
-      aCompositor->DrawGeometry(pictureRect, aClipRect, aEffectChain,
-                                aOpacity, aTransform, aGeometry);
-      aCompositor->DrawDiagnostics(diagnosticFlags,
-                                   pictureRect, aClipRect,
-                                   aTransform, mFlashCounter);
+      GetCompositor()->DrawGeometry(pictureRect, aClipRect, aEffectChain,
+                                    aOpacity, aTransform, aGeometry);
+      GetCompositor()->DrawDiagnostics(diagnosticFlags,
+                                       pictureRect, aClipRect,
+                                       aTransform, mFlashCounter);
     }
   }
 
@@ -343,14 +344,14 @@ ImageHost::Composite(Compositor* aCompositor,
 }
 
 void
-ImageHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+ImageHost::SetCompositor(Compositor* aCompositor)
 {
-  if (mTextureSourceProvider != aProvider) {
+  if (mCompositor != aCompositor) {
     for (auto& img : mImages) {
-      img.mTextureHost->SetTextureSourceProvider(aProvider);
+      img.mTextureHost->SetCompositor(aCompositor);
     }
   }
-  CompositableHost::SetTextureSourceProvider(aProvider);
+  CompositableHost::SetCompositor(aCompositor);
 }
 
 void

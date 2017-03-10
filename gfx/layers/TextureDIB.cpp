@@ -379,9 +379,9 @@ TextureHostDirectUpload::Unlock()
 }
 
 void
-TextureHostDirectUpload::SetTextureSourceProvider(TextureSourceProvider* aProvider)
+TextureHostDirectUpload::SetCompositor(Compositor* aCompositor)
 {
-  mProvider = aProvider;
+  mCompositor = aCompositor;
 }
 
 void
@@ -419,14 +419,14 @@ DIBTextureHost::DIBTextureHost(TextureFlags aFlags,
 void
 DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
 {
-  if (!mProvider) {
+  if (!mCompositor) {
     // This can happen if we send textures to a compositable that isn't yet
     // attached to a layer.
     return;
   }
 
   if (!mTextureSource) {
-    mTextureSource = mProvider->CreateDataTextureSource(mFlags);
+    mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
   }
 
   if (mSurface->CairoStatus()) {
@@ -468,14 +468,14 @@ static void UnmapFileData(void* aData)
 void
 TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
 {
-  if (!mProvider) {
+  if (!mCompositor) {
     // This can happen if we send textures to a compositable that isn't yet
     // attached to a layer.
     return;
   }
 
   if (!mTextureSource) {
-    mTextureSource = mProvider->CreateDataTextureSource(mFlags);
+    mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
   }
 
   uint8_t* data = nullptr;

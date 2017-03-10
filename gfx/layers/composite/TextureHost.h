@@ -133,7 +133,7 @@ public:
    */
   virtual BigImageIterator* AsBigImageIterator() { return nullptr; }
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
+  virtual void SetCompositor(Compositor* aCompositor) {}
 
   virtual void Unbind() {}
 
@@ -450,15 +450,13 @@ public:
    void Updated(const nsIntRegion* aRegion = nullptr);
 
   /**
-   * Sets this TextureHost's compositor. A TextureHost can change compositor
-   * on certain occasions, in particular if it belongs to an async Compositable.
+   * Sets this TextureHost's compositor.
+   * A TextureHost can change compositor on certain occasions, in particular if
+   * it belongs to an async Compositable.
    * aCompositor can be null, in which case the TextureHost must cleanup  all
-   * of its device textures.
-   *
-   * Setting mProvider from this callback implicitly causes the texture to
-   * be locked for an extra frame after being detached from a compositable.
+   * of it's device textures.
    */
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) {}
+  virtual void SetCompositor(Compositor* aCompositor) {}
 
   /**
    * Should be overridden in order to deallocate the data that is associated
@@ -582,6 +580,8 @@ public:
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
+  virtual Compositor* GetCompositor() = 0;
+
   virtual BufferTextureHost* AsBufferTextureHost() { return nullptr; }
 
 protected:
@@ -600,7 +600,6 @@ protected:
   void CallNotifyNotUsed();
 
   PTextureParent* mActor;
-  RefPtr<TextureSourceProvider> mProvider;
   RefPtr<TextureReadLock> mReadLock;
   TextureFlags mFlags;
   int mCompositableCount;
@@ -609,7 +608,6 @@ protected:
   friend class Compositor;
   friend class TextureParent;
   friend class TiledLayerBufferComposite;
-  friend class TextureSourceProvider;
 };
 
 /**
@@ -648,7 +646,9 @@ public:
 
   virtual void DeallocateDeviceData() override;
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override { return mCompositor; }
 
   /**
    * Return the format that is exposed to the compositor when calling

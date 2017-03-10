@@ -117,8 +117,7 @@ public:
     , mReceivedNewHost(false)
   { }
 
-  virtual void Composite(Compositor* aCompositor,
-                         LayerComposite* aLayer,
+  virtual void Composite(LayerComposite* aLayer,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,
@@ -127,7 +126,7 @@ public:
                          const nsIntRegion* aVisibleRegion = nullptr,
                          const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
-  virtual void SetTextureSourceProvider(TextureSourceProvider* aProvider);
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
