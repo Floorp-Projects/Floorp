@@ -382,6 +382,8 @@ public class InlineAutocompleteEditText extends android.support.v7.widget.AppCom
 
             endSettingAutocomplete();
         }
+
+        announceForAccessibility(text.toString());
     }
 
     private static boolean hasCompositionString(Editable content) {
