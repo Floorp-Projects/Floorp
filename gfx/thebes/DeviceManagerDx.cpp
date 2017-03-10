@@ -367,6 +367,8 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
   mCompositorDevice->SetExceptionMode(0);
 }
 
+//#define BREAK_ON_D3D_ERROR
+
 bool
 DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                  D3D_DRIVER_TYPE aDriverType,
@@ -374,6 +376,10 @@ DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                  HRESULT& aResOut,
                                  RefPtr<ID3D11Device>& aOutDevice)
 {
+#ifdef BREAK_ON_D3D_ERROR
+  aFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
   MOZ_SEH_TRY {
     aResOut = sD3D11CreateDeviceFn(
       aAdapter, aDriverType, nullptr,
@@ -383,6 +389,26 @@ DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
+
+#ifdef BREAK_ON_D3D_ERROR
+  do {
+    if (!aOutDevice)
+      break;
+
+    RefPtr<ID3D11Debug> debug;
+    if(!SUCCEEDED( aOutDevice->QueryInterface(__uuidof(ID3D11Debug), getter_AddRefs(debug)) ))
+      break;
+
+    RefPtr<ID3D11InfoQueue> infoQueue;
+    if(!SUCCEEDED( debug->QueryInterface(__uuidof(ID3D11InfoQueue), getter_AddRefs(infoQueue)) ))
+      break;
+
+    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
+  } while (false);
+#endif
+
   return true;
 }
 

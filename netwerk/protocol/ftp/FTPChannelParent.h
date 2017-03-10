@@ -77,7 +77,7 @@ protected:
 
   bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
                    const nsCString& aEntityID,
-                   const OptionalInputStreamParams& aUploadStream,
+                   const OptionalIPCStream& aUploadStream,
                    const OptionalLoadInfoArgs& aLoadInfoArgs);
 
   // used to connect redirected-to channel in parent with just created

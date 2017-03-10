@@ -15,6 +15,7 @@ import itertools
 banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
 
+
 def print_array_entry(output, histogram, name_index, exp_index, label_index, label_count):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
@@ -32,6 +33,7 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index, lab
            "true" if histogram.keyed() else "false"), file=output)
     if cpp_guard:
         print("#endif", file=output)
+
 
 def write_histogram_table(output, histograms):
     string_table = StringTable()
@@ -74,16 +76,20 @@ def write_histogram_table(output, histograms):
 def static_asserts_for_boolean(output, histogram):
     pass
 
+
 def static_asserts_for_flag(output, histogram):
     pass
 
+
 def static_asserts_for_count(output, histogram):
     pass
+
 
 def static_asserts_for_enumerated(output, histogram):
     n_values = histogram.high()
     static_assert(output, "%s > 2" % n_values,
                   "Not enough values for %s" % histogram.name())
+
 
 def shared_static_asserts(output, histogram):
     name = histogram.name()
@@ -96,11 +102,14 @@ def shared_static_asserts(output, histogram):
     static_assert(output, "%s > %s" % (high, n_buckets),
                   "high must be > number of buckets for %s; you may want an enumerated histogram" % name)
 
+
 def static_asserts_for_linear(output, histogram):
     shared_static_asserts(output, histogram)
 
+
 def static_asserts_for_exponential(output, histogram):
     shared_static_asserts(output, histogram)
+
 
 def write_histogram_static_asserts(output, histograms):
     print("""
@@ -121,6 +130,7 @@ def write_histogram_static_asserts(output, histograms):
     for histogram in histograms:
         histogram_tools.table_dispatch(histogram.kind(), table,
                                        lambda f: f(output, histogram))
+
 
 def write_debug_histogram_ranges(output, histograms):
     ranges_lengths = []
@@ -165,6 +175,7 @@ def write_debug_histogram_ranges(output, histograms):
         offset += range_length
     print("};", file=output)
     print("#endif", file=output)
+
 
 def main(output, *filenames):
     histograms = list(histogram_tools.from_files(filenames))

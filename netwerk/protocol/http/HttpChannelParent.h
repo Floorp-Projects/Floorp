@@ -148,7 +148,8 @@ protected:
               const nsCString&           aContentTypeHint,
               const nsCString&           aChannelId,
               const uint64_t&            aContentWindowId,
-              const nsCString&           aPreferredAlternativeType);
+              const nsCString&           aPreferredAlternativeType,
+              const uint64_t&            aTopLevelOuterContentWindowId);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(const int16_t& priority) override;
   virtual mozilla::ipc::IPCResult RecvSetClassOfService(const uint32_t& cos) override;

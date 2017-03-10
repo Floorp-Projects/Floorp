@@ -120,6 +120,21 @@ SerializeInputStreamWithFdsParent(nsIInputStream* aStream,
 
 template<typename M>
 void
+SerializeInputStreamWithFdsParent(nsIInputStream* aStream,
+                                  OptionalIPCStream& aValue,
+                                  M* aManager)
+{
+  if (!aStream) {
+    aValue = void_t();
+    return;
+  }
+
+  aValue = IPCStream();
+  SerializeInputStreamWithFdsParent(aStream, aValue.get_IPCStream(), aManager);
+}
+
+template<typename M>
+void
 SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue, M* aManager)
 {
   MOZ_ASSERT(aStream);
@@ -178,8 +193,7 @@ SerializeInputStream(nsIInputStream* aStream, OptionalIPCStream& aValue,
   }
 
   aValue = IPCStream();
-  SerializeInputStream(aStream, aValue.get_IPCStream(),
-                             aManager);
+  SerializeInputStream(aStream, aValue.get_IPCStream(), aManager);
 }
 
 void
@@ -378,7 +392,7 @@ AutoIPCStream::~AutoIPCStream()
 void
 AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager)
 {
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
   MOZ_ASSERT(!mTaken);
@@ -396,7 +410,7 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, dom::nsIContentChild* aManager
 void
 AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundChild* aManager)
 {
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
   MOZ_ASSERT(!mTaken);
@@ -414,7 +428,7 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundChild* aManager)
 void
 AutoIPCStream::Serialize(nsIInputStream* aStream, dom::PContentParent* aManager)
 {
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
   MOZ_ASSERT(!mTaken);
@@ -432,7 +446,7 @@ AutoIPCStream::Serialize(nsIInputStream* aStream, dom::PContentParent* aManager)
 void
 AutoIPCStream::Serialize(nsIInputStream* aStream, PBackgroundParent* aManager)
 {
-  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(aStream || !mValue);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mValue || mOptionalValue);
   MOZ_ASSERT(!mTaken);

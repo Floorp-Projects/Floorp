@@ -20,7 +20,7 @@
 #include "nsDefaultURIFixup.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Tokenizer.h"
 #include "nsIObserverService.h"
@@ -432,7 +432,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    ipc::OptionalInputStreamParams postData;
+    ipc::OptionalIPCStream postData;
     ipc::OptionalURIParams uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, &providerName, &postData,
@@ -444,11 +444,8 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     info->mKeywordProviderName = providerName;
 
     if (aPostData) {
-      nsTArray<ipc::FileDescriptor> fds;
-      nsCOMPtr<nsIInputStream> temp = DeserializeInputStream(postData, fds);
+      nsCOMPtr<nsIInputStream> temp = ipc::DeserializeIPCStream(postData);
       temp.forget(aPostData);
-
-      MOZ_ASSERT(fds.IsEmpty());
     }
 
     nsCOMPtr<nsIURI> temp = DeserializeURI(uri);
