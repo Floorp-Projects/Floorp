@@ -53,7 +53,13 @@ const globalScriptsRegExp =
 function getGlobalScriptsIncludes() {
   let globalScriptsPath = path.join(rootDir, "browser", "base", "content",
                                     "global-scripts.inc");
-  let fileData = fs.readFileSync(globalScriptsPath, {encoding: "utf8"});
+  let fileData;
+  try {
+    fileData = fs.readFileSync(globalScriptsPath, {encoding: "utf8"});
+  } catch (ex) {
+    // The file isn't present, so this isn't an m-c repository.
+    return null;
+  }
 
   fileData = fileData.split("\n");
 
@@ -81,8 +87,12 @@ function getGlobalScriptsIncludes() {
 
 function getScriptGlobals() {
   let fileGlobals = [];
-  var scripts = EXTRA_SCRIPTS.concat(getGlobalScriptsIncludes());
-  for (let script of scripts) {
+  let scripts = getGlobalScriptsIncludes();
+  if (!scripts) {
+    return [];
+  }
+
+  for (let script of scripts.concat(EXTRA_SCRIPTS)) {
     let fileName = path.join(rootDir, script);
     try {
       fileGlobals = fileGlobals.concat(globals.getGlobalsForFile(fileName));
