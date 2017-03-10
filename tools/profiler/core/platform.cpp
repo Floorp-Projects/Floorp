@@ -1616,6 +1616,197 @@ profiler_log(const char* aFmt, va_list aArgs)
 }
 
 ////////////////////////////////////////////////////////////////////////
+// BEGIN SamplerThread
+
+// This suspends the calling thread for the given number of microseconds.
+// Best effort timing.
+static void SleepMicro(int aMicroseconds);
+
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+struct SigHandlerCoordinator;
+#endif
+
+// The sampler thread controls sampling and runs whenever the profiler is
+// active. It periodically runs through all registered threads, finds those
+// that should be sampled, then pauses and samples them.
+
+class SamplerThread
+{
+public:
+  // Creates a sampler thread, but doesn't start it.
+  SamplerThread(PS::LockRef aLock, uint32_t aActivityGeneration,
+                double aIntervalMilliseconds);
+  ~SamplerThread();
+
+  // This runs on the sampler thread.  It suspends and resumes the samplee
+  // threads.
+  void SuspendAndSampleAndResumeThread(PS::LockRef aLock,
+                                       ThreadInfo* aThreadInfo,
+                                       bool aIsFirstProfiledThread);
+
+  // This runs on (is!) the sampler thread.
+  void Run();
+
+  // This runs on the main thread.
+  void Stop(PS::LockRef aLock);
+
+private:
+  // The activity generation, for detecting when the sampler thread must stop.
+  const uint32_t mActivityGeneration;
+
+  // The interval between samples, measured in microseconds.
+  const int mIntervalMicroseconds;
+
+  // The OS-specific handle for the sampler thread.
+#if defined(GP_OS_windows)
+  HANDLE mThread;
+#elif defined(GP_OS_darwin) || defined(GP_OS_linux) || defined(GP_OS_android)
+  pthread_t mThread;
+#endif
+
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+  // Used to restore the SIGPROF handler when ours is removed.
+  struct sigaction mOldSigprofHandler;
+
+  // This process' ID.  Needed as an argument for tgkill in
+  // SuspendAndSampleAndResumeThread.
+  int mMyPid;
+
+public:
+  // The sampler thread's ID.  Used to assert that it is not sampling itself,
+  // which would lead to deadlock.
+  int mSamplerTid;
+
+  // This is the one-and-only variable used to communicate between the sampler
+  // thread and the samplee thread's signal handler. It's static because the
+  // samplee thread's signal handler is static.
+  static struct SigHandlerCoordinator* sSigHandlerCoordinator;
+#endif
+
+private:
+  SamplerThread(const SamplerThread&) = delete;
+  void operator=(const SamplerThread&) = delete;
+};
+
+
+// This function is the sampler thread.  This implementation is used for all
+// targets.
+void
+SamplerThread::Run()
+{
+  // This will be positive if we are running behind schedule (sampling less
+  // frequently than desired) and negative if we are ahead of schedule.
+  TimeDuration lastSleepOvershoot = 0;
+  TimeStamp sampleStart = TimeStamp::Now();
+
+  while (true) {
+    // This scope is for |lock|. It ends before we sleep below.
+    {
+      PS::AutoLock lock(gPSMutex);
+
+      // At this point profiler_stop() might have been called, and
+      // profiler_start() might have been called on another thread.
+      // Alternatively, profiler_shutdown() might have been called and gPS
+      // may be null. In all these cases, PS::sActivityGeneration will no
+      // longer equal mActivityGeneration, so we must exit immediately, but
+      // without touching gPS. (This is why PS::sActivityGeneration must be
+      // static.)
+      if (PS::ActivityGeneration(lock) != mActivityGeneration) {
+        return;
+      }
+
+      gPS->Buffer(lock)->deleteExpiredStoredMarkers();
+
+      if (!gPS->IsPaused(lock)) {
+        bool isFirstProfiledThread = true;
+
+        const PS::ThreadVector& threads = gPS->Threads(lock);
+        for (uint32_t i = 0; i < threads.size(); i++) {
+          ThreadInfo* info = threads[i];
+
+          if (!info->HasProfile() || info->IsPendingDelete()) {
+            // We are not interested in profiling this thread.
+            continue;
+          }
+
+          // If the thread is asleep and has been sampled before in the same
+          // sleep episode, find and copy the previous sample, as that's
+          // cheaper than taking a new sample.
+          if (info->Stack()->CanDuplicateLastSampleDueToSleep()) {
+            bool dup_ok =
+              gPS->Buffer(lock)->DuplicateLastSample(gPS->StartTime(lock),
+                                                     info->LastSample());
+            if (dup_ok) {
+              continue;
+            }
+          }
+
+          info->UpdateThreadResponsiveness();
+
+          SuspendAndSampleAndResumeThread(lock, info, isFirstProfiledThread);
+
+          isFirstProfiledThread = false;
+        }
+
+#if defined(USE_LUL_STACKWALK)
+        // The LUL unwind object accumulates frame statistics. Periodically we
+        // should poke it to give it a chance to print those statistics.  This
+        // involves doing I/O (fprintf, __android_log_print, etc.) and so
+        // can't safely be done from the critical section inside
+        // SuspendAndSampleAndResumeThread, which is why it is done here.
+        gPS->LUL(lock)->MaybeShowStats();
+#endif
+      }
+    }
+    // gPSMutex is not held after this point.
+
+    // Calculate how long a sleep to request.  After the sleep, measure how
+    // long we actually slept and take the difference into account when
+    // calculating the sleep interval for the next iteration.  This is an
+    // attempt to keep "to schedule" in the presence of inaccuracy of the
+    // actual sleep intervals.
+    TimeStamp targetSleepEndTime =
+      sampleStart + TimeDuration::FromMicroseconds(mIntervalMicroseconds);
+    TimeStamp beforeSleep = TimeStamp::Now();
+    TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
+    double sleepTime = std::max(0.0, (targetSleepDuration -
+                                      lastSleepOvershoot).ToMicroseconds());
+    SleepMicro(static_cast<int>(sleepTime));
+    sampleStart = TimeStamp::Now();
+    lastSleepOvershoot =
+      sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
+  }
+}
+
+// We #include these files directly because it means those files can use
+// declarations from this file trivially.  These provide target-specific
+// implementations of all SamplerThread methods except Run().
+#if defined(GP_OS_windows)
+# include "platform-win32.cpp"
+#elif defined(GP_OS_darwin)
+# include "platform-macos.cpp"
+#elif defined(GP_OS_linux) || defined(GP_OS_android)
+# include "platform-linux-android.cpp"
+#else
+# error "bad platform"
+#endif
+
+UniquePlatformData
+AllocPlatformData(int aThreadId)
+{
+  return UniquePlatformData(new PlatformData(aThreadId));
+}
+
+void
+PlatformDataDestructor::operator()(PlatformData* aData)
+{
+  delete aData;
+}
+
+// END SamplerThread
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
 
 MOZ_DEFINE_MALLOC_SIZE_OF(GeckoProfilerMallocSizeOf)
@@ -1761,18 +1952,6 @@ locked_register_thread(PS::LockRef aLock, const char* aName, void* stackTop)
 
   threads.push_back(info);
 }
-
-// We #include these files directly because it means those files can use
-// declarations from this file trivially.
-#if defined(GP_OS_windows)
-# include "platform-win32.cpp"
-#elif defined(GP_OS_darwin)
-# include "platform-macos.cpp"
-#elif defined(GP_OS_linux) || defined(GP_OS_android)
-# include "platform-linux-android.cpp"
-#else
-# error "bad platform"
-#endif
 
 static void
 NotifyProfilerStarted(const int aEntries, double aInterval,
