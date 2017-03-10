@@ -85,6 +85,7 @@ const {
   LocaleData,
   StartupCache,
   getUniqueId,
+  validateThemeManifest,
 } = ExtensionUtils;
 
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
@@ -428,6 +429,17 @@ this.ExtensionData = class {
 
         preprocessors: {},
       };
+
+      if (this.manifest.theme) {
+        let invalidProps = validateThemeManifest(Object.getOwnPropertyNames(this.manifest));
+
+        if (invalidProps.length) {
+          let message = `Themes defined in the manifest may only contain static resources. ` +
+            `If you would like to use additional properties, please use the "theme" permission instead. ` +
+            `(the invalid properties found are: ${invalidProps})`;
+          this.manifestError(message);
+        }
+      }
 
       if (this.localeData) {
         context.preprocessors.localize = (value, context) => this.localize(value);
