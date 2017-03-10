@@ -5,9 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import abc
-import os
-import requests
-from taskgraph.util.taskcluster import find_task_id
 
 
 class Task(object):
@@ -18,7 +15,7 @@ class Task(object):
     - label; the label for this task
     - attributes: a dictionary of attributes for this task (used for filtering)
     - task: the task definition (JSON-able dictionary)
-    - index_paths: index paths where equivalent tasks might be found for optimization
+    - optimizations: optimizations to apply to the task (see taskgraph.optimize)
     - dependencies: tasks this one depends on, in the form {name: label}, for example
       {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
 
@@ -35,7 +32,7 @@ class Task(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, kind, label, attributes, task,
-                 index_paths=None, dependencies=None):
+                 optimizations=None, dependencies=None):
         self.kind = kind
         self.label = label
         self.attributes = attributes
@@ -46,7 +43,7 @@ class Task(object):
 
         self.attributes['kind'] = kind
 
-        self.index_paths = index_paths or ()
+        self.optimizations = optimizations or []
         self.dependencies = dependencies or {}
 
     def __eq__(self, other):
@@ -55,34 +52,8 @@ class Task(object):
             self.attributes == other.attributes and \
             self.task == other.task and \
             self.task_id == other.task_id and \
-            self.index_paths == other.index_paths and \
+            self.optimizations == other.optimizations and \
             self.dependencies == other.dependencies
-
-    def optimize(self, params):
-        """
-        Determine whether this task can be optimized, and if it can, what taskId
-        it should be replaced with.
-
-        The return value is a tuple `(optimized, taskId)`.  If `optimized` is
-        true, then the task will be optimized (in other words, not included in
-        the task graph).  If the second argument is a taskid, then any
-        dependencies on this task will isntead depend on that taskId.  It is an
-        error to return no taskId for a task on which other tasks depend.
-
-        The default optimizes when a taskId can be found for one of the index
-        paths attached to the task.
-        """
-        for index_path in self.index_paths:
-            try:
-                task_id = find_task_id(
-                    index_path,
-                    use_proxy=bool(os.environ.get('TASK_ID')))
-
-                return True, task_id
-            except requests.exceptions.HTTPError:
-                pass
-
-        return False, None
 
     @classmethod
     def from_json(cls, task_dict):
