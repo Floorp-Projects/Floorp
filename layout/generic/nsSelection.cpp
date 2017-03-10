@@ -11,6 +11,7 @@
 #include "mozilla/dom/Selection.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EventStates.h"
 
 #include "nsCOMPtr.h"
@@ -3479,6 +3480,7 @@ Selection::Selection()
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
   , mUserInitiated(false)
+  , mCalledByJS(false)
   , mSelectionChangeBlockerCount(0)
 {
 }
@@ -3489,6 +3491,7 @@ Selection::Selection(nsFrameSelection* aList)
   , mDirection(eDirNext)
   , mSelectionType(SelectionType::eNormal)
   , mUserInitiated(false)
+  , mCalledByJS(false)
   , mSelectionChangeBlockerCount(0)
 {
 }
@@ -4962,6 +4965,14 @@ Selection::AddRange(nsIDOMRange* aDOMRange)
 }
 
 void
+Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  AddRange(aRange, aRv);
+}
+
+void
 Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
 {
   return AddRangeInternal(aRange, GetParentObject(), aRv);
@@ -5133,6 +5144,14 @@ Selection::CollapseNative(nsINode* aParentNode, int32_t aOffset)
   return Collapse(aParentNode, aOffset);
 }
 
+void
+Selection::CollapseJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  Collapse(aNode, aOffset, aRv);
+}
+
 nsresult
 Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
 {
@@ -5238,6 +5257,14 @@ Selection::CollapseToStart()
 }
 
 void
+Selection::CollapseToStartJS(ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  CollapseToStart(aRv);
+}
+
+void
 Selection::CollapseToStart(ErrorResult& aRv)
 {
   int32_t cnt;
@@ -5276,6 +5303,14 @@ Selection::CollapseToEnd()
   ErrorResult result;
   CollapseToEnd(result);
   return result.StealNSResult();
+}
+
+void
+Selection::CollapseToEndJS(ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  CollapseToEnd(aRv);
 }
 
 void
@@ -5478,6 +5513,14 @@ NS_IMETHODIMP
 Selection::ExtendNative(nsINode* aParentNode, int32_t aOffset)
 {
   return Extend(aParentNode, aOffset);
+}
+
+void
+Selection::ExtendJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  Extend(aNode, aOffset, aRv);
 }
 
 nsresult
@@ -5789,6 +5832,14 @@ Selection::SelectAllChildren(nsIDOMNode* aParentNode)
   NS_ENSURE_TRUE(node, NS_ERROR_INVALID_ARG);
   SelectAllChildren(*node, result);
   return result.StealNSResult();
+}
+
+void
+Selection::SelectAllChildrenJS(nsINode& aNode, ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  SelectAllChildren(aNode, aRv);
 }
 
 void
@@ -6244,6 +6295,14 @@ Selection::RemoveSelectionListener(nsISelectionListener* aListenerToRemove,
 }
 
 nsresult
+Selection::NotifySelectionListeners(bool aCalledByJS)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = aCalledByJS;
+  return NotifySelectionListeners();
+}
+
+nsresult
 Selection::NotifySelectionListeners()
 {
   if (!mFrameSelection)
@@ -6451,6 +6510,19 @@ Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
       return;
     shell->CompleteMove(forward, extend);
   }
+}
+
+void
+Selection::SetBaseAndExtentJS(nsINode& aAnchorNode,
+                              uint32_t aAnchorOffset,
+                              nsINode& aFocusNode,
+                              uint32_t aFocusOffset,
+                              ErrorResult& aRv)
+{
+  AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
+  mCalledByJS = true;
+  SetBaseAndExtent(aAnchorNode, aAnchorOffset,
+                   aFocusNode, aFocusOffset, aRv);
 }
 
 void
