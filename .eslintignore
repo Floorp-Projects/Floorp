@@ -64,6 +64,8 @@ browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
 browser/components/tabview/**
 # generated & special files in cld2
 browser/components/translation/cld2/**
+# Screenshots is imported as a system add-on and has its own lint rules currently.
+browser/extensions/screenshots/**
 browser/extensions/pdfjs/content/build**
 browser/extensions/pdfjs/content/web**
 # generated or library files in pocket
