@@ -16,8 +16,12 @@ namespace dom {
 
 struct MessageEventInit;
 class MessagePort;
-class OwningWindowProxyOrMessagePort;
-class WindowProxyOrMessagePort;
+class OwningWindowProxyOrMessagePortOrServiceWorker;
+class WindowProxyOrMessagePortOrServiceWorker;
+
+namespace workers {
+class ServiceWorker;
+}
 
 /**
  * Implements the MessageEvent event, used for cross-document messaging and
@@ -45,7 +49,7 @@ public:
                ErrorResult& aRv);
   void GetOrigin(nsAString&) const;
   void GetLastEventId(nsAString&) const;
-  void GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const;
+  void GetSource(Nullable<OwningWindowProxyOrMessagePortOrServiceWorker>& aValue) const;
 
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 
@@ -58,13 +62,12 @@ public:
   static already_AddRefed<MessageEvent>
   Constructor(EventTarget* aEventTarget,
               const nsAString& aType,
-              const MessageEventInit& aEventInit,
-              ErrorResult& aRv);
+              const MessageEventInit& aEventInit);
 
   void InitMessageEvent(JSContext* aCx, const nsAString& aType, bool aCanBubble,
                         bool aCancelable, JS::Handle<JS::Value> aData,
                         const nsAString& aOrigin, const nsAString& aLastEventId,
-                        const Nullable<WindowProxyOrMessagePort>& aSource,
+                        const Nullable<WindowProxyOrMessagePortOrServiceWorker>& aSource,
                         const Sequence<OwningNonNull<MessagePort>>& aPorts);
 
 protected:
@@ -74,8 +77,9 @@ private:
   JS::Heap<JS::Value> mData;
   nsString mOrigin;
   nsString mLastEventId;
-  RefPtr<nsPIDOMWindowInner> mWindowSource;
+  RefPtr<nsPIDOMWindowOuter> mWindowSource;
   RefPtr<MessagePort> mPortSource;
+  RefPtr<workers::ServiceWorker> mServiceWorkerSource;
 
   nsTArray<RefPtr<MessagePort>> mPorts;
 };

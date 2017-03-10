@@ -322,14 +322,6 @@ VRManagerParent::RecvControllerListenerRemoved()
 }
 
 mozilla::ipc::IPCResult
-VRManagerParent::RecvGetControllers(nsTArray<VRControllerInfo> *aControllers)
-{
-  VRManager* vm = VRManager::Get();
-  vm->GetVRControllerInfo(*aControllers);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 VRManagerParent::RecvCreateVRTestSystem()
 {
   VRManager* vm = VRManager::Get();
