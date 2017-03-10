@@ -24,9 +24,6 @@ public:
 
 protected:
   virtual ~AboutRedirector() {}
-
-private:
-  static bool sUseOldPreferences;
 };
 
 } // namespace browser
