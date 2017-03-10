@@ -32,7 +32,8 @@ ContentHostBase::~ContentHostBase()
 }
 
 void
-ContentHostTexture::Composite(LayerComposite* aLayer,
+ContentHostTexture::Composite(Compositor* aCompositor,
+                              LayerComposite* aLayer,
                               EffectChain& aEffectChain,
                               float aOpacity,
                               const gfx::Matrix4x4& aTransform,
@@ -181,16 +182,16 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
                                         Float(tileRegionRect.width) / texRect.width,
                                         Float(tileRegionRect.height) / texRect.height);
 
-          GetCompositor()->DrawGeometry(rect, aClipRect, aEffectChain,
-                                        aOpacity, aTransform, aGeometry);
+          aCompositor->DrawGeometry(rect, aClipRect, aEffectChain,
+                                    aOpacity, aTransform, aGeometry);
 
           if (usingTiles) {
             DiagnosticFlags diagnostics = DiagnosticFlags::CONTENT | DiagnosticFlags::BIGIMAGE;
             if (iterOnWhite) {
               diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
             }
-            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
-                                             aTransform, mFlashCounter);
+            aCompositor->DrawDiagnostics(diagnostics, rect, aClipRect,
+                                         aTransform, mFlashCounter);
           }
         }
       }
@@ -212,8 +213,8 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
   if (iterOnWhite) {
     diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
   }
-  GetCompositor()->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
-                                   aTransform, mFlashCounter);
+  aCompositor->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
+                               aTransform, mFlashCounter);
 }
 
 void
