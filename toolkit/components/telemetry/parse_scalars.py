@@ -14,6 +14,7 @@ SCALAR_TYPES_MAP = {
     'boolean': 'nsITelemetry::SCALAR_BOOLEAN'
 }
 
+
 class ScalarType:
     """A class for representing a scalar definition."""
 
@@ -242,6 +243,7 @@ class ScalarType:
     def cpp_guard(self):
         """Get the cpp guard for this scalar"""
         return self._definition.get('cpp_guard')
+
 
 def load_scalars(filename):
     """Parses a YAML file containing the scalar definition.

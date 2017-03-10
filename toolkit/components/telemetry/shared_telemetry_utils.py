@@ -21,11 +21,14 @@ KNOWN_PROCESS_FLAGS = {
 
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
 
+
 def is_valid_process_name(name):
     return (name in KNOWN_PROCESS_FLAGS)
 
+
 def process_name_to_enum(name):
     return PROCESS_ENUM_PREFIX + KNOWN_PROCESS_FLAGS.get(name)
+
 
 class StringTable:
     """Manages a string table and allows C style serialization to a file."""
@@ -97,6 +100,7 @@ class StringTable:
                 f.write("  /* %5d - \"%s\" */ '\\0',\n" % (offset, string))
         f.write("};\n\n")
 
+
 def static_assert(output, expression, message):
     """Writes a C++ compile-time assertion expression to a file.
     :param output: the output stream.
@@ -105,6 +109,7 @@ def static_assert(output, expression, message):
         false.
     """
     print("static_assert(%s, \"%s\");" % (expression, message), file=output)
+
 
 def add_expiration_postfix(expiration):
     """ Formats the expiration version and adds a version postfix if needed.

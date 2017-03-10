@@ -9,6 +9,13 @@ var summary = 'uneval(eval(expression closure))';
 var actual = 'No Crash';
 var expect = 'No Crash';
 
+function normalizeSource(source) {
+  source = String(source);
+  source = source.replace(/([(){},.:\[\]])/mg, ' $1 ');
+  source = source.replace(/\s+/mg, ' ');
+
+  return source;
+}
 
 //-----------------------------------------------------------------------------
 test();
@@ -34,7 +41,7 @@ function test()
       expect = 'SyntaxError: missing { before function body';
       actual = ex + '';
     }
-    compareSource(expect, actual, summary);
+    compareSource(normalizeSource(expect), normalizeSource(actual), summary);
 
     expect = '({get f () /x/g})';
     try
@@ -48,7 +55,7 @@ function test()
       expect = 'SyntaxError: missing { before function body';
       actual = ex + '';
     }
-    compareSource(expect, actual, summary);
+    compareSource(normalizeSource(expect), normalizeSource(actual), summary);
   }
 
   exitFunc ('test');
