@@ -2071,9 +2071,7 @@ class ForOfLoopControl : public LoopControl
         // leaving try-catch block.  However, the performing IteratorClose can
         // reach the depth for try-catch, and effectively re-enter the
         // try-catch block.
-        if (!bce->emit1(JSOP_POP))                        // ITER RESULT
-            return false;
-        if (!bce->emit1(JSOP_POP))                        // ITER
+        if (!bce->emitPopN(2))                            // ITER
             return false;
 
         // Clear ITER slot on the stack to tell catch block to avoid performing
@@ -2456,6 +2454,21 @@ BytecodeEmitter::emitDupAt(unsigned slotFromTop)
 }
 
 bool
+BytecodeEmitter::emitPopN(unsigned n)
+{
+    MOZ_ASSERT(n != 0);
+
+    if (n == 1)
+        return emit1(JSOP_POP);
+
+    // 2 JSOP_POPs (2 bytes) are shorter than JSOP_POPN (3 bytes).
+    if (n == 2)
+        return emit1(JSOP_POP) && emit1(JSOP_POP);
+
+    return emitUint16Operand(JSOP_POPN, n);
+}
+
+bool
 BytecodeEmitter::emitCheckIsObj(CheckIsObjectKind kind)
 {
     return emit2(JSOP_CHECKISOBJ, uint8_t(kind));
@@ -2615,8 +2628,7 @@ BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand)
 bool
 BytecodeEmitter::flushPops(int* npops)
 {
-    MOZ_ASSERT(*npops != 0);
-    if (!emitUint16Operand(JSOP_POPN, *npops))
+    if (!emitPopN(*npops))
         return false;
 
     *npops = 0;
@@ -5330,9 +5342,7 @@ BytecodeEmitter::emitIteratorClose(CompletionKind completionKind /* = Completion
         // Restore stack.
         if (!emit2(JSOP_UNPICK, 2))                       // ... RESULT RET ITER
             return false;
-        if (!emit1(JSOP_POP))                             // ... RESULT RET
-            return false;
-        if (!emit1(JSOP_POP))                             // ... RESULT
+        if (!emitPopN(2))                                 // ... RESULT
             return false;
     } else {
         if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RESULT
@@ -6821,7 +6831,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     if (!emit2(JSOP_PICK, 3))                             // ARR FINAL_INDEX RESULT ITER
         return false;
 
-    return emitUint16Operand(JSOP_POPN, 2);               // ARR FINAL_INDEX
+    return emitPopN(2);                                   // ARR FINAL_INDEX
 }
 
 bool
@@ -7044,7 +7054,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, breakTarget.offset))
         return false;
 
-    return emitUint16Operand(JSOP_POPN, 3);               //
+    return emitPopN(3);                                   //
 }
 
 bool
@@ -7567,7 +7577,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
     }
 
     // Pop the result and the iter.
-    return emitUint16Operand(JSOP_POPN, 3);               //
+    return emitPopN(3);                                   //
 }
 
 bool
@@ -8541,7 +8551,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emit2(JSOP_UNPICK, 3))                           // ITER RESULT OLDRESULT FTYPE FVALUE
         return false;
-    if (!emitUint16Operand(JSOP_POPN, 3))                 // ITER RESULT
+    if (!emitPopN(3))                                     // ITER RESULT
         return false;
     {
         // goto tryStart;
@@ -8556,9 +8566,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
 
     if (!ifReturnMethodIsDefined.emitElse())              // ITER RESULT FTYPE FVALUE ITER RET
         return false;
-    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE ITER
-        return false;
-    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE
+    if (!emitPopN(2))                                     // ITER RESULT FTYPE FVALUE
         return false;
     if (!ifReturnMethodIsDefined.emitEnd())
         return false;
