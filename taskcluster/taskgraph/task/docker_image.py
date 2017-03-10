@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 
 from . import transform
-from taskgraph.util.docker import INDEX_PREFIX
 from taskgraph.transforms.base import TransformSequence, TransformConfig
 from taskgraph.util.python_path import find_object
 
@@ -40,13 +39,5 @@ class DockerImageTask(transform.TransformTask):
 
     @classmethod
     def from_json(cls, task_dict):
-        # Generating index_paths for optimization
-        imgMeta = task_dict['task']['extra']['imageMeta']
-        image_name = imgMeta['imageName']
-        context_hash = imgMeta['contextHash']
-        index_paths = ['{}.level-{}.{}.hash.{}'.format(
-            INDEX_PREFIX, level, image_name, context_hash)
-            for level in reversed(range(int(imgMeta['level']), 4))]
-        task_dict['index_paths'] = index_paths
         docker_image_task = cls(kind='docker-image', task=task_dict)
         return docker_image_task

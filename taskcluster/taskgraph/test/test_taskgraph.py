@@ -11,7 +11,6 @@ from ..task.docker_image import DockerImageTask
 from ..task.transform import TransformTask
 from ..taskgraph import TaskGraph
 from mozunit import main
-from taskgraph.util.docker import INDEX_PREFIX
 
 
 class TestTaskGraph(unittest.TestCase):
@@ -27,8 +26,6 @@ class TestTaskGraph(unittest.TestCase):
                 }
             }
         }
-        index_paths = ["{}.level-{}.<image>.hash.<hash>".format(INDEX_PREFIX, level)
-                       for level in reversed(range(1, 4))]
         graph = TaskGraph(tasks={
             'a': TransformTask(
                 kind='fancy',
@@ -44,7 +41,6 @@ class TestTaskGraph(unittest.TestCase):
                                      'label': 'b',
                                      'attributes': {},
                                      'task': task,
-                                     'index_paths': index_paths,
                                  }),
         }, graph=Graph(nodes={'a', 'b'}, edges=set()))
 

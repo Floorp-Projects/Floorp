@@ -61,8 +61,8 @@ def fill_template(config, tasks):
         # up on level 3 at some point if most tasks use this as a common image
         # for a given context hash, a worker within Taskcluster does not need to contain
         # the same image per branch.
-        index_paths = ['{}.level-{}.{}.hash.{}'.format(
-            INDEX_PREFIX, level, image_name, context_hash)
+        optimizations = [['index-search', '{}.level-{}.{}.hash.{}'.format(
+            INDEX_PREFIX, level, image_name, context_hash)]
             for level in reversed(range(int(config.params['level']), 4))]
 
         # include some information that is useful in reconstructing this task
@@ -81,7 +81,7 @@ def fill_template(config, tasks):
             'attributes': {'image_name': image_name},
             'expires-after': '1 year',
             'routes': routes,
-            'index-paths': index_paths,
+            'optimizations': optimizations,
             'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
             'extra': extra,
             'treeherder': {
