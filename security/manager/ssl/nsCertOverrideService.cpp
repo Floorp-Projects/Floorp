@@ -575,8 +575,11 @@ nsCertOverrideService::AddEntryToList(const nsACString &aHostName, int32_t aPort
 NS_IMETHODIMP
 nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32_t aPort)
 {
-  if (aPort == 0 &&
-      aHostName.EqualsLiteral("all:temporary-certificates")) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  if (aPort == 0 && aHostName.EqualsLiteral("all:temporary-certificates")) {
     RemoveAllTemporaryOverrides();
     return NS_OK;
   }
@@ -588,7 +591,8 @@ nsCertOverrideService::ClearValidityOverride(const nsACString & aHostName, int32
     Write();
   }
 
-  if (EnsureNSSInitialized(nssEnsure)) {
+  nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (nss) {
     SSL_ClearSessionCache();
   } else {
     return NS_ERROR_NOT_AVAILABLE;

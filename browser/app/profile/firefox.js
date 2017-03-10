@@ -533,6 +533,7 @@ pref("privacy.panicButton.enabled",         true);
 
 pref("privacy.firstparty.isolate",                        false);
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
+pref("privacy.resistFingerprinting", false);
 
 // Time until temporary permissions expire, in ms
 pref("privacy.temporary_permission_expire_time_ms",  3600000);

@@ -263,10 +263,10 @@ fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg standalone--pct-pct--px-px
 fails HTTP(../..) == inline--display-block--01.xhtml inline--display-block--01.xhtml
 fails == inline--display-inline--01.xhtml inline--display-inline--01.xhtml
 fails HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01.xhtml
-fails == inline--float-left--01.xhtml inline--float-left--01.xhtml
-fails == inline--float-right--01.xhtml inline--float-right--01.xhtml
-fails == inline--position-absolute--01.xhtml inline--position-absolute--01.xhtml
-fails == inline--position-absolute--02.xhtml inline--position-absolute--02.xhtml
+== inline--float-left--01.xhtml inline--float-left--01.xhtml
+== inline--float-right--01.xhtml inline--float-right--01.xhtml
+== inline--position-absolute--01.xhtml inline--position-absolute--01.xhtml
+== inline--position-absolute--02.xhtml inline--position-absolute--02.xhtml
 fails HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01.xhtml
 
 
@@ -304,9 +304,9 @@ random-if(Android) == object--auto-auto--px-px.html object--auto-auto--px-px.htm
 # correctly when changes are made that should result in a change in the size
 # or position of the SVG.
 
-fails == dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
-fails == dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
-fails == dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
-fails == dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
+== dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
+== dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
+== dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
+== dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
 random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
 

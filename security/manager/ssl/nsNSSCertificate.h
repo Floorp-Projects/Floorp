@@ -35,8 +35,6 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
-  friend class nsNSSCertificateFakeTransport;
-
   explicit nsNSSCertificate(CERTCertificate* cert);
   nsNSSCertificate();
   static nsNSSCertificate* Create(CERTCertificate* cert = nullptr);

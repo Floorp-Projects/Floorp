@@ -8,6 +8,7 @@
 
 #include "ChildIterator.h"
 #include "gfxFontFamilyList.h"
+#include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
@@ -362,8 +363,7 @@ Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
     NS_WARNING("stylo: requesting a Gecko declaration block?");
     return nullptr;
   }
-  return reinterpret_cast<const RawServoDeclarationBlockStrong*>
-    (decl->AsServo()->RefRaw());
+  return decl->AsServo()->RefRawStrong();
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
@@ -374,6 +374,12 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
                 "RefPtr should just be a pointer");
   const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
   if (!attrs) {
+    auto* svg = nsSVGElement::FromContentOrNull(aElement);
+    if (svg) {
+      if (auto decl = svg->GetContentDeclarationBlock()) {
+        return decl->AsServo()->RefRawStrong();
+      }
+    }
     return nullptr;
   }
 
@@ -417,6 +423,54 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
     return emptyDeclarationBlock;
   }
   return rule->GetValues();
+}
+
+bool
+Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
+                            RawGeckoStyleAnimationListBorrowed aB)
+{
+  return *aA == *aB;
+}
+
+void
+Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTagOrNull,
+                       ServoComputedValuesBorrowedOrNull aComputedValues,
+                       ServoComputedValuesBorrowedOrNull aParentComputedValues)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aElement);
+
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
+  if (!presContext) {
+    return;
+  }
+
+  if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
+    presContext->AnimationManager()->
+      UpdateAnimations(const_cast<dom::Element*>(aElement), aPseudoTagOrNull,
+                       aComputedValues, aParentComputedValues);
+  }
+}
+
+bool
+Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElement,
+                              nsIAtom* aPseudoTagOrNull)
+{
+  if (aPseudoTagOrNull &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
+      aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
+    return false;
+  }
+
+  CSSPseudoElementType pseudoType =
+    nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
+                                       CSSEnabledState::eForAllContent);
+  nsAnimationManager::CSSAnimationCollection* collection =
+    nsAnimationManager::CSSAnimationCollection
+                      ::GetAnimationCollection(aElement, pseudoType);
+
+  return collection && !collection->mAnimations.IsEmpty();
 }
 
 void
@@ -782,6 +836,15 @@ ServoBundledURI::IntoCssUrl()
                                                      do_AddRef(mReferrer),
                                                      do_AddRef(mPrincipal));
   return urlValue.forget();
+}
+
+GeckoParserExtraData::GeckoParserExtraData(nsIURI* aBaseURI,
+                                           nsIURI* aReferrer,
+                                           nsIPrincipal* aPrincipal)
+    : mBaseURI(new ThreadSafeURIHolder(aBaseURI)),
+      mReferrer(new ThreadSafeURIHolder(aReferrer)),
+      mPrincipal(new ThreadSafePrincipalHolder(aPrincipal))
+{
 }
 
 void

@@ -1028,19 +1028,16 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     nsCString name = nsCSSProps::GetStringValue(aProperty);
 
     NS_ConvertUTF16toUTF8 value(aStringValue);
-    RefPtr<ThreadSafeURIHolder> base =
-      new ThreadSafeURIHolder(aDocument->GetDocumentURI());
-    RefPtr<ThreadSafeURIHolder> referrer =
-      new ThreadSafeURIHolder(aDocument->GetDocumentURI());
-    RefPtr<ThreadSafePrincipalHolder> principal =
-      new ThreadSafePrincipalHolder(aDocument->NodePrincipal());
 
     nsCString baseString;
+    // FIXME this is using the wrong base uri (bug 1343919)
+    GeckoParserExtraData data(aDocument->GetDocumentURI(),
+                              aDocument->GetDocumentURI(),
+                              aDocument->NodePrincipal());
     aDocument->GetDocumentURI()->GetSpec(baseString);
 
     RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      Servo_ParseProperty(&name, &value, &baseString,
-                          base, referrer, principal).Consume();
+      Servo_ParseProperty(&name, &value, &baseString, &data).Consume();
 
     if (servoDeclarationBlock) {
       result.mServoDeclarationBlock = servoDeclarationBlock.forget();
