@@ -9,7 +9,7 @@ shift
 fetch_dist
 
 # Clone corpus.
-./nss/fuzz/clone_corpus.sh
+./nss/fuzz/config/clone_corpus.sh
 
 # Ensure we have a corpus.
 if [ ! -d "nss/fuzz/corpus/$type" ]; then
