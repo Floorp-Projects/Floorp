@@ -567,10 +567,18 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
                     assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs,
                     syncKeyBundle, clientState, sessionCallback, extras, fxAccount, syncDeadline);
 
-            // Register the device if necessary (asynchronous, in another thread)
+            // Register the device if necessary (asynchronous, in another thread).
+            // As part of device registration, we obtain a PushSubscription, register our push endpoint
+            // with FxA, and update account data with fxaDeviceId, which is part of our synced
+            // clients record.
             if (fxAccount.getDeviceRegistrationVersion() != FxAccountDeviceRegistrator.DEVICE_REGISTRATION_VERSION
-                || TextUtils.isEmpty(fxAccount.getDeviceId())) {
+              || TextUtils.isEmpty(fxAccount.getDeviceId())) {
               FxAccountDeviceRegistrator.register(context);
+            // We might need to re-register periodically to ensure our FxA push subscription is valid.
+            // This involves unsubscribing, subscribing and updating remote FxA device record with
+            // new push subscription information.
+            } else if (FxAccountDeviceRegistrator.needToRenewRegistration(fxAccount.getDeviceRegistrationTimestamp())) {
+              FxAccountDeviceRegistrator.renewRegistration(context);
             }
 
             // Force fetch the profile avatar information. (asynchronous, in another thread)

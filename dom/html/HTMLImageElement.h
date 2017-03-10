@@ -94,7 +94,7 @@ public:
   virtual EventStates IntrinsicState() const override;
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 
-  virtual void NodeInfoChanged() override;
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 
   nsresult CopyInnerTo(Element* aDest);
 

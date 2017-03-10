@@ -35,7 +35,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsXULAppAPI.h"
 #include "nspr.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
@@ -72,10 +71,6 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 /*static*/ nsNSSCertificate*
 nsNSSCertificate::Create(CERTCertificate* cert)
 {
-  if (GeckoProcessType_Default != XRE_GetProcessType()) {
-    NS_ERROR("Trying to initialize nsNSSCertificate in a non-chrome process!");
-    return nullptr;
-  }
   if (cert)
     return new nsNSSCertificate(cert);
   else
@@ -85,10 +80,6 @@ nsNSSCertificate::Create(CERTCertificate* cert)
 nsNSSCertificate*
 nsNSSCertificate::ConstructFromDER(char* certDER, int derLen)
 {
-  // On non-chrome process prevent instantiation
-  if (GeckoProcessType_Default != XRE_GetProcessType())
-    return nullptr;
-
   nsNSSCertificate* newObject = nsNSSCertificate::Create();
   if (newObject && !newObject->InitFromDER(certDER, derLen)) {
     delete newObject;
@@ -127,11 +118,6 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert)
   , mPermDelete(false)
   , mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
 {
-#if defined(DEBUG)
-  if (GeckoProcessType_Default != XRE_GetProcessType())
-    NS_ERROR("Trying to initialize nsNSSCertificate in a non-chrome process!");
-#endif
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
@@ -146,8 +132,6 @@ nsNSSCertificate::nsNSSCertificate()
   , mPermDelete(false)
   , mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
 {
-  if (GeckoProcessType_Default != XRE_GetProcessType())
-    NS_ERROR("Trying to initialize nsNSSCertificate in a non-chrome process!");
 }
 
 nsNSSCertificate::~nsNSSCertificate()
@@ -1538,7 +1522,6 @@ nsNSSCertListEnumerator::GetNext(nsISupports** _retval)
   return NS_OK;
 }
 
-// NB: This serialization must match that of nsNSSCertificateFakeTransport.
 NS_IMETHODIMP
 nsNSSCertificate::Write(nsIObjectOutputStream* aStream)
 {

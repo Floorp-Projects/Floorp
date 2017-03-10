@@ -518,7 +518,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     aNode->mNodeInfo.swap(newNodeInfo);
     if (elem) {
-      elem->NodeInfoChanged();
+      elem->NodeInfoChanged(oldDoc);
     }
 
     nsIDocument* newDoc = aNode->OwnerDoc();

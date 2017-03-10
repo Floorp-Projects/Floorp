@@ -22,7 +22,6 @@
 #include "nsKeygenHandler.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
-#include "nsNSSCertificateFakeTransport.h"
 #include "nsNSSComponent.h"
 #include "nsNSSU2FToken.h"
 #include "nsNSSVersion.h"
@@ -44,10 +43,13 @@
 
 namespace mozilla { namespace psm {
 
-MOZ_ALWAYS_INLINE static bool IsProcessDefault()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
+// Many of the implementations in this module call NSS functions and as a result
+// require that PSM has successfully initialized NSS before being used.
+// Additionally, some of the implementations have various restrictions on which
+// process and threads they can be used on (e.g. some can only be used in the
+// parent process and some must be initialized only on the main thread).
+// The following initialization framework allows these requirements to be
+// succinctly expressed and implemented.
 
 template<class InstanceClass, nsresult (InstanceClass::*InitMethod)()>
 MOZ_ALWAYS_INLINE static nsresult
@@ -63,8 +65,21 @@ Instantiate(REFNSIID aIID, void** aResult)
   return rv;
 }
 
-template<EnsureNSSOperator ensureOperator, class InstanceClass,
-         nsresult (InstanceClass::*InitMethod)() = nullptr>
+enum class ThreadRestriction {
+  // must be initialized on the main thread (but can be used on any thread)
+  MainThreadOnly,
+  // can be initialized and used on any thread
+  AnyThread,
+};
+
+enum class ProcessRestriction {
+  ParentProcessOnly,
+  AnyProcess,
+};
+
+template<class InstanceClass, nsresult (InstanceClass::*InitMethod)() = nullptr,
+         ProcessRestriction processRestriction = ProcessRestriction::ParentProcessOnly,
+         ThreadRestriction threadRestriction = ThreadRestriction::AnyThread>
 static nsresult
 Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -73,46 +88,35 @@ Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  if (ensureOperator == nssEnsureChromeOrContent &&
-      !IsProcessDefault()) {
-    if (!EnsureNSSInitializedChromeOrContent()) {
-      return NS_ERROR_FAILURE;
-    }
-  } else if (!EnsureNSSInitialized(ensureOperator)) {
+  if (processRestriction == ProcessRestriction::ParentProcessOnly &&
+      !XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!EnsureNSSInitializedChromeOrContent()) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = Instantiate<InstanceClass, InitMethod>(aIID, aResult);
+  if (threadRestriction == ThreadRestriction::MainThreadOnly &&
+      !NS_IsMainThread()) {
 
-  if (ensureOperator == nssLoadingComponent) {
-    if (NS_SUCCEEDED(rv)) {
-      EnsureNSSInitialized(nssInitSucceeded);
-    } else {
-      EnsureNSSInitialized(nssInitFailed);
+    nsCOMPtr<nsIThread> mainThread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+
+    // Forward to the main thread synchronously.
+    mozilla::SyncRunnable::DispatchToThread(mainThread,
+      new SyncRunnable(NS_NewRunnableFunction([&]() {
+        rv = Instantiate<InstanceClass, InitMethod>(aIID, aResult);
+      }))
+    );
+
+    return rv;
   }
 
-  return rv;
-}
-
-template<class InstanceClassChrome, class InstanceClassContent>
-MOZ_ALWAYS_INLINE static nsresult
-Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  if (IsProcessDefault()) {
-    return Constructor<nssEnsureOnChromeOnly,
-                       InstanceClassChrome>(aOuter, aIID, aResult);
-  }
-
-  return Constructor<nssEnsureOnChromeOnly,
-                     InstanceClassContent>(aOuter, aIID, aResult);
-}
-
-template<class InstanceClass>
-MOZ_ALWAYS_INLINE static nsresult
-Constructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  return Constructor<nssEnsure, InstanceClass>(aOuter, aIID, aResult);
+  return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
 } } // namespace mozilla::psm
@@ -126,10 +130,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PSMContentListener, init)
 typedef mozilla::psm::NSSErrorsService NSSErrorsService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NSSErrorsService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSVersion)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCertOverrideService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertBlocklist, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSiteSecurityService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSComponent, Init)
 
 NS_DEFINE_NAMED_CID(NS_NSSCOMPONENT_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSOCKETPROVIDER_CID);
@@ -164,18 +166,8 @@ NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
 NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_BLOCKLIST_CID);
 
-// Use the special factory constructor for everything this module implements,
-// because all code could potentially require the NSS library.
-// Our factory constructor takes an optional EnsureNSSOperator template
-// parameter.
-// Only for the nsNSSComponent, set this to nssLoadingComponent.
-// For classes available from a content process, set this to
-// nssEnsureOnChromeOnly.
-// All other classes must have this set to nssEnsure (default).
-
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
-  { &kNS_NSSCOMPONENT_CID, false, nullptr,
-    Constructor<nssLoadingComponent, nsNSSComponent, &nsNSSComponent::Init> },
+  { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
   { &kNS_SSLSOCKETPROVIDER_CID, false, nullptr,
     Constructor<nsSSLSocketProvider> },
   { &kNS_STARTTLSSOCKETPROVIDER_CID, false, nullptr,
@@ -186,43 +178,53 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_PKCS11MODULEDB_CID, false, nullptr, Constructor<nsPKCS11ModuleDB> },
   { &kNS_PSMCONTENTLISTEN_CID, false, nullptr, PSMContentListenerConstructor },
   { &kNS_X509CERT_CID, false, nullptr,
-    Constructor<nsNSSCertificate, nsNSSCertificateFakeTransport> },
+    Constructor<nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_X509CERTDB_CID, false, nullptr, Constructor<nsNSSCertificateDB> },
   { &kNS_X509CERTLIST_CID, false, nullptr,
-    Constructor<nsNSSCertList, nsNSSCertListFakeTransport> },
+    Constructor<nsNSSCertList, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_FORMPROCESSOR_CID, false, nullptr, nsKeygenFormProcessor::Create },
 #ifdef MOZ_XUL
   { &kNS_CERTTREE_CID, false, nullptr, Constructor<nsCertTree> },
 #endif
   { &kNS_PKCS11_CID, false, nullptr, Constructor<nsPkcs11> },
   { &kNS_CRYPTO_HASH_CID, false, nullptr,
-    Constructor<nssEnsureChromeOrContent, nsCryptoHash> },
+    Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr,
-    Constructor<nssEnsureChromeOrContent, nsCryptoHMAC> },
+    Constructor<nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_NTLMAUTHMODULE_CID, false, nullptr,
-    Constructor<nssEnsure, nsNTLMAuthModule, &nsNTLMAuthModule::InitTest> },
+    Constructor<nsNTLMAuthModule, &nsNTLMAuthModule::InitTest> },
   { &kNS_KEYMODULEOBJECT_CID, false, nullptr,
-    Constructor<nssEnsureChromeOrContent, nsKeyObject> },
+    Constructor<nsKeyObject, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_KEYMODULEOBJECTFACTORY_CID, false, nullptr,
-    Constructor<nssEnsureChromeOrContent, nsKeyObjectFactory> },
+    Constructor<nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_DATASIGNATUREVERIFIER_CID, false, nullptr,
     Constructor<nsDataSignatureVerifier> },
   { &kNS_CONTENTSIGNATUREVERIFIER_CID, false, nullptr,
     Constructor<ContentSignatureVerifier> },
-  { &kNS_CERTOVERRIDE_CID, false, nullptr, nsCertOverrideServiceConstructor },
+  { &kNS_CERTOVERRIDE_CID, false, nullptr,
+    Constructor<nsCertOverrideService, &nsCertOverrideService::Init,
+                ProcessRestriction::ParentProcessOnly,
+                ThreadRestriction::MainThreadOnly> },
   { &kNS_RANDOMGENERATOR_CID, false, nullptr,
-    Constructor<nssEnsureChromeOrContent, nsRandomGenerator> },
+    Constructor<nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_NSSU2FTOKEN_CID, false, nullptr,
-    Constructor<nssEnsure, nsNSSU2FToken, &nsNSSU2FToken::Init> },
+    Constructor<nsNSSU2FToken, &nsNSSU2FToken::Init> },
   { &kNS_SSLSTATUS_CID, false, nullptr,
-    Constructor<nssEnsureOnChromeOnly, nsSSLStatus> },
+    Constructor<nsSSLStatus, nullptr, ProcessRestriction::AnyProcess> },
   { &kTRANSPORTSECURITYINFO_CID, false, nullptr,
-    Constructor<nssEnsureOnChromeOnly, TransportSecurityInfo> },
+    Constructor<TransportSecurityInfo, nullptr,
+                ProcessRestriction::AnyProcess> },
   { &kNS_NSSERRORSSERVICE_CID, false, nullptr, NSSErrorsServiceConstructor },
   { &kNS_NSSVERSION_CID, false, nullptr, nsNSSVersionConstructor },
   { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
-  { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr, nsSiteSecurityServiceConstructor },
-  { &kNS_CERT_BLOCKLIST_CID, false, nullptr, CertBlocklistConstructor},
+  { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr,
+    Constructor<nsSiteSecurityService, &nsSiteSecurityService::Init,
+                ProcessRestriction::AnyProcess,
+                ThreadRestriction::MainThreadOnly> },
+  { &kNS_CERT_BLOCKLIST_CID, false, nullptr,
+    Constructor<CertBlocklist, &CertBlocklist::Init,
+                ProcessRestriction::ParentProcessOnly,
+                ThreadRestriction::MainThreadOnly> },
   { nullptr }
 };
 

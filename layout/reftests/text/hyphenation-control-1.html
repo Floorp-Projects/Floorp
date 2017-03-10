@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+code {
+  display:block;
+  hyphens:auto;
+  border: 1px solid black;
+}
+</style>
+</head>
+<body lang="en-us">
+<!--
+  Hyphenation opportunities of the texts in this test are as follows,
+
+        frag[A]ilis[A]tic[C]ex[A]pi[A]ali
+
+  where [A] is an automatic hyphen, and [C] is a conditional hyphen.
+
+  In this test, we set width to somewhere between every pair of adjacent hyphenations,
+  then we see if lines break correctly.
+-->
+<code style="width:4ch;">
+fragilistic&shy;expiali
+</code>
+<br />
+<code style="width:5ch;">
+fragilistic&shy;expiali
+</code>
+<br />
+<code style="width:9ch;">
+fragilistic&shy;expiali
+</code>
+<br />
+<code style="width:12ch;">
+fragilistic&shy;expiali
+</code>
+<br />
+<code style="width:14ch;">
+fragilistic&shy;expiali
+</code>
+<br />
+<code style="width:16ch;">
+fragilistic&shy;expiali
+</code>
+</body>
+</html>

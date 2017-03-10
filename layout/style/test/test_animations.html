@@ -231,6 +231,10 @@ window.new_div = function(style) {
 // take over the refresh driver right from the start.
 advance_clock(0);
 
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+});
+
 /*
  * css3-animations:  2. Animations
  * http://dev.w3.org/csswg/css3-animations/#animations
@@ -2094,8 +2098,6 @@ div.style.animation = "unset";
 div.style.animation = "\"none\" 1s linear";
 is(cs.getPropertyValue("left"), "7px", "animation name 'none' as string is accepted");
 done_div();
-
-SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
 </pre>
