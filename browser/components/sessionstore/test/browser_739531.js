@@ -26,8 +26,7 @@ function test() {
       let caughtError = false;
       try {
         tab2 = ss.duplicateTab(window, tab);
-      }
-      catch (e) {
+      } catch (e) {
         caughtError = true;
         info(e);
       }

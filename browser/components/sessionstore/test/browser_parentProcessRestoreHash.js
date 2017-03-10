@@ -13,14 +13,14 @@ const TESTURL = "about:testpageforsessionrestore#foo";
 
 let TestAboutPage = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  getURIFlags: function(aURI) {
+  getURIFlags(aURI) {
     // No CAN_ or MUST_LOAD_IN_CHILD means this loads in the parent:
     return Ci.nsIAboutModule.ALLOW_SCRIPT |
            Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
            Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
   },
 
-  newChannel: function(aURI, aLoadInfo) {
+  newChannel(aURI, aLoadInfo) {
     // about: page inception!
     let newURI = Services.io.newURI(SELFCHROMEURL);
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
@@ -29,20 +29,20 @@ let TestAboutPage = {
     return channel;
   },
 
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     if (outer != null) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(iid);
   },
 
-  register: function() {
+  register() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
       Components.ID(TESTCLASSID), "Only here for a test",
       "@mozilla.org/network/protocol/about;1?what=testpageforsessionrestore", this);
   },
 
-  unregister: function() {
+  unregister() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
       Components.ID(TESTCLASSID), this);
   }

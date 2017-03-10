@@ -74,7 +74,7 @@ add_task(function* test_closedObjectsChangedNotifications() {
   assertNotificationCount(2);
 
   info(`Changing the ${MAX_TABS_UNDO_PREF} pref.`);
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref(MAX_TABS_UNDO_PREF);
   });
   yield awaitNotification(() => Services.prefs.setIntPref(MAX_TABS_UNDO_PREF, 1));

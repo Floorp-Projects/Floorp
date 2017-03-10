@@ -36,7 +36,7 @@ Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 var gFrameTree = new FrameTree(this);
 
 Cu.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
-XPCOMUtils.defineLazyGetter(this, 'gContentRestore',
+XPCOMUtils.defineLazyGetter(this, "gContentRestore",
                             () => { return new ContentRestore(this) });
 
 // The current epoch.
@@ -76,11 +76,11 @@ function createLazy(fn) {
  */
 var EventListener = {
 
-  init: function () {
+  init() {
     addEventListener("load", this, true);
   },
 
-  handleEvent: function (event) {
+  handleEvent(event) {
     // Ignore load events from subframes.
     if (event.target != content.document) {
       return;
@@ -117,11 +117,11 @@ var MessageListener = {
     "SessionStore:becomeActiveProcess",
   ],
 
-  init: function () {
+  init() {
     this.MESSAGES.forEach(m => addMessageListener(m, this));
   },
 
-  receiveMessage: function ({name, data}) {
+  receiveMessage({name, data}) {
     // The docShell might be gone. Don't process messages,
     // that will just lead to errors anyway.
     if (!docShell) {
@@ -230,7 +230,7 @@ var MessageListener = {
  *   {entries: [{url: "about:mozilla", ...}, ...], index: 1}
  */
 var SessionHistoryListener = {
-  init: function () {
+  init() {
     // The frame tree observer is needed to handle initial subframe loads.
     // It will redundantly invalidate with the SHistoryListener in some cases
     // but these invalidations are very cheap.
@@ -260,14 +260,14 @@ var SessionHistoryListener = {
     addEventListener("DOMTitleChanged", this);
   },
 
-  uninit: function () {
+  uninit() {
     let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
     if (sessionHistory) {
       sessionHistory.removeSHistoryListener(this);
     }
   },
 
-  collect: function () {
+  collect() {
     // We want to send down a historychange even for full collects in case our
     // session history is a partial session history, in which case we don't have
     // enough information for a full update. collectFrom(-1) tells the collect
@@ -286,7 +286,7 @@ var SessionHistoryListener = {
   // and send the entire history. We always send the additional info like the current selected
   // index (so for going back and forth between history entries we set the index to kLastIndex
   // if nothing else changed send an empty array and the additonal info like the selected index)
-  collectFrom: function (idx) {
+  collectFrom(idx) {
     if (this._fromIdx <= idx) {
       // If we already know that we need to update history fromn index N we can ignore any changes
       // tha happened with an element with index larger than N.
@@ -312,44 +312,44 @@ var SessionHistoryListener = {
     this.collect();
   },
 
-  onFrameTreeCollected: function () {
+  onFrameTreeCollected() {
     this.collect();
   },
 
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     this.collect();
   },
 
-  OnHistoryNewEntry: function (newURI, oldIndex) {
+  OnHistoryNewEntry(newURI, oldIndex) {
     this.collectFrom(oldIndex);
   },
 
-  OnHistoryGoBack: function (backURI) {
+  OnHistoryGoBack(backURI) {
     this.collectFrom(kLastIndex);
     return true;
   },
 
-  OnHistoryGoForward: function (forwardURI) {
+  OnHistoryGoForward(forwardURI) {
     this.collectFrom(kLastIndex);
     return true;
   },
 
-  OnHistoryGotoIndex: function (index, gotoURI) {
+  OnHistoryGotoIndex(index, gotoURI) {
     this.collectFrom(kLastIndex);
     return true;
   },
 
-  OnHistoryPurge: function (numEntries) {
+  OnHistoryPurge(numEntries) {
     this.collect();
     return true;
   },
 
-  OnHistoryReload: function (reloadURI, reloadFlags) {
+  OnHistoryReload(reloadURI, reloadFlags) {
     this.collect();
     return true;
   },
 
-  OnHistoryReplaceEntry: function (index) {
+  OnHistoryReplaceEntry(index) {
     this.collect();
   },
 
@@ -372,12 +372,12 @@ var SessionHistoryListener = {
  *   {scroll: "100,100", children: [null, null, {scroll: "200,200"}]}
  */
 var ScrollPositionListener = {
-  init: function () {
+  init() {
     addEventListener("scroll", this);
     gFrameTree.addObserver(this);
   },
 
-  handleEvent: function (event) {
+  handleEvent(event) {
     let frame = event.target.defaultView;
 
     // Don't collect scroll data for frames created at or after the load event
@@ -387,15 +387,15 @@ var ScrollPositionListener = {
     }
   },
 
-  onFrameTreeCollected: function () {
+  onFrameTreeCollected() {
     MessageQueue.push("scroll", () => this.collect());
   },
 
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     MessageQueue.push("scroll", () => null);
   },
 
-  collect: function () {
+  collect() {
     return gFrameTree.map(ScrollPosition.collect);
   }
 };
@@ -418,13 +418,13 @@ var ScrollPositionListener = {
  *   }
  */
 var FormDataListener = {
-  init: function () {
+  init() {
     addEventListener("input", this, true);
     addEventListener("change", this, true);
     gFrameTree.addObserver(this);
   },
 
-  handleEvent: function (event) {
+  handleEvent(event) {
     let frame = event.target.ownerGlobal;
 
     // Don't collect form data for frames created at or after the load event
@@ -434,11 +434,11 @@ var FormDataListener = {
     }
   },
 
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     MessageQueue.push("formdata", () => null);
   },
 
-  collect: function () {
+  collect() {
     return gFrameTree.map(FormData.collect);
   }
 };
@@ -455,18 +455,18 @@ var FormDataListener = {
  *   {pageStyle: "Dusk", children: [null, {pageStyle: "Mozilla"}]}
  */
 var PageStyleListener = {
-  init: function () {
+  init() {
     Services.obs.addObserver(this, "author-style-disabled-changed", false);
     Services.obs.addObserver(this, "style-sheet-applicable-state-changed", false);
     gFrameTree.addObserver(this);
   },
 
-  uninit: function () {
+  uninit() {
     Services.obs.removeObserver(this, "author-style-disabled-changed");
     Services.obs.removeObserver(this, "style-sheet-applicable-state-changed");
   },
 
-  observe: function (subject, topic) {
+  observe(subject, topic) {
     let frame = subject.defaultView;
 
     if (frame && gFrameTree.contains(frame)) {
@@ -474,15 +474,15 @@ var PageStyleListener = {
     }
   },
 
-  collect: function () {
+  collect() {
     return PageStyle.collect(docShell, gFrameTree);
   },
 
-  onFrameTreeCollected: function () {
+  onFrameTreeCollected() {
     MessageQueue.push("pageStyle", () => this.collect());
   },
 
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     MessageQueue.push("pageStyle", () => null);
   }
 };
@@ -503,14 +503,14 @@ var DocShellCapabilitiesListener = {
    */
   _latestCapabilities: "",
 
-  init: function () {
+  init() {
     gFrameTree.addObserver(this);
   },
 
   /**
    * onFrameTreeReset() is called as soon as we start loading a page.
    */
-  onFrameTreeReset: function() {
+  onFrameTreeReset() {
     // The order of docShell capabilities cannot change while we're running
     // so calling join() without sorting before is totally sufficient.
     let caps = DocShellCapabilities.collect(docShell).join(",");
@@ -533,23 +533,23 @@ var DocShellCapabilitiesListener = {
  * as keys and per-host DOMSessionStorage data as values.
  */
 var SessionStorageListener = {
-  init: function () {
+  init() {
     addEventListener("MozSessionStorageChanged", this, true);
     Services.obs.addObserver(this, "browser:purge-domain-data", false);
     gFrameTree.addObserver(this);
   },
 
-  uninit: function () {
+  uninit() {
     Services.obs.removeObserver(this, "browser:purge-domain-data");
   },
 
-  handleEvent: function (event) {
+  handleEvent(event) {
     if (gFrameTree.contains(event.target)) {
       this.collectFromEvent(event);
     }
   },
 
-  observe: function () {
+  observe() {
     // Collect data on the next tick so that any other observer
     // that needs to purge data can do its work first.
     setTimeout(() => this.collect(), 0);
@@ -567,7 +567,7 @@ var SessionStorageListener = {
   // we also don't want to cause an OOM here, we use a quick and memory-
   // efficient approximation: we compute the total sum of string lengths
   // involved in this object.
-  estimateStorageSize: function(collected) {
+  estimateStorageSize(collected) {
     if (!collected) {
       return 0;
     }
@@ -593,11 +593,11 @@ var SessionStorageListener = {
   // reset these changes.
   _changes: undefined,
 
-  resetChanges: function () {
+  resetChanges() {
     this._changes = undefined;
   },
 
-  collectFromEvent: function (event) {
+  collectFromEvent(event) {
     // TODO: we should take browser.sessionstore.dom_storage_limit into an account here.
     if (docShell) {
       let {url, key, newValue} = event;
@@ -622,7 +622,7 @@ var SessionStorageListener = {
     }
   },
 
-  collect: function () {
+  collect() {
     if (docShell) {
       // We need the entire session storage, let's reset the pending individual change
       // messages.
@@ -649,11 +649,11 @@ var SessionStorageListener = {
     }
   },
 
-  onFrameTreeCollected: function () {
+  onFrameTreeCollected() {
     this.collect();
   },
 
-  onFrameTreeReset: function () {
+  onFrameTreeReset() {
     this.collect();
   }
 };
@@ -669,7 +669,7 @@ var SessionStorageListener = {
  *  not saved.
  */
 var PrivacyListener = {
-  init: function() {
+  init() {
     docShell.addWeakPrivacyTransitionObserver(this);
 
     // Check that value at startup as it might have
@@ -680,7 +680,7 @@ var PrivacyListener = {
   },
 
   // Ci.nsIPrivacyTransitionObserver
-  privateModeChanged: function(enabled) {
+  privateModeChanged(enabled) {
     MessageQueue.push("isPrivate", () => enabled || null);
   },
 
@@ -774,7 +774,7 @@ var MessageQueue = {
    *        A function that returns the value that will be sent to the parent
    *        process.
    */
-  push: function (key, fn) {
+  push(key, fn) {
     this._data.set(key, createLazy(fn));
 
     if (!this._timeout && !this._timeoutDisabled) {
@@ -790,7 +790,7 @@ var MessageQueue = {
    *        {flushID: 123} to specify that this is a flush
    *        {isFinal: true} to signal this is the final message sent on unload
    */
-  send: function (options = {}) {
+  send(options = {}) {
     // Looks like we have been called off a timeout after the tab has been
     // closed. The docShell is gone now and we can just return here as there
     // is nothing to do.

@@ -84,7 +84,7 @@ add_task(function* test_run() {
  * different cookie domains given in the Set-Cookie header. See above for some
  * usage examples.
  */
-var testCookieCollection = async function (params) {
+var testCookieCollection = async function(params) {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
 

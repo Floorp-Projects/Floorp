@@ -41,7 +41,7 @@ function windowObserver(aSubject, aTopic, aData) {
     win.addEventListener("load", function() {
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
-          onReady: function() {
+          onReady() {
             win.Scratchpad.removeObserver(this);
 
             let state = win.Scratchpad.getState();

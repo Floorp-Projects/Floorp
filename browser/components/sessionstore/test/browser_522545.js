@@ -145,7 +145,7 @@ function test() {
     // be in a non-userTypedValue case, while others should still have
     // userTypedValue and userTypedClear set.
     gBrowser.addTabsProgressListener({
-      onLocationChange: function (aBrowser) {
+      onLocationChange(aBrowser) {
         if (uris.indexOf(aBrowser.currentURI.spec) > -1) {
           gBrowser.removeTabsProgressListener(this);
           firstLocationChange();
@@ -196,7 +196,7 @@ function test() {
       gURLBar.value = inputText.slice(0, -1);
       EventUtils.synthesizeKey(inputText.slice(-1), {});
 
-      executeSoon(function () {
+      executeSoon(function() {
         is(browser.userTypedValue, "example.org",
            "userTypedValue was set when changing URLBar value");
         ok(!browser.didStartLoadSinceLastUserTyping(),

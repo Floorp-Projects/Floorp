@@ -57,8 +57,7 @@ function test() {
         }
       }
       pollMostRecentWindow();
-    }
-    else {
+    } else {
       browserWindowsCount(1);
       ok(!window.closed, "Restoring the old state should have left this window open");
       Services.obs.removeObserver(observer, "sessionstore-browser-state-restored");

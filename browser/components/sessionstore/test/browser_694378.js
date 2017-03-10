@@ -19,8 +19,7 @@ function test() {
   let gotError = false;
   try {
     ss.setWindowState(window, brokenStateString, true);
-  }
-  catch (ex) {
+  } catch (ex) {
     gotError = true;
     info(ex);
   }

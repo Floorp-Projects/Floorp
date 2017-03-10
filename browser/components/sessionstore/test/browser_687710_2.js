@@ -25,11 +25,10 @@ var state = {entries:[
   }
 ]};
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     ss.setBrowserState(stateBackup);
   });
 
@@ -48,8 +47,7 @@ function test()
   });
 }
 
-function compareEntries(i, j, history)
-{
+function compareEntries(i, j, history) {
   let e1 = history.getEntryAtIndex(i, false)
                   .QueryInterface(Ci.nsISHEntry)
                   .QueryInterface(Ci.nsISHContainer);
@@ -59,15 +57,15 @@ function compareEntries(i, j, history)
                   .QueryInterface(Ci.nsISHContainer);
 
   ok(e1.sharesDocumentWith(e2),
-     i + ' should share doc with ' + j);
+     i + " should share doc with " + j);
   is(e1.childCount, e2.childCount,
-     'Child count mismatch (' + i + ', ' + j + ')');
+     "Child count mismatch (" + i + ", " + j + ")");
 
   for (let c = 0; c < e1.childCount; c++) {
     let c1 = e1.GetChildAt(c);
     let c2 = e2.GetChildAt(c);
 
     ok(c1.sharesDocumentWith(c2),
-       'Cousins should share documents. (' + i + ', ' + j + ', ' + c + ')');
+       "Cousins should share documents. (" + i + ", " + j + ", " + c + ")");
   }
 }
