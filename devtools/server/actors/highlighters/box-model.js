@@ -601,10 +601,10 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
 
     // Move guide into place or hide it if no valid co-ordinate was found.
-    this._updateGuide("top", toShowY[0]);
-    this._updateGuide("right", toShowX[1]);
-    this._updateGuide("bottom", toShowY[1]);
-    this._updateGuide("left", toShowX[0]);
+    this._updateGuide("top", Math.round(toShowY[0]));
+    this._updateGuide("right", Math.round(toShowX[1]) - 1);
+    this._updateGuide("bottom", Math.round(toShowY[1] - 1));
+    this._updateGuide("left", Math.round(toShowX[0]));
   },
 
   _hideGuides: function () {
