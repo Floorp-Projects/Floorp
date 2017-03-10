@@ -2060,8 +2060,7 @@
         "characterSet", "fullZoom", "textZoom", "webProgress",
         "addProgressListener", "removeProgressListener", "audioPlaybackStarted",
         "audioPlaybackStopped", "adjustPriority", "pauseMedia", "stopMedia",
-        "blockMedia", "resumeMedia", "audioMuted", "mute", "unmute",
-        "blockedPopups", "mIconURL", "lastURI", "userTypedValue",
+        "blockMedia", "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll"
       ]</field>
 
@@ -2562,9 +2561,6 @@
               var skipPermitUnload = aParams.skipPermitUnload;
             }
 
-            // Ensure aTab's browser is inserted into the document.
-            this._insertBrowser(aTab);
-
             window.maybeRecordAbandonmentTelemetry(aTab, "tabClosed");
 
             // Handle requests for synchronously removing an already
@@ -2639,7 +2635,8 @@
               // processes the event queue and may lead to another removeTab()
               // call before permitUnload() returns.
               aTab._pendingPermitUnload = true;
-              let {permitUnload, timedOut} = browser.permitUnload();
+              let {permitUnload, timedOut} = aTab.linkedPanel ?
+                  browser.permitUnload() : {permitUnload: true, timedOut: false};
               delete aTab._pendingPermitUnload;
               // If we were closed during onbeforeunload, we return false now
               // so we don't (try to) close the same tab again. Of course, we
@@ -2700,21 +2697,23 @@
             var evt = new CustomEvent("TabClose", { bubbles: true, detail: { adoptedBy: aAdoptedByTab } });
             aTab.dispatchEvent(evt);
 
-            if (!aAdoptedByTab && !gMultiProcessBrowser) {
-              // Prevent this tab from showing further dialogs, since we're closing it
-              var windowUtils = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                                getInterface(Ci.nsIDOMWindowUtils);
-              windowUtils.disableDialogs();
+            if (aTab.linkedPanel) {
+              if (!aAdoptedByTab && !gMultiProcessBrowser) {
+                // Prevent this tab from showing further dialogs, since we're closing it
+                var windowUtils = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                  getInterface(Ci.nsIDOMWindowUtils);
+                windowUtils.disableDialogs();
+              }
+
+              // Remove the tab's filter and progress listener.
+              const filter = this._tabFilters.get(aTab);
+
+              browser.webProgress.removeProgressListener(filter);
+
+              const listener = this._tabListeners.get(aTab);
+              filter.removeProgressListener(listener);
+              listener.destroy();
             }
-
-            // Remove the tab's filter and progress listener.
-            const filter = this._tabFilters.get(aTab);
-
-            browser.webProgress.removeProgressListener(filter);
-
-            const listener = this._tabListeners.get(aTab);
-            filter.removeProgressListener(listener);
-            listener.destroy();
 
             if (browser.registeredOpenURI && !aAdoptedByTab) {
               this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI,
@@ -2779,17 +2778,20 @@
             this._tabListeners.delete(aTab);
 
             var browser = this.getBrowserForTab(aTab);
-            this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
 
-            // Because of the way XBL works (fields just set JS
-            // properties on the element) and the code we have in place
-            // to preserve the JS objects for any elements that have
-            // JS properties set on them, the browser element won't be
-            // destroyed until the document goes away.  So we force a
-            // cleanup ourselves.
-            // This has to happen before we remove the child so that the
-            // XBL implementation of nsIObserver still works.
-            browser.destroy();
+            if (aTab.linkedPanel) {
+              this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
+
+              // Because of the way XBL works (fields just set JS
+              // properties on the element) and the code we have in place
+              // to preserve the JS objects for any elements that have
+              // JS properties set on them, the browser element won't be
+              // destroyed until the document goes away.  So we force a
+              // cleanup ourselves.
+              // This has to happen before we remove the child so that the
+              // XBL implementation of nsIObserver still works.
+              browser.destroy();
+            }
 
             var wasPinned = aTab.pinned;
 
@@ -2843,12 +2845,7 @@
             this._tabForBrowser.delete(aTab.linkedBrowser);
             aTab.linkedBrowser = null;
 
-            // As the browser is removed, the removal of a dependent document can
-            // cause the whole window to close. So at this point, it's possible
-            // that the binding is destructed.
-            if (this.mTabBox) {
-              this.mPanelContainer.removeChild(panel);
-            }
+            panel.remove();
 
             if (aCloseWindow)
               this._windowIsClosing = closeWindow(true, window.warnAboutClosingWindow);
