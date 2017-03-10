@@ -12,7 +12,9 @@
 #include "nsIScriptableDateFormat.h"
 #include "nsStringGlue.h"
 #include "prtime.h"
+#ifdef ENABLE_INTL_API
 #include "unicode/udat.h"
+#endif
 
 namespace mozilla {
 
@@ -46,12 +48,14 @@ private:
   FRIEND_TEST(DateTimeFormat, FormatPRExplodedTime);
   FRIEND_TEST(DateTimeFormat, DateFormatSelectors);
 
+#ifdef ENABLE_INTL_API
   // performs a locale sensitive date formatting operation on the UDate parameter
   static nsresult FormatUDateTime(const nsDateFormatSelector aDateFormatSelector,
                                   const nsTimeFormatSelector aTimeFormatSelector,
                                   const UDate aUDateTime,
                                   const PRTimeParameters* aTimeParameters,
                                   nsAString& aStringOut);
+#endif
 
   static nsCString* mLocale;
 };

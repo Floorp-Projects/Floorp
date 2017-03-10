@@ -95,13 +95,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   init.mOrigin = mOrigin;
   init.mData = value;
 
-  ErrorResult rv;
   RefPtr<MessageEvent> event =
-    MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return IPC_OK();
-  }
+    MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init);
 
   event->SetTrusted(true);
 

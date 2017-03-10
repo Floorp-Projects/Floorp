@@ -103,6 +103,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
+    "GL_ARB_robust_buffer_access_behavior",
     "GL_ARB_robustness",
     "GL_ARB_sampler_objects",
     "GL_ARB_seamless_cube_map",
@@ -157,6 +158,8 @@ static const char* const sExtensionNames[] = {
     "GL_IMG_texture_compression_pvrtc",
     "GL_IMG_texture_npot",
     "GL_KHR_debug",
+    "GL_KHR_robust_buffer_access_behavior",
+    "GL_KHR_robustness",
     "GL_KHR_texture_compression_astc_hdr",
     "GL_KHR_texture_compression_astc_ldr",
     "GL_NV_draw_instanced",
@@ -1006,6 +1009,11 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     ////////////////
 
+    const auto err = mSymbols.fGetError();
+    MOZ_RELEASE_ASSERT(!err);
+    if (err)
+        return false;
+
     LoadMoreSymbols(prefix, trygl);
 
     ////////////////////////////////////////////////////////////////////////////
@@ -1143,30 +1151,33 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
     };
 
     if (IsSupported(GLFeature::robustness)) {
-        bool hasRobustness = false;
-
-        if (!hasRobustness && IsExtensionSupported(ARB_robustness)) {
-            const SymLoadStruct symbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
-                END_SYMBOLS
-            };
-            if (fnLoadForExt(symbols, ARB_robustness)) {
-                hasRobustness = true;
+        const auto resetStrategy = GetIntAs<GLuint>(LOCAL_GL_RESET_NOTIFICATION_STRATEGY);
+        if (resetStrategy != LOCAL_GL_LOSE_CONTEXT_ON_RESET) {
+            NS_WARNING("Robustness supported, strategy is not LOSE_CONTEXT_ON_RESET!");
+            if (ShouldSpew()) {
+                const bool isDisabled = (resetStrategy == LOCAL_GL_NO_RESET_NOTIFICATION);
+                printf_stderr("Strategy: %s (0x%04x)",
+                              (isDisabled ? "disabled" : "unrecognized"),
+                              resetStrategy);
             }
-        }
-
-        if (!hasRobustness && IsExtensionSupported(EXT_robustness)) {
-            const SymLoadStruct symbols[] = {
-                { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusEXT", nullptr } },
-                END_SYMBOLS
-            };
-            if (fnLoadForExt(symbols, EXT_robustness)) {
-                hasRobustness = true;
-            }
-        }
-
-        if (!hasRobustness) {
             MarkUnsupported(GLFeature::robustness);
+        }
+    }
+    if (IsSupported(GLFeature::robustness)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatus",
+                                                                "GetGraphicsResetStatusARB",
+                                                                "GetGraphicsResetStatusKHR",
+                                                                "GetGraphicsResetStatusEXT",
+                                                                nullptr } },
+            END_SYMBOLS
+        };
+        if (fnLoadForFeature(symbols, GLFeature::robustness)) {
+            const auto status = mSymbols.fGetGraphicsResetStatus();
+            MOZ_ALWAYS_TRUE(!status);
+
+            const auto err = mSymbols.fGetError();
+            MOZ_ALWAYS_TRUE(!err);
         }
     }
 
