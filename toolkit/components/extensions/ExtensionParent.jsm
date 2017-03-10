@@ -861,11 +861,28 @@ function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtens
   };
 }
 
+// Used to cache the list of WebExtensionManifest properties defined in the BASE_SCHEMA.
+let gBaseManifestProperties = null;
+
 const ExtensionParent = {
   GlobalManager,
   HiddenExtensionPage,
   ParentAPIManager,
   apiManager,
+  get baseManifestProperties() {
+    if (gBaseManifestProperties) {
+      return gBaseManifestProperties;
+    }
+
+    let types = Schemas.schemaJSON.get(BASE_SCHEMA)[0].types;
+    let manifest = types.find(type => type.id === "WebExtensionManifest");
+    if (!manifest) {
+      throw new Error("Unable to find base manifest properties");
+    }
+
+    gBaseManifestProperties = Object.getOwnPropertyNames(manifest.properties);
+    return gBaseManifestProperties;
+  },
   promiseExtensionViewLoaded,
   watchExtensionProxyContextLoad,
 };
