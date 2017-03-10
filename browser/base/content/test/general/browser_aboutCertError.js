@@ -35,14 +35,14 @@ add_task(function* checkReturnToAboutHome() {
   is(entries.length, 1, "there is one shistory entry");
 
   info("Clicking the go back button on about:certerror");
-  let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
   yield ContentTask.spawn(browser, null, function* () {
     let doc = content.document;
     let returnButton = doc.getElementById("returnButton");
     is(returnButton.getAttribute("autofocus"), "true", "returnButton has autofocus");
     returnButton.click();
+
+    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
-  yield pageshowPromise;
 
   is(browser.webNavigation.canGoBack, true, "webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, false, "!webNavigation.canGoForward");
@@ -71,13 +71,13 @@ add_task(function* checkReturnToPreviousPage() {
   is(entries.length, 2, "there are two shistory entries");
 
   info("Clicking the go back button on about:certerror");
-  let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
   yield ContentTask.spawn(browser, null, function* () {
     let doc = content.document;
     let returnButton = doc.getElementById("returnButton");
     returnButton.click();
+
+    yield ContentTaskUtils.waitForEvent(this, "pageshow", true);
   });
-  yield pageshowPromise;
 
   is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");

@@ -6,12 +6,7 @@
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function whenBrowserLoaded(browser, callback) {
-  browser.addEventListener("load", function onLoad(event) {
-    if (event.target == browser.contentDocument) {
-      browser.removeEventListener("load", onLoad, true);
-      executeSoon(callback);
-    }
-  }, true);
+  return BrowserTestUtils.browserLoaded(browser).then(callback);
 }
 
 function waitForOnBeforeUnloadDialog(browser, callback) {
