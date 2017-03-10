@@ -8,6 +8,7 @@
 
 #include "ChildIterator.h"
 #include "gfxFontFamilyList.h"
+#include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
@@ -429,6 +430,28 @@ Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed aA,
                             RawGeckoStyleAnimationListBorrowed aB)
 {
   return *aA == *aB;
+}
+
+void
+Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTagOrNull,
+                       ServoComputedValuesBorrowed aComputedValues,
+                       ServoComputedValuesBorrowedOrNull aParentComputedValues)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(aComputedValues);
+
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
+  if (!presContext) {
+    return;
+  }
+
+  if (presContext->IsDynamic() && aElement->IsInComposedDoc()) {
+    presContext->AnimationManager()->
+      UpdateAnimations(const_cast<dom::Element*>(aElement), aPseudoTagOrNull,
+                       aComputedValues, aParentComputedValues);
+  }
 }
 
 void
