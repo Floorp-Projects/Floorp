@@ -514,8 +514,6 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
     }
 
     NameLocation lookup(BytecodeEmitter* bce, JSAtom* name) {
-        AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx),
-                              TraceLogger_FrontendNameAnalysis);
         if (Maybe<NameLocation> loc = lookupInCache(bce, name))
             return *loc;
         return searchAndCache(bce, name);
@@ -802,8 +800,6 @@ Maybe<NameLocation>
 BytecodeEmitter::EmitterScope::locationBoundInScope(BytecodeEmitter* bce, JSAtom* name,
                                                     EmitterScope* target)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     // The target scope must be an intra-frame enclosing scope of this
     // one. Count the number of extra hops to reach it.
     uint8_t extraHops = 0;
@@ -861,8 +857,6 @@ bool
 BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
                                             Handle<LexicalScope::Data*> bindings)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(kind != ScopeKind::NamedLambda && kind != ScopeKind::StrictNamedLambda);
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
@@ -933,8 +927,6 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
 bool
 BytecodeEmitter::EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
     MOZ_ASSERT(funbox->namedLambdaBindings());
 
@@ -1002,8 +994,6 @@ BytecodeEmitter::EmitterScope::enterComprehensionFor(BytecodeEmitter* bce,
 bool
 BytecodeEmitter::EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     if (!ensureCache(bce))
@@ -1125,8 +1115,6 @@ BytecodeEmitter::EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* 
 bool
 BytecodeEmitter::EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, FunctionBox* funbox)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(funbox->hasParameterExprs);
     MOZ_ASSERT(funbox->extraVarScopeBindings() ||
                funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings());
@@ -1216,8 +1204,6 @@ class DynamicBindingIter : public BindingIter
 bool
 BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedContext* globalsc)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1278,8 +1264,6 @@ BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1335,8 +1319,6 @@ BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext
 bool
 BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     bce->setVarEmitterScope(this);
@@ -1394,8 +1376,6 @@ BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterWith(BytecodeEmitter* bce)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     MOZ_ASSERT(this == bce->innermostEmitterScope);
 
     if (!ensureCache(bce))
@@ -1422,8 +1402,6 @@ BytecodeEmitter::EmitterScope::enterWith(BytecodeEmitter* bce)
 bool
 BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendNameAnalysis);
-
     // If we aren't leaving the scope due to a non-local jump (e.g., break),
     // we must be the innermost scope.
     MOZ_ASSERT_IF(!nonLocal, this == bce->innermostEmitterScope);
@@ -1481,8 +1459,6 @@ BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
 Maybe<MaybeCheckTDZ>
 BytecodeEmitter::TDZCheckCache::needsTDZCheck(BytecodeEmitter* bce, JSAtom* name)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendTDZAnalysis);
-
     if (!ensureCache(bce))
         return Nothing();
 
@@ -1512,8 +1488,6 @@ bool
 BytecodeEmitter::TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce, JSAtom* name,
                                              MaybeCheckTDZ check)
 {
-    AutoTraceLog traceLog(TraceLoggerForCurrentThread(bce->cx), TraceLogger_FrontendTDZAnalysis);
-
     if (!ensureCache(bce))
         return false;
 
@@ -2097,9 +2071,7 @@ class ForOfLoopControl : public LoopControl
         // leaving try-catch block.  However, the performing IteratorClose can
         // reach the depth for try-catch, and effectively re-enter the
         // try-catch block.
-        if (!bce->emit1(JSOP_POP))                        // ITER RESULT
-            return false;
-        if (!bce->emit1(JSOP_POP))                        // ITER
+        if (!bce->emitPopN(2))                            // ITER
             return false;
 
         // Clear ITER slot on the stack to tell catch block to avoid performing
@@ -2482,6 +2454,21 @@ BytecodeEmitter::emitDupAt(unsigned slotFromTop)
 }
 
 bool
+BytecodeEmitter::emitPopN(unsigned n)
+{
+    MOZ_ASSERT(n != 0);
+
+    if (n == 1)
+        return emit1(JSOP_POP);
+
+    // 2 JSOP_POPs (2 bytes) are shorter than JSOP_POPN (3 bytes).
+    if (n == 2)
+        return emit1(JSOP_POP) && emit1(JSOP_POP);
+
+    return emitUint16Operand(JSOP_POPN, n);
+}
+
+bool
 BytecodeEmitter::emitCheckIsObj(CheckIsObjectKind kind)
 {
     return emit2(JSOP_CHECKISOBJ, uint8_t(kind));
@@ -2641,8 +2628,7 @@ BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand)
 bool
 BytecodeEmitter::flushPops(int* npops)
 {
-    MOZ_ASSERT(*npops != 0);
-    if (!emitUint16Operand(JSOP_POPN, *npops))
+    if (!emitPopN(*npops))
         return false;
 
     *npops = 0;
@@ -5356,9 +5342,7 @@ BytecodeEmitter::emitIteratorClose(CompletionKind completionKind /* = Completion
         // Restore stack.
         if (!emit2(JSOP_UNPICK, 2))                       // ... RESULT RET ITER
             return false;
-        if (!emit1(JSOP_POP))                             // ... RESULT RET
-            return false;
-        if (!emit1(JSOP_POP))                             // ... RESULT
+        if (!emitPopN(2))                                 // ... RESULT
             return false;
     } else {
         if (!emitCheckIsObj(CheckIsObjectKind::IteratorReturn)) // ... RESULT
@@ -6847,7 +6831,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     if (!emit2(JSOP_PICK, 3))                             // ARR FINAL_INDEX RESULT ITER
         return false;
 
-    return emitUint16Operand(JSOP_POPN, 2);               // ARR FINAL_INDEX
+    return emitPopN(2);                                   // ARR FINAL_INDEX
 }
 
 bool
@@ -7070,7 +7054,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, breakTarget.offset))
         return false;
 
-    return emitUint16Operand(JSOP_POPN, 3);               //
+    return emitPopN(3);                                   //
 }
 
 bool
@@ -7593,7 +7577,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
     }
 
     // Pop the result and the iter.
-    return emitUint16Operand(JSOP_POPN, 3);               //
+    return emitPopN(3);                                   //
 }
 
 bool
@@ -8567,7 +8551,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
         return false;
     if (!emit2(JSOP_UNPICK, 3))                           // ITER RESULT OLDRESULT FTYPE FVALUE
         return false;
-    if (!emitUint16Operand(JSOP_POPN, 3))                 // ITER RESULT
+    if (!emitPopN(3))                                     // ITER RESULT
         return false;
     {
         // goto tryStart;
@@ -8582,9 +8566,7 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter)
 
     if (!ifReturnMethodIsDefined.emitElse())              // ITER RESULT FTYPE FVALUE ITER RET
         return false;
-    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE ITER
-        return false;
-    if (!emit1(JSOP_POP))                                 // ITER RESULT FTYPE FVALUE
+    if (!emitPopN(2))                                     // ITER RESULT FTYPE FVALUE
         return false;
     if (!ifReturnMethodIsDefined.emitEnd())
         return false;

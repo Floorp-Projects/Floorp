@@ -284,13 +284,27 @@ for k, v in variant.get('env', {}).items():
         OUTDIR=OUTDIR,
     )
 
+def need_updating_configure(configure):
+    if not os.path.exists(configure):
+        return True
+
+    dep_files = [
+        os.path.join(DIR.js_src, 'configure.in'),
+        os.path.join(DIR.js_src, 'old-configure.in'),
+    ]
+    for file in dep_files:
+        if os.path.getmtime(file) > os.path.getmtime(configure):
+            return True
+
+    return False
+
 if not args.nobuild:
     CONFIGURE_ARGS += ' --enable-nspr-build'
     CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
 
     # Generate a configure script from configure.in.
     configure = os.path.join(DIR.js_src, 'configure')
-    if not os.path.exists(configure):
+    if need_updating_configure(configure):
         shutil.copyfile(configure + ".in", configure)
         os.chmod(configure, 0755)
 
