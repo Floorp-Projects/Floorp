@@ -127,9 +127,9 @@ function StorageUI(front, target, panelWin, toolbox) {
   this.view = new VariablesView(this.sidebar.firstChild,
                                 GENERIC_VARIABLES_VIEW_SETTINGS);
 
-  this.searchBox = this._panelDoc.getElementById("storage-searchbox");
   this.filterItems = this.filterItems.bind(this);
-  this.searchBox.addEventListener("command", this.filterItems);
+  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
+  this.setupToolbar();
 
   let shortcuts = new KeyShortcuts({
     window: this._panelDoc.defaultView,
@@ -191,6 +191,7 @@ exports.StorageUI = StorageUI;
 StorageUI.prototype = {
 
   storageTypes: null,
+  sidebarToggledOpen: null,
   shouldLoadMoreItems: true,
 
   set animationsEnabled(value) {
@@ -209,6 +210,9 @@ StorageUI.prototype = {
     this.searchBox.removeEventListener("input", this.filterItems);
     this.searchBox = null;
 
+    this.sidebarToggleBtn.removeEventListener("click", this.onPaneToggleButtonClicked);
+    this.sidebarToggleBtn = null;
+
     this._treePopup.removeEventListener("popupshowing", this.onTreePopupShowing);
     this._treePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
     this._treePopupDelete.removeEventListener("command", this.onRemoveTreeItem);
@@ -219,13 +223,49 @@ StorageUI.prototype = {
     this._tablePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
   },
 
+  setupToolbar: function () {
+    this.searchBox = this._panelDoc.getElementById("storage-searchbox");
+    this.searchBox.addEventListener("command", this.filterItems);
+
+    // Setup the sidebar toggle button.
+    this.sidebarToggleBtn = this._panelDoc.querySelector(".sidebar-toggle");
+    this.updateSidebarToggleButton();
+
+    this.sidebarToggleBtn.addEventListener("click", this.onPaneToggleButtonClicked);
+  },
+
+  onPaneToggleButtonClicked: function () {
+    if (this.sidebar.hidden && this.table.selectedRow) {
+      this.sidebar.hidden = false;
+      this.sidebarToggledOpen = true;
+      this.updateSidebarToggleButton();
+    } else {
+      this.sidebarToggledOpen = false;
+      this.hideSidebar();
+    }
+  },
+
+  updateSidebarToggleButton: function () {
+    let title;
+    this.sidebarToggleBtn.hidden = !this.table.hasSelectedRow;
+
+    if (this.sidebar.hidden) {
+      this.sidebarToggleBtn.classList.add("pane-collapsed");
+      title = L10N.getStr("storage.expandPane");
+    } else {
+      this.sidebarToggleBtn.classList.remove("pane-collapsed");
+      title = L10N.getStr("storage.collapsePane");
+    }
+
+    this.sidebarToggleBtn.setAttribute("tooltiptext", title);
+  },
+
   /**
-   * Empties and hides the object viewer sidebar
+   * Hide the object viewer sidebar
    */
   hideSidebar: function () {
-    this.view.empty();
     this.sidebar.hidden = true;
-    this.table.clearSelection();
+    this.updateSidebarToggleButton();
   },
 
   getCurrentActor: function () {
@@ -490,6 +530,8 @@ StorageUI.prototype = {
                                                     : {};
     let storageType = this.storageTypes[type];
 
+    this.sidebarToggledOpen = null;
+
     if (reason !== REASON.NEXT_50_ITEMS &&
         reason !== REASON.UPDATE &&
         reason !== REASON.NEW_ROW &&
@@ -581,6 +623,7 @@ StorageUI.prototype = {
     if (!item) {
       // Make sure that sidebar is hidden and return
       this.sidebar.hidden = true;
+      this.updateSidebarToggleButton();
       return;
     }
 
@@ -591,7 +634,11 @@ StorageUI.prototype = {
     }
 
     // Start updating the UI. Everything is sync beyond this point.
-    this.sidebar.hidden = false;
+    if (this.sidebarToggledOpen === null || this.sidebarToggledOpen === true) {
+      this.sidebar.hidden = false;
+    }
+
+    this.updateSidebarToggleButton();
     this.view.empty();
     let mainScope = this.view.addScope(L10N.getStr("storage.data.label"));
     mainScope.expanded = true;
@@ -898,6 +945,7 @@ StorageUI.prototype = {
     if (event.keyCode == KeyCodes.DOM_VK_ESCAPE && !this.sidebar.hidden) {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
+      this.sidebarToggledOpen = false;
       event.stopPropagation();
       event.preventDefault();
     }
