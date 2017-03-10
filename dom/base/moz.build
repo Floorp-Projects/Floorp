@@ -186,7 +186,6 @@ EXPORTS.mozilla.dom += [
     'ImageEncoder.h',
     'ImageTracker.h',
     'ImportManager.h',
-    'IntlUtils.h',
     'Link.h',
     'Location.h',
     'NameSpaceConstants.h',
@@ -260,7 +259,6 @@ UNIFIED_SOURCES += [
     'ImageEncoder.cpp',
     'ImageTracker.cpp',
     'ImportManager.cpp',
-    'IntlUtils.cpp',
     'Link.cpp',
     'Location.cpp',
     'Navigator.cpp',
@@ -373,6 +371,14 @@ if CONFIG['MOZ_WEBRTC']:
 if CONFIG['FUZZING']:
     UNIFIED_SOURCES += [
         'FuzzingFunctions.cpp',
+    ]
+
+if CONFIG['ENABLE_INTL_API']:
+    UNIFIED_SOURCES += [
+        'IntlUtils.cpp',
+    ]
+    EXPORTS.mozilla.dom += [
+        'IntlUtils.h',
     ]
 
 # these files couldn't be in UNIFIED_SOURCES for now for reasons given below:
