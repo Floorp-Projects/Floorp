@@ -450,6 +450,16 @@ ARCHIVE_FILES = {
 }
 
 
+if buildconfig.substs.get('MOZ_ASAN') and buildconfig.substs.get('CLANG_CL'):
+    asan_dll = {
+        'source': buildconfig.topobjdir,
+        'base': 'dist/bin',
+        'pattern': os.path.basename(buildconfig.substs['MOZ_CLANG_RT_ASAN_LIB_PATH']),
+        'dest': 'bin'
+    }
+    ARCHIVE_FILES['common'].append(asan_dll)
+
+
 # "common" is our catch all archive and it ignores things from other archives.
 # Verify nothing sneaks into ARCHIVE_FILES without a corresponding exclusion
 # rule in the "common" archive.
