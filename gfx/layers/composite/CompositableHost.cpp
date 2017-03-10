@@ -32,7 +32,6 @@ class Compositor;
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)
   , mCompositorID(0)
-  , mCompositor(nullptr)
   , mLayer(nullptr)
   , mFlashCounter(0)
   , mAttached(false)
@@ -49,9 +48,9 @@ CompositableHost::~CompositableHost()
 void
 CompositableHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 {
-  if (GetCompositor()) {
+  if (mTextureSourceProvider) {
     for (auto& texture : aTextures) {
-      texture.mTexture->SetTextureSourceProvider(GetCompositor());
+      texture.mTexture->SetTextureSourceProvider(mTextureSourceProvider);
     }
   }
 }
@@ -61,9 +60,9 @@ CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                             TextureHost* aTextureOnWhite)
 {
   MOZ_ASSERT(aTextureOnBlack && aTextureOnWhite);
-  if (GetCompositor()) {
-    aTextureOnBlack->SetTextureSourceProvider(GetCompositor());
-    aTextureOnWhite->SetTextureSourceProvider(GetCompositor());
+  if (mTextureSourceProvider) {
+    aTextureOnBlack->SetTextureSourceProvider(mTextureSourceProvider);
+    aTextureOnWhite->SetTextureSourceProvider(mTextureSourceProvider);
   }
 }
 
@@ -72,10 +71,10 @@ CompositableHost::RemoveTextureHost(TextureHost* aTexture)
 {}
 
 void
-CompositableHost::SetCompositor(Compositor* aCompositor)
+CompositableHost::SetTextureSourceProvider(TextureSourceProvider* aProvider)
 {
-  MOZ_ASSERT(aCompositor);
-  mCompositor = aCompositor;
+  MOZ_ASSERT(aProvider);
+  mTextureSourceProvider = aProvider;
 }
 
 bool
@@ -173,6 +172,12 @@ CompositableHost::GetLayerManager() const
     return nullptr;
   }
   return mLayer->Manager()->AsHostLayerManager();
+}
+
+TextureSourceProvider*
+CompositableHost::GetTextureSourceProvider() const
+{
+  return mTextureSourceProvider;
 }
 
 } // namespace layers
