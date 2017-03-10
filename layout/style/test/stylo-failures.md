@@ -37,11 +37,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
-  * test_animations.html [277]
-  * test_animations_async_tests.html [2]
+  * test_animations.html [70]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
-  * test_flexbox_flex_grow_and_shrink.html [8]
   * OMTA
     * test_animations_effect_timing_duration.html [1]
     * test_animations_effect_timing_enddelay.html [1]
@@ -51,9 +49,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_animations_omta_start.html [1]
     * test_animations_pausing.html [1]
     * test_animations_playbackrate.html [1]
-  * Events:
-    * test_animations_event_handler_attribute.html [10]
-    * test_animations_event_order.html [12]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * CSS Timing Functions: Frames timing functions
@@ -104,6 +99,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_transitions_dynamic_changes.html [10]
   * test_transitions_step_functions.html [24]
   * test_value_storage.html `transition` [776]
+  * Events:
+    * test_animations_event_handler_attribute.html [10]
+    * test_animations_event_order.html [11]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * url value in style attribute bug 1310886
@@ -492,6 +490,8 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_cloning.html asserts [12]
     * test_value_computation.html asserts [24]
     * test_value_storage.html asserts [44]
+  * assertion for unsupported or non-animatable property bug 1343710
+    * test_animations.html asserts [24]
 * test_value_cloning.html asserts: negative radius bug 1337618 [4]
 
 ## Need Gecko change
