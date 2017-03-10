@@ -290,7 +290,6 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
-
     switch (cmd.type()) {
       case WebRenderParentCommand::TOpAddExternalImage: {
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
@@ -332,7 +331,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
         }
 
         IntSize size = dSurf->GetSize();
-        wr::ImageDescriptor descriptor(size, map.mStride, SurfaceFormat::B8G8R8A8);
+        wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
         mApi->AddImage(key, descriptor, slice);
 

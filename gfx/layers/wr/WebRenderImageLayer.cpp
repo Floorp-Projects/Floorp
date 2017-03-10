@@ -170,5 +170,64 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
   //mContainer->SetImageFactory(originalIF);
 }
 
+Maybe<WrImageMask>
+WebRenderImageLayer::RenderMaskLayer()
+{
+  if (!mContainer) {
+     return Nothing();
+  }
+
+  CompositableType type = GetImageClientType();
+  if (type == CompositableType::UNKNOWN) {
+    return Nothing();
+  }
+
+  MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
+
+  if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
+    mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
+                                                  WrBridge(),
+                                                  TextureFlags::DEFAULT);
+    if (!mImageClient) {
+      return Nothing();
+    }
+    mImageClient->Connect();
+  }
+
+  if (!mExternalImageId) {
+    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+      MOZ_ASSERT(!mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
+    } else {
+      // Handle CompositableType::IMAGE case
+      MOZ_ASSERT(mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    }
+  }
+  MOZ_ASSERT(mExternalImageId);
+
+  // XXX Not good for async ImageContainer case.
+  AutoLockImage autoLock(mContainer);
+  Image* image = autoLock.GetImage();
+  if (!image) {
+    return Nothing();
+  }
+  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
+    return Nothing();
+  }
+
+  WrImageKey key;
+  key.mNamespace = WrBridge()->GetNamespace();
+  key.mHandle = WrBridge()->GetNextResourceId();
+  WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
+
+  gfx::IntSize size = image->GetSize();
+  WrImageMask imageMask;
+  imageMask.image = key;
+  imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
+  imageMask.repeat = false;
+  return Some(imageMask);
+}
+
 } // namespace layers
 } // namespace mozilla
