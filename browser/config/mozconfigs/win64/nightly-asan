@@ -1,0 +1,17 @@
+MOZ_AUTOMATION_L10N_CHECK=0
+
+. "$topsrcdir/build/mozconfig.win-common"
+. "$topsrcdir/browser/config/mozconfigs/common"
+
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
+
+. "$topsrcdir/build/win64/mozconfig.vs-latest"
+
+. "$topsrcdir/build/win64/mozconfig.asan"
+
+export MOZ_PACKAGE_JSSHELL=1
+export MOZ_PKG_SPECIAL=asan
+
+. "$topsrcdir/build/mozconfig.common.override"
+. "$topsrcdir/build/mozconfig.cache"
