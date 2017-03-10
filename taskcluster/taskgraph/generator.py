@@ -11,7 +11,7 @@ import copy
 from . import filter_tasks
 from .graph import Graph
 from .taskgraph import TaskGraph
-from .task.base import Task
+from .task import Task
 from .optimize import optimize_task_graph
 from .util.python_path import find_object
 from .transforms.base import TransformSequence, TransformConfig

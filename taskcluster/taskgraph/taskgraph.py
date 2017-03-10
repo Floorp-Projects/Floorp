@@ -5,7 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from .graph import Graph
-from .task.base import Task
+from .task import Task
 
 
 class TaskGraph(object):

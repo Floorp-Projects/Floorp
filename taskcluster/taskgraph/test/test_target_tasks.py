@@ -10,7 +10,7 @@ from .. import target_tasks
 from .. import try_option_syntax
 from ..graph import Graph
 from ..taskgraph import TaskGraph
-from ..task.base import Task
+from ..task import Task
 from mozunit import main
 
 

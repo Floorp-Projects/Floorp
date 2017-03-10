@@ -10,7 +10,7 @@ from ..optimize import optimize_task_graph, resolve_task_references, optimizatio
 from ..optimize import annotate_task_graph, get_subgraph
 from ..taskgraph import TaskGraph
 from .. import graph
-from ..task.base import Task
+from ..task import Task
 
 
 class TestResolveTaskReferences(unittest.TestCase):
