@@ -54,6 +54,7 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += [
       '-Wno-exit-time-destructors',
       '-Wno-global-constructors',
+      '-Wno-thread-safety',
       '-Wno-used-but-marked-unused',
     ]
 elif CONFIG['_MSC_VER']:
