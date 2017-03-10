@@ -134,6 +134,7 @@ TEST_PKGS := \
   mochitest \
   reftest \
   talos \
+  awsy \
   web-platform \
   xpcshell \
   $(NULL)
