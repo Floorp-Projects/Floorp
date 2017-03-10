@@ -625,8 +625,8 @@ js::jit::ReleaseProcessExecutableMemory()
 bool
 js::jit::CanLikelyAllocateMoreExecutableMemory()
 {
-    // Use a 16 MB buffer.
-    static const size_t BufferSize = 16 * 1024 * 1024;
+    // Use a 8 MB buffer.
+    static const size_t BufferSize = 8 * 1024 * 1024;
 
     MOZ_ASSERT(execMemory.bytesAllocated() <= MaxCodeBytesPerProcess);
 
