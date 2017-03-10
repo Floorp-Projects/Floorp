@@ -322,15 +322,11 @@ class MachFormatter(base.BaseFormatter):
     def process_output(self, data):
         rv = []
 
-        pid = data['process']
-        if pid.isdigit():
-            pid = 'pid:%s' % pid
-
         if "command" in data and data["process"] not in self._known_pids:
             self._known_pids.add(data["process"])
-            rv.append('(%s) Full command: %s' % (pid, data["command"]))
+            rv.append('(pid:%s) Full command: %s' % (data["process"], data["command"]))
 
-        rv.append('(%s) "%s"' % (pid, data["data"]))
+        rv.append('(pid:%s) "%s"' % (data["process"], data["data"]))
         return "\n".join(rv)
 
     def crash(self, data):
