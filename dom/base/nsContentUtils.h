@@ -2109,23 +2109,6 @@ public:
   static bool IsFrameTimingEnabled();
 
   /*
-   * Returns true if URL setters should percent encode the Hash/Ref segment
-   * and getters should return the percent decoded value of the segment
-   */
-  static bool EncodeDecodeURLHash()
-  {
-    return sEncodeDecodeURLHash;
-  }
-
-  /*
-   * Returns true if URL getters should percent decode the value of the segment
-   */
-  static bool GettersDecodeURLHash()
-  {
-    return sGettersDecodeURLHash && sEncodeDecodeURLHash;
-  }
-
-  /*
    * Returns true if the browser should attempt to prevent the given caller type
    * from collecting distinctive information about the browser that could
    * be used to "fingerprint" and track the user across websites.
@@ -2916,8 +2899,6 @@ private:
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
   static bool sIsWebComponentsEnabled;
-  static bool sEncodeDecodeURLHash;
-  static bool sGettersDecodeURLHash;
   static bool sPrivacyResistFingerprinting;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;

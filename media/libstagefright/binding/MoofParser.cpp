@@ -10,6 +10,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
+#include "mozilla/SizePrintfMacros.h"
 
 #if defined(MOZ_FMP4)
 extern mozilla::LogModule* GetDemuxerLog();
@@ -584,7 +585,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, u
     }
   }
   if (reader->Remaining() < need) {
-    LOG(Moof, "Incomplete Box (have:%lld need:%lld)",
+    LOG(Moof, "Incomplete Box (have:%" PRIuSIZE " need:%" PRIuSIZE ")",
         reader->Remaining(), need);
     return false;
   }

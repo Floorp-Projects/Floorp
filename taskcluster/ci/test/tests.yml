@@ -1,7 +1,7 @@
 # Each stanza here describes a particular test suite or sub-suite.  These are
 # processed through the transformations described in kind.yml to produce a
-# bunch of tasks.  See the schema in `test-descriptions.py` for a description
-# of the fields used here.
+# bunch of tasks.  See the schema in `taskcluster/taskgraph/transforms/tests.py`
+# for a description of the fields used here.
 
 # Note that these are in lexical order
 
@@ -383,8 +383,6 @@ mochitest:
             linux64-jsdcov/opt: mochitest/plain-chunked-coverage
             default: mochitest/plain-chunked
     treeherder-symbol: tc-M()
-    tags:
-        test-type: mochitest
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -414,6 +412,7 @@ mochitest:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: plain
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -421,6 +420,7 @@ mochitest:
                 extra-options:
                     - --test-suite=mochitest
             default:
+                mochitest-flavor: plain
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked: true
@@ -456,6 +456,7 @@ mochitest-a11y:
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: false
+        mochitest-flavor: a11y
         config:
             by-test-platform:
                 windows.*:
@@ -498,6 +499,7 @@ mochitest-browser-chrome:
             linux32/debug: 5400
             default: 3600
     mozharness:
+        mochitest-flavor: browser
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
@@ -537,6 +539,7 @@ mochitest-browser-screenshots:
     e10s: true
     max-run-time: 3600
     mozharness:
+        mochitest-flavor: browser
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
@@ -573,6 +576,7 @@ mochitest-chrome:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: chrome
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -584,6 +588,7 @@ mochitest-chrome:
                 extra-options:
                     - --test-suite=mochitest-chrome
             default:
+                mochitest-flavor: chrome
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked: true
@@ -613,6 +618,7 @@ mochitest-clipboard:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: plain
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -621,6 +627,7 @@ mochitest-clipboard:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-clipboard
             default:
+                mochitest-flavor: plain
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked: false
@@ -664,6 +671,7 @@ mochitest-devtools-chrome:
             macosx64/debug: true
             default: both
     mozharness:
+        mochitest-flavor: chrome
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
@@ -710,6 +718,7 @@ mochitest-gpu:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: plain
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -718,6 +727,7 @@ mochitest-gpu:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-gpu
             default:
+                mochitest-flavor: plain
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked: false
@@ -747,6 +757,7 @@ mochitest-jetpack:
             windows.*: ['mozilla-central', 'try']
             default: ['all']
     mozharness:
+        mochitest-flavor: jetpack-package
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: false
@@ -787,6 +798,7 @@ mochitest-media:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: plain
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -794,6 +806,7 @@ mochitest-media:
                 extra-options:
                     - --test-suite=mochitest-media
             default:
+                mochitest-flavor: plain
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked:
@@ -826,6 +839,7 @@ mochitest-valgrind:
     e10s: false
     allow-software-gl-layers: false
     mozharness:
+        mochitest-flavor: plain
         script: desktop_unittest.py
         no-read-buildbot-config: true
         chunked: true
@@ -870,6 +884,7 @@ mochitest-webgl:
     mozharness:
         by-test-platform:
             android.*:
+                mochitest-flavor: plain
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -877,6 +892,7 @@ mochitest-webgl:
                 extra-options:
                     - --test-suite=mochitest-gl
             default:
+                mochitest-flavor: plain
                 script: desktop_unittest.py
                 no-read-buildbot-config: true
                 chunked: true
@@ -904,6 +920,7 @@ mochitest-style:
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
             default: ['all']
     mozharness:
+        mochitest-flavor: plain
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:

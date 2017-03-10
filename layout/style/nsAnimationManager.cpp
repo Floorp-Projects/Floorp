@@ -1064,12 +1064,17 @@ nsAnimationManager::UpdateAnimations(
   CSSPseudoElementType pseudoType =
     nsCSSPseudoElements::GetPseudoType(aPseudoTagOrNull,
                                        CSSEnabledState::eForAllContent);
+  if (!aComputedValues) {
+    // If we are in a display:none subtree we will have no computed values.
+    // Since CSS animations should not run in display:none subtrees we should
+    // stop (actually, destroy) any animations on this element here.
+    StopAnimationsForElement(aElement, pseudoType);
+    return;
+  }
+
   NonOwningAnimationTarget target(aElement, pseudoType);
   ServoCSSAnimationBuilder builder(aComputedValues, aParentComputedValues);
 
-  // Currently we don't seem to call this UpdateAnimations for elements in
-  // display:none subtree. We will call this function for such elements with
-  // null computed values in bug 1341985.
   const nsStyleDisplay *disp = Servo_GetStyleDisplay(aComputedValues);
   DoUpdateAnimations(target, *disp, builder);
 }

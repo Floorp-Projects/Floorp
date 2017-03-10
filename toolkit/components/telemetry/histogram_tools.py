@@ -33,6 +33,7 @@ except ImportError:
 
 from collections import OrderedDict
 
+
 def table_dispatch(kind, table, body):
     """Call body with table[kind] if it exists.  Raise an error otherwise."""
     if kind in table:
@@ -40,8 +41,10 @@ def table_dispatch(kind, table, body):
     else:
         raise BaseException, "don't know how to handle a histogram of kind %s" % kind
 
+
 class DefinitionException(BaseException):
     pass
+
 
 def linear_buckets(dmin, dmax, n_buckets):
     ret_array = [0] * n_buckets
@@ -51,6 +54,7 @@ def linear_buckets(dmin, dmax, n_buckets):
         linear_range = (dmin * (n_buckets - 1 - i) + dmax * (i - 1)) / (n_buckets - 2)
         ret_array[i] = int(linear_range + 0.5)
     return ret_array
+
 
 def exponential_buckets(dmin, dmax, n_buckets):
     log_max = math.log(dmax);
@@ -87,6 +91,7 @@ try:
 except IOError:
     whitelists = None
     print 'Unable to parse whitelist (%s). Assuming all histograms are acceptable.' % whitelist_path
+
 
 class Histogram:
     """A class for representing a histogram definition."""
@@ -422,6 +427,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
                 definition['high'],
                 definition['n_buckets'])
 
+
 # We support generating histograms from multiple different input files, not
 # just Histograms.json.  For each file's basename, we have a specific
 # routine to parse that file, and return a dictionary mapping histogram
@@ -434,8 +440,10 @@ def from_Histograms_json(filename):
             raise BaseException, "error parsing histograms in %s: %s" % (filename, e.message)
     return histograms
 
+
 def from_UseCounters_conf(filename):
     return usecounters.generate_histograms(filename)
+
 
 def from_nsDeprecatedOperationList(filename):
     operation_regex = re.compile('^DEPRECATED_OPERATION\\(([^)]+)\\)')
@@ -474,6 +482,7 @@ try:
     FILENAME_PARSERS['UseCounters.conf'] = from_UseCounters_conf
 except ImportError:
     pass
+
 
 def from_files(filenames):
     """Return an iterator that provides a sequence of Histograms for

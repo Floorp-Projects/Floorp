@@ -16,10 +16,7 @@ import logging
 import os
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import (
-    validate_schema,
-    resolve_keyed_by,
-)
+from taskgraph.util.schema import validate_schema
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
     Any,
@@ -70,7 +67,7 @@ job_description_schema = Schema({
         # own schema.
         Extra: object,
     },
-    Optional('platforms'): [basestring],
+
     Required('worker-type'): Any(
         task_description_schema['worker-type'],
         {'by-platform': {basestring: task_description_schema['worker-type']}},
@@ -89,36 +86,6 @@ def validate(config, jobs):
     for job in jobs:
         yield validate_schema(job_description_schema, job,
                               "In job {!r}:".format(job['name']))
-
-
-@transforms.add
-def expand_platforms(config, jobs):
-    for job in jobs:
-        if 'platforms' not in job:
-            yield job
-            continue
-
-        for platform in job['platforms']:
-            pjob = copy.deepcopy(job)
-            pjob['platform'] = platform
-            del pjob['platforms']
-
-            platform, buildtype = platform.rsplit('/', 1)
-            pjob['name'] = '{}-{}-{}'.format(pjob['name'], platform, buildtype)
-            yield pjob
-
-
-@transforms.add
-def handle_keyed_by(config, jobs):
-    fields = [
-        'worker-type',
-        'worker',
-    ]
-
-    for job in jobs:
-        for field in fields:
-            resolve_keyed_by(job, field, item_name=job['name'])
-        yield job
 
 
 @transforms.add
@@ -146,11 +113,6 @@ def make_task_description(config, jobs):
         # chance to set up the task description.
         configure_taskdesc_for_run(config, job, taskdesc)
         del taskdesc['run']
-
-        if 'platform' in taskdesc:
-            if 'treeherder' in taskdesc:
-                taskdesc['treeherder']['platform'] = taskdesc['platform']
-            del taskdesc['platform']
 
         # yield only the task description, discarding the job description
         yield taskdesc

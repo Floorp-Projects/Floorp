@@ -100,3 +100,6 @@ syntax or reading a project-specific configuration file).
 
 ``optimize_target_tasks``
    If true, then target tasks are eligible for optimization.
+
+``include_nightly``
+   If true, then nightly tasks are eligible for optimization.

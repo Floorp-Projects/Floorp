@@ -30,6 +30,7 @@ file_footer = """\
 #endif // mozilla_TelemetryScalarEnums_h
 """
 
+
 def main(output, *filenames):
     # Load the scalars first.
     if len(filenames) > 1:

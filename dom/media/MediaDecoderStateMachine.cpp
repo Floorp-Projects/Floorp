@@ -2682,6 +2682,11 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
     mWatchManager.Watch(mIsVisible,
                         &MediaDecoderStateMachine::VisibilityChanged);
   }
+
+  MOZ_ASSERT(!mStateObj);
+  auto* s = new DecodeMetadataState(this);
+  mStateObj.reset(s);
+  s->Enter();
 }
 
 void
@@ -2817,7 +2822,7 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   // Dispatch initialization that needs to happen on that task queue.
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod<RefPtr<MediaDecoder>>(
     this, &MediaDecoderStateMachine::InitializationTask, aDecoder);
-  mTaskQueue->Dispatch(r.forget());
+  mTaskQueue->DispatchStateChange(r.forget());
 
   mAudioQueueListener = AudioQueue().PopEvent().Connect(
     mTaskQueue, this, &MediaDecoderStateMachine::OnAudioPopped);
@@ -2839,14 +2844,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<MediaDecoderStateMachine> self = this;
-  OwnerThread()->Dispatch(NS_NewRunnableFunction([self] () {
-    MOZ_ASSERT(!self->mStateObj);
-    auto s = new DecodeMetadataState(self);
-    self->mStateObj.reset(s);
-    s->Enter();
-  }));
 
   return NS_OK;
 }

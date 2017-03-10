@@ -11,6 +11,7 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://ppapi.js/opengles2-utils.jsm");
+Cu.importGlobalProperties(['URL']);
 
 const PP_OK = 0;
 const PP_OK_COMPLETIONPENDING = -1;
@@ -1538,12 +1539,29 @@ class PPAPIInstance {
     this.viewport = new PPAPIViewport(this);
     this.selectedText = "";
 
+    this.notifyHashChange(info.url);
+
     this.mm.addMessageListener("ppapi.js:fullscreenchange", (evt) => {
       this.viewport.notify({
         type: "fullscreenChange",
         fullscreen: evt.data.fullscreen
       });
     });
+
+    this.mm.addMessageListener("ppapipdf.js:hashchange", (evt) => {
+      this.notifyHashChange(evt.data.url);
+    });
+  }
+
+  notifyHashChange(url) {
+    let location = new URL(url);
+    if (location.hash) {
+      this.viewport.notify({
+        type: "hashChange",
+        // substring(1) for getting rid of the first '#' character
+        hash: location.hash.substring(1)
+      });
+    }
   }
 
   bindGraphics(graphicsDevice) {
@@ -1672,6 +1690,9 @@ class PPAPIInstance {
         break;
       case 'save':
         this.mm.sendAsyncMessage("ppapipdf.js:save");
+        break;
+      case 'setHash':
+        this.mm.sendAsyncMessage("ppapipdf.js:setHash", message.hash);
         break;
       case 'viewport':
       case 'rotateClockwise':

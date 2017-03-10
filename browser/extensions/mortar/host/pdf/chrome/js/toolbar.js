@@ -210,6 +210,10 @@ class Toolbar {
       case 'secondaryToolbarToggle':
         this._secondaryToolbar.toggle();
         break;
+      case 'viewBookmark':
+      case 'secondaryViewBookmark':
+        this._viewport.createBookmarkHash();
+        break;
     }
   }
 

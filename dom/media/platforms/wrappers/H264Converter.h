@@ -12,6 +12,8 @@
 
 namespace mozilla {
 
+class DecoderDoctorDiagnostics;
+
 // H264Converter is a MediaDataDecoder wrapper used to ensure that
 // only AVCC or AnnexB is fed to the underlying MediaDataDecoder.
 // The H264Converter allows playback of content where the SPS NAL may not be
@@ -76,12 +78,7 @@ private:
   void OnDecoderInitDone(const TrackType aTrackType);
   void OnDecoderInitFailed(const MediaResult& aError);
 
-  bool CanRecycleDecoder() const
-  {
-    MOZ_ASSERT(mDecoder);
-    return MediaPrefs::MediaDecoderCheckRecycling()
-           && mDecoder->SupportDecoderRecycling();
-  }
+  bool CanRecycleDecoder() const;
 
   void DecodeFirstSample(MediaRawData* aSample);
 

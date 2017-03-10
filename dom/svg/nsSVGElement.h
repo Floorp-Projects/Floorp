@@ -114,6 +114,12 @@ public:
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
+  /**
+   * We override the default to unschedule computation of Servo declaration blocks
+   * when adopted across documents.
+   */
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
+
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
   void WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker);
 
@@ -135,6 +141,8 @@ public:
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
   NS_DECL_NSIDOMSVGELEMENT
+
+  NS_IMPL_FROMCONTENT(nsSVGElement, kNameSpaceID_SVG)
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns
@@ -322,6 +330,9 @@ public:
   virtual bool IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex);
   virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
 
+  void UpdateContentDeclarationBlock(mozilla::StyleBackendType aBackend);
+  const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;
+
 protected:
   virtual JSObject* WrapNode(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
@@ -346,7 +357,6 @@ protected:
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
-  void UpdateContentDeclarationBlock();
   void UpdateAnimatedContentDeclarationBlock();
   mozilla::DeclarationBlock* GetAnimatedContentDeclarationBlock();
 

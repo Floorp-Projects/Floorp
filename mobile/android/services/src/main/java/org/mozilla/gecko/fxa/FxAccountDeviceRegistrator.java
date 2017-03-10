@@ -40,6 +40,13 @@ import java.util.concurrent.Executors;
 public class FxAccountDeviceRegistrator implements BundleEventListener {
   private static final String LOG_TAG = "FxADeviceRegistrator";
 
+  // The autopush endpoint expires stale channel subscriptions every 30 days (at a set time during
+  // the month, although we don't depend on this). To avoid the FxA service channel silently
+  // expiring from underneath us, we unsubscribe and resubscribe every 21 days.
+  // Note that this simple schedule means that we might unsubscribe perfectly valid (but old)
+  // subscriptions. This will be improved as part of Bug 1345651.
+  private static final long TIME_BETWEEN_CHANNEL_REGISTRATION_IN_MILLIS = 21 * 24 * 60 * 60 * 1000L;
+
   // The current version of the device registration, we use this to re-register
   // devices after we update what we send on device registration.
   public static final Integer DEVICE_REGISTRATION_VERSION = 2;
@@ -60,6 +67,14 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     return instance;
   }
 
+  public static boolean needToRenewRegistration(final long timestamp) {
+    // NB: we're comparing wall clock to wall clock, at different points in time.
+    // It's possible that wall clocks have changed, and our comparison will be meaningless.
+    // However, this happens in the context of a sync, and we won't be able to sync anyways if our
+    // wall clock deviates too much from time on the server.
+    return (System.currentTimeMillis() - timestamp) > TIME_BETWEEN_CHANNEL_REGISTRATION_IN_MILLIS;
+  }
+
   public static void register(Context context) {
     Context appContext = context.getApplicationContext();
     try {
@@ -69,19 +84,40 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     }
   }
 
+  public static void renewRegistration(Context context) {
+    Context appContext = context.getApplicationContext();
+    try {
+      getInstance(appContext).beginRegistrationRenewal(appContext);
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Could not start FxA device re-registration", e);
+    }
+  }
+
   private void beginRegistration(Context context) {
     // Fire up gecko and send event
     // We create the Intent ourselves instead of using GeckoService.getIntentToCreateServices
     // because we can't import these modules (circular dependency between browser and services)
-    final Intent geckoIntent = new Intent();
-    geckoIntent.setAction("create-services");
-    geckoIntent.setClassName(context, "org.mozilla.gecko.GeckoService");
-    geckoIntent.putExtra("category", "android-push-service");
-    geckoIntent.putExtra("data", "android-fxa-subscribe");
-    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
-    geckoIntent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME", fxAccount.getProfile());
+    final Intent geckoIntent = buildCreatePushServiceIntent(context, "android-fxa-subscribe");
     context.startService(geckoIntent);
     // -> handleMessage()
+  }
+
+  private void beginRegistrationRenewal(Context context) {
+    // Same as registration, but unsubscribe first to get a fresh subscription.
+    final Intent geckoIntent = buildCreatePushServiceIntent(context, "android-fxa-resubscribe");
+    context.startService(geckoIntent);
+    // -> handleMessage()
+  }
+
+  private Intent buildCreatePushServiceIntent(final Context context, final String data) {
+    final Intent intent = new Intent();
+    intent.setAction("create-services");
+    intent.setClassName(context, "org.mozilla.gecko.GeckoService");
+    intent.putExtra("category", "android-push-service");
+    intent.putExtra("data", data);
+    final AndroidFxAccount fxAccount = AndroidFxAccount.fromContext(context);
+    intent.putExtra("org.mozilla.gecko.intent.PROFILE_NAME", fxAccount.getProfile());
+    return intent;
   }
 
   @Override
@@ -135,11 +171,15 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       @Override
       public void handleError(Exception e) {
         Log.e(LOG_TAG, "Error while updating a device registration: ", e);
+        fxAccount.setDeviceRegistrationTimestamp(0L);
       }
 
       @Override
       public void handleFailure(FxAccountClientRemoteException error) {
         Log.e(LOG_TAG, "Error while updating a device registration: ", error);
+
+        fxAccount.setDeviceRegistrationTimestamp(0L);
+
         if (error.httpStatusCode == 400) {
           if (error.apiErrorNumber == FxAccountRemoteError.UNKNOWN_DEVICE) {
             recoverFromUnknownDevice(fxAccount);
@@ -152,7 +192,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
                 && error.apiErrorNumber == FxAccountRemoteError.INVALID_AUTHENTICATION_TOKEN) {
           handleTokenError(error, fxAccountClient, fxAccount);
         } else {
-          logErrorAndResetDeviceRegistrationVersion(error, fxAccount);
+          logErrorAndResetDeviceRegistrationVersionAndTimestamp(error, fxAccount);
         }
       }
 
@@ -160,15 +200,16 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       public void handleSuccess(FxAccountDevice result) {
         Log.i(LOG_TAG, "Device registration complete");
         Logger.pii(LOG_TAG, "Registered device ID: " + result.id);
-        fxAccount.setFxAUserData(result.id, DEVICE_REGISTRATION_VERSION);
+        fxAccount.setFxAUserData(result.id, DEVICE_REGISTRATION_VERSION, System.currentTimeMillis());
       }
     });
   }
 
-  private static void logErrorAndResetDeviceRegistrationVersion(
+  private static void logErrorAndResetDeviceRegistrationVersionAndTimestamp(
       final FxAccountClientRemoteException error, final AndroidFxAccount fxAccount) {
     Log.e(LOG_TAG, "Device registration failed", error);
     fxAccount.resetDeviceRegistrationVersion();
+    fxAccount.setDeviceRegistrationTimestamp(0L);
   }
 
   @Nullable
@@ -187,7 +228,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
                                        final FxAccountClient fxAccountClient,
                                        final AndroidFxAccount fxAccount) {
     Log.i(LOG_TAG, "Recovering from invalid token error: ", error);
-    logErrorAndResetDeviceRegistrationVersion(error, fxAccount);
+    logErrorAndResetDeviceRegistrationVersionAndTimestamp(error, fxAccount);
     fxAccountClient.accountStatus(fxAccount.getState().uid,
         new RequestDelegate<AccountStatusResponse>() {
       @Override
@@ -233,7 +274,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
     fxAccountClient.deviceList(sessionToken, new RequestDelegate<FxAccountDevice[]>() {
       private void onError() {
         Log.e(LOG_TAG, "failed to recover from device-session conflict");
-        logErrorAndResetDeviceRegistrationVersion(error, fxAccount);
+        logErrorAndResetDeviceRegistrationVersionAndTimestamp(error, fxAccount);
       }
 
       @Override
@@ -250,7 +291,7 @@ public class FxAccountDeviceRegistrator implements BundleEventListener {
       public void handleSuccess(FxAccountDevice[] devices) {
         for (FxAccountDevice device : devices) {
           if (device.isCurrentDevice) {
-            fxAccount.setFxAUserData(device.id, 0); // Reset device registration version
+            fxAccount.setFxAUserData(device.id, 0, 0L); // Reset device registration version/timestamp
             if (!allowRecursion) {
               Log.d(LOG_TAG, "Failure to register a device on the second try");
               break;

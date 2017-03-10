@@ -744,13 +744,8 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         // #ref
 
         if (mRef.mLen >= 0) {
-            if (nsContentUtils::EncodeDecodeURLHash()) {
-                approxLen += 1 + encoder.EncodeSegmentCount(spec, mRef, esc_Ref,
-                                                            encRef, useEncRef);
-            } else {
-                approxLen += 1 + mRef.mLen;
-                useEncRef = false;
-            }
+            approxLen += 1 + encoder.EncodeSegmentCount(spec, mRef, esc_Ref,
+                                                        encRef, useEncRef);
         }
     }
 
@@ -773,7 +768,15 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         if (!SegmentIs(spec, mScheme, "resource") &&
             !SegmentIs(spec, mScheme, "chrome")) {
             nsAutoCString ipString;
-            if (NS_SUCCEEDED(NormalizeIPv4(encHost, ipString))) {
+            if (encHost.Length() > 0 &&
+                encHost.First() == '[' && encHost.Last() == ']' &&
+                ValidIPv6orHostname(encHost.get(), encHost.Length())) {
+                rv = (nsresult) rusturl_parse_ipv6addr(&encHost, &ipString);
+                if (NS_FAILED(rv)) {
+                    return rv;
+                }
+                encHost = ipString;
+            } else if (NS_SUCCEEDED(NormalizeIPv4(encHost, ipString))) {
                 encHost = ipString;
             }
         }
@@ -2014,7 +2017,15 @@ nsStandardURL::SetHost(const nsACString &input)
 
     if (!SegmentIs(mScheme, "resource") && !SegmentIs(mScheme, "chrome")) {
         nsAutoCString ipString;
-        if (NS_SUCCEEDED(NormalizeIPv4(hostBuf, ipString))) {
+        if (hostBuf.Length() > 0 &&
+            hostBuf.First() == '[' && hostBuf.Last() == ']' &&
+            ValidIPv6orHostname(hostBuf.get(), hostBuf.Length())) {
+            rv = (nsresult) rusturl_parse_ipv6addr(&hostBuf, &ipString);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            hostBuf = ipString;
+        } else if (NS_SUCCEEDED(NormalizeIPv4(hostBuf, ipString))) {
           hostBuf = ipString;
         }
     }
@@ -2967,16 +2978,14 @@ nsStandardURL::SetRef(const nsACString &input)
     // If precent encoding is necessary, `ref` will point to `buf`'s content.
     // `buf` needs to outlive any use of the `ref` pointer.
     nsAutoCString buf;
-    if (nsContentUtils::EncodeDecodeURLHash()) {
-        // encode ref if necessary
-        bool encoded;
-        GET_SEGMENT_ENCODER(encoder);
-        encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
-                                   buf, encoded);
-        if (encoded) {
-            ref = buf.get();
-            refLen = buf.Length();
-        }
+    // encode ref if necessary
+    bool encoded;
+    GET_SEGMENT_ENCODER(encoder);
+    encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
+                               buf, encoded);
+    if (encoded) {
+        ref = buf.get();
+        refLen = buf.Length();
     }
 
     int32_t shift = ReplaceSegment(mRef.mPos, mRef.mLen, ref, refLen);

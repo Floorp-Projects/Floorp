@@ -1126,7 +1126,13 @@ public:
    */
   virtual BorrowedAttrInfo GetAttrInfo(int32_t aNamespaceID, nsIAtom* aName) const;
 
-  virtual void NodeInfoChanged()
+  /**
+   * Called when we have been adopted, and the information of the
+   * node has been changed.
+   *
+   * The new document can be reached via OwnerDoc().
+   */
+  virtual void NodeInfoChanged(nsIDocument* aOldDoc)
   {
   }
 

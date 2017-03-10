@@ -66,7 +66,7 @@ public:
     delete mReentrantMonitor;
   }
 
-  operator ReentrantMonitor* () {
+  operator ReentrantMonitor* () const {
     return mReentrantMonitor;
   }
 

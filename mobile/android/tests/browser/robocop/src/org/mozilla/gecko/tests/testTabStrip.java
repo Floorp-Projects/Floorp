@@ -45,7 +45,7 @@ public class testTabStrip extends UITest {
         // Now make sure there's still only one tab in the tab strip, and that it's still the normal
         // mode tab.
 
-        mTabStrip.assertTabCount(1);
+        mTabStrip.assertTabCountIs(1);
         mToolbar.assertTitle(normalModeUrl);
     }
 

@@ -17,6 +17,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPseudoElements.h"
@@ -313,11 +314,30 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
                                         eRestyle_CSSTransitions :
                                         eRestyle_CSSAnimations;
 
-  // FIXME: stylo only supports Self and Subtree hints now, so we override it
-  // for stylo if we are not in process of restyling.
-  if (mPresContext->StyleSet()->IsServo() &&
-      !mPresContext->RestyleManager()->IsInStyleRefresh()) {
-    hint = eRestyle_Self | eRestyle_Subtree;
+  if (mPresContext->StyleSet()->IsServo()) {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Restyle request during restyling should be requested only on "
+               "the main-thread. e.g. after the parallel traversal");
+    if (ServoStyleSet::IsInServoTraversal()) {
+      // FIXME: Bug 1302946: We will handle eRestyle_CSSTransitions.
+      MOZ_ASSERT(hint == eRestyle_CSSAnimations);
+
+      // We can't call Servo_NoteExplicitHints here since AtomicRefCell does not
+      // allow us mutate ElementData of the |aElement| in SequentialTask.
+      // Instead we call Servo_NoteExplicitHints for the element in PreTraverse() right
+      // which will be called right before the second traversal that we do for
+      // updating CSS animations.
+      // In that case PreTraverse() will return true so that we know to do the
+      // second traversal so we don't need to post any restyle requests to the
+      // PresShell.
+      return;
+    } else if (!mPresContext->RestyleManager()->IsInStyleRefresh()) {
+      // FIXME: stylo only supports Self and Subtree hints now, so we override
+      // it for stylo if we are not in process of restyling.
+      hint = eRestyle_Self | eRestyle_Subtree;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Should not request restyle");
+    }
   }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);
 }
@@ -932,12 +952,13 @@ EffectCompositor::SetPerformanceWarning(
   }
 }
 
-void
+bool
 EffectCompositor::PreTraverse()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  bool foundElementsNeedingRestyle = false;
   for (auto& elementsToRestyle : mElementsToRestyle) {
     for (auto iter = elementsToRestyle.Iter(); !iter.Done(); iter.Next()) {
       bool postedRestyle = iter.Data();
@@ -947,10 +968,20 @@ EffectCompositor::PreTraverse()
       }
 
       NonOwningAnimationTarget target = iter.Key();
+
+      // We need to post restyle hints even if the target is not in EffectSet to
+      // ensure the final restyling for removed animations.
+      // We can't call PostRestyleEvent directly here since we are still in the
+      // middle of the servo traversal.
+      mPresContext->RestyleManager()->AsServo()->
+        PostRestyleEventForAnimations(target.mElement,
+                                      eRestyle_Self | eRestyle_Subtree);
+      foundElementsNeedingRestyle = true;
+
       EffectSet* effects =
         EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
       if (!effects) {
-        // Drop the EffectSets that have been destroyed.
+        // Drop EffectSets that have been destroyed.
         iter.Remove();
         continue;
       }
@@ -964,18 +995,20 @@ EffectCompositor::PreTraverse()
       iter.Remove();
     }
   }
+  return foundElementsNeedingRestyle;
 }
 
-void
+bool
 EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
+  bool found = false;
   if (aPseudoTagOrNull &&
       aPseudoTagOrNull != nsGkAtoms::cssPseudoElementBeforeProperty &&
       aPseudoTagOrNull != nsGkAtoms::cssPseudoElementAfterProperty) {
-    return;
+    return found;
   }
 
   CSSPseudoElementType pseudoType =
@@ -990,6 +1023,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
       continue;
     }
 
+    mPresContext->RestyleManager()->AsServo()->
+      PostRestyleEventForAnimations(aElement, eRestyle_Self);
+
     EffectSet* effects = EffectSet::GetEffectSet(aElement, pseudoType);
     if (effects) {
       for (KeyframeEffectReadOnly* effect : *effects) {
@@ -998,7 +1034,9 @@ EffectCompositor::PreTraverse(dom::Element* aElement, nsIAtom* aPseudoTagOrNull)
     }
 
     elementsToRestyle.Remove(key);
+    found = true;
   }
+  return found;
 }
 
 // ---------------------------------------------------------

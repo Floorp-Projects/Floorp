@@ -37,11 +37,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
-  * test_animations.html [277]
-  * test_animations_async_tests.html [2]
+  * test_animations.html [70]
   * test_animations_dynamic_changes.html [1]
   * test_bug716226.html [1]
-  * test_flexbox_flex_grow_and_shrink.html [8]
   * OMTA
     * test_animations_effect_timing_duration.html [1]
     * test_animations_effect_timing_enddelay.html [1]
@@ -51,9 +49,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_animations_omta_start.html [1]
     * test_animations_pausing.html [1]
     * test_animations_playbackrate.html [1]
-  * Events:
-    * test_animations_event_handler_attribute.html [10]
-    * test_animations_event_order.html [12]
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
   * CSS Timing Functions: Frames timing functions
@@ -104,18 +99,19 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_transitions_dynamic_changes.html [10]
   * test_transitions_step_functions.html [24]
   * test_value_storage.html `transition` [776]
+  * Events:
+    * test_animations_event_handler_attribute.html [10]
+    * test_animations_event_order.html [11]
 * test_bug798843_pref.html: conditional opentype svg support [7]
 * test_computed_style.html `gradient`: -moz-prefixed radient value [9]
 * url value in style attribute bug 1310886
-  * test_computed_style.html `url` [18]
-  * test_parse_url.html [66]
-  * test_value_storage.html `url` [850]
+  * test_computed_style.html `url` [12]
+  * test_parse_url.html [4]
+  * test_value_storage.html `url` [92]
   * test_shorthand_property_getters.html `background shorthand` [1]
   * ... `url` [3]
 * test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [11]
 * auto value for min-{width,height} servo/servo#15045
-  * test_compute_data_with_start_struct.html `height` [1]
-  * ... ` width` [1]
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
 * test_condition_text.html: @-moz-document, CSSOM support of @media, @support [2]
 * @counter-style support:
@@ -136,12 +132,8 @@ Any line which doesn't follow the format above would be ignored like comment.
 * test_dont_use_document_colors.html: support of disabling document color [21]
 * test_exposed_prop_accessors.html: mainly various unsupported properties [*]
 * test_extra_inherit_initial.html: CSS-wide keywords are accepted as part of value servo/servo#15054 [966]
-* flex-basis glue not implemented bug 1331529
-  * test_flexbox_flex_shorthand.html `flex-basis` [28]
-  * test_flexbox_layout.html [355]
-  * test_compute_data_with_start_struct.html `flex-basis` [2]
-  * test_inherit_computation.html `flex-basis` [4]
-  * test_initial_computation.html `flex-basis` [8]
+* test_flexbox_flex_shorthand.html `flex-basis`: **need investigation** [12]
+* test_flexbox_layout.html: **need investigation** [5]
 * test_font_feature_values_parsing.html: @font-feature-values support [107]
 * Grid support:
   * test_grid_computed_values.html [4]
@@ -158,26 +150,11 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `'grid` [*]
 * test_hover_quirk.html: hover quirks [6]
 * url value from decl setter bug 1330503
-  * test_compute_data_with_start_struct.html `-moz-binding` [2]
-  * ... `border-image-source` [2]
-  * ... `background-image` [2]
-  * ... `clip-path` [2]
-  * ... `filter` [2]
-  * ... `list-style-image` [2]
+  * test_compute_data_with_start_struct.html `border-image-source` [2]
   * ... `mask-image` [2]
-  * test_inherit_computation.html `-moz-binding` [2]
-  * ... `border-image` [8]
-  * ... `background-image` [2]
-  * ... `clip-path` [2]
-  * ... `filter` [4]
-  * ... `list-style-image` [4]
+  * test_inherit_computation.html `border-image` [2]
   * ... `mask-image` [4]
-  * test_initial_computation.html `-moz-binding` [4]
-  * ... `border-image` [16]
-  * ... `background-image` [4]
-  * ... `clip-path` [4]
-  * ... `filter'` [8]
-  * ... `list-style-image` [2]
+  * test_initial_computation.html `border-image` [4]
   * ... `mask-image` [8]
 * Unimplemented prefixed properties:
   * -moz-border-*-colors
@@ -275,13 +252,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_computation.html `shape-outside` [4]
     * test_initial_storage.html `shape-outside` [4]
     * test_value_storage.html `shape-outside` [121]
-  * text-justify property
-    * test_compute_data_with_start_struct.html `text-justify` [2]
-    * test_inherit_computation.html `text-justify` [4]
-    * test_inherit_storage.html `text-justify` [4]
-    * test_initial_computation.html `text-justify` [2]
-    * test_initial_storage.html `text-justify` [2]
-    * test_value_storage.html `text-justify` [10]
   * touch-action property
     * test_compute_data_with_start_struct.html `touch-action` [2]
     * test_inherit_computation.html `touch-action` [2]
@@ -290,10 +260,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_initial_storage.html `touch-action` [4]
     * test_value_storage.html `touch-action` [14]
 * Unimplemented SVG properties:
-  * marker-{start,mid,end} properties
-    * test_compute_data_with_start_struct.html `marker-` [6]
-    * test_inherit_computation.html `marker` [16]
-    * test_initial_computation.html `marker` [8]
   * stroke properties
     * test_value_storage.html `on 'stroke` [6]
     * test_compute_data_with_start_struct.html `initial and other values of stroke-dasharray are different` [2]
@@ -424,6 +390,11 @@ Any line which doesn't follow the format above would be ignored like comment.
   * {transform,perspective}-origin fail to parse 'center left' and 'center right' servo/servo#15750
     * test_value_storage.html `'center left'` [8]
     * ... `'center right'` [8]
+* Incorrect parsing
+  * border-image and -moz-border-image shorthand servo/servo#15770
+    * test_property_syntax_errors.html `border-image` [112]
+  * mask shorthand servo/servo#15772
+    * test_property_syntax_errors.html `mask'` [76]
 * Incorrect serialization
   * border-radius and -moz-outline-radius shorthand servo/servo#15169
     * test_priority_preservation.html `border-radius` [4]
@@ -451,7 +422,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_shorthand_property_getters.html `should serialize to 4-value` [2]
   * test_variables.html `--weird`: name of custom property is not escaped properly servo/servo#15399 [1]
   * ... `got "--`: CSS-wide keywords in custom properties servo/servo#15401 [3]
-  * test_priority_preservation.html `text-decoration`: not serialize style if it has the initial value servo/servo#15790 [6]
 * Unsupported pseudo-classes
   * :default ##easy##
     * test_bug302186.html [24]
@@ -479,14 +449,13 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_parse_rule.html `border-style` [4]
   * test_initial_computation.html `0px", expected "3px` [48]
 * Negative value should be rejected
-  * test_property_syntax_errors.html `'-10%' not accepted for 'border-image-slice'`: negative percentage servo/servo#15339 [2]
-  * ... `transition-duration`: servo/servo#15343 [20]
-  * ... `-radius'`: servo/servo#15345 [30]
+  * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `perspective'`: servo/servo#15337 [20]
   * third length of shadow servo/servo#15490
     * test_property_syntax_errors.html `box-shadow'` [6]
     * ... `'text-shadow'` [2]
     * ... `drop-shadow` [6]
+  * test_property_syntax_errors.html `flex-basis`: servo/servo#15902 [6]
 * Quirks mode support
   * hashless color servo/servo#15341
     * test_property_syntax_errors.html `color: 000000` [22]
@@ -521,26 +490,25 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_cloning.html asserts [12]
     * test_value_computation.html asserts [24]
     * test_value_storage.html asserts [44]
+  * assertion for unsupported or non-animatable property bug 1343710
+    * test_animations.html asserts [24]
 * test_value_cloning.html asserts: negative radius bug 1337618 [4]
 
 ## Need Gecko change
 
 * Servo is correct but Gecko is wrong
   * unitless zero as angle bug 1234357
-    * test_property_syntax_errors.html `linear-gradient(0,` [10]
+    * test_property_syntax_errors.html `linear-gradient(0,` [8]
     * ... `hue-rotate(0)` [6]
 * test_moz_device_pixel_ratio.html: probably unship -moz-device-pixel-ratio bug 1338425 [4]
 
 ## Spec Unclear
 
-* test_property_syntax_errors.html `'background'`: whether background shorthand should accept "text" [40]
+* test_property_syntax_errors.html `'background'`: whether background shorthand should accept "text" [200]
 * test_inherit_computation.html `weight style`: whether font-synthesis should be reset by font w3c/csswg-drafts#1032 [8]
 
 ## Unknown / Unsure
 
-* border-width/padding failure
-  * test_compute_data_with_start_struct.html `-width` [4]
-  * ... `padding-` [4]
 * test_additional_sheets.html: one sub-test cascade order is wrong [1]
 * test_selectors.html `:nth-child`: &lt;an+b&gt; parsing difference [14]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child [1]

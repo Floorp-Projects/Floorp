@@ -660,6 +660,26 @@ function getWindowDimensions(window) {
 exports.getWindowDimensions = getWindowDimensions;
 
 /**
+ * Returns the max size allowed for a surface like textures or canvas.
+ * If no `webgl` context is available, DEFAULT_MAX_SURFACE_SIZE is returned instead.
+ *
+ * @param {DOMNode|DOMWindow|DOMDocument} node The node to get the window for.
+ * @return {Number} the max size allowed
+ */
+const DEFAULT_MAX_SURFACE_SIZE = 4096;
+function getMaxSurfaceSize(node) {
+  let canvas = getWindowFor(node).document.createElement("canvas");
+  let gl = canvas.getContext("webgl");
+
+  if (!gl) {
+    return DEFAULT_MAX_SURFACE_SIZE;
+  }
+
+  return gl.getParameter(gl.MAX_TEXTURE_SIZE);
+}
+exports.getMaxSurfaceSize = getMaxSurfaceSize;
+
+/**
  * Return the default view for a given node, where node can be:
  * - a DOM node
  * - the document node
