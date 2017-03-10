@@ -2611,6 +2611,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
+  mVideoDecodeMode(VideoDecodeMode::Normal),
   mIsMSE(aDecoder->IsMSE()),
   INIT_MIRROR(mBuffered, TimeIntervals()),
   INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
@@ -3063,6 +3064,56 @@ void MediaDecoderStateMachine::SuspendTaintChanged()
   CancelSuspendTimer();
 
   // Resume from suspended decoding.
+  if (mVideoDecodeSuspended) {
+    mStateObj->HandleResumeVideoDecoding();
+  }
+}
+
+void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
+{
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod<VideoDecodeMode>(this,
+                                       &MediaDecoderStateMachine::SetVideoDecodeModeInternal,
+                                       aMode);
+  OwnerThread()->DispatchStateChange(r.forget());
+}
+
+void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  DECODER_LOG("VideoDecodeModeChanged: VideoDecodeMode=(%s->%s), mVideoDecodeSuspended=%c",
+              mVideoDecodeMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+              aMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+              mVideoDecodeSuspended ? 'T' : 'F');
+
+  if (!MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
+    return;
+  }
+
+  if (aMode == mVideoDecodeMode) {
+    return;
+  }
+
+  // Set new video decode mode.
+  mVideoDecodeMode = aMode;
+
+  // Start timer to trigger suspended video decoding.
+  if (mVideoDecodeMode == VideoDecodeMode::Suspend) {
+    TimeStamp target = TimeStamp::Now() + SuspendBackgroundVideoDelay();
+
+    RefPtr<MediaDecoderStateMachine> self = this;
+    mVideoDecodeSuspendTimer.Ensure(target,
+                                    [=]() { self->OnSuspendTimerResolved(); },
+                                    [] () { MOZ_DIAGNOSTIC_ASSERT(false); });
+    mOnPlaybackEvent.Notify(MediaEventType::StartVideoSuspendTimer);
+    return;
+  }
+
+  // Resuming from suspended decoding
+
+  // If suspend timer exists, destroy it.
+  CancelSuspendTimer();
+
   if (mVideoDecodeSuspended) {
     mStateObj->HandleResumeVideoDecoding();
   }
