@@ -8,11 +8,13 @@
 include protocol PNecko;
 include protocol PBrowser;
 include protocol PTransportProvider;
-include InputStreamParams;
+include IPCStream;
 include URIParams;
 include NeckoChannelParams;
 
 include protocol PBlob; //FIXME: bug #792908
+include protocol PFileDescriptorSet; //FIXME: bug #792908
+include protocol PSendStream; //FIXME: bug #792908
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -48,7 +50,7 @@ parent:
   async Close(uint16_t code, nsCString reason);
   async SendMsg(nsCString aMsg);
   async SendBinaryMsg(nsCString aMsg);
-  async SendBinaryStream(InputStreamParams aStream, uint32_t aLength);
+  async SendBinaryStream(IPCStream aStream, uint32_t aLength);
 
   async DeleteSelf();
 

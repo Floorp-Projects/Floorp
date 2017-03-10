@@ -77,8 +77,9 @@ class UptakeMonitoring(BaseScript, VirtualenvMixin, BuildbotMixin):
             else:
                 self.warning("%s could not be found within buildprops" % prop)
                 return
-        partials = [v.strip() for v in props["partial_versions"].split(",")]
-        self.config["partial_versions"] = [v.split("build")[0] for v in partials]
+        if props.get('partial_versions'):
+            partials = [v.strip() for v in props["partial_versions"].split(",")]
+            self.config["partial_versions"] = [v.split("build")[0] for v in partials]
         self.config["platforms"] = [p.strip() for p in
                                     props["platforms"].split(",")]
 
@@ -136,8 +137,8 @@ class UptakeMonitoring(BaseScript, VirtualenvMixin, BuildbotMixin):
                     dl.append(self._get_product_uptake(tuxedo_server_url, auth,
                                                        related_product, bouncer_platform))
         # handle the partials as well
-        prev_versions = self.config["partial_versions"]
-        for product, info in self.config["partials"].iteritems():
+        prev_versions = self.config.get("partial_versions", [])
+        for product, info in self.config.get("partials", {}).iteritems():
             if info.get("check_uptake"):
                 product_template = info["product-name"]
                 for prev_version in prev_versions:

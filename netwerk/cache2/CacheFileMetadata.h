@@ -156,6 +156,7 @@ public:
 
   CacheHash::Hash16_t GetHash(uint32_t aIndex);
   nsresult            SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
+  nsresult            RemoveHash(uint32_t aIndex);
 
   nsresult AddFlags(uint32_t aFlags);
   nsresult RemoveFlags(uint32_t aFlags);

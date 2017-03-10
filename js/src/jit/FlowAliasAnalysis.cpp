@@ -463,13 +463,20 @@ FlowAliasAnalysis::analyze()
         if (!stores_->maybeFreePredecessorBlocks(*block))
             return false;
 
-        if (block->isLoopHeader())
-            loop_ = new(alloc()) LoopInfo(alloc(), loop_, *block);
-
         for (MPhiIterator def(block->phisBegin()), end(block->phisEnd()); def != end; ++def)
             def->setId(newId++);
 
         BlockStoreInfo& blockInfo = stores_->current();
+
+        // When the store dependencies is empty it means we have a disconnected
+        // graph. Those blocks will never get reached but it is only fixed up
+        // after GVN. Don't run AA on those blocks.
+        if (blockInfo.length() == 0)
+            continue;
+
+        if (block->isLoopHeader())
+            loop_ = new(alloc()) LoopInfo(alloc(), loop_, *block);
+
         for (MInstructionIterator def(block->begin()), end(block->begin(block->lastIns()));
                 def != end;
                 ++def)
@@ -587,6 +594,14 @@ FlowAliasAnalysis::processDeferredLoads(LoopInfo* info)
 
         DumpLoopInvariant(load, info->loopHeader(), /* loopinvariant = */ loopinvariant,
                           loopInvariantDependency);
+
+        // When the store dependencies is empty it means we have a disconnected
+        // graph. Those blocks will never get reached but it is only fixed up
+        // after GVN. Don't improve dependency for those loads.
+        if (loopInvariantDependency.length() == 0) {
+            load->setDependency(store);
+            continue;
+        }
 
         if (loopinvariant) {
             if (!improveDependency(load, loopInvariantDependency, output_))

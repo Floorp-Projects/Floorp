@@ -20,6 +20,9 @@ actual = uneval(
     }
   });
 
-expect = '({get foo() {return "foo";}})';
+expect = '({get foo()\n\
+    {\n\
+      return "foo";\n\
+    }})';
  
 compareSource(expect, actual, summary);
