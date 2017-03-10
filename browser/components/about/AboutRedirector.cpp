@@ -13,12 +13,15 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIProtocolHandler.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace browser {
 
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
+
+bool AboutRedirector::sUseOldPreferences = false;
 
 struct RedirEntry {
   const char* id;
@@ -138,6 +141,13 @@ AboutRedirector::NewChannel(nsIURI* aURI,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  static bool sPrefCacheInited = false;
+  if (!sPrefCacheInited) {
+    Preferences::AddBoolVarCache(&sUseOldPreferences,
+                                  "browser.preferences.useOldOrganization");
+    sPrefCacheInited = true;
+  }
+
   for (auto & redir : kRedirMap) {
     if (!strcmp(path.get(), redir.id)) {
       nsAutoCString url;
@@ -149,6 +159,8 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
+      } else if (path.EqualsLiteral("preferences") && sUseOldPreferences) {
+        url.AssignASCII("chrome://browser/content/preferences/in-content-old/preferences.xul");
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {

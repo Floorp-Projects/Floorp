@@ -1,0 +1,207 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!-- Content panel -->
+
+<preferences id="contentPreferences" hidden="true" data-category="paneContent">
+
+  <!-- DRM content -->
+  <preference id="media.eme.enabled"
+              name="media.eme.enabled"
+              type="bool"/>
+
+  <!-- Popups -->
+  <preference id="dom.disable_open_during_load"
+              name="dom.disable_open_during_load"
+              type="bool"/>
+
+  <!-- Fonts -->
+  <preference id="font.language.group"
+              name="font.language.group"
+              type="wstring"/>
+
+  <!-- Languages -->
+  <preference id="browser.translation.detectLanguage"
+              name="browser.translation.detectLanguage"
+              type="bool"/>
+</preferences>
+
+<script type="application/javascript"
+        src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+<script type="application/javascript"
+        src="chrome://browser/content/preferences/in-content-old/content.js"/>
+
+<hbox id="header-content"
+      class="header"
+      hidden="true"
+      data-category="paneContent">
+  <label class="header-name" flex="1">&paneContent.title;</label>
+  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
+</hbox>
+
+<groupbox id="drmGroup" data-category="paneContent" hidden="true">
+  <caption><label>&drmContent.label;</label></caption>
+  <grid id="contentGrid2">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-2">
+      <row id="playDRMContentRow">
+        <hbox align="center">
+          <checkbox id="playDRMContent" preference="media.eme.enabled"
+                    label="&playDRMContent.label;" accesskey="&playDRMContent.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link" value="&playDRMContent.learnMore.label;"/>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<groupbox id="notificationsGroup" data-category="paneContent" hidden="true">
+  <caption><label>&notificationsPolicy.label;</label></caption>
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row id="notificationsPolicyRow" align="center">
+        <hbox align="start">
+          <label id="notificationsPolicy">&notificationsPolicyDesc3.label;</label>
+          <label id="notificationsPolicyLearnMore"
+                 class="learnMore text-link"
+                 value="&notificationsPolicyLearnMore.label;"/>
+        </hbox>
+        <hbox pack="end">
+          <button id="notificationsPolicyButton" label="&notificationsPolicyButton.label;"
+                  accesskey="&notificationsPolicyButton.accesskey;"/>
+        </hbox>
+      </row>
+      <row id="notificationsDoNotDisturbRow" hidden="true">
+        <vbox align="start">
+          <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
+                    accesskey="&notificationsDoNotDisturb.accesskey;"/>
+          <label id="notificationsDoNotDisturbDetails"
+                 class="indent"
+                 value="&notificationsDoNotDisturbDetails.value;"/>
+        </vbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<groupbox id="miscGroup" data-category="paneContent" hidden="true">
+  <caption><label>&popups.label;</label></caption>
+  <grid id="contentGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-1">
+      <row id="popupPolicyRow">
+        <vbox align="start">
+          <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+                    label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
+                    onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton',
+                                                                        'dom.disable_open_during_load');"/>
+        </vbox>
+        <hbox pack="end">
+          <button id="popupPolicyButton" label="&popupExceptions.label;"
+                  accesskey="&popupExceptions.accesskey;"/>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Fonts and Colors -->
+<groupbox id="fontsGroup" data-category="paneContent" hidden="true">
+  <caption><label>&fontsAndColors.label;</label></caption>
+
+  <grid id="fontsGrid">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="fontsRows">
+      <row id="fontRow">
+        <hbox align="center">
+          <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
+          <menulist id="defaultFont" delayprefsave="true"/>
+          <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+          <menulist id="defaultFontSize" delayprefsave="true">
+            <menupopup>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+        <button id="advancedFonts" icon="select-font"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"/>
+      </row>
+      <row id="colorsRow">
+        <hbox/>
+        <button id="colors" icon="select-color"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"/>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneContent" hidden="true">
+  <caption><label>&languages.label;</label></caption>
+
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+    <button id="chooseLanguage"
+            label="&chooseButton.label;"
+            accesskey="&chooseButton.accesskey;"/>
+  </hbox>
+
+  <hbox id="translationBox" hidden="true">
+    <hbox align="center" flex="1">
+      <checkbox id="translate" preference="browser.translation.detectLanguage"
+                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
+                onsyncfrompreference="return gContentPane.updateButtons('translateButton',
+                                              'browser.translation.detectLanguage');"/>
+      <hbox id="bingAttribution" hidden="true">
+        <label>&translation.options.attribution.beforeLogo;</label>
+        <separator orient="vertical" class="thin"/>
+        <image id="translationAttributionImage" aria-label="Microsoft Translator"
+               src="chrome://browser/content/microsoft-translator-attribution.png"/>
+        <separator orient="vertical" class="thin"/>
+        <label>&translation.options.attribution.afterLogo;</label>
+      </hbox>
+    </hbox>
+    <button id="translateButton" label="&translateExceptions.label;"
+            accesskey="&translateExceptions.accesskey;"/>
+  </hbox>
+</groupbox>
