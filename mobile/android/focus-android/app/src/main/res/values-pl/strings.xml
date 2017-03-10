@@ -4,11 +4,9 @@
   <string name="teaser">Automatyczne przeglądanie prywatne.\nPrzeglądaj. Usuwaj. Powtórz.</string>
   <string name="feedback_erase">Usunięto historię przeglądania.</string>
   <string name="search_hint">Wyszukaj „%1$s”</string>
-  <string name="menu_back">Wstecz</string>
-  <string name="menu_forward">Dalej</string>
-  <string name="menu_refresh">Odśwież</string>
-  <string name="menu_share">Udostępnij</string>
-  <string name="menu_open_with">Otwórz za pomocą</string>
+  <string name="menu_share">Udostępnij…</string>
+  <string name="menu_open_with_default_browser">Otwórz za pomocą „%1$s”</string>
+  <string name="menu_open_with_a_browser">Otwórz za pomocą…</string>
   <string name="menu_settings">Ustawienia</string>
   <string name="menu_about">O programie</string>
   <string name="menu_help">Pomoc</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron WWW</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
+  <string name="preference_performance_block_images">Blokowanie obrazów</string>
+  <string name="preference_default_browser">Ustaw jako domyślną przeglądarkę</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Przesyłanie anonimowych danych o użyciu</string>
   <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
+  <string name="content_description_clear_input">Usuń tekst</string>
+  <string name="content_description_dismiss_input">Odrzuć</string>
+  <string name="content_description_erase">Usuń historię przeglądania</string>
+  <string name="content_description_lock">Zabezpieczone połączenie</string>
+  <string name="accessibility_announcement_loading">Wczytywanie</string>
+  <string name="accessibility_announcement_loading_finished">Wczytano stronę</string>
+  <string name="content_description_menu">Więcej opcji</string>
+  <string name="content_description_forward">Przejdź do przodu</string>
+  <string name="content_description_reload">Ponownie wczytaj stronę</string>
+  <string name="firstrun_title">Przeglądaj, jak gdyby nikt nie patrzył.</string>
+  <string name="firstrun_description">Automatycznie blokuj śledzące elementy podczas przeglądania stron. Wystarczy stuknąć, aby usunąć z urządzenia odwiedzone strony, wyszukiwania i hasła.</string>
+  <string name="firstrun_button">OK!</string>
+  <string name="firstrun_footer">Nie oznacza to, że odwiedzane strony nic o Tobie nie wiedzą.</string>
 </resources>

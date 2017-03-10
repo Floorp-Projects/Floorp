@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Escriviu una cerca o adreça</string>
+  <string name="teaser">Navegació privada automàtica.\nNavegueu. Esborreu. Torneu-hi.</string>
+  <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
+  <string name="search_hint">Cerca %1$s</string>
+  <string name="menu_share">Comparteix…</string>
+  <string name="menu_open_with_default_browser">Obre amb %1$s</string>
+  <string name="menu_open_with_a_browser">Obre amb…</string>
+  <string name="menu_settings">Paràmetres</string>
+  <string name="menu_about">Quant a</string>
+  <string name="menu_help">Ajuda</string>
+  <string name="menu_rights">Els vostres drets</string>
+  <string name="preference_category_privacy">Privadesa</string>
+  <string name="preference_privacy_block_ads">Bloqueja els elements de seguiment de publicitat</string>
+  <string name="preference_privacy_block_analytics">Bloqueja els elements de seguiment d\'anàlisi</string>
+  <string name="preference_privacy_block_social">Bloqueja els elements de seguiment social</string>
+  <string name="preference_privacy_block_content">Bloqueja altres elements de seguiment de contingut</string>
+  <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
+  <string name="preference_category_performance">Rendiment</string>
+  <string name="preference_performance_block_webfonts">Bloqueja tipus de lletra web</string>
+  <string name="preference_performance_block_images">Bloqueja les imatges</string>
+  <string name="preference_default_browser">Fes que sigui el navegador per defecte</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Envia dades d\'ús anònimes</string>
+  <string name="preference_mozilla_telemetry_summary">Més informació</string>
+  <string name="content_description_clear_input">Esborra l\'entrada</string>
+  <string name="content_description_dismiss_input">Descarta</string>
+  <string name="content_description_erase">Esborra l\'historial de navegació</string>
+  <string name="content_description_lock">Connexió segura</string>
+  <string name="accessibility_announcement_loading">S\'està carregant…</string>
+  <string name="accessibility_announcement_loading_finished">S\'ha carregat el lloc web</string>
+  <string name="content_description_menu">Més opcions</string>
+  <string name="content_description_forward">Navega cap endavant</string>
+  <string name="content_description_reload">Actualitza el lloc web</string>
+  <string name="firstrun_title">Navegueu sense sentir-vos observats.</string>
+  <string name="firstrun_description">Bloquegeu automàticament els elements que us fan el seguiment mentre navegueu. Esborreu amb un sol toc les pàgines visitades, cerques, galetes i contrasenyes del dispositiu.</string>
+  <string name="firstrun_button">Entesos</string>
+  <string name="firstrun_footer">Tingueu en compte que els serveis i els llocs web que utilitzeu poden saber igualment on heu estat.</string>
+</resources>

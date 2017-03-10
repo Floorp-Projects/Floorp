@@ -4,11 +4,9 @@
   <string name="teaser">Shfletim automatikisht privat.\nShfletoni. Fshini Gjurmët. Përsëriteni.</string>
   <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
   <string name="search_hint">Kërko për %1$s</string>
-  <string name="menu_back">Mbrapsht</string>
-  <string name="menu_forward">Përpara</string>
-  <string name="menu_refresh">Rifreskoje</string>
-  <string name="menu_share">Ndajeni me të tjerët</string>
-  <string name="menu_open_with">Hape me</string>
+  <string name="menu_share">Ndajeni me të tjerët…</string>
+  <string name="menu_open_with_default_browser">Hape me %1$s</string>
+  <string name="menu_open_with_a_browser">Hapeni me…</string>
   <string name="menu_settings">Rregullime</string>
   <string name="menu_about">Rreth</string>
   <string name="menu_help">Ndihmë</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Mund të pengojë funksionimin e disa videove dhe faqeve Web</string>
   <string name="preference_category_performance">Punim</string>
   <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
+  <string name="preference_performance_block_images">Blloko Figura</string>
+  <string name="preference_default_browser">Bëje shfletuesin parazgjedhje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Dërgo të dhëna anonime përdorimi</string>
   <string name="preference_mozilla_telemetry_summary">Mësoni më tepër</string>
+  <string name="content_description_clear_input">Pastro ç’është dhënë</string>
+  <string name="content_description_dismiss_input">Hidhe tej</string>
+  <string name="content_description_erase">Fshi historik shfletimesh</string>
+  <string name="content_description_lock">Lidhje e sigurt</string>
+  <string name="accessibility_announcement_loading">Po ngarkohet</string>
+  <string name="accessibility_announcement_loading_finished">Sajti u ngarkua</string>
+  <string name="content_description_menu">Më tepër mundësi</string>
+  <string name="content_description_forward">Lëvizni përpara</string>
+  <string name="content_description_reload">Ringarko sajtin</string>
+  <string name="firstrun_title">Shfletoni sikur të mos ju vëzhgonte njeri.</string>
+  <string name="firstrun_description">Bllokojini vetvetiu gjurmuesit në internet, teksa shfletoni. Mandej prekeni, që të fshihen nga pajisja juaj faqe të vizituara, kërkime, cookies dhe fjalëkalime.</string>
+  <string name="firstrun_button">OK, e mora vesh!</string>
+  <string name="firstrun_footer">Për ta thënë troç, sajtet dhe shërbimet që përdorni prapë mund të dinë se ku keni qenë.</string>
 </resources>

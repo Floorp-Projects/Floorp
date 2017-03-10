@@ -4,11 +4,9 @@
   <string name="teaser">Automatikus privát böngészés.\nBöngészés. Törlés. Ismétlés.</string>
   <string name="feedback_erase">A böngészési előzmények törölve.</string>
   <string name="search_hint">Keresés erre: %1$s</string>
-  <string name="menu_back">Vissza</string>
-  <string name="menu_forward">Előre</string>
-  <string name="menu_refresh">Frissítés</string>
-  <string name="menu_share">Megosztás</string>
-  <string name="menu_open_with">Megnyitás mással</string>
+  <string name="menu_share">Megosztás…</string>
+  <string name="menu_open_with_default_browser">Megnyitás ezzel: %1$s</string>
+  <string name="menu_open_with_a_browser">Megnyitás mással…</string>
   <string name="menu_settings">Beállítások</string>
   <string name="menu_about">Névjegy</string>
   <string name="menu_help">Súgó</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
   <string name="preference_category_performance">Teljesítmény</string>
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
+  <string name="preference_performance_block_images">Képek blokkolása</string>
+  <string name="preference_default_browser">Alapértelmezett böngészővé tétel</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Névtelen használati adatok küldése</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
+  <string name="content_description_clear_input">Bemenet törlése</string>
+  <string name="content_description_dismiss_input">Elutasítás</string>
+  <string name="content_description_erase">Böngészési előzmények törlése</string>
+  <string name="content_description_lock">Biztonságos kapcsolat</string>
+  <string name="accessibility_announcement_loading">Betöltés</string>
+  <string name="accessibility_announcement_loading_finished">Weboldal betöltve</string>
+  <string name="content_description_menu">További beállítások</string>
+  <string name="content_description_forward">Navigálás előre</string>
+  <string name="content_description_reload">Webhely újratöltése</string>
+  <string name="firstrun_title">Böngésszen úgy, mintha senki sem figyelné.</string>
+  <string name="firstrun_description">Automatikusan blokkolja az online követőket böngészés közben. Aztán érintse meg a gombot a meglátogatott oldalak, keresések, sütik és jelszavak törléséhez az eszközéről.</string>
+  <string name="firstrun_button">Rendben, értem!</string>
+  <string name="firstrun_footer">Hogy egyértelmű legyen, a webhelyek és szolgáltatások még mindig tudhatják, hogy hol járt.</string>
 </resources>

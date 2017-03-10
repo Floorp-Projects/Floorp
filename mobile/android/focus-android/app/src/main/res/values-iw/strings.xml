@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">חיפוש או הכנסת כתובת</string>
+  <string name="teaser">גלישה פרטית אוטומטית.\nגלישה. מחיקה. חזרה להתחלה.</string>
+  <string name="feedback_erase">היסטוריית הגלישה שלך נמחקה.</string>
+  <string name="search_hint">חיפוש עבור %1$s</string>
+  <string name="menu_share">שיתוף…</string>
+  <string name="menu_open_with_default_browser">פתיחה באמצעות %1$s</string>
+  <string name="menu_open_with_a_browser">פתיחה באמצעות…</string>
+  <string name="menu_settings">הגדרות</string>
+  <string name="menu_about">אודות</string>
+  <string name="menu_help">עזרה</string>
+  <string name="menu_rights">הזכויות שלך</string>
+  <string name="preference_category_privacy">פרטיות</string>
+  <string name="preference_privacy_block_ads">חסימת רכיבי מעקב</string>
+  <string name="preference_privacy_block_analytics">חסימת מעקב של כלי ניתוח</string>
+  <string name="preference_privacy_block_social">חסימת רכיבי מעקב חברתיים</string>
+  <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
+  <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
+  <string name="preference_category_performance">ביצועים</string>
+  <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
+  <string name="preference_performance_block_images">חסימת תמונות</string>
+  <string name="preference_default_browser">הפיכה לדפדפן בררת המחדל</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">שליחת נתוני שימוש אנונימיים</string>
+  <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
+  <string name="content_description_clear_input">מחיקת קלט</string>
+  <string name="content_description_dismiss_input">התעלמות</string>
+  <string name="content_description_erase">מחיקת היסטורית גלישה</string>
+  <string name="content_description_lock">חיבור מאובטח</string>
+  <string name="accessibility_announcement_loading">בטעינה</string>
+  <string name="accessibility_announcement_loading_finished">האתר נטען</string>
+  <string name="content_description_menu">אפשרויות נוספות</string>
+  <string name="content_description_forward">ניווט קדימה</string>
+  <string name="content_description_reload">טעינה מחדש של האתר</string>
+  <string name="firstrun_title">גלישה כאילו אף־אחד אינו צופה בך.</string>
+  <string name="firstrun_description">חסימה אוטומטית של מעקב מקוון לאורך הגלישה. מחיקה בלחיצה של האתרים שביקרת בהם, חיפושים, עוגיות וססמאות מההתקן שברשותך.</string>
+  <string name="firstrun_button">קיבלתי!</string>
+  <string name="firstrun_footer">שיהיה ברור, אתרים ושירותים בהם נעשה שימוש יוכלו עדיין לדעת מתי ביקרת בהם.</string>
+</resources>

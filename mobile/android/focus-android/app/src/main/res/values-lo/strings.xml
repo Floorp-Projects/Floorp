@@ -3,12 +3,8 @@
   <string name="urlbar_hint">ຄົ້ນຫາ ຫລື ປ້ອນທີ່ຢູ່ໃສ່ນີ້</string>
   <string name="teaser">ການທ່ອງເວັບສ່ວນຕົວແບບອັດຕະໂນມັດ.\nທ່ອງເວັບ ແລະ ລົບລ້າງປະຫວັດການໃຊ້ງານອອກ.</string>
   <string name="feedback_erase">ປະຫວັດການທ່ອງເວັບຂອງທ່ານໄດ້ຖືກລຶບອອກແລ້ວ.</string>
-  <string name="search_hint">ຄົ້ນຫາສຳລັບ %\@</string>
-  <string name="menu_back">ກັບຄືນ</string>
-  <string name="menu_forward">ໄປຂ້າງຫນ້າ</string>
-  <string name="menu_refresh">ລີເຟຣສ໌</string>
+  <string name="search_hint">ຄົ້ນຫາສຳລັບ %1$s</string>
   <string name="menu_share">ແບ່ງປັນ</string>
-  <string name="menu_open_with">ເປີດດ້ວຍ</string>
   <string name="menu_settings">ການຕັ້ງຄ່າ</string>
   <string name="menu_about">ກ່ຽວກັບ</string>
   <string name="menu_help">ວິທີໃຊ້</string>

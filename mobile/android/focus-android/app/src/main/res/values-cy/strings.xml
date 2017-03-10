@@ -4,11 +4,6 @@
   <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Ailadrodd.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
-  <string name="menu_back">Nôl</string>
-  <string name="menu_forward">Ymlaen</string>
-  <string name="menu_refresh">Adnewyddu</string>
-  <string name="menu_share">Rhannu</string>
-  <string name="menu_open_with">Agor gyda</string>
   <string name="menu_settings">Gosodiadau</string>
   <string name="menu_about">Ynghylch</string>
   <string name="menu_help">Cymorth</string>

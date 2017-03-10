@@ -4,11 +4,9 @@
   <string name="teaser">無痕瀏覽，不留足跡。</string>
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
   <string name="search_hint">搜尋 %1$s</string>
-  <string name="menu_back">上一頁</string>
-  <string name="menu_forward">下一頁</string>
-  <string name="menu_refresh">重新整理</string>
-  <string name="menu_share">分享</string>
-  <string name="menu_open_with">開啟使用</string>
+  <string name="menu_share">分享…</string>
+  <string name="menu_open_with_default_browser">使用 %1$s 開啟</string>
+  <string name="menu_open_with_a_browser">使用其他程式開啟…</string>
   <string name="menu_settings">選項</string>
   <string name="menu_about">關於</string>
   <string name="menu_help">說明</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">可能會影響網頁與影片載入</string>
   <string name="preference_category_performance">效能</string>
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
+  <string name="preference_performance_block_images">封鎖圖片</string>
+  <string name="preference_default_browser">設為預設瀏覽器</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">傳送匿名的使用統計資料</string>
   <string name="preference_mozilla_telemetry_summary">了解更多</string>
+  <string name="content_description_clear_input">清除輸入內容</string>
+  <string name="content_description_dismiss_input">結束輸入</string>
+  <string name="content_description_erase">清除瀏覽紀錄</string>
+  <string name="content_description_lock">安全連線</string>
+  <string name="accessibility_announcement_loading">載入中</string>
+  <string name="accessibility_announcement_loading_finished">網站已載入</string>
+  <string name="content_description_menu">更多選項</string>
+  <string name="content_description_forward">瀏覽下一頁</string>
+  <string name="content_description_reload">重新載入網站</string>
+  <string name="firstrun_title">讓上網時不被偷看。</string>
+  <string name="firstrun_description">自動在您上網時封鎖線上追蹤器；只要一點即可清除裝置中造訪過的頁面、搜尋、Cookie、密碼等紀錄。</string>
+  <string name="firstrun_button">好，知道了！</string>
+  <string name="firstrun_footer">您開啟的網站或服務本身還是會知道您曾經來過。</string>
 </resources>

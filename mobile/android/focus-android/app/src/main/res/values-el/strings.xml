@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Αναζήτηση ή πληκτρολόγηση διεύθυνσης</string>
+  <string name="teaser">Αυτόματη ιδιωτική περιήγηση.\nΠεριήγηση. Διαγραφή. Επανάληψη.</string>
+  <string name="feedback_erase">Το ιστορικό περιήγησής έχει εκκαθαριστεί.</string>
+  <string name="search_hint">Αναζήτηση για %1$s</string>
+  <string name="menu_share">Κοινή χρήση</string>
+  <string name="menu_settings">Ρυθμίσεις</string>
+  <string name="menu_about">Πληροφορίες</string>
+  <string name="menu_help">Βοήθεια</string>
+  <string name="menu_rights">Τα δικαιώματά σας</string>
+  <string name="preference_category_privacy">Απόρρητο</string>
+  <string name="preference_privacy_block_ads">Φραγή trackers διαφημίσεων</string>
+  <string name="preference_privacy_block_analytics">Φραγή αναλυτικών trackers</string>
+  <string name="preference_privacy_block_social">Φραγή κοινωνικών trackers</string>
+  <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
+  <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
+  <string name="preference_category_performance">Απόδοση</string>
+  <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Αποστολή ανώνυμων δεδομένων χρήσης</string>
+  <string name="preference_mozilla_telemetry_summary">Μάθετε περισσότερα</string>
+</resources>

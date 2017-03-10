@@ -1,8 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="menu_refresh">Թարմացնել</string>
   <string name="menu_share">Համաօգտագործել</string>
-  <string name="menu_open_with">Բացել սրանով՝</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>

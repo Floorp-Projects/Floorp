@@ -4,11 +4,9 @@
   <string name="teaser">স্বয়ংক্রিয় প্রাইভেন্ট ব্রাউজিং। \nব্রাউজ করুন। মুছে দিন। আবার করুন।</string>
   <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
-  <string name="menu_back">পিছনে</string>
-  <string name="menu_forward">সামনে</string>
-  <string name="menu_refresh">রিফ্রেশ</string>
-  <string name="menu_share">শেয়ার</string>
-  <string name="menu_open_with">এর সাহায্যে খুলুন</string>
+  <string name="menu_share">শেয়ার…</string>
+  <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
+  <string name="menu_open_with_a_browser">%1$s ব্যবহার করে খোলা হবে…</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
   <string name="menu_help">সহায়তা</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">কিছু ভিডিও এবং ওয়েবপেজ ভাঙ্গা ভাঙ্গা আসতে পারে</string>
   <string name="preference_category_performance">কর্মক্ষমতা</string>
   <string name="preference_performance_block_webfonts">ওয়েব ফন্ট ব্লক করুন</string>
+  <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
+  <string name="preference_default_browser">ডিফল্ট ব্রাউজার করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">ব্যবহার সম্পর্কিত ডাটা ছদ্মনামে প্রেরণ করুন</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
+  <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
+  <string name="content_description_dismiss_input">খারিজ</string>
+  <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
+  <string name="content_description_lock">সুরক্ষিত কানেকশন</string>
+  <string name="accessibility_announcement_loading">লোড হচ্ছে</string>
+  <string name="accessibility_announcement_loading_finished">ওয়েবসাইট লোড হয়েছে</string>
+  <string name="content_description_menu">আরও বিকল্পসমূহ</string>
+  <string name="content_description_forward">সামনে পরিভ্রমণ করুন</string>
+  <string name="content_description_reload">ওয়েবসাইট রিলোড করুন</string>
+  <string name="firstrun_title">ব্রাউজ করুন এমন ভাবে, যেনো কেউ দেখছে না।</string>
+  <string name="firstrun_description">আপনার ব্রাউজিংয়ের সময় স্বয়ংক্রিয়ভাবে অনলাইন ট্রাকারদেরকে অবরুদ্ধ করা হয়। তারপর আপনার ডিভাইস থেকে দেখা পৃষ্ঠাগুলি, অনুসন্ধান, কুকি এবং পাসওয়ার্ড মুছতে ট্যাপ করুন।</string>
+  <string name="firstrun_button">ঠিক আছে, আমি বুঝতে পেরেছি!</string>
+  <string name="firstrun_footer">একটা বিষয় স্পষ্ট জেনে রাখুন, যেসকল সাইট এবং অনলাইন সেবা আপনি ব্যবহার করছেন, তারা ঠিকই জেনে যায় আপনি কোন কোন সাইটে গিয়েছেন।</string>
 </resources>

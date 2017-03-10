@@ -4,11 +4,9 @@
   <string name="teaser">Navigation privée automatique.\nNaviguez. Effacez. Recommencez.</string>
   <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
   <string name="search_hint">Rechercher %1$s</string>
-  <string name="menu_back">Page précédente</string>
-  <string name="menu_forward">Page suivante</string>
-  <string name="menu_refresh">Actualiser</string>
-  <string name="menu_share">Partager</string>
-  <string name="menu_open_with">Ouvrir avec</string>
+  <string name="menu_share">Partager…</string>
+  <string name="menu_open_with_default_browser">Ouvrir avec %1$s</string>
+  <string name="menu_open_with_a_browser">Ouvrir avec…</string>
   <string name="menu_settings">Paramètres</string>
   <string name="menu_about">À propos</string>
   <string name="menu_help">Aide</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
+  <string name="preference_performance_block_images">Bloquer les images</string>
+  <string name="preference_default_browser">Définir comme navigateur par défaut</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Envoyer des statistiques d’utilisation anonymes</string>
   <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
+  <string name="content_description_clear_input">Effacer le texte saisi</string>
+  <string name="content_description_dismiss_input">Fermer</string>
+  <string name="content_description_erase">Effacer l’historique de navigation</string>
+  <string name="content_description_lock">Connexion sécurisée</string>
+  <string name="accessibility_announcement_loading">Chargement…</string>
+  <string name="accessibility_announcement_loading_finished">Site web chargé</string>
+  <string name="content_description_menu">Options supplémentaires</string>
+  <string name="content_description_forward">Avancer dans l’historique</string>
+  <string name="content_description_reload">Actualiser la page web</string>
+  <string name="firstrun_title">Naviguez comme si personne ne vous regardait.</string>
+  <string name="firstrun_description">Bloquez automatiquement les traqueurs lorsque vous naviguez. Appuyez ensuite sur le bouton Effacer pour supprimer les pages visitées, les recherches, les cookies et les mots de passe.</string>
+  <string name="firstrun_button">D’accord, j’ai compris.</string>
+  <string name="firstrun_footer">"Note : les services et sites web que vous utilisez peuvent toujours déterminer où vous êtes allé. "</string>
 </resources>

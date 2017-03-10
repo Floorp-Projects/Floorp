@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Buscar o ingresar dirección</string>
+  <string name="teaser">Navegación privada automática.\nBuscar. Borrar. Repetir.</string>
+  <string name="feedback_erase">Tu historial de navegación ha sido limpiado.</string>
+  <string name="search_hint">Buscar por %1$s</string>
+  <string name="menu_share">Compartir</string>
+  <string name="menu_settings">Ajustes</string>
+  <string name="menu_about">Acerca de</string>
+  <string name="menu_help">Ayuda</string>
+  <string name="menu_rights">Tus derechos</string>
+  <string name="preference_category_privacy">Privacidad</string>
+  <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
+  <string name="preference_privacy_block_analytics">Bloquear rastreadores de analíticas</string>
+  <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
+  <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenido</string>
+  <string name="preference_privacy_block_content_summary">Puede interferir con algunos videos y páginas Web</string>
+  <string name="preference_category_performance">Rendimiento</string>
+  <string name="preference_performance_block_webfonts">Bloquear fuentes Web</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
+  <string name="preference_mozilla_telemetry_summary">Aprender más</string>
+</resources>

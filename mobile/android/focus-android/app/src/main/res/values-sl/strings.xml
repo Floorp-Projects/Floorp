@@ -4,11 +4,9 @@
   <string name="teaser">Samodejno zasebno brskanje.\nBrskajte. Izbrišite. Ponovite.</string>
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
   <string name="search_hint">Išči %1$s</string>
-  <string name="menu_back">Nazaj</string>
-  <string name="menu_forward">Naprej</string>
-  <string name="menu_refresh">Osveži</string>
-  <string name="menu_share">Deli</string>
-  <string name="menu_open_with">Odpri s programom</string>
+  <string name="menu_share">Deli …</string>
+  <string name="menu_open_with_default_browser">Za odpiranje uporabi %1$s</string>
+  <string name="menu_open_with_a_browser">Za odpiranje uporabi ...</string>
   <string name="menu_settings">Nastavitve</string>
   <string name="menu_about">Predstavitev</string>
   <string name="menu_help">Pomoč</string>
@@ -21,7 +19,16 @@
   <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
   <string name="preference_category_performance">Učinkovitost</string>
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
+  <string name="preference_performance_block_images">Zavračaj slike</string>
+  <string name="preference_default_browser">Nastavi kot privzet brskalnik</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Pošiljaj anonimne podatke o uporabi</string>
   <string name="preference_mozilla_telemetry_summary">Več o tem</string>
+  <string name="content_description_clear_input">Počisti vnos</string>
+  <string name="content_description_dismiss_input">Opusti</string>
+  <string name="content_description_erase">Počisti zgodovino brskanja</string>
+  <string name="content_description_lock">Varna povezava</string>
+  <string name="accessibility_announcement_loading">Nalaganje</string>
+  <string name="accessibility_announcement_loading_finished">Spletna stran naložena</string>
+  <string name="content_description_menu">Več možnosti</string>
 </resources>

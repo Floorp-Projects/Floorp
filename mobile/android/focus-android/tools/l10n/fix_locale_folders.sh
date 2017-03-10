@@ -24,9 +24,7 @@ do
 
 		echo "Fixing ${folder} -> ${fixed_folder}"
 
-		if [ -f $fixed_folder ] ; then
-			rm -rf "${fixed_folder}"
-		fi
+		rm -rf "${fixed_folder}"
 
 		mv "$folder" "${fixed_folder}"
 	fi

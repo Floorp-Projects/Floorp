@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">جست‌وجو یا آدرسی وارد کنید</string>
+  <string name="teaser">مرور ناشناس خودکار.\nمرور کنید. پاک کنید. تکرار کنید.</string>
+  <string name="feedback_erase">تاریخچه مرور شما حذف شد.</string>
+  <string name="search_hint">جست‌وجو برای %1$s</string>
+  <string name="menu_share">اشتراک‌گذاری…</string>
+  <string name="menu_open_with_default_browser">باز کردن با %1$s</string>
+  <string name="menu_open_with_a_browser">باز کردن با…</string>
+  <string name="menu_settings">تنظیمات</string>
+  <string name="menu_about">راهنما</string>
+  <string name="menu_help">راهنما</string>
+  <string name="menu_rights">حقوق شما</string>
+  <string name="preference_category_privacy">حریم‌خصوصی</string>
+  <string name="preference_privacy_block_ads">مسدود کردن ردیاب‌های تبلیغاتی</string>
+  <string name="preference_privacy_block_analytics">مسدود کردن ردیاب‌های آماری</string>
+  <string name="preference_privacy_block_social">مسدود کردن ردیاب‌های شبکه‌های اجتماعی</string>
+  <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
+  <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دوچار مشکل کند</string>
+  <string name="preference_category_performance">کارایی</string>
+  <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
+  <string name="preference_performance_block_images">مسدود کردن تصاویر</string>
+  <string name="preference_default_browser">تبدیل به مرورگر پیش‌فرض</string>
+  <string name="preference_category_mozilla">موزیلا</string>
+  <string name="preference_mozilla_telemetry">ارسال داده‌های ناشناس مربوط به استفاده</string>
+  <string name="preference_mozilla_telemetry_summary">اطلاعات بیشتر</string>
+  <string name="content_description_clear_input">پاک کردن وروردی</string>
+  <string name="content_description_dismiss_input">رد کردن</string>
+  <string name="content_description_erase">حذف تاریخچه مرور</string>
+  <string name="content_description_lock">اتصال امن</string>
+  <string name="accessibility_announcement_loading">در حال بارگیری</string>
+  <string name="accessibility_announcement_loading_finished">وب‌سایت بارگیری شد</string>
+  <string name="content_description_menu">گزینه‌های بیشتر</string>
+  <string name="content_description_forward">حرکت به جلو</string>
+  <string name="content_description_reload">بارگیری مجدد سایت</string>
+  <string name="firstrun_title">بدون دغدغهٔ نگاه‌ها مرور کنید.</string>
+  <string name="firstrun_description">به طور خودکار ردیاب‌های برخط را هنگام مرور مسدود کنید. بعد از آن با یک لمس، صفحات، جست‌وجوها، کوکی‌ها و گذرواژه‌هایی که مشاهده کرده‌اید را از روی دستگاه خود حذف کنید.</string>
+  <string name="firstrun_button">باشه، گرفتم!</string>
+  <string name="firstrun_footer">بعنوان شفاف‌سازی، سایت‌ها و سرویس‌هایی که از آنها استفاده می‌کنید هنوز میتوانند بدانند که چه کارهایی انجام داده‌اید.</string>
+</resources>

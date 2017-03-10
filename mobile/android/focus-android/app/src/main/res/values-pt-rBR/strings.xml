@@ -4,11 +4,9 @@
   <string name="teaser">Navegação privativa automatica.\nNavegar. Apagar. Repetir.</string>
   <string name="feedback_erase">Seu histórico de navegação foi apagado.</string>
   <string name="search_hint">Pesquisar por %1$s</string>
-  <string name="menu_back">Voltar</string>
-  <string name="menu_forward">Avançar</string>
-  <string name="menu_refresh">Atualizar</string>
-  <string name="menu_share">Compartilhar</string>
-  <string name="menu_open_with">Abrir com</string>
+  <string name="menu_share">Compartilhar…</string>
+  <string name="menu_open_with_default_browser">Abrir com %1$s</string>
+  <string name="menu_open_with_a_browser">Abrir com…</string>
   <string name="menu_settings">Configurações</string>
   <string name="menu_about">Sobre</string>
   <string name="menu_help">Ajuda</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Pode quebrar alguns vídeos e páginas Web</string>
   <string name="preference_category_performance">Desempenho</string>
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
+  <string name="preference_performance_block_images">Bloquear imagens</string>
+  <string name="preference_default_browser">Definir como navegador padrão</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar dados de uso anonimamente</string>
   <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
+  <string name="content_description_clear_input">Limpar campo</string>
+  <string name="content_description_dismiss_input">Dispensar</string>
+  <string name="content_description_erase">Apagar o histórico de navegação</string>
+  <string name="content_description_lock">Conexão segura</string>
+  <string name="accessibility_announcement_loading">Carregando</string>
+  <string name="accessibility_announcement_loading_finished">Site carregado</string>
+  <string name="content_description_menu">Mais opções</string>
+  <string name="content_description_forward">Navegar para a frente</string>
+  <string name="content_description_reload">Recarregar o site</string>
+  <string name="firstrun_title">Navegar como se ninguém estivesse olhando.</string>
+  <string name="firstrun_description">Bloqueie automaticamente os rastreadores on-line enquanto navega. Então, toque para apagar páginas visitadas, pesquisas, cookies e senhas do seu dispositivo.</string>
+  <string name="firstrun_button">Ok, entendi!</string>
+  <string name="firstrun_footer">Para ser claro, sites e serviços que você usa ainda podem saber onde você esteve.</string>
 </resources>

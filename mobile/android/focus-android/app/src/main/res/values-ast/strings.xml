@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Gueta o introduz direiciones</string>
+  <string name="teaser">Restolar en priváu automático.\nRestola. Desanicia. Repiti.</string>
+  <string name="feedback_erase">Desanicióse\'l to historial de restolar.</string>
+  <string name="search_hint">Guetar %1$s</string>
+  <string name="menu_share">Compartir…</string>
+  <string name="menu_open_with_default_browser">Abrir con %1$s</string>
+  <string name="menu_open_with_a_browser">Abrir con…</string>
+  <string name="menu_settings">Axustes</string>
+  <string name="menu_about">Tocante a</string>
+  <string name="menu_help">Ayuda</string>
+  <string name="menu_rights">Los tos drechos</string>
+  <string name="preference_category_privacy">Privacidá</string>
+  <string name="preference_privacy_block_ads">Bloquiar rastrexadores publicitarios</string>
+  <string name="preference_privacy_block_analytics">Bloquiar rastrexadores d\'analítiques</string>
+  <string name="preference_privacy_block_social">Bloquiar rastrexadores sociales</string>
+  <string name="preference_privacy_block_content">Bloquiar otros rastrexadores</string>
+  <string name="preference_privacy_block_content_summary">Quiciabes ruempa dellos vídeos y páxines web</string>
+  <string name="preference_category_performance">Rindimientu</string>
+  <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
+  <string name="preference_performance_block_images">Bloquiar imáxenes</string>
+  <string name="preference_default_browser">Predeterminar restolador</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Unviar datos anónimos d\'usu</string>
+  <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
+  <string name="content_description_clear_input">Llimpiar entrada</string>
+  <string name="content_description_dismiss_input">Escartar</string>
+  <string name="content_description_erase">Desaniciar historial de restolar</string>
+  <string name="content_description_lock">Conexón segura</string>
+  <string name="accessibility_announcement_loading">Cargando</string>
+  <string name="accessibility_announcement_loading_finished">Sitiu web cargáu</string>
+  <string name="content_description_menu">Más opciones</string>
+  <string name="content_description_forward">Dir haza alantre</string>
+  <string name="content_description_reload">Recargar sitiu web</string>
+  <string name="firstrun_title">Restola como si naide nun te viere.</string>
+  <string name="firstrun_description">Bloquia automáticamente los rastrexadores en llinia entrín restoles. Dempués calca pa desaniciar les páxines visitaes, guetes, cookies y contraseñes del to preséu.</string>
+  <string name="firstrun_button">¡Val, píllolo!</string>
+  <string name="firstrun_footer">Siendo claros, los sitios y servicios entá puen saber onde tas.</string>
+</resources>

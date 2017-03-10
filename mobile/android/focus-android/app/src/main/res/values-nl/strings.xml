@@ -4,11 +4,9 @@
   <string name="teaser">Automatische privénavigatie.\nSurfen. Wissen. Herhalen.</string>
   <string name="feedback_erase">Uw navigatiegeschiedenis is gewist.</string>
   <string name="search_hint">Zoeken naar %1$s</string>
-  <string name="menu_back">Terug</string>
-  <string name="menu_forward">Vooruit</string>
-  <string name="menu_refresh">Vernieuwen</string>
-  <string name="menu_share">Delen</string>
-  <string name="menu_open_with">Openen met</string>
+  <string name="menu_share">Delen…</string>
+  <string name="menu_open_with_default_browser">Openen met %1$s</string>
+  <string name="menu_open_with_a_browser">Openen met…</string>
   <string name="menu_settings">Instellingen</string>
   <string name="menu_about">Over</string>
   <string name="menu_help">Help</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
+  <string name="preference_performance_block_images">Afbeeldingen blokkeren</string>
+  <string name="preference_default_browser">Standaardbrowser maken</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonieme gebruiksgegevens verzenden</string>
   <string name="preference_mozilla_telemetry_summary">Meer info</string>
+  <string name="content_description_clear_input">Invoer wissen</string>
+  <string name="content_description_dismiss_input">Verwijderen</string>
+  <string name="content_description_erase">Navigatiegeschiedenis wissen</string>
+  <string name="content_description_lock">Beveiligde verbinding</string>
+  <string name="accessibility_announcement_loading">Laden</string>
+  <string name="accessibility_announcement_loading_finished">Website geladen</string>
+  <string name="content_description_menu">Meer opties</string>
+  <string name="content_description_forward">Vooruit bladeren</string>
+  <string name="content_description_reload">Website opnieuw laden</string>
+  <string name="firstrun_title">Surf alsof niemand meekijkt.</string>
+  <string name="firstrun_description">Blokkeer automatisch onlinetrackers terwijl u surft. Tik daarna om bezochte pagina’s, zoekopdrachten, cookies en wachtwoorden op uw apparaat te wissen.</string>
+  <string name="firstrun_button">OK, begrepen!</string>
+  <string name="firstrun_footer">Voor de duidelijkheid: websites en services die u gebruikt, kunnen nog steeds zien waar u bent geweest.</string>
 </resources>

@@ -1,16 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="urlbar_hint">Nadi neɣ sekcem tansa</string>
+  <string name="urlbar_hint">Nadi neγ sekcem tansa</string>
   <string name="teaser">Tunigin tusligt tawurmant.\nSnirem. Kkes. Sniles.</string>
   <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
   <string name="search_hint">Nadi %1$s</string>
-  <string name="menu_back">Ɣer deffir</string>
-  <string name="menu_forward">Ɣer zdat</string>
-  <string name="menu_refresh">Smiren</string>
-  <string name="menu_share">Bḍu</string>
-  <string name="menu_open_with">Ldi s</string>
-  <string name="menu_settings">Iɣewwaṛen</string>
-  <string name="menu_about">Ɣef</string>
+  <string name="menu_share">Bḍu…</string>
+  <string name="menu_open_with_default_browser">Ldi s %1$s</string>
+  <string name="menu_open_with_a_browser">Ldi s…</string>
+  <string name="menu_settings">Iγewwaṛen</string>
+  <string name="menu_about">Γef</string>
   <string name="menu_help">Tallalt</string>
   <string name="menu_rights">Izerfan-inek</string>
   <string name="preference_category_privacy">Tabaḍnit</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
+  <string name="preference_performance_block_images">Sewḥel tugniwin</string>
+  <string name="preference_default_browser">Err-it d iminig amezwer</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Azen isefka n useqdec udrigen</string>
   <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
+  <string name="content_description_clear_input">Sfeḍ anekcam</string>
+  <string name="content_description_dismiss_input">Kkes</string>
+  <string name="content_description_erase">Kkes amazray n tunigin</string>
+  <string name="content_description_lock">Tuqqna taγelsant</string>
+  <string name="accessibility_announcement_loading">Asali</string>
+  <string name="accessibility_announcement_loading_finished">Asmel web yuli-d</string>
+  <string name="content_description_menu">Ugar n iγewwaṛen</string>
+  <string name="content_description_forward">Inig ar zdat</string>
+  <string name="content_description_reload">Ales asali n usmel web</string>
+  <string name="firstrun_title">Inig am akken ulac win i k-id-ittmuqqulen.</string>
+  <string name="firstrun_description">Sewḥel s wudem awurman inedfaṛen ticki tettinigeḍ. Senned sakin ɣef tqeffalt Sfeḍ akken ad tekkseḍ isebtar yettwarzan, inadiyen, inagan n tuqqna akked wawalen uffiren.</string>
+  <string name="firstrun_button">Ih, gziɣ!</string>
+  <string name="firstrun_footer">Akken ad tegzuḍ, ismal akked imeẓla zeren yakan ad ẓren anida telliḍ.</string>
 </resources>

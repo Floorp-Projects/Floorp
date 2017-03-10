@@ -4,11 +4,9 @@
   <string name="teaser">Navigazione anonima in automatico.\nNaviga. Elimina. Ripeti.</string>
   <string name="feedback_erase">La cronologia di navigazione è stata eliminata.</string>
   <string name="search_hint">Cerca %1$s</string>
-  <string name="menu_back">Indietro</string>
-  <string name="menu_forward">Avanti</string>
-  <string name="menu_refresh">Aggiorna</string>
-  <string name="menu_share">Condividi</string>
-  <string name="menu_open_with">Apri con</string>
+  <string name="menu_share">Condividi…</string>
+  <string name="menu_open_with_default_browser">Apri con %1$s</string>
+  <string name="menu_open_with_a_browser">Apri con…</string>
   <string name="menu_settings">Impostazioni</string>
   <string name="menu_about">Informazioni su</string>
   <string name="menu_help">Aiuto</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
+  <string name="preference_performance_block_images">Blocca immagini</string>
+  <string name="preference_default_browser">Imposta come browser predefinito</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Invia dati anonimi sull’uso</string>
   <string name="preference_mozilla_telemetry_summary">Ulteriori informazioni</string>
+  <string name="content_description_clear_input">Cancella testo</string>
+  <string name="content_description_dismiss_input">Chiudi</string>
+  <string name="content_description_erase">Elimina cronologia di navigazione</string>
+  <string name="content_description_lock">Connessione sicura</string>
+  <string name="accessibility_announcement_loading">Caricamento…</string>
+  <string name="accessibility_announcement_loading_finished">Sito web caricato</string>
+  <string name="content_description_menu">Altre opzioni</string>
+  <string name="content_description_forward">Naviga in avanti</string>
+  <string name="content_description_reload">Ricarica il sito web</string>
+  <string name="firstrun_title">Naviga come se nessuno ti stesse guardando.</string>
+  <string name="firstrun_description">Blocca automaticamente gli elementi in grado di tracciarti durante la navigazione. Poi, con un semplice tocco, elimina le pagine visitate, i cookie e le password dal dispositivo.</string>
+  <string name="firstrun_button">Ho capito!</string>
+  <string name="firstrun_footer">Per essere chiari, i siti web visitati e il gestore in uso potranno comunque stabilire dove sei stato.</string>
 </resources>

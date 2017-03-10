@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">Cari atau masukkan alamat</string>
+  <string name="teaser">Penjelajahan pribadi otomatis.\nJelajahi. Hapus. Ulangi.</string>
+  <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
+  <string name="search_hint">Cari %1$s</string>
+  <string name="menu_share">Bagikan</string>
+  <string name="menu_open_with_default_browser">Buka dengan %1$s</string>
+  <string name="menu_open_with_a_browser">Buka dengan …</string>
+  <string name="menu_settings">Setelan</string>
+  <string name="menu_about">Tentang</string>
+  <string name="menu_help">Bantuan</string>
+  <string name="menu_rights">Hak Anda</string>
+  <string name="preference_category_privacy">Privasi</string>
+  <string name="preference_privacy_block_ads">Blokir pelacak iklan</string>
+  <string name="preference_privacy_block_analytics">Blokir pelacak analitik</string>
+  <string name="preference_privacy_block_social">Blokir pelacak sosial</string>
+  <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
+  <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
+  <string name="preference_category_performance">Kinerja</string>
+  <string name="preference_performance_block_webfonts">Blokir font Web</string>
+  <string name="preference_performance_block_images">Blokir Gambar</string>
+  <string name="preference_default_browser">Jadikan peramban utama</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Kirim data penggunaan anonim</string>
+  <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
+  <string name="content_description_clear_input">Bersihkan masukan</string>
+  <string name="content_description_erase">Hapus riwayat penjelajahan</string>
+  <string name="content_description_lock">Sambungan aman</string>
+  <string name="accessibility_announcement_loading">Memuat</string>
+  <string name="firstrun_button">Oke, beres!</string>
+</resources>

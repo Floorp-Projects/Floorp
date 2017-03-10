@@ -4,11 +4,9 @@
   <string name="teaser">Automatické súkromné prehliadanie.\nPrehliadajte. Vymažte históriu. Opakujte.</string>
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
   <string name="search_hint">Vyhľadať %1$s</string>
-  <string name="menu_back">Naspäť</string>
-  <string name="menu_forward">Dopredu</string>
-  <string name="menu_refresh">Obnoviť</string>
-  <string name="menu_share">Zdieľať</string>
-  <string name="menu_open_with">Otvoriť pomocou</string>
+  <string name="menu_share">Zdieľať…</string>
+  <string name="menu_open_with_default_browser">Otvoriť pomocou %1$s</string>
+  <string name="menu_open_with_a_browser">Otvoriť pomocou…</string>
   <string name="menu_settings">Nastavenia</string>
   <string name="menu_about">O aplikácii</string>
   <string name="menu_help">Pomocník</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Toto môže rozbiť niektoré videá a webové stránky</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
+  <string name="preference_performance_block_images">Blokovať obrázky</string>
+  <string name="preference_default_browser">Nastaviť ako predvolený prehliadač</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
+  <string name="content_description_clear_input">Vyčistiť vstup</string>
+  <string name="content_description_dismiss_input">Zavrieť</string>
+  <string name="content_description_erase">Vymazať históriu prehliadania</string>
+  <string name="content_description_lock">Zabezpečené pripojenie</string>
+  <string name="accessibility_announcement_loading">Načítava sa</string>
+  <string name="accessibility_announcement_loading_finished">Stránka bola načítaná</string>
+  <string name="content_description_menu">Ďalšie možnosti</string>
+  <string name="content_description_forward">Prejsť dopredu</string>
+  <string name="content_description_reload">Obnoviť stránku</string>
+  <string name="firstrun_title">Prehliadajte, akoby sa nikto nepozeral.</string>
+  <string name="firstrun_description">Automaticky počas prehliadania blokujte sledovacie prvky. Potom jedným ťuknutím z vášho zariadenia vymažte zoznam navštívených stránok, výsledky vyhľadávania, cookies a heslá.</string>
+  <string name="firstrun_button">Ok, rozumiem!</string>
+  <string name="firstrun_footer">Len pre úplnosť, stránky a služby, ktoré používate môžu stále vedieť kde ste boli.</string>
 </resources>

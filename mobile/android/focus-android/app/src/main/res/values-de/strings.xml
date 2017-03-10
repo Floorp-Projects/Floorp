@@ -4,11 +4,9 @@
   <string name="teaser">Automatischer Privater Modus.\nSurfen. Löschen. Wiederholen.</string>
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
   <string name="search_hint">Suchen nach %1$s</string>
-  <string name="menu_back">Zurück</string>
-  <string name="menu_forward">Vor</string>
-  <string name="menu_refresh">Aktualisieren</string>
-  <string name="menu_share">Teilen</string>
-  <string name="menu_open_with">Öffnen mit</string>
+  <string name="menu_share">Teilen…</string>
+  <string name="menu_open_with_default_browser">Öffnen mit %1$s</string>
+  <string name="menu_open_with_a_browser">Öffnen mit…</string>
   <string name="menu_settings">Einstellungen</string>
   <string name="menu_about">Über</string>
   <string name="menu_help">Hilfe</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
+  <string name="preference_performance_block_images">Grafiken blockieren</string>
+  <string name="preference_default_browser">Als Standardbrowser verwenden</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonyme Nutzungsdaten senden</string>
   <string name="preference_mozilla_telemetry_summary">Mehr erfahren</string>
+  <string name="content_description_clear_input">Eingabefeld leeren</string>
+  <string name="content_description_dismiss_input">Schließen</string>
+  <string name="content_description_erase">Browser-Chronik löschen</string>
+  <string name="content_description_lock">Sichere Verbindung</string>
+  <string name="accessibility_announcement_loading">Wird geladen…</string>
+  <string name="accessibility_announcement_loading_finished">Website geladen</string>
+  <string name="content_description_menu">Weitere Optionen</string>
+  <string name="content_description_forward">Vorwärts navigieren</string>
+  <string name="content_description_reload">Website neu laden</string>
+  <string name="firstrun_title">Surfen Sie, als würde niemand zusehen.</string>
+  <string name="firstrun_description">Blockieren Sie automatisch Online-Verfolgung beim Surfen. Durch Tippen können Sie dann besuchte Seiten, Suchanfragen, Cookies und Passwörter von Ihrem Gerät löschen.</string>
+  <string name="firstrun_button">Ok, verstanden!</string>
+  <string name="firstrun_footer">Beachten Sie: Websites und von Ihnen genutzte Dienste können immer noch nachvollziehen, wo Sie waren.</string>
 </resources>

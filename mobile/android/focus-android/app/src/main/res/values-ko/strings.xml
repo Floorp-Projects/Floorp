@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="urlbar_hint">검색어 또는 주소 입력</string>
+  <string name="teaser">자동화된 사생활 보호 브라우저.\n쓰고, 지우고. 쓰고, 지우고.</string>
+  <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
+  <string name="search_hint">%1$s 검색</string>
+  <string name="menu_share">공유…</string>
+  <string name="menu_open_with_default_browser">%1$s로 열기</string>
+  <string name="menu_open_with_a_browser">다음으로 열기…</string>
+  <string name="menu_settings">설정</string>
+  <string name="menu_about">정보</string>
+  <string name="menu_help">도움말</string>
+  <string name="menu_rights">사용자 권리</string>
+  <string name="preference_category_privacy">개인 정보</string>
+  <string name="preference_privacy_block_ads">광고 추적기 차단</string>
+  <string name="preference_privacy_block_analytics">분석용 추적기 차단</string>
+  <string name="preference_privacy_block_social">소셜 추적기 차단</string>
+  <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
+  <string name="preference_privacy_block_content_summary">동영상이나 웹 페이지가 제대로 표시되지 않을 수 있음</string>
+  <string name="preference_category_performance">성능</string>
+  <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
+  <string name="preference_performance_block_images">이미지 차단</string>
+  <string name="preference_default_browser">기본 브라우저로 설정</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">익명으로 사용 데이터 보내기</string>
+  <string name="preference_mozilla_telemetry_summary">상세정보</string>
+  <string name="content_description_clear_input">입력 값 초기화</string>
+  <string name="content_description_dismiss_input">취소</string>
+  <string name="content_description_erase">탐색 기록 지우기</string>
+  <string name="content_description_lock">보안 연결</string>
+  <string name="accessibility_announcement_loading">로딩 중</string>
+  <string name="accessibility_announcement_loading_finished">웹 사이트 불러옴</string>
+  <string name="content_description_menu">옵션 더보기</string>
+  <string name="content_description_forward">앞으로 가기</string>
+  <string name="content_description_reload">웹 사이트 다시 불러오기</string>
+  <string name="firstrun_title">아무도 모르게 탐색합니다.</string>
+  <string name="firstrun_description">검색 중 온라인 추적을 자동으로 차단합니다. 클릭만으로 방문한 페이지, 검색 기록, 쿠키, 암호를 단말기에서 삭제할 수 있습니다.</string>
+  <string name="firstrun_button">알겠습니다!</string>
+  <string name="firstrun_footer">명확히 하자면, 사이트와 서비스는 여전히 사용자가 어디에서 왔는지 알 수 있습니다.</string>
+</resources>

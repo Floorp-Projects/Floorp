@@ -4,11 +4,9 @@
   <string name="teaser">プライベートブラウジングを自動的に。\nブラウズ、消去の繰り返し。</string>
   <string name="feedback_erase">ページの表示履歴が消去されました。</string>
   <string name="search_hint">%1$s を検索</string>
-  <string name="menu_back">戻る</string>
-  <string name="menu_forward">進む</string>
-  <string name="menu_refresh">再読み込み</string>
-  <string name="menu_share">共有</string>
-  <string name="menu_open_with">開く:</string>
+  <string name="menu_share">共有...</string>
+  <string name="menu_open_with_default_browser">%1$s で開く</string>
+  <string name="menu_open_with_a_browser">他のアプリで開く...</string>
   <string name="menu_settings">設定</string>
   <string name="menu_about">製品情報</string>
   <string name="menu_help">ヘルプ</string>
@@ -21,7 +19,22 @@
   <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
+  <string name="preference_performance_block_images">画像をブロック</string>
+  <string name="preference_default_browser">既定のブラウザにする</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">利用データを匿名で送信する</string>
   <string name="preference_mozilla_telemetry_summary">詳細情報</string>
+  <string name="content_description_clear_input">入力内容を消去</string>
+  <string name="content_description_dismiss_input">閉じる</string>
+  <string name="content_description_erase">閲覧履歴を消去</string>
+  <string name="content_description_lock">安全な接続</string>
+  <string name="accessibility_announcement_loading">読み込み中</string>
+  <string name="accessibility_announcement_loading_finished">ウェブサイト読み込み完了</string>
+  <string name="content_description_menu">その他のオプション</string>
+  <string name="content_description_forward">次のページへ進む</string>
+  <string name="content_description_reload">ウェブサイトを再読み込み</string>
+  <string name="firstrun_title">誰にも監視されないブラウジング。</string>
+  <string name="firstrun_description">ブラウジング中のオンライン追跡を自動的にブロックします。タップするだけで、訪問したページ、検索履歴、Cookie、パスワードを端末から消去できます。</string>
+  <string name="firstrun_button">了解</string>
+  <string name="firstrun_footer">誤解のないように言っておきますが、あなたが使ったサイトやサービスは、あなたがどのページを見たかを引き続き把握できます。</string>
 </resources>
