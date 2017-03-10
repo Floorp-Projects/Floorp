@@ -5,13 +5,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
-import urllib2
 
 from . import transform
 from taskgraph.util.docker import INDEX_PREFIX
 from taskgraph.transforms.base import TransformSequence, TransformConfig
-from taskgraph.util.taskcluster import get_artifact_url
 from taskgraph.util.python_path import find_object
 
 logger = logging.getLogger(__name__)
@@ -40,25 +37,6 @@ def load_tasks(kind, path, config, params, loaded_tasks):
 
 
 class DockerImageTask(transform.TransformTask):
-
-    def optimize(self, params):
-        optimized, taskId = super(DockerImageTask, self).optimize(params)
-        if optimized and taskId:
-            try:
-                # Only return the task ID if the artifact exists for the indexed
-                # task.
-                request = urllib2.Request(get_artifact_url(
-                    taskId, 'public/image.tar.zst',
-                    use_proxy=bool(os.environ.get('TASK_ID'))))
-                request.get_method = lambda: 'HEAD'
-                urllib2.urlopen(request)
-
-                # HEAD success on the artifact is enough
-                return True, taskId
-            except urllib2.HTTPError:
-                pass
-
-        return False, None
 
     @classmethod
     def from_json(cls, task_dict):

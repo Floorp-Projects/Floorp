@@ -132,6 +132,18 @@ task_description_schema = Schema({
     # tasks are never coalesced
     Optional('coalesce-name'): basestring,
 
+    # Optimizations to perform on this task during the optimization phase,
+    # specified in order.  These optimizations are defined in
+    # taskcluster/taskgraph/optimize.py.
+    Optional('optimizations'): [Any(
+        # search the index for the given index namespace, and replace this task if found
+        ['index-search', basestring],
+        # consult SETA and skip this task if it is low-value
+        ['seta'],
+        # skip this task if none of the given file patterns match
+        ['files-changed', [basestring]],
+    )],
+
     # the provisioner-id/worker-type for the task.  The following parameters will
     # be substituted in this string:
     #  {level} -- the scm level of this push
@@ -339,8 +351,8 @@ task_description_schema = Schema({
     }),
 
     # The "when" section contains descriptions of the circumstances
-    # under which this task can be "optimized", that is, left out of the
-    # task graph because it is unnecessary.
+    # under which this task should be included in the task graph.  This
+    # will be converted into an element in the `optimizations` list.
     Optional('when'): Any({
         # This task only needs to be run if a file matching one of the given
         # patterns has changed in the push.  The patterns use the mozpack
@@ -784,6 +796,17 @@ def add_files_changed(config, tasks):
 
 
 @transforms.add
+def setup_optimizations(config, tasks):
+    for task in tasks:
+        optimizations = task.setdefault('optimizations', [])
+        optimizations.extend([['index-search', idx] for idx in task.get('index-paths', [])])
+        optimizations.append(['seta'])
+        if 'when' in task and 'files-changed' in task['when']:
+            optimizations.append(['files-changed', task['when']['files-changed']])
+        yield task
+
+
+@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         worker_type = task['worker-type'].format(level=str(config.params['level']))
@@ -876,8 +899,7 @@ def build_task(config, tasks):
             'task': task_def,
             'dependencies': task.get('dependencies', {}),
             'attributes': attributes,
-            'index-paths': task.get('index-paths'),
-            'when': task.get('when', {}),
+            'optimizations': task['optimizations'],
         }
 
 
