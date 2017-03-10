@@ -555,7 +555,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     root.setAttribute("style",
       `position:absolute; width:${width}px;height:${height}px; overflow:hidden`);
 
-    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
     return true;
   },
 
@@ -1004,7 +1004,7 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this._hideGridElements();
     this._hideGridAreaInfoBar();
     this._hideGridCellInfoBar();
-    setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
+    setIgnoreLayoutChanges(false, this.highlighterEnv.document.documentElement);
   },
 
   _hideGrid() {

@@ -85,6 +85,12 @@ function* spawnTest() {
     }
   ]);
 
+  // Hide all highlighters before finishing the test.
+  yield helpers.audit(options, [{
+    setup: "unhighlight",
+    exec: {}
+  }]);
+
   yield helpers.closeToolbar(options);
   yield helpers.closeTab(options);
 }
