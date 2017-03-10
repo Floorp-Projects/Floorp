@@ -10,7 +10,7 @@ from ..try_option_syntax import TryOptionSyntax
 from ..try_option_syntax import RIDEALONG_BUILDS
 from ..graph import Graph
 from ..taskgraph import TaskGraph
-from ..task.base import Task
+from ..task import Task
 from mozunit import main
 
 # an empty graph, for things that don't look at it

@@ -7,7 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 from ..graph import Graph
-from ..task.base import Task
+from ..task import Task
 from ..taskgraph import TaskGraph
 from mozunit import main
 

@@ -10,7 +10,7 @@ import os
 from .. import create
 from ..graph import Graph
 from ..taskgraph import TaskGraph
-from ..task.base import Task
+from ..task import Task
 
 from mozunit import main
 
