@@ -1591,13 +1591,13 @@ SocketTransportShim::GetTimeout(uint32_t aType, uint32_t *_retval)
 }
 
 NS_IMETHODIMP
-SocketTransportShim::GetNetworkInterfaceId(nsACString_internal &aNetworkInterfaceId)
+SocketTransportShim::GetNetworkInterfaceId(nsACString &aNetworkInterfaceId)
 {
   return mWrapped->GetNetworkInterfaceId(aNetworkInterfaceId);
 }
 
 NS_IMETHODIMP
-SocketTransportShim::SetNetworkInterfaceId(const nsACString_internal &aNetworkInterfaceId)
+SocketTransportShim::SetNetworkInterfaceId(const nsACString &aNetworkInterfaceId)
 {
   return mWrapped->SetNetworkInterfaceId(aNetworkInterfaceId);
 }

@@ -132,13 +132,13 @@ MediaEngineTabVideoSource::DestroyRunnable::Run()
 }
 
 void
-MediaEngineTabVideoSource::GetName(nsAString_internal& aName) const
+MediaEngineTabVideoSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(u"&getUserMedia.videoSource.tabShare;");
 }
 
 void
-MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid) const
+MediaEngineTabVideoSource::GetUUID(nsACString& aUuid) const
 {
   aUuid.AssignLiteral("tab");
 }

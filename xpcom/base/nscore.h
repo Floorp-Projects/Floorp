@@ -187,18 +187,6 @@
 
 #define XPCOM_API(type) NS_EXTERN_C type
 
-#ifdef MOZILLA_INTERNAL_API
-   /*
-     The frozen string API has different definitions of nsAC?String
-     classes than the internal API. On systems that explicitly declare
-     dllexport symbols this is not a problem, but on ELF systems
-     internal symbols can accidentally "shine through"; we rename the
-     internal classes to avoid symbol conflicts.
-   */
-#  define nsAString nsAString_internal
-#  define nsACString nsACString_internal
-#endif
-
 #if (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
 /* Make refcnt logging part of the build. This doesn't mean that
  * actual logging will occur (that requires a separate enable; see
