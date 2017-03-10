@@ -134,6 +134,9 @@ public:
   ServiceWorkerInfo*
   GetActive() const;
 
+  ServiceWorkerInfo*
+  GetByID(uint64_t aID) const;
+
   // Set the given worker as the evaluating service worker.  The worker
   // state is not changed.
   void
