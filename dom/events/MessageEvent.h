@@ -62,8 +62,7 @@ public:
   static already_AddRefed<MessageEvent>
   Constructor(EventTarget* aEventTarget,
               const nsAString& aType,
-              const MessageEventInit& aEventInit,
-              ErrorResult& aRv);
+              const MessageEventInit& aEventInit);
 
   void InitMessageEvent(JSContext* aCx, const nsAString& aType, bool aCanBubble,
                         bool aCancelable, JS::Handle<JS::Value> aData,
