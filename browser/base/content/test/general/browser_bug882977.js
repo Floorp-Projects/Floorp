@@ -14,18 +14,11 @@ add_task(function*() {
   });
 
   let win = OpenBrowserWindow();
-  yield BrowserTestUtils.waitForEvent(win, "load");
+  yield BrowserTestUtils.firstBrowserLoaded(win, false);
 
   let browser = win.gBrowser.selectedBrowser;
-  // If we've finished loading about:home already, we can check
-  // right away - otherwise, we need to wait.
-  if (browser.contentDocument.readyState == "complete" &&
-      browser.currentURI.spec == homepage) {
-    checkIdentityMode(win);
-  } else {
-    yield BrowserTestUtils.browserLoaded(browser, false, homepage);
-    checkIdentityMode(win);
-  }
+  is(browser.currentURI.spec, homepage, "Loaded the correct homepage");
+  checkIdentityMode(win);
 
   yield BrowserTestUtils.closeWindow(win);
 });
