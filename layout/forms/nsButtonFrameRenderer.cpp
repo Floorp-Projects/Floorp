@@ -19,7 +19,6 @@
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/layers/WebRenderDisplayItemLayer.h"
-#include "mozilla/layers/WebRenderBorderLayer.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"

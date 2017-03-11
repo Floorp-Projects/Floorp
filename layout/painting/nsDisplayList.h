@@ -2877,6 +2877,11 @@ public:
   }
 
 protected:
+  void CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                          nsTArray<WebRenderParentCommand>& aParentCommands,
+                                          WebRenderDisplayItemLayer* aLayer);
+  void CreateBorderWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                    WebRenderDisplayItemLayer* aLayer);
   nsRegion CalculateBounds(const nsStyleBorder& aStyleBorder);
 
   mozilla::Array<mozilla::gfx::Color, 4> mColors;
