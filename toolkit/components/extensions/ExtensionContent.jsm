@@ -44,6 +44,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
                                   "resource://gre/modules/WebNavigationFrames.jsm");
 
+const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
+
 Cu.import("resource://gre/modules/ExtensionChild.jsm");
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -103,9 +105,47 @@ var apiManager = new class extends SchemaAPIManager {
   }
 }();
 
+const SCRIPT_EXPIRY_TIMEOUT_MS = 300000;
+const SCRIPT_CLEAR_TIMEOUT_MS = 5000;
+
+const scriptCaches = new WeakSet();
+
 class ScriptCache extends DefaultMap {
   constructor(options) {
     super(url => ChromeUtils.compileScript(url, options));
+
+    scriptCaches.add(this);
+  }
+
+  get(url) {
+    let script = super.get(url);
+
+    script.lastUsed = Date.now();
+    if (script.timer) {
+      script.timer.cancel();
+    }
+    script.timer = Timer(this.delete.bind(this, url),
+                         SCRIPT_EXPIRY_TIMEOUT_MS,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+
+    return script;
+  }
+
+  delete(url) {
+    if (this.has(url)) {
+      super.get(url).timer.cancel();
+    }
+
+    super.delete(url);
+  }
+
+  clear(timeout = SCRIPT_CLEAR_TIMEOUT_MS) {
+    let now = Date.now();
+    for (let [url, script] of this.entries()) {
+      if (now - script.lastUsed >= timeout) {
+        this.delete(url);
+      }
+    }
   }
 }
 
@@ -537,6 +577,7 @@ DocumentManager = {
     Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "document-element-inserted", false);
     Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "memory-pressure", false);
   },
 
   uninit() {
@@ -546,6 +587,7 @@ DocumentManager = {
     Services.obs.removeObserver(this, "content-document-global-created");
     Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
+    Services.obs.removeObserver(this, "memory-pressure");
   },
 
   getWindowState(contentWindow) {
@@ -647,6 +689,12 @@ DocumentManager = {
             type === Ci.nsIContentPolicy.TYPE_SUBDOCUMENT) {
           this.preloadScripts(subject.URI, loadInfo);
         }
+      }
+    } else if (topic === "memory-pressure") {
+      let timeout = data === "heap-minimize" ? 0 : undefined;
+
+      for (let cache of ChromeUtils.nondeterministicGetWeakSetKeys(scriptCaches)) {
+        cache.clear(timeout);
       }
     }
   },
