@@ -323,6 +323,13 @@ var gFxAccounts = {
     this.openAccountsPage("reauth", { entrypoint: entryPoint });
   },
 
+  async openDevicesManagementPage(entryPoint) {
+    let url = await fxAccounts.promiseAccountsManageDevicesURI(entryPoint);
+    switchToTabHavingURI(url, true, {
+      replaceQueryString: true
+    });
+  },
+
   sendTabToDevice(url, clientId, title) {
     Weave.Service.clientsEngine.sendURIToClientForDisplay(url, clientId, title);
   },
