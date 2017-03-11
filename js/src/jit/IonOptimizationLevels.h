@@ -139,7 +139,7 @@ class OptimizationInfo
     uint32_t compilerSmallFunctionWarmUpThreshold_;
 
     // Default small function compiler warmup threshold, unless it is overridden.
-    static const uint32_t CompilerSmallFunctionWarmupThreshold = 100;
+    static const uint32_t CompilerSmallFunctionWarmupThreshold = CompilerWarmupThreshold;
 
     // How many invocations or loop iterations are needed before calls
     // are inlined, as a fraction of compilerWarmUpThreshold.
