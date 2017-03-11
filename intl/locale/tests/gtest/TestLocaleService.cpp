@@ -40,14 +40,6 @@ TEST(Intl_Locale_LocaleService, GetAppLocales_lastIsEnUS) {
   ASSERT_TRUE(appLocales[len - 1].EqualsLiteral("en-US"));
 }
 
-TEST(Intl_Locale_LocaleService, GetRequestedLocales) {
-  nsTArray<nsCString> reqLocales;
-  LocaleService::GetInstance()->GetRequestedLocales(reqLocales);
-
-  int32_t len = reqLocales.Length();
-  ASSERT_TRUE(len > 0);
-}
-
 TEST(Intl_Locale_LocaleService, GetAppLocale) {
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocales(appLocales);
