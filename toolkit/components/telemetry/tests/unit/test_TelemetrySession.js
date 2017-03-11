@@ -1777,8 +1777,12 @@ add_task(function* test_schedulerNothingDue() {
 add_task(function* test_pingExtendedStats() {
   const EXTENDED_PAYLOAD_FIELDS = [
     "chromeHangs", "threadHangStats", "log", "slowSQL", "fileIOReports", "lateWrites",
-    "addonHistograms", "addonDetails", "UIMeasurements", "webrtc"
+    "addonHistograms", "addonDetails", "webrtc"
   ];
+
+  if (AppConstants.platform == "android") {
+    EXTENDED_PAYLOAD_FIELDS.push("UIMeasurements");
+  }
 
   // Reset telemetry and disable sending extended statistics.
   yield TelemetryStorage.testClearPendingPings();

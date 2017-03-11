@@ -35,6 +35,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_media_queries_dynamic.html [17]
   * test_media_queries_dynamic_xbl.html [2]
   * test_webkit_device_pixel_ratio.html: -webkit-device-pixel-ratio [3]
+  * browser_bug453896.js [8]
+  * test_display_mode.html [7]
+  * test_display_mode_reflow.html [2]
 * test_all_shorthand.html: all shorthand servo/servo#15055 [*]
 * Animation support:
   * test_animations.html [70]
@@ -476,10 +479,13 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_rule_insertion.html [16]
 * @-moz-document support
   * test_rule_serialization.html [2]
+  * test_moz_document_rules.html [13]
 * getComputedStyle style doesn't contain custom properties bug 1336891
   * test_variable_serialization_computed.html [36]
   * test_variables.html `custom property name` [2]
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [8]
+* test_author_specified_style.html: support serializing color as author specified [33]
+* browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 
 ## Assertions
 

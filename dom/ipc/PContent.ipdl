@@ -647,9 +647,10 @@ parent:
      * Return whether the provided KeyHandle belongs to this Token
      *
      * |keyHandle| Key Handle to evaluate.
+     * |application| The FIDO Application data that is associated with this key.
      * Returns |True| if the Key Handle is ours.
      */
-    sync NSSU2FTokenIsRegistered(uint8_t[] keyHandle)
+    sync NSSU2FTokenIsRegistered(uint8_t[] keyHandle, uint8_t[] application)
         returns (bool isValidKeyHandle);
 
     /**

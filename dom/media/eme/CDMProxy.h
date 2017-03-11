@@ -81,11 +81,13 @@ public:
   CDMProxy(dom::MediaKeys* aKeys,
            const nsAString& aKeySystem,
            bool aDistinctiveIdentifierRequired,
-           bool aPersistentStateRequired)
+           bool aPersistentStateRequired,
+           nsIEventTarget* aMainThread)
     : mKeys(aKeys)
     , mKeySystem(aKeySystem)
     , mDistinctiveIdentifierRequired(aDistinctiveIdentifierRequired)
     , mPersistentStateRequired(aPersistentStateRequired)
+    , mMainThread(aMainThread)
   {}
 
   // Main thread only.
@@ -94,8 +96,7 @@ public:
   virtual void Init(PromiseId aPromiseId,
                     const nsAString& aOrigin,
                     const nsAString& aTopLevelOrigin,
-                    const nsAString& aName,
-                    nsIEventTarget* aMainThread) = 0;
+                    const nsAString& aName) = 0;
 
   virtual void OnSetDecryptorId(uint32_t aId) {}
 
@@ -260,9 +261,6 @@ protected:
 
   const nsString mKeySystem;
 
-  // The main thread associated with the root document. Must be set in Init().
-  nsCOMPtr<nsIEventTarget> mMainThread;
-
   // Onwer specified thread. e.g. Gecko Media Plugin thread.
   // All interactions with the out-of-process EME plugin must come from this thread.
   RefPtr<nsIThread> mOwnerThread;
@@ -273,6 +271,9 @@ protected:
 
   const bool mDistinctiveIdentifierRequired;
   const bool mPersistentStateRequired;
+
+  // The main thread associated with the root document.
+  const nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
 

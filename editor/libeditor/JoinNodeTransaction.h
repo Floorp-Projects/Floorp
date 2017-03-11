@@ -36,9 +36,10 @@ public:
                       nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
-   * Call this after constructing to ensure the inputs are correct.
+   * CanDoIt() returns true if there are enough members and can join or
+   * restore the nodes.  Otherwise, false.
    */
-  nsresult CheckValidity();
+  bool CanDoIt() const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodeTransaction,
                                            EditTransactionBase)

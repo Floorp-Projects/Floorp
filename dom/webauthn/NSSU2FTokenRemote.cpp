@@ -37,9 +37,11 @@ NSSU2FTokenRemote::IsCompatibleVersion(const nsAString& aVersionString,
 
 NS_IMETHODIMP
 NSSU2FTokenRemote::IsRegistered(uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
+                                uint8_t* aAppParam, uint32_t aAppParamLen,
                                 bool* aIsRegistered)
 {
   NS_ENSURE_ARG_POINTER(aKeyHandle);
+  NS_ENSURE_ARG_POINTER(aAppParam);
   NS_ENSURE_ARG_POINTER(aIsRegistered);
 
   nsTArray<uint8_t> keyHandle;
@@ -48,9 +50,15 @@ NSSU2FTokenRemote::IsRegistered(uint8_t* aKeyHandle, uint32_t aKeyHandleLen,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsTArray<uint8_t> appParam;
+  if (!appParam.ReplaceElementsAt(0, appParam.Length(), aAppParam,
+                                  aAppParamLen)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   ContentChild* cc = ContentChild::GetSingleton();
   MOZ_ASSERT(cc);
-  if (!cc->SendNSSU2FTokenIsRegistered(keyHandle, aIsRegistered)) {
+  if (!cc->SendNSSU2FTokenIsRegistered(keyHandle, appParam, aIsRegistered)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
