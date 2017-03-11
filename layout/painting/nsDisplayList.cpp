@@ -4659,32 +4659,35 @@ nsDisplayBorder::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  if (mBorderImageRenderer) {
-    return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
-  }
-
-  RefPtr<Layer> oldLayer = aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
-  RefPtr<BorderLayer> layer = oldLayer ? oldLayer->AsBorderLayer() : nullptr;
-
-  if (!layer) {
-    layer = aManager->CreateBorderLayer();
-    if (!layer)
-      return nullptr;
-  }
-  layer->SetRect(mRect);
-  layer->SetCornerRadii(mCorners);
-  layer->SetColors(mColors);
-  layer->SetWidths(mWidths);
-  layer->SetStyles(mBorderStyles);
-  layer->SetBaseTransform(gfx::Matrix4x4::Translation(aContainerParameters.mOffset.x,
-                                                      aContainerParameters.mOffset.y, 0));
-  return layer.forget();
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
 void
-nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
-                                         nsTArray<WebRenderParentCommand>& aParentCommands,
-                                         WebRenderDisplayItemLayer* aLayer)
+nsDisplayBorder::CreateBorderWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                               WebRenderDisplayItemLayer* aLayer)
+{
+  nsPoint offset = ToReferenceFrame();
+  Maybe<nsCSSBorderRenderer> br =
+    nsCSSRendering::CreateBorderRenderer(mFrame->PresContext(),
+                                         nullptr,
+                                         mFrame,
+                                         nsRect(),
+                                         nsRect(offset, mFrame->GetSize()),
+                                         mFrame->StyleContext(),
+                                         mFrame->GetSkipSides());
+
+  if (!br) {
+    NS_WARNING("Could not create border renderer during nsDisplayButtonBorder");
+    return;
+  }
+
+  br->CreateWebRenderCommands(aBuilder, aLayer);
+}
+
+void
+nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                    nsTArray<WebRenderParentCommand>& aParentCommands,
+                                                    WebRenderDisplayItemLayer* aLayer)
 {
   // Only support border-image currently
   MOZ_ASSERT(mBorderImageRenderer);
@@ -4743,6 +4746,18 @@ nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                            wr::ToWrSideOffsets2Df32(outset[0], outset[1], outset[2], outset[3]),
                            wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
                            wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
+}
+
+void
+nsDisplayBorder::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
+                                         nsTArray<WebRenderParentCommand>& aParentCommands,
+                                         WebRenderDisplayItemLayer* aLayer)
+{
+  if (mBorderImageRenderer) {
+    CreateBorderImageWebRenderCommands(aBuilder, aParentCommands, aLayer);
+  } else {
+    CreateBorderWebRenderCommands(aBuilder, aLayer);
+  }
 }
 
 void
