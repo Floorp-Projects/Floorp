@@ -491,7 +491,7 @@ js::IsCrossCompartmentWrapper(JSObject* obj)
            !!(Wrapper::wrapperHandler(obj)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
-void
+JS_FRIEND_API(void)
 js::NukeCrossCompartmentWrapper(JSContext* cx, JSObject* wrapper)
 {
     MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());

@@ -193,7 +193,7 @@ using Vector = mozilla::Vector<T, 0, js::SystemAllocPolicy>;
 // heap snapshots store their strings as const char16_t*. In order to provide
 // zero-cost accessors to these strings in a single interface that works with
 // both cases, we use this variant type.
-class AtomOrTwoByteChars : public Variant<JSAtom*, const char16_t*> {
+class JS_PUBLIC_API(AtomOrTwoByteChars) : public Variant<JSAtom*, const char16_t*> {
     using Base = Variant<JSAtom*, const char16_t*>;
 
   public:
@@ -466,8 +466,10 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
     bool isSelfHosted(JSContext* cx) const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
 };
 
-MOZ_MUST_USE bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
-                                               MutableHandleObject outSavedFrameStack);
+MOZ_MUST_USE JS_PUBLIC_API(bool)
+ConstructSavedFrameStackSlow(JSContext* cx,
+                             JS::ubi::StackFrame& frame,
+                             MutableHandleObject outSavedFrameStack);
 
 
 /*** ubi::Node ************************************************************************************/
@@ -969,7 +971,7 @@ class PreComputedEdgeRange : public EdgeRange {
 //
 //        ...
 //    }
-class MOZ_STACK_CLASS RootList {
+class MOZ_STACK_CLASS JS_PUBLIC_API(RootList) {
     Maybe<AutoCheckCannotGC>& noGC;
 
   public:
@@ -1001,7 +1003,7 @@ class MOZ_STACK_CLASS RootList {
 /*** Concrete classes for ubi::Node referent types ************************************************/
 
 template<>
-class Concrete<RootList> : public Base {
+class JS_PUBLIC_API(Concrete<RootList>) : public Base {
   protected:
     explicit Concrete(RootList* ptr) : Base(ptr) { }
     RootList& get() const { return *static_cast<RootList*>(ptr); }
@@ -1040,7 +1042,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 // Define specializations for some commonly-used public JSAPI types.
 // These can use the generic templates above.
 template<>
-class Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
+class JS_PUBLIC_API(Concrete<JS::Symbol>) : TracerConcrete<JS::Symbol> {
   protected:
     explicit Concrete(JS::Symbol* ptr) : TracerConcrete(ptr) { }
 
@@ -1056,7 +1058,7 @@ class Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
 };
 
 template<>
-class Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
+class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithCompartment<JSScript> {
   protected:
     explicit Concrete(JSScript *ptr) : TracerConcreteWithCompartment<JSScript>(ptr) { }
 
@@ -1073,7 +1075,7 @@ class Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
 
 // The JSObject specialization.
 template<>
-class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
+class JS_PUBLIC_API(Concrete<JSObject>) : public TracerConcreteWithCompartment<JSObject> {
   protected:
     explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
 
@@ -1098,7 +1100,7 @@ class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
 
 // For JSString, we extend the generic template with a 'size' implementation.
 template<>
-class Concrete<JSString> : TracerConcrete<JSString> {
+class JS_PUBLIC_API(Concrete<JSString>) : TracerConcrete<JSString> {
   protected:
     explicit Concrete(JSString *ptr) : TracerConcrete<JSString>(ptr) { }
 
@@ -1115,7 +1117,7 @@ class Concrete<JSString> : TracerConcrete<JSString> {
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
-class Concrete<void> : public Base {
+class JS_PUBLIC_API(Concrete<void>) : public Base {
     const char16_t* typeName() const override;
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
     js::UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
