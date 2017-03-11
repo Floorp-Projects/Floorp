@@ -5015,6 +5015,14 @@ mozilla::BrowserTabsRemoteAutostart()
   return gBrowserTabsRemoteAutostart;
 }
 
+namespace mozilla {
+const char*
+PlatformBuildID()
+{
+  return gToolkitBuildID;
+}
+}
+
 void
 SetupErrorHandling(const char* progname)
 {
