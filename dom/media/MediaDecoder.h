@@ -189,7 +189,8 @@ public:
   virtual nsresult Play();
 
   // Notify activity of the decoder owner is changed.
-  virtual void NotifyOwnerActivityChanged(bool aIsVisible);
+  virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,
+                                          bool aIsElementVisible);
 
   // Pause video playback.
   virtual void Pause();
@@ -371,7 +372,8 @@ private:
   dom::AudioChannel GetAudioChannel() { return mAudioChannel; }
 
   // Called from HTMLMediaElement when owner document activity changes
-  virtual void SetElementVisibility(bool aIsVisible);
+  virtual void SetElementVisibility(bool aIsDocumentVisible,
+                                    bool aIsElementVisible);
 
   // Force override the visible state to hidden.
   // Called from HTMLMediaElement when testing of video decode suspend from mochitests.
@@ -716,8 +718,11 @@ protected:
   // only be accessed from main thread.
   nsAutoPtr<MediaInfo> mInfo;
 
-  // Tracks the visiblity status from HTMLMediaElement
-  bool mElementVisible;
+  // Tracks the visibility status of owner element's document.
+  bool mIsDocumentVisible;
+
+  // Tracks the visibliity status of owner element.
+  bool mIsElementVisible;
 
   // If true, forces the decoder to be considered hidden.
   bool mForcedHidden;
