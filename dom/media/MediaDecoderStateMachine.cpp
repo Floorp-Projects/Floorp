@@ -2547,7 +2547,6 @@ ShutdownState::Enter()
   master->mPlaybackBytesPerSecond.DisconnectIfConnected();
   master->mPlaybackRateReliable.DisconnectIfConnected();
   master->mDecoderPosition.DisconnectIfConnected();
-  master->mHasSuspendTaint.DisconnectIfConnected();
 
   master->mDuration.DisconnectAll();
   master->mIsShutdown.DisconnectAll();
@@ -2615,7 +2614,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_MIRROR(mPlaybackBytesPerSecond, 0.0),
   INIT_MIRROR(mPlaybackRateReliable, true),
   INIT_MIRROR(mDecoderPosition, 0),
-  INIT_MIRROR(mHasSuspendTaint, false),
   INIT_CANONICAL(mDuration, NullableTimeUnit()),
   INIT_CANONICAL(mIsShutdown, false),
   INIT_CANONICAL(mNextFrameStatus, MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE),
@@ -2684,12 +2682,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mObservedDuration,
                       &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
-
-  if (MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
-    mHasSuspendTaint.Connect(aDecoder->CanonicalHasSuspendTaint());
-    mWatchManager.Watch(mHasSuspendTaint,
-                        &MediaDecoderStateMachine::SuspendTaintChanged);
-  }
 
   MOZ_ASSERT(!mStateObj);
   auto* s = new DecodeMetadataState(this);
@@ -3012,19 +3004,6 @@ void MediaDecoderStateMachine::PlayStateChanged()
   }
 
   mStateObj->HandlePlayStateChanged(mPlayState);
-}
-
-void MediaDecoderStateMachine::SuspendTaintChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHasSuspendTaint); // Suspend taint is only ever set.
-
-  CancelSuspendTimer();
-
-  // Resume from suspended decoding.
-  if (mVideoDecodeSuspended) {
-    mStateObj->HandleResumeVideoDecoding();
-  }
 }
 
 void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
