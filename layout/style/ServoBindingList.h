@@ -135,7 +135,9 @@ SERVO_BINDING_FUNC(Servo_AnimationValue_DeepEqual, bool,
 
 // Style attribute
 SERVO_BINDING_FUNC(Servo_ParseStyleAttribute, RawServoDeclarationBlockStrong,
-                   const nsACString* data)
+                   const nsACString* data,
+                   const nsACString* base,
+                   const GeckoParserExtraData* extraData)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_CreateEmpty,
                    RawServoDeclarationBlockStrong)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Clone, RawServoDeclarationBlockStrong,

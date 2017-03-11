@@ -21,8 +21,8 @@ fails == clipPath-html-zoomed-01.xhtml clipPath-html-zoomed-01.xhtml
 == clipPath-transformed-html-02.xhtml clipPath-transformed-html-02.xhtml
 == conditions-outer-svg-01.xhtml conditions-outer-svg-01.xhtml
 == conditions-outer-svg-02.xhtml conditions-outer-svg-02.xhtml
-fails == dynamic-conditions-outer-svg-01.xhtml dynamic-conditions-outer-svg-01.xhtml
-fails == dynamic-conditions-outer-svg-02.xhtml dynamic-conditions-outer-svg-02.xhtml
+== dynamic-conditions-outer-svg-01.xhtml dynamic-conditions-outer-svg-01.xhtml
+== dynamic-conditions-outer-svg-02.xhtml dynamic-conditions-outer-svg-02.xhtml
 fails == dynamic-conditions-outer-svg-03.xhtml dynamic-conditions-outer-svg-03.xhtml
 == dynamic-conditions-outer-svg-04.xhtml dynamic-conditions-outer-svg-04.xhtml
 fails == filter-html-01.xhtml filter-html-01.xhtml
