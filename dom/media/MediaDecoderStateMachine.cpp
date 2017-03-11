@@ -770,11 +770,6 @@ public:
       return;
     }
 
-    // The decoder is tainted, so suspend-video-decoder is disabled.
-    if (mMaster->mHasSuspendTaint) {
-      return;
-    }
-
     mMaster->mVideoDecodeSuspended = true;
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
     Reader()->SetVideoBlankDecode(true);
@@ -1767,14 +1762,9 @@ public:
   void HandleVideoSuspendTimeout() override
   {
     // No video, so nothing to suspend.
-     if (!mMaster->HasVideo()) {
-       return;
-     }
-
-     // The decoder is tainted, so nothing to suspend.
-     if (mMaster->mHasSuspendTaint) {
-       return;
-     }
+    if (!mMaster->HasVideo()) {
+     return;
+    }
 
     mMaster->mVideoDecodeSuspended = true;
     mMaster->mOnPlaybackEvent.Notify(MediaEventType::EnterVideoSuspend);
