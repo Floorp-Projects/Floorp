@@ -446,7 +446,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_value_storage.html `33.5833px` [2]
   * ... `0.766667px` [2]
   * ... `105.333px` [2]
-* test_viewport_units.html: viewport units support [12]
+* test_viewport_units.html: viewport units support [8]
 * test_value_storage.html `: var(--a)`: extra whitespace is added for shorthand with variables servo/servo#15295 [*]
 * border-width computed wrong bug 1335990
   * test_parse_rule.html `border-style` [4]
