@@ -407,9 +407,6 @@ protected:
   // Notification method invoked when mIsVisible changes.
   void VisibilityChanged();
 
-  // Notification method invoked when mHasSuspendTaint changes.
-  void SuspendTaintChanged();
-
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();
@@ -754,8 +751,6 @@ private:
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
 
-  // HasSuspendTaint, mirrored from the media decoder.
-  Mirror<bool> mHasSuspendTaint;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
