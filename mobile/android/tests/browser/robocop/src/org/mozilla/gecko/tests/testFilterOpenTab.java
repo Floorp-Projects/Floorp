@@ -17,6 +17,8 @@ import android.content.ContentProvider;
 import android.content.Context;
 import android.database.Cursor;
 
+import static org.mozilla.gecko.Tab.TabType;
+
 /**
  * Tests that local tabs are filtered prior to upload.
  * - create a set of tabs and persists them through TabsAccessor.
@@ -54,11 +56,11 @@ public class testFilterOpenTab extends ContentProviderTest {
     }
 
     private Tab createTab(int id, String url, boolean external, int parentId, String title) {
-        return new Tab((Context) getActivity(), id, url, external, parentId, title);
+        return new Tab((Context) getActivity(), id, url, external, parentId, title, TabType.BROWSING);
     }
 
     private Tab createPrivateTab(int id, String url, boolean external, int parentId, String title) {
-        return new PrivateTab((Context) getActivity(), id, url, external, parentId, title);
+        return new PrivateTab((Context) getActivity(), id, url, external, parentId, title, TabType.BROWSING);
     }
 
     @Override

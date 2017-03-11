@@ -43,6 +43,7 @@ public class Tab {
 
     private static Pattern sColorPattern;
     private final int mId;
+    private TabType mType;
     private final BrowserDB mDB;
     private long mLastUsed;
     private String mUrl;
@@ -118,10 +119,11 @@ public class Tab {
         NONE         // Non error pages
     }
 
-    public Tab(Context context, int id, String url, boolean external, int parentId, String title) {
+    public Tab(Context context, int id, String url, boolean external, int parentId, String title, TabType type) {
         mAppContext = context.getApplicationContext();
         mDB = BrowserDB.from(context);
         mId = id;
+        mType = type;
         mUrl = url;
         mBaseDomain = "";
         mUserRequested = "";
@@ -763,6 +765,16 @@ public class Tab {
 
     public boolean isPrivate() {
         return false;
+    }
+
+    public TabType getType() {
+        return mType;
+    }
+
+    public enum TabType {
+        BROWSING,
+        CUSTOMTAB,
+        WEBAPP
     }
 
     /**

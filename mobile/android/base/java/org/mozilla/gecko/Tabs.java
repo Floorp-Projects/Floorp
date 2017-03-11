@@ -42,6 +42,8 @@ import android.support.annotation.UiThread;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import static org.mozilla.gecko.Tab.TabType;
+
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
@@ -230,9 +232,9 @@ public class Tabs implements BundleEventListener {
         }
     }
 
-    private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate, int tabIndex) {
-        final Tab tab = isPrivate ? new PrivateTab(mAppContext, id, url, external, parentId, title) :
-                                    new Tab(mAppContext, id, url, external, parentId, title);
+    private Tab addTab(int id, String url, boolean external, int parentId, String title, boolean isPrivate, int tabIndex, TabType type) {
+        final Tab tab = isPrivate ? new PrivateTab(mAppContext, id, url, external, parentId, title, type) :
+                                    new Tab(mAppContext, id, url, external, parentId, title, type);
         synchronized (this) {
             lazyRegisterBookmarkObserver();
             mTabs.put(id, tab);
@@ -535,7 +537,8 @@ public class Tabs implements BundleEventListener {
                                       message.getInt("parentId"),
                                       message.getString("title"),
                                       message.getBoolean("isPrivate"),
-                                      message.getInt("tabIndex"));
+                                      message.getInt("tabIndex"),
+                                      TabType.valueOf(message.getString("tabType")));
                 // If we added the tab as a stub, we should have already
                 // selected it, so ignore this flag for stubbed tabs.
                 if (message.getBoolean("selected"))
@@ -870,7 +873,7 @@ public class Tabs implements BundleEventListener {
     /**
      * Loads a tab with the given URL in the currently selected tab.
      *
-     * @param url URL of page to load, or search term used if searchEngine is given
+     * @param url URL of page to load
      */
     @RobocopTarget
     public Tab loadUrl(String url) {
@@ -880,7 +883,7 @@ public class Tabs implements BundleEventListener {
     /**
      * Loads a tab with the given URL.
      *
-     * @param url   URL of page to load, or search term used if searchEngine is given
+     * @param url   URL of page to load
      * @param flags flags used to load tab
      *
      * @return      the Tab if a new one was created; null otherwise
@@ -934,6 +937,7 @@ public class Tabs implements BundleEventListener {
         boolean external = (flags & LOADURL_EXTERNAL) != 0;
         final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
         final boolean customTab = (flags & LOADURL_CUSTOMTAB) != 0;
+        final TabType type = customTab ? TabType.CUSTOMTAB : TabType.BROWSING;
 
         data.putString("url", url);
         data.putString("engine", searchEngine);
@@ -991,7 +995,7 @@ public class Tabs implements BundleEventListener {
             // Add the new tab to the end of the tab order.
             final int tabIndex = -1;
 
-            tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex);
+            tabToSelect = addTab(tabId, tabUrl, external, parentId, url, isPrivate, tabIndex, type);
             tabToSelect.setDesktopMode(desktopMode);
             tabToSelect.setApplicationId(applicationId);
             if (isFirstShownAfterActivityUnhidden) {
