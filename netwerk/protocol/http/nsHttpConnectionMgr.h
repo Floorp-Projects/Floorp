@@ -45,6 +45,7 @@ public:
 
     // parameter names
     enum nsParamName {
+        MAX_URGENT_START_Q,
         MAX_CONNECTIONS,
         MAX_PERSISTENT_CONNECTIONS_PER_HOST,
         MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
@@ -57,7 +58,8 @@ public:
 
     nsHttpConnectionMgr();
 
-    MOZ_MUST_USE nsresult Init(uint16_t maxConnections,
+    MOZ_MUST_USE nsresult Init(uint16_t maxUrgentStartQ,
+                               uint16_t maxConnections,
                                uint16_t maxPersistentConnectionsPerHost,
                                uint16_t maxPersistentConnectionsPerProxy,
                                uint16_t maxRequestDelay);
@@ -212,6 +214,7 @@ private:
         ~nsConnectionEntry();
 
         RefPtr<nsHttpConnectionInfo> mConnInfo;
+        nsTArray<RefPtr<nsHttpTransaction> > mUrgentStartQ;// the urgent start transaction queue
         nsTArray<RefPtr<nsHttpTransaction> > mPendingQ;    // pending transaction queue
         nsTArray<RefPtr<nsHttpConnection> >  mActiveConns; // active connections
         nsTArray<RefPtr<nsHttpConnection> >  mIdleConns;   // idle persistent connections
@@ -366,6 +369,7 @@ private:
     nsCOMPtr<nsIEventTarget>     mSocketThreadTarget;
 
     // connection limits
+    uint16_t mMaxUrgentStartQ;
     uint16_t mMaxConns;
     uint16_t mMaxPersistConnsPerHost;
     uint16_t mMaxPersistConnsPerProxy;
@@ -378,6 +382,10 @@ private:
 
     MOZ_MUST_USE bool ProcessPendingQForEntry(nsConnectionEntry *,
                                               bool considerAll);
+    void DispatchPendingQ(nsTArray<RefPtr<nsHttpTransaction>> &pendingQ,
+                                   nsConnectionEntry *ent,
+                                   bool &dispatchedSuccessfully,
+                                   bool considerAll);
     bool     AtActiveConnectionLimit(nsConnectionEntry *, uint32_t caps);
     MOZ_MUST_USE nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                                  bool onlyReusedConnection,
@@ -421,7 +429,9 @@ private:
                                              nsHttpTransaction *trans);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
-
+    void               DispatchSpdyPendingQ(nsTArray<RefPtr<nsHttpTransaction>> &pendingQ,
+                                            nsConnectionEntry *ent,
+                                            nsHttpConnection *conn);
     // used to marshall events to the socket transport thread.
     MOZ_MUST_USE nsresult PostEvent(nsConnEventHandler  handler,
                                     int32_t             iparam = 0,
