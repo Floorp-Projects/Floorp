@@ -19,6 +19,8 @@ import android.widget.Button;
 
 import java.util.ArrayList;
 
+import static org.mozilla.gecko.Tab.TabType;
+
 public abstract class TabsLayout extends RecyclerView
         implements TabsPanel.TabsLayout,
         Tabs.OnTabsChangedListener,
@@ -29,6 +31,7 @@ public abstract class TabsLayout extends RecyclerView
     private static final String LOGTAG = "Gecko" + TabsLayout.class.getSimpleName();
 
     private final boolean isPrivate;
+    private final TabType type;
     private TabsPanel tabsPanel;
     private final TabsLayoutAdapter tabsAdapter;
 
@@ -37,6 +40,7 @@ public abstract class TabsLayout extends RecyclerView
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsLayout);
         isPrivate = (a.getInt(R.styleable.TabsLayout_tabs, 0x0) == 1);
+        type = TabType.BROWSING;
         a.recycle();
 
         tabsAdapter = new TabsLayoutAdapter(context, itemViewLayoutResId, isPrivate,
@@ -95,6 +99,10 @@ public abstract class TabsLayout extends RecyclerView
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (msg != Tabs.TabEvents.RESTORED && tab.getType() != type) {
+            return;
+        }
+
         switch (msg) {
             case ADDED:
                 final int tabIndex = Integer.parseInt(data);
@@ -173,7 +181,7 @@ public abstract class TabsLayout extends RecyclerView
         final Iterable<Tab> allTabs = Tabs.getInstance().getTabsInOrder();
 
         for (final Tab tab : allTabs) {
-            if (tab.isPrivate() == isPrivate) {
+            if (tab.isPrivate() == isPrivate && tab.getType() == type) {
                 tabData.add(tab);
             }
         }
