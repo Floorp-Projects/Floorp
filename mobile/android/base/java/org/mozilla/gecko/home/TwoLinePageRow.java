@@ -205,12 +205,13 @@ public class TwoLinePageRow extends LinearLayout
     protected void updateDisplayedUrl() {
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         final boolean isPrivate = (selectedTab != null) && (selectedTab.isPrivate());
+        final Tab.TabType type = selectedTab != null ? selectedTab.getType() : Tab.TabType.BROWSING;
 
         // We always want to display the underlying page url, however for readermode pages
         // we navigate to the about:reader equivalent, hence we need to use that url when finding
         // existing tabs
         final String navigationUrl = mHasReaderCacheItem ? ReaderModeUtils.getAboutReaderForUrl(mPageUrl) : mPageUrl;
-        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate);
+        Tab tab = Tabs.getInstance().getFirstTabForUrl(navigationUrl, isPrivate, type);
 
 
         if (!mShowIcons || tab == null) {
