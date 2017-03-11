@@ -297,11 +297,12 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 }
 
 void
-MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
+MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
+                                         bool aIsElementVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  SetElementVisibility(aIsVisible);
+  SetElementVisibility(aIsDocumentVisible, aIsElementVisible);
 
   NotifyCompositor();
 }
@@ -394,7 +395,8 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mMinimizePreroll(false)
   , mMediaTracksConstructed(false)
   , mFiredMetadataLoaded(false)
-  , mElementVisible(!aOwner->IsHidden())
+  , mIsDocumentVisible(!aOwner->IsHidden())
+  , mIsElementVisible(!aOwner->IsHidden())
   , mForcedHidden(false)
   , mHasSuspendTaint(false)
   , INIT_MIRROR(mStateMachineIsShutdown, true)
@@ -1305,10 +1307,12 @@ MediaDecoder::NotifyCompositor()
 }
 
 void
-MediaDecoder::SetElementVisibility(bool aIsVisible)
+MediaDecoder::SetElementVisibility(bool aIsDocumentVisible,
+                                   bool aIsElementVisible)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mElementVisible = aIsVisible;
+  mIsDocumentVisible = aIsDocumentVisible;
+  mIsElementVisible = aIsElementVisible;
   UpdateVideoDecodeMode();
 }
 
@@ -1343,8 +1347,15 @@ MediaDecoder::UpdateVideoDecodeMode()
   }
 
   // If mForcedHidden is set, suspend the video decoder anyway.
+  if (mForcedHidden) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+    return;
+  }
+
   // Otherwise, depends on the owner's visibility state.
-  if (!mForcedHidden && mElementVisible) {
+  // A element is visible only if its document is visible and the element
+  // itself is visible.
+  if (mIsDocumentVisible && mIsElementVisible) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   } else {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);

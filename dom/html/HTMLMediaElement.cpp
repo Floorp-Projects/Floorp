@@ -7400,12 +7400,9 @@ HTMLMediaElement::GetEMEInfo(nsString& aEMEInfo)
 void
 HTMLMediaElement::NotifyDecoderActivityChanges() const
 {
-  // A element is visible only if its document is visible and the element
-  // itself is visible.
-  const bool visible = !IsHidden() &&
-                       mVisibilityState == Visibility::APPROXIMATELY_VISIBLE;
   if (mDecoder) {
-    mDecoder->NotifyOwnerActivityChanged(visible);
+    mDecoder->NotifyOwnerActivityChanged(!IsHidden(),
+                                         mVisibilityState == Visibility::APPROXIMATELY_VISIBLE);
   }
 }
 
