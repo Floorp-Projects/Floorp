@@ -767,8 +767,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
         }
 
         if (!targetFront) {
-          console.trace("Got a mutation for an unexpected actor: " + targetID +
+          console.warn("Got a mutation for an unexpected actor: " + targetID +
             ", please file a bug on bugzilla.mozilla.org!");
+          console.trace();
           continue;
         }
 
@@ -826,8 +827,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           // first.
           for (let child of targetFront.treeChildren()) {
             if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
-              console.trace("Got an unexpected frameLoad in the inspector, " +
+              console.warn("Got an unexpected frameLoad in the inspector, " +
                 "please file a bug on bugzilla.mozilla.org!");
+              console.trace();
             }
           }
         } else if (change.type === "documentUnload") {
