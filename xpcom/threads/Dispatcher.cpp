@@ -152,6 +152,7 @@ nsIEventTarget*
 ValidatingDispatcher::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_ASSERT(aCategory != TaskCategory::Count);
+  MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
   return mEventTargets[size_t(aCategory)];
 }
 
@@ -160,6 +161,7 @@ ValidatingDispatcher::AbstractMainThreadForImpl(TaskCategory aCategory)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCategory != TaskCategory::Count);
+  MOZ_ASSERT(mEventTargets[size_t(aCategory)]);
 
   if (!mAbstractThreads[size_t(aCategory)]) {
     mAbstractThreads[size_t(aCategory)] =
@@ -187,14 +189,14 @@ ValidatingDispatcher::CreateEventTargets(bool aNeedValidation)
 }
 
 void
-ValidatingDispatcher::Shutdown()
+ValidatingDispatcher::Shutdown(bool aXPCOMShutdown)
 {
   // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To
   // avoid leaks, we need to break the chain somewhere. We shouldn't be using
   // the ThrottledEventQueue for this TabGroup when no windows belong to it,
   // so it's safe to null out the queue here.
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
-    mEventTargets[i] = do_GetMainThread();
+    mEventTargets[i] = aXPCOMShutdown ? nullptr : do_GetMainThread();
     mAbstractThreads[i] = nullptr;
   }
 }
