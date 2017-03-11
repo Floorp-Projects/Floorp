@@ -27,13 +27,13 @@ MemProfiler::GetGCHeapProfiler(JSRuntime* runtime)
     return runtime->gc.mMemProfiler.mGCHeapProfiler;
 }
 
-JS_FRIEND_API(MemProfiler*)
+MemProfiler*
 MemProfiler::GetMemProfiler(JSContext* context)
 {
     return &context->runtime()->gc.mMemProfiler;
 }
 
-JS_FRIEND_API(void)
+void
 MemProfiler::start(GCHeapProfiler* aGCHeapProfiler)
 {
     ReleaseAllJITCode(mRuntime->defaultFreeOp());
@@ -41,7 +41,7 @@ MemProfiler::start(GCHeapProfiler* aGCHeapProfiler)
     sActiveProfilerCount++;
 }
 
-JS_FRIEND_API(void)
+void
 MemProfiler::stop()
 {
     sActiveProfilerCount--;
