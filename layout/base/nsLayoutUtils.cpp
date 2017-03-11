@@ -1198,6 +1198,19 @@ GetDisplayPortData(nsIContent* aContent,
   return true;
 }
 
+bool
+nsLayoutUtils::IsMissingDisplayPortBaseRect(nsIContent* aContent)
+{
+  DisplayPortPropertyData* rectData = nullptr;
+  DisplayPortMarginsPropertyData* marginsData = nullptr;
+
+  if (GetDisplayPortData(aContent, &rectData, &marginsData) && marginsData) {
+    return !aContent->GetProperty(nsGkAtoms::DisplayPortBase);
+  }
+
+  return false;
+}
+
 static bool
 GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult, float aMultiplier)
 {
