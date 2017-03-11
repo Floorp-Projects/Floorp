@@ -624,17 +624,15 @@ DocumentManager = {
     }
   },
 
-  observe(subject, topic, data) {
+  observers: {
     // For some types of documents (about:blank), we only see the first
     // notification, for others (data: URIs) we only observe the second.
-    if (topic == "content-document-global-created" || topic == "document-element-inserted") {
+    "content-document-global-created"(subject, topic, data) {
+      this.observers["document-element-inserted"].call(this, subject.document, topic, data);
+    },
+    "document-element-inserted"(subject, topic, data) {
       let document = subject;
       let window = document && document.defaultView;
-
-      if (topic == "content-document-global-created") {
-        window = subject;
-        document = window && window.document;
-      }
 
       if (!document || !document.location || !window) {
         return;
@@ -658,7 +656,8 @@ DocumentManager = {
       window.addEventListener("DOMContentLoaded", this, true);
       window.addEventListener("load", this, true);
       /* eslint-enable mozilla/balanced-listeners */
-    } else if (topic == "inner-window-destroyed") {
+    },
+    "inner-window-destroyed"(subject, topic, data) {
       let windowId = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
 
       MessageChannel.abortResponses({innerWindowID: windowId});
@@ -681,7 +680,8 @@ DocumentManager = {
       }
 
       ExtensionChild.destroyExtensionContext(windowId);
-    } else if (topic === "http-on-opening-request") {
+    },
+    "http-on-opening-request"(subject, topic, data) {
       let {loadInfo} = subject.QueryInterface(Ci.nsIChannel);
       if (loadInfo) {
         let {externalContentPolicyType: type} = loadInfo;
@@ -690,13 +690,18 @@ DocumentManager = {
           this.preloadScripts(subject.URI, loadInfo);
         }
       }
-    } else if (topic === "memory-pressure") {
+    },
+    "memory-pressure"(subject, topic, data) {
       let timeout = data === "heap-minimize" ? 0 : undefined;
 
       for (let cache of ChromeUtils.nondeterministicGetWeakSetKeys(scriptCaches)) {
         cache.clear(timeout);
       }
-    }
+    },
+  },
+
+  observe(subject, topic, data) {
+    this.observers[topic].call(this, subject, topic, data);
   },
 
   handleEvent(event) {
