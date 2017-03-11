@@ -159,6 +159,40 @@ Script.prototype = {
     return urls;
   },
 
+  matchesLoadInfo(uri, loadInfo) {
+    if (!this.matchesURI(uri)) {
+      return false;
+    }
+
+    if (!this.options.all_frames && !loadInfo.isTopLevelLoad) {
+      return false;
+    }
+
+    return true;
+  },
+
+  matchesURI(uri) {
+    if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
+      return false;
+    }
+
+    if (this.exclude_matches_.matches(uri)) {
+      return false;
+    }
+
+    if (this.options.include_globs != null) {
+      if (!this.include_globs_.matches(uri.spec)) {
+        return false;
+      }
+    }
+
+    if (this.exclude_globs_.matches(uri.spec)) {
+      return false;
+    }
+
+    return true;
+  },
+
   matches(window) {
     let uri = window.document.documentURIObject;
     let principal = window.document.nodePrincipal;
@@ -191,21 +225,7 @@ Script.prototype = {
       uri = principal.URI;
     }
 
-    if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
-      return false;
-    }
-
-    if (this.exclude_matches_.matches(uri)) {
-      return false;
-    }
-
-    if (this.options.include_globs != null) {
-      if (!this.include_globs_.matches(uri.spec)) {
-        return false;
-      }
-    }
-
-    if (this.exclude_globs_.matches(uri.spec)) {
+    if (!this.matchesURI(uri)) {
       return false;
     }
 
@@ -511,12 +531,18 @@ DocumentManager = {
   extensionPageWindows: new Map(),
 
   init() {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.addObserver(this, "http-on-opening-request", false);
+    }
     Services.obs.addObserver(this, "content-document-global-created", false);
     Services.obs.addObserver(this, "document-element-inserted", false);
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
 
   uninit() {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+      Services.obs.removeObserver(this, "http-on-opening-request");
+    }
     Services.obs.removeObserver(this, "content-document-global-created");
     Services.obs.removeObserver(this, "document-element-inserted");
     Services.obs.removeObserver(this, "inner-window-destroyed");
@@ -556,7 +582,7 @@ DocumentManager = {
     }
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     // For some types of documents (about:blank), we only see the first
     // notification, for others (data: URIs) we only observe the second.
     if (topic == "content-document-global-created" || topic == "document-element-inserted") {
@@ -613,10 +639,19 @@ DocumentManager = {
       }
 
       ExtensionChild.destroyExtensionContext(windowId);
+    } else if (topic === "http-on-opening-request") {
+      let {loadInfo} = subject.QueryInterface(Ci.nsIChannel);
+      if (loadInfo) {
+        let {externalContentPolicyType: type} = loadInfo;
+        if (type === Ci.nsIContentPolicy.TYPE_DOCUMENT ||
+            type === Ci.nsIContentPolicy.TYPE_SUBDOCUMENT) {
+          this.preloadScripts(subject.URI, loadInfo);
+        }
+      }
     }
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     let window = event.currentTarget;
     if (event.target != window.document) {
       // We use capturing listeners so we have precedence over content script
@@ -772,6 +807,16 @@ DocumentManager = {
     this.extensionCount--;
     if (this.extensionCount == 0) {
       this.uninit();
+    }
+  },
+
+  preloadScripts(uri, loadInfo) {
+    for (let extension of ExtensionManager.extensions.values()) {
+      for (let script of extension.scripts) {
+        if (script.matchesLoadInfo(uri, loadInfo)) {
+          script.compileScripts();
+        }
+      }
     }
   },
 
