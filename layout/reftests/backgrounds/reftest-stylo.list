@@ -138,7 +138,7 @@ fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
 fails HTTP == root-background-1.html root-background-1.html
 fails HTTP == root-background-1.html root-background-1.html
 
-fails == really-big-background.html really-big-background.html # Bug 1341690
+== really-big-background.html really-big-background.html # Bug 1341690
 fails == body-background.html body-background.html # Bug 1339711
 fails == table-background.html table-background.html # Bug 1339711
 fails == table-background-print.html table-background-print.html
