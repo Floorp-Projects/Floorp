@@ -1725,7 +1725,8 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
 
   RefPtr<DeclarationBlock> decl;
   if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
-    decl = ServoDeclarationBlock::FromCssText(aString);
+    GeckoParserExtraData data(baseURI, docURI, aElement->NodePrincipal());
+    decl = ServoDeclarationBlock::FromCssText(aString, data);
   } else {
     css::Loader* cssLoader = ownerDoc->CSSLoader();
     nsCSSParser cssParser(cssLoader);

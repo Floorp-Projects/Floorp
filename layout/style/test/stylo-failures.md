@@ -111,8 +111,7 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_computed_style.html `url` [11]
   * test_parse_url.html [4]
   * test_value_storage.html `url` [92]
-  * test_shorthand_property_getters.html `background shorthand` [1]
-  * ... `url` [3]
+  * test_shorthand_property_getters.html `url` [3]
 * test_computed_style.html `mask`: setting mask shorthand resets subproperties to non-initial value bug 1331516 [0]
 * auto value for min-{width,height} servo/servo#15045
 * test_compute_data_with_start_struct.html `timing-function`: incorrectly computing keywords to bezier function servo/servo#15086 [2]
