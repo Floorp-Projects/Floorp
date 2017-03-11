@@ -1133,8 +1133,10 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
     }
 }
 
-#define ENHANCED_CONTRAST_REGISTRY_KEY \
-    HKEY_CURRENT_USER, "Software\\Microsoft\\Avalon.Graphics\\DISPLAY1\\EnhancedContrastLevel"
+#define DISPLAY1_REGISTRY_KEY \
+    HKEY_CURRENT_USER, L"Software\\Microsoft\\Avalon.Graphics\\DISPLAY1"
+
+#define ENHANCED_CONTRAST_VALUE_NAME L"EnhancedContrastLevel"
 
 void
 gfxWindowsPlatform::SetupClearTypeParams()
@@ -1197,16 +1199,20 @@ gfxWindowsPlatform::SetupClearTypeParams()
         GetDWriteFactory()->CreateRenderingParams(getter_AddRefs(defaultRenderingParams));
         // For EnhancedContrast, we override the default if the user has not set it
         // in the registry (by using the ClearType Tuner).
-        if (contrast >= 0.0 && contrast <= 10.0) {
-            contrast = contrast;
-        } else {
+        if (contrast < 0.0 || contrast > 10.0) {
             HKEY hKey;
-            if (RegOpenKeyExA(ENHANCED_CONTRAST_REGISTRY_KEY,
-                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                contrast = defaultRenderingParams->GetEnhancedContrast();
+            LONG res = RegOpenKeyExW(DISPLAY1_REGISTRY_KEY,
+                                     0, KEY_READ, &hKey);
+            if (res == ERROR_SUCCESS) {
+                res = RegQueryValueExW(hKey, ENHANCED_CONTRAST_VALUE_NAME,
+                                       nullptr, nullptr, nullptr, nullptr);
+                if (res == ERROR_SUCCESS) {
+                    contrast = defaultRenderingParams->GetEnhancedContrast();
+                }
                 RegCloseKey(hKey);
-            } else {
+            }
+
+            if (contrast < 0.0 || contrast > 10.0) {
                 contrast = 1.0;
             }
         }
@@ -1238,13 +1244,21 @@ gfxWindowsPlatform::SetupClearTypeParams()
 
         mRenderingParams[TEXT_RENDERING_NO_CLEARTYPE] = defaultRenderingParams;
 
-        GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
-            dwriteGeometry, renderMode,
+        HRESULT hr = GetDWriteFactory()->CreateCustomRenderingParams(
+            gamma, contrast, level, dwriteGeometry, renderMode,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_NORMAL]));
+        if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_NORMAL]) {
+            mRenderingParams[TEXT_RENDERING_NORMAL] = defaultRenderingParams;
+        }
 
-        GetDWriteFactory()->CreateCustomRenderingParams(gamma, contrast, level,
+        hr = GetDWriteFactory()->CreateCustomRenderingParams(
+            gamma, contrast, level,
             dwriteGeometry, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
             getter_AddRefs(mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]));
+        if (FAILED(hr) || !mRenderingParams[TEXT_RENDERING_GDI_CLASSIC]) {
+            mRenderingParams[TEXT_RENDERING_GDI_CLASSIC] =
+                defaultRenderingParams;
+        }
     }
 }
 
