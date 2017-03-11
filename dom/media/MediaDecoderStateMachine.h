@@ -754,9 +754,6 @@ private:
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
 
-  // IsVisible, mirrored from the media decoder.
-  Mirror<bool> mIsVisible;
-
   // HasSuspendTaint, mirrored from the media decoder.
   Mirror<bool> mHasSuspendTaint;
 
