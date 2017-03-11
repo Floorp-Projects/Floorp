@@ -3585,6 +3585,7 @@ Tab.prototype = {
       let message = {
         type: "Tab:Added",
         tabID: this.id,
+        tabType: "BROWSING",
         uri: truncate(uri, MAX_URI_LENGTH),
         parentId: this.parentId,
         tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
