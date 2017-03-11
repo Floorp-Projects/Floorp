@@ -4314,8 +4314,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
   }
 
   if (mDecoder) {
-    // When the MediaElement is binding to tree, the dormant status is
-    // aligned to document's hidden status.
     mDecoder->NotifyOwnerActivityChanged(!IsHidden());
   }
 
