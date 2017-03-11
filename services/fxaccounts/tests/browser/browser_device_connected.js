@@ -5,22 +5,14 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const { MockRegistrar } =
   Cu.import("resource://testing-common/MockRegistrar.jsm", {});
-const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
-                     .getService(Ci.nsIObserver);
-const accountsBundle = Services.strings.createBundle(
+
+let accountsBundle = Services.strings.createBundle(
   "chrome://browser/locale/accounts.properties"
 );
-const DEVICES_URL = "http://localhost/devices";
 
 let expectedBody;
 
 add_task(async function setup() {
-  let fxAccounts = {
-    promiseAccountsManageDevicesURI() {
-      return Promise.resolve(DEVICES_URL);
-    }
-  };
-  gBrowserGlue.observe({wrappedJSObject: fxAccounts}, "browser-glue-test", "mock-fxaccounts");
   const alertsService = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAlertsService, Ci.nsISupports]),
     showAlertNotification: (image, title, text, clickable, cookie, clickCallback) => {
@@ -41,6 +33,8 @@ async function testDeviceConnected(deviceName) {
   gBrowser.selectedBrowser.loadURI("about:robots");
   await waitForDocLoadComplete();
 
+  Preferences.set("identity.fxaccounts.settings.devices.uri", "http://localhost/devices");
+
   let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
   Services.obs.notifyObservers(null, "fxaccounts:device_connected", deviceName);
@@ -48,7 +42,9 @@ async function testDeviceConnected(deviceName) {
   let tab = await waitForTabPromise;
   Assert.ok("Tab successfully opened");
 
-  Assert.equal(tab.linkedBrowser.currentURI.spec, DEVICES_URL);
+  let expectedURI = Preferences.get("identity.fxaccounts.settings.devices.uri",
+                                    "prefundefined");
+  Assert.equal(tab.linkedBrowser.currentURI.spec, expectedURI);
 
   await BrowserTestUtils.removeTab(tab);
 }
