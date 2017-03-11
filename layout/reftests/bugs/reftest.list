@@ -1717,7 +1717,7 @@ needs-focus != 703186-1.html 703186-2.html
 fuzzy-if(true,1,21) fuzzy-if(d2d,68,173) fuzzy-if(cocoaWidget,1,170) fails-if(webrender) == 718521.html 718521-ref.html # bug 773482
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
-fuzzy-if(Android,1,40000) == 722923-1.html 722923-1-ref.html
+fuzzy(1,40000) == 722923-1.html 722923-1-ref.html
 == 723484-1.html 723484-1-ref.html
 random-if(Android) == 728983-1.html 728983-1-ref.html
 == 729143-1.html 729143-1-ref.html
