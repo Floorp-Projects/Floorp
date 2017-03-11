@@ -108,7 +108,7 @@ SERVO_BINDING_FUNC(Servo_GetComputedKeyframeValues, void,
                    RawGeckoKeyframeListBorrowed keyframes,
                    ServoComputedValuesBorrowed style,
                    ServoComputedValuesBorrowedOrNull parent_style,
-                   RawGeckoPresContextBorrowed pres_context,
+                   RawServoStyleSetBorrowed set,
                    RawGeckoComputedKeyframeValuesListBorrowedMut result)
 
 // AnimationValues handling

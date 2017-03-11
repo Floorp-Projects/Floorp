@@ -598,22 +598,13 @@ KeyframeUtils::GetComputedKeyframeValues(
   const ServoComputedStyleValues& aServoValues)
 {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->OwnerDoc()->IsStyledByServo());
+  MOZ_ASSERT(aElement->IsStyledByServo());
 
   nsPresContext* presContext = nsContentUtils::GetContextForContent(aElement);
   MOZ_ASSERT(presContext);
 
-  nsTArray<ComputedKeyframeValues> result(aKeyframes.Length());
-
-  // Construct each nsTArray<PropertyStyleAnimationValuePair> here.
-  result.AppendElements(aKeyframes.Length());
-
-  Servo_GetComputedKeyframeValues(&aKeyframes,
-                                  aServoValues.mCurrentStyle,
-                                  aServoValues.mParentStyle,
-                                  presContext,
-                                  &result);
-  return result;
+  return presContext->StyleSet()->AsServo()
+    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aServoValues);
 }
 
 /* static */ nsTArray<ComputedKeyframeValues>
