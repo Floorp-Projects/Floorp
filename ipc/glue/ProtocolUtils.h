@@ -46,6 +46,7 @@ namespace {
 // protocol 0.  Oops!  We can get away with this until protocol 0
 // starts approaching its 65,536th message.
 enum {
+    BUILD_ID_MESSAGE_TYPE = kuint16max - 7,
     CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 6,
     SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,
     SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 4,
