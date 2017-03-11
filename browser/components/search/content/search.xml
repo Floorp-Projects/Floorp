@@ -1701,7 +1701,7 @@
           button.setAttribute("label", label);
           button.setAttribute("crop", "end");
           button.setAttribute("tooltiptext", engine.uri);
-          button.setAttribute("uri", engine.uri);
+          button.setAttribute("tooltiptext", engine.title + "\n" + engine.uri);
           button.setAttribute("title", engine.title);
           if (engine.icon) {
             button.setAttribute("image", engine.icon);
