@@ -61,7 +61,7 @@ LazyLogModule gMediaDecoderLog("MediaDecoder");
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("Decoder=%p " x, this, ##__VA_ARGS__))
 
 #define DUMP_LOG(x, ...) \
-  NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString("Decoder=%p " x, this, ##__VA_ARGS__).get(), nullptr, nullptr, -1)
+  printf_stderr("%s\n", nsPrintfCString("Decoder=%p " x, this, ##__VA_ARGS__).get())
 
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 

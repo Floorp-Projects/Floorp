@@ -70,7 +70,7 @@ Structure:
       lateWrites: {...},
       addonDetails: {...},
       addonHistograms: {...},
-      UIMeasurements: [...],
+      UIMeasurements: [...],  // Android only
       slowSQL: {...},
       slowSQLstartup: {...},
     }
@@ -672,7 +672,7 @@ This section contains the slow SQL statements gathered at startup (until the "se
 
 UIMeasurements
 --------------
-This section contains UI specific telemetry measurements and events. This section is mainly populated with Android-specific data and events (`see here <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3AUITelemetry.%28addEvent|startSession|stopSession%29&redirect=false&case=false>`_).
+This section is Android-only and contains UI specific Telemetry measurements and events (`see here <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3AUITelemetry.%28addEvent|startSession|stopSession%29&redirect=false&case=false>`_).
 
 Structure:
 

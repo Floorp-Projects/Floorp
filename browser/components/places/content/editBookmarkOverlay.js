@@ -1121,8 +1121,8 @@ var gEditItemOverlay = {
   onItemMoved(aItemId, aOldParent, aOldIndex,
               aNewParent, aNewIndex, aItemType) {
     if (!this._paneInfo.isItem ||
-        !this._paneInfo.visibleRows.has("folderPicker") ||
-        this._paneInfo.itemId != aItemOd ||
+        !this._paneInfo.visibleRows.has("folderRow") ||
+        this._paneInfo.itemId != aItemId ||
         aNewParent == this._getFolderIdFromMenuList()) {
       return;
     }

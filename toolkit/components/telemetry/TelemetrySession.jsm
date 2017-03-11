@@ -1348,7 +1348,10 @@ var Impl = {
       payloadObj.addonDetails = protect(() => AddonManagerPrivate.getTelemetryDetails());
 
       let clearUIsession = !(reason == REASON_GATHER_PAYLOAD || reason == REASON_GATHER_SUBSESSION_PAYLOAD);
-      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements(clearUIsession));
+
+      if (AppConstants.platform == "android") {
+        payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements(clearUIsession));
+      }
 
       if (this._slowSQLStartup &&
           Object.keys(this._slowSQLStartup).length != 0 &&
