@@ -41,15 +41,13 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTransactionBase,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
-nsresult
-DeleteTextTransaction::Init()
+bool
+DeleteTextTransaction::CanDoIt() const
 {
-  // Do nothing if the node is read-only
-  if (!mEditorBase.IsModifiableNode(mCharData)) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!mCharData)) {
+    return false;
   }
-
-  return NS_OK;
+  return mEditorBase.IsModifiableNode(mCharData);
 }
 
 NS_IMETHODIMP

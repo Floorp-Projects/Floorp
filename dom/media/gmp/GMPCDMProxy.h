@@ -26,13 +26,13 @@ public:
               const nsAString& aKeySystem,
               GMPCrashHelper* aCrashHelper,
               bool aDistinctiveIdentifierRequired,
-              bool aPersistentStateRequired);
+              bool aPersistentStateRequired,
+              nsIEventTarget* aMainThread);
 
   void Init(PromiseId aPromiseId,
             const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
-            const nsAString& aGMPName,
-            nsIEventTarget* aMainThread) override;
+            const nsAString& aGMPName) override;
 
   void OnSetDecryptorId(uint32_t aId) override;
 

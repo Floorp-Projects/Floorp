@@ -25,14 +25,14 @@ class RangeUpdater;
 class DeleteNodeTransaction final : public EditTransactionBase
 {
 public:
-  /**
-   * Initialize the transaction.
-   * @param aElement        The node to delete.
-   */
-  nsresult Init(EditorBase* aEditorBase, nsINode* aNode,
-                RangeUpdater* aRangeUpdater);
+  DeleteNodeTransaction(EditorBase& aEditorBase, nsINode& aNodeToDelete,
+                        RangeUpdater* aRangeUpdater);
 
-  DeleteNodeTransaction();
+  /**
+   * CanDoIt() returns true if there are enough members and can modify the
+   * parent.  Otherwise, false.
+   */
+  bool CanDoIt() const;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteNodeTransaction,
@@ -45,17 +45,17 @@ public:
 protected:
   virtual ~DeleteNodeTransaction();
 
+  // The editor for this transaction.
+  EditorBase& mEditorBase;
+
   // The element to delete.
-  nsCOMPtr<nsINode> mNode;
+  nsCOMPtr<nsINode> mNodeToDelete;
 
   // Parent of node to delete.
-  nsCOMPtr<nsINode> mParent;
+  nsCOMPtr<nsINode> mParentNode;
 
   // Next sibling to remember for undo/redo purposes.
   nsCOMPtr<nsIContent> mRefNode;
-
-  // The editor for this transaction.
-  EditorBase* mEditorBase;
 
   // Range updater object.
   RangeUpdater* mRangeUpdater;

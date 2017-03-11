@@ -5859,22 +5859,12 @@ ScriptOffset(JSContext* cx, const Value& v, size_t* offsetp)
 }
 
 static bool
-ScriptOffset(JSContext* cx, JSScript* script, const Value& v, size_t* offsetp)
+EnsureScriptOffsetIsValid(JSContext* cx, JSScript* script, size_t offset)
 {
-    double d;
-    size_t off;
-
-    bool ok = v.isNumber();
-    if (ok) {
-        d = v.toNumber();
-        off = size_t(d);
-    }
-    if (!ok || off != d || !IsValidBytecodeOffset(cx, script, off)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
-        return false;
-    }
-    *offsetp = off;
-    return true;
+    if (IsValidBytecodeOffset(cx, script, offset))
+        return true;
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+    return false;
 }
 
 namespace {
@@ -6179,10 +6169,8 @@ class DebuggerScriptGetOffsetLocationMatcher
       : cx_(cx), offset_(offset), result_(result) { }
     using ReturnType = bool;
     ReturnType match(HandleScript script) {
-        if (!IsValidBytecodeOffset(cx_, script, offset_)) {
-            JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+        if (!EnsureScriptOffsetIsValid(cx_, script, offset_))
             return false;
-        }
 
         FlowGraphSummary flowData(cx_);
         if (!flowData.populate(cx_, script))
@@ -6741,10 +6729,8 @@ struct DebuggerScriptSetBreakpointMatcher
             return false;
         }
 
-        if (!IsValidBytecodeOffset(cx_, script, offset_)) {
-            JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+        if (!EnsureScriptOffsetIsValid(cx_, script, offset_))
             return false;
-        }
 
         // Ensure observability *before* setting the breakpoint. If the script is
         // not already a debuggee, trying to ensure observability after setting
@@ -6815,7 +6801,7 @@ DebuggerScript_getBreakpoints(JSContext* cx, unsigned argc, Value* vp)
     jsbytecode* pc;
     if (args.length() > 0) {
         size_t offset;
-        if (!ScriptOffset(cx, script, args[0], &offset))
+        if (!ScriptOffset(cx, args[0], &offset) || !EnsureScriptOffsetIsValid(cx, script, offset))
             return false;
         pc = script->offsetToPC(offset);
     } else {
@@ -6898,38 +6884,67 @@ DebuggerScript_clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+class DebuggerScriptIsInCatchScopeMatcher
+{
+    JSContext* cx_;
+    size_t offset_;
+    bool isInCatch_;
+
+  public:
+    explicit DebuggerScriptIsInCatchScopeMatcher(JSContext* cx, size_t offset) : cx_(cx), offset_(offset) { }
+    using ReturnType = bool;
+
+    inline bool isInCatch() const { return isInCatch_; }
+
+    ReturnType match(HandleScript script) {
+        if (!EnsureScriptOffsetIsValid(cx_, script, offset_))
+            return false;
+
+        /*
+         * Try note ranges are relative to the mainOffset of the script, so adjust
+         * offset accordingly.
+         */
+        size_t offset = offset_ - script->mainOffset();
+
+        if (script->hasTrynotes()) {
+            JSTryNote* tnBegin = script->trynotes()->vector;
+            JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
+            while (tnBegin != tnEnd) {
+                if (tnBegin->start <= offset &&
+                    offset <= tnBegin->start + tnBegin->length &&
+                    tnBegin->kind == JSTRY_CATCH)
+                {
+                    isInCatch_ = true;
+                    return true;
+                }
+                ++tnBegin;
+            }
+        }
+        isInCatch_ = false;
+        return true;
+    }
+
+    ReturnType match(Handle<WasmInstanceObject*> instance) {
+        isInCatch_ = false;
+        return true;
+    }
+};
+
 static bool
 DebuggerScript_isInCatchScope(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "isInCatchScope", args, obj, script);
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "isInCatchScope", args, obj, referent);
     if (!args.requireAtLeast(cx, "Debugger.Script.isInCatchScope", 1))
         return false;
 
     size_t offset;
-    if (!ScriptOffset(cx, script, args[0], &offset))
+    if (!ScriptOffset(cx, args[0], &offset))
         return false;
 
-    /*
-     * Try note ranges are relative to the mainOffset of the script, so adjust
-     * offset accordingly.
-     */
-    offset -= script->mainOffset();
-
-    args.rval().setBoolean(false);
-    if (script->hasTrynotes()) {
-        JSTryNote* tnBegin = script->trynotes()->vector;
-        JSTryNote* tnEnd = tnBegin + script->trynotes()->length;
-        while (tnBegin != tnEnd) {
-            if (tnBegin->start <= offset &&
-                offset <= tnBegin->start + tnBegin->length &&
-                tnBegin->kind == JSTRY_CATCH)
-            {
-                args.rval().setBoolean(true);
-                break;
-            }
-            ++tnBegin;
-        }
-    }
+    DebuggerScriptIsInCatchScopeMatcher matcher(cx, offset);
+    if (!referent.match(matcher))
+        return false;
+    args.rval().setBoolean(matcher.isInCatch());
     return true;
 }
 
