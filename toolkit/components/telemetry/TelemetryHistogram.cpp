@@ -551,7 +551,7 @@ internal_GetHistogramByName(const nsACString &name, Histogram **ret)
 }
 
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 
 /**
  * This clones a histogram |existing| with the id |existingId| to a
@@ -652,7 +652,7 @@ internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
     return NS_OK;
   }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (Histogram* subsession = internal_GetSubsessionHistogram(histogram)) {
     subsession->Add(value);
   }
@@ -697,7 +697,7 @@ internal_HistogramClear(Histogram& aHistogram, bool onlySubsession)
     aHistogram.Clear();
   }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (Histogram* subsession = internal_GetSubsessionHistogram(aHistogram)) {
     subsession->Clear();
   }
@@ -890,7 +890,7 @@ private:
   typedef nsBaseHashtableET<nsCStringHashKey, Histogram*> KeyedHistogramEntry;
   typedef AutoHashtable<KeyedHistogramEntry> KeyedHistogramMapType;
   KeyedHistogramMapType mHistogramMap;
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   KeyedHistogramMapType mSubsessionMap;
 #endif
 
@@ -914,7 +914,7 @@ KeyedHistogram::KeyedHistogram(const nsACString &name,
                                uint32_t min, uint32_t max,
                                uint32_t bucketCount, uint32_t dataset)
   : mHistogramMap()
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   , mSubsessionMap()
 #endif
   , mName(name)
@@ -932,7 +932,7 @@ nsresult
 KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
                              bool subsession)
 {
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   KeyedHistogramMapType& map = subsession ? mSubsessionMap : mHistogramMap;
 #else
   KeyedHistogramMapType& map = mHistogramMap;
@@ -944,7 +944,7 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
   }
 
   nsCString histogramName;
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (subsession) {
     histogramName.AppendLiteral(SUBSESSION_HISTOGRAM_PREFIX);
   }
@@ -998,7 +998,7 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
   if (!histogram) {
     return NS_ERROR_FAILURE;
   }
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   Histogram* subsession = GetHistogram(key, true);
   MOZ_ASSERT(subsession);
   if (!subsession) {
@@ -1011,7 +1011,7 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
   }
 
   histogram->Add(sample);
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   subsession->Add(sample);
 #endif
   return NS_OK;
@@ -1024,7 +1024,7 @@ KeyedHistogram::Clear(bool onlySubsession)
   if (!XRE_IsParentProcess()) {
     return;
   }
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   for (auto iter = mSubsessionMap.Iter(); !iter.Done(); iter.Next()) {
     iter.Get()->mData->Clear();
   }
@@ -1093,7 +1093,7 @@ nsresult
 KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                               bool subsession, bool clearSubsession)
 {
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   KeyedHistogramMapType& map = subsession ? mSubsessionMap : mHistogramMap;
 #else
   KeyedHistogramMapType& map = mHistogramMap;
@@ -1102,7 +1102,7 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
     return NS_ERROR_FAILURE;
   }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   if (subsession && clearSubsession) {
     Clear(true);
   }
@@ -1544,7 +1544,7 @@ internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   bool onlySubsession = false;
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
   if (args.length() >= 1) {
@@ -1763,7 +1763,7 @@ internal_JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, false, false);
 }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 bool
 internal_JSKeyedHistogram_SubsessionSnapshot(JSContext *cx,
                                              unsigned argc, JS::Value *vp)
@@ -1772,7 +1772,7 @@ internal_JSKeyedHistogram_SubsessionSnapshot(JSContext *cx,
 }
 #endif
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 bool
 internal_JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx,
                                                      unsigned argc,
@@ -1800,7 +1800,7 @@ internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
   bool onlySubsession = false;
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
@@ -1839,7 +1839,7 @@ internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
   if (!(JS_DefineFunction(cx, obj, "add", internal_JSKeyedHistogram_Add, 2, 0)
         && JS_DefineFunction(cx, obj, "snapshot",
                              internal_JSKeyedHistogram_Snapshot, 1, 0)
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
         && JS_DefineFunction(cx, obj, "subsessionSnapshot",
                              internal_JSKeyedHistogram_SubsessionSnapshot, 1, 0)
         && JS_DefineFunction(cx, obj, "snapshotSubsessionAndClear",
@@ -2280,7 +2280,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     }
 
     Histogram* original = h;
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
     if (subsession) {
       h = internal_GetSubsessionHistogram(*h);
       if (!h) {
@@ -2308,7 +2308,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
       }
     }
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
     if (subsession && clearSubsession) {
       h->Clear();
     }
