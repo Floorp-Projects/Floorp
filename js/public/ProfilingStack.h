@@ -23,7 +23,7 @@ namespace js {
 //
 // For more detailed information, see vm/GeckoProfiler.h.
 //
-class JS_PUBLIC_API(ProfileEntry)
+class ProfileEntry
 {
     // All fields are marked volatile to prevent the compiler from re-ordering
     // instructions. Namely this sequence:

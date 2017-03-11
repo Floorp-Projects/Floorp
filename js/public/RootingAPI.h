@@ -674,10 +674,10 @@ struct JS_PUBLIC_API(MovableCellHasher)
     using Key = T;
     using Lookup = T;
 
-    static JS_PUBLIC_API(bool) hasHash(const Lookup& l);
-    static JS_PUBLIC_API(bool) ensureHash(const Lookup& l);
-    static JS_PUBLIC_API(HashNumber) hash(const Lookup& l);
-    static JS_PUBLIC_API(bool) match(const Key& k, const Lookup& l);
+    static bool hasHash(const Lookup& l);
+    static bool ensureHash(const Lookup& l);
+    static HashNumber hash(const Lookup& l);
+    static bool match(const Key& k, const Lookup& l);
     static void rekey(Key& k, const Key& newKey) { k = newKey; }
 };
 

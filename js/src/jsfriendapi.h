@@ -1335,7 +1335,7 @@ GetErrorMessage(void* userRef, const unsigned errorNumber);
  * JSString methods and often the code can be rewritten so that only indexes
  * instead of char pointers are used in parts of the code that can GC.
  */
-class MOZ_STACK_CLASS JS_FRIEND_API(AutoStableStringChars)
+class MOZ_STACK_CLASS AutoStableStringChars
 {
     /*
      * When copying string char, use this many bytes of inline storage.  This is
@@ -2987,7 +2987,7 @@ class GCHeapProfiler
     virtual void reset() = 0;
 };
 
-class JS_FRIEND_API(MemProfiler)
+class MemProfiler
 {
     static mozilla::Atomic<uint32_t, mozilla::Relaxed> sActiveProfilerCount;
     static NativeProfiler* sNativeProfiler;
@@ -3005,8 +3005,8 @@ class JS_FRIEND_API(MemProfiler)
   public:
     explicit MemProfiler(JSRuntime* aRuntime) : mGCHeapProfiler(nullptr), mRuntime(aRuntime) {}
 
-    JS_FRIEND_API(void) start(GCHeapProfiler* aGCHeapProfiler);
-    JS_FRIEND_API(void) stop();
+    void start(GCHeapProfiler* aGCHeapProfiler);
+    void stop();
 
     GCHeapProfiler* getGCHeapProfiler() const {
         return mGCHeapProfiler;
@@ -3016,7 +3016,7 @@ class JS_FRIEND_API(MemProfiler)
         return sActiveProfilerCount > 0;
     }
 
-    static JS_FRIEND_API(MemProfiler*) GetMemProfiler(JSContext* context);
+    static MemProfiler* GetMemProfiler(JSContext* context);
 
     static void SetNativeProfiler(NativeProfiler* aProfiler) {
         sNativeProfiler = aProfiler;
