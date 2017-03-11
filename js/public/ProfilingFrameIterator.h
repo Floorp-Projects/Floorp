@@ -187,13 +187,10 @@ struct ForEachProfiledFrameOp
         bool hasTrackedOptimizations() const { return optsIndex_.isSome(); }
         void* canonicalAddress() const { return canonicalAddr_; }
 
-        JS_PUBLIC_API(ProfilingFrameIterator::FrameKind) frameKind() const;
-        JS_PUBLIC_API(void) forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
-                                                       JSScript** scriptOut,
-                                                       jsbytecode** pcOut) const;
-
-        JS_PUBLIC_API(void)
-        forEachOptimizationTypeInfo(ForEachTrackedOptimizationTypeInfoOp& op) const;
+        ProfilingFrameIterator::FrameKind frameKind() const;
+        void forEachOptimizationAttempt(ForEachTrackedOptimizationAttemptOp& op,
+                                        JSScript** scriptOut, jsbytecode** pcOut) const;
+        void forEachOptimizationTypeInfo(ForEachTrackedOptimizationTypeInfoOp& op) const;
     };
 
     // Called once per frame.

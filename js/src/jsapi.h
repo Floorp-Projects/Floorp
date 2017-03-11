@@ -2000,7 +2000,7 @@ struct JSPropertySpec {
     bool isAccessor() const {
         return !(flags & JSPROP_INTERNAL_USE_BIT);
     }
-    JS_PUBLIC_API(bool) getValue(JSContext* cx, JS::MutableHandleValue value) const;
+    bool getValue(JSContext* cx, JS::MutableHandleValue value) const;
 
     bool isSelfHosted() const {
         MOZ_ASSERT(isAccessor());
@@ -5530,7 +5530,7 @@ class JSErrorNotes
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
 
-    JS_PUBLIC_API(size_t) length();
+    size_t length();
 
     // Create a deep copy of notes.
     js::UniquePtr<JSErrorNotes> copy(JSContext* cx);
@@ -5556,8 +5556,8 @@ class JSErrorNotes
             return *note_;
         }
     };
-    JS_PUBLIC_API(iterator) begin();
-    JS_PUBLIC_API(iterator) end();
+    iterator begin();
+    iterator end();
 };
 
 /**
@@ -6461,7 +6461,7 @@ struct MaxFrames
  * consider self-hosted frames with the given principals as satisfying the stack
  * capture.
  */
-struct JS_PUBLIC_API(FirstSubsumedFrame)
+struct FirstSubsumedFrame
 {
     JSContext* cx;
     JSPrincipals* principals;
@@ -6682,7 +6682,7 @@ class AutoStopwatch;
  * provide a concrete implementation of this class, as well as the
  * relevant callbacks (see below).
  */
-struct JS_PUBLIC_API(PerformanceGroup) {
+struct PerformanceGroup {
     PerformanceGroup();
 
     // The current iteration of the event loop.

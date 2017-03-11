@@ -1725,9 +1725,8 @@ struct MOZ_STACK_CLASS AtomizingMatcher
     }
 };
 
-JS_PUBLIC_API(bool)
-ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
-                             MutableHandleObject outSavedFrameStack)
+bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
+                                  MutableHandleObject outSavedFrameStack)
 {
     SavedFrame::AutoLookupVector stackChain(cx);
     Rooted<JS::ubi::StackFrame> ubiFrame(cx, frame);
