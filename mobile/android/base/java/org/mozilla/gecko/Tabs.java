@@ -448,13 +448,13 @@ public class Tabs implements BundleEventListener {
         if (nextTab == null)
             nextTab = getPreviousTabFrom(tab, getPrivate, type);
         if (nextTab == null && getPrivate) {
-            // If there are no private tabs remaining, get the last normal tab
-            Tab lastTab = mOrder.get(mOrder.size() - 1);
-            if (!lastTab.isPrivate()) {
-                nextTab = lastTab;
-            } else {
-                nextTab = getPreviousTabFrom(lastTab, false, type);
-            }
+            // If there are no private tabs remaining, get the last normal tab.
+            nextTab = getFallbackNextTab(type);
+        }
+        if (nextTab == null && type != TabType.BROWSING) {
+            // If there are no non-private tabs of the same type remaining,
+            // fall back to TabType.BROWSING.
+            nextTab = getFallbackNextTab(TabType.BROWSING);
         }
 
         Tab parent = getTab(tab.getParentId());
@@ -464,6 +464,26 @@ public class Tabs implements BundleEventListener {
                 return nextTab;
             else
                 return parent;
+        }
+        return nextTab;
+    }
+
+    /**
+     * Normally, {@link #getNextTab(Tab)} will attempt to find a tab of the same privacy mode and
+     * {@link TabType} as the currently selected tab. If no such tab exists, we will first fall back
+     * to non-private tabs if the current tab is a private tab. If we can't find any non-private
+     * tabs of the same type, we then start looking for any non-private {@link TabType#BROWSING} tabs.
+     *
+     * @param type The {@link TabType} of tab to be searched.
+     * @return A non-private tab of the type specified or null if none could be found.
+     */
+    private Tab getFallbackNextTab(TabType type) {
+        Tab nextTab;
+        Tab lastTab = mOrder.get(mOrder.size() - 1);
+        if (!lastTab.isPrivate() && lastTab.getType() == type) {
+            nextTab = lastTab;
+        } else {
+            nextTab = getPreviousTabFrom(lastTab, false, type);
         }
         return nextTab;
     }
