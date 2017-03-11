@@ -34,6 +34,8 @@ function getObserverTopic(aNotificationId) {
     topic = "addon-install-started";
   else if (topic == "addon-install-restart")
     topic = "addon-install-complete";
+  else if (topic == "addon-installed")
+    topic = "webextension-install-notify";
   return topic;
 }
 
@@ -441,14 +443,9 @@ function test_restartless() {
     yield progressPromise;
     let installDialog = yield dialogPromise;
 
-    let notificationPromise = waitForNotification("addon-install-complete");
+    let notificationPromise = waitForNotification("addon-installed");
     acceptInstallDialog(installDialog);
-    let panel = yield notificationPromise;
-
-    let notification = panel.childNodes[0];
-    is(notification.getAttribute("label"),
-       "XPI Test has been installed successfully.",
-       "Should have seen the right message");
+    yield notificationPromise;
 
     let installs = yield getInstalls();
     is(installs.length, 0, "Should be no pending installs");
@@ -574,7 +571,7 @@ function test_allUnverified() {
     is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
     is(container.childNodes[0].childNodes.length, 1, "Shouldn't have the unverified marker");
 
-    let notificationPromise = waitForNotification("addon-install-complete");
+    let notificationPromise = waitForNotification("addon-installed");
     acceptInstallDialog(installDialog);
     yield notificationPromise;
 
@@ -1024,7 +1021,7 @@ var gTestStart = null;
 
 var XPInstallObserver = {
   observe(aSubject, aTopic, aData) {
-    var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
+    var installInfo = aSubject.wrappedJSObject;
     info("Observed " + aTopic + " for " + installInfo.installs.length + " installs");
     installInfo.installs.forEach(function(aInstall) {
       info("Install of " + aInstall.sourceURI.spec + " was in state " + aInstall.state);
@@ -1043,7 +1040,6 @@ add_task(function* () {
   Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
   Services.obs.addObserver(XPInstallObserver, "addon-install-blocked", false);
   Services.obs.addObserver(XPInstallObserver, "addon-install-failed", false);
-  Services.obs.addObserver(XPInstallObserver, "addon-install-complete", false);
 
   registerCleanupFunction(function() {
     // Make sure no more test parts run in case we were timed out
@@ -1063,7 +1059,6 @@ add_task(function* () {
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-failed");
-    Services.obs.removeObserver(XPInstallObserver, "addon-install-complete");
   });
 
   for (let i = 0; i < TESTS.length; ++i) {

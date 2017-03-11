@@ -8,9 +8,6 @@ add_task(function* setup() {
 
     // Point updates to the local mochitest server
     ["extensions.update.url", `${BASE}/browser_webext_update.json`],
-
-    // XXX remove this when prompts are enabled by default
-    ["extensions.webextPermissionPrompts", true],
   ]});
 });
 
