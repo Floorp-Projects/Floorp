@@ -93,6 +93,9 @@ typedef uint8_t nsHttpVersion;
 // interop problems with critical infrastructure
 #define NS_HTTP_BE_CONSERVATIVE      (1<<11)
 
+// Transactions with this flag should be processed first.
+#define NS_HTTP_URGENT_START         (1<<12)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
