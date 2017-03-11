@@ -478,10 +478,6 @@
       <menuitem label="&syncedTabs.context.openAllInTabs.label;"
                 accesskey="&syncedTabs.context.openAllInTabs.accesskey;"
                 id="syncedTabsOpenAllInTabs"/>
-      <menuitem label="&syncedTabs.context.managedevices.label;"
-                accesskey="&syncedTabs.context.managedevices.accesskey;"
-                id="syncedTabsManageDevices"
-                oncommand="gFxAccounts.openDevicesManagementPage('syncedtabs-sidebar');"/>
       <menuitem label="&syncSyncNowItem.label;"
                 accesskey="&syncSyncNowItem.accesskey;"
                 id="syncedTabsRefresh"/>

@@ -7,8 +7,6 @@ this.EXPORTED_SYMBOLS = ["fxAccounts", "FxAccounts"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.importGlobalProperties(["URL"]);
-
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/utils.js");
@@ -61,7 +59,6 @@ var publicProperties = [
   "promiseAccountsChangeProfileURI",
   "promiseAccountsForceSigninURI",
   "promiseAccountsManageURI",
-  "promiseAccountsManageDevicesURI",
   "promiseAccountsSignUpURI",
   "promiseAccountsSignInURI",
   "removeCachedOAuthToken",
@@ -1266,66 +1263,80 @@ FxAccountsInternal.prototype = {
     return FxAccountsConfig.promiseAccountsSignInURI();
   },
 
-  /**
-   * Pull an URL defined in the user preferences, add the current UID and email
-   * to the query string, add entrypoint and extra params to the query string if
-   * requested.
-   * @param {string} prefName The preference name from where to pull the URL to format.
-   * @param {string} [entrypoint] "entrypoint" searchParam value.
-   * @param {Object.<string, string>} [extraParams] Additionnal searchParam key and values.
-   * @returns {Promise.<string>} A promise that resolves to the formatted URL
-   */
-  async _formatPrefURL(prefName, entrypoint, extraParams) {
-    let url = new URL(Services.urlFormatter.formatURLPref(prefName));
-    if (this.requiresHttps() && url.protocol != "https:") {
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
-    let accountData = await this.getSignedInUser();
-    if (!accountData) {
-      return Promise.resolve(null);
-    }
-    url.searchParams.append("uid", accountData.uid);
-    url.searchParams.append("email", accountData.email);
-    if (entrypoint) {
-      url.searchParams.append("entrypoint", entrypoint);
-    }
-    if (extraParams) {
-      for (let [k, v] of Object.entries(extraParams)) {
-        url.searchParams.append(k, v);
-      }
-    }
-    return this.currentAccountState.resolve(url.href);
-  },
-
   // Returns a promise that resolves with the URL to use to force a re-signin
   // of the current account.
-  async promiseAccountsForceSigninURI() {
-    await FxAccountsConfig.ensureConfigured();
-    return this._formatPrefURL("identity.fxaccounts.remote.force_auth.uri");
-  },
+  promiseAccountsForceSigninURI: Task.async(function *() {
+    yield FxAccountsConfig.ensureConfigured();
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.force_auth.uri");
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    let currentState = this.currentAccountState;
+    // but we need to append the email address onto a query string.
+    return this.getSignedInUser().then(accountData => {
+      if (!accountData) {
+        return null;
+      }
+      let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
+      newQueryPortion += "email=" + encodeURIComponent(accountData.email);
+      return url + newQueryPortion;
+    }).then(result => currentState.resolve(result));
+  }),
 
   // Returns a promise that resolves with the URL to use to change
   // the current account's profile image.
   // if settingToEdit is set, the profile page should hightlight that setting
   // for the user to edit.
-  async promiseAccountsChangeProfileURI(entrypoint, settingToEdit = null) {
-    let extraParams;
+  promiseAccountsChangeProfileURI(entrypoint, settingToEdit = null) {
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
+
     if (settingToEdit) {
-      extraParams = { setting: settingToEdit };
+      url += (url.indexOf("?") == -1 ? "?" : "&") +
+             "setting=" + encodeURIComponent(settingToEdit);
     }
-    return this._formatPrefURL("identity.fxaccounts.settings.uri", entrypoint, extraParams);
+
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    let currentState = this.currentAccountState;
+    // but we need to append the email address onto a query string.
+    return this.getSignedInUser().then(accountData => {
+      if (!accountData) {
+        return null;
+      }
+      let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
+      newQueryPortion += "email=" + encodeURIComponent(accountData.email);
+      newQueryPortion += "&uid=" + encodeURIComponent(accountData.uid);
+      if (entrypoint) {
+        newQueryPortion += "&entrypoint=" + encodeURIComponent(entrypoint);
+      }
+      return url + newQueryPortion;
+    }).then(result => currentState.resolve(result));
   },
 
   // Returns a promise that resolves with the URL to use to manage the current
   // user's FxA acct.
-  async promiseAccountsManageURI(entrypoint) {
-    return this._formatPrefURL("identity.fxaccounts.settings.uri", entrypoint);
-  },
-
-  // Returns a promise that resolves with the URL to use to manage the devices in
-  // the current user's FxA acct.
-  async promiseAccountsManageDevicesURI(entrypoint) {
-    return this._formatPrefURL("identity.fxaccounts.settings.devices.uri", entrypoint);
+  promiseAccountsManageURI(entrypoint) {
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
+    if (this.requiresHttps() && !/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    let currentState = this.currentAccountState;
+    // but we need to append the uid and email address onto a query string
+    // (if the server has no matching uid it will offer to sign in with the
+    // email address)
+    return this.getSignedInUser().then(accountData => {
+      if (!accountData) {
+        return null;
+      }
+      let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
+      newQueryPortion += "uid=" + encodeURIComponent(accountData.uid) +
+                         "&email=" + encodeURIComponent(accountData.email);
+      if (entrypoint) {
+        newQueryPortion += "&entrypoint=" + encodeURIComponent(entrypoint);
+      }
+      return url + newQueryPortion;
+    }).then(result => currentState.resolve(result));
   },
 
   /**
