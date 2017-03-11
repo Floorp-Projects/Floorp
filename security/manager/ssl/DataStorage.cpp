@@ -17,9 +17,11 @@
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"
 #include "nsNetUtil.h"
+#include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 
@@ -36,8 +38,36 @@ static const int64_t sOneDayInMicroseconds = int64_t(24 * 60 * 60) *
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(DataStorage,
-                  nsIObserver)
+class DataStorageMemoryReporter final : public nsIMemoryReporter
+{
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  ~DataStorageMemoryReporter() = default;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) final
+  {
+    nsTArray<nsString> fileNames;
+    DataStorage::GetAllFileNames(fileNames);
+    for (const auto& file: fileNames) {
+      RefPtr<DataStorage> ds = DataStorage::Get(file);
+      size_t amount = ds->SizeOfIncludingThis(MallocSizeOf);
+      nsPrintfCString path("explicit/data-storage/%s",
+                           NS_ConvertUTF16toUTF8(file).get());
+      Unused << aHandleReport->Callback(EmptyCString(), path, KIND_HEAP,
+        UNITS_BYTES, amount,
+        NS_LITERAL_CSTRING("Memory used by PSM data storage cache."),
+        aData);
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(DataStorageMemoryReporter, nsIMemoryReporter)
+
+NS_IMPL_ISUPPORTS(DataStorage, nsIObserver)
 
 StaticAutoPtr<DataStorage::DataStorages> DataStorage::sDataStorages;
 
@@ -113,6 +143,17 @@ DataStorage::SetCachedStorageEntries(
   }
 }
 
+size_t
+DataStorage::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t sizeOfExcludingThis =
+    mPersistentDataTable.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+    mTemporaryDataTable.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+    mPrivateDataTable.ShallowSizeOfExcludingThis(aMallocSizeOf) +
+    mFilename.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return aMallocSizeOf(this) + sizeOfExcludingThis;
+}
+
 nsresult
 DataStorage::Init(bool& aDataWillPersist,
                   const InfallibleTArray<mozilla::dom::DataStorageItem>* aItems)
@@ -131,6 +172,16 @@ DataStorage::Init(bool& aDataWillPersist,
   }
 
   mInitCalled = true;
+
+  static bool memoryReporterRegistered = false;
+  if (!memoryReporterRegistered) {
+    nsresult rv =
+      RegisterStrongMemoryReporter(new DataStorageMemoryReporter());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    memoryReporterRegistered = true;
+  }
 
   nsresult rv;
   if (XRE_IsParentProcess()) {
