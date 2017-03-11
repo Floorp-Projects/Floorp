@@ -33,25 +33,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985988
     t.dispatchEvent(e);
     ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
 
-    // mouseover has reversed meaning for handler return value.
-    t.onmouseover = reversedHandler;
+    t.onmouseover = handler;
     e = new MouseEvent("mouseover", {cancelable: true});
     t.dispatchEvent(e);
     ok(e.defaultPrevented, "Should have prevented default handling.");
 
-    t.onmouseover = handler;
+    t.onmouseover = reversedHandler;
     e = new MouseEvent("mouseover", {cancelable: true});
     t.dispatchEvent(e);
     ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
 
-    // error has reversed meaning for handler return value.
+    // error does not have reversed meaning for handler return value on
+    // non-globals.
+    t.onerror = handler;
+    e = new ErrorEvent("error", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(e.defaultPrevented, "Should have prevented default handling.");
+
+    t.onerror = reversedHandler;
+    e = new ErrorEvent("error", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
+
+    // error has reversed meaning for handler return value on globals.
+    t = document.getElementById("testtarget2").contentWindow;
     t.onerror = reversedHandler;
     e = new ErrorEvent("error", {cancelable: true});
     t.dispatchEvent(e);
     ok(e.defaultPrevented, "Should have prevented default handling.");
 
     t.onerror = handler;
-    e = new MouseEvent("error", {cancelable: true});
+    e = new ErrorEvent("error", {cancelable: true});
     t.dispatchEvent(e);
     ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
 
@@ -70,6 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985988
 
 </div>
 <a href="#" id="testtarget">test target</a>
+<iframe id="testtarget2"></iframe>
 <pre id="test">
 </pre>
 </body>
