@@ -11,58 +11,8 @@ const prefs = require("../preferences/service");
 const { Cu, Cc, Ci } = require("chrome");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
-/**
- * Gets the currently selected locale for display.
- * Gets all usable locale that we can use sorted by priority of relevance
- * @return  Array of locales, begins with highest priority
- */
-const PREF_MATCH_OS_LOCALE  = "intl.locale.matchOS";
-const PREF_SELECTED_LOCALE  = "general.useragent.locale";
-const PREF_ACCEPT_LANGUAGES = "intl.accept_languages";
-
 function getPreferedLocales(caseSensitve) {
-  let locales = [];
-  function addLocale(locale) {
-    locale = locale.trim();
-    if (!caseSensitve)
-      locale = locale.toLowerCase();
-    if (locales.indexOf(locale) === -1)
-      locales.push(locale);
-  }
-
-  // Most important locale is OS one. But we use it, only if
-  // "intl.locale.matchOS" pref is set to `true`.
-  // Currently only used for multi-locales mobile builds.
-  // http://mxr.mozilla.org/mozilla-central/source/mobile/android/installer/Makefile.in#46
-  if (prefs.get(PREF_MATCH_OS_LOCALE, false)) {
-    let localeService = Cc["@mozilla.org/intl/nslocaleservice;1"].
-                        getService(Ci.nsILocaleService);
-    let osLocale = localeService.getLocaleComponentForUserAgent();
-    addLocale(osLocale);
-  }
-
-  // In some cases, mainly on Fennec and on Linux version,
-  // `general.useragent.locale` is a special 'localized' value, like:
-  // "chrome://global/locale/intl.properties"
-  let browserUiLocale = prefs.getLocalized(PREF_SELECTED_LOCALE, "") ||
-                        prefs.get(PREF_SELECTED_LOCALE, "");
-  if (browserUiLocale)
-    addLocale(browserUiLocale);
-
-  // Third priority is the list of locales used for web content
-  let contentLocales = prefs.getLocalized(PREF_ACCEPT_LANGUAGES, "") ||
-                       prefs.get(PREF_ACCEPT_LANGUAGES, "");
-  if (contentLocales) {
-    // This list is a string of locales seperated by commas.
-    // There is spaces after commas, so strip each item
-    for (let locale of contentLocales.split(","))
-      addLocale(locale.replace(/(^\s+)|(\s+$)/g, ""));
-  }
-
-  // Finally, we ensure that en-US is the final fallback if it wasn't added
-  addLocale("en-US");
-
-  return locales;
+  return Services.locale.getRequestedLocales();
 }
 exports.getPreferedLocales = getPreferedLocales;
 

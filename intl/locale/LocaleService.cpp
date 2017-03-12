@@ -748,6 +748,24 @@ LocaleService::GetRequestedLocales(uint32_t* aCount, char*** aOutArray)
 }
 
 NS_IMETHODIMP
+LocaleService::GetRequestedLocale(nsACString& aRetVal)
+{
+  AutoTArray<nsCString, 16> requestedLocales;
+  bool res = GetRequestedLocales(requestedLocales);
+
+  if (!res) {
+    NS_ERROR("Couldn't retrieve selected locales from prefs!");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (requestedLocales.Length() > 0) {
+    aRetVal = requestedLocales[0];
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LocaleService::SetRequestedLocales(const char** aRequested,
                                    uint32_t aRequestedCount)
 {
