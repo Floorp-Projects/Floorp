@@ -87,4 +87,10 @@ interface nsISessionStore : nsISupports
    * @param aWindow The window to remove
    */
   void removeWindow(in nsIDOMWindow aWindow);
+
+  /**
+   * Set the load state of the session store. Use only for testing.
+   * @param aState The target load state.
+   */
+  void setLoadState(in long aState);
 };
