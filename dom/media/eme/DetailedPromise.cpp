@@ -36,7 +36,7 @@ DetailedPromise::~DetailedPromise()
   // GetPromiseState() == PromiseState::Rejected.  But by now we've been
   // unlinked, so don't have a reference to our actual JS Promise object
   // anymore.
-  MaybeReportTelemetry(Failed);
+  MaybeReportTelemetry(kFailed);
 }
 
 void
@@ -46,7 +46,7 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
                       static_cast<uint32_t>(aArg), PromiseFlatCString(aReason).get());
   EME_LOG("%s", msg.get());
 
-  MaybeReportTelemetry(Failed);
+  MaybeReportTelemetry(kFailed);
 
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
@@ -84,7 +84,7 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
 }
 
 void
-DetailedPromise::MaybeReportTelemetry(Status aStatus)
+DetailedPromise::MaybeReportTelemetry(eStatus aStatus)
 {
   if (mResponded) {
     return;
@@ -95,8 +95,8 @@ DetailedPromise::MaybeReportTelemetry(Status aStatus)
   }
   uint32_t latency = (TimeStamp::Now() - mStartTime).ToMilliseconds();
   EME_LOG("%s %s latency %ums reported via telemetry", mName.get(),
-          ((aStatus == Succeeded) ? "succcess" : "failure"), latency);
-  Telemetry::HistogramID tid = (aStatus == Succeeded) ? mSuccessLatencyProbe.Value()
+          ((aStatus == kSucceeded) ? "succcess" : "failure"), latency);
+  Telemetry::HistogramID tid = (aStatus == kSucceeded) ? mSuccessLatencyProbe.Value()
                                                       : mFailureLatencyProbe.Value();
   Telemetry::Accumulate(tid, latency);
 }
