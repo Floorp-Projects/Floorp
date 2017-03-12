@@ -98,6 +98,10 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
   getGrids: function (rootNode) {
     let grids = [];
 
+    if (!rootNode) {
+      return grids;
+    }
+
     let treeWalker = this.walker.getDocumentWalker(rootNode);
     while (treeWalker.nextNode()) {
       let currentNode = treeWalker.currentNode;
