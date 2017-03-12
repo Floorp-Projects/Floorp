@@ -54,12 +54,12 @@ function frameScript() {
   Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
 
   ExtensionContent.init(this);
-  addEventListener("unload", () => {
+  this.addEventListener("unload", () => { // eslint-disable-line mozilla/balanced-listeners
     ExtensionContent.uninit(this);
   });
 }
 
-const FRAME_SCRIPT = `data:text/javascript,(${frameScript}).call(this)`;
+const FRAME_SCRIPT = `data:text/javascript,(${encodeURI(frameScript)}).call(this)`;
 
 
 const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeURI(
