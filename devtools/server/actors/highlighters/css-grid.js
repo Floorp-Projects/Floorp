@@ -144,7 +144,7 @@ function CssGridHighlighter(highlighterEnv) {
     this._buildMarkup.bind(this));
 
   this.onNavigate = this.onNavigate.bind(this);
-  this.onPageHide = this.hide.bind(this);
+  this.onPageHide = this.onPageHide.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
 
   this.highlighterEnv.on("navigate", this.onNavigate);
@@ -332,7 +332,9 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
-    pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
+    if (pageListenerTarget) {
+      pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
+    }
 
     this.markup.destroy();
 
@@ -419,6 +421,14 @@ CssGridHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   onNavigate() {
     this._clearCache();
+  },
+
+  onPageHide: function ({ target }) {
+    // If a page hide event is triggered for current window's highlighter, hide the
+    // highlighter.
+    if (target.defaultView === this.win) {
+      this.hide();
+    }
   },
 
   onWillNavigate({ isTopLevel }) {

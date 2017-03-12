@@ -104,9 +104,13 @@ function BoxModelHighlighter(highlighterEnv) {
    */
   this.regionFill = {};
 
+  this.onPageHide = this.onPageHide.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
 
   this.highlighterEnv.on("will-navigate", this.onWillNavigate);
+
+  let { pageListenerTarget } = highlighterEnv;
+  pageListenerTarget.addEventListener("pagehide", this.onPageHide);
 }
 
 BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -260,6 +264,12 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   destroy: function () {
     this.highlighterEnv.off("will-navigate", this.onWillNavigate);
+
+    let { pageListenerTarget } = this.highlighterEnv;
+    if (pageListenerTarget) {
+      pageListenerTarget.removeEventListener("pagehide", this.onPageHide);
+    }
+
     this.markup.destroy();
     AutoRefreshHighlighter.prototype.destroy.call(this);
   },
@@ -708,6 +718,14 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     let container = this.getElement("infobar-container");
 
     moveInfobar(container, bounds, this.win);
+  },
+
+  onPageHide: function ({ target }) {
+    // If a pagehide event is triggered for current window's highlighter, hide the
+    // highlighter.
+    if (target.defaultView === this.win) {
+      this.hide();
+    }
   },
 
   onWillNavigate: function ({ isTopLevel }) {
