@@ -1607,6 +1607,11 @@ SessionStore.prototype = {
     } else if (this._loadState <= STATE_QUITTING) {
       this.saveStateDelayed();
     }
+  },
+
+  setLoadState: function ss_setLoadState(aState) {
+    this.flushPendingState();
+    this._loadState = aState;
   }
 
 };
