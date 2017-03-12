@@ -972,7 +972,7 @@ public class Tabs implements BundleEventListener {
         data.putBoolean("isPrivate", isPrivate);
         data.putBoolean("pinned", (flags & LOADURL_PINNED) != 0);
         data.putBoolean("desktopMode", desktopMode);
-        data.putBoolean("customTab", customTab);
+        data.putString("tabType", type.name());
 
         final boolean needsNewTab;
         final String applicationId = (intent == null) ? null :
