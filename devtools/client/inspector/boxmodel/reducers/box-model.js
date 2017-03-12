@@ -5,14 +5,22 @@
 "use strict";
 
 const {
+  UPDATE_GEOMETRY_EDITOR_ENABLED,
   UPDATE_LAYOUT,
 } = require("../actions/index");
 
 const INITIAL_BOX_MODEL = {
+  geometryEditorEnabled: false,
   layout: {},
 };
 
 let reducers = {
+
+  [UPDATE_GEOMETRY_EDITOR_ENABLED](boxModel, { enabled }) {
+    return Object.assign({}, boxModel, {
+      geometryEditorEnabled: enabled,
+    });
+  },
 
   [UPDATE_LAYOUT](boxModel, { layout }) {
     return Object.assign({}, boxModel, {

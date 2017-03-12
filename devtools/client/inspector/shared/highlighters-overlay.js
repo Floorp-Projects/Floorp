@@ -25,6 +25,8 @@ function HighlightersOverlay(inspector) {
   // Only initialize the overlay if at least one of the highlighter types is supported.
   this.supportsHighlighters = this.highlighterUtils.supportsCustomHighlighters();
 
+  // NodeFront of element that is highlighted by the geometry editor.
+  this.geometryEditorHighlighterShown = null;
   // NodeFront of the grid container that is highlighted.
   this.gridHighlighterShown = null;
   // Name of the highlighter shown on mouse hover.
@@ -151,6 +153,57 @@ HighlightersOverlay.prototype = {
     // hidden for.
     this.emit("grid-highlighter-hidden", this.gridHighlighterShown);
     this.gridHighlighterShown = null;
+  }),
+
+  /**
+   * Toggle the geometry editor highlighter for the given element.
+   *
+   * @param {NodeFront} node
+   *        The NodeFront of the element to highlight.
+   */
+  toggleGeometryHighlighter: Task.async(function* (node) {
+    if (node == this.geometryEditorHighlighterShown) {
+      yield this.hideGeometryEditor();
+      return;
+    }
+
+    yield this.showGeometryEditor(node);
+  }),
+
+  /**
+   * Show the geometry editor highlightor for the given element.
+   *
+   * @param {NodeFront} node
+   *        THe NodeFront of the element to highlight.
+   */
+  showGeometryEditor: Task.async(function* (node) {
+    let highlighter = yield this._getHighlighter("GeometryEditorHighlighter");
+    if (!highlighter) {
+      return;
+    }
+
+    let isShown = yield highlighter.show(node);
+    if (!isShown) {
+      return;
+    }
+
+    this.emit("geometry-editor-highlighter-shown");
+    this.geometryEditorHighlighterShown = node;
+  }),
+
+  /**
+   * Hide the geometry editor highlighter.
+   */
+  hideGeometryEditor: Task.async(function* () {
+    if (!this.geometryEditorHighlighterShown ||
+        !this.highlighters.GeometryEditorHighlighter) {
+      return;
+    }
+
+    yield this.highlighters.GeometryEditorHighlighter.hide();
+
+    this.emit("geometry-editor-highlighter-hidden");
+    this.geometryEditorHighlighterShown = null;
   }),
 
   /**
@@ -319,6 +372,7 @@ HighlightersOverlay.prototype = {
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate: function () {
+    this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
@@ -342,6 +396,8 @@ HighlightersOverlay.prototype = {
     this.highlighters = null;
     this.highlighterUtils = null;
     this.supportsHighlighters = null;
+
+    this.geometryEditorHighlighterShown = null;
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
