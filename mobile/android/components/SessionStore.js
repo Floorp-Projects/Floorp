@@ -156,8 +156,8 @@ SessionStore.prototype = {
     } else { // We're shutting down and must delete synchronously
       if (this._sessionFile.exists()) { this._sessionFile.remove(false); }
       if (this._sessionFileBackup.exists()) { this._sessionFileBackup.remove(false); }
-      if (this._sessionFileBackup.exists()) { this._sessionFilePrevious.remove(false); }
-      if (this._sessionFileBackup.exists()) { this._sessionFileTemp.remove(false); }
+      if (this._sessionFilePrevious.exists()) { this._sessionFilePrevious.remove(false); }
+      if (this._sessionFileTemp.exists()) { this._sessionFileTemp.remove(false); }
     }
   },
 
