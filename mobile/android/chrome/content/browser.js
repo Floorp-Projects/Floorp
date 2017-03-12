@@ -1870,7 +1870,7 @@ var BrowserApp = {
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
           desktopMode: (data.desktopMode === true),
-          customTab: ("customTab" in data) ? data.customTab : false
+          tabType: ("tabType" in data) ? data.tabType : "BROWSING"
         };
 
         params.userRequested = url;
@@ -3393,8 +3393,8 @@ nsBrowserAccess.prototype = {
 
     if (aOpener != null) {
       let parent = BrowserApp.getTabForWindow(aOpener.top);
-      if ((parent != null) && ("isCustomTab" in parent)) {
-        newTab = newTab && !parent.isCustomTab;
+      if (parent != null) {
+        newTab = newTab && parent.tabType != "CUSTOMTAB";
       }
     }
 
@@ -3563,6 +3563,9 @@ Tab.prototype = {
     // Java and new tabs from Gecko.
     let stub = false;
 
+    // The authoritative list of possible tab types is the TabType enum in Tab.java.
+    this.type = "tabType" in aParams ? aParams.tabType : "BROWSING";
+
     if (!aParams.zombifying) {
       if ("tabID" in aParams) {
         this.id = aParams.tabID;
@@ -3585,7 +3588,7 @@ Tab.prototype = {
       let message = {
         type: "Tab:Added",
         tabID: this.id,
-        tabType: "BROWSING",
+        tabType: this.type,
         uri: truncate(uri, MAX_URI_LENGTH),
         parentId: this.parentId,
         tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
@@ -3665,7 +3668,6 @@ Tab.prototype = {
       // The search term the user entered to load the current URL
       this.userRequested = "userRequested" in aParams ? aParams.userRequested : "";
       this.isSearch = "isSearch" in aParams ? aParams.isSearch : false;
-      this.isCustomTab = "customTab" in aParams ? aParams.customTab : false;
 
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
