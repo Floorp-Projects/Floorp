@@ -190,7 +190,8 @@ public:
 
   // Notify activity of the decoder owner is changed.
   virtual void NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                          bool aIsElementVisible);
+                                          bool aIsElementVisible,
+                                          bool aIsElementInTree);
 
   // Pause video playback.
   virtual void Pause();
@@ -373,7 +374,8 @@ private:
 
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsDocumentVisible,
-                                    bool aIsElementVisible);
+                                    bool aIsElementVisible,
+                                    bool aIsElementInTree);
 
   // Force override the visible state to hidden.
   // Called from HTMLMediaElement when testing of video decode suspend from mochitests.
@@ -721,8 +723,11 @@ protected:
   // Tracks the visibility status of owner element's document.
   bool mIsDocumentVisible;
 
-  // Tracks the visibliity status of owner element.
+  // Tracks the visibility status of owner element.
   bool mIsElementVisible;
+
+  // Tracks the owner is in-tree or not.
+  bool mIsElementInTree;
 
   // If true, forces the decoder to be considered hidden.
   bool mForcedHidden;
