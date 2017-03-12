@@ -438,7 +438,7 @@ add_task(function* () {
 });
 
 
-add_task(function* test_neuter() {
+add_task(function* test_invalidated_lazy_injection() {
   context.permissionsChanged = null;
 
   let root = {};
