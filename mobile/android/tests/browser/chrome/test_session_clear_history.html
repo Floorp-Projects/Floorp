@@ -48,7 +48,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     cleanupTabs();
   });
 
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
+  // Session store load state constants
+  const STATE_STOPPED = 0;
+  const STATE_RUNNING = 1;
+  const STATE_QUITTING = -1;
+  const STATE_QUITTING_FLUSHED = -2;
+
+  function createFileIfNotExists(file) {
+    if (!file.exists()) {
+      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
+    }
+  }
+
+  // URLs for testing
   const url1 = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article_mobile.html";
   const url2 = "http://example.org/chrome/mobile/android/tests/browser/chrome/basic_article.html";
   const url3 = "data:text/html;charset=utf-8,It%20was%20a%20dark%20and%20stormy%20night.";
@@ -87,6 +101,51 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1343603
     is(data.entries[0].url, url2, "URL of first history entry is correct after data clearing");
 
     cleanupTabs();
+  });
+
+  add_task(function* test_sessionStoreClearFiles() {
+    // Temporarily set the session store to shutdown mode to test the
+    // synchronous deletion code path.
+    // This also means that nothing gets written to disk until explicitly
+    // flushed, so we can test that all files have been deleted and don't
+    // have to worry about them already having been recreated before we get
+    // around checking on them.
+    ss.setLoadState(STATE_QUITTING);
+
+    let sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    let sessionFileBackup = sessionFile.clone();
+    let sessionFilePrevious = sessionFile.clone();
+    let sessionFileTemp = sessionFile.clone();
+
+    sessionFile.append("sessionstore.js"); // The main session store save file.
+    sessionFileBackup.append("sessionstore.bak"); // A backup copy to guard against interrupted writes.
+    sessionFilePrevious.append("sessionstore.old"); // The previous session's file, used for what used to be the "Tabs from last time".
+    sessionFileTemp.append(sessionFile.leafName + ".tmp"); // Temporary file for writing changes to disk.
+
+    createFileIfNotExists(sessionFile);
+    createFileIfNotExists(sessionFileBackup);
+    createFileIfNotExists(sessionFilePrevious);
+    createFileIfNotExists(sessionFileTemp);
+
+    ok(sessionFile.exists(), "session file exists");
+    ok(sessionFileBackup.exists(), "backup file exists");
+    ok(sessionFilePrevious.exists(), "last session file exists");
+    ok(sessionFileTemp.exists(), "temp file exists");
+
+    // Clear browsing history
+    let sanitize = { history:true };
+    let notification = promiseNotification("sessionstore-state-purge-complete");
+
+    BrowserApp.sanitize(sanitize);
+    yield notification;
+
+    ok(!sessionFile.exists(), "session file was deleted");
+    ok(!sessionFileBackup.exists(), "backup file was deleted");
+    ok(!sessionFilePrevious.exists(), "last session file was deleted");
+    ok(!sessionFileTemp.exists(), "temp file was deleted");
+
+    // Revert back to normal
+    ss.setLoadState(STATE_RUNNING);
   });
 
   add_task(function* test_sessionStoreClearZombieTabHistory() {
