@@ -6,7 +6,6 @@
 #ifndef mozilla_intl_LocaleService_h__
 #define mozilla_intl_LocaleService_h__
 
-#include "mozilla/StaticPtr.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "nsTArray.h"
