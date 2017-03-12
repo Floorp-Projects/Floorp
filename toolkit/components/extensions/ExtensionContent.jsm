@@ -114,6 +114,8 @@ class ScriptCache extends DefaultMap {
   constructor(options) {
     super(url => ChromeUtils.compileScript(url, options));
 
+    this.expiryTimeout = SCRIPT_EXPIRY_TIMEOUT_MS;
+
     scriptCaches.add(this);
   }
 
@@ -125,7 +127,7 @@ class ScriptCache extends DefaultMap {
       script.timer.cancel();
     }
     script.timer = Timer(this.delete.bind(this, url),
-                         SCRIPT_EXPIRY_TIMEOUT_MS,
+                         this.expiryTimeout,
                          Ci.nsITimer.TYPE_ONE_SHOT);
 
     return script;
