@@ -224,6 +224,10 @@ function GeometryEditorHighlighter(highlighterEnv) {
     this.getElement("handler-" + side)
       .addEventListener("mousedown", onMouseDown);
   }
+
+  this.onWillNavigate = this.onWillNavigate.bind(this);
+
+  this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 }
 
 GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
@@ -699,6 +703,12 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
                          : "translate(" + labelCross + " " + labelMain + ")");
     labelEl.removeAttribute("hidden");
     labelTextEl.setTextContent(labelValue);
-  }
+  },
+
+  onWillNavigate({ isTopLevel }) {
+    if (isTopLevel) {
+      this.hide();
+    }
+  },
 });
 exports.GeometryEditorHighlighter = GeometryEditorHighlighter;

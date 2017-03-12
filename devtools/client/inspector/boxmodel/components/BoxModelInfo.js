@@ -22,14 +22,29 @@ module.exports = createClass({
 
   propTypes: {
     boxModel: PropTypes.shape(Types.boxModel).isRequired,
+    onToggleGeometryEditor: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
 
+  onToggleGeometryEditor(e) {
+    this.props.onToggleGeometryEditor();
+  },
+
   render() {
     let { boxModel } = this.props;
-    let { layout } = boxModel;
-    let { width, height, position } = layout;
+    let { geometryEditorEnabled, layout } = boxModel;
+    let {
+      height,
+      isPositionEditable,
+      position,
+      width,
+    } = layout;
+
+    let buttonClass = "layout-geometry-editor devtools-button";
+    if (geometryEditorEnabled) {
+      buttonClass += " checked";
+    }
 
     return dom.div(
       {
@@ -45,10 +60,14 @@ module.exports = createClass({
         {
           className: "boxmodel-position-group",
         },
-        dom.button({
-          className: "layout-geometry-editor devtools-button",
-          title: BOXMODEL_L10N.getStr("boxmodel.geometryButton.tooltip"),
-        }),
+        isPositionEditable ?
+          dom.button({
+            className: buttonClass,
+            title: BOXMODEL_L10N.getStr("boxmodel.geometryButton.tooltip"),
+            onClick: this.onToggleGeometryEditor,
+          })
+          :
+          null,
         dom.span(
           {
             className: "boxmodel-element-position",
