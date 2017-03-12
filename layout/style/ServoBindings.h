@@ -245,6 +245,9 @@ void Gecko_SetCursorImage(nsCursorImage* cursor,
 void Gecko_CopyCursorArrayFrom(nsStyleUserInterface* dest,
                                const nsStyleUserInterface* src);
 
+void Gecko_SetContentDataImage(nsStyleContentData* content_data, ServoBundledURI uri);
+void Gecko_SetContentDataArray(nsStyleContentData* content_data, nsStyleContentType type, uint32_t len);
+
 // Dirtiness tracking.
 uint32_t Gecko_GetNodeFlags(RawGeckoNodeBorrowed node);
 void Gecko_SetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
@@ -348,7 +351,8 @@ void Gecko_CSSValue_SetPercentage(nsCSSValueBorrowedMut css_value, float percent
 void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
-void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const nsString string);
+void Gecko_CSSValue_SetString(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
+void Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut css_value, const uint8_t* string, uint32_t len);
 void Gecko_CSSValue_SetArray(nsCSSValueBorrowedMut css_value, int32_t len);
 void Gecko_CSSValue_SetURL(nsCSSValueBorrowedMut css_value, ServoBundledURI uri);
 void Gecko_CSSValue_SetLocal(nsCSSValueBorrowedMut css_value, const nsString family);

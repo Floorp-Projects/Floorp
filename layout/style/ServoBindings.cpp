@@ -920,6 +920,21 @@ Gecko_CopyCursorArrayFrom(nsStyleUserInterface* aDest,
   aDest->mCursorImages = aSrc->mCursorImages;
 }
 
+void
+Gecko_SetContentDataImage(nsStyleContentData* aContent, ServoBundledURI aURI)
+{
+  RefPtr<nsStyleImageRequest> req = CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
+  aContent->SetImageRequest(req.forget());
+}
+
+void
+Gecko_SetContentDataArray(nsStyleContentData* aContent,
+                          nsStyleContentType aType, uint32_t aLen)
+{
+  nsCSSValue::Array* arr = nsCSSValue::Array::Create(aLen);
+  aContent->SetCounters(aType, arr);
+}
+
 nsStyleGradient*
 Gecko_CreateGradient(uint8_t aShape,
                      uint8_t aSize,
@@ -1312,10 +1327,25 @@ Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut aCSSValue, int32_t aLen)
 }
 
 void
-Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const nsString aString)
+Gecko_CSSValue_SetString(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
 {
   MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
-  aCSSValue->SetStringValue(aString, eCSSUnit_String);
+  nsString string;
+  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
+                                  aLength);
+  AppendUTF8toUTF16(slice, string);
+  aCSSValue->SetStringValue(string, eCSSUnit_String);
+}
+
+void
+Gecko_CSSValue_SetIdent(nsCSSValueBorrowedMut aCSSValue, const uint8_t* aString, uint32_t aLength)
+{
+  MOZ_ASSERT(aCSSValue->GetUnit() == eCSSUnit_Null);
+  nsString string;
+  nsDependentCSubstring slice(reinterpret_cast<const char*>(aString),
+                                  aLength);
+  AppendUTF8toUTF16(slice, string);
+  aCSSValue->SetStringValue(string, eCSSUnit_Ident);
 }
 
 void
