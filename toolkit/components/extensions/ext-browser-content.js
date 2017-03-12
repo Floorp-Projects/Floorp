@@ -32,7 +32,7 @@ const {
 const RESIZE_TIMEOUT = 100;
 
 const BrowserListener = {
-  init({allowScriptsToClose, fixedWidth, maxHeight, maxWidth, stylesheets, isInline}) {
+  init({allowScriptsToClose, blockParser, fixedWidth, maxHeight, maxWidth, stylesheets, isInline}) {
     this.fixedWidth = fixedWidth;
     this.stylesheets = stylesheets || [];
 
@@ -51,11 +51,18 @@ const BrowserListener = {
     // Force external links to open in tabs.
     docShell.isAppTab = true;
 
+    if (blockParser) {
+      this.blockingPromise = new Promise(resolve => {
+        this.unblockParser = resolve;
+      });
+    }
+
     addEventListener("DOMWindowCreated", this, true);
     addEventListener("load", this, true);
     addEventListener("DOMContentLoaded", this, true);
     addEventListener("DOMWindowClose", this, true);
     addEventListener("MozScrolledAreaChanged", this, true);
+    addEventListener("DOMDocElementInserted", this, true);
   },
 
   destroy() {
@@ -64,11 +71,17 @@ const BrowserListener = {
     removeEventListener("DOMContentLoaded", this, true);
     removeEventListener("DOMWindowClose", this, true);
     removeEventListener("MozScrolledAreaChanged", this, true);
+    removeEventListener("DOMDocElementInserted", this, true);
   },
 
   receiveMessage({name, data}) {
     if (name === "Extension:InitBrowser") {
       this.init(data);
+    } else if (name === "Extension:UnblockParser") {
+      if (this.unblockParser) {
+        this.unblockParser();
+        this.blockingPromise = null;
+      }
     }
   },
 
@@ -83,6 +96,12 @@ const BrowserListener = {
 
   handleEvent(event) {
     switch (event.type) {
+      case "DOMDocElementInserted":
+        if (this.blockingPromise) {
+          event.target.blockParsing(this.blockingPromise);
+        }
+        break;
+
       case "DOMWindowCreated":
         if (event.target === content.document) {
           this.loadStylesheets();
@@ -229,3 +248,4 @@ const BrowserListener = {
 };
 
 addMessageListener("Extension:InitBrowser", BrowserListener);
+addMessageListener("Extension:UnblockParser", BrowserListener);
