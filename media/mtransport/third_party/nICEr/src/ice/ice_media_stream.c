@@ -731,6 +731,9 @@ int nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_comp
       stream->timer=0;
     }
 
+    /* Cancel consent timers in case it is running already */
+    nr_ice_component_consent_destroy(component);
+
     if (stream->pctx->handler) {
       stream->pctx->handler->vtbl->stream_failed(stream->pctx->handler->obj,stream->local_stream);
     }
