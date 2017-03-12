@@ -10,6 +10,7 @@
 #include "nsUConvPropertySearch.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "nsIObserverService.h"
 #include "mozilla/intl/LocaleService.h"
 
 using mozilla::intl::LocaleService;
@@ -29,19 +30,15 @@ static constexpr nsUConvProp nonParticipatingDomains[] = {
 #include "nonparticipatingdomains.properties.h"
 };
 
+NS_IMPL_ISUPPORTS(FallbackEncoding, nsIObserver)
+
 FallbackEncoding* FallbackEncoding::sInstance = nullptr;
 bool FallbackEncoding::sGuessFallbackFromTopLevelDomain = true;
 
 FallbackEncoding::FallbackEncoding()
 {
-  MOZ_COUNT_CTOR(FallbackEncoding);
   MOZ_ASSERT(!FallbackEncoding::sInstance,
              "Singleton already exists.");
-}
-
-FallbackEncoding::~FallbackEncoding()
-{
-  MOZ_COUNT_DTOR(FallbackEncoding);
 }
 
 void
@@ -118,6 +115,16 @@ FallbackEncoding::PrefChanged(const char*, void*)
   FallbackEncoding::sInstance->Invalidate();
 }
 
+NS_IMETHODIMP
+FallbackEncoding::Observe(nsISupports *aSubject, const char *aTopic,
+                         const char16_t *aData)
+{
+  MOZ_ASSERT(FallbackEncoding::sInstance,
+             "Observe callback called with null fallback cache.");
+  FallbackEncoding::sInstance->Invalidate();
+  return NS_OK;
+}
+
 void
 FallbackEncoding::Initialize()
 {
@@ -127,11 +134,13 @@ FallbackEncoding::Initialize()
   Preferences::RegisterCallback(FallbackEncoding::PrefChanged,
                                 "intl.charset.fallback.override",
                                 nullptr);
-  Preferences::RegisterCallback(FallbackEncoding::PrefChanged,
-                                "general.useragent.locale",
-                                nullptr);
   Preferences::AddBoolVarCache(&sGuessFallbackFromTopLevelDomain,
                                "intl.charset.fallback.tld");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(sInstance, "intl:requested-locales-changed", true);
+  }
 }
 
 void
@@ -139,6 +148,10 @@ FallbackEncoding::Shutdown()
 {
   MOZ_ASSERT(FallbackEncoding::sInstance,
              "Releasing non-existent fallback cache.");
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(sInstance, "intl:requested-locales-changed");
+  }
   delete FallbackEncoding::sInstance;
   FallbackEncoding::sInstance = nullptr;
 }
