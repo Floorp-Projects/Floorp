@@ -6,4 +6,8 @@ module.exports = { // eslint-disable-line no-undef
   "globals": {
     "browser": false,
   },
+
+  "env": {
+    "browser": true,
+  }
 };
