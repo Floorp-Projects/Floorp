@@ -298,11 +298,12 @@ MediaDecoder::ResourceCallback::NotifyBytesConsumed(int64_t aBytes,
 
 void
 MediaDecoder::NotifyOwnerActivityChanged(bool aIsDocumentVisible,
-                                         bool aIsElementVisible)
+                                         bool aIsElementVisible,
+                                         bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  SetElementVisibility(aIsDocumentVisible, aIsElementVisible);
+  SetElementVisibility(aIsDocumentVisible, aIsElementVisible, aIsElementInTree);
 
   NotifyCompositor();
 }
@@ -397,6 +398,7 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
   , mIsElementVisible(false)
+  , mIsElementInTree(false)
   , mForcedHidden(false)
   , mHasSuspendTaint(false)
   , INIT_MIRROR(mStateMachineIsShutdown, true)
@@ -1308,11 +1310,13 @@ MediaDecoder::NotifyCompositor()
 
 void
 MediaDecoder::SetElementVisibility(bool aIsDocumentVisible,
-                                   bool aIsElementVisible)
+                                   bool aIsElementVisible,
+                                   bool aIsElementInTree)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mIsDocumentVisible = aIsDocumentVisible;
   mIsElementVisible = aIsElementVisible;
+  mIsElementInTree = aIsElementInTree;
   UpdateVideoDecodeMode();
 }
 
@@ -1342,6 +1346,12 @@ MediaDecoder::UpdateVideoDecodeMode()
 
   // If mHasSuspendTaint is set, never suspend the video decoder.
   if (mHasSuspendTaint) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
+    return;
+  }
+
+  // Don't suspend elements that is not in tree.
+  if (!mIsElementInTree) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
