@@ -74,7 +74,7 @@ XPCOMUtils.defineLazyGetter(this, "standaloneStylesheets", () => {
 });
 
 class BasePopup {
-  constructor(extension, viewNode, popupURL, browserStyle, fixedWidth = false) {
+  constructor(extension, viewNode, popupURL, browserStyle, fixedWidth = false, blockParser = false) {
     this.extension = extension;
     this.popupURL = popupURL;
     this.viewNode = viewNode;
@@ -82,6 +82,7 @@ class BasePopup {
     this.window = viewNode.ownerGlobal;
     this.destroyed = false;
     this.fixedWidth = fixedWidth;
+    this.blockParser = blockParser;
 
     extension.callOnClose(this);
 
@@ -117,9 +118,14 @@ class BasePopup {
 
     this.destroyed = true;
     this.browserLoadedDeferred.reject(new Error("Popup destroyed"));
+
+    BasePopup.instances.get(this.window).delete(this.extension);
+
     return this.browserReady.then(() => {
-      this.destroyBrowser(this.browser, true);
-      this.browser.remove();
+      if (this.browser) {
+        this.destroyBrowser(this.browser, true);
+        this.browser.remove();
+      }
 
       if (this.viewNode) {
         this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
@@ -130,8 +136,6 @@ class BasePopup {
         this.panel.style.removeProperty("--arrowpanel-background");
         this.panel.style.removeProperty("--panel-arrow-image-vertical");
       }
-
-      BasePopup.instances.get(this.window).delete(this.extension);
 
       this.browser = null;
       this.viewNode = null;
@@ -287,6 +291,7 @@ class BasePopup {
 
       mm.sendAsyncMessage("Extension:InitBrowser", {
         allowScriptsToClose: true,
+        blockParser: this.blockParser,
         fixedWidth: this.fixedWidth,
         maxWidth: 800,
         maxHeight: 600,
@@ -294,6 +299,12 @@ class BasePopup {
       });
 
       browser.loadURI(popupURL);
+    });
+  }
+
+  unblockParser() {
+    this.browserReady.then(browser => {
+      this.browser.messageManager.sendAsyncMessage("Extension:UnblockParser");
     });
   }
 
@@ -401,7 +412,7 @@ class PanelPopup extends BasePopup {
 }
 
 class ViewPopup extends BasePopup {
-  constructor(extension, window, popupURL, browserStyle, fixedWidth) {
+  constructor(extension, window, popupURL, browserStyle, fixedWidth, blockParser) {
     let document = window.document;
 
     // Create a temporary panel to hold the browser while it pre-loads its
@@ -411,7 +422,7 @@ class ViewPopup extends BasePopup {
     panel.setAttribute("type", "arrow");
     document.getElementById("mainPopupSet").appendChild(panel);
 
-    super(extension, panel, popupURL, browserStyle, fixedWidth);
+    super(extension, panel, popupURL, browserStyle, fixedWidth, blockParser);
 
     this.ignoreResizes = true;
 

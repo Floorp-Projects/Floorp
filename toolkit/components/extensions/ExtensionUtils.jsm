@@ -1334,6 +1334,7 @@ this.ExtensionUtils = {
   getInnerWindowID,
   getMessageManager,
   getUniqueId,
+  filterStack,
   ignoreEvent,
   injectAPI,
   instanceOf,
