@@ -478,7 +478,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   _removeAllListeners: function () {
-    if (this.highlighterEnv) {
+    if (this.highlighterEnv && this.highlighterEnv.pageListenerTarget) {
       let target = this.highlighterEnv.pageListenerTarget;
       for (let [type] of this.listeners) {
         target.removeEventListener(type, this, true);
