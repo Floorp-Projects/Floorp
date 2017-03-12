@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
