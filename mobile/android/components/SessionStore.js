@@ -1116,6 +1116,7 @@ SessionStore.prototype = {
     tabData.isPrivate = aBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
     tabData.tabId = tab.id;
     tabData.parentId = tab.parentId;
+    tabData.type = tab.type;
 
     aBrowser.__SS_data = tabData;
   },
