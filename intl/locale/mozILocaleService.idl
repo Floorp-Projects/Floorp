@@ -133,4 +133,23 @@ interface mozILocaleService : nsISupports
    */
   void getRequestedLocales([optional] out unsigned long aCount,
                            [retval, array, size_is(aCount)] out string aLocales);
+
+  /**
+   * Sets a list of locales that the user requested the app to be
+   * localized to.
+   *
+   * The argument is an ordered list of locale IDs which should be
+   * used as a requestedLocales input list for language negotiation.
+   *
+   * The current implementation is limited to handle at most one
+   * locale passed to the API. In the future we'll transition to support
+   * whole fallback chain.
+   *
+   * If an empty list is passed, the list of requested locales will
+   * be picked from the operating system.
+   *
+   * Example: ["de"]
+   */
+  void setRequestedLocales([array, size_is(aRequestedCount)] in string aRequested,
+                           [optional] in unsigned long aRequestedCount);
 };
