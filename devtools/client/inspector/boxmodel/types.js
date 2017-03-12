@@ -11,6 +11,9 @@ const { PropTypes } = require("devtools/client/shared/vendor/react");
  */
 exports.boxModel = {
 
+  // Whether or not the geometry editor is enabled
+  geometryEditorEnabled: PropTypes.boolean,
+
   // The layout information of the current selected node
   layout: PropTypes.object,
 
