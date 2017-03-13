@@ -1520,6 +1520,25 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::GECKO;
+    };
+
+    struct NotifyPushObservers_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::String::Param,
+                mozilla::jni::String::Param> Args;
+        static constexpr char name[] = "nativeNotifyPushObservers";
+        static constexpr char signature[] =
+                "(Ljava/lang/String;Ljava/lang/String;)V";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
                 mozilla::jni::DispatchTarget::PROXY;
     };
 
