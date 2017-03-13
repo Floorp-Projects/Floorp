@@ -508,7 +508,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Gradient:
     {
-      nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
+      nsCSSRendering::PaintGradient(aPresContext, *ctx,
                                     mGradientData, aDirtyRect,
                                     aDest, aFill, aRepeatSize, aSrc, mSize,
                                     aOpacity);
