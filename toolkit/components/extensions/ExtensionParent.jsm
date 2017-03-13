@@ -601,7 +601,7 @@ ParentAPIManager = {
           reply({result});
         }, error => {
           error = context.normalizeError(error);
-          reply({error: {message: error.message}});
+          reply({error: {message: error.message, fileName: error.fileName}});
         });
       }
     } catch (e) {
