@@ -73,7 +73,6 @@ public:
   typedef char_traits::incompatible_char_type incompatible_char_type;
 
   typedef nsTSubstring_CharT                  self_type;
-  typedef self_type                           abstract_string_type;
   typedef self_type                           base_string_type;
 
   typedef self_type                           substring_type;
@@ -858,26 +857,6 @@ public:
     Assign(aTuple);
   }
 
-  /**
-   * allows for direct initialization of a nsTSubstring object.
-   *
-   * NOTE: this constructor is declared public _only_ for convenience
-   * inside the string implementation.
-   */
-  // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
-#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
-#define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags);
-#else
-#undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
-    : mData(aData)
-    , mLength(aLength)
-    , mFlags(aFlags)
-  {
-  }
-#endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
-
   size_t SizeOfExcludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
   size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf)
@@ -910,9 +889,7 @@ public:
 
 protected:
 
-  friend class nsTObsoleteAStringThunk_CharT;
   friend class nsTSubstringTuple_CharT;
-  friend class nsTPromiseFlatString_CharT;
 
   char_type*  mData;
   size_type   mLength;
@@ -926,13 +903,6 @@ protected:
   {
   }
 
-  // version of constructor that leaves mData and mLength uninitialized
-  explicit
-  nsTSubstring_CharT(uint32_t aFlags)
-    : mFlags(aFlags)
-  {
-  }
-
   // copy-constructor, constructs as dependent on given object
   // (NOTE: this is for internal use only)
   nsTSubstring_CharT(const self_type& aStr)
@@ -941,6 +911,23 @@ protected:
     ,  mFlags(aStr.mFlags & (F_TERMINATED | F_VOIDED))
   {
   }
+
+ /**
+   * allows for direct initialization of a nsTSubstring object.
+   */
+  // XXXbz or can I just include nscore.h and use NS_BUILD_REFCNT_LOGGING?
+#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
+#define XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags);
+#else
+#undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
+  nsTSubstring_CharT(char_type* aData, size_type aLength, uint32_t aFlags)
+    : mData(aData)
+    , mLength(aLength)
+    , mFlags(aFlags)
+  {
+  }
+#endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
   /**
    * this function releases mData and does not change the value of
