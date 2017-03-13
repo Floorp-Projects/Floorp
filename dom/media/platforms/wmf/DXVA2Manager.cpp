@@ -883,7 +883,6 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 {
   NS_ENSURE_TRUE(aVideoSample, E_POINTER);
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
-  NS_ENSURE_TRUE(mSyncObject, E_FAIL);
   MOZ_ASSERT(mTextureClientAllocator);
 
   RefPtr<D3D11ShareHandleImage> image =
@@ -903,6 +902,8 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   if (mutex) {
     hr = mutex->AcquireSync(0, 2000);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  } else {
+    NS_ENSURE_TRUE(mSyncObject, E_FAIL);
   }
 
   if (client && client->GetFormat() == SurfaceFormat::NV12) {
