@@ -454,9 +454,9 @@ Any line which doesn't follow the format above would be ignored like comment.
   * test_property_syntax_errors.html `transition-duration`: servo/servo#15343 [20]
   * ... `perspective'`: servo/servo#15337 [20]
   * third length of shadow servo/servo#15490
-    * test_property_syntax_errors.html `box-shadow'` [6]
+    * test_property_syntax_errors.html `box-shadow'` [0]
     * ... `'text-shadow'` [2]
-    * ... `drop-shadow` [6]
+    * ... `drop-shadow` [0]
   * test_property_syntax_errors.html `flex-basis`: servo/servo#15902 [6]
 * Quirks mode support
   * hashless color servo/servo#15341
