@@ -514,14 +514,12 @@ class BaseCompiler
         bool deadThenBranch;            // deadCode_ was set on exit from "then"
     };
 
-    struct BaseCompilePolicy : OpIterPolicy
+    struct BaseCompilePolicy
     {
-        static const bool Validate = true;
-        static const bool Output = true;
-
         // The baseline compiler tracks values on a stack of its own -- it
         // needs to scan that stack for spilling -- and thus has no need
         // for the values maintained by the iterator.
+        typedef Nothing Value;
 
         // The baseline compiler uses the iterator's control stack, attaching
         // its own control information.
