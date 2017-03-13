@@ -481,8 +481,9 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * NodeActor argument (NodeActor as in
    * devtools/server/actor/inspector).
    * Note however that some highlighters use this argument merely as a context
-   * node: The SelectHighlighter for instance uses it as a base node to run the
-   * provided CSS selector on.
+   * node: the RectHighlighter for instance uses it to calculate the absolute
+   * position of the provided rect. The SelectHighlighter uses it as a base node
+   * to run the provided CSS selector on.
    *
    * @param {NodeActor} The node to be highlighted
    * @param {Object} Options for the custom highlighter
@@ -700,6 +701,10 @@ exports.CssTransformHighlighter = CssTransformHighlighter;
 const { SelectorHighlighter } = require("./highlighters/selector");
 register(SelectorHighlighter);
 exports.SelectorHighlighter = SelectorHighlighter;
+
+const { RectHighlighter } = require("./highlighters/rect");
+register(RectHighlighter);
+exports.RectHighlighter = RectHighlighter;
 
 const { GeometryEditorHighlighter } = require("./highlighters/geometry-editor");
 register(GeometryEditorHighlighter);
