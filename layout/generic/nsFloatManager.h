@@ -462,7 +462,7 @@ private:
   };
 
   // Implements shape-outside: circle() and shape-outside: ellipse().
-  class EllipseShapeInfo : public ShapeInfo
+  class EllipseShapeInfo final : public ShapeInfo
   {
   public:
     EllipseShapeInfo(const nsPoint& aCenter,
@@ -486,7 +486,7 @@ private:
       mCenter.MoveBy(aLineLeft, aBlockStart);
     }
 
-  protected:
+  private:
     // The position of the center of the ellipse. The coordinate space is the
     // same as FloatInfo::mRect.
     nsPoint mCenter;
