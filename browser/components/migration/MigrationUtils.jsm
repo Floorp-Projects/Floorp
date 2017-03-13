@@ -991,6 +991,20 @@ this.MigrationUtils = Object.freeze({
     });
   },
 
+  insertManyBookmarksWrapper(bookmarks, parent) {
+    let insertionPromise = PlacesUtils.bookmarks.insertTree({guid: parent, children: bookmarks});
+    return insertionPromise.then(insertedItems => {
+      this._importQuantities.bookmarks += insertedItems.length;
+      if (gKeepUndoData) {
+        let bmData = gUndoData.get("bookmarks");
+        for (let bm of insertedItems) {
+          let {parentGuid, guid, lastModified, type} = bm;
+          bmData.push({parentGuid, guid, lastModified, type});
+        }
+      }
+    }, ex => Cu.reportError(ex));
+  },
+
   insertVisitsWrapper(places, options) {
     this._importQuantities.history += places.length;
     if (gKeepUndoData) {
