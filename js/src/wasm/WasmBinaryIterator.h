@@ -508,6 +508,11 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return d_.done();
     }
 
+    // Return a pointer to the end of the buffer being decoded by this iterator.
+    const uint8_t* end() const {
+        return d_.end();
+    }
+
     // Report a general failure.
     MOZ_MUST_USE bool fail(const char* msg) MOZ_COLD;
 
@@ -525,7 +530,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
 
     MOZ_MUST_USE bool readOp(uint16_t* op);
     MOZ_MUST_USE bool readFunctionStart(ExprType ret);
-    MOZ_MUST_USE bool readFunctionEnd();
+    MOZ_MUST_USE bool readFunctionEnd(const uint8_t* bodyEnd);
     MOZ_MUST_USE bool readReturn(Value* value);
     MOZ_MUST_USE bool readBlock();
     MOZ_MUST_USE bool readLoop();
@@ -954,8 +959,11 @@ OpIter<Policy>::readFunctionStart(ExprType ret)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readFunctionEnd()
+OpIter<Policy>::readFunctionEnd(const uint8_t* bodyEnd)
 {
+    if (d_.currentPosition() != bodyEnd)
+        return fail("function body length mismatch");
+
     if (Validate) {
         if (!controlStack_.empty())
             return fail("unbalanced function body control flow");
