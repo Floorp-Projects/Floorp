@@ -47,10 +47,15 @@ rm ${icu_dir}/source/data/region/*.txt
 rm ${icu_dir}/source/data/translit/*
 rm ${icu_dir}/source/data/unit/*.mk
 rm ${icu_dir}/source/data/unit/*.txt
+# bug 1225401 and bug1345336 to remove unused zone name
 find ${icu_dir}/source/data/zone \
     -name root.txt -prune -or \
     -name tzdbNames.txt -prune -or \
     -name '*.txt' -print | xargs sed -i '/^\s\{8\}\"[A-Z]/, /^\s\{8\}}/ { d }'
+find ${icu_dir}/source/data/zone \
+    -name root.txt -prune -or \
+    -name tzdbNames.txt -prune -or \
+    -name '*.txt' -print | xargs sed -i '/^\s\{4\}zoneStrings{/{N; s/^\s\{4\}zoneStrings{\n\s\{4\}}// }; /^$/d'
 
 # Record `svn info`, eliding the line that changes every time the entire ICU
 # repository (not just the path within it we care about) receives a commit.
