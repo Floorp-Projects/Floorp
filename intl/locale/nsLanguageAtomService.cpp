@@ -4,16 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsLanguageAtomService.h"
-#include "nsILocaleService.h"
 #include "nsUConvPropertySearch.h"
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla;
+using mozilla::intl::LocaleService;
 
 static constexpr nsUConvProp kLangGroups[] = {
 #include "langGroups.properties.h"
@@ -45,36 +46,17 @@ nsLanguageAtomService::LookupCharSet(const nsACString& aCharSet)
 }
 
 nsIAtom*
-nsLanguageAtomService::GetLocaleLanguage(nsresult *aError)
+nsLanguageAtomService::GetLocaleLanguage()
 {
-  nsresult res = NS_OK;
-
   do {
     if (!mLocaleLanguage) {
-      nsCOMPtr<nsILocaleService> localeService;
-      localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID);
-      if (!localeService) {
-        res = NS_ERROR_FAILURE;
-        break;
-      }
+      nsAutoCString locale;
+      LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
 
-      nsCOMPtr<nsILocale> locale;
-      res = localeService->GetApplicationLocale(getter_AddRefs(locale));
-      if (NS_FAILED(res))
-        break;
-
-      nsAutoString loc;
-      res = locale->GetCategory(NS_LITERAL_STRING(NSILOCALE_MESSAGE), loc);
-      if (NS_FAILED(res))
-        break;
-
-      ToLowerCase(loc); // use lowercase for all language atoms
-      mLocaleLanguage = NS_Atomize(loc);
+      ToLowerCase(locale); // use lowercase for all language atoms
+      mLocaleLanguage = NS_Atomize(locale);
     }
   } while (0);
-
-  if (aError)
-    *aError = res;
 
   return mLocaleLanguage;
 }

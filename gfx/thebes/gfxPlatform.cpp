@@ -67,7 +67,6 @@
 #include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
 #include "FrameMetrics.h"
