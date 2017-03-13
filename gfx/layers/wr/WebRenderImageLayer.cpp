@@ -137,7 +137,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
                  "No other scalemodes than stretch and none supported yet.");
     rect = gfx::Rect(0, 0, mScaleToSize.width, mScaleToSize.height);
   }
-  RelativeToVisible(rect);
+  rect = RelativeToVisible(rect);
   gfx::Rect clipRect = GetWrClipRect(rect);
 
   Maybe<WrImageMask> mask = BuildWrMaskLayer();
