@@ -14,9 +14,7 @@ using double_conversion::DoubleToStringConverter;
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
 nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        uint32_t aFlags)
-  : mData(aData),
-    mLength(aLength),
-    mFlags(aFlags)
+  : nsTStringRepr_CharT(aData, aLength, aFlags)
 {
   if (aFlags & F_OWNED) {
     STRING_STAT_INCREMENT(Adopt);
