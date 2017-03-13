@@ -38,7 +38,7 @@ ShapeUtils::ComputeShapeRadius(const StyleShapeRadius aType,
 }
 
 nsPoint
-ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeCircleOrEllipseCenter(const StyleBasicShape* aBasicShape,
                                          const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Circle ||
@@ -50,11 +50,11 @@ ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
   nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape->GetPosition(),
                                             size, size,
                                             &topLeft, &anchor);
-  return nsPoint(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
+  return anchor + aRefBox.TopLeft();
 }
 
 nscoord
-ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeCircleRadius(const StyleBasicShape* aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -86,7 +86,7 @@ ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
 }
 
 nsSize
-ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeEllipseRadii(const StyleBasicShape* aBasicShape,
                                 const nsPoint& aCenter,
                                 const nsRect& aRefBox)
 {
@@ -117,7 +117,7 @@ ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
 }
 
 /* static */ nsRect
-ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeInsetRect(const StyleBasicShape* aBasicShape,
                              const nsRect& aRefBox)
 {
   MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Inset,
@@ -138,7 +138,7 @@ ShapeUtils::ComputeInsetRect(StyleBasicShape* const aBasicShape,
 }
 
 /* static */ bool
-ShapeUtils::ComputeInsetRadii(StyleBasicShape* const aBasicShape,
+ShapeUtils::ComputeInsetRadii(const StyleBasicShape* aBasicShape,
                               const nsRect& aInsetRect,
                               const nsRect& aRefBox,
                               nscoord aRadii[8])
@@ -147,6 +147,27 @@ ShapeUtils::ComputeInsetRadii(StyleBasicShape* const aBasicShape,
   return nsIFrame::ComputeBorderRadii(radius, aInsetRect.Size(), aRefBox.Size(),
                                       Sides(), aRadii);
 
+}
+
+/* static */ nsTArray<nsPoint>
+ShapeUtils::ComputePolygonVertices(const StyleBasicShape* aBasicShape,
+                                   const nsRect& aRefBox)
+{
+  MOZ_ASSERT(aBasicShape->GetShapeType() == StyleBasicShapeType::Polygon,
+             "The basic shape must be polygon()!");
+
+  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() % 2 == 0 &&
+             coords.Length() >= 2, "Wrong number of arguments!");
+
+  nsTArray<nsPoint> vertices(coords.Length() / 2);
+  for (size_t i = 0; i + 1 < coords.Length(); i += 2) {
+    vertices.AppendElement(
+      nsPoint(nsRuleNode::ComputeCoordPercentCalc(coords[i], aRefBox.width),
+              nsRuleNode::ComputeCoordPercentCalc(coords[i + 1], aRefBox.height))
+      + aRefBox.TopLeft());
+  }
+  return vertices;
 }
 
 } // namespace mozilla

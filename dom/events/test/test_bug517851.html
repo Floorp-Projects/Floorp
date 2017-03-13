@@ -26,57 +26,69 @@ window.testReturnValue = false;
 var target = document.createElement("div");
 var target2 = $("subframe").contentDocument.body;
 target.setAttribute("onerror", "++window.handledCount; return window.testReturnValue;");
+target2.setAttribute("onerror", "++window.parent.handledCount; return window.parent.testReturnValue;");
 target.setAttribute("onmouseover", "++window.handledCount; return window.testReturnValue;");
 target.setAttribute("onbeforeunload", "++window.handledCount; return window.testReturnValue;");
 target2.setAttribute("onbeforeunload", "++window.parent.handledCount; return window.parent.testReturnValue;");
 target.setAttribute("onmousemove", "++window.handledCount; return window.testReturnValue;");                     
 
-var e = document.createEvent("Event");
+var e = document.createEvent("ErrorEvent");
+e.initEvent("error", true, true);
+window.testReturnValue = true;
+is(target.dispatchEvent(e), window.testReturnValue,
+   "error event should not have reverse return value handling on div!");
+is(handledCount, 1, "Wrong event count!");
+window.testReturnValue = false;
+is(target.dispatchEvent(e), window.testReturnValue,
+   "error event should not have reverse return value handling on div (2)!");
+is(handledCount, 2, "Wrong event count!");
+
+var e = document.createEvent("ErrorEvent");
 e.initEvent("error", true, true);
 window.testReturnValue = false;
-is(target.dispatchEvent(e), !window.testReturnValue,
+is(target2.dispatchEvent(e), !window.testReturnValue,
    "error event should have reverse return value handling!");
-is(handledCount, 1, "Wrong event count!");
+is(handledCount, 3, "Wrong event count!");
 window.testReturnValue = true;
-is(target.dispatchEvent(e), !window.testReturnValue,
+is(target2.dispatchEvent(e), !window.testReturnValue,
    "error event should have reverse return value handling (2)!");
-is(handledCount, 2, "Wrong event count!");
+is(handledCount, 4, "Wrong event count!");
 
 e = document.createEvent("MouseEvent");
 e.initEvent("mouseover", true, true);
-window.testReturnValue = false;
-is(target.dispatchEvent(e), !window.testReturnValue,
-   "mouseover event should have reverse return value handling!");
-is(handledCount, 3, "Wrong event count!");
 window.testReturnValue = true;
-is(target.dispatchEvent(e), !window.testReturnValue,
-   "mouseover event should have reverse return value handling (2)!");
-is(handledCount, 4, "Wrong event count!");
+is(target.dispatchEvent(e), window.testReturnValue,
+   "mouseover event should not have reverse return value handling!");
+is(handledCount, 5, "Wrong event count!");
+window.testReturnValue = false;
+is(target.dispatchEvent(e), window.testReturnValue,
+   "mouseover event should not have reverse return value handling (2)!");
+is(handledCount, 6, "Wrong event count!");
 
 e = document.createEvent("BeforeUnloadEvent");
 e.initEvent("beforeunload", true, true);
 window.testReturnValue = true;
 is(target.dispatchEvent(e), true,
    "beforeunload event on random element should not be prevented!");
-is(handledCount, 4, "Wrong event count; handler should not have run!");
+is(handledCount, 6, "Wrong event count; handler should not have run!");
 is(target2.dispatchEvent(e), false,
    "beforeunload event should be prevented!");
-is(handledCount, 5, "Wrong event count!");
+is(handledCount, 7, "Wrong event count!");
 window.testReturnValue = false;
 is(target.dispatchEvent(e), false,
    "beforeunload event on random element should be prevented because the event was already cancelled!");
-is(handledCount, 5, "Wrong event count; handler should not have run! (2)");
+is(handledCount, 7, "Wrong event count; handler should not have run! (2)");
 
 e = document.createEvent("BeforeUnloadEvent");
 e.initEvent("beforeunload", true, true);
 window.testReturnValue = false;
 is(target.dispatchEvent(e), true,
    "beforeunload event on random element should not be prevented (2)!");
-is(handledCount, 5, "Wrong event count; handler should not have run! (2)");
+is(handledCount, 7, "Wrong event count; handler should not have run! (2)");
 
 is(target2.dispatchEvent(e), false,
    "beforeunload event should be prevented (2)!");
-is(handledCount, 6, "Wrong event count!");
+is(handledCount, 8, "Wrong event count!");
 
 // Create normal event for beforeunload.
 e = document.createEvent("Event");
@@ -84,21 +96,21 @@ e.initEvent("beforeunload", true, true);
 window.testReturnValue = true;
 is(target.dispatchEvent(e), true,
    "beforeunload event shouldn't be prevented (3)!");
-is(handledCount, 6, "Wrong event count: handler should not have run(3)!");
+is(handledCount, 8, "Wrong event count: handler should not have run(3)!");
 is(target2.dispatchEvent(e), true,
    "beforeunload event shouldn't be prevented (3)!");
-is(handledCount, 7, "Wrong event count!");
+is(handledCount, 9, "Wrong event count!");
 
 e = document.createEvent("MouseEvent");
 e.initEvent("mousemove", true, true);
 window.testReturnValue = true;
 is(target.dispatchEvent(e), window.testReturnValue,
    "mousemove event shouldn't have reverse return value handling!");
-is(handledCount, 8, "Wrong event count!");
+is(handledCount, 10, "Wrong event count!");
 window.testReturnValue = false;
 is(target.dispatchEvent(e), window.testReturnValue,
    "mousemove event shouldn't have reverse return value handling (2)!");
-is(handledCount, 9, "Wrong event count!");
+is(handledCount, 11, "Wrong event count!");
 
 // Now unhook the beforeunload handler in the subframe, so we don't prompt to
 // unload.

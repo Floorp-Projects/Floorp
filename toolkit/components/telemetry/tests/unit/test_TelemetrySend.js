@@ -52,13 +52,13 @@ function fakePingId(type, number) {
   return id;
 }
 
-var checkPingsSaved = Task.async(function* (pingIds) {
+var checkPingsSaved = async function(pingIds) {
   let allFound = true;
   for (let id of pingIds) {
     const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
     let exists = false;
     try {
-      exists = yield OS.File.exists(path);
+      exists = await OS.File.exists(path);
     } catch (ex) {}
 
     if (!exists) {
@@ -68,7 +68,7 @@ var checkPingsSaved = Task.async(function* (pingIds) {
   }
 
   return allFound;
-});
+};
 
 function histogramValueCount(h) {
   return h.counts.reduce((a, b) => a + b);

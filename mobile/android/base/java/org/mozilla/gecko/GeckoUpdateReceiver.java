@@ -17,6 +17,9 @@ public class GeckoUpdateReceiver extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent) {
         if (UpdateServiceHelper.ACTION_CHECK_UPDATE_RESULT.equals(intent.getAction())) {
+            if (GeckoAppShell.getGeckoInterface() == null) {
+                return;
+            }
             final GeckoBundle data = new GeckoBundle(1);
             data.putString("result", intent.getStringExtra("result"));
             GeckoApp.getEventDispatcher().dispatch("Update:CheckResult", data);

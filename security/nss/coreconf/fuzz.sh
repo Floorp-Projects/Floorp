@@ -34,5 +34,5 @@ fi
 
 if [ ! -f "/usr/lib/libFuzzingEngine.a" ]; then
   echo "Cloning libFuzzer files ..."
-  run_verbose "$cwd"/fuzz/clone_libfuzzer.sh
+  run_verbose "$cwd"/fuzz/config/clone_libfuzzer.sh
 fi

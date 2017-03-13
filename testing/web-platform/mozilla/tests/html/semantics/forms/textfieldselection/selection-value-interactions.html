@@ -1,0 +1,219 @@
+<!doctype html>
+<meta charset=utf-8>
+<title></title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<div id=target></div>
+<script>
+  var target = document.getElementById("target");
+  var sometext = "something";
+  var shorttext = "abc";
+  var elemData = [
+    {
+      desc: "textarea not in body",
+      factory: () => document.createElement("textarea"),
+    },
+    {
+      desc: "input not in body",
+      factory: () => document.createElement("input"),
+    },
+    {
+      desc: "textarea in body",
+      factory: () => document.body.appendChild(document.createElement("textarea")),
+    },
+    {
+      desc: "input in body",
+      factory: () => document.body.appendChild(document.createElement("input")),
+    },
+    {
+      desc: "textarea in body with parsed default value",
+      factory: () => {
+        target.innerHTML = "<textarea>abcdefghij</textarea>"
+        return target.querySelector("textarea");
+      },
+    },
+    {
+      desc: "input in body with parsed default value",
+      factory: () => {
+        target.innerHTML = "<input value='abcdefghij'>"
+        return target.querySelector("input");
+      },
+    },
+    {
+      desc: "focused textarea",
+      factory: () => {
+        var t = document.body.appendChild(document.createElement("textarea"));
+        t.focus();
+        return t;
+      },
+    },
+    {
+      desc: "focused input",
+      factory: () => {
+        var i = document.body.appendChild(document.createElement("input"));
+        i.focus();
+        return i;
+      },
+    },
+    {
+      desc: "focused then blurred textarea",
+      factory: () => {
+        var t = document.body.appendChild(document.createElement("textarea"));
+        t.focus();
+        t.blur();
+        return t;
+      },
+    },
+    {
+      desc: "focused then blurred input",
+      factory: () => {
+        var i = document.body.appendChild(document.createElement("input"));
+        i.focus();
+        i.blur()
+        return i;
+      },
+    },
+  ];
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    assert_equals(el.selectionStart, 0,
+                  `Cursor start should be at beginning of ${data.desc}`);
+    assert_equals(el.selectionEnd, 0,
+                  `Cursor end should be at beginning of ${data.desc}`);
+  }, `cursor location for initial value of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    el.defaultValue = sometext;
+    // The "focused or has been focused" case behaves differently.
+    if (data.desc.includes("focused")) {
+      assert_equals(el.selectionStart, el.value.length,
+                    `Cursor start should be at end of ${data.desc}`);
+      assert_equals(el.selectionEnd, el.value.length,
+                    `Cursor end should be at end of ${data.desc}`);
+    } else {
+      assert_equals(el.selectionStart, 0,
+                    `Cursor start should be at beginning of ${data.desc}`);
+      assert_equals(el.selectionEnd, 0,
+                    `Cursor end should be at beginning of ${data.desc}`);
+    }
+  }, `cursor location after defaultValue set of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    el.selectionStart = el.selectionStart;
+    el.defaultValue = sometext;
+    // The focused case behaves differently.
+    if (data.desc.includes("focused")) {
+      assert_equals(el.selectionStart, el.value.length,
+                    `Cursor start should be at end of ${data.desc}`);
+      assert_equals(el.selectionEnd, el.value.length,
+                    `Cursor end should be at end of ${data.desc}`);
+    } else {
+      assert_equals(el.selectionStart, 0,
+                    `Cursor start should be at beginning of ${data.desc}`);
+      assert_equals(el.selectionEnd, 0,
+                    `Cursor end should be at beginning of ${data.desc}`);
+    }
+  }, `cursor location after defaultValue set after no-op selectionStart set of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    el.value = sometext;
+    assert_equals(el.selectionStart, sometext.length,
+                  `Cursor start should be at end of ${data.desc}`);
+    assert_equals(el.selectionEnd, sometext.length,
+                  `Cursor end should be at end of ${data.desc}`);
+  }, `cursor location after value set of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    assert_true(sometext.length > 8,
+                "sometext too short, test won't work right");
+    el.defaultValue = sometext;
+    el.selectionStart = 1;
+    el.selectionEnd = 8;
+    assert_equals(el.selectionStart, 1, "We just set selectionStart!");
+    assert_equals(el.selectionEnd, 8, "We just set selectionEnd!");
+    assert_true(shorttext.length > 1,
+                "shorttext too short, test won't work right");
+    assert_true(shorttext.length < 8,
+                "shorttext too long, test won't work right");
+    el.defaultValue = shorttext;
+    // The "focused or has been focused" case behaves differently.
+    if (data.desc.includes("focused")) {
+      assert_equals(el.selectionStart, el.value.length,
+                    `Cursor start should be at end of ${data.desc}`);
+      assert_equals(el.selectionEnd, el.value.length,
+                    `Cursor end should be at end of ${data.desc}`);
+    } else {
+      assert_equals(el.selectionStart, 1,
+                    "Shouldn't have moved selection start");
+      assert_equals(el.selectionEnd, shorttext.length,
+                    "Should have adjusted selection end");
+    }
+  }, `selection location after defaultValue set to shorter than selectionEnd of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    assert_true(sometext.length > 8,
+                "sometext too short, test won't work right");
+    el.defaultValue = sometext;
+    el.selectionStart = 5;
+    el.selectionEnd = 8;
+    assert_equals(el.selectionStart, 5, "We just set selectionStart!");
+    assert_equals(el.selectionEnd, 8, "We just set selectionEnd!");
+    assert_true(shorttext.length < 5,
+                "shorttext too long, test won't work right");
+    el.defaultValue = shorttext;
+    // The "focused or has been focused" case behaves differently.
+    if (data.desc.includes("focused")) {
+      assert_equals(el.selectionStart, el.value.length,
+                    `Cursor start should be at end of ${data.desc}`);
+      assert_equals(el.selectionEnd, el.value.length,
+                    `Cursor end should be at end of ${data.desc}`);
+    } else {
+      assert_equals(el.selectionStart, shorttext.length,
+                    "Should have adjusted selection start");
+      assert_equals(el.selectionEnd, shorttext.length,
+                    "Should have adjusted selection end");
+    }
+  }, `selection location after defaultValue set to shorter than selectionStart of ${data.desc}`);
+}
+
+for (var data of elemData) {
+  test(function() {
+    var el = data.factory();
+    this.add_cleanup(() => el.remove());
+    el.defaultValue = sometext;
+    assert_true(sometext.length > 8,
+                "sometext too short, test won't work right");
+    el.selectionStart = 4;
+    el.selectionEnd = 6;
+    el.setRangeText("xyz");
+    el.defaultValue = "set range text";
+    assert_equals(el.value, sometext.slice(0, 4) + "xyz" + sometext.slice(6),
+                  "Calling setRangeText should set the value dirty flag");
+  }, `value dirty flag behavior after setRangeText on ${data.desc}`);
+}
+
+</script>

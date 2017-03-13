@@ -108,9 +108,9 @@ public:
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
+  virtual void GetValueFromSetRangeText(nsAString& aValue) override;
+  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
-                               int32_t* aSelectionEnd) override;
 
 
   // nsIContent
@@ -250,9 +250,8 @@ public:
   void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, const SelectionMode& aSelectMode,
-                    ErrorResult& aRv, int32_t aSelectionStart = -1,
-                    int32_t aSelectionEnd = -1);
+                    uint32_t aEnd, SelectionMode aSelectMode,
+                    ErrorResult& aRv);
 
   void SetRequired(bool aRequired, ErrorResult& aError)
   {
@@ -393,6 +392,13 @@ protected:
    */
   bool IsValueEmpty() const;
 
+  /**
+   * A helper to get the current selection range.  Will throw on the ErrorResult
+   * if we have no editor state.
+   */
+  void GetSelectionRange(uint32_t* aSelectionStart,
+                         uint32_t* aSelectionEnd,
+                         ErrorResult& aRv);
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);

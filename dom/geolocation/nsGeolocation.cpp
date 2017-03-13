@@ -1172,9 +1172,7 @@ Geolocation::IsAlreadyCleared(nsGeolocationRequest* aRequest)
 bool
 Geolocation::ShouldBlockInsecureRequests() const
 {
-  // TODO: Also remove all the *_SECURE_ORIGIN Telemetry probes before
-  // landing the patch for #1072859. Also default to false.
-  if (Preferences::GetBool(PREF_GEO_SECURITY_ALLOWINSECURE, true)) {
+  if (Preferences::GetBool(PREF_GEO_SECURITY_ALLOWINSECURE, false)) {
     return false;
   }
 
@@ -1188,7 +1186,7 @@ Geolocation::ShouldBlockInsecureRequests() const
     return false;
   }
 
-  if (!nsGlobalWindow::Cast(win)->IsSecureContext()) {
+  if (!nsGlobalWindow::Cast(win)->IsSecureContextIfOpenerIgnored()) {
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("DOM"), doc,
                                     nsContentUtils::eDOM_PROPERTIES,

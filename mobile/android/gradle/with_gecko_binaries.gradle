@@ -57,8 +57,10 @@ task buildOmnijar(type:Exec) {
 
 task syncOmnijarFromDistDir(type: Sync) {
     into("${project.buildDir}/generated/omnijar")
-    from("${topobjdir}/dist/fennec/assets") {
-        include 'omni.ja'
+    from("${topobjdir}/dist/fennec/omni.ja",
+         "${topobjdir}/dist/fennec/assets/omni.ja") {
+        // Throw an exception if we find multiple, potentially conflicting omni.ja files.
+        duplicatesStrategy 'fail'
     }
 }
 
