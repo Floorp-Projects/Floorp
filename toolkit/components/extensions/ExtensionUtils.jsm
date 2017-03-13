@@ -96,11 +96,6 @@ let StartupCache = {
   },
 
   async reallyOpen(invalidate = false) {
-    if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
-      throw new Error("Startup cache only supported in parent process");
-    }
-    Services.obs.addObserver(StartupCache, "startupcache-invalidate", false);
-
     if (this.dbPromise) {
       let db = await this.dbPromise;
       db.close();
@@ -109,7 +104,9 @@ let StartupCache = {
     if (invalidate) {
       this.cacheInvalidated = ExtensionManagement.cacheInvalidated;
 
-      IndexedDB.deleteDatabase(this.DB_NAME, {storage: "persistent"});
+      if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT) {
+        IndexedDB.deleteDatabase(this.DB_NAME, {storage: "persistent"});
+      }
     }
 
     return IndexedDB.open(this.DB_NAME,
@@ -133,6 +130,8 @@ let StartupCache = {
     }
   },
 };
+
+Services.obs.addObserver(StartupCache, "startupcache-invalidate", false);
 
 class CacheStore {
   constructor(storeName) {
