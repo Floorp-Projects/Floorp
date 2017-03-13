@@ -5,15 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EncodedBufferCache.h"
-#include "mozilla/dom/File.h"
-#include "nsAnonymousTemporaryFile.h"
 #include "prio.h"
+#include "nsAnonymousTemporaryFile.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/File.h"
+#include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 
 void
 EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
+
   MutexAutoLock lock(mMutex);
   mDataSize += aBuf.Length();
 
@@ -23,10 +29,40 @@ EncodedBufferCache::AppendBuffer(nsTArray<uint8_t> & aBuf)
     nsresult rv;
     PRFileDesc* tempFD = nullptr;
     {
-      // Release the mMutex because there is a sync dispatch to mainthread in
-      // NS_OpenAnonymousTemporaryFile.
+      // Release the mMutex because of the sync dispatch to the main thread.
       MutexAutoUnlock unlock(mMutex);
-      rv = NS_OpenAnonymousTemporaryFile(&tempFD);
+      if (XRE_IsParentProcess()) {
+        // In case we are in the parent process, do a synchronous I/O here to open a
+        // temporary file.
+        rv = NS_OpenAnonymousTemporaryFile(&tempFD);
+      } else {
+        // In case we are in the child process, we don't have access to open a file
+        // directly due to sandbox restrictions, so we need to ask the parent process
+        // to do that for us.  In order to initiate the IPC, we need to first go to
+        // the main thread.  This is done by dispatching a runnable to the main thread.
+        // From there, we start an asynchronous IPC, and we block the current thread
+        // using a monitor while this async work is in progress.  When we receive the
+        // resulting file descriptor from the parent process, we notify the monitor
+        // and unblock the current thread and continue.
+        typedef dom::ContentChild::AnonymousTemporaryFileCallback
+          AnonymousTemporaryFileCallback;
+        Monitor monitor("EncodeBufferCache::AppendBuffer");
+        RefPtr<dom::ContentChild> cc = dom::ContentChild::GetSingleton();
+        nsCOMPtr<nsIRunnable> runnable =
+          NewRunnableMethod<AnonymousTemporaryFileCallback>(cc,
+            &dom::ContentChild::AsyncOpenAnonymousTemporaryFile,
+            [&](PRFileDesc* aFile) {
+              rv = aFile ? NS_OK : NS_ERROR_FAILURE;
+              tempFD = aFile;
+              MonitorAutoLock lock(monitor);
+              lock.Notify();
+            });
+        rv = NS_DispatchToMainThread(runnable);
+        if (NS_SUCCEEDED(rv)) {
+          MonitorAutoLock lock(monitor);
+          lock.Wait();
+        }
+      }
     }
     if (!NS_FAILED(rv)) {
       // Check the mDataSize again since we release the mMutex before.
