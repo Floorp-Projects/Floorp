@@ -31,7 +31,7 @@ add_task(function* test_1() {
      "sessionstore state: 2 windows in data being written to disk");
   is(state.selectedWindow, 2,
      "Selected window is updated to match one of the saved windows");
-  ok(state.windows.every(win => !win.isPrivate),
+  ok(state.windows.every(win2 => !win2.isPrivate),
     "Saved windows are not private");
   is(state._closedWindows.length, 0,
      "sessionstore state: no closed windows in data being written to disk");
@@ -100,11 +100,11 @@ add_task(function* test_3() {
      "sessionstore state: 1 window in data being written to disk");
   is(state.selectedWindow, 1,
      "Selected window is updated to match one of the saved windows");
-  ok(state.windows.every(win => !win.isPrivate),
+  ok(state.windows.every(win2 => !win2.isPrivate),
     "Saved windows are not private");
   is(state._closedWindows.length, 1,
      "sessionstore state: 1 closed window in data being written to disk");
-  ok(state._closedWindows.every(win => !win.isPrivate),
+  ok(state._closedWindows.every(win2 => !win2.isPrivate),
     "Closed windows are not private");
 
   // Cleanup.

@@ -33,12 +33,13 @@ function restoreClosedTabWithValue(rval) {
 }
 
 function promiseNewLocationAndHistoryEntryReplaced(browser, snippet) {
-  return ContentTask.spawn(browser, snippet, function* (snippet) {
+  /* eslint-env mozilla/frame-script */
+  return ContentTask.spawn(browser, snippet, function* (codeSnippet) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let shistory = webNavigation.sessionHistory;
 
     // Evaluate the snippet that the changes the location.
-    eval(snippet);
+    eval(codeSnippet);
 
     return new Promise(resolve => {
       let listener = {

@@ -65,7 +65,6 @@ function test() {
 async function testTabRestoreData(aFormData, aExpectedValue) {
   let URL = ROOT + "browser_formdata_format_sample.html";
   let tab = gBrowser.addTab("about:blank");
-  let browser = tab.linkedBrowser;
 
   aFormData.url = URL;
   let tabState = { entries: [{ url: URL, triggeringPrincipal_base64 }], formdata: aFormData };

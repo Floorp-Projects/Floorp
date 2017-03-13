@@ -23,13 +23,13 @@ add_task(function* () {
       is(history.entries[i].url, URIs[i], "URI at index " + i + " matches");
     }
     is(history.index, index, "Index matches");
-    yield ContentTask.spawn(browser, [index, length], function* ([index, length]) {
+    yield ContentTask.spawn(browser, [index, length], function* ([expectedIndex, expectedLength]) {
       let webNav = content.window.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIWebNavigation);
       is(webNav.sessionHistory.globalIndexOffset + webNav.sessionHistory.index,
-         index - 1, "In content index matches");
-      is(webNav.canGoForward, index < length, "canGoForward is correct");
-      is(webNav.canGoBack, index > 1, "canGoBack is correct");
+         expectedIndex - 1, "In content index matches");
+      is(webNav.canGoForward, expectedIndex < expectedLength, "canGoForward is correct");
+      is(webNav.canGoBack, expectedIndex > 1, "canGoBack is correct");
     });
   }
 
