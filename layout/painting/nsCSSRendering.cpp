@@ -4322,7 +4322,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
   for (int i = LEFT; i <= RIGHT; i++) {
     for (int j = TOP; j <= BOTTOM; j++) {
-      StyleBorderImageRepeat fillStyleH, fillStyleV;
+      uint8_t fillStyleH, fillStyleV;
       nsSize unitSize;
 
       if (i == MIDDLE && j == MIDDLE) {
@@ -4378,7 +4378,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
         unitSize.width = sliceWidth[i]*factor;
         unitSize.height = borderHeight[j];
         fillStyleH = aStyleBorder.mBorderImageRepeatH;
-        fillStyleV = StyleBorderImageRepeat::Stretch;
+        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
 
       } else if (j == MIDDLE) { // left, right
         gfxFloat factor;
@@ -4389,15 +4389,15 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
         unitSize.width = borderWidth[i];
         unitSize.height = sliceHeight[j]*factor;
-        fillStyleH = StyleBorderImageRepeat::Stretch;
+        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
         fillStyleV = aStyleBorder.mBorderImageRepeatV;
 
       } else {
         // Corners are always stretched to fit the corner.
         unitSize.width = borderWidth[i];
         unitSize.height = borderHeight[j];
-        fillStyleH = StyleBorderImageRepeat::Stretch;
-        fillStyleV = StyleBorderImageRepeat::Stretch;
+        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
+        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
       }
 
       nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
@@ -5970,30 +5970,30 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
  * aUnitSize The size of the source rect in dest coords.
  */
 static nsRect
-ComputeTile(nsRect&                 aFill,
-            StyleBorderImageRepeat  aHFill,
-            StyleBorderImageRepeat  aVFill,
-            const nsSize&           aUnitSize,
-            nsSize&                 aRepeatSize)
+ComputeTile(nsRect&              aFill,
+            uint8_t              aHFill,
+            uint8_t              aVFill,
+            const nsSize&        aUnitSize,
+            nsSize&              aRepeatSize)
 {
   nsRect tile;
   switch (aHFill) {
-  case StyleBorderImageRepeat::Stretch:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
     tile.x = aFill.x;
     tile.width = aFill.width;
     aRepeatSize.width = tile.width;
     break;
-  case StyleBorderImageRepeat::Repeat:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
     tile.x = aFill.x + aFill.width/2 - aUnitSize.width/2;
     tile.width = aUnitSize.width;
     aRepeatSize.width = tile.width;
     break;
-  case StyleBorderImageRepeat::Round:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
     tile.x = aFill.x;
     tile.width = ComputeRoundedSize(aUnitSize.width, aFill.width);
     aRepeatSize.width = tile.width;
     break;
-  case StyleBorderImageRepeat::Space:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
     {
       nscoord space;
       aRepeatSize.width =
@@ -6009,22 +6009,22 @@ ComputeTile(nsRect&                 aFill,
   }
 
   switch (aVFill) {
-  case StyleBorderImageRepeat::Stretch:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
     tile.y = aFill.y;
     tile.height = aFill.height;
     aRepeatSize.height = tile.height;
     break;
-  case StyleBorderImageRepeat::Repeat:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
     tile.y = aFill.y + aFill.height/2 - aUnitSize.height/2;
     tile.height = aUnitSize.height;
     aRepeatSize.height = tile.height;
     break;
-  case StyleBorderImageRepeat::Round:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
     tile.y = aFill.y;
     tile.height = ComputeRoundedSize(aUnitSize.height, aFill.height);
     aRepeatSize.height = tile.height;
     break;
-  case StyleBorderImageRepeat::Space:
+  case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
     {
       nscoord space;
       aRepeatSize.height =
@@ -6048,31 +6048,31 @@ ComputeTile(nsRect&                 aFill,
  * for argument descriptions.
  */
 static bool
-RequiresScaling(const nsRect&           aFill,
-                StyleBorderImageRepeat  aHFill,
-                StyleBorderImageRepeat  aVFill,
-                const nsSize&           aUnitSize)
+RequiresScaling(const nsRect&        aFill,
+                uint8_t              aHFill,
+                uint8_t              aVFill,
+                const nsSize&        aUnitSize)
 {
   // If we have no tiling in either direction, we can skip the intermediate
   // scaling step.
-  return (aHFill != StyleBorderImageRepeat::Stretch ||
-          aVFill != StyleBorderImageRepeat::Stretch) &&
+  return (aHFill != NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH ||
+          aVFill != NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH) &&
          (aUnitSize.width != aFill.width ||
           aUnitSize.height != aFill.height);
 }
 
 DrawResult
-nsImageRenderer::DrawBorderImageComponent(nsPresContext* aPresContext,
-                                          nsRenderingContext& aRenderingContext,
-                                          const nsRect& aDirtyRect,
-                                          const nsRect& aFill,
-                                          const CSSIntRect& aSrc,
-                                          StyleBorderImageRepeat aHFill,
-                                          StyleBorderImageRepeat aVFill,
-                                          const nsSize& aUnitSize,
-                                          uint8_t aIndex,
+nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
+                                          nsRenderingContext&  aRenderingContext,
+                                          const nsRect&        aDirtyRect,
+                                          const nsRect&        aFill,
+                                          const CSSIntRect&    aSrc,
+                                          uint8_t              aHFill,
+                                          uint8_t              aVFill,
+                                          const nsSize&        aUnitSize,
+                                          uint8_t              aIndex,
                                           const Maybe<nsSize>& aSVGViewportSize,
-                                          const bool aHasIntrinsicRatio)
+                                          const bool           aHasIntrinsicRatio)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");

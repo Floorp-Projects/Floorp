@@ -1456,7 +1456,6 @@ struct SetEnumValueHelper
   DEFINE_ENUM_CLASS_SETTER(StyleUserModify, ReadOnly, WriteOnly)
   DEFINE_ENUM_CLASS_SETTER(StyleWindowDragging, Default, NoDrag)
   DEFINE_ENUM_CLASS_SETTER(StyleOrient, Inline, Vertical)
-  DEFINE_ENUM_CLASS_SETTER(StyleBorderImageRepeat, Stretch, Space)
 #ifdef MOZ_XUL
   DEFINE_ENUM_CLASS_SETTER(StyleDisplay, None, MozPopup)
 #else
@@ -7884,14 +7883,14 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mBorderImageRepeatH,
-           StyleBorderImageRepeat::Stretch);
+           NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH);
 
   SetValue(borderImageRepeat.mYValue,
            border->mBorderImageRepeatV,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mBorderImageRepeatV,
-           StyleBorderImageRepeat::Stretch);
+           NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH);
 
   COMPUTE_END_RESET(Border, border)
 }
