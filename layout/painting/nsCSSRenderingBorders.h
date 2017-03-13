@@ -317,6 +317,8 @@ private:
   uint8_t mRepeatModeHorizontal;
   uint8_t mRepeatModeVertical;
   uint8_t mFill;
+
+  friend class nsDisplayBorder;
 };
 
 namespace mozilla {
