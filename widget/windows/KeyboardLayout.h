@@ -390,6 +390,9 @@ private:
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
   bool    mIsOverridingKeyboardLayout;
+  // mCanIgnoreModifierStateAtKeyPress is true if it's allowed to remove
+  // Ctrl or Alt modifier state at dispatching eKeyPress.
+  bool    mCanIgnoreModifierStateAtKeyPress;
 
   nsTArray<FakeCharMsg>* mFakeCharMsgs;
 
