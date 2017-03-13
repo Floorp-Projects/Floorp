@@ -247,7 +247,7 @@ GenerateRandomBytes(uint32_t aSize,
 }
 
 nsresult
-GenerateGUID(nsCString& _guid)
+GenerateGUID(nsACString& _guid)
 {
   _guid.Truncate();
 

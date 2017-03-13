@@ -440,7 +440,6 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("frecency"),
                              IsQueryURI(spec) ? 0 : -1);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString guid;
   rv = GenerateGUID(_GUID);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), _GUID);
@@ -3720,6 +3719,15 @@ nsNavHistory::clearEmbedVisits() {
 NS_IMETHODIMP
 nsNavHistory::ClearEmbedVisits() {
   clearEmbedVisits();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::MakeGuid(nsACString& aGuid) {
+  if (NS_FAILED(GenerateGUID(aGuid))) {
+    MOZ_ASSERT(false, "Shouldn't fail to create a guid!");
+    aGuid.SetIsVoid(true);
+  }
   return NS_OK;
 }
 
