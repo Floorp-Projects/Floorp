@@ -786,12 +786,12 @@ MessageChannel::Send(Message* aMsg)
     }
 
     // If the message was created by the IPC bindings, the create time will be
-    // recorded. Use this information to report the IPC_WRITE_LATENCY_MS (time
+    // recorded. Use this information to report the IPC_WRITE_MAIN_THREAD_LATENCY_MS (time
     // from message creation to it being sent).
-    if (aMsg->create_time()) {
+    if (NS_IsMainThread() && aMsg->create_time()) {
         uint32_t latencyMs = round((mozilla::TimeStamp::Now() - aMsg->create_time()).ToMilliseconds());
         if (latencyMs >= kMinTelemetryIPCWriteLatencyMs) {
-            mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_WRITE_LATENCY_MS,
+            mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_WRITE_MAIN_THREAD_LATENCY_MS,
                                            nsDependentCString(aMsg->name()),
                                            latencyMs);
         }

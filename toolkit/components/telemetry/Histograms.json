@@ -11019,7 +11019,7 @@
     "description": "Results of displaying add-on installation notifications.",
     "releaseChannelCollection": "opt-out"
   },
-  "IPC_READ_LATENCY_MS": {
+  "IPC_READ_MAIN_THREAD_LATENCY_MS": {
     "alert_emails": ["mlayzell@mozilla.com"],
     "bug_numbers": [1342635],
     "expires_in_version": "60",
@@ -11027,9 +11027,9 @@
     "high": 500,
     "n_buckets": 20,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+    "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to deserialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   },
-  "IPC_WRITE_LATENCY_MS": {
+  "IPC_WRITE_MAIN_THREAD_LATENCY_MS": {
     "alert_emails": ["mlayzell@mozilla.com"],
     "bug_numbers": [1342635],
     "expires_in_version": "60",
@@ -11037,6 +11037,6 @@
     "high": 500,
     "n_buckets": 20,
     "keyed": true,
-    "description": "Measures the number of milliseconds we spend waiting for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
+    "description": "Measures the number of milliseconds we spend waiting on the main thread for IPC messages to serialize their parameters. Note: only messages that take more than 500 microseconds are included in this probe. This probe is keyed on the IPDL message name."
   }
 }
