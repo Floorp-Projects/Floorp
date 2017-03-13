@@ -114,7 +114,7 @@ WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 }
 
 void
-WebRenderPaintedLayer::RenderLayer()
+WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   // XXX We won't keep using ContentClient for WebRenderPaintedLayer in the future and
   // there is a crash problem for ContentClient on MacOS. So replace ContentClient with
@@ -182,63 +182,36 @@ WebRenderPaintedLayer::RenderLayer()
   mImageContainer->SetCurrentImageInTransaction(image);
   if (!mImageClient->UpdateImage(mImageContainer, /* unused */0)) {
     return;
-   }
- 
-  WrScrollFrameStackingContextGenerator scrollFrames(this);
-
-  Matrix4x4 transform = GetTransform();
-
-  // Since we are creating a stacking context below using the visible region of
-  // this layer, we need to make sure the image display item has coordinates
-  // relative to the visible region.
-  Rect rect(0, 0, size.width, size.height);
-  Rect clip;
-  if (GetClipRect().isSome()) {
-      clip = RelativeToVisible(transform.Inverse().TransformBounds(IntRectToRect(GetClipRect().ref().ToUnknownRect())));
-  } else {
-      clip = rect;
   }
 
-  Maybe<WrImageMask> mask = buildMaskLayer();
-  Rect relBounds = VisibleBoundsRelativeToParent();
-  if (!transform.IsIdentity()) {
-    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
-    gfx::Matrix4x4 boundTransform = transform;
-    boundTransform._41 = 0.0f;
-    boundTransform._42 = 0.0f;
-    boundTransform._43 = 0.0f;
-    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
-  }
+  gfx::Matrix4x4 transform = GetTransform();
+  gfx::Rect relBounds = GetWrRelBounds();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
-  Rect overflow(0, 0, relBounds.width, relBounds.height);
-  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+  gfx::Rect rect(0, 0, size.width, size.height);
+  gfx::Rect clipRect = GetWrClipRect(rect);
 
-  if (gfxPrefs::LayersDump()) {
-    printf_stderr("PaintedLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
-                  this->GetLayer(),
-                  Stringify(relBounds).c_str(),
-                  Stringify(overflow).c_str(),
-                  Stringify(transform).c_str(),
-                  Stringify(rect).c_str(),
-                  Stringify(clip).c_str(),
-                  Stringify(mixBlendMode).c_str());
-  }
+  Maybe<WrImageMask> mask = BuildWrMaskLayer();
+  WrClipRegion clip = aBuilder.BuildClipRegion(wr::ToWrRect(clipRect));
 
-  WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds),
-                              wr::ToWrRect(overflow),
-                              mask,
-                              1.0f,
-                              GetAnimations(),
-                              transform,
-                              mixBlendMode,
-                              FrameMetrics::NULL_SCROLL_ID));
+  wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+
+  DumpLayerInfo("PaintedLayer", rect);
+
   WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId, key));
-  WrBridge()->AddWebRenderCommand(OpDPPushImage(wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), wr::ImageRendering::Auto, key));
-  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+
+  aBuilder.PushStackingContext(wr::ToWrRect(relBounds),
+                              wr::ToWrRect(overflow),
+                              mask.ptrOr(nullptr),
+                              1.0f,
+                              //GetAnimations(),
+                              transform,
+                              mixBlendMode);
+  aBuilder.PushImage(wr::ToWrRect(rect), clip, wr::ImageRendering::Auto, key);
+  aBuilder.PopStackingContext();
 }
 
 } // namespace layers

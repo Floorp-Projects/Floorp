@@ -43,6 +43,7 @@ class Compositor;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
+class WebRenderImageHost;
 struct EffectChain;
 
 struct ImageCompositeNotificationInfo {
@@ -148,6 +149,7 @@ public:
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
+  virtual WebRenderImageHost* AsWebRenderImageHost() { return nullptr; }
 
   typedef uint32_t AttachFlags;
   static const AttachFlags NO_FLAGS = 0;

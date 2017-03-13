@@ -66,6 +66,7 @@ pub fn should_record_msg(msg: &ApiMsg) -> bool {
     match msg {
         &ApiMsg::AddRawFont(..) |
         &ApiMsg::AddNativeFont(..) |
+        &ApiMsg::DeleteFont(..) |
         &ApiMsg::AddImage(..) |
         &ApiMsg::GenerateFrame(..) |
         &ApiMsg::UpdateImage(..) |

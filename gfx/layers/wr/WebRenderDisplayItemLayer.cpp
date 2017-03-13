@@ -16,18 +16,19 @@ namespace mozilla {
 namespace layers {
 
 void
-WebRenderDisplayItemLayer::RenderLayer()
+WebRenderDisplayItemLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
   if (mItem) {
+    wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
     // We might have recycled this layer. Throw away the old commands.
-    mCommands.Clear();
     mParentCommands.Clear();
-    mItem->CreateWebRenderCommands(mCommands, mParentCommands, this);
+    mItem->CreateWebRenderCommands(builder, mParentCommands, this);
+    mBuiltDisplayList = builder.Finalize();
   }
   // else we have an empty transaction and just use the
   // old commands.
 
-  WrBridge()->AddWebRenderCommands(mCommands);
+  aBuilder.PushBuiltDisplayList(Move(mBuiltDisplayList));
   WrBridge()->AddWebRenderParentCommands(mParentCommands);
 }
 

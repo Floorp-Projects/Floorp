@@ -42,11 +42,8 @@ namespace {
 
 typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
 
-struct IonCompilePolicy : OpIterPolicy
+struct IonCompilePolicy
 {
-    // Producing output is what we're all about here.
-    static const bool Output = true;
-
     // We store SSA definitions in the value stack.
     typedef MDefinition* Value;
 
@@ -60,7 +57,8 @@ class FunctionCompiler;
 
 // TlsUsage describes how the TLS register is used during a function call.
 
-enum class TlsUsage {
+enum class TlsUsage
+{
     Unused,     // No particular action is taken with respect to the TLS register.
     Need,       // The TLS register must be reloaded just before the call.
     CallerSaved // Same, plus space must be allocated to save/restore the TLS
@@ -68,7 +66,8 @@ enum class TlsUsage {
 };
 
 static bool
-NeedsTls(TlsUsage usage) {
+NeedsTls(TlsUsage usage)
+{
     return usage == TlsUsage::Need || usage == TlsUsage::CallerSaved;
 }
 
@@ -1663,6 +1662,127 @@ MDefinition* FunctionCompiler::unary<MAbs>(MDefinition* op, MIRType type)
 } // end anonymous namespace
 
 static bool
+EmitI32Const(FunctionCompiler& f)
+{
+    int32_t i32;
+    if (!f.iter().readI32Const(&i32))
+        return false;
+
+    f.iter().setResult(f.constant(Int32Value(i32), MIRType::Int32));
+    return true;
+}
+
+static bool
+EmitI64Const(FunctionCompiler& f)
+{
+    int64_t i64;
+    if (!f.iter().readI64Const(&i64))
+        return false;
+
+    f.iter().setResult(f.constant(i64));
+    return true;
+}
+
+static bool
+EmitF32Const(FunctionCompiler& f)
+{
+    float f32;
+    if (!f.iter().readF32Const(&f32))
+        return false;
+
+    f.iter().setResult(f.constant(f32));
+    return true;
+}
+
+static bool
+EmitF64Const(FunctionCompiler& f)
+{
+    double f64;
+    if (!f.iter().readF64Const(&f64))
+        return false;
+
+    f.iter().setResult(f.constant(f64));
+    return true;
+}
+
+static bool
+EmitI8x16Const(FunctionCompiler& f)
+{
+    I8x16 i8x16;
+    if (!f.iter().readI8x16Const(&i8x16))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Int8x16));
+    return true;
+}
+
+static bool
+EmitI16x8Const(FunctionCompiler& f)
+{
+    I16x8 i16x8;
+    if (!f.iter().readI16x8Const(&i16x8))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Int16x8));
+    return true;
+}
+
+static bool
+EmitI32x4Const(FunctionCompiler& f)
+{
+    I32x4 i32x4;
+    if (!f.iter().readI32x4Const(&i32x4))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Int32x4));
+    return true;
+}
+
+static bool
+EmitF32x4Const(FunctionCompiler& f)
+{
+    F32x4 f32x4;
+    if (!f.iter().readF32x4Const(&f32x4))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX4(f32x4), MIRType::Float32x4));
+    return true;
+}
+
+static bool
+EmitB8x16Const(FunctionCompiler& f)
+{
+    I8x16 i8x16;
+    if (!f.iter().readB8x16Const(&i8x16))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Bool8x16));
+    return true;
+}
+
+static bool
+EmitB16x8Const(FunctionCompiler& f)
+{
+    I16x8 i16x8;
+    if (!f.iter().readB16x8Const(&i16x8))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Bool16x8));
+    return true;
+}
+
+static bool
+EmitB32x4Const(FunctionCompiler& f)
+{
+    I32x4 i32x4;
+    if (!f.iter().readB32x4Const(&i32x4))
+        return false;
+
+    f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Bool32x4));
+    return true;
+}
+
+static bool
 EmitBlock(FunctionCompiler& f)
 {
     return f.iter().readBlock() &&
@@ -1848,6 +1968,16 @@ EmitReturn(FunctionCompiler& f)
     }
 
     f.returnExpr(value);
+    return true;
+}
+
+static bool
+EmitUnreachable(FunctionCompiler& f)
+{
+    if (!f.iter().readUnreachable())
+        return false;
+
+    f.unreachableTrap();
     return true;
 }
 
@@ -3071,450 +3201,468 @@ EmitCurrentMemory(FunctionCompiler& f)
 }
 
 static bool
-EmitExpr(FunctionCompiler& f)
+EmitBodyExprs(FunctionCompiler& f)
 {
-    if (!f.mirGen().ensureBallast())
+    if (!f.iter().readFunctionStart(f.sig().ret()))
         return false;
 
-    uint16_t u16;
-    MOZ_ALWAYS_TRUE(f.iter().readOp(&u16));
-    Op op = Op(u16);
+#define CHECK(c)                                                              \
+    if (!(c))                                                                 \
+        return false;                                                         \
+    break
 
-    switch (op) {
-      // Control opcodes
-      case Op::Nop:
-        return f.iter().readNop();
-      case Op::Drop:
-        return f.iter().readDrop();
-      case Op::Block:
-        return EmitBlock(f);
-      case Op::Loop:
-        return EmitLoop(f);
-      case Op::If:
-        return EmitIf(f);
-      case Op::Else:
-        return EmitElse(f);
-      case Op::End:
-        return EmitEnd(f);
-      case Op::Br:
-        return EmitBr(f);
-      case Op::BrIf:
-        return EmitBrIf(f);
-      case Op::BrTable:
-        return EmitBrTable(f);
-      case Op::Return:
-        return EmitReturn(f);
-      case Op::Unreachable:
-        if (!f.iter().readUnreachable())
-            return false;
-        f.unreachableTrap();
-        return true;
+#define CHECK_ASMJS(c)                                                        \
+    if (!f.env().isAsmJS())                                                   \
+        return f.iter().unrecognizedOpcode(op);                               \
+    if (!(c))                                                                 \
+        return false;                                                         \
+    break
 
-      // Calls
-      case Op::Call:
-        return EmitCall(f);
-      case Op::CallIndirect:
-        return EmitCallIndirect(f, /* oldStyle = */ false);
-      case Op::OldCallIndirect:
-        return EmitCallIndirect(f, /* oldStyle = */ true);
-
-      // Locals and globals
-      case Op::GetLocal:
-        return EmitGetLocal(f);
-      case Op::SetLocal:
-        return EmitSetLocal(f);
-      case Op::TeeLocal:
-        return EmitTeeLocal(f);
-      case Op::GetGlobal:
-        return EmitGetGlobal(f);
-      case Op::SetGlobal:
-        return EmitSetGlobal(f);
-      case Op::TeeGlobal:
-        return EmitTeeGlobal(f);
-
-      // Select
-      case Op::Select:
-        return EmitSelect(f);
-
-      // I32
-      case Op::I32Const: {
-        int32_t i32;
-        if (!f.iter().readI32Const(&i32))
+    while (true) {
+        if (!f.mirGen().ensureBallast())
             return false;
 
-        f.iter().setResult(f.constant(Int32Value(i32), MIRType::Int32));
-        return true;
-      }
-      case Op::I32Add:
-        return EmitAdd(f, ValType::I32, MIRType::Int32);
-      case Op::I32Sub:
-        return EmitSub(f, ValType::I32, MIRType::Int32);
-      case Op::I32Mul:
-        return EmitMul(f, ValType::I32, MIRType::Int32);
-      case Op::I32DivS:
-      case Op::I32DivU:
-        return EmitDiv(f, ValType::I32, MIRType::Int32, op == Op::I32DivU);
-      case Op::I32RemS:
-      case Op::I32RemU:
-        return EmitRem(f, ValType::I32, MIRType::Int32, op == Op::I32RemU);
-      case Op::I32Min:
-      case Op::I32Max:
-        return EmitMinMax(f, ValType::I32, MIRType::Int32, op == Op::I32Max);
-      case Op::I32Eqz:
-        return EmitConversion<MNot>(f, ValType::I32, ValType::I32);
-      case Op::I32TruncSF32:
-      case Op::I32TruncUF32:
-        return EmitTruncate(f, ValType::F32, ValType::I32, op == Op::I32TruncUF32);
-      case Op::I32TruncSF64:
-      case Op::I32TruncUF64:
-        return EmitTruncate(f, ValType::F64, ValType::I32, op == Op::I32TruncUF64);
-      case Op::I32WrapI64:
-        return EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32);
-      case Op::I32ReinterpretF32:
-        return EmitReinterpret(f, ValType::I32, ValType::F32, MIRType::Int32);
-      case Op::I32Clz:
-        return EmitUnaryWithType<MClz>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Ctz:
-        return EmitUnaryWithType<MCtz>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Popcnt:
-        return EmitUnaryWithType<MPopcnt>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Abs:
-        return EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Neg:
-        return EmitUnaryWithType<MAsmJSNeg>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Or:
-        return EmitBitwise<MBitOr>(f, ValType::I32, MIRType::Int32);
-      case Op::I32And:
-        return EmitBitwise<MBitAnd>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Xor:
-        return EmitBitwise<MBitXor>(f, ValType::I32, MIRType::Int32);
-      case Op::I32Shl:
-        return EmitBitwise<MLsh>(f, ValType::I32, MIRType::Int32);
-      case Op::I32ShrS:
-        return EmitBitwise<MRsh>(f, ValType::I32, MIRType::Int32);
-      case Op::I32ShrU:
-        return EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32);
-      case Op::I32BitNot:
-        return EmitBitNot(f, ValType::I32);
-      case Op::I32Load8S:
-        return EmitLoad(f, ValType::I32, Scalar::Int8);
-      case Op::I32Load8U:
-        return EmitLoad(f, ValType::I32, Scalar::Uint8);
-      case Op::I32Load16S:
-        return EmitLoad(f, ValType::I32, Scalar::Int16);
-      case Op::I32Load16U:
-        return EmitLoad(f, ValType::I32, Scalar::Uint16);
-      case Op::I32Load:
-        return EmitLoad(f, ValType::I32, Scalar::Int32);
-      case Op::I32Store8:
-        return EmitStore(f, ValType::I32, Scalar::Int8);
-      case Op::I32TeeStore8:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int8);
-      case Op::I32Store16:
-        return EmitStore(f, ValType::I32, Scalar::Int16);
-      case Op::I32TeeStore16:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int16);
-      case Op::I32Store:
-        return EmitStore(f, ValType::I32, Scalar::Int32);
-      case Op::I32TeeStore:
-        return EmitTeeStore(f, ValType::I32, Scalar::Int32);
-      case Op::I32Rotr:
-      case Op::I32Rotl:
-        return EmitRotate(f, ValType::I32, op == Op::I32Rotl);
-
-      // I64
-      case Op::I64Const: {
-        int64_t i64;
-        if (!f.iter().readI64Const(&i64))
+        uint16_t op;
+        if (!f.iter().readOp(&op))
             return false;
 
-        f.iter().setResult(f.constant(i64));
-        return true;
-      }
-      case Op::I64Add:
-        return EmitAdd(f, ValType::I64, MIRType::Int64);
-      case Op::I64Sub:
-        return EmitSub(f, ValType::I64, MIRType::Int64);
-      case Op::I64Mul:
-        return EmitMul(f, ValType::I64, MIRType::Int64);
-      case Op::I64DivS:
-      case Op::I64DivU:
-        return EmitDiv(f, ValType::I64, MIRType::Int64, op == Op::I64DivU);
-      case Op::I64RemS:
-      case Op::I64RemU:
-        return EmitRem(f, ValType::I64, MIRType::Int64, op == Op::I64RemU);
-      case Op::I64TruncSF32:
-      case Op::I64TruncUF32:
-        return EmitTruncate(f, ValType::F32, ValType::I64, op == Op::I64TruncUF32);
-      case Op::I64TruncSF64:
-      case Op::I64TruncUF64:
-        return EmitTruncate(f, ValType::F64, ValType::I64, op == Op::I64TruncUF64);
-      case Op::I64ExtendSI32:
-      case Op::I64ExtendUI32:
-        return EmitExtendI32(f, op == Op::I64ExtendUI32);
-      case Op::I64ReinterpretF64:
-        return EmitReinterpret(f, ValType::I64, ValType::F64, MIRType::Int64);
-      case Op::I64Or:
-        return EmitBitwise<MBitOr>(f, ValType::I64, MIRType::Int64);
-      case Op::I64And:
-        return EmitBitwise<MBitAnd>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Xor:
-        return EmitBitwise<MBitXor>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Shl:
-        return EmitBitwise<MLsh>(f, ValType::I64, MIRType::Int64);
-      case Op::I64ShrS:
-        return EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64);
-      case Op::I64ShrU:
-        return EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Rotr:
-      case Op::I64Rotl:
-        return EmitRotate(f, ValType::I64, op == Op::I64Rotl);
-      case Op::I64Eqz:
-        return EmitConversion<MNot>(f, ValType::I64, ValType::I32);
-      case Op::I64Clz:
-        return EmitUnaryWithType<MClz>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Ctz:
-        return EmitUnaryWithType<MCtz>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Popcnt:
-        return EmitUnaryWithType<MPopcnt>(f, ValType::I64, MIRType::Int64);
-      case Op::I64Load8S:
-        return EmitLoad(f, ValType::I64, Scalar::Int8);
-      case Op::I64Load8U:
-        return EmitLoad(f, ValType::I64, Scalar::Uint8);
-      case Op::I64Load16S:
-        return EmitLoad(f, ValType::I64, Scalar::Int16);
-      case Op::I64Load16U:
-        return EmitLoad(f, ValType::I64, Scalar::Uint16);
-      case Op::I64Load32S:
-        return EmitLoad(f, ValType::I64, Scalar::Int32);
-      case Op::I64Load32U:
-        return EmitLoad(f, ValType::I64, Scalar::Uint32);
-      case Op::I64Load:
-        return EmitLoad(f, ValType::I64, Scalar::Int64);
-      case Op::I64Store8:
-        return EmitStore(f, ValType::I64, Scalar::Int8);
-      case Op::I64TeeStore8:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int8);
-      case Op::I64Store16:
-        return EmitStore(f, ValType::I64, Scalar::Int16);
-      case Op::I64TeeStore16:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int16);
-      case Op::I64Store32:
-        return EmitStore(f, ValType::I64, Scalar::Int32);
-      case Op::I64TeeStore32:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int32);
-      case Op::I64Store:
-        return EmitStore(f, ValType::I64, Scalar::Int64);
-      case Op::I64TeeStore:
-        return EmitTeeStore(f, ValType::I64, Scalar::Int64);
+        switch (op) {
+          case uint16_t(Op::End):
+            if (!EmitEnd(f))
+                return false;
 
-      // F32
-      case Op::F32Const: {
-        float f32;
-        if (!f.iter().readF32Const(&f32))
-            return false;
+            if (f.iter().controlStackEmpty()) {
+                if (f.inDeadCode() || IsVoid(f.sig().ret()))
+                    f.returnVoid();
+                else
+                    f.returnExpr(f.iter().getResult());
+                return f.iter().readFunctionEnd(f.iter().end());
+            }
+            break;
 
-        f.iter().setResult(f.constant(f32));
-        return true;
-      }
-      case Op::F32Add:
-        return EmitAdd(f, ValType::F32, MIRType::Float32);
-      case Op::F32Sub:
-        return EmitSub(f, ValType::F32, MIRType::Float32);
-      case Op::F32Mul:
-        return EmitMul(f, ValType::F32, MIRType::Float32);
-      case Op::F32Div:
-        return EmitDiv(f, ValType::F32, MIRType::Float32, /* isUnsigned = */ false);
-      case Op::F32Min:
-      case Op::F32Max:
-        return EmitMinMax(f, ValType::F32, MIRType::Float32, op == Op::F32Max);
-      case Op::F32CopySign:
-        return EmitCopySign(f, ValType::F32);
-      case Op::F32Neg:
-        return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F32, MIRType::Float32);
-      case Op::F32Abs:
-        return EmitUnaryWithType<MAbs>(f, ValType::F32, MIRType::Float32);
-      case Op::F32Sqrt:
-        return EmitUnaryWithType<MSqrt>(f, ValType::F32, MIRType::Float32);
-      case Op::F32Ceil:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilF, ValType::F32);
-      case Op::F32Floor:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorF, ValType::F32);
-      case Op::F32Trunc:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncF, ValType::F32);
-      case Op::F32Nearest:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntF, ValType::F32);
-      case Op::F32DemoteF64:
-        return EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32);
-      case Op::F32ConvertSI32:
-        return EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32);
-      case Op::F32ConvertUI32:
-        return EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32, ValType::F32);
-      case Op::F32ConvertSI64:
-      case Op::F32ConvertUI64:
-        return EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32,
-                                             op == Op::F32ConvertUI64);
-      case Op::F32ReinterpretI32:
-        return EmitReinterpret(f, ValType::F32, ValType::I32, MIRType::Float32);
+          // Control opcodes
+          case uint16_t(Op::Unreachable):
+            CHECK(EmitUnreachable(f));
+          case uint16_t(Op::Nop):
+            CHECK(f.iter().readNop());
+          case uint16_t(Op::Block):
+            CHECK(EmitBlock(f));
+          case uint16_t(Op::Loop):
+            CHECK(EmitLoop(f));
+          case uint16_t(Op::If):
+            CHECK(EmitIf(f));
+          case uint16_t(Op::Else):
+            CHECK(EmitElse(f));
+          case uint16_t(Op::Br):
+            CHECK(EmitBr(f));
+          case uint16_t(Op::BrIf):
+            CHECK(EmitBrIf(f));
+          case uint16_t(Op::BrTable):
+            CHECK(EmitBrTable(f));
+          case uint16_t(Op::Return):
+            CHECK(EmitReturn(f));
 
-      case Op::F32Load:
-        return EmitLoad(f, ValType::F32, Scalar::Float32);
-      case Op::F32Store:
-        return EmitStore(f, ValType::F32, Scalar::Float32);
-      case Op::F32TeeStore:
-        return EmitTeeStore(f, ValType::F32, Scalar::Float32);
-      case Op::F32TeeStoreF64:
-        return EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64);
+          // Calls
+          case uint16_t(Op::Call):
+            CHECK(EmitCall(f));
+          case uint16_t(Op::CallIndirect):
+            CHECK(EmitCallIndirect(f, /* oldStyle = */ false));
 
-      // F64
-      case Op::F64Const: {
-        double f64;
-        if (!f.iter().readF64Const(&f64))
-            return false;
+          // Parametric operators
+          case uint16_t(Op::Drop):
+            CHECK(f.iter().readDrop());
+          case uint16_t(Op::Select):
+            CHECK(EmitSelect(f));
 
-        f.iter().setResult(f.constant(f64));
-        return true;
-      }
-      case Op::F64Add:
-        return EmitAdd(f, ValType::F64, MIRType::Double);
-      case Op::F64Sub:
-        return EmitSub(f, ValType::F64, MIRType::Double);
-      case Op::F64Mul:
-        return EmitMul(f, ValType::F64, MIRType::Double);
-      case Op::F64Div:
-        return EmitDiv(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false);
-      case Op::F64Mod:
-        return EmitRem(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false);
-      case Op::F64Min:
-      case Op::F64Max:
-        return EmitMinMax(f, ValType::F64, MIRType::Double, op == Op::F64Max);
-      case Op::F64CopySign:
-        return EmitCopySign(f, ValType::F64);
-      case Op::F64Neg:
-        return EmitUnaryWithType<MAsmJSNeg>(f, ValType::F64, MIRType::Double);
-      case Op::F64Abs:
-        return EmitUnaryWithType<MAbs>(f, ValType::F64, MIRType::Double);
-      case Op::F64Sqrt:
-        return EmitUnaryWithType<MSqrt>(f, ValType::F64, MIRType::Double);
-      case Op::F64Ceil:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilD, ValType::F64);
-      case Op::F64Floor:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorD, ValType::F64);
-      case Op::F64Trunc:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncD, ValType::F64);
-      case Op::F64Nearest:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntD, ValType::F64);
-      case Op::F64Sin:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD, ValType::F64);
-      case Op::F64Cos:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD, ValType::F64);
-      case Op::F64Tan:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD, ValType::F64);
-      case Op::F64Asin:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD, ValType::F64);
-      case Op::F64Acos:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD, ValType::F64);
-      case Op::F64Atan:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD, ValType::F64);
-      case Op::F64Exp:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD, ValType::F64);
-      case Op::F64Log:
-        return EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD, ValType::F64);
-      case Op::F64Pow:
-        return EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD, ValType::F64);
-      case Op::F64Atan2:
-        return EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D, ValType::F64);
-      case Op::F64PromoteF32:
-        return EmitConversion<MToDouble>(f, ValType::F32, ValType::F64);
-      case Op::F64ConvertSI32:
-        return EmitConversion<MToDouble>(f, ValType::I32, ValType::F64);
-      case Op::F64ConvertUI32:
-        return EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32, ValType::F64);
-      case Op::F64ConvertSI64:
-      case Op::F64ConvertUI64:
-        return EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double,
-                                             op == Op::F64ConvertUI64);
-      case Op::F64Load:
-        return EmitLoad(f, ValType::F64, Scalar::Float64);
-      case Op::F64Store:
-        return EmitStore(f, ValType::F64, Scalar::Float64);
-      case Op::F64TeeStore:
-        return EmitTeeStore(f, ValType::F64, Scalar::Float64);
-      case Op::F64TeeStoreF32:
-        return EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32);
-      case Op::F64ReinterpretI64:
-        return EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double);
+          // Locals and globals
+          case uint16_t(Op::GetLocal):
+            CHECK(EmitGetLocal(f));
+          case uint16_t(Op::SetLocal):
+            CHECK(EmitSetLocal(f));
+          case uint16_t(Op::TeeLocal):
+            CHECK(EmitTeeLocal(f));
+          case uint16_t(Op::GetGlobal):
+            CHECK(EmitGetGlobal(f));
+          case uint16_t(Op::SetGlobal):
+            CHECK(EmitSetGlobal(f));
 
-      // Comparisons
-      case Op::I32Eq:
-        return EmitComparison(f, ValType::I32, JSOP_EQ, MCompare::Compare_Int32);
-      case Op::I32Ne:
-        return EmitComparison(f, ValType::I32, JSOP_NE, MCompare::Compare_Int32);
-      case Op::I32LtS:
-        return EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_Int32);
-      case Op::I32LeS:
-        return EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_Int32);
-      case Op::I32GtS:
-        return EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_Int32);
-      case Op::I32GeS:
-        return EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_Int32);
-      case Op::I32LtU:
-        return EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_UInt32);
-      case Op::I32LeU:
-        return EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_UInt32);
-      case Op::I32GtU:
-        return EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_UInt32);
-      case Op::I32GeU:
-        return EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_UInt32);
-      case Op::I64Eq:
-        return EmitComparison(f, ValType::I64, JSOP_EQ, MCompare::Compare_Int64);
-      case Op::I64Ne:
-        return EmitComparison(f, ValType::I64, JSOP_NE, MCompare::Compare_Int64);
-      case Op::I64LtS:
-        return EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_Int64);
-      case Op::I64LeS:
-        return EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_Int64);
-      case Op::I64GtS:
-        return EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_Int64);
-      case Op::I64GeS:
-        return EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_Int64);
-      case Op::I64LtU:
-        return EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_UInt64);
-      case Op::I64LeU:
-        return EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_UInt64);
-      case Op::I64GtU:
-        return EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_UInt64);
-      case Op::I64GeU:
-        return EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_UInt64);
-      case Op::F32Eq:
-        return EmitComparison(f, ValType::F32, JSOP_EQ, MCompare::Compare_Float32);
-      case Op::F32Ne:
-        return EmitComparison(f, ValType::F32, JSOP_NE, MCompare::Compare_Float32);
-      case Op::F32Lt:
-        return EmitComparison(f, ValType::F32, JSOP_LT, MCompare::Compare_Float32);
-      case Op::F32Le:
-        return EmitComparison(f, ValType::F32, JSOP_LE, MCompare::Compare_Float32);
-      case Op::F32Gt:
-        return EmitComparison(f, ValType::F32, JSOP_GT, MCompare::Compare_Float32);
-      case Op::F32Ge:
-        return EmitComparison(f, ValType::F32, JSOP_GE, MCompare::Compare_Float32);
-      case Op::F64Eq:
-        return EmitComparison(f, ValType::F64, JSOP_EQ, MCompare::Compare_Double);
-      case Op::F64Ne:
-        return EmitComparison(f, ValType::F64, JSOP_NE, MCompare::Compare_Double);
-      case Op::F64Lt:
-        return EmitComparison(f, ValType::F64, JSOP_LT, MCompare::Compare_Double);
-      case Op::F64Le:
-        return EmitComparison(f, ValType::F64, JSOP_LE, MCompare::Compare_Double);
-      case Op::F64Gt:
-        return EmitComparison(f, ValType::F64, JSOP_GT, MCompare::Compare_Double);
-      case Op::F64Ge:
-        return EmitComparison(f, ValType::F64, JSOP_GE, MCompare::Compare_Double);
+          // Memory-related operators
+          case uint16_t(Op::I32Load):
+            CHECK(EmitLoad(f, ValType::I32, Scalar::Int32));
+          case uint16_t(Op::I64Load):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Int64));
+          case uint16_t(Op::F32Load):
+            CHECK(EmitLoad(f, ValType::F32, Scalar::Float32));
+          case uint16_t(Op::F64Load):
+            CHECK(EmitLoad(f, ValType::F64, Scalar::Float64));
+          case uint16_t(Op::I32Load8S):
+            CHECK(EmitLoad(f, ValType::I32, Scalar::Int8));
+          case uint16_t(Op::I32Load8U):
+            CHECK(EmitLoad(f, ValType::I32, Scalar::Uint8));
+          case uint16_t(Op::I32Load16S):
+            CHECK(EmitLoad(f, ValType::I32, Scalar::Int16));
+          case uint16_t(Op::I32Load16U):
+            CHECK(EmitLoad(f, ValType::I32, Scalar::Uint16));
+          case uint16_t(Op::I64Load8S):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Int8));
+          case uint16_t(Op::I64Load8U):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Uint8));
+          case uint16_t(Op::I64Load16S):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Int16));
+          case uint16_t(Op::I64Load16U):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Uint16));
+          case uint16_t(Op::I64Load32S):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Int32));
+          case uint16_t(Op::I64Load32U):
+            CHECK(EmitLoad(f, ValType::I64, Scalar::Uint32));
+          case uint16_t(Op::I32Store):
+            CHECK(EmitStore(f, ValType::I32, Scalar::Int32));
+          case uint16_t(Op::I64Store):
+            CHECK(EmitStore(f, ValType::I64, Scalar::Int64));
+          case uint16_t(Op::F32Store):
+            CHECK(EmitStore(f, ValType::F32, Scalar::Float32));
+          case uint16_t(Op::F64Store):
+            CHECK(EmitStore(f, ValType::F64, Scalar::Float64));
+          case uint16_t(Op::I32Store8):
+            CHECK(EmitStore(f, ValType::I32, Scalar::Int8));
+          case uint16_t(Op::I32Store16):
+            CHECK(EmitStore(f, ValType::I32, Scalar::Int16));
+          case uint16_t(Op::I64Store8):
+            CHECK(EmitStore(f, ValType::I64, Scalar::Int8));
+          case uint16_t(Op::I64Store16):
+            CHECK(EmitStore(f, ValType::I64, Scalar::Int16));
+          case uint16_t(Op::I64Store32):
+            CHECK(EmitStore(f, ValType::I64, Scalar::Int32));
+          case uint16_t(Op::CurrentMemory):
+            CHECK(EmitCurrentMemory(f));
+          case uint16_t(Op::GrowMemory):
+            CHECK(EmitGrowMemory(f));
 
-      // SIMD
+          // Constants
+          case uint16_t(Op::I32Const):
+            CHECK(EmitI32Const(f));
+          case uint16_t(Op::I64Const):
+            CHECK(EmitI64Const(f));
+          case uint16_t(Op::F32Const):
+            CHECK(EmitF32Const(f));
+          case uint16_t(Op::F64Const):
+            CHECK(EmitF64Const(f));
+
+          // Comparison operators
+          case uint16_t(Op::I32Eqz):
+            CHECK(EmitConversion<MNot>(f, ValType::I32, ValType::I32));
+          case uint16_t(Op::I32Eq):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_EQ, MCompare::Compare_Int32));
+          case uint16_t(Op::I32Ne):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_NE, MCompare::Compare_Int32));
+          case uint16_t(Op::I32LtS):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_Int32));
+          case uint16_t(Op::I32LtU):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_UInt32));
+          case uint16_t(Op::I32GtS):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_Int32));
+          case uint16_t(Op::I32GtU):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_UInt32));
+          case uint16_t(Op::I32LeS):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_Int32));
+          case uint16_t(Op::I32LeU):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_UInt32));
+          case uint16_t(Op::I32GeS):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_Int32));
+          case uint16_t(Op::I32GeU):
+            CHECK(EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_UInt32));
+          case uint16_t(Op::I64Eqz):
+            CHECK(EmitConversion<MNot>(f, ValType::I64, ValType::I32));
+          case uint16_t(Op::I64Eq):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_EQ, MCompare::Compare_Int64));
+          case uint16_t(Op::I64Ne):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_NE, MCompare::Compare_Int64));
+          case uint16_t(Op::I64LtS):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_Int64));
+          case uint16_t(Op::I64LtU):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_UInt64));
+          case uint16_t(Op::I64GtS):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_Int64));
+          case uint16_t(Op::I64GtU):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_UInt64));
+          case uint16_t(Op::I64LeS):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_Int64));
+          case uint16_t(Op::I64LeU):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_UInt64));
+          case uint16_t(Op::I64GeS):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_Int64));
+          case uint16_t(Op::I64GeU):
+            CHECK(EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_UInt64));
+          case uint16_t(Op::F32Eq):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_EQ, MCompare::Compare_Float32));
+          case uint16_t(Op::F32Ne):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_NE, MCompare::Compare_Float32));
+          case uint16_t(Op::F32Lt):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_LT, MCompare::Compare_Float32));
+          case uint16_t(Op::F32Gt):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_GT, MCompare::Compare_Float32));
+          case uint16_t(Op::F32Le):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_LE, MCompare::Compare_Float32));
+          case uint16_t(Op::F32Ge):
+            CHECK(EmitComparison(f, ValType::F32, JSOP_GE, MCompare::Compare_Float32));
+          case uint16_t(Op::F64Eq):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_EQ, MCompare::Compare_Double));
+          case uint16_t(Op::F64Ne):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_NE, MCompare::Compare_Double));
+          case uint16_t(Op::F64Lt):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_LT, MCompare::Compare_Double));
+          case uint16_t(Op::F64Gt):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_GT, MCompare::Compare_Double));
+          case uint16_t(Op::F64Le):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_LE, MCompare::Compare_Double));
+          case uint16_t(Op::F64Ge):
+            CHECK(EmitComparison(f, ValType::F64, JSOP_GE, MCompare::Compare_Double));
+
+          // Numeric operators
+          case uint16_t(Op::I32Clz):
+            CHECK(EmitUnaryWithType<MClz>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Ctz):
+            CHECK(EmitUnaryWithType<MCtz>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Popcnt):
+            CHECK(EmitUnaryWithType<MPopcnt>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Add):
+            CHECK(EmitAdd(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Sub):
+            CHECK(EmitSub(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Mul):
+            CHECK(EmitMul(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32DivS):
+          case uint16_t(Op::I32DivU):
+            CHECK(EmitDiv(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32DivU));
+          case uint16_t(Op::I32RemS):
+          case uint16_t(Op::I32RemU):
+            CHECK(EmitRem(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32RemU));
+          case uint16_t(Op::I32And):
+            CHECK(EmitBitwise<MBitAnd>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Or):
+            CHECK(EmitBitwise<MBitOr>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Xor):
+            CHECK(EmitBitwise<MBitXor>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Shl):
+            CHECK(EmitBitwise<MLsh>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32ShrS):
+            CHECK(EmitBitwise<MRsh>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32ShrU):
+            CHECK(EmitBitwise<MUrsh>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32Rotl):
+          case uint16_t(Op::I32Rotr):
+            CHECK(EmitRotate(f, ValType::I32, Op(op) == Op::I32Rotl));
+          case uint16_t(Op::I64Clz):
+            CHECK(EmitUnaryWithType<MClz>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Ctz):
+            CHECK(EmitUnaryWithType<MCtz>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Popcnt):
+            CHECK(EmitUnaryWithType<MPopcnt>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Add):
+            CHECK(EmitAdd(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Sub):
+            CHECK(EmitSub(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Mul):
+            CHECK(EmitMul(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64DivS):
+          case uint16_t(Op::I64DivU):
+            CHECK(EmitDiv(f, ValType::I64, MIRType::Int64, Op(op) == Op::I64DivU));
+          case uint16_t(Op::I64RemS):
+          case uint16_t(Op::I64RemU):
+            CHECK(EmitRem(f, ValType::I64, MIRType::Int64, Op(op) == Op::I64RemU));
+          case uint16_t(Op::I64And):
+            CHECK(EmitBitwise<MBitAnd>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Or):
+            CHECK(EmitBitwise<MBitOr>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Xor):
+            CHECK(EmitBitwise<MBitXor>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Shl):
+            CHECK(EmitBitwise<MLsh>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64ShrS):
+            CHECK(EmitBitwise<MRsh>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64ShrU):
+            CHECK(EmitBitwise<MUrsh>(f, ValType::I64, MIRType::Int64));
+          case uint16_t(Op::I64Rotl):
+          case uint16_t(Op::I64Rotr):
+            CHECK(EmitRotate(f, ValType::I64, Op(op) == Op::I64Rotl));
+          case uint16_t(Op::F32Abs):
+            CHECK(EmitUnaryWithType<MAbs>(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Neg):
+            CHECK(EmitUnaryWithType<MAsmJSNeg>(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Ceil):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilF, ValType::F32));
+          case uint16_t(Op::F32Floor):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorF, ValType::F32));
+          case uint16_t(Op::F32Trunc):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncF, ValType::F32));
+          case uint16_t(Op::F32Nearest):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntF, ValType::F32));
+          case uint16_t(Op::F32Sqrt):
+            CHECK(EmitUnaryWithType<MSqrt>(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Add):
+            CHECK(EmitAdd(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Sub):
+            CHECK(EmitSub(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Mul):
+            CHECK(EmitMul(f, ValType::F32, MIRType::Float32));
+          case uint16_t(Op::F32Div):
+            CHECK(EmitDiv(f, ValType::F32, MIRType::Float32, /* isUnsigned = */ false));
+          case uint16_t(Op::F32Min):
+          case uint16_t(Op::F32Max):
+            CHECK(EmitMinMax(f, ValType::F32, MIRType::Float32, Op(op) == Op::F32Max));
+          case uint16_t(Op::F32CopySign):
+            CHECK(EmitCopySign(f, ValType::F32));
+          case uint16_t(Op::F64Abs):
+            CHECK(EmitUnaryWithType<MAbs>(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Neg):
+            CHECK(EmitUnaryWithType<MAsmJSNeg>(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Ceil):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CeilD, ValType::F64));
+          case uint16_t(Op::F64Floor):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::FloorD, ValType::F64));
+          case uint16_t(Op::F64Trunc):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TruncD, ValType::F64));
+          case uint16_t(Op::F64Nearest):
+            CHECK(EmitUnaryMathBuiltinCall(f, SymbolicAddress::NearbyIntD, ValType::F64));
+          case uint16_t(Op::F64Sqrt):
+            CHECK(EmitUnaryWithType<MSqrt>(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Add):
+            CHECK(EmitAdd(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Sub):
+            CHECK(EmitSub(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Mul):
+            CHECK(EmitMul(f, ValType::F64, MIRType::Double));
+          case uint16_t(Op::F64Div):
+            CHECK(EmitDiv(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false));
+          case uint16_t(Op::F64Min):
+          case uint16_t(Op::F64Max):
+            CHECK(EmitMinMax(f, ValType::F64, MIRType::Double, Op(op) == Op::F64Max));
+          case uint16_t(Op::F64CopySign):
+            CHECK(EmitCopySign(f, ValType::F64));
+
+          // Conversions
+          case uint16_t(Op::I32WrapI64):
+            CHECK(EmitConversion<MWrapInt64ToInt32>(f, ValType::I64, ValType::I32));
+          case uint16_t(Op::I32TruncSF32):
+          case uint16_t(Op::I32TruncUF32):
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I32, Op(op) == Op::I32TruncUF32));
+          case uint16_t(Op::I32TruncSF64):
+          case uint16_t(Op::I32TruncUF64):
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I32, Op(op) == Op::I32TruncUF64));
+          case uint16_t(Op::I64ExtendSI32):
+          case uint16_t(Op::I64ExtendUI32):
+            CHECK(EmitExtendI32(f, Op(op) == Op::I64ExtendUI32));
+          case uint16_t(Op::I64TruncSF32):
+          case uint16_t(Op::I64TruncUF32):
+            CHECK(EmitTruncate(f, ValType::F32, ValType::I64, Op(op) == Op::I64TruncUF32));
+          case uint16_t(Op::I64TruncSF64):
+          case uint16_t(Op::I64TruncUF64):
+            CHECK(EmitTruncate(f, ValType::F64, ValType::I64, Op(op) == Op::I64TruncUF64));
+          case uint16_t(Op::F32ConvertSI32):
+            CHECK(EmitConversion<MToFloat32>(f, ValType::I32, ValType::F32));
+          case uint16_t(Op::F32ConvertUI32):
+            CHECK(EmitConversion<MWasmUnsignedToFloat32>(f, ValType::I32, ValType::F32));
+          case uint16_t(Op::F32ConvertSI64):
+          case uint16_t(Op::F32ConvertUI64):
+            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F32, MIRType::Float32, Op(op) == Op::F32ConvertUI64));
+          case uint16_t(Op::F32DemoteF64):
+            CHECK(EmitConversion<MToFloat32>(f, ValType::F64, ValType::F32));
+          case uint16_t(Op::F64ConvertSI32):
+            CHECK(EmitConversion<MToDouble>(f, ValType::I32, ValType::F64));
+          case uint16_t(Op::F64ConvertUI32):
+            CHECK(EmitConversion<MWasmUnsignedToDouble>(f, ValType::I32, ValType::F64));
+          case uint16_t(Op::F64ConvertSI64):
+          case uint16_t(Op::F64ConvertUI64):
+            CHECK(EmitConvertI64ToFloatingPoint(f, ValType::F64, MIRType::Double, Op(op) == Op::F64ConvertUI64));
+          case uint16_t(Op::F64PromoteF32):
+            CHECK(EmitConversion<MToDouble>(f, ValType::F32, ValType::F64));
+
+          // Reinterpretations
+          case uint16_t(Op::I32ReinterpretF32):
+            CHECK(EmitReinterpret(f, ValType::I32, ValType::F32, MIRType::Int32));
+          case uint16_t(Op::I64ReinterpretF64):
+            CHECK(EmitReinterpret(f, ValType::I64, ValType::F64, MIRType::Int64));
+          case uint16_t(Op::F32ReinterpretI32):
+            CHECK(EmitReinterpret(f, ValType::F32, ValType::I32, MIRType::Float32));
+          case uint16_t(Op::F64ReinterpretI64):
+            CHECK(EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double));
+
+          // asm.js-specific operators
+
+          case uint16_t(Op::TeeGlobal):
+            CHECK_ASMJS(EmitTeeGlobal(f));
+          case uint16_t(Op::I32Min):
+          case uint16_t(Op::I32Max):
+            CHECK_ASMJS(EmitMinMax(f, ValType::I32, MIRType::Int32, Op(op) == Op::I32Max));
+          case uint16_t(Op::I32Neg):
+            CHECK_ASMJS(EmitUnaryWithType<MAsmJSNeg>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::I32BitNot):
+            CHECK_ASMJS(EmitBitNot(f, ValType::I32));
+          case uint16_t(Op::I32Abs):
+            CHECK_ASMJS(EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32));
+          case uint16_t(Op::F32TeeStoreF64):
+            CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64));
+          case uint16_t(Op::F64TeeStoreF32):
+            CHECK_ASMJS(EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32));
+          case uint16_t(Op::I32TeeStore8):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int8));
+          case uint16_t(Op::I32TeeStore16):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int16));
+          case uint16_t(Op::I64TeeStore8):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int8));
+          case uint16_t(Op::I64TeeStore16):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int16));
+          case uint16_t(Op::I64TeeStore32):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int32));
+          case uint16_t(Op::I32TeeStore):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I32, Scalar::Int32));
+          case uint16_t(Op::I64TeeStore):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::I64, Scalar::Int64));
+          case uint16_t(Op::F32TeeStore):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::F32, Scalar::Float32));
+          case uint16_t(Op::F64TeeStore):
+            CHECK_ASMJS(EmitTeeStore(f, ValType::F64, Scalar::Float64));
+          case uint16_t(Op::F64Mod):
+            CHECK_ASMJS(EmitRem(f, ValType::F64, MIRType::Double, /* isUnsigned = */ false));
+          case uint16_t(Op::F64Sin):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::SinD, ValType::F64));
+          case uint16_t(Op::F64Cos):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::CosD, ValType::F64));
+          case uint16_t(Op::F64Tan):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::TanD, ValType::F64));
+          case uint16_t(Op::F64Asin):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ASinD, ValType::F64));
+          case uint16_t(Op::F64Acos):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ACosD, ValType::F64));
+          case uint16_t(Op::F64Atan):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ATanD, ValType::F64));
+          case uint16_t(Op::F64Exp):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::ExpD, ValType::F64));
+          case uint16_t(Op::F64Log):
+            CHECK_ASMJS(EmitUnaryMathBuiltinCall(f, SymbolicAddress::LogD, ValType::F64));
+          case uint16_t(Op::F64Pow):
+            CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::PowD, ValType::F64));
+          case uint16_t(Op::F64Atan2):
+            CHECK_ASMJS(EmitBinaryMathBuiltinCall(f, SymbolicAddress::ATan2D, ValType::F64));
+          case uint16_t(Op::OldCallIndirect):
+            CHECK_ASMJS(EmitCallIndirect(f, /* oldStyle = */ true));
+
+          // Atomics
+          case uint16_t(Op::I32AtomicsLoad):
+            CHECK_ASMJS(EmitAtomicsLoad(f));
+          case uint16_t(Op::I32AtomicsStore):
+            CHECK_ASMJS(EmitAtomicsStore(f));
+          case uint16_t(Op::I32AtomicsBinOp):
+            CHECK_ASMJS(EmitAtomicsBinOp(f));
+          case uint16_t(Op::I32AtomicsCompareExchange):
+            CHECK_ASMJS(EmitAtomicsCompareExchange(f));
+          case uint16_t(Op::I32AtomicsExchange):
+            CHECK_ASMJS(EmitAtomicsExchange(f));
+
+          // SIMD
 #define CASE(TYPE, OP, SIGN)                                                    \
-      case Op::TYPE##OP:                                                      \
-        return EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN);
+          case uint16_t(Op::TYPE##OP):                                          \
+            CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Fn_##OP, SIGN));
 #define I8x16CASE(OP) CASE(I8x16, OP, SimdSign::Signed)
 #define I16x8CASE(OP) CASE(I16x8, OP, SimdSign::Signed)
 #define I32x4CASE(OP) CASE(I32x4, OP, SimdSign::Signed)
@@ -3523,17 +3671,17 @@ EmitExpr(FunctionCompiler& f)
 #define B16x8CASE(OP) CASE(B16x8, OP, SimdSign::NotApplicable)
 #define B32x4CASE(OP) CASE(B32x4, OP, SimdSign::NotApplicable)
 #define ENUMERATE(TYPE, FORALL, DO)                                             \
-      case Op::TYPE##Constructor:                                             \
-        return EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable); \
-      FORALL(DO)
+          case uint16_t(Op::TYPE##Constructor):                                 \
+            CHECK_ASMJS(EmitSimdOp(f, ValType::TYPE, SimdOperation::Constructor, SimdSign::NotApplicable)); \
+          FORALL(DO)
 
-      ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
-      ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
-      ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
-      ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
-      ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
-      ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
-      ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
+          ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
+          ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
+          ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
+          ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
+          ENUMERATE(B8x16, FORALL_BOOL_SIMD_OP, B8x16CASE)
+          ENUMERATE(B16x8, FORALL_BOOL_SIMD_OP, B16x8CASE)
+          ENUMERATE(B32x4, FORALL_BOOL_SIMD_OP, B32x4CASE)
 
 #undef CASE
 #undef I8x16CASE
@@ -3545,131 +3693,77 @@ EmitExpr(FunctionCompiler& f)
 #undef B32x4CASE
 #undef ENUMERATE
 
-      case Op::I8x16Const: {
-        I8x16 i8x16;
-        if (!f.iter().readI8x16Const(&i8x16))
-            return false;
+          case uint16_t(Op::I8x16Const):
+            CHECK_ASMJS(EmitI8x16Const(f));
+          case uint16_t(Op::I16x8Const):
+            CHECK_ASMJS(EmitI16x8Const(f));
+          case uint16_t(Op::I32x4Const):
+            CHECK_ASMJS(EmitI32x4Const(f));
+          case uint16_t(Op::F32x4Const):
+            CHECK_ASMJS(EmitF32x4Const(f));
+          case uint16_t(Op::B8x16Const):
+            CHECK_ASMJS(EmitB8x16Const(f));
+          case uint16_t(Op::B16x8Const):
+            CHECK_ASMJS(EmitB16x8Const(f));
+          case uint16_t(Op::B32x4Const):
+            CHECK_ASMJS(EmitB32x4Const(f));
 
-        f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Int8x16));
-        return true;
-      }
-      case Op::I16x8Const: {
-        I16x8 i16x8;
-        if (!f.iter().readI16x8Const(&i16x8))
-            return false;
+          case uint16_t(Op::I8x16addSaturateU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16subSaturateU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16shiftRightByScalarU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16lessThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16lessThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16greaterThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16greaterThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I8x16extractLaneU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
 
-        f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Int16x8));
-        return true;
-      }
-      case Op::I32x4Const: {
-        I32x4 i32x4;
-        if (!f.iter().readI32x4Const(&i32x4))
-            return false;
+          case uint16_t(Op::I16x8addSaturateU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8subSaturateU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8shiftRightByScalarU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8lessThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8lessThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8greaterThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8greaterThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I16x8extractLaneU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned));
 
-        f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Int32x4));
-        return true;
-      }
-      case Op::F32x4Const: {
-        F32x4 f32x4;
-        if (!f.iter().readF32x4Const(&f32x4))
-            return false;
+          case uint16_t(Op::I32x4shiftRightByScalarU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned));
+          case uint16_t(Op::I32x4lessThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned));
+          case uint16_t(Op::I32x4lessThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I32x4greaterThanU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned));
+          case uint16_t(Op::I32x4greaterThanOrEqualU):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned));
+          case uint16_t(Op::I32x4fromFloat32x4U):
+            CHECK_ASMJS(EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned));
 
-        f.iter().setResult(f.constant(SimdConstant::CreateX4(f32x4), MIRType::Float32x4));
-        return true;
-      }
-      case Op::B8x16Const: {
-        I8x16 i8x16;
-        if (!f.iter().readB8x16Const(&i8x16))
-            return false;
-
-        f.iter().setResult(f.constant(SimdConstant::CreateX16(i8x16), MIRType::Bool8x16));
-        return true;
-      }
-      case Op::B16x8Const: {
-        I16x8 i16x8;
-        if (!f.iter().readB16x8Const(&i16x8))
-            return false;
-
-        f.iter().setResult(f.constant(SimdConstant::CreateX8(i16x8), MIRType::Bool16x8));
-        return true;
-      }
-      case Op::B32x4Const: {
-        I32x4 i32x4;
-        if (!f.iter().readB32x4Const(&i32x4))
-            return false;
-
-        f.iter().setResult(f.constant(SimdConstant::CreateX4(i32x4), MIRType::Bool32x4));
-        return true;
-      }
-
-      // SIMD unsigned integer operations.
-      case Op::I8x16addSaturateU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_addSaturate, SimdSign::Unsigned);
-      case Op::I8x16subSaturateU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_subSaturate, SimdSign::Unsigned);
-      case Op::I8x16shiftRightByScalarU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Op::I8x16lessThanU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Op::I8x16lessThanOrEqualU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Op::I8x16greaterThanU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Op::I8x16greaterThanOrEqualU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Op::I8x16extractLaneU:
-        return EmitSimdOp(f, ValType::I8x16, SimdOperation::Fn_extractLane, SimdSign::Unsigned);
-
-      case Op::I16x8addSaturateU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_addSaturate, SimdSign::Unsigned);
-      case Op::I16x8subSaturateU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_subSaturate, SimdSign::Unsigned);
-      case Op::I16x8shiftRightByScalarU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Op::I16x8lessThanU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Op::I16x8lessThanOrEqualU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Op::I16x8greaterThanU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Op::I16x8greaterThanOrEqualU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Op::I16x8extractLaneU:
-        return EmitSimdOp(f, ValType::I16x8, SimdOperation::Fn_extractLane, SimdSign::Unsigned);
-
-      case Op::I32x4shiftRightByScalarU:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_shiftRightByScalar, SimdSign::Unsigned);
-      case Op::I32x4lessThanU:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThan, SimdSign::Unsigned);
-      case Op::I32x4lessThanOrEqualU:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_lessThanOrEqual, SimdSign::Unsigned);
-      case Op::I32x4greaterThanU:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThan, SimdSign::Unsigned);
-      case Op::I32x4greaterThanOrEqualU:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_greaterThanOrEqual, SimdSign::Unsigned);
-      case Op::I32x4fromFloat32x4U:
-        return EmitSimdOp(f, ValType::I32x4, SimdOperation::Fn_fromFloat32x4, SimdSign::Unsigned);
-
-      // Atomics
-      case Op::I32AtomicsLoad:
-        return EmitAtomicsLoad(f);
-      case Op::I32AtomicsStore:
-        return EmitAtomicsStore(f);
-      case Op::I32AtomicsBinOp:
-        return EmitAtomicsBinOp(f);
-      case Op::I32AtomicsCompareExchange:
-        return EmitAtomicsCompareExchange(f);
-      case Op::I32AtomicsExchange:
-        return EmitAtomicsExchange(f);
-      // Memory Operators
-      case Op::GrowMemory:
-        return EmitGrowMemory(f);
-      case Op::CurrentMemory:
-        return EmitCurrentMemory(f);
-      case Op::Limit:;
+          default:
+            return f.iter().unrecognizedOpcode(op);
+        }
     }
 
-    MOZ_CRASH("unexpected wasm opcode");
+    MOZ_CRASH("unreachable");
+
+#undef CHECK
+#undef CHECK_ASMJS
 }
 
 bool
@@ -3679,16 +3773,8 @@ wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* 
 
     const FuncBytes& func = unit->func();
     const ModuleEnvironment& env = task->env();
-    uint32_t bodySize = func.bytes().length();
 
     Decoder d(func.bytes().begin(), func.bytes().end(), func.lineOrBytecode(), error);
-
-    if (!env.isAsmJS()) {
-        if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
-            return false;
-
-        d.rollbackPosition(d.begin());
-    }
 
     // Build the local types vector.
 
@@ -3717,20 +3803,7 @@ wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* 
         if (!f.startBlock())
             return false;
 
-        if (!f.iter().readFunctionStart(f.sig().ret()))
-            return false;
-
-        while (!f.done()) {
-            if (!EmitExpr(f))
-                return false;
-        }
-
-        if (f.inDeadCode() || IsVoid(f.sig().ret()))
-            f.returnVoid();
-        else
-            f.returnExpr(f.iter().getResult());
-
-        if (!f.iter().readFunctionEnd())
+        if (!EmitBodyExprs(f))
             return false;
 
         f.finish();

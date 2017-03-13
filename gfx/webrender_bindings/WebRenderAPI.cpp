@@ -21,7 +21,8 @@ public:
               bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
-              bool aEnableProfiler)
+              bool aEnableProfiler,
+              LayoutDeviceIntSize aSize)
     : mWrApi(aApi)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
@@ -29,6 +30,7 @@ public:
     , mCompositorWidget(Move(aWidget))
     , mTask(aTask)
     , mEnableProfiler(aEnableProfiler)
+    , mSize(aSize)
   {
     MOZ_COUNT_CTOR(NewRenderer);
   }
@@ -51,7 +53,8 @@ public:
     *mUseANGLE = gl->IsANGLE();
 
     WrRenderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, gl.get(), this->mEnableProfiler, mWrApi, &wrRenderer)) {
+    if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
+                       this->mEnableProfiler, mWrApi, &wrRenderer)) {
       return;
     }
     MOZ_ASSERT(wrRenderer);
@@ -79,6 +82,7 @@ private:
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
   bool mEnableProfiler;
+  LayoutDeviceIntSize mSize;
 };
 
 class RemoveRenderer : public RendererEvent
@@ -110,7 +114,8 @@ private:
 already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(bool aEnableProfiler,
                      layers::CompositorBridgeParentBase* aBridge,
-                     RefPtr<widget::CompositorWidget>&& aWidget)
+                     RefPtr<widget::CompositorWidget>&& aWidget,
+                     LayoutDeviceIntSize aSize)
 {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
@@ -127,7 +132,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
   // the next time we need to access the WrApi object.
   layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, &maxTextureSize, &useANGLE,
-                                       Move(aWidget), &task, aEnableProfiler);
+                                       Move(aWidget), &task, aEnableProfiler, aSize);
   RenderThread::Get()->RunEvent(id, Move(event));
 
   task.Wait();
@@ -185,6 +190,19 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
 }
 
 void
+WebRenderAPI::ClearRootDisplayList(Epoch aEpoch,
+                                   WrPipelineId pipeline_id)
+{
+  wr_api_clear_root_display_list(mWrApi, aEpoch, pipeline_id);
+}
+
+void
+WebRenderAPI::SetWindowParameters(LayoutDeviceIntSize size)
+{
+  wr_api_set_window_parameters(mWrApi, size.width, size.height);
+}
+
+void
 WebRenderAPI::Readback(gfx::IntSize size,
                        uint8_t *buffer,
                        uint32_t buffer_size)
@@ -232,18 +250,54 @@ WebRenderAPI::Readback(gfx::IntSize size,
 }
 
 void
+WebRenderAPI::WaitFlushed()
+{
+    class WaitFlushedEvent : public RendererEvent
+    {
+        public:
+            explicit WaitFlushedEvent(layers::SynchronousTask* aTask)
+                : mTask(aTask)
+            {
+                MOZ_COUNT_CTOR(WaitFlushedEvent);
+            }
+
+            ~WaitFlushedEvent()
+            {
+                MOZ_COUNT_DTOR(WaitFlushedEvent);
+            }
+
+            virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+            {
+                layers::AutoCompleteTask complete(mTask);
+            }
+
+            layers::SynchronousTask* mTask;
+    };
+
+    layers::SynchronousTask task("WaitFlushed");
+    auto event = MakeUnique<WaitFlushedEvent>(&task);
+    // This event will be passed from wr_backend thread to renderer thread. That
+    // implies that all frame data have been processed when the renderer runs this
+    // read-back event. Then, we could make sure this read-back event gets the
+    // latest result.
+    RunOnRenderThread(Move(event));
+
+    task.Wait();
+}
+
+void
 WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
   wr_api_set_root_pipeline(mWrApi, aPipeline);
 }
 
 void
-WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescritptor,
+WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                        Range<uint8_t> aBytes)
 {
   wr_api_add_image(mWrApi,
                    key,
-                   &aDescritptor,
+                   &aDescriptor,
                    &aBytes[0], aBytes.length());
 }
 
@@ -262,25 +316,23 @@ WebRenderAPI::AddExternalImageHandle(ImageKey key,
 
 void
 WebRenderAPI::AddExternalImageBuffer(ImageKey key,
-                                     gfx::IntSize aSize,
-                                     gfx::SurfaceFormat aFormat,
+                                     const ImageDescriptor& aDescriptor,
                                      uint64_t aHandle)
 {
-  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_add_external_image_buffer(mWrApi,
                                    key,
-                                   aSize.width, aSize.height, format,
+                                   &aDescriptor,
                                    aHandle);
 }
 
 void
 WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
-                                const ImageDescriptor& aDescritptor,
+                                const ImageDescriptor& aDescriptor,
                                 Range<uint8_t> aBytes)
 {
   wr_api_update_image(mWrApi,
                       aKey,
-                      &aDescritptor,
+                      &aDescriptor,
                       &aBytes[0], aBytes.length());
 }
 
@@ -366,17 +418,16 @@ DisplayListBuilder::End()
   wr_dp_end(mWrState);
 }
 
-void
-DisplayListBuilder::Finalize(WrBuiltDisplayListDescriptor& dl_descriptor,
-                             wr::VecU8& dl_data,
-                             WrAuxiliaryListsDescriptor& aux_descriptor,
-                             wr::VecU8& aux_data)
+BuiltDisplayList
+DisplayListBuilder::Finalize()
 {
-    wr_api_finalize_builder(mWrState,
-                            dl_descriptor,
-                            dl_data.inner,
-                            aux_descriptor,
-                            aux_data.inner);
+  BuiltDisplayList dl;
+  wr_api_finalize_builder(mWrState,
+                          dl.dl_desc,
+                          dl.dl.inner,
+                          dl.aux_desc,
+                          dl.aux.inner);
+  return dl;
 }
 
 void
@@ -398,6 +449,16 @@ DisplayListBuilder::PopStackingContext()
 }
 
 void
+DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList dl)
+{
+  wr_dp_push_built_display_list(mWrState,
+                                dl.dl_desc,
+                                dl.dl.Extract(),
+                                dl.aux_desc,
+                                dl.aux.Extract());
+}
+
+void
 DisplayListBuilder::PushScrollLayer(const WrRect& aBounds,
                                     const WrRect& aOverflow,
                                     const WrImageMask* aMask)
@@ -413,7 +474,7 @@ DisplayListBuilder::PopScrollLayer()
 
 void
 DisplayListBuilder::PushRect(const WrRect& aBounds,
-                             const WrRect& aClip,
+                             const WrClipRegion& aClip,
                              const WrColor& aColor)
 {
   wr_dp_push_rect(mWrState, aBounds, aClip, aColor);
@@ -421,7 +482,7 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
-                                       const WrRect& aClip,
+                                       const WrClipRegion& aClip,
                                        const WrPoint& aStartPoint,
                                        const WrPoint& aEndPoint,
                                        const nsTArray<WrGradientStop>& aStops,
@@ -436,7 +497,7 @@ DisplayListBuilder::PushLinearGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
-                                       const WrRect& aClip,
+                                       const WrClipRegion& aClip,
                                        const WrPoint& aStartCenter,
                                        const WrPoint& aEndCenter,
                                        float aStartRadius,
@@ -454,17 +515,16 @@ DisplayListBuilder::PushRadialGradient(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
-                              const WrRect& aClip,
-                              const WrImageMask* aMask,
+                              const WrClipRegion& aClip,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage);
+  wr_dp_push_image(mWrState, aBounds, aClip, aFilter, aImage);
 }
 
 void
 DisplayListBuilder::PushIFrame(const WrRect& aBounds,
-                               const WrRect& aClip,
+                               const WrClipRegion& aClip,
                                PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWrState, aBounds, aClip, aPipeline);
@@ -472,7 +532,8 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
-                               const WrRect& aClip,
+                               const WrClipRegion& aClip,
+                               const WrBorderWidths& aWidths,
                                const WrBorderSide& aTop,
                                const WrBorderSide& aRight,
                                const WrBorderSide& aBottom,
@@ -480,13 +541,27 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrBorderRadius& aRadius)
 {
   wr_dp_push_border(mWrState, aBounds, aClip,
-                    aTop, aRight, aBottom, aLeft,
-                    aRadius);
+                    aWidths, aTop, aRight, aBottom, aLeft, aRadius);
+}
+
+void
+DisplayListBuilder::PushBorderImage(const WrRect& aBounds,
+                                    const WrClipRegion& aClip,
+                                    const WrBorderWidths& aWidths,
+                                    wr::ImageKey aImage,
+                                    const WrNinePatchDescriptor& aPatch,
+                                    const WrSideOffsets2Df32& aOutset,
+                                    const WrRepeatMode& aRepeatHorizontal,
+                                    const WrRepeatMode& aRepeatVertical)
+{
+  wr_dp_push_border_image(mWrState, aBounds, aClip,
+                          aWidths, aImage, aPatch, aOutset,
+                          aRepeatHorizontal, aRepeatVertical);
 }
 
 void
 DisplayListBuilder::PushText(const WrRect& aBounds,
-                             const WrRect& aClip,
+                             const WrClipRegion& aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
                              Range<const WrGlyphInstance> aGlyphBuffer,
@@ -501,7 +576,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
 
 void
 DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
-                                  const WrRect& aClip,
+                                  const WrClipRegion& aClip,
                                   const WrRect& aBoxBounds,
                                   const WrPoint& aOffset,
                                   const WrColor& aColor,
@@ -514,6 +589,27 @@ DisplayListBuilder::PushBoxShadow(const WrRect& aRect,
                         aBoxBounds, aOffset, aColor,
                         aBlurRadius, aSpreadRadius, aBorderRadius,
                         aClipMode);
+}
+
+WrClipRegion
+DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
+                                    const WrImageMask* aMask)
+{
+  return wr_dp_new_clip_region(mWrState,
+                               aMain,
+                               nullptr, 0,
+                               aMask);
+}
+
+WrClipRegion
+DisplayListBuilder::BuildClipRegion(const WrRect& aMain,
+                                    const nsTArray<WrComplexClipRegion>& aComplex,
+                                    const WrImageMask* aMask)
+{
+  return wr_dp_new_clip_region(mWrState,
+                               aMain,
+                               aComplex.Elements(), aComplex.Length(),
+                               aMask);
 }
 
 } // namespace wr

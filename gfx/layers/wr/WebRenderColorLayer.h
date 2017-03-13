@@ -29,7 +29,7 @@ protected:
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer() override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 };
 
 } // namespace layers

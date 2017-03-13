@@ -22,6 +22,9 @@ use std::path::PathBuf;
 use webrender_traits::{ColorF, ImageFormat};
 use webrender_traits::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintSize};
 
+#[derive(Debug, Copy, Clone)]
+pub struct FrameId(usize);
+
 #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
 const GL_FORMAT_A: gl::GLuint = gl::RED;
 
@@ -497,6 +500,7 @@ pub struct GpuFrameProfile<T> {
     samples: Vec<GpuSample<T>>,
     next_query: usize,
     pending_query: gl::GLuint,
+    frame_id: FrameId,
 }
 
 impl<T> GpuFrameProfile<T> {
@@ -509,6 +513,7 @@ impl<T> GpuFrameProfile<T> {
             samples: Vec::new(),
             next_query: 0,
             pending_query: 0,
+            frame_id: FrameId(0),
         }
     }
 
@@ -519,10 +524,12 @@ impl<T> GpuFrameProfile<T> {
             samples: Vec::new(),
             next_query: 0,
             pending_query: 0,
+            frame_id: FrameId(0),
         }
     }
 
-    fn begin_frame(&mut self) {
+    fn begin_frame(&mut self, frame_id: FrameId) {
+        self.frame_id = frame_id;
         self.next_query = 0;
         self.pending_query = 0;
         self.samples.clear();
@@ -572,7 +579,7 @@ impl<T> GpuFrameProfile<T> {
     }
 
     fn is_valid(&self) -> bool {
-        self.next_query <= MAX_EVENTS_PER_FRAME
+        self.next_query > 0 && self.next_query <= MAX_EVENTS_PER_FRAME
     }
 
     #[cfg(not(target_os = "android"))]
@@ -619,18 +626,18 @@ impl<T> GpuProfiler<T> {
         }
     }
 
-    pub fn build_samples(&mut self) -> Option<Vec<GpuSample<T>>> {
+    pub fn build_samples(&mut self) -> Option<(FrameId, Vec<GpuSample<T>>)> {
         let frame = &mut self.frames[self.next_frame];
         if frame.is_valid() {
-            Some(frame.build_samples())
+            Some((frame.frame_id, frame.build_samples()))
         } else {
             None
         }
     }
 
-    pub fn begin_frame(&mut self) {
+    pub fn begin_frame(&mut self, frame_id: FrameId) {
         let frame = &mut self.frames[self.next_frame];
-        frame.begin_frame();
+        frame.begin_frame(frame_id);
     }
 
     pub fn end_frame(&mut self) {
@@ -821,6 +828,10 @@ pub struct Device {
     next_vao_id: gl::GLuint,
 
     max_texture_size: u32,
+
+    // Frame counter. This is used to map between CPU
+    // frames and GPU frames.
+    frame_id: FrameId,
 }
 
 impl Device {
@@ -860,7 +871,8 @@ impl Device {
             next_vao_id: 1,
             //file_watcher: file_watcher,
 
-            max_texture_size: gl::get_integer_v(gl::MAX_TEXTURE_SIZE) as u32
+            max_texture_size: gl::get_integer_v(gl::MAX_TEXTURE_SIZE) as u32,
+            frame_id: FrameId(0),
         }
     }
 
@@ -903,7 +915,7 @@ impl Device {
         }
     }
 
-    pub fn begin_frame(&mut self, device_pixel_ratio: f32) {
+    pub fn begin_frame(&mut self, device_pixel_ratio: f32) -> FrameId {
         debug_assert!(!self.inside_frame);
         self.inside_frame = true;
         self.device_pixel_ratio = device_pixel_ratio;
@@ -938,6 +950,8 @@ impl Device {
 
         // Default is sampler 0, always
         gl::active_texture(gl::TEXTURE0);
+
+        self.frame_id
     }
 
     pub fn bind_texture(&mut self,
@@ -1826,6 +1840,8 @@ impl Device {
         }
 
         gl::active_texture(gl::TEXTURE0);
+
+        self.frame_id.0 += 1;
     }
 
     pub fn assign_ubo_binding(&self, program_id: ProgramId, name: &str, value: u32) -> u32 {
@@ -1886,6 +1902,30 @@ impl Device {
         }
     }
 
+    pub fn clear_target_rect(&self,
+                             color: Option<[f32; 4]>,
+                             depth: Option<f32>,
+                             rect: DeviceIntRect) {
+        let mut clear_bits = 0;
+
+        if let Some(color) = color {
+            gl::clear_color(color[0], color[1], color[2], color[3]);
+            clear_bits |= gl::COLOR_BUFFER_BIT;
+        }
+
+        if let Some(depth) = depth {
+            gl::clear_depth(depth as f64);
+            clear_bits |= gl::DEPTH_BUFFER_BIT;
+        }
+
+        if clear_bits != 0 {
+            gl::enable(gl::SCISSOR_TEST);
+            gl::scissor(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+            gl::clear(clear_bits);
+            gl::disable(gl::SCISSOR_TEST);
+        }
+    }
+
     pub fn enable_depth(&self) {
         gl::enable(gl::DEPTH_TEST);
     }
@@ -1923,7 +1963,7 @@ impl Device {
     }
 
     pub fn set_blend_mode_premultiplied_alpha(&self) {
-        gl::blend_func(gl::SRC_ALPHA, gl::ZERO);
+        gl::blend_func(gl::ONE, gl::ONE_MINUS_SRC_ALPHA);
         gl::blend_equation(gl::FUNC_ADD);
     }
 
