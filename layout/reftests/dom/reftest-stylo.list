@@ -32,7 +32,7 @@
 == insertmultiplemultiple-2.html insertmultiplemultiple-2.html
 
 # testing bindings that have multiple insertion points
-fails == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml
+== multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml
 # append a single element
 fails == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-appendsingle-1.xhtml
 fails == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-appendsingle-2.xhtml

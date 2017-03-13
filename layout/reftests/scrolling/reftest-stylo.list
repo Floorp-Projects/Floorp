@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
 fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,23) == deferred-anchor2.xhtml deferred-anchor2.xhtml
-fails HTTP == fixed-1.html fixed-1.html
+HTTP == fixed-1.html fixed-1.html
 fails == fixed-table-1.html fixed-table-1.html
-fails HTTP == fixed-opacity-1.html fixed-opacity-1.html
-fails HTTP == fixed-opacity-2.html fixed-opacity-2.html
-fails == fixed-text-1.html fixed-text-1.html
+HTTP == fixed-opacity-1.html fixed-opacity-1.html
+HTTP == fixed-opacity-2.html fixed-opacity-2.html
+== fixed-text-1.html fixed-text-1.html
 HTTP == fixed-text-2.html fixed-text-2.html
 fails == iframe-border-radius.html iframe-border-radius.html
 == image-1.html image-1.html
@@ -22,7 +22,7 @@ fails == scroll-behavior-8.html scroll-behavior-8.html
 fails == scroll-behavior-9.html scroll-behavior-9.html
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-10.html scroll-behavior-10.html
 fails == scroll-behavior-textarea.html scroll-behavior-textarea.html
-fails HTTP == simple-1.html simple-1.html
+HTTP == simple-1.html simple-1.html
 fails HTTP == subpixel-1.html#d subpixel-1-ref.html#d
 == text-1.html text-1.html
 == text-2.html?up text-2.html?up

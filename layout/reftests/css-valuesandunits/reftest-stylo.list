@@ -7,7 +7,7 @@
 == unit-rem-root-fontsize.html unit-rem-root-fontsize.html
 fails == unit-rem-root-width.html unit-rem-root-width.html
 == unit-rem.svg unit-rem.svg
-fails == unit-vh-vw.html unit-vh-vw.html
+== unit-vh-vw.html unit-vh-vw.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom.html
 fails == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto.html
 fails == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll.html

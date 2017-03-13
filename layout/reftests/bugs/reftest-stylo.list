@@ -441,8 +441,8 @@ fails == 331809-1.html 331809-1.html
 fails == 332557-1.html 332557-1.html
 == 332975-1.html 332975-1.html
 == 333970-1.html 333970-1.html
-== 334829-1a.xhtml 334829-1a.xhtml
-== 334829-1b.xhtml 334829-1b.xhtml
+fails == 334829-1a.xhtml 334829-1a.xhtml
+fails == 334829-1b.xhtml 334829-1b.xhtml
 fails == 335628-1.html 335628-1.html
 == 335628-2.xul 335628-2.xul
 == 336096-1.xul 336096-1.xul
@@ -601,10 +601,10 @@ fails == 367247-l-scroll.html 367247-l-scroll.html
 == 367612-1e.html 367612-1e.html
 == 367612-1f.html 367612-1f.html
 == 367612-1g.html 367612-1g.html
-fails == 368020-1.html 368020-1.html
-fails == 368020-2.html 368020-2.html
-fails == 368020-3.html 368020-3.html
-fails pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5.html
+== 368020-1.html 368020-1.html
+== 368020-2.html 368020-2.html
+== 368020-3.html 368020-3.html
+pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5.html
 == 368155-1.xhtml 368155-1.xhtml
 asserts(4-8) == 368155-negative-margins-1.html 368155-negative-margins-1.html
 # we can't test this because there's antialiasing involved, and our comparison
@@ -1211,21 +1211,21 @@ fails == 456330-1.gif 456330-1.gif
 fails == 458296-1b.html 458296-1b.html
 fails == 458296-1c.html 458296-1c.html
 fails == 458296-1d.html 458296-1d.html
-fails == 458487-1a.html 458487-1a.html
-fails == 458487-1b.html 458487-1b.html
-fails == 458487-1c.html 458487-1c.html
-fails == 458487-1d.html 458487-1d.html
-fails == 458487-1e.html 458487-1e.html
-fails == 458487-1f.html 458487-1f.html
-fails == 458487-1g.html 458487-1g.html
-fails == 458487-1h.html 458487-1h.html
+== 458487-1a.html 458487-1a.html
+== 458487-1b.html 458487-1b.html
+== 458487-1c.html 458487-1c.html
+== 458487-1d.html 458487-1d.html
+== 458487-1e.html 458487-1e.html
+== 458487-1f.html 458487-1f.html
+== 458487-1g.html 458487-1g.html
+== 458487-1h.html 458487-1h.html
 == 458487-2.html 458487-2.html
 == 458487-3.html 458487-3.html
-fails == 458487-4a.html 458487-4a.html
-fails == 458487-4b.html 458487-4b.html
-fails == 458487-4c.html 458487-4c.html
-fails == 458487-5a.html 458487-5a.html
-fails == 458487-5b.html 458487-5b.html
+== 458487-4a.html 458487-4a.html
+== 458487-4b.html 458487-4b.html
+== 458487-4c.html 458487-4c.html
+== 458487-5a.html 458487-5a.html
+== 458487-5b.html 458487-5b.html
 == 459443-1.html 459443-1.html
 == 459613-1.html 459613-1.html
 == 460012-1.html 460012-1.html
@@ -1237,10 +1237,10 @@ fails == 458487-5b.html 458487-5b.html
 == 462844-4.html 462844-4.html
 == 463204-1.html 463204-1.html
 == 463217-1.xul 463217-1.xul
-fails == 463952-1.html 463952-1.html
-fails == 464811-1.html 464811-1.html
+== 463952-1.html 463952-1.html
+== 464811-1.html 464811-1.html
 == 465574-1.html 465574-1.html
-fails == 466258-1.html 466258-1.html
+== 466258-1.html 466258-1.html
 == 466395-1.html 466395-1.html
 == 466395-2.html 466395-2.html
 fails == 467084-1.html 467084-1.html
@@ -1642,10 +1642,10 @@ fails == 617242-1.html 617242-1.html
 fails == 618071.html 618071.html
 fails == 619117-1.html 619117-1.html
 fails HTTP(..) == 619511-1.html 619511-1.html
-fails == 621253-1-externalFilter.html 621253-1-externalFilter.html
-fails == 621253-1-internalFilter.html 621253-1-internalFilter.html
-fails HTTP(..) == 621253-2-externalFilter.html 621253-2-externalFilter.html
-fails == 621253-2-internalFilter.html 621253-2-internalFilter.html
+== 621253-1-externalFilter.html 621253-1-externalFilter.html
+== 621253-1-internalFilter.html 621253-1-internalFilter.html
+HTTP(..) == 621253-2-externalFilter.html 621253-2-externalFilter.html
+== 621253-2-internalFilter.html 621253-2-internalFilter.html
 random-if(winWidget) fuzzy-if(OSX==1008,19,17) == 621918-1.svg 621918-1.svg
 random-if(winWidget) HTTP(..) == 621918-2.svg 621918-2.svg
 fails == 622585-1.html 622585-1.html
@@ -1834,7 +1834,7 @@ fails == 1018522-1.html 1018522-1.html
 == 1021564-2.html 1021564-2.html
 == 1021564-3.html 1021564-3.html
 == 1021564-4.html 1021564-4.html
-fails pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
+pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
 == 1024473-1.html 1024473-1.html
 == 1025914-1.html 1025914-1.html

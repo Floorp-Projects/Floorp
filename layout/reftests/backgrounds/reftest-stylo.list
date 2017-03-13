@@ -8,26 +8,26 @@ include vector/reftest-stylo.list
 == layers-layer-count-cascade-2.xhtml layers-layer-count-cascade-2.xhtml
 fails == layers-layer-count-inheritance-2.xhtml layers-layer-count-inheritance-2.xhtml
 == viewport-translucent-color-1.html viewport-translucent-color-1.html
-fails == viewport-translucent-color-2.html viewport-translucent-color-2.html
-fails == viewport-translucent-color-3.html viewport-translucent-color-3.html
+== viewport-translucent-color-2.html viewport-translucent-color-2.html
+== viewport-translucent-color-3.html viewport-translucent-color-3.html
 == viewport-translucent-color-ref.html viewport-translucent-color-ref.html
 == iframe-translucent-color-1.html iframe-translucent-color-1.html
 == translucent-color-1.html translucent-color-1.html
-fails == translucent-color-2.html translucent-color-2.html
+== translucent-color-2.html translucent-color-2.html
 fuzzy-if(skiaContent,1,1024) == translucent-color-3.html translucent-color-3.html
 == translucent-color-ref.html translucent-color-ref.html
 == root-element-display-none-1.html root-element-display-none-1.html
-fails == continuous-inline-1a.html continuous-inline-1a.html
-fails == continuous-inline-1b.html continuous-inline-1b.html
-fails == continuous-inline-1c.html continuous-inline-1c.html
-fails == continuous-inline-1d.html continuous-inline-1d.html
-fails == continuous-inline-2a.html continuous-inline-2a.html
-fails == continuous-inline-2b.html continuous-inline-2b.html
-fails == continuous-inline-3.html continuous-inline-3.html
-fails == continuous-inline-4a.html continuous-inline-4a.html
-fails == continuous-inline-4b.html continuous-inline-4b.html
-fails == continuous-inline-5a.html continuous-inline-5a.html
-fails == continuous-inline-5b.html continuous-inline-5b.html
+== continuous-inline-1a.html continuous-inline-1a.html
+== continuous-inline-1b.html continuous-inline-1b.html
+== continuous-inline-1c.html continuous-inline-1c.html
+== continuous-inline-1d.html continuous-inline-1d.html
+== continuous-inline-2a.html continuous-inline-2a.html
+== continuous-inline-2b.html continuous-inline-2b.html
+== continuous-inline-3.html continuous-inline-3.html
+== continuous-inline-4a.html continuous-inline-4a.html
+== continuous-inline-4b.html continuous-inline-4b.html
+== continuous-inline-5a.html continuous-inline-5a.html
+== continuous-inline-5b.html continuous-inline-5b.html
 == background-redraw-237766.html background-redraw-237766.html
 
 == background-clip-1.html background-clip-1.html
@@ -135,10 +135,10 @@ fails == background-moz-default-background-color.html background-moz-default-bac
 fails == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
 
-fails HTTP == root-background-1.html root-background-1.html
-fails HTTP == root-background-1.html root-background-1.html
+HTTP == root-background-1.html root-background-1.html
+HTTP == root-background-1.html root-background-1.html
 
-== really-big-background.html really-big-background.html # Bug 1341690
+fails == really-big-background.html really-big-background.html # Bug 1341690
 fails == body-background.html body-background.html # Bug 1339711
 fails == table-background.html table-background.html # Bug 1339711
 fails == table-background-print.html table-background-print.html
