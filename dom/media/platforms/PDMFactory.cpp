@@ -53,7 +53,6 @@ namespace mozilla {
 
 extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
-extern already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule();
 
 class PDMFactoryImpl final
 {
@@ -164,7 +163,7 @@ PDMFactory::PDMFactory()
 {
   EnsureInit();
   CreatePDMs();
-  CreateNullPDM();
+  CreateBlankPDM();
 }
 
 PDMFactory::~PDMFactory()
@@ -204,9 +203,9 @@ PDMFactory::EnsureInit() const
 already_AddRefed<MediaDataDecoder>
 PDMFactory::CreateDecoder(const CreateDecoderParams& aParams)
 {
-  if (aParams.mUseNullDecoder) {
-    MOZ_ASSERT(mNullPDM);
-    return CreateDecoderWithPDM(mNullPDM, aParams);
+  if (aParams.mUseBlankDecoder) {
+    MOZ_ASSERT(mBlankPDM);
+    return CreateDecoderWithPDM(mBlankPDM, aParams);
   }
 
   const TrackInfo& config = aParams.mConfig;
@@ -291,7 +290,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
     return nullptr;
   }
 
-  if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseNullDecoder) {
+  if (MP4Decoder::IsH264(config.mMimeType) && !aParams.mUseBlankDecoder) {
     RefPtr<H264Converter> h = new H264Converter(aPDM, aParams);
     const nsresult rv = h->GetLastError();
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
@@ -403,10 +402,10 @@ PDMFactory::CreatePDMs()
 }
 
 void
-PDMFactory::CreateNullPDM()
+PDMFactory::CreateBlankPDM()
 {
-  mNullPDM = CreateNullDecoderModule();
-  MOZ_ASSERT(mNullPDM && NS_SUCCEEDED(mNullPDM->Startup()));
+  mBlankPDM = CreateBlankDecoderModule();
+  MOZ_ASSERT(mBlankPDM && NS_SUCCEEDED(mBlankPDM->Startup()));
 }
 
 bool

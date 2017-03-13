@@ -665,7 +665,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
         : *ownerData.mOriginalInfo->GetAsAudioInfo(),
         ownerData.mTaskQueue,
         mOwner->mCrashHelper,
-        ownerData.mIsNullDecode,
+        ownerData.mIsBlankDecode,
         &result,
         TrackInfo::kAudioTrack,
         &mOwner->OnTrackWaitingForKeyProducer()
@@ -684,7 +684,7 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
         mOwner->mKnowsCompositor,
         mOwner->GetImageContainer(),
         mOwner->mCrashHelper,
-        ownerData.mIsNullDecode,
+        ownerData.mIsBlankDecode,
         &result,
         TrackType::kVideoTrack,
         &mOwner->OnTrackWaitingForKeyProducer()
@@ -3047,26 +3047,26 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
 }
 
 void
-MediaFormatReader::SetVideoNullDecode(bool aIsNullDecode)
+MediaFormatReader::SetVideoBlankDecode(bool aIsBlankDecode)
 {
   MOZ_ASSERT(OnTaskQueue());
-  return SetNullDecode(TrackType::kVideoTrack, aIsNullDecode);
+  return SetBlankDecode(TrackType::kVideoTrack, aIsBlankDecode);
 }
 
 void
-MediaFormatReader::SetNullDecode(TrackType aTrack, bool aIsNullDecode)
+MediaFormatReader::SetBlankDecode(TrackType aTrack, bool aIsBlankDecode)
 {
   MOZ_ASSERT(OnTaskQueue());
 
   auto& decoder = GetDecoderData(aTrack);
-  if (decoder.mIsNullDecode == aIsNullDecode) {
+  if (decoder.mIsBlankDecode == aIsBlankDecode) {
     return;
   }
 
-  LOG("%s, decoder.mIsNullDecode = %d => aIsNullDecode = %d",
-      TrackTypeToStr(aTrack), decoder.mIsNullDecode, aIsNullDecode);
+  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
+      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
 
-  decoder.mIsNullDecode = aIsNullDecode;
+  decoder.mIsBlankDecode = aIsBlankDecode;
   ShutdownDecoder(aTrack);
 }
 
