@@ -2462,6 +2462,11 @@ NS_IMETHODIMP
 HttpChannelChild::OpenAlternativeOutputStream(const nsACString & aType, nsIOutputStream * *_retval)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  if (!mIPCOpen) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   RefPtr<AltDataOutputStreamChild> stream =
     static_cast<AltDataOutputStreamChild*>(gNeckoChild->SendPAltDataOutputStreamConstructor(nsCString(aType), this));
   stream.forget(_retval);
