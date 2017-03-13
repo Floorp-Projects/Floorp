@@ -631,8 +631,8 @@ TextEditRules::WillInsertText(EditAction aAction,
     return NS_OK;
   }
 
-  int32_t start = 0;
-  int32_t end = 0;
+  uint32_t start = 0;
+  uint32_t end = 0;
 
   // handle password field docs
   if (IsPasswordEditor()) {
@@ -855,7 +855,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // manage the password buffer
-    int32_t start, end;
+    uint32_t start, end;
     nsContentUtils::GetSelectionInTextControl(aSelection,
                                               mTextEditor->GetRoot(),
                                               start, end);
@@ -872,7 +872,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
     // Collapsed selection.
     if (end == start) {
       // Deleting back.
-      if (nsIEditor::ePrevious == aCollapsedAction && 0<start) {
+      if (nsIEditor::ePrevious == aCollapsedAction && start > 0) {
         mPasswordText.Cut(start-1, 1);
       }
       // Deleting forward.
@@ -1277,15 +1277,15 @@ TextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
       return rv;
     }
 
-    int32_t start, end;
+    uint32_t start, end;
     nsContentUtils::GetSelectionInTextControl(aSelection,
                                               mTextEditor->GetRoot(),
                                               start, end);
 
     TextComposition* composition = mTextEditor->GetComposition();
-    int32_t oldCompStrLength = composition ? composition->String().Length() : 0;
+    uint32_t oldCompStrLength = composition ? composition->String().Length() : 0;
 
-    const int32_t selectionLength = end - start;
+    const uint32_t selectionLength = end - start;
     const int32_t resultingDocLength = docLength - selectionLength - oldCompStrLength;
     if (resultingDocLength >= aMaxLength) {
       // This call is guaranteed to reduce the capacity of the string, so it
@@ -1327,7 +1327,7 @@ TextEditRules::ResetIMETextPWBuf()
 }
 
 void
-TextEditRules::RemoveIMETextFromPWBuf(int32_t& aStart,
+TextEditRules::RemoveIMETextFromPWBuf(uint32_t& aStart,
                                       nsAString* aIMEString)
 {
   MOZ_ASSERT(aIMEString);
@@ -1371,7 +1371,7 @@ TextEditRules::HideLastPWInput()
   NS_ENSURE_STATE(mTextEditor);
   RefPtr<Selection> selection = mTextEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  int32_t start, end;
+  uint32_t start, end;
   nsContentUtils::GetSelectionInTextControl(selection, mTextEditor->GetRoot(),
                                             start, end);
 
@@ -1379,6 +1379,8 @@ TextEditRules::HideLastPWInput()
   NS_ENSURE_TRUE(selNode, NS_OK);
 
   selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText);
+  // XXXbz Selection::Collapse/Extend take int32_t, but there are tons of
+  // callsites... Converting all that is a battle for another day.
   selection->Collapse(selNode, start);
   if (start != end) {
     selection->Extend(selNode, end);

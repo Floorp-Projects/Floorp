@@ -24,7 +24,7 @@ random == delaytest.html?transparent-animation.gif delaytest.html?transparent-an
 fails == one-color-offset.gif one-color-offset.gif
 
 # Bug 1068230
-fails == tile-transform.html tile-transform.html
+== tile-transform.html tile-transform.html
 
 # Bug 1234077
 == truncated-framerect.html truncated-framerect.html

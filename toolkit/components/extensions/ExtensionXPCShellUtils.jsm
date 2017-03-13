@@ -12,6 +12,10 @@ Components.utils.import("resource://gre/modules/ExtensionUtils.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonTestUtils",
+                                  "resource://testing-common/AddonTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -54,12 +58,12 @@ function frameScript() {
   Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
 
   ExtensionContent.init(this);
-  addEventListener("unload", () => {
+  this.addEventListener("unload", () => { // eslint-disable-line mozilla/balanced-listeners
     ExtensionContent.uninit(this);
   });
 }
 
-const FRAME_SCRIPT = `data:text/javascript,(${frameScript}).call(this)`;
+const FRAME_SCRIPT = `data:text/javascript,(${encodeURI(frameScript)}).call(this)`;
 
 
 const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeURI(
@@ -109,6 +113,7 @@ class ContentPage {
                                             .QueryInterface(Ci.nsIWebNavigation);
 
     chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.useGlobalHistory = false;
     chromeShell.loadURI(XUL_URL, 0, null, null, null);
 
     await promiseObserved("chrome-document-global-created",
@@ -118,6 +123,7 @@ class ContentPage {
 
     let browser = chromeDoc.createElement("browser");
     browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
 
     let awaitFrameLoader = Promise.resolve();
     if (this.remote) {
@@ -152,9 +158,13 @@ class ContentPage {
 }
 
 class ExtensionWrapper {
-  constructor(extension, testScope) {
-    this.extension = extension;
+  constructor(testScope, extension = null) {
     this.testScope = testScope;
+
+    this.extension = null;
+
+    this.handleResult = this.handleResult.bind(this);
+    this.handleMessage = this.handleMessage.bind(this);
 
     this.state = "uninitialized";
 
@@ -166,57 +176,103 @@ class ExtensionWrapper {
 
     this.messageQueue = new Set();
 
-    this.attachListeners();
 
     this.testScope.do_register_cleanup(() => {
-      if (this.messageQueue.size) {
-        let names = Array.from(this.messageQueue, ([msg]) => msg);
-        this.testScope.equal(JSON.stringify(names), "[]", "message queue is empty");
-      }
-      if (this.messageAwaiter.size) {
-        let names = Array.from(this.messageAwaiter.keys());
-        this.testScope.equal(JSON.stringify(names), "[]", "no tasks awaiting on messages");
-      }
-    });
+      this.clearMessageQueues();
 
-    this.testScope.do_register_cleanup(() => {
       if (this.state == "pending" || this.state == "running") {
         this.testScope.equal(this.state, "unloaded", "Extension left running at test shutdown");
         return this.unload();
-      } else if (extension.state == "unloading") {
+      } else if (this.state == "unloading") {
         this.testScope.equal(this.state, "unloaded", "Extension not fully unloaded at test shutdown");
       }
+      this.destroy();
     });
 
-    this.testScope.do_print(`Extension loaded`);
+    if (extension) {
+      this.id = extension.id;
+      this.attachExtension(extension);
+    }
   }
 
-  attachListeners() {
-    /* eslint-disable mozilla/balanced-listeners */
-    this.extension.on("test-eq", (kind, pass, msg, expected, actual) => {
-      this.testScope.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
-    });
-    this.extension.on("test-log", (kind, pass, msg) => {
-      this.testScope.do_print(msg);
-    });
-    this.extension.on("test-result", (kind, pass, msg) => {
-      this.testScope.ok(pass, msg);
-    });
-    this.extension.on("test-done", (kind, pass, msg, expected, actual) => {
-      this.testScope.ok(pass, msg);
-      this.testResolve(msg);
-    });
+  destroy() {
+    // This method should be implemented in subclasses which need to
+    // perform cleanup when destroyed.
+  }
 
-    this.extension.on("test-message", (kind, msg, ...args) => {
-      let handler = this.messageHandler.get(msg);
-      if (handler) {
-        handler(...args);
-      } else {
-        this.messageQueue.add([msg, ...args]);
-        this.checkMessages();
+  attachExtension(extension) {
+    if (extension === this.extension) {
+      return;
+    }
+
+    if (this.extension) {
+      this.extension.off("test-eq", this.handleResult);
+      this.extension.off("test-log", this.handleResult);
+      this.extension.off("test-result", this.handleResult);
+      this.extension.off("test-done", this.handleResult);
+      this.extension.off("test-message", this.handleMessage);
+      this.clearMessageQueues();
+    }
+    this.extension = extension;
+
+    extension.on("test-eq", this.handleResult);
+    extension.on("test-log", this.handleResult);
+    extension.on("test-result", this.handleResult);
+    extension.on("test-done", this.handleResult);
+    extension.on("test-message", this.handleMessage);
+
+    this.testScope.do_print(`Extension attached`);
+  }
+
+  clearMessageQueues() {
+    if (this.messageQueue.size) {
+      let names = Array.from(this.messageQueue, ([msg]) => msg);
+      this.testScope.equal(JSON.stringify(names), "[]", "message queue is empty");
+      this.messageQueue.clear();
+    }
+    if (this.messageAwaiter.size) {
+      let names = Array.from(this.messageAwaiter.keys());
+      this.testScope.equal(JSON.stringify(names), "[]", "no tasks awaiting on messages");
+      for (let promise of this.messageAwaiter.values()) {
+        promise.reject();
       }
-    });
-    /* eslint-enable mozilla/balanced-listeners */
+      this.messageAwaiter.clear();
+    }
+  }
+
+  handleResult(kind, pass, msg, expected, actual) {
+    switch (kind) {
+      case "test-eq":
+        this.testScope.ok(pass, `${msg} - Expected: ${expected}, Actual: ${actual}`);
+        break;
+
+      case "test-log":
+        this.testScope.do_print(msg);
+        break;
+
+      case "test-result":
+        this.testScope.ok(pass, msg);
+        break;
+
+      case "test-done":
+        this.testScope.ok(pass, msg);
+        this.testResolve(msg);
+        break;
+    }
+  }
+
+  handleMessage(kind, msg, ...args) {
+    let handler = this.messageHandler.get(msg);
+    if (handler) {
+      handler(...args);
+    } else {
+      this.messageQueue.add([msg, ...args]);
+      this.checkMessages();
+    }
+  }
+
+  awaitStartup() {
+    return this.startupPromise;
   }
 
   startup() {
@@ -225,7 +281,7 @@ class ExtensionWrapper {
     }
     this.state = "pending";
 
-    return this.extension.startup().then(
+    this.startupPromise = this.extension.startup().then(
       result => {
         this.state = "running";
 
@@ -236,6 +292,8 @@ class ExtensionWrapper {
 
         return Promise.reject(error);
       });
+
+    return this.startupPromise;
   }
 
   async unload() {
@@ -244,7 +302,11 @@ class ExtensionWrapper {
     }
     this.state = "unloading";
 
-    await this.extension.shutdown();
+    if (this.addon) {
+      this.addon.uninstall();
+    } else {
+      await this.extension.shutdown();
+    }
 
     this.state = "unloaded";
   }
@@ -300,10 +362,10 @@ class ExtensionWrapper {
   }
 
   awaitMessage(msg) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this.checkDuplicateListeners(msg);
 
-      this.messageAwaiter.set(msg, {resolve});
+      this.messageAwaiter.set(msg, {resolve, reject});
       this.checkMessages();
     });
   }
@@ -311,6 +373,187 @@ class ExtensionWrapper {
   onMessage(msg, callback) {
     this.checkDuplicateListeners(msg);
     this.messageHandler.set(msg, callback);
+  }
+}
+
+class AOMExtensionWrapper extends ExtensionWrapper {
+  constructor(testScope, xpiFile, installType) {
+    super(testScope);
+
+    this.onEvent = this.onEvent.bind(this);
+
+    this.file = xpiFile;
+    this.installType = installType;
+
+    this.cleanupFiles = [xpiFile];
+
+    Management.on("ready", this.onEvent);
+    Management.on("shutdown", this.onEvent);
+    Management.on("startup", this.onEvent);
+
+    AddonTestUtils.on("addon-manager-shutdown", this.onEvent);
+    AddonTestUtils.on("addon-manager-started", this.onEvent);
+
+    AddonManager.addAddonListener(this);
+  }
+
+  destroy() {
+    this.id = null;
+    this.addon = null;
+
+    Management.off("ready", this.onEvent);
+    Management.off("shutdown", this.onEvent);
+    Management.off("startup", this.onEvent);
+
+    AddonTestUtils.off("addon-manager-shutdown", this.onEvent);
+    AddonTestUtils.off("addon-manager-started", this.onEvent);
+
+    AddonManager.removeAddonListener(this);
+
+    for (let file of this.cleanupFiles.splice(0)) {
+      try {
+        Services.obs.notifyObservers(file, "flush-cache-entry", null);
+        file.remove(false);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    }
+  }
+
+  setRestarting() {
+    if (this.state !== "restarting") {
+      this.startupPromise = new Promise(resolve => {
+        this.resolveStartup = resolve;
+      });
+    }
+    this.state = "restarting";
+  }
+
+  onEnabling(addon) {
+    if (addon.id === this.id) {
+      this.setRestarting();
+    }
+  }
+
+  onInstalling(addon) {
+    if (addon.id === this.id) {
+      this.setRestarting();
+    }
+  }
+
+  onInstalled(addon) {
+    if (addon.id === this.id) {
+      this.addon = addon;
+    }
+  }
+
+  onUninstalled(addon) {
+    if (addon.id === this.id) {
+      this.destroy();
+    }
+  }
+
+  onEvent(kind, ...args) {
+    switch (kind) {
+      case "addon-manager-started":
+        AddonManager.getAddonByID(this.id).then(addon => {
+          this.addon = addon;
+        });
+        // FALLTHROUGH
+      case "addon-manager-shutdown":
+        this.addon = null;
+
+        this.setRestarting();
+        break;
+
+      case "startup": {
+        let [extension] = args;
+        if (extension.id === this.id) {
+          this.attachExtension(extension);
+          this.state = "pending";
+        }
+        break;
+      }
+
+      case "shutdown": {
+        let [extension] = args;
+        if (extension.id === this.id && this.state !== "restarting") {
+          this.state = "unloaded";
+        }
+        break;
+      }
+
+      case "ready": {
+        let [extension] = args;
+        if (extension.id === this.id) {
+          this.state = "running";
+          this.resolveStartup(extension);
+        }
+        break;
+      }
+    }
+  }
+
+  _install(xpiFile) {
+    if (this.installType === "temporary") {
+      return AddonManager.installTemporaryAddon(xpiFile).then(addon => {
+        this.id = addon.id;
+        this.addon = addon;
+
+        return this.startupPromise;
+      }).catch(e => {
+        this.state = "unloaded";
+        return Promise.reject(e);
+      });
+    } else if (this.installType === "permanent") {
+      return AddonManager.getInstallForFile(xpiFile).then(install => {
+        let listener = {
+          onInstallFailed: () => {
+            this.state = "unloaded";
+            this.resolveStartup(Promise.reject(new Error("Install failed")));
+          },
+          onInstallEnded: (install, newAddon) => {
+            this.id = newAddon.id;
+            this.addon = newAddon;
+          },
+        };
+
+        install.addListener(listener);
+        install.install();
+
+        return this.startupPromise;
+      });
+    }
+  }
+
+  get version() {
+    return this.addon && this.addon.version;
+  }
+
+  startup() {
+    if (this.state != "uninitialized") {
+      throw new Error("Extension already started");
+    }
+
+    this.state = "pending";
+    this.startupPromise = new Promise(resolve => {
+      this.resolveStartup = resolve;
+    });
+
+    return this._install(this.file);
+  }
+
+  upgrade(data) {
+    this.startupPromise = new Promise(resolve => {
+      this.resolveStartup = resolve;
+    });
+    this.state = "restarting";
+
+    let xpiFile = Extension.generateXPI(data);
+
+    this.cleanupFiles.push(xpiFile);
+
+    return this._install(xpiFile);
   }
 }
 
@@ -408,9 +651,15 @@ var ExtensionTestUtils = {
   },
 
   loadExtension(data) {
+    if (data.useAddonManager) {
+      let xpiFile = Extension.generateXPI(data);
+
+      return new AOMExtensionWrapper(this.currentScope, xpiFile, data.useAddonManager);
+    }
+
     let extension = Extension.generate(data);
 
-    return new ExtensionWrapper(extension, this.currentScope);
+    return new ExtensionWrapper(this.currentScope, extension);
   },
 
   get remoteContentScripts() {

@@ -1133,10 +1133,8 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
     }
 }
 
-#define DISPLAY1_REGISTRY_KEY \
-    HKEY_CURRENT_USER, "Software\\Microsoft\\Avalon.Graphics\\DISPLAY1"
-
-#define ENHANCED_CONTRAST_VALUE_NAME "EnhancedContrastLevel"
+#define ENHANCED_CONTRAST_REGISTRY_KEY \
+    HKEY_CURRENT_USER, "Software\\Microsoft\\Avalon.Graphics\\DISPLAY1\\EnhancedContrastLevel"
 
 void
 gfxWindowsPlatform::SetupClearTypeParams()
@@ -1203,14 +1201,10 @@ gfxWindowsPlatform::SetupClearTypeParams()
             contrast = contrast;
         } else {
             HKEY hKey;
-            LONG res = RegOpenKeyExA(DISPLAY1_REGISTRY_KEY,
-                                     0, KEY_READ, &hKey);
-            if (res == ERROR_SUCCESS) {
-                res = RegQueryValueExA(hKey, ENHANCED_CONTRAST_VALUE_NAME,
-                                       nullptr, nullptr, nullptr, nullptr);
-                if (res == ERROR_SUCCESS) {
-                    contrast = defaultRenderingParams->GetEnhancedContrast();
-                }
+            if (RegOpenKeyExA(ENHANCED_CONTRAST_REGISTRY_KEY,
+                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                contrast = defaultRenderingParams->GetEnhancedContrast();
                 RegCloseKey(hKey);
             } else {
                 contrast = 1.0;
@@ -1882,13 +1876,6 @@ gfxWindowsPlatform::CreateHardwareVsyncSource()
 
   RefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
   return d3dVsyncSource.forget();
-}
-
-bool
-gfxWindowsPlatform::SupportsApzTouchInput() const
-{
-  int value = gfxPrefs::TouchEventsEnabled();
-  return value == 1 || value == 2;
 }
 
 void

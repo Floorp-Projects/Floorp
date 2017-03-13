@@ -36,7 +36,7 @@ struct ShapeUtils final
   // @param aRefBox The reference box of the basic shape.
   // @return The point of the center.
   static nsPoint ComputeCircleOrEllipseCenter(
-    StyleBasicShape* const aBasicShape,
+    const StyleBasicShape* aBasicShape,
     const nsRect& aRefBox);
 
   // Compute the radius for a circle.
@@ -44,7 +44,7 @@ struct ShapeUtils final
   // @param aRefBox the reference box of the circle.
   // @return The length of the radius in app units.
   static nscoord ComputeCircleRadius(
-    mozilla::StyleBasicShape* const aBasicShape,
+    const StyleBasicShape* aBasicShape,
     const nsPoint& aCenter, const nsRect& aRefBox);
 
   // Compute the radii for an ellipse.
@@ -53,14 +53,14 @@ struct ShapeUtils final
   // @return The radii of the ellipse in app units. The width and height
   // represent the x-axis and y-axis radii of the ellipse.
   static nsSize ComputeEllipseRadii(
-    mozilla::StyleBasicShape* const aBasicShape,
+    const StyleBasicShape* aBasicShape,
     const nsPoint& aCenter, const nsRect& aRefBox);
 
   // Compute the rect for an inset.
   // @param aRefBox the reference box of the inset.
   // @return The inset rect in app units.
   static nsRect ComputeInsetRect(
-    mozilla::StyleBasicShape* const aBasicShape,
+    const StyleBasicShape* aBasicShape,
     const nsRect& aRefBox);
 
   // Compute the radii for an inset.
@@ -69,10 +69,18 @@ struct ShapeUtils final
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
   static bool ComputeInsetRadii(
-    mozilla::StyleBasicShape* const aBasicShape,
+    const StyleBasicShape* aBasicShape,
     const nsRect& aInsetRect,
     const nsRect& aRefBox,
     nscoord aRadii[8]);
+
+  // Compute the vertices for a polygon.
+  // @param aRefBox the reference box of the polygon.
+  // @return The vertices in app units; the coordinate space is the same
+  //         as aRefBox.
+  static nsTArray<nsPoint> ComputePolygonVertices(
+    const StyleBasicShape* aBasicShape,
+    const nsRect& aRefBox);
 };
 
 } // namespace mozilla

@@ -94,10 +94,10 @@ impl Device {
         self.viewport_override.as_ref().map(|v| {
             Size2D::new(Au::from_f32_px(v.size.width),
                         Au::from_f32_px(v.size.height))
-        }).unwrap_or_else(|| {
-            // TODO(emilio): Grab from pres context.
-            Size2D::new(Au::from_f32_px(1024.0),
-                        Au::from_f32_px(768.0))
+        }).unwrap_or_else(|| unsafe {
+            // TODO(emilio): Need to take into account scrollbars.
+            Size2D::new(Au((*self.pres_context).mVisibleArea.width),
+                        Au((*self.pres_context).mVisibleArea.height))
         })
     }
 }
@@ -137,8 +137,15 @@ impl ToCss for Expression {
     }
 }
 
+impl PartialEq for Expression {
+    fn eq(&self, other: &Expression) -> bool {
+        self.feature.mName == other.feature.mName &&
+            self.value == other.value && self.range == other.range
+    }
+}
+
 /// A resolution.
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Resolution {
     /// Dots per inch.
     Dpi(CSSFloat),
@@ -200,7 +207,7 @@ unsafe fn string_from_ns_string_buffer(buffer: *const nsStringBuffer) -> String 
 }
 
 /// A value found or expected in a media expression.
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum MediaExpressionValue {
     /// A length.
     Length(specified::Length),

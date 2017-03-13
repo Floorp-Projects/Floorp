@@ -911,10 +911,10 @@ mochitest-webgl:
 
 mochitest-style:
     description: "Mochitest plain run for style system"
-    suite: mochitest/mochitest-style
+    suite: mochitest/plain-style
     treeherder-symbol: tc-M(s)
     loopback-video: true
-    e10s: false
+    e10s: both
     run-on-projects:
         by-test-platform:
             linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
@@ -929,7 +929,29 @@ mochitest-style:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            - --mochitest-suite=mochitest-style
+            - --mochitest-suite=plain-style
+
+mochitest-chrome-style:
+    description: "Mochitest chrome run for style system"
+    suite: mochitest/chrome-style
+    treeherder-symbol: tc-M(cs)
+    loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/.*: [ 'stylo', 'autoland', 'mozilla-inbound', 'mozilla-central', 'try' ]
+            default: ['all']
+    e10s: false
+    mozharness:
+        mochitest-flavor: chrome
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                default:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=chrome-style
 
 reftest:
     description: "Reftest run"

@@ -11,7 +11,7 @@ info: >
   object that is defined once for each realm.
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var localArgs = function(){ "use strict"; return arguments; }();
 var otherArgs = (new other.Function('return arguments;'))();
 var localThrowTypeError = Object.getOwnPropertyDescriptor(localArgs, "callee").get;

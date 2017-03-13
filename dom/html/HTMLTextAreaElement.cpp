@@ -324,11 +324,14 @@ nsresult
 HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
                                       uint32_t aFlags)
 {
-  // Need to set the value changed flag here, so that
-  // nsTextControlFrame::UpdateValueDisplay retrieves the correct value
-  // if needed.
-  SetValueChanged(true);
-  aFlags |= nsTextEditorState::eSetValue_Notify;
+  // Need to set the value changed flag here if our value has in fact changed
+  // (i.e. if eSetValue_Notify is in aFlags), so that
+  // nsTextControlFrame::UpdateValueDisplay retrieves the correct value if
+  // needed.
+  if (aFlags & nsTextEditorState::eSetValue_Notify) {
+    SetValueChanged(true);
+  }
+
   if (!mState.SetValue(aValue, aFlags)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -350,7 +353,9 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue)
   GetValueInternal(currentValue, true);
 
   nsresult rv =
-    SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent);
+    SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
+                             nsTextEditorState::eSetValue_Notify |
+                             nsTextEditorState::eSetValue_MoveCursorToEnd);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFocusedValue.Equals(currentValue)) {
@@ -363,7 +368,10 @@ HTMLTextAreaElement::SetValue(const nsAString& aValue)
 NS_IMETHODIMP 
 HTMLTextAreaElement::SetUserInput(const nsAString& aValue)
 {
-  return SetValueInternal(aValue, nsTextEditorState::eSetValue_BySetUserInput);
+  return SetValueInternal(aValue,
+                          nsTextEditorState::eSetValue_BySetUserInput |
+                          nsTextEditorState::eSetValue_Notify|
+                          nsTextEditorState::eSetValue_MoveCursorToEnd);
 }
 
 NS_IMETHODIMP
@@ -690,255 +698,55 @@ HTMLTextAreaElement::GetTextLength(int32_t *aTextLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::GetSelectionStart(int32_t *aSelectionStart)
-{
-  NS_ENSURE_ARG_POINTER(aSelectionStart);
-
-  ErrorResult error;
-  Nullable<uint32_t> selStart(GetSelectionStart(error));
-  if (error.Failed()) {
-    return error.StealNSResult();
-  }
-
-  *aSelectionStart = int32_t(selStart.Value());
-  return error.StealNSResult();
-}
-
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionStart(ErrorResult& aError)
 {
-  int32_t selStart, selEnd;
-  nsresult rv = GetSelectionRange(&selStart, &selEnd);
-
-  if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    return Nullable<uint32_t>(mState.GetSelectionProperties().GetStart());
-  }
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  uint32_t selStart, selEnd;
+  GetSelectionRange(&selStart, &selEnd, aError);
   return Nullable<uint32_t>(selStart);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionStart(int32_t aSelectionStart)
-{
-  ErrorResult error;
-  Nullable<uint32_t> selStart(aSelectionStart);
-  SetSelectionStart(selStart, error);
-  return error.StealNSResult();
 }
 
 void
 HTMLTextAreaElement::SetSelectionStart(const Nullable<uint32_t>& aSelectionStart,
                                        ErrorResult& aError)
 {
-  int32_t selStart = 0;
-  if (!aSelectionStart.IsNull()) {
-    selStart = aSelectionStart.Value();
-  }
-
-  if (mState.IsSelectionCached()) {
-    mState.GetSelectionProperties().SetStart(selStart);
-    return;
-  }
-
-  nsAutoString direction;
-  nsresult rv = GetSelectionDirection(direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-  int32_t start, end;
-  rv = GetSelectionRange(&start, &end);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-  start = selStart;
-  if (end < start) {
-    end = start;
-  }
-  rv = SetSelectionRange(start, end, direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::GetSelectionEnd(int32_t *aSelectionEnd)
-{
-  NS_ENSURE_ARG_POINTER(aSelectionEnd);
-
-  ErrorResult error;
-  Nullable<uint32_t> selEnd(GetSelectionEnd(error));
-  if (error.Failed()) {
-    return error.StealNSResult();
-  }
-
-  *aSelectionEnd = int32_t(selEnd.Value());
-  return NS_OK;
+  mState.SetSelectionStart(aSelectionStart, aError);
 }
 
 Nullable<uint32_t>
 HTMLTextAreaElement::GetSelectionEnd(ErrorResult& aError)
 {
-  int32_t selStart, selEnd;
-  nsresult rv = GetSelectionRange(&selStart, &selEnd);
-
-  if (NS_FAILED(rv) && mState.IsSelectionCached()) {
-    return Nullable<uint32_t>(mState.GetSelectionProperties().GetEnd());
-  }
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  uint32_t selStart, selEnd;
+  GetSelectionRange(&selStart, &selEnd, aError);
   return Nullable<uint32_t>(selEnd);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionEnd(int32_t aSelectionEnd)
-{
-  ErrorResult error;
-  Nullable<uint32_t> selEnd(aSelectionEnd);
-  SetSelectionEnd(selEnd, error);
-  return error.StealNSResult();
 }
 
 void
 HTMLTextAreaElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
                                      ErrorResult& aError)
 {
-  int32_t selEnd = 0;
-  if (!aSelectionEnd.IsNull()) {
-    selEnd = aSelectionEnd.Value();
-  }
-
-  if (mState.IsSelectionCached()) {
-    mState.GetSelectionProperties().SetEnd(selEnd);
-    return;
-  }
-
-  nsAutoString direction;
-  nsresult rv = GetSelectionDirection(direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-  int32_t start, end;
-  rv = GetSelectionRange(&start, &end);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-  end = selEnd;
-  if (start > end) {
-    start = end;
-  }
-  rv = SetSelectionRange(start, end, direction);
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  mState.SetSelectionEnd(aSelectionEnd, aError);
 }
 
-NS_IMETHODIMP
-HTMLTextAreaElement::GetSelectionRange(int32_t* aSelectionStart,
-                                       int32_t* aSelectionEnd)
+void
+HTMLTextAreaElement::GetSelectionRange(uint32_t* aSelectionStart,
+                                       uint32_t* aSelectionEnd,
+                                       ErrorResult& aRv)
 {
-  // Flush frames, because our editor state will want to work with the frame.
-  if (IsInComposedDoc()) {
-    GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
-  }
-
-  return mState.GetSelectionRange(aSelectionStart, aSelectionEnd);
-}
-
-static void
-DirectionToName(nsITextControlFrame::SelectionDirection dir, nsAString& aDirection)
-{
-  if (dir == nsITextControlFrame::eNone) {
-    aDirection.AssignLiteral("none");
-  } else if (dir == nsITextControlFrame::eForward) {
-    aDirection.AssignLiteral("forward");
-  } else if (dir == nsITextControlFrame::eBackward) {
-    aDirection.AssignLiteral("backward");
-  } else {
-    NS_NOTREACHED("Invalid SelectionDirection value");
-  }
-}
-
-nsresult
-HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection)
-{
-  ErrorResult error;
-  GetSelectionDirection(aDirection, error);
-  return error.StealNSResult();
+  return mState.GetSelectionRange(aSelectionStart, aSelectionEnd, aRv);
 }
 
 void
 HTMLTextAreaElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aError)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  if (formControlFrame) {
-    nsITextControlFrame::SelectionDirection dir;
-    rv = mState.GetSelectionDirection(&dir);
-    if (NS_SUCCEEDED(rv)) {
-      DirectionToName(dir, aDirection);
-      return;
-    }
-  }
-
-  if (mState.IsSelectionCached()) {
-    DirectionToName(mState.GetSelectionProperties().GetDirection(), aDirection);
-    return;
-  }
-
-  aError.Throw(rv);
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection)
-{
-  ErrorResult error;
-  SetSelectionDirection(aDirection, error);
-  return error.StealNSResult();
+  mState.GetSelectionDirectionString(aDirection, aError);
 }
 
 void
 HTMLTextAreaElement::SetSelectionDirection(const nsAString& aDirection,
                                            ErrorResult& aError)
 {
-  if (mState.IsSelectionCached()) {
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eNone;
-    if (aDirection.EqualsLiteral("forward")) {
-      dir = nsITextControlFrame::eForward;
-    } else if (aDirection.EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-    mState.GetSelectionProperties().SetDirection(dir);
-    return;
-  }
-
-  int32_t start, end;
-  nsresult rv = GetSelectionRange(&start, &end);
-  if (NS_SUCCEEDED(rv)) {
-    rv = SetSelectionRange(start, end, aDirection);
-  }
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-HTMLTextAreaElement::SetSelectionRange(int32_t aSelectionStart,
-                                       int32_t aSelectionEnd,
-                                       const nsAString& aDirection)
-{
-  ErrorResult error;
-  Optional<nsAString> dir;
-  dir = &aDirection;
-  SetSelectionRange(aSelectionStart, aSelectionEnd, dir, error);
-  return error.StealNSResult();
+  mState.SetSelectionDirection(aDirection, aError);
 }
 
 void
@@ -947,154 +755,51 @@ HTMLTextAreaElement::SetSelectionRange(uint32_t aSelectionStart,
                                        const Optional<nsAString>& aDirection,
                                        ErrorResult& aError)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-  if (textControlFrame) {
-    // Default to forward, even if not specified.
-    // Note that we don't currently support directionless selections, so
-    // "none" is treated like "forward".
-    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-    if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
-      dir = nsITextControlFrame::eBackward;
-    }
-
-    rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
-    if (NS_SUCCEEDED(rv)) {
-      rv = textControlFrame->ScrollSelectionIntoView();
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
-                                 true, false);
-      asyncDispatcher->PostDOMEvent();
-    }
-  }
-
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-  }
+  mState.SetSelectionRange(aSelectionStart, aSelectionEnd,
+                           aDirection, aError);
 }
 
 void
 HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
                                   ErrorResult& aRv)
 {
-  int32_t start, end;
-  aRv = GetSelectionRange(&start, &end);
-  if (aRv.Failed()) {
-    if (mState.IsSelectionCached()) {
-      start = mState.GetSelectionProperties().GetStart();
-      end = mState.GetSelectionProperties().GetEnd();
-      aRv = NS_OK;
-    }
-  }
-
-  SetRangeText(aReplacement, start, end, mozilla::dom::SelectionMode::Preserve,
-               aRv, start, end);
+  mState.SetRangeText(aReplacement, aRv);
 }
 
 void
 HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
                                   uint32_t aStart, uint32_t aEnd,
-                                  const SelectionMode& aSelectMode,
-                                  ErrorResult& aRv, int32_t aSelectionStart,
-                                  int32_t aSelectionEnd)
+                                  SelectionMode aSelectMode,
+                                  ErrorResult& aRv)
 {
-  if (aStart > aEnd) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return;
-  }
+  mState.SetRangeText(aReplacement, aStart, aEnd, aSelectMode, aRv);
+}
 
-  nsAutoString value;
-  GetValueInternal(value, false);
-  uint32_t inputValueLength = value.Length();
+void
+HTMLTextAreaElement::GetValueFromSetRangeText(nsAString& aValue)
+{
+  GetValueInternal(aValue, false);
+}
 
-  if (aStart > inputValueLength) {
-    aStart = inputValueLength;
-  }
-
-  if (aEnd > inputValueLength) {
-    aEnd = inputValueLength;
-  }
-
-  if (aSelectionStart == -1 && aSelectionEnd == -1) {
-    aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
-    if (aRv.Failed()) {
-      if (mState.IsSelectionCached()) {
-        aSelectionStart = mState.GetSelectionProperties().GetStart();
-        aSelectionEnd = mState.GetSelectionProperties().GetEnd();
-        aRv = NS_OK;
-      }
-    }
-  }
-
-  if (aStart <= aEnd) {
-    value.Replace(aStart, aEnd - aStart, aReplacement);
-    nsresult rv =
-      SetValueInternal(value, nsTextEditorState::eSetValue_ByContent);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-  }
-
-  uint32_t newEnd = aStart + aReplacement.Length();
-  int32_t delta =  aReplacement.Length() - (aEnd - aStart);
-
-  switch (aSelectMode) {
-    case mozilla::dom::SelectionMode::Select:
-    {
-      aSelectionStart = aStart;
-      aSelectionEnd = newEnd;
-    }
-    break;
-    case mozilla::dom::SelectionMode::Start:
-    {
-      aSelectionStart = aSelectionEnd = aStart;
-    }
-    break;
-    case mozilla::dom::SelectionMode::End:
-    {
-      aSelectionStart = aSelectionEnd = newEnd;
-    }
-    break;
-    case mozilla::dom::SelectionMode::Preserve:
-    {
-      if ((uint32_t)aSelectionStart > aEnd) {
-        aSelectionStart += delta;
-      } else if ((uint32_t)aSelectionStart > aStart) {
-        aSelectionStart = aStart;
-      }
-
-      if ((uint32_t)aSelectionEnd > aEnd) {
-        aSelectionEnd += delta;
-      } else if ((uint32_t)aSelectionEnd > aStart) {
-        aSelectionEnd = newEnd;
-      }
-    }
-    break;
-    default:
-      MOZ_CRASH("Unknown mode!");
-  }
-
-  Optional<nsAString> direction;
-  SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
+nsresult
+HTMLTextAreaElement::SetValueFromSetRangeText(const nsAString& aValue)
+{
+  return SetValueInternal(aValue,
+                          nsTextEditorState::eSetValue_ByContent |
+                          nsTextEditorState::eSetValue_Notify);
 }
 
 nsresult
 HTMLTextAreaElement::Reset()
 {
-  nsresult rv;
-
-  // To get the initial spellchecking, reset value to
-  // empty string before setting the default value.
-  rv = SetValue(EmptyString());
-  NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString resetVal;
   GetDefaultValue(resetVal);
-  rv = SetValue(resetVal);
+  SetValueChanged(false);
+
+  nsresult rv = SetValueInternal(resetVal,
+                                 nsTextEditorState::eSetValue_Internal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  SetValueChanged(false);
   return NS_OK;
 }
 

@@ -9,6 +9,7 @@
 
 #include <secmodt.h>
 #include <string>
+#include <vector>
 
 enum PwDataType { PW_NONE = 0, PW_FROMFILE = 1, PW_PLAINTEXT = 2 };
 typedef struct {
@@ -19,5 +20,6 @@ typedef struct {
 bool InitSlotPassword(void);
 bool DBLoginIfNeeded(const ScopedPK11SlotInfo &slot);
 std::string StringToHex(const ScopedSECItem &input);
+std::vector<char> ReadInputData(std::string &dataPath);
 
 #endif  // util_h__

@@ -204,7 +204,8 @@ config = {
         "jetpack-package-clipboard": ["--flavor=jetpack-package", "--subsuite=clipboard"],
         "jetpack-addon": ["--flavor=jetpack-addon"],
         "a11y": ["--flavor=a11y"],
-        "mochitest-style": ["--disable-e10s", "--failure-pattern-file=stylo-failures.md", "layout/style/test"],
+        "plain-style": ["--failure-pattern-file=stylo-failures.md", "layout/style/test"],
+        "chrome-style": ["--flavor=chrome", "--failure-pattern-file=../stylo-failures.md", "layout/style/test/chrome"],
     },
     # local reftest suites
     "all_reftest_suites": {

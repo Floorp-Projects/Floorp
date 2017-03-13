@@ -312,24 +312,25 @@ SEC_DerSignData(PLArenaPool *arena, SECItem *result,
     if (algID == SEC_OID_UNKNOWN) {
         switch (pk->keyType) {
             case rsaKey:
-                algID = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+                algID = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
                 break;
             case dsaKey:
                 /* get Signature length (= q_len*2) and work from there */
                 switch (PK11_SignatureLen(pk)) {
+                    case 320:
+                        algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
+                        break;
                     case 448:
                         algID = SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA224_DIGEST;
                         break;
                     case 512:
-                        algID = SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST;
-                        break;
                     default:
-                        algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
+                        algID = SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST;
                         break;
                 }
                 break;
             case ecKey:
-                algID = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+                algID = SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE;
                 break;
             default:
                 PORT_SetError(SEC_ERROR_INVALID_KEY);
@@ -468,13 +469,13 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
             break;
         case dsaKey:
             switch (hashAlgTag) {
-                case SEC_OID_UNKNOWN: /* default for DSA if not specified */
                 case SEC_OID_SHA1:
                     sigTag = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
                     break;
                 case SEC_OID_SHA224:
                     sigTag = SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA224_DIGEST;
                     break;
+                case SEC_OID_UNKNOWN: /* default for DSA if not specified */
                 case SEC_OID_SHA256:
                     sigTag = SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST;
                     break;
@@ -484,13 +485,13 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
             break;
         case ecKey:
             switch (hashAlgTag) {
-                case SEC_OID_UNKNOWN: /* default for ECDSA if not specified */
                 case SEC_OID_SHA1:
                     sigTag = SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE;
                     break;
                 case SEC_OID_SHA224:
                     sigTag = SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE;
                     break;
+                case SEC_OID_UNKNOWN: /* default for ECDSA if not specified */
                 case SEC_OID_SHA256:
                     sigTag = SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE;
                     break;

@@ -298,7 +298,7 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
     PK11SlotList * slotList = nullptr;
     char16_t** tokenNameList = nullptr;
     nsCOMPtr<nsITokenDialogs> dialogs;
-    char16_t *unicodeTokenChosen;
+    nsAutoString tokenStr;
     PK11SlotListElement *slotElement, *tmpSlot;
     uint32_t numSlots = 0, i = 0;
     bool canceled;
@@ -360,7 +360,7 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
         rv = dialogs->ChooseToken(m_ctx, (const char16_t**)tokenNameList,
-                                  numSlots, &unicodeTokenChosen, &canceled);
+                                  numSlots, tokenStr, &canceled);
     }
 		if (NS_FAILED(rv)) goto loser;
 
@@ -368,7 +368,6 @@ GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
 
         // Get the slot //
         slotElement = PK11_GetFirstSafe(slotList);
-        nsAutoString tokenStr(unicodeTokenChosen);
         while (slotElement) {
             if (tokenStr.Equals(NS_ConvertUTF8toUTF16(PK11_GetTokenName(slotElement->slot)))) {
                 *aSlot = slotElement->slot;

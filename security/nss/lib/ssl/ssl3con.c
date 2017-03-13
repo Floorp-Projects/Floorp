@@ -12575,7 +12575,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
     ssl3CipherSpec *crSpec;
     SSL3ContentType rType;
     sslBuffer *plaintext;
-    sslBuffer temp_buf;
+    sslBuffer temp_buf = { NULL, 0, 0 };
     SSL3AlertDescription alert = internal_error;
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
 
@@ -12632,25 +12632,11 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
     /* If we will be decompressing the buffer we need to decrypt somewhere
      * other than into databuf */
     if (crSpec->decompressor) {
-        temp_buf.buf = NULL;
-        temp_buf.space = 0;
         plaintext = &temp_buf;
     } else {
         plaintext = databuf;
     }
-
     plaintext->len = 0; /* filled in by Unprotect call below. */
-    if (plaintext->space < MAX_FRAGMENT_LENGTH) {
-        rv = sslBuffer_Grow(plaintext, MAX_FRAGMENT_LENGTH + 2048);
-        if (rv != SECSuccess) {
-            ssl_ReleaseSpecReadLock(ss); /*************************/
-            SSL_DBG(("%d: SSL3[%d]: HandleRecord, tried to get %d bytes",
-                     SSL_GETPID(), ss->fd, MAX_FRAGMENT_LENGTH + 2048));
-            /* sslBuffer_Grow has set a memory error code. */
-            /* Perhaps we should send an alert. (but we have no memory!) */
-            return SECFailure;
-        }
-    }
 
     /* We're waiting for another ClientHello, which will appear unencrypted.
      * Use the content type to tell whether this is should be discarded.
@@ -12663,6 +12649,18 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
         PORT_Assert(ss->ssl3.hs.ws == wait_client_hello);
         databuf->len = 0;
         return SECSuccess;
+    }
+
+    if (plaintext->space < MAX_FRAGMENT_LENGTH) {
+        rv = sslBuffer_Grow(plaintext, MAX_FRAGMENT_LENGTH + 2048);
+        if (rv != SECSuccess) {
+            ssl_ReleaseSpecReadLock(ss); /*************************/
+            SSL_DBG(("%d: SSL3[%d]: HandleRecord, tried to get %d bytes",
+                     SSL_GETPID(), ss->fd, MAX_FRAGMENT_LENGTH + 2048));
+            /* sslBuffer_Grow has set a memory error code. */
+            /* Perhaps we should send an alert. (but we have no memory!) */
+            return SECFailure;
+        }
     }
 
 #ifdef UNSAFE_FUZZER_MODE
@@ -12685,6 +12683,9 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
         ssl_ReleaseSpecReadLock(ss); /***************************/
 
         SSL_DBG(("%d: SSL3[%d]: decryption failed", SSL_GETPID(), ss->fd));
+
+        /* Clear the temp buffer used for decompression upon failure. */
+        sslBuffer_Clear(&temp_buf);
 
         if (IS_DTLS(ss) ||
             (ss->sec.isServer &&
@@ -12730,7 +12731,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
                              SSL3_COMPRESSION_MAX_EXPANSION));
                 /* sslBuffer_Grow has set a memory error code. */
                 /* Perhaps we should send an alert. (but we have no memory!) */
-                PORT_Free(plaintext->buf);
+                sslBuffer_Clear(&temp_buf);
                 return SECFailure;
             }
         }
@@ -12768,12 +12769,12 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *databuf)
                 }
             }
 
-            PORT_Free(plaintext->buf);
+            sslBuffer_Clear(&temp_buf);
             PORT_SetError(err);
             return SECFailure;
         }
 
-        PORT_Free(plaintext->buf);
+        sslBuffer_Clear(&temp_buf);
     }
 
     /*
