@@ -1490,14 +1490,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
   border-color: -moz-mac-focusring;
-  box-shadow: @focusRingShadow@;
-}
-
-@media (-moz-mac-yosemite-theme) {
-  #urlbar[focused="true"],
-  .searchbar-textbox[focused="true"] {
-    box-shadow: @yosemiteFocusRingShadow@;
-  }
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #urlbar-container {
@@ -1572,8 +1565,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #identity-box:-moz-focusring {
-  box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
-              0 0 2px 2px -moz-mac-focusring;
+  box-shadow: var(--focus-ring-box-shadow);
   border-inline-end-style: none;
   padding-inline-end: 5px;
 }
@@ -2070,7 +2062,7 @@ html|span.ac-emphasize-text-url {
 #editBMPanel_rows > row > textbox[focused="true"],
 #editBMPanel_rows > row > hbox > textbox[focused="true"] {
   border-color: -moz-mac-focusring !important;
-  box-shadow: @focusRingShadow@;
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 /**** HUD style buttons ****/
@@ -2090,7 +2082,7 @@ html|span.ac-emphasize-text-url {
 
 .editBookmarkPanelHeaderButton:-moz-focusring,
 .editBookmarkPanelBottomButton:-moz-focusring {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 .editBookmarkPanelBottomButton[default="true"] {
@@ -2144,7 +2136,7 @@ html|span.ac-emphasize-text-url {
 }
 
 #editBMPanel_newFolderButton:-moz-focusring {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #editBMPanel_newFolderButton .button-text {
@@ -2163,7 +2155,7 @@ html|span.ac-emphasize-text-url {
 }
 
 #editBMPanel_folderMenuList:-moz-focusring {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #editBMPanel_folderMenuList[open="true"],
@@ -2203,7 +2195,7 @@ html|span.ac-emphasize-text-url {
 #editBMPanel_folderTree:-moz-focusring,
 #editBMPanel_tagsSelector:-moz-focusring {
   border-color: -moz-mac-focusring;
-  box-shadow: @focusRingShadow@;
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #editBMPanel_folderTree {
@@ -2229,7 +2221,7 @@ html|span.ac-emphasize-text-url {
 
 #editBookmarkPanel .expander-up:-moz-focusring,
 #editBookmarkPanel .expander-down:-moz-focusring {
-  @hudButtonFocused@
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #editBookmarkPanel .expander-up:hover:active,
@@ -2533,7 +2525,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label-container:not([pinned]),
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-icon-image[pinned],
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-throbber[pinned] {
-  box-shadow: @focusRingShadow@;
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 #TabsToolbar {

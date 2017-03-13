@@ -21,6 +21,13 @@ menulist > menupopup {
   --arrowpanel-color: hsl(0,0%,10%);
   --arrowpanel-border-color: hsla(210,4%,10%,.05);
   --arrowpanel-border-radius: 3.5px;
+  --focus-ring-box-shadow: @focusRingShadow@;
+}
+
+@media (-moz-mac-yosemite-theme) {
+  :root {
+    --focus-ring-box-shadow: @yosemiteFocusRingShadow@;
+  }
 }
 
 /* ::::: root elements ::::: */
@@ -236,7 +243,7 @@ label[disabled="true"] {
 }
   
 .text-link:-moz-focusring {
-  box-shadow: @focusRingShadow@;
+  box-shadow: var(--focus-ring-box-shadow);
 }
 
 .toolbar-focustarget {

@@ -90,6 +90,9 @@
                     "cursive" => return Ok(FontFamily::Generic(atom!("cursive"))),
                     "fantasy" => return Ok(FontFamily::Generic(atom!("fantasy"))),
                     "monospace" => return Ok(FontFamily::Generic(atom!("monospace"))),
+                    % if product == "gecko":
+                        "-moz-fixed" => return Ok(FontFamily::Generic(atom!("-moz-fixed"))),
+                    % endif
 
                     // https://drafts.csswg.org/css-fonts/#propdef-font-family
                     // "Font family names that happen to be the same as a keyword value
@@ -135,7 +138,16 @@
                     FontFamily::FamilyName(ref name) => name.to_css(dest),
 
                     // All generic values accepted by the parser are known to not require escaping.
-                    FontFamily::Generic(ref name) => write!(dest, "{}", name),
+                    FontFamily::Generic(ref name) => {
+                        % if product == "gecko":
+                            // We should treat -moz-fixed as monospace
+                            if name == &atom!("-moz-fixed") {
+                                return write!(dest, "monospace");
+                            }
+                        % endif
+
+                        write!(dest, "{}", name)
+                    },
                 }
             }
         }

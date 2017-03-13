@@ -28,7 +28,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServoDeclarationBlock)
 
   static already_AddRefed<ServoDeclarationBlock>
-  FromCssText(const nsAString& aCssText);
+  FromCssText(const nsAString& aCssText,
+              const GeckoParserExtraData& aExtraData);
 
   RawServoDeclarationBlock* Raw() const { return mRaw; }
   RawServoDeclarationBlock* const* RefRaw() const {

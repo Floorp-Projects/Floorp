@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A utility class for CustomTabsActivity to extract information from intent.
  * For example, this class helps to extract exit-animation resource id.
@@ -40,6 +43,16 @@ class IntentUtil {
                 && (getActionButtonIcon(intent) != null)
                 && (getActionButtonDescription(intent) != null)
                 && (getActionButtonPendingIntent(intent) != null);
+    }
+
+    /**
+     * To determine whether the intent requires to add share action to menu item.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return true, if intent requires to add share action to menu item.
+     */
+    static boolean hasShareItem(@NonNull Intent intent) {
+        return intent.getBooleanExtra(CustomTabsIntent.EXTRA_DEFAULT_SHARE_MENU_ITEM, false);
     }
 
     /**
@@ -112,6 +125,41 @@ class IntentUtil {
     }
 
     /**
+     * To get titles for Menu Items from an intent.
+     * 3rd-party-app is able to add and customize up to five menu items. This method helps to
+     * get titles for each menu items.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return A list of string as title for each menu items
+     */
+    static List<String> getMenuItemsTitle(@NonNull Intent intent) {
+        final List<Bundle> bundles = getMenuItemsBundle(intent);
+        final List<String> titles = new ArrayList<>();
+        for (Bundle b : bundles) {
+            titles.add(b.getString(CustomTabsIntent.KEY_MENU_ITEM_TITLE));
+        }
+        return titles;
+    }
+
+    /**
+     * To get pending-intent for Menu Items from an intent.
+     * 3rd-party-app is able to add and customize up to five menu items. This method helps to
+     * get pending-intent for each menu items.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return A list of pending-intent for each menu items
+     */
+    static List<PendingIntent> getMenuItemsPendingIntent(@NonNull Intent intent) {
+        final List<Bundle> bundles = getMenuItemsBundle(intent);
+        final List<PendingIntent> intents = new ArrayList<>();
+        for (Bundle b : bundles) {
+            PendingIntent p = b.getParcelable(CustomTabsIntent.KEY_PENDING_INTENT);
+            intents.add(p);
+        }
+        return intents;
+    }
+
+    /**
      * To check whether the intent has necessary information to apply customize exit-animation.
      *
      * @param intent which to launch a Custom-Tabs-Activity
@@ -163,5 +211,19 @@ class IntentUtil {
      */
     private static Bundle getAnimationBundle(@NonNull Intent intent) {
         return intent.getBundleExtra(CustomTabsIntent.EXTRA_EXIT_ANIMATION_BUNDLE);
+    }
+
+    /**
+     * To extract bundles for Menu Items from an intent.
+     * 3rd-party-app is able to add and customize up to five menu items. This method helps to
+     * extract bundles to build menu items.
+     *
+     * @param intent which to launch a Custom-Tabs-Activity
+     * @return bundle for menu items, if any. Otherwise, an empty list.
+     */
+    private static List<Bundle> getMenuItemsBundle(@NonNull Intent intent) {
+        ArrayList<Bundle> extra = intent.getParcelableArrayListExtra(
+                CustomTabsIntent.EXTRA_MENU_ITEMS);
+        return (extra == null) ? new ArrayList<Bundle>() : extra;
     }
 }
