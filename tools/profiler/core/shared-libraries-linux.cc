@@ -94,7 +94,7 @@ dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 
   SharedLibrary shlib(libStart, libEnd, 0, getId(path),
                       nameStr, pathStr, nameStr, pathStr,
-                      "");
+                      "", "");
   info.AddSharedLibrary(shlib);
 
   return 0;
@@ -172,7 +172,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 
     SharedLibrary shlib(start, end, offset, getId(path),
                         nameStr, pathStr, nameStr, pathStr,
-                        "");
+                        "", "");
     info.AddSharedLibrary(shlib);
     if (count > 10000) {
       LOG("Get maps failed");
