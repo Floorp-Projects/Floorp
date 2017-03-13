@@ -1444,6 +1444,13 @@ interface nsINavHistoryService : nsISupports
    * Clear all TRANSITION_EMBED visits.
    */
   void clearEmbedVisits();
+
+  /**
+   * Generate a guid.
+   * Guids can be used for any places purposes (history, bookmarks, etc.)
+   * Returns null if the generation of the guid failed.
+   */
+  ACString makeGuid();
 };
 
 /**
