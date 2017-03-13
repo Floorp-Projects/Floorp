@@ -109,6 +109,10 @@ public:
 
   ChromiumCDMProxy* AsChromiumCDMProxy() override { return this; }
 
+  // Threadsafe. Note this may return a reference to a shutdown
+  // CDM, which will fail on all operations.
+  already_AddRefed<gmp::ChromiumCDMParent> GetCDMParent();
+
 private:
   void OnCDMCreated(uint32_t aPromiseId);
 
@@ -116,6 +120,7 @@ private:
 
   GMPCrashHelper* mCrashHelper;
 
+  Mutex mCDMMutex;
   RefPtr<gmp::ChromiumCDMParent> mCDM;
   RefPtr<AbstractThread> mGMPThread;
 };

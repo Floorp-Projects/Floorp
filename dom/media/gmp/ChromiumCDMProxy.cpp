@@ -24,7 +24,7 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
              aPersistentStateRequired,
              aMainThread)
   , mCrashHelper(aCrashHelper)
-  , mCDM(nullptr)
+  , mCDMMutex("ChromiumCDMProxy")
   , mGMPThread(GetGMPAbstractThread())
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -101,7 +101,10 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
                                 NS_LITERAL_CSTRING("GetCDM failed."));
             return;
           }
-          self->mCDM = cdm;
+          {
+            MutexAutoLock lock(self->mCDMMutex);
+            self->mCDM = cdm;
+          }
           self->OnCDMCreated(aPromiseId);
         },
         [self, aPromiseId](nsresult rv) {
@@ -127,13 +130,21 @@ ChromiumCDMProxy::OnCDMCreated(uint32_t aPromiseId)
                           NS_DISPATCH_NORMAL);
     return;
   }
-  // This should only be called once the CDM has been created.
-  MOZ_ASSERT(mCDM);
   MOZ_ASSERT(NS_IsMainThread());
   if (mKeys.IsNull()) {
     return;
   }
-  mKeys->OnCDMCreated(aPromiseId, mCDM->PluginId());
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  // This should only be called once the CDM has been created.
+  MOZ_ASSERT(cdm);
+  if (cdm) {
+    mKeys->OnCDMCreated(aPromiseId, cdm->PluginId());
+  } else {
+    // No CDM? Shouldn't be possible, but reject the promise anyway...
+    mKeys->RejectPromise(aPromiseId,
+                         NS_ERROR_DOM_INVALID_STATE_ERR,
+                         NS_LITERAL_CSTRING("Null CDM in OnCDMCreated()"));
+  }
 }
 
 #ifdef DEBUG
@@ -190,12 +201,13 @@ ChromiumCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   uint32_t sessionType = ToCDMSessionType(aSessionType);
   uint32_t initDataType = ToCDMInitDataType(aInitDataType);
 
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   mGMPThread->Dispatch(
     NewRunnableMethod<uint32_t,
                       uint32_t,
                       uint32_t,
                       uint32_t,
-                      nsTArray<uint8_t>>(mCDM,
+                      nsTArray<uint8_t>>(cdm,
                                          &gmp::ChromiumCDMParent::CreateSession,
                                          aCreateSessionToken,
                                          sessionType,
@@ -223,8 +235,9 @@ ChromiumCDMProxy::SetServerCertificate(PromiseId aPromiseId,
           aPromiseId,
           aCert.Length());
 
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   mGMPThread->Dispatch(NewRunnableMethod<uint32_t, nsTArray<uint8_t>>(
-    mCDM,
+    cdm,
     &gmp::ChromiumCDMParent::SetServerCertificate,
     aPromiseId,
     Move(aCert)));
@@ -241,8 +254,10 @@ ChromiumCDMProxy::UpdateSession(const nsAString& aSessionId,
           aPromiseId,
           aResponse.Length());
 
-  mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t, nsTArray<uint8_t>>(
-      mCDM,
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
+  mGMPThread->Dispatch(
+    NewRunnableMethod<nsCString, uint32_t, nsTArray<uint8_t>>(
+      cdm,
       &gmp::ChromiumCDMParent::UpdateSession,
       NS_ConvertUTF16toUTF8(aSessionId),
       aPromiseId,
@@ -258,8 +273,9 @@ ChromiumCDMProxy::CloseSession(const nsAString& aSessionId,
           NS_ConvertUTF16toUTF8(aSessionId).get(),
           aPromiseId);
 
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
-    mCDM,
+    cdm,
     &gmp::ChromiumCDMParent::CloseSession,
     NS_ConvertUTF16toUTF8(aSessionId),
     aPromiseId));
@@ -274,8 +290,9 @@ ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
           NS_ConvertUTF16toUTF8(aSessionId).get(),
           aPromiseId);
 
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   mGMPThread->Dispatch(NewRunnableMethod<nsCString, uint32_t>(
-    mCDM,
+    cdm,
     &gmp::ChromiumCDMParent::RemoveSession,
     NS_ConvertUTF16toUTF8(aSessionId),
     aPromiseId));
@@ -473,7 +490,7 @@ ChromiumCDMProxy::Capabilites()
 RefPtr<DecryptPromise>
 ChromiumCDMProxy::Decrypt(MediaRawData* aSample)
 {
-  RefPtr<gmp::ChromiumCDMParent> cdm = mCDM;
+  RefPtr<gmp::ChromiumCDMParent> cdm = GetCDMParent();
   RefPtr<MediaRawData> sample = aSample;
   return InvokeAsync(
     mGMPThread, __func__, [cdm, sample]() { return cdm->Decrypt(sample); });
@@ -493,6 +510,14 @@ ChromiumCDMProxy::Terminated()
   if (!mKeys.IsNull()) {
     mKeys->Terminated();
   }
+}
+
+already_AddRefed<gmp::ChromiumCDMParent>
+ChromiumCDMProxy::GetCDMParent()
+{
+  MutexAutoLock lock(mCDMMutex);
+  RefPtr<gmp::ChromiumCDMParent> cdm = mCDM;
+  return cdm.forget();
 }
 
 } // namespace mozilla
