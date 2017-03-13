@@ -31,6 +31,10 @@ public:
   nsAutoRollup();
   ~nsAutoRollup();
 
+  // Convenience constructor that creates a nsAutoRollup and also sets
+  // the last rollup.
+  explicit nsAutoRollup(nsIContent* aRollup);
+
   static void SetLastRollup(nsIContent* aLastRollup);
   // Return the popup that was last rolled up, or null if there isn't one.
   static nsIContent* GetLastRollup();

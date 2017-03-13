@@ -20,6 +20,14 @@ nsAutoRollup::nsAutoRollup()
   sCount++;
 }
 
+nsAutoRollup::nsAutoRollup(nsIContent* aRollup)
+{
+  MOZ_ASSERT(!sLastRollup);
+  mWasClear = true;
+  sCount++;
+  SetLastRollup(aRollup);
+}
+
 nsAutoRollup::~nsAutoRollup()
 {
   if (sLastRollup && mWasClear) {
