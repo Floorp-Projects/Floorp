@@ -29,6 +29,7 @@ const BoxModelApp = createClass({
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
+    onToggleGeometryEditor: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],

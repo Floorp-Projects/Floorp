@@ -5997,8 +5997,27 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
   nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
   if (scrollFrame) {
     scrollFrame->NotifyApproximateFrameVisibilityUpdate();
+
+    bool ignoreDisplayPort = false;
+    if (nsLayoutUtils::IsMissingDisplayPortBaseRect(aFrame->GetContent())) {
+      // We can properly set the base rect for root scroll frames on top level
+      // and root content documents. Otherwise the base rect we compute might
+      // be way too big without the limiting that
+      // ScrollFrameHelper::DecideScrollableLayer does, so we just ignore the
+      // displayport in that case.
+      nsPresContext* pc = aFrame->PresContext();
+      if (scrollFrame->IsRootScrollFrameOfDocument() &&
+          (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
+        nsRect baseRect =
+          nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(aFrame));
+        nsLayoutUtils::SetDisplayPortBase(aFrame->GetContent(), baseRect);
+      } else {
+        ignoreDisplayPort = true;
+      }
+    }
+
     nsRect displayPort;
-    bool usingDisplayport =
+    bool usingDisplayport = !ignoreDisplayPort &&
       nsLayoutUtils::GetDisplayPortForVisibilityTesting(
         aFrame->GetContent(), &displayPort, RelativeTo::ScrollFrame);
     if (usingDisplayport) {
@@ -6565,10 +6584,11 @@ nsIPresShell::GetPointerCapturingContent(uint32_t aPointerId)
 }
 
 /* static */ void
-nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId,
-                                       uint16_t aPointerType, bool aIsPrimary)
+nsIPresShell::CheckPointerCaptureState(const WidgetPointerEvent* aPointerEvent)
 {
-  PointerCaptureInfo* captureInfo = GetPointerCaptureInfo(aPointerId);
+  PointerCaptureInfo* captureInfo =
+    GetPointerCaptureInfo(aPointerEvent->pointerId);
+
   if (captureInfo &&
       captureInfo->mPendingContent != captureInfo->mOverrideContent) {
     // cache captureInfo->mPendingContent since it may be changed in the pointer
@@ -6576,17 +6596,17 @@ nsIPresShell::CheckPointerCaptureState(uint32_t aPointerId,
     nsIContent* pendingContent = captureInfo->mPendingContent.get();
     if (captureInfo->mOverrideContent) {
       DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ false,
-                                           aPointerId, aPointerType, aIsPrimary,
+                                           aPointerEvent,
                                            captureInfo->mOverrideContent);
     }
     if (pendingContent) {
-      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ true, aPointerId,
-                                           aPointerType, aIsPrimary,
-                                           pendingContent);
+      DispatchGotOrLostPointerCaptureEvent(/* aIsGotCapture */ true,
+                                           aPointerEvent, pendingContent);
     }
+
     captureInfo->mOverrideContent = pendingContent;
     if (captureInfo->Empty()) {
-      sPointerCaptureList->Remove(aPointerId);
+      sPointerCaptureList->Remove(aPointerEvent->pointerId);
     }
   }
 }
@@ -7112,37 +7132,30 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
   return NS_OK;
 }
 
-class ReleasePointerCaptureCaller
+class ReleasePointerCaptureCaller final
 {
 public:
-  ReleasePointerCaptureCaller() :
-    mPointerId(0),
-    mPointerType(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN),
-    mIsPrimary(false),
-    mIsSet(false)
+  ReleasePointerCaptureCaller()
+    : mPointerEvent(nullptr)
   {
   }
   ~ReleasePointerCaptureCaller()
   {
-    if (mIsSet) {
-      nsIPresShell::ReleasePointerCapturingContent(mPointerId);
-      nsIPresShell::CheckPointerCaptureState(mPointerId, mPointerType,
-                                             mIsPrimary);
+    if (mPointerEvent) {
+      nsIPresShell::ReleasePointerCapturingContent(mPointerEvent->pointerId);
+      nsIPresShell::CheckPointerCaptureState(mPointerEvent);
     }
   }
-  void SetTarget(uint32_t aPointerId, uint16_t aPointerType, bool aIsPrimary)
+
+  void SetTarget(const WidgetPointerEvent* aPointerEvent)
   {
-    mPointerId = aPointerId;
-    mPointerType = aPointerType;
-    mIsPrimary = aIsPrimary;
-    mIsSet = true;
+    MOZ_ASSERT(aPointerEvent);
+    mPointerEvent = aPointerEvent;
   }
 
 private:
-  int32_t mPointerId;
-  uint16_t mPointerType;
-  bool mIsPrimary;
-  bool mIsSet;
+  // This is synchronously used inside PresShell::HandleEvent.
+  const WidgetPointerEvent* mPointerEvent;
 };
 
 bool
@@ -7566,9 +7579,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         AutoWeakFrame frameKeeper(frame);
         // Handle pending pointer capture before any pointer events except
         // gotpointercapture / lostpointercapture.
-        CheckPointerCaptureState(pointerEvent->pointerId,
-                                 pointerEvent->inputSource,
-                                 pointerEvent->mIsPrimary);
+        CheckPointerCaptureState(pointerEvent);
         // Prevent application crashes, in case damaged frame.
         if (!frameKeeper.IsAlive()) {
           frame = nullptr;
@@ -7589,33 +7600,29 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    if (aEvent->mClass == ePointerEventClass &&
-        aEvent->mMessage != ePointerDown) {
-      if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
-        uint32_t pointerId = pointerEvent->pointerId;
+    // Mouse events should be fired to the same target as their mapped pointer
+    // events
+    if ((aEvent->mClass == ePointerEventClass ||
+         aEvent->mClass == eMouseEventClass) &&
+        aEvent->mMessage != ePointerDown && aEvent->mMessage != eMouseDown) {
+      if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+        uint32_t pointerId = mouseEvent->pointerId;
         nsIContent* pointerCapturingContent =
           GetPointerCapturingContent(pointerId);
 
         if (pointerCapturingContent) {
           if (nsIFrame* capturingFrame = pointerCapturingContent->GetPrimaryFrame()) {
-            // If pointer capture is set, we should suppress
-            // pointerover/pointerenter events for all elements except element
-            // which have pointer capture. (Code in EventStateManager)
-            pointerEvent->retargetedByPointerCapture =
-              frame && frame->GetContent() &&
-              !nsContentUtils::ContentIsDescendantOf(frame->GetContent(),
-                                                     pointerCapturingContent);
             frame = capturingFrame;
           }
 
-          if (pointerEvent->mMessage == ePointerUp ||
-              pointerEvent->mMessage == ePointerCancel) {
+          if (aEvent->mMessage == ePointerUp ||
+              aEvent->mMessage == ePointerCancel) {
             // Implicitly releasing capture for given pointer.
             // ePointerLostCapture should be send after ePointerUp or
             // ePointerCancel.
-            releasePointerCaptureCaller.SetTarget(pointerId,
-                                                  pointerEvent->inputSource,
-                                                  pointerEvent->mIsPrimary);
+            WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+            MOZ_ASSERT(pointerEvent);
+            releasePointerCaptureCaller.SetTarget(pointerEvent);
           }
         }
       }
@@ -8052,6 +8059,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       }
       case eMouseDown:
       case eMouseUp:
+      case ePointerDown:
+      case ePointerUp:
         isHandlingUserInput = true;
         mPresContext->RecordInteractionTime(
           nsPresContext::InteractionType::eClickInteraction,
@@ -8198,35 +8207,44 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
   return rv;
 }
 
-void
-nsIPresShell::DispatchGotOrLostPointerCaptureEvent(bool aIsGotCapture,
-                                                   uint32_t aPointerId,
-                                                   uint16_t aPointerType,
-                                                   bool aIsPrimary,
-                                                   nsIContent* aCaptureTarget)
+/* static */ void
+nsIPresShell::DispatchGotOrLostPointerCaptureEvent(
+                bool aIsGotCapture,
+                const WidgetPointerEvent* aPointerEvent,
+                nsIContent* aCaptureTarget)
 {
-  PointerEventInit init;
-  init.mPointerId = aPointerId;
-  init.mBubbles = true;
-  ConvertPointerTypeToString(aPointerType, init.mPointerType);
-  init.mIsPrimary = aIsPrimary;
-  RefPtr<mozilla::dom::PointerEvent> event;
-  event = PointerEvent::Constructor(aCaptureTarget,
-                                    aIsGotCapture
-                                      ? NS_LITERAL_STRING("gotpointercapture")
-                                      : NS_LITERAL_STRING("lostpointercapture"),
-                                    init);
-  if (event) {
+  nsIDocument* targetDoc = aCaptureTarget->OwnerDoc();
+  nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
+  NS_ENSURE_TRUE_VOID(shell);
+
+  if (!aIsGotCapture && !aCaptureTarget->IsInUncomposedDoc()) {
+    // If the capturing element was removed from the DOM tree, fire
+    // ePointerLostCapture at the document.
+    PointerEventInit init;
+    init.mPointerId = aPointerEvent->pointerId;
+    init.mBubbles = true;
+    init.mComposed = true;
+    ConvertPointerTypeToString(aPointerEvent->inputSource, init.mPointerType);
+    init.mIsPrimary = aPointerEvent->mIsPrimary;
+    RefPtr<mozilla::dom::PointerEvent> event;
+    event = PointerEvent::Constructor(aCaptureTarget,
+                                      NS_LITERAL_STRING("lostpointercapture"),
+                                      init);
     bool dummy;
-    // If the capturing element was removed from the DOM tree,
-    // lostpointercapture event should be fired at the document.
-    if (!aIsGotCapture && !aCaptureTarget->IsInUncomposedDoc()) {
-      aCaptureTarget->OwnerDoc()->DispatchEvent(event->InternalDOMEvent(),
-                                                &dummy);
-    } else {
-      aCaptureTarget->DispatchEvent(event->InternalDOMEvent(), &dummy);
-    }
+    targetDoc->DispatchEvent(event->InternalDOMEvent(), &dummy);
+    return;
   }
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetPointerEvent localEvent(aPointerEvent->IsTrusted(),
+                                aIsGotCapture ? ePointerGotCapture :
+                                                ePointerLostCapture,
+                                aPointerEvent->mWidget);
+  localEvent.AssignPointerEventData(*aPointerEvent, true);
+  nsresult rv = shell->HandleEventWithTarget(
+                         &localEvent,
+                         aCaptureTarget->GetPrimaryFrame(),
+                         aCaptureTarget, &status);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 nsresult

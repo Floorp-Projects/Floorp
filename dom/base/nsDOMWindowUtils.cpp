@@ -2652,6 +2652,28 @@ nsDOMWindowUtils::ZoomToFocusedInput()
     return NS_OK;
   }
 
+  nsIFrame* currentFrame = content->GetPrimaryFrame();
+  nsIFrame* rootFrame = shell->GetRootFrame();
+  nsIFrame* scrolledFrame = rootScrollFrame->GetScrolledFrame();
+  bool isFixedPos = true;
+
+  while (currentFrame) {
+    if (currentFrame == rootFrame) {
+      break;
+    } else if (currentFrame == scrolledFrame) {
+      // we are in the rootScrollFrame so this element is not fixed
+      isFixedPos = false;
+      break;
+    }
+    currentFrame = nsLayoutUtils::GetCrossDocParentFrame(currentFrame);
+  }
+
+  if (isFixedPos) {
+    // We didn't find the scrolledFrame in our parent frames so this content must be fixed position.
+    // Zooming into fixed position content doesn't make sense so just return with out panning and zooming.
+    return NS_OK;
+  }
+
   nsIDocument* document = shell->GetDocument();
   if (!document) {
     return NS_OK;

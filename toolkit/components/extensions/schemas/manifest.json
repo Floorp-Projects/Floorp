@@ -166,6 +166,7 @@
 
           "permissions": {
             "type": "array",
+            "default": [],
             "items": {
               "choices": [
                 { "$ref": "Permission" },

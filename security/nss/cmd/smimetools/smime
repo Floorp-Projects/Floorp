@@ -199,8 +199,8 @@ sub signentity($$)
     # construct a new multipart/signed MIME entity consisting of the original content and
     # the signature
     #
-    # (we assume that cmsutil generates a SHA1 digest)
-    $out .= "Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha1; boundary=\"${boundary}\"\n";
+    # (we assume that cmsutil generates a SHA256 digest)
+    $out .= "Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha256; boundary=\"${boundary}\"\n";
     $out .= "\n";		# end of entity header
     $out .= "This is a cryptographically signed message in MIME format.\n"; # explanatory comment
     $out .= "\n--${boundary}\n";

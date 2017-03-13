@@ -22,7 +22,7 @@ function* generateAddon(data) {
   let jarURI = NetUtil.newURI(`jar:${fileURI.spec}!/webextension/`);
 
   let extension = new ExtensionData(jarURI);
-  yield extension.readManifest();
+  yield extension.loadManifest();
 
   return extension;
 }

@@ -22,12 +22,6 @@
 
 class nsRange;
 
-// IID for the nsFrameSelection interface
-// 3c6ae2d0-4cf1-44a1-9e9d-2411867f19c6
-#define NS_FRAME_SELECTION_IID      \
-{ 0x3c6ae2d0, 0x4cf1, 0x44a1, \
-  { 0x9e, 0x9d, 0x24, 0x11, 0x86, 0x7f, 0x19, 0xc6 } }
-
 #define BIDI_LEVEL_UNDEFINED 0x80
 
 //----------------------------------------------------------------------
@@ -52,7 +46,6 @@ struct SelectionDetails
 };
 
 class nsIPresShell;
-class nsIScrollableFrame;
 
 /** PeekOffsetStruct is used to group various arguments (both input and output)
  *  that are passed to nsFrame::PeekOffset(). See below for the description of
@@ -178,8 +171,8 @@ class nsIScrollableFrame;
  * They may cause nsFrameSelection to be deleted, if strong pointer isn't used,
  * or they may cause other objects to be deleted.
  */
-
-class nsFrameSelection final {
+class nsFrameSelection final
+{
 public:
   typedef mozilla::CaretAssociationHint CaretAssociateHint;
 
@@ -247,7 +240,7 @@ public:
    *
    * @param  aCell  [in] HTML td element.
    */
-  virtual nsresult SelectCellElement(nsIContent *aCell);
+  nsresult SelectCellElement(nsIContent *aCell);
 
   /**
    * Add cells to the selection inside of the given cells range.
@@ -258,11 +251,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  virtual nsresult AddCellsToSelection(nsIContent *aTable,
-                                       int32_t aStartRowIndex,
-                                       int32_t aStartColumnIndex,
-                                       int32_t aEndRowIndex,
-                                       int32_t aEndColumnIndex);
+  nsresult AddCellsToSelection(nsIContent* aTable,
+                               int32_t aStartRowIndex,
+                               int32_t aStartColumnIndex,
+                               int32_t aEndRowIndex,
+                               int32_t aEndColumnIndex);
 
   /**
    * Remove cells from selection inside of the given cell range.
@@ -273,11 +266,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  virtual nsresult RemoveCellsFromSelection(nsIContent *aTable,
-                                            int32_t aStartRowIndex,
-                                            int32_t aStartColumnIndex,
-                                            int32_t aEndRowIndex,
-                                            int32_t aEndColumnIndex);
+  nsresult RemoveCellsFromSelection(nsIContent* aTable,
+                                    int32_t aStartRowIndex,
+                                    int32_t aStartColumnIndex,
+                                    int32_t aEndRowIndex,
+                                    int32_t aEndColumnIndex);
 
   /**
    * Remove cells from selection outside of the given cell range.
@@ -288,11 +281,11 @@ public:
    * @param  aEndRowIndex       [in] row index where the cells range ends
    * @param  aEndColumnIndex    [in] column index where the cells range ends
    */
-  virtual nsresult RestrictCellsToSelection(nsIContent *aTable,
-                                            int32_t aStartRowIndex,
-                                            int32_t aStartColumnIndex,
-                                            int32_t aEndRowIndex,
-                                            int32_t aEndColumnIndex);
+  nsresult RestrictCellsToSelection(nsIContent* aTable,
+                                    int32_t aStartRowIndex,
+                                    int32_t aStartColumnIndex,
+                                    int32_t aEndRowIndex,
+                                    int32_t aEndColumnIndex);
 
   /** StartAutoScrollTimer is responsible for scrolling frames so that
    *  aPoint is always visible, and for selecting any frame that contains
@@ -382,10 +375,10 @@ public:
    * @param aOffset offset into above node.
    * @param aReturnOffset will contain offset into frame.
    */
-  virtual nsIFrame* GetFrameForNodeOffset(nsIContent*        aNode,
-                                          int32_t            aOffset,
-                                          CaretAssociateHint aHint,
-                                          int32_t*           aReturnOffset) const;
+  nsIFrame* GetFrameForNodeOffset(nsIContent*        aNode,
+                                  int32_t            aOffset,
+                                  CaretAssociateHint aHint,
+                                  int32_t*           aReturnOffset) const;
 
   /**
    * Scrolling then moving caret placement code in common to text areas and 
@@ -407,19 +400,21 @@ public:
   void SetHint(CaretAssociateHint aHintRight) { mHint = aHintRight; }
   CaretAssociateHint GetHint() const { return mHint; }
 
-  /** SetCaretBidiLevel sets the caret bidi level
-   *  @param aLevel the caret bidi level
-   *  This method is virtual since it gets called from outside of layout.
+  /**
+   * SetCaretBidiLevel sets the caret bidi level.
+   * @param aLevel the caret bidi level
    */
-  virtual void SetCaretBidiLevel(nsBidiLevel aLevel);
-  /** GetCaretBidiLevel gets the caret bidi level
-   *  This method is virtual since it gets called from outside of layout.
+  void SetCaretBidiLevel(nsBidiLevel aLevel);
+
+  /**
+   * GetCaretBidiLevel gets the caret bidi level.
    */
-  virtual nsBidiLevel GetCaretBidiLevel() const;
-  /** UndefineCaretBidiLevel sets the caret bidi level to "undefined"
-   *  This method is virtual since it gets called from outside of layout.
+  nsBidiLevel GetCaretBidiLevel() const;
+
+  /**
+   * UndefineCaretBidiLevel sets the caret bidi level to "undefined".
    */
-  virtual void UndefineCaretBidiLevel();
+  void UndefineCaretBidiLevel();
 
   /** PhysicalMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one unit 'aAmount' in the
@@ -548,7 +543,8 @@ public:
    */
   bool GetMouseDoubleDown() const { return mMouseDoubleDownState; }
 
-  /** GetPrevNextBidiLevels will return the frames and associated Bidi levels of the characters
+  /**
+   * GetPrevNextBidiLevels will return the frames and associated Bidi levels of the characters
    *   logically before and after a (collapsed) selection.
    *  @param aNode is the node containing the selection
    *  @param aContentOffset is the offset of the selection in the node
@@ -561,12 +557,10 @@ public:
    *   Bidi level equal to the paragraph embedding level.
    *  In these cases the before frame and after frame respectively will be 
    *   nullptr.
-   *
-   *  This method is virtual since it gets called from outside of layout. 
    */
-  virtual nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
-                                                     uint32_t aContentOffset,
-                                                     bool aJumpLines) const;
+  nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent* aNode,
+                                             uint32_t aContentOffset,
+                                             bool aJumpLines) const;
 
   /** GetFrameFromLevel will scan in a given direction
    *   until it finds a frame with a Bidi level less than or equal to a given level.

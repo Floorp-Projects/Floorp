@@ -220,28 +220,38 @@ SharedArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc, Value* v
     return CallNonGenericMethod<IsSharedArrayBuffer, byteLengthGetterImpl>(cx, args);
 }
 
+// ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
+// 24.2.2.1 SharedArrayBuffer( length )
 bool
 SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    // Step 1.
     if (!ThrowIfNotConstructing(cx, args, "SharedArrayBuffer"))
         return false;
 
-    // Bugs 1068458, 1161298: Limit length to 2^31-1.
-    uint32_t length;
-    bool overflow_unused;
-    if (!ToLengthClamped(cx, args.get(0), &length, &overflow_unused) || length > INT32_MAX) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
+    // Step 2.
+    uint64_t byteLength;
+    if (!ToIndex(cx, args.get(0), &byteLength))
         return false;
-    }
 
+    // Step 3 (Inlined 24.2.1.1 AllocateSharedArrayBuffer).
+    // 24.2.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
     RootedObject newTarget(cx, &args.newTarget().toObject());
     if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
         return false;
 
-    JSObject* bufobj = New(cx, length, proto);
+    // 24.2.1.1, step 3 (Inlined 6.2.7.2 CreateSharedByteDataBlock, step 2).
+    // Refuse to allocate too large buffers, currently limited to ~2 GiB.
+    if (byteLength > INT32_MAX) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
+        return false;
+    }
+
+    // 24.2.1.1, steps 1 and 4-6.
+    JSObject* bufobj = New(cx, uint32_t(byteLength), proto);
     if (!bufobj)
         return false;
     args.rval().setObject(*bufobj);

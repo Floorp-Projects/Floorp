@@ -19,7 +19,7 @@ info: |
 features: [Reflect]
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var C = new other.Function();
 C.prototype = null;
 

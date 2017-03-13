@@ -54,7 +54,7 @@ assert(
 var allKeys = Reflect.ownKeys(ns);
 
 assert(
-  allKeys.length > 11,
+  allKeys.length >= 11,
   'at least as many keys as defined by the module and the specification'
 );
 assert.sameValue(allKeys[0], 'a_local1');

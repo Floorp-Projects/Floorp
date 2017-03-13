@@ -35026,6 +35026,9 @@ var WidgetAnnotation = function WidgetAnnotationClosure() {
    var loopDict = dict;
    while (loopDict.has('Parent')) {
     loopDict = loopDict.get('Parent');
+    if (!isDict(loopDict)) {
+     break;
+    }
     if (loopDict.has('T')) {
      fieldName.unshift(stringToPDFString(loopDict.get('T')));
     }
@@ -49129,8 +49132,8 @@ exports.Type1Parser = Type1Parser;
 
 "use strict";
 
-var pdfjsVersion = '1.7.348';
-var pdfjsBuild = '754c4bd0';
+var pdfjsVersion = '1.7.359';
+var pdfjsBuild = 'd471e356';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

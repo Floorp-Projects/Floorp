@@ -3896,10 +3896,7 @@ var PDFAttachmentViewer = function PDFAttachmentViewerClosure() {
  PDFAttachmentViewer.prototype = {
   reset: function PDFAttachmentViewer_reset(keepRenderedCapability) {
    this.attachments = null;
-   var container = this.container;
-   while (container.firstChild) {
-    container.firstChild.remove();
-   }
+   this.container.textContent = '';
    if (!keepRenderedCapability) {
     this._renderedCapability = pdfjsLib.createPromiseCapability();
    }
@@ -4187,6 +4184,7 @@ var PDFFindBar = function PDFFindBarClosure() {
   this.caseSensitive.addEventListener('click', function () {
    self.dispatchEvent('casesensitivitychange');
   });
+  this.eventBus.on('resize', this._adjustWidth.bind(this));
  }
  PDFFindBar.prototype = {
   reset: function PDFFindBar_reset() {
@@ -4233,6 +4231,7 @@ var PDFFindBar = function PDFFindBarClosure() {
    this.findField.setAttribute('data-status', status);
    this.findMsg.textContent = findMsg;
    this.updateResultsCount(matchCount);
+   this._adjustWidth();
   },
   updateResultsCount: function (matchCount) {
    if (!this.findResultsCount) {
@@ -4253,6 +4252,7 @@ var PDFFindBar = function PDFFindBarClosure() {
    }
    this.findField.select();
    this.findField.focus();
+   this._adjustWidth();
   },
   close: function PDFFindBar_close() {
    if (!this.opened) {
@@ -4268,6 +4268,17 @@ var PDFFindBar = function PDFFindBarClosure() {
     this.close();
    } else {
     this.open();
+   }
+  },
+  _adjustWidth: function PDFFindBar_adjustWidth() {
+   if (!this.opened) {
+    return;
+   }
+   this.bar.classList.remove('wrapContainers');
+   var findbarHeight = this.bar.clientHeight;
+   var inputContainerHeight = this.bar.firstElementChild.clientHeight;
+   if (findbarHeight > inputContainerHeight) {
+    this.bar.classList.add('wrapContainers');
    }
   }
  };
@@ -4596,10 +4607,8 @@ var PDFOutlineViewer = function PDFOutlineViewerClosure() {
   reset: function PDFOutlineViewer_reset() {
    this.outline = null;
    this.lastToggleIsShow = true;
-   var container = this.container;
-   while (container.firstChild) {
-    container.firstChild.remove();
-   }
+   this.container.textContent = '';
+   this.container.classList.remove('outlineWithDeepNesting');
   },
   _dispatchEvent: function PDFOutlineViewer_dispatchEvent(outlineCount) {
    this.eventBus.dispatch('outlineloaded', {

@@ -57,8 +57,8 @@ def linear_buckets(dmin, dmax, n_buckets):
 
 
 def exponential_buckets(dmin, dmax, n_buckets):
-    log_max = math.log(dmax);
-    bucket_index = 2;
+    log_max = math.log(dmax)
+    bucket_index = 2
     ret_array = [0] * n_buckets
     current = dmin
     ret_array[1] = current
@@ -78,7 +78,7 @@ always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
                        'alert_emails', 'keyed', 'releaseChannelCollection',
                        'bug_numbers']
 
-whitelists = None;
+whitelists = None
 try:
     whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))), 'histogram-whitelists.json')
     with open(whitelist_path, 'r') as f:
@@ -508,7 +508,7 @@ the histograms defined in filenames.
     # We require that all USE_COUNTER2_* histograms be defined in a contiguous
     # block.
     use_counter_indices = filter(lambda x: x[1].startswith("USE_COUNTER2_"),
-                                 enumerate(all_histograms.iterkeys()));
+                                 enumerate(all_histograms.iterkeys()))
     if use_counter_indices:
         lower_bound = use_counter_indices[0][0]
         upper_bound = use_counter_indices[-1][0]
