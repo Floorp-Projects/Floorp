@@ -1116,7 +1116,13 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign(nsRect& anchorRect,
 
     nsIFrame* selectedItemFrame = GetSelectedItemForAlignment();
     if (selectedItemFrame) {
-      pnt.y -= originalAnchorRect.height + selectedItemFrame->GetRect().y;
+      int32_t scrolly = 0;
+      nsIScrollableFrame *scrollframe = do_QueryFrame(nsBox::GetChildXULBox(this));
+      if (scrollframe) {
+        scrolly = scrollframe->GetScrollPosition().y;
+      }
+
+      pnt.y -= originalAnchorRect.height + selectedItemFrame->GetRect().y - scrolly;
     }
   }
 
