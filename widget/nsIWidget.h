@@ -1456,11 +1456,6 @@ class nsIWidget : public nsISupports
     virtual bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) = 0;
 
     /**
-     * Return the popup that was last rolled up, or null if there isn't one.
-     */
-    virtual nsIContent* GetLastRollup() = 0;
-
-    /**
      * Begin a window resizing drag, based on the event passed in.
      */
     virtual MOZ_MUST_USE nsresult
