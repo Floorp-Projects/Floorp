@@ -863,39 +863,30 @@ Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
 
 static already_AddRefed<nsStyleImageRequest>
 CreateStyleImageRequest(nsStyleImageRequest::Mode aModeFlags,
-                        const uint8_t* aURLString, uint32_t aURLStringLength,
-                        ThreadSafeURIHolder* aBaseURI,
-                        ThreadSafeURIHolder* aReferrer,
-                        ThreadSafePrincipalHolder* aPrincipal)
+                        ServoBundledURI aURI)
 {
-  MOZ_ASSERT(aURLString);
-  MOZ_ASSERT(aBaseURI);
-  MOZ_ASSERT(aReferrer);
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aURI.mURLString);
+  MOZ_ASSERT(aURI.mBaseURI);
+  MOZ_ASSERT(aURI.mReferrer);
+  MOZ_ASSERT(aURI.mPrincipal);
 
   nsString url;
-  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURLString),
-                                  aURLStringLength);
+  nsDependentCSubstring urlString(reinterpret_cast<const char*>(aURI.mURLString),
+                                  aURI.mURLStringLength);
   AppendUTF8toUTF16(urlString, url);
   RefPtr<nsStringBuffer> urlBuffer = nsCSSValue::BufferFromString(url);
 
   RefPtr<nsStyleImageRequest> req =
-    new nsStyleImageRequest(aModeFlags, urlBuffer, do_AddRef(aBaseURI),
-                            do_AddRef(aReferrer), do_AddRef(aPrincipal));
+    new nsStyleImageRequest(aModeFlags, urlBuffer, do_AddRef(aURI.mBaseURI),
+                            do_AddRef(aURI.mReferrer), do_AddRef(aURI.mPrincipal));
   return req.forget();
 }
 
 void
-Gecko_SetUrlImageValue(nsStyleImage* aImage,
-                       const uint8_t* aURLString, uint32_t aURLStringLength,
-                       ThreadSafeURIHolder* aBaseURI,
-                       ThreadSafeURIHolder* aReferrer,
-                       ThreadSafePrincipalHolder* aPrincipal)
+Gecko_SetUrlImageValue(nsStyleImage* aImage, ServoBundledURI aURI)
 {
   RefPtr<nsStyleImageRequest> req =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aURI);
   aImage->SetImageRequest(req.forget());
 }
 
@@ -916,16 +907,10 @@ Gecko_SetCursorArrayLength(nsStyleUserInterface* aStyleUI, size_t aLen)
 }
 
 void
-Gecko_SetCursorImage(nsCursorImage* aCursor,
-                     const uint8_t* aURLString, uint32_t aURLStringLength,
-                     ThreadSafeURIHolder* aBaseURI,
-                     ThreadSafeURIHolder* aReferrer,
-                     ThreadSafePrincipalHolder* aPrincipal)
+Gecko_SetCursorImage(nsCursorImage* aCursor, ServoBundledURI aURI)
 {
   aCursor->mImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard,
-                            aURLString, aURLStringLength,
-                            aBaseURI, aReferrer, aPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aURI);
 }
 
 void
@@ -978,9 +963,7 @@ Gecko_SetListStyleImage(nsStyleList* aList,
                         ServoBundledURI aURI)
 {
   aList->mListStyleImage =
-    CreateStyleImageRequest(nsStyleImageRequest::Mode(0),
-                            aURI.mURLString, aURI.mURLStringLength,
-                            aURI.mBaseURI, aURI.mReferrer, aURI.mPrincipal);
+    CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aURI);
 }
 
 void
