@@ -439,7 +439,7 @@ function prompt(aBrowser, aRequest) {
   // share without prompting).
   let reasonForNoPermanentAllow = "";
   if (sharingScreen) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen2";
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen3";
   } else if (sharingAudio) {
     reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
   } else if (!aRequest.secure) {
