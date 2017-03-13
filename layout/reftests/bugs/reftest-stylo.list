@@ -601,7 +601,7 @@ fails == 367247-l-scroll.html 367247-l-scroll.html
 == 367612-1e.html 367612-1e.html
 == 367612-1f.html 367612-1f.html
 == 367612-1g.html 367612-1g.html
-== 368020-1.html 368020-1.html
+random == 368020-1.html 368020-1.html
 == 368020-2.html 368020-2.html
 == 368020-3.html 368020-3.html
 pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5.html
