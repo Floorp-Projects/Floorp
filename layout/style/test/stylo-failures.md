@@ -497,7 +497,6 @@ Any line which doesn't follow the format above would be ignored like comment.
     * test_value_storage.html asserts [44]
   * assertion for unsupported or non-animatable property bug 1343710
     * test_animations.html asserts [24]
-* test_value_cloning.html asserts: negative radius bug 1337618 [4]
 
 ## Need Gecko change
 
