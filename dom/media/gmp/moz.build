@@ -69,6 +69,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'ChromiumCDMAdapter.cpp',
     'ChromiumCDMChild.cpp',
     'ChromiumCDMParent.cpp',
     'DecryptJob.cpp',

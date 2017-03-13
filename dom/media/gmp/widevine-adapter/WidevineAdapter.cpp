@@ -15,7 +15,7 @@
 #include "gmp-api/gmp-video-codec.h"
 #include "gmp-api/gmp-platform.h"
 
-static const GMPPlatformAPI* sPlatform = nullptr;
+const GMPPlatformAPI* sPlatform = nullptr;
 
 namespace mozilla {
 

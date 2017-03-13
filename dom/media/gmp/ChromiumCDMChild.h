@@ -20,6 +20,7 @@ public:
 
   explicit ChromiumCDMChild(GMPContentChild* aPlugin);
 
+  void Init(cdm::ContentDecryptionModule_8* aCDM);
 protected:
   ~ChromiumCDMChild() {}
 
@@ -49,7 +50,8 @@ protected:
     const CDMInputBuffer& aBuffer) override;
   ipc::IPCResult RecvDestroy() override;
 
-  GMPContentChild* mPlugin;
+  GMPContentChild* mPlugin = nullptr;
+  cdm::ContentDecryptionModule_8* mCDM = nullptr;
 };
 
 } // namespace gmp
