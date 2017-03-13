@@ -116,9 +116,6 @@ public:
   int32_t StyleRuleCount() const;
   css::Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
-  nsresult InsertRuleIntoGroup(const nsAString& aRule, css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
-
   void SetOwnerRule(css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
   // Workaround overloaded-virtual warning in GCC.
@@ -222,6 +219,9 @@ protected:
   uint32_t InsertRuleInternal(const nsAString& aRule,
                               uint32_t aIndex, ErrorResult& aRv);
   void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+  nsresult InsertRuleIntoGroupInternal(const nsAString& aRule,
+                                       css::GroupRule* aGroup,
+                                       uint32_t aIndex);
 
   void EnabledStateChangedInternal();
 

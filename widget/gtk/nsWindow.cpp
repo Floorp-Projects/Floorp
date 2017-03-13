@@ -167,8 +167,6 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint x, gint y,
                                         gint *retx, gint *rety);
 
-static inline bool is_context_menu_key(const WidgetKeyboardEvent& inKeyEvent);
-
 static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
 
@@ -3065,41 +3063,83 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 
     // before we dispatch a key, check if it's the context menu key.
     // If so, send a context menu key event instead.
-    if (is_context_menu_key(keypressEvent)) {
-        WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
-                                          WidgetMouseEvent::eReal,
-                                          WidgetMouseEvent::eContextMenuKey);
+    if (MaybeDispatchContextMenuEvent(aEvent)) {
+        return TRUE;
+    }
 
-        contextMenuEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
-        contextMenuEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
-        contextMenuEvent.mClickCount = 1;
-        KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
-        DispatchInputEvent(&contextMenuEvent);
+    RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
+    nsresult rv = dispatcher->BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return TRUE;
+    }
+
+    // If the character code is in the BMP, send the key press event.
+    // Otherwise, send a compositionchange event with the equivalent UTF-16
+    // string.
+    // TODO: Investigate other browser's behavior in this case because
+    //       this hack is odd for UI Events.
+    nsEventStatus status = nsEventStatus_eIgnore;
+    if (keypressEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
+        keypressEvent.mKeyValue.Length() == 1) {
+        dispatcher->MaybeDispatchKeypressEvents(keypressEvent,
+                                                status, aEvent);
     } else {
-        RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
-        nsresult rv = dispatcher->BeginNativeInputTransaction();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-            return TRUE;
-        }
-
-        // If the character code is in the BMP, send the key press event.
-        // Otherwise, send a compositionchange event with the equivalent UTF-16
-        // string.
-        // TODO: Investigate other browser's behavior in this case because
-        //       this hack is odd for UI Events.
-        nsEventStatus status = nsEventStatus_eIgnore;
-        if (keypressEvent.mKeyNameIndex != KEY_NAME_INDEX_USE_STRING ||
-            keypressEvent.mKeyValue.Length() == 1) {
-            dispatcher->MaybeDispatchKeypressEvents(keypressEvent,
-                                                    status, aEvent);
-        } else {
-            WidgetEventTime eventTime = GetWidgetEventTime(aEvent->time);
-            dispatcher->CommitComposition(status, &keypressEvent.mKeyValue,
-                                          &eventTime);
-        }
+        WidgetEventTime eventTime = GetWidgetEventTime(aEvent->time);
+        dispatcher->CommitComposition(status, &keypressEvent.mKeyValue,
+                                      &eventTime);
     }
 
     return TRUE;
+}
+
+bool
+nsWindow::MaybeDispatchContextMenuEvent(const GdkEventKey* aEvent)
+{
+    KeyNameIndex keyNameIndex = KeymapWrapper::ComputeDOMKeyNameIndex(aEvent);
+
+    // Shift+F10 and ContextMenu should cause eContextMenu event.
+    if (keyNameIndex != KEY_NAME_INDEX_F10 &&
+        keyNameIndex != KEY_NAME_INDEX_ContextMenu) {
+      return false;
+    }
+
+    WidgetMouseEvent contextMenuEvent(true, eContextMenu, this,
+                                      WidgetMouseEvent::eReal,
+                                      WidgetMouseEvent::eContextMenuKey);
+
+    contextMenuEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
+    contextMenuEvent.AssignEventTime(GetWidgetEventTime(aEvent->time));
+    contextMenuEvent.mClickCount = 1;
+    KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
+
+    if (contextMenuEvent.IsControl() || contextMenuEvent.IsMeta() ||
+        contextMenuEvent.IsAlt()) {
+        return false;
+    }
+
+    // If the key is ContextMenu, then an eContextMenu mouse event is
+    // dispatched regardless of the state of the Shift modifier.  When it is
+    // pressed without the Shift modifier, a web page can prevent the default
+    // context menu action.  When pressed with the Shift modifier, the web page
+    // cannot prevent the default context menu action.
+    // (PresShell::HandleEventInternal() sets mOnlyChromeDispatch to true.)
+
+    // If the key is F10, it needs Shift state because Shift+F10 is well-known
+    // shortcut key on Linux.  However, eContextMenu with Shift state is
+    // special.  It won't fire "contextmenu" event in the web content for
+    // blocking web page to prevent its default.  Therefore, this combination
+    // should work same as ContextMenu key.
+    // XXX Should we allow to block web page to prevent its default with
+    //     Ctrl+Shift+F10 or Alt+Shift+F10 instead?
+    if (keyNameIndex == KEY_NAME_INDEX_F10) {
+        if (!contextMenuEvent.IsShift()) {
+            return false;
+        }
+        contextMenuEvent.mModifiers &= ~MODIFIER_SHIFT;
+    }
+
+    DispatchInputEvent(&contextMenuEvent);
+    return true;
 }
 
 gboolean
@@ -5979,17 +6019,6 @@ get_inner_gdk_window (GdkWindow *aWindow,
     *retx = x;
     *rety = y;
     return aWindow;
-}
-
-static inline bool
-is_context_menu_key(const WidgetKeyboardEvent& aKeyEvent)
-{
-    return ((aKeyEvent.mKeyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
-             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
-             !aKeyEvent.IsAlt()) ||
-            (aKeyEvent.mKeyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.IsShift() &&
-             !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
-             !aKeyEvent.IsAlt()));
 }
 
 static int

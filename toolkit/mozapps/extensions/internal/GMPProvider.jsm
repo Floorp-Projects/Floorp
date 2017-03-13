@@ -530,7 +530,7 @@ var GMPProvider = {
     this.buildPluginList();
     this.ensureProperCDMInstallState();
 
-    Preferences.observe(GMPPrefs.KEY_LOG_BASE, configureLogging);
+    Services.prefs.addObserver(GMPPrefs.KEY_LOG_BASE, configureLogging, false);
 
     for (let plugin of this._plugins.values()) {
       let wrapper = plugin.wrapper;
@@ -581,7 +581,7 @@ var GMPProvider = {
 
   shutdown() {
     this._log.trace("shutdown");
-    Preferences.ignore(GMPPrefs.KEY_LOG_BASE, configureLogging);
+    Services.prefs.removeObserver(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
     let shutdownTask = Task.spawn(function*() {
       this._log.trace("shutdown - shutdownTask");

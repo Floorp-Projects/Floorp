@@ -17,6 +17,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/FontFace.h"
 #include "nsAutoPtr.h"
 #include "nsCSSPropertyID.h"
@@ -27,7 +28,6 @@
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSFontFeatureValuesRule.h"
 #include "nsIDOMCSSGroupingRule.h"
-#include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSSupportsRule.h"
@@ -41,10 +41,13 @@ namespace mozilla {
 
 class ErrorResult;
 
+namespace dom {
+class MediaList;
+}
+
 namespace css {
 
-class MediaRule final : public ConditionRule,
-                        public nsIDOMCSSMediaRule
+class MediaRule final : public dom::CSSMediaRule
 {
 public:
   MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber);
@@ -52,9 +55,8 @@ private:
   MediaRule(const MediaRule& aCopy);
   ~MediaRule();
 public:
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRule, ConditionRule)
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRule, dom::CSSMediaRule)
 
   // Rule methods
 #ifdef DEBUG
@@ -66,18 +68,10 @@ public:
     mozilla::StyleSheet* sheet = GroupRule::GetStyleSheet();
     return sheet ? sheet->AsGecko() : nullptr;
   }
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
-
-  // nsIDOMCSSGroupingRule interface
-  NS_DECL_NSIDOMCSSGROUPINGRULE
 
   // nsIDOMCSSConditionRule interface
   NS_DECL_NSIDOMCSSCONDITIONRULE
-
-  // nsIDOMCSSMediaRule interface
-  NS_DECL_NSIDOMCSSMEDIARULE
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
@@ -87,18 +81,12 @@ public:
   nsresult SetMedia(nsMediaList* aMedia);
 
   // WebIDL interface
-  uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // Our XPCOM GetConditionText is OK
-  virtual void SetConditionText(const nsAString& aConditionText,
-                                ErrorResult& aRv) override;
-  nsMediaList* Media() const;
+  using CSSMediaRule::SetConditionText;
+  dom::MediaList* Media() override;
   
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   void AppendConditionText(nsAString& aOutput) const;

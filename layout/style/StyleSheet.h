@@ -20,7 +20,6 @@
 class nsIDocument;
 class nsINode;
 class nsIPrincipal;
-class nsMediaList;
 class nsCSSRuleProcessor;
 
 namespace mozilla {
@@ -32,10 +31,12 @@ struct CSSStyleSheetInner;
 
 namespace dom {
 class CSSRuleList;
+class MediaList;
 class SRIMetadata;
 } // namespace dom
 
 namespace css {
+class GroupRule;
 class ImportRule;
 class Rule;
 }
@@ -150,7 +151,7 @@ public:
   inline void SetPrincipal(nsIPrincipal* aPrincipal);
 
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
-  void SetMedia(nsMediaList* aMedia);
+  void SetMedia(dom::MediaList* aMedia);
 
   // Get this style sheet's CORS mode
   inline CORSMode GetCORSMode() const;
@@ -170,7 +171,7 @@ public:
   // GetOwnerNode is defined above.
   inline StyleSheet* GetParentStyleSheet() const;
   // The XPCOM GetTitle is fine for WebIDL.
-  nsMediaList* Media();
+  dom::MediaList* Media();
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL.
 
@@ -211,6 +212,10 @@ public:
   // WillDirty and then make no change and skip the DidDirty call.
   inline void WillDirty();
   inline void DidDirty();
+
+  nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule,
+                               css::GroupRule* aGroup, uint32_t aIndex);
 
 private:
   // Get a handle to the various stylesheet bits which live on the 'inner' for
@@ -262,7 +267,7 @@ protected:
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
 
-  RefPtr<nsMediaList> mMedia;
+  RefPtr<dom::MediaList> mMedia;
 
   RefPtr<StyleSheet> mNext;
 

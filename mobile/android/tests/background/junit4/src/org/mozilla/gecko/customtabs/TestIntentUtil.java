@@ -8,8 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.annotation.AnimRes;
+import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
+import android.text.TextUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,6 +22,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.List;
 import java.util.Objects;
 
 import static org.mockito.Mockito.doReturn;
@@ -41,12 +45,7 @@ public class TestIntentUtil {
         // create properties for CustomTabsIntent
         final String description = "Description";
         final boolean tinted = true;
-        final Intent actionIntent = new Intent(Intent.ACTION_VIEW);
-        final int reqCode = 0x123;
-        final PendingIntent pendingIntent = PendingIntent.getActivities(spyContext,
-                reqCode,
-                new Intent[]{actionIntent},
-                PendingIntent.FLAG_CANCEL_CURRENT);
+        final PendingIntent pendingIntent = createPendingIntent(0x123, "https://mozilla.org");
 
         final Bitmap bitmap = BitmapFactory.decodeResource(
                 spyContext.getResources(),
@@ -102,5 +101,48 @@ public class TestIntentUtil {
                 IntentUtil.getEnterAnimationRes(i));
         Assert.assertEquals(IntentUtil.NO_ANIMATION_RESOURCE,
                 IntentUtil.getExitAnimationRes(i));
+    }
+
+    @Test
+    public void testMenuItems() {
+        final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+        builder.addDefaultShareMenuItem(); // This should not effect menu-item method
+        PendingIntent intent0 = createPendingIntent(0x100, "http://mozilla.com/0");
+        PendingIntent intent1 = createPendingIntent(0x100, "http://mozilla.com/1");
+        PendingIntent intent2 = createPendingIntent(0x100, "http://mozilla.com/2");
+        builder.addMenuItem("Label 0", intent0);
+        builder.addMenuItem("Label 1", intent1);
+        builder.addMenuItem("Label 2", intent2);
+
+        final Intent intent = builder.build().intent;
+        List<String> titles = IntentUtil.getMenuItemsTitle(intent);
+        List<PendingIntent> intents = IntentUtil.getMenuItemsPendingIntent(intent);
+        Assert.assertEquals(3, titles.size());
+        Assert.assertEquals(3, intents.size());
+        Assert.assertEquals("Label 0", titles.get(0));
+        Assert.assertEquals("Label 1", titles.get(1));
+        Assert.assertEquals("Label 2", titles.get(2));
+        Assert.assertTrue(Objects.equals(intent0, intents.get(0)));
+        Assert.assertTrue(Objects.equals(intent1, intents.get(1)));
+        Assert.assertTrue(Objects.equals(intent2, intents.get(2)));
+    }
+
+    @Test
+    public void testMenuShareItem() {
+        final CustomTabsIntent.Builder builderNoShareItem = new CustomTabsIntent.Builder();
+        Assert.assertFalse(IntentUtil.hasShareItem(builderNoShareItem.build().intent));
+
+        final CustomTabsIntent.Builder builderHasShareItem = new CustomTabsIntent.Builder();
+        builderHasShareItem.addDefaultShareMenuItem();
+        Assert.assertTrue(IntentUtil.hasShareItem(builderHasShareItem.build().intent));
+    }
+
+    private PendingIntent createPendingIntent(int reqCode, @Nullable String uri) {
+        final Intent actionIntent = new Intent(Intent.ACTION_VIEW);
+        if (!TextUtils.isEmpty(uri)) {
+            actionIntent.setData(Uri.parse(uri));
+        }
+        return PendingIntent.getActivity(spyContext, reqCode, actionIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
     }
 }

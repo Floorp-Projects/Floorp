@@ -1878,13 +1878,6 @@ gfxWindowsPlatform::CreateHardwareVsyncSource()
   return d3dVsyncSource.forget();
 }
 
-bool
-gfxWindowsPlatform::SupportsApzTouchInput() const
-{
-  int value = gfxPrefs::TouchEventsEnabled();
-  return value == 1 || value == 2;
-}
-
 void
 gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
 {
