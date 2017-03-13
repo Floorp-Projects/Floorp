@@ -1553,6 +1553,11 @@ web-platform-tests-reftests:
     treeherder-symbol: tc-W(Wr)
     max-run-time: 5400
     instance-size: xlarge
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        windows.*: 1
+        default: 6
     e10s:
         by-test-platform:
             macosx.*: true
