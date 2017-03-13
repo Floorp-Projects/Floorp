@@ -863,8 +863,6 @@ Declaration::GetPropertyValueInternal(
         data->ValueFor(eCSSProperty_font_language_override);
       const nsCSSValue *fontKerning =
         data->ValueFor(eCSSProperty_font_kerning);
-      const nsCSSValue *fontSynthesis =
-        data->ValueFor(eCSSProperty_font_synthesis);
       const nsCSSValue *fontVariantAlternates =
         data->ValueFor(eCSSProperty_font_variant_alternates);
       const nsCSSValue *fontVariantCaps =
@@ -891,7 +889,6 @@ Declaration::GetPropertyValueInternal(
             featureSettings->GetUnit() != eCSSUnit_System_Font ||
             languageOverride->GetUnit() != eCSSUnit_System_Font ||
             fontKerning->GetUnit() != eCSSUnit_System_Font ||
-            fontSynthesis->GetUnit() != eCSSUnit_System_Font ||
             fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
             fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
             fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
@@ -910,9 +907,6 @@ Declaration::GetPropertyValueInternal(
             featureSettings->GetUnit() != eCSSUnit_Normal ||
             languageOverride->GetUnit() != eCSSUnit_Normal ||
             fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
-            fontSynthesis->GetUnit() != eCSSUnit_Enumerated ||
-            fontSynthesis->GetIntValue() !=
-              (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
             fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
             fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
             fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
