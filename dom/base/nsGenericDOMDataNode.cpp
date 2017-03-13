@@ -681,13 +681,6 @@ nsGenericDOMDataNode::GetChildAt(uint32_t aIndex) const
   return nullptr;
 }
 
-nsIContent * const *
-nsGenericDOMDataNode::GetChildArray(uint32_t* aChildCount) const
-{
-  *aChildCount = 0;
-  return nullptr;
-}
-
 int32_t
 nsGenericDOMDataNode::IndexOf(const nsINode* aPossibleChild) const
 {
