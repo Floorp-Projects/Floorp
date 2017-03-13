@@ -11,6 +11,7 @@
 #include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "d3d11.h"
 #include "gfxPrefs.h"
 #include "DXVA2Manager.h"
@@ -18,6 +19,8 @@
 
 namespace mozilla {
 namespace layers {
+
+using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect)
@@ -193,7 +196,8 @@ D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                              const gfx::IntSize& aSize)
 {
   TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
-  if (gfxPrefs::PDMWMFUseSyncTexture()) {
+  if (gfxPrefs::PDMWMFUseSyncTexture() || mDevice == DeviceManagerDx::Get()->GetCompositorDevice()) {
+    // If our device is the compositor device, we don't need any synchronization in practice.
     allocFlags = TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION;
   }
   RefPtr<TextureClient> textureClient =
