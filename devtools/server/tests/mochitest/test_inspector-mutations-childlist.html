@@ -11,26 +11,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/shared/fronts/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gInspectee = null;
-var gWalker = null;
-var gClient = null;
-var gCleanupConnection = null;
+let gInspectee = null;
+let gWalker = null;
+let gCleanupConnection = null;
 
 function setup(callback) {
   let url = document.getElementById("inspectorContent").href;
-  gCleanupConnection = attachURL(url, function(err, client, tab, doc) {
+  gCleanupConnection = attachURL(url, function (err, client, tab, doc) {
     gInspectee = doc;
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
-      gClient = client;
       gWalker = walker;
     }).then(callback));
   });
@@ -38,7 +36,6 @@ function setup(callback) {
 
 function teardown() {
   gWalker = null;
-  gClient = null;
   gInspectee = null;
   if (gCleanupConnection) {
     gCleanupConnection();
@@ -47,7 +44,7 @@ function teardown() {
 }
 
 function assertOwnership() {
-  let num = assertOwnershipTrees(gWalker);
+  return assertOwnershipTrees(gWalker);
 }
 
 function setParent(nodeSelector, newParentSelector) {
@@ -83,7 +80,7 @@ function doMoves(moves) {
 var gDummySerial = 0;
 
 function mutationTest(testSpec) {
-  return function() {
+  return function () {
     setup(() => {
       promiseDone(loadSelectors(testSpec.load || ["html"]).then(() => {
         gWalker.autoCleanup = !!testSpec.autoCleanup;
@@ -99,6 +96,7 @@ function mutationTest(testSpec) {
 
         gWalker.once("mutations", (mutations) => {
           // Filter out our dummy mutation.
+          // eslint-disable-next-line max-nested-callbacks
           mutations = mutations.filter(change => {
             if (change.type == "attributes" &&
                 change.attributeName == "data-dummy") {
@@ -114,14 +112,14 @@ function mutationTest(testSpec) {
           runNextTest();
         });
       }));
-    })
-  }
+    });
+  };
 }
 
 // Verify that our dummy mutation works.
 addTest(mutationTest({
   autoCleanup: false,
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 0, "Dummy mutation is filtered out.");
   }
 }));
@@ -134,17 +132,18 @@ addTest(mutationTest({
   moves: [
     ["#a", "#longlist"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     let remove = mutations[0];
-    is(remove.type, "childList", "First mutation should be a childList.")
-    ok(remove.removed.length > 0, "First mutation should be a removal.")
+    is(remove.type, "childList", "First mutation should be a childList.");
+    ok(remove.removed.length > 0, "First mutation should be a removal.");
     let add = mutations[1];
-    is(add.type, "childList", "Second mutation should be a childList removal.")
-    ok(add.added.length > 0, "Second mutation should be an addition.")
+    is(add.type, "childList", "Second mutation should be a childList removal.");
+    ok(add.added.length > 0, "Second mutation should be an addition.");
     let a = add.added[0];
     is(a.id, "a", "Added node should be #a");
     is(a.parentNode(), remove.target, "Should still be a child of longlist.");
-    is(remove.target, add.target, "First and second mutations should be against the same node.");
+    is(remove.target, add.target,
+       "First and second mutations should be against the same node.");
   }
 }));
 
@@ -155,13 +154,13 @@ addTest(mutationTest({
   moves: [
     ["#a", "#longlist-sibling"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     let remove = mutations[0];
-    is(remove.type, "childList", "First mutation should be a childList.")
-    ok(remove.removed.length > 0, "First mutation should be a removal.")
+    is(remove.type, "childList", "First mutation should be a childList.");
+    ok(remove.removed.length > 0, "First mutation should be a removal.");
     let add = mutations[1];
-    is(add.type, "childList", "Second mutation should be a childList removal.")
-    ok(add.added.length > 0, "Second mutation should be an addition.")
+    is(add.type, "childList", "Second mutation should be a childList removal.");
+    ok(add.added.length > 0, "Second mutation should be an addition.");
     let a = add.added[0];
     is(a.id, "a", "Added node should be #a");
     is(a.parentNode(), add.target, "Should still be a child of longlist.");
@@ -177,7 +176,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling", "#longlist"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 2, "Should generate two mutations");
     is(mutations[0].type, "childList", "Should be childList mutations.");
     is(mutations[0].added.length, 0, "Should have no adds.");
@@ -196,7 +195,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling-firstchild", "#longlist"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 1, "Should generate two mutations");
     is(mutations[0].type, "childList", "Should be childList mutations.");
     is(mutations[0].added.length, 0, "Should have no adds.");
@@ -211,7 +210,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist-sibling", "#longlist"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 0, "Should generate no mutations.");
   }
 }));
@@ -223,14 +222,15 @@ addTest(mutationTest({
   moves: [
     ["#longlist", null]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
     is(change.removed.length, 1, "Should have removed a child.");
     let ownership = clientOwnershipTree(gWalker);
     is(ownership.orphaned.length, 1, "Should have one orphaned subtree.");
-    is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26, "Should have orphaned longlist, and 26 children, and 26 singleTextChilds");
+    is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26,
+       "Should have orphaned longlist, and 26 children, and 26 singleTextChilds");
   }
 }));
 
@@ -241,7 +241,7 @@ addTest(mutationTest({
   moves: [
     ["#longlist", null]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
@@ -258,25 +258,27 @@ addTest(mutationTest({
   moves: [
     ["#longlist", "#longlist-sibling"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
     is(change.removed.length, 1, "Should have removed a child.");
     let ownership = clientOwnershipTree(gWalker);
     is(ownership.orphaned.length, 1, "Should have one orphaned subtree.");
-    is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26, "Should have orphaned longlist, 26 children, and 26 singleTextChilds.");
+    is(ownershipTreeSize(ownership.orphaned[0]), 1 + 26 + 26,
+       "Should have orphaned longlist, 26 children, and 26 singleTextChilds.");
   }
 }));
 
-// Orphan a node by moving it into the tree but out of our visible subtree, and clean it up.
+// Orphan a node by moving it into the tree but out of our visible subtree,
+// and clean it up.
 addTest(mutationTest({
   autoCleanup: true,
   load: ["#longlist div"],
   moves: [
     ["#longlist", "#longlist-sibling"]
   ],
-  postCheck: function(mutations) {
+  postCheck: function (mutations) {
     is(mutations.length, 1, "Should generate one mutation.");
     let change = mutations[0];
     is(change.type, "childList", "Should be a childList.");
@@ -286,15 +288,11 @@ addTest(mutationTest({
   }
 }));
 
-
 addTest(function cleanup() {
-  delete gInspectee;
-  delete gWalker;
-  delete gClient;
+  gInspectee = null;
+  gWalker = null;
   runNextTest();
 });
-
-
   </script>
 </head>
 <body>

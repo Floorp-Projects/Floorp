@@ -11,12 +11,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1222409
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   const Cu = Components.utils;
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const promise = require("promise");
   const {InspectorFront} = require("devtools/shared/fronts/inspector");
-  const {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 
   SimpleTest.waitForExplicitFinish();
 
@@ -24,12 +25,13 @@ window.onload = function() {
   let inspector = null;
 
   addAsyncTest(function* setup() {
-    info ("Setting up inspector and walker actors.");
+    info("Setting up inspector and walker actors.");
 
     let url = document.getElementById("inspectorContent").href;
 
+    // eslint-disable-next-line new-cap
     yield new promise(resolve => {
-      attachURL(url, function(err, client, tab, doc) {
+      attachURL(url, function (err, client, tab, doc) {
         win = doc.defaultView;
         inspector = InspectorFront(client, tab);
         resolve();
@@ -39,7 +41,7 @@ window.onload = function() {
     runNextTest();
   });
 
-  addAsyncTest(function*() {
+  addAsyncTest(function* () {
     let walker = yield inspector.getWalker();
 
     // We can't receive events from the walker if we haven't first executed a
@@ -47,6 +49,7 @@ window.onload = function() {
     yield walker.querySelector(walker.rootNode, "img");
 
     let {outerWidth, outerHeight} = win;
+    // eslint-disable-next-line new-cap
     let onResize = new promise(resolve => {
       walker.once("resize", () => {
         resolve();

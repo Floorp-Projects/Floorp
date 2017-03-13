@@ -11,25 +11,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript" src="inspector-helpers.js"></script>
   <script type="application/javascript">
-const inspector = require("devtools/server/actors/inspector");
+"use strict";
 
-window.onload = function() {
+window.onload = function () {
   SimpleTest.waitForExplicitFinish();
   runNextTest();
-}
+};
 
-var gWalker = null;
-var gStyles = null;
-var gClient = null;
+let gWalker = null;
+let gStyles = null;
 
 addTest(function setup() {
   let url = document.getElementById("inspectorContent").href;
-  attachURL(url, function(err, client, tab, doc) {
+  attachURL(url, function (err, client, tab, doc) {
     let {InspectorFront} = require("devtools/shared/fronts/inspector");
     let inspector = InspectorFront(client, tab);
     promiseDone(inspector.getWalker().then(walker => {
       ok(walker, "getWalker() should return an actor.");
-      gClient = client;
       gWalker = walker;
       return inspector.getPageStyle();
     }).then(styles => {
@@ -50,23 +48,28 @@ addTest(function inheritedUserStyles() {
     is(applied[1].inherited.id, "uninheritable-rule-inheritable-style",
        "Entry 1 should be inherited from the parent");
     is(applied[1].rule.type, 100, "Entry 1 should be an element style");
-    is(applied[1].rule.cssText, "color: red;", "Entry 1 should have the expected cssText");
+    is(applied[1].rule.cssText, "color: red;",
+       "Entry 1 should have the expected cssText");
 
     is(applied[2].inherited.id, "inheritable-rule-inheritable-style",
        "Entry 2 should be inherited from the parent's parent");
     is(applied[2].rule.type, 100, "Entry 2 should be an element style");
-    is(applied[2].rule.cssText, "color: blue;", "Entry 2 should have the expected cssText");
+    is(applied[2].rule.cssText, "color: blue;",
+       "Entry 2 should have the expected cssText");
 
     is(applied[3].inherited.id, "inheritable-rule-inheritable-style",
        "Entry 3 should be inherited from the parent's parent");
     is(applied[3].rule.type, 1, "Entry 3 should be a rule style");
-    is(applied[3].rule.cssText, "font-size: 15px;", "Entry 3 should have the expected cssText");
-    ok(!applied[3].matchedSelectors, "Shouldn't get matchedSelectors with this request.");
+    is(applied[3].rule.cssText, "font-size: 15px;",
+       "Entry 3 should have the expected cssText");
+    ok(!applied[3].matchedSelectors,
+       "Shouldn't get matchedSelectors with this request.");
 
     is(applied[4].inherited.id, "inheritable-rule-uninheritable-style",
        "Entry 4 should be inherited from the parent's parent");
     is(applied[4].rule.type, 1, "Entry 4 should be an rule style");
-    is(applied[4].rule.cssText, "font-size: 15px;", "Entry 4 should have the expected cssText");
+    is(applied[4].rule.cssText, "font-size: 15px;",
+       "Entry 4 should have the expected cssText");
     ok(!applied[4].matchedSelectors, "Shouldn't get matchedSelectors with this request.");
 
     is(applied.length, 5, "Should have 5 rules.");
@@ -106,8 +109,10 @@ addTest(function matchedSelectors() {
       inherited: true, filter: "user", matchedSelectors: true
     });
   }).then(applied => {
-    is(applied[3].matchedSelectors[0], ".inheritable-rule", "Entry 3 should have a matched selector");
-    is(applied[4].matchedSelectors[0], ".inheritable-rule", "Entry 4 should have a matched selector");
+    is(applied[3].matchedSelectors[0], ".inheritable-rule",
+       "Entry 3 should have a matched selector");
+    is(applied[4].matchedSelectors[0], ".inheritable-rule",
+       "Entry 4 should have a matched selector");
   }).then(runNextTest));
 });
 
@@ -124,9 +129,8 @@ addTest(function testMediaQuery() {
 });
 
 addTest(function cleanup() {
-  delete gStyles;
-  delete gWalker;
-  delete gClient;
+  gStyles = null;
+  gWalker = null;
   runNextTest();
 });
 
