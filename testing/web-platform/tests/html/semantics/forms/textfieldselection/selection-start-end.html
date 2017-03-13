@@ -5,22 +5,22 @@
 <script src=/resources/testharnessreport.js></script>
 <div id=log></div>
 <script>
-  function createInputElement(value, append) {
+  function createInputElement(value, append, suffix) {
     var el = document.createElement("input");
     el.type = "text";
     el.value = value;
-    el.id = "input" + (append ? "-appended" : "-not-appended");
+    el.id = "input" + (append ? "-appended" : "-not-appended") + (suffix ? suffix : "");
     if (append) {
       document.body.appendChild(el);
     }
     return el;
   };
 
-  function createTextareaElement(value, append) {
+  function createTextareaElement(value, append, suffix) {
     var el = document.createElement("textarea");
     el.value = value;
 
-    el.id = "textarea" + (append ? "-appended" : "-not-appended");
+    el.id = "textarea" + (append ? "-appended" : "-not-appended") + (suffix ? suffix : "");
     if (append) {
       document.body.appendChild(el);
     }
@@ -28,14 +28,14 @@
   };
 
   function createPrefocusedInputElement(value, append) {
-    var el = createInputElement(value, append);
+    var el = createInputElement(value, append, "-prefocused");
     el.focus();
     el.blur();
     return el;
   }
 
   function createPrefocusedTextareaElement(value, append) {
-    var el = createTextareaElement(value, append);
+    var el = createTextareaElement(value, append, "-prefocused");
     el.focus();
     el.blur();
     return el;
@@ -53,7 +53,7 @@
            ];
   }
 
-  const testValue = "abcdefghij";
+  var testValue = "abcdefghij";
 
   test(function() {
     assert_equals(testValue.length, 10);
