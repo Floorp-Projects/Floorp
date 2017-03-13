@@ -2331,25 +2331,35 @@ profiler_start(int aEntries, double aInterval,
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  PS::AutoLock lock(gPSMutex);
+  SamplerThread* samplerThread = nullptr;
+  {
+    PS::AutoLock lock(gPSMutex);
 
-  // Initialize if necessary.
-  if (!gPS) {
-    profiler_init(nullptr);
+    // Initialize if necessary.
+    if (!gPS) {
+      profiler_init(nullptr);
+    }
+
+    // Reset the current state if the profiler is running.
+    if (gPS->IsActive(lock)) {
+      samplerThread = locked_profiler_stop(lock);
+    }
+
+    locked_profiler_start(lock, aEntries, aInterval, aFeatures, aFeatureCount,
+                          aThreadNameFilters, aFilterCount);
   }
 
-  // Reset the current state if the profiler is running.
-  if (gPS->IsActive(lock)) {
-    locked_profiler_stop(lock);
+  // We call Join() with gPSMutex unlocked. The comment in profiler_stop()
+  // explains why.
+  if (samplerThread) {
+    samplerThread->Join();
+    delete samplerThread;
   }
-
-  locked_profiler_start(lock, aEntries, aInterval, aFeatures, aFeatureCount,
-                        aThreadNameFilters, aFilterCount);
 
   LOG("END   profiler_start");
 }
 
-static SamplerThread*
+static MOZ_MUST_USE SamplerThread*
 locked_profiler_stop(PS::LockRef aLock)
 {
   LOG("BEGIN locked_profiler_stop");
