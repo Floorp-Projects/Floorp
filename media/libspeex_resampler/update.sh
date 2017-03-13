@@ -25,5 +25,4 @@ patch -p3 < simd-detect-runtime.patch
 patch -p3 < set-skip-frac.patch
 patch -p3 < hugemem.patch
 patch -p3 < remove-empty-asm-clobber.patch
-patch -p3 < handle-memory-error.patch
-patch -p3 < fix-overflow.patch
+patch -p3 < set-rate-overflow-no-return.patch

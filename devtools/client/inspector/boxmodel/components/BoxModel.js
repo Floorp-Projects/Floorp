@@ -23,6 +23,7 @@ module.exports = createClass({
     onHideBoxModelHighlighter: PropTypes.func.isRequired,
     onShowBoxModelEditor: PropTypes.func.isRequired,
     onShowBoxModelHighlighter: PropTypes.func.isRequired,
+    onToggleGeometryEditor: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -34,6 +35,7 @@ module.exports = createClass({
       onHideBoxModelHighlighter,
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
+      onToggleGeometryEditor,
     } = this.props;
 
     return dom.div(
@@ -48,6 +50,7 @@ module.exports = createClass({
       }),
       BoxModelInfo({
         boxModel,
+        onToggleGeometryEditor,
       }),
       showBoxModelProperties ?
         BoxModelProperties({

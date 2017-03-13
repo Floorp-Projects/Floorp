@@ -239,9 +239,14 @@ public:
   NS_IMETHOD_(bool) GetPlaceholderVisibility() override;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() override;
   NS_IMETHOD_(void) OnValueChanged(bool aNotify, bool aWasInteractiveUserChange) override;
+  virtual void GetValueFromSetRangeText(nsAString& aValue) override;
+  virtual nsresult SetValueFromSetRangeText(const nsAString& aValue) override;
   NS_IMETHOD_(bool) HasCachedSelection() override;
-  NS_IMETHOD GetSelectionRange(int32_t* aSelectionStart,
-                               int32_t* aSelectionEnd) override;
+
+  // Methods for nsFormFillController so it can do selection operations on input
+  // types the HTML spec doesn't support them on, like "email".
+  uint32_t GetSelectionStartIgnoringType(ErrorResult& aRv);
+  uint32_t GetSelectionEndIgnoringType(ErrorResult& aRv);
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
@@ -293,11 +298,10 @@ public:
 
   void MaybeLoadImage();
 
-  void SetSelectionProperties(const nsTextEditorState::SelectionProperties& aProps)
+  void SetSelectionCached()
   {
     MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
     mSelectionCached = true;
-    mSelectionProperties = aProps;
   }
   bool IsSelectionCached() const
   {
@@ -712,25 +716,24 @@ public:
 
   // XPCOM Select() is OK
 
-  Nullable<int32_t> GetSelectionStart(ErrorResult& aRv);
-  void SetSelectionStart(const Nullable<int32_t>& aValue, ErrorResult& aRv);
+  Nullable<uint32_t> GetSelectionStart(ErrorResult& aRv);
+  void SetSelectionStart(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
 
-  Nullable<int32_t> GetSelectionEnd(ErrorResult& aRv);
-  void SetSelectionEnd(const Nullable<int32_t>& aValue, ErrorResult& aRv);
+  Nullable<uint32_t> GetSelectionEnd(ErrorResult& aRv);
+  void SetSelectionEnd(const Nullable<uint32_t>& aValue, ErrorResult& aRv);
 
   void GetSelectionDirection(nsAString& aValue, ErrorResult& aRv);
   void SetSelectionDirection(const nsAString& aValue, ErrorResult& aRv);
 
-  void SetSelectionRange(int32_t aStart, int32_t aEnd,
+  void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
                          const Optional< nsAString >& direction,
                          ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
 
   void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
-                    uint32_t aEnd, const SelectionMode& aSelectMode,
-                    ErrorResult& aRv, int32_t aSelectionStart = -1,
-                    int32_t aSelectionEnd = -1);
+                    uint32_t aEnd, SelectionMode aSelectMode,
+                    ErrorResult& aRv);
 
   bool Allowdirs() const
   {
@@ -1483,6 +1486,14 @@ protected:
    * decide whether to add this element into its dispatch-to-content region.
    */
   void UpdateApzAwareFlag();
+
+  /**
+   * A helper to get the current selection range.  Will throw on the ErrorResult
+   * if we have no editor state.
+   */
+  void GetSelectionRange(uint32_t* aSelectionStart,
+                         uint32_t* aSelectionEnd,
+                         ErrorResult& aRv);
 
   nsCOMPtr<nsIControllers> mControllers;
 

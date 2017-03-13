@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
                                       "extensions.webextensions.remote", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparateFileUriProcess",
                                       "browser.tabs.remote.separateFileUriProcess", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "allowLinkedWebInFileUriProcess",
+                                      "browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
 XPCOMUtils.defineLazyModuleGetter(this, "Utils",
                                   "resource://gre/modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
@@ -45,8 +47,20 @@ const LARGE_ALLOCATION_REMOTE_TYPE = "webLargeAllocation";
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
 
 function validatedWebRemoteType(aPreferredRemoteType) {
-  return aPreferredRemoteType && aPreferredRemoteType.startsWith(WEB_REMOTE_TYPE)
-         ? aPreferredRemoteType : WEB_REMOTE_TYPE;
+  if (!aPreferredRemoteType) {
+    return WEB_REMOTE_TYPE;
+  }
+
+  if (aPreferredRemoteType.startsWith(WEB_REMOTE_TYPE)) {
+    return aPreferredRemoteType;
+  }
+
+  if (allowLinkedWebInFileUriProcess &&
+      aPreferredRemoteType == FILE_REMOTE_TYPE) {
+    return aPreferredRemoteType;
+  }
+
+  return WEB_REMOTE_TYPE;
 }
 
 this.E10SUtils = {

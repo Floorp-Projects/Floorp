@@ -789,8 +789,10 @@ struct SVGDrawingParameters
     , opacity(aSVGContext ? aSVGContext->GetGlobalOpacity() : aOpacity)
   {
     if (aSVGContext) {
-      CSSIntSize sz = aSVGContext->GetViewportSize();
-      viewportSize = nsIntSize(sz.width, sz.height); // XXX losing unit
+      auto sz = aSVGContext->GetViewportSize();
+      if (sz) {
+        viewportSize = nsIntSize(sz->width, sz->height); // XXX losing unit
+      }
     }
   }
 
@@ -844,31 +846,31 @@ VectorImage::Draw(gfxContext* aContext,
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
-  Maybe<SVGImageContext> svgContext;
-  // If FLAG_FORCE_PRESERVEASPECTRATIO_NONE bit is set, that mean we should
+  // If FLAG_FORCE_PRESERVEASPECTRATIO_NONE bit is set, that means we should
   // overwrite SVG preserveAspectRatio attibute of this image with none, and
   // always stretch this image to viewport non-uniformly.
   // And we can do this only if the caller pass in the the SVG viewport, via
   // aSVGContext.
-  if ((aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext.isSome()) {
+  Maybe<SVGImageContext> newSVGContext;
+  if ((aFlags & FLAG_FORCE_PRESERVEASPECTRATIO_NONE) && aSVGContext) {
     Maybe<SVGPreserveAspectRatio> aspectRatio =
       Some(SVGPreserveAspectRatio(SVG_PRESERVEASPECTRATIO_NONE,
                                   SVG_MEETORSLICE_UNKNOWN));
-    svgContext = Some(SVGImageContext(*aSVGContext)); // copy
-    svgContext->SetPreserveAspectRatio(aspectRatio);
-  } else {
-    svgContext = aSVGContext;
+    newSVGContext = aSVGContext; // copy
+    newSVGContext->SetPreserveAspectRatio(aspectRatio);
   }
 
   float animTime =
     (aWhichFrame == FRAME_FIRST) ? 0.0f
                                  : mSVGDocumentWrapper->GetCurrentTime();
-  AutoSVGRenderingState autoSVGState(svgContext, animTime,
+  AutoSVGRenderingState autoSVGState(newSVGContext ? newSVGContext : aSVGContext,
+                                     animTime,
                                      mSVGDocumentWrapper->GetRootSVGElem());
 
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
-                              svgContext, animTime, aFlags, aOpacity);
+                              newSVGContext ? newSVGContext : aSVGContext,
+                              animTime, aFlags, aOpacity);
 
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.

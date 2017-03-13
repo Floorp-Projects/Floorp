@@ -17,6 +17,10 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const global = this;
 
+/* globals atob, btoa */
+
+Cu.importGlobalProperties(["atob", "btoa"]);
+
 Cu.import("resource://gre/modules/AppConstants.jsm");
 const KINTO_PROD_SERVER_URL = "https://webextensions.settings.services.mozilla.com/v1";
 const KINTO_DEFAULT_SERVER_URL = KINTO_PROD_SERVER_URL;

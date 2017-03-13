@@ -488,37 +488,44 @@ GetLoggedData(TimeStamp aTimeStamp)
 
       switch (log.mType) {
       case ACTION_DISPATCH:
-        buffer.AppendPrintf("%d %lld %lld %lld %d %lld",
+        buffer.AppendPrintf("%d %llu %llu %llu %d %llu",
                             ACTION_DISPATCH,
-                            log.mDispatch.mTaskId,
-                            log.mDispatch.mTime,
-                            log.mDispatch.mSourceEventId,
+                            (unsigned long long)log.mDispatch.mTaskId,
+                            (unsigned long long)log.mDispatch.mTime,
+                            (unsigned long long)log.mDispatch.mSourceEventId,
                             log.mDispatch.mSourceEventType,
-                            log.mDispatch.mParentTaskId);
+                            (unsigned long long)log.mDispatch.mParentTaskId);
         break;
 
       case ACTION_BEGIN:
-        buffer.AppendPrintf("%d %lld %lld %d %d",
-                            ACTION_BEGIN, log.mBegin.mTaskId,
-                            log.mBegin.mTime, log.mBegin.mPid,
+        buffer.AppendPrintf("%d %llu %llu %d %d",
+                            ACTION_BEGIN,
+                            (unsigned long long)log.mBegin.mTaskId,
+                            (unsigned long long)log.mBegin.mTime,
+                            log.mBegin.mPid,
                             log.mBegin.mTid);
         break;
 
       case ACTION_END:
-        buffer.AppendPrintf("%d %lld %lld",
-                            ACTION_END, log.mEnd.mTaskId, log.mEnd.mTime);
+        buffer.AppendPrintf("%d %llu %llu",
+                            ACTION_END,
+                            (unsigned long long)log.mEnd.mTaskId,
+                            (unsigned long long)log.mEnd.mTime);
         break;
 
       case ACTION_GET_VTABLE:
-        buffer.AppendPrintf("%d %lld %p",
-                            ACTION_GET_VTABLE, log.mVPtr.mTaskId,
-                            log.mVPtr.mVPtr);
+        buffer.AppendPrintf("%d %llu %p",
+                            ACTION_GET_VTABLE,
+                            (unsigned long long)log.mVPtr.mTaskId,
+                            (void*)log.mVPtr.mVPtr);
         break;
 
       case ACTION_ADD_LABEL:
-        buffer.AppendPrintf("%d %lld %lld \"%s\"",
-                            ACTION_ADD_LABEL, log.mLabel.mTaskId,
-                            log.mLabel.mTime, strs[log.mLabel.mStrIdx].get());
+        buffer.AppendPrintf("%d %llu %llu2 \"%s\"",
+                            ACTION_ADD_LABEL,
+                            (unsigned long long)log.mLabel.mTaskId,
+                            (unsigned long long)log.mLabel.mTime,
+                            strs[log.mLabel.mStrIdx].get());
         break;
 
       default:

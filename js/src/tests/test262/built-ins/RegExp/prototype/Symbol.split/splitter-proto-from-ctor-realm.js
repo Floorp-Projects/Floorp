@@ -18,7 +18,7 @@ info: >
 features: [Symbol.species]
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 other.shared = null;
 var C = new other.Function('shared = this; return /./;');
 C.prototype = null;

@@ -27,7 +27,7 @@ includes: [testTypedArray.js, detachArrayBuffer.js]
 features: [Reflect]
 ---*/
 
-var other = $.createRealm().global;
+var other = $262.createRealm().global;
 var desc = {
   value: 0,
   configurable: false,

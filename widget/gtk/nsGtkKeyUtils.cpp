@@ -606,44 +606,59 @@ KeymapWrapper::AreModifiersActive(Modifiers aModifiers,
     return true;
 }
 
+/* static */ uint32_t
+KeymapWrapper::ComputeCurrentKeyModifiers()
+{
+    return ComputeKeyModifiers(GetCurrentModifierState());
+}
+
+/* static */ uint32_t
+KeymapWrapper::ComputeKeyModifiers(guint aModifierState)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+
+    uint32_t keyModifiers = 0;
+    // DOM Meta key should be TRUE only on Mac.  We need to discuss this
+    // issue later.
+    if (keymapWrapper->AreModifiersActive(SHIFT, aModifierState)) {
+        keyModifiers |= MODIFIER_SHIFT;
+    }
+    if (keymapWrapper->AreModifiersActive(CTRL, aModifierState)) {
+        keyModifiers |= MODIFIER_CONTROL;
+    }
+    if (keymapWrapper->AreModifiersActive(ALT, aModifierState)) {
+        keyModifiers |= MODIFIER_ALT;
+    }
+    if (keymapWrapper->AreModifiersActive(META, aModifierState)) {
+        keyModifiers |= MODIFIER_META;
+    }
+    if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
+        keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
+        keyModifiers |= MODIFIER_OS;
+    }
+    if (keymapWrapper->AreModifiersActive(LEVEL3, aModifierState) ||
+        keymapWrapper->AreModifiersActive(LEVEL5, aModifierState)) {
+        keyModifiers |= MODIFIER_ALTGRAPH;
+    }
+    if (keymapWrapper->AreModifiersActive(CAPS_LOCK, aModifierState)) {
+        keyModifiers |= MODIFIER_CAPSLOCK;
+    }
+    if (keymapWrapper->AreModifiersActive(NUM_LOCK, aModifierState)) {
+        keyModifiers |= MODIFIER_NUMLOCK;
+    }
+    if (keymapWrapper->AreModifiersActive(SCROLL_LOCK, aModifierState)) {
+        keyModifiers |= MODIFIER_SCROLLLOCK;
+    }
+    return keyModifiers;
+}
+
 /* static */ void
 KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
                               guint aModifierState)
 {
     KeymapWrapper* keymapWrapper = GetInstance();
 
-    aInputEvent.mModifiers = 0;
-    // DOM Meta key should be TRUE only on Mac.  We need to discuss this
-    // issue later.
-    if (keymapWrapper->AreModifiersActive(SHIFT, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_SHIFT;
-    }
-    if (keymapWrapper->AreModifiersActive(CTRL, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_CONTROL;
-    }
-    if (keymapWrapper->AreModifiersActive(ALT, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_ALT;
-    }
-    if (keymapWrapper->AreModifiersActive(META, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_META;
-    }
-    if (keymapWrapper->AreModifiersActive(SUPER, aModifierState) ||
-        keymapWrapper->AreModifiersActive(HYPER, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_OS;
-    }
-    if (keymapWrapper->AreModifiersActive(LEVEL3, aModifierState) ||
-        keymapWrapper->AreModifiersActive(LEVEL5, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_ALTGRAPH;
-    }
-    if (keymapWrapper->AreModifiersActive(CAPS_LOCK, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_CAPSLOCK;
-    }
-    if (keymapWrapper->AreModifiersActive(NUM_LOCK, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_NUMLOCK;
-    }
-    if (keymapWrapper->AreModifiersActive(SCROLL_LOCK, aModifierState)) {
-        aInputEvent.mModifiers |= MODIFIER_SCROLLLOCK;
-    }
+    aInputEvent.mModifiers = ComputeKeyModifiers(aModifierState);
 
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Debug,
         ("%p InitInputEvent, aModifierState=0x%08X, "

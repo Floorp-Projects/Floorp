@@ -19,7 +19,7 @@ iter1.next().then(function(result) {
   assert.sameValue(
     result.done, false, "Without right-hand-side: first result `done` flag");
 }).then(undefined, $DONE);
-iter1.next(function(result) {
+iter1.next().then(function(result) {
   assert.sameValue(
     result.value, undefined, "Without right-hand-side: second result `value`");
   assert.sameValue(
@@ -33,7 +33,7 @@ iter2.next().then(function(result) {
   assert.sameValue(
     result.done, false, "With right-hand-side: first result `done` flag");
 }).then(undefined, $DONE);
-iter2.next(function(result) {
+iter2.next().then(function(result) {
   assert.sameValue(
     result.value, undefined, "With right-hand-side: second result `value`");
   assert.sameValue(

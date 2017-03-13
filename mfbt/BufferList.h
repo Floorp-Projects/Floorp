@@ -316,6 +316,7 @@ private:
   void* AllocateSegment(size_t aSize, size_t aCapacity)
   {
     MOZ_RELEASE_ASSERT(mOwning);
+    MOZ_ASSERT(aSize <= aCapacity);
 
     char* data = this->template pod_malloc<char>(aCapacity);
     if (!data) {

@@ -2479,8 +2479,12 @@ class BaseCompiler
         masm.freeStack(stackSpace + adjustment);
 
         if (call.reloadMachineStateAfter) {
+            // On x86 there are no pinned registers, so don't waste time
+            // reloading the Tls.
+#ifndef JS_CODEGEN_X86
             loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
             masm.loadWasmPinnedRegsFromTls();
+#endif
         }
     }
 
@@ -5398,6 +5402,7 @@ BaseCompiler::emitLoop()
     bceSafe_ = 0;
 
     if (!deadCode_) {
+        masm.nopAlign(CodeAlignment);
         masm.bind(&controlItem(0).label);
         addInterruptCheck();
     }

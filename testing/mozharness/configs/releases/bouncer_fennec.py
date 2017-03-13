@@ -5,7 +5,7 @@ config = {
             "product-name": "Fennec-%(version)s",
             "check_uptake": True,
             "alias": "fennec-latest",
-            "ssl-only": False,
+            "ssl-only": True,
             "add-locales": False,  # Do not add locales to let "multi" work
             "paths": {
                 "android-api-15": {

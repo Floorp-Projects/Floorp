@@ -111,10 +111,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1162990
     }
 
     function finishTest() {
-      parent.is(test_basketLeave,       0, "Part1: basket should not receive pointerleave event after pointer capturing");
+      parent.is(test_basketLeave,       1, "Part1: basket should receive pointerleave event after pointer capturing");
       parent.is(test_targetGotCapture,  1, "Part1: target should receive gotpointercapture event");
       parent.is(test_targetLostCapture, 1, "Part1: target should receive lostpointercapture event");
-      parent.is(test_targetLeave,       2, "Part1: target should receive pointerleave event two times");
+      parent.is(test_targetLeave,       1, "Part1: target should receive pointerleave event only one time");
       parent.is(test_childLeave,        0, "Part1: child should not receive pointerleave event after pointer capturing");
       parent.is(test_listenerDown,      1, "Part1: listener should receive pointerdown event");
       parent.is(test_listenerLeave,     1, "Part1: listener should receive pointerleave event only one time");

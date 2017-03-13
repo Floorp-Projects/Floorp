@@ -293,12 +293,13 @@ OrientedImage::Draw(gfxContext* aContext,
   region.TransformBoundsBy(inverseMatrix);
 
   auto orientViewport = [&](const SVGImageContext& aOldContext) {
-    CSSIntSize viewportSize(aOldContext.GetViewportSize());
-    if (mOrientation.SwapsWidthAndHeight()) {
-      swap(viewportSize.width, viewportSize.height);
-    }
     SVGImageContext context(aOldContext);
-    context.SetViewportSize(viewportSize);
+    auto oldViewport = aOldContext.GetViewportSize();
+    if (oldViewport && mOrientation.SwapsWidthAndHeight()) {
+      // Swap width and height:
+      CSSIntSize newViewport(oldViewport->height, oldViewport->width);
+      context.SetViewportSize(Some(newViewport));
+    }
     return context;
   };
 
