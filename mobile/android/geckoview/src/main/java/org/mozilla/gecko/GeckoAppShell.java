@@ -290,7 +290,7 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     public static native void syncNotifyObservers(String topic, String data);
 
-    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "proxy")
+    @WrapForJNI(stubName = "NotifyObservers", dispatchTo = "gecko")
     private static native void nativeNotifyObservers(String topic, String data);
 
     @RobocopTarget
@@ -305,6 +305,19 @@ public class GeckoAppShell
             GeckoThread.queueNativeCallUntil(
                     state, GeckoAppShell.class, "nativeNotifyObservers",
                     String.class, topic, String.class, data);
+        }
+    }
+
+    @WrapForJNI(stubName = "NotifyPushObservers", dispatchTo = "proxy")
+    private static native void nativeNotifyPushObservers(String topic, String data);
+
+    public static void notifyPushObservers(final String topic, final String data) {
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            nativeNotifyPushObservers(topic, data);
+        } else {
+            GeckoThread.queueNativeCallUntil(
+                    GeckoThread.State.PROFILE_READY, GeckoAppShell.class,
+                    "nativeNotifyPushObservers", String.class, topic, String.class, data);
         }
     }
 
