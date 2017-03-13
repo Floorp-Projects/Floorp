@@ -2294,8 +2294,8 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
-        RefPtr<mozilla::css::Loader> cssLoader =
-          new mozilla::css::Loader(backendType);
+        RefPtr<css::Loader> cssLoader =
+          new css::Loader(backendType, aDocument->GetDocGroup());
 
         char *str = ToNewCString(sheets);
         char *newStr = str;
