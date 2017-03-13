@@ -66,14 +66,10 @@ struct AstDecodeStackItem
 // We don't define a Value type because OpIter doesn't push void values, which
 // we actually need here because we're building an AST, so we maintain our own
 // stack.
-struct AstDecodePolicy : OpIterPolicy
+struct AstDecodePolicy
 {
-    // Enable validation because we can be called from wasmBinaryToText on bytes
-    // which are not necessarily valid, and we shouldn't run the decoder in
-    // non-validating mode on invalid code.
-    static const bool Validate = true;
-
-    static const bool Output = true;
+    typedef Nothing Value;
+    typedef Nothing ControlItem;
 };
 
 typedef OpIter<AstDecodePolicy> AstDecodeOpIter;
