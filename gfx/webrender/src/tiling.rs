@@ -7,7 +7,7 @@ use fnv::FnvHasher;
 use gpu_store::GpuStoreAddress;
 use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
 use internal_types::SourceTexture;
-use mask_cache::{ClipSource, MaskCacheInfo};
+use mask_cache::MaskCacheInfo;
 use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve, GpuBlock128, GpuBlock16, GpuBlock32};
 use prim_store::{GpuBlock64, GradientData, PrimitiveCacheKey, PrimitiveGeometry, PrimitiveIndex};
 use prim_store::{PrimitiveKind, PrimitiveMetadata, PrimitiveStore, TexelRect};
@@ -105,7 +105,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
             }
             PrimitiveKind::YuvImage => {
                 let image_cpu = &self.cpu_yuv_images[metadata.cpu_prim_index.0];
-                [image_cpu.y_texture_id, image_cpu.u_texture_id, image_cpu.v_texture_id]
+                image_cpu.yuv_texture_id
             }
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
@@ -126,6 +126,13 @@ impl AlphaBatchHelpers for PrimitiveStore {
                 } else {
                     // Text runs drawn to blur never get drawn with subpixel AA.
                     BlendMode::Alpha
+                }
+            }
+            PrimitiveKind::Image => {
+                if needs_blending {
+                    BlendMode::PremultipliedAlpha
+                } else {
+                    BlendMode::None
                 }
             }
             _ => {
@@ -277,6 +284,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
                         });
                     }
                     AlphaBatchKind::YuvImage => {
+                        let image_yuv_cpu = &self.cpu_yuv_images[metadata.cpu_prim_index.0];
+
                         data.push(PrimitiveInstance {
                             task_index: task_index,
                             clip_task_index: clip_task_index,
@@ -284,7 +293,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
                             global_prim_id: global_prim_id,
                             prim_address: prim_address,
                             sub_index: 0,
-                            user_data: [ 0, 0 ],
+                            user_data: [ image_yuv_cpu.yuv_resource_address.0, 0 ],
                             z_sort_index: z_sort_index,
                         });
                     }
@@ -391,13 +400,10 @@ pub struct ScrollbarPrimitive {
     pub border_radius: f32,
 }
 
+#[derive(Debug)]
 pub enum PrimitiveRunCmd {
     PushStackingContext(StackingContextIndex),
     PopStackingContext,
-
-    PushScrollLayer(ScrollLayerIndex),
-    PopScrollLayer,
-
     PrimitiveRun(PrimitiveIndex, usize, ScrollLayerId),
 }
 
@@ -1395,18 +1401,6 @@ impl ClipScrollGroup {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct ScrollLayerIndex(pub usize);
-
-pub struct ScrollLayer {
-    pub scroll_layer_id: ScrollLayerId,
-    pub parent_index: ScrollLayerIndex,
-    pub clip_source: ClipSource,
-    pub clip_cache_info: Option<MaskCacheInfo>,
-    pub packed_layer_index: PackedLayerIndex,
-    pub xf_rect: Option<TransformedRect>,
-}
-
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct PackedLayer {
@@ -1472,13 +1466,6 @@ impl CompositeOps {
         CompositeOps {
             filters: filters,
             mix_blend_mode: mix_blend_mode
-        }
-    }
-
-    pub fn empty() -> CompositeOps {
-        CompositeOps {
-            filters: Vec::new(),
-            mix_blend_mode: None,
         }
     }
 
