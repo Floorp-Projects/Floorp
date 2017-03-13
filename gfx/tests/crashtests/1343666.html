@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function f()
+{
+    finish();
+}
+
+window.onload = function() {
+  let a = window.open("data:text/plain,test", null, "width=300,height=300");
+  setTimeout(function(){
+    a.close();
+    a.addEventListener("vrdisplayconnect", function(){});
+    window.close();
+    document.documentElement.removeAttribute("class");
+  }, 0);
+};
+
+</script>
+</head>
+</html>
