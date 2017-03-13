@@ -1038,7 +1038,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
                                filters);
     state.frame_builder.dl_builder.push_scroll_layer(clip_region,
                                                      bounds.size,
-                                                     ServoScrollRootId(1));
+                                                     Some(ServoScrollRootId(1)));
 }
 
 #[no_mangle]
@@ -1066,7 +1066,7 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
     state.frame_builder.dl_builder.push_scroll_layer(clip_region,
                                                      bounds.size,
-                                                     ServoScrollRootId(1));
+                                                     Some(ServoScrollRootId(1)));
 }
 
 #[no_mangle]

@@ -2,11 +2,379 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use app_units::Au;
+use euclid::SideOffsets2D;
 use display_list::AuxiliaryListsBuilder;
-use {BorderRadius, ClipRegion, ColorF, ComplexClipRegion};
-use {FontKey, ImageKey, PipelineId, ScrollLayerId, ScrollLayerInfo, ServoScrollRootId};
-use {ImageMask, ItemRange};
-use {LayoutSize, LayoutPoint, LayoutRect};
+use {ColorF, FontKey, ImageKey, PipelineId, WebGLContextId};
+use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
+use {PropertyBinding};
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct DisplayItem {
+    pub item: SpecificDisplayItem,
+    pub rect: LayoutRect,
+    pub clip: ClipRegion,
+    pub scroll_layer_id: ScrollLayerId,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum SpecificDisplayItem {
+    Clip(ClipDisplayItem),
+    Rectangle(RectangleDisplayItem),
+    Text(TextDisplayItem),
+    Image(ImageDisplayItem),
+    YuvImage(YuvImageDisplayItem),
+    WebGL(WebGLDisplayItem),
+    Border(BorderDisplayItem),
+    BoxShadow(BoxShadowDisplayItem),
+    Gradient(GradientDisplayItem),
+    RadialGradient(RadialGradientDisplayItem),
+    Iframe(IframeDisplayItem),
+    PushStackingContext(PushStackingContextDisplayItem),
+    PopStackingContext,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ItemRange {
+    pub start: usize,
+    pub length: usize,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ClipDisplayItem {
+    pub content_size: LayoutSize,
+    pub id: ScrollLayerId,
+    pub parent_id: ScrollLayerId,
+    pub scroll_root_id: Option<ServoScrollRootId>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RectangleDisplayItem {
+    pub color: ColorF,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct TextDisplayItem {
+    pub glyphs: ItemRange,
+    pub font_key: FontKey,
+    pub size: Au,
+    pub color: ColorF,
+    pub blur_radius: Au,
+    pub glyph_options: Option<GlyphOptions>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct GlyphOptions {
+    // These are currently only used on windows for dwrite fonts.
+    pub use_embedded_bitmap: bool,
+    pub force_gdi_rendering: bool,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct WebGLDisplayItem {
+    pub context_id: WebGLContextId,
+}
+
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct NormalBorder {
+    pub left: BorderSide,
+    pub right: BorderSide,
+    pub top: BorderSide,
+    pub bottom: BorderSide,
+    pub radius: BorderRadius,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum RepeatMode {
+    Stretch,
+    Repeat,
+    Round,
+    Space,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct NinePatchDescriptor {
+    pub width: u32,
+    pub height: u32,
+    pub slice: SideOffsets2D<u32>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ImageBorder {
+    pub image_key: ImageKey,
+    pub patch: NinePatchDescriptor,
+    pub outset: SideOffsets2D<f32>,
+    pub repeat_horizontal: RepeatMode,
+    pub repeat_vertical: RepeatMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct GradientBorder {
+    pub gradient: Gradient,
+    pub outset: SideOffsets2D<f32>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RadialGradientBorder {
+    pub gradient: RadialGradient,
+    pub outset: SideOffsets2D<f32>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum BorderDetails {
+    Normal(NormalBorder),
+    Image(ImageBorder),
+    Gradient(GradientBorder),
+    RadialGradient(RadialGradientBorder),
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderDisplayItem {
+    pub widths: BorderWidths,
+    pub details: BorderDetails,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderRadius {
+    pub top_left: LayoutSize,
+    pub top_right: LayoutSize,
+    pub bottom_left: LayoutSize,
+    pub bottom_right: LayoutSize,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderWidths {
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BorderSide {
+    pub color: ColorF,
+    pub style: BorderStyle,
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum BorderStyle {
+    None    = 0,
+    Solid   = 1,
+    Double  = 2,
+    Dotted  = 3,
+    Dashed  = 4,
+    Hidden  = 5,
+    Groove  = 6,
+    Ridge   = 7,
+    Inset   = 8,
+    Outset  = 9,
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub enum BoxShadowClipMode {
+    None    = 0,
+    Outset  = 1,
+    Inset   = 2,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct BoxShadowDisplayItem {
+    pub box_bounds: LayoutRect,
+    pub offset: LayoutPoint,
+    pub color: ColorF,
+    pub blur_radius: f32,
+    pub spread_radius: f32,
+    pub border_radius: f32,
+    pub clip_mode: BoxShadowClipMode,
+}
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
+pub enum ExtendMode {
+    Clamp,
+    Repeat,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct Gradient {
+    pub start_point: LayoutPoint,
+    pub end_point: LayoutPoint,
+    pub stops: ItemRange,
+    pub extend_mode: ExtendMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct GradientDisplayItem {
+    pub gradient: Gradient,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct GradientStop {
+    pub offset: f32,
+    pub color: ColorF,
+}
+known_heap_size!(0, GradientStop);
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RadialGradient {
+    pub start_center: LayoutPoint,
+    pub start_radius: f32,
+    pub end_center: LayoutPoint,
+    pub end_radius: f32,
+    pub stops: ItemRange,
+    pub extend_mode: ExtendMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RadialGradientDisplayItem {
+    pub gradient: RadialGradient,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct PushStackingContextDisplayItem {
+    pub stacking_context: StackingContext,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct StackingContext {
+    pub scroll_policy: ScrollPolicy,
+    pub bounds: LayoutRect,
+    pub z_index: i32,
+    pub transform: Option<PropertyBinding<LayoutTransform>>,
+    pub perspective: Option<LayoutTransform>,
+    pub mix_blend_mode: MixBlendMode,
+    pub filters: ItemRange,
+}
+
+#[repr(C)]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ScrollPolicy {
+    Scrollable  = 0,
+    Fixed       = 1,
+}
+
+known_heap_size!(0, ScrollPolicy);
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum MixBlendMode {
+    Normal      = 0,
+    Multiply    = 1,
+    Screen      = 2,
+    Overlay     = 3,
+    Darken      = 4,
+    Lighten     = 5,
+    ColorDodge  = 6,
+    ColorBurn   = 7,
+    HardLight   = 8,
+    SoftLight   = 9,
+    Difference  = 10,
+    Exclusion   = 11,
+    Hue         = 12,
+    Saturation  = 13,
+    Color       = 14,
+    Luminosity  = 15,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub enum FilterOp {
+    Blur(Au),
+    Brightness(f32),
+    Contrast(f32),
+    Grayscale(f32),
+    HueRotate(f32),
+    Invert(f32),
+    Opacity(PropertyBinding<f32>),
+    Saturate(f32),
+    Sepia(f32),
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct IframeDisplayItem {
+    pub pipeline_id: PipelineId,
+}
+
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ImageDisplayItem {
+    pub image_key: ImageKey,
+    pub stretch_size: LayoutSize,
+    pub tile_spacing: LayoutSize,
+    pub image_rendering: ImageRendering,
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum ImageRendering {
+    Auto        = 0,
+    CrispEdges  = 1,
+    Pixelated   = 2,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct YuvImageDisplayItem {
+    pub y_image_key: ImageKey,
+    pub u_image_key: ImageKey,
+    pub v_image_key: ImageKey,
+    pub color_space: YuvColorSpace,
+}
+
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum YuvColorSpace {
+    Rec601 = 1, // The values must match the ones in prim_shared.glsl
+    Rec709 = 2,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ImageMask {
+    pub image: ImageKey,
+    pub rect: LayoutRect,
+    pub repeat: bool,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ClipRegion {
+    pub main: LayoutRect,
+    pub complex: ItemRange,
+    pub image_mask: Option<ImageMask>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ComplexClipRegion {
+    /// The boundaries of the rectangle.
+    pub rect: LayoutRect,
+    /// Border radii of this rectangle.
+    pub radii: BorderRadius,
+}
+
+impl StackingContext {
+    pub fn new(scroll_policy: ScrollPolicy,
+               bounds: LayoutRect,
+               z_index: i32,
+               transform: Option<PropertyBinding<LayoutTransform>>,
+               perspective: Option<LayoutTransform>,
+               mix_blend_mode: MixBlendMode,
+               filters: Vec<FilterOp>,
+               auxiliary_lists_builder: &mut AuxiliaryListsBuilder)
+               -> StackingContext {
+        StackingContext {
+            scroll_policy: scroll_policy,
+            bounds: bounds,
+            z_index: z_index,
+            transform: transform,
+            perspective: perspective,
+            mix_blend_mode: mix_blend_mode,
+            filters: auxiliary_lists_builder.add_filters(&filters),
+        }
+    }
+}
 
 impl BorderRadius {
     pub fn zero() -> BorderRadius {
@@ -141,26 +509,48 @@ impl ComplexClipRegion {
     }
 }
 
-impl FontKey {
-    pub fn new(key0: u32, key1: u32) -> FontKey {
-        FontKey(key0, key1)
-    }
-}
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ServoScrollRootId(pub usize);
 
-impl ImageKey {
-    pub fn new(key0: u32, key1: u32) -> ImageKey {
-        ImageKey(key0, key1)
-    }
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ScrollLayerId {
+    pub pipeline_id: PipelineId,
+    pub info: ScrollLayerInfo,
 }
 
 impl ScrollLayerId {
-    pub fn new(pipeline_id: PipelineId,
-               index: usize,
-               scroll_root_id: ServoScrollRootId)
-               -> ScrollLayerId {
+    pub fn root_scroll_layer(pipeline_id: PipelineId) -> ScrollLayerId {
         ScrollLayerId {
             pipeline_id: pipeline_id,
-            info: ScrollLayerInfo::Scrollable(index, scroll_root_id),
+            info: ScrollLayerInfo::Scrollable(0),
         }
     }
+
+    pub fn root_reference_frame(pipeline_id: PipelineId) -> ScrollLayerId {
+        ScrollLayerId {
+            pipeline_id: pipeline_id,
+            info: ScrollLayerInfo::ReferenceFrame(0),
+        }
+    }
+
+    pub fn is_reference_frame(&self) -> bool {
+        match self.info {
+            ScrollLayerInfo::Scrollable(..) => false,
+            ScrollLayerInfo::ReferenceFrame(..) => true,
+        }
+    }
+
+    pub fn new(pipeline_id: PipelineId, index: usize) -> ScrollLayerId {
+        ScrollLayerId {
+            pipeline_id: pipeline_id,
+            info: ScrollLayerInfo::Scrollable(index),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum ScrollLayerInfo {
+    Scrollable(usize),
+    ReferenceFrame(usize),
 }
