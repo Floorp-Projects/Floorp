@@ -537,6 +537,11 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
     return true;
 }
 
+mozilla::PrintfTarget::PrintfTarget()
+  : mEmitted(0)
+{
+}
+
 bool
 mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 {
