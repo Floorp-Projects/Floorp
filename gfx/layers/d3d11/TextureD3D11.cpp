@@ -402,7 +402,7 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
   if (!NS_IsMainThread() || !!(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) {
     // On the main thread we use the syncobject to handle synchronization.
-    if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION) && aDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
+    if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION)) {
       newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
     }
   }
