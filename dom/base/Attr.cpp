@@ -319,13 +319,6 @@ Attr::GetChildAt(uint32_t aIndex) const
   return nullptr;
 }
 
-nsIContent * const *
-Attr::GetChildArray(uint32_t* aChildCount) const
-{
-  *aChildCount = 0;
-  return nullptr;
-}
-
 int32_t
 Attr::IndexOf(const nsINode* aPossibleChild) const
 {
