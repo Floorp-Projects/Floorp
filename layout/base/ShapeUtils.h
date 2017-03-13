@@ -73,6 +73,14 @@ struct ShapeUtils final
     const nsRect& aInsetRect,
     const nsRect& aRefBox,
     nscoord aRadii[8]);
+
+  // Compute the vertices for a polygon.
+  // @param aRefBox the reference box of the polygon.
+  // @return The vertices in app units; the coordinate space is the same
+  //         as aRefBox.
+  static nsTArray<nsPoint> ComputePolygonVertices(
+    const StyleBasicShape* aBasicShape,
+    const nsRect& aRefBox);
 };
 
 } // namespace mozilla
