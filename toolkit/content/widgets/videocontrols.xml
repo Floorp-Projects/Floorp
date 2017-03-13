@@ -285,11 +285,16 @@
           show = false;
         }
 
+        if (this._showThrobberTimer) {
+          show = true;
+        }
+
         this.log("Status overlay: seeking=" + this.video.seeking +
                  " error=" + this.video.error + " readyState=" + this.video.readyState +
                  " paused=" + this.video.paused + " ended=" + this.video.ended +
                  " networkState=" + this.video.networkState +
                  " timeUpdateCount=" + this.timeUpdateCount +
+                 " _showThrobberTimer=" + this._showThrobberTimer +
                  " --> " + (show ? "SHOW" : "HIDE"));
         this.startFade(this.statusOverlay, show, immediate);
       },
@@ -493,6 +498,37 @@
         this.volumeControl.value = volumePercentage;
       },
 
+      /*
+       * We suspend a video element's video decoder if the video
+       * element is invisible. However, resuming the video decoder
+       * takes time and we show the throbber UI if it takes more than
+       * 250 ms.
+       *
+       * When an already-suspended video element becomes visible, we
+       * resume its video decoder immediately and queue a seek task to
+       * seek the resumed video decoder to the current position;
+       * meanwhile, we also file a "mozexitvideosuspend" event which
+       * we used to start the timer here.
+       *
+       * Once the queued seek operation is done, we dispatch a
+       * "canplay" event which indicates that the resuming operation
+       * is completed.
+       */
+      SHOW_THROBBER_TIMEOUT_MS: 250,
+      _showThrobberTimer: null,
+      _delayShowThrobberWhileResumingVideoDecoder() {
+          this._showThrobberTimer = setTimeout(() => {
+              this.statusIcon.setAttribute("type", "throbber");
+              this.setupStatusFader();
+          }, this.SHOW_THROBBER_TIMEOUT_MS);
+      },
+      _cancelShowThrobberWhileResumingVideoDecoder() {
+          if (this._showThrobberTimer) {
+            clearTimeout(this._showThrobberTimer);
+            this._showThrobberTimer = null;
+          }
+      },
+
       handleEvent(aEvent) {
         this.log("Got media event ----> " + aEvent.type);
 
@@ -638,6 +674,7 @@
           case "seeked":
           case "playing":
           case "canplay":
+            this._cancelShowThrobberWhileResumingVideoDecoder();
           case "canplaythrough":
             this.setupStatusFader();
             break;
@@ -665,6 +702,7 @@
             }
             break;
           case "mozexitvideosuspend":
+            this._delayShowThrobberWhileResumingVideoDecoder();
             break;
           default:
             this.log("!!! event " + aEvent.type + " not handled!");
