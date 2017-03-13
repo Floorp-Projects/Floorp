@@ -131,8 +131,8 @@ fails == wordwrap-03.html wordwrap-03.html
 == overflowwrap-04.html overflowwrap-04.html
 fails == wordwrap-05.html wordwrap-05.html
 fails == overflowwrap-05.html overflowwrap-05.html
-fails == wordwrap-06.html wordwrap-06.html
-fails == overflowwrap-06.html overflowwrap-06.html
+== wordwrap-06.html wordwrap-06.html
+== overflowwrap-06.html overflowwrap-06.html
 == wordwrap-07.html wordwrap-07.html
 == overflowwrap-07.html overflowwrap-07.html
 fails == wordwrap-08.html wordwrap-08.html # Bug 1341637, bug 1321769?

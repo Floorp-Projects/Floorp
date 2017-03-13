@@ -6,17 +6,17 @@ include zoom/reftest-stylo.list
 
 # Background-image tests
 == background-display-none-1.html background-display-none-1.html
-fails == background-simple-1.html background-simple-1.html
-fails == background-simple-2.html background-simple-2.html
+== background-simple-1.html background-simple-1.html
+== background-simple-2.html background-simple-2.html
 
 # Sightly trickier background-image test
-fails == background-viewBox-1.html background-viewBox-1.html
+== background-viewBox-1.html background-viewBox-1.html
 
 # background tests with the background area getting resized
-fails == background-resize-1.html background-resize-1.html
-fails == background-resize-2.html background-resize-2.html
-fails == background-resize-3.html background-resize-3.html
-fails == background-resize-4.html background-resize-4.html
+== background-resize-1.html background-resize-1.html
+== background-resize-2.html background-resize-2.html
+== background-resize-3.html background-resize-3.html
+== background-resize-4.html background-resize-4.html
 
 # Test for stretching background images by different amounts in each dimension
 == background-stretch-1.html background-stretch-1.html

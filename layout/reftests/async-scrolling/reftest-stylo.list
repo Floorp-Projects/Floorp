@@ -1,14 +1,14 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == bg-fixed-1.html bg-fixed-1.html
+== bg-fixed-1.html bg-fixed-1.html
 == bg-fixed-cover-1.html bg-fixed-cover-1.html
-fails == bg-fixed-cover-2.html bg-fixed-cover-2.html
+== bg-fixed-cover-2.html bg-fixed-cover-2.html
 skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3.html
 skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child.html
-fails == bg-fixed-child-clip-1.html bg-fixed-child-clip-1.html
-fails == bg-fixed-child-clip-2.html bg-fixed-child-clip-2.html
+== bg-fixed-child-clip-1.html bg-fixed-child-clip-1.html
+== bg-fixed-child-clip-2.html bg-fixed-child-clip-2.html
 fuzzy(1,246) fuzzy-if(skiaContent,2,160) fuzzy-if(browserIsRemote&&d2d,53,185) skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask.html
 == bg-fixed-in-opacity.html bg-fixed-in-opacity.html
-fails == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1.html
+== bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1.html
 == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2.html
 fuzzy-if(Android,2,4000) fuzzy-if(browserIsRemote&&cocoaWidget,2,179524) fuzzy-if(browserIsRemote&&winWidget,1,74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,1,3528) skip-if(!asyncPan) == bg-fixed-transformed-image.html bg-fixed-transformed-image.html
 == element-1.html element-1.html
