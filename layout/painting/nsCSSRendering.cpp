@@ -430,15 +430,6 @@ struct ColorStop {
 };
 
 /* Local functions */
-static DrawResult DrawBorderImage(nsPresContext* aPresContext,
-                                  nsRenderingContext& aRenderingContext,
-                                  nsIFrame* aForFrame,
-                                  const nsRect& aBorderArea,
-                                  const nsStyleBorder& aStyleBorder,
-                                  const nsRect& aDirtyRect,
-                                  Sides aSkipSides,
-                                  PaintBorderFlags aFlags);
-
 static nscolor MakeBevelColor(mozilla::Side whichSide, uint8_t style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
@@ -841,9 +832,23 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   }
 
   if (aStyleBorder.IsBorderImageLoaded()) {
-    return DrawBorderImage(aPresContext, aRenderingContext, aForFrame,
-                           aBorderArea, aStyleBorder, aDirtyRect,
-                           aSkipSides, aFlags);
+    DrawResult result;
+
+    uint32_t irFlags = 0;
+    if (aFlags & PaintBorderFlags::SYNC_DECODE_IMAGES) {
+      irFlags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
+    }
+
+    Maybe<nsCSSBorderImageRenderer> renderer =
+      nsCSSBorderImageRenderer::CreateBorderImageRenderer(aPresContext, aForFrame, aBorderArea,
+                                                          aStyleBorder, aDirtyRect, aSkipSides,
+                                                          irFlags, &result);
+    if (!renderer) {
+      return result;
+    }
+
+    return renderer->DrawBorderImage(aPresContext, aRenderingContext,
+                                     aForFrame, aDirtyRect);
   }
 
   DrawResult result = DrawResult::SUCCESS;
@@ -4099,327 +4104,6 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
       PrepareImageLayer(aPresContext, aForFrame, aFlags, borderArea,
                              aClipRect, aLayer);
   return state.mFillArea;
-}
-
-static DrawResult
-DrawBorderImage(nsPresContext*       aPresContext,
-                nsRenderingContext&  aRenderingContext,
-                nsIFrame*            aForFrame,
-                const nsRect&        aBorderArea,
-                const nsStyleBorder& aStyleBorder,
-                const nsRect&        aDirtyRect,
-                Sides                aSkipSides,
-                PaintBorderFlags     aFlags)
-{
-  NS_PRECONDITION(aStyleBorder.IsBorderImageLoaded(),
-                  "drawing border image that isn't successfully loaded");
-
-  if (aDirtyRect.IsEmpty()) {
-    return DrawResult::SUCCESS;
-  }
-
-  uint32_t irFlags = 0;
-  if (aFlags & PaintBorderFlags::SYNC_DECODE_IMAGES) {
-    irFlags |= nsImageRenderer::FLAG_SYNC_DECODE_IMAGES;
-  }
-  nsImageRenderer renderer(aForFrame, &aStyleBorder.mBorderImageSource, irFlags);
-
-  // Ensure we get invalidated for loads and animations of the image.
-  // We need to do this here because this might be the only code that
-  // knows about the association of the style data with the frame.
-  // XXX We shouldn't really... since if anybody is passing in a
-  // different style, they'll potentially have the wrong size for the
-  // border too.
-  aForFrame->AssociateImage(aStyleBorder.mBorderImageSource, aPresContext);
-
-  if (!renderer.PrepareImage()) {
-    return renderer.PrepareResult();
-  }
-
-  // NOTE: no Save() yet, we do that later by calling autoSR.EnsureSaved()
-  // in case we need it.
-  gfxContextAutoSaveRestore autoSR;
-
-  // Determine the border image area, which by default corresponds to the
-  // border box but can be modified by 'border-image-outset'.
-  // Note that 'border-radius' do not apply to 'border-image' borders per
-  // <http://dev.w3.org/csswg/css-backgrounds/#corner-clipping>.
-  nsRect borderImgArea;
-  nsMargin borderWidths(aStyleBorder.GetComputedBorder());
-  nsMargin imageOutset(aStyleBorder.GetImageOutset());
-  if (::IsBoxDecorationSlice(aStyleBorder) && !aSkipSides.IsEmpty()) {
-    borderImgArea = ::BoxDecorationRectForBorder(aForFrame, aBorderArea,
-                                                 aSkipSides, &aStyleBorder);
-    if (borderImgArea.IsEqualEdges(aBorderArea)) {
-      // No need for a clip, just skip the sides we don't want.
-      borderWidths.ApplySkipSides(aSkipSides);
-      imageOutset.ApplySkipSides(aSkipSides);
-      borderImgArea.Inflate(imageOutset);
-    } else {
-      // We're drawing borders around the joined continuation boxes so we need
-      // to clip that to the slice that we want for this frame.
-      borderImgArea.Inflate(imageOutset);
-      imageOutset.ApplySkipSides(aSkipSides);
-      nsRect clip = aBorderArea;
-      clip.Inflate(imageOutset);
-      autoSR.EnsureSaved(aRenderingContext.ThebesContext());
-      aRenderingContext.ThebesContext()->
-        Clip(NSRectToSnappedRect(clip,
-                                 aForFrame->PresContext()->AppUnitsPerDevPixel(),
-                                 *aRenderingContext.GetDrawTarget()));
-    }
-  } else {
-    borderImgArea = aBorderArea;
-    borderImgArea.Inflate(imageOutset);
-  }
-
-  // Calculate the image size used to compute slice points.
-  CSSSizeOrRatio intrinsicSize = renderer.ComputeIntrinsicSize();
-  nsSize imageSize = nsImageRenderer::ComputeConcreteSize(CSSSizeOrRatio(),
-                                                          intrinsicSize,
-                                                          borderImgArea.Size());
-  renderer.SetPreferredSize(intrinsicSize, imageSize);
-
-  // Compute the used values of 'border-image-slice' and 'border-image-width';
-  // we do them together because the latter can depend on the former.
-  nsMargin slice;
-  nsMargin border;
-  NS_FOR_CSS_SIDES(s) {
-    nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
-    int32_t imgDimension = SideIsVertical(s)
-                           ? imageSize.width : imageSize.height;
-    nscoord borderDimension = SideIsVertical(s)
-                           ? borderImgArea.width : borderImgArea.height;
-    double value;
-    switch (coord.GetUnit()) {
-      case eStyleUnit_Percent:
-        value = coord.GetPercentValue() * imgDimension;
-        break;
-      case eStyleUnit_Factor:
-        value = nsPresContext::CSSPixelsToAppUnits(
-          NS_lround(coord.GetFactorValue()));
-        break;
-      default:
-        NS_NOTREACHED("unexpected CSS unit for image slice");
-        value = 0;
-        break;
-    }
-    if (value < 0)
-      value = 0;
-    if (value > imgDimension)
-      value = imgDimension;
-    slice.Side(s) = value;
-
-    coord = aStyleBorder.mBorderImageWidth.Get(s);
-    switch (coord.GetUnit()) {
-      case eStyleUnit_Coord: // absolute dimension
-        value = coord.GetCoordValue();
-        break;
-      case eStyleUnit_Percent:
-        value = coord.GetPercentValue() * borderDimension;
-        break;
-      case eStyleUnit_Factor:
-        value = coord.GetFactorValue() * borderWidths.Side(s);
-        break;
-      case eStyleUnit_Auto:  // same as the slice value, in CSS pixels
-        value = slice.Side(s);
-        break;
-      default:
-        NS_NOTREACHED("unexpected CSS unit for border image area division");
-        value = 0;
-        break;
-    }
-    // NSToCoordRoundWithClamp rounds towards infinity, but that's OK
-    // because we expect value to be non-negative.
-    MOZ_ASSERT(value >= 0);
-    border.Side(s) = NSToCoordRoundWithClamp(value);
-    MOZ_ASSERT(border.Side(s) >= 0);
-  }
-
-  // "If two opposite border-image-width offsets are large enough that they
-  // overlap, their used values are proportionately reduced until they no
-  // longer overlap."
-  uint32_t combinedBorderWidth = uint32_t(border.left) +
-                                 uint32_t(border.right);
-  double scaleX = combinedBorderWidth > uint32_t(borderImgArea.width)
-                  ? borderImgArea.width / double(combinedBorderWidth)
-                  : 1.0;
-  uint32_t combinedBorderHeight = uint32_t(border.top) +
-                                  uint32_t(border.bottom);
-  double scaleY = combinedBorderHeight > uint32_t(borderImgArea.height)
-                  ? borderImgArea.height / double(combinedBorderHeight)
-                  : 1.0;
-  double scale = std::min(scaleX, scaleY);
-  if (scale < 1.0) {
-    border.left *= scale;
-    border.right *= scale;
-    border.top *= scale;
-    border.bottom *= scale;
-    NS_ASSERTION(border.left + border.right <= borderImgArea.width &&
-                 border.top + border.bottom <= borderImgArea.height,
-                 "rounding error in width reduction???");
-  }
-
-  // These helper tables recharacterize the 'slice' and 'width' margins
-  // in a more convenient form: they are the x/y/width/height coords
-  // required for various bands of the border, and they have been transformed
-  // to be relative to the innerRect (for 'slice') or the page (for 'border').
-  enum {
-    LEFT, MIDDLE, RIGHT,
-    TOP = LEFT, BOTTOM = RIGHT
-  };
-  const nscoord borderX[3] = {
-    borderImgArea.x + 0,
-    borderImgArea.x + border.left,
-    borderImgArea.x + borderImgArea.width - border.right,
-  };
-  const nscoord borderY[3] = {
-    borderImgArea.y + 0,
-    borderImgArea.y + border.top,
-    borderImgArea.y + borderImgArea.height - border.bottom,
-  };
-  const nscoord borderWidth[3] = {
-    border.left,
-    borderImgArea.width - border.left - border.right,
-    border.right,
-  };
-  const nscoord borderHeight[3] = {
-    border.top,
-    borderImgArea.height - border.top - border.bottom,
-    border.bottom,
-  };
-  const int32_t sliceX[3] = {
-    0,
-    slice.left,
-    imageSize.width - slice.right,
-  };
-  const int32_t sliceY[3] = {
-    0,
-    slice.top,
-    imageSize.height - slice.bottom,
-  };
-  const int32_t sliceWidth[3] = {
-    slice.left,
-    std::max(imageSize.width - slice.left - slice.right, 0),
-    slice.right,
-  };
-  const int32_t sliceHeight[3] = {
-    slice.top,
-    std::max(imageSize.height - slice.top - slice.bottom, 0),
-    slice.bottom,
-  };
-
-  DrawResult result = DrawResult::SUCCESS;
-
-  // intrinsicSize.CanComputeConcreteSize() return false means we can not
-  // read intrinsic size from aStyleBorder.mBorderImageSource.
-  // In this condition, we pass imageSize(a resolved size comes from
-  // default sizing algorithm) to renderer as the viewport size.
-  Maybe<nsSize> svgViewportSize = intrinsicSize.CanComputeConcreteSize() ?
-    Nothing() : Some(imageSize);
-  bool hasIntrinsicRatio = intrinsicSize.HasRatio();
-  renderer.PurgeCacheForViewportChange(svgViewportSize, hasIntrinsicRatio);
-
-  for (int i = LEFT; i <= RIGHT; i++) {
-    for (int j = TOP; j <= BOTTOM; j++) {
-      uint8_t fillStyleH, fillStyleV;
-      nsSize unitSize;
-
-      if (i == MIDDLE && j == MIDDLE) {
-        // Discard the middle portion unless set to fill.
-        if (NS_STYLE_BORDER_IMAGE_SLICE_NOFILL ==
-            aStyleBorder.mBorderImageFill) {
-          continue;
-        }
-
-        NS_ASSERTION(NS_STYLE_BORDER_IMAGE_SLICE_FILL ==
-                     aStyleBorder.mBorderImageFill,
-                     "Unexpected border image fill");
-
-        // css-background:
-        //     The middle image's width is scaled by the same factor as the
-        //     top image unless that factor is zero or infinity, in which
-        //     case the scaling factor of the bottom is substituted, and
-        //     failing that, the width is not scaled. The height of the
-        //     middle image is scaled by the same factor as the left image
-        //     unless that factor is zero or infinity, in which case the
-        //     scaling factor of the right image is substituted, and failing
-        //     that, the height is not scaled.
-        gfxFloat hFactor, vFactor;
-
-        if (0 < border.left && 0 < slice.left)
-          vFactor = gfxFloat(border.left)/slice.left;
-        else if (0 < border.right && 0 < slice.right)
-          vFactor = gfxFloat(border.right)/slice.right;
-        else
-          vFactor = 1;
-
-        if (0 < border.top && 0 < slice.top)
-          hFactor = gfxFloat(border.top)/slice.top;
-        else if (0 < border.bottom && 0 < slice.bottom)
-          hFactor = gfxFloat(border.bottom)/slice.bottom;
-        else
-          hFactor = 1;
-
-        unitSize.width = sliceWidth[i]*hFactor;
-        unitSize.height = sliceHeight[j]*vFactor;
-        fillStyleH = aStyleBorder.mBorderImageRepeatH;
-        fillStyleV = aStyleBorder.mBorderImageRepeatV;
-
-      } else if (i == MIDDLE) { // top, bottom
-        // Sides are always stretched to the thickness of their border,
-        // and stretched proportionately on the other axis.
-        gfxFloat factor;
-        if (0 < borderHeight[j] && 0 < sliceHeight[j])
-          factor = gfxFloat(borderHeight[j])/sliceHeight[j];
-        else
-          factor = 1;
-
-        unitSize.width = sliceWidth[i]*factor;
-        unitSize.height = borderHeight[j];
-        fillStyleH = aStyleBorder.mBorderImageRepeatH;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
-
-      } else if (j == MIDDLE) { // left, right
-        gfxFloat factor;
-        if (0 < borderWidth[i] && 0 < sliceWidth[i])
-          factor = gfxFloat(borderWidth[i])/sliceWidth[i];
-        else
-          factor = 1;
-
-        unitSize.width = borderWidth[i];
-        unitSize.height = sliceHeight[j]*factor;
-        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
-        fillStyleV = aStyleBorder.mBorderImageRepeatV;
-
-      } else {
-        // Corners are always stretched to fit the corner.
-        unitSize.width = borderWidth[i];
-        unitSize.height = borderHeight[j];
-        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
-      }
-
-      nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);
-      nsRect subArea(sliceX[i], sliceY[j], sliceWidth[i], sliceHeight[j]);
-      if (subArea.IsEmpty())
-        continue;
-
-      nsIntRect intSubArea = subArea.ToOutsidePixels(nsPresContext::AppUnitsPerCSSPixel());
-      result &=
-        renderer.DrawBorderImageComponent(aPresContext,
-                                          aRenderingContext, aDirtyRect,
-                                          destArea, CSSIntRect(intSubArea.x,
-                                                               intSubArea.y,
-                                                               intSubArea.width,
-                                                               intSubArea.height),
-                                          fillStyleH, fillStyleV,
-                                          unitSize, j * (RIGHT + 1) + i,
-                                          svgViewportSize, hasIntrinsicRatio);
-    }
-  }
-
-  return result;
 }
 
 // Begin table border-collapsing section
