@@ -7538,7 +7538,7 @@ BaseCompiler::emitFunction()
     if (!deadCode_)
         doReturn(sig.ret(), PopStack(false));
 
-    if (!iter_.readFunctionEnd())
+    if (!iter_.readFunctionEnd(iter_.end()))
         return false;
 
     if (!endFunction())
