@@ -40,7 +40,7 @@ skip-if(!webrender) pref(layers.advanced.border-layers,true) == border-reduce-he
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-fuzzy-if(skiaContent,1,13) fails-if(webrender) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(skiaContent,1,13) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html

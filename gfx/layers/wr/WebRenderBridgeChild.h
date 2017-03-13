@@ -16,6 +16,10 @@ namespace widget {
 class CompositorWidget;
 }
 
+namespace wr {
+class DisplayListBuilder;
+}
+
 namespace layers {
 
 class CompositableClient;
@@ -30,15 +34,15 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
 public:
   explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
-  void AddWebRenderCommand(const WebRenderCommand& aCmd);
-  void AddWebRenderCommands(const nsTArray<WebRenderCommand>& aCommands);
   void AddWebRenderParentCommand(const WebRenderParentCommand& aCmd);
   void AddWebRenderParentCommands(const nsTArray<WebRenderParentCommand>& aCommands);
 
   bool DPBegin(const  gfx::IntSize& aSize);
-  void DPEnd(const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
+  void DPEnd(wr::DisplayListBuilder &aBuilder, const gfx::IntSize& aSize, bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();
+
+  wr::PipelineId GetPipeline() { return mPipelineId; }
 
   // KnowsCompositor
   TextureForwarder* GetTextureForwarder() override;
@@ -69,9 +73,6 @@ private:
   ~WebRenderBridgeChild() {}
 
   uint64_t GetNextExternalImageId();
-
-  wr::BuiltDisplayList ProcessWebrenderCommands(const gfx::IntSize &aSize,
-                                                InfallibleTArray<WebRenderCommand>& aCommands);
 
   // CompositableForwarder
   void Connect(CompositableClient* aCompositable,
@@ -110,7 +111,6 @@ private:
 
   bool AddOpDestroy(const OpDestroy& aOp);
 
-  nsTArray<WebRenderCommand> mCommands;
   nsTArray<WebRenderParentCommand> mParentCommands;
   nsTArray<OpDestroy> mDestroyedActors;
   nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;

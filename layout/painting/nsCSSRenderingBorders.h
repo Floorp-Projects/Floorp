@@ -15,9 +15,12 @@
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
+#include "nsIFrame.h"
+#include "nsImageRenderer.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
+#include "gfxUtils.h"
 
 struct nsBorderColors;
 class nsDisplayBorder;
@@ -26,6 +29,9 @@ namespace mozilla {
 namespace gfx {
 class GradientStops;
 } // namespace gfx
+namespace layers {
+class WebRenderDisplayItemLayer;
+} // namespace layers
 } // namespace mozilla
 
 // define this to enable a bunch of debug dump info
@@ -79,6 +85,8 @@ class nsCSSBorderRenderer final
 
   friend class nsDisplayBorder;
   friend class nsDisplayOutline;
+  friend class nsDisplayButtonBorder;
+  friend class nsDisplayButtonForeground;
 
 public:
 
@@ -96,6 +104,9 @@ public:
 
   // draw the entire border
   void DrawBorders();
+
+  void CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                               mozilla::layers::WebRenderDisplayItemLayer* aLayer);
 
   // utility function used for background painting as well as borders
   static void ComputeInnerRadii(const RectCornerRadii& aRadii,
@@ -264,6 +275,50 @@ private:
   // Draw a solid border that has no border radius (i.e. is rectangular) and
   // uses CompositeColors.
   void DrawRectangularCompositeColors();
+};
+
+class nsCSSBorderImageRenderer final
+{
+  typedef mozilla::nsImageRenderer nsImageRenderer;
+public:
+  static mozilla::Maybe<nsCSSBorderImageRenderer>
+  CreateBorderImageRenderer(nsPresContext* aPresContext,
+                            nsIFrame* aForFrame,
+                            const nsRect& aBorderArea,
+                            const nsStyleBorder& aStyleBorder,
+                            const nsRect& aDirtyRect,
+                            nsIFrame::Sides aSkipSides,
+                            uint32_t aFlags,
+                            mozilla::image::DrawResult* aDrawResult);
+
+  mozilla::image::DrawResult
+  DrawBorderImage(nsPresContext* aPresContext,
+                  nsRenderingContext& aRenderingContext,
+                  nsIFrame* aForFrame,
+                  const nsRect& aDirtyRect);
+
+  nsCSSBorderImageRenderer(const nsCSSBorderImageRenderer& aRhs);
+  nsCSSBorderImageRenderer& operator=(const nsCSSBorderImageRenderer& aRhs);
+
+private:
+  nsCSSBorderImageRenderer(nsIFrame* aForFrame,
+                           const nsRect& aBorderArea,
+                           const nsStyleBorder& aStyleBorder,
+                           nsIFrame::Sides aSkipSides,
+                           const nsImageRenderer& aImageRenderer);
+
+  nsImageRenderer mImageRenderer;
+  nsSize mImageSize;
+  nsMargin mSlice;
+  nsMargin mWidths;
+  nsMargin mImageOutset;
+  nsRect mArea;
+  nsRect mClip;
+  uint8_t mRepeatModeHorizontal;
+  uint8_t mRepeatModeVertical;
+  uint8_t mFill;
+
+  friend class nsDisplayBorder;
 };
 
 namespace mozilla {

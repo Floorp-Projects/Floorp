@@ -126,7 +126,7 @@ jit::PatchBackedge(CodeLocationJump& jump, CodeLocationLabel label,
 }
 
 void
-Assembler::executableCopy(uint8_t* buffer)
+Assembler::executableCopy(uint8_t* buffer, bool flushICache = true)
 {
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
@@ -139,7 +139,8 @@ Assembler::executableCopy(uint8_t* buffer)
         Assembler::UpdateLoad64Value(inst, (uint64_t)buffer + value);
     }
 
-    AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
+    if (flushICache)
+        AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
 }
 
 uintptr_t

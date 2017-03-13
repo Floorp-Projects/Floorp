@@ -85,6 +85,8 @@ const I64TruncUF32Code = 0xaf;
 const I64TruncSF64Code = 0xb0;
 const I64TruncUF64Code = 0xb1;
 
+const FirstInvalidOpcode = 0xc0;
+
 // DefinitionKind
 const FunctionCode     = 0x00;
 const TableCode        = 0x01;

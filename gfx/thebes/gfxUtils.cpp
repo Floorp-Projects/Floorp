@@ -27,6 +27,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIClipboardHelper.h"
@@ -1460,7 +1461,7 @@ WriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
 
 void
 WebRenderGlyphHelper::BuildWebRenderCommands(WebRenderBridgeChild* aBridge,
-                                             nsTArray<WebRenderCommand>& aCommands,
+                                             wr::DisplayListBuilder& aBuilder,
                                              const nsTArray<GlyphArray>& aGlyphs,
                                              ScaledFont* aFont,
                                              const Point& aOffset,
@@ -1481,30 +1482,28 @@ WebRenderGlyphHelper::BuildWebRenderCommands(WebRenderBridgeChild* aBridge,
 
   aBridge->SendAddRawFont(key, fontBuffer, mIndex);
 
-  nsTArray<WrGlyphArray> wr_glyphs;
-  wr_glyphs.SetLength(aGlyphs.Length());
+  WrClipRegion clipRegion = aBuilder.BuildClipRegion(wr::ToWrRect(aClip));
 
   for (size_t i = 0; i < aGlyphs.Length(); i++) {
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
 
-    nsTArray<WrGlyphInstance>& wr_glyph_instances = wr_glyphs[i].glyphs;
+    nsTArray<WrGlyphInstance> wr_glyph_instances;
     wr_glyph_instances.SetLength(glyphs.Length());
-    wr_glyphs[i].color = glyph_array.color().value();
 
     for (size_t j = 0; j < glyphs.Length(); j++) {
       wr_glyph_instances[j].index = glyphs[j].mIndex;
       wr_glyph_instances[j].x = glyphs[j].mPosition.x - aOffset.x;
       wr_glyph_instances[j].y = glyphs[j].mPosition.y - aOffset.y;
     }
-  }
+    aBuilder.PushText(wr::ToWrRect(aBounds),
+                      clipRegion,
+                      glyph_array.color().value(),
+                      key,
+                      Range<const WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
+                      mGlyphSize);
 
-  aCommands.AppendElement(OpDPPushText(
-                            wr::ToWrRect(aBounds),
-                            wr::ToWrRect(aClip),
-                            wr_glyphs,
-                            mGlyphSize,
-                            key));
+  }
 }
 
 } // namespace gfx

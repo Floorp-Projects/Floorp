@@ -151,6 +151,22 @@ vec3 Luminosity(vec3 Cb, vec3 Cs) {
     return SetLum(Cb, Lum(Cs));
 }
 
+const int MixBlendMode_Multiply    = 1;
+const int MixBlendMode_Screen      = 2;
+const int MixBlendMode_Overlay     = 3;
+const int MixBlendMode_Darken      = 4;
+const int MixBlendMode_Lighten     = 5;
+const int MixBlendMode_ColorDodge  = 6;
+const int MixBlendMode_ColorBurn   = 7;
+const int MixBlendMode_HardLight   = 8;
+const int MixBlendMode_SoftLight   = 9;
+const int MixBlendMode_Difference  = 10;
+const int MixBlendMode_Exclusion   = 11;
+const int MixBlendMode_Hue         = 12;
+const int MixBlendMode_Saturation  = 13;
+const int MixBlendMode_Color       = 14;
+const int MixBlendMode_Luminosity  = 15;
+
 void main(void) {
     vec4 Cb = texture(sCache, vUv0);
     vec4 Cs = texture(sCache, vUv1);
@@ -159,60 +175,62 @@ void main(void) {
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
     switch (vOp) {
-        case 1:
+        case MixBlendMode_Multiply:
             result.rgb = Multiply(Cb.rgb, Cs.rgb);
             break;
-        case 2:
+        case MixBlendMode_Screen:
             result.rgb = Screen(Cb.rgb, Cs.rgb);
             break;
-        case 3:
-            result.rgb = HardLight(Cs.rgb, Cb.rgb);        // Overlay is inverse of Hardlight
+        case MixBlendMode_Overlay:
+            // Overlay is inverse of Hardlight
+            result.rgb = HardLight(Cs.rgb, Cb.rgb);
             break;
-        case 4:
-            // mix-blend-mode: darken
+        case MixBlendMode_Darken:
             result.rgb = min(Cs.rgb, Cb.rgb);
             break;
-        case 5:
-            // mix-blend-mode: lighten
+        case MixBlendMode_Lighten:
             result.rgb = max(Cs.rgb, Cb.rgb);
             break;
-        case 6:
+        case MixBlendMode_ColorDodge:
             result.r = ColorDodge(Cb.r, Cs.r);
             result.g = ColorDodge(Cb.g, Cs.g);
             result.b = ColorDodge(Cb.b, Cs.b);
             break;
-        case 7:
+        case MixBlendMode_ColorBurn:
             result.r = ColorBurn(Cb.r, Cs.r);
             result.g = ColorBurn(Cb.g, Cs.g);
             result.b = ColorBurn(Cb.b, Cs.b);
             break;
-        case 8:
+        case MixBlendMode_HardLight:
             result.rgb = HardLight(Cb.rgb, Cs.rgb);
             break;
-        case 9:
+        case MixBlendMode_SoftLight:
             result.r = SoftLight(Cb.r, Cs.r);
             result.g = SoftLight(Cb.g, Cs.g);
             result.b = SoftLight(Cb.b, Cs.b);
             break;
-        case 10:
+        case MixBlendMode_Difference:
             result.rgb = Difference(Cb.rgb, Cs.rgb);
             break;
-        case 11:
+        case MixBlendMode_Exclusion:
             result.rgb = Exclusion(Cb.rgb, Cs.rgb);
             break;
-        case 12:
+        case MixBlendMode_Hue:
             result.rgb = Hue(Cb.rgb, Cs.rgb);
             break;
-        case 13:
+        case MixBlendMode_Saturation:
             result.rgb = Saturation(Cb.rgb, Cs.rgb);
             break;
-        case 14:
+        case MixBlendMode_Color:
             result.rgb = Color(Cb.rgb, Cs.rgb);
             break;
-        case 15:
+        case MixBlendMode_Luminosity:
             result.rgb = Luminosity(Cb.rgb, Cs.rgb);
             break;
     }
+
+    result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
+    result.a = Cs.a;
 
     oFragColor = result;
 }

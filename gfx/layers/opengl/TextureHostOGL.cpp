@@ -40,13 +40,16 @@ class Compositor;
 already_AddRefed<TextureHost>
 CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                      ISurfaceAllocator* aDeallocator,
+                     LayersBackend aBackend,
                      TextureFlags aFlags)
 {
   RefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorBuffer: {
       result = CreateBackendIndependentTextureHost(aDesc,
-                                                   aDeallocator, aFlags);
+                                                   aDeallocator,
+                                                   aBackend,
+                                                   aFlags);
       break;
     }
 

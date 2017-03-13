@@ -13,6 +13,7 @@
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -21,6 +22,7 @@ namespace mozilla {
 namespace wr {
 
 class RendererOGL;
+class RenderTextureHost;
 class RenderThread;
 
 /// Base class for an event that can be scheduled to run on the render thread.
@@ -99,6 +101,13 @@ public:
 
   /// Can only be called from the render thread.
   void UpdateAndRender(wr::WindowId aWindowId);
+
+  void RegisterExternalImage(uint64_t aExternalImageId, RenderTextureHost* aTexture);
+
+  void UnregisterExternalImage(uint64_t aExternalImageId);
+
+  RenderTextureHost* GetRenderTexture(uint64_t aExternalImageId);
+
 private:
   explicit RenderThread(base::Thread* aThread);
 
@@ -108,6 +117,9 @@ private:
   base::Thread* const mThread;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
+
+  Mutex mRenderTextureMapLock;
+  nsDataHashtable<nsUint64HashKey, RefPtr<RenderTextureHost> > mRenderTextures;
 };
 
 } // namespace wr

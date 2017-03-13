@@ -45,7 +45,7 @@ protected:
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer() override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
 protected:
   uint64_t mExternalImageId;

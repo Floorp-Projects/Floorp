@@ -40,6 +40,11 @@ extern LogModule* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 
+LogModule* AudioLogModule() {
+  static mozilla::LazyLogModule log("AudioLatency");
+  return static_cast<LogModule*>(log);
+}
+
 /**
  * Webrtc microphone source source.
  */
@@ -198,6 +203,8 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mTrackID(TRACK_NONE)
   , mStarted(false)
   , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
+  , mTotalFrames(0)
+  , mLastLogFrames(0)
   , mPlayoutDelay(0)
   , mNullTransport(nullptr)
   , mSkipProcessing(false)
@@ -576,6 +583,16 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
 {
   if (mState != kStarted) {
     return;
+  }
+
+  if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
+    mTotalFrames += aFrames;
+    if (mTotalFrames > mLastLogFrames + mSampleFrequency) { // ~ 1 second
+      MOZ_LOG(AudioLogModule(), LogLevel::Debug,
+              ("%p: Inserting %" PRIuSIZE " samples into graph, total frames = %" PRIu64,
+               (void*)this, aFrames, mTotalFrames));
+      mLastLogFrames = mTotalFrames;
+    }
   }
 
   size_t len = mSources.Length();

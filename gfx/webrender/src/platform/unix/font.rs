@@ -13,6 +13,7 @@ use freetype::freetype::{FT_Library, FT_Set_Char_Size};
 use freetype::freetype::{FT_Face, FT_Long, FT_UInt, FT_F26Dot6};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot, FT_LcdFilter};
+use freetype::freetype::{FT_Done_Face};
 
 use std::{mem, ptr, slice};
 use std::collections::HashMap;
@@ -86,6 +87,15 @@ impl FontContext {
 
     pub fn add_native_font(&mut self, _font_key: &FontKey, _native_font_handle: NativeFontHandle) {
         panic!("TODO: Not supported on Linux");
+    }
+
+    pub fn delete_font(&mut self, font_key: &FontKey) {
+        if let Some(face) = self.faces.remove(font_key) {
+            let result = unsafe {
+                FT_Done_Face(face.face)
+            };
+            assert!(result.succeeded());
+        }
     }
 
     fn load_glyph(&self,

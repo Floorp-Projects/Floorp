@@ -109,92 +109,80 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
 }
 
 Maybe<WrImageMask>
-WebRenderLayer::buildMaskLayer() {
-  Maybe<WrImageMask> mask = Nothing();
-  WrImageMask imageMask;
-  Layer* maskLayer = GetLayer()->GetMaskLayer();
-
-  if (maskLayer) {
-    RefPtr<SourceSurface> surface = WebRenderLayer::ToWebRenderLayer(maskLayer)->GetAsSourceSurface();
-    if (surface) {
-      Matrix transform;
-      Matrix4x4 effectiveTransform = maskLayer->GetEffectiveTransform();
-      DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
-      NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-      //XXX: let's assert that the mask transform is the same as the layer transform
-      //transform.PostTranslate(-aDeviceOffset.x, -aDeviceOffset.y);
-      {
-          RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-          DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::MapType::READ);
-          gfx::IntSize size = surface->GetSize();
-          MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
-          wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-          WrImageKey maskKey;
-          maskKey.mNamespace = WrBridge()->GetNamespace();
-          maskKey.mHandle = WrBridge()->GetNextResourceId();
-          WrBridge()->SendAddImage(maskKey, size, map.GetStride(), SurfaceFormat::A8, buf);
-
-          imageMask.image = maskKey;
-          imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
-          imageMask.repeat = false;
-          WrManager()->AddImageKeyForDiscard(maskKey);
-          mask = Some(imageMask);
-      }
-    }
-  }
-  return mask;
-}
-
-
-
-
-WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
-        WebRenderLayer* aLayer)
-  : mLayer(aLayer)
+WebRenderLayer::BuildWrMaskLayer()
 {
-  Matrix4x4 identity;
-  Layer* layer = mLayer->GetLayer();
-  for (size_t i = layer->GetScrollMetadataCount(); i > 0; i--) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i - 1);
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    Rect bounds = fm.GetCompositionBounds().ToUnknownRect();
-    Rect overflow = (fm.GetExpandedScrollableRect() * fm.LayersPixelsPerCSSPixel()).ToUnknownRect();
-    Point scrollPos = (fm.GetScrollOffset() * fm.LayersPixelsPerCSSPixel()).ToUnknownPoint();
-    Rect parentBounds = mLayer->ParentStackingContextBounds(i);
-    bounds.MoveBy(-parentBounds.x, -parentBounds.y);
-    // Subtract the MT scroll position from the overflow here so that the WR
-    // scroll offset (which is the APZ async scroll component) always fits in
-    // the available overflow. If we didn't do this and WR did bounds checking
-    // on the scroll offset, we'd fail those checks.
-    overflow.MoveBy(bounds.x - scrollPos.x, bounds.y - scrollPos.y);
-    if (gfxPrefs::LayersDump()) {
-      printf_stderr("Pushing stacking context id %" PRIu64 " with bounds=%s, overflow=%s\n",
-        fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
-    }
-
-/*    mLayer->WrBridge()->AddWebRenderCommand(
-      OpDPPushScrollLayer(wr::ToWrRect(bounds),
-                          wr::ToWrRect(overflow),
-                          Nothing(),
-                          fm.GetScrollId()));*/
+  if (GetLayer()->GetMaskLayer()) {
+    WebRenderLayer* maskLayer = ToWebRenderLayer(GetLayer()->GetMaskLayer());
+    return maskLayer->RenderMaskLayer();
   }
+
+  return Nothing();
 }
 
-WrScrollFrameStackingContextGenerator::~WrScrollFrameStackingContextGenerator()
+gfx::Rect
+WebRenderLayer::GetWrBoundsRect()
 {
-  Layer* layer = mLayer->GetLayer();
-  for (size_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
-    const FrameMetrics& fm = layer->GetFrameMetrics(i);
-    if (!fm.IsScrollable()) {
-      continue;
-    }
-    if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
-//    mLayer->WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
-  }
+  LayerIntRect bounds = GetLayer()->GetVisibleRegion().GetBounds();
+  return Rect(0, 0, bounds.width, bounds.height);
 }
 
+gfx::Rect
+WebRenderLayer::GetWrClipRect(gfx::Rect& aRect)
+{
+  gfx::Rect clip;
+  Layer* layer = GetLayer();
+  Matrix4x4 transform = layer->GetTransform();
+  if (layer->GetClipRect().isSome()) {
+    clip = RelativeToVisible(transform.Inverse().TransformBounds(
+             IntRectToRect(layer->GetClipRect().ref().ToUnknownRect()))
+           );
+  } else {
+    clip = aRect;
+  }
+
+  return clip;
+}
+
+gfx::Rect
+WebRenderLayer::GetWrRelBounds()
+{
+  gfx::Rect relBounds = VisibleBoundsRelativeToParent();
+  gfx::Matrix4x4 transform = GetLayer()->GetTransform();
+  if (!transform.IsIdentity()) {
+    // WR will only apply the 'translate' of the transform, so we need to do the scale/rotation manually.
+    gfx::Matrix4x4 boundTransform = transform;
+    boundTransform._41 = 0.0f;
+    boundTransform._42 = 0.0f;
+    boundTransform._43 = 0.0f;
+    relBounds.MoveTo(boundTransform.TransformPoint(relBounds.TopLeft()));
+  }
+
+  return relBounds;
+}
+
+void
+WebRenderLayer::DumpLayerInfo(const char* aLayerType, gfx::Rect& aRect)
+{
+  if (!gfxPrefs::LayersDump()) {
+    return;
+  }
+
+  Matrix4x4 transform = GetLayer()->GetTransform();
+  Rect clip = GetWrClipRect(aRect);
+  Rect relBounds = GetWrRelBounds();
+  Rect overflow(0, 0, relBounds.width, relBounds.height);
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
+
+  printf_stderr("%s %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
+                aLayerType,
+                GetLayer(),
+                Stringify(relBounds).c_str(),
+                Stringify(overflow).c_str(),
+                Stringify(transform).c_str(),
+                Stringify(aRect).c_str(),
+                Stringify(clip).c_str(),
+                Stringify(mixBlendMode).c_str());
+}
 
 WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
   : mWidget(aWidget)
@@ -218,14 +206,15 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   MOZ_ASSERT(mWrChild == nullptr);
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
+  LayoutDeviceIntSize size = mWidget->GetClientSize();
   TextureFactoryIdentifier textureFactoryIdentifier;
   uint32_t id_namespace;
   PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
+                                                                            size,
                                                                             &textureFactoryIdentifier,
                                                                             &id_namespace);
   MOZ_ASSERT(bridge);
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
-  LayoutDeviceIntSize size = mWidget->GetClientSize();
   WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   WrBridge()->SetNamespace(id_namespace);
@@ -316,12 +305,13 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
     return;
   }
 
-  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer();
+  wr::DisplayListBuilder builder(WrBridge()->GetPipeline());
+  WebRenderLayer::ToWebRenderLayer(mRoot)->RenderLayer(builder);
 
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WrBridge()->DPEnd(size.ToUnknownSize(), sync, mLatestTransactionId);
+  WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
 
@@ -346,7 +336,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
                                             SurfaceFormat::B8G8R8A8,
                                             aSize.ToUnknownSize(),
                                             BackendType::SKIA,
-                                            TextureFlags::DEFAULT);
+                                            TextureFlags::SNAPSHOT);
   if (!texture) {
     return;
   }

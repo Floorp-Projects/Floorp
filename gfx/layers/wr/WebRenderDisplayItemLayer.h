@@ -29,16 +29,15 @@ public:
 protected:
   virtual ~WebRenderDisplayItemLayer()
   {
-    mCommands.Clear();
     MOZ_COUNT_DTOR(WebRenderDisplayItemLayer);
   }
 
 public:
   Layer* GetLayer() override { return this; }
-  void RenderLayer() override;
+  void RenderLayer(wr::DisplayListBuilder& aBuilder) override;
 
 private:
-  nsTArray<WebRenderCommand> mCommands;
+  wr::BuiltDisplayList mBuiltDisplayList;
   nsTArray<WebRenderParentCommand> mParentCommands;
   RefPtr<ImageClient> mImageClient;
   RefPtr<ImageContainer> mImageContainer;

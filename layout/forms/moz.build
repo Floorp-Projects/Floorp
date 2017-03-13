@@ -43,6 +43,8 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 LOCAL_INCLUDES += [
     '../../editor/txmgr',
     '../base',
