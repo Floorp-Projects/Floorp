@@ -44,11 +44,6 @@ typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
 
 struct IonCompilePolicy
 {
-    // Producing output is what we're all about here. (These flags go away in a
-    // later patch.)
-    static const bool Output = true;
-    static const bool Validate = true;
-
     // We store SSA definitions in the value stack.
     typedef MDefinition* Value;
 
@@ -62,7 +57,8 @@ class FunctionCompiler;
 
 // TlsUsage describes how the TLS register is used during a function call.
 
-enum class TlsUsage {
+enum class TlsUsage
+{
     Unused,     // No particular action is taken with respect to the TLS register.
     Need,       // The TLS register must be reloaded just before the call.
     CallerSaved // Same, plus space must be allocated to save/restore the TLS
@@ -70,7 +66,8 @@ enum class TlsUsage {
 };
 
 static bool
-NeedsTls(TlsUsage usage) {
+NeedsTls(TlsUsage usage)
+{
     return usage == TlsUsage::Need || usage == TlsUsage::CallerSaved;
 }
 
