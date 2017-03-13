@@ -188,6 +188,7 @@
   <string name="pref_home_updates_enabled">&pref_home_updates_enabled;</string>
   <string name="pref_category_home_homepage">&pref_category_home_homepage;</string>
   <string name="home_homepage_title">&home_homepage_title;</string>
+  <string name="home_homepage_every_new_tab">&home_homepage_every_new_tab;</string>
   <string name="home_homepage_radio_default">&home_homepage_radio_default;</string>
   <string name="home_homepage_radio_user_address">&home_homepage_radio_user_address;</string>
   <string name="home_homepage_hint_user_address">&home_homepage_hint_user_address;</string>

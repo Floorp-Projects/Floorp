@@ -23,7 +23,6 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.notifications.NotificationClient;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.mozglue.SafeIntent;
@@ -66,14 +65,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.hardware.Sensor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
@@ -1587,7 +1584,7 @@ public abstract class GeckoApp
                 // to the Recent Tabs folder of the Combined History panel.
                 Tabs.getInstance().loadUrl(AboutPages.getURLForBuiltinPanelType(PanelType.DEPRECATED_RECENT_TABS), flags);
             } else {
-                final String homepage = getHomepage();
+                final String homepage = Tabs.getHomepage(this);
                 Tabs.getInstance().loadUrl(!TextUtils.isEmpty(homepage) ? homepage : AboutPages.HOME, flags);
             }
         }
@@ -1609,10 +1606,6 @@ public abstract class GeckoApp
         }
 
         Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
-    }
-
-    public String getHomepage() {
-        return null;
     }
 
     private String getIntentURI(SafeIntent intent) {
