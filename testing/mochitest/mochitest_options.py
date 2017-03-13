@@ -729,7 +729,6 @@ class MochitestArguments(ArgumentContainer):
                 "devtools.chrome.enabled=true",
                 "devtools.debugger.prompt-connection=false"
             ]
-            options.autorun = False
 
         if options.debugOnFailure and not options.jsdebugger:
             parser.error(
