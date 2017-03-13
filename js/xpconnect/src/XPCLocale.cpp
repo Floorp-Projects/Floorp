@@ -11,12 +11,12 @@
 #include "nsCollationCID.h"
 #include "nsJSUtils.h"
 #include "nsIPlatformCharset.h"
-#include "nsILocaleService.h"
 #include "nsICollation.h"
 #include "nsUnicharUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"
 #include "nsIUnicodeDecoder.h"
 
@@ -24,6 +24,7 @@
 
 using namespace JS;
 using mozilla::dom::EncodingUtils;
+using mozilla::intl::LocaleService;
 
 /**
  * JS locale callbacks implemented by XPCOM modules.  These are theoretically
@@ -164,27 +165,18 @@ private:
 
     if (!mDecoder) {
       // use app default locale
-      nsCOMPtr<nsILocaleService> localeService =
-        do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+      nsAutoCString appLocale;
+      LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
+      NS_ConvertUTF8toUTF16 localeStr(appLocale);
+
+      nsCOMPtr<nsIPlatformCharset> platformCharset =
+        do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsILocale> appLocale;
-        rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+        nsAutoCString charset;
+        rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
         if (NS_SUCCEEDED(rv)) {
-          nsAutoString localeStr;
-          rv = appLocale->
-               GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
-          MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to get app locale info");
-
-          nsCOMPtr<nsIPlatformCharset> platformCharset =
-            do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-
-          if (NS_SUCCEEDED(rv)) {
-            nsAutoCString charset;
-            rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
-            if (NS_SUCCEEDED(rv)) {
-              mDecoder = EncodingUtils::DecoderForEncoding(charset);
-            }
-          }
+          mDecoder = EncodingUtils::DecoderForEncoding(charset);
         }
       }
     }
@@ -252,22 +244,10 @@ xpc_LocalizeContext(JSContext* cx)
 
   // No pref has been found, so get the default locale from the
   // application's locale.
-  nsCOMPtr<nsILocaleService> localeService =
-    do_GetService(NS_LOCALESERVICE_CONTRACTID);
-  if (!localeService)
-    return false;
+  nsAutoCString appLocaleStr;
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
 
-  nsCOMPtr<nsILocale> appLocale;
-  nsresult rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
-  if (NS_FAILED(rv))
-    return false;
-
-  nsAutoString localeStr;
-  rv = appLocale->GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to get app locale info");
-  NS_LossyConvertUTF16toASCII locale(localeStr);
-
-  return JS_SetDefaultLocale(cx, locale.get());
+  return JS_SetDefaultLocale(cx, appLocaleStr.get());
 }
 
 void
