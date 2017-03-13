@@ -200,7 +200,7 @@ function test_undoCloseTab() {
 
 
 function test_setWindowState() {
-  let testState = {
+  let newState = {
     windows: [{
       tabs: [
         { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }], extData: { "foo": "bar" } },
@@ -243,7 +243,7 @@ function test_setWindowState() {
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
   gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
 
-  ss.setWindowState(window, JSON.stringify(testState), true);
+  ss.setWindowState(window, JSON.stringify(newState), true);
 }
 
 

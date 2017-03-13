@@ -41,7 +41,7 @@ add_task(function* () {
     Assert.equal(content.frames[1].document.getElementById("out2").value,
       "", "id prefixes can't be faked");
     // Disabled for now, Bug 588077
-    //Assert.equal(content.frames[0].frames[1].document.getElementById("in1").value,
+    // Assert.equal(content.frames[0].frames[1].document.getElementById("in1").value,
     //  "", "id prefixes aren't mixed up");
     Assert.equal(content.frames[1].frames[0].document.getElementById("in1").value,
       "", "id prefixes aren't mixed up");

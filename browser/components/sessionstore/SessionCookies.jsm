@@ -356,10 +356,10 @@ var CookieStore = {
   /**
    * Returns the list of stored session cookies for a given host.
    *
-   * @param host
+   * @param mainHost
    *        A string containing the host name we want to get cookies for.
    */
-  getCookiesForHost(host) {
+  getCookiesForHost(mainHost) {
     let cookies = [];
 
     let appendCookiesForHost = host => {
@@ -381,7 +381,7 @@ var CookieStore = {
     // <.example.com>. We will find those variants with a leading dot in the
     // map if the Set-Cookie header had a domain= attribute, i.e. the cookie
     // will be stored for a parent domain and we send it for any subdomain.
-    for (let variant of [host, ...getPossibleSubdomainVariants(host)]) {
+    for (let variant of [mainHost, ...getPossibleSubdomainVariants(mainHost)]) {
       appendCookiesForHost(variant);
     }
 

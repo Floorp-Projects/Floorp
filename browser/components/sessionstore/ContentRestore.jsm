@@ -288,7 +288,7 @@ ContentRestoreInternal.prototype = {
     if (!this._restoringDocument) {
       return;
     }
-    let {entry, pageStyle, formdata, scrollPositions} = this._restoringDocument;
+    let {pageStyle, formdata, scrollPositions} = this._restoringDocument;
     this._restoringDocument = null;
 
     let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)

@@ -46,9 +46,9 @@ function assertNotificationCount(count) {
 }
 
 function* awaitNotification(callback) {
-  let awaitNotification = TestUtils.topicObserved(TOPIC);
+  let notification = TestUtils.topicObserved(TOPIC);
   executeSoon(callback);
-  yield awaitNotification;
+  yield notification;
 }
 
 add_task(function* test_closedObjectsChangedNotifications() {

@@ -10,10 +10,6 @@ function test() {
     is(gBrowser.visibleTabs.length, num, msg);
   }
 
-  let assertNumberOfPinnedTabs = function(num, msg) {
-    is(gBrowser._numPinnedTabs, num, msg);
-  }
-
   waitForExplicitFinish();
 
   // check prerequisites
