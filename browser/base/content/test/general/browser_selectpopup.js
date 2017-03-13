@@ -125,6 +125,15 @@ const OPTION_COLOR_EQUAL_TO_UABACKGROUND_COLOR_SELECT =
   '  <option value="Two" selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
+const GENERIC_OPTION_STYLED_AS_IMPORTANT =
+  "<html><head><style>" +
+  "  option { background-color: black !important; color: white !important; }" +
+  "</style>" +
+  "<body><select id='one'>" +
+  '  <option value="One">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 0)"}</option>' +
+  '  <option value="Two" selected="true">{"end": "true"}</option>' +
+  "</select></body></html>";
+
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -967,6 +976,35 @@ add_task(function* test_options_inverted_from_select_background() {
     "popup has expected background color");
 
   ok(!child.selected, "The first child should not be selected");
+  while (child) {
+    testOptionColors(idx, child, menulist);
+    idx++;
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
+// This test checks when a <select> element has a background set using !important,
+// which was affecting how we calculated the user-agent styling.
+add_task(function* test_select_background_using_important() {
+  const pageUrl = "data:text/html," + escape(GENERIC_OPTION_STYLED_AS_IMPORTANT);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  is(selectPopup.parentNode.itemCount, 2, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+  ok(!child.selected, "The first child should not be selected");
+
   while (child) {
     testOptionColors(idx, child, menulist);
     idx++;
