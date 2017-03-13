@@ -4,11 +4,16 @@
 
 use euclid::Point3D;
 use geometry::ray_intersects_rect;
+use mask_cache::{ClipSource, MaskCacheInfo};
+use prim_store::GpuBlock32;
+use renderer::VertexDataStore;
 use spring::{DAMPING, STIFFNESS, Spring};
-use webrender_traits::{LayerPoint, LayerRect, LayerSize, LayerToScrollTransform};
-use webrender_traits::{LayerToWorldTransform, PipelineId, ScrollEventPhase, ScrollLayerId};
-use webrender_traits::{ScrollLayerRect, ScrollLocation, ScrollToWorldTransform, WorldPoint};
-use webrender_traits::{WorldPoint4D};
+use tiling::PackedLayerIndex;
+use util::TransformedRect;
+use webrender_traits::{ClipRegion, LayerPixel, LayerPoint, LayerRect, LayerSize};
+use webrender_traits::{LayerToScrollTransform, LayerToWorldTransform, PipelineId};
+use webrender_traits::{ScrollEventPhase, ScrollLayerId, ScrollLayerRect, ScrollLocation};
+use webrender_traits::{ServoScrollRootId, WorldPoint, WorldPoint4D};
 
 #[cfg(target_os = "macos")]
 const CAN_OVERSCROLL: bool = true;
@@ -16,9 +21,67 @@ const CAN_OVERSCROLL: bool = true;
 #[cfg(not(target_os = "macos"))]
 const CAN_OVERSCROLL: bool = false;
 
+#[derive(Clone, Debug)]
+pub struct ClipInfo {
+    /// The ClipSource for this node, which is used to generate mask_cache_info.
+    pub clip_source: ClipSource,
+
+    /// The MaskCacheInfo for this node, which is produced by processing the
+    /// provided ClipSource.
+    pub mask_cache_info: Option<MaskCacheInfo>,
+
+    /// The packed layer index for this node, which is used to render a clip mask
+    /// for it, if necessary.
+    pub packed_layer_index: PackedLayerIndex,
+
+    /// The final transformed rectangle of this clipping region for this node,
+    /// which depends on the screen rectangle and the transformation of all of
+    /// the parents.
+    pub xf_rect: Option<TransformedRect>,
+
+    /// An external identifier that is used to scroll this clipping node
+    /// from the API.
+    pub scroll_root_id: Option<ServoScrollRootId>,
+}
+
+impl ClipInfo {
+    pub fn new(clip_region: &ClipRegion,
+               clip_store: &mut VertexDataStore<GpuBlock32>,
+               packed_layer_index: PackedLayerIndex,
+               scroll_root_id: Option<ServoScrollRootId>)
+               -> ClipInfo {
+        // We pass true here for the MaskCacheInfo because this type of
+        // mask needs an extra clip for the clip rectangle.
+        let clip_source = ClipSource::Region(clip_region.clone());
+        ClipInfo {
+            mask_cache_info: MaskCacheInfo::new(&clip_source, true, clip_store),
+            clip_source: clip_source,
+            packed_layer_index: packed_layer_index,
+            xf_rect: None,
+            scroll_root_id: scroll_root_id,
+        }
+    }
+
+    pub fn is_masking(&self) -> bool {
+        match self.mask_cache_info {
+            Some(ref info) => info.is_masking(),
+            _ => false,
+        }
+    }
+
+}
+#[derive(Clone, Debug)]
+pub enum NodeType {
+    /// Transform for this layer, relative to parent reference frame. A reference
+    /// frame establishes a new coordinate space in the tree.
+    ReferenceFrame(LayerToScrollTransform),
+
+    /// Other nodes just do clipping, but no transformation.
+    Clip(ClipInfo),
+}
 
 /// Contains scrolling and transform information stacking contexts.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClipScrollNode {
     /// Manages scrolling offset, overscroll state etc.
     pub scrolling: ScrollingState,
@@ -26,44 +89,78 @@ pub struct ClipScrollNode {
     /// Size of the content inside the scroll region (in logical pixels)
     pub content_size: LayerSize,
 
-    /// Viewing rectangle
+    /// Viewing rectangle in the coordinate system of the parent reference frame.
     pub local_viewport_rect: LayerRect,
 
-    /// Viewing rectangle clipped against parent layer(s)
+    /// Clip rect of this node - typically the same as viewport rect, except
+    /// in overscroll cases.
+    pub local_clip_rect: LayerRect,
+
+    /// Viewport rectangle clipped against parent layer(s) viewport rectangles.
+    /// This is in the coordinate system of the parent reference frame.
     pub combined_local_viewport_rect: LayerRect,
 
-    /// World transform for the viewport rect itself.
+    /// World transform for the viewport rect itself. This is the parent
+    /// reference frame transformation plus the scrolling offsets provided by
+    /// the nodes in between the reference frame and this node.
     pub world_viewport_transform: LayerToWorldTransform,
 
-    /// World transform for content within this layer
+    /// World transform for content transformed by this node.
     pub world_content_transform: LayerToWorldTransform,
-
-    /// Transform for this layer, relative to parent scrollable layer.
-    pub local_transform: LayerToScrollTransform,
 
     /// Pipeline that this layer belongs to
     pub pipeline_id: PipelineId,
 
+    /// Parent layer. If this is None, we are the root node.
+    pub parent: Option<ScrollLayerId>,
+
     /// Child layers
     pub children: Vec<ScrollLayerId>,
+
+    /// Whether or not this node is a reference frame.
+    pub node_type: NodeType,
 }
 
 impl ClipScrollNode {
-    pub fn new(local_viewport_rect: &LayerRect,
+    pub fn new(pipeline_id: PipelineId,
+               parent_id: ScrollLayerId,
+               local_viewport_rect: &LayerRect,
                content_size: LayerSize,
-               local_transform: &LayerToScrollTransform,
-               pipeline_id: PipelineId)
+               clip_info: ClipInfo)
                -> ClipScrollNode {
         ClipScrollNode {
             scrolling: ScrollingState::new(),
             content_size: content_size,
             local_viewport_rect: *local_viewport_rect,
-            combined_local_viewport_rect: *local_viewport_rect,
+            local_clip_rect: *local_viewport_rect,
+            combined_local_viewport_rect: LayerRect::zero(),
             world_viewport_transform: LayerToWorldTransform::identity(),
             world_content_transform: LayerToWorldTransform::identity(),
-            local_transform: *local_transform,
+            parent: Some(parent_id),
             children: Vec::new(),
             pipeline_id: pipeline_id,
+            node_type: NodeType::Clip(clip_info),
+        }
+    }
+
+    pub fn new_reference_frame(parent_id: Option<ScrollLayerId>,
+                               local_viewport_rect: &LayerRect,
+                               content_size: LayerSize,
+                               local_transform: &LayerToScrollTransform,
+                               pipeline_id: PipelineId)
+                               -> ClipScrollNode {
+        ClipScrollNode {
+            scrolling: ScrollingState::new(),
+            content_size: content_size,
+            local_viewport_rect: *local_viewport_rect,
+            local_clip_rect: *local_viewport_rect,
+            combined_local_viewport_rect: LayerRect::zero(),
+            world_viewport_transform: LayerToWorldTransform::identity(),
+            world_content_transform: LayerToWorldTransform::identity(),
+            parent: parent_id,
+            children: Vec::new(),
+            pipeline_id: pipeline_id,
+            node_type: NodeType::ReferenceFrame(*local_transform),
         }
     }
 
@@ -117,9 +214,16 @@ impl ClipScrollNode {
     }
 
     pub fn update_transform(&mut self,
-                            parent_world_transform: &ScrollToWorldTransform,
-                            parent_viewport_rect: &ScrollLayerRect) {
-        let inv_transform = match self.local_transform.inverse() {
+                            parent_reference_frame_transform: &LayerToWorldTransform,
+                            parent_combined_viewport_rect: &ScrollLayerRect,
+                            parent_accumulated_scroll_offset: LayerPoint) {
+
+        let local_transform = match self.node_type {
+            NodeType::ReferenceFrame(transform) => transform,
+            NodeType::Clip(_) => LayerToScrollTransform::identity(),
+        };
+
+        let inv_transform = match local_transform.inverse() {
             Some(transform) => transform,
             None => {
                 // If a transform function causes the current transformation matrix of an object
@@ -129,18 +233,40 @@ impl ClipScrollNode {
             }
         };
 
-        let parent_viewport_rect_in_local_space = inv_transform.transform_rect(parent_viewport_rect)
-                                                               .translate(&-self.scrolling.offset);
-        let local_viewport_rect = self.local_viewport_rect.translate(&-self.scrolling.offset);
-        let viewport_rect = parent_viewport_rect_in_local_space.intersection(&local_viewport_rect)
-                                                               .unwrap_or(LayerRect::zero());
+        // We are trying to move the combined viewport rectangle of our parent nodes into the
+        // coordinate system of this node, so we must invert our transformation (only for
+        // reference frames) and then apply the scroll offset of all the parent layers.
+        let parent_combined_viewport_in_local_space =
+            inv_transform.pre_translated(-parent_accumulated_scroll_offset.x,
+                                         -parent_accumulated_scroll_offset.y,
+                                         0.0)
+                         .transform_rect(parent_combined_viewport_rect);
 
-        self.combined_local_viewport_rect = viewport_rect;
-        self.world_viewport_transform = parent_world_transform.pre_mul(&self.local_transform);
-        self.world_content_transform = self.world_viewport_transform
-                                                     .pre_translated(self.scrolling.offset.x,
-                                                                     self.scrolling.offset.y,
-                                                                     0.0);
+        // Now that we have the combined viewport rectangle of the parent nodes in local space,
+        // we do the intersection and get our combined viewport rect in the coordinate system
+        // starting from our origin.
+        self.combined_local_viewport_rect =
+            parent_combined_viewport_in_local_space.intersection(&self.local_clip_rect)
+                                                    .unwrap_or(LayerRect::zero());
+
+        // The transformation for this viewport in world coordinates is the transformation for
+        // our parent reference frame, plus any accumulated scrolling offsets from nodes
+        // between our reference frame and this node. For reference frames, we also include
+        // whatever local transformation this reference frame provides. This can be combined
+        // with the local_viewport_rect to get its position in world space.
+        self.world_viewport_transform =
+            parent_reference_frame_transform
+                .pre_translated(parent_accumulated_scroll_offset.x,
+                                parent_accumulated_scroll_offset.y,
+                                0.0)
+                .pre_mul(&local_transform.with_destination::<LayerPixel>());
+
+        // The transformation for any content inside of us is the viewport transformation, plus
+        // whatever scrolling offset we supply as well.
+        self.world_content_transform =
+            self.world_viewport_transform.pre_translated(self.scrolling.offset.x,
+                                                         self.scrolling.offset.y,
+                                                         0.0);
     }
 
     pub fn scrollable_height(&self) -> f32 {
@@ -265,7 +391,7 @@ impl ClipScrollNode {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct ScrollingState {
     pub offset: LayerPoint,
     pub spring: Spring,

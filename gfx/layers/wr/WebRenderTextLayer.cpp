@@ -18,7 +18,7 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-WebRenderTextLayer::RenderLayer()
+WebRenderTextLayer::RenderLayer(wr::DisplayListBuilder& aBuilder)
 {
     if (mBounds.IsEmpty()) {
         return;
@@ -39,10 +39,8 @@ WebRenderTextLayer::RenderLayer()
                       Stringify(clip).c_str());
     }
 
-    nsTArray<WebRenderCommand> commands;
-    mGlyphHelper.BuildWebRenderCommands(WrBridge(), commands, mGlyphs, mFont,
+    mGlyphHelper.BuildWebRenderCommands(WrBridge(), aBuilder, mGlyphs, mFont,
                                         GetOffsetToParent(), rect, clip);
-    WrBridge()->AddWebRenderCommands(commands);
 }
 
 } // namespace layers

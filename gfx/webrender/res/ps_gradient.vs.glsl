@@ -12,25 +12,33 @@ void main(void) {
 
     RectWithSize segment_rect;
     vec2 axis;
+    vec4 adjusted_color_g0 = g0.color;
+    vec4 adjusted_color_g1 = g1.color;
     if (gradient.start_end_point.y == gradient.start_end_point.w) {
-        float x0 = mix(gradient.start_end_point.x,
-                       gradient.start_end_point.z,
-                       g0.offset.x);
-        float x1 = mix(gradient.start_end_point.x,
-                       gradient.start_end_point.z,
-                       g1.offset.x);
-        segment_rect.p0 = vec2(x0, prim.local_rect.p0.y);
-        segment_rect.size = vec2(x1 - x0, prim.local_rect.size.y);
+        vec2 x = mix(gradient.start_end_point.xx, gradient.start_end_point.zz,
+                     vec2(g0.offset.x, g1.offset.x));
+        // The start and end point of gradient might exceed the geometry rect. So clamp
+        // it to the geometry rect.
+        x = clamp(x, prim.local_rect.p0.xx, prim.local_rect.p0.xx + prim.local_rect.size.xx);
+        vec2 adjusted_offset =
+            (x - gradient.start_end_point.xx) / (gradient.start_end_point.zz - gradient.start_end_point.xx);
+        adjusted_color_g0 = mix(g0.color, g1.color, adjusted_offset.x);
+        adjusted_color_g1 = mix(g0.color, g1.color, adjusted_offset.y);
+        segment_rect.p0 = vec2(x.x, prim.local_rect.p0.y);
+        segment_rect.size = vec2(x.y - x.x, prim.local_rect.size.y);
         axis = vec2(1.0, 0.0);
     } else {
-        float y0 = mix(gradient.start_end_point.y,
-                       gradient.start_end_point.w,
-                       g0.offset.x);
-        float y1 = mix(gradient.start_end_point.y,
-                       gradient.start_end_point.w,
-                       g1.offset.x);
-        segment_rect.p0 = vec2(prim.local_rect.p0.x, y0);
-        segment_rect.size = vec2(prim.local_rect.size.x, y1 - y0);
+        vec2 y = mix(gradient.start_end_point.yy, gradient.start_end_point.ww,
+                     vec2(g0.offset.x, g1.offset.x));
+        // The start and end point of gradient might exceed the geometry rect. So clamp
+        // it to the geometry rect.
+        y = clamp(y, prim.local_rect.p0.yy, prim.local_rect.p0.yy + prim.local_rect.size.yy);
+        vec2 adjusted_offset =
+            (y - gradient.start_end_point.yy) / (gradient.start_end_point.ww - gradient.start_end_point.yy);
+        adjusted_color_g0 = mix(g0.color, g1.color, adjusted_offset.x);
+        adjusted_color_g1 = mix(g0.color, g1.color, adjusted_offset.y);
+        segment_rect.p0 = vec2(prim.local_rect.p0.x, y.x);
+        segment_rect.size = vec2(prim.local_rect.size.x, y.y - y.x);
         axis = vec2(0.0, 1.0);
     }
 
@@ -56,5 +64,5 @@ void main(void) {
 
     write_clip(vi.screen_pos, prim.clip_area);
 
-    vColor = mix(g0.color, g1.color, dot(f, axis));
+    vColor = mix(adjusted_color_g0, adjusted_color_g1, dot(f, axis));
 }

@@ -68,6 +68,10 @@ impl IntProfileCounter {
     pub fn set(&mut self, amount: usize) {
         self.value = amount;
     }
+
+    pub fn get(&self) -> usize {
+        self.value
+    }
 }
 
 impl ProfileCounter for IntProfileCounter {
@@ -152,6 +156,10 @@ impl TimeProfileCounter {
         let ns = t1 - t0;
         self.nanoseconds += ns;
         val
+    }
+
+    pub fn get(&self) -> u64 {
+        self.nanoseconds
     }
 }
 

@@ -336,6 +336,7 @@ public:
     MOZ_MUST_USE nsresult OverrideSecurityInfo(nsISupports* aSecurityInfo);
 
 public: /* Necko internal use only... */
+    int64_t GetAltDataLength() { return mAltDataLength; }
     bool IsNavigation();
 
     // Return whether upon a redirect code of httpStatus for method, the
@@ -604,6 +605,7 @@ protected:
   nsCString mPreferredCachedAltDataType;
   // Holds the name of the alternative data type the channel returned.
   nsCString mAvailableCachedAltDataType;
+  int64_t   mAltDataLength;
 
   bool mForceMainDocumentChannel;
   bool mIsTrackingResource;
