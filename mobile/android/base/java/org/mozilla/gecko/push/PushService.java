@@ -287,16 +287,14 @@ public class PushService implements BundleEventListener {
 
     protected static void sendMessageToGeckoService(final @NonNull JSONObject message) {
         Log.i(LOG_TAG, "Delivering dom/push message to Gecko!");
-        GeckoAppShell.notifyObservers("PushServiceAndroidGCM:ReceivedPushMessage",
-                                      message.toString(),
-                                      GeckoThread.State.PROFILE_READY);
+        GeckoAppShell.notifyPushObservers("PushServiceAndroidGCM:ReceivedPushMessage",
+                                          message.toString());
     }
 
     protected static void sendMessageToDecodeToGeckoService(final @NonNull JSONObject message) {
         Log.i(LOG_TAG, "Delivering dom/push message to decode to Gecko!");
-        GeckoAppShell.notifyObservers("FxAccountsPush:ReceivedPushMessageToDecode",
-                                      message.toString(),
-                                      GeckoThread.State.PROFILE_READY);
+        GeckoAppShell.notifyPushObservers("FxAccountsPush:ReceivedPushMessageToDecode",
+                                          message.toString());
     }
 
     protected void registerGeckoEventListener() {
